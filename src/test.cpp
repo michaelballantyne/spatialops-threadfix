@@ -1,0 +1,411 @@
+#include <SpatialOperator.h>
+#include <SpatialField.h>
+#include <FVStaggeredSpatialOps.h>
+
+#include <Epetra_CrsMatrix.h>
+#include <Epetra_Vector.h>
+
+#include <EpetraExt_RowMatrixOut.h>
+#include <EpetraExt_VectorOut.h>
+
+#include <vector>
+#include <iostream>
+#include <cmath>
+
+using namespace std;
+using namespace SpatialOps;
+
+#define PI 3.1415
+
+//====================================================================
+
+bool test_field()
+{
+  std::vector<int> dim(3,1);
+  dim[0] = 10;
+
+  const int nghost = 0;
+
+  int nn=1;
+  for( int i=0; i<3; ++i )
+    nn *= dim[i]+nghost;
+
+  double * fptr = new double[nn];
+  double * gptr = new double[nn];
+
+  SpatialField f( dim, nghost, fptr, SpatialField::ExternalStorage );
+  SpatialField g( dim, nghost, gptr, SpatialField::ExternalStorage );
+  SpatialField h( dim, nghost, NULL, SpatialField::InternalStorage );
+
+  for( int i=0; i<nn; ++i ){
+    fptr[i] = 2*i;
+    gptr[i] = nn+i;
+  }
+
+  h += g;
+  h *= f;
+  h -= g;
+
+  bool ok = true;
+
+  for( int i=0; i<nn; ++i ){
+    const double ans = gptr[i]*fptr[i]-gptr[i];
+    if( std::abs( h.get_ptr()[i]-ans ) > 0.0001 )
+      ok = false;
+  }
+
+  delete [] fptr;
+  delete [] gptr;
+
+  return ok;
+}
+
+//====================================================================
+
+bool test_spatial_ops_x()
+{
+  using namespace FVStaggeredUniform;
+
+  std::vector<int> dim(3,1);
+  dim[0] = 10;
+  dim[1] = 2;
+  dim[2] = 2;
+
+  // set up array dimensions for "source" arrays
+  const int nghost=1;
+  const int nx = dim[0]+2*nghost;
+  const int ny = dim[1]>1 ? dim[1]+2*nghost : 1;
+  const int nz = dim[2]>1 ? dim[2]+2*nghost : 1;
+  const int nn = nx*ny*nz;
+
+  std::vector<double> spacing(3,0.0);
+  std::vector<double>    area(3,0.0);
+  for( int i=0; i<3; ++i )
+    spacing[i] = (dim[i]==1) ? 1.0 : PI/(dim[i]-1);
+  area[0] = spacing[1]*spacing[2];
+  area[1] = spacing[0]*spacing[2];
+  area[2] = spacing[1]*spacing[2];
+  const double volume = spacing[0]*spacing[1]*spacing[2];
+
+  const LinearInterpolant xinterp( dim, X_DIR );
+  const Gradient2ndOrder  xGrad( spacing, dim, X_DIR );
+  const Divergence2ndOrder xDiv( area, volume, dim, X_DIR );
+
+  ScratchOperator scratchOp( dim, 3, X_DIR );
+
+  /*
+  EpetraExt::RowMatrixToMatrixMarketFile( "Int_x.mm",
+					  xinterp.epetra_mat(), 
+					  "xinterp",
+					  "1-D interpolant in x-direction" );
+
+  EpetraExt::RowMatrixToMatrixMarketFile( "Grad_x.mm",
+					  xGrad.epetra_mat(), 
+					  "xGrad",
+					  "1-D gradient in x-direction" );
+  EpetraExt::RowMatrixToMatrixMarketFile( "Div_x.mm",
+					  xDiv.epetra_mat(), 
+					  "xDiv",
+					  "1-D divergence in x-direction" );
+  */
+
+  double * const fptr = new double[nn];
+  double * const dfdx = new double[nn];
+  double * const d2fdx2 = new double[nn];
+  double * const xptr = new double[nn];
+
+  // set values in fptr and xptr
+  int ix=0;
+  for( int k=0; k<nz; ++k ){
+    for( int j=0; j<ny; ++j){
+      for( int i=0; i<nx; ++i ){
+	xptr[ix] = double(i)*spacing[0];
+	fptr[ix] = std::sin(xptr[ix]);
+	dfdx[ix] = std::cos(xptr[ix]);
+	++ix;
+      }
+    }
+  }
+
+  SpatialField  f( dim, nghost, fptr, SpatialField::ExternalStorage );
+  SpatialField  x( dim, nghost, xptr, SpatialField::ExternalStorage );
+  SpatialField  g( dim, nghost, NULL, SpatialField::InternalStorage );
+  SpatialField df( dim, nghost, NULL, SpatialField::InternalStorage );
+  SpatialField xg( dim, nghost, NULL, SpatialField::InternalStorage );
+  SpatialField d2f(dim, nghost, NULL, SpatialField::InternalStorage );
+
+  xinterp.apply( f, g );
+  xinterp.apply( x, xg);
+  xGrad  .apply( f, df );
+
+  // form the laplacian
+  xDiv.apply( xGrad, scratchOp );
+  scratchOp.apply( f, d2f );
+  EpetraExt::RowMatrixToMatrixMarketFile( "Laplace_x.mm",
+					  scratchOp.epetra_mat(), 
+					  "laplace x",
+					  "1-D laplacian in x-direction" );
+
+  EpetraExt::VectorToMatrixMarketFile( "fx.mm",  f.epetra_vec(), "f", "original data" );
+  EpetraExt::VectorToMatrixMarketFile(  "x.mm",   x.epetra_vec(), "x", "original x" );
+  EpetraExt::VectorToMatrixMarketFile( "gx.mm",  g.epetra_vec(), "g", "intpolated data" );
+  EpetraExt::VectorToMatrixMarketFile( "dfdx.mm", df.epetra_vec(), "dfdx", "grad x" );
+  EpetraExt::VectorToMatrixMarketFile( "xg.mm", xg.epetra_vec(), "xg", "intpolated x" );
+  EpetraExt::VectorToMatrixMarketFile( "d2fdx2.mm", d2f.epetra_vec(), "d2f", "laplacian x" );
+ 
+  /*
+    scratchOp.zero_entries();
+    scratchOp += xinterp;
+    
+    EpetraExt::RowMatrixToMatrixMarketFile( "I2.mm", scratchOp.epetra_mat(), "", "" );
+    EpetraExt::RowMatrixToMatrixMarketFile( "I1.mm",   xinterp.epetra_mat(), "", "" );
+  */
+
+  delete[] fptr;
+  delete[] dfdx;
+  delete[] xptr;
+  delete[] d2fdx2;
+
+  return true;
+}
+
+//====================================================================
+
+bool test_spatial_ops_y()
+{
+  using namespace FVStaggeredUniform;
+
+  std::vector<int> dim(3,1);
+  dim[0] = 2;
+  dim[1] = 10;
+  dim[2] = 2;
+
+  std::vector<double> spacing(3,0.0);
+  for( int i=0; i<3; ++i ) spacing[i] = PI/(dim[i]-1);
+
+  // set up array dimensions for "source" arrays
+  const int nghost=1;
+  const int nx = dim[0]+2*nghost;
+  const int ny = dim[1]>1 ? dim[1]+2*nghost : 1;
+  const int nz = dim[2]>1 ? dim[2]+2*nghost : 1;
+  const int nn = nx*ny*nz;
+
+  LinearInterpolant yinterp( dim, Y_DIR );
+  Gradient2ndOrder yGrad( spacing, dim, Y_DIR );
+  /*
+  EpetraExt::RowMatrixToMatrixMarketFile( "Int_y.mm",
+					  yinterp.epetra_mat(), 
+					  "yinterp",
+					  "1-D interpolant in y-direction" );
+
+  EpetraExt::RowMatrixToMatrixMarketFile( "Grad_y.mm",
+					  yGrad.epetra_mat(), 
+					  "yGrad",
+					  "1-D gradient in y-direction" );
+  */
+  double * const fptr = new double[nn];
+  double * const dfdx = new double[nn];
+  double * const yptr = new double[nn];
+
+  // set values in fptr and yptr
+  int ix=0;
+  for( int k=0; k<nz; ++k ){
+    for( int j=0; j<ny; ++j){
+      for( int i=0; i<nx; ++i ){
+	yptr[ix] = double(j)*spacing[1];
+	fptr[ix] = std::sin(yptr[ix]);
+	++ix;
+      }
+    }
+  }
+
+  SpatialField  f( dim, nghost, fptr, SpatialField::ExternalStorage );
+  SpatialField  y( dim, nghost, yptr, SpatialField::ExternalStorage );
+  SpatialField df( dim, nghost, NULL, SpatialField::InternalStorage );
+  SpatialField  g( dim, nghost, NULL, SpatialField::InternalStorage );
+  SpatialField yg( dim, nghost, NULL, SpatialField::InternalStorage );
+  
+  yinterp.apply( f, g );
+  yinterp.apply( y, yg);
+  yGrad.apply( f, df );
+  
+  EpetraExt::VectorToMatrixMarketFile( "fy.mm",  f.epetra_vec(),  "f", "original data"   );
+  EpetraExt::VectorToMatrixMarketFile( "y.mm",   y.epetra_vec(),  "y", "original y"      );
+  EpetraExt::VectorToMatrixMarketFile( "dfdy.mm",  df.epetra_vec(),  "dfdy", "gradient y" );
+  EpetraExt::VectorToMatrixMarketFile( "gy.mm",  g.epetra_vec(),  "g", "intpolated data" );
+  EpetraExt::VectorToMatrixMarketFile( "yg.mm", yg.epetra_vec(), "yg", "intpolated y"    );
+
+  delete [] fptr;
+  delete [] dfdx;
+  delete [] yptr; 
+
+  bool ok = true;
+  return ok;
+}
+
+//====================================================================
+
+bool test_spatial_ops_z()
+{
+  using namespace FVStaggeredUniform;
+
+  std::vector<int> dim(3,1);
+  dim[0] = 2;
+  dim[1] = 2;
+  dim[2] = 10;
+
+  // set up array dimensions for "source" arrays
+  const int nghost=1;
+  const int nx = dim[0]+2*nghost;
+  const int ny = dim[1]>1 ? dim[1]+2*nghost : 1;
+  const int nz = dim[2]>1 ? dim[2]+2*nghost : 1;
+  const int nn = nx*ny*nz;
+
+  std::vector<double> spacing(3,0.0);
+  for( int i=0; i<3; ++i ) spacing[i] = PI/(dim[i]-1);
+
+  LinearInterpolant zinterp( dim, Z_DIR );
+  Gradient2ndOrder zGrad( spacing, dim, Z_DIR );
+  /*
+  EpetraExt::RowMatrixToMatrixMarketFile( "Int_z.mm",
+					  zinterp.epetra_mat(), 
+					  "zinterp",
+					  "1-D interpolant in z-direction" );
+
+  EpetraExt::RowMatrixToMatrixMarketFile( "Grad_z.mm",
+					  zGrad.epetra_mat(), 
+					  "zinterp",
+					  "1-D interpolant in z-direction" );
+  */
+  double * const fptr = new double[nn];
+  double * const zptr = new double[nn];
+
+  // set values in fptr and zptr
+  int ix=0;
+  for( int k=0; k<nz; ++k ){
+    for( int j=0; j<ny; ++j){
+      for( int i=0; i<nx; ++i ){
+	zptr[ix] = double(k)*spacing[2];
+	fptr[ix] = std::sin(zptr[ix]);
+	++ix;
+      }
+    }
+  }
+
+  SpatialField  f( dim, nghost, fptr, SpatialField::ExternalStorage );
+  SpatialField  z( dim, nghost, zptr, SpatialField::ExternalStorage );
+  SpatialField df( dim, nghost, NULL, SpatialField::InternalStorage );
+  SpatialField  g( dim, nghost, NULL, SpatialField::InternalStorage );
+  SpatialField zg( dim, nghost, NULL, SpatialField::InternalStorage );
+  
+  zinterp.apply( f, g );
+  zinterp.apply( z, zg);
+  zGrad.apply( f, df );
+  
+  EpetraExt::VectorToMatrixMarketFile( "fz.mm",  f.epetra_vec(),  "f", "original data"   );
+  EpetraExt::VectorToMatrixMarketFile( "z.mm",   z.epetra_vec(),  "z", "original z"      );
+  EpetraExt::VectorToMatrixMarketFile( "dfdz.mm",  df.epetra_vec(),  "dfdz", "gradient z" );
+  EpetraExt::VectorToMatrixMarketFile( "gz.mm",  g.epetra_vec(),  "g", "intpolated data" );
+  EpetraExt::VectorToMatrixMarketFile( "zg.mm", zg.epetra_vec(), "zg", "intpolated z"    );
+
+  delete [] fptr;
+  delete [] zptr;
+ 
+  bool ok = true;
+  return ok;
+}
+
+//====================================================================
+
+bool test_spatial_ops_algebra()
+{
+  using namespace FVStaggeredUniform;
+
+  bool ok = true;
+
+  std::vector<int> dim(3,1);
+  dim[0] = 2;
+  dim[1] = 2;
+  dim[2] = 3;
+
+  // set up array dimensions for "source" arrays
+  const int nghost=1;
+  const int nx = dim[0]+2*nghost;
+  const int ny = dim[1]>1 ? dim[1]+2*nghost : 1;
+  const int nz = dim[2]>1 ? dim[2]+2*nghost : 1;
+  const int nn = nx*ny*nz;
+
+  LinearInterpolant zinterp( dim, Z_DIR );
+  LinearInterpolant z2( dim, Z_DIR );
+
+  double * const f1 = new double[nn];
+  double * const f2 = new double[nn];
+
+  for( int ix=0; ix<nn; ++ix ){
+    f1[ix] = 2.0;
+    f2[ix] = ix;
+  }
+
+  SpatialField field1( dim, nghost, f1, SpatialField::InternalStorage );
+  SpatialField field2( dim, nghost, f2, SpatialField::InternalStorage );
+
+  zinterp.right_scale( field1 );
+  for( int i=0; i<zinterp.nrows(); ++i ){
+    double*vals;    int*ixs;    int nentries;
+    zinterp.epetra_mat().ExtractMyRowView( i, nentries, vals, ixs );
+    assert( nentries == 2 );
+
+    for( int k=0; k<nentries; ++k ){
+      if( *vals++ != 1.0 ) ok=false;
+    }
+  }
+
+  zinterp.right_scale( field2 );
+  for( int i=0; i<zinterp.nrows(); ++i ){
+    double*vals;    int*ixs;    int nentries;
+    zinterp.epetra_mat().ExtractMyRowView( i, nentries, vals, ixs );
+    assert( nentries == 2 );
+
+    for( int k=0; k<nentries; ++k ){
+      if( *vals++ != ixs[k] ){
+	ok=false;
+ 	cout << *(vals-1) << "  " << ixs[k] << std::endl;
+      }
+    }    
+  }
+
+  delete [] f1;
+  delete [] f2;
+
+  return ok;
+}
+
+//====================================================================
+
+int main()
+{
+  bool ok = test_field();
+  if( ok ) cout << "   field ops test:   PASS" << endl;
+  else     cout << "   field ops test:   FAIL" << endl;
+
+  ok = test_spatial_ops_x();
+  if( ok ) cout << "   spatial ops X test: PASS" << endl;
+  else     cout << "   spatial ops X test: FAIL" << endl;
+
+  ok = test_spatial_ops_y();
+  if( ok ) cout << "   spatial ops Y test: PASS" << endl;
+  else     cout << "   spatial ops Y test: FAIL" << endl;
+
+  ok = test_spatial_ops_z();
+  if( ok ) cout << "   spatial ops Z test: PASS" << endl;
+  else     cout << "   spatial ops Z test: FAIL" << endl;
+
+  ok = test_spatial_ops_algebra();
+  cout << "   spatial ops algebra test: ";
+  if( ok ) cout << "PASS" << std::endl;
+  else     cout << "FAIL" << std::endl;
+
+  return 0;
+}
+
+//====================================================================
