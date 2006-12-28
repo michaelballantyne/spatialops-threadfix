@@ -91,12 +91,24 @@ SpatialOperator::apply( const SpatialOperator & B,
   assert( compatibility_check(B) );
   assert( compatibility_check(C) );
 
+  const bool useTranspose = false;
   const int flag =
-    EpetraExt::MatrixMatrix::Multiply( epetra_mat(), false,
-				       B.epetra_mat(), false,
+    EpetraExt::MatrixMatrix::Multiply( epetra_mat(), useTranspose,
+				       B.epetra_mat(), useTranspose,
 				       C.epetra_mat() );
   if( flag!=0 ) std::cout << flag << std::endl;
   assert( flag==0 );
+}
+//--------------------------------------------------------------------
+SpatialOperator&
+SpatialOperator::operator = ( const SpatialOperator& op )
+{
+  assert( op.nrows() == nrows() );
+  assert( op.ncols() == ncols() );
+
+  // jcs this is INEFFICIENT.  It would be better to do this directly.
+  zero_entries();
+  return (*this)+=(op);
 }
 //--------------------------------------------------------------------
 SpatialOperator&

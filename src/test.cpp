@@ -30,12 +30,12 @@ bool test_field()
   for( int i=0; i<3; ++i )
     nn *= dim[i]+nghost;
 
-  double * fptr = new double[nn];
-  double * gptr = new double[nn];
+  vector<double> fptr(nn,0.0);
+  vector<double> gptr(nn,0.0);
 
-  SpatialField f( dim, nghost, fptr, SpatialField::ExternalStorage );
-  SpatialField g( dim, nghost, gptr, SpatialField::ExternalStorage );
-  SpatialField h( dim, nghost, NULL, SpatialField::InternalStorage );
+  SpatialField f( dim, nghost, &fptr[0], SpatialField::ExternalStorage );
+  SpatialField g( dim, nghost, &gptr[0], SpatialField::ExternalStorage );
+  SpatialField h( dim, nghost, NULL,     SpatialField::InternalStorage );
 
   for( int i=0; i<nn; ++i ){
     fptr[i] = 2*i;
@@ -54,9 +54,6 @@ bool test_field()
       ok = false;
   }
 
-  delete [] fptr;
-  delete [] gptr;
-
   return ok;
 }
 
@@ -68,8 +65,8 @@ bool test_spatial_ops_x()
 
   std::vector<int> dim(3,1);
   dim[0] = 10;
-  dim[1] = 2;
-  dim[2] = 2;
+  dim[1] = 1;
+  dim[2] = 1;
 
   // set up array dimensions for "source" arrays
   const int nghost=1;
@@ -98,7 +95,7 @@ bool test_spatial_ops_x()
 					  xinterp.epetra_mat(), 
 					  "xinterp",
 					  "1-D interpolant in x-direction" );
-
+  */
   EpetraExt::RowMatrixToMatrixMarketFile( "Grad_x.mm",
 					  xGrad.epetra_mat(), 
 					  "xGrad",
@@ -107,12 +104,12 @@ bool test_spatial_ops_x()
 					  xDiv.epetra_mat(), 
 					  "xDiv",
 					  "1-D divergence in x-direction" );
-  */
+  /*  */
 
-  double * const fptr = new double[nn];
-  double * const dfdx = new double[nn];
-  double * const d2fdx2 = new double[nn];
-  double * const xptr = new double[nn];
+  vector<double> fptr  (nn,0.0);
+  vector<double> dfdx  (nn,0.0);
+  vector<double> d2fdx2(nn,0.0);
+  vector<double> xptr  (nn,0.0);
 
   // set values in fptr and xptr
   int ix=0;
@@ -127,12 +124,12 @@ bool test_spatial_ops_x()
     }
   }
 
-  SpatialField  f( dim, nghost, fptr, SpatialField::ExternalStorage );
-  SpatialField  x( dim, nghost, xptr, SpatialField::ExternalStorage );
-  SpatialField  g( dim, nghost, NULL, SpatialField::InternalStorage );
-  SpatialField df( dim, nghost, NULL, SpatialField::InternalStorage );
-  SpatialField xg( dim, nghost, NULL, SpatialField::InternalStorage );
-  SpatialField d2f(dim, nghost, NULL, SpatialField::InternalStorage );
+  SpatialField  f( dim, nghost, &fptr[0], SpatialField::ExternalStorage );
+  SpatialField  x( dim, nghost, &xptr[0], SpatialField::ExternalStorage );
+  SpatialField  g( dim, nghost, NULL,     SpatialField::InternalStorage );
+  SpatialField df( dim, nghost, NULL,     SpatialField::InternalStorage );
+  SpatialField xg( dim, nghost, NULL,     SpatialField::InternalStorage );
+  SpatialField d2f(dim, nghost, NULL,     SpatialField::InternalStorage );
 
   xinterp.apply( f, g );
   xinterp.apply( x, xg);
@@ -160,11 +157,6 @@ bool test_spatial_ops_x()
     EpetraExt::RowMatrixToMatrixMarketFile( "I2.mm", scratchOp.epetra_mat(), "", "" );
     EpetraExt::RowMatrixToMatrixMarketFile( "I1.mm",   xinterp.epetra_mat(), "", "" );
   */
-
-  delete[] fptr;
-  delete[] dfdx;
-  delete[] xptr;
-  delete[] d2fdx2;
 
   return true;
 }
@@ -203,9 +195,9 @@ bool test_spatial_ops_y()
 					  "yGrad",
 					  "1-D gradient in y-direction" );
   */
-  double * const fptr = new double[nn];
-  double * const dfdx = new double[nn];
-  double * const yptr = new double[nn];
+  vector<double> fptr(nn,0.0);
+  vector<double> dfdx(nn,0.0);
+  vector<double> yptr(nn,0.0);
 
   // set values in fptr and yptr
   int ix=0;
@@ -219,11 +211,11 @@ bool test_spatial_ops_y()
     }
   }
 
-  SpatialField  f( dim, nghost, fptr, SpatialField::ExternalStorage );
-  SpatialField  y( dim, nghost, yptr, SpatialField::ExternalStorage );
-  SpatialField df( dim, nghost, NULL, SpatialField::InternalStorage );
-  SpatialField  g( dim, nghost, NULL, SpatialField::InternalStorage );
-  SpatialField yg( dim, nghost, NULL, SpatialField::InternalStorage );
+  SpatialField  f( dim, nghost, &fptr[0], SpatialField::ExternalStorage );
+  SpatialField  y( dim, nghost, &yptr[0], SpatialField::ExternalStorage );
+  SpatialField df( dim, nghost, NULL,     SpatialField::InternalStorage );
+  SpatialField  g( dim, nghost, NULL,     SpatialField::InternalStorage );
+  SpatialField yg( dim, nghost, NULL,     SpatialField::InternalStorage );
   
   yinterp.apply( f, g );
   yinterp.apply( y, yg);
@@ -234,10 +226,6 @@ bool test_spatial_ops_y()
   EpetraExt::VectorToMatrixMarketFile( "dfdy.mm",  df.epetra_vec(),  "dfdy", "gradient y" );
   EpetraExt::VectorToMatrixMarketFile( "gy.mm",  g.epetra_vec(),  "g", "intpolated data" );
   EpetraExt::VectorToMatrixMarketFile( "yg.mm", yg.epetra_vec(), "yg", "intpolated y"    );
-
-  delete [] fptr;
-  delete [] dfdx;
-  delete [] yptr; 
 
   bool ok = true;
   return ok;
@@ -277,8 +265,8 @@ bool test_spatial_ops_z()
 					  "zinterp",
 					  "1-D interpolant in z-direction" );
   */
-  double * const fptr = new double[nn];
-  double * const zptr = new double[nn];
+  vector<double> fptr(nn,0.0);
+  vector<double> zptr(nn,0.0);
 
   // set values in fptr and zptr
   int ix=0;
@@ -292,11 +280,11 @@ bool test_spatial_ops_z()
     }
   }
 
-  SpatialField  f( dim, nghost, fptr, SpatialField::ExternalStorage );
-  SpatialField  z( dim, nghost, zptr, SpatialField::ExternalStorage );
-  SpatialField df( dim, nghost, NULL, SpatialField::InternalStorage );
-  SpatialField  g( dim, nghost, NULL, SpatialField::InternalStorage );
-  SpatialField zg( dim, nghost, NULL, SpatialField::InternalStorage );
+  SpatialField  f( dim, nghost, &fptr[0], SpatialField::ExternalStorage );
+  SpatialField  z( dim, nghost, &zptr[0], SpatialField::ExternalStorage );
+  SpatialField df( dim, nghost, NULL,     SpatialField::InternalStorage );
+  SpatialField  g( dim, nghost, NULL,     SpatialField::InternalStorage );
+  SpatialField zg( dim, nghost, NULL,     SpatialField::InternalStorage );
   
   zinterp.apply( f, g );
   zinterp.apply( z, zg);
@@ -308,9 +296,6 @@ bool test_spatial_ops_z()
   EpetraExt::VectorToMatrixMarketFile( "gz.mm",  g.epetra_vec(),  "g", "intpolated data" );
   EpetraExt::VectorToMatrixMarketFile( "zg.mm", zg.epetra_vec(), "zg", "intpolated z"    );
 
-  delete [] fptr;
-  delete [] zptr;
- 
   bool ok = true;
   return ok;
 }
@@ -338,16 +323,16 @@ bool test_spatial_ops_algebra()
   LinearInterpolant zinterp( dim, Z_DIR );
   LinearInterpolant z2( dim, Z_DIR );
 
-  double * const f1 = new double[nn];
-  double * const f2 = new double[nn];
+  vector<double> f1(nn,0.0);
+  vector<double> f2(nn,0.0);
 
   for( int ix=0; ix<nn; ++ix ){
     f1[ix] = 2.0;
     f2[ix] = ix;
   }
 
-  SpatialField field1( dim, nghost, f1, SpatialField::InternalStorage );
-  SpatialField field2( dim, nghost, f2, SpatialField::InternalStorage );
+  SpatialField field1( dim, nghost, &f1[0], SpatialField::InternalStorage );
+  SpatialField field2( dim, nghost, &f2[0], SpatialField::InternalStorage );
 
   zinterp.right_scale( field1 );
   for( int i=0; i<zinterp.nrows(); ++i ){
@@ -373,9 +358,6 @@ bool test_spatial_ops_algebra()
       }
     }    
   }
-
-  delete [] f1;
-  delete [] f2;
 
   return ok;
 }

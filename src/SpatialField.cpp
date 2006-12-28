@@ -115,6 +115,15 @@ SpatialField::operator *=(const SpatialField& s)
 }
 //--------------------------------------------------------------------
 SpatialField&
+SpatialField::operator /=(const SpatialField& s)
+{
+  assert( consistency_check(s) );
+  for( int i=0; i<npts_; ++i )
+    fieldValues_[i] /= s.fieldValues_[i];
+  return *this;
+}
+//--------------------------------------------------------------------
+SpatialField&
 SpatialField::operator +=(const double s)
 {
   for( int i=0; i<npts_; ++i ) fieldValues_[i] += s;
@@ -145,21 +154,29 @@ SpatialField::operator =(const RHS& rhs)
 
   const int nxf= (extent_[0]>1) ? extent_[0]+2*ng : 1;
   const int nyf= (extent_[1]>1) ? extent_[1]+2*ng : 1;
+  const int nzf= (extent_[2]>1) ? extent_[2]+2*ng : 1;
 
   const int nxr = rhs.get_extent()[0];
   const int nyr = rhs.get_extent()[1];
   const int nzr = rhs.get_extent()[2];
 
+  //
+  // RHS fields do not have ghosting.
+  // Thus, we must be very carful on the indices!
+  //
+
+  int ixr = 0;
+  int ixf = ng;
+  if( nyf>1 ) ixf += ng*nxf + 2*ng;
+  if( nzf>1 ) ixf += ng*nxf*nyf + 2*ng;
   for( int k=0; k<nzr; ++k ){
-    int ixf = k*nxf*nyf + ng;
-    int ixr = k*nxr*nyr;
+    if( nzf>1 ) ixf += nyf*ng;
     for( int j=0; j<nyr; ++j ){
-      ixf += j*nxf + ng;
-      ixr += j*nxr;
+      if( nyf>1 )  ixf += ng;
       for( int i=0; i<nxr; ++i ){
-	ixf += i+ng;
-	ixr += i;
 	f[ixf] = r[ixr];
+	++ixf;
+	++ixr;
       }
     }
   }
@@ -176,21 +193,29 @@ SpatialField::operator +=(const RHS& rhs)
 
   const int nxf= (extent_[0]>1) ? extent_[0]+2*ng : 1;
   const int nyf= (extent_[1]>1) ? extent_[1]+2*ng : 1;
+  const int nzf= (extent_[2]>1) ? extent_[2]+2*ng : 1;
 
   const int nxr = rhs.get_extent()[0];
   const int nyr = rhs.get_extent()[1];
   const int nzr = rhs.get_extent()[2];
 
+  //
+  // RHS fields do not have ghosting.
+  // Thus, we must be very carful on the indices!
+  //
+
+  int ixr = 0;
+  int ixf = ng;
+  if( nyf>1 ) ixf += ng*nxf + 2*ng;
+  if( nzf>1 ) ixf += ng*nxf*nyf + 2*ng;
   for( int k=0; k<nzr; ++k ){
-    int ixf = k*nxf*nyf + ng;
-    int ixr = k*nxr*nyr;
+    if( nzf>1 ) ixf += nyf*ng;
     for( int j=0; j<nyr; ++j ){
-      ixf += j*nxf + ng;
-      ixr += j*nxr;
+      if( nyf>1 )  ixf += ng;
       for( int i=0; i<nxr; ++i ){
-	ixf += i+ng;
-	ixr += i;
 	f[ixf] += r[ixr];
+	++ixf;
+	++ixr;
       }
     }
   }
@@ -207,21 +232,29 @@ SpatialField::operator -=(const RHS& rhs)
 
   const int nxf= (extent_[0]>1) ? extent_[0]+2*ng : 1;
   const int nyf= (extent_[1]>1) ? extent_[1]+2*ng : 1;
+  const int nzf= (extent_[2]>1) ? extent_[2]+2*ng : 1;
 
   const int nxr = rhs.get_extent()[0];
   const int nyr = rhs.get_extent()[1];
   const int nzr = rhs.get_extent()[2];
 
+  //
+  // RHS fields do not have ghosting.
+  // Thus, we must be very carful on the indices!
+  //
+
+  int ixr = 0;
+  int ixf = ng;
+  if( nyf>1 ) ixf += ng*nxf + 2*ng;
+  if( nzf>1 ) ixf += ng*nxf*nyf + 2*ng;
   for( int k=0; k<nzr; ++k ){
-    int ixf = k*nxf*nyf + ng;
-    int ixr = k*nxr*nyr;
+    if( nzf>1 ) ixf += nyf*ng;
     for( int j=0; j<nyr; ++j ){
-      ixf += j*nxf + ng;
-      ixr += j*nxr;
+      if( nyf>1 )  ixf += ng;
       for( int i=0; i<nxr; ++i ){
-	ixf += i+ng;
-	ixr += i;
 	f[ixf] -= r[ixr];
+	++ixf;
+	++ixr;
       }
     }
   }

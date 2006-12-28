@@ -89,6 +89,8 @@ public:
   inline bool ready() const{ return isFinalized_; }
 
   
+  SpatialOperator& operator  = ( const SpatialOperator& );
+
   SpatialOperator& operator += ( const SpatialOperator& );
   SpatialOperator& operator -= ( const SpatialOperator& );
 
@@ -116,7 +118,7 @@ public:
   /** zero out the coefficients in the matrix */
   void zero_entries();
 
-  //@{ /** Obtain the underlying Epetra_CrsMatrix object */
+  //@{ /** Obtain a reference to the underlying Epetra_CrsMatrix object */
 
         Epetra_CrsMatrix & epetra_mat();
   const Epetra_CrsMatrix & epetra_mat() const;

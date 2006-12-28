@@ -76,18 +76,31 @@ public:
 
   //@{  /** Operators for SpatialField objects */
 
+  //@{
+  /**
+   *  These operators preserve/update ghost cell information. 
+   */
   SpatialField& operator  =(const SpatialField&);
   SpatialField& operator +=(const SpatialField&);
   SpatialField& operator -=(const SpatialField&);
   SpatialField& operator *=(const SpatialField&);
+  SpatialField& operator /=(const SpatialField&);
 
   SpatialField& operator  =(const double);
   SpatialField& operator *=(const double);
   SpatialField& operator +=(const double);
+  //}@
 
+  //@{
+  /**
+   *  Note that these operators will invalidate ghost cell information
+   *  on this SpatialField, since RHS fields don't have ghost
+   *  information.
+   */
   SpatialField& operator  =(const RHS&);
   SpatialField& operator +=(const RHS&);
   SpatialField& operator -=(const RHS&);
+  //}@
 
   //}@
 
