@@ -84,24 +84,37 @@ bool test_spatial_ops_x()
   area[2] = spacing[1]*spacing[2];
   const double volume = spacing[0]*spacing[1]*spacing[2];
 
-  const LinearInterpolant xinterp( dim, X_DIR );
-  const Gradient2ndOrder  xGrad( spacing, dim, X_DIR );
-  const Divergence2ndOrder xDiv( area, volume, dim, X_DIR );
+  // build some operators and stash them in the database.
+  SpatialOpDatabase & SODatabase = SpatialOpDatabase::self();
+  {
+    SpatialOperator * xinterp = new LinearInterpolant( dim, X_DIR );
+    SpatialOperator * xGrad   = new Gradient2ndOrder( spacing, dim, X_DIR );
+    SpatialOperator * xDiv = new Divergence2ndOrder( area, volume, dim, X_DIR );
+    SpatialOperator * scratchOp = new ScratchOperator( dim, 3, X_DIR );
 
-  ScratchOperator scratchOp( dim, 3, X_DIR );
+    SODatabase.register_new_operator( SpatialOpDatabase::INTERPOLANT, xinterp, "X-Interpolant Second Order Staggered" );
+    SODatabase.register_new_operator( SpatialOpDatabase::DIVERGENCE,  xDiv,    "X-Divergence Second Order Staggered" );
+    SODatabase.register_new_operator( SpatialOpDatabase::GRADIENT,    xGrad,   "X-Gradient Second Order Staggered" );
+    SODatabase.register_new_operator( SpatialOpDatabase::SCRATCH,     scratchOp, "Three entry scratch" );
+  }
+
+  SpatialOperator *& xinterp  = SODatabase.retrieve_operator( SpatialOpDatabase::INTERPOLANT );
+  SpatialOperator *& xDiv     = SODatabase.retrieve_operator( SpatialOpDatabase::DIVERGENCE  );
+  SpatialOperator *& xGrad    = SODatabase.retrieve_operator( SpatialOpDatabase::GRADIENT    );
+  SpatialOperator *& scratchOp= SODatabase.retrieve_operator( "Three entry scratch"          );
 
   /*
   EpetraExt::RowMatrixToMatrixMarketFile( "Int_x.mm",
-					  xinterp.epetra_mat(), 
+					  xinterp->epetra_mat(), 
 					  "xinterp",
 					  "1-D interpolant in x-direction" );
   */
   EpetraExt::RowMatrixToMatrixMarketFile( "Grad_x.mm",
-					  xGrad.epetra_mat(), 
+					  xGrad->epetra_mat(), 
 					  "xGrad",
 					  "1-D gradient in x-direction" );
   EpetraExt::RowMatrixToMatrixMarketFile( "Div_x.mm",
-					  xDiv.epetra_mat(), 
+					  xDiv->epetra_mat(), 
 					  "xDiv",
 					  "1-D divergence in x-direction" );
   /*  */
@@ -131,15 +144,15 @@ bool test_spatial_ops_x()
   SpatialField xg( dim, nghost, NULL,     SpatialField::InternalStorage );
   SpatialField d2f(dim, nghost, NULL,     SpatialField::InternalStorage );
 
-  xinterp.apply( f, g );
-  xinterp.apply( x, xg);
-  xGrad  .apply( f, df );
+  xinterp->apply( f, g );
+  xinterp->apply( x, xg);
+  xGrad  ->apply( f, df );
 
   // form the laplacian
-  xDiv.apply( xGrad, scratchOp );
-  scratchOp.apply( f, d2f );
+  xDiv->apply( *xGrad, *scratchOp );
+  scratchOp->apply( f, d2f );
   EpetraExt::RowMatrixToMatrixMarketFile( "Laplace_x.mm",
-					  scratchOp.epetra_mat(), 
+					  scratchOp->epetra_mat(), 
 					  "laplace x",
 					  "1-D laplacian in x-direction" );
 

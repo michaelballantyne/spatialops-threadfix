@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <map>
+#include <string>
 
 //-------------------------------------
 // trilinos class forward declarations:
@@ -17,6 +18,101 @@ namespace SpatialOps{
 
 // forward declaration
 class SpatialField;
+class SpatialOperator;
+
+//====================================================================
+
+
+/**
+ *  @class  SpatialOpDatabase
+ *  @author James C. Sutherland
+ *  @date   December, 2006
+ *
+ *  Factory for SpatialOperator objects.  These objects are registered
+ *  here (created externally, ownership is transferred) and can be
+ *  recalled for later use.
+ *
+ *  Note that one can have multiple operators registered for a given
+ *  type, and activate them as needed.  This allows the potential for
+ *  dynamic operator switching.
+ *
+ */
+class SpatialOpDatabase
+{
+public:
+
+  enum OperatorType{
+    DIVERGENCE,
+    GRADIENT,
+    INTERPOLANT,
+    SCRATCH
+  };
+
+  static SpatialOpDatabase& self();
+
+  /**
+   *  Registers a new operator.
+   *
+   *  @param opType : The type of operator.
+
+   *  @param op : The operator itself.  Ownership is transfered.  This
+   *  must be a heap-allocated object (build via "new")
+   *
+   *  @param opName : The name for this operator.  Must be a unique
+   *  name.  Duplicate names will result in an exception.
+   *
+   *  @param makeDefault : [true] By default, registration of a new
+   *  operator makes it the default operator.  If this flag is "false"
+   *  then it will not replace the current default operator, unless
+   *  one does not yet exist.
+   */
+  void register_new_operator( const OperatorType opType,
+			      SpatialOperator * const op,
+			      const std::string& opName,
+			      const bool makeDefault = true );
+
+  /**
+   *  Reset the default operator to the one with the given name.
+   */
+  void set_default_operator( const OperatorType opType,
+			     const std::string & opName );
+
+  /**
+   *  Obtain the spatial operator with the given type.  Throws an
+   *  exception if no match is found.
+   *
+   *  This pointer reference can change if the default operator for
+   *  this type is changed via a call to
+   *  <code>set_default_operator</code> or
+   *  <code>register_new_operator</code>.
+   */
+  SpatialOperator*& retrieve_operator( const OperatorType opType );
+
+  /**
+   *  Obtain the spatial operator with the given name.  Throws an
+   *  exception if no match is found.
+   *
+   *  This returns a pointer reference that will never change.
+   */
+  SpatialOperator*& retrieve_operator( const std::string & opName );
+
+
+  /** return the string name of the OperatorType */
+  const std::string& type2name( const OperatorType ) const;
+
+private:
+
+  SpatialOpDatabase();
+  ~SpatialOpDatabase();
+
+  SpatialOpDatabase(const SpatialOpDatabase&);
+  SpatialOpDatabase&  operator=(const SpatialOpDatabase&);
+
+  typedef std::map< OperatorType, SpatialOperator* > TypeOpMap;
+  typedef std::map< std::string,  SpatialOperator* > NameOpMap;
+  TypeOpMap activeOps_;
+  NameOpMap allOps_;
+};
 
 
 //====================================================================

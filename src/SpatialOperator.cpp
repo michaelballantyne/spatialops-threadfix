@@ -4,8 +4,8 @@
 //-----------------------------
 #include <numeric>
 #include <iostream>
-// #include <sstream>
-// #include <stdexcept>
+#include <sstream>
+#include <stdexcept>
 //-----------------------------
 
 //-----------------------------
@@ -339,6 +339,107 @@ MapFactory::get_map( const int npts )
     return *myMap;
   }
   return *(ii->second);
+}
+//--------------------------------------------------------------------
+
+
+//====================================================================
+
+
+//--------------------------------------------------------------------
+SpatialOpDatabase&
+SpatialOpDatabase::self()
+{
+  static SpatialOpDatabase s;
+  return s;
+}
+//--------------------------------------------------------------------
+void
+SpatialOpDatabase::register_new_operator( const OperatorType opType,
+					 SpatialOperator * const op,
+					 const std::string & name,
+					 const bool makeDefault )
+{
+  std::pair< NameOpMap::const_iterator, bool > result =
+    allOps_.insert( make_pair(name,op) );
+
+  if( !result.second ){
+    std::ostringstream msg;
+    msg << "ERROR! Could not insert a spatial operator of type " << type2name( opType ) << std::endl
+	<< "       and name '" << name << "' - this must be a duplicate entry!" << std::endl;
+    throw std::runtime_error( msg.str() );
+  }
+
+  if( makeDefault || (activeOps_.find(opType)==activeOps_.end()) ){
+    activeOps_[opType] = op;
+  }
+}
+//--------------------------------------------------------------------
+SpatialOperator*&
+SpatialOpDatabase::retrieve_operator( const std::string & name )
+{
+  NameOpMap::iterator ii = allOps_.find( name );
+  if( ii == allOps_.end() ){
+    std::ostringstream msg;
+    msg << "ERROR! No operator named '" << name << "' has been registered!" << std::endl;
+    throw std::runtime_error( msg.str() );
+  }
+  return ii->second;
+}
+//--------------------------------------------------------------------
+SpatialOperator*&
+SpatialOpDatabase::retrieve_operator( const OperatorType opType )
+{
+  TypeOpMap::iterator ii = activeOps_.find( opType );
+  if( ii == activeOps_.end() ){
+    std::ostringstream msg;
+    msg << "ERROR! No operator of type '" << type2name(opType) << "' has been registered!" << std::endl;
+    throw std::runtime_error( msg.str() );
+  }
+  return ii->second;
+}
+//--------------------------------------------------------------------
+void
+SpatialOpDatabase::set_default_operator( const OperatorType opType,
+					const std::string & opName )
+{
+  // do we have an operator with the given name?  If not, just return and do nothing.
+  NameOpMap::iterator ii = allOps_.find( opName );
+  if( ii == allOps_.end() ) return;
+
+  // do we have an operator of this type?  If not, just return and do nothing.
+  TypeOpMap::iterator jj = activeOps_.find( opType );
+  if( jj != activeOps_.end() ) jj->second = ii->second;
+}
+//--------------------------------------------------------------------
+const std::string&
+SpatialOpDatabase::type2name( const OperatorType opType ) const
+{
+  const static std::string DivName    = "Divergence";
+  const static std::string GradName   = "Gradient";
+  const static std::string InterpName = "Interpolant";
+
+  switch( opType ){
+  case DIVERGENCE:  return DivName;
+  case GRADIENT:    return GradName;
+  case INTERPOLANT: return InterpName;
+  default:{
+    throw std::runtime_error( "ERROR!  Invalid OperatorType in SpatialOpDatabase::type2name()\n" );
+  }
+  }
+  const static std::string err = "ERROR";
+  return err;
+}
+//--------------------------------------------------------------------
+SpatialOpDatabase::SpatialOpDatabase()
+{
+}
+//--------------------------------------------------------------------
+SpatialOpDatabase::~SpatialOpDatabase()
+{
+  for( NameOpMap::iterator ii=allOps_.begin(); ii!=allOps_.end(); ++ii ){
+    delete ii->second;
+  }
 }
 //--------------------------------------------------------------------
 
