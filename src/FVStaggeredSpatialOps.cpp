@@ -90,8 +90,10 @@ ScratchOperator::get_row_entries( const int irow,
     if( i==0 ){
       vals.push_back( val );  ixs.push_back( irow   );
       vals.push_back( val );  ixs.push_back( irow+1 );
+      vals.push_back( 0.0 );  ixs.push_back( irow+2 );
     }
     else if( i==nx-1 ){
+      vals.push_back( 0.0 );  ixs.push_back( irow-2 );
       vals.push_back( val );  ixs.push_back( irow-1 );
       vals.push_back( val );  ixs.push_back( irow   );
     }

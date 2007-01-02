@@ -43,7 +43,8 @@ RHS::reset( const double val )
 }
 //--------------------------------------------------------------------
 void
-RHS::add_contribution( const SpatialOps::SpatialField & f )
+RHS::add_contribution( const SpatialOps::SpatialField & f,
+		       const double scaleFac )
 {
   assert( consistency_check(f) );
 
@@ -76,7 +77,7 @@ RHS::add_contribution( const SpatialOps::SpatialField & f )
       ixf += (j+jshift)*nxf + ishift;
       for( int i=0; i<extent_[0]; ++i ){
 	//	ixf = (k+kshift)*nxf*nyf + (j+jshift)*nxf + (i+ishift);
-	field_[ix] += fptr[ixf];
+	field_[ix] += scaleFac * fptr[ixf];
 	++ix;
 	++ixf;
       }
@@ -119,7 +120,8 @@ LHS::reset( const double val )
 }
 //--------------------------------------------------------------------
 void
-LHS::add_contribution( const SpatialOps::SpatialOperator & op )
+LHS::add_contribution( const SpatialOps::SpatialOperator & op,
+		       const double scaleFac )
 {
   assert( compatibility_check(op) );
 
@@ -156,7 +158,7 @@ LHS::add_contribution( const SpatialOps::SpatialOperator & op )
       if( nz>1 && (k<ng || k>=(nzm-ng)) ) continue;
 
       // insert this value
-      rowDWork_.push_back( vals[icol] );
+      rowDWork_.push_back( scaleFac*vals[icol] );
 
       // now determine the column index for insertion of this value
       const int ii = i-ng;
@@ -176,7 +178,8 @@ LHS::add_contribution( const SpatialOps::SpatialOperator & op )
 }
 //--------------------------------------------------------------------
 void
-LHS::add_contribution( const SpatialOps::SpatialField & f )
+LHS::add_contribution( const SpatialOps::SpatialField & f,
+		       const double scaleFac )
 {
   assert( compatibility_check(f) );
 
@@ -203,7 +206,7 @@ LHS::add_contribution( const SpatialOps::SpatialField & f )
     if( extent_[2]>1 && (k<ng || k>=nzm-ng) ) continue;
 
     // add this value to the diagonal
-    double val = fvals[irow];
+    double val = scaleFac * fvals[irow];
     A_.SumIntoMyValues( irow, 1, &val, &irow );
   }
 

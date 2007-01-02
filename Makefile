@@ -1,8 +1,8 @@
-#TRILINOS_INCLUDE = /home/sutherland/apps/trilinos/include
-#TRILINOS_LIB      = /home/sutherland/apps/trilinos/lib 
+TRILINOS_INCLUDE = /home/sutherland/apps/trilinos/include
+TRILINOS_LIB      = /home/sutherland/apps/trilinos/lib 
 
-TRILINOS_INCLUDE = /jcs/software/trilinos/include
-TRILINOS_LIB     = /jcs/software/trilinos/lib
+#TRILINOS_INCLUDE = /jcs/software/trilinos/include
+#TRILINOS_LIB     = /jcs/software/trilinos/lib
 
 INCDIRS = -I./include -I$(TRILINOS_INCLUDE)
 LIBDIRS = -L./ -L$(TRILINOS_LIB)

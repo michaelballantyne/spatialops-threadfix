@@ -65,8 +65,8 @@ bool test_spatial_ops_x()
 
   std::vector<int> dim(3,1);
   dim[0] = 10;
-  dim[1] = 1;
-  dim[2] = 1;
+  dim[1] = 5;
+  dim[2] = 3;
 
   // set up array dimensions for "source" arrays
   const int nghost=1;
@@ -92,16 +92,16 @@ bool test_spatial_ops_x()
     SpatialOperator * xDiv = new Divergence2ndOrder( area, volume, dim, X_DIR );
     SpatialOperator * scratchOp = new ScratchOperator( dim, 3, X_DIR );
 
-    SODatabase.register_new_operator( SpatialOpDatabase::INTERPOLANT, xinterp, "X-Interpolant Second Order Staggered" );
-    SODatabase.register_new_operator( SpatialOpDatabase::DIVERGENCE,  xDiv,    "X-Divergence Second Order Staggered" );
-    SODatabase.register_new_operator( SpatialOpDatabase::GRADIENT,    xGrad,   "X-Gradient Second Order Staggered" );
-    SODatabase.register_new_operator( SpatialOpDatabase::SCRATCH,     scratchOp, "Three entry scratch" );
+    SODatabase.register_new_operator( SpatialOpDatabase::INTERPOLANT_X, xinterp, "X-Interpolant Second Order Staggered" );
+    SODatabase.register_new_operator( SpatialOpDatabase::DIVERGENCE_X,  xDiv,    "X-Divergence Second Order Staggered" );
+    SODatabase.register_new_operator( SpatialOpDatabase::GRADIENT_X,    xGrad,   "X-Gradient Second Order Staggered" );
+    SODatabase.register_new_operator( SpatialOpDatabase::SCRATCH_X,     scratchOp, "Scratch X Second Order" );
   }
 
-  SpatialOperator *& xinterp  = SODatabase.retrieve_operator( SpatialOpDatabase::INTERPOLANT );
-  SpatialOperator *& xDiv     = SODatabase.retrieve_operator( SpatialOpDatabase::DIVERGENCE  );
-  SpatialOperator *& xGrad    = SODatabase.retrieve_operator( SpatialOpDatabase::GRADIENT    );
-  SpatialOperator *& scratchOp= SODatabase.retrieve_operator( "Three entry scratch"          );
+  SpatialOperator *& xinterp  = SODatabase.retrieve_operator( SpatialOpDatabase::INTERPOLANT_X );
+  SpatialOperator *& xDiv     = SODatabase.retrieve_operator( SpatialOpDatabase::DIVERGENCE_X  );
+  SpatialOperator *& xGrad    = SODatabase.retrieve_operator( SpatialOpDatabase::GRADIENT_X    );
+  SpatialOperator *& scratchOp= SODatabase.retrieve_operator( "Scratch X Second Order"         );
 
   /*
   EpetraExt::RowMatrixToMatrixMarketFile( "Int_x.mm",
@@ -117,7 +117,6 @@ bool test_spatial_ops_x()
 					  xDiv->epetra_mat(), 
 					  "xDiv",
 					  "1-D divergence in x-direction" );
-  /*  */
 
   vector<double> fptr  (nn,0.0);
   vector<double> dfdx  (nn,0.0);
@@ -151,24 +150,21 @@ bool test_spatial_ops_x()
   // form the laplacian
   xDiv->apply( *xGrad, *scratchOp );
   scratchOp->apply( f, d2f );
-  EpetraExt::RowMatrixToMatrixMarketFile( "Laplace_x.mm",
-					  scratchOp->epetra_mat(), 
-					  "laplace x",
-					  "1-D laplacian in x-direction" );
 
+  EpetraExt::RowMatrixToMatrixMarketFile( "Laplace_x.mm", scratchOp->epetra_mat(),  "laplace x", "1-D laplacian in x-direction" );
   EpetraExt::VectorToMatrixMarketFile( "fx.mm",  f.epetra_vec(), "f", "original data" );
   EpetraExt::VectorToMatrixMarketFile(  "x.mm",   x.epetra_vec(), "x", "original x" );
   EpetraExt::VectorToMatrixMarketFile( "gx.mm",  g.epetra_vec(), "g", "intpolated data" );
   EpetraExt::VectorToMatrixMarketFile( "dfdx.mm", df.epetra_vec(), "dfdx", "grad x" );
   EpetraExt::VectorToMatrixMarketFile( "xg.mm", xg.epetra_vec(), "xg", "intpolated x" );
-  EpetraExt::VectorToMatrixMarketFile( "d2fdx2.mm", d2f.epetra_vec(), "d2f", "laplacian x" );
+  EpetraExt::VectorToMatrixMarketFile( "d2fdx2.mm", d2f.epetra_vec(), "d2f", "" );
  
   /*
-    scratchOp.zero_entries();
+    scratchOp.reset_entries(0.0);
     scratchOp += xinterp;
     
-    EpetraExt::RowMatrixToMatrixMarketFile( "I2.mm", scratchOp.epetra_mat(), "", "" );
-    EpetraExt::RowMatrixToMatrixMarketFile( "I1.mm",   xinterp.epetra_mat(), "", "" );
+    EpetraExt::RowMatrixToMatrixMarketFile( "I2.mm", scratchOp->epetra_mat(), "", "" );
+    EpetraExt::RowMatrixToMatrixMarketFile( "I1.mm",   xinterp->epetra_mat(), "", "" );
   */
 
   return true;

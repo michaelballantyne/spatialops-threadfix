@@ -96,8 +96,14 @@ SpatialOperator::apply( const SpatialOperator & B,
     EpetraExt::MatrixMatrix::Multiply( epetra_mat(), useTranspose,
 				       B.epetra_mat(), useTranspose,
 				       C.epetra_mat() );
-  if( flag!=0 ) std::cout << flag << std::endl;
-  assert( flag==0 );
+  if( flag!=0 )
+    std::cout << std::endl
+	      << "ERROR!  Flag=" << flag
+	      << " returned from EpetraExt::MatrixMatrix::Multiply()." << std::endl
+	      << "        This likely indicates incompatible matrices for multiplication." << std::endl
+	      << "        Check matrix sparsity patterns and dimensions for compatibility."
+	      << std::endl << std::endl;
+  //  assert( flag==0 );
 }
 //--------------------------------------------------------------------
 SpatialOperator&
@@ -107,7 +113,7 @@ SpatialOperator::operator = ( const SpatialOperator& op )
   assert( op.ncols() == ncols() );
 
   // jcs this is INEFFICIENT.  It would be better to do this directly.
-  zero_entries();
+  reset_entries(0.0);
   return (*this)+=(op);
 }
 //--------------------------------------------------------------------
@@ -122,7 +128,7 @@ SpatialOperator::operator += ( const SpatialOperator& op )
 				epetra_mat(),
 				1.0 );
   return *this;
-
+  /*
   // hand-coded method - only works for operators with identical sparsity patterns:
   for( int i=0; i<op.nrows(); ++i ){
     double * destRowVals=0;
@@ -144,6 +150,7 @@ SpatialOperator::operator += ( const SpatialOperator& op )
     }
   }
   return *this;
+  */
 }
 //--------------------------------------------------------------------
 SpatialOperator&
@@ -158,6 +165,7 @@ SpatialOperator::operator -= ( const SpatialOperator& op )
 				1.0 );
   return *this;
 
+  /*
   // hand-coded method - only works for operators with identical sparsity patterns:
   for( int i=0; i<nrows(); ++i ){
     double * destRowVals=0;
@@ -179,6 +187,7 @@ SpatialOperator::operator -= ( const SpatialOperator& op )
     }
   }
   return *this;
+  */
 }
 //--------------------------------------------------------------------
 SpatialOperator&
@@ -220,19 +229,10 @@ SpatialOperator::right_scale( const SpatialField& f )
 }
 //--------------------------------------------------------------------
 void
-SpatialOperator::zero_entries()
+SpatialOperator::reset_entries( const double val )
 {
-  for( int i=0; i<nrows(); ++i ){
-    double * destRowVals=0;
-    int * destRowIx=0;
-    int nvals=0;
-    epetra_mat().ExtractMyRowView( i, nvals, destRowVals, destRowIx );
-
-    for( int k=0; k<nvals; ++k ){
-      *destRowVals = 0.0;
-      ++destRowVals;
-    }
-  }
+  mat_->PutScalar(val);
+  return;
 }
 //--------------------------------------------------------------------
 void
@@ -240,10 +240,14 @@ SpatialOperator::insert_row_entry( const int rownum,
 				   std::vector<double> & rowValues,
 				   std::vector<int> & rowIndices )
 {
-  const int flag = mat_->InsertGlobalValues( rownum,
-					     rowValues.size(),
-					     &rowValues[0],
-					     &rowIndices[0] );
+  const int flag = mat_->InsertMyValues( rownum,
+					 rowValues.size(),
+					 &rowValues[0],
+					 &rowIndices[0] );
+//   const int flag = mat_->ReplaceMyValues( rownum,
+// 					      rowValues.size(),
+// 					      &rowValues[0],
+// 					      &rowIndices[0] );
   if( flag!=0 ) std::cout << flag << std::endl;
   assert( flag==0 );
 }
@@ -412,20 +416,35 @@ SpatialOpDatabase::set_default_operator( const OperatorType opType,
   if( jj != activeOps_.end() ) jj->second = ii->second;
 }
 //--------------------------------------------------------------------
-const std::string&
+const std::string
 SpatialOpDatabase::type2name( const OperatorType opType ) const
 {
-  const static std::string DivName    = "Divergence";
-  const static std::string GradName   = "Gradient";
-  const static std::string InterpName = "Interpolant";
+  const static std::string DivName     = "Divergence";
+  const static std::string GradName    = "Gradient";
+  const static std::string InterpName  = "Interpolant";
+  const static std::string ScratchName = "Scratch";
 
   switch( opType ){
-  case DIVERGENCE:  return DivName;
-  case GRADIENT:    return GradName;
-  case INTERPOLANT: return InterpName;
-  default:{
+
+  case DIVERGENCE_X:  return (DivName+"-X");
+  case DIVERGENCE_Y:  return (DivName+"-Y");
+  case DIVERGENCE_Z:  return (DivName+"-Z");
+
+  case GRADIENT_X:    return (GradName+"-X");
+  case GRADIENT_Y:    return (GradName+"-Y");
+  case GRADIENT_Z:    return (GradName+"-Z");
+
+  case INTERPOLANT_X: return (InterpName+"-X");
+  case INTERPOLANT_Y: return (InterpName+"-Y");
+  case INTERPOLANT_Z: return (InterpName+"-Z");
+
+  case SCRATCH_X: return (ScratchName+"-X");
+  case SCRATCH_Y: return (ScratchName+"-Y");
+  case SCRATCH_Z: return (ScratchName+"-Z");
+
+  default:
     throw std::runtime_error( "ERROR!  Invalid OperatorType in SpatialOpDatabase::type2name()\n" );
-  }
+
   }
   const static std::string err = "ERROR";
   return err;

@@ -42,10 +42,23 @@ class SpatialOpDatabase
 public:
 
   enum OperatorType{
-    DIVERGENCE,
-    GRADIENT,
-    INTERPOLANT,
-    SCRATCH
+
+    DIVERGENCE_X,
+    DIVERGENCE_Y,
+    DIVERGENCE_Z,
+
+    GRADIENT_X,
+    GRADIENT_Y,
+    GRADIENT_Z,
+
+    INTERPOLANT_X,
+    INTERPOLANT_Y,
+    INTERPOLANT_Z,
+
+    SCRATCH_X,
+    SCRATCH_Y,
+    SCRATCH_Z
+
   };
 
   static SpatialOpDatabase& self();
@@ -98,7 +111,7 @@ public:
 
 
   /** return the string name of the OperatorType */
-  const std::string& type2name( const OperatorType ) const;
+  const std::string type2name( const OperatorType ) const;
 
 private:
 
@@ -132,10 +145,10 @@ private:
  *  Several rules apply:
  *
  *   - Application of a SpatialOperator must not involve parallel
- *   communication.
+ *   communication.  This is to ensure efficiency.
  *
  *   - 
- *   .
+ *   
  *
  */
 class SpatialOperator
@@ -211,8 +224,8 @@ public:
   void right_scale( const SpatialField& );
 
 
-  /** zero out the coefficients in the matrix */
-  void zero_entries();
+  /** reset the coefficients in the matrix */
+  void reset_entries( const double val = 0 );
 
   //@{ /** Obtain a reference to the underlying Epetra_CrsMatrix object */
 

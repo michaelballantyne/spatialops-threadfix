@@ -41,7 +41,8 @@ public:
   ~RHS();
 
   void reset( const double val = 0.0 );
-  void add_contribution( const SpatialOps::SpatialField & localField );
+  void add_contribution( const SpatialOps::SpatialField & localField,
+			 const double scaleFac = 1.0 );
 
   const std::vector<double> & get_field() const{return field_;}
 
@@ -87,10 +88,12 @@ public:
   void reset( const double val = 0 );
 
   /** add non-ghost elements of the local matrix to this LHS operator */
-  void add_contribution( const SpatialOps::SpatialOperator & localMat );
+  void add_contribution( const SpatialOps::SpatialOperator & localMat,
+			 const double scaleFac = 1.0 );
 
   /** add non-ghost elements of the local field to this LHS operator */
-  void add_contribution( const SpatialOps::SpatialField & localField );
+  void add_contribution( const SpatialOps::SpatialField & localField,
+			 const double scaleFac = 1.0 );
 
         Epetra_CrsMatrix& epetra_mat()      { return A_; }
   const Epetra_CrsMatrix& epetra_mat() const{ return A_; }
