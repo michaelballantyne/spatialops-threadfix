@@ -43,6 +43,12 @@ RHS::reset( const double val )
 }
 //--------------------------------------------------------------------
 void
+RHS::reset_value( const int rownum, const double val )
+{
+  field_[rownum] = val;
+}
+//--------------------------------------------------------------------
+void
 RHS::add_contribution( const SpatialOps::SpatialField & f,
 		       const double scaleFac )
 {
@@ -136,7 +142,20 @@ LHS::add_contribution( const SpatialOps::SpatialOperator & op,
   const int nym = (opextent[1]>1) ? opextent[1]+2*ng : 1;
   const int nzm = (opextent[2]>1) ? opextent[2]+2*ng : 1;
 
+  int destRowIndex = 0;
+
   for( int irow=0; irow<op.nrows(); ++irow ){
+
+    // if we are at a ghost entry, skip it.
+    const int i = irow%nxm;
+    if( i<ng || i>=(nxm-ng)  ) continue;
+
+    const int j = (irow/nxm)%nym;
+    if( ny>1 && (j<ng || j>=(nym-ng)) ) continue;
+
+    const int k = irow/(nxm*nym);
+    if( nz>1 && (k<ng || k>=(nzm-ng)) ) continue;
+
 
     rowDWork_.clear();
     rowIWork_.clear();
@@ -147,23 +166,25 @@ LHS::add_contribution( const SpatialOps::SpatialOperator & op,
     for( int icol=0; icol<ncol; ++icol ){
 
       // determine the ijk indices for this column.
+      // if we are at a ghost entry, skip it.
       const int colindex = ixs[icol];
-      const int i = colindex%nxm;
-      const int j = (colindex/nxm)%nym;
-      const int k = colindex/(nxm*nym);
 
-      // are we at a ghost entry?  If so, go to the next column entry.
-      if(          i<ng || i>=(nxm-ng)  ) continue;
+      const int i = colindex%nxm;
+      if( i<ng || i>=(nxm-ng)  ) continue;
+
+      const int j = (colindex/nxm)%nym;
       if( ny>1 && (j<ng || j>=(nym-ng)) ) continue;
+
+      const int k = colindex/(nxm*nym);
       if( nz>1 && (k<ng || k>=(nzm-ng)) ) continue;
 
       // insert this value
       rowDWork_.push_back( scaleFac*vals[icol] );
 
       // now determine the column index for insertion of this value
-      const int ii = i-ng;
-      const int jj = j-ng;
-      const int kk = k-ng;
+      const int ii = nxm>1 ? i-ng : 0;
+      const int jj = nym>1 ? j-ng : 0;
+      const int kk = nzm>1 ? k-ng : 0;
       int iflat = kk*(nx*ny) + jj*(nx) + ii;
       rowIWork_.push_back( iflat );
 
@@ -171,8 +192,9 @@ LHS::add_contribution( const SpatialOps::SpatialOperator & op,
 
     // insert this information into the matrix
     if( rowDWork_.size() > 0 ){
-      A_.SumIntoMyValues( irow, rowDWork_.size(), &rowDWork_[0], &rowIWork_[0] );
+      A_.SumIntoMyValues( destRowIndex, rowDWork_.size(), &rowDWork_[0], &rowIWork_[0] );
     }
+    ++destRowIndex;
  
   } // row loop
 }
@@ -209,7 +231,12 @@ LHS::add_contribution( const SpatialOps::SpatialField & f,
     double val = scaleFac * fvals[irow];
     A_.SumIntoMyValues( irow, 1, &val, &irow );
   }
-
+}
+//--------------------------------------------------------------------
+void
+LHS::Print( std::ostream & c ) const
+{
+  A_.Print(c);
 }
 //--------------------------------------------------------------------
 bool
@@ -239,7 +266,18 @@ LinearSystem::LinearSystem( const vector<int> & extent )
   : extent_( extent ),
     npts_( std::accumulate(extent.begin(),extent.end(),1,std::multiplies<int>() ) ),
     rhs_( extent ),
-    solnFieldValues_( new double[npts_] )
+    lhs_( NULL ),
+    solnFieldValues_( npts_ ),
+
+    maxIterations_  ( 100    ),
+    solverTolerance_( 1.0e-16 ),
+
+    A_(NULL), b_(NULL), x_(NULL),
+
+    comm_( NULL ),
+
+    linProb_( NULL ),
+    aztec_  ( NULL )
 {
   // Build the Epetra Maps
 #ifdef HAVE_MPI
@@ -254,19 +292,25 @@ LinearSystem::LinearSystem( const vector<int> & extent )
   if( extent[1]>1 ) entriesPerRow += 2;
   if( extent[2]>1 ) entriesPerRow += 2;
 
-  // Build the matrix
+  // Build the matrix & imprint it with the proper sparsity pattern (for now, hard-coded)
+  // Note that if we want periodic BCs, we will need to modify the imprinting.
   A_ = new Epetra_CrsMatrix( Copy, emap, entriesPerRow, true );
+  imprint( extent, entriesPerRow );
+
   lhs_ = new LHS( extent_, *A_ );
 
   // Build the RHS and LHS vectors - we manage storage (not trilinos)
-  x_ = new Epetra_Vector( View, emap, solnFieldValues_ );
+  x_ = new Epetra_Vector( View, emap, &solnFieldValues_[0] );
   b_ = new Epetra_Vector( View, emap, rhs_.get_ptr() );
 
   // Build the Linear Problem
   linProb_ = new Epetra_LinearProblem( A_, x_, b_ );
 
+  A_->FillComplete();
+  A_->OptimizeStorage();
+
   // Build the aztec solver
-  aztec_ = new AztecOO( *linProb_ );
+  //aztec_ = new AztecOO( *linProb_ );
 }
 //--------------------------------------------------------------------
 LinearSystem::~LinearSystem()
@@ -276,12 +320,94 @@ LinearSystem::~LinearSystem()
   delete b_;
   delete x_;
   delete A_;
-
-  delete [] solnFieldValues_;
+  delete lhs_;
 
 #ifndef HAVE_MPI
   delete comm_;
 #endif
+}
+//--------------------------------------------------------------------
+void
+LinearSystem::imprint( const std::vector<int> & extent,
+		       const int entriesPerRow )
+{
+  // set the sparsity pattern
+
+  const int nx = extent[0];
+  const int ny = extent[1];
+  const int nz = extent[2];
+
+  const bool doX = nx > 1;
+  const bool doY = ny > 1;
+  const bool doZ = nz > 1;
+
+  assert( doX );
+
+  std::vector<double> vals;
+  std::vector<int> ixs;
+
+  for( int irow=0; irow<A_->NumMyRows(); ++irow ){
+
+    vals.clear();
+    ixs.clear();
+
+    const int i = irow%nx;
+    const int j = (irow/ny)%ny;
+    const int k = irow/(nx*ny);
+
+    // NOTE: STENCIL IS HARD-CODED!
+
+    if( doX ){
+      if( i>0 ){
+	const int l = i-1;
+	const int icol = k*(nx*ny) + j*nx + l;
+	ixs.push_back( icol );
+	vals.push_back(1.0);
+      }
+      ixs.push_back( irow );
+      vals.push_back(1.0);
+      if( i<nx-1 ){
+	const int l = i+1;
+	const int icol = k*(nx*ny) + j*nx + l;
+	ixs.push_back( icol );
+	vals.push_back(1.0);
+      }
+    }
+
+    if( doY ){
+      if( j>0 ){
+	const int l = j-1;
+	const int icol = k*(nx*ny) + l*nx + i;
+	ixs.push_back( icol );
+	vals.push_back(1.0);
+      }
+      if( j<ny-1 ){
+	const int l = j+1;
+	const int icol = k*(nx*ny) + l*nx + i;
+	ixs.push_back( icol );
+	vals.push_back(1.0);
+      }
+    }
+
+    if( doZ ){
+      if( k>0 ){
+	const int l = k-1;
+	const int icol = l*(nx*ny) + j*nx + i;
+	ixs.push_back( icol );
+	vals.push_back(1.0);
+      }
+      if( k<nz-1 ){
+	const int l = k+1;
+	const int icol = l*(nx*ny) + j*nx + i;
+	ixs.push_back( icol );
+	vals.push_back(1.0);
+      }
+    }
+
+    A_->InsertGlobalValues( irow, ixs.size(), &vals[0], &ixs[0] );
+
+  } // row loop
+
 }
 //--------------------------------------------------------------------
 void
@@ -294,6 +420,7 @@ LinearSystem::reset()
 void
 LinearSystem::solve()
 {
+  if( NULL == aztec_ )  aztec_ = new AztecOO( *linProb_ );
   aztec_->Iterate( maxIterations_, solverTolerance_ );
 }
 //--------------------------------------------------------------------
@@ -309,6 +436,8 @@ LinSysMapFactory::LinSysMapFactory()
 //--------------------------------------------------------------------
 LinSysMapFactory::~LinSysMapFactory()
 {
+  for( std::map<int,Epetra_Map*>::iterator ii=emap_.begin(); ii!=emap_.end(); ++ii )
+    delete ii->second;
 }
 //--------------------------------------------------------------------
 LinSysMapFactory&

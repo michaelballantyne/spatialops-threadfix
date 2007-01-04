@@ -1,6 +1,7 @@
 #include <SpatialOperator.h>
 #include <SpatialField.h>
 #include <FVStaggeredSpatialOps.h>
+#include <LinearSystem.h>
 
 #include <Epetra_CrsMatrix.h>
 #include <Epetra_Vector.h>
@@ -16,6 +17,84 @@ using namespace std;
 using namespace SpatialOps;
 
 #define PI 3.1415
+
+void setup_geom( const std::vector<int> & dim,
+		 const int nghost,
+		 int & nn, int&nx, int&ny, int&nz,
+		 std::vector<double> & spacing,
+		 std::vector<double> & area,
+		 double & volume )
+{
+
+  // set up array dimensions for "source" arrays
+  nx = dim[0]+2*nghost;
+  ny = dim[1]>1 ? dim[1]+2*nghost : 1;
+  nz = dim[2]>1 ? dim[2]+2*nghost : 1;
+  nn = nx*ny*nz;
+
+  for( int i=0; i<3; ++i )
+    spacing[i] = (dim[i]==1) ? 1.0 : PI/(dim[i]-1);
+  area[0] = spacing[1]*spacing[2];
+  area[1] = spacing[0]*spacing[2];
+  area[2] = spacing[0]*spacing[1];
+
+  volume = spacing[0]*spacing[1]*spacing[2];
+}
+
+//====================================================================
+
+bool test_linsys()
+{
+  using namespace FVStaggeredUniform;
+
+  std::vector<int> dim(3,1);
+  dim[0] = 10;
+  dim[1] = 2;
+  dim[2] = 1;
+
+  std::vector<double> spacing(3), area(3);
+  double volume;
+  int nn, nx,ny,nz;
+  const int nghost = 1;
+  setup_geom( dim, nghost, nn,nx,ny,nz, spacing, area, volume );
+
+  // create a laplacian
+  const Gradient2ndOrder xGrad( spacing, dim, X_DIR );
+  const Divergence2ndOrder xDiv( area, volume, dim, X_DIR );
+  ScratchOperator xLaplacian( dim, 3, X_DIR );
+
+  xDiv.apply( xGrad, xLaplacian );
+
+//   EpetraExt::RowMatrixToMatrixMarketFile( "xDiv.mm", xDiv.epetra_mat(), "", "" );
+//   EpetraExt::RowMatrixToMatrixMarketFile( "xGrad.mm", xGrad.epetra_mat(), "", "" );
+//   EpetraExt::RowMatrixToMatrixMarketFile( "xLaplacian.mm", xLaplacian.epetra_mat(), "", "" );
+
+  LinearSystem linSys( dim );
+  linSys.reset();
+
+  linSys.get_lhs().add_contribution( xLaplacian );
+
+  EpetraExt::RowMatrixToMatrixMarketFile( "xLaplacian.mm", linSys.get_lhs().epetra_mat(), "", "" );
+
+  SpatialField rhsField ( dim, nghost, NULL, SpatialField::InternalStorage );
+
+  rhsField = 1.0;
+
+  RHS & rhs = linSys.get_rhs();
+
+  rhs.reset();
+  rhs.add_contribution( rhsField );
+
+  linSys.solve();
+
+  SpatialField tmp( dim, 0, linSys.get_rhs().get_ptr(), SpatialField::ExternalStorage );
+  EpetraExt::VectorToMatrixMarketFile( "rhs.mm",   tmp.epetra_vec(), "", "" );
+  EpetraExt::VectorToMatrixMarketFile( "soln.mm",  linSys.get_soln_field_epetra_vec(), "", "" );
+
+  //  linSys.get_lhs().Print(std::cout);
+
+  return true;
+}
 
 //====================================================================
 
@@ -70,19 +149,12 @@ bool test_spatial_ops_x()
 
   // set up array dimensions for "source" arrays
   const int nghost=1;
-  const int nx = dim[0]+2*nghost;
-  const int ny = dim[1]>1 ? dim[1]+2*nghost : 1;
-  const int nz = dim[2]>1 ? dim[2]+2*nghost : 1;
-  const int nn = nx*ny*nz;
-
+  int nx, ny, nz, nn;
   std::vector<double> spacing(3,0.0);
   std::vector<double>    area(3,0.0);
-  for( int i=0; i<3; ++i )
-    spacing[i] = (dim[i]==1) ? 1.0 : PI/(dim[i]-1);
-  area[0] = spacing[1]*spacing[2];
-  area[1] = spacing[0]*spacing[2];
-  area[2] = spacing[1]*spacing[2];
-  const double volume = spacing[0]*spacing[1]*spacing[2];
+  double volume;
+
+  setup_geom( dim, 1, nn, nx, ny, nz, spacing, area, volume );
 
   // build some operators and stash them in the database.
   SpatialOpDatabase & SODatabase = SpatialOpDatabase::self();
@@ -181,15 +253,12 @@ bool test_spatial_ops_y()
   dim[1] = 10;
   dim[2] = 2;
 
-  std::vector<double> spacing(3,0.0);
-  for( int i=0; i<3; ++i ) spacing[i] = PI/(dim[i]-1);
-
-  // set up array dimensions for "source" arrays
   const int nghost=1;
-  const int nx = dim[0]+2*nghost;
-  const int ny = dim[1]>1 ? dim[1]+2*nghost : 1;
-  const int nz = dim[2]>1 ? dim[2]+2*nghost : 1;
-  const int nn = nx*ny*nz;
+  int nn,nx,ny,nz;
+  std::vector<double> spacing(3,0.0);
+  std::vector<double>    area(3,0.0);
+  double volume;
+  setup_geom( dim, 1, nn,nx,ny,nz, spacing, area, volume );
 
   LinearInterpolant yinterp( dim, Y_DIR );
   Gradient2ndOrder yGrad( spacing, dim, Y_DIR );
@@ -375,7 +444,12 @@ bool test_spatial_ops_algebra()
 
 int main()
 {
-  bool ok = test_field();
+  bool ok;
+  ok = test_linsys();
+  if( ok ) cout << "   linsys test:   PASS" << endl;
+  else     cout << "   linsys test:   FAIL" << endl;
+
+  ok = test_field();
   if( ok ) cout << "   field ops test:   PASS" << endl;
   else     cout << "   field ops test:   FAIL" << endl;
 

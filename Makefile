@@ -10,7 +10,7 @@ LIBDIRS = -L./ -L$(TRILINOS_LIB)
 
 EPETRA_LIBS = -lepetra -lepetraext -lblas -llapack
 AZTECOO_LIBS = -laztecoo -lteuchos 
-LIBS =  $(EPETRA_LIBS) $(AZTECOO_LIBS)
+LIBS = $(AZTECOO_LIBS)  $(EPETRA_LIBS) 
 
 CXXFLAGS = -g -Wall
 COMPILE_CXX = g++ -c $(CXXFLAGS) $(INCDIRS)

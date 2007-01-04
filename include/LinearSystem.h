@@ -41,6 +41,9 @@ public:
   ~RHS();
 
   void reset( const double val = 0.0 );
+
+  void reset_value( const int rownum, const double value=0.0 );
+
   void add_contribution( const SpatialOps::SpatialField & localField,
 			 const double scaleFac = 1.0 );
 
@@ -98,6 +101,8 @@ public:
         Epetra_CrsMatrix& epetra_mat()      { return A_; }
   const Epetra_CrsMatrix& epetra_mat() const{ return A_; }
 
+  void Print( std::ostream& c ) const;
+
 private:
 
   bool compatibility_check( const SpatialOps::SpatialField& f ) const;
@@ -148,13 +153,23 @@ public:
         LHS & get_lhs()      { return *lhs_; }
   const LHS & get_lhs() const{ return *lhs_; }
 
+  const std::vector<double> & get_soln_field() const{return solnFieldValues_; }
+
+  const Epetra_Vector& get_soln_field_epetra_vec() const{ return *x_; }
+
+  void set_tolerance( const double tol ){ solverTolerance_=tol; }
+
+  void set_maxiter( const int maxit ){ maxIterations_=maxit; }
+
 protected:
+
+  void imprint( const std::vector<int> &, const int );
 
   const std::vector<int> extent_;
   const int npts_;
   RHS   rhs_;
   LHS * lhs_;
-  double * const solnFieldValues_;
+  std::vector<double> solnFieldValues_;
 
   int maxIterations_;
   double solverTolerance_;
