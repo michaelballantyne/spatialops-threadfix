@@ -273,6 +273,12 @@ SpatialField::epetra_vec() const
   return *vec_;
 }
 //--------------------------------------------------------------------
+void
+SpatialField::Print( std::ostream& c ) const
+{
+  epetra_vec().Print(c);
+}
+//--------------------------------------------------------------------
 bool
 SpatialField::consistency_check( const SpatialField& s ) const
 {

@@ -270,7 +270,7 @@ LinearSystem::LinearSystem( const vector<int> & extent )
     solnFieldValues_( npts_ ),
 
     maxIterations_  ( 100    ),
-    solverTolerance_( 1.0e-16 ),
+    solverTolerance_( 1.0e-12 ),
 
     A_(NULL), b_(NULL), x_(NULL),
 

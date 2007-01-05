@@ -244,6 +244,8 @@ public:
 
   const std::vector<int> & get_extent() const{ return extent_; }
 
+  void Print( std::ostream & ) const;
+
 protected:
 
 

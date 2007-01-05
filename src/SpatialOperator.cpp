@@ -309,6 +309,12 @@ SpatialOperator::compatibility_check( const SpatialField & field,
   return true;
 }
 //--------------------------------------------------------------------
+void
+SpatialOperator::Print( std::ostream & c ) const
+{
+  epetra_mat().Print(c);
+}
+//--------------------------------------------------------------------
 
 
 //====================================================================

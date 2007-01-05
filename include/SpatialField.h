@@ -116,6 +116,8 @@ public:
   inline       double* get_ptr()      { return fieldValues_; }
   inline const double* get_ptr() const{return fieldValues_; }
 
+  void Print( std::ostream& ) const;
+
 protected:
 
   virtual bool consistency_check( const SpatialField& s ) const;

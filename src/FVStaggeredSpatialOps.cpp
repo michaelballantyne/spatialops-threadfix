@@ -240,6 +240,7 @@ LinearInterpolant::get_row_entries( const int irow,
     // boundary condition could be applied here.  We could:
     //   1. use the same interpolated value as the first interior point
     //   2. Use the value specified at the first source node.
+    //   3. Zero out the value.
     // Let's choose method 1 for now...
 
     if( i==0 ){
@@ -491,18 +492,18 @@ Divergence2ndOrder::get_row_entries( const int irow,
 				     vector<double> & vals,
 				     vector<int> & ixs ) const
 {
-  const int nx  = extent_[0]+2*nghost();
-  const int ny  = extent_[1]+2*nghost();
-
   switch( dir_ ){
 
   case X_DIR:{
+
+    const int nx = extent_[0]+2*nghost();
 
     const double fac = faceArea_[0]/cellVol_;
 
     const int i = irow%nx;
     if( i==nx-1 ){
-      vals.push_back( 0.0 );  ixs.push_back( irow );
+      vals.push_back( -fac );  ixs.push_back( irow-1 );
+      vals.push_back(  fac );  ixs.push_back( irow   );
     }
     else{
       vals.push_back( -fac );  ixs.push_back( irow   );
@@ -514,17 +515,20 @@ Divergence2ndOrder::get_row_entries( const int irow,
   case Y_DIR:{
 
     assert( ndim_ > 1 );
+    
+    const int nx = extent_[0]+2*nghost();
+    const int ny = extent_[1]+2*nghost();
 
     const double fac = faceArea_[1]/cellVol_;
     const int j = (irow/nx)%ny;
 
-    if( j==0 ){
-      vals.push_back( -fac );  ixs.push_back( irow );
-      vals.push_back(  fac );  ixs.push_back( irow+nx );
+    if( j==ny-1 ){
+      vals.push_back( -fac );  ixs.push_back( irow-nx );
+      vals.push_back(  fac );  ixs.push_back( irow    );
     }
     else{
-      vals.push_back( -fac );  ixs.push_back( irow-nx );
-      vals.push_back(  fac );  ixs.push_back( irow );
+      vals.push_back( -fac );  ixs.push_back( irow );
+      vals.push_back(  fac );  ixs.push_back( irow+nx );
     }
     break;
   }
@@ -532,15 +536,19 @@ Divergence2ndOrder::get_row_entries( const int irow,
   case Z_DIR:{
     assert( ndim_ == 3 );
 
+    const int nx = extent_[0]+2*nghost();
+    const int ny = extent_[1]+2*nghost();
+    const int nz = extent_[2]+2*nghost();
+
     const double fac = faceArea_[2]/cellVol_;
     const int k = irow/(nx*ny);
-    if( k==0 ){
-      vals.push_back( -fac );  ixs.push_back( irow );
-      vals.push_back(  fac );  ixs.push_back( irow+nx*ny );
+    if( k==nz-1 ){
+      vals.push_back( -fac );  ixs.push_back( irow-nx*ny );
+      vals.push_back(  fac );  ixs.push_back( irow       );
     }
     else{
-      vals.push_back( -fac );  ixs.push_back( irow-nx*ny );
-      vals.push_back(  fac );  ixs.push_back( irow );
+      vals.push_back( -fac );  ixs.push_back( irow );
+      vals.push_back(  fac );  ixs.push_back( irow+nx*ny );
     }
     break;
   }
