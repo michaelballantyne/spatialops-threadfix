@@ -1,16 +1,24 @@
+#
+# USE THIS FOR LINUX:
+#
 TRILINOS_INCLUDE = /home/sutherland/apps/trilinos/include
 TRILINOS_LIB      = /home/sutherland/apps/trilinos/lib 
+LIBDIRS = -L./ -L$(TRILINOS_LIB)
+EXTRA_LIBS = 
 
+#
+# USE THIS FOR MAC
+#
 #TRILINOS_INCLUDE = /jcs/software/trilinos/include
 #TRILINOS_LIB     = /jcs/software/trilinos/lib
+#LIBDIRS = -L./ -L$(TRILINOS_LIB) -L/sw/lib/gcc-lib/i386-apple-darwin8/4.0.3
+#EXTRA_LIBS = -lf95
 
 INCDIRS = -I./include -I$(TRILINOS_INCLUDE)
-LIBDIRS = -L./ -L$(TRILINOS_LIB)
-
 
 EPETRA_LIBS = -lepetra -lepetraext -lblas -llapack
 AZTECOO_LIBS = -laztecoo -lteuchos 
-LIBS = $(AZTECOO_LIBS)  $(EPETRA_LIBS) 
+LIBS = $(AZTECOO_LIBS)  $(EPETRA_LIBS) $(EXTRA_LIBS)
 
 CXXFLAGS = -g -Wall
 COMPILE_CXX = g++ -c $(CXXFLAGS) $(INCDIRS)

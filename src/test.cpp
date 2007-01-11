@@ -49,8 +49,8 @@ bool test_linsys()
 
   std::vector<int> dim(3,1);
   dim[0] = 13;
-  dim[1] = 18;
-  dim[2] = 20;
+  dim[1] = 1 ;
+  dim[2] = 1 ;
 
   std::vector<double> spacing(3), area(3);
   double volume;
@@ -65,9 +65,9 @@ bool test_linsys()
 
   xDiv.apply( xGrad, xLaplacian );
 
-//   EpetraExt::RowMatrixToMatrixMarketFile( "xDiv.mm", xDiv.epetra_mat(), "", "" );
-//   EpetraExt::RowMatrixToMatrixMarketFile( "xGrad.mm", xGrad.epetra_mat(), "", "" );
-//   EpetraExt::RowMatrixToMatrixMarketFile( "xLaplacian.mm", xLaplacian.epetra_mat(), "", "" );
+  EpetraExt::RowMatrixToMatrixMarketFile( "xDiv.mm", xDiv.epetra_mat(), "", "" );
+  EpetraExt::RowMatrixToMatrixMarketFile( "xGrad.mm", xGrad.epetra_mat(), "", "" );
+  EpetraExt::RowMatrixToMatrixMarketFile( "xLaplacian.mm", xLaplacian.epetra_mat(), "", "" );
 
   LinearSystem linSys( dim );
   linSys.reset();
@@ -80,12 +80,10 @@ bool test_linsys()
     ScratchOperator yLaplace( dim, 3, Y_DIR );
     yDiv.apply( yGrad, yLaplace );
 
-    //  yLaplace.Print(std::cout);
-
     linSys.get_lhs().add_contribution( yLaplace );
-//     EpetraExt::RowMatrixToMatrixMarketFile( "yLaplacian.mm", yLaplace.epetra_mat(), "", "" );
-//     EpetraExt::RowMatrixToMatrixMarketFile( "yDiv.mm", yGrad.epetra_mat(), "", "" );
-//     EpetraExt::RowMatrixToMatrixMarketFile( "yGrad.mm", yDiv.epetra_mat(), "", "" );
+    EpetraExt::RowMatrixToMatrixMarketFile( "yLaplacian.mm", yLaplace.epetra_mat(), "", "" );
+    EpetraExt::RowMatrixToMatrixMarketFile( "yDiv.mm", yDiv.epetra_mat(), "", "" );
+    EpetraExt::RowMatrixToMatrixMarketFile( "yGrad.mm", yGrad.epetra_mat(), "", "" );
   }
 
   if( dim[2] > 1 ){
@@ -100,14 +98,16 @@ bool test_linsys()
   RHS & rhs = linSys.get_rhs();
   rhs.reset(1.0);
 
+  // set a dirichlet condition on the first grid point (0th row)
+  linSys.set_dirichlet_condition( 0 );
+  linSys.set_dirichlet_condition( dim[0]*dim[1]*dim[2] -1, 1.0 );
+
   linSys.solve();
 
   EpetraExt::RowMatrixToMatrixMarketFile( "LHS.mm", linSys.get_lhs().epetra_mat(), "", "" );
   SpatialField tmp( dim, 0, linSys.get_rhs().get_ptr(), SpatialField::ExternalStorage );
   EpetraExt::VectorToMatrixMarketFile( "rhs.mm",   tmp.epetra_vec(), "", "" );
   EpetraExt::VectorToMatrixMarketFile( "soln.mm",  linSys.get_soln_field_epetra_vec(), "", "" );
-
-  //  linSys.get_lhs().Print(std::cout);
 
   return true;
 }
@@ -191,20 +191,10 @@ bool test_spatial_ops_x()
   SpatialOperator *& xGrad    = SODatabase.retrieve_operator( SpatialOpDatabase::GRADIENT_X    );
   SpatialOperator *& scratchOp= SODatabase.retrieve_operator( "Scratch X Second Order"         );
 
-  /*
-  EpetraExt::RowMatrixToMatrixMarketFile( "Int_x.mm",
-					  xinterp->epetra_mat(), 
-					  "xinterp",
-					  "1-D interpolant in x-direction" );
-  */
-  EpetraExt::RowMatrixToMatrixMarketFile( "Grad_x.mm",
-					  xGrad->epetra_mat(), 
-					  "xGrad",
-					  "1-D gradient in x-direction" );
-  EpetraExt::RowMatrixToMatrixMarketFile( "Div_x.mm",
-					  xDiv->epetra_mat(), 
-					  "xDiv",
-					  "1-D divergence in x-direction" );
+
+//   EpetraExt::RowMatrixToMatrixMarketFile( "Int_x.mm", xinterp->epetra_mat(), "", "" );
+//   EpetraExt::RowMatrixToMatrixMarketFile( "Grad_x.mm", xGrad->epetra_mat(), "", "" );
+//   EpetraExt::RowMatrixToMatrixMarketFile( "Div_x.mm", xDiv->epetra_mat(), "", "" );
 
   vector<double> fptr  (nn,0.0);
   vector<double> dfdx  (nn,0.0);
@@ -230,22 +220,37 @@ bool test_spatial_ops_x()
   SpatialField df( dim, nghost, NULL,     SpatialField::InternalStorage );
   SpatialField xg( dim, nghost, NULL,     SpatialField::InternalStorage );
   SpatialField d2f(dim, nghost, NULL,     SpatialField::InternalStorage );
+  SpatialField tmp(dim, nghost, NULL,     SpatialField::InternalStorage );
 
   xinterp->apply( f, g );
   xinterp->apply( x, xg);
   xGrad  ->apply( f, df );
+  xDiv->apply( df, tmp );
 
   // form the laplacian
   xDiv->apply( *xGrad, *scratchOp );
   scratchOp->apply( f, d2f );
 
-  EpetraExt::RowMatrixToMatrixMarketFile( "Laplace_x.mm", scratchOp->epetra_mat(),  "laplace x", "1-D laplacian in x-direction" );
-  EpetraExt::VectorToMatrixMarketFile( "fx.mm",  f.epetra_vec(), "f", "original data" );
-  EpetraExt::VectorToMatrixMarketFile(  "x.mm",   x.epetra_vec(), "x", "original x" );
-  EpetraExt::VectorToMatrixMarketFile( "gx.mm",  g.epetra_vec(), "g", "intpolated data" );
-  EpetraExt::VectorToMatrixMarketFile( "dfdx.mm", df.epetra_vec(), "dfdx", "grad x" );
-  EpetraExt::VectorToMatrixMarketFile( "xg.mm", xg.epetra_vec(), "xg", "intpolated x" );
-  EpetraExt::VectorToMatrixMarketFile( "d2fdx2.mm", d2f.epetra_vec(), "d2f", "" );
+  // check equality of the two methods
+  for( int i=0; i<tmp.get_ntotal(); ++i ){
+    const double f1 = tmp.get_ptr()[i];
+    const double f2 = d2f.get_ptr()[i];
+    const double tol = 1.0e-8;
+    const double relerr = std::abs( f1-f2 )/(f1+tol);
+    if( relerr > tol ){
+      std::cout << "PROBLEMS - laplacian is broken!" << std::endl
+		<< tmp.get_ptr()[i] << "  " << d2f.get_ptr()[i] << std::endl;
+      return false;
+    }
+  }
+
+  EpetraExt::RowMatrixToMatrixMarketFile( "Laplace_x.mm", scratchOp->epetra_mat(),  "", "" );
+  EpetraExt::VectorToMatrixMarketFile( "fx.mm",  f.epetra_vec(), "", "" );
+  EpetraExt::VectorToMatrixMarketFile(  "x.mm",   x.epetra_vec(), "", "" );
+  EpetraExt::VectorToMatrixMarketFile( "gx.mm",  g.epetra_vec(), "", "" );
+  EpetraExt::VectorToMatrixMarketFile( "dfdx.mm", df.epetra_vec(), "", "" );
+  EpetraExt::VectorToMatrixMarketFile( "xg.mm", xg.epetra_vec(), "", "" );
+  EpetraExt::VectorToMatrixMarketFile( "d2fdx2.mm", d2f.epetra_vec(), "", "" );
  
   /*
     scratchOp.reset_entries(0.0);
@@ -460,6 +465,7 @@ int main()
   ok = test_linsys();
   if( ok ) cout << "   linsys test:   PASS" << endl;
   else     cout << "   linsys test:   FAIL" << endl;
+  return 0;
 
   ok = test_field();
   if( ok ) cout << "   field ops test:   PASS" << endl;

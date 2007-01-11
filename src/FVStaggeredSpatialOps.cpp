@@ -372,8 +372,10 @@ Gradient2ndOrder::get_row_entries( const int irow,
     const int i = irow%nx;
 
     if( i==0 ){
-      vals.push_back( -fac );  ixs.push_back( irow   );
-      vals.push_back(  fac );  ixs.push_back( irow+1 );
+      vals.push_back( 0.0 );  ixs.push_back( irow   );
+      vals.push_back( 0.0 );  ixs.push_back( irow+1 );
+//       vals.push_back( -fac );  ixs.push_back( irow   );
+//       vals.push_back(  fac );  ixs.push_back( irow+1 );
     }
     else{
       vals.push_back( -fac );  ixs.push_back( irow-1 );
@@ -390,8 +392,10 @@ Gradient2ndOrder::get_row_entries( const int irow,
     const double fac = 1.0/spacing_[1];
 
     if( j==0 ){
-      vals.push_back( -fac );  ixs.push_back( irow    );
-      vals.push_back(  fac );  ixs.push_back( irow+nx );
+      vals.push_back( 0.0 );  ixs.push_back( irow    );
+      vals.push_back( 0.0 );  ixs.push_back( irow+nx );
+//       vals.push_back( -fac );  ixs.push_back( irow    );
+//       vals.push_back(  fac );  ixs.push_back( irow+nx );
     }
     else{
       vals.push_back( -fac );  ixs.push_back( irow-nx );
@@ -407,8 +411,10 @@ Gradient2ndOrder::get_row_entries( const int irow,
     const int k = irow/(nx*ny);
 
     if( k==0 ){
-      vals.push_back( -fac );  ixs.push_back( irow );
-      vals.push_back(  fac );  ixs.push_back( irow+nx*ny );
+      vals.push_back( 0.0 );  ixs.push_back( irow );
+      vals.push_back( 0.0 );  ixs.push_back( irow+nx*ny );
+//       vals.push_back( -fac );  ixs.push_back( irow );
+//       vals.push_back(  fac );  ixs.push_back( irow+nx*ny );
     }
     else{
       vals.push_back( -fac );  ixs.push_back( irow-nx*ny );
@@ -502,8 +508,10 @@ Divergence2ndOrder::get_row_entries( const int irow,
 
     const int i = irow%nx;
     if( i==nx-1 ){
-      vals.push_back( -fac );  ixs.push_back( irow-1 );
-      vals.push_back(  fac );  ixs.push_back( irow   );
+      vals.push_back( 0.0 );  ixs.push_back( irow-1 );
+      vals.push_back( 0.0 );  ixs.push_back( irow   );
+//       vals.push_back( -fac );  ixs.push_back( irow-1 );
+//       vals.push_back(  fac );  ixs.push_back( irow   );
     }
     else{
       vals.push_back( -fac );  ixs.push_back( irow   );
@@ -523,8 +531,10 @@ Divergence2ndOrder::get_row_entries( const int irow,
     const int j = (irow/nx)%ny;
 
     if( j==ny-1 ){
-      vals.push_back( -fac );  ixs.push_back( irow-nx );
-      vals.push_back(  fac );  ixs.push_back( irow    );
+      vals.push_back( 0.0 );  ixs.push_back( irow-nx );
+      vals.push_back( 0.0 );  ixs.push_back( irow    );
+//       vals.push_back( -fac );  ixs.push_back( irow-nx );
+//       vals.push_back(  fac );  ixs.push_back( irow    );
     }
     else{
       vals.push_back( -fac );  ixs.push_back( irow );
@@ -543,8 +553,10 @@ Divergence2ndOrder::get_row_entries( const int irow,
     const double fac = faceArea_[2]/cellVol_;
     const int k = irow/(nx*ny);
     if( k==nz-1 ){
-      vals.push_back( -fac );  ixs.push_back( irow-nx*ny );
-      vals.push_back(  fac );  ixs.push_back( irow       );
+      vals.push_back( 0.0 );  ixs.push_back( irow-nx*ny );
+      vals.push_back( 0.0 );  ixs.push_back( irow       );
+//       vals.push_back( -fac );  ixs.push_back( irow-nx*ny );
+//       vals.push_back(  fac );  ixs.push_back( irow       );
     }
     else{
       vals.push_back( -fac );  ixs.push_back( irow );

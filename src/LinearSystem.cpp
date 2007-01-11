@@ -126,6 +126,22 @@ LHS::reset( const double val )
 }
 //--------------------------------------------------------------------
 void
+LHS::unit_diagonal_zero_else( const int irow )
+{
+  int rownum = irow; // trilinos wants a non-const int.  Stupid.
+  int n;
+  double * vals;
+  int * ixs;
+  A_.ExtractMyRowView( rownum, n, vals, ixs );
+
+  for( int i=0; i<n; ++i ){
+    vals[i] = 0.0;
+    if( ixs[i] == irow ) rownum = i;
+  }
+  vals[rownum] = 1.0;
+}
+//--------------------------------------------------------------------
+void
 LHS::add_contribution( const SpatialOps::SpatialOperator & op,
 		       const double scaleFac )
 {
@@ -422,6 +438,17 @@ LinearSystem::solve()
 {
   if( NULL == aztec_ )  aztec_ = new AztecOO( *linProb_ );
   aztec_->Iterate( maxIterations_, solverTolerance_ );
+}
+//--------------------------------------------------------------------
+void
+LinearSystem::set_dirichlet_condition( const int irow,
+				       const double rhsVal )
+{
+  // set the LHS row.
+  lhs_->unit_diagonal_zero_else( irow );
+
+  // set the rhs value
+  rhs_.reset_value( irow, rhsVal );
 }
 //--------------------------------------------------------------------
 

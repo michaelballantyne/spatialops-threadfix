@@ -88,7 +88,14 @@ public:
   int nrows() const{ return nrows_; }
   int ncols() const{ return ncols_; }
 
+  /** reset all values in the matrix */
   void reset( const double val = 0 );
+
+  /**
+   *  For setting dirichlet conditions.  Places unity on the diagonal
+   *  entry of this row and zeros elsewhere.
+   */
+  void unit_diagonal_zero_else( const int irow );
 
   /** add non-ghost elements of the local matrix to this LHS operator */
   void add_contribution( const SpatialOps::SpatialOperator & localMat,
@@ -97,6 +104,7 @@ public:
   /** add non-ghost elements of the local field to this LHS operator */
   void add_contribution( const SpatialOps::SpatialField & localField,
 			 const double scaleFac = 1.0 );
+
 
         Epetra_CrsMatrix& epetra_mat()      { return A_; }
   const Epetra_CrsMatrix& epetra_mat() const{ return A_; }
@@ -153,13 +161,29 @@ public:
         LHS & get_lhs()      { return *lhs_; }
   const LHS & get_lhs() const{ return *lhs_; }
 
-  const std::vector<double> & get_soln_field() const{return solnFieldValues_; }
+  const std::vector<double> & get_soln_field() const{ return solnFieldValues_; }
+        std::vector<double> & get_soln_field()      { return solnFieldValues_; }
 
   const Epetra_Vector& get_soln_field_epetra_vec() const{ return *x_; }
 
   void set_tolerance( const double tol ){ solverTolerance_=tol; }
 
   void set_maxiter( const int maxit ){ maxIterations_=maxit; }
+
+
+
+  /**
+   *  Dirichlet conditions are accomplished by zeroing all columns of
+   *  the given row and placing a "1" on the diagonal. The rhs vector
+   *  is also set to accomplish the desired solution value.
+   *
+   *  In the case where this linear system is being applied to a
+   *  residual update, the lhs value should be zero, which is set as a
+   *  default.
+   */
+  void set_dirichlet_condition( const int irow,
+				const double rhsVal = 0 );
+
 
 protected:
 
