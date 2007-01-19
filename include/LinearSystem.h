@@ -42,7 +42,7 @@ public:
 
   void reset( const double val = 0.0 );
 
-  void reset_value( const int rownum, const double value=0.0 );
+  void reset( const int rownum, const double value=0.0 );
 
   void add_contribution( const SpatialOps::SpatialField & localField,
 			 const double scaleFac = 1.0 );
@@ -101,10 +101,13 @@ public:
   void add_contribution( const SpatialOps::SpatialOperator & localMat,
 			 const double scaleFac = 1.0 );
 
-  /** add non-ghost elements of the local field to this LHS operator */
+  /** add non-ghost elements of the local field to the diagonal of LHS operator */
   void add_contribution( const SpatialOps::SpatialField & localField,
 			 const double scaleFac = 1.0 );
 
+
+  /** add a constant to the diagonal of the matrix */
+  void add_diag_contribution( double x );
 
         Epetra_CrsMatrix& epetra_mat()      { return A_; }
   const Epetra_CrsMatrix& epetra_mat() const{ return A_; }
@@ -129,6 +132,8 @@ private:
 };
 
 //====================================================================
+
+typedef RHS SOLN;
 
 /**
  *  @class  LinearSystem
@@ -161,8 +166,8 @@ public:
         LHS & get_lhs()      { return *lhs_; }
   const LHS & get_lhs() const{ return *lhs_; }
 
-  const std::vector<double> & get_soln_field() const{ return solnFieldValues_; }
-        std::vector<double> & get_soln_field()      { return solnFieldValues_; }
+  const SOLN & get_soln_field() const{ return solnFieldValues_; }
+        SOLN & get_soln_field()      { return solnFieldValues_; }
 
   const Epetra_Vector& get_soln_field_epetra_vec() const{ return *x_; }
 
@@ -193,7 +198,7 @@ protected:
   const int npts_;
   RHS   rhs_;
   LHS * lhs_;
-  std::vector<double> solnFieldValues_;
+  SOLN  solnFieldValues_;
 
   int maxIterations_;
   double solverTolerance_;

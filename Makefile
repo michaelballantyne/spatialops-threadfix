@@ -1,8 +1,8 @@
 #
 # USE THIS FOR LINUX:
 #
-TRILINOS_INCLUDE = /home/sutherland/apps/trilinos/include
-TRILINOS_LIB      = /home/sutherland/apps/trilinos/lib 
+TRILINOS_INCLUDE = /home/sutherland/apps/trilinos_jcs/include
+TRILINOS_LIB      = /home/sutherland/apps/trilinos_jcs/lib 
 LIBDIRS = -L./ -L$(TRILINOS_LIB)
 EXTRA_LIBS = 
 

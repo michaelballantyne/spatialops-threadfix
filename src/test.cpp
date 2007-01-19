@@ -49,8 +49,8 @@ bool test_linsys()
 
   std::vector<int> dim(3,1);
   dim[0] = 13;
-  dim[1] = 1 ;
-  dim[2] = 1 ;
+  dim[1] = 10;
+  dim[2] = 10;
 
   std::vector<double> spacing(3), area(3);
   double volume;
@@ -175,21 +175,24 @@ bool test_spatial_ops_x()
   // build some operators and stash them in the database.
   SpatialOpDatabase & SODatabase = SpatialOpDatabase::self();
   {
-    SpatialOperator * xinterp = new LinearInterpolant( dim, X_DIR );
-    SpatialOperator * xGrad   = new Gradient2ndOrder( spacing, dim, X_DIR );
-    SpatialOperator * xDiv = new Divergence2ndOrder( area, volume, dim, X_DIR );
+    SpatialOperator * xinterp   = new LinearInterpolant( dim, X_DIR );
+    SpatialOperator * xGrad     = new Gradient2ndOrder( spacing, dim, X_DIR );
+    SpatialOperator * xDiv      = new Divergence2ndOrder( area, volume, dim, X_DIR );
     SpatialOperator * scratchOp = new ScratchOperator( dim, 3, X_DIR );
+    SpatialOperator * scratchOp2= new ScratchOperator( dim, 3, X_DIR );
 
-    SODatabase.register_new_operator( SpatialOpDatabase::INTERPOLANT_X, xinterp, "X-Interpolant Second Order Staggered" );
-    SODatabase.register_new_operator( SpatialOpDatabase::DIVERGENCE_X,  xDiv,    "X-Divergence Second Order Staggered" );
-    SODatabase.register_new_operator( SpatialOpDatabase::GRADIENT_X,    xGrad,   "X-Gradient Second Order Staggered" );
-    SODatabase.register_new_operator( SpatialOpDatabase::SCRATCH_X,     scratchOp, "Scratch X Second Order" );
+    SODatabase.register_new_operator( SpatialOpDatabase::INTERPOLANT_X, xinterp,   "X-Interpolant Second Order Staggered" );
+    SODatabase.register_new_operator( SpatialOpDatabase::DIVERGENCE_X,  xDiv,      "X-Divergence Second Order Staggered"  );
+    SODatabase.register_new_operator( SpatialOpDatabase::GRADIENT_X,    xGrad,     "X-Gradient Second Order Staggered"    );
+    SODatabase.register_new_operator( SpatialOpDatabase::SCRATCH_X,     scratchOp, "Scratch X Second Order"               );
+    SODatabase.register_new_operator( SpatialOpDatabase::SCRATCH_X,     scratchOp2,"Scratch X Second Order 2"             );
   }
 
-  SpatialOperator *& xinterp  = SODatabase.retrieve_operator( SpatialOpDatabase::INTERPOLANT_X );
-  SpatialOperator *& xDiv     = SODatabase.retrieve_operator( SpatialOpDatabase::DIVERGENCE_X  );
-  SpatialOperator *& xGrad    = SODatabase.retrieve_operator( SpatialOpDatabase::GRADIENT_X    );
-  SpatialOperator *& scratchOp= SODatabase.retrieve_operator( "Scratch X Second Order"         );
+  SpatialOperator *& xinterp   = SODatabase.retrieve_operator( SpatialOpDatabase::INTERPOLANT_X );
+  SpatialOperator *& xDiv      = SODatabase.retrieve_operator( SpatialOpDatabase::DIVERGENCE_X  );
+  SpatialOperator *& xGrad     = SODatabase.retrieve_operator( SpatialOpDatabase::GRADIENT_X    );
+  SpatialOperator *& scratchOp = SODatabase.retrieve_operator( "Scratch X Second Order"         );
+  SpatialOperator *& scratchOp2= SODatabase.retrieve_operator( "Scratch X Second Order 2"       );
 
 
 //   EpetraExt::RowMatrixToMatrixMarketFile( "Int_x.mm", xinterp->epetra_mat(), "", "" );
@@ -229,6 +232,9 @@ bool test_spatial_ops_x()
 
   // form the laplacian
   xDiv->apply( *xGrad, *scratchOp );
+  // jcs: we should be able to do it this way, but trilinos barfs:
+  *scratchOp2 = *xGrad;
+  xDiv->apply( *scratchOp2, *scratchOp );
   scratchOp->apply( f, d2f );
 
   // check equality of the two methods
@@ -465,7 +471,6 @@ int main()
   ok = test_linsys();
   if( ok ) cout << "   linsys test:   PASS" << endl;
   else     cout << "   linsys test:   FAIL" << endl;
-  return 0;
 
   ok = test_field();
   if( ok ) cout << "   field ops test:   PASS" << endl;

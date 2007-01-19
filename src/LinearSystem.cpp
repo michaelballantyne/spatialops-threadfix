@@ -43,7 +43,7 @@ RHS::reset( const double val )
 }
 //--------------------------------------------------------------------
 void
-RHS::reset_value( const int rownum, const double val )
+RHS::reset( const int rownum, const double val )
 {
   field_[rownum] = val;
 }
@@ -250,6 +250,14 @@ LHS::add_contribution( const SpatialOps::SpatialField & f,
 }
 //--------------------------------------------------------------------
 void
+LHS::add_diag_contribution( double x )
+{
+  for( int irow=0; irow<nrows_; ++irow ){
+    A_.SumIntoMyValues( irow, 1, &x, &irow );
+  }
+}
+//--------------------------------------------------------------------
+void
 LHS::Print( std::ostream & c ) const
 {
   A_.Print(c);
@@ -281,9 +289,9 @@ LinearSystem::LinearSystem( const vector<int> & extent )
 #endif
   : extent_( extent ),
     npts_( std::accumulate(extent.begin(),extent.end(),1,std::multiplies<int>() ) ),
-    rhs_( extent ),
+    rhs_( extent_ ),  // construct the rhs
     lhs_( NULL ),
-    solnFieldValues_( npts_ ),
+    solnFieldValues_( extent_ ),  // construct the solution
 
     maxIterations_  ( 100    ),
     solverTolerance_( 1.0e-12 ),
@@ -316,7 +324,7 @@ LinearSystem::LinearSystem( const vector<int> & extent )
   lhs_ = new LHS( extent_, *A_ );
 
   // Build the RHS and LHS vectors - we manage storage (not trilinos)
-  x_ = new Epetra_Vector( View, emap, &solnFieldValues_[0] );
+  x_ = new Epetra_Vector( View, emap, solnFieldValues_.get_ptr() );
   b_ = new Epetra_Vector( View, emap, rhs_.get_ptr() );
 
   // Build the Linear Problem
@@ -448,7 +456,7 @@ LinearSystem::set_dirichlet_condition( const int irow,
   lhs_->unit_diagonal_zero_else( irow );
 
   // set the rhs value
-  rhs_.reset_value( irow, rhsVal );
+  rhs_.reset( irow, rhsVal );
 }
 //--------------------------------------------------------------------
 
