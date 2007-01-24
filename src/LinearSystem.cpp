@@ -20,6 +20,53 @@
 
 using std::vector;
 
+//====================================================================
+
+/**
+ *  @class  LinSysMapFactory
+ *  @author James C. Sutherland
+ *  @date   December, 2006
+ *
+ *  Support for creating Epetra_Map objects for use with the
+ *  LinearSystem class.
+ */
+class LinSysMapFactory
+{
+public:
+
+  static LinSysMapFactory& self()
+  {
+    static LinSysMapFactory s;
+    return s;
+  }
+
+  Epetra_Map& get_map( const int npts,
+		       Epetra_Comm & com )
+  {
+    std::map<int,Epetra_Map*>::const_iterator ii = emap_.find( npts );
+    if( ii == emap_.end() ){
+      Epetra_Map * myMap = new Epetra_Map( npts, 0, com );
+      emap_.insert( std::make_pair(npts,myMap) );
+      return *myMap;
+    }
+    return *(ii->second);
+  }
+
+private:
+
+  std::map<int,Epetra_Map*> emap_;
+
+  LinSysMapFactory()
+  {
+  }
+
+  ~LinSysMapFactory()
+  {
+    for( std::map<int,Epetra_Map*>::iterator ii=emap_.begin(); ii!=emap_.end(); ++ii )
+      delete ii->second;
+  }
+
+};
 
 //====================================================================
 
@@ -288,7 +335,13 @@ LinearSystem::LinearSystem( const vector<int> & extent,
 LinearSystem::LinearSystem( const vector<int> & extent )
 #endif
   : extent_( extent ),
-    npts_( std::accumulate(extent.begin(),extent.end(),1,std::multiplies<int>() ) ),
+
+#if HAVE_MPI
+    npts_( get_global_npts(extent,comm) ),
+#else
+    npts_( get_global_npts(extent) ),
+#endif
+
     rhs_( extent_ ),  // construct the rhs
     lhs_( NULL ),
     solnFieldValues_( extent_ ),  // construct the solution
@@ -309,6 +362,7 @@ LinearSystem::LinearSystem( const vector<int> & extent )
 #else
   comm_ = new Epetra_SerialComm();
 #endif
+
   const Epetra_Map & emap = LinSysMapFactory::self().get_map( npts_, *comm_ );
 
   // for now, hard code this for 2nd order.
@@ -350,6 +404,25 @@ LinearSystem::~LinearSystem()
   delete comm_;
 #endif
 }
+//--------------------------------------------------------------------
+#ifdef HAVE_MPI
+int
+LinearSystem::get_global_npts( const std::vector<int> & extent,
+			       MPI_Comm & comm )
+{
+  // determine the total number of points in each dimension.
+  vector<int> globPoints( extent.size(), 0 );
+  MPI_Allreduce( &extent[0], &globPoints[0], extent.size(), MPI_INT, MPI_SUM, comm );
+
+  return std::accumulate( globPoints.begin(), globPoints.end(), 1, std::multiplies<int>() );
+}
+#else
+int
+LinearSystem::get_global_npts( const std::vector<int> & extent )
+{
+  return std::accumulate(extent.begin(),extent.end(),1,std::multiplies<int>() );
+}
+#endif
 //--------------------------------------------------------------------
 void
 LinearSystem::imprint( const std::vector<int> & extent,
@@ -465,36 +538,91 @@ LinearSystem::set_dirichlet_condition( const int irow,
 
 
 //--------------------------------------------------------------------
-LinSysMapFactory::LinSysMapFactory()
+#ifdef HAVE_MPI
+LinSysInfo::LinSysInfo( const std::vector<int> & npts,
+			MPI_Comm & communicator )
+  : dimExtent( npts ),
+    comm( communicator )
+#else
+LinSysInfo::LinSysInfo( const std::vector<int> & npts )
+  : dimExtent( npts )
+#endif
+{
+  solverPackage  = TRILINOS;
+  preconditioner = DEFAULT;
+}
+//--------------------------------------------------------------------
+LinSysInfo::~LinSysInfo()
 {
 }
 //--------------------------------------------------------------------
-LinSysMapFactory::~LinSysMapFactory()
+bool
+LinSysInfo::operator==(const LinSysInfo& s) const
 {
-  for( std::map<int,Epetra_Map*>::iterator ii=emap_.begin(); ii!=emap_.end(); ++ii )
-    delete ii->second;
+  return( s.solverPackage  == solverPackage &&
+	  s.preconditioner == preconditioner &&
+	  s.dimExtent == dimExtent );
 }
 //--------------------------------------------------------------------
-LinSysMapFactory&
-LinSysMapFactory::self()
+bool
+LinSysInfo::operator<(const LinSysInfo& s) const
 {
-  static LinSysMapFactory s;
-  return s;
-}
-//--------------------------------------------------------------------
-Epetra_Map&
-LinSysMapFactory::get_map( const int npts,
-			   Epetra_Comm & com )
-{
-  std::map<int,Epetra_Map*>::const_iterator ii = emap_.find( npts );
-  if( ii == emap_.end() ){
-    Epetra_Map * myMap = new Epetra_Map( npts, 0, com );
-    emap_.insert( std::make_pair(npts,myMap) );
-    return *myMap;
-  }
-  return *(ii->second);
+  return( s.solverPackage < solverPackage &&
+	  s.preconditioner< preconditioner &&
+	  s.dimExtent < dimExtent );
 }
 //--------------------------------------------------------------------
 
+
+//====================================================================
+
+
+//--------------------------------------------------------------------
+LinSysFactory::LinSysFactory()
+{
+}
+//--------------------------------------------------------------------
+LinSysFactory::~LinSysFactory()
+{
+  for( InfoMap::iterator ii=infoMap_.begin();
+       ii!=infoMap_.end();
+       ++ii )
+    {
+      delete ii->second;
+    }
+}
+//--------------------------------------------------------------------
+LinSysFactory&
+LinSysFactory::self()
+{
+  static LinSysFactory s;
+  return s;
+}
+//--------------------------------------------------------------------
+LinearSystem&
+LinSysFactory::get_linsys( const LinSysInfo& info )
+{
+  // do we have a match?
+  InfoMap::iterator ii = infoMap_.find( info );
+
+  if( ii==infoMap_.end() ){
+
+    // build a new linear system.
+
+#ifdef HAVE_MPI
+    LinearSystem * linSys = new LinearSystem( info.dimExtent, info.comm );
+#else
+    LinearSystem * linSys = new LinearSystem( info.dimExtent );
+#endif
+
+    std::pair<InfoMap::iterator,bool> result =
+      infoMap_.insert( std::make_pair(info,linSys) );
+
+    assert( result.second );
+
+    ii = result.first;
+  }
+  return *(ii->second);
+}
 
 //====================================================================

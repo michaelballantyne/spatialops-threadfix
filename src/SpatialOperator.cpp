@@ -219,13 +219,15 @@ SpatialOperator::operator -= ( const SpatialField & f )
 void
 SpatialOperator::left_scale( const SpatialField& f )
 {
-  epetra_mat().LeftScale( f.epetra_vec() );
+  const int flag = epetra_mat().LeftScale( f.epetra_vec() );
+  assert( flag == 0 );
 }
 //--------------------------------------------------------------------
 void
 SpatialOperator::right_scale( const SpatialField& f )
 {
-  epetra_mat().RightScale( f.epetra_vec() );
+  const int flag = epetra_mat().RightScale( f.epetra_vec() );
+  assert( flag == 0 );
 }
 //--------------------------------------------------------------------
 void
@@ -244,10 +246,6 @@ SpatialOperator::insert_row_entry( const int rownum,
 					 rowValues.size(),
 					 &rowValues[0],
 					 &rowIndices[0] );
-//   const int flag = mat_->ReplaceMyValues( rownum,
-// 					      rowValues.size(),
-// 					      &rowValues[0],
-// 					      &rowIndices[0] );
   if( flag!=0 ) std::cout << flag << std::endl;
   assert( flag==0 );
 }

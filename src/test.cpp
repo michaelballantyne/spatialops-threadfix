@@ -69,7 +69,7 @@ bool test_linsys()
   EpetraExt::RowMatrixToMatrixMarketFile( "xGrad.mm", xGrad.epetra_mat(), "", "" );
   EpetraExt::RowMatrixToMatrixMarketFile( "xLaplacian.mm", xLaplacian.epetra_mat(), "", "" );
 
-  LinearSystem linSys( dim );
+  LinearSystem & linSys = LinSysFactory::self().get_linsys( LinSysInfo(dim) );
   linSys.reset();
 
   linSys.get_lhs().add_contribution( xLaplacian );

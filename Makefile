@@ -1,8 +1,8 @@
 #
 # USE THIS FOR LINUX:
 #
-TRILINOS_INCLUDE = /home/sutherland/apps/trilinos_jcs/include
-TRILINOS_LIB      = /home/sutherland/apps/trilinos_jcs/lib 
+TRILINOS_INCLUDE = /home/sutherland/apps/trilinos_jcs_opt/include
+TRILINOS_LIB      = /home/sutherland/apps/trilinos_jcs_opt/lib 
 LIBDIRS = -L./ -L$(TRILINOS_LIB)
 EXTRA_LIBS = 
 
@@ -20,7 +20,8 @@ EPETRA_LIBS = -lepetra -lepetraext -lblas -llapack
 AZTECOO_LIBS = -laztecoo -lteuchos 
 LIBS = $(AZTECOO_LIBS)  $(EPETRA_LIBS) $(EXTRA_LIBS)
 
-CXXFLAGS = -g -Wall
+CXXFLAGS = -O3 -Wall -fexpensive-optimizations -funroll-loops
+#CXXFLAGS = -g -Wall
 COMPILE_CXX = g++ -c $(CXXFLAGS) $(INCDIRS)
 
 LINK = g++ $(CXXFLAGS) $(INCDIRS) $(LIBDIRS)

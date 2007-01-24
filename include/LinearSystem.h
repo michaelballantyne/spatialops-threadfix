@@ -4,6 +4,10 @@
 #include <vector>
 #include <map>
 
+#ifdef HAVE_MPI
+#include <mpi.h>
+#endif
+
 // SpatialOps forward declarations:
 namespace SpatialOps{
   class SpatialOperator;
@@ -20,7 +24,88 @@ class Epetra_LinearProblem;
 class AztecOO;
 
 
+// local forward declarations
+class LinearSystem;
+
+
 //====================================================================
+
+/**
+ *  @struct LinSysInfo
+ *  @author James C. Sutherland
+ *  @date   January, 2007
+ *
+ *  Information required to obtain a LinearSystem from the
+ *  LinSysFactory.
+ */
+struct LinSysInfo
+{
+
+  enum SolverPackage{
+    TRILINOS  // currently only TRILINOS is supported.
+  };
+
+  enum Preconditioner{
+    NONE,
+    DEFAULT
+  };
+
+#ifdef HAVE_MPI
+  LinSysInfo( const std::vector<int> & npts,
+	      MPI_Comm & communicator );
+#else
+  LinSysInfo( const std::vector<int> & npts );
+#endif
+
+  ~LinSysInfo();
+
+  SolverPackage solverPackage;
+  Preconditioner preconditioner;
+
+  //
+  // these are required to build the linear system.
+  //
+
+  const std::vector<int> dimExtent;
+
+#ifdef HAVE_MPI
+  MPI_Comm & comm;
+#endif
+
+  bool operator ==(const LinSysInfo&) const;
+  bool operator < (const LinSysInfo&) const;
+};
+
+
+//====================================================================
+
+
+/**
+ *  @class  LinSysFactory
+ *  @author James C. Sutherland
+ *  @date   January, 2007
+ *
+ *  Factory to produce linear systems.
+ */
+class LinSysFactory
+{
+public:
+  static LinSysFactory& self();
+
+  LinearSystem & get_linsys( const LinSysInfo& info );
+
+private:
+  LinSysFactory();
+  ~LinSysFactory();
+
+  typedef std::map<LinSysInfo,LinearSystem*> InfoMap;
+  InfoMap infoMap_;
+
+};
+
+
+//====================================================================
+
 
 /**
  *  @class  RHS
@@ -141,19 +226,14 @@ typedef RHS SOLN;
  *  @date   December, 2006
  *
  *  Basic support for a linear system distributed in parallel.
+ *
+ *  LinearSystem objects are constructed via the LinSysFactory.
  */
 class LinearSystem
 {
+  friend class LinSysFactory;
+
 public:
-
-#ifdef HAVE_MPI
-  LinearSystem( const std::vector<int> & dimExtent,
-		MPI_Comm & comm );
-#else
-  LinearSystem( const std::vector<int> & dimExtent );
-#endif
-
-  ~LinearSystem();
 
   /** Zero the lhs and rhs */
   void reset();
@@ -192,6 +272,26 @@ public:
 
 protected:
 
+
+#ifdef HAVE_MPI
+
+  LinearSystem( const std::vector<int> & dimExtent,
+		MPI_Comm & comm );
+
+  int LinearSystem::get_global_npts( const std::vector<int> & extent,
+				     MPI_Comm & comm );
+
+#else
+
+  LinearSystem( const std::vector<int> & dimExtent );
+
+  int LinearSystem::get_global_npts( const std::vector<int> & extent );
+
+#endif
+
+  ~LinearSystem();
+
+
   void imprint( const std::vector<int> &, const int );
 
   const std::vector<int> extent_;
@@ -214,34 +314,6 @@ private:
   Epetra_LinearProblem * linProb_;
   AztecOO * aztec_;
 
-};
-
-//====================================================================
-
-
-/**
- *  @class  LinSysMapFactory
- *  @author James C. Sutherland
- *  @date   December, 2006
- *
- *  Support for creating Epetra_Map objects for use with the
- *  LinearSystem class.
- */
-class LinSysMapFactory
-{
-public:
-
-  static LinSysMapFactory& self();
-
-  Epetra_Map& get_map( const int npts,
-		       Epetra_Comm & com );
-
-private:
-
-  std::map<int,Epetra_Map*> emap_;
-
-  LinSysMapFactory();
-  ~LinSysMapFactory();
 };
 
 //====================================================================
