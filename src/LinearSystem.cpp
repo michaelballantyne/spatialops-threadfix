@@ -351,18 +351,16 @@ LinearSystem::LinearSystem( const vector<int> & extent )
 
     A_(NULL), b_(NULL), x_(NULL),
 
-    comm_( NULL ),
+#ifdef HAVE_MPI
+    comm_( new Epetra_MpiComm(comm) ),
+#else
+    comm_( new Epetra_SerialComm() ),
+#endif
 
     linProb_( NULL ),
     aztec_  ( NULL )
 {
   // Build the Epetra Maps
-#ifdef HAVE_MPI
-  comm_ = &comm;
-#else
-  comm_ = new Epetra_SerialComm();
-#endif
-
   const Epetra_Map & emap = LinSysMapFactory::self().get_map( npts_, *comm_ );
 
   // for now, hard code this for 2nd order.
@@ -411,8 +409,9 @@ LinearSystem::get_global_npts( const std::vector<int> & extent,
 			       MPI_Comm & comm )
 {
   // determine the total number of points in each dimension.
+  vector<int> tmpPts = extent;
   vector<int> globPoints( extent.size(), 0 );
-  MPI_Allreduce( &extent[0], &globPoints[0], extent.size(), MPI_INT, MPI_SUM, comm );
+  MPI_Allreduce( &tmpPts[0], &globPoints[0], extent.size(), MPI_INT, MPI_SUM, comm );
 
   return std::accumulate( globPoints.begin(), globPoints.end(), 1, std::multiplies<int>() );
 }
@@ -561,7 +560,11 @@ LinSysInfo::operator==(const LinSysInfo& s) const
 {
   return( s.solverPackage  == solverPackage &&
 	  s.preconditioner == preconditioner &&
-	  s.dimExtent == dimExtent );
+	  s.dimExtent == dimExtent
+#ifdef HAVE_MPI
+	  && s.comm == comm
+#endif
+    );
 }
 //--------------------------------------------------------------------
 bool
@@ -569,7 +572,11 @@ LinSysInfo::operator<(const LinSysInfo& s) const
 {
   return( s.solverPackage < solverPackage &&
 	  s.preconditioner< preconditioner &&
-	  s.dimExtent < dimExtent );
+	  s.dimExtent < dimExtent
+#ifdef HAVE_MPI
+	  && s.comm < comm
+#endif
+    );
 }
 //--------------------------------------------------------------------
 
