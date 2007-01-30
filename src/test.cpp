@@ -19,16 +19,16 @@ using namespace SpatialOps;
 #define PI 3.1415
 
 void setup_geom( const std::vector<int> & dim,
-		 const int nghost,
+		 const std::vector<int> & nghost,
 		 int & nn, int&nx, int&ny, int&nz,
 		 std::vector<double> & spacing,
 		 std::vector<double> & area,
 		 double & volume )
 {
   // set up array dimensions for "source" arrays
-  nx = dim[0]+2*nghost;
-  ny = dim[1]>1 ? dim[1]+2*nghost : 1;
-  nz = dim[2]>1 ? dim[2]+2*nghost : 1;
+  nx = dim[0]+nghost[0]+nghost[1];
+  ny = dim[1]>1 ? dim[1]+nghost[2]+nghost[3] : 1;
+  nz = dim[2]>1 ? dim[2]+nghost[4]+nghost[5] : 1;
   nn = nx*ny*nz;
 
   for( int i=0; i<3; ++i )
@@ -55,13 +55,13 @@ bool test_linsys()
   std::vector<double> spacing(3), area(3);
   double volume;
   int nn, nx,ny,nz;
-  const int nghost = 1;
-  setup_geom( dim, nghost, nn,nx,ny,nz, spacing, area, volume );
+  const std::vector<int> nghostCell(6,1);
+  setup_geom( dim, nghostCell, nn,nx,ny,nz, spacing, area, volume );
 
   // create a laplacian
-  const Gradient2ndOrder xGrad( spacing, dim, X_DIR );
-  const Divergence2ndOrder xDiv( area, volume, dim, X_DIR );
-  ScratchOperator xLaplacian( dim, 3, X_DIR );
+  const Gradient2ndOrder xGrad( spacing, dim, nghostCell, X_DIR );
+  const Divergence2ndOrder xDiv( area, volume, dim, nghostCell, X_DIR );
+  ScratchOperator xLaplacian( dim, nghostCell, 3, X_DIR );
 
   xDiv.apply( xGrad, xLaplacian );
 
@@ -75,9 +75,9 @@ bool test_linsys()
   linSys.get_lhs().add_contribution( xLaplacian );
 
   if( dim[1] > 1 ){
-    const Gradient2ndOrder yGrad( spacing, dim, Y_DIR );
-    const Divergence2ndOrder yDiv( area, volume, dim, Y_DIR );
-    ScratchOperator yLaplace( dim, 3, Y_DIR );
+    const Gradient2ndOrder yGrad( spacing, dim, nghostCell, Y_DIR );
+    const Divergence2ndOrder yDiv( area, volume, dim, nghostCell, Y_DIR );
+    ScratchOperator yLaplace( dim, nghostCell, 3, Y_DIR );
     yDiv.apply( yGrad, yLaplace );
 
     linSys.get_lhs().add_contribution( yLaplace );
@@ -87,9 +87,9 @@ bool test_linsys()
   }
 
   if( dim[2] > 1 ){
-    const Gradient2ndOrder zGrad( spacing, dim, Z_DIR );
-    const Divergence2ndOrder zDiv( area, volume, dim, Z_DIR );
-    ScratchOperator zLaplace( dim, 3, Z_DIR );
+    const Gradient2ndOrder zGrad( spacing, dim, nghostCell, Z_DIR );
+    const Divergence2ndOrder zDiv( area, volume, dim, nghostCell, Z_DIR );
+    ScratchOperator zLaplace( dim, nghostCell, 3, Z_DIR );
     zDiv.apply( zGrad, zLaplace );
 
     linSys.get_lhs().add_contribution( zLaplace );
@@ -104,8 +104,9 @@ bool test_linsys()
 
   linSys.solve();
 
+  vector<int> ng0(6,0);
   EpetraExt::RowMatrixToMatrixMarketFile( "LHS.mm", linSys.get_lhs().epetra_mat(), "", "" );
-  SpatialField tmp( dim, 0, linSys.get_rhs().get_ptr(), SpatialField::ExternalStorage );
+  SpatialField tmp( dim, ng0, linSys.get_rhs().get_ptr(), SpatialField::ExternalStorage );
   EpetraExt::VectorToMatrixMarketFile( "rhs.mm",   tmp.epetra_vec(), "", "" );
   EpetraExt::VectorToMatrixMarketFile( "soln.mm",  linSys.get_soln_field_epetra_vec(), "", "" );
 
@@ -119,11 +120,10 @@ bool test_field()
   std::vector<int> dim(3,1);
   dim[0] = 10;
 
-  const int nghost = 0;
+  const std::vector<int> nghost(6,0);
 
   int nn=1;
-  for( int i=0; i<3; ++i )
-    nn *= dim[i]+nghost;
+  for( int i=0; i<3; ++i )    nn *= dim[i]+nghost[i*2]+nghost[i*2+1];
 
   vector<double> fptr(nn,0.0);
   vector<double> gptr(nn,0.0);
@@ -164,35 +164,65 @@ bool test_spatial_ops_x()
   dim[2] = 3;
 
   // set up array dimensions for "source" arrays
-  const int nghost=1;
+  const std::vector<int> nghostCell(6,1);
+  const std::vector<int> nghostFace = nghostCell;
   int nx, ny, nz, nn;
   std::vector<double> spacing(3,0.0);
   std::vector<double>    area(3,0.0);
   double volume;
 
-  setup_geom( dim, 1, nn, nx, ny, nz, spacing, area, volume );
+  setup_geom( dim, nghostCell, nn, nx, ny, nz, spacing, area, volume );
 
   // build some operators and stash them in the database.
+  // This will test database functionality.
   SpatialOpDatabase & SODatabase = SpatialOpDatabase::self();
   {
-    SpatialOperator * xinterp   = new LinearInterpolant( dim, X_DIR );
-    SpatialOperator * xGrad     = new Gradient2ndOrder( spacing, dim, X_DIR );
-    SpatialOperator * xDiv      = new Divergence2ndOrder( area, volume, dim, X_DIR );
-    SpatialOperator * scratchOp = new ScratchOperator( dim, 3, X_DIR );
-    SpatialOperator * scratchOp2= new ScratchOperator( dim, 3, X_DIR );
+    SODatabase.register_new_operator( SpatialOpDatabase::CELL_INTERPOLANT_X,
+				      new LinearInterpolant( dim, nghostCell, X_DIR ),
+				      "X-Interpolant Second Order Staggered Cell" );
 
-    SODatabase.register_new_operator( SpatialOpDatabase::INTERPOLANT_X, xinterp,   "X-Interpolant Second Order Staggered" );
-    SODatabase.register_new_operator( SpatialOpDatabase::DIVERGENCE_X,  xDiv,      "X-Divergence Second Order Staggered"  );
-    SODatabase.register_new_operator( SpatialOpDatabase::GRADIENT_X,    xGrad,     "X-Gradient Second Order Staggered"    );
-    SODatabase.register_new_operator( SpatialOpDatabase::SCRATCH_X,     scratchOp, "Scratch X Second Order"               );
-    SODatabase.register_new_operator( SpatialOpDatabase::SCRATCH_X,     scratchOp2,"Scratch X Second Order 2"             );
+    SODatabase.register_new_operator( SpatialOpDatabase::FACE_INTERPOLANT_X,
+				      new LinearInterpolant( dim, nghostFace, X_DIR ),
+				      "X-Interpolant Second Order Staggered Face" );
+
+    SODatabase.register_new_operator( SpatialOpDatabase::CELL_DIVERGENCE_X,
+				      new Divergence2ndOrder( area, volume, dim, nghostCell, X_DIR ),
+				      "X-Divergence Second Order Staggered Cell"  );
+
+    SODatabase.register_new_operator( SpatialOpDatabase::FACE_DIVERGENCE_X,
+				      new Divergence2ndOrder( area, volume, dim, nghostFace, X_DIR ),
+				      "X-Divergence Second Order Staggered Face"  );
+
+    SODatabase.register_new_operator( SpatialOpDatabase::CELL_GRADIENT_X,
+				      new Gradient2ndOrder( spacing, dim, nghostCell, X_DIR ),
+				      "X-Gradient Second Order Staggered Cell"    );
+
+    SODatabase.register_new_operator( SpatialOpDatabase::FACE_GRADIENT_X,
+				      new Gradient2ndOrder( spacing, dim, nghostFace, X_DIR ),
+				      "X-Gradient Second Order Staggered Face"    );
+
+    SODatabase.register_new_operator( SpatialOpDatabase::CELL_SCRATCH_X,
+				      new ScratchOperator( dim, nghostCell, 3, X_DIR ),
+				      "Scratch X Second Order Cell" );
+
+    SODatabase.register_new_operator( SpatialOpDatabase::CELL_SCRATCH_X,
+				      new ScratchOperator( dim, nghostCell, 3, X_DIR ),
+				      "Scratch X Second Order Cell 2" );
+
+    SODatabase.register_new_operator( SpatialOpDatabase::FACE_SCRATCH_X,
+				      new ScratchOperator( dim, nghostFace, 3, X_DIR ),
+				      "Scratch X Second Order Face" );
+
+    SODatabase.register_new_operator( SpatialOpDatabase::FACE_SCRATCH_X,
+				      new ScratchOperator( dim, nghostFace, 3, X_DIR ),
+				      "Scratch X Second Order Face 2" );
   }
 
-  SpatialOperator *& xinterp   = SODatabase.retrieve_operator( SpatialOpDatabase::INTERPOLANT_X );
-  SpatialOperator *& xDiv      = SODatabase.retrieve_operator( SpatialOpDatabase::DIVERGENCE_X  );
-  SpatialOperator *& xGrad     = SODatabase.retrieve_operator( SpatialOpDatabase::GRADIENT_X    );
-  SpatialOperator *& scratchOp = SODatabase.retrieve_operator( "Scratch X Second Order"         );
-  SpatialOperator *& scratchOp2= SODatabase.retrieve_operator( "Scratch X Second Order 2"       );
+  SpatialOperator *& CellRx  = SODatabase.retrieve_operator( SpatialOpDatabase::CELL_INTERPOLANT_X );
+  SpatialOperator *& CellDx  = SODatabase.retrieve_operator( SpatialOpDatabase::CELL_DIVERGENCE_X  );
+  SpatialOperator *& CellGx  = SODatabase.retrieve_operator( SpatialOpDatabase::CELL_GRADIENT_X    );
+  SpatialOperator *& CellSx1 = SODatabase.retrieve_operator( "Scratch X Second Order Cell"         );
+  SpatialOperator *& CellSx2 = SODatabase.retrieve_operator( "Scratch X Second Order Cell 2"       );
 
 
 //   EpetraExt::RowMatrixToMatrixMarketFile( "Int_x.mm", xinterp->epetra_mat(), "", "" );
@@ -217,25 +247,25 @@ bool test_spatial_ops_x()
     }
   }
 
-  SpatialField  f( dim, nghost, &fptr[0], SpatialField::ExternalStorage );
-  SpatialField  x( dim, nghost, &xptr[0], SpatialField::ExternalStorage );
-  SpatialField  g( dim, nghost, NULL,     SpatialField::InternalStorage );
-  SpatialField df( dim, nghost, NULL,     SpatialField::InternalStorage );
-  SpatialField xg( dim, nghost, NULL,     SpatialField::InternalStorage );
-  SpatialField d2f(dim, nghost, NULL,     SpatialField::InternalStorage );
-  SpatialField tmp(dim, nghost, NULL,     SpatialField::InternalStorage );
+  SpatialField  f( dim, nghostCell, &fptr[0], SpatialField::ExternalStorage );
+  SpatialField  x( dim, nghostCell, &xptr[0], SpatialField::ExternalStorage );
+  SpatialField  g( dim, nghostCell, NULL,     SpatialField::InternalStorage );
+  SpatialField df( dim, nghostCell, NULL,     SpatialField::InternalStorage );
+  SpatialField xg( dim, nghostCell, NULL,     SpatialField::InternalStorage );
+  SpatialField d2f(dim, nghostCell, NULL,     SpatialField::InternalStorage );
+  SpatialField tmp(dim, nghostCell, NULL,     SpatialField::InternalStorage );
 
-  xinterp->apply( f, g );
-  xinterp->apply( x, xg);
-  xGrad  ->apply( f, df );
-  xDiv->apply( df, tmp );
+  CellRx->apply(  f, g   );
+  CellRx->apply(  x, xg  );
+  CellGx->apply(  f, df  );
+  CellDx->apply( df, tmp );
 
   // form the laplacian
-  xDiv->apply( *xGrad, *scratchOp );
+  CellDx->apply( *CellGx, *CellSx1 );
   // jcs: we should be able to do it this way, but trilinos barfs:
-  *scratchOp2 = *xGrad;
-  xDiv->apply( *scratchOp2, *scratchOp );
-  scratchOp->apply( f, d2f );
+  *CellSx2 = *CellGx;
+  CellDx->apply( *CellSx2, *CellSx1 );
+  CellSx1->apply( f, d2f );
 
   // check equality of the two methods
   for( int i=0; i<tmp.get_ntotal(); ++i ){
@@ -250,7 +280,7 @@ bool test_spatial_ops_x()
     }
   }
 
-  EpetraExt::RowMatrixToMatrixMarketFile( "Laplace_x.mm", scratchOp->epetra_mat(),  "", "" );
+  EpetraExt::RowMatrixToMatrixMarketFile( "Laplace_x.mm", CellSx1->epetra_mat(),  "", "" );
   EpetraExt::VectorToMatrixMarketFile( "fx.mm",  f.epetra_vec(), "", "" );
   EpetraExt::VectorToMatrixMarketFile(  "x.mm",   x.epetra_vec(), "", "" );
   EpetraExt::VectorToMatrixMarketFile( "gx.mm",  g.epetra_vec(), "", "" );
@@ -280,16 +310,16 @@ bool test_spatial_ops_y()
   dim[1] = 21;
   dim[2] = 9;
 
-  const int nghost=1;
+  const vector<int> nghost(6,1);
   int nn,nx,ny,nz;
   std::vector<double> spacing(3,0.0);
   std::vector<double>    area(3,0.0);
   double volume;
   setup_geom( dim, nghost, nn,nx,ny,nz, spacing, area, volume );
 
-  LinearInterpolant yinterp( dim, Y_DIR );
-  Gradient2ndOrder  yGrad( spacing, dim, Y_DIR );
-  Divergence2ndOrder yDiv( area, volume, dim, Y_DIR );
+  LinearInterpolant yinterp( dim, nghost, Y_DIR );
+  Gradient2ndOrder  yGrad( spacing, dim, nghost, Y_DIR );
+  Divergence2ndOrder yDiv( area, volume, dim, nghost, Y_DIR );
 
   EpetraExt::RowMatrixToMatrixMarketFile( "Int_y.mm", yinterp.epetra_mat(), "", "" );
   EpetraExt::RowMatrixToMatrixMarketFile( "Grad_y.mm", yGrad.epetra_mat(), "", "" );
@@ -346,16 +376,16 @@ bool test_spatial_ops_z()
   dim[2] = 16;
 
   // set up array dimensions for "source" arrays
-  const int nghost=1;
+  const vector<int> nghost(6,1);
   int nn,nx,ny,nz;
   std::vector<double> spacing(3,0.0);
   std::vector<double>    area(3,0.0);
   double volume;
   setup_geom( dim, nghost, nn,nx,ny,nz, spacing, area, volume );
 
-  LinearInterpolant zinterp( dim, Z_DIR );
-  Gradient2ndOrder zGrad( spacing, dim, Z_DIR );
-  Divergence2ndOrder zDiv( area, volume, dim, Z_DIR );
+  LinearInterpolant zinterp( dim, nghost, Z_DIR );
+  Gradient2ndOrder zGrad( spacing, dim, nghost, Z_DIR );
+  Divergence2ndOrder zDiv( area, volume, dim, nghost, Z_DIR );
 
   /*
   EpetraExt::RowMatrixToMatrixMarketFile( "Int_z.mm", zinterp.epetra_mat(), "", "" );
@@ -415,14 +445,14 @@ bool test_spatial_ops_algebra()
   dim[2] = 3;
 
   // set up array dimensions for "source" arrays
-  const int nghost=1;
-  const int nx = dim[0]+2*nghost;
-  const int ny = dim[1]>1 ? dim[1]+2*nghost : 1;
-  const int nz = dim[2]>1 ? dim[2]+2*nghost : 1;
+  const vector<int> nghost(6,1);
+  const int nx = dim[0]+nghost[0]+nghost[1];
+  const int ny = dim[1]>1 ? dim[1]+nghost[2]+nghost[3] : 1;
+  const int nz = dim[2]>1 ? dim[2]+nghost[4]+nghost[5] : 1;
   const int nn = nx*ny*nz;
 
-  LinearInterpolant zinterp( dim, Z_DIR );
-  LinearInterpolant z2( dim, Z_DIR );
+  LinearInterpolant zinterp( dim, nghost, Z_DIR );
+  LinearInterpolant z2( dim, nghost, Z_DIR );
 
   vector<double> f1(nn,0.0);
   vector<double> f2(nn,0.0);

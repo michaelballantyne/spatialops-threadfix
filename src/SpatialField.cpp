@@ -16,8 +16,8 @@ namespace SpatialOps{
 
 
 //--------------------------------------------------------------------
-SpatialField::SpatialField( const std::vector<int> & fieldDims,
-			    const int nghost,
+SpatialField::SpatialField( const vector<int> & fieldDims,
+			    const vector<int> & nghost,
 			    double * const fieldValues,
 			    const StorageMode mode )
   : extent_( fieldDims ),
@@ -55,11 +55,19 @@ SpatialField::~SpatialField()
 //--------------------------------------------------------------------
 int
 SpatialField::get_npts( const vector<int> & extent,
-			const int nghost )
+			const vector<int> & nghost )
 {
-  int npts = 1;
+  int npts=1;
+  vector<int>::const_iterator ig = nghost.begin();
   for( vector<int>::const_iterator ii=extent.begin(); ii!=extent.end(); ++ii ){
-    if( *ii>1 ) npts *= *ii+2*nghost;
+    if( *ii > 1 ){
+      // add "left" side ghosts
+      int nn = *ii;
+      nn += *ig;
+      ++ig;
+      nn += *ig;
+      npts *= nn;
+    }
   }
   return npts;
 }
@@ -147,38 +155,39 @@ SpatialField::operator =(const double s)
 SpatialField&
 SpatialField::operator =(const RHS& rhs)
 {
-  const int ng = nghost();
   double * const f = get_ptr();
 
   const std::vector<double> & r = rhs.get_field();
 
-  const int nxf= (extent_[0]>1) ? extent_[0]+2*ng : 1;
-  const int nyf= (extent_[1]>1) ? extent_[1]+2*ng : 1;
-  const int nzf= (extent_[2]>1) ? extent_[2]+2*ng : 1;
+  // get the dimensions of the field
+  const int nxf= (extent_[0]>1) ? extent_[0] + nghost_[0] + nghost_[1] : 1;
+  const int nyf= (extent_[1]>1) ? extent_[1] + nghost_[2] + nghost_[3] : 1;
+  const int nzf= (extent_[2]>1) ? extent_[2] + nghost_[4] + nghost_[5] : 1;
 
+  // get the dimensions of the rhs
   const int nxr = rhs.get_extent()[0];
   const int nyr = rhs.get_extent()[1];
   const int nzr = rhs.get_extent()[2];
 
   //
   // RHS fields do not have ghosting.
-  // Thus, we must be very carful on the indices!
+  // Thus, we must be very careful on the indices!
   //
 
   int ixr = 0;
-  int ixf = ng;
-  if( nyf>1 ) ixf += ng*nxf + 2*ng;
-  if( nzf>1 ) ixf += ng*nxf*nyf + 2*ng;
+  int ixf = nghost_[0];
+  if( nyf>1 ) ixf += nxf;
+  if( nzf>1 ) ixf += nxf*nyf;
   for( int k=0; k<nzr; ++k ){
-    if( nzf>1 ) ixf += nyf*ng;
     for( int j=0; j<nyr; ++j ){
-      if( nyf>1 )  ixf += ng;
       for( int i=0; i<nxr; ++i ){
 	f[ixf] = r[ixr];
 	++ixf;
 	++ixr;
       }
+      ixf += nghost_[0] + nghost_[1];
     }
+    ixf += nxf * ( nghost_[2]+nghost_[3] );
   }
   return *this;
 }
@@ -186,14 +195,14 @@ SpatialField::operator =(const RHS& rhs)
 SpatialField&
 SpatialField::operator +=(const RHS& rhs)
 {
-  const int ng = nghost();
   double * const f = get_ptr();
 
   const double * const r = rhs.get_ptr();
 
-  const int nxf= (extent_[0]>1) ? extent_[0]+2*ng : 1;
-  const int nyf= (extent_[1]>1) ? extent_[1]+2*ng : 1;
-  const int nzf= (extent_[2]>1) ? extent_[2]+2*ng : 1;
+  // get the dimensions of the field
+  const int nxf= (extent_[0]>1) ? extent_[0] + nghost_[0] + nghost_[1] : 1;
+  const int nyf= (extent_[1]>1) ? extent_[1] + nghost_[2] + nghost_[3] : 1;
+  const int nzf= (extent_[2]>1) ? extent_[2] + nghost_[4] + nghost_[5] : 1;
 
   const int nxr = rhs.get_extent()[0];
   const int nyr = rhs.get_extent()[1];
@@ -205,19 +214,19 @@ SpatialField::operator +=(const RHS& rhs)
   //
 
   int ixr = 0;
-  int ixf = ng;
-  if( nyf>1 ) ixf += ng*nxf + 2*ng;
-  if( nzf>1 ) ixf += ng*nxf*nyf + 2*ng;
+  int ixf = nghost_[0];
+  if( nyf>1 ) ixf += nxf;
+  if( nzf>1 ) ixf += nxf*nyf;
   for( int k=0; k<nzr; ++k ){
-    if( nzf>1 ) ixf += nyf*ng;
     for( int j=0; j<nyr; ++j ){
-      if( nyf>1 )  ixf += ng;
       for( int i=0; i<nxr; ++i ){
 	f[ixf] += r[ixr];
 	++ixf;
 	++ixr;
       }
+      ixf += nghost_[0]+nghost_[1];
     }
+    ixf += nxf * ( nghost_[2] + nghost_[3] );
   }
   return *this;
 }
@@ -225,14 +234,14 @@ SpatialField::operator +=(const RHS& rhs)
 SpatialField&
 SpatialField::operator -=(const RHS& rhs)
 {
-  const int ng = nghost();
   double * const f = get_ptr();
 
   const double * const r = rhs.get_ptr();
 
-  const int nxf= (extent_[0]>1) ? extent_[0]+2*ng : 1;
-  const int nyf= (extent_[1]>1) ? extent_[1]+2*ng : 1;
-  const int nzf= (extent_[2]>1) ? extent_[2]+2*ng : 1;
+  // get the dimensions of the field
+  const int nxf= (extent_[0]>1) ? extent_[0] + nghost_[0] + nghost_[1] : 1;
+  const int nyf= (extent_[1]>1) ? extent_[1] + nghost_[2] + nghost_[3] : 1;
+  const int nzf= (extent_[2]>1) ? extent_[2] + nghost_[4] + nghost_[5] : 1;
 
   const int nxr = rhs.get_extent()[0];
   const int nyr = rhs.get_extent()[1];
@@ -244,19 +253,19 @@ SpatialField::operator -=(const RHS& rhs)
   //
 
   int ixr = 0;
-  int ixf = ng;
-  if( nyf>1 ) ixf += ng*nxf + 2*ng;
-  if( nzf>1 ) ixf += ng*nxf*nyf + 2*ng;
+  int ixf = nghost_[0];
+  if( nyf>1 ) ixf += nxf;
+  if( nzf>1 ) ixf += nxf*nyf;
   for( int k=0; k<nzr; ++k ){
-    if( nzf>1 ) ixf += nyf*ng;
     for( int j=0; j<nyr; ++j ){
-      if( nyf>1 )  ixf += ng;
       for( int i=0; i<nxr; ++i ){
 	f[ixf] -= r[ixr];
 	++ixf;
 	++ixr;
       }
+      ixf += nghost_[0]+nghost_[1];
     }
+    ixf += nxf * ( nghost_[2] + nghost_[3] );
   }
   return *this;
 }

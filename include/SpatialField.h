@@ -30,6 +30,17 @@ class SpatialField
 {
 public:
 
+  enum Dimension{
+    XDIM = 0,
+    YDIM = 1,
+    ZDIM = 2
+  };
+
+  enum Side{
+    MINUS = 0,
+    PLUS  = 1
+  };
+
   enum StorageMode{
     InternalStorage,
     ExternalStorage
@@ -41,6 +52,10 @@ public:
    *  @param fieldDims: The number of points (excluding any ghost
    *  cells) for the domain in each of the three ordinal directions.
    *
+   *  @param nghost : the number of  ghost cells on the minus and plus
+   *  sides of the patch that  this field is defined on.  For example:
+   *  [nxgl, nxgr, nygl, nygr, nzgl, nzgr].
+   *
    *  @param fieldValues : Pointer to the field values.  Behavior is
    *  dictated by the choice of <code>StorageMode</code>
    *
@@ -51,7 +66,7 @@ public:
    *  avoid excessive copies.
    */
   SpatialField( const std::vector<int> & fieldDims,
-		const int nghost,
+		const std::vector<int> & nghost,
 		double * const fieldValues,
 		const StorageMode mode );
 
@@ -108,7 +123,13 @@ public:
   /** get the total number of points (including ghost layers) */
   inline int get_ntotal() const{ return npts_; }
 
-  inline int nghost() const{ return nghost_; }
+  inline const std::vector<int>& nghost() const{return nghost_;}
+
+  inline const int nghost( const Dimension dim, const Side side ) const
+  {
+    const int ix = int(dim)*(int(side)+1);
+    return nghost_[ix];
+  }
 
   inline const std::vector<int>& get_extent() const{return extent_;}
 
@@ -125,11 +146,11 @@ protected:
 private:
 
   static int get_npts( const std::vector<int> & extent,
-		       const int nghost );
+		       const std::vector<int> & nghost );
 
   const std::vector<int> extent_;
   const int npts_;
-  const int nghost_;
+  const std::vector<int> nghost_;
   const StorageMode storageMode_;
   double * const fieldValues_;
 

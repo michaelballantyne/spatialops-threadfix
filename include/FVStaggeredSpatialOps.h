@@ -7,17 +7,26 @@
 namespace SpatialOps{
 namespace FVStaggeredUniform{
 
+  int rowcount( const std::vector<int> & dimExtent,
+		const std::vector<int> & nghost );
+  int colcount( const std::vector<int> & dimExtent,
+		const std::vector<int> & nghost );
+
 //====================================================================
 
   /**
    *  @class  ScratchOperator
    *  @author James C. Sutherland
    *  @date   December, 2006
+   *
+   *  provides a "scratch" operator for cell fields.  This may be
+   *  useful when building operators from other operators & fields.
    */
   class ScratchOperator : public SpatialOperator
   {
   public:
     ScratchOperator( const std::vector<int> & dimExtent,
+		     const std::vector<int> & nghost,
 		     const int entriesPerRow,
 		     const Direction dir );
 
@@ -26,9 +35,6 @@ namespace FVStaggeredUniform{
     void setup_matrix();
 
   private:
-    static int rowcount( const std::vector<int> & dimExtent, const int nghost );
-    static int colcount( const std::vector<int> & dimExtent, const int nghost );
-    static int my_nghost(){return 1;}
 
     void get_row_entries( const int irow,
 			  std::vector<double> & vals,
@@ -42,7 +48,7 @@ namespace FVStaggeredUniform{
 //====================================================================
 
   /**
-   *  @class  ScratchOperator
+   *  @class  LinearInterpolant
    *  @author James C. Sutherland
    *  @date   December, 2006
    */
@@ -51,21 +57,16 @@ namespace FVStaggeredUniform{
   public:
 
     LinearInterpolant( const std::vector<int> & dimExtent,
+		       const std::vector<int> & nghost,
 		       const Direction dir );
-
+    
     ~LinearInterpolant();
 
     void setup_matrix();
 
   private:
 
-    static int colcount( const std::vector<int>& dims );
-
-    static int rowcount( const std::vector<int>& dims );
-
     static int entries_per_row(){ return 2; }
-
-    static int my_nghost(){ return 1; }
 
     void get_row_entries( const int irow,
 			  std::vector<double> & vals,
@@ -78,7 +79,7 @@ namespace FVStaggeredUniform{
 //====================================================================
 
   /**
-   *  @class  ScratchOperator
+   *  @class  Gradient2ndOrder
    *  @author James C. Sutherland
    *  @date   December, 2006
    */
@@ -88,16 +89,14 @@ namespace FVStaggeredUniform{
 
     Gradient2ndOrder( const std::vector<double> & meshSpacing,
 		      const std::vector<int> & dimExtent,
+		      const std::vector<int> & nghost,
 		      const Direction dir );
 
     ~Gradient2ndOrder();
 
   private:
 
-    static int rowcount( const std::vector<int> & extent );
-    static int colcount( const std::vector<int> & extent );
     static int entries_per_row(){ return 2; }
-    static int my_nghost(){ return 1; }
 
     void setup_matrix();
 
@@ -113,7 +112,7 @@ namespace FVStaggeredUniform{
 //====================================================================
 
   /**
-   *  @class  ScratchOperator
+   *  @class  Divergence2ndOrder
    *  @author James C. Sutherland
    *  @date   December, 2006
    */
@@ -123,16 +122,14 @@ namespace FVStaggeredUniform{
     Divergence2ndOrder( const std::vector<double> & cellFaceArea,
 			const double cellVolume,
 			const std::vector<int> & dimExtent,
+			const std::vector<int> & nghost,
 			const Direction dir );
 
     ~Divergence2ndOrder();
 
   private:
 
-    static int rowcount( const std::vector<int> & extent );
-    static int colcount( const std::vector<int> & extent );
     static int entries_per_row(){ return 2; }
-    static int my_nghost(){ return 1; }
 
     void setup_matrix();
     void get_row_entries( const int irow,

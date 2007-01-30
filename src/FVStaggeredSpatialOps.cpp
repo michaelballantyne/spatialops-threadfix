@@ -11,14 +11,44 @@ namespace FVStaggeredUniform{
 
 //====================================================================
 
+//--------------------------------------------------------------------
+int colcount( const vector<int> & dims,
+	      const vector<int> & nghost )
+{
+  int nrows=1;
+  vector<int>::const_iterator ig = nghost.begin();
+  for( vector<int>::const_iterator ii=dims.begin(); ii!=dims.end(); ++ii ){
+    if( *ii > 1 ){
+      // add "left" side ghosts
+      int nn = *ii;
+      nn += *ig;
+      ++ig;
+      nn += *ig;
+      nrows *= nn;
+    }
+  }
+  return nrows;
+}
+//--------------------------------------------------------------------
+int rowcount( const vector<int> & dims,
+	      const vector<int> & nghost )
+{
+  return colcount(dims,nghost);
+}
+//--------------------------------------------------------------------
+
+
+//====================================================================
+
 
 //--------------------------------------------------------------------
 ScratchOperator::ScratchOperator( const vector<int> & dimExtent,
+				  const vector<int> & nghost,
 				  const int entriesPerRow,
 				  const Direction dir )
-  : SpatialOperator( rowcount(dimExtent,my_nghost()),
-		     colcount(dimExtent,my_nghost()),
-		     my_nghost(),
+  : SpatialOperator( rowcount( dimExtent, nghost ),
+		     colcount( dimExtent, nghost ),
+		     nghost,
 		     entriesPerRow,
 		     dimExtent ),
 
@@ -40,22 +70,6 @@ ScratchOperator::~ScratchOperator()
 {
 }
 //--------------------------------------------------------------------
-int
-ScratchOperator::rowcount( const vector<int> & dimExtent,
-			   const int nghost )
-{
-  int nrows=1;
-  for( vector<int>::const_iterator ii=dimExtent.begin(); ii!=dimExtent.end(); ++ii )
-    if( *ii > 1 ) nrows *= *ii+nghost*2;
-  return nrows;
-}
-//--------------------------------------------------------------------
-int
-ScratchOperator::colcount( const vector<int> & dimExtent, const int nghost )
-{
-  return rowcount(dimExtent,nghost);
-}
-//--------------------------------------------------------------------
 void
 ScratchOperator::setup_matrix()
 {
@@ -72,14 +86,14 @@ ScratchOperator::setup_matrix()
 //--------------------------------------------------------------------
 void
 ScratchOperator::get_row_entries( const int irow,
-				  vector<double> & vals,
-				  vector<int> & ixs ) const
+				      vector<double> & vals,
+				      vector<int> & ixs ) const
 {
   const double val = 0.0;
 
-  const int nx = extent_[0]+2*nghost();
-  const int ny = extent_[1]+2*nghost();
-  const int nz = extent_[2]+2*nghost();
+  const int nx = extent_[0] + nghost(XDIM,MINUS) + nghost(XDIM,PLUS);
+  const int ny = extent_[1] + nghost(YDIM,MINUS) + nghost(YDIM,PLUS);
+  const int nz = extent_[2] + nghost(ZDIM,MINUS) + nghost(ZDIM,PLUS);
 
   switch( dir_ ){
 
@@ -164,10 +178,11 @@ ScratchOperator::get_row_entries( const int irow,
 
 //--------------------------------------------------------------------
 LinearInterpolant::LinearInterpolant( const vector<int> & dimExtent,
+				      const vector<int> & nghost,
 				      const Direction dir )
-  : SpatialOperator( rowcount( dimExtent ),
-		     colcount( dimExtent ),
-		     my_nghost(),
+  : SpatialOperator( rowcount( dimExtent, nghost ),
+		     colcount( dimExtent, nghost ),
+		     nghost,
 		     entries_per_row(),
 		     dimExtent ),
     dir_( dir )
@@ -183,22 +198,6 @@ LinearInterpolant::LinearInterpolant( const vector<int> & dimExtent,
 //--------------------------------------------------------------------
 LinearInterpolant::~LinearInterpolant()
 {
-}
-//--------------------------------------------------------------------
-int
-LinearInterpolant::colcount( const vector<int>& dims )
-{
-  vector<int> nn = dims;
-  for( vector<int>::iterator ii=nn.begin(); ii!=nn.end(); ++ii ){
-    if( *ii > 1 ) *ii += 2*my_nghost();
-  }
-  return std::accumulate( nn.begin(), nn.end(), 1, std::multiplies<int>() );
-}
-//--------------------------------------------------------------------
-int
-LinearInterpolant::rowcount( const vector<int>& dims )
-{
-  return colcount(dims);
 }
 //--------------------------------------------------------------------
 void
@@ -226,8 +225,8 @@ LinearInterpolant::get_row_entries( const int irow,
   //
   const double val = 0.5;
 
-  const int nx = extent_[0]+2*nghost();
-  const int ny = extent_[1]+2*nghost();
+  const int nx = extent_[0] + nghost(XDIM,MINUS) + nghost(XDIM,PLUS);
+  const int ny = extent_[1] + nghost(YDIM,MINUS) + nghost(YDIM,PLUS);
 
   switch( dir_ ){
 
@@ -303,10 +302,11 @@ LinearInterpolant::get_row_entries( const int irow,
 //--------------------------------------------------------------------
 Gradient2ndOrder::Gradient2ndOrder( const vector<double> & meshSpacing,
 				    const vector<int> & dimExtent,
+				    const vector<int> & nghost,
 				    const Direction dir )
-  : SpatialOperator( rowcount(dimExtent),
-		     colcount(dimExtent),
-		     my_nghost(),
+  : SpatialOperator( rowcount( dimExtent, nghost ),
+		     colcount( dimExtent, nghost ),
+		     nghost,
 		     entries_per_row(),
 		     dimExtent ),
 
@@ -326,22 +326,6 @@ Gradient2ndOrder::~Gradient2ndOrder()
 {
 }
 //--------------------------------------------------------------------
-int
-Gradient2ndOrder::rowcount( const vector<int>& dims )
-{
-  return colcount( dims );
-}
-//--------------------------------------------------------------------
-int
-Gradient2ndOrder::colcount( const vector<int>& dims )
-{
-  vector<int> nn = dims;
-  for( vector<int>::iterator ii=nn.begin(); ii!=nn.end(); ++ii ){
-    if( *ii > 1 ) *ii += 2*my_nghost();
-  }
-  return std::accumulate( nn.begin(), nn.end(), 1, std::multiplies<int>() );
-}
-//--------------------------------------------------------------------
 void
 Gradient2ndOrder::setup_matrix()
 {
@@ -358,11 +342,11 @@ Gradient2ndOrder::setup_matrix()
 //--------------------------------------------------------------------
 void
 Gradient2ndOrder::get_row_entries( const int irow,
-				   vector<double> & vals,
-				   vector<int> & ixs ) const
+				       vector<double> & vals,
+				       vector<int> & ixs ) const
 {
-  const int nx  = extent_[0]+2*nghost();
-  const int ny  = extent_[1]+2*nghost();
+  const int nx  = extent_[0] + nghost(XDIM,MINUS) + nghost(XDIM,PLUS);
+  const int ny  = extent_[1] + nghost(YDIM,MINUS) + nghost(YDIM,PLUS);
 
   switch( dir_ ){
 
@@ -440,10 +424,11 @@ Gradient2ndOrder::get_row_entries( const int irow,
 Divergence2ndOrder::Divergence2ndOrder( const vector<double> & cellFaceArea,
 					const double cellVolume,
 					const vector<int> & dimExtent,
+					const vector<int> & nghost,
 					const Direction dir )
-  : SpatialOperator( rowcount(dimExtent),
-		     colcount(dimExtent),
-		     my_nghost(),
+  : SpatialOperator( rowcount( dimExtent, nghost ),
+		     colcount( dimExtent, nghost ),
+		     nghost,
 		     entries_per_row(), 
 		     dimExtent ),
 
@@ -461,22 +446,7 @@ Divergence2ndOrder::Divergence2ndOrder( const vector<double> & cellFaceArea,
 }
 //--------------------------------------------------------------------
 Divergence2ndOrder::~Divergence2ndOrder()
-{}
-//--------------------------------------------------------------------
-int
-Divergence2ndOrder::colcount( const vector<int> & dims )
 {
-  vector<int> nn = dims;
-  for( vector<int>::iterator ii=nn.begin(); ii!=nn.end(); ++ii ){
-    if( *ii > 1 ) *ii += 2*my_nghost();
-  }
-  return std::accumulate( nn.begin(), nn.end(), 1, std::multiplies<int>() );
-}
-//--------------------------------------------------------------------
-int
-Divergence2ndOrder::rowcount( const vector<int>& dims )
-{
-  return colcount(dims);
 }
 //--------------------------------------------------------------------
 void
@@ -502,7 +472,7 @@ Divergence2ndOrder::get_row_entries( const int irow,
 
   case X_DIR:{
 
-    const int nx = extent_[0]+2*nghost();
+    const int nx = extent_[0] + nghost(XDIM,MINUS) + nghost(XDIM,PLUS);
 
     const double fac = faceArea_[0]/cellVol_;
 
@@ -524,8 +494,8 @@ Divergence2ndOrder::get_row_entries( const int irow,
 
     assert( ndim_ > 1 );
     
-    const int nx = extent_[0]+2*nghost();
-    const int ny = extent_[1]+2*nghost();
+    const int nx = extent_[0] + nghost(XDIM,MINUS) + nghost(XDIM,PLUS);
+    const int ny = extent_[1] + nghost(YDIM,MINUS) + nghost(YDIM,PLUS);
 
     const double fac = faceArea_[1]/cellVol_;
     const int j = (irow/nx)%ny;
@@ -546,9 +516,9 @@ Divergence2ndOrder::get_row_entries( const int irow,
   case Z_DIR:{
     assert( ndim_ == 3 );
 
-    const int nx = extent_[0]+2*nghost();
-    const int ny = extent_[1]+2*nghost();
-    const int nz = extent_[2]+2*nghost();
+    const int nx = extent_[0] + nghost(XDIM,MINUS) + nghost(XDIM,PLUS);
+    const int ny = extent_[1] + nghost(YDIM,MINUS) + nghost(YDIM,PLUS);
+    const int nz = extent_[2] + nghost(ZDIM,MINUS) + nghost(ZDIM,PLUS);
 
     const double fac = faceArea_[2]/cellVol_;
     const int k = irow/(nx*ny);

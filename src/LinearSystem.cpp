@@ -107,34 +107,38 @@ RHS::add_contribution( const SpatialOps::SpatialField & f,
    *    2. Sum field elements into RHS, skipping ghost values
    */
 
-  const int ng = f.nghost();
   const double * const fptr = f.get_ptr();
 
   const int nx=extent_[0];
   const int ny=extent_[1];
   const int nz=extent_[2];
 
-  const vector<int> & fextent = f.get_extent();
-  const int nxf = ( fextent[0] > 1 ) ? fextent[0]+2*ng : 1;
-  const int nyf = ( fextent[1] > 1 ) ? fextent[1]+2*ng : 1;
-  const int nzf = ( fextent[2] > 1 ) ? fextent[2]+2*ng : 1;
-  const int ishift = nxf>1 ? ng : 0;
-  const int jshift = nyf>1 ? ng : 0;
-  const int kshift = nzf>1 ? ng : 0;
+  const int ngxl = f.nghost( SpatialOps::SpatialField::XDIM, SpatialOps::SpatialField::MINUS );
+  const int ngxr = f.nghost( SpatialOps::SpatialField::XDIM, SpatialOps::SpatialField::PLUS  );
+  const int ngyl = f.nghost( SpatialOps::SpatialField::YDIM, SpatialOps::SpatialField::MINUS );
+  const int ngyr = f.nghost( SpatialOps::SpatialField::YDIM, SpatialOps::SpatialField::PLUS  );
+  const int ngzl = f.nghost( SpatialOps::SpatialField::ZDIM, SpatialOps::SpatialField::MINUS );
+  const int ngzr = f.nghost( SpatialOps::SpatialField::ZDIM, SpatialOps::SpatialField::PLUS  );
 
+  // get the dimensions of the field
+  const int nxf= (extent_[0]>1) ? extent_[0] + ngxl + ngxr : 1;
+  const int nyf= (extent_[1]>1) ? extent_[1] + ngyl + ngyr : 1;
+  const int nzf= (extent_[2]>1) ? extent_[2] + ngzl + ngzr : 1;
+
+  int ixr = 0;
+  int ixf = ngxl;
+  if( nyf>1 ) ixf += nxf;
+  if( nzf>1 ) ixf += nxf*nyf;
   for( int k=0; k<nz; ++k ){
-    int ix  = k*nx*ny;            // index for the local field
-    int ixf = (k+kshift)*nxf*nyf; // index for field we are adding (skip ghost cells)
     for( int j=0; j<ny; ++j ){
-      ix  += j*nx;
-      ixf += (j+jshift)*nxf + ishift;
-      for( int i=0; i<extent_[0]; ++i ){
-	//	ixf = (k+kshift)*nxf*nyf + (j+jshift)*nxf + (i+ishift);
-	field_[ix] += scaleFac * fptr[ixf];
-	++ix;
+      for( int k=0; k<nx; ++k ){
+	field_[ixr] += scaleFac * fptr[ixf];
 	++ixf;
+	++ixr;
       }
+      ixf += ngxl+ngxr;
     }
+    ixf += nxf * (ngyl+ngyr);
   }
 }
 //--------------------------------------------------------------------
@@ -199,11 +203,17 @@ LHS::add_contribution( const SpatialOps::SpatialOperator & op,
   const int ny=extent_[1];
   const int nz=extent_[2];
 
-  const int ng  = op.nghost();
+  const int ngxl = op.nghost( SpatialOps::SpatialOperator::XDIM, SpatialOps::SpatialOperator::MINUS );
+  const int ngxr = op.nghost( SpatialOps::SpatialOperator::XDIM, SpatialOps::SpatialOperator::PLUS  );
+  const int ngyl = op.nghost( SpatialOps::SpatialOperator::YDIM, SpatialOps::SpatialOperator::MINUS );
+  const int ngyr = op.nghost( SpatialOps::SpatialOperator::YDIM, SpatialOps::SpatialOperator::PLUS  );
+  const int ngzl = op.nghost( SpatialOps::SpatialOperator::ZDIM, SpatialOps::SpatialOperator::MINUS );
+  const int ngzr = op.nghost( SpatialOps::SpatialOperator::ZDIM, SpatialOps::SpatialOperator::PLUS  );
+
   const vector<int> & opextent = op.get_extent();
-  const int nxm = (opextent[0]>1) ? opextent[0]+2*ng : 1;
-  const int nym = (opextent[1]>1) ? opextent[1]+2*ng : 1;
-  const int nzm = (opextent[2]>1) ? opextent[2]+2*ng : 1;
+  const int nxm = (opextent[0]>1) ? opextent[0]+ngxl+ngxr : 1;
+  const int nym = (opextent[1]>1) ? opextent[1]+ngyl+ngyr : 1;
+  const int nzm = (opextent[2]>1) ? opextent[2]+ngzl+ngzr : 1;
 
   int destRowIndex = 0;
 
@@ -211,13 +221,13 @@ LHS::add_contribution( const SpatialOps::SpatialOperator & op,
 
     // if we are at a ghost entry, skip it.
     const int i = irow%nxm;
-    if( i<ng || i>=(nxm-ng)  ) continue;
+    if( i<ngxl || i>=(nxm-ngxr)  ) continue;
 
     const int j = (irow/nxm)%nym;
-    if( ny>1 && (j<ng || j>=(nym-ng)) ) continue;
+    if( ny>1 && (j<ngyl || j>=(nym-ngyr)) ) continue;
 
     const int k = irow/(nxm*nym);
-    if( nz>1 && (k<ng || k>=(nzm-ng)) ) continue;
+    if( nz>1 && (k<ngzl || k>=(nzm-ngzr)) ) continue;
 
 
     rowDWork_.clear();
@@ -233,21 +243,21 @@ LHS::add_contribution( const SpatialOps::SpatialOperator & op,
       const int colindex = ixs[icol];
 
       const int i = colindex%nxm;
-      if( i<ng || i>=(nxm-ng)  ) continue;
+      if( i<ngxl || i>=(nxm-ngxr)  ) continue;
 
       const int j = (colindex/nxm)%nym;
-      if( ny>1 && (j<ng || j>=(nym-ng)) ) continue;
+      if( ny>1 && (j<ngyl || j>=(nym-ngyr)) ) continue;
 
       const int k = colindex/(nxm*nym);
-      if( nz>1 && (k<ng || k>=(nzm-ng)) ) continue;
+      if( nz>1 && (k<ngzl || k>=(nzm-ngzr)) ) continue;
 
       // insert this value
       rowDWork_.push_back( scaleFac*vals[icol] );
 
       // now determine the column index for insertion of this value
-      const int ii = nxm>1 ? i-ng : 0;
-      const int jj = nym>1 ? j-ng : 0;
-      const int kk = nzm>1 ? k-ng : 0;
+      const int ii = nxm>1 ? i-ngxl : 0;
+      const int jj = nym>1 ? j-ngyl : 0;
+      const int kk = nzm>1 ? k-ngzl : 0;
       int iflat = kk*(nx*ny) + jj*(nx) + ii;
       rowIWork_.push_back( iflat );
 
@@ -268,13 +278,19 @@ LHS::add_contribution( const SpatialOps::SpatialField & f,
 {
   assert( compatibility_check(f) );
 
+  const int ngxl = f.nghost( SpatialOps::SpatialField::XDIM, SpatialOps::SpatialField::MINUS );
+  const int ngxr = f.nghost( SpatialOps::SpatialField::XDIM, SpatialOps::SpatialField::PLUS  );
+  const int ngyl = f.nghost( SpatialOps::SpatialField::YDIM, SpatialOps::SpatialField::MINUS );
+  const int ngyr = f.nghost( SpatialOps::SpatialField::YDIM, SpatialOps::SpatialField::PLUS  );
+  const int ngzl = f.nghost( SpatialOps::SpatialField::ZDIM, SpatialOps::SpatialField::MINUS );
+  const int ngzr = f.nghost( SpatialOps::SpatialField::ZDIM, SpatialOps::SpatialField::PLUS  );
+
   // add non-ghost elements of the local field to this LHS operator
 
-  const int ng  = f.nghost();
   const vector<int> & fextent = f.get_extent();
-  const int nxm = (fextent[0]>1) ? fextent[0]+2*ng : 1;
-  const int nym = (fextent[1]>1) ? fextent[1]+2*ng : 1;
-  const int nzm = (fextent[2]>1) ? fextent[2]+2*ng : 1;
+  const int nxm = (fextent[0]>1) ? fextent[0] + ngxl + ngxr : 1;
+  const int nym = (fextent[1]>1) ? fextent[1] + ngyl + ngyr : 1;
+  const int nzm = (fextent[2]>1) ? fextent[2] + ngzl + ngzr : 1;
 
   const double * const fvals = f.get_ptr();
 
@@ -286,9 +302,9 @@ LHS::add_contribution( const SpatialOps::SpatialField & f,
     const int k = irow/(nxm*nym);
 
     // are we at a ghost entry?  If so, go to the next entry.
-    if(                  i<ng || i>=nxm-ng  ) continue;
-    if( extent_[1]>1 && (j<ng || j>=nym-ng) ) continue;
-    if( extent_[2]>1 && (k<ng || k>=nzm-ng) ) continue;
+    if(                  i<ngxl || i>=nxm-ngxr  ) continue;
+    if( extent_[1]>1 && (j<ngyl || j>=nym-ngyr) ) continue;
+    if( extent_[2]>1 && (k<ngzl || k>=nzm-ngzr) ) continue;
 
     // add this value to the diagonal
     double val = scaleFac * fvals[irow];

@@ -27,16 +27,16 @@ namespace SpatialOps{
 
 SpatialOperator::SpatialOperator( const int nrows,
 				  const int ncols,
-				  const int nghost,
+				  const std::vector<int> & nghost,
 				  const int entriesPerRow,
 				  const std::vector<int> & extent )
   : extent_( extent ),
     nrows_ ( nrows  ),
     ncols_ ( ncols  ),
-    nghost_( nghost ),
 
     entriesPerRow_( entriesPerRow ),
 
+    nghost_( nghost ),
 
     isFinalized_( false ),
 
@@ -430,21 +430,44 @@ SpatialOpDatabase::type2name( const OperatorType opType ) const
 
   switch( opType ){
 
-  case DIVERGENCE_X:  return (DivName+"-X");
-  case DIVERGENCE_Y:  return (DivName+"-Y");
-  case DIVERGENCE_Z:  return (DivName+"-Z");
+  case CELL_DIVERGENCE_X:  return (DivName+"-X Cell");
+  case FACE_DIVERGENCE_X:  return (DivName+"-X Face");
 
-  case GRADIENT_X:    return (GradName+"-X");
-  case GRADIENT_Y:    return (GradName+"-Y");
-  case GRADIENT_Z:    return (GradName+"-Z");
+  case CELL_DIVERGENCE_Y:  return (DivName+"-Y Cell");
+  case FACE_DIVERGENCE_Y:  return (DivName+"-Y Face");
 
-  case INTERPOLANT_X: return (InterpName+"-X");
-  case INTERPOLANT_Y: return (InterpName+"-Y");
-  case INTERPOLANT_Z: return (InterpName+"-Z");
+  case CELL_DIVERGENCE_Z:  return (DivName+"-Z Cell");
+  case FACE_DIVERGENCE_Z:  return (DivName+"-Z Face");
 
-  case SCRATCH_X: return (ScratchName+"-X");
-  case SCRATCH_Y: return (ScratchName+"-Y");
-  case SCRATCH_Z: return (ScratchName+"-Z");
+
+  case CELL_GRADIENT_X:    return (GradName+"-X Cell");
+  case FACE_GRADIENT_X:    return (GradName+"-X Face");
+
+  case CELL_GRADIENT_Y:    return (GradName+"-Y Cell");
+  case FACE_GRADIENT_Y:    return (GradName+"-Y Face");
+
+  case CELL_GRADIENT_Z:    return (GradName+"-Z Cell");
+  case FACE_GRADIENT_Z:    return (GradName+"-Z Face");
+
+
+  case CELL_INTERPOLANT_X: return (InterpName+"-X Cell");
+  case FACE_INTERPOLANT_X: return (InterpName+"-X Face");
+
+  case CELL_INTERPOLANT_Y: return (InterpName+"-Y Cell");
+  case FACE_INTERPOLANT_Y: return (InterpName+"-Y Face");
+
+  case CELL_INTERPOLANT_Z: return (InterpName+"-Z Cell");
+  case FACE_INTERPOLANT_Z: return (InterpName+"-Z Face");
+
+
+  case CELL_SCRATCH_X: return (ScratchName+"-X Cell");
+  case FACE_SCRATCH_X: return (ScratchName+"-X Face");
+
+  case CELL_SCRATCH_Y: return (ScratchName+"-Y Cell");
+  case FACE_SCRATCH_Y: return (ScratchName+"-Y Face");
+
+  case CELL_SCRATCH_Z: return (ScratchName+"-Z Cell");
+  case FACE_SCRATCH_Z: return (ScratchName+"-Z Face");
 
   default:
     throw std::runtime_error( "ERROR!  Invalid OperatorType in SpatialOpDatabase::type2name()\n" );

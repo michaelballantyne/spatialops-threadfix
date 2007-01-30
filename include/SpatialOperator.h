@@ -43,21 +43,21 @@ public:
 
   enum OperatorType{
 
-    DIVERGENCE_X,
-    DIVERGENCE_Y,
-    DIVERGENCE_Z,
+    CELL_DIVERGENCE_X,     FACE_DIVERGENCE_X,
+    CELL_DIVERGENCE_Y,     FACE_DIVERGENCE_Y,
+    CELL_DIVERGENCE_Z,     FACE_DIVERGENCE_Z,
 
-    GRADIENT_X,
-    GRADIENT_Y,
-    GRADIENT_Z,
+    CELL_GRADIENT_X,       FACE_GRADIENT_X,
+    CELL_GRADIENT_Y,       FACE_GRADIENT_Y,
+    CELL_GRADIENT_Z,       FACE_GRADIENT_Z,
 
-    INTERPOLANT_X,
-    INTERPOLANT_Y,
-    INTERPOLANT_Z,
+    CELL_INTERPOLANT_X,    FACE_INTERPOLANT_X,
+    CELL_INTERPOLANT_Y,    FACE_INTERPOLANT_Y,
+    CELL_INTERPOLANT_Z,    FACE_INTERPOLANT_Z,
 
-    SCRATCH_X,
-    SCRATCH_Y,
-    SCRATCH_Z
+    CELL_SCRATCH_X,        FACE_SCRATCH_X,
+    CELL_SCRATCH_Y,        FACE_SCRATCH_Y,
+    CELL_SCRATCH_Z,        FACE_SCRATCH_Z
 
   };
 
@@ -156,12 +156,28 @@ class SpatialOperator
 
 public:
 
+  enum Dimension{
+    XDIM = 0,
+    YDIM = 1,
+    ZDIM = 2
+  };
+
+  enum Side{
+    MINUS = 0,
+    PLUS  = 1
+  };
+
+
   /**
    *  Construct a SpatialOperator.
    *
    *  @param nrows: The number of rows in this matrix
    *
    *  @param ncols : The number of columns in this matrix
+   *
+   *  @param nghost : The number of ghost cells on the (-) and (+)
+   *  side of the patch in each coordinate direction.  For example,
+   *  [ngxl, ngxr, ngyl, ngyr, ngzl, ngzr]
    *
    *  @param entriesPerRow : The number of nonzero entries on each row of this matrix operator.
    *
@@ -170,7 +186,7 @@ public:
    */
   SpatialOperator( const int nrows,
 		   const int ncols,
-		   const int nghost,
+		   const std::vector<int> & nghost,
 		   const int entriesPerRow,
 		   const std::vector<int> & extent );
 		   
@@ -240,9 +256,18 @@ public:
   /** Obtain the number of columns in this operator */
   inline int ncols() const{ return ncols_; }
 
-  inline int nghost() const{ return nghost_; }
 
-  const std::vector<int> & get_extent() const{ return extent_; }
+
+  inline const std::vector<int>& nghost() const{return nghost_;}
+
+  inline const int nghost( const Dimension dim, const Side side ) const
+  {
+    const int ix = int(dim)*(int(side)+1);
+    return nghost_[ix];
+  }
+
+
+    const std::vector<int> & get_extent() const{ return extent_; }
 
   void Print( std::ostream & ) const;
 
@@ -295,7 +320,8 @@ protected:
 
 private:
 
-  const int nrows_, ncols_, nghost_, entriesPerRow_;
+  const int nrows_, ncols_, entriesPerRow_;
+  const std::vector<int> nghost_;
   bool isFinalized_;
   Epetra_CrsMatrix * mat_;
 
