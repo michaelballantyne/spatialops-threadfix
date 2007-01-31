@@ -262,7 +262,7 @@ public:
 
   inline const int nghost( const Dimension dim, const Side side ) const
   {
-    const int ix = int(dim)*(int(side)+1);
+    const int ix = 2*int(dim) + int(side);
     return nghost_[ix];
   }
 
