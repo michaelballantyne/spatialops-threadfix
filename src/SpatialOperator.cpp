@@ -281,6 +281,16 @@ SpatialOperator::compatibility_check( const SpatialOperator& op  ) const
   if( nrows_         != op.nrows_         ) return false;
   if( ncols_         != op.ncols_         ) return false;
   //  if( entriesPerRow_ != op.entriesPerRow_ ) return false;
+
+  // ensure identical ghosting patterns
+  const vector<int> & opg = op.nghost();
+  vector<int>::const_iterator iopg = opg.begin();
+  for( vector<int>::const_iterator ig=nghost().begin();
+       ig != nghost().end(); 
+       ++ig, ++iopg )
+    {
+      if( *iopg != *ig ) return false;
+    }
   return true;
 }
 //--------------------------------------------------------------------
@@ -289,21 +299,41 @@ SpatialOperator::compatibility_check( const SpatialField & field,
 				      const FieldType fldType ) const
 {
   switch( fldType ){
-  case SOURCE_FIELD:
+
+  case SOURCE_FIELD:{
     if( ncols_ != field.epetra_vec().GlobalLength() ){
       std::cout << "expecting " << ncols_ << " entries, found "
 		<< field.epetra_vec().GlobalLength() << std::endl;
       return false;
     }
     break;
-  case DEST_FIELD:
+  }
+
+  case DEST_FIELD:{
     if( nrows_ != field.epetra_vec().GlobalLength() ){
       std::cout << "expecting " << nrows_ << " entries, found "
 		<< field.epetra_vec().GlobalLength() << std::endl;
       return false;
     }
+
     break;
   }
+
+  }
+
+  // verify ghosting compatibility
+  const vector<int> & fg = field.nghost();
+  vector<int>::const_iterator ifg = fg.begin();
+  for( vector<int>::const_iterator ig = nghost().begin();
+       ig!=nghost().end();
+       ++ig, ++ifg )
+    {
+      if( *ifg != *ifg ){
+	std::cout << "ghost incompatibility detected between field and spatial operator." << std::endl;
+	return false;
+      }
+    }
+
   return true;
 }
 //--------------------------------------------------------------------
