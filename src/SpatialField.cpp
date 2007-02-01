@@ -61,11 +61,9 @@ SpatialField::get_npts( const vector<int> & extent,
   vector<int>::const_iterator ig = nghost.begin();
   for( vector<int>::const_iterator ii=extent.begin(); ii!=extent.end(); ++ii ){
     if( *ii > 1 ){
-      // add "left" side ghosts
-      int nn = *ii;
-      nn += *ig;
-      ++ig;
-      nn += *ig;
+      int nn = *ii; // add in interior points
+      nn += *ig++;  // add in "left"  side ghosts
+      nn += *ig++;  // add in "right" side ghosts
       npts *= nn;
     }
   }

@@ -21,9 +21,8 @@ int colcount( const vector<int> & dims,
     if( *ii > 1 ){
       // add "left" side ghosts
       int nn = *ii;
-      nn += *ig;
-      ++ig;
-      nn += *ig;
+      nn += *ig++;
+      nn += *ig++;
       nrows *= nn;
     }
   }
