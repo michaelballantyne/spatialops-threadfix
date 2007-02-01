@@ -368,113 +368,128 @@ SpatialOpDatabase::register_new_operator( const OperatorType opType,
 					 const std::string & name,
 					 const bool makeDefault )
 {
-  std::pair< NameOpMap::const_iterator, bool > result =
-    allOps_.insert( make_pair(name,op) );
+  Shape s( op->nghost(), op->get_extent() );
 
-  if( !result.second ){
-    std::ostringstream msg;
-    msg << "ERROR! Could not insert a spatial operator of type " << type2name( opType ) << std::endl
-	<< "       and name '" << name << "' - this must be a duplicate entry!" << std::endl;
-    throw std::runtime_error( msg.str() );
+  TypeShapeMap::iterator itsm = typeMap_.find( opType );
+  if( itsm == typeMap_.end() ){
+    ShapeOpMap som;
+    som.insert( make_pair(s,op) );
+    typeMap_.insert( make_pair(opType,som) );
+  }
+  else{
+    ShapeOpMap & som = itsm->second;
+
+    ShapeOpMap::iterator iop = som.find( s );
+    if( iop == som.end() ){
+      pair<ShapeOpMap::const_iterator,bool> result = som.insert( make_pair( s, op ) );
+    }
+    else if( makeDefault ){
+      iop->second = op;
+    }
   }
 
-  if( makeDefault || (activeOps_.find(opType)==activeOps_.end()) ){
-    activeOps_[opType] = op;
+  NameShapeMap::iterator insm = nameMap_.find( name );
+  if( insm == nameMap_.end() ){
+    ShapeOpMap som;
+    som.insert( make_pair(s,op) );
+    nameMap_[name] = som;
   }
+  else{
+    ShapeOpMap & som = insm->second;
+    pair<ShapeOpMap::const_iterator,bool> result = som.insert( make_pair( s, op ) );
+    if( !result.second ){
+      std::ostringstream msg;
+      msg << "ERROR!  Operator named '" << name << "' has already been registered!" << std::endl;
+      throw std::runtime_error( msg.str() );
+    }
+  }
+
 }
 //--------------------------------------------------------------------
 SpatialOperator*&
-SpatialOpDatabase::retrieve_operator( const std::string & name )
+SpatialOpDatabase::retrieve_operator( const std::string & name,
+				      const std::vector<int> & nxyz,
+				      const std::vector<int> & nghost )
 {
-  NameOpMap::iterator ii = allOps_.find( name );
-  if( ii == allOps_.end() ){
+  NameShapeMap::iterator ii = nameMap_.find( name );
+  if( ii == nameMap_.end() ){
     std::ostringstream msg;
-    msg << "ERROR! No operator named '" << name << "' has been registered!" << std::endl;
+    msg << "ERROR!  No operator named '" << name << "'" << std::endl
+	<< "        has been registered!" << std::endl;
     throw std::runtime_error( msg.str() );
   }
-  return ii->second;
+
+  ShapeOpMap & som = ii->second;
+  Shape s( nxyz, nghost );
+  ShapeOpMap::iterator iop = som.find( s );
+  if( iop == som.end() ){
+    std::ostringstream msg;
+    msg << "ERROR!  No operator named '" << name << "'" << std::endl
+	<< "        with the requested dimensions and ghosting has been registered!" << std::endl;
+    throw std::runtime_error( msg.str() );
+  }
+  return iop->second;
 }
 //--------------------------------------------------------------------
 SpatialOperator*&
-SpatialOpDatabase::retrieve_operator( const OperatorType opType )
+SpatialOpDatabase::retrieve_operator( const OperatorType opType,
+				      const std::vector<int> & nxyz,
+				      const std::vector<int> & nghost )
 {
-  TypeOpMap::iterator ii = activeOps_.find( opType );
-  if( ii == activeOps_.end() ){
+  // look for an operator of this type
+  TypeShapeMap::iterator itsm = typeMap_.find( opType );
+
+  if( itsm == typeMap_.end() ){
     std::ostringstream msg;
-    msg << "ERROR! No operator of type '" << type2name(opType) << "' has been registered!" << std::endl;
+    msg << "ERROR!  Attempted to retrieve an operator that does not exist." << std::endl
+	<< "        Check the operator type and shape (nx,ny,nz and nghost)" << std::endl
+	<< "        and ensure that an operator of this type has been registered" << std::endl
+	<< "        in the database." << std::endl;
     throw std::runtime_error( msg.str() );
   }
-  return ii->second;
+
+  ShapeOpMap & som = itsm->second;
+  Shape s( nxyz, nghost );
+
+  // look for one with this shape
+  ShapeOpMap::iterator iop = som.find( s );
+  if( iop == som.end() ){
+    std::ostringstream msg;
+    msg << "ERROR!  Attempted to retrieve an operator that does not exist." << std::endl
+	<< "        Check the operator shape (nx,ny,nz and nghost) and ensure" << std::endl
+	<< "        that an operator of this type and shape has been registered" << std::endl
+	<< "        in the database." << std::endl;
+    throw std::runtime_error( msg.str() );
+  }
+
+  return iop->second;
 }
 //--------------------------------------------------------------------
 void
 SpatialOpDatabase::set_default_operator( const OperatorType opType,
-					const std::string & opName )
+					 const std::string & opName,
+					 const std::vector<int> & nxyz,
+					 const std::vector<int> & nghost )
 {
   // do we have an operator with the given name?  If not, just return and do nothing.
-  NameOpMap::iterator ii = allOps_.find( opName );
-  if( ii == allOps_.end() ) return;
+  NameShapeMap::iterator ii = nameMap_.find( opName );
+  if( ii == nameMap_.end() ) return;
 
   // do we have an operator of this type?  If not, just return and do nothing.
-  TypeOpMap::iterator jj = activeOps_.find( opType );
-  if( jj != activeOps_.end() ) jj->second = ii->second;
-}
-//--------------------------------------------------------------------
-const std::string
-SpatialOpDatabase::type2name( const OperatorType opType ) const
-{
-  const static std::string DivName     = "Divergence";
-  const static std::string GradName    = "Gradient";
-  const static std::string InterpName  = "Interpolant";
-  const static std::string ScratchName = "Scratch";
-
-  switch( opType ){
-
-  case CELL_DIVERGENCE_X:  return (DivName+"-X Cell");
-  case FACE_DIVERGENCE_X:  return (DivName+"-X Face");
-
-  case CELL_DIVERGENCE_Y:  return (DivName+"-Y Cell");
-  case FACE_DIVERGENCE_Y:  return (DivName+"-Y Face");
-
-  case CELL_DIVERGENCE_Z:  return (DivName+"-Z Cell");
-  case FACE_DIVERGENCE_Z:  return (DivName+"-Z Face");
+  TypeShapeMap::iterator jj = typeMap_.find( opType );
+  if( jj == typeMap_.end() ) return;
 
 
-  case CELL_GRADIENT_X:    return (GradName+"-X Cell");
-  case FACE_GRADIENT_X:    return (GradName+"-X Face");
+  // See if we have an operator with this name AND shape
+  Shape s( nxyz, nghost );
+  ShapeOpMap & somName = ii->second;
+  ShapeOpMap::iterator iopn = somName.find( s );
 
-  case CELL_GRADIENT_Y:    return (GradName+"-Y Cell");
-  case FACE_GRADIENT_Y:    return (GradName+"-Y Face");
-
-  case CELL_GRADIENT_Z:    return (GradName+"-Z Cell");
-  case FACE_GRADIENT_Z:    return (GradName+"-Z Face");
-
-
-  case CELL_INTERPOLANT_X: return (InterpName+"-X Cell");
-  case FACE_INTERPOLANT_X: return (InterpName+"-X Face");
-
-  case CELL_INTERPOLANT_Y: return (InterpName+"-Y Cell");
-  case FACE_INTERPOLANT_Y: return (InterpName+"-Y Face");
-
-  case CELL_INTERPOLANT_Z: return (InterpName+"-Z Cell");
-  case FACE_INTERPOLANT_Z: return (InterpName+"-Z Face");
-
-
-  case CELL_SCRATCH_X: return (ScratchName+"-X Cell");
-  case FACE_SCRATCH_X: return (ScratchName+"-X Face");
-
-  case CELL_SCRATCH_Y: return (ScratchName+"-Y Cell");
-  case FACE_SCRATCH_Y: return (ScratchName+"-Y Face");
-
-  case CELL_SCRATCH_Z: return (ScratchName+"-Z Cell");
-  case FACE_SCRATCH_Z: return (ScratchName+"-Z Face");
-
-  default:
-    throw std::runtime_error( "ERROR!  Invalid OperatorType in SpatialOpDatabase::type2name()\n" );
-
+  if( iopn != somName.end() ){
+    ShapeOpMap & somType = jj->second;
+    ShapeOpMap::iterator iopt = somType.find(s);
+    iopt->second = iopn->second;
   }
-  const static std::string err = "ERROR";
-  return err;
 }
 //--------------------------------------------------------------------
 SpatialOpDatabase::SpatialOpDatabase()
@@ -483,12 +498,70 @@ SpatialOpDatabase::SpatialOpDatabase()
 //--------------------------------------------------------------------
 SpatialOpDatabase::~SpatialOpDatabase()
 {
-  for( NameOpMap::iterator ii=allOps_.begin(); ii!=allOps_.end(); ++ii ){
-    delete ii->second;
+  for( NameShapeMap::iterator ii=nameMap_.begin(); ii!=nameMap_.end(); ++ii ){
+    ShapeOpMap & som = ii->second;
+    for( ShapeOpMap::iterator jj=som.begin(); jj!=som.end(); ++jj ){
+      delete jj->second;
+    }
   }
 }
 //--------------------------------------------------------------------
 
+//====================================================================
+
+SpatialOpDatabase::Shape::Shape( const std::vector<int> & extent,
+				 const std::vector<int> ghosts )
+{
+  nxyz = extent;
+  ng = ghosts;
+}
+//--------------------------------------------------------------------
+bool
+SpatialOpDatabase::Shape::operator==( const Shape & s ) const
+{
+  bool isequal = true;
+
+  if( s.nxyz.size() != nxyz.size() ) return false;
+
+  if( s.ng.size() != ng.size() ) return false;
+
+  vector<int>::const_iterator is = s.nxyz.begin();
+  vector<int>::const_iterator ii = nxyz.begin();
+  for( ; ii!=nxyz.end(); ++ii, ++is ){
+    if( *ii != *is ) isequal = false;
+  }
+
+  is = s.ng.begin();
+  ii =   ng.begin();
+  for( ; ii!=ng.end(); ++ii, ++is ){
+    if( *ii != *is ) isequal = false;
+  }
+
+  return isequal;
+}
+//--------------------------------------------------------------------
+bool
+SpatialOpDatabase::Shape::operator < ( const Shape& s ) const
+{
+  bool isLess = true;
+
+  if( s.nxyz.size() != nxyz.size() ) return false;
+
+  if( s.ng.size() != ng.size() ) return false;
+
+  vector<int>::const_iterator is = s.nxyz.begin();
+  vector<int>::const_iterator ii = nxyz.begin();
+  for( ; ii!=nxyz.end(); ++ii, ++is ){
+    if( *ii >= *is ) isLess = false;
+  }
+
+  is = s.ng.begin();
+  ii =   ng.begin();
+  for( ; ii!=ng.end(); ++ii, ++is ){
+    if( *ii >= *is ) isLess = false;
+  }
+  return isLess;
+}
 
 //====================================================================
 

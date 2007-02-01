@@ -218,11 +218,11 @@ bool test_spatial_ops_x()
 				      "Scratch X Second Order Face 2" );
   }
 
-  SpatialOperator *& CellRx  = SODatabase.retrieve_operator( SpatialOpDatabase::CELL_INTERPOLANT_X );
-  SpatialOperator *& CellDx  = SODatabase.retrieve_operator( SpatialOpDatabase::CELL_DIVERGENCE_X  );
-  SpatialOperator *& CellGx  = SODatabase.retrieve_operator( SpatialOpDatabase::CELL_GRADIENT_X    );
-  SpatialOperator *& CellSx1 = SODatabase.retrieve_operator( "Scratch X Second Order Cell"         );
-  SpatialOperator *& CellSx2 = SODatabase.retrieve_operator( "Scratch X Second Order Cell 2"       );
+  SpatialOperator *& CellRx  = SODatabase.retrieve_operator( SpatialOpDatabase::CELL_INTERPOLANT_X, dim, nghostCell );
+  SpatialOperator *& CellDx  = SODatabase.retrieve_operator( SpatialOpDatabase::CELL_DIVERGENCE_X,  dim, nghostCell );
+  SpatialOperator *& CellGx  = SODatabase.retrieve_operator( SpatialOpDatabase::CELL_GRADIENT_X,    dim, nghostCell );
+  SpatialOperator *& CellSx1 = SODatabase.retrieve_operator( "Scratch X Second Order Cell",         dim, nghostCell );
+  SpatialOperator *& CellSx2 = SODatabase.retrieve_operator( "Scratch X Second Order Cell 2",       dim, nghostCell );
 
 
 //   EpetraExt::RowMatrixToMatrixMarketFile( "Int_x.mm", xinterp->epetra_mat(), "", "" );

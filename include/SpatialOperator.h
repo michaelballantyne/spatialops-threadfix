@@ -88,30 +88,32 @@ public:
    *  Reset the default operator to the one with the given name.
    */
   void set_default_operator( const OperatorType opType,
-			     const std::string & opName );
+			     const std::string & opName,
+			     const std::vector<int> & nxyz,
+			     const std::vector<int> & nghost );
 
   /**
-   *  Obtain the spatial operator with the given type.  Throws an
-   *  exception if no match is found.
+   *  Obtain the spatial operator with the given type and shape.
+   *  Throws an exception if no match is found.
    *
    *  This pointer reference can change if the default operator for
    *  this type is changed via a call to
    *  <code>set_default_operator</code> or
    *  <code>register_new_operator</code>.
    */
-  SpatialOperator*& retrieve_operator( const OperatorType opType );
+  SpatialOperator*& retrieve_operator( const OperatorType opType,
+				       const std::vector<int> & nxyz,
+				       const std::vector<int> & nghost );
 
   /**
-   *  Obtain the spatial operator with the given name.  Throws an
-   *  exception if no match is found.
+   *  Obtain the spatial operator with the given name and shape.
+   *  Throws an exception if no match is found.
    *
    *  This returns a pointer reference that will never change.
    */
-  SpatialOperator*& retrieve_operator( const std::string & opName );
-
-
-  /** return the string name of the OperatorType */
-  const std::string type2name( const OperatorType ) const;
+  SpatialOperator*& retrieve_operator( const std::string & opName,
+				       const std::vector<int> & nxyz,
+				       const std::vector<int> & nghost );
 
 private:
 
@@ -121,10 +123,23 @@ private:
   SpatialOpDatabase(const SpatialOpDatabase&);
   SpatialOpDatabase&  operator=(const SpatialOpDatabase&);
 
-  typedef std::map< OperatorType, SpatialOperator* > TypeOpMap;
-  typedef std::map< std::string,  SpatialOperator* > NameOpMap;
-  TypeOpMap activeOps_;
-  NameOpMap allOps_;
+  struct Shape{
+    Shape( const std::vector<int> & extent,
+	   const std::vector<int> ghosts );
+    std::vector<int> nxyz;
+    std::vector<int> ng;
+    bool operator ==( const Shape& s ) const;
+    bool operator < ( const Shape& s ) const;
+  };
+
+  typedef std::map< Shape,SpatialOperator* > ShapeOpMap;
+
+  typedef std::map< OperatorType, ShapeOpMap > TypeShapeMap;
+  typedef std::map< std::string,  ShapeOpMap > NameShapeMap;
+
+  NameShapeMap nameMap_;
+  TypeShapeMap typeMap_;
+
 };
 
 
@@ -267,7 +282,7 @@ public:
   }
 
 
-    const std::vector<int> & get_extent() const{ return extent_; }
+  const std::vector<int> & get_extent() const{ return extent_; }
 
   void Print( std::ostream & ) const;
 
