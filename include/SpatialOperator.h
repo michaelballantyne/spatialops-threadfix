@@ -90,7 +90,8 @@ public:
   void set_default_operator( const OperatorType opType,
 			     const std::string & opName,
 			     const std::vector<int> & nxyz,
-			     const std::vector<int> & nghost );
+			     const std::vector<int> & nghostSrc,
+			     const std::vector<int> & nghostDest );
 
   /**
    *  Obtain the spatial operator with the given type and shape.
@@ -103,7 +104,8 @@ public:
    */
   SpatialOperator*& retrieve_operator( const OperatorType opType,
 				       const std::vector<int> & nxyz,
-				       const std::vector<int> & nghost );
+				       const std::vector<int> & nghostSrc,
+				       const std::vector<int> & nghostDest );
 
   /**
    *  Obtain the spatial operator with the given name and shape.
@@ -113,7 +115,8 @@ public:
    */
   SpatialOperator*& retrieve_operator( const std::string & opName,
 				       const std::vector<int> & nxyz,
-				       const std::vector<int> & nghost );
+				       const std::vector<int> & nghostSrc,
+				       const std::vector<int> & nghostDest );
 
 private:
 
@@ -125,9 +128,9 @@ private:
 
   struct Shape{
     Shape( const std::vector<int> & extent,
-	   const std::vector<int> ghosts );
-    std::vector<int> nxyz;
-    std::vector<int> ng;
+	   const std::vector<int> ghostSrc,
+	   const std::vector<int> ghostDest );
+    std::vector<int> nxyz, ngS, ngD;
     bool operator ==( const Shape& s ) const;
     bool operator < ( const Shape& s ) const;
   };
@@ -201,7 +204,8 @@ public:
    */
   SpatialOperator( const int nrows,
 		   const int ncols,
-		   const std::vector<int> & nghost,
+		   const std::vector<int> & nghostSrc,
+		   const std::vector<int> & nghostDest,
 		   const int entriesPerRow,
 		   const std::vector<int> & extent );
 		   
@@ -273,14 +277,30 @@ public:
 
 
 
-  inline const std::vector<int>& nghost() const{return nghost_;}
+  inline const std::vector<int>& nghost_src()  const{return nghostSrc_ ;}
+  inline const std::vector<int>& nghost_dest() const{return nghostDest_;}
 
-  inline const int nghost( const Dimension dim, const Side side ) const
+  inline const int nghost_src( const Dimension dim, const Side side ) const
   {
     const int ix = 2*int(dim) + int(side);
-    return nghost_[ix];
+    return nghostSrc_[ix];
   }
 
+  inline const int nghost_dest( const Dimension dim, const Side side ) const
+  {
+    const int ix = 2*int(dim) + int(side);
+    return nghostDest_[ix];
+  }
+
+
+  struct IndexTriplet{
+    int index[3];
+    inline int& operator[](const int i){return index[i];}
+  };
+
+  /** if provided, the IndexTriplet is populated with the interior ijk index for non-ghost entries.*/
+  bool is_col_ghost( const int colnum, IndexTriplet* const ix=NULL ) const;
+  bool is_row_ghost( const int rownum, IndexTriplet* const ix=NULL ) const;
 
   const std::vector<int> & get_extent() const{ return extent_; }
 
@@ -303,7 +323,8 @@ protected:
    *  dimensional compatibility checks.  Derived classes may
    *  specialize this method further.
    */
-  virtual bool compatibility_check( const SpatialOperator& op  ) const;
+  virtual bool compatibility_check( const SpatialOperator& op,
+				    const bool isResultOp ) const;
 
 
   enum FieldType{ SOURCE_FIELD, DEST_FIELD };
@@ -336,7 +357,7 @@ protected:
 private:
 
   const int nrows_, ncols_, entriesPerRow_;
-  const std::vector<int> nghost_;
+  const std::vector<int> nghostSrc_, nghostDest_;
   bool isFinalized_;
   Epetra_CrsMatrix * mat_;
 

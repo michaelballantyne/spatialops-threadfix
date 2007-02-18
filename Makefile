@@ -56,4 +56,7 @@ lib: $(OBJS)
 exe: lib ./src/test.cpp
 	$(LINK) ./src/test.cpp -lspatialops $(LIBS) -o test.x
 
+test2: lib ./src/test2.cpp
+	$(LINK) ./src/test2.cpp -lspatialops $(LIBS) -o test2.x
+
 clean: ; @rm *.o libspatialops.a test.x

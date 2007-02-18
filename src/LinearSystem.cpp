@@ -203,38 +203,18 @@ LHS::add_contribution( const SpatialOps::SpatialOperator & op,
   const int ny=extent_[1];
   const int nz=extent_[2];
 
-  const int ngxl = op.nghost( SpatialOps::SpatialOperator::XDIM, SpatialOps::SpatialOperator::MINUS );
-  const int ngxr = op.nghost( SpatialOps::SpatialOperator::XDIM, SpatialOps::SpatialOperator::PLUS  );
-  const int ngyl = op.nghost( SpatialOps::SpatialOperator::YDIM, SpatialOps::SpatialOperator::MINUS );
-  const int ngyr = op.nghost( SpatialOps::SpatialOperator::YDIM, SpatialOps::SpatialOperator::PLUS  );
-  const int ngzl = op.nghost( SpatialOps::SpatialOperator::ZDIM, SpatialOps::SpatialOperator::MINUS );
-  const int ngzr = op.nghost( SpatialOps::SpatialOperator::ZDIM, SpatialOps::SpatialOperator::PLUS  );
+  SpatialOps::SpatialOperator::IndexTriplet ix;
 
-  const vector<int> & opextent = op.get_extent();
-  const int nxm = (opextent[0]>1) ? opextent[0]+ngxl+ngxr : 1;
-  const int nym = (opextent[1]>1) ? opextent[1]+ngyl+ngyr : 1;
-  const int nzm = (opextent[2]>1) ? opextent[2]+ngzl+ngzr : 1;
+  int irow = 0;
+  for( int ioprow=0; ioprow<op.nrows(); ++ioprow ){
 
-  int destRowIndex = 0;
-
-  for( int irow=0; irow<op.nrows(); ++irow ){
-
-    // if we are at a ghost entry, skip it.
-    const int i = irow%nxm;
-    if( i<ngxl || i>=(nxm-ngxr)  ) continue;
-
-    const int j = (irow/nxm)%nym;
-    if( ny>1 && (j<ngyl || j>=(nym-ngyr)) ) continue;
-
-    const int k = irow/(nxm*nym);
-    if( nz>1 && (k<ngzl || k>=(nzm-ngzr)) ) continue;
-
+    if( op.is_row_ghost(ioprow) ) continue;
 
     rowDWork_.clear();
     rowIWork_.clear();
 
     int ncol=0;   double*vals=0;   int*ixs=0;
-    op.epetra_mat().ExtractMyRowView( irow, ncol, vals, ixs );
+    op.epetra_mat().ExtractMyRowView( ioprow, ncol, vals, ixs );
 
     for( int icol=0; icol<ncol; ++icol ){
 
@@ -242,32 +222,30 @@ LHS::add_contribution( const SpatialOps::SpatialOperator & op,
       // if we are at a ghost entry, skip it.
       const int colindex = ixs[icol];
 
-      const int i = colindex%nxm;
-      if( i<ngxl || i>=(nxm-ngxr)  ) continue;
-
-      const int j = (colindex/nxm)%nym;
-      if( ny>1 && (j<ngyl || j>=(nym-ngyr)) ) continue;
-
-      const int k = colindex/(nxm*nym);
-      if( nz>1 && (k<ngzl || k>=(nzm-ngzr)) ) continue;
+      // check to see if we are at a ghost entry - get the "interior" indices.
+      if( op.is_col_ghost( colindex, &ix ) ) continue;
 
       // insert this value
       rowDWork_.push_back( scaleFac*vals[icol] );
 
       // now determine the column index for insertion of this value
-      const int ii = nxm>1 ? i-ngxl : 0;
-      const int jj = nym>1 ? j-ngyl : 0;
-      const int kk = nzm>1 ? k-ngzl : 0;
-      int iflat = kk*(nx*ny) + jj*(nx) + ii;
+      const int ii = nx>1 ? ix[0] : 0;
+      const int jj = ny>1 ? ix[1] : 0;
+      const int kk = nz>1 ? ix[2] : 0;
+      const int iflat = kk*(nx*ny) + jj*(nx) + ii;
       rowIWork_.push_back( iflat );
 
     } // column loop
 
     // insert this information into the matrix
     if( rowDWork_.size() > 0 ){
-      A_.SumIntoMyValues( destRowIndex, rowDWork_.size(), &rowDWork_[0], &rowIWork_[0] );
+      const int errCode = A_.SumIntoMyValues( irow, rowDWork_.size(), &rowDWork_[0], &rowIWork_[0] );
+      if( errCode != 0 ){
+	std::cout << "ERROR: code '" << errCode << "' returned from trilinos SumIntoMyValues." << std::endl
+		  << "       This is likely due to an invalid column index for summation." << std::endl;
+      }
     }
-    ++destRowIndex;
+    ++irow;
  
   } // row loop
 }
@@ -464,7 +442,7 @@ LinearSystem::imprint( const std::vector<int> & extent,
     ixs.clear();
 
     const int i = irow%nx;
-    const int j = (irow/ny)%ny;
+    const int j = (irow/nx)%ny;
     const int k = irow/(nx*ny);
 
     // NOTE: STENCIL IS HARD-CODED!

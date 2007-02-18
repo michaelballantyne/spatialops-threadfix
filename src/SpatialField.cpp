@@ -37,7 +37,7 @@ SpatialField::SpatialField( const vector<int> & fieldDims,
   if( mode==InternalStorage )  reset_values( npts_, fieldValues );
  
 
- // Build the Trilinos Epetra vector.  Use the "view" option to allow
+  // Build the Trilinos Epetra vector.  Use the "view" option to allow
   // us to directly control the memory that Trilinos uses, rather than
   // allowing Trilinos to make copies.  In this way, modifications to
   // fieldValues_ will directly affect the values that Trilinos sees.

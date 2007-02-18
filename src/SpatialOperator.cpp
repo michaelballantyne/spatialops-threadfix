@@ -27,7 +27,8 @@ namespace SpatialOps{
 
 SpatialOperator::SpatialOperator( const int nrows,
 				  const int ncols,
-				  const std::vector<int> & nghost,
+				  const std::vector<int> & nghostSrc,
+				  const std::vector<int> & nghostDest,
 				  const int entriesPerRow,
 				  const std::vector<int> & extent )
   : extent_( extent ),
@@ -36,7 +37,8 @@ SpatialOperator::SpatialOperator( const int nrows,
 
     entriesPerRow_( entriesPerRow ),
 
-    nghost_( nghost ),
+    nghostSrc_ ( nghostSrc  ),
+    nghostDest_( nghostDest ),
 
     isFinalized_( false ),
 
@@ -88,8 +90,8 @@ SpatialOperator::apply( const SpatialOperator & B,
 {
   assert( ready() && B.ready() && C.ready() );
 
-  assert( compatibility_check(B) );
-  assert( compatibility_check(C) );
+  assert( compatibility_check(B,false) );
+  assert( compatibility_check(C,true ) );
 
   const bool useTranspose = false;
   const int flag =
@@ -263,6 +265,89 @@ SpatialOperator::sum_into_row( const int rownum,
   assert( flag==0 );
 }
 //--------------------------------------------------------------------
+bool
+SpatialOperator::is_row_ghost( const int irow,
+			       IndexTriplet* const ix ) const
+{
+  const bool getIxs = (ix != NULL);
+  if( getIxs ){
+    IndexTriplet & i= *ix;
+    i[0] = -1;
+    i[1] = -1;
+    i[2] = -1;
+  }
+
+  bool isGhost = false;
+
+  // is this row a ghost entry?  Row corresponds to entry in dest vec.
+  const int nxd = extent_[0] + nghostDest_[0] + nghostDest_[1];
+  const int idest = irow % nxd - nghostDest_[0];
+  if( idest < 0  ||  idest >= extent_[0] ){
+    isGhost = true;
+    if( !getIxs ) return true;
+  }
+  if( getIxs ) (*ix)[0] = idest;
+
+  const int nyd = extent_[1] + nghostDest_[2] + nghostDest_[3];
+  if( extent_[1] > 1 ){
+    const int jdest = irow/nxd % nyd - nghostDest_[2];
+    if( jdest < 0  ||  jdest >= extent_[1] ){
+      isGhost = true;
+      if( !getIxs ) return true;
+    }
+    if( getIxs ) (*ix)[1] = jdest;
+  }
+
+  if( extent_[2] > 1 ){
+    const int kdest = irow/(nxd*nyd) - nghostDest_[4];
+    if( kdest < 0  ||  kdest >= extent_[2] ){
+      isGhost = true;
+    }
+    if( getIxs ) (*ix)[2] = kdest;
+  }
+  return isGhost;
+}
+//--------------------------------------------------------------------
+bool
+SpatialOperator::is_col_ghost( const int icol,
+			       IndexTriplet* const ix ) const
+{
+  const bool getIxs = (ix!=NULL);
+  if( getIxs ){
+    IndexTriplet & i= *ix;
+    i[0] = -1;
+    i[1] = -1;
+    i[2] = -1;
+  }
+
+  bool isGhost = false;
+
+  // is this column a ghost entry?  Column corresponds to entry in src vec.
+  const int nxs = extent_[0] + nghostSrc_[0] + nghostSrc_[1];
+  const int isrc = icol%nxs - nghostSrc_[0];
+  if( isrc < 0  ||  isrc >= extent_[0] ){
+    isGhost = true;
+    if( !getIxs ) return true;
+  }
+  if( getIxs ) (*ix)[0] = isrc;
+
+  const int nys = extent_[1] + nghostSrc_[2] + nghostSrc_[3];
+  if( extent_[1] > 1 ){
+    const int jsrc = (icol/nxs) % nys - nghostSrc_[2];
+    if( jsrc < 0  ||  jsrc >= extent_[1] ){
+      isGhost = true;
+      if( !getIxs ) return true;
+    }
+    if( getIxs ) (*ix)[1] = jsrc;
+  }
+  if( extent_[2] > 1 ){
+    const int ksrc = icol/(nxs*nys) - nghostSrc_[4];
+    if( ksrc < 0  ||  ksrc >= extent_[2] )   isGhost = true;
+    if( getIxs ) (*ix)[2] = ksrc;
+  }
+  return isGhost;
+}
+//--------------------------------------------------------------------
 Epetra_CrsMatrix &
 SpatialOperator::epetra_mat()
 {
@@ -276,21 +361,46 @@ SpatialOperator::epetra_mat() const
 }
 //--------------------------------------------------------------------
 bool
-SpatialOperator::compatibility_check( const SpatialOperator& op  ) const
+SpatialOperator::compatibility_check( const SpatialOperator& op,
+				      const bool isResultOp ) const
 {
-  if( nrows_         != op.nrows_         ) return false;
-  if( ncols_         != op.ncols_         ) return false;
-  //  if( entriesPerRow_ != op.entriesPerRow_ ) return false;
+  if( isResultOp ){
+    if( nrows_ != op.nrows_ ){
+      std::cout << "Destination matrix must have same number of rows as operator." << std::endl;
+      return false;
+    }
+  }
+  else{
+    if( ncols_ != op.nrows_ ){
+      std::cout << "Matrix dimensions are incompatible for multiplication." << std::endl;
+      return false;
+    }
+  }
+  return true;
 
   // ensure identical ghosting patterns
-  const vector<int> & opg = op.nghost();
-  vector<int>::const_iterator iopg = opg.begin();
-  for( vector<int>::const_iterator ig=nghost().begin();
-       ig != nghost().end(); 
-       ++ig, ++iopg )
-    {
-      if( *iopg != *ig ) return false;
+  const vector<int> & opgs = op.nghost_src();
+  const vector<int> & opgd = op.nghost_dest();
+  vector<int>::const_iterator iopgs = opgs.begin();
+  vector<int>::const_iterator iopgd = opgd.begin();
+
+  vector<int>::const_iterator igs = nghost_src().begin();
+  vector<int>::const_iterator igd = nghost_dest().begin();
+
+  for( ; igs != nghost_src().end();  ++igs, ++iopgs ){
+    if( *iopgs != *igs ){
+      std::cout << "ghosting incompatibility detected in operators.  Source field ghosting is not identical." << std::endl;
+      return false;
     }
+  }
+
+  for( ; igd != nghost_dest().end();  ++igd, ++iopgd ){
+    if( *iopgd != *igd ){
+      std::cout << "ghosting incompatibility detected in operators. Destination field ghosting is not identical." << std::endl;
+      return false;
+    }
+  }
+
   return true;
 }
 //--------------------------------------------------------------------
@@ -302,39 +412,52 @@ SpatialOperator::compatibility_check( const SpatialField & field,
 
   case SOURCE_FIELD:{
     if( ncols_ != field.epetra_vec().GlobalLength() ){
-      std::cout << "expecting " << ncols_ << " entries, found "
+      std::cout << "expecting " << ncols_ << " entries for source field, found "
 		<< field.epetra_vec().GlobalLength() << std::endl;
       return false;
     }
+
+    // verify ghosting compatibility
+    const vector<int> & fg = field.nghost();
+    vector<int>::const_iterator ifg = fg.begin();
+    for( vector<int>::const_iterator ig = nghost_src().begin();
+	 ig!=nghost_src().end();
+	 ++ig, ++ifg )
+      {
+	if( *ifg != *ifg ){
+	  std::cout << "ghost incompatibility detected between field and spatial operator." << std::endl;
+	  return false;
+	}
+      }
+
     break;
   }
 
   case DEST_FIELD:{
     if( nrows_ != field.epetra_vec().GlobalLength() ){
-      std::cout << "expecting " << nrows_ << " entries, found "
+      std::cout << "expecting " << nrows_ << " entries for destination field, found "
 		<< field.epetra_vec().GlobalLength() << std::endl;
       return false;
     }
+
+    const vector<int> & fg = field.nghost();
+    vector<int>::const_iterator ifg = fg.begin();
+    for( vector<int>::const_iterator ig = nghost_dest().begin();
+	 ig!=nghost_dest().end();
+	 ++ig, ++ifg )
+      {
+	if( *ifg != *ifg ){
+	  std::cout << "ghost incompatibility detected between field and spatial operator." << std::endl;
+	  return false;
+	}
+      }
 
     break;
   }
 
   }
 
-  // verify ghosting compatibility
-  const vector<int> & fg = field.nghost();
-  vector<int>::const_iterator ifg = fg.begin();
-  for( vector<int>::const_iterator ig = nghost().begin();
-       ig!=nghost().end();
-       ++ig, ++ifg )
-    {
-      if( *ifg != *ifg ){
-	std::cout << "ghost incompatibility detected between field and spatial operator." << std::endl;
-	return false;
-      }
-    }
-
-  return true;
+   return true;
 }
 //--------------------------------------------------------------------
 void
@@ -398,7 +521,7 @@ SpatialOpDatabase::register_new_operator( const OperatorType opType,
 					 const std::string & name,
 					 const bool makeDefault )
 {
-  Shape s( op->nghost(), op->get_extent() );
+  Shape s( op->get_extent(), op->nghost_src(), op->nghost_dest() );
 
   TypeShapeMap::iterator itsm = typeMap_.find( opType );
   if( itsm == typeMap_.end() ){
@@ -439,7 +562,8 @@ SpatialOpDatabase::register_new_operator( const OperatorType opType,
 SpatialOperator*&
 SpatialOpDatabase::retrieve_operator( const std::string & name,
 				      const std::vector<int> & nxyz,
-				      const std::vector<int> & nghost )
+				      const std::vector<int> & nghostSrc,
+				      const std::vector<int> & nghostDest )
 {
   NameShapeMap::iterator ii = nameMap_.find( name );
   if( ii == nameMap_.end() ){
@@ -450,7 +574,7 @@ SpatialOpDatabase::retrieve_operator( const std::string & name,
   }
 
   ShapeOpMap & som = ii->second;
-  Shape s( nxyz, nghost );
+  Shape s( nxyz, nghostSrc, nghostDest );
   ShapeOpMap::iterator iop = som.find( s );
   if( iop == som.end() ){
     std::ostringstream msg;
@@ -464,7 +588,8 @@ SpatialOpDatabase::retrieve_operator( const std::string & name,
 SpatialOperator*&
 SpatialOpDatabase::retrieve_operator( const OperatorType opType,
 				      const std::vector<int> & nxyz,
-				      const std::vector<int> & nghost )
+				      const std::vector<int> & nghostSrc,
+				      const std::vector<int> & nghostDest )
 {
   // look for an operator of this type
   TypeShapeMap::iterator itsm = typeMap_.find( opType );
@@ -479,7 +604,7 @@ SpatialOpDatabase::retrieve_operator( const OperatorType opType,
   }
 
   ShapeOpMap & som = itsm->second;
-  Shape s( nxyz, nghost );
+  Shape s( nxyz, nghostSrc, nghostDest );
 
   // look for one with this shape
   ShapeOpMap::iterator iop = som.find( s );
@@ -499,7 +624,8 @@ void
 SpatialOpDatabase::set_default_operator( const OperatorType opType,
 					 const std::string & opName,
 					 const std::vector<int> & nxyz,
-					 const std::vector<int> & nghost )
+					 const std::vector<int> & nghostSrc,
+					 const std::vector<int> & nghostDest )
 {
   // do we have an operator with the given name?  If not, just return and do nothing.
   NameShapeMap::iterator ii = nameMap_.find( opName );
@@ -511,7 +637,7 @@ SpatialOpDatabase::set_default_operator( const OperatorType opType,
 
 
   // See if we have an operator with this name AND shape
-  Shape s( nxyz, nghost );
+  Shape s( nxyz, nghostSrc, nghostDest );
   ShapeOpMap & somName = ii->second;
   ShapeOpMap::iterator iopn = somName.find( s );
 
@@ -540,10 +666,12 @@ SpatialOpDatabase::~SpatialOpDatabase()
 //====================================================================
 
 SpatialOpDatabase::Shape::Shape( const std::vector<int> & extent,
-				 const std::vector<int> ghosts )
+				 const std::vector<int> ghostSrc,
+				 const std::vector<int> ghostDest )
 {
   nxyz = extent;
-  ng = ghosts;
+  ngS = ghostSrc;
+  ngD = ghostDest;
 }
 //--------------------------------------------------------------------
 bool
@@ -553,7 +681,8 @@ SpatialOpDatabase::Shape::operator==( const Shape & s ) const
 
   if( s.nxyz.size() != nxyz.size() ) return false;
 
-  if( s.ng.size() != ng.size() ) return false;
+  if( s.ngS.size() != ngS.size() ) return false;
+  if( s.ngD.size() != ngD.size() ) return false;
 
   vector<int>::const_iterator is = s.nxyz.begin();
   vector<int>::const_iterator ii = nxyz.begin();
@@ -561,9 +690,15 @@ SpatialOpDatabase::Shape::operator==( const Shape & s ) const
     if( *ii != *is ) isequal = false;
   }
 
-  is = s.ng.begin();
-  ii =   ng.begin();
-  for( ; ii!=ng.end(); ++ii, ++is ){
+  is = s.ngS.begin();
+  ii =   ngS.begin();
+  for( ; ii!=ngS.end(); ++ii, ++is ){
+    if( *ii != *is ) isequal = false;
+  }
+
+  is = s.ngD.begin();
+  ii =   ngD.begin();
+  for( ; ii!=ngD.end(); ++ii, ++is ){
     if( *ii != *is ) isequal = false;
   }
 
@@ -577,7 +712,8 @@ SpatialOpDatabase::Shape::operator < ( const Shape& s ) const
 
   if( s.nxyz.size() != nxyz.size() ) return false;
 
-  if( s.ng.size() != ng.size() ) return false;
+  if( s.ngS.size() != ngS.size() ) return false;
+  if( s.ngD.size() != ngD.size() ) return false;
 
   vector<int>::const_iterator is = s.nxyz.begin();
   vector<int>::const_iterator ii = nxyz.begin();
@@ -585,11 +721,18 @@ SpatialOpDatabase::Shape::operator < ( const Shape& s ) const
     if( *ii >= *is ) isLess = false;
   }
 
-  is = s.ng.begin();
-  ii =   ng.begin();
-  for( ; ii!=ng.end(); ++ii, ++is ){
+  is = s.ngS.begin();
+  ii =   ngS.begin();
+  for( ; ii!=ngS.end(); ++ii, ++is ){
     if( *ii >= *is ) isLess = false;
   }
+
+  is = s.ngD.begin();
+  ii =   ngD.begin();
+  for( ; ii!=ngD.end(); ++ii, ++is ){
+    if( *ii >= *is ) isLess = false;
+  }
+
   return isLess;
 }
 

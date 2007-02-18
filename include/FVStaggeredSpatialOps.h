@@ -7,6 +7,11 @@
 namespace SpatialOps{
 namespace FVStaggeredUniform{
 
+  enum OpType{
+    CellToFace,
+    FaceToCell
+  };
+
   int rowcount( const std::vector<int> & dimExtent,
 		const std::vector<int> & nghost );
   int colcount( const std::vector<int> & dimExtent,
@@ -26,7 +31,8 @@ namespace FVStaggeredUniform{
   {
   public:
     ScratchOperator( const std::vector<int> & dimExtent,
-		     const std::vector<int> & nghost,
+		     const std::vector<int> & nghostSrc,
+		     const std::vector<int> & nghostDest,
 		     const int entriesPerRow,
 		     const Direction dir );
 
@@ -57,7 +63,9 @@ namespace FVStaggeredUniform{
   public:
 
     LinearInterpolant( const std::vector<int> & dimExtent,
-		       const std::vector<int> & nghost,
+		       const std::vector<int> & nghostSrc,
+		       const std::vector<int> & nghostDest,
+		       const OpType opType,
 		       const Direction dir );
     
     ~LinearInterpolant();
@@ -72,6 +80,7 @@ namespace FVStaggeredUniform{
 			  std::vector<double> & vals,
 			  std::vector<int> & ixs ) const;
 
+    const OpType opType_;
     const Direction dir_;
     int ndim_;
   };
@@ -89,7 +98,9 @@ namespace FVStaggeredUniform{
 
     Gradient2ndOrder( const std::vector<double> & meshSpacing,
 		      const std::vector<int> & dimExtent,
-		      const std::vector<int> & nghost,
+		      const std::vector<int> & nghostSrc,
+		      const std::vector<int> & nghostDest,
+		      const OpType opType,
 		      const Direction dir );
 
     ~Gradient2ndOrder();
@@ -105,6 +116,7 @@ namespace FVStaggeredUniform{
 			  std::vector<int> & ixs ) const;
 
     const std::vector<double> spacing_;
+    const OpType opType_;
     const Direction dir_;
     int ndim_;
   };
@@ -122,7 +134,9 @@ namespace FVStaggeredUniform{
     Divergence2ndOrder( const std::vector<double> & cellFaceArea,
 			const double cellVolume,
 			const std::vector<int> & dimExtent,
-			const std::vector<int> & nghost,
+			const std::vector<int> & nghostSrc,
+			const std::vector<int> & nghostDest,
+			const OpType opType,
 			const Direction dir );
 
     ~Divergence2ndOrder();
@@ -139,6 +153,7 @@ namespace FVStaggeredUniform{
 
     const std::vector<double> faceArea_;
     const double cellVol_;
+    const OpType opType_;
     const Direction dir_;
     int ndim_;
   };
