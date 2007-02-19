@@ -41,24 +41,28 @@ class SpatialOpDatabase
 {
 public:
 
+  enum Direction{ X, Y, Z };
+
+  enum OperatorLoc{ CELL, FACE };
+
   enum OperatorType{
+    DIVERGENCE,
+    GRADIENT,
+    INTERPOLANT,
+    SCRATCH
+  };
 
-    CELL_DIVERGENCE_X,     FACE_DIVERGENCE_X,
-    CELL_DIVERGENCE_Y,     FACE_DIVERGENCE_Y,
-    CELL_DIVERGENCE_Z,     FACE_DIVERGENCE_Z,
+  struct OperatorDescriptor{
+    OperatorDescriptor( const Direction    d,
+			const OperatorLoc  l,
+			const OperatorType t );
 
-    CELL_GRADIENT_X,       FACE_GRADIENT_X,
-    CELL_GRADIENT_Y,       FACE_GRADIENT_Y,
-    CELL_GRADIENT_Z,       FACE_GRADIENT_Z,
+    bool operator < ( const OperatorDescriptor& s ) const;
+    bool operator ==( const OperatorDescriptor& s ) const;
 
-    CELL_INTERPOLANT_X,    FACE_INTERPOLANT_X,
-    CELL_INTERPOLANT_Y,    FACE_INTERPOLANT_Y,
-    CELL_INTERPOLANT_Z,    FACE_INTERPOLANT_Z,
-
-    CELL_SCRATCH_X,        FACE_SCRATCH_X,
-    CELL_SCRATCH_Y,        FACE_SCRATCH_Y,
-    CELL_SCRATCH_Z,        FACE_SCRATCH_Z
-
+    const Direction dir;
+    const OperatorLoc loc;
+    const OperatorType type;
   };
 
   static SpatialOpDatabase& self();
@@ -79,7 +83,7 @@ public:
    *  then it will not replace the current default operator, unless
    *  one does not yet exist.
    */
-  void register_new_operator( const OperatorType opType,
+  void register_new_operator( const OperatorDescriptor & opType,
 			      SpatialOperator * const op,
 			      const std::string& opName,
 			      const bool makeDefault = true );
@@ -87,7 +91,7 @@ public:
   /**
    *  Reset the default operator to the one with the given name.
    */
-  void set_default_operator( const OperatorType opType,
+  void set_default_operator( const OperatorDescriptor & opType,
 			     const std::string & opName,
 			     const std::vector<int> & nxyz,
 			     const std::vector<int> & nghostSrc,
@@ -102,7 +106,7 @@ public:
    *  <code>set_default_operator</code> or
    *  <code>register_new_operator</code>.
    */
-  SpatialOperator*& retrieve_operator( const OperatorType opType,
+  SpatialOperator*& retrieve_operator( const OperatorDescriptor & opType,
 				       const std::vector<int> & nxyz,
 				       const std::vector<int> & nghostSrc,
 				       const std::vector<int> & nghostDest );
@@ -137,8 +141,8 @@ private:
 
   typedef std::map< Shape,SpatialOperator* > ShapeOpMap;
 
-  typedef std::map< OperatorType, ShapeOpMap > TypeShapeMap;
-  typedef std::map< std::string,  ShapeOpMap > NameShapeMap;
+  typedef std::map< OperatorDescriptor, ShapeOpMap > TypeShapeMap;
+  typedef std::map< std::string,        ShapeOpMap > NameShapeMap;
 
   NameShapeMap nameMap_;
   TypeShapeMap typeMap_;

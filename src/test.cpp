@@ -182,52 +182,93 @@ bool test_spatial_ops_x()
   // This will test database functionality.
   SpatialOpDatabase & SODatabase = SpatialOpDatabase::self();
   {
-    SODatabase.register_new_operator( SpatialOpDatabase::CELL_INTERPOLANT_X,
+    SODatabase.register_new_operator( SpatialOpDatabase::OperatorDescriptor( SpatialOpDatabase::X,
+									     SpatialOpDatabase::CELL,
+									     SpatialOpDatabase::INTERPOLANT ),
 				      new LinearInterpolant( dim, nghostCell, nghostFace, CellToFace, X_DIR ),
 				      "X-Interpolant Second Order Staggered Cell" );
 
-    SODatabase.register_new_operator( SpatialOpDatabase::FACE_INTERPOLANT_X,
+    SODatabase.register_new_operator( SpatialOpDatabase::OperatorDescriptor( SpatialOpDatabase::X,
+									     SpatialOpDatabase::FACE,
+									     SpatialOpDatabase::INTERPOLANT ),
 				      new LinearInterpolant( dim, nghostFace, nghostCell, FaceToCell, X_DIR ),
 				      "X-Interpolant Second Order Staggered Face" );
 
-    SODatabase.register_new_operator( SpatialOpDatabase::CELL_DIVERGENCE_X,
+    SODatabase.register_new_operator( SpatialOpDatabase::OperatorDescriptor( SpatialOpDatabase::X,
+									     SpatialOpDatabase::CELL,
+									     SpatialOpDatabase::DIVERGENCE ),
 				      new Divergence2ndOrder( area, volume, dim, nghostFace, nghostCell, FaceToCell, X_DIR ),
 				      "X-Divergence Second Order Staggered Cell"  );
 
-    SODatabase.register_new_operator( SpatialOpDatabase::FACE_DIVERGENCE_X,
+    SODatabase.register_new_operator( SpatialOpDatabase::OperatorDescriptor( SpatialOpDatabase::X,
+									     SpatialOpDatabase::FACE,
+									     SpatialOpDatabase::DIVERGENCE ),
 				      new Divergence2ndOrder( area, volume, dim, nghostCell, nghostFace, CellToFace, X_DIR ),
 				      "X-Divergence Second Order Staggered Face"  );
 
-    SODatabase.register_new_operator( SpatialOpDatabase::CELL_GRADIENT_X,
+    SODatabase.register_new_operator( SpatialOpDatabase::OperatorDescriptor( SpatialOpDatabase::X,
+									     SpatialOpDatabase::CELL,
+									     SpatialOpDatabase::GRADIENT ),
 				      new Gradient2ndOrder( spacing, dim, nghostCell, nghostFace, CellToFace, X_DIR ),
 				      "X-Gradient Second Order Staggered Cell"    );
 
-    SODatabase.register_new_operator( SpatialOpDatabase::FACE_GRADIENT_X,
+    SODatabase.register_new_operator( SpatialOpDatabase::OperatorDescriptor( SpatialOpDatabase::X,
+									     SpatialOpDatabase::FACE,
+									     SpatialOpDatabase::GRADIENT ),
 				      new Gradient2ndOrder( spacing, dim, nghostFace, nghostCell, FaceToCell, X_DIR ),
 				      "X-Gradient Second Order Staggered Face"    );
 
-    SODatabase.register_new_operator( SpatialOpDatabase::CELL_SCRATCH_X,
+    SODatabase.register_new_operator( SpatialOpDatabase::OperatorDescriptor( SpatialOpDatabase::X,
+									     SpatialOpDatabase::CELL,
+									     SpatialOpDatabase::SCRATCH ),
 				      new ScratchOperator( dim, nghostCell, nghostCell, 3, X_DIR ),
 				      "Scratch X Second Order Cell" );
 
-    SODatabase.register_new_operator( SpatialOpDatabase::CELL_SCRATCH_X,
+    SODatabase.register_new_operator( SpatialOpDatabase::OperatorDescriptor( SpatialOpDatabase::X,
+									     SpatialOpDatabase::CELL,
+									     SpatialOpDatabase::SCRATCH ),
 				      new ScratchOperator( dim, nghostCell, nghostCell, 3, X_DIR ),
 				      "Scratch X Second Order Cell 2" );
 
-    SODatabase.register_new_operator( SpatialOpDatabase::FACE_SCRATCH_X,
+    SODatabase.register_new_operator( SpatialOpDatabase::OperatorDescriptor( SpatialOpDatabase::X,
+									     SpatialOpDatabase::FACE,
+									     SpatialOpDatabase::SCRATCH ),
 				      new ScratchOperator( dim, nghostFace, nghostFace, 3, X_DIR ),
 				      "Scratch X Second Order Face" );
 
-    SODatabase.register_new_operator( SpatialOpDatabase::FACE_SCRATCH_X,
+    SODatabase.register_new_operator( SpatialOpDatabase::OperatorDescriptor( SpatialOpDatabase::X,
+									     SpatialOpDatabase::FACE,
+									     SpatialOpDatabase::SCRATCH ),
 				      new ScratchOperator( dim, nghostFace, nghostFace, 3, X_DIR ),
 				      "Scratch X Second Order Face 2" );
   }
 
-  SpatialOperator *& CellRx  = SODatabase.retrieve_operator( SpatialOpDatabase::CELL_INTERPOLANT_X, dim, nghostCell, nghostFace );
-  SpatialOperator *& CellDx  = SODatabase.retrieve_operator( SpatialOpDatabase::CELL_DIVERGENCE_X,  dim, nghostFace, nghostCell );
-  SpatialOperator *& CellGx  = SODatabase.retrieve_operator( SpatialOpDatabase::CELL_GRADIENT_X,    dim, nghostCell, nghostFace );
-  SpatialOperator *& CellSx1 = SODatabase.retrieve_operator( "Scratch X Second Order Cell",         dim, nghostCell, nghostCell );
-  SpatialOperator *& CellSx2 = SODatabase.retrieve_operator( "Scratch X Second Order Cell 2",       dim, nghostCell, nghostCell );
+  SpatialOperator *& CellRx  = SODatabase.retrieve_operator( SpatialOpDatabase::OperatorDescriptor( SpatialOpDatabase::X,
+												    SpatialOpDatabase::CELL,
+												    SpatialOpDatabase::INTERPOLANT ),
+							     dim,
+							     nghostCell,
+							     nghostFace );
+
+  SpatialOperator *& CellDx  = SODatabase.retrieve_operator( SpatialOpDatabase::OperatorDescriptor( SpatialOpDatabase::X,
+												    SpatialOpDatabase::CELL,
+												    SpatialOpDatabase::DIVERGENCE ),
+							     dim,
+							     nghostFace,
+							     nghostCell );
+
+  SpatialOperator *& CellGx  = SODatabase.retrieve_operator( SpatialOpDatabase::OperatorDescriptor( SpatialOpDatabase::X,
+												    SpatialOpDatabase::CELL,
+												    SpatialOpDatabase::GRADIENT ),
+							     dim,
+							     nghostCell,
+							     nghostFace );
+
+  SpatialOperator *& CellSx1 = SODatabase.retrieve_operator( "Scratch X Second Order Cell",
+							     dim,
+							     nghostCell,
+							     nghostCell );
+  //  SpatialOperator *& CellSx2 = SODatabase.retrieve_operator( "Scratch X Second Order Cell 2",       dim, nghostCell, nghostCell );
 
 
 //   EpetraExt::RowMatrixToMatrixMarketFile( "Int_x.mm", xinterp->epetra_mat(), "", "" );

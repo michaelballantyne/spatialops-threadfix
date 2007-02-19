@@ -508,6 +508,42 @@ MapFactory::get_map( const int npts )
 
 
 //--------------------------------------------------------------------
+SpatialOpDatabase::OperatorDescriptor::OperatorDescriptor( const Direction    d,
+							   const OperatorLoc  l,
+							   const OperatorType t )
+  : dir ( d ),
+    loc ( l ),
+    type( t )
+{}
+//--------------------------------------------------------------------
+bool
+SpatialOpDatabase::OperatorDescriptor::operator < ( const OperatorDescriptor& s ) const
+{
+  // jcs: this is REALLY SLOW!  I did this because I couldn't get the
+  // straight enum compare to work properly for some reason.
+  ostringstream s1, s2;
+  s1 << dir << " " << loc << " " << type;
+  s2 << s.dir << " "  << s.loc << " " << s.type;
+  return (s1.str()<s2.str());
+  /*
+  bool isLess =
+    (dir < s.dir ) &&
+    (loc < s.loc ) &&
+    (type< s.type);
+
+  return isLess;
+  */
+}
+//--------------------------------------------------------------------
+bool
+SpatialOpDatabase::OperatorDescriptor::operator== ( const OperatorDescriptor& s ) const
+{
+  return ( (dir == s.dir)  &&
+	   (loc == s.loc)  &&
+	   (type== s.type) );
+}
+
+//--------------------------------------------------------------------
 SpatialOpDatabase&
 SpatialOpDatabase::self()
 {
@@ -516,7 +552,7 @@ SpatialOpDatabase::self()
 }
 //--------------------------------------------------------------------
 void
-SpatialOpDatabase::register_new_operator( const OperatorType opType,
+SpatialOpDatabase::register_new_operator( const OperatorDescriptor & opType,
 					 SpatialOperator * const op,
 					 const std::string & name,
 					 const bool makeDefault )
@@ -586,7 +622,7 @@ SpatialOpDatabase::retrieve_operator( const std::string & name,
 }
 //--------------------------------------------------------------------
 SpatialOperator*&
-SpatialOpDatabase::retrieve_operator( const OperatorType opType,
+SpatialOpDatabase::retrieve_operator( const OperatorDescriptor & opType,
 				      const std::vector<int> & nxyz,
 				      const std::vector<int> & nghostSrc,
 				      const std::vector<int> & nghostDest )
@@ -621,7 +657,7 @@ SpatialOpDatabase::retrieve_operator( const OperatorType opType,
 }
 //--------------------------------------------------------------------
 void
-SpatialOpDatabase::set_default_operator( const OperatorType opType,
+SpatialOpDatabase::set_default_operator( const OperatorDescriptor & opType,
 					 const std::string & opName,
 					 const std::vector<int> & nxyz,
 					 const std::vector<int> & nghostSrc,
@@ -711,9 +747,8 @@ SpatialOpDatabase::Shape::operator < ( const Shape& s ) const
   bool isLess = true;
 
   if( s.nxyz.size() != nxyz.size() ) return false;
-
-  if( s.ngS.size() != ngS.size() ) return false;
-  if( s.ngD.size() != ngD.size() ) return false;
+  if( s.ngS.size()  != ngS.size()  ) return false;
+  if( s.ngD.size()  != ngD.size()  ) return false;
 
   vector<int>::const_iterator is = s.nxyz.begin();
   vector<int>::const_iterator ii = nxyz.begin();
