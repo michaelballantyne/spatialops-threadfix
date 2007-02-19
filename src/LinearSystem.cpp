@@ -1,4 +1,6 @@
 #include <numeric>
+#include <sstream>
+#include <stdexcept>
 
 #include <LinearSystem.h>
 
@@ -624,6 +626,26 @@ LinSysFactory::get_linsys( const LinSysInfo& info )
     ii = result.first;
   }
   return *(ii->second);
+}
+//--------------------------------------------------------------------
+void
+LinSysFactory::bind_name_to_info( const LinSysInfo& info,
+				  const std::string & name )
+{
+  nameInfoMap_.insert( make_pair(name,info) );
+}
+//--------------------------------------------------------------------
+LinearSystem&
+LinSysFactory::get_linsys( const std::string & name )
+{
+  NameInfoMap::iterator ii=nameInfoMap_.find( name );
+  if( ii==nameInfoMap_.end() ){
+    std::ostringstream msg;
+    msg << "ERROR: No linear system has been assigned to '" << name << "'." << std::endl
+	<< "       You must first bind the name to the linear system information." << std::endl;
+    throw std::runtime_error( msg.str() );
+  }
+  return get_linsys( ii->second );
 }
 
 //====================================================================

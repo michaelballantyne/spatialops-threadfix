@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <map>
+#include <string>
 
 #ifdef HAVE_MPI
 #include <mpi.h>
@@ -92,7 +93,12 @@ class LinSysFactory
 public:
   static LinSysFactory& self();
 
+  void bind_name_to_info( const LinSysInfo& info,
+			  const std::string & name );
+
   LinearSystem & get_linsys( const LinSysInfo& info );
+
+  LinearSystem & get_linsys( const std::string & name );
 
 private:
   LinSysFactory();
@@ -101,6 +107,8 @@ private:
   typedef std::map<LinSysInfo,LinearSystem*> InfoMap;
   InfoMap infoMap_;
 
+  typedef std::map<std::string,LinSysInfo> NameInfoMap;
+  NameInfoMap nameInfoMap_;
 };
 
 
