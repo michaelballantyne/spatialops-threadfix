@@ -252,24 +252,40 @@ LinearInterpolant::get_row_entries( const int irow,
   const int kdest = irow/(nxd*nyd);
 
   // get the (ijk) index for the src array
-  const int isrc = idest - nghost_dest(XDIM,MINUS) + nghost_src(XDIM,MINUS);
-  const int jsrc = jdest - nghost_dest(YDIM,MINUS) + nghost_src(YDIM,MINUS);
-  const int ksrc = kdest - nghost_dest(ZDIM,MINUS) + nghost_src(ZDIM,MINUS);
+  int isrc = idest - nghost_dest(XDIM,MINUS) + nghost_src(XDIM,MINUS);
+  int jsrc = jdest - nghost_dest(YDIM,MINUS) + nghost_src(YDIM,MINUS);
+  int ksrc = kdest - nghost_dest(ZDIM,MINUS) + nghost_src(ZDIM,MINUS);
 
   // are we in bounds?  If not, we don't have any entries...
   const int shift = (staggerLeft ? 0 :-1);
-  if( isrc < 1+shift  ||  isrc >= nxs+shift ) return;
-  if( extent_[1] > 1 )  if( jsrc < 1+shift  ||  jsrc >= nys+shift ) return;
-  if( extent_[2] > 1 )  if( ksrc < 1+shift  ||  ksrc >= nzs+shift ) return;
+  bool inBoundsLo[3], inBoundsHi[3];
+  for(int i=0; i<3; ++i){ inBoundsLo[i]=inBoundsHi[i]=true; }
+
+  if( isrc <    1+shift ){ inBoundsLo[0]=false; isrc=0;     }
+  if( isrc >= nxs+shift ){ inBoundsHi[0]=false; isrc=nxs-1; }
+  if( extent_[1] > 1 ){
+    if( jsrc <    1+shift ){ inBoundsLo[1]=false; jsrc=0;     }
+    if( jsrc >= nys+shift ){ inBoundsHi[1]=false; jsrc=nys-1; }
+  }
+  if( extent_[2] > 1 ){
+    if( ksrc <    1+shift ){ inBoundsLo[2]=false; ksrc=0;     }
+    if( ksrc >= nzs+shift ){ inBoundsHi[2]=false; ksrc=nzs-1; }
+  }
 
   const int icol = ksrc*(nxs*nys) + jsrc*nxs + isrc;
+  int ifac = (staggerLeft ? -1 : 1);
+  bool inBounds[3];
+  for( int i=0; i<3; ++i ){
+    inBounds[i] = ( inBoundsLo[i] && inBoundsHi[i] );
+  }
 
   switch( dir_ ){
 
   case X_DIR:{
 
-    const int ishift = (staggerLeft ? -1 : 1);
-
+    if( !inBoundsLo[0] ) ifac=1;
+    if( !inBoundsHi[0] ) ifac=-1;
+    const int ishift = ifac;
     vals.push_back( val );  ixs.push_back( icol        );
     vals.push_back( val );  ixs.push_back( icol+ishift );
 
@@ -280,8 +296,9 @@ LinearInterpolant::get_row_entries( const int irow,
 
     assert( ndim_ > 1 );
 
-    const int jshift = (staggerLeft ? -1 : 1 ) * nxs;
-
+    if( !inBoundsLo[1] ) ifac=1;
+    if( !inBoundsHi[1] ) ifac=-1;
+    const int jshift = ifac * nxs;
     vals.push_back( val );  ixs.push_back( icol );
     vals.push_back( val );  ixs.push_back( icol+jshift );
 
@@ -292,7 +309,9 @@ LinearInterpolant::get_row_entries( const int irow,
 
     assert( ndim_==3 );
 
-    const int kshift = (staggerLeft ? -1 : 1 ) * nxs*nys;
+    if( !inBoundsLo[2] ) ifac=1;
+    if( !inBoundsHi[2] ) ifac=-1;
+    const int kshift = ifac * nxs*nys;
     vals.push_back( val );  ixs.push_back( icol        );
     vals.push_back( val );  ixs.push_back( icol+kshift );
 
@@ -399,12 +418,12 @@ Gradient2ndOrder::get_row_entries( const int irow,
   }
 
   const int icol = ksrc*(nxs*nys) + jsrc*nxs + isrc;
-
   int ifac = (staggerLeft ? -1 : 1);
-
   bool inBounds[3];
-  for( int i=0; i<3; ++i )   inBounds[i] = ( inBoundsLo[i] && inBoundsHi[i] );
-    
+  for( int i=0; i<3; ++i ){
+    inBounds[i] = ( inBoundsLo[i] && inBoundsHi[i] );
+  }
+
   switch( dir_ ){
 
   case X_DIR:{
