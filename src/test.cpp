@@ -1,36 +1,19 @@
-#include <SpatialOperator.h>
-#include <SpatialField.h>
-#include <FVStaggeredSpatialOps.h>
-#include <LinearSystem.h>
+#include <vector>
 
-#include <Epetra_CrsMatrix.h>
-#include <Epetra_Vector.h>
+#include <FV2ndOrderTypes.h>
 
 #include <EpetraExt_RowMatrixOut.h>
 #include <EpetraExt_VectorOut.h>
 
-#include <vector>
-#include <iostream>
-#include <cmath>
-
 using namespace std;
-using namespace SpatialOps;
 
-#define PI 3.1415
+#define PI 3.14159265358979
 
 void setup_geom( const std::vector<int> & dim,
-		 const std::vector<int> & nghost,
-		 int & nn, int&nx, int&ny, int&nz,
 		 std::vector<double> & spacing,
 		 std::vector<double> & area,
 		 double & volume )
 {
-  // set up array dimensions for "source" arrays
-  nx = dim[0]+nghost[0]+nghost[1];
-  ny = dim[1]>1 ? dim[1]+nghost[2]+nghost[3] : 1;
-  nz = dim[2]>1 ? dim[2]+nghost[4]+nghost[5] : 1;
-  nn = nx*ny*nz;
-
   for( int i=0; i<3; ++i )
     spacing[i] = (dim[i]==1) ? 1.0 : PI/(dim[i]-1);
 
@@ -41,542 +24,358 @@ void setup_geom( const std::vector<int> & dim,
   volume = spacing[0]*spacing[1]*spacing[2];
 }
 
-//====================================================================
+//--------------------------------------------------------------------
 
-bool test_linsys()
+void build_ops( const std::vector<int> & dim )
 {
+  using namespace SpatialOps;
   using namespace FVStaggeredUniform;
-
-  std::vector<int> dim(3,1);
-  dim[0] = 13;
-  dim[1] = 1 ;
-  dim[2] = 1 ;
 
   std::vector<double> spacing(3), area(3);
   double volume;
-  int nn, nx,ny,nz;
-  const std::vector<int> nghostCell(6,1);
-  const std::vector<int> nghostFace(6,1);
-  setup_geom( dim, nghostCell, nn,nx,ny,nz, spacing, area, volume );
+  setup_geom( dim, spacing, area, volume );
 
-  // create a laplacian
-  const Gradient2ndOrder xGrad( spacing, dim, nghostCell, nghostFace, CellToFace, X_DIR );
-  const Divergence2ndOrder xDiv( area, volume, dim, nghostFace, nghostCell, FaceToCell, X_DIR );
-  ScratchOperator xLaplacian( dim, nghostCell, nghostCell, 3, X_DIR );
+  // build the assemblers
+  InterpXC2FAssembler rxcfasmbl( dim );
+  InterpYC2FAssembler rycfasmbl( dim );
+  InterpZC2FAssembler rzcfasmbl( dim );
 
-  xDiv.apply( xGrad, xLaplacian );
+  GradXC2FAssembler gxcfasmbl( spacing, dim );
+  GradYC2FAssembler gycfasmbl( spacing, dim );
+  GradZC2FAssembler gzcfasmbl( spacing, dim );
 
-  EpetraExt::RowMatrixToMatrixMarketFile( "xDiv.mm", xDiv.epetra_mat(), "", "" );
-  EpetraExt::RowMatrixToMatrixMarketFile( "xGrad.mm", xGrad.epetra_mat(), "", "" );
-  EpetraExt::RowMatrixToMatrixMarketFile( "xLaplacian.mm", xLaplacian.epetra_mat(), "", "" );
+  GradXF2CAssembler gxfcasmbl( spacing, dim );
+  GradYF2CAssembler gyfcasmbl( spacing, dim );
+  GradZF2CAssembler gzfcasmbl( spacing, dim );
 
-  LinearSystem & linSys = LinSysFactory::self().get_linsys( LinSysInfo(dim) );
-  linSys.reset();
+  DivXF2CAssembler dxfcasmbl( dim, area, volume );
+  DivYF2CAssembler dyfcasmbl( dim, area, volume );
+  DivZF2CAssembler dzfcasmbl( dim, area, volume );
 
-  linSys.get_lhs().add_contribution( xLaplacian );
+  SxCellAssembler  sxcasmbl( dim );
+  SyCellAssembler  sycasmbl( dim );
+  SzCellAssembler  szcasmbl( dim );
 
-  EpetraExt::RowMatrixToMatrixMarketFile( "A.mm", linSys.get_lhs().epetra_mat(), "", "" );
+  SxC2FAssembler  sxcfasmbl( dim );
+  SyC2FAssembler  sycfasmbl( dim );
+  SzC2FAssembler  szcfasmbl( dim );
+
+
+  // build the operators
+  InterpXC2F *rxcf = new InterpXC2F( rxcfasmbl );
+  InterpYC2F *rycf = new InterpYC2F( rycfasmbl );
+  InterpZC2F *rzcf = new InterpZC2F( rzcfasmbl );
+
+  GradXC2F   *gxcf = new GradXC2F( gxcfasmbl );
+  GradYC2F   *gycf = new GradYC2F( gycfasmbl );
+  GradZC2F   *gzcf = new GradZC2F( gzcfasmbl );
+
+  GradXF2C   *gxfc = new GradXF2C( gxfcasmbl );
+  GradYF2C   *gyfc = new GradYF2C( gyfcasmbl );
+  GradZF2C   *gzfc = new GradZF2C( gzfcasmbl );
+
+  DivXF2C    *dxfc = new DivXF2C( dxfcasmbl );
+  DivYF2C    *dyfc = new DivYF2C( dyfcasmbl );
+  DivZF2C    *dzfc = new DivZF2C( dzfcasmbl );
+
+  SxCellSide *sxcf = new SxCellSide( sxcfasmbl );
+  SyCellSide *sycf = new SyCellSide( sycfasmbl );
+  SzCellSide *szcf = new SzCellSide( szcfasmbl );
+
+  SxCell     *sxc  = new SxCell( sxcasmbl  );
+  SyCell     *syc  = new SyCell( sycasmbl  );
+  SzCell     *szc  = new SzCell( szcasmbl  );
+
+  SpatialOpDatabase<InterpXC2F>::self().register_new_operator( rxcf, "Interp-X-Cell-to-Side" );
+  SpatialOpDatabase<InterpYC2F>::self().register_new_operator( rycf, "Interp-Y-Cell-to-Side" );
+  SpatialOpDatabase<InterpZC2F>::self().register_new_operator( rzcf, "Interp-Z-Cell-to-Side" );
+
+  SpatialOpDatabase<GradXC2F  >::self().register_new_operator( gxcf, "Grad-X-Cell-to-Side" );
+  SpatialOpDatabase<GradYC2F  >::self().register_new_operator( gycf, "Grad-Y-Cell-to-Side" );
+  SpatialOpDatabase<GradZC2F  >::self().register_new_operator( gzcf, "Grad-Z-Cell-to-Side" );
+
+  SpatialOpDatabase<GradXF2C  >::self().register_new_operator( gxfc, "Grad-X-Side-to-Cell" );
+  SpatialOpDatabase<GradYF2C  >::self().register_new_operator( gyfc, "Grad-Y-Side-to-Cell" );
+  SpatialOpDatabase<GradZF2C  >::self().register_new_operator( gzfc, "Grad-Z-Side-to-Cell" );
+
+  SpatialOpDatabase<DivXF2C   >::self().register_new_operator( dxfc, "Div-X-Side-to-Cell" );
+  SpatialOpDatabase<DivYF2C   >::self().register_new_operator( dyfc, "Div-Y-Side-to-Cell" );
+  SpatialOpDatabase<DivZF2C   >::self().register_new_operator( dzfc, "Div-Z-Side-to-Cell" );
+
+  SpatialOpDatabase<SxCellSide>::self().register_new_operator( sxcf, "Scratch-X-Cell-to-Side" );
+  SpatialOpDatabase<SyCellSide>::self().register_new_operator( sycf, "Scratch-Y-Cell-to-Side" );
+  SpatialOpDatabase<SzCellSide>::self().register_new_operator( szcf, "Scratch-Z-Cell-to-Side" );
+
+  SpatialOpDatabase<SxCell    >::self().register_new_operator( sxc, "Scratch-X-Cell" );
+  SpatialOpDatabase<SyCell    >::self().register_new_operator( syc, "Scratch-Y-Cell"  );
+  SpatialOpDatabase<SzCell    >::self().register_new_operator( szc, "Scratch-Z-Cell"  );
+}
+
+
+
+bool test( const std::vector<int> & dim )
+{
+  using namespace SpatialOps;
+  using namespace FVStaggeredUniform;
+
+  std::vector<double> spacing(3), area(3);
+  double volume;
+  setup_geom( dim, spacing, area, volume );
+
+  // get the operators
+  InterpXC2F & rxcf = *SpatialOpDatabase<InterpXC2F>::self().retrieve_operator( dim );
+  GradXC2F   & gxcf = *SpatialOpDatabase<GradXC2F  >::self().retrieve_operator( dim );
+  DivXF2C    & dxfc = *SpatialOpDatabase<DivXF2C   >::self().retrieve_operator( dim );
+  SxCellSide & sxcf = *SpatialOpDatabase<SxCellSide>::self().retrieve_operator( dim );
+  SxCell     & sxc  = *SpatialOpDatabase<SxCell    >::self().retrieve_operator( dim );
+
+  EpetraExt::RowMatrixToMatrixMarketFile( "Dx.mm", dxfc.get_linalg_mat(), "", "" );
+  EpetraExt::RowMatrixToMatrixMarketFile( "Gx.mm", gxcf.get_linalg_mat(), "", "" );
+  EpetraExt::RowMatrixToMatrixMarketFile( "Rx.mm", rxcf.get_linalg_mat(), "", "" );
+
+
+  sxcf  = gxcf;
+  sxcf += gxcf;
+  sxcf -= gxcf;
+
+
+  // build the spatial fields
+  CellField      x( dim, NULL, InternalStorage );
+  CellField      f( dim, NULL, InternalStorage );
+  XSideField  xint( dim, NULL, InternalStorage );
+  XSideField  fint( dim, NULL, InternalStorage );
+  XSideField gradF( dim, NULL, InternalStorage );
+  CellField    d2f( dim, NULL, InternalStorage );
+
+
+  const double dx = spacing[0]; //1.0/double(dim[0]-1);
+  const int ngxlo = CellFieldTraits::GhostTraits::get<XDIR,SideMinus>();
+  const int khi = dim[2]==1 ? 1 : dim[2]+CellFieldTraits::GhostTraits::get<ZDIR,SideMinus>() + CellFieldTraits::GhostTraits::get<ZDIR,SidePlus>();
+  const int jhi = dim[1]==1 ? 1 : dim[1]+CellFieldTraits::GhostTraits::get<YDIR,SideMinus>() + CellFieldTraits::GhostTraits::get<YDIR,SidePlus>();
+  const int ihi = dim[0]+CellFieldTraits::GhostTraits::get<XDIR,SideMinus>() + CellFieldTraits::GhostTraits::get<XDIR,SidePlus>();
+  const int ilo=0, jlo=0, klo=0;
+  int ix = 0;
+  for( int k=klo; k<khi ; ++k ){
+    for( int j=jlo; j<jhi; ++j ){
+      for( int i=ilo; i<ihi; ++i ){
+	x[ix] = (i-ngxlo)*dx;
+	f[ix] = std::sin(x[ix]) + 2.0;
+	++ix;
+      }
+    }
+  }
+
+  // apply the operators to the fields
+  gxcf.apply_to_field( f, gradF );
+  rxcf.apply_to_field( x, xint  );
+  rxcf.apply_to_field( f, fint  );
+
+  dxfc.apply_to_op( gxcf, sxc );
+  EpetraExt::RowMatrixToMatrixMarketFile( "Lx.mm", sxc.get_linalg_mat(), "", "" );
+
+  sxc.apply_to_field( f, d2f );
+
+  //gxfc.apply_to_field( gradF, d2f );
+
+  /*
+  EpetraExt::VectorToMatrixMarketFile( "x.mm",   x.get_linalg_vec(), "", "" );
+  EpetraExt::VectorToMatrixMarketFile( "fx.mm",   f.get_linalg_vec(), "", "" );
+  EpetraExt::VectorToMatrixMarketFile( "xx.mm", xint.get_linalg_vec(), "", "" );
+  EpetraExt::VectorToMatrixMarketFile( "fintx.mm", fint.get_linalg_vec(), "", "" );
+  EpetraExt::VectorToMatrixMarketFile( "dfdx.mm", gradF.get_linalg_vec(), "", "" );
+  EpetraExt::VectorToMatrixMarketFile( "d2fdx2.mm", d2f.get_linalg_vec(), "", "" );
+  */
+
+  // build a field without any ghost information in it.
+  CellFieldNoGhost tmpField( dim, NULL, InternalStorage );
+  RHS tmp(dim);
+  tmp.reset();
+  tmp.add_field_contribution( x );
+  tmpField = tmp;
+
+  // this is really a hack, but it is a way to eliminate ghost values from the output...
+  tmp.reset(); tmp.add_field_contribution(x    ); tmpField=tmp;  EpetraExt::VectorToMatrixMarketFile( "x.mm", tmpField.get_linalg_vec(), "", "" );
+  tmp.reset(); tmp.add_field_contribution(f    ); tmpField=tmp;  EpetraExt::VectorToMatrixMarketFile( "fx.mm", tmpField.get_linalg_vec(), "", "" );
+  tmp.reset(); tmp.add_field_contribution(xint ); tmpField=tmp;  EpetraExt::VectorToMatrixMarketFile( "xx.mm", tmpField.get_linalg_vec(), "", "" );
+  tmp.reset(); tmp.add_field_contribution(fint ); tmpField=tmp;  EpetraExt::VectorToMatrixMarketFile( "fintx.mm", tmpField.get_linalg_vec(), "", "" );
+  tmp.reset(); tmp.add_field_contribution(gradF); tmpField=tmp;  EpetraExt::VectorToMatrixMarketFile( "dfdx.mm", tmpField.get_linalg_vec(), "", "" );
+  tmp.reset(); tmp.add_field_contribution(d2f  ); tmpField=tmp;  EpetraExt::VectorToMatrixMarketFile( "d2fdx2.mm", tmpField.get_linalg_vec(), "", "" );
+
 
   if( dim[1] > 1 ){
-    const Gradient2ndOrder yGrad( spacing, dim, nghostCell, nghostFace, CellToFace, Y_DIR );
-    const Divergence2ndOrder yDiv( area, volume, dim, nghostFace, nghostCell, FaceToCell, Y_DIR );
-    ScratchOperator yLaplace( dim, nghostCell, nghostCell, 3, Y_DIR );
-    yDiv.apply( yGrad, yLaplace );
 
-    linSys.get_lhs().add_contribution( yLaplace );
-    EpetraExt::RowMatrixToMatrixMarketFile( "yLaplacian.mm", yLaplace.epetra_mat(), "", "" );
-    EpetraExt::RowMatrixToMatrixMarketFile( "yDiv.mm", yDiv.epetra_mat(), "", "" );
-    EpetraExt::RowMatrixToMatrixMarketFile( "yGrad.mm", yGrad.epetra_mat(), "", "" );
+    // get the operators
+    InterpYC2F & rycf = *SpatialOpDatabase<InterpYC2F>::self().retrieve_operator( dim );
+    GradYC2F   & gycf = *SpatialOpDatabase<GradYC2F  >::self().retrieve_operator( dim );
+    DivYF2C    & dyfc = *SpatialOpDatabase<DivYF2C   >::self().retrieve_operator( dim );
+    SyCell     & syc  = *SpatialOpDatabase<SyCell    >::self().retrieve_operator( dim );
+
+    EpetraExt::RowMatrixToMatrixMarketFile( "Dy.mm", dyfc.get_linalg_mat(), "", "" );
+    EpetraExt::RowMatrixToMatrixMarketFile( "Gy.mm", gycf.get_linalg_mat(), "", "" );
+    EpetraExt::RowMatrixToMatrixMarketFile( "Ry.mm", rycf.get_linalg_mat(), "", "" );
+
+
+    CellField     y( dim, NULL, InternalStorage );
+    YSideField yint( dim, NULL, InternalStorage );
+    YSideField   fy( dim, NULL, InternalStorage );
+    YSideField dfdy( dim, NULL, InternalStorage );
+
+    const double dy = spacing[1];
+    const int ngylo = CellFieldTraits::GhostTraits::get<YDIR,SideMinus>();
+    int ix=0;
+    for( int k=klo; k<khi ; ++k ){
+      for( int j=jlo; j<jhi; ++j ){
+	for( int i=ilo; i<ihi; ++i ){
+	  y[ix] = (j-ngylo)*dy;
+	  f[ix] = std::sin(y[ix]) + 2.0;
+	  ++ix;
+	}
+      }
+    }
+
+    rycf.apply_to_field( f, fy );
+    rycf.apply_to_field( y, yint );
+    gycf.apply_to_field( f, dfdy );
+    dyfc.apply_to_field( dfdy, d2f );
+
+    dyfc.apply_to_op( gycf, syc );
+
+    syc.apply_to_field( f, d2f );
+    
+    EpetraExt::RowMatrixToMatrixMarketFile( "Ly.mm", syc.get_linalg_mat(), "", "" );
+
+   // this is really a hack, but it is a way to eliminate ghost values from the output...
+    tmp.reset(); tmp.add_field_contribution(y    ); tmpField=tmp;  EpetraExt::VectorToMatrixMarketFile( "y.mm", tmpField.get_linalg_vec(), "", "" );
+    tmp.reset(); tmp.add_field_contribution(f    ); tmpField=tmp;  EpetraExt::VectorToMatrixMarketFile( "fy.mm", tmpField.get_linalg_vec(), "", "" );
+    tmp.reset(); tmp.add_field_contribution(yint ); tmpField=tmp;  EpetraExt::VectorToMatrixMarketFile( "yy.mm", tmpField.get_linalg_vec(), "", "" );
+    tmp.reset(); tmp.add_field_contribution(fy   ); tmpField=tmp;  EpetraExt::VectorToMatrixMarketFile( "finty.mm", tmpField.get_linalg_vec(), "", "" );
+    tmp.reset(); tmp.add_field_contribution(dfdy ); tmpField=tmp;  EpetraExt::VectorToMatrixMarketFile( "dfdy.mm", tmpField.get_linalg_vec(), "", "" );
+    tmp.reset(); tmp.add_field_contribution(d2f  ); tmpField=tmp;  EpetraExt::VectorToMatrixMarketFile( "d2fdy2.mm", tmpField.get_linalg_vec(), "", "" );
+ 
   }
+
 
   if( dim[2] > 1 ){
-    const Gradient2ndOrder zGrad( spacing, dim, nghostCell, nghostFace, CellToFace, Z_DIR );
-    const Divergence2ndOrder zDiv( area, volume, dim, nghostFace, nghostCell, FaceToCell, Z_DIR );
-    ScratchOperator zLaplace( dim, nghostCell, nghostCell, 3, Z_DIR );
-    zDiv.apply( zGrad, zLaplace );
 
-    linSys.get_lhs().add_contribution( zLaplace );
-  }
+    // get the operators
+    InterpZC2F & rzcf = *SpatialOpDatabase<InterpZC2F>::self().retrieve_operator( dim );
+    GradZC2F   & gzcf = *SpatialOpDatabase<GradZC2F  >::self().retrieve_operator( dim );
+    DivZF2C    & dzfc = *SpatialOpDatabase<DivZF2C   >::self().retrieve_operator( dim );
+    SzCell     & szc  = *SpatialOpDatabase<SzCell    >::self().retrieve_operator( dim );
 
-  RHS & rhs = linSys.get_rhs();
-  rhs.reset(1.0);
+    EpetraExt::RowMatrixToMatrixMarketFile( "Dz.mm", dzfc.get_linalg_mat(), "", "" );
+    EpetraExt::RowMatrixToMatrixMarketFile( "Gz.mm", gzcf.get_linalg_mat(), "", "" );
+    EpetraExt::RowMatrixToMatrixMarketFile( "Rz.mm", rzcf.get_linalg_mat(), "", "" );
 
-  // set a dirichlet condition on the first grid point (0th row)
-  linSys.set_dirichlet_condition( 0 );
-  linSys.set_dirichlet_condition( dim[0]*dim[1]*dim[2] -1, 1.0 );
+
+    CellField     z( dim, NULL, InternalStorage );
+    ZSideField zint( dim, NULL, InternalStorage );
+    ZSideField   fz( dim, NULL, InternalStorage );
+    ZSideField dfdz( dim, NULL, InternalStorage );
+
+    const double dz = spacing[2];
+    const int ngzlo = CellFieldTraits::GhostTraits::get<ZDIR,SideMinus>();
+    int ix=0;
+    for( int k=klo; k<khi ; ++k ){
+      for( int j=jlo; j<jhi; ++j ){
+	for( int i=ilo; i<ihi; ++i ){
+	  z[ix] = (k-ngzlo)*dz;
+	  f[ix] = std::sin(z[ix]) + 2.0;
+	  ++ix;
+	}
+      }
+    }
+
+    rzcf.apply_to_field( f, fz );
+    rzcf.apply_to_field( z, zint );
+    gzcf.apply_to_field( f, dfdz );
+    dzfc.apply_to_field( dfdz, d2f );
+
+    dzfc.apply_to_op( gzcf, szc );
+
+    szc.apply_to_field( f, d2f );
+    
+    EpetraExt::RowMatrixToMatrixMarketFile( "Lz.mm", szc.get_linalg_mat(), "", "" );
+
+   // this is really a hack, but it is a way to eliminate ghost values from the output...
+    tmp.reset(); tmp.add_field_contribution(z    ); tmpField=tmp;  EpetraExt::VectorToMatrixMarketFile( "z.mm", tmpField.get_linalg_vec(), "", "" );
+    tmp.reset(); tmp.add_field_contribution(f    ); tmpField=tmp;  EpetraExt::VectorToMatrixMarketFile( "fz.mm", tmpField.get_linalg_vec(), "", "" );
+    tmp.reset(); tmp.add_field_contribution(zint ); tmpField=tmp;  EpetraExt::VectorToMatrixMarketFile( "zz.mm", tmpField.get_linalg_vec(), "", "" );
+    tmp.reset(); tmp.add_field_contribution(fz   ); tmpField=tmp;  EpetraExt::VectorToMatrixMarketFile( "fintz.mm", tmpField.get_linalg_vec(), "", "" );
+    tmp.reset(); tmp.add_field_contribution(dfdz ); tmpField=tmp;  EpetraExt::VectorToMatrixMarketFile( "dfdz.mm", tmpField.get_linalg_vec(), "", "" );
+    tmp.reset(); tmp.add_field_contribution(d2f  ); tmpField=tmp;  EpetraExt::VectorToMatrixMarketFile( "d2fdz2.mm", tmpField.get_linalg_vec(), "", "" );
+ 
+  } // z-dir
+
+  return true;
+}
+
+//====================================================================
+
+bool test_linsys( const std::vector<int> & dim )
+{
+  using namespace SpatialOps;
+  using namespace FVStaggeredUniform;
+
+  std::vector<double> spacing(3), area(3);
+  double volume;
+  setup_geom( dim, spacing, area, volume );
+
+  // get the operators
+  GradXC2F   & gradX = *SpatialOpDatabase<GradXC2F  >::self().retrieve_operator( dim );
+  GradYC2F   & gradY = *SpatialOpDatabase<GradYC2F  >::self().retrieve_operator( dim );
+  GradZC2F   & gradZ = *SpatialOpDatabase<GradZC2F  >::self().retrieve_operator( dim );
+
+  DivXF2C    & divX = *SpatialOpDatabase<DivXF2C   >::self().retrieve_operator( dim );
+  DivYF2C    & divY = *SpatialOpDatabase<DivYF2C   >::self().retrieve_operator( dim );
+  DivZF2C    & divZ = *SpatialOpDatabase<DivZF2C   >::self().retrieve_operator( dim );
+
+  SxCell     & sxc  = *SpatialOpDatabase<SxCell    >::self().retrieve_operator( dim );
+  SyCell     & syc  = *SpatialOpDatabase<SyCell    >::self().retrieve_operator( dim );
+  SzCell     & szc  = *SpatialOpDatabase<SzCell    >::self().retrieve_operator( dim );
+
+
+  divX.apply_to_op( gradX, sxc );
+  divY.apply_to_op( gradY, syc );
+  divZ.apply_to_op( gradZ, szc );
+
+  LinearSystem & linSys = LinSysFactory::self().get_linsys( LinSysInfo(dim) );
+
+  LHS & A = linSys.get_lhs();
+  A.reset();
+  A.add_op_contribution( sxc );
+  A.add_op_contribution( syc );
+  A.add_op_contribution( szc );
+  RHS & b = linSys.get_rhs();
+  b.reset( 1.0 );
 
   linSys.solve();
 
-  vector<int> ng0(6,0);
-  EpetraExt::RowMatrixToMatrixMarketFile( "LHS.mm", linSys.get_lhs().epetra_mat(), "", "" );
-  SpatialField tmp( dim, ng0, linSys.get_rhs().get_ptr(), SpatialField::ExternalStorage );
-  EpetraExt::VectorToMatrixMarketFile( "rhs.mm",   tmp.epetra_vec(), "", "" );
-  EpetraExt::VectorToMatrixMarketFile( "soln.mm",  linSys.get_soln_field_epetra_vec(), "", "" );
+  CellFieldNoGhost tmpField( dim, NULL, InternalStorage );
+  tmpField = linSys.get_soln_field();
+
+  EpetraExt::VectorToMatrixMarketFile( "soln.mm", tmpField.get_linalg_vec(), "", "" );
+
+  tmpField = b;
+  EpetraExt::VectorToMatrixMarketFile( "rhs.mm", tmpField.get_linalg_vec(), "", "" );
+
+  EpetraExt::RowMatrixToMatrixMarketFile( "A.mm", A.epetra_mat(), "", "" );
 
   return true;
-}
-
-//====================================================================
-
-bool test_field()
-{
-  std::vector<int> dim(3,1);
-  dim[0] = 10;
-
-  const std::vector<int> nghost(6,0);
-
-  int nn=1;
-  for( int i=0; i<3; ++i )    nn *= dim[i]+nghost[i*2]+nghost[i*2+1];
-
-  vector<double> fptr(nn,0.0);
-  vector<double> gptr(nn,0.0);
-
-  SpatialField f( dim, nghost, &fptr[0], SpatialField::ExternalStorage );
-  SpatialField g( dim, nghost, &gptr[0], SpatialField::ExternalStorage );
-  SpatialField h( dim, nghost, NULL,     SpatialField::InternalStorage );
-
-  for( int i=0; i<nn; ++i ){
-    fptr[i] = 2*i;
-    gptr[i] = nn+i;
-  }
-
-  h += g;
-  h *= f;
-  h -= g;
-
-  bool ok = true;
-
-  for( int i=0; i<nn; ++i ){
-    const double ans = gptr[i]*fptr[i]-gptr[i];
-    if( std::abs( h.get_ptr()[i]-ans ) > 0.0001 )
-      ok = false;
-  }
-
-  return ok;
-}
-
-//====================================================================
-
-bool test_spatial_ops_x()
-{
-  using namespace FVStaggeredUniform;
-
-  std::vector<int> dim(3,1);
-  dim[0] = 13;
-  dim[1] = 9;
-  dim[2] = 12;
-
-  // set up array dimensions for "source" arrays
-  std::vector<int> nghostCell(6,1);
-  std::vector<int> nghostFace = nghostCell;
-  nghostFace[1] = 2;
-
-  int nx, ny, nz, nn;
-  std::vector<double> spacing(3,0.0);
-  std::vector<double>    area(3,0.0);
-  double volume;
-
-  setup_geom( dim, nghostCell, nn, nx, ny, nz, spacing, area, volume );
-
-  // build some operators and stash them in the database.
-  // This will test database functionality.
-  SpatialOpDatabase & SODatabase = SpatialOpDatabase::self();
-  {
-    SODatabase.register_new_operator( SpatialOpDatabase::OperatorDescriptor( SpatialOpDatabase::X,
-									     SpatialOpDatabase::CELL,
-									     SpatialOpDatabase::INTERPOLANT ),
-				      new LinearInterpolant( dim, nghostCell, nghostFace, CellToFace, X_DIR ),
-				      "X-Interpolant Second Order Staggered Cell" );
-
-    SODatabase.register_new_operator( SpatialOpDatabase::OperatorDescriptor( SpatialOpDatabase::X,
-									     SpatialOpDatabase::FACE,
-									     SpatialOpDatabase::INTERPOLANT ),
-				      new LinearInterpolant( dim, nghostFace, nghostCell, FaceToCell, X_DIR ),
-				      "X-Interpolant Second Order Staggered Face" );
-
-    SODatabase.register_new_operator( SpatialOpDatabase::OperatorDescriptor( SpatialOpDatabase::X,
-									     SpatialOpDatabase::CELL,
-									     SpatialOpDatabase::DIVERGENCE ),
-				      new Divergence2ndOrder( area, volume, dim, nghostFace, nghostCell, FaceToCell, X_DIR ),
-				      "X-Divergence Second Order Staggered Cell"  );
-
-    SODatabase.register_new_operator( SpatialOpDatabase::OperatorDescriptor( SpatialOpDatabase::X,
-									     SpatialOpDatabase::FACE,
-									     SpatialOpDatabase::DIVERGENCE ),
-				      new Divergence2ndOrder( area, volume, dim, nghostCell, nghostFace, CellToFace, X_DIR ),
-				      "X-Divergence Second Order Staggered Face"  );
-
-    SODatabase.register_new_operator( SpatialOpDatabase::OperatorDescriptor( SpatialOpDatabase::X,
-									     SpatialOpDatabase::CELL,
-									     SpatialOpDatabase::GRADIENT ),
-				      new Gradient2ndOrder( spacing, dim, nghostCell, nghostFace, CellToFace, X_DIR ),
-				      "X-Gradient Second Order Staggered Cell"    );
-
-    SODatabase.register_new_operator( SpatialOpDatabase::OperatorDescriptor( SpatialOpDatabase::X,
-									     SpatialOpDatabase::FACE,
-									     SpatialOpDatabase::GRADIENT ),
-				      new Gradient2ndOrder( spacing, dim, nghostFace, nghostCell, FaceToCell, X_DIR ),
-				      "X-Gradient Second Order Staggered Face"    );
-
-    SODatabase.register_new_operator( SpatialOpDatabase::OperatorDescriptor( SpatialOpDatabase::X,
-									     SpatialOpDatabase::CELL,
-									     SpatialOpDatabase::SCRATCH ),
-				      new ScratchOperator( dim, nghostCell, nghostCell, 3, X_DIR ),
-				      "Scratch X Second Order Cell" );
-
-    SODatabase.register_new_operator( SpatialOpDatabase::OperatorDescriptor( SpatialOpDatabase::X,
-									     SpatialOpDatabase::CELL,
-									     SpatialOpDatabase::SCRATCH ),
-				      new ScratchOperator( dim, nghostCell, nghostCell, 3, X_DIR ),
-				      "Scratch X Second Order Cell 2" );
-
-    SODatabase.register_new_operator( SpatialOpDatabase::OperatorDescriptor( SpatialOpDatabase::X,
-									     SpatialOpDatabase::FACE,
-									     SpatialOpDatabase::SCRATCH ),
-				      new ScratchOperator( dim, nghostFace, nghostFace, 3, X_DIR ),
-				      "Scratch X Second Order Face" );
-
-    SODatabase.register_new_operator( SpatialOpDatabase::OperatorDescriptor( SpatialOpDatabase::X,
-									     SpatialOpDatabase::FACE,
-									     SpatialOpDatabase::SCRATCH ),
-				      new ScratchOperator( dim, nghostFace, nghostFace, 3, X_DIR ),
-				      "Scratch X Second Order Face 2" );
-  }
-
-  SpatialOperator *& CellRx  = SODatabase.retrieve_operator( SpatialOpDatabase::OperatorDescriptor( SpatialOpDatabase::X,
-												    SpatialOpDatabase::CELL,
-												    SpatialOpDatabase::INTERPOLANT ),
-							     dim,
-							     nghostCell,
-							     nghostFace );
-
-  SpatialOperator *& CellDx  = SODatabase.retrieve_operator( SpatialOpDatabase::OperatorDescriptor( SpatialOpDatabase::X,
-												    SpatialOpDatabase::CELL,
-												    SpatialOpDatabase::DIVERGENCE ),
-							     dim,
-							     nghostFace,
-							     nghostCell );
-
-  SpatialOperator *& CellGx  = SODatabase.retrieve_operator( SpatialOpDatabase::OperatorDescriptor( SpatialOpDatabase::X,
-												    SpatialOpDatabase::CELL,
-												    SpatialOpDatabase::GRADIENT ),
-							     dim,
-							     nghostCell,
-							     nghostFace );
-
-  SpatialOperator *& CellSx1 = SODatabase.retrieve_operator( "Scratch X Second Order Cell",
-							     dim,
-							     nghostCell,
-							     nghostCell );
-  //  SpatialOperator *& CellSx2 = SODatabase.retrieve_operator( "Scratch X Second Order Cell 2",       dim, nghostCell, nghostCell );
-
-
-//   EpetraExt::RowMatrixToMatrixMarketFile( "Int_x.mm", xinterp->epetra_mat(), "", "" );
-   EpetraExt::RowMatrixToMatrixMarketFile( "Gx.mm", CellGx->epetra_mat(), "", "" );
-   EpetraExt::RowMatrixToMatrixMarketFile( "Dx.mm", CellDx->epetra_mat(), "", "" );
-
-  vector<double> fptr  (nn,0.0);
-  vector<double> dfdx  (nn,0.0);
-  vector<double> d2fdx2(nn,0.0);
-  vector<double> xptr  (nn,0.0);
-
-  // set values in fptr and xptr
-  int ix=0;
-  for( int k=0; k<nz; ++k ){
-    for( int j=0; j<ny; ++j){
-      for( int i=0; i<nx; ++i ){
-	xptr[ix] = double(i)*spacing[0];
-	fptr[ix] = std::sin(xptr[ix]);
-	dfdx[ix] = std::cos(xptr[ix]);
-	++ix;
-      }
-    }
-  }
-
-  SpatialField  f( dim, nghostCell, &fptr[0], SpatialField::ExternalStorage );
-  SpatialField  x( dim, nghostCell, &xptr[0], SpatialField::ExternalStorage );
-  SpatialField  g( dim, nghostFace, NULL,     SpatialField::InternalStorage );
-  SpatialField df( dim, nghostFace, NULL,     SpatialField::InternalStorage );
-  SpatialField xg( dim, nghostFace, NULL,     SpatialField::InternalStorage );
-  SpatialField d2f(dim, nghostCell, NULL,     SpatialField::InternalStorage );
-  SpatialField tmp(dim, nghostCell, NULL,     SpatialField::InternalStorage );
-
-  CellRx->apply(  f, g   );
-  CellRx->apply(  x, xg  );
-  CellGx->apply(  f, df  );
-  CellDx->apply( df, tmp );
-
-  EpetraExt::VectorToMatrixMarketFile( "fx.mm",  f.epetra_vec(), "", "" );
-  EpetraExt::VectorToMatrixMarketFile(  "x.mm",   x.epetra_vec(), "", "" );
-  EpetraExt::VectorToMatrixMarketFile( "gx.mm",  g.epetra_vec(), "", "" );
-  EpetraExt::VectorToMatrixMarketFile( "dfdx.mm", df.epetra_vec(), "", "" );
-  EpetraExt::VectorToMatrixMarketFile( "xg.mm", xg.epetra_vec(), "", "" );
-
-  //  return true;
-  // form the laplacian
-  CellDx->apply( *CellGx, *CellSx1 );
-  // jcs: we should be able to do it this way, but trilinos barfs:
-//   SpatialOperator * const Sx2 = new ScratchOperator( dim, nghostCell, nghostFace, 3, X_DIR );
-//   *Sx2 = *CellGx;
-//   CellDx->apply( *Sx2, *CellSx1 );
-  //  *CellSx2 = *CellGx;
-  //   CellDx->apply( *CellSx2, *CellSx1 );
-  CellSx1->apply( f, d2f );
-
-  // check equality of the two methods
-  for( int i=0; i<tmp.get_ntotal(); ++i ){
-    const double f1 = tmp.get_ptr()[i];
-    const double f2 = d2f.get_ptr()[i];
-    const double tol = 1.0e-8;
-    const double relerr = std::abs( f1-f2 )/(f1+tol);
-    if( relerr > tol ){
-      std::cout << "PROBLEMS - laplacian is broken!" << std::endl
-		<< tmp.get_ptr()[i] << "  " << d2f.get_ptr()[i] << std::endl;
-      return false;
-    }
-  }
-
-  EpetraExt::RowMatrixToMatrixMarketFile( "Laplace_x.mm", CellSx1->epetra_mat(),  "", "" );
-  EpetraExt::VectorToMatrixMarketFile( "d2fdx2.mm", d2f.epetra_vec(), "", "" );
- 
-  /*
-    scratchOp.reset_entries(0.0);
-    scratchOp += xinterp;
-    
-    EpetraExt::RowMatrixToMatrixMarketFile( "I2.mm", scratchOp->epetra_mat(), "", "" );
-    EpetraExt::RowMatrixToMatrixMarketFile( "I1.mm",   xinterp->epetra_mat(), "", "" );
-  */
-
-  return true;
-}
-
-//====================================================================
-
-bool test_spatial_ops_y()
-{
-  using namespace FVStaggeredUniform;
-
-  std::vector<int> dim(3,1);
-  dim[0] = 12;
-  dim[1] = 21;
-  dim[2] = 9;
-
-  const vector<int> nghostCell(6,1);
-  const vector<int> nghostFace(6,1);
-  int nn,nx,ny,nz;
-  std::vector<double> spacing(3,0.0);
-  std::vector<double>    area(3,0.0);
-  double volume;
-  setup_geom( dim, nghostCell, nn,nx,ny,nz, spacing, area, volume );
-
-  LinearInterpolant yinterp( dim, nghostCell, nghostFace, CellToFace, Y_DIR );
-  Gradient2ndOrder  yGrad( spacing, dim, nghostCell, nghostFace, CellToFace, Y_DIR );
-  Divergence2ndOrder yDiv( area, volume, dim, nghostFace, nghostCell, FaceToCell, Y_DIR );
-
-  EpetraExt::RowMatrixToMatrixMarketFile( "Int_y.mm", yinterp.epetra_mat(), "", "" );
-  EpetraExt::RowMatrixToMatrixMarketFile( "Grad_y.mm", yGrad.epetra_mat(), "", "" );
-  EpetraExt::RowMatrixToMatrixMarketFile( "Div_y.mm", yDiv.epetra_mat(), "", "" );
-
-  vector<double> fptr(nn,0.0);
-  vector<double> dfdx(nn,0.0);
-  vector<double> yptr(nn,0.0);
-
-  // set values in fptr and yptr
-  int ix=0;
-  for( int k=0; k<nz; ++k ){
-    for( int j=0; j<ny; ++j){
-      for( int i=0; i<nx; ++i ){
-	yptr[ix] = double(j)*spacing[1];
-	fptr[ix] = std::sin(yptr[ix]);
-	++ix;
-      }
-    }
-  }
-
-  SpatialField  f ( dim, nghostCell, &fptr[0], SpatialField::ExternalStorage );
-  SpatialField  y ( dim, nghostCell, &yptr[0], SpatialField::ExternalStorage );
-  SpatialField df ( dim, nghostFace, NULL,     SpatialField::InternalStorage );
-  SpatialField d2f( dim, nghostCell, NULL,     SpatialField::InternalStorage );
-  SpatialField  g ( dim, nghostCell, NULL,     SpatialField::InternalStorage );
-  SpatialField yg ( dim, nghostCell, NULL,     SpatialField::InternalStorage );
-  
-  yinterp.apply( f, g );
-  yinterp.apply( y, yg);
-  yGrad.apply( f, df );
-  yDiv.apply( df, d2f );
-  
-  EpetraExt::VectorToMatrixMarketFile( "fy.mm",  f.epetra_vec(),  "", ""   );
-  EpetraExt::VectorToMatrixMarketFile( "y.mm",   y.epetra_vec(),  "", ""      );
-  EpetraExt::VectorToMatrixMarketFile( "dfdy.mm",  df.epetra_vec(),  "dfdy", "" );
-  EpetraExt::VectorToMatrixMarketFile( "d2fdy2.mm",  d2f.epetra_vec(),  "", "" );
-  EpetraExt::VectorToMatrixMarketFile( "gy.mm",  g.epetra_vec(),  "", "" );
-  EpetraExt::VectorToMatrixMarketFile( "yg.mm", yg.epetra_vec(), "", ""    );
-
-  bool ok = true;
-  return ok;
-}
-
-//====================================================================
-
-bool test_spatial_ops_z()
-{
-  using namespace FVStaggeredUniform;
-
-  std::vector<int> dim(3,1);
-  dim[0] = 7;
-  dim[1] = 5;
-  dim[2] = 16;
-
-  // set up array dimensions for "source" arrays
-  const vector<int> nghost(6,1);
-  int nn,nx,ny,nz;
-  std::vector<double> spacing(3,0.0);
-  std::vector<double>    area(3,0.0);
-  double volume;
-  setup_geom( dim, nghost, nn,nx,ny,nz, spacing, area, volume );
-
-  LinearInterpolant zinterp( dim, nghost, nghost, CellToFace, Z_DIR );
-  Gradient2ndOrder zGrad( spacing, dim, nghost, nghost, CellToFace, Z_DIR );
-  Divergence2ndOrder zDiv( area, volume, dim, nghost, nghost, FaceToCell, Z_DIR );
-
-  /*
-  EpetraExt::RowMatrixToMatrixMarketFile( "Int_z.mm", zinterp.epetra_mat(), "", "" );
-  EpetraExt::RowMatrixToMatrixMarketFile( "Grad_z.mm",zGrad.epetra_mat(), "", "" );
-  EpetraExt::RowMatrixToMatrixMarketFile( "Div_z.mm",zDiv.epetra_mat(), "", "" );
-  */
-
-  vector<double> fpts(nn,0.0);
-  vector<double> zpts(nn,0.0);
-
-  // set values in fpts and zpts
-  int ix=0;
-  for( int k=0; k<nz; ++k ){
-    for( int j=0; j<ny; ++j){
-      for( int i=0; i<nx; ++i ){
-	zpts[ix] = double(k)*spacing[2];
-	fpts[ix] = std::sin(zpts[ix]);
-	++ix;
-      }
-    }
-  }
-
-  SpatialField  f ( dim, nghost, &fpts[0], SpatialField::ExternalStorage );
-  SpatialField  z ( dim, nghost, &zpts[0], SpatialField::ExternalStorage );
-  SpatialField df ( dim, nghost, NULL,     SpatialField::InternalStorage );
-  SpatialField d2f( dim, nghost, NULL,     SpatialField::InternalStorage );
-  SpatialField  g ( dim, nghost, NULL,     SpatialField::InternalStorage );
-  SpatialField zg ( dim, nghost, NULL,     SpatialField::InternalStorage );
-  
-  zinterp.apply( f, g );
-  zinterp.apply( z, zg);
-  zGrad.apply( f, df );
-  zDiv.apply( df, d2f );
-  
-  EpetraExt::VectorToMatrixMarketFile( "fz.mm",  f.epetra_vec(),  "", ""   );
-  EpetraExt::VectorToMatrixMarketFile( "z.mm",   z.epetra_vec(),  "", ""      );
-  EpetraExt::VectorToMatrixMarketFile( "dfdz.mm",  df.epetra_vec(),  "", "" );
-  EpetraExt::VectorToMatrixMarketFile( "d2fdz2.mm",  d2f.epetra_vec(),  "", "" );
-  EpetraExt::VectorToMatrixMarketFile( "gz.mm",  g.epetra_vec(),  "", "" );
-  EpetraExt::VectorToMatrixMarketFile( "zg.mm", zg.epetra_vec(), "", ""    );
-
-  bool ok = true;
-  return ok;
-}
-
-//====================================================================
-
-bool test_spatial_ops_algebra()
-{
-  using namespace FVStaggeredUniform;
-
-  bool ok = true;
-
-  std::vector<int> dim(3,1);
-  dim[0] = 5;
-  dim[1] = 4;
-  dim[2] = 9;
-
-  // set up array dimensions for "source" arrays
-  const vector<int> nghost(6,1);
-  const int nx = dim[0]+nghost[0]+nghost[1];
-  const int ny = dim[1]>1 ? dim[1]+nghost[2]+nghost[3] : 1;
-  const int nz = dim[2]>1 ? dim[2]+nghost[4]+nghost[5] : 1;
-  const int nn = nx*ny*nz;
-
-  LinearInterpolant zinterp( dim, nghost, nghost, CellToFace, Z_DIR );
-  LinearInterpolant z2( dim, nghost, nghost, CellToFace, Z_DIR );
-
-  vector<double> f1(nn,0.0);
-  vector<double> f2(nn,0.0);
-
-  for( int ix=0; ix<nn; ++ix ){
-    f1[ix] = 2.0;
-    f2[ix] = ix;
-  }
-
-  SpatialField field1( dim, nghost, &f1[0], SpatialField::InternalStorage );
-  SpatialField field2( dim, nghost, &f2[0], SpatialField::InternalStorage );
-
-  zinterp.right_scale( field1 );
-  for( int i=0; i<zinterp.nrows(); ++i ){
-    double*vals;    int*ixs;    int nentries;
-    zinterp.epetra_mat().ExtractMyRowView( i, nentries, vals, ixs );
-    //    assert( nentries == 2 );
-
-    for( int k=0; k<nentries; ++k ){
-      if( *vals++ != 1.0 ) ok=false;
-    }
-  }
-
-  zinterp.right_scale( field2 );
-  for( int i=0; i<zinterp.nrows(); ++i ){
-    double*vals;    int*ixs;    int nentries;
-    zinterp.epetra_mat().ExtractMyRowView( i, nentries, vals, ixs );
-    //    assert( nentries == 2 );
-
-    for( int k=0; k<nentries; ++k ){
-      if( *vals++ != ixs[k] ){
-	ok=false;
- 	cout << *(vals-1) << "  " << ixs[k] << std::endl;
-      }
-    }    
-  }
-
-  return ok;
 }
 
 //====================================================================
 
 int main()
 {
-  bool ok;
+  vector<int> dim(3,1);
+  dim[0]=7;
+  dim[1]=9;
+  dim[2]=15;
 
-  ok = test_linsys();
-  if( ok ) cout << "   linsys test:   PASS" << endl;
-  else     cout << "   linsys test:   FAIL" << endl;
+  build_ops( dim );
 
-  ok = test_field();
-  if( ok ) cout << "   field ops test:   PASS" << endl;
-  else     cout << "   field ops test:   FAIL" << endl;
-
-  ok = test_spatial_ops_x();
-  if( ok ) cout << "   spatial ops X test: PASS" << endl;
-  else     cout << "   spatial ops X test: FAIL" << endl;
-
-  ok = test_spatial_ops_y();
-  if( ok ) cout << "   spatial ops Y test: PASS" << endl;
-  else     cout << "   spatial ops Y test: FAIL" << endl;
-
-  ok = test_spatial_ops_z();
-  if( ok ) cout << "   spatial ops Z test: PASS" << endl;
-  else     cout << "   spatial ops Z test: FAIL" << endl;
-
-  ok = test_spatial_ops_algebra();
-  cout << "   spatial ops algebra test: ";
-  if( ok ) cout << "PASS" << std::endl;
-  else     cout << "FAIL" << std::endl;
-
+  test( dim );
+  test_linsys( dim );
   return 0;
 }
-
-//====================================================================
