@@ -39,20 +39,23 @@ namespace SpatialOps{
 
     //@{  /** Operators to assemble matrices into this matrix */
 
-    template< typename SrcFieldTraits,
-	      typename DestFieldTraits,
-	      typename OpAssembler >
-    inline LinAlgTrilinos& operator= ( const SpatialOperator< LinAlgTrilinos, SrcFieldTraits, DestFieldTraits, OpAssembler > & m );
+    template< typename OpType,
+	      typename Direction,
+	      typename SrcFieldTraits,
+	      typename DestFieldTraits >
+    inline LinAlgTrilinos& operator= ( const SpatialOperator< LinAlgTrilinos, OpType, Direction, SrcFieldTraits, DestFieldTraits > & m );
 
-    template< typename SrcFieldTraits,
-	      typename DestFieldTraits,
-	      typename OpAssembler >
-    inline LinAlgTrilinos& operator+=( const SpatialOperator< LinAlgTrilinos, SrcFieldTraits, DestFieldTraits, OpAssembler > & m );
+    template< typename OpType,
+	      typename Direction,
+	      typename SrcFieldTraits,
+	      typename DestFieldTraits >
+    inline LinAlgTrilinos& operator+=( const SpatialOperator< LinAlgTrilinos, OpType, Direction, SrcFieldTraits, DestFieldTraits > & m );
 
-    template< typename SrcFieldTraits,
-	      typename DestFieldTraits,
-	      typename OpAssembler >
-    inline LinAlgTrilinos& operator-=( const  SpatialOperator< LinAlgTrilinos, SrcFieldTraits, DestFieldTraits, OpAssembler > & m );
+    template< typename OpType,
+	      typename Direction,
+	      typename SrcFieldTraits,
+	      typename DestFieldTraits >
+    inline LinAlgTrilinos& operator-=( const  SpatialOperator< LinAlgTrilinos, OpType, Direction, SrcFieldTraits, DestFieldTraits > & m );
 
     //}@
 
@@ -97,32 +100,26 @@ namespace SpatialOps{
 
 
 
-  template< typename SrcFieldTraits,
-	    typename DestFieldTraits,
-	    typename OpAssembler >
+  template< typename OpType, typename Direction, typename SrcFieldTraits, typename DestFieldTraits >
   LinAlgTrilinos&
-  LinAlgTrilinos::operator=( const SpatialOperator<LinAlgTrilinos,SrcFieldTraits,DestFieldTraits,OpAssembler>& m )
+  LinAlgTrilinos::operator=( const SpatialOperator<LinAlgTrilinos,OpType,Direction,SrcFieldTraits,DestFieldTraits>& m )
   {
     // jcs this is INEFFICIENT.  It would be better to do this directly.
     reset_entries(0.0);
     return ( (*this)+=m );
   }
   //------------------------------------------------------------------
-  template< typename SrcFieldTraits,
-	    typename DestFieldTraits,
-	    typename OpAssembler >
+  template< typename OpType, typename Direction, typename SrcFieldTraits, typename DestFieldTraits >
   LinAlgTrilinos&
-  LinAlgTrilinos::operator+=( const SpatialOperator<LinAlgTrilinos,SrcFieldTraits,DestFieldTraits,OpAssembler>& m )
+  LinAlgTrilinos::operator+=( const SpatialOperator<LinAlgTrilinos,OpType,Direction,SrcFieldTraits,DestFieldTraits>& m )
   {
     EpetraExt::MatrixMatrix::Add( m.get_linalg_mat(), false, 1.0, *mat_, 1.0 );
     return *this;
   }
   //------------------------------------------------------------------
-  template< typename SrcFieldTraits,
-	    typename DestFieldTraits,
-	    typename OpAssembler >
+  template< typename OpType, typename Direction, typename SrcFieldTraits, typename DestFieldTraits >
   LinAlgTrilinos&
-  LinAlgTrilinos::operator-=( const SpatialOperator<LinAlgTrilinos,SrcFieldTraits,DestFieldTraits,OpAssembler>& m )
+  LinAlgTrilinos::operator-=( const SpatialOperator<LinAlgTrilinos,OpType,Direction,SrcFieldTraits,DestFieldTraits>& m )
   {
     EpetraExt::MatrixMatrix::Add( m.get_linalg_mat(), false, -1.0, *mat_, 1.0 );
     return *this;

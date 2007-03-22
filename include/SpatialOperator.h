@@ -41,6 +41,19 @@ namespace SpatialOps{
   }
 
 
+  /**
+   *  This should be specialized for each operator type to provide the
+   *  type of assembler required for the operator.
+   */
+  template< typename OpType,
+	    typename Dir,
+	    typename Location,
+	    typename SrcGhost,
+	    typename DestGhost >
+  struct OpAssemblerSelector{};
+
+
+
   //====================================================================
 
 
@@ -64,18 +77,19 @@ namespace SpatialOps{
    *   
    *
    */
-  template< class LinAlg,
-	    class SrcFieldTraits,
-	    class DestFieldTraits,
-	    class OpAssembler >
+  template< typename LinAlg,
+	    typename OpType,
+	    typename Direction,
+	    typename SrcFieldTraits,
+	    typename DestFieldTraits >
   class SpatialOperator
   {
   public:
-    //    typedef typename LinAlg::VecType            VecType;
-    typedef typename LinAlg::MatType            MatType;
 
-    typedef typename OpAssembler::OpLocation    OpLocation;
-    typedef typename OpAssembler::DirType       DirType;
+    typedef typename LinAlg::MatType                   MatType;
+
+    typedef typename SrcFieldTraits::StorageLocation   OpLocation;
+    typedef Direction                                  DirType;
 
     typedef typename SrcFieldTraits::GhostTraits       SrcGhost;
     typedef typename SrcFieldTraits::StorageLocation   SrcLocation;
@@ -83,6 +97,12 @@ namespace SpatialOps{
     typedef typename DestFieldTraits::GhostTraits      DestGhost;
     typedef typename DestFieldTraits::StorageLocation  DestLocation;
 
+    typedef typename OpAssemblerSelector
+                       < OpType,
+			 Direction,
+			 OpLocation,
+			 SrcGhost,
+			 DestGhost >::Assembler        Assembler;
 
   public:
 
@@ -99,7 +119,7 @@ namespace SpatialOps{
      *  @param extent : The number of points in each direction
      *  (excluding ghost cells) for the domain extent.
      */
-    SpatialOperator( OpAssembler & opAssembler );
+    SpatialOperator( Assembler & opAssembler );
 
     virtual ~SpatialOperator();
 
@@ -121,35 +141,35 @@ namespace SpatialOps{
     // This means that the dest field for dest operator is the same as
     // the dest field for this operator, and the src field for this
     // operator is the same as the src field for the src op.
+    /*
     template< class FieldType1,
 	      class OpAssemble1,
 	      class OpAssemble2 >
     inline void apply_to_op2( const SpatialOperator< LinAlg, FieldType1,      SrcFieldTraits, OpAssemble1 > & srcOp,
 			      SpatialOperator< LinAlg, DestFieldTraits, FieldType1,     OpAssemble2 > & destOp ) const;
-
+    */
 
     template< class SrcOp, class DestOp >
     inline void apply_to_op( const SrcOp& src, DestOp& dest ) const;
 
 
 
-    template< class LA, class OA >
-    inline SpatialOperator& operator=( const SpatialOperator<LA,SrcFieldTraits,DestFieldTraits,OA>& );
+    template< typename OT >
+    inline SpatialOperator& operator=( const SpatialOperator<LinAlg,OT,Direction,SrcFieldTraits,DestFieldTraits>& );
 
-    template< class LA, class OA >
-    inline SpatialOperator& operator+=( const SpatialOperator<LA,SrcFieldTraits,DestFieldTraits,OA>& );
+    template< typename OT >
+    inline SpatialOperator& operator+=( const SpatialOperator<LinAlg,OT,Direction,SrcFieldTraits,DestFieldTraits>& );
 
-    template< class LA, class OA >
-    inline SpatialOperator& operator-=( const SpatialOperator<LA,SrcFieldTraits,DestFieldTraits,OA>& );
+    template< typename OT >
+    inline SpatialOperator& operator-=( const SpatialOperator<LinAlg,OT,Direction,SrcFieldTraits,DestFieldTraits>& );
 
 
 
     // sum the given field into the diagonal
-    template< class FieldT >
-    inline SpatialOperator& operator+=( const FieldT& f ){ linAlg_ += f; return *this; }
+    inline SpatialOperator& operator+=( const SpatialField<LinAlg,DestLocation,DestGhost>& f ){ linAlg_+=f; return *this; }
 
-    template<class FieldT>
-    inline SpatialOperator& operator-=( const FieldT& f ){ linAlg_ -= f; return *this; }
+    // subtract the given field from the diagonal
+    inline SpatialOperator& operator-=( const SpatialField<LinAlg,DestLocation,DestGhost>& f ){ linAlg_-=f; return *this; }
 
 
     /**
@@ -388,23 +408,20 @@ namespace SpatialOps{
   //==================================================================
 
 
-  template< class LinAlg,
-	    class SrcFieldTraits,
-	    class DestFieldTraits,
-	    class OpAssembler >
-  SpatialOperator<LinAlg,SrcFieldTraits,DestFieldTraits,OpAssembler>::
-  SpatialOperator( OpAssembler & opAssembler )
+  template< typename LinAlg, typename OpType, typename Direction, typename SrcFieldTraits, typename DestFieldTraits >
+  SpatialOperator<LinAlg,OpType,Direction,SrcFieldTraits,DestFieldTraits>::
+  SpatialOperator( Assembler & opAssembler )
     : extent_( opAssembler.get_extent() ),
       nrows_ ( opAssembler.get_nrows()  ),
       ncols_ ( opAssembler.get_ncols()  ),
       nghostSrc_ ( ghost_vec< SrcGhost>() ),
       nghostDest_( ghost_vec<DestGhost>() ),
-      mat_( linAlg_.setup_matrix( nrows_, ncols_, OpAssembler::num_nonzeros() ) )
+      mat_( linAlg_.setup_matrix( nrows_, ncols_, Assembler::num_nonzeros() ) )
   {
 
     // build the operator
-    std::vector<double> vals( OpAssembler::num_nonzeros(), 0.0 );
-    std::vector<int>    ixs ( OpAssembler::num_nonzeros(), 0   );
+    std::vector<double> vals( Assembler::num_nonzeros(), 0.0 );
+    std::vector<int>    ixs ( Assembler::num_nonzeros(), 0   );
     for( int i=0; i<nrows_; ++i ){
       vals.clear();
       ixs.clear();
@@ -414,11 +431,8 @@ namespace SpatialOps{
     linAlg_.finalize();
   }
   //------------------------------------------------------------------
-  template< class LinAlg,
-	    class SrcFieldTraits,
-	    class DestFieldTraits,
-	    class OpAssembler >
-  SpatialOperator<LinAlg,SrcFieldTraits,DestFieldTraits,OpAssembler>::
+  template< typename LinAlg, typename OpType, typename Direction, typename SrcFieldTraits, typename DestFieldTraits >
+  SpatialOperator<LinAlg,OpType,Direction,SrcFieldTraits,DestFieldTraits>::
   ~SpatialOperator()
   {
     linAlg_.destroy_matrix();
@@ -429,12 +443,9 @@ namespace SpatialOps{
    *  destination fields must have compatible dimension and ghosting
    *  for use with this operator.
    */
-  template< class LinAlg,
-	    class SrcFieldTraits,
-	    class DestFieldTraits,
-	    class OpAssembler >
+  template< typename LinAlg, typename OpType, typename Direction, typename SrcFieldTraits, typename DestFieldTraits >
   void
-  SpatialOperator<LinAlg,SrcFieldTraits,DestFieldTraits,OpAssembler>::
+  SpatialOperator<LinAlg,OpType,Direction,SrcFieldTraits,DestFieldTraits>::
   apply_to_field( const SpatialField< LinAlg, typename SrcFieldTraits::StorageLocation, typename SrcFieldTraits::GhostTraits > & src,
 		  SpatialField< LinAlg, typename DestFieldTraits::StorageLocation, typename DestFieldTraits::GhostTraits > & dest ) const
   {
@@ -448,32 +459,11 @@ namespace SpatialOps{
     linAlg_.multiply( src.get_linalg_vec(), dest.get_linalg_vec() );
   }
 
-  /**
-   *  performs matrix-matrix multiplication, resulting in another
-   *  SpatialOperator
-   */
-  template< class LinAlg,
-	    class SrcFieldTraits,
-	    class DestFieldTraits,
-	    class OpAssembler >
-  template< class FieldType1,
-	    class OpAssemble1,
-	    class OpAssemble2 >
-  void
-  SpatialOperator<LinAlg,SrcFieldTraits,DestFieldTraits,OpAssembler>::
-  apply_to_op2( const SpatialOperator<LinAlg,FieldType1,SrcFieldTraits,OpAssemble1> & srcOp,
-		SpatialOperator<LinAlg,DestFieldTraits,FieldType1,OpAssemble2> & destOp ) const
-  {
-    linAlg_.multiply( srcOp.get_linalg_mat(), destOp.get_linalg_mat() );
-  }
   //------------------------------------------------------------------
-  template< class LinAlg,
-	    class SrcFieldTraits,
-	    class DestFieldTraits,
-	    class OpAssembler >
+  template< typename LinAlg, typename OpType, typename Direction, typename SrcFieldTraits, typename DestFieldTraits >
   template< class SrcOp, class DestOp >
   void
-  SpatialOperator<LinAlg,SrcFieldTraits,DestFieldTraits,OpAssembler>::
+  SpatialOperator<LinAlg,OpType,Direction,SrcFieldTraits,DestFieldTraits>::
   apply_to_op( const SrcOp& src, DestOp& dest ) const
   {
     BOOST_STATIC_ASSERT( bool( IsSameType< SrcGhost,  typename SrcOp::DestGhost>::result ));
@@ -483,51 +473,39 @@ namespace SpatialOps{
     linAlg_.multiply( src.get_linalg_mat(), dest.get_linalg_mat() );
   }
   //------------------------------------------------------------------
-  template< class LinAlg,
-	    class SrcFieldTraits,
-	    class DestFieldTraits,
-	    class OpAssembler >
-  template< class LA, class OA >
-  SpatialOperator<LinAlg,SrcFieldTraits,DestFieldTraits,OpAssembler>&
-  SpatialOperator<LinAlg,SrcFieldTraits,DestFieldTraits,OpAssembler>::
-  operator=( const SpatialOperator<LA,SrcFieldTraits,DestFieldTraits,OA>& op )
+  template< typename LinAlg, typename OpType, typename Direction, typename SrcFieldTraits, typename DestFieldTraits >
+  template< typename OT >
+  SpatialOperator<LinAlg,OpType,Direction,SrcFieldTraits,DestFieldTraits>&
+  SpatialOperator<LinAlg,OpType,Direction,SrcFieldTraits,DestFieldTraits>::
+  operator=( const SpatialOperator<LinAlg,OT,Direction,SrcFieldTraits,DestFieldTraits>& op )
   {
     linAlg_ = op;
     return *this;
   }
   //------------------------------------------------------------------
-  template< class LinAlg,
-	    class SrcFieldTraits,
-	    class DestFieldTraits,
-	    class OpAssembler >
-  template< class LA, class OA >
-  SpatialOperator<LinAlg,SrcFieldTraits,DestFieldTraits,OpAssembler>&
-  SpatialOperator<LinAlg,SrcFieldTraits,DestFieldTraits,OpAssembler>::
-  operator+=( const SpatialOperator<LA,SrcFieldTraits,DestFieldTraits,OA>& op )
+  template< typename LinAlg, typename OpType, typename Direction, typename SrcFieldTraits, typename DestFieldTraits >
+  template< typename OT >
+  SpatialOperator<LinAlg,OpType,Direction,SrcFieldTraits,DestFieldTraits>&
+  SpatialOperator<LinAlg,OpType,Direction,SrcFieldTraits,DestFieldTraits>::
+  operator+=( const SpatialOperator<LinAlg,OT,Direction,SrcFieldTraits,DestFieldTraits>& op )
   {
     linAlg_ += op;
     return *this;
   }
   //------------------------------------------------------------------
-  template< class LinAlg,
-	    class SrcFieldTraits,
-	    class DestFieldTraits,
-	    class OpAssembler >
-  template< class LA, class OA >
-  SpatialOperator<LinAlg,SrcFieldTraits,DestFieldTraits,OpAssembler>&
-  SpatialOperator<LinAlg,SrcFieldTraits,DestFieldTraits,OpAssembler>::
-  operator-=( const SpatialOperator<LA,SrcFieldTraits,DestFieldTraits,OA>& op )
+  template< typename LinAlg, typename OpType, typename Direction, typename SrcFieldTraits, typename DestFieldTraits >
+  template< typename OT >
+  SpatialOperator<LinAlg,OpType,Direction,SrcFieldTraits,DestFieldTraits>&
+  SpatialOperator<LinAlg,OpType,Direction,SrcFieldTraits,DestFieldTraits>::
+  operator-=( const SpatialOperator<LinAlg,OT,Direction,SrcFieldTraits,DestFieldTraits>& op )
   {
     linAlg_ -= op;
     return *this;
   }
   //------------------------------------------------------------------
-  template< class LinAlg,
-	    class SrcFieldTraits,
-	    class DestFieldTraits,
-	    class OpAssembler >
+  template< typename LinAlg, typename OpType, typename Direction, typename SrcFieldTraits, typename DestFieldTraits >
   bool
-  SpatialOperator<LinAlg,SrcFieldTraits,DestFieldTraits,OpAssembler>::
+  SpatialOperator<LinAlg,OpType,Direction,SrcFieldTraits,DestFieldTraits>::
   is_row_ghost( const int irow,
 		IndexTriplet* const ix ) const
   {
@@ -570,12 +548,9 @@ namespace SpatialOps{
     return isGhost;
   }
   //------------------------------------------------------------------
-  template< class LinAlg,
-	    class SrcFieldTraits,
-	    class DestFieldTraits,
-	    class OpAssembler >
+  template< typename LinAlg, typename OpType, typename Direction, typename SrcFieldTraits, typename DestFieldTraits >
   bool
-  SpatialOperator<LinAlg,SrcFieldTraits,DestFieldTraits,OpAssembler>::
+  SpatialOperator<LinAlg,OpType,Direction,SrcFieldTraits,DestFieldTraits>::
   is_col_ghost( const int icol,
 		IndexTriplet* const ix ) const
   {
@@ -615,13 +590,10 @@ namespace SpatialOps{
     return isGhost;
   }
   //------------------------------------------------------------------
-  template< class LinAlg,
-	    class SrcFieldTraits,
-	    class DestFieldTraits,
-	    class OpAssembler >
+  template< typename LinAlg, typename OpType, typename Direction, typename SrcFieldTraits, typename DestFieldTraits >
   template< typename T >
   bool
-  SpatialOperator<LinAlg,SrcFieldTraits,DestFieldTraits,OpAssembler>::
+  SpatialOperator<LinAlg,OpType,Direction,SrcFieldTraits,DestFieldTraits>::
   compatibility_check( const T& op, const bool isResultOp ) const
   {
     if( isResultOp ){
@@ -639,12 +611,9 @@ namespace SpatialOps{
     return true;
   }
   //------------------------------------------------------------------
-  template< class LinAlg,
-	    class SrcFieldTraits,
-	    class DestFieldTraits,
-	    class OpAssembler >
+  template< typename LinAlg, typename OpType, typename Direction, typename SrcFieldTraits, typename DestFieldTraits >
   void
-  SpatialOperator<LinAlg,SrcFieldTraits,DestFieldTraits,OpAssembler>::
+  SpatialOperator<LinAlg,OpType,Direction,SrcFieldTraits,DestFieldTraits>::
   insert_row_entry( const int rownum,
 		    std::vector<double> & rowValues,
 		    std::vector<int> & rowIndices )
@@ -654,12 +623,9 @@ namespace SpatialOps{
 			       rowIndices );
   }
   //------------------------------------------------------------------
-  template< class LinAlg,
-	    class SrcFieldTraits,
-	    class DestFieldTraits,
-	    class OpAssembler >
+  template< typename LinAlg, typename OpType, typename Direction, typename SrcFieldTraits, typename DestFieldTraits >
   void
-  SpatialOperator<LinAlg,SrcFieldTraits,DestFieldTraits,OpAssembler>::
+  SpatialOperator<LinAlg,OpType,Direction,SrcFieldTraits,DestFieldTraits>::
   sum_into_row( const int rownum,
 		std::vector<double> & rowValues,
 		std::vector<int> & rowIndices )
@@ -670,12 +636,9 @@ namespace SpatialOps{
 			       &rowIndices[0] );
   }
   //------------------------------------------------------------------
-  template< class LinAlg,
-	    class SrcFieldTraits,
-	    class DestFieldTraits,
-	    class OpAssembler >
+  template< typename LinAlg, typename OpType, typename Direction, typename SrcFieldTraits, typename DestFieldTraits >
   void
-  SpatialOperator<LinAlg,SrcFieldTraits,DestFieldTraits,OpAssembler>::
+  SpatialOperator<LinAlg,OpType,Direction,SrcFieldTraits,DestFieldTraits>::
   Print( std::ostream & s ) const
   {
     mat_.Print( s );

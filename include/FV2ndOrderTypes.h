@@ -15,6 +15,12 @@
 namespace SpatialOps{
 namespace FVStaggeredUniform{
 
+  struct Gradient{};
+  struct Divergence{};
+  struct Interpolant{};
+
+  template< int N >
+  struct Scratch{ static const int NumNonZero = N; };
 
 
   //==================================================================
@@ -56,76 +62,39 @@ namespace FVStaggeredUniform{
 
 
 
-  //==================================================================
-  // Operator Assembler types
-
-  // linear interpolant assembler - Cell to Side
-  typedef LinearInterpolantAssembler< XDIR, Cell, CellFieldTraits::GhostTraits, XSideFieldTraits::GhostTraits >  InterpXC2FAssembler;
-  typedef LinearInterpolantAssembler< YDIR, Cell, CellFieldTraits::GhostTraits, YSideFieldTraits::GhostTraits >  InterpYC2FAssembler;
-  typedef LinearInterpolantAssembler< ZDIR, Cell, CellFieldTraits::GhostTraits, ZSideFieldTraits::GhostTraits >  InterpZC2FAssembler;
-
-  // linear interpolant assembler - Side to Cell
-  typedef LinearInterpolantAssembler< XDIR, Side, XSideFieldTraits::GhostTraits, CellFieldTraits::GhostTraits >  InterpXF2CAssembler;
-  typedef LinearInterpolantAssembler< YDIR, Side, YSideFieldTraits::GhostTraits, CellFieldTraits::GhostTraits >  InterpYF2CAssembler;
-  typedef LinearInterpolantAssembler< ZDIR, Side, ZSideFieldTraits::GhostTraits, CellFieldTraits::GhostTraits >  InterpZF2CAssembler;
-
-  // divergence assembler - Side to Cell
-  typedef DivergenceAssembler< XDIR, Side, XSideFieldTraits::GhostTraits, CellFieldTraits ::GhostTraits >        DivXF2CAssembler;
-  typedef DivergenceAssembler< YDIR, Side, YSideFieldTraits::GhostTraits, CellFieldTraits ::GhostTraits >        DivYF2CAssembler;
-  typedef DivergenceAssembler< ZDIR, Side, ZSideFieldTraits::GhostTraits, CellFieldTraits ::GhostTraits >        DivZF2CAssembler;
-
-  // divergence assembler - Cell to Side
-  typedef DivergenceAssembler< XDIR, Cell, CellFieldTraits ::GhostTraits, XSideFieldTraits::GhostTraits >        DivXC2FAssembler;
-  typedef DivergenceAssembler< YDIR, Cell, CellFieldTraits ::GhostTraits, YSideFieldTraits::GhostTraits >        DivYC2FAssembler;
-  typedef DivergenceAssembler< ZDIR, Cell, CellFieldTraits ::GhostTraits, ZSideFieldTraits::GhostTraits >        DivZC2FAssembler;
-													         
-  // gradient assembler - Cell to Side
-  typedef GradientAssembler< XDIR, Cell, CellFieldTraits ::GhostTraits, XSideFieldTraits::GhostTraits >          GradXC2FAssembler;
-  typedef GradientAssembler< YDIR, Cell, CellFieldTraits ::GhostTraits, YSideFieldTraits::GhostTraits >          GradYC2FAssembler;
-  typedef GradientAssembler< ZDIR, Cell, CellFieldTraits ::GhostTraits, ZSideFieldTraits::GhostTraits >          GradZC2FAssembler;
-													       
-  // gradient assembler - Side to Cell
-  typedef GradientAssembler< XDIR, Side, XSideFieldTraits::GhostTraits, CellFieldTraits::GhostTraits  >          GradXF2CAssembler;
-  typedef GradientAssembler< YDIR, Side, YSideFieldTraits::GhostTraits, CellFieldTraits::GhostTraits  >          GradYF2CAssembler;
-  typedef GradientAssembler< ZDIR, Side, ZSideFieldTraits::GhostTraits, CellFieldTraits::GhostTraits  >          GradZF2CAssembler;
-													       
-  // Operator Assembler types
-  //==================================================================
-
-
 
 
   //==================================================================
   // Operator Types
 
   // linear interpolants - Cell to Side
-  typedef SpatialOperator< LinAlgTrilinos, CellFieldTraits, XSideFieldTraits, InterpXC2FAssembler >  InterpXC2F;
-  typedef SpatialOperator< LinAlgTrilinos, CellFieldTraits, YSideFieldTraits, InterpYC2FAssembler >  InterpYC2F;
-  typedef SpatialOperator< LinAlgTrilinos, CellFieldTraits, ZSideFieldTraits, InterpZC2FAssembler >  InterpZC2F;
+  typedef SpatialOperator< LinAlgTrilinos, Interpolant, XDIR, CellFieldTraits, XSideFieldTraits > InterpXC2F;
+  typedef SpatialOperator< LinAlgTrilinos, Interpolant, YDIR, CellFieldTraits, YSideFieldTraits > InterpYC2F;
+  typedef SpatialOperator< LinAlgTrilinos, Interpolant, ZDIR, CellFieldTraits, ZSideFieldTraits > InterpZC2F;
 
   // linear interpolants - Side to Cell
-  typedef SpatialOperator< LinAlgTrilinos, XSideFieldTraits, CellFieldTraits, InterpXF2CAssembler >  InterpXF2C;
-  typedef SpatialOperator< LinAlgTrilinos, YSideFieldTraits, CellFieldTraits, InterpYF2CAssembler >  InterpYF2C;
-  typedef SpatialOperator< LinAlgTrilinos, ZSideFieldTraits, CellFieldTraits, InterpZF2CAssembler >  InterpZF2C;
+  typedef SpatialOperator< LinAlgTrilinos, Interpolant, XDIR, XSideFieldTraits, CellFieldTraits > InterpXF2C;
+  typedef SpatialOperator< LinAlgTrilinos, Interpolant, YDIR, YSideFieldTraits, CellFieldTraits > InterpYF2C;
+  typedef SpatialOperator< LinAlgTrilinos, Interpolant, ZDIR, ZSideFieldTraits, CellFieldTraits > InterpZF2C;
 
   // divergence operators - Side to Cell
-  typedef SpatialOperator< LinAlgTrilinos, XSideFieldTraits, CellFieldTraits, DivXF2CAssembler >     DivXF2C;
-  typedef SpatialOperator< LinAlgTrilinos, YSideFieldTraits, CellFieldTraits, DivYF2CAssembler >     DivYF2C;
-  typedef SpatialOperator< LinAlgTrilinos, ZSideFieldTraits, CellFieldTraits, DivZF2CAssembler >     DivZF2C;
+  typedef SpatialOperator< LinAlgTrilinos, Divergence, XDIR, XSideFieldTraits, CellFieldTraits >  DivXF2C;
+  typedef SpatialOperator< LinAlgTrilinos, Divergence, YDIR, YSideFieldTraits, CellFieldTraits >  DivYF2C;
+  typedef SpatialOperator< LinAlgTrilinos, Divergence, ZDIR, ZSideFieldTraits, CellFieldTraits >  DivZF2C;
 // divergence operators - Cell to Side
-  typedef SpatialOperator< LinAlgTrilinos, CellFieldTraits, XSideFieldTraits, DivXC2FAssembler >     DivXC2F;
-  typedef SpatialOperator< LinAlgTrilinos, CellFieldTraits, YSideFieldTraits, DivYC2FAssembler >     DivYC2F;
-  typedef SpatialOperator< LinAlgTrilinos, CellFieldTraits, ZSideFieldTraits, DivZC2FAssembler >     DivZC2F;
-												        
+  typedef SpatialOperator< LinAlgTrilinos, Divergence, XDIR, CellFieldTraits, XSideFieldTraits >  DivXC2F;
+  typedef SpatialOperator< LinAlgTrilinos, Divergence, YDIR, CellFieldTraits, YSideFieldTraits >  DivYC2F;
+  typedef SpatialOperator< LinAlgTrilinos, Divergence, ZDIR, CellFieldTraits, ZSideFieldTraits >  DivZC2F;
+									    	        
   // gradient operators - Cell to Side
-  typedef SpatialOperator< LinAlgTrilinos, CellFieldTraits, XSideFieldTraits, GradXC2FAssembler >    GradXC2F;
-  typedef SpatialOperator< LinAlgTrilinos, CellFieldTraits, YSideFieldTraits, GradYC2FAssembler >    GradYC2F;
-  typedef SpatialOperator< LinAlgTrilinos, CellFieldTraits, ZSideFieldTraits, GradZC2FAssembler >    GradZC2F;
+  typedef SpatialOperator< LinAlgTrilinos, Gradient, XDIR, CellFieldTraits, XSideFieldTraits >    GradXC2F;
+  typedef SpatialOperator< LinAlgTrilinos, Gradient, YDIR, CellFieldTraits, YSideFieldTraits >    GradYC2F;
+  typedef SpatialOperator< LinAlgTrilinos, Gradient, ZDIR, CellFieldTraits, ZSideFieldTraits >    GradZC2F;
 
   // gradient operators - Side to Cell
-  typedef SpatialOperator< LinAlgTrilinos, XSideFieldTraits, CellFieldTraits, GradXF2CAssembler >    GradXF2C;
-  typedef SpatialOperator< LinAlgTrilinos, YSideFieldTraits, CellFieldTraits, GradYF2CAssembler >    GradYF2C;
-  typedef SpatialOperator< LinAlgTrilinos, ZSideFieldTraits, CellFieldTraits, GradZF2CAssembler >    GradZF2C;
+  typedef SpatialOperator< LinAlgTrilinos, Gradient, XDIR, XSideFieldTraits, CellFieldTraits >    GradXF2C;
+  typedef SpatialOperator< LinAlgTrilinos, Gradient, YDIR, YSideFieldTraits, CellFieldTraits >    GradYF2C;
+  typedef SpatialOperator< LinAlgTrilinos, Gradient, ZDIR, ZSideFieldTraits, CellFieldTraits >    GradZF2C;
 
   // Operator Types
   //==================================================================
@@ -138,27 +107,17 @@ namespace FVStaggeredUniform{
 
 
   //==================================================================
-  // SCRATCH OPERATORS and their ASSEMBLERS
+  // SCRATCH OPERATORS
 
-  typedef ScratchAssembler< 3, XDIR, Cell, CellFieldTraits::GhostTraits,  CellFieldTraits::GhostTraits > SxCellAssembler;
-  typedef ScratchAssembler< 3, YDIR, Cell, CellFieldTraits::GhostTraits,  CellFieldTraits::GhostTraits > SyCellAssembler;
-  typedef ScratchAssembler< 3, ZDIR, Cell, CellFieldTraits::GhostTraits,  CellFieldTraits::GhostTraits > SzCellAssembler;
+  typedef SpatialOperator< LinAlgTrilinos, Scratch<3>, XDIR, CellFieldTraits, CellFieldTraits  > SxCell;
+  typedef SpatialOperator< LinAlgTrilinos, Scratch<3>, YDIR, CellFieldTraits, CellFieldTraits  > SyCell;
+  typedef SpatialOperator< LinAlgTrilinos, Scratch<3>, ZDIR, CellFieldTraits, CellFieldTraits  > SzCell;
 
-  typedef ScratchAssembler< 2, XDIR, Cell, CellFieldTraits::GhostTraits, XSideFieldTraits::GhostTraits > SxC2FAssembler;
-  typedef ScratchAssembler< 2, YDIR, Cell, CellFieldTraits::GhostTraits, YSideFieldTraits::GhostTraits > SyC2FAssembler;
-  typedef ScratchAssembler< 2, ZDIR, Cell, CellFieldTraits::GhostTraits, ZSideFieldTraits::GhostTraits > SzC2FAssembler;
+  typedef SpatialOperator< LinAlgTrilinos, Scratch<2>, XDIR, CellFieldTraits, XSideFieldTraits > SxCellSide;
+  typedef SpatialOperator< LinAlgTrilinos, Scratch<2>, YDIR, CellFieldTraits, YSideFieldTraits > SyCellSide;
+  typedef SpatialOperator< LinAlgTrilinos, Scratch<2>, ZDIR, CellFieldTraits, ZSideFieldTraits > SzCellSide;
 
-
-
-  typedef SpatialOperator< LinAlgTrilinos, CellFieldTraits,  CellFieldTraits, SxCellAssembler > SxCell;
-  typedef SpatialOperator< LinAlgTrilinos, CellFieldTraits,  CellFieldTraits, SyCellAssembler > SyCell;
-  typedef SpatialOperator< LinAlgTrilinos, CellFieldTraits,  CellFieldTraits, SzCellAssembler > SzCell;
-
-  typedef SpatialOperator< LinAlgTrilinos, CellFieldTraits, XSideFieldTraits, SxC2FAssembler  > SxCellSide;
-  typedef SpatialOperator< LinAlgTrilinos, CellFieldTraits, YSideFieldTraits, SyC2FAssembler  > SyCellSide;
-  typedef SpatialOperator< LinAlgTrilinos, CellFieldTraits, ZSideFieldTraits, SzC2FAssembler  > SzCellSide;
-
-  // SCRATCH OPERATORS and their ASSEMBLERS
+  // SCRATCH OPERATORS
   //==================================================================
 
 
@@ -166,5 +125,36 @@ namespace FVStaggeredUniform{
 } // namespace FVStaggeredUniform
 } // namespace SpatialOps
 
+
+
+namespace SpatialOps{
+
+
+  template<typename Dir, typename Location, typename SrcGhost, typename DestGhost >
+  struct OpAssemblerSelector< FVStaggeredUniform::Gradient, Dir, Location, SrcGhost, DestGhost >
+  {
+    typedef FVStaggeredUniform::GradientAssembler<Dir,Location,SrcGhost,DestGhost>  Assembler;
+  };
+
+  template< typename Dir, typename Location, typename SrcGhost, typename DestGhost >
+  struct OpAssemblerSelector< FVStaggeredUniform::Divergence, Dir, Location, SrcGhost, DestGhost >
+  {
+    typedef FVStaggeredUniform::DivergenceAssembler<Dir,Location,SrcGhost,DestGhost>  Assembler;
+  };
+
+  template< typename Dir, typename Location, typename SrcGhost, typename DestGhost >
+  struct OpAssemblerSelector< FVStaggeredUniform::Interpolant, Dir, Location, SrcGhost, DestGhost >
+  {
+    typedef FVStaggeredUniform::LinearInterpolantAssembler<Dir,Location,SrcGhost,DestGhost>  Assembler;
+  };
+
+  template< int N, typename Dir, typename Location, typename SrcGhost, typename DestGhost >
+  struct OpAssemblerSelector< FVStaggeredUniform::Scratch<N>, Dir, Location, SrcGhost, DestGhost >
+  {
+    typedef FVStaggeredUniform::ScratchAssembler< FVStaggeredUniform::Scratch<N>::NumNonZero,Dir,Location,SrcGhost,DestGhost>  Assembler;
+  };
+
+
+} // namespace SpatialOps
 
 #endif // UT_FV2ndOrderTypes_h
