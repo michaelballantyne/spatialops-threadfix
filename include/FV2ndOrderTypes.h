@@ -26,14 +26,14 @@ namespace FVStaggeredUniform{
   //==================================================================
   // Spatial Field Traits
 
-  typedef FieldTraits< Side, DefaultSideGhostingX >     XSideFieldTraits;
-  typedef FieldTraits< Side, DefaultSideGhostingY >     YSideFieldTraits;
-  typedef FieldTraits< Side, DefaultSideGhostingZ >     ZSideFieldTraits;
+  typedef FieldTraits< Side, DefaultSideGhosting<XDIR> >  XSideFieldTraits;
+  typedef FieldTraits< Side, DefaultSideGhosting<YDIR> >  YSideFieldTraits;
+  typedef FieldTraits< Side, DefaultSideGhosting<ZDIR> >  ZSideFieldTraits;
 
-  typedef FieldTraits< Cell, DefaultCellGhosting >      CellFieldTraits;
+  typedef FieldTraits< Cell, DefaultCellGhosting >        CellFieldTraits;
 
-  typedef FieldTraits< Cell, NoGhosting >               NoGhostCellFieldTraits;
-  typedef FieldTraits< Side, NoGhosting >               NoGhostSideFieldTraits;
+  typedef FieldTraits< Cell, NoGhosting >                 NoGhostCellFieldTraits;
+  typedef FieldTraits< Side, NoGhosting >                 NoGhostSideFieldTraits;
 
   // Spatial Field Traits
   //==================================================================

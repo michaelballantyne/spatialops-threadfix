@@ -241,13 +241,16 @@ namespace FVStaggeredUniform{
 
 
   template<>
-  int DefaultSideGhostingX::get<XDIR,SidePlus>(){return 2;}
+  template<>
+  int DefaultSideGhosting<XDIR>::get<XDIR,SidePlus>(){return 2;}
 
   template<>
-  int DefaultSideGhostingY::get<YDIR,SidePlus>(){return 2;}
+  template<>
+  int DefaultSideGhosting<YDIR>::get<YDIR,SidePlus>(){return 2;}
 
   template<>
-  int DefaultSideGhostingZ::get<ZDIR,SidePlus>(){return 2;}
+  template<>
+  int DefaultSideGhosting<ZDIR>::get<ZDIR,SidePlus>(){return 2;}
 
 
   //==================================================================

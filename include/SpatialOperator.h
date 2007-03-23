@@ -317,27 +317,11 @@ namespace SpatialOps{
      *
      *  @param op : The operator itself.  Ownership is transfered.  This
      *  must be a heap-allocated object (build via "new")
-     *
-     *  @param opName : The name for this operator.  Must be a unique
-     *  name.  Duplicate names will result in an exception.
-     *
-     *  @param makeDefault : [true] By default, registration of a new
-     *  operator makes it the default operator.  If this flag is "false"
-     *  then it will not replace the current default operator, unless
-     *  one does not yet exist.
      */
-    void register_new_operator( SpatialOpType * const op,
-				const std::string& opName,
-				const bool makeDefault = true );
+    void register_new_operator( SpatialOpType * const op );
 
     /**
-     *  Reset the default operator to the one with the given name.
-     */
-    void set_default_operator( const std::string & opName,
-			       const std::vector<int> & nxyz );
-
-    /**
-     *  Obtain the spatial operator with the given type and shape.
+     *  Obtain the spatial operator with the given shape.
      *  Throws an exception if no match is found.
      *
      *  This pointer reference can change if the default operator for
@@ -348,13 +332,9 @@ namespace SpatialOps{
     SpatialOpType*& retrieve_operator( const std::vector<int> & nxyz );
 
     /**
-     *  Obtain the spatial operator with the given name and shape.
-     *  Throws an exception if no match is found.
-     *
-     *  This returns a pointer reference that will never change.
+     *  determine if an operator of this size exists in the databse
      */
-    SpatialOpType*& retrieve_operator( const std::string & opName,
-					 const std::vector<int> & nxyz );
+    bool query_operator( const std::vector<int>& nxyz ) const;
 
   private:
 
@@ -372,12 +352,8 @@ namespace SpatialOps{
       bool operator < ( const Shape& s ) const;
     };
     
-    typedef std::map< Shape,       SpatialOpType* > ShapeOpMap;
-    typedef std::map< std::string, Shape          > NameShapeMap;
-
-    NameShapeMap nameMap_;
+    typedef std::map< Shape, SpatialOpType* > ShapeOpMap;
     ShapeOpMap   shapeOpMap_;
-
   };
 
 
@@ -418,6 +394,9 @@ namespace SpatialOps{
       nghostDest_( ghost_vec<DestGhost>() ),
       mat_( linAlg_.setup_matrix( nrows_, ncols_, Assembler::num_nonzeros() ) )
   {
+    if( IsSameType<Direction,XDIR>::result )  assert(  extent_[0]>1 );
+    if( IsSameType<Direction,YDIR>::result )  assert( (extent_[0]>1)  && (extent_[1]>1) );
+    if( IsSameType<Direction,ZDIR>::result )  assert( (extent_[0]>1)  && (extent_[1]>1) && (extent_[2]>1) );
 
     // build the operator
     std::vector<double> vals( Assembler::num_nonzeros(), 0.0 );
@@ -660,22 +639,16 @@ namespace SpatialOps{
   template< class SpatialOpType >
   void
   SpatialOpDatabase<SpatialOpType>::
-  register_new_operator( SpatialOpType * const op,
-			 const std::string & name,
-			 const bool makeDefault )
+  register_new_operator( SpatialOpType * const op )
   {
     Shape s( op->get_extent() );
 
-    shapeOpMap_[s] = op;
+    std::pair< typename ShapeOpMap::iterator, bool > result
+      = shapeOpMap_.insert( make_pair(s,op) );
 
-    typename NameShapeMap::iterator insm = nameMap_.find( name );
-    if( insm == nameMap_.end() ){
-      nameMap_.insert( make_pair(name,s) );
-      //      nameMap_[name] = s;
-    }
-    else{
+    if( !result.second ){
       std::ostringstream msg;
-      msg << "ERROR!  Operator named '" << name << "' has already been registered!" << std::endl;
+      msg << "ERROR!  Can not insert duplicate operators into database." << std::endl;
       throw std::runtime_error( msg.str() );
     }
   }
@@ -683,39 +656,14 @@ namespace SpatialOps{
   template< class SpatialOpType >
   SpatialOpType*&
   SpatialOpDatabase<SpatialOpType>::
-  retrieve_operator( const std::string & name,
-		     const std::vector<int> & nxyz )
+  retrieve_operator( const std::vector<int> & nxyz )
   {
-    typename NameShapeMap::iterator ii = nameMap_.find( name );
-    if( ii == nameMap_.end() ){
-      std::ostringstream msg;
-      msg << "ERROR!  No operator named '" << name << "'" << std::endl
-	  << "        has been registered!" << std::endl;
-      throw std::runtime_error( msg.str() );
-    }
-
-    typename ShapeOpMap::iterator iop = shapeOpMap_.find( ii->second );
-    if( iop == shapeOpMap_.end() ){
-      std::ostringstream msg;
-      msg << "ERROR!  No operator named '" << name << "'" << std::endl
-	  << "        with the requested dimensions and ghosting has been registered!" << std::endl;
-      throw std::runtime_error( msg.str() );
-    }
-    return iop->second;
-  }
-  //------------------------------------------------------------------
-  template< class SpatialOpType >
-  SpatialOpType*&
-  SpatialOpDatabase<SpatialOpType>::
-  SpatialOpDatabase::retrieve_operator( const std::vector<int> & nxyz )
-  {
-    Shape s( nxyz );
-    typename ShapeOpMap::iterator iop = shapeOpMap_.find( s );
+    typename ShapeOpMap::iterator iop = shapeOpMap_.find( Shape(nxyz) );
     if( iop == shapeOpMap_.end() ){
       std::ostringstream msg;
       msg << "ERROR!  Attempted to retrieve an operator that does not exist." << std::endl
 	  << "        Check the operator shape (nx,ny,nz and nghost) and ensure" << std::endl
-	  << "        that an operator of this type and shape has been registered" << std::endl
+	  << "        that an operator with this shape has been registered" << std::endl
 	  << "        in the database." << std::endl;
       throw std::runtime_error( msg.str() );
     }
@@ -723,22 +671,12 @@ namespace SpatialOps{
   }
   //------------------------------------------------------------------
   template< class SpatialOpType >
-  void
+  bool
   SpatialOpDatabase<SpatialOpType>::
-  SpatialOpDatabase::set_default_operator( const std::string & opName,
-					   const std::vector<int> & nxyz )
+  query_operator( const std::vector<int> & nxyz ) const
   {
-    // do we have an operator with the given name?  If not, just return and do nothing.
-    typename NameShapeMap::iterator ii = nameMap_.find( opName );
-    if( ii == nameMap_.end() ) return;
-    
-    // See if we have an operator with this name AND shape
-    Shape s( nxyz );
-    const typename ShapeOpMap::iterator iopn = shapeOpMap_.find( s );
-    
-    if( iopn != shapeOpMap_.end() ){
-      iopn->second = ii->second;
-    }
+    typename ShapeOpMap::iterator iop = shapeOpMap_.find( Shape(nxyz) );
+    return( iop!=shapeOpMap_.end() );
   }
   //------------------------------------------------------------------
   template< class SpatialOpType >

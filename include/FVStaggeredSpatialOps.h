@@ -28,31 +28,13 @@ namespace FVStaggeredUniform{
   };
 
 
-  // Policy defining ghosting for a X side field
-  struct DefaultSideGhostingX
+  template< typename Dir >
+  struct DefaultSideGhosting
   {
-    // note that this is specialized for the X+ version to return 2.
-    template<typename Dir, typename SideType >
+    template<typename Direction, typename SideType>
     static int get(){return 1;}
   };
 
-
-  // Policy defining ghosting for a Y side field
-  struct DefaultSideGhostingY
-  {
-    // note that this is specialized for the Y+ version to return 2.
-    template<typename Dir, typename SideType>
-    static int get(){return 1;}
-  };
-
-
-  // Policy defining ghosting for a Z side field
-  struct DefaultSideGhostingZ
-  {
-    // note that this is specialized for the Z+ version to return 2.
-    template<typename Dir, typename SideType>
-    static int get(){return 1;}
-  };
 
 
   //==================================================================
@@ -549,7 +531,7 @@ namespace FVStaggeredUniform{
 		   std::vector<double> & vals,
 		   std::vector<int> & ixs )
   {
-    const bool staggerLeft = stagger_left<Location>();
+    static const bool staggerLeft = stagger_left<Location>();
 
     const double val = 0.0;
     int icol;
@@ -558,6 +540,7 @@ namespace FVStaggeredUniform{
     const int ncols = opInfo_.ncols();
 
     int nShift = -( int(std::ceil( float(NumNonZero)/2.0 )) - 1 );
+    static const int nOffDiagP = NumNonZero/2;
     if( NumNonZero%2 == 0 ){
       if( staggerLeft )  --nShift;
       else               ++nShift;
@@ -566,12 +549,9 @@ namespace FVStaggeredUniform{
     int skip = 1;
     scratch_bounds_helper<Direction>( inBoundsLo_, opInfo_, skip, nShift );
 
-//     const int ngSMinus =  SrcGhostPolicy::template get<Direction,SideMinus>();
-//     const int ngDMinus = DestGhostPolicy::template get<Direction,SideMinus>();
-
     int ix = nShift*skip;
     while( ix+icol <0 ) ix+=skip;
-    while( ix+icol + NumNonZero*skip > ncols ) ix-=skip;
+    while( ix+icol + nOffDiagP*skip > ncols ) ix-=skip;
     for( int i=0; i<NumNonZero; ++i ){
       const int ipos = icol + ix;
       if( ipos >= 0 && ipos < ncols ){

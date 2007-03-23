@@ -94,33 +94,33 @@ void build_ops( const std::vector<int> & dim )
   SyCell     *syc  = new SyCell( sycasmbl  );
   SzCell     *szc  = new SzCell( szcasmbl  );
 
-  SpatialOpDatabase<InterpXC2F>::self().register_new_operator( rxcf, "Interp-X-Cell-to-Side" );
-  SpatialOpDatabase<InterpYC2F>::self().register_new_operator( rycf, "Interp-Y-Cell-to-Side" );
-  SpatialOpDatabase<InterpZC2F>::self().register_new_operator( rzcf, "Interp-Z-Cell-to-Side" );
+  SpatialOpDatabase<InterpXC2F>::self().register_new_operator( rxcf );
+  SpatialOpDatabase<InterpYC2F>::self().register_new_operator( rycf );
+  SpatialOpDatabase<InterpZC2F>::self().register_new_operator( rzcf );
 
-  SpatialOpDatabase<InterpXF2C>::self().register_new_operator( rxfc, "Interp-X-Side-to-Cell" );
-  SpatialOpDatabase<InterpYF2C>::self().register_new_operator( ryfc, "Interp-Y-Side-to-Cell" );
-  SpatialOpDatabase<InterpZF2C>::self().register_new_operator( rzfc, "Interp-Z-Side-to-Cell" );
+  SpatialOpDatabase<InterpXF2C>::self().register_new_operator( rxfc );
+  SpatialOpDatabase<InterpYF2C>::self().register_new_operator( ryfc );
+  SpatialOpDatabase<InterpZF2C>::self().register_new_operator( rzfc );
 
-  SpatialOpDatabase<GradXC2F  >::self().register_new_operator( gxcf, "Grad-X-Cell-to-Side" );
-  SpatialOpDatabase<GradYC2F  >::self().register_new_operator( gycf, "Grad-Y-Cell-to-Side" );
-  SpatialOpDatabase<GradZC2F  >::self().register_new_operator( gzcf, "Grad-Z-Cell-to-Side" );
+  SpatialOpDatabase<GradXC2F  >::self().register_new_operator( gxcf );
+  SpatialOpDatabase<GradYC2F  >::self().register_new_operator( gycf );
+  SpatialOpDatabase<GradZC2F  >::self().register_new_operator( gzcf );
 
-  SpatialOpDatabase<GradXF2C  >::self().register_new_operator( gxfc, "Grad-X-Side-to-Cell" );
-  SpatialOpDatabase<GradYF2C  >::self().register_new_operator( gyfc, "Grad-Y-Side-to-Cell" );
-  SpatialOpDatabase<GradZF2C  >::self().register_new_operator( gzfc, "Grad-Z-Side-to-Cell" );
+  SpatialOpDatabase<GradXF2C  >::self().register_new_operator( gxfc );
+  SpatialOpDatabase<GradYF2C  >::self().register_new_operator( gyfc );
+  SpatialOpDatabase<GradZF2C  >::self().register_new_operator( gzfc );
 
-  SpatialOpDatabase<DivXF2C   >::self().register_new_operator( dxfc, "Div-X-Side-to-Cell" );
-  SpatialOpDatabase<DivYF2C   >::self().register_new_operator( dyfc, "Div-Y-Side-to-Cell" );
-  SpatialOpDatabase<DivZF2C   >::self().register_new_operator( dzfc, "Div-Z-Side-to-Cell" );
+  SpatialOpDatabase<DivXF2C   >::self().register_new_operator( dxfc );
+  SpatialOpDatabase<DivYF2C   >::self().register_new_operator( dyfc );
+  SpatialOpDatabase<DivZF2C   >::self().register_new_operator( dzfc );
 
-  SpatialOpDatabase<SxCellSide>::self().register_new_operator( sxcf, "Scratch-X-Cell-to-Side" );
-  SpatialOpDatabase<SyCellSide>::self().register_new_operator( sycf, "Scratch-Y-Cell-to-Side" );
-  SpatialOpDatabase<SzCellSide>::self().register_new_operator( szcf, "Scratch-Z-Cell-to-Side" );
+  SpatialOpDatabase<SxCellSide>::self().register_new_operator( sxcf );
+  SpatialOpDatabase<SyCellSide>::self().register_new_operator( sycf );
+  SpatialOpDatabase<SzCellSide>::self().register_new_operator( szcf );
 
-  SpatialOpDatabase<SxCell    >::self().register_new_operator( sxc, "Scratch-X-Cell" );
-  SpatialOpDatabase<SyCell    >::self().register_new_operator( syc, "Scratch-Y-Cell"  );
-  SpatialOpDatabase<SzCell    >::self().register_new_operator( szc, "Scratch-Z-Cell"  );
+  SpatialOpDatabase<SxCell    >::self().register_new_operator( sxc );
+  SpatialOpDatabase<SyCell    >::self().register_new_operator( syc );
+  SpatialOpDatabase<SzCell    >::self().register_new_operator( szc );
 }
 
 
@@ -145,6 +145,7 @@ bool test( const std::vector<int> & dim )
   EpetraExt::RowMatrixToMatrixMarketFile( "Dx.mm", dxfc.get_linalg_mat(), "", "" );
   EpetraExt::RowMatrixToMatrixMarketFile( "Gx.mm", gxcf.get_linalg_mat(), "", "" );
   EpetraExt::RowMatrixToMatrixMarketFile( "Rx.mm", rxcf.get_linalg_mat(), "", "" );
+  EpetraExt::RowMatrixToMatrixMarketFile( "Sx.mm", sxc .get_linalg_mat(), "", "" );
 
 
   // build the spatial fields
@@ -233,6 +234,7 @@ bool test( const std::vector<int> & dim )
     EpetraExt::RowMatrixToMatrixMarketFile( "Dy.mm", dyfc.get_linalg_mat(), "", "" );
     EpetraExt::RowMatrixToMatrixMarketFile( "Gy.mm", gycf.get_linalg_mat(), "", "" );
     EpetraExt::RowMatrixToMatrixMarketFile( "Ry.mm", rycf.get_linalg_mat(), "", "" );
+    EpetraExt::RowMatrixToMatrixMarketFile( "Sy.mm", syc.get_linalg_mat(), "", "" );
 
 
     CellField     y( dim, NULL, InternalStorage );
@@ -290,6 +292,7 @@ bool test( const std::vector<int> & dim )
     EpetraExt::RowMatrixToMatrixMarketFile( "Dz.mm", dzfc.get_linalg_mat(), "", "" );
     EpetraExt::RowMatrixToMatrixMarketFile( "Gz.mm", gzcf.get_linalg_mat(), "", "" );
     EpetraExt::RowMatrixToMatrixMarketFile( "Rz.mm", rzcf.get_linalg_mat(), "", "" );
+    EpetraExt::RowMatrixToMatrixMarketFile( "Sz.mm", szc .get_linalg_mat(), "", "" );
 
 
     CellField     z( dim, NULL, InternalStorage );
@@ -297,6 +300,7 @@ bool test( const std::vector<int> & dim )
     ZSideField   fz( dim, NULL, InternalStorage );
     ZSideField dfdz( dim, NULL, InternalStorage );
     CellField   fz2( dim, NULL, InternalStorage );
+    CellField  d2fa( dim, NULL, InternalStorage );
 
     const double dz = spacing[2];
     const int ngzlo = CellFieldTraits::GhostTraits::get<ZDIR,SideMinus>();
@@ -315,11 +319,23 @@ bool test( const std::vector<int> & dim )
     rzfc.apply_to_field( fz, fz2 );
     rzcf.apply_to_field( z, zint );
     gzcf.apply_to_field( f, dfdz );
-    dzfc.apply_to_field( dfdz, d2f );
+    dzfc.apply_to_field( dfdz, d2fa );
 
     dzfc.apply_to_op( gzcf, szc );
 
     szc.apply_to_field( f, d2f );
+
+    ix=0;
+    for( int k=klo; k<khi ; ++k ){
+      for( int j=jlo; j<jhi; ++j ){
+	for( int i=ilo; i<ihi; ++i ){
+	  const double err = std::abs( d2fa[ix] - d2f[ix] );
+	  if( err > 1.0e-11 ) std::cout << "("<<i<<","<<j<<","<<k<<") err: " << err << std::endl;
+	  assert( err < 1.0e-10 );
+	  ++ix;
+	}
+      }
+    }
     
     EpetraExt::RowMatrixToMatrixMarketFile( "Lz.mm", szc.get_linalg_mat(), "", "" );
 
@@ -331,6 +347,7 @@ bool test( const std::vector<int> & dim )
     tmp.reset(); tmp.add_field_contribution(fz2  ); tmpField=tmp;  EpetraExt::VectorToMatrixMarketFile( "fintz2.mm", tmpField.get_linalg_vec(), "", "" );
     tmp.reset(); tmp.add_field_contribution(dfdz ); tmpField=tmp;  EpetraExt::VectorToMatrixMarketFile( "dfdz.mm", tmpField.get_linalg_vec(), "", "" );
     tmp.reset(); tmp.add_field_contribution(d2f  ); tmpField=tmp;  EpetraExt::VectorToMatrixMarketFile( "d2fdz2.mm", tmpField.get_linalg_vec(), "", "" );
+    tmp.reset(); tmp.add_field_contribution(d2fa ); tmpField=tmp;  EpetraExt::VectorToMatrixMarketFile( "d2fdz2a.mm", tmpField.get_linalg_vec(), "", "" );
  
   } // z-dir
 
@@ -396,9 +413,9 @@ bool test_linsys( const std::vector<int> & dim )
 int main()
 {
   vector<int> dim(3,1);
-  dim[0]=12;
-  dim[1]=9;
-  dim[2]=14;
+  dim[0]=10;
+  dim[1]=13;
+  dim[2]=31;
 
   build_ops( dim );
 
