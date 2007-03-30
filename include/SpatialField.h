@@ -112,6 +112,7 @@ namespace SpatialOps{
 
 
     inline double& operator[](const int i){return fieldValues_[i];}
+    inline const double& operator[](const int i) const{return fieldValues_[i];}
 
     /** obtain a pointer to the underlying field - this should be used carefully! */
     inline       double* get_ptr()      { return fieldValues_; }
