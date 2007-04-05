@@ -58,17 +58,17 @@ void check_equality_C2F(grid_class &grid, double *analytical_int, XSideField &nu
   std::vector<int> index;
 
   indices_for_SideFields<SpatialOps::XDIR>(grid, index);
-			
+
   for(unsigned int i=0; i<grid.index_bothsides.size(); i++)
     {    
       int point = grid.index_bothsides[i];
       int point_interpolation = index[i];
-      compare( analytical_int[point], numerical.get_ptr()[point_interpolation], mean_rel_err, max_rel_err);
-      // cout << endl << analytical_int[point] << " " << numerical.get_ptr()[point_interpolation] ;
+      compare( analytical_int[point], numerical.begin()[point_interpolation], mean_rel_err, max_rel_err);
+      // cout << endl << analytical_int[point] << " " << numerical.begin()[point_interpolation] ;
     }	
 	
   //for(unsigned int i=0; i<grid.nx*grid.ny*grid.nz; i++)
-  //	cout << endl << analytical_int[i] << " " << numerical.get_ptr()[i] ;
+  //	cout << endl << analytical_int[i] << " " << numerical.begin()[i] ;
 		
   mean_rel_err /= double(grid.index_bothsides.size());
 
@@ -97,12 +97,12 @@ void check_equality_C2F(grid_class &grid, double *analytical_int, YSideField &nu
     {    
       int point = grid.index_bothsides[i];
       int point_interpolation = index[i];
-      compare( analytical_int[point], numerical.get_ptr()[point_interpolation], mean_rel_err, max_rel_err);
-      // cout << endl << analytical_int[point] << " " << numerical.get_ptr()[point_interpolation] ;
+      compare( analytical_int[point], numerical.begin()[point_interpolation], mean_rel_err, max_rel_err);
+      // cout << endl << analytical_int[point] << " " << numerical.begin()[point_interpolation] ;
     }	
 	
   //for(unsigned int i=0; i<grid.nx*grid.ny*grid.nz; i++)
-  //	cout << endl << analytical_int[i] << " " << numerical.get_ptr()[i] ;
+  //	cout << endl << analytical_int[i] << " " << numerical.begin()[i] ;
 		
   mean_rel_err /= double(grid.index_bothsides.size());
 
@@ -131,12 +131,12 @@ void check_equality_C2F(grid_class &grid, double *analytical_int, ZSideField &nu
     {    
       int point = grid.index_bothsides[i];
       int point_interpolation = index[i];
-      compare( analytical_int[point], numerical.get_ptr()[point_interpolation], mean_rel_err, max_rel_err);
-      //cout << endl << analytical_int[point] << " " << numerical.get_ptr()[point_interpolation] ;
+      compare( analytical_int[point], numerical.begin()[point_interpolation], mean_rel_err, max_rel_err);
+      //cout << endl << analytical_int[point] << " " << numerical.begin()[point_interpolation] ;
     }	
 	
   //for(unsigned int i=0; i<grid.nx*grid.ny*grid.nz; i++)
-  //	cout << endl << analytical_int[i] << " " << numerical.get_ptr()[i] ;
+  //	cout << endl << analytical_int[i] << " " << numerical.begin()[i] ;
 		
   mean_rel_err /= double(grid.index_bothsides.size());
 
@@ -159,7 +159,7 @@ void check_equality_F2C(grid_class &grid, double *analytical_int, CellField &num
   for(unsigned int i=0; i<grid.index_bothsides.size(); i++)
     {    
       int point = grid.index_bothsides[i];
-      compare( analytical_int[point], numerical.get_ptr()[point], mean_rel_err, max_rel_err);
+      compare( analytical_int[point], numerical.begin()[point], mean_rel_err, max_rel_err);
       //cout << endl << analytical_int[point] << " " << numerical[point] ;
     }	
 	

@@ -67,60 +67,60 @@ void build_ops( const std::vector<int> & dim )
 
   // build the operators
   InterpXC2F *rxcf = new InterpXC2F( rxcfasmbl );
-  InterpYC2F *rycf = new InterpYC2F( rycfasmbl );
-  InterpZC2F *rzcf = new InterpZC2F( rzcfasmbl );
+  InterpYC2F *rycf = dim[1]==1 ? NULL : new InterpYC2F( rycfasmbl );
+  InterpZC2F *rzcf = dim[2]==1 ? NULL : new InterpZC2F( rzcfasmbl );
 
   InterpXF2C *rxfc = new InterpXF2C( rxfcasmbl );
-  InterpYF2C *ryfc = new InterpYF2C( ryfcasmbl );
-  InterpZF2C *rzfc = new InterpZF2C( rzfcasmbl );
+  InterpYF2C *ryfc = dim[1]==1 ? NULL : new InterpYF2C( ryfcasmbl );
+  InterpZF2C *rzfc = dim[2]==1 ? NULL : new InterpZF2C( rzfcasmbl );
 
   GradXC2F   *gxcf = new GradXC2F( gxcfasmbl );
-  GradYC2F   *gycf = new GradYC2F( gycfasmbl );
-  GradZC2F   *gzcf = new GradZC2F( gzcfasmbl );
+  GradYC2F   *gycf = dim[1]==1 ? NULL : new GradYC2F( gycfasmbl );
+  GradZC2F   *gzcf = dim[2]==1 ? NULL : new GradZC2F( gzcfasmbl );
 
   GradXF2C   *gxfc = new GradXF2C( gxfcasmbl );
-  GradYF2C   *gyfc = new GradYF2C( gyfcasmbl );
-  GradZF2C   *gzfc = new GradZF2C( gzfcasmbl );
+  GradYF2C   *gyfc = dim[1]==1 ? NULL : new GradYF2C( gyfcasmbl );
+  GradZF2C   *gzfc = dim[2]==1 ? NULL : new GradZF2C( gzfcasmbl );
 
   DivXF2C    *dxfc = new DivXF2C( dxfcasmbl );
-  DivYF2C    *dyfc = new DivYF2C( dyfcasmbl );
-  DivZF2C    *dzfc = new DivZF2C( dzfcasmbl );
+  DivYF2C    *dyfc = dim[1]==1 ? NULL : new DivYF2C( dyfcasmbl );
+  DivZF2C    *dzfc = dim[2]==1 ? NULL : new DivZF2C( dzfcasmbl );
 
   SxCellSide *sxcf = new SxCellSide( sxcfasmbl );
-  SyCellSide *sycf = new SyCellSide( sycfasmbl );
-  SzCellSide *szcf = new SzCellSide( szcfasmbl );
+  SyCellSide *sycf = dim[1]==1 ? NULL : new SyCellSide( sycfasmbl );
+  SzCellSide *szcf = dim[2]==1 ? NULL : new SzCellSide( szcfasmbl );
 
   SxCell     *sxc  = new SxCell( sxcasmbl  );
-  SyCell     *syc  = new SyCell( sycasmbl  );
-  SzCell     *szc  = new SzCell( szcasmbl  );
+  SyCell     *syc  = dim[1]==1 ? NULL : new SyCell( sycasmbl  );
+  SzCell     *szc  = dim[2]==1 ? NULL : new SzCell( szcasmbl  );
 
   SpatialOpDatabase<InterpXC2F>::self().register_new_operator( rxcf );
-  SpatialOpDatabase<InterpYC2F>::self().register_new_operator( rycf );
-  SpatialOpDatabase<InterpZC2F>::self().register_new_operator( rzcf );
+  if( dim[1]>1 ) SpatialOpDatabase<InterpYC2F>::self().register_new_operator( rycf );
+  if( dim[2]>1 ) SpatialOpDatabase<InterpZC2F>::self().register_new_operator( rzcf );
 
   SpatialOpDatabase<InterpXF2C>::self().register_new_operator( rxfc );
-  SpatialOpDatabase<InterpYF2C>::self().register_new_operator( ryfc );
-  SpatialOpDatabase<InterpZF2C>::self().register_new_operator( rzfc );
+  if( dim[1]>1 ) SpatialOpDatabase<InterpYF2C>::self().register_new_operator( ryfc );
+  if( dim[2]>1 ) SpatialOpDatabase<InterpZF2C>::self().register_new_operator( rzfc );
 
   SpatialOpDatabase<GradXC2F  >::self().register_new_operator( gxcf );
-  SpatialOpDatabase<GradYC2F  >::self().register_new_operator( gycf );
-  SpatialOpDatabase<GradZC2F  >::self().register_new_operator( gzcf );
+  if( dim[1]>1 ) SpatialOpDatabase<GradYC2F  >::self().register_new_operator( gycf );
+  if( dim[2]>1 ) SpatialOpDatabase<GradZC2F  >::self().register_new_operator( gzcf );
 
   SpatialOpDatabase<GradXF2C  >::self().register_new_operator( gxfc );
-  SpatialOpDatabase<GradYF2C  >::self().register_new_operator( gyfc );
-  SpatialOpDatabase<GradZF2C  >::self().register_new_operator( gzfc );
+  if( dim[1]>1 ) SpatialOpDatabase<GradYF2C  >::self().register_new_operator( gyfc );
+  if( dim[2]>1 ) SpatialOpDatabase<GradZF2C  >::self().register_new_operator( gzfc );
 
   SpatialOpDatabase<DivXF2C   >::self().register_new_operator( dxfc );
-  SpatialOpDatabase<DivYF2C   >::self().register_new_operator( dyfc );
-  SpatialOpDatabase<DivZF2C   >::self().register_new_operator( dzfc );
+  if( dim[1]>1 ) SpatialOpDatabase<DivYF2C   >::self().register_new_operator( dyfc );
+  if( dim[2]>1 ) SpatialOpDatabase<DivZF2C   >::self().register_new_operator( dzfc );
 
   SpatialOpDatabase<SxCellSide>::self().register_new_operator( sxcf );
-  SpatialOpDatabase<SyCellSide>::self().register_new_operator( sycf );
-  SpatialOpDatabase<SzCellSide>::self().register_new_operator( szcf );
+  if( dim[1]>1 ) SpatialOpDatabase<SyCellSide>::self().register_new_operator( sycf );
+  if( dim[2]>1 ) SpatialOpDatabase<SzCellSide>::self().register_new_operator( szcf );
 
   SpatialOpDatabase<SxCell    >::self().register_new_operator( sxc );
-  SpatialOpDatabase<SyCell    >::self().register_new_operator( syc );
-  SpatialOpDatabase<SzCell    >::self().register_new_operator( szc );
+  if( dim[1]>1 ) SpatialOpDatabase<SyCell    >::self().register_new_operator( syc );
+  if( dim[2]>1 ) SpatialOpDatabase<SzCell    >::self().register_new_operator( szc );
 }
 
 
@@ -367,31 +367,36 @@ bool test_linsys( const std::vector<int> & dim )
   double volume;
   setup_geom( dim, spacing, area, volume );
 
-  // get the operators
-  GradXC2F   & gradX = *SpatialOpDatabase<GradXC2F  >::self().retrieve_operator( dim );
-  GradYC2F   & gradY = *SpatialOpDatabase<GradYC2F  >::self().retrieve_operator( dim );
-  GradZC2F   & gradZ = *SpatialOpDatabase<GradZC2F  >::self().retrieve_operator( dim );
-
-  DivXF2C    & divX = *SpatialOpDatabase<DivXF2C   >::self().retrieve_operator( dim );
-  DivYF2C    & divY = *SpatialOpDatabase<DivYF2C   >::self().retrieve_operator( dim );
-  DivZF2C    & divZ = *SpatialOpDatabase<DivZF2C   >::self().retrieve_operator( dim );
-
-  SxCell     & sxc  = *SpatialOpDatabase<SxCell    >::self().retrieve_operator( dim );
-  SyCell     & syc  = *SpatialOpDatabase<SyCell    >::self().retrieve_operator( dim );
-  SzCell     & szc  = *SpatialOpDatabase<SzCell    >::self().retrieve_operator( dim );
-
-
-  divX.apply_to_op( gradX, sxc );
-  divY.apply_to_op( gradY, syc );
-  divZ.apply_to_op( gradZ, szc );
-
   LinearSystem & linSys = LinSysFactory::self().get_linsys( LinSysInfo(dim) );
-
   LHS & A = linSys.get_lhs();
   A.reset();
+
+
+  GradXC2F   & gradX = *SpatialOpDatabase<GradXC2F  >::self().retrieve_operator( dim );
+  DivXF2C    & divX = *SpatialOpDatabase<DivXF2C   >::self().retrieve_operator( dim );
+  SxCell     & sxc  = *SpatialOpDatabase<SxCell    >::self().retrieve_operator( dim );
+  divX.apply_to_op( gradX, sxc );
   A.add_op_contribution( sxc );
-  A.add_op_contribution( syc );
-  A.add_op_contribution( szc );
+
+  if( dim[1]>1 ){
+    GradYC2F   & gradY = *SpatialOpDatabase<GradYC2F  >::self().retrieve_operator( dim );
+    DivYF2C    & divY = *SpatialOpDatabase<DivYF2C   >::self().retrieve_operator( dim );
+    SyCell     & syc  = *SpatialOpDatabase<SyCell    >::self().retrieve_operator( dim );
+    divY.apply_to_op( gradY, syc );
+    A.add_op_contribution( syc );
+  }
+  if( dim[2]>1 ){
+    GradZC2F   & gradZ = *SpatialOpDatabase<GradZC2F  >::self().retrieve_operator( dim );
+    DivZF2C    & divZ = *SpatialOpDatabase<DivZF2C   >::self().retrieve_operator( dim );
+    SzCell     & szc  = *SpatialOpDatabase<SzCell    >::self().retrieve_operator( dim );
+    divZ.apply_to_op( gradZ, szc );
+    A.add_op_contribution( szc );
+  }
+
+  CellField d(dim,NULL,InternalStorage);
+  d = 1.0;
+  A.add_field_contribution( d );
+
   RHS & b = linSys.get_rhs();
   b.reset( 1.0 );
 
@@ -415,9 +420,9 @@ bool test_linsys( const std::vector<int> & dim )
 int main()
 {
   vector<int> dim(3,1);
-  dim[0]=04;
-  dim[1]=04;
-  dim[2]=04;
+  dim[0]= 14;
+  dim[1]= 11;
+  dim[2]= 12;
 
   build_ops( dim );
 

@@ -86,16 +86,16 @@ bool test_linear_interpolant_C2F(int iTestFunction, std::vector<int> dim, std::v
   // Check Equality
   // -----------------------------------------------------------------------------------------------------------------------------	
   std:: cout << " Test x: ";
-  check_equality_C2F(grid, f_xint.get_ptr(), Rfx, test_x, mean_rel_err[X_DIR], max_rel_err[X_DIR]);
+  check_equality_C2F(grid, f_xint.begin(), Rfx, test_x, mean_rel_err[X_DIR], max_rel_err[X_DIR]);
   	
   std:: cout << endl;
   			
   std:: cout << " Test y: ";
-  check_equality_C2F(grid, f_yint.get_ptr(), Rfy, test_y, mean_rel_err[Y_DIR], max_rel_err[Y_DIR]);
+  check_equality_C2F(grid, f_yint.begin(), Rfy, test_y, mean_rel_err[Y_DIR], max_rel_err[Y_DIR]);
   std:: cout << endl;
 
   std:: cout << " Test z: ";
-  check_equality_C2F(grid, f_zint.get_ptr(), Rfz, test_z, mean_rel_err[Z_DIR], max_rel_err[Z_DIR]);
+  check_equality_C2F(grid, f_zint.begin(), Rfz, test_z, mean_rel_err[Z_DIR], max_rel_err[Z_DIR]);
   std:: cout << endl;
 	
   ok = true;
@@ -163,15 +163,15 @@ bool test_linear_interpolant_F2C(int iTestFunction, std::vector<int> dim, std::v
   // Check Equality
   // -----------------------------------------------------------------------------------------------------------------------------	
   std:: cout << " Test x: ";
-  check_equality_F2C( grid, f.get_ptr(), Rfx, test_x, mean_rel_err[X_DIR], max_rel_err[X_DIR]);
+  check_equality_F2C( grid, f.begin(), Rfx, test_x, mean_rel_err[X_DIR], max_rel_err[X_DIR]);
   std:: cout << endl;
   			
   std:: cout << " Test y: ";
-  check_equality_F2C(grid, f.get_ptr(), Rfy, test_y, mean_rel_err[Y_DIR], max_rel_err[Y_DIR]);
+  check_equality_F2C(grid, f.begin(), Rfy, test_y, mean_rel_err[Y_DIR], max_rel_err[Y_DIR]);
   std:: cout << endl;
 
   std:: cout << " Test z: ";
-  check_equality_F2C(grid, f.get_ptr(), Rfz, test_z, mean_rel_err[Z_DIR], max_rel_err[Z_DIR]);
+  check_equality_F2C(grid, f.begin(), Rfz, test_z, mean_rel_err[Z_DIR], max_rel_err[Z_DIR]);
   std:: cout << endl;
 	
   ok = true;
@@ -236,15 +236,15 @@ bool test_gradient_C2F(int iTestFunction, std::vector<int> dim, std::vector<int>
   // Check Equality
   // -----------------------------------------------------------------------------------------------------------------------------
   std:: cout << " Test x: ";
-  check_equality_C2F(grid, dfdx_int.get_ptr(), Gx, test_x, mean_rel_err[X_DIR], max_rel_err[X_DIR]);
+  check_equality_C2F(grid, dfdx_int.begin(), Gx, test_x, mean_rel_err[X_DIR], max_rel_err[X_DIR]);
   std:: cout << endl;
   		
   std:: cout << " Test y: ";
-  check_equality_C2F(grid, dfdy_int.get_ptr(), Gy, test_y, mean_rel_err[Y_DIR], max_rel_err[Y_DIR]);	
+  check_equality_C2F(grid, dfdy_int.begin(), Gy, test_y, mean_rel_err[Y_DIR], max_rel_err[Y_DIR]);	
   std:: cout << endl;
 
   std:: cout << " Test z: ";
-  check_equality_C2F(grid, dfdz_int.get_ptr(), Gz, test_z, mean_rel_err[Z_DIR], max_rel_err[Z_DIR]);  	
+  check_equality_C2F(grid, dfdz_int.begin(), Gz, test_z, mean_rel_err[Z_DIR], max_rel_err[Z_DIR]);  	
   std:: cout << endl;
   	
   ok = true;
@@ -311,15 +311,15 @@ bool test_gradient_F2C(int iTestFunction, std::vector<int> dim, std::vector<int>
   // Check Equality
   // -----------------------------------------------------------------------------------------------------------------------------
   std:: cout << " Test x: ";
-  check_equality_F2C(grid, dfdx.get_ptr(), Gx, test_x, mean_rel_err[X_DIR], max_rel_err[X_DIR]);
+  check_equality_F2C(grid, dfdx.begin(), Gx, test_x, mean_rel_err[X_DIR], max_rel_err[X_DIR]);
   std:: cout << endl;
   		
   std:: cout << " Test y: ";
-  check_equality_F2C( grid, dfdy.get_ptr(), Gy, test_y, mean_rel_err[Y_DIR], max_rel_err[Y_DIR]);	
+  check_equality_F2C( grid, dfdy.begin(), Gy, test_y, mean_rel_err[Y_DIR], max_rel_err[Y_DIR]);	
   std:: cout << endl;
 
   std:: cout << " Test z: ";
-  check_equality_F2C( grid, dfdz.get_ptr(), Gz, test_z, mean_rel_err[Z_DIR], max_rel_err[Z_DIR]);  	
+  check_equality_F2C( grid, dfdz.begin(), Gz, test_z, mean_rel_err[Z_DIR], max_rel_err[Z_DIR]);  	
   std:: cout << endl;
 	
   ok = true;
@@ -401,15 +401,15 @@ bool test_divergence_F2C(int iTestFunction, std::vector<int> dim, std::vector<in
   // Check Equality
   // -----------------------------------------------------------------------------------------------------------------------------
   std:: cout << " Test x: ";
-  check_equality_F2C(grid, d2fdx2.get_ptr(), Dx, test_x, mean_rel_err[X_DIR], max_rel_err[X_DIR]);
+  check_equality_F2C(grid, d2fdx2.begin(), Dx, test_x, mean_rel_err[X_DIR], max_rel_err[X_DIR]);
   std:: cout << endl;
 		
   std:: cout << " Test y: ";
-  check_equality_F2C(grid, d2fdy2.get_ptr(), Dy, test_y, mean_rel_err[Y_DIR], max_rel_err[Y_DIR]);
+  check_equality_F2C(grid, d2fdy2.begin(), Dy, test_y, mean_rel_err[Y_DIR], max_rel_err[Y_DIR]);
   std:: cout << endl;
 
   std:: cout << " Test z: ";
-  check_equality_F2C(grid, d2fdz2.get_ptr(), Dz, test_z, mean_rel_err[Z_DIR], max_rel_err[Z_DIR]);
+  check_equality_F2C(grid, d2fdz2.begin(), Dz, test_z, mean_rel_err[Z_DIR], max_rel_err[Z_DIR]);
   std:: cout << endl;
  	
   ok = true;
@@ -493,15 +493,15 @@ bool test_divergence_C2F(int iTestFunction, std::vector<int> dim, std::vector<in
   // Check Equality
   // -----------------------------------------------------------------------------------------------------------------------------
   std:: cout << " Test x: ";
-  check_equality_C2F(grid, d2fdx2_xint.get_ptr(), Dx, test_x, mean_rel_err[X_DIR], max_rel_err[X_DIR]);
+  check_equality_C2F(grid, d2fdx2_xint.begin(), Dx, test_x, mean_rel_err[X_DIR], max_rel_err[X_DIR]);
   std:: cout << endl;
 		
   std:: cout << " Test y: ";
-  check_equality_C2F( grid, d2fdy2_yint.get_ptr(), Dy, test_y, mean_rel_err[Y_DIR], max_rel_err[Y_DIR]);
+  check_equality_C2F( grid, d2fdy2_yint.begin(), Dy, test_y, mean_rel_err[Y_DIR], max_rel_err[Y_DIR]);
   std:: cout << endl;
 
   std:: cout << " Test z: ";
-  check_equality_C2F( grid, d2fdz2_zint.get_ptr(), Dz, test_z, mean_rel_err[Z_DIR], max_rel_err[Z_DIR]);
+  check_equality_C2F( grid, d2fdz2_zint.begin(), Dz, test_z, mean_rel_err[Z_DIR], max_rel_err[Z_DIR]);
   std:: cout << endl;
  	
   ok = true;
@@ -588,15 +588,15 @@ bool test_scratch(int iTestFunction, std::vector<int> dim, std::vector<int> ngho
   // Check Equality - Laplacian
   // -----------------------------------------------------------------------------------------------------------------------------
   std:: cout << " Test x: ";
-  check_equality_F2C(grid, d2fdx2.get_ptr(), Dx, test_x, mean_rel_err[X_DIR], max_rel_err[X_DIR]);
+  check_equality_F2C(grid, d2fdx2.begin(), Dx, test_x, mean_rel_err[X_DIR], max_rel_err[X_DIR]);
   std:: cout << endl;
 		
   std:: cout << " Test y: ";
-  check_equality_F2C(grid, d2fdy2.get_ptr(), Dy, test_y, mean_rel_err[Y_DIR], max_rel_err[Y_DIR]);
+  check_equality_F2C(grid, d2fdy2.begin(), Dy, test_y, mean_rel_err[Y_DIR], max_rel_err[Y_DIR]);
   std:: cout << endl;
 
   std:: cout << " Test z: ";
-  check_equality_F2C(grid, d2fdz2.get_ptr(), Dz, test_z, mean_rel_err[Z_DIR], max_rel_err[Z_DIR]);
+  check_equality_F2C(grid, d2fdz2.begin(), Dz, test_z, mean_rel_err[Z_DIR], max_rel_err[Z_DIR]);
   std:: cout << endl;
 	  	  	
   // -----------------------------------------------------------------------------------------------------------------------------	
@@ -629,18 +629,18 @@ bool test_scratch(int iTestFunction, std::vector<int> dim, std::vector<int> ngho
   		
     for( int i=0; i<_Dx.get_ntotal(); ++i )
       {
-	if (_Dx.get_ptr()[i]<=1.e-16 && Dx.get_ptr()[i]<=1.e-16) comparison_x = true;
-	else if ( _Dx.get_ptr()[i]/(Dx.get_ptr()[i]+TOL) >= 1.e-10) comparison_x = false;
+	if (_Dx.begin()[i]<=1.e-16 && Dx.begin()[i]<=1.e-16) comparison_x = true;
+	else if ( _Dx.begin()[i]/(Dx.begin()[i]+TOL) >= 1.e-10) comparison_x = false;
       }
     for( int i=0; i<_Dy.get_ntotal(); ++i )
       {	
-	if (_Dy.get_ptr()[i]<=1.e-16 && Dy.get_ptr()[i]<=1.e-16) comparison_y = true;
-	else if ( _Dy.get_ptr()[i]/(Dy.get_ptr()[i]+TOL) >= 1.e-10) comparison_y = false;
+	if (_Dy.begin()[i]<=1.e-16 && Dy.begin()[i]<=1.e-16) comparison_y = true;
+	else if ( _Dy.begin()[i]/(Dy.begin()[i]+TOL) >= 1.e-10) comparison_y = false;
       }
     for( int i=0; i<_Dz.get_ntotal(); ++i )
       {
-	if (_Dz.get_ptr()[i]<=1.e-16 && Dz.get_ptr()[i]<=1.e-16) comparison_z = true;
-	else if ( _Dz.get_ptr()[i]/(Dz.get_ptr()[i]+TOL) >= 1.e-10) comparison_z = false;
+	if (_Dz.begin()[i]<=1.e-16 && Dz.begin()[i]<=1.e-16) comparison_z = true;
+	else if ( _Dz.begin()[i]/(Dz.begin()[i]+TOL) >= 1.e-10) comparison_z = false;
       }
 		
     if (comparison_x == true && comparison_y == true && comparison_z == true)
@@ -793,27 +793,27 @@ bool test_mixed_derivatives(int iTestFunction, std::vector<int> dim, std::vector
   // Check Equality - Scratch Operator
   // -----------------------------------------------------------------------------------------------------------------------------
   std:: cout << " Test x-y: ";
-  check_equality_F2C(grid, d2fdxdy.get_ptr(), D2DxDy, test_xy, mean_rel_err_xy, max_rel_err_xy);
+  check_equality_F2C(grid, d2fdxdy.begin(), D2DxDy, test_xy, mean_rel_err_xy, max_rel_err_xy);
   std:: cout << endl;
 
   std:: cout << " Test x-z: ";
-  check_equality_F2C(grid, d2fdxdz.get_ptr(), D2DxDz, test_xz, mean_rel_err_xz, max_rel_err_xz);
+  check_equality_F2C(grid, d2fdxdz.begin(), D2DxDz, test_xz, mean_rel_err_xz, max_rel_err_xz);
   std:: cout << endl;
 
   std:: cout << " Test y-x: ";
-  check_equality_F2C(grid, d2fdydx.get_ptr(), D2DyDx, test_yx, mean_rel_err_yx, max_rel_err_yx);
+  check_equality_F2C(grid, d2fdydx.begin(), D2DyDx, test_yx, mean_rel_err_yx, max_rel_err_yx);
   std:: cout << endl;
 
   std:: cout << " Test y-z: ";
-  check_equality_F2C(grid, d2fdydz.get_ptr(), D2DyDz, test_yz, mean_rel_err_yz, max_rel_err_yz);
+  check_equality_F2C(grid, d2fdydz.begin(), D2DyDz, test_yz, mean_rel_err_yz, max_rel_err_yz);
   std:: cout << endl;
   	
   std:: cout << " Test z-x: ";
-  check_equality_F2C(grid, d2fdzdx.get_ptr(), D2DzDx, test_zx, mean_rel_err_zx, max_rel_err_zx);
+  check_equality_F2C(grid, d2fdzdx.begin(), D2DzDx, test_zx, mean_rel_err_zx, max_rel_err_zx);
   std:: cout << endl;
 
   std:: cout << " Test z-y: ";
-  check_equality_F2C(grid, d2fdzdy.get_ptr(), D2DzDy, test_zy, mean_rel_err_zy, max_rel_err_zy);
+  check_equality_F2C(grid, d2fdzdy.begin(), D2DzDy, test_zy, mean_rel_err_zy, max_rel_err_zy);
   std:: cout << endl;
 	 
   mean_rel_err[X_DIR] = mean_rel_err_xy;
@@ -835,21 +835,21 @@ bool test_mixed_derivatives(int iTestFunction, std::vector<int> dim, std::vector
     for(unsigned int i=0; i<grid.index_bothsides.size(); i++)
       {    
 	int point = grid.index_bothsides[i];
-	if ( fabs( D2DxDy.get_ptr()[point] - D2DyDx.get_ptr()[point]) / (fabs(D2DxDy.get_ptr()[point])+TOL) >= 1.e-4 )
+	if ( fabs( D2DxDy.begin()[point] - D2DyDx.begin()[point]) / (fabs(D2DxDy.begin()[point])+TOL) >= 1.e-4 )
 	  comparison_xy = false; 		
       }	
 		
     for(unsigned int i=0; i<grid.index_bothsides.size(); i++)
       {    
 	int point = grid.index_bothsides[i];
-	if ( fabs( D2DxDz.get_ptr()[point] - D2DzDx.get_ptr()[point]) / (fabs(D2DxDz.get_ptr()[point])+TOL) >= 1.e-4 )
+	if ( fabs( D2DxDz.begin()[point] - D2DzDx.begin()[point]) / (fabs(D2DxDz.begin()[point])+TOL) >= 1.e-4 )
 	  comparison_xz = false; 		
       }	
 		
     for(unsigned int i=0; i<grid.index_bothsides.size(); i++)
       {    
 	int point = grid.index_bothsides[i];
-	if ( fabs( D2DyDz.get_ptr()[point] - D2DzDy.get_ptr()[point]) / (fabs(D2DyDz.get_ptr()[point])+TOL) >= 1.e-4 )
+	if ( fabs( D2DyDz.begin()[point] - D2DzDy.begin()[point]) / (fabs(D2DyDz.begin()[point])+TOL) >= 1.e-4 )
 	  comparison_yz = false; 		
       }	
 		
@@ -949,13 +949,13 @@ void test_scale_C2F(string kind, std::vector<int> dim, std::vector<int> nghostCe
 	Rz2_C2F.right_scale( field2 );
       }
   	
-    ok_linear_interpolant = compare_scaling(kind, Rx1_C2F.get_linalg_mat(), RxOld_C2F.get_linalg_mat(), field1.get_ptr());
-    ok_linear_interpolant = compare_scaling(kind, Ry1_C2F.get_linalg_mat(), RyOld_C2F.get_linalg_mat(), field1.get_ptr());
-    ok_linear_interpolant = compare_scaling(kind, Rz1_C2F.get_linalg_mat(), RzOld_C2F.get_linalg_mat(), field1.get_ptr());
+    ok_linear_interpolant = compare_scaling(kind, Rx1_C2F.get_linalg_mat(), RxOld_C2F.get_linalg_mat(), field1.begin());
+    ok_linear_interpolant = compare_scaling(kind, Ry1_C2F.get_linalg_mat(), RyOld_C2F.get_linalg_mat(), field1.begin());
+    ok_linear_interpolant = compare_scaling(kind, Rz1_C2F.get_linalg_mat(), RzOld_C2F.get_linalg_mat(), field1.begin());
 
-    ok_linear_interpolant = compare_scaling(kind, Rx2_C2F.get_linalg_mat(), RxOld_C2F.get_linalg_mat(), field2.get_ptr());
-    ok_linear_interpolant = compare_scaling(kind, Ry2_C2F.get_linalg_mat(), RyOld_C2F.get_linalg_mat(), field2.get_ptr());
-    ok_linear_interpolant = compare_scaling(kind, Rz2_C2F.get_linalg_mat(), RzOld_C2F.get_linalg_mat(), field2.get_ptr());
+    ok_linear_interpolant = compare_scaling(kind, Rx2_C2F.get_linalg_mat(), RxOld_C2F.get_linalg_mat(), field2.begin());
+    ok_linear_interpolant = compare_scaling(kind, Ry2_C2F.get_linalg_mat(), RyOld_C2F.get_linalg_mat(), field2.begin());
+    ok_linear_interpolant = compare_scaling(kind, Rz2_C2F.get_linalg_mat(), RzOld_C2F.get_linalg_mat(), field2.begin());
   }
 	
   // -----------------------------------------------------------------------------------------------------------------------------	
@@ -999,13 +999,13 @@ void test_scale_C2F(string kind, std::vector<int> dim, std::vector<int> nghostCe
 	zGrad2_C2F.right_scale( field2 );
       }
 
-    ok_gradient = compare_scaling(kind, xGrad1_C2F.get_linalg_mat(), xGradOld_C2F.get_linalg_mat(), field1.get_ptr());		
-    ok_gradient = compare_scaling(kind, yGrad1_C2F.get_linalg_mat(), yGradOld_C2F.get_linalg_mat(), field1.get_ptr());		
-    ok_gradient = compare_scaling(kind, zGrad1_C2F.get_linalg_mat(), zGradOld_C2F.get_linalg_mat(), field1.get_ptr());
+    ok_gradient = compare_scaling(kind, xGrad1_C2F.get_linalg_mat(), xGradOld_C2F.get_linalg_mat(), field1.begin());		
+    ok_gradient = compare_scaling(kind, yGrad1_C2F.get_linalg_mat(), yGradOld_C2F.get_linalg_mat(), field1.begin());		
+    ok_gradient = compare_scaling(kind, zGrad1_C2F.get_linalg_mat(), zGradOld_C2F.get_linalg_mat(), field1.begin());
 
-    ok_gradient = compare_scaling(kind, xGrad2_C2F.get_linalg_mat(), xGradOld_C2F.get_linalg_mat(), field2.get_ptr());	
-    ok_gradient = compare_scaling(kind, yGrad2_C2F.get_linalg_mat(), yGradOld_C2F.get_linalg_mat(), field2.get_ptr());
-    ok_gradient = compare_scaling(kind, yGrad2_C2F.get_linalg_mat(), yGradOld_C2F.get_linalg_mat(), field2.get_ptr());
+    ok_gradient = compare_scaling(kind, xGrad2_C2F.get_linalg_mat(), xGradOld_C2F.get_linalg_mat(), field2.begin());	
+    ok_gradient = compare_scaling(kind, yGrad2_C2F.get_linalg_mat(), yGradOld_C2F.get_linalg_mat(), field2.begin());
+    ok_gradient = compare_scaling(kind, yGrad2_C2F.get_linalg_mat(), yGradOld_C2F.get_linalg_mat(), field2.begin());
   }
   	
   // -----------------------------------------------------------------------------------------------------------------------------	
@@ -1049,13 +1049,13 @@ void test_scale_C2F(string kind, std::vector<int> dim, std::vector<int> nghostCe
 	zDiv2_C2F.right_scale( field2 );
       }
 
-    ok_divergence = compare_scaling(kind, xDiv1_C2F.get_linalg_mat(), xDivOld_C2F.get_linalg_mat(), field1.get_ptr());		
-    ok_divergence = compare_scaling(kind, yDiv1_C2F.get_linalg_mat(), yDivOld_C2F.get_linalg_mat(), field1.get_ptr());		
-    ok_divergence = compare_scaling(kind, zDiv1_C2F.get_linalg_mat(), zDivOld_C2F.get_linalg_mat(), field1.get_ptr());		
+    ok_divergence = compare_scaling(kind, xDiv1_C2F.get_linalg_mat(), xDivOld_C2F.get_linalg_mat(), field1.begin());		
+    ok_divergence = compare_scaling(kind, yDiv1_C2F.get_linalg_mat(), yDivOld_C2F.get_linalg_mat(), field1.begin());		
+    ok_divergence = compare_scaling(kind, zDiv1_C2F.get_linalg_mat(), zDivOld_C2F.get_linalg_mat(), field1.begin());		
 	    
-    ok_divergence = compare_scaling(kind, xDiv2_C2F.get_linalg_mat(), xDivOld_C2F.get_linalg_mat(), field2.get_ptr());		
-    ok_divergence = compare_scaling(kind, yDiv2_C2F.get_linalg_mat(), yDivOld_C2F.get_linalg_mat(), field2.get_ptr());		
-    ok_divergence = compare_scaling(kind, zDiv2_C2F.get_linalg_mat(), zDivOld_C2F.get_linalg_mat(), field2.get_ptr());		
+    ok_divergence = compare_scaling(kind, xDiv2_C2F.get_linalg_mat(), xDivOld_C2F.get_linalg_mat(), field2.begin());		
+    ok_divergence = compare_scaling(kind, yDiv2_C2F.get_linalg_mat(), yDivOld_C2F.get_linalg_mat(), field2.begin());		
+    ok_divergence = compare_scaling(kind, zDiv2_C2F.get_linalg_mat(), zDivOld_C2F.get_linalg_mat(), field2.begin());		
   }
 	
   // -----------------------------------------------------------------------------------------------------------------------------	
@@ -1146,13 +1146,13 @@ void test_scale_F2C(string kind, std::vector<int> dim, std::vector<int> nghostCe
 	Rz2_F2C.right_scale( field2Z );
       }
   	
-    ok_linear_interpolant = compare_scaling(kind, Rx1_F2C.get_linalg_mat(), RxOld_F2C.get_linalg_mat(), field1.get_ptr());
-    ok_linear_interpolant = compare_scaling(kind, Ry1_F2C.get_linalg_mat(), RyOld_F2C.get_linalg_mat(), field1.get_ptr());
-    ok_linear_interpolant = compare_scaling(kind, Rz1_F2C.get_linalg_mat(), RzOld_F2C.get_linalg_mat(), field1.get_ptr());
+    ok_linear_interpolant = compare_scaling(kind, Rx1_F2C.get_linalg_mat(), RxOld_F2C.get_linalg_mat(), field1.begin());
+    ok_linear_interpolant = compare_scaling(kind, Ry1_F2C.get_linalg_mat(), RyOld_F2C.get_linalg_mat(), field1.begin());
+    ok_linear_interpolant = compare_scaling(kind, Rz1_F2C.get_linalg_mat(), RzOld_F2C.get_linalg_mat(), field1.begin());
 
-    ok_linear_interpolant = compare_scaling(kind, Rx2_F2C.get_linalg_mat(), RxOld_F2C.get_linalg_mat(), field2.get_ptr());
-    ok_linear_interpolant = compare_scaling(kind, Ry2_F2C.get_linalg_mat(), RyOld_F2C.get_linalg_mat(), field2.get_ptr());
-    ok_linear_interpolant = compare_scaling(kind, Rz2_F2C.get_linalg_mat(), RzOld_F2C.get_linalg_mat(), field2.get_ptr());
+    ok_linear_interpolant = compare_scaling(kind, Rx2_F2C.get_linalg_mat(), RxOld_F2C.get_linalg_mat(), field2.begin());
+    ok_linear_interpolant = compare_scaling(kind, Ry2_F2C.get_linalg_mat(), RyOld_F2C.get_linalg_mat(), field2.begin());
+    ok_linear_interpolant = compare_scaling(kind, Rz2_F2C.get_linalg_mat(), RzOld_F2C.get_linalg_mat(), field2.begin());
   }
 	
   // -----------------------------------------------------------------------------------------------------------------------------	
@@ -1196,13 +1196,13 @@ void test_scale_F2C(string kind, std::vector<int> dim, std::vector<int> nghostCe
 	zGrad2_F2C.right_scale( field2Z );
       }
 
-    ok_gradient = compare_scaling(kind, xGrad1_F2C.get_linalg_mat(), xGradOld_F2C.get_linalg_mat(), field1.get_ptr());		
-    ok_gradient = compare_scaling(kind, yGrad1_F2C.get_linalg_mat(), yGradOld_F2C.get_linalg_mat(), field1.get_ptr());		
-    ok_gradient = compare_scaling(kind, zGrad1_F2C.get_linalg_mat(), zGradOld_F2C.get_linalg_mat(), field1.get_ptr());
+    ok_gradient = compare_scaling(kind, xGrad1_F2C.get_linalg_mat(), xGradOld_F2C.get_linalg_mat(), field1.begin());		
+    ok_gradient = compare_scaling(kind, yGrad1_F2C.get_linalg_mat(), yGradOld_F2C.get_linalg_mat(), field1.begin());		
+    ok_gradient = compare_scaling(kind, zGrad1_F2C.get_linalg_mat(), zGradOld_F2C.get_linalg_mat(), field1.begin());
 
-    ok_gradient = compare_scaling(kind, xGrad2_F2C.get_linalg_mat(), xGradOld_F2C.get_linalg_mat(), field2.get_ptr());	
-    ok_gradient = compare_scaling(kind, yGrad2_F2C.get_linalg_mat(), yGradOld_F2C.get_linalg_mat(), field2.get_ptr());
-    ok_gradient = compare_scaling(kind, yGrad2_F2C.get_linalg_mat(), yGradOld_F2C.get_linalg_mat(), field2.get_ptr());
+    ok_gradient = compare_scaling(kind, xGrad2_F2C.get_linalg_mat(), xGradOld_F2C.get_linalg_mat(), field2.begin());	
+    ok_gradient = compare_scaling(kind, yGrad2_F2C.get_linalg_mat(), yGradOld_F2C.get_linalg_mat(), field2.begin());
+    ok_gradient = compare_scaling(kind, yGrad2_F2C.get_linalg_mat(), yGradOld_F2C.get_linalg_mat(), field2.begin());
   }
   	
   // -----------------------------------------------------------------------------------------------------------------------------	
@@ -1246,13 +1246,13 @@ void test_scale_F2C(string kind, std::vector<int> dim, std::vector<int> nghostCe
 	zDiv2_F2C.right_scale( field2Z );
       }
 
-    ok_divergence = compare_scaling(kind, xDiv1_F2C.get_linalg_mat(), xDivOld_F2C.get_linalg_mat(), field1.get_ptr());		
-    ok_divergence = compare_scaling(kind, yDiv1_F2C.get_linalg_mat(), yDivOld_F2C.get_linalg_mat(), field1.get_ptr());		
-    ok_divergence = compare_scaling(kind, zDiv1_F2C.get_linalg_mat(), zDivOld_F2C.get_linalg_mat(), field1.get_ptr());		
+    ok_divergence = compare_scaling(kind, xDiv1_F2C.get_linalg_mat(), xDivOld_F2C.get_linalg_mat(), field1.begin());		
+    ok_divergence = compare_scaling(kind, yDiv1_F2C.get_linalg_mat(), yDivOld_F2C.get_linalg_mat(), field1.begin());		
+    ok_divergence = compare_scaling(kind, zDiv1_F2C.get_linalg_mat(), zDivOld_F2C.get_linalg_mat(), field1.begin());		
 	    
-    ok_divergence = compare_scaling(kind, xDiv2_F2C.get_linalg_mat(), xDivOld_F2C.get_linalg_mat(), field2.get_ptr());		
-    ok_divergence = compare_scaling(kind, yDiv2_F2C.get_linalg_mat(), yDivOld_F2C.get_linalg_mat(), field2.get_ptr());		
-    ok_divergence = compare_scaling(kind, zDiv2_F2C.get_linalg_mat(), zDivOld_F2C.get_linalg_mat(), field2.get_ptr());		
+    ok_divergence = compare_scaling(kind, xDiv2_F2C.get_linalg_mat(), xDivOld_F2C.get_linalg_mat(), field2.begin());		
+    ok_divergence = compare_scaling(kind, yDiv2_F2C.get_linalg_mat(), yDivOld_F2C.get_linalg_mat(), field2.begin());		
+    ok_divergence = compare_scaling(kind, zDiv2_F2C.get_linalg_mat(), zDivOld_F2C.get_linalg_mat(), field2.begin());		
   }
 	
   // -----------------------------------------------------------------------------------------------------------------------------	
@@ -1388,7 +1388,7 @@ void operator_test(int kind)
   std::vector<double> mean_rel_err(3, 0.);
   std::vector<double> max_rel_err(3, 0.);
   	
-  for (int nGridPoints=4, i=1; i<=3; nGridPoints*=2, i++)
+  for (int nGridPoints=11, i=1; i<=3; nGridPoints*=2, i++)
     {  	
       std::cout << "Grid: " << nGridPoints << " x " << nGridPoints << " x "<< nGridPoints << endl;
       dim[X_DIR] = nGridPoints; dim[Y_DIR] = nGridPoints; dim[Z_DIR] = nGridPoints;

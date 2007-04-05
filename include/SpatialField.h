@@ -114,9 +114,16 @@ namespace SpatialOps{
     inline double& operator[](const int i){return fieldValues_[i];}
     inline const double& operator[](const int i) const{return fieldValues_[i];}
 
-    /** obtain a pointer to the underlying field - this should be used carefully! */
-    inline       double* get_ptr()      { return fieldValues_; }
-    inline const double* get_ptr() const{return fieldValues_; }
+
+    typedef double*           iterator;
+    typedef double const*     const_iterator;
+
+    inline iterator       begin()      {return fieldValues_;}
+    inline const_iterator begin() const{return fieldValues_;}
+
+    inline iterator       end()      {return fieldValues_+npts_;}
+    inline const_iterator end() const{return fieldValues_+npts_;}
+
 
     void Print( std::ostream& ) const;
 
@@ -311,8 +318,6 @@ namespace SpatialOps{
   SpatialField<VecOps,FieldLocation, GhostTraits>::
   operator =(const RHS& rhs)
   {
-    double * const f = get_ptr();
-
     const std::vector<double> & r = rhs.get_field();
 
     // get the dimensions of the field
@@ -351,16 +356,20 @@ namespace SpatialOps{
     if( extent_[2] > 1 )  ixf += ( nxf * GhostTraits::template get<YDIR,SideMinus>() )
 			    * ( nyf * GhostTraits::template get<ZDIR,SideMinus>() );
 
+    typename SpatialField::iterator ifld = this->begin() + ixf;
+    std::vector<double>::const_iterator irfld = r.begin() + ixr;
+
+    const int yskip = ngxm+ngxp;
+    const int zskip = nxf * (ngym+ngyp);
+
     for( int k=0; k<nzr; ++k ){
       for( int j=0; j<nyr; ++j ){
 	for( int i=0; i<nxr; ++i ){
-	  f[ixf] = r[ixr];
-	  ++ixf;
-	  ++ixr;
+ 	  *ifld++ = *irfld++;
 	}
-	ixf += ngxm + ngxp;
+	ifld += yskip;
       }
-      ixf += nxf * (ngym+ngyp);
+      ifld += zskip;
     }
     return *this;
   }
@@ -370,10 +379,6 @@ namespace SpatialOps{
   SpatialField<VecOps,FieldLocation, GhostTraits>::
   operator +=(const RHS& rhs)
   {
-    double * const f = get_ptr();
-
-    const double * const r = rhs.get_ptr();
-
     // get the dimensions of the field
     const int nxf = extent_[0]
       + GhostTraits::template get<XDIR,SideMinus>()
@@ -384,12 +389,6 @@ namespace SpatialOps{
       + GhostTraits::template get<YDIR,SideMinus>()
       + GhostTraits::template get<YDIR,SidePlus>()
       : 1;
-
-//     const int nzf= ( extent_[2] > 1 ) ?
-//       extent_[2]
-//       + GhostTraits::template get<YDIR,SideMinus>()
-//       + GhostTraits::template get<YDIR,SidePlus>()
-//       : 1;
 
     const int nxr = rhs.get_extent()[0];
     const int nyr = rhs.get_extent()[1];
@@ -405,23 +404,25 @@ namespace SpatialOps{
     static const int ngym = GhostTraits::template get<YDIR,SideMinus>();
     static const int ngyp = GhostTraits::template get<YDIR,SidePlus>();
 
-    int ixr = 0;
-    int ixf = GhostTraits::template get<XDIR,SideMinus>();
+    const int yskip = ngxm+ngxp;
+    const int zskip = nxf * ( ngym+ngyp );
 
+    int ixf = GhostTraits::template get<XDIR,SideMinus>();
     if( extent_[1] > 1 )   ixf += GhostTraits::template get<YDIR,SideMinus>();
     if( extent_[2] > 1 )   ixf += ( nxf * GhostTraits::template get<YDIR,SideMinus>() )
 			     * ( nyf * GhostTraits::template get<ZDIR,SideMinus>() );
 
+    typename SpatialField::iterator ifld = this->begin() + ixf;
+    typename RHS::iterator irhs = rhs.begin();
+
     for( int k=0; k<nzr; ++k ){
       for( int j=0; j<nyr; ++j ){
 	for( int i=0; i<nxr; ++i ){
-	  f[ixf] += r[ixr];
-	  ++ixf;
-	  ++ixr;
+	  *ifld++  +=  *irhs++;
 	}
-	ixf += ngxm+ngxp;
+	ifld += yskip;
       }
-      ixf += nxf * ( ngym+ngyp );
+      ifld += zskip;
     }
     return *this;
   }

@@ -146,13 +146,20 @@ public:
 
   const std::vector<double> & get_field() const{return field_;}
 
-        double* get_ptr()      { return &field_[0]; }
-  const double* get_ptr() const{ return &field_[0]; }
-
   const std::vector<int> & get_extent() const{return extent_;}
 
 
   inline RHS& operator=(const double val){ reset(val); return *this; }
+
+
+  typedef double* iterator;
+  typedef double const* const_iterator;
+
+  iterator begin(){ return &field_[0]; }
+  iterator end()  { return &field_[npts_]; }
+
+  const_iterator begin() const{ return &field_[0]; }
+  const_iterator end()   const{ return &field_[npts_]; }
 
 private:
 
@@ -370,8 +377,6 @@ RHS::add_field_contribution( const FieldType& f,
    *    2. Sum field elements into RHS, skipping ghost values
    */
 
-  const double * const fptr = f.get_ptr();
-
   const int nx=extent_[0];
   const int ny=extent_[1];
   const int nz=extent_[2];
@@ -388,20 +393,24 @@ RHS::add_field_contribution( const FieldType& f,
   const int nyf= (extent_[1]>1) ? extent_[1] + ngyl + ngyr : 1;
   const int nzf= (extent_[2]>1) ? extent_[2] + ngzl + ngzr : 1;
 
-  int ixr = 0;
-  int ixf = ngxl;
+  const int yskip = ngxl+ngxr;
+  const int zskip = nxf * (ngyl+ngyr);
+
+  int ixf=ngxl;
   if( nyf>1 ) ixf += nxf;
   if( nzf>1 ) ixf += nxf*nyf;
+
+  typename FieldType::const_iterator ifld = f.begin() + ixf;
+  std::vector<double>::iterator irhs = field_.begin();
+
   for( int k=0; k<nz; ++k ){
     for( int j=0; j<ny; ++j ){
       for( int k=0; k<nx; ++k ){
-	field_[ixr] += scaleFac * fptr[ixf];
-	++ixf;
-	++ixr;
+ 	*irhs++ += scaleFac * (*ifld++);
       }
-      ixf += ngxl+ngxr;
+      ifld += yskip;
     }
-    ixf += nxf * (ngyl+ngyr);
+    ifld += zskip;
   }
 }
 //--------------------------------------------------------------------
@@ -473,7 +482,7 @@ void
 LHS::add_field_contribution( const FieldType & f,
 			     const double scaleFac )
 {
-  assert( compatibility_check(f) );
+  //  assert( compatibility_check(f) );
 
   using namespace SpatialOps;
   using std::vector;
@@ -492,9 +501,9 @@ LHS::add_field_contribution( const FieldType & f,
   const int nym = (fextent[1]>1) ? fextent[1] + ngyl + ngyr : 1;
   const int nzm = (fextent[2]>1) ? fextent[2] + ngzl + ngzr : 1;
 
-  const double * const fvals = f.get_ptr();
-
-  for( int irow=0; irow<f.get_ntotal(); ++irow ){
+  int ientry=0;
+  int irow=0;
+  for( typename FieldType::const_iterator ifld=f.begin(); ifld!=f.end(); ++ifld, ++irow ){
 
     // determine the ijk indices
     const int i = irow%nxm;
@@ -507,8 +516,9 @@ LHS::add_field_contribution( const FieldType & f,
     if( extent_[2]>1 && (k<ngzl || k>=nzm-ngzr) ) continue;
 
     // add this value to the diagonal
-    double val = scaleFac * fvals[irow];
-    A_.SumIntoMyValues( irow, 1, &val, &irow );
+    double val = scaleFac * (*ifld);
+    A_.SumIntoMyValues( ientry, 1, &val, &ientry );
+    ++ientry;
   }
 }
 //--------------------------------------------------------------------

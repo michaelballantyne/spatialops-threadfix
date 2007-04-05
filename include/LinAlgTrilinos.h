@@ -131,9 +131,9 @@ namespace SpatialOps{
   {
     const int nrows = mat_->NumGlobalRows();
     assert( nrows == f.get_ntotal() );
-    const double * const fptr = f.get_ptr();
-    for( int i=0; i<nrows; ++i ){
-      double val = fptr[i];
+    int i=0;
+    for( typename FieldT::const_iterator ifld = f.begin(); ifld!=f.end(); ++ifld, ++i ){
+      double val = *ifld;
       mat_->SumIntoMyValues( i, 1, &val, &i );
     }
     return *this;
@@ -145,9 +145,9 @@ namespace SpatialOps{
   {
     const int nrows = mat_->NumGlobalRows();
     assert( nrows == f.get_ntotal() );
-    const double * const fptr = f.get_ptr();
-    for( int i=0; i<nrows; ++i ){
-      double val = -fptr[i];
+    int i=0;
+    for( typename FieldT::const_iterator ifld = f.begin(); ifld!=f.end(); ++ifld, ++i ){
+      double val = -*ifld;
       mat_->SumIntoMyValues( i, 1, &val, &i );
     }
     return *this;

@@ -206,8 +206,8 @@ LinearSystem::LinearSystem( const vector<int> & extent )
   lhs_ = new LHS( extent_, *A_ );
 
   // Build the RHS and LHS vectors - we manage storage (not trilinos)
-  x_ = new Epetra_Vector( View, emap, solnFieldValues_.get_ptr() );
-  b_ = new Epetra_Vector( View, emap, rhs_.get_ptr() );
+  x_ = new Epetra_Vector( View, emap, solnFieldValues_.begin() );
+  b_ = new Epetra_Vector( View, emap, rhs_.begin() );
 
   // Build the Linear Problem
   linProb_ = new Epetra_LinearProblem( A_, x_, b_ );
@@ -346,7 +346,10 @@ LinearSystem::reset()
 void
 LinearSystem::solve()
 {
-  if( NULL == aztec_ )  aztec_ = new AztecOO( *linProb_ );
+  if( NULL == aztec_ ){
+    aztec_ = new AztecOO( *linProb_ );
+    aztec_->SetAztecOption(AZ_output,AZ_none);
+  }
   aztec_->Iterate( maxIterations_, solverTolerance_ );
 }
 //--------------------------------------------------------------------
