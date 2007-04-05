@@ -1,3 +1,5 @@
+#include <FVStaggeredSpatialOps.h>
+
 // *****************************************************************************************************************************	
 // Check Equality
 // *****************************************************************************************************************************	
@@ -17,65 +19,30 @@ void compare(const double fAnalytical, const double fNumerical, double &mean_rel
     max_rel_err = rel_err;
 }
 
-void indeces_for_SideFields(char C, grid_class &grid, std::vector<int> &index)
+template< typename Dir >
+void indices_for_SideFields(grid_class &grid, std::vector<int> &index)
 {
-  int nX, nY, nZ;
-  int nXMinus = 0;
-  int  nXPlus = 0;
-  int  nYMinus =0;
-  int  nYPlus =0;
-  int  nZMinus =0;
-  int nZPlus = 0;
-	
-  nX = grid.nx;
-  nY = grid.ny;
-  nZ = grid.nz;
-	
-  if (C=='X')
-    {
-      nXMinus = XSideFieldTraits::GhostTraits::get<XDIR,SideMinus>();
-      nYMinus = XSideFieldTraits::GhostTraits::get<YDIR,SidePlus>();
-      nZMinus = XSideFieldTraits::GhostTraits::get<ZDIR,SidePlus>();
-      nXPlus   = XSideFieldTraits::GhostTraits::get<XDIR,SidePlus>();
-      nYPlus   = XSideFieldTraits::GhostTraits::get<YDIR,SidePlus>();
-      nZPlus   = XSideFieldTraits::GhostTraits::get<ZDIR,SidePlus>();
-    }
+  typedef SpatialOps::FVStaggeredUniform::DefaultSideGhosting<Dir>  GhostTraits;
 
-  else if (C=='Y')
-    {
-      nXMinus = YSideFieldTraits::GhostTraits::get<XDIR,SideMinus>();
-      nYMinus = YSideFieldTraits::GhostTraits::get<YDIR,SidePlus>();
-      nZMinus = YSideFieldTraits::GhostTraits::get<ZDIR,SidePlus>();
-      nXPlus   = YSideFieldTraits::GhostTraits::get<XDIR,SidePlus>();
-      nYPlus   = YSideFieldTraits::GhostTraits::get<YDIR,SidePlus>();
-      nZPlus   = YSideFieldTraits::GhostTraits::get<ZDIR,SidePlus>();
-    }
-	
-  else if (C=='Z')
-    {
-      nXMinus = ZSideFieldTraits::GhostTraits::get<XDIR,SideMinus>();
-      nYMinus = ZSideFieldTraits::GhostTraits::get<YDIR,SidePlus>();
-      nZMinus = ZSideFieldTraits::GhostTraits::get<ZDIR,SidePlus>();
-      nXPlus   = ZSideFieldTraits::GhostTraits::get<XDIR,SidePlus>();
-      nYPlus   = ZSideFieldTraits::GhostTraits::get<YDIR,SidePlus>();
-      nZPlus   = ZSideFieldTraits::GhostTraits::get<ZDIR,SidePlus>();
-    }
-
+  const int nXMinus = GhostTraits::template get<SpatialOps::XDIR,SpatialOps::SideMinus>();
+  const int nYMinus = GhostTraits::template get<SpatialOps::YDIR,SpatialOps::SideMinus>();
+  const int nZMinus = GhostTraits::template get<SpatialOps::ZDIR,SpatialOps::SideMinus>();
+  const int nXPlus  = GhostTraits::template get<SpatialOps::XDIR,SpatialOps::SidePlus>();
+  const int nYPlus  = GhostTraits::template get<SpatialOps::YDIR,SpatialOps::SidePlus>();
+  const int nZPlus  = GhostTraits::template get<SpatialOps::ZDIR,SpatialOps::SidePlus>();
 		
-  nX += (nXMinus-1);
-  nY += (nYMinus-1);
-  nZ += (nZMinus-1);
+  const int nX = grid.nx + (nXMinus-1) + (nXPlus-1);
+  const int nY = grid.ny + (nYMinus-1) + (nYPlus-1);
+  const int nZ = grid.nz + (nZMinus-1) + (nZPlus-1);
 		
   // skip BOTH sides
-  for( int k=1; k<=nZ; ++k )
-    for( int j=1; j<=nY; ++j )
-      for( int i=1; i<=nX; ++i )
-	{
-	  if (i>nXMinus && i<=(nX-nXPlus))
-	    if (j>nYMinus && j<=(nY-nYPlus))
-	      if (k>nZMinus && k<=(nZ-nZPlus))
-		index.push_back( (i-1)+(j-1)*nX+(k-1)*nX*nY ); 
-	}  
+  const int klo=nZMinus;  const int khi = nZ-nZPlus;
+  const int jlo=nYMinus;  const int jhi = nY-nYPlus;
+  const int ilo=nXMinus;  const int ihi = nX-nXPlus;
+  for( int k=klo; k<khi; ++k )
+    for( int j=jlo; j<jhi; ++j )
+      for( int i=ilo; i<ihi; ++i )
+	index.push_back( i + j*nX+k*nX*nY );
 }
 
 
@@ -90,7 +57,7 @@ void check_equality_C2F(grid_class &grid, double *analytical_int, XSideField &nu
   // skip BOTH sides
   std::vector<int> index;
 
-  indeces_for_SideFields('X', grid, index);
+  indices_for_SideFields<SpatialOps::XDIR>(grid, index);
 			
   for(unsigned int i=0; i<grid.index_bothsides.size(); i++)
     {    
@@ -124,7 +91,7 @@ void check_equality_C2F(grid_class &grid, double *analytical_int, YSideField &nu
   // skip BOTH sides
   std::vector<int> index;
 
-  indeces_for_SideFields('Y', grid, index);
+  indices_for_SideFields<SpatialOps::YDIR>(grid, index);
 			
   for(unsigned int i=0; i<grid.index_bothsides.size(); i++)
     {    
@@ -158,7 +125,7 @@ void check_equality_C2F(grid_class &grid, double *analytical_int, ZSideField &nu
   // skip BOTH sides
   std::vector<int> index;
 
-  indeces_for_SideFields('Z', grid, index);
+  indices_for_SideFields<SpatialOps::ZDIR>(grid, index);
 			
   for(unsigned int i=0; i<grid.index_bothsides.size(); i++)
     {    

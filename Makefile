@@ -23,7 +23,7 @@ AZTECOO_LIBS = -laztecoo -lteuchos
 LIBS = $(AZTECOO_LIBS)  $(EPETRA_LIBS) $(EXTRA_LIBS)
 
 CXXFLAGS = -O3 -Wall -fexpensive-optimizations -funroll-loops
-#CXXFLAGS = -g -Wall #-DHAVE_MPI
+#CXXFLAGS = -g -Wall
 COMPILE_CXX = g++ -c $(CXXFLAGS) $(INCDIRS)
 #COMPILE_CXX = mpiCC -c $(CXXFLAGS) $(INCDIRS)
 

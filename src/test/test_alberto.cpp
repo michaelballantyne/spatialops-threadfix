@@ -10,6 +10,7 @@
 
 #include <EpetraExt_RowMatrixOut.h>
 #include <EpetraExt_VectorOut.h>
+#include <LinearSystem.h>
 
 #define TOL 1.e-6
 #define MAX_MAXRELERR 1.e-3
@@ -51,9 +52,9 @@ bool test_linear_interpolant_C2F(int iTestFunction, std::vector<int> dim, std::v
   InterpYC2F::Assembler Ry_C2F_Assembler(grid.dim);				// Assembler Linear Interpolant X - Cells To Faces
   InterpZC2F::Assembler Rz_C2F_Assembler(grid.dim);				// Assembler Linear Interpolant X - Cells To Faces
 		
-  InterpXC2F Rx_C2F = InterpXC2F( Rx_C2F_Assembler );
-  InterpYC2F Ry_C2F = InterpYC2F( Ry_C2F_Assembler );
-  InterpZC2F Rz_C2F = InterpZC2F( Rz_C2F_Assembler );
+  InterpXC2F Rx_C2F( Rx_C2F_Assembler );
+  InterpYC2F Ry_C2F( Ry_C2F_Assembler );
+  InterpZC2F Rz_C2F( Rz_C2F_Assembler );
 			
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Analytical function construction
@@ -127,10 +128,10 @@ bool test_linear_interpolant_F2C(int iTestFunction, std::vector<int> dim, std::v
   InterpYF2C::Assembler Ry_F2C_Assembler(grid.dim);				// Assembler Linear Interpolant X - Cells To Faces
   InterpZF2C::Assembler Rz_F2C_Assembler(grid.dim);				// Assembler Linear Interpolant X - Cells To Faces
 	
-  InterpXF2C Rx_F2C = InterpXF2C( Rx_F2C_Assembler );
-  InterpYF2C Ry_F2C = InterpYF2C( Ry_F2C_Assembler );
-  InterpZF2C Rz_F2C = InterpZF2C( Rz_F2C_Assembler );
-			
+  InterpXF2C Rx_F2C( Rx_F2C_Assembler );
+  InterpYF2C Ry_F2C( Ry_F2C_Assembler );
+  InterpZF2C Rz_F2C( Rz_F2C_Assembler );
+  
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Analytical function construction
   // -----------------------------------------------------------------------------------------------------------------------------		
@@ -141,22 +142,23 @@ bool test_linear_interpolant_F2C(int iTestFunction, std::vector<int> dim, std::v
   // -----------------------------------------------------------------------------------------------------------------------------	
   // From Analytical function to Spatial Fields
   // -----------------------------------------------------------------------------------------------------------------------------	
-  CellField               	   f( grid.dim, &funct.f[0],		ExternalStorage );
+  CellField            f( grid.dim, &funct.f[0],	ExternalStorage );
   XSideField      f_xint( grid.dim, &funct.f_xint[0],  	ExternalStorage );
   YSideField      f_yint( grid.dim, &funct.f_yint[0],  	ExternalStorage );
   ZSideField      f_zint( grid.dim, &funct.f_zint[0], 	ExternalStorage );
-	
+  
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Spatial Fields: Numerical Interpolations
   // -----------------------------------------------------------------------------------------------------------------------------	
   CellField          Rfx( grid.dim, NULL, InternalStorage  );
   CellField          Rfy( grid.dim, NULL, InternalStorage  );
   CellField          Rfz( grid.dim, NULL, InternalStorage  );
-   	
-  Rx_F2C.apply_to_field( f_xint, Rfx  );
-  Ry_F2C.apply_to_field( f_yint, Rfy  );
-  Rz_F2C.apply_to_field( f_zint, Rfz  );
-  	
+  
+  Rx_F2C.apply_to_field( f_xint, Rfx );
+  Ry_F2C.apply_to_field( f_yint, Rfy );
+  Rz_F2C.apply_to_field( f_zint, Rfz );
+
+
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Check Equality
   // -----------------------------------------------------------------------------------------------------------------------------	
@@ -1278,31 +1280,31 @@ int main()
 {
   // 1. Operator - TESTS
   // -----------------------------------------------------------------------------------
-  int iLinearInterpolant_C2F_Test	= 0;
+  int iLinearInterpolant_C2F_Test	= 1;
   int iLinearInterpolant_F2C_Test	= 0;
 	
-  int iGradient_C2F_Test		= 0;
+  int iGradient_C2F_Test		= 1;
   int iGradient_F2C_Test		= 0;  	
 	
-  int iDivergence_C2F_Test		= 0;
+  int iDivergence_C2F_Test		= 1;
   int iDivergence_F2C_Test		= 0; 	
 	
-  int iScratch_Laplacian_Test		= 0;
+  int iScratch_Laplacian_Test		= 1;
   int iMixedDerivatives_Test		= 0;
  	
   // 2. Operators - CONVERGENCE TESTS 
   // -----------------------------------------------------------------------------------	
   int iLinearInterpolant_Convergence_C2F_Test 	= 1;
-  int iLinearInterpolant_Convergence_F2C_Test 	= 1; 	
+  int iLinearInterpolant_Convergence_F2C_Test 	= 0; 	
 	
   int iGradient_Convergence_C2F_Test		= 1;
-  int iGradient_Convergence_F2C_Test		= 1; 	
+  int iGradient_Convergence_F2C_Test		= 0; 	
 	
   int iDivergence_Convergence_C2F_Test		= 1;
-  int iDivergence_Convergence_F2C_Test		= 1; 	
+  int iDivergence_Convergence_F2C_Test		= 0; 	
 	
   int iScratch_Laplacian_Convergence_Test	= 1;
-  int iMixedDerivatives_Convergence_Test	= 1;
+  int iMixedDerivatives_Convergence_Test	= 0;
  	 	
   // 3. Spatial Fields - LEFT AND RIGHT SCALING
   // ----------------------------------------------------------------------------------- 	
@@ -1386,7 +1388,7 @@ void operator_test(int kind)
   std::vector<double> mean_rel_err(3, 0.);
   std::vector<double> max_rel_err(3, 0.);
   	
-  for (int nGridPoints=11, i=1; i<=3; nGridPoints*=2, i++)
+  for (int nGridPoints=4, i=1; i<=3; nGridPoints*=2, i++)
     {  	
       std::cout << "Grid: " << nGridPoints << " x " << nGridPoints << " x "<< nGridPoints << endl;
       dim[X_DIR] = nGridPoints; dim[Y_DIR] = nGridPoints; dim[Z_DIR] = nGridPoints;
@@ -1510,7 +1512,7 @@ void convergence_test(int kind)
       oFile << "Max Rel Z" << "\t\t";
       oFile << endl << endl;
 			
-      for (int nGridPoints=4, i=1; i<3; nGridPoints*=2, i++)
+      for (int nGridPoints=4, i=1; i<5; nGridPoints*=2, i++)
 	{  			 
 	  std::cout << "Grid: " << nGridPoints << " x " << nGridPoints << " x "<< nGridPoints << endl;
   		  	

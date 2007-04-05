@@ -145,6 +145,7 @@ bool test( const std::vector<int> & dim )
   EpetraExt::RowMatrixToMatrixMarketFile( "Dx.mm", dxfc.get_linalg_mat(), "", "" );
   EpetraExt::RowMatrixToMatrixMarketFile( "Gx.mm", gxcf.get_linalg_mat(), "", "" );
   EpetraExt::RowMatrixToMatrixMarketFile( "Rx.mm", rxcf.get_linalg_mat(), "", "" );
+  EpetraExt::RowMatrixToMatrixMarketFile( "Rxfc.mm", rxfc.get_linalg_mat(), "", "" );
   EpetraExt::RowMatrixToMatrixMarketFile( "Sx.mm", sxc .get_linalg_mat(), "", "" );
 
 
@@ -234,6 +235,7 @@ bool test( const std::vector<int> & dim )
     EpetraExt::RowMatrixToMatrixMarketFile( "Dy.mm", dyfc.get_linalg_mat(), "", "" );
     EpetraExt::RowMatrixToMatrixMarketFile( "Gy.mm", gycf.get_linalg_mat(), "", "" );
     EpetraExt::RowMatrixToMatrixMarketFile( "Ry.mm", rycf.get_linalg_mat(), "", "" );
+    EpetraExt::RowMatrixToMatrixMarketFile( "Ryfc.mm", ryfc.get_linalg_mat(), "", "" );
     EpetraExt::RowMatrixToMatrixMarketFile( "Sy.mm", syc.get_linalg_mat(), "", "" );
 
 
@@ -413,9 +415,9 @@ bool test_linsys( const std::vector<int> & dim )
 int main()
 {
   vector<int> dim(3,1);
-  dim[0]=10;
-  dim[1]=13;
-  dim[2]=31;
+  dim[0]=04;
+  dim[1]=04;
+  dim[2]=04;
 
   build_ops( dim );
 
