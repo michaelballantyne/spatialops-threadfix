@@ -32,19 +32,13 @@ using namespace FVStaggeredUniform;
 // *****************************************************************************************************************************	
 // Test Linear Interpolant Operator C2F
 // *****************************************************************************************************************************	
-bool test_linear_interpolant_C2F(int iTestFunction, std::vector<int> dim, std::vector<int> nghostCell, std::vector<double> &mean_rel_err, std::vector<double> &max_rel_err)
+bool test_linear_interpolant_C2F(const grid_class& grid, analytical_class& funct, std::vector<double> &mean_rel_err, std::vector<double> &max_rel_err)
 {
   using namespace FVStaggeredUniform;
   std::cout.setf(ios::scientific);
 
   bool test_x, test_y, test_z, ok;
 	
-  // -----------------------------------------------------------------------------------------------------------------------------	
-  // Geometry Construction
-  // -----------------------------------------------------------------------------------------------------------------------------	
-  grid_class grid;
-  grid.setup_geom(dim, nghostCell);
-
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Build the operators
   // -----------------------------------------------------------------------------------------------------------------------------	
@@ -57,16 +51,9 @@ bool test_linear_interpolant_C2F(int iTestFunction, std::vector<int> dim, std::v
   InterpZC2F Rz_C2F( Rz_C2F_Assembler );
 			
   // -----------------------------------------------------------------------------------------------------------------------------	
-  // Analytical function construction
-  // -----------------------------------------------------------------------------------------------------------------------------		
-  analytical_class funct;
-  funct.setup(&grid);
-  funct.assign_function(iTestFunction);
-
-  // -----------------------------------------------------------------------------------------------------------------------------	
   // From Analytical function to Spatial Fields
   // -----------------------------------------------------------------------------------------------------------------------------	
-  CellField           f( grid.dim, &funct.f[0], 	    ExternalStorage );
+  CellField           f( grid.dim, &funct.f[0],       ExternalStorage );
   CellField      f_xint( grid.dim, &funct.f_xint[0],  ExternalStorage );
   CellField      f_yint( grid.dim, &funct.f_yint[0],  ExternalStorage );
   CellField      f_zint( grid.dim, &funct.f_zint[0],  ExternalStorage );
@@ -108,19 +95,13 @@ bool test_linear_interpolant_C2F(int iTestFunction, std::vector<int> dim, std::v
 // *****************************************************************************************************************************	
 // Test Linear Interpolant Operator F2C
 // *****************************************************************************************************************************	
-bool test_linear_interpolant_F2C(int iTestFunction, std::vector<int> dim, std::vector<int> nghostCell, std::vector<double> &mean_rel_err, std::vector<double> &max_rel_err)
+bool test_linear_interpolant_F2C(const grid_class& grid, analytical_class& funct, std::vector<double> &mean_rel_err, std::vector<double> &max_rel_err)
 {
   using namespace FVStaggeredUniform;
   std::cout.setf(ios::scientific);
 
   bool test_x, test_y, test_z, ok;
 	
-  // -----------------------------------------------------------------------------------------------------------------------------	
-  // Geometry Construction
-  // -----------------------------------------------------------------------------------------------------------------------------	
-  grid_class grid;
-  grid.setup_geom(dim, nghostCell);
-
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Build the operators
   // -----------------------------------------------------------------------------------------------------------------------------	
@@ -131,13 +112,6 @@ bool test_linear_interpolant_F2C(int iTestFunction, std::vector<int> dim, std::v
   InterpXF2C Rx_F2C( Rx_F2C_Assembler );
   InterpYF2C Ry_F2C( Ry_F2C_Assembler );
   InterpZF2C Rz_F2C( Rz_F2C_Assembler );
-  
-  // -----------------------------------------------------------------------------------------------------------------------------	
-  // Analytical function construction
-  // -----------------------------------------------------------------------------------------------------------------------------		
-  analytical_class funct;
-  funct.setup(&grid);
-  funct.assign_function(iTestFunction);
 
   // -----------------------------------------------------------------------------------------------------------------------------	
   // From Analytical function to Spatial Fields
@@ -185,19 +159,13 @@ bool test_linear_interpolant_F2C(int iTestFunction, std::vector<int> dim, std::v
 // *****************************************************************************************************************************	
 // Test Gradient C2F
 // *****************************************************************************************************************************	
-bool test_gradient_C2F(int iTestFunction, std::vector<int> dim, std::vector<int> nghostCell, std::vector<double> &mean_rel_err, std::vector<double> &max_rel_err)
+bool test_gradient_C2F(const grid_class& grid, analytical_class& funct, std::vector<double> &mean_rel_err, std::vector<double> &max_rel_err)
 {
   using namespace FVStaggeredUniform;
   std::cout.setf(ios::scientific);
 
   bool test_x, test_y, test_z, ok;
 		
-  // -----------------------------------------------------------------------------------------------------------------------------	
-  // Geometry Construction
-  // -----------------------------------------------------------------------------------------------------------------------------	
-  grid_class grid;
-  grid.setup_geom(dim, nghostCell);
-
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Build the operators
   // -----------------------------------------------------------------------------------------------------------------------------	
@@ -212,10 +180,6 @@ bool test_gradient_C2F(int iTestFunction, std::vector<int> dim, std::vector<int>
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Spatial Fields: Function and analytical gradient
   // -----------------------------------------------------------------------------------------------------------------------------			
-  analytical_class funct;
-  funct.setup(&grid);
-  funct.assign_function(iTestFunction);
-  	
   CellField             f( grid.dim, &funct.f[0], 	ExternalStorage );
   CellField      dfdx_int( grid.dim, &funct.dfdx_int[0],  ExternalStorage );
   CellField      dfdy_int( grid.dim, &funct.dfdy_int[0],  ExternalStorage );
@@ -257,19 +221,13 @@ bool test_gradient_C2F(int iTestFunction, std::vector<int> dim, std::vector<int>
 // *****************************************************************************************************************************	
 // Test Gradient F2C
 // *****************************************************************************************************************************	
-bool test_gradient_F2C(int iTestFunction, std::vector<int> dim, std::vector<int> nghostCell, std::vector<double> &mean_rel_err, std::vector<double> &max_rel_err)
+bool test_gradient_F2C(const grid_class& grid, analytical_class& funct, std::vector<double> &mean_rel_err, std::vector<double> &max_rel_err)
 {
   using namespace FVStaggeredUniform;
   std::cout.setf(ios::scientific);
 
   bool test_x, test_y, test_z, ok;
 		
-  // -----------------------------------------------------------------------------------------------------------------------------	
-  // Geometry Construction
-  // -----------------------------------------------------------------------------------------------------------------------------	
-  grid_class grid;
-  grid.setup_geom(dim, nghostCell);
-
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Build the operators
   // -----------------------------------------------------------------------------------------------------------------------------	
@@ -284,10 +242,6 @@ bool test_gradient_F2C(int iTestFunction, std::vector<int> dim, std::vector<int>
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Spatial Fields: Function and analytical gradient
   // -----------------------------------------------------------------------------------------------------------------------------			
-  analytical_class funct;
-  funct.setup(&grid);
-  funct.assign_function(iTestFunction);
-
   XSideField      f_xint( grid.dim, &funct.f_xint[0],  	ExternalStorage );
   YSideField      f_yint( grid.dim, &funct.f_yint[0],  	ExternalStorage );
   ZSideField      f_zint( grid.dim, &funct.f_zint[0], 	ExternalStorage );
@@ -332,19 +286,13 @@ bool test_gradient_F2C(int iTestFunction, std::vector<int> dim, std::vector<int>
 // *****************************************************************************************************************************	
 // Test Divergence C2F
 // *****************************************************************************************************************************	
-bool test_divergence_F2C(int iTestFunction, std::vector<int> dim, std::vector<int> nghostCell, std::vector<double> &mean_rel_err, std::vector<double> &max_rel_err)
+bool test_divergence_F2C(const grid_class& grid, analytical_class& funct, std::vector<double> &mean_rel_err, std::vector<double> &max_rel_err)
 {
   using namespace FVStaggeredUniform;
   std::cout.setf(ios::scientific);
 
   bool test_x, test_y, test_z, ok;
 	
-  // -----------------------------------------------------------------------------------------------------------------------------	
-  // Geometry Construction
-  // -----------------------------------------------------------------------------------------------------------------------------	
-  grid_class grid;
-  grid.setup_geom(dim, nghostCell);
-
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Build the operators
   // -----------------------------------------------------------------------------------------------------------------------------	
@@ -367,11 +315,7 @@ bool test_divergence_F2C(int iTestFunction, std::vector<int> dim, std::vector<in
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Spatial Fields: Function and analytical gradient
   // -----------------------------------------------------------------------------------------------------------------------------		
-  analytical_class funct;
-  funct.setup(&grid);
-  funct.assign_function(iTestFunction);
-  		
-  std::cout << "Test Function " << iTestFunction << ": " << funct.test.description() << endl;
+  std::cout << "Test Function: " << funct.test.description() << endl;
   	
   CellField           f( grid.dim, &funct.f[0],	    ExternalStorage );
   CellField      d2fdx2( grid.dim, &funct.d2fdx2[0],  ExternalStorage );
@@ -422,18 +366,12 @@ bool test_divergence_F2C(int iTestFunction, std::vector<int> dim, std::vector<in
 // *****************************************************************************************************************************	
 // Test Divergence C2F
 // *****************************************************************************************************************************	
-bool test_divergence_C2F(int iTestFunction, std::vector<int> dim, std::vector<int> nghostCell, std::vector<double> &mean_rel_err, std::vector<double> &max_rel_err)
+bool test_divergence_C2F(const grid_class& grid, analytical_class& funct, std::vector<double> &mean_rel_err, std::vector<double> &max_rel_err)
 {
   using namespace FVStaggeredUniform;
   std::cout.setf(ios::scientific);
 
   bool test_x, test_y, test_z, ok;
-	
-  // -----------------------------------------------------------------------------------------------------------------------------	
-  // Geometry Construction
-  // -----------------------------------------------------------------------------------------------------------------------------	
-  grid_class grid;
-  grid.setup_geom(dim, nghostCell);
 
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Build the operators
@@ -457,11 +395,7 @@ bool test_divergence_C2F(int iTestFunction, std::vector<int> dim, std::vector<in
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Spatial Fields: Function and analytical gradient
   // -----------------------------------------------------------------------------------------------------------------------------		
-  analytical_class funct;
-  funct.setup(&grid);
-  funct.assign_function(iTestFunction);
-  		
-  std::cout << "Test Function " << iTestFunction << ": " << funct.test.description() << endl;
+  std::cout << "Test Function: " << funct.test.description() << endl;
   	
   XSideField      f_xint( grid.dim, &funct.f_xint[0],	      ExternalStorage );
   YSideField      f_yint( grid.dim, &funct.f_yint[0],	      ExternalStorage );
@@ -515,18 +449,12 @@ bool test_divergence_C2F(int iTestFunction, std::vector<int> dim, std::vector<in
 // *****************************************************************************************************************************	
 // Test Scratch Operator - Laplacian
 // *****************************************************************************************************************************	
-bool test_scratch(int iTestFunction, std::vector<int> dim, std::vector<int> nghostCell, std::vector<double> &mean_rel_err, std::vector<double> &max_rel_err)
+bool test_scratch(const grid_class& grid, analytical_class& funct, std::vector<double> &mean_rel_err, std::vector<double> &max_rel_err)
 {
   using namespace FVStaggeredUniform;
   std::cout.setf(ios::scientific);
 
   bool test_x, test_y, test_z, ok;
- 	
-  // -----------------------------------------------------------------------------------------------------------------------------	
-  // Geometry Construction
-  // -----------------------------------------------------------------------------------------------------------------------------	
-  grid_class grid;
-  grid.setup_geom(dim, nghostCell);
 
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Build the operators
@@ -562,11 +490,7 @@ bool test_scratch(int iTestFunction, std::vector<int> dim, std::vector<int> ngho
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Spatial Fields: Function and analytical laplacian
   // -----------------------------------------------------------------------------------------------------------------------------		
-  analytical_class funct;
-  funct.setup(&grid);
-  funct.assign_function(iTestFunction);
-  		
-  std::cout << "Test Function " << iTestFunction << ": " << funct.test.description() << endl;
+  std::cout << "Test Function: " << funct.test.description() << endl;
 
   CellField           f( grid.dim, &funct.f[0],		ExternalStorage );
   CellField      d2fdx2( grid.dim, &funct.d2fdx2[0],  	ExternalStorage );
@@ -659,7 +583,7 @@ bool test_scratch(int iTestFunction, std::vector<int> dim, std::vector<int> ngho
 // *****************************************************************************************************************************	
 // Mixed Derivatives
 // *****************************************************************************************************************************	
-bool test_mixed_derivatives(int iTestFunction, std::vector<int> dim, std::vector<int> nghostCell, std::vector<double> &mean_rel_err, std::vector<double> &max_rel_err)
+bool test_mixed_derivatives(const grid_class& grid, analytical_class& funct, std::vector<double> &mean_rel_err, std::vector<double> &max_rel_err)
 {
   using namespace FVStaggeredUniform;
   std::cout.setf(ios::scientific);
@@ -676,12 +600,6 @@ bool test_mixed_derivatives(int iTestFunction, std::vector<int> dim, std::vector
   double max_rel_err_xy, max_rel_err_xz;
   double max_rel_err_yx, max_rel_err_yz;
   double max_rel_err_zx, max_rel_err_zy;
-		
-  // -----------------------------------------------------------------------------------------------------------------------------	
-  // Geometry Construction
-  // -----------------------------------------------------------------------------------------------------------------------------	
-  grid_class grid;
-  grid.setup_geom(dim, nghostCell);
 	
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Build the operators
@@ -721,11 +639,7 @@ bool test_mixed_derivatives(int iTestFunction, std::vector<int> dim, std::vector
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Spatial Fields: Function and analytical gradient
   // -----------------------------------------------------------------------------------------------------------------------------		
-  analytical_class funct;
-  funct.setup(&grid);
-  funct.assign_function(iTestFunction);
-  		
-  std::cout << "Test Function " << iTestFunction << ": " << funct.test.description() << endl;
+  std::cout << "Test Function: " << funct.test.description() << endl;
   		
   CellField            f( grid.dim, &funct.f[0],		ExternalStorage );
   CellField      d2fdxdy( grid.dim, &funct.d2fdxdy[0],  	ExternalStorage );
@@ -884,8 +798,7 @@ void test_scale_C2F(string kind, std::vector<int> dim, std::vector<int> nghostCe
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Geometry Construction
   // -----------------------------------------------------------------------------------------------------------------------------	
-  grid_class grid;
-  grid.setup_geom(dim, nghostCell);
+  grid_class grid(dim, nghostCell);
 
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Spatial Fields
@@ -1081,8 +994,7 @@ void test_scale_F2C(string kind, std::vector<int> dim, std::vector<int> nghostCe
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Geometry Construction
   // -----------------------------------------------------------------------------------------------------------------------------	
-  grid_class grid;
-  grid.setup_geom(dim, nghostCell);
+  grid_class grid(dim, nghostCell);
 
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Spatial Fields
@@ -1395,20 +1307,22 @@ void operator_test(int kind)
   	
       for (int iTestFunction=1; iTestFunction <=8; iTestFunction++)
 	{
-	  analytical_class funct;
+	  grid_class grid(dim, nghostCell);
+	  analytical_class funct(grid);
 	  funct.assign_function_name(iTestFunction);
+	  funct.assign_function(iTestFunction);
 	
 	  std::cout << "Test Function " << iTestFunction << ": " << funct.test.description() << endl;
 	  std::cout << "---------------------------------------------------------------------------------" << endl;	
 			
-	  if (kind == 1) ok = test_linear_interpolant_C2F(iTestFunction, dim, nghostCell,  mean_rel_err, max_rel_err);
-	  if (kind == 2) ok = test_gradient_C2F(iTestFunction, dim, nghostCell, mean_rel_err, max_rel_err);
-	  if (kind == 3) ok = test_divergence_C2F(iTestFunction, dim, nghostCell, mean_rel_err, max_rel_err);
-	  if (kind == 4) ok = test_scratch(iTestFunction, dim, nghostCell, mean_rel_err, max_rel_err);
-	  if (kind == 5) ok = test_mixed_derivatives(iTestFunction, dim, nghostCell, mean_rel_err, max_rel_err);
-	  if (kind == 6) ok = test_linear_interpolant_F2C(iTestFunction, dim, nghostCell, mean_rel_err, max_rel_err);
-	  if (kind == 7) ok = test_gradient_F2C(iTestFunction, dim, nghostCell, mean_rel_err, max_rel_err);
-	  if (kind == 8) ok = test_divergence_F2C(iTestFunction, dim, nghostCell, mean_rel_err, max_rel_err);
+	  if (kind == 1) ok = test_linear_interpolant_C2F( grid, funct, mean_rel_err, max_rel_err );
+	  if (kind == 2) ok = test_gradient_C2F          ( grid, funct, mean_rel_err, max_rel_err );
+	  if (kind == 3) ok = test_divergence_C2F        ( grid, funct, mean_rel_err, max_rel_err );
+	  if (kind == 4) ok = test_scratch               ( grid, funct, mean_rel_err, max_rel_err );
+	  if (kind == 5) ok = test_mixed_derivatives     ( grid, funct, mean_rel_err, max_rel_err );
+	  if (kind == 6) ok = test_linear_interpolant_F2C( grid, funct, mean_rel_err, max_rel_err );
+	  if (kind == 7) ok = test_gradient_F2C          ( grid, funct, mean_rel_err, max_rel_err );
+	  if (kind == 8) ok = test_divergence_F2C        ( grid, funct, mean_rel_err, max_rel_err );
 			
 	  std::cout << endl;
   	
@@ -1492,10 +1406,7 @@ void convergence_test(int kind)
 			  	   	
   for (int iTestFunction=1; iTestFunction <=8; iTestFunction++)
     {
-      analytical_class funct;
-      funct.assign_function_name(iTestFunction);
-	
-      std::cout << "Test Function " << iTestFunction << ": " << funct.test.description() << endl;
+      std::cout << "Test Function: " << iTestFunction << endl;
       std::cout << "---------------------------------------------------------------------------------" << endl;
 			
       ofstream oFile;
@@ -1511,21 +1422,26 @@ void convergence_test(int kind)
       oFile << "Max Rel Y" << "\t\t";
       oFile << "Max Rel Z" << "\t\t";
       oFile << endl << endl;
-			
+      
       for (int nGridPoints=4, i=1; i<5; nGridPoints*=2, i++)
 	{  			 
 	  std::cout << "Grid: " << nGridPoints << " x " << nGridPoints << " x "<< nGridPoints << endl;
   		  	
 	  dim[X_DIR] = nGridPoints; dim[Y_DIR] = nGridPoints; dim[Z_DIR] = nGridPoints;
 
-	  if (kind == 1) ok = test_linear_interpolant_C2F(iTestFunction, dim, nghostCell, mean_rel_err, max_rel_err);
-	  if (kind == 2) ok = test_gradient_C2F(iTestFunction, dim, nghostCell, mean_rel_err, max_rel_err);
-	  if (kind == 3) ok = test_divergence_C2F(iTestFunction, dim, nghostCell, mean_rel_err, max_rel_err);
-	  if (kind == 4) ok = test_scratch(iTestFunction, dim, nghostCell, mean_rel_err, max_rel_err);
-	  if (kind == 5) ok = test_mixed_derivatives(iTestFunction, dim, nghostCell, mean_rel_err, max_rel_err);
-	  if (kind == 6) ok = test_linear_interpolant_F2C(iTestFunction, dim, nghostCell, mean_rel_err, max_rel_err);
-	  if (kind == 7) ok = test_gradient_F2C(iTestFunction, dim, nghostCell, mean_rel_err, max_rel_err);
-	  if (kind == 8) ok = test_divergence_F2C(iTestFunction, dim, nghostCell, mean_rel_err, max_rel_err);
+	  grid_class grid( dim, nghostCell );
+	  analytical_class funct( grid );
+	  funct.assign_function_name(iTestFunction);
+	  funct.assign_function(iTestFunction);
+	
+	  if (kind == 1) ok = test_linear_interpolant_C2F( grid, funct, mean_rel_err, max_rel_err );
+	  if (kind == 2) ok = test_gradient_C2F          ( grid, funct, mean_rel_err, max_rel_err );
+	  if (kind == 3) ok = test_divergence_C2F        ( grid, funct, mean_rel_err, max_rel_err );
+	  if (kind == 4) ok = test_scratch               ( grid, funct, mean_rel_err, max_rel_err );
+	  if (kind == 5) ok = test_mixed_derivatives     ( grid, funct, mean_rel_err, max_rel_err );
+	  if (kind == 6) ok = test_linear_interpolant_F2C( grid, funct, mean_rel_err, max_rel_err );
+	  if (kind == 7) ok = test_gradient_F2C          ( grid, funct, mean_rel_err, max_rel_err );
+	  if (kind == 8) ok = test_divergence_F2C        ( grid, funct, mean_rel_err, max_rel_err );
   	
 	  std::cout << endl;
   				

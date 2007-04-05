@@ -20,7 +20,7 @@ void compare(const double fAnalytical, const double fNumerical, double &mean_rel
 }
 
 template< typename Dir >
-void indices_for_SideFields(grid_class &grid, std::vector<int> &index)
+void indices_for_SideFields(const grid_class &grid, std::vector<int> &index)
 {
   typedef SpatialOps::FVStaggeredUniform::DefaultSideGhosting<Dir>  GhostTraits;
 
@@ -46,7 +46,7 @@ void indices_for_SideFields(grid_class &grid, std::vector<int> &index)
 }
 
 
-void check_equality_C2F(grid_class &grid, double *analytical_int, XSideField &numerical, bool &test, double &mean_rel_err, double &max_rel_err)
+void check_equality_C2F(const grid_class &grid, double *analytical_int, XSideField &numerical, bool &test, double &mean_rel_err, double &max_rel_err)
 {
   // ----------------------------------------------------------------------------------------------------------------------------------
   //	Error checking
@@ -80,7 +80,7 @@ void check_equality_C2F(grid_class &grid, double *analytical_int, XSideField &nu
   else test = true;
 }
 
-void check_equality_C2F(grid_class &grid, double *analytical_int, YSideField &numerical, bool &test, double &mean_rel_err, double &max_rel_err)
+void check_equality_C2F(const grid_class &grid, double *analytical_int, YSideField &numerical, bool &test, double &mean_rel_err, double &max_rel_err)
 {
   // ----------------------------------------------------------------------------------------------------------------------------------
   //	Error checking
@@ -114,7 +114,7 @@ void check_equality_C2F(grid_class &grid, double *analytical_int, YSideField &nu
   else test = true;
 }
 
-void check_equality_C2F(grid_class &grid, double *analytical_int, ZSideField &numerical, bool &test, double &mean_rel_err, double &max_rel_err)
+void check_equality_C2F(const grid_class &grid, double *analytical_int, ZSideField &numerical, bool &test, double &mean_rel_err, double &max_rel_err)
 {
   // ----------------------------------------------------------------------------------------------------------------------------------
   //	Error checking
@@ -148,7 +148,7 @@ void check_equality_C2F(grid_class &grid, double *analytical_int, ZSideField &nu
   else test = true;
 }
 
-void check_equality_F2C(grid_class &grid, double *analytical_int, CellField &numerical, bool &test, double &mean_rel_err, double &max_rel_err)
+void check_equality_F2C(const grid_class &grid, double *analytical_int, CellField &numerical, bool &test, double &mean_rel_err, double &max_rel_err)
 {
   // ----------------------------------------------------------------------------------------------------------------------------------
   //	Error checking
