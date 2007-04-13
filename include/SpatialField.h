@@ -413,7 +413,7 @@ namespace SpatialOps{
 			     * ( nyf * GhostTraits::template get<ZDIR,SideMinus>() );
 
     typename SpatialField::iterator ifld = this->begin() + ixf;
-    typename RHS::iterator irhs = rhs.begin();
+    typename RHS::const_iterator irhs = rhs.begin();
 
     for( int k=0; k<nzr; ++k ){
       for( int j=0; j<nyr; ++j ){
