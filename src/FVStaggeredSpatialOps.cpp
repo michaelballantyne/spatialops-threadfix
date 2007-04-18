@@ -5,7 +5,6 @@
 #include <numeric>
 #include <algorithm>
 
-using std::vector;
 
 namespace SpatialOps{
 namespace FVStaggeredUniform{
