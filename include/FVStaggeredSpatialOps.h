@@ -31,10 +31,10 @@ namespace FVStaggeredUniform{
   template< typename Dir >
   struct DefaultSideGhosting
   {
+    // note: specialized template member functions exist!
     template<typename Direction, typename SideType>
     static int get(){return 1;}
   };
-
 
 
   //==================================================================
@@ -609,6 +609,22 @@ namespace FVStaggeredUniform{
   }
 
   //==================================================================
+
+
+  template<>
+  template<>
+  int DefaultSideGhosting<XDIR>::get<XDIR,SidePlus>(){return 2;}
+
+  template<>
+  template<>
+  int DefaultSideGhosting<YDIR>::get<YDIR,SidePlus>(){return 2;}
+
+  template<>
+  template<>
+  int DefaultSideGhosting<ZDIR>::get<ZDIR,SidePlus>(){return 2;}
+
+
+  //====================================================================
 
 
 } // namespace FVStaggeredUniform

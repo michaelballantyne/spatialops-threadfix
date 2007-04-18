@@ -237,21 +237,6 @@ namespace FVStaggeredUniform{
     if( !loBnds[2] ) ++shift;
   }
 
-  //==================================================================
-
-
-  template<>
-  template<>
-  int DefaultSideGhosting<XDIR>::get<XDIR,SidePlus>(){return 2;}
-
-  template<>
-  template<>
-  int DefaultSideGhosting<YDIR>::get<YDIR,SidePlus>(){return 2;}
-
-  template<>
-  template<>
-  int DefaultSideGhosting<ZDIR>::get<ZDIR,SidePlus>(){return 2;}
-
 
   //==================================================================
 

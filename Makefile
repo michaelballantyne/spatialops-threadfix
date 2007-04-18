@@ -22,9 +22,9 @@ EPETRA_LIBS = -lepetra -lepetraext -lblas -llapack
 AZTECOO_LIBS = -laztecoo -lteuchos 
 LIBS = $(AZTECOO_LIBS)  $(EPETRA_LIBS) $(EXTRA_LIBS)
 
-#CXXFLAGS = -O3 -Wall -fexpensive-optimizations -funroll-loops
+CXXFLAGS = -O3 -Wall -fexpensive-optimizations -funroll-loops
 CXXFLAGS = -g -Wall #-DHAVE_MPI
-COMPILE_CXX = g++ -c $(CXXFLAGS) $(INCDIRS)
+#COMPILE_CXX = g++ -c $(CXXFLAGS) $(INCDIRS)
 #COMPILE_CXX = mpiCC -c $(CXXFLAGS) $(INCDIRS)
 
 LINK = g++ $(CXXFLAGS) $(INCDIRS) $(LIBDIRS)
@@ -62,3 +62,6 @@ smalltest: lib test.o
 	$(LINK) test.o -lspatialops $(LIBS) -o smalltest.x
 
 clean: ; @rm *.o libspatialops.a test.x
+
+test2: lib ./src/test.cpp
+	$(LINK) ./src/test.cpp -lspatialops $(LIBS) -o test2.x
