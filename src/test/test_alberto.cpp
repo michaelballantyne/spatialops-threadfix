@@ -6,11 +6,7 @@
 #include <iostream>
 #include <string>
 
-#include <FV2ndOrderTypes.h>
-
-#include <EpetraExt_RowMatrixOut.h>
-#include <EpetraExt_VectorOut.h>
-#include <LinearSystem.h>
+#include <FV2ndOrderTypes.h> 
 
 #define TOL 1.e-6
 #define MAX_MAXRELERR 1.e-3
@@ -19,7 +15,7 @@
 #define X_DIR 0
 #define Y_DIR 1
 #define Z_DIR 2
-
+ 
 using namespace SpatialOps;
 using namespace FVStaggeredUniform;
 
@@ -39,6 +35,8 @@ bool test_linear_interpolant_C2F(const grid_class& grid, analytical_class& funct
 
   bool test_x, test_y, test_z, ok;
 	
+  std::cout << "Test Function: " << funct.test.description() << endl;
+		
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Build the operators
   // -----------------------------------------------------------------------------------------------------------------------------	
@@ -49,14 +47,6 @@ bool test_linear_interpolant_C2F(const grid_class& grid, analytical_class& funct
   InterpXC2F Rx_C2F( Rx_C2F_Assembler );
   InterpYC2F Ry_C2F( Ry_C2F_Assembler );
   InterpZC2F Rz_C2F( Rz_C2F_Assembler );
-			
-  // -----------------------------------------------------------------------------------------------------------------------------	
-  // From Analytical function to Spatial Fields
-  // -----------------------------------------------------------------------------------------------------------------------------	
-  CellField           f( grid.dim, &funct.f[0],       ExternalStorage );
-  CellField      f_xint( grid.dim, &funct.f_xint[0],  ExternalStorage );
-  CellField      f_yint( grid.dim, &funct.f_yint[0],  ExternalStorage );
-  CellField      f_zint( grid.dim, &funct.f_zint[0],  ExternalStorage );
 	
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Spatial Fields: Numerical Interpolations
@@ -65,24 +55,23 @@ bool test_linear_interpolant_C2F(const grid_class& grid, analytical_class& funct
   YSideField          Rfy( grid.dim, NULL, InternalStorage  );
   ZSideField          Rfz( grid.dim, NULL, InternalStorage  );
    	
-  Rx_C2F.apply_to_field( f, Rfx  );
-  Ry_C2F.apply_to_field( f, Rfy  );
-  Rz_C2F.apply_to_field( f, Rfz  );
+  Rx_C2F.apply_to_field( funct.f, Rfx  );
+  Ry_C2F.apply_to_field( funct.f, Rfy  );
+  Rz_C2F.apply_to_field( funct.f, Rfz  );
   	
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Check Equality
   // -----------------------------------------------------------------------------------------------------------------------------	
   std:: cout << " Test x: ";
-  check_equality_C2F(grid, f_xint.begin(), Rfx, test_x, mean_rel_err[X_DIR], max_rel_err[X_DIR]);
-  	
+  check_equality_C2F(grid, funct.f_faceX, Rfx, test_x, mean_rel_err[X_DIR], max_rel_err[X_DIR]);
   std:: cout << endl;
   			
   std:: cout << " Test y: ";
-  check_equality_C2F(grid, f_yint.begin(), Rfy, test_y, mean_rel_err[Y_DIR], max_rel_err[Y_DIR]);
+  check_equality_C2F(grid, funct.f_faceY, Rfy, test_y, mean_rel_err[Y_DIR], max_rel_err[Y_DIR]);
   std:: cout << endl;
 
   std:: cout << " Test z: ";
-  check_equality_C2F(grid, f_zint.begin(), Rfz, test_z, mean_rel_err[Z_DIR], max_rel_err[Z_DIR]);
+  check_equality_C2F(grid, funct.f_faceZ, Rfz, test_z, mean_rel_err[Z_DIR], max_rel_err[Z_DIR]);
   std:: cout << endl;
 	
   ok = true;
@@ -101,6 +90,8 @@ bool test_linear_interpolant_F2C(const grid_class& grid, analytical_class& funct
   std::cout.setf(ios::scientific);
 
   bool test_x, test_y, test_z, ok;
+
+  std::cout << "Test Function: " << funct.test.description() << endl;
 	
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Build the operators
@@ -112,40 +103,31 @@ bool test_linear_interpolant_F2C(const grid_class& grid, analytical_class& funct
   InterpXF2C Rx_F2C( Rx_F2C_Assembler );
   InterpYF2C Ry_F2C( Ry_F2C_Assembler );
   InterpZF2C Rz_F2C( Rz_F2C_Assembler );
-
-  // -----------------------------------------------------------------------------------------------------------------------------	
-  // From Analytical function to Spatial Fields
-  // -----------------------------------------------------------------------------------------------------------------------------	
-  CellField            f( grid.dim, &funct.f[0],	ExternalStorage );
-  XSideField      f_xint( grid.dim, &funct.f_xint[0],  	ExternalStorage );
-  YSideField      f_yint( grid.dim, &funct.f_yint[0],  	ExternalStorage );
-  ZSideField      f_zint( grid.dim, &funct.f_zint[0], 	ExternalStorage );
-  
+ 
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Spatial Fields: Numerical Interpolations
   // -----------------------------------------------------------------------------------------------------------------------------	
   CellField          Rfx( grid.dim, NULL, InternalStorage  );
   CellField          Rfy( grid.dim, NULL, InternalStorage  );
   CellField          Rfz( grid.dim, NULL, InternalStorage  );
-  
-  Rx_F2C.apply_to_field( f_xint, Rfx );
-  Ry_F2C.apply_to_field( f_yint, Rfy );
-  Rz_F2C.apply_to_field( f_zint, Rfz );
-
+    
+  Rx_F2C.apply_to_field( funct.f_faceX, Rfx );
+  Ry_F2C.apply_to_field( funct.f_faceY, Rfy );
+  Rz_F2C.apply_to_field( funct.f_faceZ, Rfz );
 
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Check Equality
   // -----------------------------------------------------------------------------------------------------------------------------	
   std:: cout << " Test x: ";
-  check_equality_F2C( grid, f.begin(), Rfx, test_x, mean_rel_err[X_DIR], max_rel_err[X_DIR]);
+  check_equality_F2C( grid, funct.f, Rfx, test_x, mean_rel_err[X_DIR], max_rel_err[X_DIR]);
   std:: cout << endl;
   			
   std:: cout << " Test y: ";
-  check_equality_F2C(grid, f.begin(), Rfy, test_y, mean_rel_err[Y_DIR], max_rel_err[Y_DIR]);
+  check_equality_F2C(grid, funct.f, Rfy, test_y, mean_rel_err[Y_DIR], max_rel_err[Y_DIR]);
   std:: cout << endl;
 
   std:: cout << " Test z: ";
-  check_equality_F2C(grid, f.begin(), Rfz, test_z, mean_rel_err[Z_DIR], max_rel_err[Z_DIR]);
+  check_equality_F2C(grid, funct.f, Rfz, test_z, mean_rel_err[Z_DIR], max_rel_err[Z_DIR]);
   std:: cout << endl;
 	
   ok = true;
@@ -164,8 +146,10 @@ bool test_gradient_C2F(const grid_class& grid, analytical_class& funct, std::vec
   using namespace FVStaggeredUniform;
   std::cout.setf(ios::scientific);
 
-  bool test_x, test_y, test_z, ok;
+  std::cout << "Test Function: " << funct.test.description() << endl;
 		
+  bool test_x, test_y, test_z, ok;
+	
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Build the operators
   // -----------------------------------------------------------------------------------------------------------------------------	
@@ -176,15 +160,7 @@ bool test_gradient_C2F(const grid_class& grid, analytical_class& funct, std::vec
   GradXC2F	xGrad_C2F( xGrad_C2F_Assembler);	
   GradYC2F	yGrad_C2F( yGrad_C2F_Assembler);	
   GradZC2F	zGrad_C2F( zGrad_C2F_Assembler);	
-	
-  // -----------------------------------------------------------------------------------------------------------------------------	
-  // Spatial Fields: Function and analytical gradient
-  // -----------------------------------------------------------------------------------------------------------------------------			
-  CellField             f( grid.dim, &funct.f[0], 	ExternalStorage );
-  CellField      dfdx_int( grid.dim, &funct.dfdx_int[0],  ExternalStorage );
-  CellField      dfdy_int( grid.dim, &funct.dfdy_int[0],  ExternalStorage );
-  CellField      dfdz_int( grid.dim, &funct.dfdz_int[0],  ExternalStorage );
-  	
+
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Spatial Fields: Numerical Gradients
   // -----------------------------------------------------------------------------------------------------------------------------	
@@ -192,23 +168,23 @@ bool test_gradient_C2F(const grid_class& grid, analytical_class& funct, std::vec
   YSideField      Gy( grid.dim, NULL,  InternalStorage  );
   ZSideField      Gz( grid.dim, NULL,  InternalStorage  );
  
-  xGrad_C2F.apply_to_field( f, Gx );	// Numerical Gradient X
-  yGrad_C2F.apply_to_field( f, Gy );	// Numerical Gradient Y
-  zGrad_C2F.apply_to_field( f, Gz );	// Numerical Gradient Z
+  xGrad_C2F.apply_to_field( funct.f, Gx );	// Numerical Gradient X
+  yGrad_C2F.apply_to_field( funct.f, Gy );	// Numerical Gradient Y
+  zGrad_C2F.apply_to_field( funct.f, Gz );	// Numerical Gradient Z
   
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Check Equality
   // -----------------------------------------------------------------------------------------------------------------------------
   std:: cout << " Test x: ";
-  check_equality_C2F(grid, dfdx_int.begin(), Gx, test_x, mean_rel_err[X_DIR], max_rel_err[X_DIR]);
+  check_equality_C2F(grid, funct.dfdx_faceX, Gx, test_x, mean_rel_err[X_DIR], max_rel_err[X_DIR]);
   std:: cout << endl;
   		
   std:: cout << " Test y: ";
-  check_equality_C2F(grid, dfdy_int.begin(), Gy, test_y, mean_rel_err[Y_DIR], max_rel_err[Y_DIR]);	
+  check_equality_C2F(grid, funct.dfdy_faceY, Gy, test_y, mean_rel_err[Y_DIR], max_rel_err[Y_DIR]);	
   std:: cout << endl;
 
   std:: cout << " Test z: ";
-  check_equality_C2F(grid, dfdz_int.begin(), Gz, test_z, mean_rel_err[Z_DIR], max_rel_err[Z_DIR]);  	
+  check_equality_C2F(grid, funct.dfdz_faceZ, Gz, test_z, mean_rel_err[Z_DIR], max_rel_err[Z_DIR]);  	
   std:: cout << endl;
   	
   ok = true;
@@ -227,6 +203,8 @@ bool test_gradient_F2C(const grid_class& grid, analytical_class& funct, std::vec
   std::cout.setf(ios::scientific);
 
   bool test_x, test_y, test_z, ok;
+
+  std::cout << "Test Function: " << funct.test.description() << endl;	
 		
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Build the operators
@@ -240,40 +218,29 @@ bool test_gradient_F2C(const grid_class& grid, analytical_class& funct, std::vec
   GradZF2C	zGrad_F2C( zGrad_F2C_Assembler);	
 	
   // -----------------------------------------------------------------------------------------------------------------------------	
-  // Spatial Fields: Function and analytical gradient
-  // -----------------------------------------------------------------------------------------------------------------------------			
-  XSideField      f_xint( grid.dim, &funct.f_xint[0],  	ExternalStorage );
-  YSideField      f_yint( grid.dim, &funct.f_yint[0],  	ExternalStorage );
-  ZSideField      f_zint( grid.dim, &funct.f_zint[0], 	ExternalStorage );
-	  	
-  CellField	dfdx( grid.dim, &funct.dfdx[0],  	ExternalStorage );
-  CellField	dfdy( grid.dim, &funct.dfdy[0],  	ExternalStorage );
-  CellField	dfdz( grid.dim, &funct.dfdz[0],  	ExternalStorage );
-  	
-  // -----------------------------------------------------------------------------------------------------------------------------	
   // Spatial Fields: Numerical Gradients
   // -----------------------------------------------------------------------------------------------------------------------------	
   CellField      Gx( grid.dim, NULL,  InternalStorage  );
   CellField      Gy( grid.dim, NULL,  InternalStorage  );
   CellField      Gz( grid.dim, NULL,  InternalStorage  );
  
-  xGrad_F2C.apply_to_field( f_xint, Gx );	// Numerical Gradient X
-  yGrad_F2C.apply_to_field( f_yint, Gy );	// Numerical Gradient Y
-  zGrad_F2C.apply_to_field( f_zint, Gz );	// Numerical Gradient Z
+  xGrad_F2C.apply_to_field( funct.f_faceX, Gx );	// Numerical Gradient X
+  yGrad_F2C.apply_to_field( funct.f_faceY, Gy );	// Numerical Gradient Y
+  zGrad_F2C.apply_to_field( funct.f_faceZ, Gz );	// Numerical Gradient Z
   
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Check Equality
   // -----------------------------------------------------------------------------------------------------------------------------
   std:: cout << " Test x: ";
-  check_equality_F2C(grid, dfdx.begin(), Gx, test_x, mean_rel_err[X_DIR], max_rel_err[X_DIR]);
+  check_equality_F2C(grid, funct.dfdx, Gx, test_x, mean_rel_err[X_DIR], max_rel_err[X_DIR]);
   std:: cout << endl;
   		
   std:: cout << " Test y: ";
-  check_equality_F2C( grid, dfdy.begin(), Gy, test_y, mean_rel_err[Y_DIR], max_rel_err[Y_DIR]);	
+  check_equality_F2C( grid, funct.dfdy, Gy, test_y, mean_rel_err[Y_DIR], max_rel_err[Y_DIR]);	
   std:: cout << endl;
 
   std:: cout << " Test z: ";
-  check_equality_F2C( grid, dfdz.begin(), Gz, test_z, mean_rel_err[Z_DIR], max_rel_err[Z_DIR]);  	
+  check_equality_F2C( grid, funct.dfdz, Gz, test_z, mean_rel_err[Z_DIR], max_rel_err[Z_DIR]);  	
   std:: cout << endl;
 	
   ok = true;
@@ -292,6 +259,8 @@ bool test_divergence_F2C(const grid_class& grid, analytical_class& funct, std::v
   std::cout.setf(ios::scientific);
 
   bool test_x, test_y, test_z, ok;
+
+  std::cout << "Test Function: " << funct.test.description() << endl;		
 	
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Build the operators
@@ -313,16 +282,6 @@ bool test_divergence_F2C(const grid_class& grid, analytical_class& funct, std::v
   GradZC2F	zGrad_C2F( zGrad_C2F_Assembler);	
   	
   // -----------------------------------------------------------------------------------------------------------------------------	
-  // Spatial Fields: Function and analytical gradient
-  // -----------------------------------------------------------------------------------------------------------------------------		
-  std::cout << "Test Function: " << funct.test.description() << endl;
-  	
-  CellField           f( grid.dim, &funct.f[0],	    ExternalStorage );
-  CellField      d2fdx2( grid.dim, &funct.d2fdx2[0],  ExternalStorage );
-  CellField      d2fdy2( grid.dim, &funct.d2fdy2[0],  ExternalStorage );
-  CellField      d2fdz2( grid.dim, &funct.d2fdz2[0],  ExternalStorage );
-  	  	
-  // -----------------------------------------------------------------------------------------------------------------------------	
   // Spatial Fields: Numerical Gradients
   // -----------------------------------------------------------------------------------------------------------------------------	
   XSideField   Gx( grid.dim, NULL,  InternalStorage  );
@@ -333,9 +292,9 @@ bool test_divergence_F2C(const grid_class& grid, analytical_class& funct, std::v
   CellField    Dy( grid.dim, NULL, InternalStorage );	// Numerical  Divergence Y
   CellField    Dz( grid.dim, NULL, InternalStorage );	// Numerical  Divergence Z
 
-  xGrad_C2F.apply_to_field( f, Gx );	// Numerical Gradient X
-  yGrad_C2F.apply_to_field( f, Gy );	// Numerical Gradient Y
-  zGrad_C2F.apply_to_field( f, Gz );	// Numerical Gradient Z
+  xGrad_C2F.apply_to_field( funct.f, Gx );	// Numerical Gradient X
+  yGrad_C2F.apply_to_field( funct.f, Gy );	// Numerical Gradient Y
+  zGrad_C2F.apply_to_field( funct.f, Gz );	// Numerical Gradient Z
   		
   xDiv_F2C.apply_to_field( Gx, Dx );  // Numerical Divergence X
   yDiv_F2C.apply_to_field( Gy, Dy );  // Numerical Divergence Y
@@ -345,15 +304,15 @@ bool test_divergence_F2C(const grid_class& grid, analytical_class& funct, std::v
   // Check Equality
   // -----------------------------------------------------------------------------------------------------------------------------
   std:: cout << " Test x: ";
-  check_equality_F2C(grid, d2fdx2.begin(), Dx, test_x, mean_rel_err[X_DIR], max_rel_err[X_DIR]);
+  check_equality_F2C(grid, funct.d2fdx2, Dx, test_x, mean_rel_err[X_DIR], max_rel_err[X_DIR]);
   std:: cout << endl;
 		
   std:: cout << " Test y: ";
-  check_equality_F2C(grid, d2fdy2.begin(), Dy, test_y, mean_rel_err[Y_DIR], max_rel_err[Y_DIR]);
+  check_equality_F2C(grid, funct.d2fdy2, Dy, test_y, mean_rel_err[Y_DIR], max_rel_err[Y_DIR]);
   std:: cout << endl;
 
   std:: cout << " Test z: ";
-  check_equality_F2C(grid, d2fdz2.begin(), Dz, test_z, mean_rel_err[Z_DIR], max_rel_err[Z_DIR]);
+  check_equality_F2C(grid, funct.d2fdz2, Dz, test_z, mean_rel_err[Z_DIR], max_rel_err[Z_DIR]);
   std:: cout << endl;
  	
   ok = true;
@@ -373,6 +332,8 @@ bool test_divergence_C2F(const grid_class& grid, analytical_class& funct, std::v
 
   bool test_x, test_y, test_z, ok;
 
+  std::cout << "Test Function: " << funct.test.description() << endl;
+	
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Build the operators
   // -----------------------------------------------------------------------------------------------------------------------------	
@@ -391,19 +352,7 @@ bool test_divergence_C2F(const grid_class& grid, analytical_class& funct, std::v
   GradXF2C	xGrad_F2C( xGrad_F2C_Assembler);	
   GradYF2C	yGrad_F2C( yGrad_F2C_Assembler);	
   GradZF2C	zGrad_F2C( zGrad_F2C_Assembler);	
-  	
-  // -----------------------------------------------------------------------------------------------------------------------------	
-  // Spatial Fields: Function and analytical gradient
-  // -----------------------------------------------------------------------------------------------------------------------------		
-  std::cout << "Test Function: " << funct.test.description() << endl;
-  	
-  XSideField      f_xint( grid.dim, &funct.f_xint[0],	      ExternalStorage );
-  YSideField      f_yint( grid.dim, &funct.f_yint[0],	      ExternalStorage );
-  ZSideField      f_zint( grid.dim, &funct.f_zint[0],	      ExternalStorage );  	
-  CellField         d2fdx2_xint( grid.dim, &funct.d2fdx2_xint[0],  ExternalStorage );
-  CellField         d2fdy2_yint( grid.dim, &funct.d2fdy2_yint[0],  ExternalStorage );
-  CellField         d2fdz2_zint( grid.dim, &funct.d2fdz2_zint[0],  ExternalStorage );
-  	  	
+  		
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Spatial Fields: Numerical Gradients
   // -----------------------------------------------------------------------------------------------------------------------------	
@@ -415,10 +364,10 @@ bool test_divergence_C2F(const grid_class& grid, analytical_class& funct, std::v
   YSideField    Dy( grid.dim, NULL, InternalStorage );	// Numerical  Divergence Y
   ZSideField    Dz( grid.dim, NULL, InternalStorage );	// Numerical  Divergence Z
 
-  xGrad_F2C.apply_to_field( f_xint, Gx );	// Numerical Gradient X
-  yGrad_F2C.apply_to_field( f_yint, Gy );	// Numerical Gradient Y
-  zGrad_F2C.apply_to_field( f_zint, Gz );	// Numerical Gradient Z
-  		
+  xGrad_F2C.apply_to_field( funct.f_faceX, Gx );	// Numerical Gradient X
+  yGrad_F2C.apply_to_field( funct.f_faceY, Gy );	// Numerical Gradient Y
+  zGrad_F2C.apply_to_field( funct.f_faceZ, Gz );	// Numerical Gradient Z
+   		
   xDiv_C2F.apply_to_field( Gx, Dx );  // Numerical Divergence X
   yDiv_C2F.apply_to_field( Gy, Dy );  // Numerical Divergence Y
   zDiv_C2F.apply_to_field( Gz, Dz );  // Numerical Divergence Z
@@ -427,15 +376,15 @@ bool test_divergence_C2F(const grid_class& grid, analytical_class& funct, std::v
   // Check Equality
   // -----------------------------------------------------------------------------------------------------------------------------
   std:: cout << " Test x: ";
-  check_equality_C2F(grid, d2fdx2_xint.begin(), Dx, test_x, mean_rel_err[X_DIR], max_rel_err[X_DIR]);
+  check_equality_C2F(grid, funct.d2fdx2_faceX, Dx, test_x, mean_rel_err[X_DIR], max_rel_err[X_DIR]);
   std:: cout << endl;
 		
   std:: cout << " Test y: ";
-  check_equality_C2F( grid, d2fdy2_yint.begin(), Dy, test_y, mean_rel_err[Y_DIR], max_rel_err[Y_DIR]);
+  check_equality_C2F( grid, funct.d2fdy2_faceY, Dy, test_y, mean_rel_err[Y_DIR], max_rel_err[Y_DIR]);
   std:: cout << endl;
 
   std:: cout << " Test z: ";
-  check_equality_C2F( grid, d2fdz2_zint.begin(), Dz, test_z, mean_rel_err[Z_DIR], max_rel_err[Z_DIR]);
+  check_equality_C2F( grid, funct.d2fdz2_faceZ, Dz, test_z, mean_rel_err[Z_DIR], max_rel_err[Z_DIR]);
   std:: cout << endl;
  	
   ok = true;
@@ -455,6 +404,8 @@ bool test_scratch(const grid_class& grid, analytical_class& funct, std::vector<d
   std::cout.setf(ios::scientific);
 
   bool test_x, test_y, test_z, ok;
+
+  std::cout << "Test Function: " << funct.test.description() << endl;
 
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Build the operators
@@ -488,39 +439,29 @@ bool test_scratch(const grid_class& grid, analytical_class& funct, std::vector<d
   zDiv_F2C.apply_to_op(zGrad_C2F, zLaplacian);
 
   // -----------------------------------------------------------------------------------------------------------------------------	
-  // Spatial Fields: Function and analytical laplacian
-  // -----------------------------------------------------------------------------------------------------------------------------		
-  std::cout << "Test Function: " << funct.test.description() << endl;
-
-  CellField           f( grid.dim, &funct.f[0],		ExternalStorage );
-  CellField      d2fdx2( grid.dim, &funct.d2fdx2[0],  	ExternalStorage );
-  CellField      d2fdy2( grid.dim, &funct.d2fdy2[0],  	ExternalStorage );
-  CellField      d2fdz2( grid.dim, &funct.d2fdz2[0],  	ExternalStorage );
- 
-  // -----------------------------------------------------------------------------------------------------------------------------	
   // Laplacian Application
   // -----------------------------------------------------------------------------------------------------------------------------		
   CellField    Dx( grid.dim, NULL, InternalStorage );	// Numerical  Divergence X
   CellField    Dy( grid.dim, NULL, InternalStorage );	// Numerical  Divergence Y
   CellField    Dz( grid.dim, NULL, InternalStorage );	// Numerical  Divergence Z
   		
-  xLaplacian.apply_to_field( f, Dx );  // Numerical Divergence X
-  yLaplacian.apply_to_field( f, Dy );  // Numerical Divergence Y
-  zLaplacian.apply_to_field( f, Dz );  // Numerical Divergence Z		  		
+  xLaplacian.apply_to_field( funct.f, Dx );  // Numerical Divergence X
+  yLaplacian.apply_to_field( funct.f, Dy );  // Numerical Divergence Y
+  zLaplacian.apply_to_field( funct.f, Dz );  // Numerical Divergence Z		  		
 
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Check Equality - Laplacian
   // -----------------------------------------------------------------------------------------------------------------------------
   std:: cout << " Test x: ";
-  check_equality_F2C(grid, d2fdx2.begin(), Dx, test_x, mean_rel_err[X_DIR], max_rel_err[X_DIR]);
+  check_equality_F2C(grid, funct.d2fdx2, Dx, test_x, mean_rel_err[X_DIR], max_rel_err[X_DIR]);
   std:: cout << endl;
 		
   std:: cout << " Test y: ";
-  check_equality_F2C(grid, d2fdy2.begin(), Dy, test_y, mean_rel_err[Y_DIR], max_rel_err[Y_DIR]);
+  check_equality_F2C(grid, funct.d2fdy2, Dy, test_y, mean_rel_err[Y_DIR], max_rel_err[Y_DIR]);
   std:: cout << endl;
 
   std:: cout << " Test z: ";
-  check_equality_F2C(grid, d2fdz2.begin(), Dz, test_z, mean_rel_err[Z_DIR], max_rel_err[Z_DIR]);
+  check_equality_F2C(grid, funct.d2fdz2, Dz, test_z, mean_rel_err[Z_DIR], max_rel_err[Z_DIR]);
   std:: cout << endl;
 	  	  	
   // -----------------------------------------------------------------------------------------------------------------------------	
@@ -534,10 +475,10 @@ bool test_scratch(const grid_class& grid, analytical_class& funct, std::vector<d
     CellField    _Dx( grid.dim, NULL, InternalStorage );	// Numerical  Divergence X
     CellField    _Dy( grid.dim, NULL, InternalStorage );	// Numerical  Divergence Y
     CellField    _Dz( grid.dim, NULL, InternalStorage );	// Numerical  Divergence Z
-  		
-    xGrad_C2F.apply_to_field( f, _Gx );	// Numerical Gradient X
-    yGrad_C2F.apply_to_field( f, _Gy );	// Numerical Gradient Y
-    zGrad_C2F.apply_to_field( f, _Gz );	// Numerical Gradient Z
+  			
+    xGrad_C2F.apply_to_field( funct.f, _Gx );	// Numerical Gradient X
+    yGrad_C2F.apply_to_field( funct.f, _Gy );	// Numerical Gradient Y
+    zGrad_C2F.apply_to_field( funct.f, _Gz );	// Numerical Gradient Z
   		
     xDiv_F2C.apply_to_field( _Gx, _Dx );  // Numerical Divergence X
     yDiv_F2C.apply_to_field( _Gy, _Dy );  // Numerical Divergence Y
@@ -601,6 +542,8 @@ bool test_mixed_derivatives(const grid_class& grid, analytical_class& funct, std
   double max_rel_err_yx, max_rel_err_yz;
   double max_rel_err_zx, max_rel_err_zy;
 	
+  std::cout << "Test Function: " << funct.test.description() << endl;
+
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Build the operators
   // -----------------------------------------------------------------------------------------------------------------------------	
@@ -635,21 +578,6 @@ bool test_mixed_derivatives(const grid_class& grid, analytical_class& funct, std
   GradXC2F	xGrad_C2F( xGrad_C2F_Assembler);	
   GradYC2F	yGrad_C2F( yGrad_C2F_Assembler);	
   GradZC2F	zGrad_C2F( zGrad_C2F_Assembler);	
-
-  // -----------------------------------------------------------------------------------------------------------------------------	
-  // Spatial Fields: Function and analytical gradient
-  // -----------------------------------------------------------------------------------------------------------------------------		
-  std::cout << "Test Function: " << funct.test.description() << endl;
-  		
-  CellField            f( grid.dim, &funct.f[0],		ExternalStorage );
-  CellField      d2fdxdy( grid.dim, &funct.d2fdxdy[0],  	ExternalStorage );
-  CellField      d2fdxdz( grid.dim, &funct.d2fdxdz[0],  	ExternalStorage );
-  	
-  CellField      d2fdydx( grid.dim, &funct.d2fdxdy[0],  	ExternalStorage );
-  CellField      d2fdydz( grid.dim, &funct.d2fdydz[0],  	ExternalStorage );
-
-  CellField      d2fdzdx( grid.dim, &funct.d2fdxdz[0],  	ExternalStorage );
-  CellField      d2fdzdy( grid.dim, &funct.d2fdydz[0],  	ExternalStorage );
 		 	
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Scratch Operator Application
@@ -667,67 +595,66 @@ bool test_mixed_derivatives(const grid_class& grid, analytical_class& funct, std
   CellField    D2DzDy( grid.dim, NULL, InternalStorage );	// Numerical  Divergence Z
 	 
   // xy Derivatives
-  yGrad_C2F.apply_to_field(f,FaceY);	
+  yGrad_C2F.apply_to_field(funct.f,FaceY);	
   Ry_F2C.apply_to_field(FaceY,D2DxDy);
   Rx_C2F.apply_to_field(D2DxDy, FaceX);
   xDiv_F2C.apply_to_field(FaceX,D2DxDy);	
 
   // yx Derivatives	
-  xGrad_C2F.apply_to_field(f,FaceX);	
+  xGrad_C2F.apply_to_field(funct.f,FaceX);	
   Rx_F2C.apply_to_field(FaceX,D2DyDx);
   Ry_C2F.apply_to_field(D2DyDx, FaceY);
   yDiv_F2C.apply_to_field(FaceY,D2DyDx);	
 		
   // xz Derivatives
-  zGrad_C2F.apply_to_field(f,FaceZ);	
+  zGrad_C2F.apply_to_field(funct.f,FaceZ);	
   Rz_F2C.apply_to_field(FaceZ,D2DxDz);
   Rx_C2F.apply_to_field(D2DxDz, FaceX);
   xDiv_F2C.apply_to_field(FaceX,D2DxDz);	
 
   // zx Derivatives
-  xGrad_C2F.apply_to_field(f,FaceX);	
+  xGrad_C2F.apply_to_field(funct.f,FaceX);	
   Rx_F2C.apply_to_field(FaceX,D2DzDx);
   Rz_C2F.apply_to_field(D2DzDx, FaceZ);
   zDiv_F2C.apply_to_field(FaceZ,D2DzDx);	
 
   // xz Derivatives
-  zGrad_C2F.apply_to_field(f,FaceZ);	
+  zGrad_C2F.apply_to_field(funct.f,FaceZ);	
   Rz_F2C.apply_to_field(FaceZ,D2DyDz);
   Ry_C2F.apply_to_field(D2DyDz, FaceY);
   yDiv_F2C.apply_to_field(FaceY,D2DyDz);	
 
   // zx Derivatives
-  yGrad_C2F.apply_to_field(f,FaceY);	
+  yGrad_C2F.apply_to_field(funct.f,FaceY);	
   Ry_F2C.apply_to_field(FaceY,D2DzDy);
   Rz_C2F.apply_to_field(D2DzDy, FaceZ);
   zDiv_F2C.apply_to_field(FaceZ,D2DzDy);	
 				
-
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Check Equality - Scratch Operator
   // -----------------------------------------------------------------------------------------------------------------------------
   std:: cout << " Test x-y: ";
-  check_equality_F2C(grid, d2fdxdy.begin(), D2DxDy, test_xy, mean_rel_err_xy, max_rel_err_xy);
+  check_equality_F2C(grid, funct.d2fdxdy, D2DxDy, test_xy, mean_rel_err_xy, max_rel_err_xy);
   std:: cout << endl;
 
   std:: cout << " Test x-z: ";
-  check_equality_F2C(grid, d2fdxdz.begin(), D2DxDz, test_xz, mean_rel_err_xz, max_rel_err_xz);
+  check_equality_F2C(grid, funct.d2fdxdz, D2DxDz, test_xz, mean_rel_err_xz, max_rel_err_xz);
   std:: cout << endl;
 
   std:: cout << " Test y-x: ";
-  check_equality_F2C(grid, d2fdydx.begin(), D2DyDx, test_yx, mean_rel_err_yx, max_rel_err_yx);
+  check_equality_F2C(grid, funct.d2fdydx, D2DyDx, test_yx, mean_rel_err_yx, max_rel_err_yx);
   std:: cout << endl;
 
   std:: cout << " Test y-z: ";
-  check_equality_F2C(grid, d2fdydz.begin(), D2DyDz, test_yz, mean_rel_err_yz, max_rel_err_yz);
+  check_equality_F2C(grid, funct.d2fdydz, D2DyDz, test_yz, mean_rel_err_yz, max_rel_err_yz);
   std:: cout << endl;
   	
   std:: cout << " Test z-x: ";
-  check_equality_F2C(grid, d2fdzdx.begin(), D2DzDx, test_zx, mean_rel_err_zx, max_rel_err_zx);
+  check_equality_F2C(grid, funct.d2fdzdx, D2DzDx, test_zx, mean_rel_err_zx, max_rel_err_zx);
   std:: cout << endl;
 
   std:: cout << " Test z-y: ";
-  check_equality_F2C(grid, d2fdzdy.begin(), D2DzDy, test_zy, mean_rel_err_zy, max_rel_err_zy);
+  check_equality_F2C(grid, funct.d2fdzdy, D2DzDy, test_zy, mean_rel_err_zy, max_rel_err_zy);
   std:: cout << endl;
 	 
   mean_rel_err[X_DIR] = mean_rel_err_xy;
@@ -746,23 +673,23 @@ bool test_mixed_derivatives(const grid_class& grid, analytical_class& funct, std
     bool comparison_xz = true;
     bool comparison_yz = true;
   		
-    for(unsigned int i=0; i<grid.index_bothsides.size(); i++)
+    for(unsigned int i=0; i<grid.index_bothsides_cell.size(); i++)
       {    
-	int point = grid.index_bothsides[i];
+	int point = grid.index_bothsides_cell[i];
 	if ( fabs( D2DxDy.begin()[point] - D2DyDx.begin()[point]) / (fabs(D2DxDy.begin()[point])+TOL) >= 1.e-4 )
 	  comparison_xy = false; 		
       }	
 		
-    for(unsigned int i=0; i<grid.index_bothsides.size(); i++)
+    for(unsigned int i=0; i<grid.index_bothsides_cell.size(); i++)
       {    
-	int point = grid.index_bothsides[i];
+	int point = grid.index_bothsides_cell[i];
 	if ( fabs( D2DxDz.begin()[point] - D2DzDx.begin()[point]) / (fabs(D2DxDz.begin()[point])+TOL) >= 1.e-4 )
 	  comparison_xz = false; 		
       }	
 		
-    for(unsigned int i=0; i<grid.index_bothsides.size(); i++)
+    for(unsigned int i=0; i<grid.index_bothsides_cell.size(); i++)
       {    
-	int point = grid.index_bothsides[i];
+	int point = grid.index_bothsides_cell[i];
 	if ( fabs( D2DyDz.begin()[point] - D2DzDy.begin()[point]) / (fabs(D2DyDz.begin()[point])+TOL) >= 1.e-4 )
 	  comparison_yz = false; 		
       }	
@@ -786,7 +713,7 @@ bool test_mixed_derivatives(const grid_class& grid, analytical_class& funct, std
 // *****************************************************************************************************************************	
 // Test Scaling C2F
 // *****************************************************************************************************************************	
-void test_scale_C2F(string kind, std::vector<int> dim, std::vector<int> nghostCell, std::vector<bool> &ok)
+void test_scale_C2F(string kind, std::vector<int> dim, std::vector<bool> &ok)
 {
   using namespace FVStaggeredUniform;
   std::cout.setf(ios::scientific);
@@ -798,15 +725,15 @@ void test_scale_C2F(string kind, std::vector<int> dim, std::vector<int> nghostCe
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Geometry Construction
   // -----------------------------------------------------------------------------------------------------------------------------	
-  grid_class grid(dim, nghostCell);
+  grid_class grid(dim);
 
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Spatial Fields
   // -----------------------------------------------------------------------------------------------------------------------------	
-  vector<double> f1(grid.nn,0.0);
-  vector<double> f2(grid.nn,0.0);
+  vector<double> f1(grid.ntot_cell);
+  vector<double> f2(grid.ntot_cell);
 
-  for( int ix=0; ix<grid.nn; ++ix )
+  for( int ix=0; ix<grid.ntot_cell; ++ix )
     {
       f1[ix] = double(ix);							 
       f2[ix] = double(ix)*double(2*ix) + sqrt(double(ix)); 
@@ -982,7 +909,7 @@ void test_scale_C2F(string kind, std::vector<int> dim, std::vector<int> nghostCe
 // *****************************************************************************************************************************	
 // Test Scaling F2C
 // *****************************************************************************************************************************	
-void test_scale_F2C(string kind, std::vector<int> dim, std::vector<int> nghostCell, std::vector<bool> &ok)
+void test_scale_F2C(string kind, std::vector<int> dim, std::vector<bool> &ok)
 {
   using namespace FVStaggeredUniform;
   std::cout.setf(ios::scientific);
@@ -994,15 +921,15 @@ void test_scale_F2C(string kind, std::vector<int> dim, std::vector<int> nghostCe
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Geometry Construction
   // -----------------------------------------------------------------------------------------------------------------------------	
-  grid_class grid(dim, nghostCell);
+  grid_class grid(dim);
 
   // -----------------------------------------------------------------------------------------------------------------------------	
   // Spatial Fields
   // -----------------------------------------------------------------------------------------------------------------------------	
-  vector<double> f1(grid.nn,0.0);
-  vector<double> f2(grid.nn,0.0);
+  vector<double> f1(grid.ntot_cell);
+  vector<double> f2(grid.ntot_cell);
 
-  for( int ix=0; ix<grid.nn; ++ix )
+  for( int ix=0; ix<grid.ntot_cell; ++ix )
     {
       f1[ix] = double(ix);							 
       f2[ix] = double(ix)*double(2*ix) + sqrt(double(ix)); 
@@ -1190,91 +1117,157 @@ void right_scale_test();
 
 int main()
 {
+  const int size = 300;
+  char comment[size];
+	
+  int iLinearInterpolant_C2F_Test;
+  int iLinearInterpolant_F2C_Test;
+  int iGradient_C2F_Test;
+  int iGradient_F2C_Test;
+  int iDivergence_C2F_Test;
+  int iDivergence_F2C_Test; 	
+  int iScratch_Laplacian_Test;
+  int iMixedDerivatives_Test;
+  int iLinearInterpolant_Convergence_C2F_Test;
+  int iLinearInterpolant_Convergence_F2C_Test; 	
+  int iGradient_Convergence_C2F_Test;
+  int iGradient_Convergence_F2C_Test; 	
+  int iDivergence_Convergence_C2F_Test;
+  int iDivergence_Convergence_F2C_Test; 	
+  int iScratch_Laplacian_Convergence_Test;
+  int iMixedDerivatives_Convergence_Test;
+  int iLeft_Scale_Test;
+  int iRight_Scale_Test;
+	
+  ifstream iFile("src/test/test.input", ios::in);
+		
   // 1. Operator - TESTS
   // -----------------------------------------------------------------------------------
-  int iLinearInterpolant_C2F_Test	= 1;
-  int iLinearInterpolant_F2C_Test	= 0;
+  iFile.getline(comment, size);
+  iFile.getline(comment, size);
+  iFile.getline(comment, size);	
 	
-  int iGradient_C2F_Test		= 1;
-  int iGradient_F2C_Test		= 0;  	
+  iFile.getline(comment, size);	
+  iFile >> iLinearInterpolant_C2F_Test;	iFile.getline(comment, size);
+  iFile >> iLinearInterpolant_F2C_Test;	iFile.getline(comment, size);
+  iFile.getline(comment, size);	
 	
-  int iDivergence_C2F_Test		= 1;
-  int iDivergence_F2C_Test		= 0; 	
+  iFile.getline(comment, size);		
+  iFile >> iGradient_C2F_Test;			iFile.getline(comment, size);
+  iFile >> iGradient_F2C_Test;			iFile.getline(comment, size);
+  iFile.getline(comment, size);		
+		
+  iFile.getline(comment, size);		
+  iFile >> iDivergence_C2F_Test;		iFile.getline(comment, size);
+  iFile >> iDivergence_F2C_Test;		iFile.getline(comment, size); 	
+  iFile.getline(comment, size);	
+
+  iFile.getline(comment, size);	
+  iFile >> iScratch_Laplacian_Test;		iFile.getline(comment, size);
+  iFile.getline(comment, size);	
+
+  iFile.getline(comment, size);		  	
+  iFile >> iMixedDerivatives_Test;		iFile.getline(comment, size);
+  iFile.getline(comment, size);	
 	
-  int iScratch_Laplacian_Test		= 1;
-  int iMixedDerivatives_Test		= 0;
- 	
   // 2. Operators - CONVERGENCE TESTS 
   // -----------------------------------------------------------------------------------	
-  int iLinearInterpolant_Convergence_C2F_Test 	= 1;
-  int iLinearInterpolant_Convergence_F2C_Test 	= 0; 	
+  iFile.getline(comment, size);
+  iFile.getline(comment, size);
+  iFile.getline(comment, size);  	
 	
-  int iGradient_Convergence_C2F_Test		= 1;
-  int iGradient_Convergence_F2C_Test		= 0; 	
+  iFile.getline(comment, size);	
+  iFile >> iLinearInterpolant_Convergence_C2F_Test;		iFile.getline(comment, size);
+  iFile >> iLinearInterpolant_Convergence_F2C_Test; 		iFile.getline(comment, size);
+  iFile.getline(comment, size);	
+
+  iFile.getline(comment, size);	
+  iFile >> iGradient_Convergence_C2F_Test;				iFile.getline(comment, size);
+  iFile >> iGradient_Convergence_F2C_Test; 			iFile.getline(comment, size);
+  iFile.getline(comment, size);	
+
+  iFile.getline(comment, size);	
+  iFile >> iDivergence_Convergence_C2F_Test;			iFile.getline(comment, size);
+  iFile >> iDivergence_Convergence_F2C_Test; 			iFile.getline(comment, size);
+  iFile.getline(comment, size);	
 	
-  int iDivergence_Convergence_C2F_Test		= 1;
-  int iDivergence_Convergence_F2C_Test		= 0; 	
+  iFile.getline(comment, size);	
+  iFile >> iScratch_Laplacian_Convergence_Test;			iFile.getline(comment, size);
+  iFile.getline(comment, size);	
 	
-  int iScratch_Laplacian_Convergence_Test	= 1;
-  int iMixedDerivatives_Convergence_Test	= 0;
- 	 	
+  iFile.getline(comment, size);	  	
+  iFile >> iMixedDerivatives_Convergence_Test;			iFile.getline(comment, size);
+  iFile.getline(comment, size);	
+
   // 3. Spatial Fields - LEFT AND RIGHT SCALING
   // ----------------------------------------------------------------------------------- 	
-  int iLeft_Scale_Test	= 1;
-  int iRight_Scale_Test = 1;
-  	 	
+  iFile.getline(comment, size);
+  iFile.getline(comment, size);
+  iFile.getline(comment, size);
+  iFile >> iLeft_Scale_Test;								iFile.getline(comment, size);
+  iFile >> iRight_Scale_Test;							iFile.getline(comment, size);
+	
+  iFile >> comment;
+  iFile.close();
+	
+  if (strcmp(comment, "END"))
+    {
+      cout << "Error in file test.input!" << endl;
+      exit(1);
+    }
+
   std::cout << endl << endl;	
  
   // ------------------------------------------------------------------------
   // 1. OPERATORS - TESTS
   // ------------------------------------------------------------------------
   // LINEAR INTERPOLANT OPERATOR TEST
-  if (iLinearInterpolant_C2F_Test)	operator_test(1);
-  if (iLinearInterpolant_F2C_Test)  	operator_test(6);
+  if (iLinearInterpolant_C2F_Test==1)	operator_test(1);
+  if (iLinearInterpolant_F2C_Test==1)  	operator_test(6);
 						
   // GRADIENT OPERATOR TEST
-  if (iGradient_C2F_Test)			operator_test(2);
-  if (iGradient_F2C_Test)			operator_test(7);
+  if (iGradient_C2F_Test==1)			operator_test(2);
+  if (iGradient_F2C_Test==1)			operator_test(7);
 		  	
   // DIVERGENCE OPERATOR TEST
-  if (iDivergence_C2F_Test)		operator_test(3);
-  if (iDivergence_F2C_Test)		operator_test(8);
+  if (iDivergence_C2F_Test==1)		operator_test(3);
+  if (iDivergence_F2C_Test==1)		operator_test(8);
 
   // SCRATCH OPERATOR TEST
-  if (iScratch_Laplacian_Test)		operator_test(4);
+  if (iScratch_Laplacian_Test==1)		operator_test(4);
 
   // MIXED DERIVATIVES TEST
-  if (iMixedDerivatives_Test)		operator_test(5);
+  if (iMixedDerivatives_Test==1)		operator_test(5);
 		 
   // ------------------------------------------------------------------------
   // 2. OPERATORS - CONVERGENCE TESTS
   // ------------------------------------------------------------------------
   // LINEAR INTERPOLANT OPERATOR TEST - CONVERGENCE
-  if (iLinearInterpolant_Convergence_C2F_Test)	convergence_test(1);
-  if (iLinearInterpolant_Convergence_F2C_Test)	convergence_test(6);
+  if (iLinearInterpolant_Convergence_C2F_Test==1)	convergence_test(1);
+  if (iLinearInterpolant_Convergence_F2C_Test==1)	convergence_test(6);
 
   // GRADIENT OPERATOR TEST - CONVERGENCE
-  if (iGradient_Convergence_C2F_Test)			convergence_test(2);  	
-  if (iGradient_Convergence_F2C_Test)			convergence_test(7);
+  if (iGradient_Convergence_C2F_Test==1)			convergence_test(2);  	
+  if (iGradient_Convergence_F2C_Test==1)			convergence_test(7);
 		
   // DIVERGENCE OPERATOR TEST - CONVERGENCE
-  if (iDivergence_Convergence_C2F_Test)		convergence_test(3);
-  if (iDivergence_Convergence_F2C_Test)		convergence_test(8);
+  if (iDivergence_Convergence_C2F_Test==1)		convergence_test(3);
+  if (iDivergence_Convergence_F2C_Test==1)		convergence_test(8);
 		  	
   // SCRATCH (LAPLACIAN) OPERATOR TEST - CONVERGENCE
-  if (iScratch_Laplacian_Convergence_Test)		convergence_test(4);
+  if (iScratch_Laplacian_Convergence_Test==1)		convergence_test(4);
 	
   // MIXED DERIVATIVES OPERATOR TEST - CONVERGENCE
-  if (iMixedDerivatives_Convergence_Test)		convergence_test(5);	
+  if (iMixedDerivatives_Convergence_Test==1)		convergence_test(5);	
  
   // ------------------------------------------------------------------------
-  // 5. SPATIAL FIELDS - LEFT AND RIGHT SCALING
+  // 3. SPATIAL FIELDS - LEFT AND RIGHT SCALING
   // ------------------------------------------------------------------------		 		 		
   // LEFT SCALE
-  if (iLeft_Scale_Test)	left_scale_test();
+  if (iLeft_Scale_Test==1)	left_scale_test();
 
   // RIGHT SCALE
-  if (iRight_Scale_Test)	right_scale_test();
+  if (iRight_Scale_Test==1)	right_scale_test();
 	
   // Return	
   return 0;
@@ -1293,25 +1286,24 @@ void operator_test(int kind)
   if (kind == 7) std::cout << " GRADIENT OPERATOR - F2C"			<< endl;	
   if (kind == 8) std::cout << " DIVERGENCE OPERATOR - F2C"			<< endl;	
   std::cout << "---------------------------------------------------------------" 			<< endl 	<< endl;
-  	
+  	   
   bool ok = false;
   std::vector<int> dim(3,1);
-  std::vector<int> nghostCell(6,1);
   std::vector<double> mean_rel_err(3, 0.);
   std::vector<double> max_rel_err(3, 0.);
   	
-  for (int nGridPoints=11, i=1; i<=3; nGridPoints*=2, i++)
+  for (int nGridPoints=4, i=1; i<2; nGridPoints*=2, i++)
     {  	
       std::cout << "Grid: " << nGridPoints << " x " << nGridPoints << " x "<< nGridPoints << endl;
       dim[X_DIR] = nGridPoints; dim[Y_DIR] = nGridPoints; dim[Z_DIR] = nGridPoints;
-  	
+  	 
       for (int iTestFunction=1; iTestFunction <=8; iTestFunction++)
 	{
-	  grid_class grid(dim, nghostCell);
+	  grid_class grid(dim);
 	  analytical_class funct(grid);
 	  funct.assign_function_name(iTestFunction);
 	  funct.assign_function(iTestFunction);
-	
+	    
 	  std::cout << "Test Function " << iTestFunction << ": " << funct.test.description() << endl;
 	  std::cout << "---------------------------------------------------------------------------------" << endl;	
 			
@@ -1388,12 +1380,10 @@ void convergence_test(int kind)
 	 
   bool ok;
   std::vector<int> dim(3,1);
-  std::vector<int> nghostCell(6,1);
-  	
   std::vector<double> mean_rel_err(3, 0.);
   std::vector<double> max_rel_err(3, 0.);
   std::string fileName;
-  std::string path;
+  std::string path; 
 	
   if (kind == 1) path = "testfiles/convergence/linear_interpolant_C2F/TestFunction_";
   if (kind == 2) path = "testfiles/convergence/gradient_C2F/TestFunction_";
@@ -1403,7 +1393,7 @@ void convergence_test(int kind)
   if (kind == 6) path = "testfiles/convergence/linear_interpolant_F2C/TestFunction_";
   if (kind == 7) path = "testfiles/convergence/gradient_F2C/TestFunction_";
   if (kind == 8) path = "testfiles/convergence/divergence_F2C/TestFunction_";
-			  	   	
+			  	    	
   for (int iTestFunction=1; iTestFunction <=8; iTestFunction++)
     {
       std::cout << "Test Function: " << iTestFunction << endl;
@@ -1423,13 +1413,13 @@ void convergence_test(int kind)
       oFile << "Max Rel Z" << "\t\t";
       oFile << endl << endl;
       
-      for (int nGridPoints=4, i=1; i<5; nGridPoints*=2, i++)
+      for (int nGridPoints=6, i=1; i<5; nGridPoints*=2, i++)
 	{  			 
 	  std::cout << "Grid: " << nGridPoints << " x " << nGridPoints << " x "<< nGridPoints << endl;
   		  	
 	  dim[X_DIR] = nGridPoints; dim[Y_DIR] = nGridPoints; dim[Z_DIR] = nGridPoints;
 
-	  grid_class grid( dim, nghostCell );
+	  grid_class grid( dim);
 	  analytical_class funct( grid );
 	  funct.assign_function_name(iTestFunction);
 	  funct.assign_function(iTestFunction);
@@ -1470,7 +1460,6 @@ void left_scale_test()
   std::vector<bool> ok(3,true);
   std::vector<string> ok_string(3,"FAIL");
   std::vector<int>  dim(3,1);
-  std::vector<int>  nghostCell(6,1);
 	  
   ofstream oFile;
   oFile.open("testfiles/scaling/Left_Scale", ios::out);
@@ -1485,7 +1474,7 @@ void left_scale_test()
 	  std::cout << "Grid: " << nX << " x " << nY << " x "<< nZ << endl;
 	  dim[X_DIR] = nX; dim[Y_DIR] = nY; dim[Z_DIR] = nZ;
 	  			  						
-	  test_scale_C2F("LEFT", dim, nghostCell, ok);
+	  test_scale_C2F("LEFT", dim, ok);
   			
 	  if (ok[0] == true)	 	{std::cout << "Left Scaling C2F - Linear Interpolant: PASS" << endl; ok_string[0] = "PASS";}
 	  if (ok[0] == false)		 std::cout << "Left Scaling C2F - Linear Interpolant: FAIL" << endl;
@@ -1502,7 +1491,7 @@ void left_scale_test()
 	  oFile << ok_string[0] << "\t" << ok_string[1] << "\t" << ok_string[2] << "\t";
 	  oFile << endl;
 				  				
-	  test_scale_F2C("LEFT", dim, nghostCell, ok);
+	  test_scale_F2C("LEFT", dim, ok);
   			
 	  if (ok[0] == true)	 	{std::cout << "Left Scaling F2C - Linear Interpolant: PASS" << endl; ok_string[0] = "PASS";}
 	  if (ok[0] == false)		 std::cout << "Left Scaling F2C - Linear Interpolant: FAIL" << endl;
@@ -1534,7 +1523,6 @@ void right_scale_test()
   std::vector<bool> ok(3,true);
   std::vector<string> ok_string(3,"FAIL");
   std::vector<int>  dim(3,1);
-  std::vector<int>  nghostCell(6,1);
 	  
   ofstream oFile;
   oFile.open("testfiles/scaling/Right_Scale", ios::out);
@@ -1549,7 +1537,7 @@ void right_scale_test()
 	  std::cout << "Grid: " << nX << " x " << nY << " x "<< nZ << endl;
 	  dim[X_DIR] = nX; dim[Y_DIR] = nY; dim[Z_DIR] = nZ;
 	  			  						
-	  test_scale_C2F("RIGHT", dim, nghostCell, ok);
+	  test_scale_C2F("RIGHT", dim, ok);
   			
 	  if (ok[0] == true)	 	{std::cout << "Right Scaling C2F - Linear Interpolant: PASS" << endl; ok_string[0] = "PASS";}
 	  if (ok[0] == false)		 std::cout << "Right Scaling C2F - Linear Interpolant: FAIL" << endl;
@@ -1566,7 +1554,7 @@ void right_scale_test()
 	  oFile << ok_string[0] << "\t" << ok_string[1] << "\t" << ok_string[2] << "\t";
 	  oFile << endl;
 				
-	  test_scale_F2C("RIGHT", dim, nghostCell, ok);
+	  test_scale_F2C("RIGHT", dim, ok);
   			
 	  if (ok[0] == true)	 	{std::cout << "Right Scaling F2C - Linear Interpolant: PASS" << endl; ok_string[0] = "PASS";}
 	  if (ok[0] == false)		 std::cout << "Right Scaling F2C - Linear Interpolant: FAIL" << endl;
@@ -1587,4 +1575,6 @@ void right_scale_test()
   oFile << endl;
   oFile.close();
 }
+
+
 
