@@ -8,6 +8,10 @@
 #include <Epetra_CrsMatrix.h>
 #include <EpetraExt_MatrixMatrix.h>
 
+
+class Epetra_LocalMap;  // forward declaration
+
+
 namespace SpatialOps{
 
   //====================================================================

@@ -2,6 +2,7 @@
 #define UT_SpatialField_h
 
 #include <vector>
+#include <iostream>
 
 #include <SpatialOpsDefs.h>
 #include <LinearSystem.h>
@@ -480,6 +481,13 @@ namespace SpatialOps{
     return *this;
   }
   */
+  //--------------------------------------------------------------------
+  template< typename VecOps, typename FieldLocation, typename GhostTraits >
+  void
+  SpatialField<VecOps,FieldLocation,GhostTraits>::Print(std::ostream& s) const
+  {
+    vec_.Print(s);
+  }
   //==================================================================
 
 
