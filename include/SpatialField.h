@@ -97,6 +97,9 @@ namespace SpatialOps{
     inline SpatialField& operator+=(const RHS&);
     inline SpatialField& operator-=(const RHS&);
 
+    inline bool operator==(const SpatialField&);
+    inline bool operator!=(const SpatialField&);
+
     //}@
 
 
@@ -428,28 +431,18 @@ namespace SpatialOps{
     return *this;
   }
   //--------------------------------------------------------------------
-  /*  template< class VecOps, typename FieldLocation, typename GhostTraits >
+  template< class VecOps, typename FieldLocation, typename GhostTraits >
   SpatialField< VecOps, FieldLocation, GhostTraits >&
   SpatialField< VecOps, FieldLocation, GhostTraits >::
   operator -=(const RHS& rhs)
   {
-    double * const f = get_ptr();
-
-    const double * const r = rhs.get_ptr();
-
     // get the dimensions of the field
-    const int nxf= (extent_[0]>1)
-      ? extent_[0]
+    const int nxf = extent_[0]
       + GhostTraits::template get<XDIR,SideMinus>()
-      + GhostTraits::template get<XDIR,SidePlus>()
-      : 1;
-    const int nyf= (extent_[1]>1)
-      ? extent_[1]
-      + GhostTraits::template get<YDIR,SideMinus>()
-      + GhostTraits::template get<YDIR,SidePlus>()
-      : 1;
-    const int nzf= (extent_[2]>1)
-      ? extent_[2]
+      + GhostTraits::template get<XDIR,SidePlus>();
+
+    const int nyf= ( extent_[1] > 1 ) ?
+      extent_[1]
       + GhostTraits::template get<YDIR,SideMinus>()
       + GhostTraits::template get<YDIR,SidePlus>()
       : 1;
@@ -463,24 +456,33 @@ namespace SpatialOps{
     // Thus, we must be very carful on the indices!
     //
 
-    int ixr = 0;
-    int ixf = nghost_[0];
-    if( nyf>1 ) ixf += nxf;
-    if( nzf>1 ) ixf += nxf*nyf;
+    static const int ngxm = GhostTraits::template get<XDIR,SideMinus>();
+    static const int ngxp = GhostTraits::template get<XDIR,SidePlus>();
+    static const int ngym = GhostTraits::template get<YDIR,SideMinus>();
+    static const int ngyp = GhostTraits::template get<YDIR,SidePlus>();
+
+    static const int yskip = ngxm+ngxp;
+    static const int zskip = nxf * ( ngym+ngyp );
+
+    int ixf = GhostTraits::template get<XDIR,SideMinus>();
+    if( extent_[1] > 1 )   ixf += GhostTraits::template get<YDIR,SideMinus>();
+    if( extent_[2] > 1 )   ixf += ( nxf * GhostTraits::template get<YDIR,SideMinus>() )
+			     * ( nyf * GhostTraits::template get<ZDIR,SideMinus>() );
+
+    typename SpatialField::iterator ifld = this->begin() + ixf;
+    typename RHS::const_iterator irhs = rhs.begin();
+
     for( int k=0; k<nzr; ++k ){
       for( int j=0; j<nyr; ++j ){
 	for( int i=0; i<nxr; ++i ){
-	  f[ixf] -= r[ixr];
-	  ++ixf;
-	  ++ixr;
+	  *ifld++  -=  *irhs++;
 	}
-	ixf += nghost_[0]+nghost_[1];
+	ifld += yskip;
       }
-      ixf += nxf * ( nghost_[2] + nghost_[3] );
+      ifld += zskip;
     }
     return *this;
   }
-  */
   //--------------------------------------------------------------------
   template< typename VecOps, typename FieldLocation, typename GhostTraits >
   void
@@ -488,6 +490,26 @@ namespace SpatialOps{
   {
     vec_.Print(s);
   }
+  //--------------------------------------------------------------------
+  template< typename VecOps, typename FieldLocation, typename GhostTraits >
+  bool
+  SpatialField<VecOps,FieldLocation,GhostTraits>::operator==(const SpatialField& f)
+  {
+    for( int i=0; i<npts_; ++i ){
+      if( f[i] != fieldValues_[i] ) return false; 
+    }
+    return true;
+  }
+  //--------------------------------------------------------------------
+  template< typename VecOps, typename FieldLocation, typename GhostTraits >
+  bool
+  SpatialField<VecOps,FieldLocation,GhostTraits>::operator!=(const SpatialField& f)
+  {
+    return !(*this==f);
+  }
+  //--------------------------------------------------------------------
+
+
   //==================================================================
 
 

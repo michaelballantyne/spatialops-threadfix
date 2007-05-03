@@ -222,6 +222,13 @@ bool test( const std::vector<int> & dim )
   tmp.reset(); tmp.add_field_contribution(d2f  ); tmpField=tmp;  EpetraExt::VectorToMatrixMarketFile( "d2fdx2.mm", tmpField.get_linalg_vec(), "", "" );
   tmp.reset(); tmp.add_field_contribution(fint2); tmpField=tmp;  EpetraExt::VectorToMatrixMarketFile( "fintx2.mm", tmpField.get_linalg_vec(), "", "" );
 
+  tmpField += tmp;  // test += operator
+  tmpField -= tmp;  // test -= operator
+  CellFieldNoGhost tmp2( dim,NULL,InternalStorage );
+  tmp2 = tmp;
+  cout << "SpatialField operators -=, +=, ==, = ... ";
+  if( tmp2!=tmpField ) cout << "FAIL!" << std::endl;
+  else cout << "PASS" << std::endl;
 
   if( dim[1] > 1 ){
 
@@ -327,17 +334,24 @@ bool test( const std::vector<int> & dim )
 
     szc.apply_to_field( f, d2f );
 
+    cout << "test on grad/div consistency ... ";
     ix=0;
+    bool trouble = false;
     for( int k=klo; k<khi ; ++k ){
       for( int j=jlo; j<jhi; ++j ){
 	for( int i=ilo; i<ihi; ++i ){
 	  const double err = std::abs( d2fa[ix] - d2f[ix] );
-	  if( err > 1.0e-11 ) std::cout << "("<<i<<","<<j<<","<<k<<") err: " << err << std::endl;
+	  if( err > 1.0e-11 ){
+	    std::cout << "("<<i<<","<<j<<","<<k<<") err: " << err << std::endl;
+	    trouble = true;
+	  }
 	  assert( err < 1.0e-10 );
 	  ++ix;
 	}
       }
     }
+    if( trouble ) cout << "FAIL" << std::endl;
+    else cout << "PASS" << std::endl;
     
     EpetraExt::RowMatrixToMatrixMarketFile( "Lz.mm", szc.get_linalg_mat(), "", "" );
 

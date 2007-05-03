@@ -1292,7 +1292,7 @@ void operator_test(int kind)
   std::vector<double> mean_rel_err(3, 0.);
   std::vector<double> max_rel_err(3, 0.);
   	
-  for (int nGridPoints=4, i=1; i<2; nGridPoints*=2, i++)
+  for (int nGridPoints=19, i=0; i<2; nGridPoints*=2, i++)
     {  	
       std::cout << "Grid: " << nGridPoints << " x " << nGridPoints << " x "<< nGridPoints << endl;
       dim[X_DIR] = nGridPoints; dim[Y_DIR] = nGridPoints; dim[Z_DIR] = nGridPoints;

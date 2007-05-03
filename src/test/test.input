@@ -23,22 +23,22 @@
 OPERATORS - CONVERGENCE TESTS
  -----------------------------------------------------------------------------------------------------
  LINEAR INTERPOLANT OPERATOR TEST - CONVERGENCE
- 1		iLinearInterpolant_Convergence_C2F_Test
- 1		iLinearInterpolant_Convergence_F2C_Test
+ 0		iLinearInterpolant_Convergence_C2F_Test
+ 0		iLinearInterpolant_Convergence_F2C_Test
 
 GRADIENT OPERATOR TEST - CONVERGENCE
-1		iGradient_Convergence_C2F_Test
-1		iGradient_Convergence_F2C_Test
+0		iGradient_Convergence_C2F_Test
+0		iGradient_Convergence_F2C_Test
 		
 DIVERGENCE OPERATOR TEST - CONVERGENCE
-1		iDivergence_Convergence_C2F_Test
-1		iDivergence_Convergence_F2C_Test
+0		iDivergence_Convergence_C2F_Test
+0		iDivergence_Convergence_F2C_Test
 		  	
 SCRATCH (LAPLACIAN) OPERATOR TEST - CONVERGENCE
-1		iScratch_Laplacian_Convergence_Test
+0		iScratch_Laplacian_Convergence_Test
 	
 MIXED DERIVATIVES OPERATOR TEST - CONVERGENCE
-1		iMixedDerivatives_Convergence_Test
+0		iMixedDerivatives_Convergence_Test
  
  -----------------------------------------------------------------------------------------------------   
    SPATIAL FIELDS - LEFT AND RIGHT SCALING
