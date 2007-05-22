@@ -431,16 +431,71 @@ bool test_linsys( const std::vector<int> & dim )
 
 //====================================================================
 
+void test_daixt( vector<int>& dim )
+{
+  using namespace SpatialOps;
+  using namespace FVStaggeredUniform;
+
+  cout << "SpatialField operators +, -, /, *, =  ... ";
+
+  vector<double> d1, d2;
+  const int n = dim[0]*dim[1]*dim[2];
+  for( int i=0; i<n; ++i){
+    d1.push_back(i);
+    d2.push_back(-i+1.234);
+  }
+
+  CellFieldNoGhost f1( dim, &d1[0], ExternalStorage );
+  CellFieldNoGhost f2( dim, &d2[0], ExternalStorage );
+  CellFieldNoGhost f3( dim, NULL,   InternalStorage );
+
+  f3 = f1+f2;
+  for( int i=0; i<n; ++i ){
+    if( std::abs(f3[i] - 1.234)>1.0e-10 ){
+      cout << "FAIL" << endl;
+    }
+  }
+
+  f3 = f3-(f1+f2);
+  for( int i=0; i<n; ++i ){
+    if( std::abs(f3[i])>1.0e-10 ){
+      cout << "FAIL" << endl;
+    }
+  }
+
+
+  f3 = (f1+f2)*f1;
+  for( int i=0; i<n; ++i ){
+    if( std::abs(f3[i] - f1[i]*1.234)>1.0e-10 ){
+      cout << "FAIL" << endl;
+    }
+  }
+
+
+  f3 = f1*f2+f1/f2*f3+f2/f1+f2*f1*f2;  // this ends up using two temporaries.
+
+  // THIS SHOULD NEVER BE DONE, because it is very volatile, as shown below.
+  CellFieldNoGhost& f4 = f1+f2;  // f4 is computed from a temporary.
+  f3 = f1-f2;       // the same temporary is used here, and now f4 is dead.
+
+  cout << "PASS" << endl;
+}
+
+//====================================================================
+
 int main()
 {
   vector<int> dim(3,1);
   dim[0]= 14;
-  dim[1]= 11;
-  dim[2]= 12;
+  dim[1]=  1;
+  dim[2]=  1;
+
+  test_daixt( dim );
 
   build_ops( dim );
 
   test( dim );
   test_linsys( dim );
+
   return 0;
 }

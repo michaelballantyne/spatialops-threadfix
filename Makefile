@@ -4,6 +4,7 @@
 BOOST_INCLUDE = /home/sutherland/packages/boost_1_33_1
 TRILINOS_INCLUDE = /home/sutherland/apps/trilinos_jcs_opt/include
 TRILINOS_LIB      = /home/sutherland/apps/trilinos_jcs_opt/lib 
+DAIXT_INCLUDE     = /home/sutherland/apps/daixtrose/include
 LIBDIRS = -L./ -L$(TRILINOS_LIB)
 EXTRA_LIBS = 
 
@@ -16,7 +17,7 @@ EXTRA_LIBS =
 #LIBDIRS = -L./ -L$(TRILINOS_LIB) -L/sw/lib/gcc-lib/i386-apple-darwin8/4.0.3
 #EXTRA_LIBS = -lf95
 
-INCDIRS = -I./include -I$(TRILINOS_INCLUDE) -I$(BOOST_INCLUDE)
+INCDIRS = -I./include -I$(DAIXT_INCLUDE) -I$(TRILINOS_INCLUDE) -I$(BOOST_INCLUDE)
 
 EPETRA_LIBS = -lepetra -lepetraext -lblas -llapack
 AZTECOO_LIBS = -laztecoo -lteuchos 
