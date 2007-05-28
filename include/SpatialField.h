@@ -72,7 +72,7 @@ namespace SpatialOps{
      */
     SpatialField( const std::vector<int> & fieldDims,
 		  double * const fieldValues,
-		  const StorageMode mode );
+		  const StorageMode mode = InternalStorage );
 
 
     virtual ~SpatialField();
