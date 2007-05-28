@@ -325,9 +325,7 @@ namespace SpatialOps{
       tmpFieldNum_(0)
   {
     if( mode==InternalStorage )  reset_values( npts_, fieldValues );
-
-    tmp_ = &(SpatialFieldStore<VecOps,FieldLocation,GhostTraits>::self().get( *this, tmpFieldNum_ ));
-    assert( tmp_ != NULL );
+    // leave the tmp field NULL.  If we need it later, we will construct it then.
   }
   //------------------------------------------------------------------
   template< class VecOps,
@@ -358,8 +356,7 @@ namespace SpatialOps{
   SpatialField<VecOps,FieldLocation, GhostTraits>::check_tmp_validity()
   {
     if( tmp_ == NULL ){
-      ++tmpFieldNum_;
-      tmp_ = &SpatialFieldStore<VecOps,FieldLocation,GhostTraits>::self().get( *this, tmpFieldNum_ );
+      tmp_ = &SpatialFieldStore<VecOps,FieldLocation,GhostTraits>::self().get( *this, tmpFieldNum_++ );
     }
   }
   //------------------------------------------------------------------
