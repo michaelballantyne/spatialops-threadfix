@@ -288,11 +288,11 @@ namespace SpatialOps{
     Evaluate(arg.arg());
   }
   //------------------------------------------------------------------
-  void Evaluate( const SpatialOps::FVStaggeredUniform::CellFieldNoGhost& x )
-  {
-    x.Print(cout);
-    cout << endl;
-  }
+//   void Evaluate( const SpatialOps::FVStaggeredUniform::CellFieldNoGhost& x )
+//   {
+//     x.Print(cout);
+//     cout << endl;
+//   }
   //------------------------------------------------------------------
   template<typename T>
   void Evaluate( const T& t )

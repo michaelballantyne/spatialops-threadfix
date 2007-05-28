@@ -45,7 +45,7 @@ namespace SpatialOps{
    *  This should be specialized for each operator type to provide the
    *  type of assembler required for the operator.
    */
-  template< typename OpType,
+  template< typename OpType,     // the type of operator we are dealing with
 	    typename Dir,
 	    typename Location,
 	    typename SrcGhost,
@@ -77,11 +77,11 @@ namespace SpatialOps{
    *   
    *
    */
-  template< typename LinAlg,
-	    typename OpType,
-	    typename Direction,
-	    typename SrcFieldTraits,
-	    typename DestFieldTraits >
+  template< typename LinAlg,           // linear algebra support for this operator
+	    typename OpType,           // type of operator
+	    typename Direction,        // direction that the operator acts in
+	    typename SrcFieldTraits,   // information on the source field (field operator acts on)
+	    typename DestFieldTraits > // information on the dest field (field operator produces)
   class SpatialOperator
   {
   public:
