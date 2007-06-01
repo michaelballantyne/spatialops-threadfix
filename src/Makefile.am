@@ -2,7 +2,7 @@
 # Process this file with 'automake' to produce Makefile.in
 # Then ./configure to produce Makefile
 
-AM_CPPFLAGS	= -I$(top_srcdir)/include $(SOPS_CPPFLAGS) #preprocessor flags go here
+AM_CPPFLAGS	= -I$(top_srcdir)/include -I$(top_srcdir)/include/trilinos -I$(top_srcdir)/include/boost-1_33_1 $(SOPS_CPPFLAGS) #preprocessor flags go here
 EPETRA_LIBS 	= -lepetra -lepetraext -lblas -llapack
 SOPS_LIBDIR	= -L$(top_srcdir)/lib
 

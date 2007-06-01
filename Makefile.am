@@ -1,11 +1,19 @@
+#Instruct autoconf to pick up our sub-package-configurator macro in m4/subconf.m4
+#ACLOCAL_AMFLAGS = -I m4
+
 #bin_PROGRAMS = test
 #test_SOURCES = i
 #test_CFLAGS = 
+
+#Recurse into these subdirectories and 'make' there too.
+
 SUBDIRS = 	src \
-		src/test \
-		# trilinos-7.0.6
+		src/test 
+
 #test_LDFLAGS = @LDFLAGS@ @GTK_LIBS@ -lgthread
 #INCLUDES = @GTK_CFLAGS@
+
+#Here are some custom targets to recurse the build process too.  These really should be under SUBDIRS= instead.
 BOOST_VERSION=1_33_1
 boost: jam
 	cd boost_${BOOST_VERSION}; ./bjam -sTOOLS=gcc --prefix=`pwd`/../ install
