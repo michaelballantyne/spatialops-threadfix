@@ -1,0 +1,58 @@
+=== MAC OS X: ===
+ use fink to install autotools, automake, autoconf
+ 1.  Mac OS X builds require additional tools.  Install:
+  -BSD Subsystem (from Mac OS X Installer) - installed by default
+  -Apple Developer Tools (XCode) 2.4.1 or later http://developer.apple.com/tools/xcode/
+  -Fink and FinkCommander - http://finkproject.org/
+  -Fink packages: autoconf automake gcc4 (which includes g++ and gfortran)
+  -A different GFortran is here (untested) :
+    http://www.macresearch.org/xcode_gfortran_plugin_update 
+ 2.  Make sure gfortran is in your path! Edit the file ~/.cshrc :
+    export PATH=/sw/bin:$PATH
+  and then []$ source ~/.cshrc
+
+ For some reason, when using GCC gfortran MacOSX can't find its BLAS.  Use this instead:
+./configure -C --with-blas=/System/Library/Frameworks/vecLib.framework/vecLib CXX=/sw/bin/g++-4 CC=/sw/bin/gcc-4 F77=/sw/bin/gfortran
+
+#trilinos has trouble building under OSX with the default compilers.  Use Fink's instead. These are under /sw/bin/g??-4
+#The default compilers don't work well.  If you need to use them, You need to specify /usr/local/bin/g77 if you installed a fortran compiler yourself.
+
+
+LINUX: Make sure your system defaults to gcc compilers, version 4 or greater.  If you have older GCCs installed along with version 4, you may have to set these variables to force the newer version:
+CC=gcc4
+CXX=g++4
+F77=gfortran
+
+
+
+svn co <path to repository>/SpatialOps/trunk <check out path>
+cd <blah>
+
+T#hese steps require autotools 1.9 (automake, autoconf, etc.)
+# which are included with most Linux systems.
+#
+#They will generate the portable buildsystem.  We don't need these
+#steps after the build system is checked-in to the repo
+aclocal
+autoheader
+automake --add-missing
+autoconf
+
+#Now get and install boost, trilinos, daixtrose inside trunk
+tar xzf boost_1_33_1.tar.gz
+tar xzf daixtrose-0.0.3.tar.gz
+tar xzf trilinos-7.0.6.tar.gz
+
+#remove this line (#733):
+vi trilinos-7.0.6/packages/epetraext/Makefile.in
+        if [ $(srcdir) != $(top_builddir) ]; then cp -f $(srcdir)/example/inout/matlab.h5 $(top_builddir)/example/inout/matlab.h5 ; fi
+
+#Now we don't even have to touch these packages.  The buildsystem
+#will link into them by itself.
+
+#Now just:
+./configure -C CC=g++
+#...wait... as dependencies are built first...
+
+make
+make install
