@@ -14,6 +14,7 @@ EXTRA_LIBS =
 #BOOST_INCLUDE = /jcs/software/boost_1_33_1
 #TRILINOS_INCLUDE = /jcs/software/trilinos/include
 #TRILINOS_LIB     = /jcs/software/trilinos/lib
+#DAIXT_INCLUDE    = /jcs/software/daixtrose-0.0.3/jcs_install/include
 #LIBDIRS = -L./ -L$(TRILINOS_LIB) -L/sw/lib/gcc-lib/i386-apple-darwin8/4.0.3
 #EXTRA_LIBS = -lf95
 

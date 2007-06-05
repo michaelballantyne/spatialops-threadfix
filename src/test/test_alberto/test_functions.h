@@ -1,6 +1,7 @@
 class TestFunction
 {
 public:
+  virtual ~TestFunction(){}
   virtual std::string description() = 0;
   virtual double    f(double x, double y, double z)	 = 0;	
   virtual double dfdx(double x, double y, double z)	 = 0;
@@ -17,6 +18,7 @@ public:
 class TestFunction01 : 	public TestFunction	// linear function
 {
 public:
+  TestFunction01(){}
   std::string description()	{return "Linear function";}
   double    f(double x, double y, double z)			{return 2.*x + 2.*y + 2.*z;}
   double dfdx(double x, double y, double z)			{return 2.;}
@@ -33,6 +35,7 @@ public:
 class TestFunction02 : 	public TestFunction	// quadratic function
 {
 public:
+  TestFunction02(){}
   std::string description()	{return "Quadratic function";}
   double    f(double x, double y, double z)		{return x*x + y*y + z*z; }
   double dfdx(double x, double y, double z)		{return 2.*x;}
@@ -49,6 +52,7 @@ public:
 class TestFunction03 : 	public TestFunction	// quadratic function + constant
 {
 public:
+  TestFunction03(){}
   std::string description()	{return "Quadratic function + constant";}
   double    f(double x, double y, double z)		{return x*x + y*y + z*z + 1; }
   double dfdx(double x, double y, double z)		{return 2.*x;}
@@ -66,6 +70,7 @@ public:
 class TestFunction04 : 	public TestFunction	// quadratic function with mixed terms
 {
 public:
+  TestFunction04(){}
   std::string description()	{return "Quadratic function with mixed terms";}
   double    f(double x, double y, double z)		{return 3.*x*y + 3.*x*z + 3.*y*z;}
   double dfdx(double x, double y, double z)		{return 3.*y + 3.*z;}
@@ -82,6 +87,7 @@ public:
 class TestFunction05 : 	public TestFunction	// sinusoidal functions - linear combination
 {
 public:
+  TestFunction05(){}
   std::string description()	{return "Sinusoidal functions - linear combination";}
   double    f(double x, double y, double z)		{return 6.*sin(x) + 6.*sin(y) + 6.*sin(z);}
   double dfdx(double x, double y, double z)		{return 6.*cos(x);}
@@ -98,6 +104,7 @@ public:
 class TestFunction06 : 	public TestFunction	// sinusoidal functions - linear combination + constant
 {
 public:
+  TestFunction06(){}
   std::string description()	{return "Sinusoidal functions - linear combination + constant";}
   double    f(double x, double y, double z)		{return 6.*sin(x) + 6.*sin(y) + 6.*sin(z) + 1;}
   double dfdx(double x, double y, double z)		{return 6.*cos(x);}
@@ -115,6 +122,7 @@ public:
 class TestFunction07 : 	public TestFunction // sinusoidal functions - quadratic combination
 {
 public:
+  TestFunction07(){}
   std::string description()	{return "Sinusoidal functions - quadratic combination";}
   double    f(double x, double y, double z)		{return  2.*sin(x)*sin(y) + 2.*sin(x)*sin(z) + 2.*sin(y)*sin(z);}
   double dfdx(double x, double y, double z)		{return  2.*cos(x)*(sin(y)+sin(z));}
@@ -132,6 +140,7 @@ public:
 class TestFunction08 : 	public TestFunction // exponential function - cubic combination
 {
 public:
+  TestFunction08(){}
   std::string description()	{return "Exponential function - cubic combination";}
   double    f(double x, double y, double z)		{return  exp(x)*exp(y)*exp(z) + 2.*exp(x)*exp(y) + 2.*exp(x)*exp(z) + 2.*exp(y)*exp(z);}
   double dfdx(double x, double y, double z)		{return  exp(x)*exp(y)*exp(z) + 2.*exp(x)*exp(y) + 2.*exp(x)*exp(z);}
