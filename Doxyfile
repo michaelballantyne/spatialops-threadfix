@@ -31,7 +31,7 @@ PROJECT_NUMBER         = $Id$
 # If a relative path is entered, it will be relative to the location 
 # where doxygen was started. If left blank the current directory will be used.
 
-OUTPUT_DIRECTORY       = /uufs/crsim.utah.edu/common/crsimfs/stbrown/projects/james/doxygen/SpatialOps
+OUTPUT_DIRECTORY       = doc/ 
 
 # If the CREATE_SUBDIRS tag is set to YES, then doxygen will create 
 # 4096 sub-directories (in 2 levels) under the output directory of each output 
@@ -691,7 +691,7 @@ TREEVIEW_WIDTH         = 250
 # If the GENERATE_LATEX tag is set to YES (the default) Doxygen will 
 # generate Latex output.
 
-GENERATE_LATEX         = YES
+GENERATE_LATEX         = NO 
 
 # The LATEX_OUTPUT tag is used to specify where the LaTeX docs will be put. 
 # If a relative path is entered the value of OUTPUT_DIRECTORY will be 
