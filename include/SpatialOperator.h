@@ -41,9 +41,46 @@ namespace SpatialOps{
   }
 
 
+  //====================================================================
+
+
   /**
+   *  @struct OpAssemblerSelector
+   *
    *  This should be specialized for each operator type to provide the
    *  type of assembler required for the operator.
+   *
+   *  @par Template Parameters
+   *    - \b OpType The type of operator
+   *    - \b Dir    The direction that this operator acts on.
+   *    - \b Location The location for this operator
+   *
+   *  Specialized versions must provide the following methods:
+   *
+   *   \li A method to return a vector containing the number of points
+   *   in each direction (excluding ghost cells) that this operator
+   *   should be constructed for. This should have the following
+   *   signature: \code const std::vector<int>& get_extent() \endcode
+   *
+   *   \li A method to return the number of rows in the operator.
+   *   This should have the following signature: \code int get_nrows()
+   *   \endcode
+   *
+   *   \li A method to return the number of columns in the operator.
+   *   This should have the following signature: \code int get_ncols()
+   *   \endcode
+   *
+   *   \li A method to return the nonzero entries in a given row,
+   *   together with the indices of the columns corresponding to the
+   *   nonzero entries.  This method should have the following
+   *   signature: \code void get_row_entries( const int irow,
+   *   std::vector<double>& vals, std::vector<int>& ixs ) \endcode
+   *
+   *  Specialized versions must specialize one or more of the template
+   *  arguments. As this is an empty struct, it simply defines an
+   *  interface.  Thus, if a specialized match is not found, the
+   *  compiler will fail.
+   *
    */
   template< typename OpType,     // the type of operator we are dealing with
 	    typename Dir,
@@ -64,18 +101,65 @@ namespace SpatialOps{
    *
    *  Provides support for discrete spatial operators.
    *
-   *  This is intended to be used as a base class only, and provides
-   *  most of the functionality required.  Derived classes mainly are
-   *  responsible for populating each row of the matrix.
+   *  @par Template Parameters
+   *  <ul>
    *
-   *  Several rules apply:
+   *    <li> \b LinAlg The Linear Algebra type for use with this
+   *    SpatialOperator.  This must define:
+   *    <ul>
+   *      <li> \b MatType This defines the type for the underlying Matrix operator.
+   *    </ul>
    *
-   *   - Application of a SpatialOperator must not involve parallel
-   *   communication.  This is to ensure efficiency.
+   *    <li> \b OpType This defines the type of the operator.  This is
+   *    really only used to distinguish various types of operators.
+   *    In many cases, an empty struct will suffice for this type.
    *
-   *   - 
-   *   
+   *    <li> \b Direction Specifies the direction that this operator
+   *    applies in.  See @link DirectionDefinitions here @endlink for
+   *    the predefined direction types.  These are also "empty" types
+   *    in the sense that they do not provide functionality, only type
+   *    information.
    *
+   *    <li> \b SrcFieldTraits Specifies information about the field
+   *    type that this operator acts on.  It must define several
+   *    things:
+   *
+   *    <ul>
+   *
+   *      <li>\b StorageLocation Defines where this field is located.
+   *    This is a user-defined type, and is an "empty" type - it
+   *    provides only type information and no functionality.  It is
+   *    never instantiated.
+   *
+   *      <li> \b GhostTraits Defines information about ghosting.
+   *      This should provide a templated method,
+   *
+   *       \code
+   *         template<typename Dir, typename SideType> static int get();
+   *       \endcode
+   *
+   *      which returns the number of ghost cells in a given direction
+   *      and given side of the patch.  This must be a static method,
+   *      and may be specialized to deal with different ghosting on
+   *      different faces of a patch.
+   *
+   *    </ul>
+   *
+   *    <li> \b DestFieldTraits Specifies information about the field
+   *    type that this operator produces.  It must define the same
+   *    things as the SrcFieldTraits type does.
+   *  </ul>
+   *
+   *
+   *  @par The OpAssemblerSelector
+   * 
+   *  All operators have an associated assembler object that must be
+   *  instantiated and passed to the SpatialOperator constructor.  The
+   *  full type of the OpAssemblerSelector is determined from the
+   *  template parameters to the SpatialOperator.  However, the user
+   *  must provide specializations of the OpAssemblerSelector concept
+   *  that have the required functionality.  See documentation on
+   *  OpAssemblerSelector for more details.
    */
   template< typename LinAlg,           // linear algebra support for this operator
 	    typename OpType,           // type of operator
@@ -109,51 +193,58 @@ namespace SpatialOps{
     /**
      *  Construct a SpatialOperator.
      *
-     *  @param nrows: The number of rows in this matrix
-     *
-     *  @param ncols : The number of columns in this matrix
-     *
-     *  @param entriesPerRow : The number of nonzero entries on each
-     *  row of this matrix operator.
-     *
-     *  @param extent : The number of points in each direction
-     *  (excluding ghost cells) for the domain extent.
+     *  @param opAssembler The assembler is a strongly typed object
+     *  that provides information required to construct this
+     *  operator. The assembler is of type OpAssemblerSelector, which
+     *  must be specialized by the client who is building the
+     *  SpatialOperator, and holds information required to construct
+     *  the operator.
      */
     SpatialOperator( Assembler & opAssembler );
 
     virtual ~SpatialOperator();
 
+    //@{
+    /** @brief Return the underlying linear algebra matrix representation */
     MatType& get_linalg_mat(){ return mat_; }
     const MatType& get_linalg_mat() const{ return mat_; }
+    //@}
 
-
+    /**
+     *  @brief Apply this operator to the supplied source field to
+     *  produce the supplied destination field.
+     *
+     *  Calculates \f$(dest)=[Op](src)\f$.
+     *
+     *  @param src  The field to apply the operator to.
+     *  @param dest The resulting field.
+     */
     void apply_to_field( const SpatialField<LinAlg,SrcLocation,SrcGhost> & src,
 			 SpatialField<LinAlg,DestLocation,DestGhost> & dest ) const;
 
-    // the source field for an operator defines the number of columns,
-    // the dest field defines the number of rows.
-    //
-    // The src operator must have the same number of rows as this
-    // operator has columns.
-    //
-    // The dest operator must have the same number of rows as this
-    // operator has, and the same number of columns as the src op.
-    // This means that the dest field for dest operator is the same as
-    // the dest field for this operator, and the src field for this
-    // operator is the same as the src field for the src op.
-    /*
-    template< class FieldType1,
-	      class OpAssemble1,
-	      class OpAssemble2 >
-    inline void apply_to_op2( const SpatialOperator< LinAlg, FieldType1,      SrcFieldTraits, OpAssemble1 > & srcOp,
-			      SpatialOperator< LinAlg, DestFieldTraits, FieldType1,     OpAssemble2 > & destOp ) const;
-    */
 
+    /**
+     *  @brief Apply this operator to another operator to produce a third.
+     *
+     *  Calculates \f$ [D] = [Op][S] \f$, where [D] represents the
+     *  destination operator, [S] represents the "source" operator,
+     *  and [Op] represents this operator.
+     *
+     *  @param src  The operator that we act on to produce the result.
+     *  @param dest The resulting operator.
+     */
     template< class SrcOp, class DestOp >
     inline void apply_to_op( const SrcOp& src, DestOp& dest ) const;
 
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-
+    /**
+     *  @name Matrix Operators
+     *
+     *  Operators to add/subtract/assign another spatial operator with
+     *  the same direction, and source/destination traits.
+     */
+    //@{
     template< typename OT >
     inline SpatialOperator& operator=( const SpatialOperator<LinAlg,OT,Direction,SrcFieldTraits,DestFieldTraits>& );
 
@@ -162,15 +253,23 @@ namespace SpatialOps{
 
     template< typename OT >
     inline SpatialOperator& operator-=( const SpatialOperator<LinAlg,OT,Direction,SrcFieldTraits,DestFieldTraits>& );
+    //@}
 
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-
-    // sum the given field into the diagonal
+    /**
+     *  @name Field Operators
+     *  Operators to add/subtract a SpatialField from the diagonal of this operator.
+     */
+    //@{
+    /** @brief sum the given field into the diagonal */
     inline SpatialOperator& operator+=( const SpatialField<LinAlg,DestLocation,DestGhost>& f ){ linAlg_+=f; return *this; }
 
-    // subtract the given field from the diagonal
+    /** @brief subtract the given field from the diagonal */
     inline SpatialOperator& operator-=( const SpatialField<LinAlg,DestLocation,DestGhost>& f ){ linAlg_-=f; return *this; }
+    //@}
 
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     /**
      *  Scale the matrix such that A(i,j) = x(i)*A(i,j) where i denotes
@@ -192,35 +291,88 @@ namespace SpatialOps{
     }
 
 
-    /** reset the coefficients in the matrix */
+    /** @brief reset the coefficients in the matrix */
     inline void reset_entries( const double val = 0 )
     {
       linAlg_.reset_entries( val );
     }
 
 
-    /** Obtain the number of rows in this operator */
+    /** @brief Obtain the number of rows in this operator */
     inline int nrows() const{ return nrows_; }
 
-    /** Obtain the number of columns in this operator */
+    /** @brief Obtain the number of columns in this operator */
     inline int ncols() const{ return ncols_; }
 
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+    /**
+     * @name Ghost Information - All Faces
+     */
+    //@{
+
+    /** @brief Obtain the number of ghost cells for the source field.
+     *  Returns an array with 6 entries corresponding to the number of
+     *  ghost cells on each side of the patch, ordered as
+     *  <code>(-x,+x,-y,+y,-z,+z)</code>
+     */
     inline const std::vector<int>& nghost_src()  const{return nghostSrc_ ;}
+
+    /** @brief Obtain the number of ghost cells for the destination field.
+     *  Returns an array with 6 entries corresponding to the number of
+     *  ghost cells on each side of the patch, ordered as
+     *  <code>(-x,+x,-y,+y,-z,+z)</code>
+     */
     inline const std::vector<int>& nghost_dest() const{return nghostDest_;}
 
+    //@}
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    /**
+     *  @name Ghost Information - Specific Face
+     *
+     *  Obtain the number of ghost cells for a particular face of the
+     *  patch for the source/destination field corresponding to this
+     *  operator.
+     *
+     *  The two relevant methods are
+     *  \code nghost_src<Dir,Side>() \endcode
+     *   and
+     *  \code nghost_dest<Dir,Side>() \endcode
+     *  which provide ghosting
+     *  information for the source and destination fields valid for
+     *  this operator.
+     *
+     *  Template Parameters:
+     *    \li \b Dir Specifies the direction of interest.  See
+     *    @link DirectionDefinitions here @endlink for options.
+     *    \li \b SideType Specifies the side of interest.  See
+     *    @link SideDefinitions here @endlink for options.
+     */
+    //@{
+
+    /** @brief Ghost info for source fields on a specific face */
     template< typename Dir, typename SideType >
     inline int nghost_src() const
     {
       return DestGhost::template get<Dir,SideType>();
     }
 
+    /** @brief Ghost info for destination fields on a specific face */
     template< typename Dir, typename SideType >
     inline int nghost_dest() const
     {
       return DestGhost::template get<Dir,SideType>();
     }
 
+    //@}
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    /** @brief Obtain the patch extent, i.e. the number of points in
+	each direction for the patch.  This excludes ghost cells.  It
+	returns a vector with elements <code>(nx,ny,nz)</code> */
     inline const std::vector<int> & get_extent() const{ return extent_; }
 
 
@@ -235,6 +387,7 @@ namespace SpatialOps{
     bool is_row_ghost( const int rownum, IndexTriplet* const ix=NULL ) const;
 
 
+    /** @brief Print the operator's entries to the specified output stream. */
     void Print( std::ostream & ) const;
 
   protected:
@@ -326,8 +479,8 @@ namespace SpatialOps{
      *
      *  This pointer reference can change if the default operator for
      *  this type is changed via a call to
-     *  <code>set_default_operator</code> or
-     *  <code>register_new_operator</code>.
+     *  <code>set_default_operator()</code> or
+     *  <code>register_new_operator()</code>.
      */
     SpatialOpType*& retrieve_operator( const std::vector<int> & nxyz );
 

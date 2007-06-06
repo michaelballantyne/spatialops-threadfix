@@ -12,9 +12,7 @@
 namespace SpatialOps{
 
   // forward declaration
-  template< typename T1,
-	    typename T2,
-	    typename T3 >     class SpatialField;
+  template<typename T1,typename T2,typename T3>  class SpatialField;
 
 
   /**
@@ -22,16 +20,26 @@ namespace SpatialOps{
    *  @author James C. Sutherland
    *  @date   May, 2007
    *
-   *  The <code>SpatialFieldStore</code> class provides a mechanism to
-   *  generate temporary <code>SpatialField</code> objects for use in
-   *  internal operatations in the <code>SpatialField</code> class.
-   *  This prevents multiple allocation/deallocation of such objects
-   *  that would be required otherwise.
+   *  The SpatialFieldStore class provides a mechanism to generate
+   *  temporary SpatialField objects for use in internal operatations
+   *  in the SpatialField class.  This prevents multiple
+   *  allocation/deallocation of such objects that would be required
+   *  otherwise.
+   *
+   *
+   *  @par Template Parameters
+   *
+   *   See documentation on the SpatialField class for information on
+   *  the template parameters.
+   *
+   *
+   *  @par Thread-Parallelism Issues:
    *
    *  NOTE: this could get us into big trouble if we have threads
    *  running concurrently, since we would not be able to guarantee
    *  that two threads didn't use the same memory.
    *
+   *  \todo Implement a thread-safe version of this concept.
    */
   template< typename T1,
 	    typename T2,
@@ -42,6 +50,14 @@ namespace SpatialOps{
   public:
     static SpatialFieldStore& self();
 
+    /**
+     *  @brief Obtain a SpatialField temporary of the same type and
+     *  size as the supplied field.
+     *
+     *  @param field A field that we want a duplicate temporary modeled after.
+     *
+     *  @param fieldNum  A tag to identify the field.
+     */
     SpatialField<T1,T2,T3>& get( const SpatialField<T1,T2,T3>& field,
 				 const size_t fieldNum );
 

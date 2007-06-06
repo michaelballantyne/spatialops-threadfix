@@ -41,7 +41,13 @@ namespace SpatialOps{
     void destroy_matrix();
     void destroy_vector();
 
-    //@{  /** Operators to assemble matrices into this matrix */
+
+    /**
+     *  @name Matrix Assembly Operators
+     *
+     *  Operators to assemble matrices into this matrix
+     */
+    //@{
 
     template< typename OpType,
 	      typename Direction,
@@ -61,18 +67,22 @@ namespace SpatialOps{
 	      typename DestFieldTraits >
     inline LinAlgTrilinos& operator-=( const  SpatialOperator< LinAlgTrilinos, OpType, Direction, SrcFieldTraits, DestFieldTraits > & m );
 
-    //}@
+    //@}
 
 
-    //@{ /** Operators to assemble vectors into this matrix.  We only allow assembly of fields with consistent spatial storage location. */
-
+    /**
+     *  @name Vector Assembly Operators
+     *
+     *  Operators to assemble vectors into this matrix.  We only allow
+     *  assembly of fields with consistent spatial storage location.
+     */
+    //@{
     template<typename FieldT>
     inline LinAlgTrilinos& operator+=( const FieldT & f );
 
     template<typename FieldT>
     inline LinAlgTrilinos& operator-=( const FieldT& f );
-
-    //}@
+    //@}
 
     void  left_scale( const VecType& v );
     void right_scale( const VecType& v );

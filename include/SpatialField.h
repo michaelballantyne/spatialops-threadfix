@@ -16,7 +16,15 @@
 namespace SpatialOps{
 
 
-  enum StorageMode{ InternalStorage, ExternalStorage };
+  /**
+   *  @enum StorageMode
+   *  @brief Enumerates options for storage of a SpatialField.
+   */
+  enum StorageMode
+    {
+      InternalStorage, ///< Selector for storing fields internal to the SpatialField object.
+      ExternalStorage  ///< Selector for storing fields external to the SpatialField object.
+    };
 
 
   //==================================================================
@@ -27,23 +35,34 @@ namespace SpatialOps{
    *  @author James C. Sutherland
    *  @date   December, 2006
    *
-   *  Base class for SpatialFields defined on a logically rectangular
-   *  domain.
+   *  @brief Class to represent spatial fields defined on a logically
+   *  rectangular domain.
    *
-   *  Policies & traits required by this class:
+   *  @par Template Parameters
    *
-   *    VecOps - a policy dictating the treatment of this SpatialField
-   *    by the linear algebra package.
+   *   <ul>
    *
-   *    FieldTraits - information about this spatial field.
+   *   <li> \b VecOps a policy dictating the treatment of this
+   *   SpatialField by the linear algebra package. Defines a \b
+   *   VecType type that is the type of object that the underlying
+   *   vector is stored in.
    *
-   *     \li StorageLocation - a trait specifying the field location
-   *    type (e.g. node, cell, face, etc.)
+   *   <li> \b FieldLocation a trait specifying the field location
+   *   type (e.g. node, cell, face, etc.)
    *
-   *     \li GhostTraits - information about ghosting on each logical
-   *     face.
+   *   <li> \b GhostTraits Defines information about ghosting.  This
+   *   should provide a templated method,
    *
-   *     
+   *     \code
+   *       template<typename Dir, typename SideType> static int get();
+   *     \endcode
+   *
+   *   which returns the number of ghost cells in a given direction
+   *   and given side of the patch.  This must be a static method, and
+   *   may be specialized to deal with different ghosting on different
+   *   faces of a patch.
+   *
+   *   </ul>
    */
   template< typename VecOps,
 	    typename FieldLocation,
@@ -62,13 +81,16 @@ namespace SpatialOps{
      *  cells) for the domain in each of the three ordinal directions.
      *
      *  @param fieldValues : Pointer to the field values.  Behavior is
-     *  dictated by the choice of <code>StorageMode</code>
+     *  dictated by the choice of StorageMode.
      *
      *  @param mode : Storage options.  If InternalStorage then the
      *  fieldValues will be copied into an internal buffer.  If
-     *  ExternalStorage then the fieldValues will be stored externally.
-     *  Efficiency suggests that ExternalStorage is best, since it will
-     *  avoid excessive copies.
+     *  ExternalStorage then the fieldValues will be stored
+     *  externally.  Efficiency suggests that ExternalStorage is best,
+     *  since it will avoid excessive copies.  Safety suggests that
+     *  InternalStorage is best, since it protects against memory
+     *  corruption and inadvertant deletion of the field's underlying
+     *  memory.
      */
     SpatialField( const std::vector<int> & fieldDims,
 		  double * const fieldValues,
@@ -79,6 +101,7 @@ namespace SpatialOps{
 
 
     /**
+     *  @brief Overwrite the values in the SpatialField with the ones supplied.
      *  @param npts : number of points (including ghost cells)
      *  @param values : array of values to overwrite with.
      */
@@ -86,47 +109,53 @@ namespace SpatialOps{
 			      const double* const values );
 
 
-    //@{  /** Operators for SpatialField objects */
+    /**
+     *  @name Operators for SpatialField objects
+     */
+    //@{
 
-    inline SpatialField& operator =(const SpatialField&);
-    inline SpatialField& operator+=(const SpatialField&);
-    inline SpatialField& operator-=(const SpatialField&);
-    inline SpatialField& operator*=(const SpatialField&);
-    inline SpatialField& operator/=(const SpatialField&);
+    inline SpatialField& operator =(const SpatialField&);  ///< Assign a SpatialField to this one.
+    inline SpatialField& operator+=(const SpatialField&);  ///< Add a SpatialField to this.
+    inline SpatialField& operator-=(const SpatialField&);  ///< Subtract a SpatialField from this.
+    inline SpatialField& operator*=(const SpatialField&);  ///< Multiply this by a SpatialField
+    inline SpatialField& operator/=(const SpatialField&);  ///< Divide this by a SpatialField
 
-    inline SpatialField& operator =(const double);
-    inline SpatialField& operator+=(const double);
-    inline SpatialField& operator-=(const double);
-    inline SpatialField& operator*=(const double);
-    inline SpatialField& operator/=(const double);
+    inline SpatialField& operator =(const double);  ///< Assign this field to a constant
+    inline SpatialField& operator+=(const double);  ///< Add a constant to this field
+    inline SpatialField& operator-=(const double);  ///< Subtract a constant from this field
+    inline SpatialField& operator*=(const double);  ///< Multiply this field by a constant
+    inline SpatialField& operator/=(const double);  ///< Divide this field by a constant
 
-    inline SpatialField& operator =(const RHS&);
-    inline SpatialField& operator+=(const RHS&);
-    inline SpatialField& operator-=(const RHS&);
+    inline SpatialField& operator =(const RHS&);  ///< Assign a RHS to this field (doesn't affect ghosts)
+    inline SpatialField& operator+=(const RHS&);  ///< Add a RHS to this field (doesn't affect ghosts)
+    inline SpatialField& operator-=(const RHS&);  ///< Subtract a RHS from this field (doesn't affect ghosts)
 
-    inline bool operator==(const SpatialField&);
-    inline bool operator!=(const SpatialField&);
+    inline bool operator==(const SpatialField&);  ///< Is this field equal to the supplied one?
+    inline bool operator!=(const SpatialField&);  ///< Is this field not equal to the supplied one?
 
-    //}@
+    //@}
 
-
-
-    //@{ Binary operators
 
     /**
+     *  @name Binary Operators
+     *
      *  note that these return references rather than copies because
      *  we have a temporary working vector that we use internally.
      *  However, this also means that it is not safe to get a
      *  reference to these variables, since they could change very
      *  easily!  That means that you SHOULD NOT do something like
      *
+     *  \code
      *     SpatialField a,b;
      *     SpatialField & c = a+b;
+     *  \endcode
      *
      *  rather, you should do:
      *
+     *  \code
      *     SpatialField a,b,c;
      *     c = a+b;
+     *  \endcode
      *
      *  This results in a copy from a temporary to c, but is safe.
      *
@@ -137,54 +166,68 @@ namespace SpatialOps{
      *  would require us to obtain a new field for each call that
      *  required it - a bit slower but probably worth the price.
      */
+    //@{
 
     inline SpatialField& operator+(const SpatialField&) const;
     inline SpatialField& operator-(const SpatialField&) const;
     inline SpatialField& operator*(const SpatialField&) const;
     inline SpatialField& operator/(const SpatialField&) const;
 
-
-    // this provides support for Daixtrose - an expression template
-    // engine to allow compund expressions involving SpatialField
-    // objects to be unrolled by the compiler.
+    /**
+     * this provides support for Daixtrose - an expression template
+     * engine to allow compund expressions involving SpatialField
+     * objects to be unrolled by the compiler.
+     */
     template<class T>
     inline SpatialField& operator=(const Daixt::Expr<T>&E);
 
-    //}@
+    //@}
 
 
+    //@{
+    /**
+     * @brief Obtain the underlying VecType object that corresponds to
+     * the LinAlg strategy.
+     */
     inline       VecType & get_linalg_vec()      { return vec_; }
     inline const VecType & get_linalg_vec() const{ return vec_; }
-
+    //@}
 
     /**
-     *  Get the total number of points (including ghost layers) in this SpatialField
+     * @brief Get the total number of points (including ghost layers)
+     * in this SpatialField.
      */
     inline int get_ntotal() const{ return npts_; }
 
     /**
-     *  Obtain the number of ghost cells in the given direction and side of the patch.
+     * @brief Obtain the number of ghost cells in the given direction
+     * and side of the patch.
      */
     template< typename Dir, typename SideType>
     static int nghost(){ return GhostTraits::template get<Dir,SideType>(); }
 
     /**
-     *  Obtain the domain extent.  This is a vector containing the
-     *  number of points in each direction, excluding ghost cells.
+     *  @brief Obtain the domain extent.  This is a vector containing
+     *  the number of points in each direction, excluding ghost cells.
      */
     inline const std::vector<int>& get_extent() const{return extent_;}
 
 
+    //@{
     /**
-     *  Obtain a reference to the field using the [] operator.  This
-     *  should not generally be used, as it is not tuned for
+     *  @bfief Obtain a reference to the field using the [] operator.
+     *  This should not generally be used, as it is not tuned for
      *  performance.
      */
     inline double& operator[](const int i){return fieldValues_[i];}
     inline const double& operator[](const int i) const{return fieldValues_[i];}
+    //@}
 
 
-    //@{  STL-compliant iterators for this field
+    /**
+     *  @name Iterators for SpatialField objects
+     */
+    //@{
 
     typedef double*           iterator;
     typedef double const*     const_iterator;
@@ -195,7 +238,7 @@ namespace SpatialOps{
     inline iterator       end()      {return fieldValues_+npts_;}
     inline const_iterator end() const{return fieldValues_+npts_;}
 
-    //}@
+    //@}
 
 
     /** Dump information about the field to the given output stream. */
@@ -230,17 +273,21 @@ namespace SpatialOps{
     double * const fieldValues_;
     VecType & vec_;
 
-    // these fields facilitate more efficient operations.  +,-,*,/
-    // operators require a temporary.  Here we store a temporary for
-    // this purpose rather than building one each time we hit one of
-    // these operators.  The SpatialFieldStore is used to assist in
-    // holding and building temporaries to minimize the number of them
-    // that are created.  Basically, any time any of the above
-    // operators are called, a temporary must be generated.  Note that
-    // the increment operators like += *= etc do not require
-    // temporaries.
-    mutable SpatialField* tmp_;  // a temporary field to use for efficient operations
-    mutable size_t tmpFieldNum_; // the id for the temporary field...
+    /**
+     * these fields facilitate more efficient operations.  +,-,*,/
+     * operators require a temporary.  Here we store a temporary for
+     * this purpose rather than building one each time we hit one of
+     * these operators.  The SpatialFieldStore is used to assist in
+     * holding and building temporaries to minimize the number of them
+     * that are created.  Basically, any time any of the above
+     * operators are called, a temporary must be generated.  Note that
+     * the increment operators like += *= etc do not require
+     * temporaries.
+     */
+    //@{
+    mutable SpatialField* tmp_;             ///< a temporary field to use for efficient operations
+    mutable size_t tmpFieldNum_; ///< the id for the temporary field...
+    //@}
 
     SpatialField( const SpatialField& );
     SpatialField();
