@@ -431,12 +431,12 @@ bool test_linsys( const std::vector<int> & dim )
 
 //====================================================================
 
-void test_daixt( vector<int>& dim )
+void test_daixt( const vector<int>& dim )
 {
   using namespace SpatialOps;
   using namespace FVStaggeredUniform;
 
-  cout << "SpatialField operators +, -, /, *, =  ... ";
+  cout << "SpatialField operators (+, -, /, *, =) involving SpatialField objects  ... ";
 
   vector<double> d1, d2;
   const int n = dim[0]*dim[1]*dim[2];
@@ -483,6 +483,65 @@ void test_daixt( vector<int>& dim )
 
 //====================================================================
 
+template<typename FieldT>
+bool test_op_rhs_assign( const vector<int>& dim )
+{
+  RHS rhs(dim);
+  FieldT field( dim, NULL, SpatialOps::InternalStorage );
+
+  bool err = false;
+
+  int ix=0;
+  for( typename FieldT::iterator ifld=field.begin(); ifld!=field.end(); ++ifld, ++ix ){
+    *ifld = ix;
+  }
+  rhs.reset();
+  rhs.add_field_contribution( field );
+  field = rhs;
+  ix=0;
+  for( typename FieldT::iterator ifld=field.begin(); ifld!=field.end(); ++ifld, ++ix ){
+    if( *ifld != ix )  err = true;
+  }
+  return err;
+}
+
+//====================================================================
+
+void test_rhs_ops()
+{
+  using namespace SpatialOps;
+  using namespace FVStaggeredUniform;
+
+  vector<int> dim(3,1);
+  dim[0] = 10;
+  dim[1] = 7;
+  dim[2] = 13;
+
+  cout << endl
+       << "SpatialField operators involving RHS objects: "
+       << endl;
+
+  cout << "  CellField  ... ";
+  if( test_op_rhs_assign<CellField>( dim ) )    cout << "FAIL!" << endl;
+  else cout << "PASS" << endl;
+
+  cout << "  XSideField ... ";
+  if( test_op_rhs_assign<XSideField>( dim ) )   cout << "FAIL!" << endl;
+  else cout << "PASS" << endl;
+
+  cout << "  YSideField ... ";
+  if( test_op_rhs_assign<XSideField>( dim ) )   cout << "FAIL!" << endl;
+  else cout << "PASS" << endl;
+
+  cout << "  ZSideField ... ";
+  if( test_op_rhs_assign<XSideField>( dim ) )   cout << "FAIL!" << endl;
+  else cout << "PASS" << endl;
+
+  return;
+}
+
+//====================================================================
+
 int main()
 {
   vector<int> dim(3,1);
@@ -496,6 +555,8 @@ int main()
 
   test( dim );
   test_linsys( dim );
+
+  test_rhs_ops();
 
   return 0;
 }
