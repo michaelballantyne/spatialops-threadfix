@@ -616,17 +616,19 @@ namespace SpatialOps{
     static const int ngym = GhostTraits::template get<YDIR,SideMinus>();
     static const int ngyp = GhostTraits::template get<YDIR,SidePlus>();
 
-    int ixr = 0;
+    static const int yskip = ngxm+ngxp;
+    static const int zskip = nxf * (ngym+ngyp);
+
     int ixf = GhostTraits::template get<XDIR,SideMinus>();
-    if( extent_[1] > 1 )  ixf += GhostTraits::template get<YDIR,SideMinus>();
-    if( extent_[2] > 1 )  ixf += ( nxf * GhostTraits::template get<YDIR,SideMinus>() )
-			    * ( nyf * GhostTraits::template get<ZDIR,SideMinus>() );
+    if( extent_[1] > 1 ){
+      ixf = nxf + GhostTraits::template get<YDIR,SideMinus>();
+    }
+    if( extent_[2] > 1 ){       // must also have extent_[1] > 1
+      ixf += nxf*nyf;
+    }
 
     typename SpatialField::iterator ifld = this->begin() + ixf;
-    std::vector<double>::const_iterator irfld = r.begin() + ixr;
-
-    const int yskip = ngxm+ngxp;
-    const int zskip = nxf * (ngym+ngyp);
+    std::vector<double>::const_iterator irfld = r.begin();
 
     for( int k=0; k<nzr; ++k ){
       for( int j=0; j<nyr; ++j ){
@@ -674,9 +676,12 @@ namespace SpatialOps{
     const int zskip = nxf * ( ngym+ngyp );
 
     int ixf = GhostTraits::template get<XDIR,SideMinus>();
-    if( extent_[1] > 1 )   ixf += GhostTraits::template get<YDIR,SideMinus>();
-    if( extent_[2] > 1 )   ixf += ( nxf * GhostTraits::template get<YDIR,SideMinus>() )
-			     * ( nyf * GhostTraits::template get<ZDIR,SideMinus>() );
+    if( extent_[1] > 1 ){
+      ixf = nxf + GhostTraits::template get<YDIR,SideMinus>();
+    }
+    if( extent_[2] > 1 ){       // must also have extent_[1] > 1
+      ixf += nxf*nyf;
+    }
 
     typename SpatialField::iterator ifld = this->begin() + ixf;
     typename RHS::const_iterator irhs = rhs.begin();
@@ -727,9 +732,12 @@ namespace SpatialOps{
     static const int zskip = nxf * ( ngym+ngyp );
 
     int ixf = GhostTraits::template get<XDIR,SideMinus>();
-    if( extent_[1] > 1 )   ixf += GhostTraits::template get<YDIR,SideMinus>();
-    if( extent_[2] > 1 )   ixf += ( nxf * GhostTraits::template get<YDIR,SideMinus>() )
-			     * ( nyf * GhostTraits::template get<ZDIR,SideMinus>() );
+    if( extent_[1] > 1 ){
+      ixf = nxf + GhostTraits::template get<YDIR,SideMinus>();
+    }
+    if( extent_[2] > 1 ){       // must also have extent_[1] > 1
+      ixf += nxf*nyf;
+    }
 
     typename SpatialField::iterator ifld = this->begin() + ixf;
     typename RHS::const_iterator irhs = rhs.begin();
