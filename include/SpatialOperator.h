@@ -204,10 +204,10 @@ namespace SpatialOps{
 
     virtual ~SpatialOperator();
 
-    //@{
     /** @brief Return the underlying linear algebra matrix representation */
-    MatType& get_linalg_mat(){ return mat_; }
-    const MatType& get_linalg_mat() const{ return mat_; }
+    //@{
+    inline       MatType& get_linalg_mat()      { return mat_; }
+    inline const MatType& get_linalg_mat() const{ return mat_; }
     //@}
 
     /**

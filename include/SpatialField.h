@@ -219,8 +219,8 @@ namespace SpatialOps{
      *  This should not generally be used, as it is not tuned for
      *  performance.
      */
-    inline double& operator[](const int i){return fieldValues_[i];}
-    inline const double& operator[](const int i) const{return fieldValues_[i];}
+    inline       double& operator[](const int i)      { return fieldValues_[i]; }
+    inline const double& operator[](const int i) const{ return fieldValues_[i]; }
     //@}
 
 
@@ -482,7 +482,9 @@ namespace SpatialOps{
   SpatialField<VecOps,FieldLocation, GhostTraits>::
   operator=(const SpatialField<VecOps,FieldLocation, GhostTraits>& s)
   {
-    for( int i=0; i<npts_; ++i ) fieldValues_[i] = s.fieldValues_[i];
+    double* f = fieldValues_;
+    const double* sf = s.fieldValues_;
+    for( int i=0; i<npts_; ++i ) *f++ = *sf++;
     return *this;
   }
   //------------------------------------------------------------------
@@ -491,7 +493,9 @@ namespace SpatialOps{
   SpatialField<VecOps,FieldLocation, GhostTraits>::
   operator+=(const SpatialField<VecOps,FieldLocation, GhostTraits>& s)
   {
-    for( int i=0; i<npts_; ++i ) fieldValues_[i] += s.fieldValues_[i];
+    double* f = fieldValues_;
+    const double* sf = s.fieldValues_;
+    for( int i=0; i<npts_; ++i ) *f++ += *sf++;
     return *this;
   }
   //------------------------------------------------------------------
@@ -500,60 +504,70 @@ namespace SpatialOps{
   SpatialField<VecOps,FieldLocation, GhostTraits>::
   operator-=(const SpatialField<VecOps,FieldLocation, GhostTraits>& s)
   {
-    for( int i=0; i<npts_; ++i ) fieldValues_[i] -= s.fieldValues_[i];
+    double* f = fieldValues_;
+    const double* sf = s.fieldValues_;
+    for( int i=0; i<npts_; ++i ) *f++ -= *sf++;
     return *this;
   }
   //------------------------------------------------------------------
   template< class VecOps, typename FieldLocation, typename GhostTraits >
   SpatialField<VecOps,FieldLocation, GhostTraits>& 
   SpatialField<VecOps,FieldLocation, GhostTraits>::
-  operator *=(const SpatialField<VecOps,FieldLocation, GhostTraits>& s)
+  operator*=(const SpatialField<VecOps,FieldLocation, GhostTraits>& s)
   {
-    for( int i=0; i<npts_; ++i ) fieldValues_[i] *= s.fieldValues_[i];
+    double* f = fieldValues_;
+    const double* sf = s.fieldValues_;
+    for( int i=0; i<npts_; ++i ) *f++ *= *sf++;
     return *this;
   }
   //------------------------------------------------------------------
   template< class VecOps, typename FieldLocation, typename GhostTraits >
   SpatialField<VecOps,FieldLocation, GhostTraits>& 
   SpatialField<VecOps,FieldLocation, GhostTraits>::
-  operator /=(const SpatialField<VecOps,FieldLocation, GhostTraits>& s)
+  operator/=(const SpatialField<VecOps,FieldLocation, GhostTraits>& s)
   {
-    for( int i=0; i<npts_; ++i ) fieldValues_[i] /= s.fieldValues_[i];
+    double* f = fieldValues_;
+    const double* sf = s.fieldValues_;
+    for( int i=0; i<npts_; ++i ) *f++ /= *sf++;
     return *this;
   }
   //------------------------------------------------------------------
   template< class VecOps, typename FieldLocation, typename GhostTraits >
   SpatialField<VecOps,FieldLocation, GhostTraits>&
   SpatialField<VecOps,FieldLocation, GhostTraits>::
-  operator =(const double a){
-    for( int i=0; i<npts_; ++i ) fieldValues_[i] = a;
+  operator=(const double a){
+    double* f = fieldValues_;
+    for( int i=0; i<npts_; ++i ) *f++ = a;
     return *this;
   } 
   //------------------------------------------------------------------
   template< class VecOps, typename FieldLocation, typename GhostTraits >
   SpatialField<VecOps,FieldLocation, GhostTraits>&
   SpatialField<VecOps,FieldLocation, GhostTraits>::
-  operator +=(const double a)
+  operator+=(const double a)
   {
-    for( int i=0; i<npts_; ++i ) fieldValues_[i] += a;
+    double* f = fieldValues_;
+    for( int i=0; i<npts_; ++i ) *f++ += a;
     return *this;
   }
   //------------------------------------------------------------------
   template< class VecOps, typename FieldLocation, typename GhostTraits >
   SpatialField<VecOps,FieldLocation, GhostTraits>&
   SpatialField<VecOps,FieldLocation, GhostTraits>::
-  operator -=(const double a)
+  operator-=(const double a)
   {
-    for( int i=0; i<npts_; ++i ) fieldValues_[i] -= a;
+    double* f = fieldValues_;
+    for( int i=0; i<npts_; ++i ) *f++ -= a;
     return *this;
   }
   //------------------------------------------------------------------
   template< class VecOps, typename FieldLocation, typename GhostTraits >
   SpatialField<VecOps,FieldLocation, GhostTraits>&
   SpatialField<VecOps,FieldLocation, GhostTraits>::
-  operator *=(const double a)
+  operator*=(const double a)
   {
-    for( int i=0; i<npts_; ++i ) fieldValues_[i] *= a;
+    double* f = fieldValues_;
+    for( int i=0; i<npts_; ++i ) *f++ *= a;
     return *this;
   }
   //------------------------------------------------------------------
@@ -582,7 +596,7 @@ namespace SpatialOps{
   template< class VecOps, typename FieldLocation, typename GhostTraits >
   SpatialField<VecOps,FieldLocation, GhostTraits>&
   SpatialField<VecOps,FieldLocation, GhostTraits>::
-  operator =(const RHS& rhs)
+  operator=(const RHS& rhs)
   {
     const std::vector<double> & r = rhs.get_field();
 
@@ -645,7 +659,7 @@ namespace SpatialOps{
   template< class VecOps, typename FieldLocation, typename GhostTraits >
   SpatialField<VecOps,FieldLocation, GhostTraits>&
   SpatialField<VecOps,FieldLocation, GhostTraits>::
-  operator +=(const RHS& rhs)
+  operator+=(const RHS& rhs)
   {
     // get the dimensions of the field
     const int nxf = extent_[0]
@@ -701,7 +715,7 @@ namespace SpatialOps{
   template< class VecOps, typename FieldLocation, typename GhostTraits >
   SpatialField< VecOps, FieldLocation, GhostTraits >&
   SpatialField< VecOps, FieldLocation, GhostTraits >::
-  operator -=(const RHS& rhs)
+  operator-=(const RHS& rhs)
   {
     // get the dimensions of the field
     const int nxf = extent_[0]

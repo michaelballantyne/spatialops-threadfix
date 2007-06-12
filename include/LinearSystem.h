@@ -403,14 +403,27 @@ RHS::add_field_contribution( const FieldType& f,
   typename FieldType::const_iterator ifld = f.begin() + ixf;
   std::vector<double>::iterator irhs = field_.begin();
 
-  for( int k=0; k<nz; ++k ){
-    for( int j=0; j<ny; ++j ){
-      for( int k=0; k<nx; ++k ){
- 	*irhs++ += scaleFac * (*ifld++);
+  if( scaleFac==1.0 ){
+    for( int k=0; k<nz; ++k ){
+      for( int j=0; j<ny; ++j ){
+	for( int k=0; k<nx; ++k ){
+	  *irhs++ += *ifld++;
+	}
+	ifld += yskip;
       }
-      ifld += yskip;
+      ifld += zskip;
     }
-    ifld += zskip;
+  }
+  else{
+    for( int k=0; k<nz; ++k ){
+      for( int j=0; j<ny; ++j ){
+	for( int k=0; k<nx; ++k ){
+	  *irhs++ += scaleFac * (*ifld++);
+	}
+	ifld += yskip;
+      }
+      ifld += zskip;
+    }
   }
 }
 //--------------------------------------------------------------------

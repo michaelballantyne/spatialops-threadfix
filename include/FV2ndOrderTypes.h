@@ -113,6 +113,10 @@ namespace FVStaggeredUniform{
   typedef SpatialOperator< LinAlgTrilinos, Scratch<3>, YDIR, CellFieldTraits, CellFieldTraits  > SyCell;
   typedef SpatialOperator< LinAlgTrilinos, Scratch<3>, ZDIR, CellFieldTraits, CellFieldTraits  > SzCell;
 
+  typedef SpatialOperator< LinAlgTrilinos, Scratch<1>, XDIR, XSideFieldTraits, XSideFieldTraits > SxSide;
+  typedef SpatialOperator< LinAlgTrilinos, Scratch<1>, YDIR, YSideFieldTraits, YSideFieldTraits > SySide;
+  typedef SpatialOperator< LinAlgTrilinos, Scratch<1>, YDIR, ZSideFieldTraits, ZSideFieldTraits > SzSide;
+
   typedef SpatialOperator< LinAlgTrilinos, Scratch<2>, XDIR, CellFieldTraits, XSideFieldTraits > SxCellSide;
   typedef SpatialOperator< LinAlgTrilinos, Scratch<2>, YDIR, CellFieldTraits, YSideFieldTraits > SyCellSide;
   typedef SpatialOperator< LinAlgTrilinos, Scratch<2>, ZDIR, CellFieldTraits, ZSideFieldTraits > SzCellSide;
