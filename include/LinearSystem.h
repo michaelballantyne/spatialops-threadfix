@@ -144,9 +144,9 @@ public:
   void add_field_contribution( const FieldType & localField,
 			       const double scaleFac = 1.0 );
 
-  const std::vector<double> & get_field() const{return field_;}
+  inline const std::vector<double> & get_field() const{return field_;}
 
-  const std::vector<int> & get_extent() const{return extent_;}
+  inline const std::vector<int> & get_extent() const{return extent_;}
 
 
   inline RHS& operator=(const double val){ reset(val); return *this; }
@@ -155,11 +155,11 @@ public:
   typedef double* iterator;
   typedef double const* const_iterator;
 
-  iterator begin(){ return &field_[0]; }
-  iterator end()  { return &field_[npts_]; }
+  inline iterator begin(){ return &field_[0]; }
+  inline iterator end()  { return &field_[npts_]; }
 
-  const_iterator begin() const{ return &field_[0]; }
-  const_iterator end()   const{ return &field_[npts_]; }
+  inline const_iterator begin() const{ return &field_[0]; }
+  inline const_iterator end()   const{ return &field_[npts_]; }
 
 private:
 

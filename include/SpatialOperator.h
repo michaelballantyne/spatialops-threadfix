@@ -219,8 +219,8 @@ namespace SpatialOps{
      *  @param src  The field to apply the operator to.
      *  @param dest The resulting field.
      */
-    void apply_to_field( const SpatialField<LinAlg,SrcLocation,SrcGhost> & src,
-			 SpatialField<LinAlg,DestLocation,DestGhost> & dest ) const;
+    inline void apply_to_field( const SpatialField<LinAlg,SrcLocation,SrcGhost> & src,
+				SpatialField<LinAlg,DestLocation,DestGhost> & dest ) const;
 
 
     /**

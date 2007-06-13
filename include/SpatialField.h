@@ -246,7 +246,7 @@ namespace SpatialOps{
 
   protected:
     
-    bool consistency_check( const SpatialField& s ) const{ return ( npts_ == s.npts_ ); }
+    inline bool consistency_check( const SpatialField& s ) const{ return ( npts_ == s.npts_ ); }
 
   private:
 
