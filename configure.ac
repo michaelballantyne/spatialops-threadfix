@@ -1,24 +1,18 @@
-echo "Alakazaam!  Configuring the Spiffy Spatial Ops Build System 0.1"
-
 AC_INIT([SpatialOps], [1.0], [james.sutherland@utah.edu])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
-
 #check if the compiler works.
 #Use Fink defaults if available
-if test `uname` = "Darwin" -a -e /sw/bin/gcc-4; then
+if test `uname` = "Darwin" -a -e "/sw/bin/gcc-4"; then
 	echo "Using Fink compilers."
-	AC_PROG_CC(gcc-4)
-	AC_PROG_CXX(g++-4)
-	AC_PROG_F77(gfortran)
- 	export with_blas=/System/Library/Frameworks/vecLib.framework/vecLib
-	#export CC=/sw/bin/gcc-4
-	#export CXX=/sw/bin/g++-4
-	#export F77=/sw/bin/gfortran
-else
-	AC_PROG_CXX
-	AC_PROG_CC
-	AC_PROG_F77
+	export CC="gcc-4"
+	export CXX="g++-4"
+	export F77="gfortran"
+	export with_blas=/System/Library/Frameworks/vecLib.framework/vecLib
 fi
+
+AC_PROG_CXX
+AC_PROG_CC
+AC_PROG_F77
 
 AC_PROG_RANLIB
 
@@ -42,13 +36,11 @@ AC_CONFIG_FILES([
   src/Makefile
   src/test/Makefile
 ])
-#trilinos-7.0.6/Makefile
-#])
 
 TRILINOS_VERSION=7.0.6
-
 TRILINOS_FLAGS=" --prefix=`pwd`\
   --includedir=`pwd`/include/trilinos \
+  --disable-dependency-tracking \
   --disable-default-packages \
   --enable-aztecoo \
   --enable-epetra \
@@ -99,18 +91,27 @@ DAIXTROSE_VERSION=0.0.3
 DAIXTROSE_FLAGS="    \
   --prefix=`pwd` \
   --srcdir='' \
+  --includedir=`pwd`/include/daixtrose
   --with-boost=`pwd`/include   \
 "
-echo "Configuring subpackage daixtrose."
-BUILD_CONFIG_SUBDIR(daixtrose-0.0.3,[ ${DAIXTROSE_FLAGS} ])
+
+if test ! -e "daixtrose-0.0.3/config.status"; then
+  echo "Configuring subpackage daixtrose."
+  BUILD_CONFIG_SUBDIR("daixtrose-0.0.3",[ ${DAIXTROSE_FLAGS} ])
   cd daixtrose-0.0.3
   make install
   cd ..
-echo "All done configuring daixtrose."
+  echo "All done configuring daixtrose."
+else
+  echo "Daixtrose seems to be configured already.  Skipping."
+fi
 
+CFLAGS= #nothing; cleanup stray -O2 from children above?
+CXXFLAGS= #nothing
+#what are these for?
 #PKG_CHECK_MODULES(SOPS)
-AC_SUBST(SOPS_CPPFLAGS)
-AC_SUBST(SOPS_LIBS)
+#AC_SUBST(SOPS_CPPFLAGS)
+#AC_SUBST(SOPS_LIBS)
 AC_OUTPUT
 
 echo "All done.  Type 'make <enter>' to build SpatialOps."
