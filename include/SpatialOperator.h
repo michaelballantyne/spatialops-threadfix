@@ -500,9 +500,8 @@ namespace SpatialOps{
     struct Shape
     {
       Shape( const std::vector<int> & extent );
-      const std::vector<int> nxyz;
-      bool operator ==( const Shape& s ) const;
       bool operator < ( const Shape& s ) const;
+      const std::vector<int> nxyz;
     };
     
     typedef std::map< Shape, SpatialOpType* > ShapeOpMap;
@@ -795,13 +794,14 @@ namespace SpatialOps{
   register_new_operator( SpatialOpType * const op )
   {
     Shape s( op->get_extent() );
-
-    std::pair< typename ShapeOpMap::iterator, bool > result
+  
+    std::pair< typename ShapeOpMap::const_iterator, bool > result
       = shapeOpMap_.insert( make_pair(s,op) );
 
     if( !result.second ){
       std::ostringstream msg;
-      msg << "ERROR!  Can not insert duplicate operators into database." << std::endl;
+      msg << "ERROR!  Cannot insert duplicate operators into database." << std::endl
+	  << "        nx=" << s.nxyz[0] << ", ny=" << s.nxyz[1] << ", nz=" << s.nxyz[2] << std::endl;
       throw std::runtime_error( msg.str() );
     }
   }
@@ -815,9 +815,14 @@ namespace SpatialOps{
     if( iop == shapeOpMap_.end() ){
       std::ostringstream msg;
       msg << "ERROR!  Attempted to retrieve an operator that does not exist." << std::endl
-	  << "        Check the operator shape (nx,ny,nz and nghost) and ensure" << std::endl
-	  << "        that an operator with this shape has been registered" << std::endl
-	  << "        in the database." << std::endl;
+          << "        (nx,ny,nz) = (" << nxyz[0] << "," << nxyz[1] << "," << nxyz[2] << ")" << std::endl
+	  << "        Check the operator shape (nx,ny,nz and nghost) and ensure that an" << std::endl
+	  << "        operator with this shape has been registered in the database" << std::endl
+	  << "        Operator type name: " << typeid(SpatialOpType).name() << std::endl
+          << "   Registered shapes:" << std::endl;
+      for( iop=shapeOpMap_.begin(); iop!=shapeOpMap_.end(); ++iop ){
+	msg << "     (" << iop->first.nxyz[0] << "," << iop->first.nxyz[1] << "," << iop->first.nxyz[2] << ")" <<  std::endl;
+      }
       throw std::runtime_error( msg.str() );
     }
     return iop->second;
@@ -828,8 +833,7 @@ namespace SpatialOps{
   SpatialOpDatabase<SpatialOpType>::
   query_operator( const std::vector<int> & nxyz ) const
   {
-    typename ShapeOpMap::iterator iop = shapeOpMap_.find( Shape(nxyz) );
-    return( iop!=shapeOpMap_.end() );
+    return( shapeOpMap_.find(Shape(nxyz)) != shapeOpMap_.end() );
   }
   //------------------------------------------------------------------
   template< class SpatialOpType >
@@ -856,36 +860,18 @@ namespace SpatialOps{
   Shape( const std::vector<int> & extent )
     : nxyz( extent )
   {
+    assert( extent.size() == 3 );
   }
   //------------------------------------------------------------------
   template< class SpatialOpType >
   bool
   SpatialOpDatabase<SpatialOpType>::Shape::
-  operator==( const Shape & s ) const
+  operator<( const Shape& s ) const
   {
-    bool isequal = true;
-    if( s.nxyz.size() != nxyz.size() ) return false;
-    std::vector<int>::const_iterator is = s.nxyz.begin();
-    std::vector<int>::const_iterator ii = nxyz.begin();
-    for( ; ii!=nxyz.end(); ++ii, ++is ){
-      if( *ii != *is ) isequal = false;
-    }
-    return isequal;
-  }
-  //------------------------------------------------------------------
-  template< class SpatialOpType >
-  bool
-  SpatialOpDatabase<SpatialOpType>::Shape::
-  operator < ( const Shape& s ) const
-  {
-    bool isLess = true;
-    if( s.nxyz.size() != nxyz.size() ) return false;
-    std::vector<int>::const_iterator is = s.nxyz.begin();
-    std::vector<int>::const_iterator ii = nxyz.begin();
-    for( ; ii!=nxyz.end(); ++ii, ++is ){
-      if( *ii >= *is ) isLess = false;
-    }
-    return isLess;
+    if( nxyz[0] < s.nxyz[0] ) return true;
+    if( nxyz[1] < s.nxyz[1] ) return true;
+    if( nxyz[2] < s.nxyz[2] ) return true;
+    return false;
   }
   //------------------------------------------------------------------
 

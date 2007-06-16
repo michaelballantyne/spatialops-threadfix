@@ -381,24 +381,22 @@ RHS::add_field_contribution( const FieldType& f,
   const int ny=extent_[1];
   const int nz=extent_[2];
 
-  const int ngxl = f.template nghost<XDIR,SideMinus>();
-  const int ngxr = f.template nghost<XDIR,SidePlus >();
-  const int ngyl = f.template nghost<YDIR,SideMinus>();
-  const int ngyr = f.template nghost<YDIR,SidePlus >();
-  const int ngzl = f.template nghost<ZDIR,SideMinus>();
-  const int ngzr = f.template nghost<ZDIR,SidePlus >();
+  static const int ngxl = f.template nghost<XDIR,SideMinus>();
+  static const int ngxr = f.template nghost<XDIR,SidePlus >();
+  static const int ngyl = f.template nghost<YDIR,SideMinus>();
+  static const int ngyr = f.template nghost<YDIR,SidePlus >();
+  static const int ngzl = f.template nghost<ZDIR,SideMinus>();
 
   // get the dimensions of the field
-  const int nxf= (extent_[0]>1) ? extent_[0] + ngxl + ngxr : 1;
-  const int nyf= (extent_[1]>1) ? extent_[1] + ngyl + ngyr : 1;
-  const int nzf= (extent_[2]>1) ? extent_[2] + ngzl + ngzr : 1;
+  const int nxf= (nx>1) ? nx+ngxl+ngxr : 1;
+  const int nyf= (ny>1) ? ny+ngyl+ngyr : 1;
 
   const int yskip = ngxl+ngxr;
-  const int zskip = nxf * (ngyl+ngyr);
+  const int zskip = yskip + nxf * (ngyl+ngyr);
 
-  int ixf=ngxl;
-  if( nyf>1 ) ixf += nxf;
-  if( nzf>1 ) ixf += nxf*nyf;
+  int ixf = ngxl;
+  if( ny>1 ) ixf += nxf*ngyl;
+  if( nz>1 ) ixf += nxf*nyf*ngzl;
 
   typename FieldType::const_iterator ifld = f.begin() + ixf;
   std::vector<double>::iterator irhs = field_.begin();

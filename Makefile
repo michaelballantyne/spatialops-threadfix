@@ -38,7 +38,7 @@ OBJS =		\
 	LinAlgTrilinos.o \
 	LinearSystem.o
 
-test.o: ./src/test/test.cpp ./include/SpatialField.h ./include/SpatialOperator.h ./include/FVStaggeredSpatialOps.h ./include/LinAlgTrilinos.h ./include/FV2ndOrderTypes.h
+test.o: ./src/test/test.cpp ./include/SpatialField.h ./include/SpatialOperator.h ./include/FVStaggeredSpatialOps.h ./include/LinAlgTrilinos.h ./include/FV2ndOrderTypes.h ./include/FVStaggeredBCTools.h
 	$(COMPILE_CXX) ./src/test/test.cpp
 
 LinAlgTrilinos.o: ./src/LinAlgTrilinos.cpp ./include/LinAlgTrilinos.h

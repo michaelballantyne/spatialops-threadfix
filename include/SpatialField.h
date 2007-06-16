@@ -74,6 +74,9 @@ namespace SpatialOps{
 
   public:
 
+    typedef GhostTraits Ghost;
+    typedef FieldLocation Location;
+
     /**
      *  Construct a SpatialField.
      *
@@ -392,7 +395,7 @@ namespace SpatialOps{
   SpatialField<VecOps,FieldLocation, GhostTraits>::SpatialField( const SpatialField<VecOps,FieldLocation,GhostTraits>& f )
     : extent_     ( f.extent_ ),
       npts_       ( f.npts_ ),
-      storageMode_( f.storageMode_ ),
+      storageMode_( InternalStorage ),
       fieldValues_( new double[npts_] ),
       vec_        ( linAlg_.setup_vector(npts_,fieldValues_) ),
       tmp_        (NULL),
@@ -482,9 +485,10 @@ namespace SpatialOps{
   SpatialField<VecOps,FieldLocation, GhostTraits>::
   operator=(const SpatialField<VecOps,FieldLocation, GhostTraits>& s)
   {
-    double* f = fieldValues_;
-    const double* sf = s.fieldValues_;
-    for( int i=0; i<npts_; ++i ) *f++ = *sf++;
+    typename SpatialField::iterator ifld = this->begin();
+    const typename SpatialField::const_iterator iend = this->end();
+    typename SpatialField::const_iterator isrc = s.begin();
+    for( ; ifld!=iend; ++ifld, ++isrc ) *ifld = *isrc;
     return *this;
   }
   //------------------------------------------------------------------
@@ -493,9 +497,10 @@ namespace SpatialOps{
   SpatialField<VecOps,FieldLocation, GhostTraits>::
   operator+=(const SpatialField<VecOps,FieldLocation, GhostTraits>& s)
   {
-    double* f = fieldValues_;
-    const double* sf = s.fieldValues_;
-    for( int i=0; i<npts_; ++i ) *f++ += *sf++;
+    typename SpatialField::iterator ifld = this->begin();
+    const typename SpatialField::const_iterator iend = this->end();
+    typename SpatialField::const_iterator isrc = s.begin();
+    for( ; ifld!=iend; ++ifld, ++isrc ) *ifld += *isrc;
     return *this;
   }
   //------------------------------------------------------------------
@@ -504,9 +509,10 @@ namespace SpatialOps{
   SpatialField<VecOps,FieldLocation, GhostTraits>::
   operator-=(const SpatialField<VecOps,FieldLocation, GhostTraits>& s)
   {
-    double* f = fieldValues_;
-    const double* sf = s.fieldValues_;
-    for( int i=0; i<npts_; ++i ) *f++ -= *sf++;
+    typename SpatialField::iterator ifld = this->begin();
+    const typename SpatialField::const_iterator iend = this->end();
+    typename SpatialField::const_iterator isrc = s.begin();
+    for( ; ifld!=iend; ++ifld, ++isrc ) *ifld -= *isrc;
     return *this;
   }
   //------------------------------------------------------------------
@@ -515,9 +521,10 @@ namespace SpatialOps{
   SpatialField<VecOps,FieldLocation, GhostTraits>::
   operator*=(const SpatialField<VecOps,FieldLocation, GhostTraits>& s)
   {
-    double* f = fieldValues_;
-    const double* sf = s.fieldValues_;
-    for( int i=0; i<npts_; ++i ) *f++ *= *sf++;
+    typename SpatialField::iterator ifld = this->begin();
+    const typename SpatialField::const_iterator iend = this->end();
+    typename SpatialField::const_iterator isrc = s.begin();
+    for( ; ifld!=iend; ++ifld, ++isrc ) *ifld *= *isrc;
     return *this;
   }
   //------------------------------------------------------------------
@@ -526,9 +533,10 @@ namespace SpatialOps{
   SpatialField<VecOps,FieldLocation, GhostTraits>::
   operator/=(const SpatialField<VecOps,FieldLocation, GhostTraits>& s)
   {
-    double* f = fieldValues_;
-    const double* sf = s.fieldValues_;
-    for( int i=0; i<npts_; ++i ) *f++ /= *sf++;
+    typename SpatialField::iterator ifld = this->begin();
+    const typename SpatialField::const_iterator iend = this->end();
+    typename SpatialField::const_iterator isrc = s.begin();
+    for( ; ifld!=iend; ++ifld, ++isrc ) *ifld /= *isrc;
     return *this;
   }
   //------------------------------------------------------------------
@@ -598,55 +606,37 @@ namespace SpatialOps{
   SpatialField<VecOps,FieldLocation, GhostTraits>::
   operator=(const RHS& rhs)
   {
-    const std::vector<double> & r = rhs.get_field();
+    static const int ngxm = GhostTraits::template get<XDIR,SideMinus>();
+    static const int ngxp = GhostTraits::template get<XDIR,SidePlus >();
+    static const int ngym = GhostTraits::template get<YDIR,SideMinus>();
+    static const int ngyp = GhostTraits::template get<YDIR,SidePlus >();
+    static const int ngzm = GhostTraits::template get<ZDIR,SideMinus>();
+
+    const int nx = extent_[0];
+    const int ny = extent_[1];
+    const int nz = extent_[2];
 
     // get the dimensions of the field
-    const int nxf = extent_[0]
-      + GhostTraits::template get<XDIR,SideMinus>()
-      + GhostTraits::template get<XDIR,SidePlus>();
-
-    const int nyf= ( extent_[1] > 1 ) ?
-      extent_[1]
-      + GhostTraits::template get<YDIR,SideMinus>()
-      + GhostTraits::template get<YDIR,SidePlus>()
-      : 1;
-//     const int nzf= ( extent_[2] > 1 ) ?
-//       extent_[2]
-//       + GhostTraits::template get<YDIR,SideMinus>()
-//       + GhostTraits::template get<YDIR,SidePlus>()
-//       : 1;
-
-    // get the dimensions of the rhs
-    const int nxr = rhs.get_extent()[0];
-    const int nyr = rhs.get_extent()[1];
-    const int nzr = rhs.get_extent()[2];
+    const int nxf = nx + ngxm + ngxp;
+    const int nyf= (ny>1) ? ny+ngym+ngyp : 1;
 
     //
     // RHS fields do not have ghosting.
     // Thus, we must be very careful on the indices!
     //
-    static const int ngxm = GhostTraits::template get<XDIR,SideMinus>();
-    static const int ngxp = GhostTraits::template get<XDIR,SidePlus>();
-    static const int ngym = GhostTraits::template get<YDIR,SideMinus>();
-    static const int ngyp = GhostTraits::template get<YDIR,SidePlus>();
-
     static const int yskip = ngxm+ngxp;
-    static const int zskip = nxf * (ngym+ngyp);
+    const int zskip = yskip + nxf * (ngym+ngyp);
 
-    int ixf = GhostTraits::template get<XDIR,SideMinus>();
-    if( extent_[1] > 1 ){
-      ixf = nxf + GhostTraits::template get<YDIR,SideMinus>();
-    }
-    if( extent_[2] > 1 ){       // must also have extent_[1] > 1
-      ixf += nxf*nyf;
-    }
+    int ixf = ngxm;
+    if( ny>1 )  ixf += nxf*ngym;
+    if( nz>1 )  ixf += nxf*nyf*ngzm;    // must also have extent_[1] > 1
 
     typename SpatialField::iterator ifld = this->begin() + ixf;
-    std::vector<double>::const_iterator irfld = r.begin();
+    typename RHS::const_iterator irfld = rhs.begin();
 
-    for( int k=0; k<nzr; ++k ){
-      for( int j=0; j<nyr; ++j ){
-	for( int i=0; i<nxr; ++i ){
+    for( int k=0; k<nz; ++k ){
+      for( int j=0; j<ny; ++j ){
+	for( int i=0; i<nx; ++i ){
  	  *ifld++ = *irfld++;
 	}
 	ifld += yskip;
@@ -661,48 +651,37 @@ namespace SpatialOps{
   SpatialField<VecOps,FieldLocation, GhostTraits>::
   operator+=(const RHS& rhs)
   {
-    // get the dimensions of the field
-    const int nxf = extent_[0]
-      + GhostTraits::template get<XDIR,SideMinus>()
-      + GhostTraits::template get<XDIR,SidePlus>();
-
-    const int nyf= ( extent_[1] > 1 ) ?
-      extent_[1]
-      + GhostTraits::template get<YDIR,SideMinus>()
-      + GhostTraits::template get<YDIR,SidePlus>()
-      : 1;
-
-    const int nxr = rhs.get_extent()[0];
-    const int nyr = rhs.get_extent()[1];
-    const int nzr = rhs.get_extent()[2];
-
-    //
-    // RHS fields do not have ghosting.
-    // Thus, we must be very carful on the indices!
-    //
-
     static const int ngxm = GhostTraits::template get<XDIR,SideMinus>();
     static const int ngxp = GhostTraits::template get<XDIR,SidePlus>();
     static const int ngym = GhostTraits::template get<YDIR,SideMinus>();
     static const int ngyp = GhostTraits::template get<YDIR,SidePlus>();
+    static const int ngzm = GhostTraits::template get<ZDIR,SideMinus>();
 
-    const int yskip = ngxm+ngxp;
-    const int zskip = nxf * ( ngym+ngyp );
+    const int nx = extent_[0];
+    const int ny = extent_[1];
+    const int nz = extent_[2];
 
-    int ixf = GhostTraits::template get<XDIR,SideMinus>();
-    if( extent_[1] > 1 ){
-      ixf = nxf + GhostTraits::template get<YDIR,SideMinus>();
-    }
-    if( extent_[2] > 1 ){       // must also have extent_[1] > 1
-      ixf += nxf*nyf;
-    }
+    // get the dimensions of the field
+    const int nxf = nx + ngxm + ngxp;
+    const int nyf= (ny>1) ? ny+ngym+ngyp : 1;
+
+    //
+    // RHS fields do not have ghosting.
+    // Thus, we must be very careful on the indices!
+    //
+    static const int yskip = ngxm+ngxp;
+    const int zskip = yskip + nxf * (ngym+ngyp);
+
+    int ixf = ngxm;
+    if( ny>1 )  ixf += nxf*ngym;
+    if( nz>1 )  ixf += nxf*nyf*ngzm;    // must also have extent_[1] > 1
 
     typename SpatialField::iterator ifld = this->begin() + ixf;
     typename RHS::const_iterator irhs = rhs.begin();
 
-    for( int k=0; k<nzr; ++k ){
-      for( int j=0; j<nyr; ++j ){
-	for( int i=0; i<nxr; ++i ){
+    for( int k=0; k<nz; ++k ){
+      for( int j=0; j<ny; ++j ){
+	for( int i=0; i<nx; ++i ){
 	  *ifld++  +=  *irhs++;
 	}
 	ifld += yskip;
@@ -717,48 +696,37 @@ namespace SpatialOps{
   SpatialField< VecOps, FieldLocation, GhostTraits >::
   operator-=(const RHS& rhs)
   {
-    // get the dimensions of the field
-    const int nxf = extent_[0]
-      + GhostTraits::template get<XDIR,SideMinus>()
-      + GhostTraits::template get<XDIR,SidePlus>();
-
-    const int nyf= ( extent_[1] > 1 ) ?
-      extent_[1]
-      + GhostTraits::template get<YDIR,SideMinus>()
-      + GhostTraits::template get<YDIR,SidePlus>()
-      : 1;
-
-    const int nxr = rhs.get_extent()[0];
-    const int nyr = rhs.get_extent()[1];
-    const int nzr = rhs.get_extent()[2];
-
-    //
-    // RHS fields do not have ghosting.
-    // Thus, we must be very carful on the indices!
-    //
-
     static const int ngxm = GhostTraits::template get<XDIR,SideMinus>();
     static const int ngxp = GhostTraits::template get<XDIR,SidePlus>();
     static const int ngym = GhostTraits::template get<YDIR,SideMinus>();
     static const int ngyp = GhostTraits::template get<YDIR,SidePlus>();
+    static const int ngzm = GhostTraits::template get<ZDIR,SideMinus>();
 
+    const int nx = extent_[0];
+    const int ny = extent_[1];
+    const int nz = extent_[2];
+
+    // get the dimensions of the field
+    const int nxf = nx + ngxm + ngxp;
+    const int nyf= (ny>1) ? ny+ngym+ngyp : 1;
+
+    //
+    // RHS fields do not have ghosting.
+    // Thus, we must be very careful on the indices!
+    //
     static const int yskip = ngxm+ngxp;
-    static const int zskip = nxf * ( ngym+ngyp );
+    const int zskip = yskip + nxf * (ngym+ngyp);
 
-    int ixf = GhostTraits::template get<XDIR,SideMinus>();
-    if( extent_[1] > 1 ){
-      ixf = nxf + GhostTraits::template get<YDIR,SideMinus>();
-    }
-    if( extent_[2] > 1 ){       // must also have extent_[1] > 1
-      ixf += nxf*nyf;
-    }
+    int ixf = ngxm;
+    if( ny>1 )  ixf += nxf*ngym;
+    if( nz>1 )  ixf += nxf*nyf*ngzm;    // must also have extent_[1] > 1
 
     typename SpatialField::iterator ifld = this->begin() + ixf;
     typename RHS::const_iterator irhs = rhs.begin();
 
-    for( int k=0; k<nzr; ++k ){
-      for( int j=0; j<nyr; ++j ){
-	for( int i=0; i<nxr; ++i ){
+    for( int k=0; k<nz; ++k ){
+      for( int j=0; j<ny; ++j ){
+	for( int i=0; i<nx; ++i ){
 	  *ifld++  -=  *irhs++;
 	}
 	ifld += yskip;
