@@ -46,16 +46,63 @@ namespace SpatialOps{
 
   /**
    *  @struct OpAssemblerSelector
+   *  @author James C. Sutherland
+   *
+   *  @brief Defines the type of Assembler required to build a given
+   *  SpatialOperator.
    *
    *  This should be specialized for each operator type to provide the
    *  type of assembler required for the operator.
    *
    *  @par Template Parameters
-   *    - \b OpType The type of operator
-   *    - \b Dir    The direction that this operator acts on.
-   *    - \b Location The location for this operator
+   *    \li \b OpType The type of operator.
+   *    \li \b Dir    The direction that this operator acts on.
+   *    \li \b Location The location for this operator
+   *    \li \b SrcGhost Specifies ghosting information for the source field.
+   *    \li \b SrcGhost Specifies ghosting information for the destination field.
    *
-   *  Specialized versions must provide the following methods:
+   *  Specialized versions of the OpAssemblerSelector struct must
+   *  specialize one or more of the template arguments. As this is an
+   *  empty struct, it simply defines an interface.  Thus, if a
+   *  specialized match is not found, the compiler will fail.
+   *
+   *  Specialized versions must provide a typedef that defines an \c
+   *  Assembler type which is the type of Assembler to be used to
+   *  construct the SpatialOperator.  This is required as an input to
+   *  the constructor.  As an example, assume that we have an operator
+   *  assembler to build a SpatialOperator of type \c MyOp - let's
+   *  call it \c MyOpAssembler If MyOp was templated on the direction,
+   *  location, and ghosting of the source and destination fields,
+   *  e.g.,
+   *
+   *  \code
+   *    template< typename Direction,
+   *              typename Location,
+   *              typename SrcGhost,
+   *              typename DestGhost >
+   *    class MyOpAssembler
+   *    {
+   *      ...
+   *    };
+   *  \endcode
+   *
+   *  Then we could define an OpAssemblerSelector for \c MyOp objects as
+   *
+   *  \code
+   *    template< typename Direction,
+   *              typename Location,
+   *              typename SrcGhost,
+   *              typename DestGhost >
+   *    OpAssemblerSelector< MyOp, Direction, Location, SrcGhost, DestGhost >
+   *    {
+   *      typedef MyOpAssembler<Direction,Location,SrcGhost,Direction>  Assembler;
+   *    };
+   *  \endcode
+   *
+   *
+   *  @par The Assembler
+   *
+   *  An Assembler must provide the following methods:
    *
    *   \li A method to return a vector containing the number of points
    *   in each direction (excluding ghost cells) that this operator
@@ -76,13 +123,13 @@ namespace SpatialOps{
    *   signature: \code void get_row_entries( const int irow,
    *   std::vector<double>& vals, std::vector<int>& ixs ) \endcode
    *
-   *  Specialized versions must specialize one or more of the template
-   *  arguments. As this is an empty struct, it simply defines an
-   *  interface.  Thus, if a specialized match is not found, the
-   *  compiler will fail.
+   *   @par More Examples
    *
+   *   See FV2ndOrderTypes.h for an example of defining
+   *   OpAssemblerSelector structs and see FVStaggeredSpatialOps.h for
+   *   examples of defining assemblers for various operators.
    */
-  template< typename OpType,     // the type of operator we are dealing with
+  template< typename OpType,
 	    typename Dir,
 	    typename Location,
 	    typename SrcGhost,
@@ -195,10 +242,14 @@ namespace SpatialOps{
      *
      *  @param opAssembler The assembler is a strongly typed object
      *  that provides information required to construct this
-     *  operator. The assembler is of type OpAssemblerSelector, which
-     *  must be specialized by the client who is building the
-     *  SpatialOperator, and holds information required to construct
-     *  the operator.
+     *  operator. The assembler type is defined by the
+     *  OpAssemblerSelector, which must be specialized by the client
+     *  who is building the SpatialOperator.  The assembler provides
+     *  methods required to construct the operator.  See documentation
+     *  on OpAssemblerSelector for more information.  Since the
+     *  assembler is only required during construction, it may be a
+     *  temporary object that can be destroyed after a call to this
+     *  constructor.
      */
     SpatialOperator( Assembler & opAssembler );
 
@@ -214,7 +265,7 @@ namespace SpatialOps{
      *  @brief Apply this operator to the supplied source field to
      *  produce the supplied destination field.
      *
-     *  Calculates \f$(dest)=[Op](src)\f$.
+     *  Calculates the matrix-vector product (dest)=[Op](src).
      *
      *  @param src  The field to apply the operator to.
      *  @param dest The resulting field.
@@ -226,9 +277,9 @@ namespace SpatialOps{
     /**
      *  @brief Apply this operator to another operator to produce a third.
      *
-     *  Calculates \f$ [D] = [Op][S] \f$, where [D] represents the
-     *  destination operator, [S] represents the "source" operator,
-     *  and [Op] represents this operator.
+     *  Calculates the matrix product [D] = [Op][S], where [D]
+     *  represents the destination operator, [S] represents the
+     *  "source" operator, and [Op] represents this operator.
      *
      *  @param src  The operator that we act on to produce the result.
      *  @param dest The resulting operator.

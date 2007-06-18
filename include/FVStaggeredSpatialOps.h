@@ -8,11 +8,14 @@
 namespace SpatialOps{
 namespace FVStaggeredUniform{
 
-  struct Side{};  // provides type information for face fields
-  struct Cell{};  // provides type information for cell fields
+  /** @brief Defines a type for face fields */
+  struct Side{};
+
+  /** @brief Defines a type for cell fields */
+  struct Cell{};
 
 
-  /** Policy for a field with no ghost cells */
+  /** @brief Policy for a field with no ghost cells */
   struct NoGhosting
   {
     template<typename Dir, typename SideType >
@@ -20,7 +23,7 @@ namespace FVStaggeredUniform{
   };
 
 
-  // Policy defining ghosting for a cell field
+  /** @brief Policy defining ghosting for a cell field */
   struct DefaultCellGhosting
   {
     template<typename Dir, typename SideType >
@@ -28,6 +31,7 @@ namespace FVStaggeredUniform{
   };
 
 
+  /** @brief Policy defining ghosting for a side field */
   template< typename Dir >
   struct DefaultSideGhosting
   {
@@ -39,17 +43,24 @@ namespace FVStaggeredUniform{
 
   //==================================================================
 
+  /**
+   *  @brief Describes traits of a finite volume field.
+   */
   template< class Location,
 	    class GhostPolicy >
   struct FieldTraits
   {
-    typedef GhostPolicy GhostTraits;      // required by SpatialField policy for FieldTraits
-    typedef Location    StorageLocation;  // required by SpatialField policy for FieldTraits
+    typedef GhostPolicy GhostTraits;      ///< required by SpatialField policy for FieldTraits
+    typedef Location    StorageLocation;  ///< required by SpatialField policy for FieldTraits
   };
 
   //==================================================================
   
 
+  /**
+   *  @brief Provides some common information useful for constructing
+   *  SpatialOperators.
+   */
   class OpInfo
   {
   public:
@@ -99,6 +110,46 @@ namespace FVStaggeredUniform{
   //==================================================================
 
 
+  /**
+   *  @class  LinearInterpolantAssembler
+   *  @author James C. Sutherland
+   *
+   *  @brief Assembles linear interpolant operators for staggered meshes.
+   *
+   *  An assembler for a linear interpolant operator to be used to
+   *  construct a SpatialOperator.  This conforms to the requirements
+   *  for a %SpatialOperator Assembler as defined in the documentation
+   *  on the OpAssemblerSelector.
+   *
+   *  @par Template Parameters
+   *  <ul>
+   *
+   *  <li> \b Direction The direction that this interpolant is applied
+   *  to.  See XDIR, YDIR, ZDIR for more information.
+   *
+   *  <li> \b Location The location for the operator.  This refers to
+   *  the location of the source field.  For example, if this operator
+   *  interpolates a cell field to a face field, the location would be
+   *  a cell field.
+   *
+   *  <li> \b SrcGhostPolicy The policy for ghosting of the source
+   *  field.  This must define a method with the following signature:
+   *  \code
+   *    template<typename Dir, typename SideType > static int get();
+   *  \endcode
+   *  which returns the number of ghost cells in a given coordinate
+   *  direction on the given side of the domain.
+   *
+   *  <li> \b DestGhostPolicy The policy for ghosting of the
+   *  destination field.  This must define a method with the
+   *  following signature:
+   *  \code
+   *    template<typename Dir, typename SideType > static int get();
+   *  \endcode
+   *  which returns the number of ghost cells in a given coordinate
+   *  direction on the given side of the domain.
+   *
+   */
   template< typename Direction,
 	    typename Location,        // location of source field => location of operator.
 	    class SrcGhostPolicy,
@@ -110,17 +161,33 @@ namespace FVStaggeredUniform{
     typedef Location  OpLocation;
     typedef Direction DirType;
 
+    /** @brief Return the number of nonzero entries for this interpolant operator. */
     static int num_nonzeros(){ return 2; }
 
+    /**
+     *  @brief Construct a LinearInterpolantAssembler object.
+     *
+     *  @param dimExtent A vector with three elements indicating the
+     *  domain extent (number of cells) in each coordinate direction.
+     */
     LinearInterpolantAssembler( const std::vector<int> & dimExtent );
     
     ~LinearInterpolantAssembler(){};
 
-    int get_ncols() const;
-    int get_nrows() const;
+    int get_ncols() const;   ///< Return the number of columns in this operator
+    int get_nrows() const;   ///< Return the number of rows in this operator
 
     inline const std::vector<int>& get_extent() const{ return opInfo_.extent(); }
 
+    /**
+     *  @brief Obtain the nonzero values for this operator on the given row.
+     *
+     *  @param irow The index for the row to obtain entries for.
+     *  @param vals A vector containing the values for the nonzero
+     *         entries in this row.
+     *  @param ixs A vector containing the column indices
+     *         corresponding to each nonzero entry.
+     */
     void get_row_entries( const int irow,
 			  std::vector<double> & vals,
 			  std::vector<int> & ixs );
@@ -136,7 +203,47 @@ namespace FVStaggeredUniform{
   //==================================================================
 
 
-  template< typename Direction,
+  /**
+   *  @class  DivergenceAssembler
+   *  @author James C. Sutherland
+   *
+   *  @brief Assembles divergence operators for staggered meshes.
+   *
+   *  An assembler for a divergence operator to be used to construct a
+   *  SpatialOperator.  This conforms to the requirements for a
+   *  %SpatialOperator Assembler as defined in the documentation on
+   *  the OpAssemblerSelector.
+   *
+   *  @par Template Parameters
+   *  <ul>
+   *
+   *  <li> \b Direction The direction that this interpolant is applied
+   *  to.  See XDIR, YDIR, ZDIR for more information.
+   *
+   *  <li> \b Location The location for the operator.  This refers to
+   *  the location of the source field.  For example, if this operator
+   *  interpolates a cell field to a face field, the location would be
+   *  a cell field.
+   *
+   *  <li> \b SrcGhostPolicy The policy for ghosting of the source
+   *  field.  This must define a method with the following signature:
+   *  \code
+   *    template<typename Dir, typename SideType > static int get();
+   *  \endcode
+   *  which returns the number of ghost cells in a given coordinate
+   *  direction on the given side of the domain.
+   *
+   *  <li> \b DestGhostPolicy The policy for ghosting of the
+   *  destination field.  This must define a method with the
+   *  following signature:
+   *  \code
+   *    template<typename Dir, typename SideType > static int get();
+   *  \endcode
+   *  which returns the number of ghost cells in a given coordinate
+   *  direction on the given side of the domain.
+   *
+   */
+ template< typename Direction,
 	    typename Location,
 	    class SrcGhostPolicy,
 	    class DestGhostPolicy >
@@ -147,19 +254,35 @@ namespace FVStaggeredUniform{
     typedef Direction DirType;
     typedef Location OpLocation;
 
+    /** @brief Return the number of nonzero entries for this interpolant operator. */
     static int num_nonzeros(){ return 2; }
 
+    /**
+     *  @brief Construct a DivergenceAssembler object.
+     *
+     *  @param dimExtent A vector with three elements indicating the
+     *  domain extent (number of cells) in each coordinate direction.
+     */
     DivergenceAssembler( const std::vector<int> & dimExtent,
 			 const std::vector<double> & cellFaceArea,
 			 const double cellVolume );
 
     ~DivergenceAssembler(){}
 
-    int get_ncols() const;
-    int get_nrows() const;
+    int get_ncols() const;   ///< Return the number of columns in this operator
+    int get_nrows() const;   ///< Return the number of rows in this operator
 
     inline const std::vector<int>& get_extent() const{ return opInfo_.extent(); }
 
+    /**
+     *  @brief Obtain the nonzero values for this operator on the given row.
+     *
+     *  @param irow The index for the row to obtain entries for.
+     *  @param vals A vector containing the values for the nonzero
+     *         entries in this row.
+     *  @param ixs A vector containing the column indices
+     *         corresponding to each nonzero entry.
+     */
     void get_row_entries( const int irow,
 			  std::vector<double> & vals,
 			  std::vector<int> & ixs );
@@ -177,6 +300,46 @@ namespace FVStaggeredUniform{
   //==================================================================
 
 
+  /**
+   *  @class  GradientAssembler
+   *  @author James C. Sutherland
+   *
+   *  @brief Assembles gradient operators for staggered meshes.
+   *
+   *  An assembler for a gradient operator to be used to construct a
+   *  SpatialOperator.  This conforms to the requirements for a
+   *  %SpatialOperator Assembler as defined in the documentation on
+   *  the OpAssemblerSelector.
+
+   *  @par Template Parameters
+   *  <ul>
+   *
+   *  <li> \b Direction The direction that this interpolant is applied
+   *  to.  See XDIR, YDIR, ZDIR for more information.
+   *
+   *  <li> \b Location The location for the operator.  This refers to
+   *  the location of the source field.  For example, if this operator
+   *  interpolates a cell field to a face field, the location would be
+   *  a cell field.
+   *
+   *  <li> \b SrcGhostPolicy The policy for ghosting of the source
+   *  field.  This must define a method with the following signature:
+   *  \code
+   *    template<typename Dir, typename SideType > static int get();
+   *  \endcode
+   *  which returns the number of ghost cells in a given coordinate
+   *  direction on the given side of the domain.
+   *
+   *  <li> \b DestGhostPolicy The policy for ghosting of the
+   *  destination field.  This must define a method with the
+   *  following signature:
+   *  \code
+   *    template<typename Dir, typename SideType > static int get();
+   *  \endcode
+   *  which returns the number of ghost cells in a given coordinate
+   *  direction on the given side of the domain.
+   *
+   */
   template< typename Direction,
 	    typename Location,
 	    class SrcGhostPolicy,
@@ -188,8 +351,15 @@ namespace FVStaggeredUniform{
     typedef Direction DirType;
     typedef Location OpLocation;
 
+    /** @brief Return the number of nonzero entries for this interpolant operator. */
     static int num_nonzeros(){ return 2; }
 
+    /**
+     *  @brief Construct a GradientAssembler object.
+     *
+     *  @param dimExtent A vector with three elements indicating the
+     *  domain extent (number of cells) in each coordinate direction.
+     */
     GradientAssembler( const std::vector<double> & meshSpacing,
 		       const std::vector<int> & dimExtent );
 
@@ -200,6 +370,15 @@ namespace FVStaggeredUniform{
 
     inline const std::vector<int>& get_extent() const{ return opInfo_.extent(); }
 
+    /**
+     *  @brief Obtain the nonzero values for this operator on the given row.
+     *
+     *  @param irow The index for the row to obtain entries for.
+     *  @param vals A vector containing the values for the nonzero
+     *         entries in this row.
+     *  @param ixs A vector containing the column indices
+     *         corresponding to each nonzero entry.
+     */
     void get_row_entries( const int irow,
 			  std::vector<double> & vals,
 			  std::vector<int> & ixs );
@@ -216,6 +395,53 @@ namespace FVStaggeredUniform{
   //==================================================================
 
 
+  /**
+   *  @class  ScratchAssembler
+   *  @author James C. Sutherland
+   *
+   *  @brief Assembles scratch operators for staggered meshes.
+
+   *  An assembler for a scratch operator to be used to construct a
+   *  SpatialOperator.  This conforms to the requirements for a
+   *  %SpatialOperator Assembler as defined in the documentation on
+   *  the OpAssemblerSelector.
+   *
+   *  A scratch operator may have a prescribed number of nonzeros and
+   *  may be defined to be compatible with divergence, gradient, or
+   *  interpolant operators (or any other well-defined operator).
+   *
+   *  @par Template Parameters
+   *  <ul>
+   *
+   *  <li> \b NumNonZero An integer indicating the number of nonzero
+   *  entries in each row of the operator.
+   *
+   *  <li> \b Direction The direction that this interpolant is applied
+   *  to.  See XDIR, YDIR, ZDIR for more information.
+   *
+   *  <li> \b Location The location for the operator.  This refers to
+   *  the location of the source field.  For example, if this operator
+   *  interpolates a cell field to a face field, the location would be
+   *  a cell field.
+   *
+   *  <li> \b SrcGhostPolicy The policy for ghosting of the source
+   *  field.  This must define a method with the following signature:
+   *  \code
+   *    template<typename Dir, typename SideType > static int get();
+   *  \endcode
+   *  which returns the number of ghost cells in a given coordinate
+   *  direction on the given side of the domain.
+   *
+   *  <li> \b DestGhostPolicy The policy for ghosting of the
+   *  destination field.  This must define a method with the
+   *  following signature:
+   *  \code
+   *    template<typename Dir, typename SideType > static int get();
+   *  \endcode
+   *  which returns the number of ghost cells in a given coordinate
+   *  direction on the given side of the domain.
+   *
+   */
   template< int NumNonZero,
 	    typename Direction,
 	    typename Location,
@@ -239,6 +465,15 @@ namespace FVStaggeredUniform{
 
     inline const std::vector<int>& get_extent() const{ return opInfo_.extent(); }
 
+    /**
+     *  @brief Obtain the nonzero values for this operator on the given row.
+     *
+     *  @param irow The index for the row to obtain entries for.
+     *  @param vals A vector containing the values for the nonzero
+     *         entries in this row.
+     *  @param ixs A vector containing the column indices
+     *         corresponding to each nonzero entry.
+     */
     void get_row_entries( const int irow,
 			  std::vector<double> & vals,
 			  std::vector<int> & ixs );

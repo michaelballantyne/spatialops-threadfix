@@ -15,10 +15,25 @@
 namespace SpatialOps{
 namespace FVStaggeredUniform{
 
+  /**
+   * @brief Defines a Gradient type.  Doesn't need to provide any functionality.
+   */
   struct Gradient{};
+
+  /**
+   * @brief Defines a Divergence type.  Doesn't need to provide any functionality.
+ */
   struct Divergence{};
+
+  /**
+   * @brief Defines an Interpolant type.  Doesn't need to provide any functionality.
+   */
   struct Interpolant{};
 
+  /**
+   *  @brief Defines a Scratch type with a specified number
+   *  nonzeros. Doesn't need to provide any functionality.
+   */
   template< int N >
   struct Scratch{ static const int NumNonZero = N; };
 
@@ -68,33 +83,34 @@ namespace FVStaggeredUniform{
   // Operator Types
 
   // linear interpolants - Cell to Side
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, XDIR, CellFieldTraits, XSideFieldTraits > InterpXC2F;
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, YDIR, CellFieldTraits, YSideFieldTraits > InterpYC2F;
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, ZDIR, CellFieldTraits, ZSideFieldTraits > InterpZC2F;
+  typedef SpatialOperator< LinAlgTrilinos, Interpolant, XDIR, CellFieldTraits, XSideFieldTraits > InterpXC2F;  ///< Interpolate cell to face in x-dir
+  typedef SpatialOperator< LinAlgTrilinos, Interpolant, YDIR, CellFieldTraits, YSideFieldTraits > InterpYC2F;  ///< Interpolate cell to face in y-dir
+  typedef SpatialOperator< LinAlgTrilinos, Interpolant, ZDIR, CellFieldTraits, ZSideFieldTraits > InterpZC2F;  ///< Interpolate cell to face in z-dir
+  //@}
 
   // linear interpolants - Side to Cell
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, XDIR, XSideFieldTraits, CellFieldTraits > InterpXF2C;
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, YDIR, YSideFieldTraits, CellFieldTraits > InterpYF2C;
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, ZDIR, ZSideFieldTraits, CellFieldTraits > InterpZF2C;
+  typedef SpatialOperator< LinAlgTrilinos, Interpolant, XDIR, XSideFieldTraits, CellFieldTraits > InterpXF2C;  ///< Interpolate face to cell in x-dir
+  typedef SpatialOperator< LinAlgTrilinos, Interpolant, YDIR, YSideFieldTraits, CellFieldTraits > InterpYF2C;  ///< Interpolate face to cell in y-dir
+  typedef SpatialOperator< LinAlgTrilinos, Interpolant, ZDIR, ZSideFieldTraits, CellFieldTraits > InterpZF2C;  ///< Interpolate face to cell in z-dir
 
   // divergence operators - Side to Cell
-  typedef SpatialOperator< LinAlgTrilinos, Divergence, XDIR, XSideFieldTraits, CellFieldTraits >  DivXF2C;
-  typedef SpatialOperator< LinAlgTrilinos, Divergence, YDIR, YSideFieldTraits, CellFieldTraits >  DivYF2C;
-  typedef SpatialOperator< LinAlgTrilinos, Divergence, ZDIR, ZSideFieldTraits, CellFieldTraits >  DivZF2C;
+  typedef SpatialOperator< LinAlgTrilinos, Divergence, XDIR, XSideFieldTraits, CellFieldTraits >  DivXF2C;     ///< Divergence of a face field in x-dir
+  typedef SpatialOperator< LinAlgTrilinos, Divergence, YDIR, YSideFieldTraits, CellFieldTraits >  DivYF2C;     ///< Divergence of a face field in y-dir
+  typedef SpatialOperator< LinAlgTrilinos, Divergence, ZDIR, ZSideFieldTraits, CellFieldTraits >  DivZF2C;     ///< Divergence of a face field in z-dir
 // divergence operators - Cell to Side
-  typedef SpatialOperator< LinAlgTrilinos, Divergence, XDIR, CellFieldTraits, XSideFieldTraits >  DivXC2F;
-  typedef SpatialOperator< LinAlgTrilinos, Divergence, YDIR, CellFieldTraits, YSideFieldTraits >  DivYC2F;
-  typedef SpatialOperator< LinAlgTrilinos, Divergence, ZDIR, CellFieldTraits, ZSideFieldTraits >  DivZC2F;
+  typedef SpatialOperator< LinAlgTrilinos, Divergence, XDIR, CellFieldTraits, XSideFieldTraits >  DivXC2F;     ///< Divergence of a cell field in x-dir
+  typedef SpatialOperator< LinAlgTrilinos, Divergence, YDIR, CellFieldTraits, YSideFieldTraits >  DivYC2F;     ///< Divergence of a cell field in y-dir
+  typedef SpatialOperator< LinAlgTrilinos, Divergence, ZDIR, CellFieldTraits, ZSideFieldTraits >  DivZC2F;     ///< Divergence of a cell field in z-dir
 									    	        
   // gradient operators - Cell to Side
-  typedef SpatialOperator< LinAlgTrilinos, Gradient, XDIR, CellFieldTraits, XSideFieldTraits >    GradXC2F;
-  typedef SpatialOperator< LinAlgTrilinos, Gradient, YDIR, CellFieldTraits, YSideFieldTraits >    GradYC2F;
-  typedef SpatialOperator< LinAlgTrilinos, Gradient, ZDIR, CellFieldTraits, ZSideFieldTraits >    GradZC2F;
+  typedef SpatialOperator< LinAlgTrilinos, Gradient, XDIR, CellFieldTraits, XSideFieldTraits >    GradXC2F;     ///< Gradient of a cell field in x-dir
+  typedef SpatialOperator< LinAlgTrilinos, Gradient, YDIR, CellFieldTraits, YSideFieldTraits >    GradYC2F;     ///< Gradient of a cell field in y-dir
+  typedef SpatialOperator< LinAlgTrilinos, Gradient, ZDIR, CellFieldTraits, ZSideFieldTraits >    GradZC2F;     ///< Gradient of a cell field in z-dir
 
   // gradient operators - Side to Cell
-  typedef SpatialOperator< LinAlgTrilinos, Gradient, XDIR, XSideFieldTraits, CellFieldTraits >    GradXF2C;
-  typedef SpatialOperator< LinAlgTrilinos, Gradient, YDIR, YSideFieldTraits, CellFieldTraits >    GradYF2C;
-  typedef SpatialOperator< LinAlgTrilinos, Gradient, ZDIR, ZSideFieldTraits, CellFieldTraits >    GradZF2C;
+  typedef SpatialOperator< LinAlgTrilinos, Gradient, XDIR, XSideFieldTraits, CellFieldTraits >    GradXF2C;     ///< Gradient of a cell field in x-dir
+  typedef SpatialOperator< LinAlgTrilinos, Gradient, YDIR, YSideFieldTraits, CellFieldTraits >    GradYF2C;     ///< Gradient of a cell field in y-dir
+  typedef SpatialOperator< LinAlgTrilinos, Gradient, ZDIR, ZSideFieldTraits, CellFieldTraits >    GradZF2C;     ///< Gradient of a cell field in z-dir
 
   // Operator Types
   //==================================================================
