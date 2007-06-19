@@ -69,8 +69,11 @@ namespace SpatialOps{
 	    typename GhostTraits >
   class SpatialField
   {
-    friend class SpatialFieldStore<VecOps,FieldLocation,GhostTraits>;
     typedef typename VecOps::VecType VecType;
+
+    typedef SpatialField<VecOps,FieldLocation,GhostTraits> MyType;
+
+    friend class SpatialFieldStore<MyType>;
 
   public:
 
@@ -140,44 +143,7 @@ namespace SpatialOps{
 
 
     /**
-     *  @name Binary Operators
-     *
-     *  note that these return references rather than copies because
-     *  we have a temporary working vector that we use internally.
-     *  However, this also means that it is not safe to get a
-     *  reference to these variables, since they could change very
-     *  easily!  That means that you SHOULD NOT do something like
-     *
-     *  \code
-     *     SpatialField a,b;
-     *     SpatialField & c = a+b;
-     *  \endcode
-     *
-     *  rather, you should do:
-     *
-     *  \code
-     *     SpatialField a,b,c;
-     *     c = a+b;
-     *  \endcode
-     *
-     *  This results in a copy from a temporary to c, but is safe.
-     *
-     *  NOTE: this could get us into big trouble if we have threads
-     *  running concurrently, since we would not be able to guarantee
-     *  that two threads didn't use the same memory.  We could
-     *  implement some sort of locking on the tmp fields, but this
-     *  would require us to obtain a new field for each call that
-     *  required it - a bit slower but probably worth the price.
-     */
-    //@{
-
-    inline SpatialField& operator+(const SpatialField&) const;
-    inline SpatialField& operator-(const SpatialField&) const;
-    inline SpatialField& operator*(const SpatialField&) const;
-    inline SpatialField& operator/(const SpatialField&) const;
-
-    /**
-     * this provides support for Daixtrose - an expression template
+     * @brief This provides support for Daixtrose - an expression template
      * engine to allow compund expressions involving SpatialField
      * objects to be unrolled by the compiler.
      */
@@ -187,11 +153,12 @@ namespace SpatialOps{
     //@}
 
 
-    //@{
     /**
-     * @brief Obtain the underlying VecType object that corresponds to
+     * @name
+     * Obtain the underlying VecType object that corresponds to
      * the LinAlg strategy.
      */
+    //@{
     inline       VecType & get_linalg_vec()      { return vec_; }
     inline const VecType & get_linalg_vec() const{ return vec_; }
     //@}
@@ -216,12 +183,13 @@ namespace SpatialOps{
     inline const std::vector<int>& get_extent() const{return extent_;}
 
 
-    //@{
     /**
-     *  @bfief Obtain a reference to the field using the [] operator.
+     *  @name
+     *  Obtain a reference to the field using the [] operator.
      *  This should not generally be used, as it is not tuned for
      *  performance.
      */
+    //@{
     inline       double& operator[](const int i)      { return fieldValues_[i]; }
     inline const double& operator[](const int i) const{ return fieldValues_[i]; }
     //@}
@@ -259,14 +227,6 @@ namespace SpatialOps{
      */
     static int get_npts( const std::vector<int> & extent );
 
-    /**
-     *  If the temporary work array assigned to this field is not
-     *  valid, obtain a valid one.  This should only be called if the
-     *  temporary is required, as it may result in allocation of new
-     *  memory.
-     */
-    inline void check_tmp_validity() const;
-
 
 
     VecOps linAlg_;
@@ -276,21 +236,7 @@ namespace SpatialOps{
     double * const fieldValues_;
     VecType & vec_;
 
-    /**
-     * these fields facilitate more efficient operations.  +,-,*,/
-     * operators require a temporary.  Here we store a temporary for
-     * this purpose rather than building one each time we hit one of
-     * these operators.  The SpatialFieldStore is used to assist in
-     * holding and building temporaries to minimize the number of them
-     * that are created.  Basically, any time any of the above
-     * operators are called, a temporary must be generated.  Note that
-     * the increment operators like += *= etc do not require
-     * temporaries.
-     */
-    //@{
-    mutable SpatialField* tmp_;             ///< a temporary field to use for efficient operations
-    mutable size_t tmpFieldNum_; ///< the id for the temporary field...
-    //@}
+    SpatialFieldStore<SpatialField>& sfStore_;
 
     SpatialField( const SpatialField& );
     SpatialField();
@@ -374,11 +320,9 @@ namespace SpatialOps{
 
       vec_( linAlg_.setup_vector( npts_, fieldValues_ ) ),
 
-      tmp_(NULL),
-      tmpFieldNum_(0)
+      sfStore_( SpatialFieldStore<SpatialField>::self() )
   {
     if( mode==InternalStorage )  reset_values( npts_, fieldValues );
-    // leave the tmp field NULL.  If we need it later, we will construct it then.
   }
   //------------------------------------------------------------------
   template< class VecOps,
@@ -398,19 +342,9 @@ namespace SpatialOps{
       storageMode_( InternalStorage ),
       fieldValues_( new double[npts_] ),
       vec_        ( linAlg_.setup_vector(npts_,fieldValues_) ),
-      tmp_        (NULL),
-      tmpFieldNum_(0)
+      sfStore_( SpatialFieldStore<SpatialField>::self() )
   {
-    // leave the tmp field NULL.  If we need it later, we will construct it then.
-  }
-  //------------------------------------------------------------------
-  template< class VecOps, typename FieldLocation, typename GhostTraits >
-  void
-  SpatialField<VecOps,FieldLocation, GhostTraits>::check_tmp_validity() const
-  {
-    if( tmp_ == NULL ){
-      tmp_ = &SpatialFieldStore<VecOps,FieldLocation,GhostTraits>::self().get( *this, tmpFieldNum_++ );
-    }
+    reset_values( npts_, f.fieldValues_ );
   }
   //------------------------------------------------------------------
   template< class VecOps, typename FieldLocation, typename GhostTraits >
@@ -434,50 +368,6 @@ namespace SpatialOps{
     for( int i=0; i<npts_; ++i )
       fieldValues_[i] = Evaluate(E);
     return *this;
-  }
-  //------------------------------------------------------------------
-  template< class VecOps, typename FieldLocation, typename GhostTraits >
-  SpatialField<VecOps,FieldLocation, GhostTraits>&
-  SpatialField<VecOps,FieldLocation, GhostTraits>::
-  operator+(const SpatialField<VecOps,FieldLocation, GhostTraits>& s) const
-  {
-    check_tmp_validity();
-    *tmp_=*this;
-    *tmp_+=s;
-    return *tmp_;
-  }
-  //------------------------------------------------------------------
-  template< class VecOps, typename FieldLocation, typename GhostTraits >
-  SpatialField<VecOps,FieldLocation, GhostTraits>&
-  SpatialField<VecOps,FieldLocation, GhostTraits>::
-  operator-(const SpatialField<VecOps,FieldLocation, GhostTraits>& s) const
-  {
-    check_tmp_validity();
-    *tmp_=*this;
-    *tmp_-=s;
-    return *tmp_;
-  }
-  //------------------------------------------------------------------
-  template< class VecOps, typename FieldLocation, typename GhostTraits >
-  SpatialField<VecOps,FieldLocation, GhostTraits>&
-  SpatialField<VecOps,FieldLocation, GhostTraits>::
-  operator*(const SpatialField<VecOps,FieldLocation, GhostTraits>& s) const
-  {
-    check_tmp_validity();
-    *tmp_=*this;
-    *tmp_*=s;
-    return *tmp_;
-  }
-  //------------------------------------------------------------------
-  template< class VecOps, typename FieldLocation, typename GhostTraits >
-  SpatialField<VecOps,FieldLocation, GhostTraits>&
-  SpatialField<VecOps,FieldLocation, GhostTraits>::
-  operator/(const SpatialField<VecOps,FieldLocation, GhostTraits>& s) const
-  {
-    check_tmp_validity();
-    *tmp_=*this;
-    *tmp_/=s;
-    return *tmp_;
   }
   //------------------------------------------------------------------
   template< class VecOps, typename FieldLocation, typename GhostTraits >

@@ -451,39 +451,36 @@ void test_daixt( const vector<int>& dim )
 
   CellFieldNoGhost f1( dim, &d1[0], ExternalStorage );
   CellFieldNoGhost f2( dim, &d2[0], ExternalStorage );
-  CellFieldNoGhost f3( dim, NULL,   InternalStorage );
 
-  f3 = f1+f2;
+  const SpatFldPtr<CellFieldNoGhost> fp1(f1), fp2(f2);
+  SpatFldPtr<CellFieldNoGhost> fp3;
+
+  fp3 = fp1+fp2;
   for( int i=0; i<n; ++i ){
-    if( std::abs(f3[i] - 1.234)>1.0e-10 ){
+    if( std::abs((*fp3)[i] - 1.234)>1.0e-10 ){
       isOkay = false;
     }
   }
 
-  f3 = f3-(f1+f2);
+  fp3 = fp3-(fp1+fp2);
   for( int i=0; i<n; ++i ){
-    if( std::abs(f3[i])>1.0e-10 ){
+    if( std::abs((*fp3)[i])>1.0e-10 ){
       isOkay = false;
     }
   }
 
 
-  f3 = (f1+f2)*f1;
+  fp3 = (fp1+fp2)*fp1;
   for( int i=0; i<n; ++i ){
     const double ans = f1[i]*1.234;
-    const double abserr = std::abs(f3[i] - ans);
+    const double abserr = std::abs((*fp3)[i] - ans);
     const double relerr = abserr/std::abs(ans);
     if( abserr>1.0e-10 && relerr>1.0e-8 ){
       isOkay = false;
     }
   }
 
-
-  f3 = f1*f2+f1/f2*f3+f2/f1+f2*f1*f2;  // this ends up using two temporaries.
-
-  // THIS SHOULD NEVER BE DONE, because it is very volatile, as shown below.
-  CellFieldNoGhost& f4 = f1+f2;  // f4 is computed from a temporary.
-  f3 = f1-f2;       // the same temporary is used here, and now f4 is dead.
+  fp3 = fp1*fp2+fp1/fp2*fp3+fp2/fp1+fp2*fp1*fp2;  // this ends up using two temporaries.
 
   if( isOkay )  cout << "PASS" << endl;
   else          cout << "FAIL!" << endl;
@@ -693,7 +690,7 @@ void test_bc()
 int main()
 {
   vector<int> dim(3,1);
-  dim[0]=  14;
+  dim[0]=  4;
   dim[1]=  23;
   dim[2]=  18;
 

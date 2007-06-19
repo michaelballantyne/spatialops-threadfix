@@ -1,18 +1,120 @@
 #ifndef UT_SpatialFieldStore_h
 #define UT_SpatialFieldStore_h
 
-#include <SpatialField.h>
+#include <queue>
+#include <map>
 
-//
-//  JCS: NOTE - this is not thread safe!  We could have concurrent
-//  threads accessing the same memory!  I don't know how to beat this
-//  elegantly.
-//
 
 namespace SpatialOps{
 
+
   // forward declaration
-  template<typename T1,typename T2,typename T3>  class SpatialField;
+  template<typename T>  class SpatialFieldStore;
+
+  /**
+   *  @class  SpatFldPtr
+   *  @author James C. Sutherland
+   *  @date June, 2007
+   *
+   *  @brief Wrapper for pointers to SpatialField objects.  Provides
+   *  reference counting.
+   *
+   *  The SpatFldPtr class provides reference counted pointer
+   *  management for SpatialField objects.  Furthermore, it can be
+   *  used in conjunction with the SpatialFieldStore class to obtain
+   *  temporary (scratch) SpatialField objects.  It also supports
+   *  binary operations among SpatFldPtr objects - an extension to the
+   *  SpatialField class, which doesn't support binary operators since
+   *  the issue of creating intermediate/temporary objects is
+   *  dangerous.
+   *
+   *  You should NOT dereference SpatFldPtr objects and store those
+   *  references.  That is VERY dangerous and can lead to memory
+   *  corruption.
+   *
+   *  Note that the underlying SpatialField object will not be owned
+   *  by this class.  The real functionality provided here is to allow
+   *  an interface to the SpatialFieldStore so that when a SpatFldPtr
+   *  is created from there, it may be reference-counted so that when
+   *  the last one is destroyed it returns control of the memory back
+   *  to the SpatialFieldStore.  You can create SpatFldPtr onjects
+   *  from an existing SpatialField, but the SpatFldPtr will not
+   *  assume ownership of the memory.
+   */
+  template<typename FieldT>
+  class SpatFldPtr
+  {
+  public:
+
+    /**
+     *  @brief Construct a SpatFldPtr.
+     *
+     *  @param field The field to wrap.  This constructor should be
+     *  used if you want to wrap an existing SpatialField for use as a
+     *  SpatFldPtr.
+     */
+    SpatFldPtr( FieldT& field );
+
+    /**
+     *  @brief Constructor for use from the SpatialFieldStore class only.
+     *
+     *  @param field The field to wrap.
+     *
+     *  @param builtFromStore if true, then SpatFldPtr will return the
+     *  memory it owns to the SpatialFieldStore class once the last
+     *  reference is destroyed.  If false, then this constructor
+     *  behaves as the other one.
+     */
+    SpatFldPtr( FieldT& field, const bool builtFromStore );
+
+    ~SpatFldPtr();
+
+    /** @brief Copy constructor */
+    SpatFldPtr( const SpatFldPtr<FieldT>& p );
+
+    /** @brief Skeletal constructor */
+    SpatFldPtr();
+
+    /** @brief Assignment operator */
+    SpatFldPtr& operator=( const SpatFldPtr& p );
+
+
+    inline       FieldT& operator*()      {return *f_;}
+    inline const FieldT& operator*() const{return *f_;}
+
+
+    /** @name binary Operators */
+    //@{
+    inline SpatFldPtr operator+(const SpatFldPtr&) const;  ///< Add two fields to produce a third: A=B+C
+    inline SpatFldPtr operator-(const SpatFldPtr&) const;  ///< Subtract two fields to produce a third: A=B-C
+    inline SpatFldPtr operator*(const SpatFldPtr&) const;  ///< Multiply two fields to produce a third: A=B*C
+    inline SpatFldPtr operator/(const SpatFldPtr&) const;  ///< Divide two fields to produce a third: A=B/C
+    //@}
+
+    /**
+     *  @name unary operators
+     *  these simply call through to the corresponding SpatialField unary operators.
+     */
+    //@{
+    inline SpatFldPtr& operator+=(const SpatFldPtr& p){*f_+=*p; return *this;}  ///< Add a SpatFldPtr to this.
+    inline SpatFldPtr& operator-=(const SpatFldPtr& p){*f_-=*p; return *this;}  ///< Subtract a SpatFldPtr from this.
+    inline SpatFldPtr& operator*=(const SpatFldPtr& p){*f_*=*p; return *this;}  ///< Multiply this by a SpatFldPtr
+    inline SpatFldPtr& operator/=(const SpatFldPtr& p){*f_/=*p; return *this;}  ///< Divide this by a SpatFldPtr
+
+    inline SpatFldPtr& operator =(const double x){*f_ =x; return *this;}  ///< Assign this field to a constant
+    inline SpatFldPtr& operator+=(const double x){*f_+=x; return *this;}  ///< Add a constant to this field
+    inline SpatFldPtr& operator-=(const double x){*f_-=x; return *this;}  ///< Subtract a constant from this field
+    inline SpatFldPtr& operator*=(const double x){*f_*=x; return *this;}  ///< Multiply this field by a constant
+    inline SpatFldPtr& operator/=(const double x){*f_/=x; return *this;}  ///< Divide this field by a constant
+    //@}
+
+  private:
+    SpatialFieldStore<FieldT>& store_;
+    FieldT* f_;
+    int* count_;
+    bool builtFromStore_;
+  };
+
 
 
   /**
@@ -20,17 +122,26 @@ namespace SpatialOps{
    *  @author James C. Sutherland
    *  @date   May, 2007
    *
+   *  @brief Provides a common interface to obtain temporary (work) fields.
+   *
    *  The SpatialFieldStore class provides a mechanism to generate
-   *  temporary SpatialField objects for use in internal operatations
-   *  in the SpatialField class.  This prevents multiple
+   *  temporary SpatialField objects. This prevents multiple
    *  allocation/deallocation of such objects that would be required
-   *  otherwise.
+   *  otherwise.  It is implemented as a singleton, and provides a
+   *  method:
    *
+   *  \code
+   *    SpatFldPtr<FieldT> SpatialFieldStore<FieldT>::get( const FieldT& f )
+   *  \endcode
    *
-   *  @par Template Parameters
+   *  to return a field with the asme dimensions as the provided
+   *  template field.  Note that the field will not necessarily have
+   *  the same values as the provided field.  The supplied field is
+   *  simply used to provide information needed to construct clones.
    *
-   *   See documentation on the SpatialField class for information on
-   *  the template parameters.
+   *  Note that the returned type, <code>SpatFldPtr<FieldT></code>,
+   *  should not be dereferenced and saved as a SpatialField.  Doing
+   *  so can cause serious memory corruption.
    *
    *
    *  @par Thread-Parallelism Issues:
@@ -41,35 +152,44 @@ namespace SpatialOps{
    *
    *  \todo Implement a thread-safe version of this concept.
    */
-  template< typename T1,
-	    typename T2,
-	    typename T3 >
+  template< typename FieldT >
   class SpatialFieldStore
   {
+    friend class SpatFldPtr<FieldT>;
 
   public:
     static SpatialFieldStore& self();
 
     /**
-     *  @brief Obtain a SpatialField temporary of the same type and
-     *  size as the supplied field.
+     *  @brief Obtain a temporary field.
      *
-     *  @param field A field that we want a duplicate temporary modeled after.
+     *  @param f The field to pattern the temporary after.  If a
+     *  temporary field is not available in the SpatialFieldStore,
+     *  then the supplied field will be used as the argument to
+     *  copy-construct a new field.
      *
-     *  @param fieldNum  A tag to identify the field.
+     *  Note that in general the returned field will NOT have the same
+     *  values as the supplied field, since it may return a recently
+     *  released field with other values.
+     *
+     *  Note that you should not dereference the SpatFldPtr object to
+     *  store a SpatialField reference.  Doing so can cause memory
+     *  corruption.
      */
-    SpatialField<T1,T2,T3>& get( const SpatialField<T1,T2,T3>& field,
-				 const size_t fieldNum );
+    SpatFldPtr<FieldT> get( const FieldT& f );
 
   private:
+
+    void restore_field( FieldT& f );
 
     SpatialFieldStore(){};
     ~SpatialFieldStore();
 
-    typedef std::vector<SpatialField<T1,T2,T3>*> FieldStore;
-    typedef std::map<int,FieldStore> FieldStoreMap;
 
-    FieldStoreMap fsmap_;
+    typedef std::queue<FieldT*> FieldQueue;
+    typedef std::map<int,FieldQueue> FQMap;
+
+    FQMap fqmap_;
   };
 
 
@@ -90,44 +210,177 @@ namespace SpatialOps{
 
 
 
+
   //=================================================================
 
 
   //------------------------------------------------------------------
-  template<typename T1,typename T2,typename T3>
-  SpatialFieldStore<T1,T2,T3>::~SpatialFieldStore()
+  template<typename FieldT>
+  SpatFldPtr<FieldT>::SpatFldPtr( FieldT& f )
+    : store_( SpatialFieldStore<FieldT>::self() )
   {
-    for( typename FieldStoreMap::iterator ii=fsmap_.begin(); ii!=fsmap_.end(); ++ii ){
-      FieldStore& fs = ii->second;
-      for( typename FieldStore::iterator jj=fs.begin(); jj!=fs.end(); ++jj ){
-	delete *jj;
+    f_ = &f;
+    count_ = new int;
+    *count_ = 1;
+    builtFromStore_ = false;
+  }
+  //------------------------------------------------------------------
+  template<typename FieldT>
+  SpatFldPtr<FieldT>::SpatFldPtr( FieldT& f, const bool builtFromStore )
+    : store_( SpatialFieldStore<FieldT>::self() )
+  {
+    f_ = &f;
+    count_ = new int;
+    *count_ = 1;
+    builtFromStore_ = builtFromStore;
+  }
+  //------------------------------------------------------------------
+  template<typename FieldT>
+  SpatFldPtr<FieldT>::SpatFldPtr( const SpatFldPtr<FieldT>& p )
+    : store_( SpatialFieldStore<FieldT>::self() )
+  {
+    f_ = p.f_;
+    count_ = p.count_;
+    ++(*count_);
+    builtFromStore_ = p.builtFromStore_;
+  }
+  //------------------------------------------------------------------
+  template<typename FieldT>
+  SpatFldPtr<FieldT>::SpatFldPtr()
+    : store_( SpatialFieldStore<FieldT>::self() )
+  {
+    f_     = NULL;
+    count_ = NULL;
+    builtFromStore_ = false;
+  }
+  //------------------------------------------------------------------
+  template<typename FieldT>
+  SpatFldPtr<FieldT>&
+  SpatFldPtr<FieldT>::operator=( const SpatFldPtr& p )
+  {
+    // was this an active SpatFldPtr?
+    if( count_ != NULL ){
+      // this one is dying so decrement the count.
+      --(*count_);
+      // kill the old one if needed
+      if( *count_ == 0 ){
+	if( builtFromStore_ ) store_.restore_field( *f_ );
+	delete count_;
+      }
+    }
+    // reassign
+    f_ = p.f_;
+    count_ = p.count_;
+    builtFromStore_ = p.builtFromStore_;
+    // increment copy count
+    ++(*count_);
+
+    return *this;
+  }
+  //------------------------------------------------------------------
+  template<typename FieldT>
+  SpatFldPtr<FieldT>::~SpatFldPtr()
+  {
+    if( count_ != NULL ){
+      --(*count_);
+      if( *count_ == 0 ){
+	if( builtFromStore_ ) store_.restore_field( *f_ );
+	delete count_;
       }
     }
   }
   //------------------------------------------------------------------
-  template<typename T1,typename T2,typename T3>
-  SpatialFieldStore<T1,T2,T3>&
-  SpatialFieldStore<T1,T2,T3>::self()
+  template<typename FieldT>
+  SpatFldPtr<FieldT>
+  SpatFldPtr<FieldT>::operator+(const SpatFldPtr& p) const
   {
-    static SpatialFieldStore<T1,T2,T3> s;
+    SpatFldPtr result( store_.get(*p) );
+    *result = *f_;
+    *result += *p;
+    return result;
+  }
+  //------------------------------------------------------------------
+  template<typename FieldT>
+  SpatFldPtr<FieldT>
+  SpatFldPtr<FieldT>::operator-(const SpatFldPtr& p) const
+  {
+    SpatFldPtr result( store_.get(*p) );
+    *result = *f_;
+    *result -= *p;
+    return result;
+  }
+  //------------------------------------------------------------------
+  template<typename FieldT>
+  SpatFldPtr<FieldT>
+  SpatFldPtr<FieldT>::operator*(const SpatFldPtr& p) const
+  {
+    SpatFldPtr result( store_.get(*p) );
+    *result = *f_;
+    *result *= *p;
+    return result;
+  }
+  //------------------------------------------------------------------
+  template<typename FieldT>
+  SpatFldPtr<FieldT>
+  SpatFldPtr<FieldT>::operator/(const SpatFldPtr& p) const
+  {
+    SpatFldPtr result( store_.get(*p) );
+    *result = *f_;
+    *result /= *p;
+    return result;
+  }
+  //------------------------------------------------------------------
+  
+
+  //==================================================================
+
+
+  //------------------------------------------------------------------
+  template<typename FieldT>
+  SpatialFieldStore<FieldT>::~SpatialFieldStore()
+  {
+    for( typename FQMap::iterator ii=fqmap_.begin(); ii!=fqmap_.end(); ++ii ){
+      FieldQueue& q = ii->second;
+      while( !q.empty() ){
+	FieldT* field = q.front();
+	delete field;
+	q.pop();
+      }
+    }
+  }
+  //------------------------------------------------------------------
+  template<typename FieldT>
+  SpatialFieldStore<FieldT>&
+  SpatialFieldStore<FieldT>::self()
+  {
+    static SpatialFieldStore<FieldT> s;
     return s;
   }
   //------------------------------------------------------------------
-  template<typename T1,typename T2,typename T3>
-  SpatialField<T1,T2,T3>&
-  SpatialFieldStore<T1,T2,T3>::get( const SpatialField<T1,T2,T3>& field,
-				    const size_t fieldNum )
+  template<typename FieldT>
+  SpatFldPtr<FieldT>
+  SpatialFieldStore<FieldT>::get( const FieldT& field )
   {
-    const int npts = field.get_ntotal();
-
     // find the proper map
-    FieldStore& fs = fsmap_[npts];
+    FieldQueue& q = fqmap_[ field.get_ntotal() ];
 
-    // check for existance of this field
-    if( fieldNum >= fs.size() ){
-      fs.push_back( new SpatialField<T1,T2,T3>(field) );
+    if( q.empty() ){
+      FieldT* f = new FieldT(field);
+      q.push( f );
     }
-    return *(fs[fieldNum]);
+
+    FieldT* f = q.front();
+    q.pop();
+
+    return SpatFldPtr<FieldT>(*f,true);
+  }
+  //------------------------------------------------------------------
+  template<typename FieldT>
+  void
+  SpatialFieldStore<FieldT>::restore_field( FieldT& field )
+  {
+    FieldQueue& q = fqmap_[ field.get_ntotal() ];
+    q.push( &field );
   }
   //------------------------------------------------------------------
 

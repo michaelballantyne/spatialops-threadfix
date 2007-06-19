@@ -217,6 +217,7 @@ namespace SpatialOps{
   {
   public:
 
+    typedef LinAlg                                     LinAlgType;
     typedef typename LinAlg::MatType                   MatType;
 
     typedef typename SrcFieldTraits::StorageLocation   OpLocation;
@@ -255,7 +256,10 @@ namespace SpatialOps{
 
     virtual ~SpatialOperator();
 
-    /** @brief Return the underlying linear algebra matrix representation */
+    /**
+     *  @name 
+     *  Return the underlying linear algebra matrix representation 
+     */
     //@{
     inline       MatType& get_linalg_mat()      { return mat_; }
     inline const MatType& get_linalg_mat() const{ return mat_; }
