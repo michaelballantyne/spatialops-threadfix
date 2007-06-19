@@ -14,7 +14,7 @@ namespace SpatialOps{
   /**
    *  @class  SpatFldPtr
    *  @author James C. Sutherland
-   *  @date June, 2007
+   *  @date   June, 2007
    *
    *  @brief Wrapper for pointers to SpatialField objects.  Provides
    *  reference counting.
@@ -62,8 +62,8 @@ namespace SpatialOps{
      *
      *  @param builtFromStore if true, then SpatFldPtr will return the
      *  memory it owns to the SpatialFieldStore class once the last
-     *  reference is destroyed.  If false, then this constructor
-     *  behaves as the other one.
+     *  reference is destroyed.  If false then this will simply alias
+     *  a FieldT object and provide binary operations.
      */
     SpatFldPtr( FieldT& field, const bool builtFromStore );
 
@@ -83,29 +83,41 @@ namespace SpatialOps{
     inline const FieldT& operator*() const{return *f_;}
 
 
-    /** @name binary Operators */
+    /**
+     *  @name binary Operators
+     *
+     *  These operators only result in new memory allocation when
+     *  required, otherwise, a temporary is used from the
+     *  SpatialFieldStore.  The resulting SpatFldPtr object should NOT
+     *  be dereferenced and stored as a reference to an underlying
+     *  SpatialField.  This will cause severe memory corruption.
+     *
+     *  These operator simply call through to the ones defined on the
+     *  underlying SpatialField object.
+     */
     //@{
-    inline SpatFldPtr operator+(const SpatFldPtr&) const;  ///< Add two fields to produce a third: A=B+C
-    inline SpatFldPtr operator-(const SpatFldPtr&) const;  ///< Subtract two fields to produce a third: A=B-C
-    inline SpatFldPtr operator*(const SpatFldPtr&) const;  ///< Multiply two fields to produce a third: A=B*C
-    inline SpatFldPtr operator/(const SpatFldPtr&) const;  ///< Divide two fields to produce a third: A=B/C
+    inline SpatFldPtr operator+(const SpatFldPtr& p) const{return (*f_ + *p);}  ///< Add two fields to produce a third: A=B+C
+    inline SpatFldPtr operator-(const SpatFldPtr& p) const{return (*f_ - *p);}  ///< Subtract two fields to produce a third: A=B-C
+    inline SpatFldPtr operator*(const SpatFldPtr& p) const{return (*f_ * *p);}  ///< Multiply two fields to produce a third: A=B*C
+    inline SpatFldPtr operator/(const SpatFldPtr& p) const{return (*f_ / *p);}  ///< Divide two fields to produce a third: A=B/C
     //@}
+
 
     /**
      *  @name unary operators
      *  these simply call through to the corresponding SpatialField unary operators.
      */
     //@{
-    inline SpatFldPtr& operator+=(const SpatFldPtr& p){*f_+=*p; return *this;}  ///< Add a SpatFldPtr to this.
-    inline SpatFldPtr& operator-=(const SpatFldPtr& p){*f_-=*p; return *this;}  ///< Subtract a SpatFldPtr from this.
-    inline SpatFldPtr& operator*=(const SpatFldPtr& p){*f_*=*p; return *this;}  ///< Multiply this by a SpatFldPtr
-    inline SpatFldPtr& operator/=(const SpatFldPtr& p){*f_/=*p; return *this;}  ///< Divide this by a SpatFldPtr
+    inline SpatFldPtr& operator+=(const SpatFldPtr& p){*f_ += *p; return *this;}  ///< Add a SpatFldPtr to this.
+    inline SpatFldPtr& operator-=(const SpatFldPtr& p){*f_ -= *p; return *this;}  ///< Subtract a SpatFldPtr from this.
+    inline SpatFldPtr& operator*=(const SpatFldPtr& p){*f_ *= *p; return *this;}  ///< Multiply this by a SpatFldPtr
+    inline SpatFldPtr& operator/=(const SpatFldPtr& p){*f_ /= *p; return *this;}  ///< Divide this by a SpatFldPtr
 
-    inline SpatFldPtr& operator =(const double x){*f_ =x; return *this;}  ///< Assign this field to a constant
-    inline SpatFldPtr& operator+=(const double x){*f_+=x; return *this;}  ///< Add a constant to this field
-    inline SpatFldPtr& operator-=(const double x){*f_-=x; return *this;}  ///< Subtract a constant from this field
-    inline SpatFldPtr& operator*=(const double x){*f_*=x; return *this;}  ///< Multiply this field by a constant
-    inline SpatFldPtr& operator/=(const double x){*f_/=x; return *this;}  ///< Divide this field by a constant
+    inline SpatFldPtr& operator =(const double x){*f_  = x; return *this;}  ///< Assign this field to a constant
+    inline SpatFldPtr& operator+=(const double x){*f_ += x; return *this;}  ///< Add a constant to this field
+    inline SpatFldPtr& operator-=(const double x){*f_ -= x; return *this;}  ///< Subtract a constant from this field
+    inline SpatFldPtr& operator*=(const double x){*f_ *= x; return *this;}  ///< Multiply this field by a constant
+    inline SpatFldPtr& operator/=(const double x){*f_ /= x; return *this;}  ///< Divide this field by a constant
     //@}
 
   private:
@@ -118,7 +130,7 @@ namespace SpatialOps{
 
 
   /**
-   *  @class SpatialFieldStore
+   *  @class  SpatialFieldStore
    *  @author James C. Sutherland
    *  @date   May, 2007
    *
@@ -131,7 +143,7 @@ namespace SpatialOps{
    *  method:
    *
    *  \code
-   *    SpatFldPtr<FieldT> SpatialFieldStore<FieldT>::get( const FieldT& f )
+   *    SpatFldPtr<FieldT> SpatialFieldStore<FieldT>::get( const std::vector<int>& extent )
    *  \endcode
    *
    *  to return a field with the asme dimensions as the provided
@@ -160,27 +172,37 @@ namespace SpatialOps{
   public:
     static SpatialFieldStore& self();
 
+
     /**
      *  @brief Obtain a temporary field.
      *
-     *  @param f The field to pattern the temporary after.  If a
-     *  temporary field is not available in the SpatialFieldStore,
-     *  then the supplied field will be used as the argument to
-     *  copy-construct a new field.
+     *  @param extent  The patch extent in each direction.  {nx,ny,nz}
      *
-     *  Note that in general the returned field will NOT have the same
-     *  values as the supplied field, since it may return a recently
-     *  released field with other values.
+     *  @param ntot The total number of points (including ghost cells)
+     *  for this field.
      *
      *  Note that you should not dereference the SpatFldPtr object to
      *  store a SpatialField reference.  Doing so can cause memory
      *  corruption.
      */
-    SpatFldPtr<FieldT> get( const FieldT& f );
+    SpatFldPtr<FieldT> get( const std::vector<int>& extent,
+			    const int ntot );
 
   private:
 
+    /**
+     *  @brief Restores a field to the store for future use.
+     *
+     *  Note that this method is private to ensure it is only called
+     *  by SpatFldPtr objects.  Calling it anywhere else can result in
+     *  memory corruption.
+     */
     void restore_field( FieldT& f );
+
+    /**
+     *  This is a convenience method for use with the SpatFldPtr class.
+     */
+    SpatFldPtr<FieldT> get( const FieldT& f );
 
     SpatialFieldStore(){};
     ~SpatialFieldStore();
@@ -290,46 +312,6 @@ namespace SpatialOps{
     }
   }
   //------------------------------------------------------------------
-  template<typename FieldT>
-  SpatFldPtr<FieldT>
-  SpatFldPtr<FieldT>::operator+(const SpatFldPtr& p) const
-  {
-    SpatFldPtr result( store_.get(*p) );
-    *result = *f_;
-    *result += *p;
-    return result;
-  }
-  //------------------------------------------------------------------
-  template<typename FieldT>
-  SpatFldPtr<FieldT>
-  SpatFldPtr<FieldT>::operator-(const SpatFldPtr& p) const
-  {
-    SpatFldPtr result( store_.get(*p) );
-    *result = *f_;
-    *result -= *p;
-    return result;
-  }
-  //------------------------------------------------------------------
-  template<typename FieldT>
-  SpatFldPtr<FieldT>
-  SpatFldPtr<FieldT>::operator*(const SpatFldPtr& p) const
-  {
-    SpatFldPtr result( store_.get(*p) );
-    *result = *f_;
-    *result *= *p;
-    return result;
-  }
-  //------------------------------------------------------------------
-  template<typename FieldT>
-  SpatFldPtr<FieldT>
-  SpatFldPtr<FieldT>::operator/(const SpatFldPtr& p) const
-  {
-    SpatFldPtr result( store_.get(*p) );
-    *result = *f_;
-    *result /= *p;
-    return result;
-  }
-  //------------------------------------------------------------------
   
 
   //==================================================================
@@ -359,13 +341,21 @@ namespace SpatialOps{
   //------------------------------------------------------------------
   template<typename FieldT>
   SpatFldPtr<FieldT>
-  SpatialFieldStore<FieldT>::get( const FieldT& field )
+  SpatialFieldStore<FieldT>::get( const FieldT& f )
+  {
+    return get( f.get_extent(), f.get_ntotal() );
+  }
+  //------------------------------------------------------------------
+  template<typename FieldT>
+  SpatFldPtr<FieldT>
+  SpatialFieldStore<FieldT>::get( const std::vector<int>& extent,
+				  const int ntot )
   {
     // find the proper map
-    FieldQueue& q = fqmap_[ field.get_ntotal() ];
+    FieldQueue& q = fqmap_[ ntot ];
 
     if( q.empty() ){
-      FieldT* f = new FieldT(field);
+      FieldT* f = new FieldT( extent, NULL );
       q.push( f );
     }
 

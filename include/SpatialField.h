@@ -116,7 +116,28 @@ namespace SpatialOps{
 
 
     /**
-     *  @name Operators for SpatialField objects
+     *  @name Binary Operators for SpatialField objects.
+     *
+     *  These all return a SpatFldPtr object.  Since binary operations
+     *  require a new field to hold the result, a SpatFldPtr is used.
+     *  This only results in new memory allocation when required,
+     *  otherwise, a temporary is used from the SpatialFieldStore.
+     *  The resulting SpatFldPtr object should NOT be dereferenced and
+     *  stored as a reference to an underlying SpatialField.  This
+     *  will cause severe memory corruption.
+     */
+    //@{
+    inline SpatFldPtr<SpatialField> operator+(const SpatialField&) const;  ///< Add two fields to produce a third: A=B+C
+    inline SpatFldPtr<SpatialField> operator-(const SpatialField&) const;  ///< Subtract two fields to produce a third: A=B-C
+    inline SpatFldPtr<SpatialField> operator*(const SpatialField&) const;  ///< Multiply two fields to produce a third: A=B*C
+    inline SpatFldPtr<SpatialField> operator/(const SpatialField&) const;  ///< Divide two fields to produce a third: A=B/C
+    //@}
+
+
+    /**
+     *  @name Unary Operators for SpatialField objects
+     *
+     *  Perform basic operations on a SpatialField.
      */
     //@{
 
@@ -177,6 +198,14 @@ namespace SpatialOps{
     static int nghost(){ return GhostTraits::template get<Dir,SideType>(); }
 
     /**
+     *  Given the patch extent, this returns the total number of
+     *  points in this field (including ghost points).  In general, if
+     *  you have a SpatialField object available, you should use the
+     *  get_ntotal method rather than this method.
+     */
+    static int get_npts( const std::vector<int> & extent );
+
+    /**
      *  @brief Obtain the domain extent.  This is a vector containing
      *  the number of points in each direction, excluding ghost cells.
      */
@@ -221,14 +250,6 @@ namespace SpatialOps{
 
   private:
 
-    /**
-     *  Given the patch extent, this returns the total number of points
-     *  in this field (including ghost points)
-     */
-    static int get_npts( const std::vector<int> & extent );
-
-
-
     VecOps linAlg_;
     const std::vector<int> extent_;
     const int npts_;
@@ -240,15 +261,11 @@ namespace SpatialOps{
 
     SpatialField( const SpatialField& );
     SpatialField();
-
+    
   };
 
 
-  //====================================================================
-
-
-
-
+  //==================================================================
 
 
 
@@ -286,12 +303,6 @@ namespace SpatialOps{
     cout << OP::Symbol() << endl;
     Evaluate(arg.arg());
   }
-  //------------------------------------------------------------------
-//   void Evaluate( const SpatialOps::FVStaggeredUniform::CellFieldNoGhost& x )
-//   {
-//     x.Print(cout);
-//     cout << endl;
-//   }
   //------------------------------------------------------------------
   template<typename T>
   void Evaluate( const T& t )
@@ -490,7 +501,7 @@ namespace SpatialOps{
     }
     return npts;
   }
-  //--------------------------------------------------------------------
+  //------------------------------------------------------------------
   template< class VecOps, typename FieldLocation, typename GhostTraits >
   SpatialField<VecOps,FieldLocation, GhostTraits>&
   SpatialField<VecOps,FieldLocation, GhostTraits>::
@@ -535,7 +546,7 @@ namespace SpatialOps{
     }
     return *this;
   }
-  //--------------------------------------------------------------------
+  //------------------------------------------------------------------
   template< class VecOps, typename FieldLocation, typename GhostTraits >
   SpatialField<VecOps,FieldLocation, GhostTraits>&
   SpatialField<VecOps,FieldLocation, GhostTraits>::
@@ -580,7 +591,7 @@ namespace SpatialOps{
     }
     return *this;
   }
-  //--------------------------------------------------------------------
+  //------------------------------------------------------------------
   template< class VecOps, typename FieldLocation, typename GhostTraits >
   SpatialField< VecOps, FieldLocation, GhostTraits >&
   SpatialField< VecOps, FieldLocation, GhostTraits >::
@@ -625,14 +636,14 @@ namespace SpatialOps{
     }
     return *this;
   }
-  //--------------------------------------------------------------------
+  //------------------------------------------------------------------
   template< typename VecOps, typename FieldLocation, typename GhostTraits >
   void
   SpatialField<VecOps,FieldLocation,GhostTraits>::Print(std::ostream& s) const
   {
     vec_.Print(s);
   }
-  //--------------------------------------------------------------------
+  //------------------------------------------------------------------
   template< typename VecOps, typename FieldLocation, typename GhostTraits >
   bool
   SpatialField<VecOps,FieldLocation,GhostTraits>::operator==(const SpatialField& f)
@@ -642,15 +653,59 @@ namespace SpatialOps{
     }
     return true;
   }
-  //--------------------------------------------------------------------
+  //------------------------------------------------------------------
   template< typename VecOps, typename FieldLocation, typename GhostTraits >
   bool
   SpatialField<VecOps,FieldLocation,GhostTraits>::operator!=(const SpatialField& f)
   {
     return !(*this==f);
   }
-  //--------------------------------------------------------------------
-
+  //------------------------------------------------------------------
+  template< class VecOps, typename FieldLocation, typename GhostTraits >
+  SpatFldPtr< SpatialField< VecOps, FieldLocation, GhostTraits > >
+  SpatialField< VecOps, FieldLocation, GhostTraits >::  
+  operator+( const SpatialField& f ) const
+  {
+    SpatFldPtr<SpatialField> result( sfStore_.get(extent_,npts_) );
+    *result  = *this;
+    *result += f;
+    return result;
+  }
+  //------------------------------------------------------------------
+  template< class VecOps, typename FieldLocation, typename GhostTraits >
+  SpatFldPtr< SpatialField< VecOps, FieldLocation, GhostTraits > >
+  SpatialField< VecOps, FieldLocation, GhostTraits >::  
+  operator-( const SpatialField& f ) const
+  {
+    SpatFldPtr<SpatialField> result( sfStore_.get(extent_,npts_) );
+    *result  = *this;
+    *result -= f;
+    return result;
+  }
+  //------------------------------------------------------------------
+  template< class VecOps, typename FieldLocation, typename GhostTraits >
+  SpatFldPtr< SpatialField< VecOps, FieldLocation, GhostTraits > >
+  SpatialField< VecOps, FieldLocation, GhostTraits >::  
+  operator*( const SpatialField& f ) const
+  {
+    SpatFldPtr<SpatialField> result( sfStore_.get(extent_,npts_) );
+    *result  = *this;
+    *result *= f;
+    return result;
+  }
+  //------------------------------------------------------------------
+  template< class VecOps, typename FieldLocation, typename GhostTraits >
+  SpatFldPtr< SpatialField< VecOps, FieldLocation, GhostTraits > >
+  SpatialField< VecOps, FieldLocation, GhostTraits >::  
+  operator/( const SpatialField& f ) const
+  {
+    SpatFldPtr<SpatialField> result( sfStore_.get(extent_,npts_) );
+    *result  = *this;
+    *result /= f;
+    return result;
+  }
+  //------------------------------------------------------------------
+  
 
   //==================================================================
 

@@ -455,14 +455,16 @@ void test_daixt( const vector<int>& dim )
   const SpatFldPtr<CellFieldNoGhost> fp1(f1), fp2(f2);
   SpatFldPtr<CellFieldNoGhost> fp3;
 
+  SpatFldPtr<CellFieldNoGhost> tmp = f1+f2;
   fp3 = fp1+fp2;
   for( int i=0; i<n; ++i ){
-    if( std::abs((*fp3)[i] - 1.234)>1.0e-10 ){
+    if( std::abs((*fp3)[i] - 1.234)>1.0e-10  ||
+	(*fp3)[i] != (*tmp)[i] ){
       isOkay = false;
     }
   }
 
-  fp3 = fp3-(fp1+fp2);
+  fp3 = fp3-(f1+f2);
   for( int i=0; i<n; ++i ){
     if( std::abs((*fp3)[i])>1.0e-10 ){
       isOkay = false;
@@ -470,7 +472,7 @@ void test_daixt( const vector<int>& dim )
   }
 
 
-  fp3 = (fp1+fp2)*fp1;
+  fp3 = (f1+f2)*fp1;
   for( int i=0; i<n; ++i ){
     const double ans = f1[i]*1.234;
     const double abserr = std::abs((*fp3)[i] - ans);
@@ -480,7 +482,7 @@ void test_daixt( const vector<int>& dim )
     }
   }
 
-  fp3 = fp1*fp2+fp1/fp2*fp3+fp2/fp1+fp2*fp1*fp2;  // this ends up using two temporaries.
+  fp3 = f1*f2+f1/f2*fp3+f2/f1+f2*f1*f2;
 
   if( isOkay )  cout << "PASS" << endl;
   else          cout << "FAIL!" << endl;
