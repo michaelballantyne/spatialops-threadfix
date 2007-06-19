@@ -37,6 +37,8 @@ AC_CONFIG_FILES([
   src/test/Makefile
 ])
 
+AC_OUTPUT
+
 TRILINOS_VERSION=7.0.6
 TRILINOS_FLAGS=" --prefix=`pwd`\
   --includedir=`pwd`/include/trilinos \
@@ -45,6 +47,8 @@ TRILINOS_FLAGS=" --prefix=`pwd`\
   --enable-aztecoo \
   --enable-epetra \
   --enable-epetraext \
+  --disable-examples \
+  --disable-tests \
 "
 #use this to invoke configure on subpackages (trilinos boost etc.)
 if test ! -e "trilinos-7.0.6/config.status"; then
@@ -112,6 +116,5 @@ CXXFLAGS= #nothing
 #PKG_CHECK_MODULES(SOPS)
 #AC_SUBST(SOPS_CPPFLAGS)
 #AC_SUBST(SOPS_LIBS)
-AC_OUTPUT
 
 echo "All done.  Type 'make <enter>' to build SpatialOps."
