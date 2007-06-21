@@ -82,6 +82,10 @@ namespace SpatialOps{
     inline       FieldT& operator*()      {return *f_;}
     inline const FieldT& operator*() const{return *f_;}
 
+    inline       FieldT* operator->()      {return f_;}
+    inline const FieldT* operator->() const{return f_;}
+
+
 
     /**
      *  @name binary Operators
@@ -185,8 +189,8 @@ namespace SpatialOps{
      *  store a SpatialField reference.  Doing so can cause memory
      *  corruption.
      */
-    SpatFldPtr<FieldT> get( const std::vector<int>& extent,
-			    const int ntot );
+    inline SpatFldPtr<FieldT> get( const std::vector<int>& extent,
+				   const int ntot );
 
   private:
 
@@ -202,7 +206,7 @@ namespace SpatialOps{
     /**
      *  This is a convenience method for use with the SpatFldPtr class.
      */
-    SpatFldPtr<FieldT> get( const FieldT& f );
+    inline SpatFldPtr<FieldT> get( const FieldT& f );
 
     SpatialFieldStore(){};
     ~SpatialFieldStore();

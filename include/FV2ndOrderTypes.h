@@ -97,7 +97,8 @@ namespace FVStaggeredUniform{
   typedef SpatialOperator< LinAlgTrilinos, Divergence, XDIR, XSideFieldTraits, CellFieldTraits >  DivXF2C;     ///< Divergence of a face field in x-dir
   typedef SpatialOperator< LinAlgTrilinos, Divergence, YDIR, YSideFieldTraits, CellFieldTraits >  DivYF2C;     ///< Divergence of a face field in y-dir
   typedef SpatialOperator< LinAlgTrilinos, Divergence, ZDIR, ZSideFieldTraits, CellFieldTraits >  DivZF2C;     ///< Divergence of a face field in z-dir
-// divergence operators - Cell to Side
+
+  // divergence operators - Cell to Side
   typedef SpatialOperator< LinAlgTrilinos, Divergence, XDIR, CellFieldTraits, XSideFieldTraits >  DivXC2F;     ///< Divergence of a cell field in x-dir
   typedef SpatialOperator< LinAlgTrilinos, Divergence, YDIR, CellFieldTraits, YSideFieldTraits >  DivYC2F;     ///< Divergence of a cell field in y-dir
   typedef SpatialOperator< LinAlgTrilinos, Divergence, ZDIR, CellFieldTraits, ZSideFieldTraits >  DivZC2F;     ///< Divergence of a cell field in z-dir

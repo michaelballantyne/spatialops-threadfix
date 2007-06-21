@@ -127,6 +127,9 @@ private:
  *  segregated implicit scheme where the RHS is used in conjunction
  *  with a LHS operator, or in an explicit scheme where the RHS is
  *  simply used to obtain an update for the solution field directly.
+ *
+ *  @todo Implement unary operators involving constants
+ *  @todo Implement unary operator version of add_field_contribution
  */
 class RHS
 {
@@ -150,6 +153,15 @@ public:
 
 
   inline RHS& operator=(const double val){ reset(val); return *this; }
+
+
+  /** @name unary operators */
+  //@{
+  inline RHS& operator+=(const double val){ for(iterator i=begin(); i!=end(); ++i) *i+=val;  return *this; }
+  inline RHS& operator-=(const double val){ for(iterator i=begin(); i!=end(); ++i) *i-=val;  return *this; }
+  inline RHS& operator*=(const double val){ for(iterator i=begin(); i!=end(); ++i) *i*=val;  return *this; }
+  inline RHS& operator/=(const double val){ return(*this *= (1.0/val)); }
+  //@}
 
 
   typedef double* iterator;
