@@ -41,7 +41,14 @@ libspatialops_a_SOURCES	=  \
 	$(SOPS_INCDIR)/SpatialOpsDefs.h \
 	$(SOPS_INCDIR)/SpatialFieldStore.h \
 	$(SOPS_INCDIR)/SpatialOperator.h \
+	$(SOPS_INCDIR)/FVStaggeredBCTools.h \
 	$(SOPS_INCDIR)/FVStaggeredSpatialOps.h \
 	$(SOPS_INCDIR)/LinAlgTrilinos.h \
 	$(SOPS_INCDIR)/FV2ndOrderTypes.h \
 	$(SOPS_INCDIR)/LinearSystem.h
+
+#libspatialops_a_HEADERS = #headers to be installed
+#libspatialops_a_noinst_HEADERS = #headers just used for compiling
+
+#where is an extra_INSTALL target to specify libteuchos.a, etc. ?
+#How about an extra_UNINSTALL target to clean up subpackages' headers?
