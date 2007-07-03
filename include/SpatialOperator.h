@@ -507,8 +507,7 @@ namespace SpatialOps{
    *  dynamic operator switching.
    *
    *  @todo Need to allow the ability to put multiple operators in a
-   *  database and retrieve them, potentially with locking capability
-   *  to prevent multiple access.
+   *  database and retrieve them, potentially with locking capability to prevent multiple access.
    */
   template< class SpatialOpType >
   class SpatialOpDatabase

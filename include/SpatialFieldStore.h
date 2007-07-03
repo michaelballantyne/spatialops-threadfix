@@ -117,6 +117,11 @@ namespace SpatialOps{
     inline SpatFldPtr& operator*=(const SpatFldPtr& p){*f_ *= *p; return *this;}  ///< Multiply this by a SpatFldPtr
     inline SpatFldPtr& operator/=(const SpatFldPtr& p){*f_ /= *p; return *this;}  ///< Divide this by a SpatFldPtr
 
+    inline SpatFldPtr& operator+=(const FieldT& p){*f_ += p; return *this;}  ///< Add a FieldT to this.
+    inline SpatFldPtr& operator-=(const FieldT& p){*f_ -= p; return *this;}  ///< Subtract a FieldT from this.
+    inline SpatFldPtr& operator*=(const FieldT& p){*f_ *= p; return *this;}  ///< Multiply this by a FieldT
+    inline SpatFldPtr& operator/=(const FieldT& p){*f_ /= p; return *this;}  ///< Divide this by a FieldT
+
     inline SpatFldPtr& operator =(const double x){*f_  = x; return *this;}  ///< Assign this field to a constant
     inline SpatFldPtr& operator+=(const double x){*f_ += x; return *this;}  ///< Add a constant to this field
     inline SpatFldPtr& operator-=(const double x){*f_ -= x; return *this;}  ///< Subtract a constant from this field

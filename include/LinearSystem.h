@@ -128,7 +128,6 @@ private:
  *  with a LHS operator, or in an explicit scheme where the RHS is
  *  simply used to obtain an update for the solution field directly.
  *
- *  @todo Implement unary operators involving constants
  *  @todo Implement unary operator version of add_field_contribution
  */
 class RHS
