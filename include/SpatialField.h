@@ -526,7 +526,7 @@ namespace SpatialOps{
     // Thus, we must be very careful on the indices!
     //
     static const int yskip = ngxm+ngxp;
-    const int zskip = yskip + nxf * (ngym+ngyp);
+    const int zskip = nxf * (ngym+ngyp);
 
     int ixf = ngxm;
     if( ny>1 )  ixf += nxf*ngym;
@@ -571,7 +571,7 @@ namespace SpatialOps{
     // Thus, we must be very careful on the indices!
     //
     static const int yskip = ngxm+ngxp;
-    const int zskip = yskip + nxf * (ngym+ngyp);
+    const int zskip = nxf * (ngym+ngyp);
 
     int ixf = ngxm;
     if( ny>1 )  ixf += nxf*ngym;
@@ -616,7 +616,7 @@ namespace SpatialOps{
     // Thus, we must be very careful on the indices!
     //
     static const int yskip = ngxm+ngxp;
-    const int zskip = yskip + nxf * (ngym+ngyp);
+    const int zskip = nxf * (ngym+ngyp);
 
     int ixf = ngxm;
     if( ny>1 )  ixf += nxf*ngym;

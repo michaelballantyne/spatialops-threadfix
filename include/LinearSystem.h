@@ -403,7 +403,7 @@ RHS::add_field_contribution( const FieldType& f,
   const int nyf= (ny>1) ? ny+ngyl+ngyr : 1;
 
   const int yskip = ngxl+ngxr;
-  const int zskip = yskip + nxf * (ngyl+ngyr);
+  const int zskip = nxf * (ngyl+ngyr);
 
   int ixf = ngxl;
   if( ny>1 ) ixf += nxf*ngyl;
