@@ -50,6 +50,16 @@ namespace FVStaggeredUniform{
   typedef FieldTraits< Cell, NoGhosting >                 NoGhostCellFieldTraits;
   typedef FieldTraits< Side, NoGhosting >                 NoGhostSideFieldTraits;
 
+
+  typedef FieldTraits< Edge<XDIR>, DefaultSideGhosting<YDIR> > XEdgeYDirFieldTraits;
+  typedef FieldTraits< Edge<XDIR>, DefaultSideGhosting<ZDIR> > XEdgeZDirFieldTraits;
+
+  typedef FieldTraits< Edge<YDIR>, DefaultSideGhosting<XDIR> > YEdgeXDirFieldTraits;
+  typedef FieldTraits< Edge<YDIR>, DefaultSideGhosting<ZDIR> > YEdgeZDirFieldTraits;
+
+  typedef FieldTraits< Edge<ZDIR>, DefaultSideGhosting<XDIR> > ZEdgeXDirFieldTraits;
+  typedef FieldTraits< Edge<ZDIR>, DefaultSideGhosting<YDIR> > ZEdgeYDirFieldTraits;
+
   // Spatial Field Traits
   //==================================================================
 
@@ -71,6 +81,18 @@ namespace FVStaggeredUniform{
   typedef SpatialField< LinAlgTrilinos, NoGhostCellFieldTraits::StorageLocation, NoGhostCellFieldTraits::GhostTraits >   CellFieldNoGhost;
   typedef SpatialField< LinAlgTrilinos, NoGhostSideFieldTraits::StorageLocation, NoGhostSideFieldTraits::GhostTraits >   SideFieldNoGhost;
 
+  // X-edge fields
+  typedef SpatialField< LinAlgTrilinos, XEdgeYDirFieldTraits::StorageLocation, XEdgeYDirFieldTraits::GhostTraits >  XEdgeYDirField;
+  typedef SpatialField< LinAlgTrilinos, XEdgeZDirFieldTraits::StorageLocation, XEdgeZDirFieldTraits::GhostTraits >  XEdgeZDirField;
+
+  // Y-edge fields
+  typedef SpatialField< LinAlgTrilinos, YEdgeXDirFieldTraits::StorageLocation, YEdgeXDirFieldTraits::GhostTraits >  YEdgeXDirField;
+  typedef SpatialField< LinAlgTrilinos, YEdgeZDirFieldTraits::StorageLocation, YEdgeZDirFieldTraits::GhostTraits >  YEdgeZDirField;
+
+  // Z-edge fields
+  typedef SpatialField< LinAlgTrilinos, ZEdgeXDirFieldTraits::StorageLocation, ZEdgeXDirFieldTraits::GhostTraits >  ZEdgeXDirField;
+  typedef SpatialField< LinAlgTrilinos, ZEdgeYDirFieldTraits::StorageLocation, ZEdgeYDirFieldTraits::GhostTraits >  ZEdgeYDirField;
+
   // Spatial Field Types
   //==================================================================
 
@@ -86,7 +108,6 @@ namespace FVStaggeredUniform{
   typedef SpatialOperator< LinAlgTrilinos, Interpolant, XDIR, CellFieldTraits, XSideFieldTraits > InterpXC2F;  ///< Interpolate cell to face in x-dir
   typedef SpatialOperator< LinAlgTrilinos, Interpolant, YDIR, CellFieldTraits, YSideFieldTraits > InterpYC2F;  ///< Interpolate cell to face in y-dir
   typedef SpatialOperator< LinAlgTrilinos, Interpolant, ZDIR, CellFieldTraits, ZSideFieldTraits > InterpZC2F;  ///< Interpolate cell to face in z-dir
-  //@}
 
   // linear interpolants - Side to Cell
   typedef SpatialOperator< LinAlgTrilinos, Interpolant, XDIR, XSideFieldTraits, CellFieldTraits > InterpXF2C;  ///< Interpolate face to cell in x-dir
@@ -112,6 +133,31 @@ namespace FVStaggeredUniform{
   typedef SpatialOperator< LinAlgTrilinos, Gradient, XDIR, XSideFieldTraits, CellFieldTraits >    GradXF2C;     ///< Gradient of a cell field in x-dir
   typedef SpatialOperator< LinAlgTrilinos, Gradient, YDIR, YSideFieldTraits, CellFieldTraits >    GradYF2C;     ///< Gradient of a cell field in y-dir
   typedef SpatialOperator< LinAlgTrilinos, Gradient, ZDIR, ZSideFieldTraits, CellFieldTraits >    GradZF2C;     ///< Gradient of a cell field in z-dir
+
+
+  // linear interpolant - Side to Edge
+  typedef SpatialOperator< LinAlgTrilinos, Interpolant, XDIR, YSideFieldTraits, ZEdgeYDirFieldTraits >  InterpX_YF2ZE;  ///< Interpolate y-face field in x-dir to a edge z-edge
+  typedef SpatialOperator< LinAlgTrilinos, Interpolant, XDIR, ZSideFieldTraits, YEdgeZDirFieldTraits >  InterpX_ZF2YE;  ///< Interpolate z-face field in x-dir to a edge y-edge
+  typedef SpatialOperator< LinAlgTrilinos, Interpolant, YDIR, XSideFieldTraits, ZEdgeXDirFieldTraits >  InterpY_XF2ZE;  ///< Interpolate x-face field in y-dir to a edge z-edge
+  typedef SpatialOperator< LinAlgTrilinos, Interpolant, YDIR, ZSideFieldTraits, XEdgeZDirFieldTraits >  InterpY_ZF2XE;  ///< Interpolate y-face field in y-dir to a edge x-edge
+  typedef SpatialOperator< LinAlgTrilinos, Interpolant, ZDIR, XSideFieldTraits, YEdgeXDirFieldTraits >  InterpZ_XF2YE;  ///< Interpolate z-face field in z-dir to a edge y-edge
+  typedef SpatialOperator< LinAlgTrilinos, Interpolant, ZDIR, YSideFieldTraits, XEdgeYDirFieldTraits >  InterpZ_YF2XE;  ///< Interpolate y-face field in z-dir to a edge x-edge
+
+  // gradient operators - Side to Edge
+  typedef SpatialOperator< LinAlgTrilinos, Gradient, XDIR, YSideFieldTraits, ZEdgeYDirFieldTraits >  GradX_YF2ZE;  ///< Gradient in x-dir y-face field to a edge z-edge
+  typedef SpatialOperator< LinAlgTrilinos, Gradient, XDIR, ZSideFieldTraits, YEdgeZDirFieldTraits >  GradX_ZF2YE;  ///< Gradient in x-dir z-face field to a edge y-edge
+  typedef SpatialOperator< LinAlgTrilinos, Gradient, YDIR, XSideFieldTraits, ZEdgeXDirFieldTraits >  GradY_XF2ZE;  ///< Gradient in y-dir x-face field to a edge z-edge
+  typedef SpatialOperator< LinAlgTrilinos, Gradient, YDIR, ZSideFieldTraits, XEdgeZDirFieldTraits >  GradY_ZF2XE;  ///< Gradient in y-dir y-face field to a edge x-edge
+  typedef SpatialOperator< LinAlgTrilinos, Gradient, ZDIR, XSideFieldTraits, YEdgeXDirFieldTraits >  GradZ_XF2YE;  ///< Gradient in z-dir z-face field to a edge y-edge
+  typedef SpatialOperator< LinAlgTrilinos, Gradient, ZDIR, YSideFieldTraits, XEdgeYDirFieldTraits >  GradZ_YF2XE;  ///< Gradient in z-dir y-face field to a edge x-edge
+
+  // divergence operators - Edge to Side
+  typedef SpatialOperator< LinAlgTrilinos, Divergence, YDIR, ZEdgeYDirFieldTraits, XSideFieldTraits > DivY_ZE2XF;  ///< Divergence in y-dir z-edge field to x-face field
+  typedef SpatialOperator< LinAlgTrilinos, Divergence, ZDIR, YEdgeZDirFieldTraits, XSideFieldTraits > DivZ_YE2XF;  ///< Divergence in z-dir y-edge field to x-face field
+  typedef SpatialOperator< LinAlgTrilinos, Divergence, XDIR, ZEdgeXDirFieldTraits, YSideFieldTraits > DivX_ZE2YF;  ///< Divergence in x-dir z-edge field to y-face field
+  typedef SpatialOperator< LinAlgTrilinos, Divergence, ZDIR, XEdgeZDirFieldTraits, YSideFieldTraits > DivZ_XE2YF;  ///< Divergence in z-dir x-edge field to y-face field
+  typedef SpatialOperator< LinAlgTrilinos, Divergence, XDIR, YEdgeXDirFieldTraits, ZSideFieldTraits > DivX_YE2ZF;  ///< Divergence in x-dir y-edge field to z-face field
+  typedef SpatialOperator< LinAlgTrilinos, Divergence, YDIR, XEdgeYDirFieldTraits, ZSideFieldTraits > DivY_XE2ZF;  ///< Divergence in y-dir x-edge field to z-face field
 
   // Operator Types
   //==================================================================

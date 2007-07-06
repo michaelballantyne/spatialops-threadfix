@@ -35,7 +35,9 @@ void build_ops( const std::vector<int> & dim )
   double volume;
   setup_geom( dim, spacing, area, volume );
 
+  //
   // build the assemblers
+  //
   InterpXC2F::Assembler rxcfasmbl( dim );
   InterpYC2F::Assembler rycfasmbl( dim );
   InterpZC2F::Assembler rzcfasmbl( dim );
@@ -56,6 +58,27 @@ void build_ops( const std::vector<int> & dim )
   DivYF2C::Assembler dyfcasmbl( dim, area, volume );
   DivZF2C::Assembler dzfcasmbl( dim, area, volume );
 
+  InterpX_YF2ZE::Assembler rx_yfze_a( dim );
+  InterpX_ZF2YE::Assembler rx_zfye_a( dim );
+  InterpY_XF2ZE::Assembler ry_xfze_a( dim );
+  InterpY_ZF2XE::Assembler ry_zfxe_a( dim );
+  InterpZ_XF2YE::Assembler rz_xfye_a( dim );
+  InterpZ_YF2XE::Assembler rz_yfxe_a( dim );
+
+  GradX_YF2ZE::Assembler gx_yfze_a( spacing, dim );
+  GradX_ZF2YE::Assembler gx_zfye_a( spacing, dim );
+  GradY_XF2ZE::Assembler gy_xfze_a( spacing, dim );
+  GradY_ZF2XE::Assembler gy_zfxe_a( spacing, dim );
+  GradZ_XF2YE::Assembler gz_xfye_a( spacing, dim );
+  GradZ_YF2XE::Assembler gz_yfxe_a( spacing, dim );
+
+  DivX_YE2ZF::Assembler dx_yfze_a( dim, area, volume );
+  DivX_ZE2YF::Assembler dx_zfye_a( dim, area, volume );
+  DivY_XE2ZF::Assembler dy_xfze_a( dim, area, volume );
+  DivY_ZE2XF::Assembler dy_zfxe_a( dim, area, volume );
+  DivZ_XE2YF::Assembler dz_xfye_a( dim, area, volume );
+  DivZ_YE2XF::Assembler dz_yfxe_a( dim, area, volume );
+
   SxCell::Assembler  sxcasmbl( dim );
   SyCell::Assembler  sycasmbl( dim );
   SzCell::Assembler  szcasmbl( dim );
@@ -64,63 +87,79 @@ void build_ops( const std::vector<int> & dim )
   SyCellSide::Assembler  sycfasmbl( dim );
   SzCellSide::Assembler  szcfasmbl( dim );
 
+  // 
+  // Inerpolants
+  //
+  SpatialOpDatabase<InterpXC2F>::self().register_new_operator( new InterpXC2F( rxcfasmbl ) );
+  if( dim[1]>1 ) SpatialOpDatabase<InterpYC2F>::self().register_new_operator( new InterpYC2F( rycfasmbl ) );
+  if( dim[2]>1 ) SpatialOpDatabase<InterpZC2F>::self().register_new_operator( new InterpZC2F( rzcfasmbl ) );
 
-  // build the operators
-  InterpXC2F *rxcf = new InterpXC2F( rxcfasmbl );
-  InterpYC2F *rycf = dim[1]==1 ? NULL : new InterpYC2F( rycfasmbl );
-  InterpZC2F *rzcf = dim[2]==1 ? NULL : new InterpZC2F( rzcfasmbl );
+  SpatialOpDatabase<InterpXF2C>::self().register_new_operator( new InterpXF2C( rxfcasmbl ) );
+  if( dim[1]>1 ) SpatialOpDatabase<InterpYF2C>::self().register_new_operator( new InterpYF2C( ryfcasmbl ) );
+  if( dim[2]>1 ) SpatialOpDatabase<InterpZF2C>::self().register_new_operator( new InterpZF2C( rzfcasmbl ) );
 
-  InterpXF2C *rxfc = new InterpXF2C( rxfcasmbl );
-  InterpYF2C *ryfc = dim[1]==1 ? NULL : new InterpYF2C( ryfcasmbl );
-  InterpZF2C *rzfc = dim[2]==1 ? NULL : new InterpZF2C( rzfcasmbl );
+  SpatialOpDatabase<InterpX_YF2ZE>::self().register_new_operator( new InterpX_YF2ZE( rx_yfze_a ) );
+  SpatialOpDatabase<InterpX_ZF2YE>::self().register_new_operator( new InterpX_ZF2YE( rx_zfye_a ) );
+  if( dim[1]>1 ){
+   SpatialOpDatabase<InterpY_XF2ZE>::self().register_new_operator( new InterpY_XF2ZE( ry_xfze_a ) );
+   SpatialOpDatabase<InterpY_ZF2XE>::self().register_new_operator( new InterpY_ZF2XE( ry_zfxe_a ) );
+  }
+  if( dim[2]>1 ){
+    SpatialOpDatabase<InterpZ_XF2YE>::self().register_new_operator( new InterpZ_XF2YE( rz_xfye_a ) );
+    SpatialOpDatabase<InterpZ_YF2XE>::self().register_new_operator( new InterpZ_YF2XE( rz_yfxe_a ) );
+  }
 
-  GradXC2F   *gxcf = new GradXC2F( gxcfasmbl );
-  GradYC2F   *gycf = dim[1]==1 ? NULL : new GradYC2F( gycfasmbl );
-  GradZC2F   *gzcf = dim[2]==1 ? NULL : new GradZC2F( gzcfasmbl );
+  //
+  // Gradient
+  //
+  SpatialOpDatabase<GradXC2F>::self().register_new_operator( new GradXC2F( gxcfasmbl ) );
+  if( dim[1]>1 ) SpatialOpDatabase<GradYC2F>::self().register_new_operator( new GradYC2F( gycfasmbl ) );
+  if( dim[2]>1 ) SpatialOpDatabase<GradZC2F>::self().register_new_operator( new GradZC2F( gzcfasmbl ) );
 
-  GradXF2C   *gxfc = new GradXF2C( gxfcasmbl );
-  GradYF2C   *gyfc = dim[1]==1 ? NULL : new GradYF2C( gyfcasmbl );
-  GradZF2C   *gzfc = dim[2]==1 ? NULL : new GradZF2C( gzfcasmbl );
+  SpatialOpDatabase<GradXF2C>::self().register_new_operator( new GradXF2C( gxfcasmbl ) );
+  if( dim[1]>1 ) SpatialOpDatabase<GradYF2C>::self().register_new_operator( new GradYF2C( gyfcasmbl ) );
+  if( dim[2]>1 ) SpatialOpDatabase<GradZF2C>::self().register_new_operator( new GradZF2C( gzfcasmbl ) );
 
-  DivXF2C    *dxfc = new DivXF2C( dxfcasmbl );
-  DivYF2C    *dyfc = dim[1]==1 ? NULL : new DivYF2C( dyfcasmbl );
-  DivZF2C    *dzfc = dim[2]==1 ? NULL : new DivZF2C( dzfcasmbl );
+  SpatialOpDatabase<GradX_YF2ZE>::self().register_new_operator( new GradX_YF2ZE( gx_yfze_a ) );
+  SpatialOpDatabase<GradX_ZF2YE>::self().register_new_operator( new GradX_ZF2YE( gx_zfye_a ) );
+  if( dim[1]>1 ){
+    SpatialOpDatabase<GradY_XF2ZE>::self().register_new_operator( new GradY_XF2ZE( gy_xfze_a ) );
+    SpatialOpDatabase<GradY_ZF2XE>::self().register_new_operator( new GradY_ZF2XE( gy_zfxe_a ) );
+  }
+  if( dim[2]>1 ){
+    SpatialOpDatabase<GradZ_XF2YE>::self().register_new_operator( new GradZ_XF2YE( gz_xfye_a ) );
+    SpatialOpDatabase<GradZ_YF2XE>::self().register_new_operator( new GradZ_YF2XE( gz_yfxe_a ) );
+  }
 
-  SxCellSide *sxcf = new SxCellSide( sxcfasmbl );
-  SyCellSide *sycf = dim[1]==1 ? NULL : new SyCellSide( sycfasmbl );
-  SzCellSide *szcf = dim[2]==1 ? NULL : new SzCellSide( szcfasmbl );
+  //
+  // Divergence
+  //
+  SpatialOpDatabase<DivXF2C>::self().register_new_operator( new DivXF2C( dxfcasmbl ) );
+  if( dim[1]>1 ) SpatialOpDatabase<DivYF2C>::self().register_new_operator( new DivYF2C( dyfcasmbl ) );
+  if( dim[2]>1 ) SpatialOpDatabase<DivZF2C>::self().register_new_operator( new DivZF2C( dzfcasmbl ) );
 
-  SxCell     *sxc  = new SxCell( sxcasmbl  );
-  SyCell     *syc  = dim[1]==1 ? NULL : new SyCell( sycasmbl  );
-  SzCell     *szc  = dim[2]==1 ? NULL : new SzCell( szcasmbl  );
+  SpatialOpDatabase<DivX_YE2ZF>::self().register_new_operator( new DivX_YE2ZF( dx_yfze_a ) );
+  SpatialOpDatabase<DivX_ZE2YF>::self().register_new_operator( new DivX_ZE2YF( dx_zfye_a ) );
+  if( dim[1]>1 ){
+    SpatialOpDatabase<DivY_XE2ZF>::self().register_new_operator( new DivY_XE2ZF( dy_xfze_a ) );
+    SpatialOpDatabase<DivY_ZE2XF>::self().register_new_operator( new DivY_ZE2XF( dy_zfxe_a ) );
+  }
+  if( dim[2]>1 ){
+    SpatialOpDatabase<DivZ_XE2YF>::self().register_new_operator( new DivZ_XE2YF( dz_xfye_a ) );
+    SpatialOpDatabase<DivZ_YE2XF>::self().register_new_operator( new DivZ_YE2XF( dz_yfxe_a ) );
+  }
 
-  SpatialOpDatabase<InterpXC2F>::self().register_new_operator( rxcf );
-  if( dim[1]>1 ) SpatialOpDatabase<InterpYC2F>::self().register_new_operator( rycf );
-  if( dim[2]>1 ) SpatialOpDatabase<InterpZC2F>::self().register_new_operator( rzcf );
+  //
+  // Scratch
+  //
+  SpatialOpDatabase<SxCellSide>::self().register_new_operator( new SxCellSide( sxcfasmbl ) );
+  if( dim[1]>1 ) SpatialOpDatabase<SyCellSide>::self().register_new_operator( new SyCellSide( sycfasmbl ) );
+  if( dim[2]>1 ) SpatialOpDatabase<SzCellSide>::self().register_new_operator( new SzCellSide( szcfasmbl ) );
 
-  SpatialOpDatabase<InterpXF2C>::self().register_new_operator( rxfc );
-  if( dim[1]>1 ) SpatialOpDatabase<InterpYF2C>::self().register_new_operator( ryfc );
-  if( dim[2]>1 ) SpatialOpDatabase<InterpZF2C>::self().register_new_operator( rzfc );
+  SpatialOpDatabase<SxCell>::self().register_new_operator( new SxCell( sxcasmbl ) );
+  if( dim[1]>1 ) SpatialOpDatabase<SyCell>::self().register_new_operator( new SyCell( sycasmbl ) );
+  if( dim[2]>1 ) SpatialOpDatabase<SzCell>::self().register_new_operator( new SzCell( szcasmbl ) );
 
-  SpatialOpDatabase<GradXC2F  >::self().register_new_operator( gxcf );
-  if( dim[1]>1 ) SpatialOpDatabase<GradYC2F  >::self().register_new_operator( gycf );
-  if( dim[2]>1 ) SpatialOpDatabase<GradZC2F  >::self().register_new_operator( gzcf );
-
-  SpatialOpDatabase<GradXF2C  >::self().register_new_operator( gxfc );
-  if( dim[1]>1 ) SpatialOpDatabase<GradYF2C  >::self().register_new_operator( gyfc );
-  if( dim[2]>1 ) SpatialOpDatabase<GradZF2C  >::self().register_new_operator( gzfc );
-
-  SpatialOpDatabase<DivXF2C   >::self().register_new_operator( dxfc );
-  if( dim[1]>1 ) SpatialOpDatabase<DivYF2C   >::self().register_new_operator( dyfc );
-  if( dim[2]>1 ) SpatialOpDatabase<DivZF2C   >::self().register_new_operator( dzfc );
-
-  SpatialOpDatabase<SxCellSide>::self().register_new_operator( sxcf );
-  if( dim[1]>1 ) SpatialOpDatabase<SyCellSide>::self().register_new_operator( sycf );
-  if( dim[2]>1 ) SpatialOpDatabase<SzCellSide>::self().register_new_operator( szcf );
-
-  SpatialOpDatabase<SxCell    >::self().register_new_operator( sxc );
-  if( dim[1]>1 ) SpatialOpDatabase<SyCell    >::self().register_new_operator( syc );
-  if( dim[2]>1 ) SpatialOpDatabase<SzCell    >::self().register_new_operator( szc );
 }
 
 
@@ -458,8 +497,7 @@ void test_daixt( const vector<int>& dim )
   SpatFldPtr<CellFieldNoGhost> tmp = f1+f2;
   fp3 = fp1+fp2;
   for( int i=0; i<n; ++i ){
-    if( std::abs((*fp3)[i] - 1.234)>1.0e-10  ||
-	(*fp3)[i] != (*tmp)[i] ){
+    if( std::abs((*fp3)[i] - 1.234)>1.0e-10  || (*fp3)[i] != (*tmp)[i] ){
       isOkay = false;
     }
   }

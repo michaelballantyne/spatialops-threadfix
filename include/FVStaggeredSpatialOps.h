@@ -14,6 +14,9 @@ namespace FVStaggeredUniform{
   /** @brief Defines a type for cell fields */
   struct Cell{};
 
+  /** @brief Defines a type for edge fields */
+  template<typename DirT>
+  struct Edge{};
 
   /** @brief Policy for a field with no ghost cells */
   struct NoGhosting

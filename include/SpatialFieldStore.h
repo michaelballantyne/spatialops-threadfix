@@ -85,7 +85,7 @@ namespace SpatialOps{
     inline       FieldT* operator->()      {return f_;}
     inline const FieldT* operator->() const{return f_;}
 
-
+    inline bool isnull() const{ return f_ == NULL; }
 
     /**
      *  @name binary Operators

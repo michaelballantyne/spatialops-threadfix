@@ -89,6 +89,9 @@ namespace FVStaggeredUniform{
   template<>
   bool stagger_left<Side>(){ return false; }
 
+  template<> bool stagger_left<Edge<XDIR> >(){ return false; }
+  template<> bool stagger_left<Edge<YDIR> >(){ return false; }
+  template<> bool stagger_left<Edge<ZDIR> >(){ return false; }
 
   //==================================================================
 
