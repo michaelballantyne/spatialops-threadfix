@@ -165,7 +165,7 @@ namespace FVStaggeredUniform{
     typedef Direction DirType;
 
     /** @brief Return the number of nonzero entries for this interpolant operator. */
-    static int num_nonzeros(){ return 2; }
+    int num_nonzeros(){ return 2; }
 
     /**
      *  @brief Construct a LinearInterpolantAssembler object.
@@ -258,7 +258,7 @@ namespace FVStaggeredUniform{
     typedef Location OpLocation;
 
     /** @brief Return the number of nonzero entries for this interpolant operator. */
-    static int num_nonzeros(){ return 2; }
+    int num_nonzeros(){ return 2; }
 
     /**
      *  @brief Construct a DivergenceAssembler object.
@@ -355,7 +355,7 @@ namespace FVStaggeredUniform{
     typedef Location OpLocation;
 
     /** @brief Return the number of nonzero entries for this interpolant operator. */
-    static int num_nonzeros(){ return 2; }
+    int num_nonzeros(){ return 2; }
 
     /**
      *  @brief Construct a GradientAssembler object.
@@ -416,9 +416,6 @@ namespace FVStaggeredUniform{
    *  @par Template Parameters
    *  <ul>
    *
-   *  <li> \b NumNonZero An integer indicating the number of nonzero
-   *  entries in each row of the operator.
-   *
    *  <li> \b Direction The direction that this interpolant is applied
    *  to.  See XDIR, YDIR, ZDIR for more information.
    *
@@ -445,8 +442,7 @@ namespace FVStaggeredUniform{
    *  direction on the given side of the domain.
    *
    */
-  template< int NumNonZero,
-	    typename Direction,
+  template< typename Direction,
 	    typename Location,
 	    class SrcGhostPolicy,
 	    class DestGhostPolicy >
@@ -457,9 +453,9 @@ namespace FVStaggeredUniform{
     typedef Direction DirType;
     typedef Location  OpLocation;
 
-    static int num_nonzeros(){ return NumNonZero; }
+    int num_nonzeros(){ return numNonZero_; }
 
-    ScratchAssembler( const std::vector<int> & dimExtent );
+    ScratchAssembler( const std::vector<int> & dimExtent, const int numNonZero );
 
     ~ScratchAssembler(){}
 
@@ -484,6 +480,7 @@ namespace FVStaggeredUniform{
   private:
 
     const OpInfo opInfo_;
+    const int numNonZero_;
     bool inBoundsLo_[3], inBoundsHi_[3], inBounds_[3];
 
   };
@@ -745,26 +742,25 @@ namespace FVStaggeredUniform{
 
 
   //------------------------------------------------------------------
-  template< int NumNonZero,
-	    typename Direction,
+  template< typename Direction,
 	    typename Location,
 	    class SrcGhostPolicy,
 	    class DestGhostPolicy >
-  ScratchAssembler<NumNonZero,Direction,Location,SrcGhostPolicy,DestGhostPolicy>::
-  ScratchAssembler::ScratchAssembler( const std::vector<int> & dimExtent )
+  ScratchAssembler<Direction,Location,SrcGhostPolicy,DestGhostPolicy>::
+  ScratchAssembler::ScratchAssembler( const std::vector<int> & dimExtent, const int numNonZero )
     : opInfo_( dimExtent,
 	       ghost_vec<SrcGhostPolicy >(),
-	       ghost_vec<DestGhostPolicy>() )
+	       ghost_vec<DestGhostPolicy>() ),
+      numNonZero_( numNonZero )
   {
   }
   //------------------------------------------------------------------
-  template< int NumNonZero,
-	    typename Direction,
+  template< typename Direction,
 	    typename Location,
 	    class SrcGhostPolicy,
 	    class DestGhostPolicy >
   void
-  ScratchAssembler<NumNonZero,Direction,Location,SrcGhostPolicy,DestGhostPolicy>::
+  ScratchAssembler<Direction,Location,SrcGhostPolicy,DestGhostPolicy>::
   get_row_entries( const int irow,
 		   std::vector<double> & vals,
 		   std::vector<int> & ixs )
@@ -773,13 +769,13 @@ namespace FVStaggeredUniform{
 
     const double val = 0.0;
     int icol;
-    opInfo_.get_bounds( irow, staggerLeft, NumNonZero, inBoundsLo_, inBoundsHi_, inBounds_, icol );
+    opInfo_.get_bounds( irow, staggerLeft, numNonZero_, inBoundsLo_, inBoundsHi_, inBounds_, icol );
 
     const int ncols = opInfo_.ncols();
 
-    int nShift = -( int(std::ceil( float(NumNonZero)/2.0 )) - 1 );
-    static const int nOffDiagP = NumNonZero/2;
-    if( NumNonZero%2 == 0 ){
+    int nShift = -( int(std::ceil( float(numNonZero_)/2.0 )) - 1 );
+    static const int nOffDiagP = numNonZero_/2;
+    if( numNonZero_%2 == 0 ){
       if( staggerLeft )  --nShift;
       else               ++nShift;
     }
@@ -790,7 +786,7 @@ namespace FVStaggeredUniform{
     int ix = nShift*skip;
     while( ix+icol <0 ) ix+=skip;
     while( ix+icol + nOffDiagP*skip > ncols ) ix-=skip;
-    for( int i=0; i<NumNonZero; ++i ){
+    for( int i=0; i<numNonZero_; ++i ){
       const int ipos = icol + ix;
       if( ipos >= 0 && ipos < ncols ){
 	vals.push_back( val );  ixs.push_back( ipos );
@@ -799,25 +795,23 @@ namespace FVStaggeredUniform{
     }
   }
   //------------------------------------------------------------------
-  template< int NumNonZero,
-	    typename Direction,
+  template< typename Direction,
 	    typename Location,
 	    class SrcGhostPolicy,
 	    class DestGhostPolicy >
   int
-  ScratchAssembler<NumNonZero,Direction,Location,SrcGhostPolicy,DestGhostPolicy>::
+  ScratchAssembler<Direction,Location,SrcGhostPolicy,DestGhostPolicy>::
   get_ncols() const
   {
     return entrycount<SrcGhostPolicy>( opInfo_.extent() );
   }
   //------------------------------------------------------------------
-  template< int NumNonZero,
-	    typename Direction,
+  template< typename Direction,
 	    typename Location,
 	    class SrcGhostPolicy,
 	    class DestGhostPolicy >
   int
-  ScratchAssembler<NumNonZero,Direction,Location,SrcGhostPolicy,DestGhostPolicy>::
+  ScratchAssembler<Direction,Location,SrcGhostPolicy,DestGhostPolicy>::
   get_nrows() const
   {
     return entrycount<DestGhostPolicy>( opInfo_.extent() );

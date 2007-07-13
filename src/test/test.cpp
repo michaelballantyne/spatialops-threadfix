@@ -79,13 +79,13 @@ void build_ops( const std::vector<int> & dim )
   DivZ_XE2YF::Assembler dz_xfye_a( dim, area, volume );
   DivZ_YE2XF::Assembler dz_yfxe_a( dim, area, volume );
 
-  SxCell::Assembler  sxcasmbl( dim );
-  SyCell::Assembler  sycasmbl( dim );
-  SzCell::Assembler  szcasmbl( dim );
+  SxCell::Assembler  sxcasmbl( dim,3 );
+  SyCell::Assembler  sycasmbl( dim,3 );
+  SzCell::Assembler  szcasmbl( dim,3 );
 
-  SxCellSide::Assembler  sxcfasmbl( dim );
-  SyCellSide::Assembler  sycfasmbl( dim );
-  SzCellSide::Assembler  szcfasmbl( dim );
+  SxCellSide::Assembler  sxcfasmbl( dim,2 );
+  SyCellSide::Assembler  sycfasmbl( dim,2 );
+  SzCellSide::Assembler  szcfasmbl( dim,2 );
 
   // 
   // Inerpolants

@@ -418,9 +418,9 @@ bool test_scratch(const grid_class& grid, analytical_class& funct, std::vector<d
   GradYC2F::Assembler yGrad_C2F_Assembler( grid.spacing, grid.dim );
   GradZC2F::Assembler zGrad_C2F_Assembler( grid.spacing, grid.dim );
 	
-  SxCell::Assembler  xLaplacian_Assembler(grid.dim);
-  SyCell::Assembler  yLaplacian_Assembler(grid.dim);
-  SzCell::Assembler  zLaplacian_Assembler(grid.dim);
+  SxCell::Assembler  xLaplacian_Assembler(grid.dim,3);
+  SyCell::Assembler  yLaplacian_Assembler(grid.dim,3);
+  SzCell::Assembler  zLaplacian_Assembler(grid.dim,3);
 	
   DivXF2C    xDiv_F2C( xDiv_F2C_assembler );
   DivYF2C    yDiv_F2C( yDiv_F2C_assembler );

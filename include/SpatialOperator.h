@@ -220,6 +220,9 @@ namespace SpatialOps{
     typedef LinAlg                                     LinAlgType;
     typedef typename LinAlg::MatType                   MatType;
 
+    typedef SrcFieldTraits                             SrcTraits;
+    typedef DestFieldTraits                            DestTraits;
+
     typedef typename SrcFieldTraits::StorageLocation   OpLocation;
     typedef Direction                                  DirType;
 
@@ -601,15 +604,15 @@ namespace SpatialOps{
       ncols_ ( opAssembler.get_ncols()  ),
       nghostSrc_ ( ghost_vec< SrcGhost>() ),
       nghostDest_( ghost_vec<DestGhost>() ),
-      mat_( linAlg_.setup_matrix( nrows_, ncols_, Assembler::num_nonzeros() ) )
+      mat_( linAlg_.setup_matrix( nrows_, ncols_, opAssembler.num_nonzeros() ) )
   {
     if( IsSameType<Direction,XDIR>::result )  assert(  extent_[0]>1 );
     if( IsSameType<Direction,YDIR>::result )  assert( (extent_[0]>1)  && (extent_[1]>1) );
     if( IsSameType<Direction,ZDIR>::result )  assert( (extent_[0]>1)  && (extent_[1]>1) && (extent_[2]>1) );
 
     // build the operator
-    std::vector<double> vals( Assembler::num_nonzeros(), 0.0 );
-    std::vector<int>    ixs ( Assembler::num_nonzeros(), 0   );
+    std::vector<double> vals( opAssembler.num_nonzeros(), 0.0 );
+    std::vector<int>    ixs ( opAssembler.num_nonzeros(), 0   );
     for( int i=0; i<nrows_; ++i ){
       vals.clear();
       ixs.clear();

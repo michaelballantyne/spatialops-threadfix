@@ -31,11 +31,9 @@ namespace FVStaggeredUniform{
   struct Interpolant{};
 
   /**
-   *  @brief Defines a Scratch type with a specified number
-   *  nonzeros. Doesn't need to provide any functionality.
+   *  @brief Defines a Scratch type.  Doesn't need to provide any functionality.
    */
-  template< int N >
-  struct Scratch{ static const int NumNonZero = N; };
+  struct Scratch{};
 
 
   //==================================================================
@@ -136,20 +134,20 @@ namespace FVStaggeredUniform{
 
 
   // linear interpolant - Side to Edge
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, XDIR, YSideFieldTraits, ZEdgeYDirFieldTraits >  InterpX_YF2ZE;  ///< Interpolate y-face field in x-dir to a edge z-edge
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, XDIR, ZSideFieldTraits, YEdgeZDirFieldTraits >  InterpX_ZF2YE;  ///< Interpolate z-face field in x-dir to a edge y-edge
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, YDIR, XSideFieldTraits, ZEdgeXDirFieldTraits >  InterpY_XF2ZE;  ///< Interpolate x-face field in y-dir to a edge z-edge
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, YDIR, ZSideFieldTraits, XEdgeZDirFieldTraits >  InterpY_ZF2XE;  ///< Interpolate y-face field in y-dir to a edge x-edge
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, ZDIR, XSideFieldTraits, YEdgeXDirFieldTraits >  InterpZ_XF2YE;  ///< Interpolate z-face field in z-dir to a edge y-edge
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, ZDIR, YSideFieldTraits, XEdgeYDirFieldTraits >  InterpZ_YF2XE;  ///< Interpolate y-face field in z-dir to a edge x-edge
+  typedef SpatialOperator< LinAlgTrilinos, Interpolant, XDIR, YSideFieldTraits, ZEdgeYDirFieldTraits >  InterpX_YF2ZE;  ///< Interpolate y-face field in x-dir to a z-edge
+  typedef SpatialOperator< LinAlgTrilinos, Interpolant, XDIR, ZSideFieldTraits, YEdgeZDirFieldTraits >  InterpX_ZF2YE;  ///< Interpolate z-face field in x-dir to a y-edge
+  typedef SpatialOperator< LinAlgTrilinos, Interpolant, YDIR, XSideFieldTraits, ZEdgeXDirFieldTraits >  InterpY_XF2ZE;  ///< Interpolate x-face field in y-dir to a z-edge
+  typedef SpatialOperator< LinAlgTrilinos, Interpolant, YDIR, ZSideFieldTraits, XEdgeZDirFieldTraits >  InterpY_ZF2XE;  ///< Interpolate y-face field in y-dir to a x-edge
+  typedef SpatialOperator< LinAlgTrilinos, Interpolant, ZDIR, XSideFieldTraits, YEdgeXDirFieldTraits >  InterpZ_XF2YE;  ///< Interpolate z-face field in z-dir to a y-edge
+  typedef SpatialOperator< LinAlgTrilinos, Interpolant, ZDIR, YSideFieldTraits, XEdgeYDirFieldTraits >  InterpZ_YF2XE;  ///< Interpolate y-face field in z-dir to a x-edge
 
   // gradient operators - Side to Edge
-  typedef SpatialOperator< LinAlgTrilinos, Gradient, XDIR, YSideFieldTraits, ZEdgeYDirFieldTraits >  GradX_YF2ZE;  ///< Gradient in x-dir y-face field to a edge z-edge
-  typedef SpatialOperator< LinAlgTrilinos, Gradient, XDIR, ZSideFieldTraits, YEdgeZDirFieldTraits >  GradX_ZF2YE;  ///< Gradient in x-dir z-face field to a edge y-edge
-  typedef SpatialOperator< LinAlgTrilinos, Gradient, YDIR, XSideFieldTraits, ZEdgeXDirFieldTraits >  GradY_XF2ZE;  ///< Gradient in y-dir x-face field to a edge z-edge
-  typedef SpatialOperator< LinAlgTrilinos, Gradient, YDIR, ZSideFieldTraits, XEdgeZDirFieldTraits >  GradY_ZF2XE;  ///< Gradient in y-dir y-face field to a edge x-edge
-  typedef SpatialOperator< LinAlgTrilinos, Gradient, ZDIR, XSideFieldTraits, YEdgeXDirFieldTraits >  GradZ_XF2YE;  ///< Gradient in z-dir z-face field to a edge y-edge
-  typedef SpatialOperator< LinAlgTrilinos, Gradient, ZDIR, YSideFieldTraits, XEdgeYDirFieldTraits >  GradZ_YF2XE;  ///< Gradient in z-dir y-face field to a edge x-edge
+  typedef SpatialOperator< LinAlgTrilinos, Gradient, XDIR, YSideFieldTraits, ZEdgeYDirFieldTraits >  GradX_YF2ZE;  ///< Gradient in x-dir y-face field to a z-edge
+  typedef SpatialOperator< LinAlgTrilinos, Gradient, XDIR, ZSideFieldTraits, YEdgeZDirFieldTraits >  GradX_ZF2YE;  ///< Gradient in x-dir z-face field to a y-edge
+  typedef SpatialOperator< LinAlgTrilinos, Gradient, YDIR, XSideFieldTraits, ZEdgeXDirFieldTraits >  GradY_XF2ZE;  ///< Gradient in y-dir x-face field to a z-edge
+  typedef SpatialOperator< LinAlgTrilinos, Gradient, YDIR, ZSideFieldTraits, XEdgeZDirFieldTraits >  GradY_ZF2XE;  ///< Gradient in y-dir y-face field to a x-edge
+  typedef SpatialOperator< LinAlgTrilinos, Gradient, ZDIR, XSideFieldTraits, YEdgeXDirFieldTraits >  GradZ_XF2YE;  ///< Gradient in z-dir z-face field to a y-edge
+  typedef SpatialOperator< LinAlgTrilinos, Gradient, ZDIR, YSideFieldTraits, XEdgeYDirFieldTraits >  GradZ_YF2XE;  ///< Gradient in z-dir y-face field to a x-edge
 
   // divergence operators - Edge to Side
   typedef SpatialOperator< LinAlgTrilinos, Divergence, YDIR, ZEdgeYDirFieldTraits, XSideFieldTraits > DivY_ZE2XF;  ///< Divergence in y-dir z-edge field to x-face field
@@ -172,17 +170,17 @@ namespace FVStaggeredUniform{
   //==================================================================
   // SCRATCH OPERATORS
 
-  typedef SpatialOperator< LinAlgTrilinos, Scratch<3>, XDIR, CellFieldTraits, CellFieldTraits  > SxCell;
-  typedef SpatialOperator< LinAlgTrilinos, Scratch<3>, YDIR, CellFieldTraits, CellFieldTraits  > SyCell;
-  typedef SpatialOperator< LinAlgTrilinos, Scratch<3>, ZDIR, CellFieldTraits, CellFieldTraits  > SzCell;
+  typedef SpatialOperator< LinAlgTrilinos, Scratch, XDIR, CellFieldTraits, CellFieldTraits  > SxCell;
+  typedef SpatialOperator< LinAlgTrilinos, Scratch, YDIR, CellFieldTraits, CellFieldTraits  > SyCell;
+  typedef SpatialOperator< LinAlgTrilinos, Scratch, ZDIR, CellFieldTraits, CellFieldTraits  > SzCell;
 
-  typedef SpatialOperator< LinAlgTrilinos, Scratch<1>, XDIR, XSideFieldTraits, XSideFieldTraits > SxSide;
-  typedef SpatialOperator< LinAlgTrilinos, Scratch<1>, YDIR, YSideFieldTraits, YSideFieldTraits > SySide;
-  typedef SpatialOperator< LinAlgTrilinos, Scratch<1>, YDIR, ZSideFieldTraits, ZSideFieldTraits > SzSide;
+  typedef SpatialOperator< LinAlgTrilinos, Scratch, XDIR, XSideFieldTraits, XSideFieldTraits > SxSide;
+  typedef SpatialOperator< LinAlgTrilinos, Scratch, YDIR, YSideFieldTraits, YSideFieldTraits > SySide;
+  typedef SpatialOperator< LinAlgTrilinos, Scratch, YDIR, ZSideFieldTraits, ZSideFieldTraits > SzSide;
 
-  typedef SpatialOperator< LinAlgTrilinos, Scratch<2>, XDIR, CellFieldTraits, XSideFieldTraits > SxCellSide;
-  typedef SpatialOperator< LinAlgTrilinos, Scratch<2>, YDIR, CellFieldTraits, YSideFieldTraits > SyCellSide;
-  typedef SpatialOperator< LinAlgTrilinos, Scratch<2>, ZDIR, CellFieldTraits, ZSideFieldTraits > SzCellSide;
+  typedef SpatialOperator< LinAlgTrilinos, Scratch, XDIR, CellFieldTraits, XSideFieldTraits > SxCellSide;
+  typedef SpatialOperator< LinAlgTrilinos, Scratch, YDIR, CellFieldTraits, YSideFieldTraits > SyCellSide;
+  typedef SpatialOperator< LinAlgTrilinos, Scratch, ZDIR, CellFieldTraits, ZSideFieldTraits > SzCellSide;
 
   // SCRATCH OPERATORS
   //==================================================================
@@ -215,10 +213,10 @@ namespace SpatialOps{
     typedef FVStaggeredUniform::LinearInterpolantAssembler<Dir,Location,SrcGhost,DestGhost>  Assembler;
   };
 
-  template< int N, typename Dir, typename Location, typename SrcGhost, typename DestGhost >
-  struct OpAssemblerSelector< FVStaggeredUniform::Scratch<N>, Dir, Location, SrcGhost, DestGhost >
+  template< typename Dir, typename Location, typename SrcGhost, typename DestGhost >
+  struct OpAssemblerSelector< FVStaggeredUniform::Scratch, Dir, Location, SrcGhost, DestGhost >
   {
-    typedef FVStaggeredUniform::ScratchAssembler< FVStaggeredUniform::Scratch<N>::NumNonZero,Dir,Location,SrcGhost,DestGhost>  Assembler;
+    typedef FVStaggeredUniform::ScratchAssembler<Dir,Location,SrcGhost,DestGhost>  Assembler;
   };
 
 
