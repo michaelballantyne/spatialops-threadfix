@@ -75,8 +75,13 @@ namespace SpatialOps{
     /** @brief Skeletal constructor */
     SpatFldPtr();
 
+    SpatFldPtr( FieldT* const p );
+
     /** @brief Assignment operator */
     SpatFldPtr& operator=( const SpatFldPtr& p );
+
+    /** @brief Assignment operator */
+    SpatFldPtr& operator=( FieldT& f );
 
 
     inline       FieldT& operator*()      {return *f_;}
@@ -286,6 +291,15 @@ namespace SpatialOps{
   }
   //------------------------------------------------------------------
   template<typename FieldT>
+  SpatFldPtr<FieldT>::SpatFldPtr( FieldT* const p )
+    : store_( SpatialFieldStore<FieldT>::self() )
+  {
+    f_ = p;
+    *count_ = 1;
+    builtFromStore_ = false;
+  }
+  //------------------------------------------------------------------
+  template<typename FieldT>
   SpatFldPtr<FieldT>&
   SpatFldPtr<FieldT>::operator=( const SpatFldPtr& p )
   {
@@ -305,6 +319,28 @@ namespace SpatialOps{
     builtFromStore_ = p.builtFromStore_;
     // increment copy count
     ++(*count_);
+
+    return *this;
+  }
+  //------------------------------------------------------------------
+  template<typename FieldT>
+  SpatFldPtr<FieldT>&
+  SpatFldPtr<FieldT>::operator=( FieldT& f )
+  {
+    // was this an active SpatFldPtr?
+    if( count_ != NULL ){
+      // this one is dying so decrement the count.
+      --(*count_);
+      // kill the old one if needed
+      if( *count_ == 0 ){
+	if( builtFromStore_ ) store_.restore_field( *f_ );
+	delete count_;
+      }
+    }
+    // reassign
+    f_ = &f;
+    *count_ = 1;
+    builtFromStore_ = false;
 
     return *this;
   }
