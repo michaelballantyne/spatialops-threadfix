@@ -8,6 +8,14 @@
 #not the build path. ($srcdir instead of $top_srcdir)
 SOPS_INCDIR	= $(srcdir)/../include
 
++#XXX change project tree structure?
++#(first) move all headers from /include to /src
++#(second) rename /src to /spatialops
++#(third)  change all includes to #include <spatialops/foo.h>
++#(fourth) make buildsys install headers to /usr/include/spatialops
++# Now we can use the same header paths to build the library,
++# as we can to link with it later on.
+
 #Dependency package headers _are_ near our build location
 # (since they're installed on a per-arch basis.)  Therefore
 # they're relative to the build path, not the source path.

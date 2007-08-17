@@ -35,6 +35,7 @@ AC_CONFIG_FILES([
   Makefile
   src/Makefile
   src/test/Makefile
+  spatialops-1.0.pc
 ])
 
 AC_OUTPUT
