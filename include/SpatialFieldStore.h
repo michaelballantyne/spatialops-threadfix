@@ -339,6 +339,7 @@ namespace SpatialOps{
     }
     // reassign
     f_ = &f;
+    count_ = new int;
     *count_ = 1;
     builtFromStore_ = false;
 
