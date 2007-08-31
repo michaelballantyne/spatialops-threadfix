@@ -72,9 +72,8 @@ private:
 
 
 //--------------------------------------------------------------------
-RHS::RHS( const std::vector<int> & domainExtent )
-  : extent_( domainExtent ),
-    npts_( std::accumulate(extent_.begin(), extent_.end(), 1, std::multiplies<int>() ) )
+RHS::RHS( const int npts )
+  : npts_( npts )
 {
   field_.resize( npts_ );
 }
@@ -161,20 +160,17 @@ LHS::Print( std::ostream & c ) const
 #ifdef HAVE_MPI
 LinearSystem::LinearSystem( const vector<int> & extent,
 			    MPI_Comm & comm )
+  : npts_( get_global_npts(extent,comm) ),
 #else
 LinearSystem::LinearSystem( const vector<int> & extent )
-#endif
-  : extent_( extent ),
-
-#if HAVE_MPI
-    npts_( get_global_npts(extent,comm) ),
-#else
-    npts_( get_global_npts(extent) ),
+  : npts_( get_global_npts(extent) ),
 #endif
 
-    rhs_( extent_ ),  // construct the rhs
-    lhs_( NULL ),
-    solnFieldValues_( extent_ ),  // construct the solution
+    extent_( extent ),
+
+    rhs_( npts_ ),  // construct the rhs
+    lhs_( NULL  ),
+    solnFieldValues_( npts_ ),  // construct the solution
 
     maxIterations_  ( 100    ),
     solverTolerance_( 1.0e-12 ),

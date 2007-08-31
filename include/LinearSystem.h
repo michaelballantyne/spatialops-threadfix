@@ -5,7 +5,8 @@
 #include <map>
 #include <string>
 
-#include <SpatialOpsDefs.h>
+#include <FVStaggeredTools.h>
+#include <SpatialField.h>
 
 //---------------------------------
 // trilinos includes
@@ -31,6 +32,8 @@ class AztecOO;
 // local forward declarations
 class LinearSystem;
 
+
+/** @todo rip out the extent information here. */
 
 //====================================================================
 
@@ -134,7 +137,7 @@ class RHS
 {
 public:
 
-  RHS( const std::vector<int> & domainExtent );
+  RHS( const int npts );
 
   ~RHS();
 
@@ -148,9 +151,6 @@ public:
 
   inline const std::vector<double> & get_field() const{return field_;}
 
-  inline const std::vector<int> & get_extent() const{return extent_;}
-
-
   inline RHS& operator=(const double val){ reset(val); return *this; }
 
 
@@ -163,7 +163,7 @@ public:
   //@}
 
 
-  typedef double* iterator;
+  typedef double*             iterator;
   typedef double const* const_iterator;
 
   inline iterator begin(){ return &field_[0]; }
@@ -172,12 +172,19 @@ public:
   inline const_iterator begin() const{ return &field_[0]; }
   inline const_iterator end()   const{ return &field_[npts_]; }
 
+
+  typedef iterator interior_iterator;
+  typedef const_iterator const_interior_iterator;
+  inline const_interior_iterator interior_begin() const{return begin();}
+  inline       interior_iterator interior_begin()      {return begin();}
+  inline const_interior_iterator interior_end()   const{return end();}
+  inline       interior_iterator interior_end()        {return end();}
+
 private:
 
   template<typename FieldType>
   bool consistency_check( const FieldType& f ) const;
 
-  const std::vector<int> extent_;
   const int npts_;
 
   std::vector<double> field_;
@@ -237,12 +244,6 @@ public:
   void Print( std::ostream& c ) const;
 
 private:
-
-  template<typename FieldType>
-  bool field_compatibility_check( const FieldType& t ) const;
-
-  template<typename OpType>
-  bool op_compatibility_check( const OpType& op ) const;
 
   Epetra_CrsMatrix & A_;
   const std::vector<int> extent_;
@@ -334,8 +335,8 @@ protected:
 
   void imprint( const std::vector<int> &, const int );
 
-  const std::vector<int> extent_;
   const int npts_;
+  const std::vector<int> extent_;
   RHS   rhs_;
   LHS * lhs_;
   SOLN  solnFieldValues_;
@@ -365,73 +366,28 @@ private:
 
 //====================================================================
 
-template<typename FieldType>
-bool
-RHS::consistency_check( const FieldType& f ) const
-{
-  bool ok = f.get_extent() == extent_;
-  return ok;
-}
 //--------------------------------------------------------------------
 template<typename FieldType>
 void
 RHS::add_field_contribution( const FieldType& f,
 			     const double scaleFac )
 {
-  assert( consistency_check(f) );
+  typename FieldType::const_interior_iterator ifld = f.interior_begin();
+  const typename FieldType::const_interior_iterator iflde = f.interior_end();
 
-  using namespace SpatialOps;
+  iterator irhs = begin();
+  const iterator irhse = end();
 
-  /*
-   *  Procedure:
-   *    1. Determine how many ghost cells are in the field
-   *    2. Sum field elements into RHS, skipping ghost values
-   */
-
-  const int nx=extent_[0];
-  const int ny=extent_[1];
-  const int nz=extent_[2];
-
-  static const int ngxl = f.template nghost<XDIR,SideMinus>();
-  static const int ngxr = f.template nghost<XDIR,SidePlus >();
-  static const int ngyl = f.template nghost<YDIR,SideMinus>();
-  static const int ngyr = f.template nghost<YDIR,SidePlus >();
-  static const int ngzl = f.template nghost<ZDIR,SideMinus>();
-
-  // get the dimensions of the field
-  const int nxf= (nx>1) ? nx+ngxl+ngxr : 1;
-  const int nyf= (ny>1) ? ny+ngyl+ngyr : 1;
-
-  const int yskip = ngxl+ngxr;
-  const int zskip = nxf * (ngyl+ngyr);
-
-  int ixf = ngxl;
-  if( ny>1 ) ixf += nxf*ngyl;
-  if( nz>1 ) ixf += nxf*nyf*ngzl;
-
-  typename FieldType::const_iterator ifld = f.begin() + ixf;
-  std::vector<double>::iterator irhs = field_.begin();
-
-  if( scaleFac==1.0 ){
-    for( int k=0; k<nz; ++k ){
-      for( int j=0; j<ny; ++j ){
-	for( int k=0; k<nx; ++k ){
-	  *irhs++ += *ifld++;
-	}
-	ifld += yskip;
-      }
-      ifld += zskip;
+  if( scaleFac==1 ){
+    for( ; ifld!=iflde; ++ifld, ++irhs ){
+      assert( irhs != irhse );
+      *irhs += *ifld;
     }
   }
   else{
-    for( int k=0; k<nz; ++k ){
-      for( int j=0; j<ny; ++j ){
-	for( int k=0; k<nx; ++k ){
-	  *irhs++ += scaleFac * (*ifld++);
-	}
-	ifld += yskip;
-      }
-      ifld += zskip;
+    for( ; ifld!=iflde; ++ifld, ++irhs ){
+      assert( irhs != irhse );
+      *irhs += *ifld * scaleFac;
     }
   }
 }
@@ -445,14 +401,14 @@ void
 LHS::add_op_contribution( const OpType & op,
 			  const double scaleFac )
 {
-  assert( op_compatibility_check(op) );
+  using namespace SpatialOps;
 
   // add non-ghost elements of the local matrix to this LHS operator
   const int nx=extent_[0];
   const int ny=extent_[1];
   const int nz=extent_[2];
 
-  typename OpType::IndexTriplet ix;
+  FVStaggered::IndexTriplet t;
 
   int irow = 0;
   for( int ioprow=0; ioprow<op.nrows(); ++ioprow ){
@@ -472,16 +428,19 @@ LHS::add_op_contribution( const OpType & op,
       const int colindex = ixs[icol];
 
       // check to see if we are at a ghost entry - get the "interior" indices.
-      if( op.is_col_ghost( colindex, &ix ) ) continue;
+      if( op.is_col_ghost( colindex ) ) continue;
 
       // insert this value
       rowDWork_.push_back( scaleFac*vals[icol] );
 
       // now determine the column index for insertion of this value
-      const int ii = nx>1 ? ix[0] : 0;
-      const int jj = ny>1 ? ix[1] : 0;
-      const int kk = nz>1 ? ix[2] : 0;
-      const int iflat = kk*(nx*ny) + jj*(nx) + ii;
+      typedef typename OpType::SrcFieldType SrcField;
+      t = FVStaggered::flat2ijk<SrcField,SrcField::Location::IsSurface>::value( extent_, colindex );
+      if( nx>1 ) t.i -= SrcField::Ghost::NM;
+      if( ny>1 ) t.j -= SrcField::Ghost::NM;
+      if( nz>1 ) t.k -= SrcField::Ghost::NM;
+
+      const int iflat = t.k*(nx*ny) + t.j*(nx) + t.i;
       rowIWork_.push_back( iflat );
 
     } // column loop
@@ -504,61 +463,90 @@ void
 LHS::add_field_contribution( const FieldType & f,
 			     const double scaleFac )
 {
-  //  assert( compatibility_check(f) );
-
-  using namespace SpatialOps;
   using std::vector;
 
-  const int ngxl = f.template nghost<XDIR,SideMinus>();
-  const int ngxr = f.template nghost<XDIR,SidePlus >();
-  const int ngyl = f.template nghost<YDIR,SideMinus>();
-  const int ngyr = f.template nghost<YDIR,SidePlus >();
-  const int ngzl = f.template nghost<ZDIR,SideMinus>();
-  const int ngzr = f.template nghost<ZDIR,SidePlus >();
-
-  // add non-ghost elements of the local field to this LHS operator
-
-  const vector<int> & fextent = f.get_extent();
-  const int nxm = (fextent[0]>1) ? fextent[0] + ngxl + ngxr : 1;
-  const int nym = (fextent[1]>1) ? fextent[1] + ngyl + ngyr : 1;
-  const int nzm = (fextent[2]>1) ? fextent[2] + ngzl + ngzr : 1;
+  const typename FieldType::const_interior_iterator iflde = f.interior_end();
+  typename FieldType::const_interior_iterator ifld = f.interior_begin();
 
   int ientry=0;
-  int irow=0;
-  for( typename FieldType::const_iterator ifld=f.begin(); ifld!=f.end(); ++ifld, ++irow ){
-
-    // determine the ijk indices
-    const int i = irow%nxm;
-    const int j = (irow/nxm)%nym;
-    const int k = irow/(nxm*nym);
-
-    // are we at a ghost entry?  If so, go to the next entry.
-    if(                  i<ngxl || i>=nxm-ngxr  ) continue;
-    if( extent_[1]>1 && (j<ngyl || j>=nym-ngyr) ) continue;
-    if( extent_[2]>1 && (k<ngzl || k>=nzm-ngzr) ) continue;
-
+  for( ; ifld!=iflde; ++ifld, ++ientry ){
     // add this value to the diagonal
     double val = scaleFac * (*ifld);
     A_.SumIntoMyValues( ientry, 1, &val, &ientry );
-    ++ientry;
   }
-}
-//--------------------------------------------------------------------
-template<typename FieldType>
-bool
-LHS::field_compatibility_check( const FieldType& f ) const
-{
-  return ( extent_ == f.get_extent() );  
-}
-//--------------------------------------------------------------------
-template<typename OpType>
-bool
-LHS::op_compatibility_check( const OpType& op ) const
-{
-  return ( extent_ == op.get_extent() );
+
 }
 //--------------------------------------------------------------------
 
 //====================================================================
+
+
+
+
+
+
+
+
+//====================================================================
+
+namespace SpatialOps{
+
+  template< class VecOps, typename FieldLocation, typename GhostTraits >
+  SpatialField<VecOps,FieldLocation,GhostTraits>&
+  SpatialField<VecOps,FieldLocation,GhostTraits>::
+  operator=( const RHS& rhs )
+  {
+    // assign the RHS field to this spatial field.
+    typename RHS::const_iterator irhs = rhs.begin();
+    const typename RHS::const_iterator irhse = rhs.end();
+    
+    const interior_iterator iflde = this->interior_end();
+    interior_iterator ifld = this->interior_begin();
+    
+    for( ; ifld!=iflde; ++ifld, ++irhs ){
+      assert( irhs!=irhse );
+      *ifld = *irhs;
+    }
+    return *this;
+  }
+  //------------------------------------------------------------------
+  template< class VecOps, typename FieldLocation, typename GhostTraits >
+  SpatialField<VecOps,FieldLocation,GhostTraits>&
+  SpatialField<VecOps,FieldLocation,GhostTraits>::
+  operator+=( const RHS& rhs )
+  {
+    // assign the RHS field to this spatial field.
+    typename RHS::const_iterator irhs = rhs.begin();
+    const typename RHS::const_iterator irhse = rhs.end();
+    
+    const interior_iterator iflde = this->interior_end();
+    interior_iterator ifld = this->interior_begin();
+    
+    for( ; ifld!=iflde; ++ifld, ++irhs ){
+      assert( irhs!=irhse );
+      *ifld += *irhs;
+    }
+    return *this;
+  }
+  //------------------------------------------------------------------
+  template< class VecOps, typename FieldLocation, typename GhostTraits >
+  SpatialField<VecOps,FieldLocation,GhostTraits>&
+  SpatialField<VecOps,FieldLocation,GhostTraits>::
+  operator-=( const RHS& rhs )
+  {
+    // assign the RHS field to this spatial field.
+    typename RHS::const_iterator irhs = rhs.begin();
+    const typename RHS::const_iterator irhse = rhs.end();
+    
+    const interior_iterator iflde = this->interior_end();
+    interior_iterator ifld = this->interior_begin();
+    
+    for( ; ifld!=iflde; ++ifld, ++irhs ){
+      assert( irhs!=irhse );
+      *ifld -= *irhs;
+    }
+    return *this;
+  }
+}// namespace SpatialOps
 
 #endif

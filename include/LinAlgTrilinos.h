@@ -7,7 +7,7 @@
 #include <SpatialField.h>
 #include <Epetra_CrsMatrix.h>
 #include <EpetraExt_MatrixMatrix.h>
-
+#include <Epetra_Vector.h>
 
 class Epetra_LocalMap;  // forward declaration
 
@@ -50,22 +50,19 @@ namespace SpatialOps{
     //@{
 
     template< typename OpType,
-	      typename Direction,
-	      typename SrcFieldTraits,
-	      typename DestFieldTraits >
-    inline LinAlgTrilinos& operator= ( const SpatialOperator< LinAlgTrilinos, OpType, Direction, SrcFieldTraits, DestFieldTraits > & m );
+	      typename SrcFieldT,
+	      typename DestFieldT >
+    inline LinAlgTrilinos& operator= ( const SpatialOperator< LinAlgTrilinos, OpType, SrcFieldT, DestFieldT > & m );
 
     template< typename OpType,
-	      typename Direction,
-	      typename SrcFieldTraits,
-	      typename DestFieldTraits >
-    inline LinAlgTrilinos& operator+=( const SpatialOperator< LinAlgTrilinos, OpType, Direction, SrcFieldTraits, DestFieldTraits > & m );
+	      typename SrcFieldT,
+	      typename DestFieldT >
+    inline LinAlgTrilinos& operator+=( const SpatialOperator< LinAlgTrilinos, OpType, SrcFieldT, DestFieldT > & m );
 
     template< typename OpType,
-	      typename Direction,
-	      typename SrcFieldTraits,
-	      typename DestFieldTraits >
-    inline LinAlgTrilinos& operator-=( const  SpatialOperator< LinAlgTrilinos, OpType, Direction, SrcFieldTraits, DestFieldTraits > & m );
+	      typename SrcFieldT,
+	      typename DestFieldT >
+    inline LinAlgTrilinos& operator-=( const  SpatialOperator< LinAlgTrilinos, OpType, SrcFieldT, DestFieldT > & m );
 
     //@}
 
@@ -114,26 +111,29 @@ namespace SpatialOps{
 
 
 
-  template< typename OpType, typename Direction, typename SrcFieldTraits, typename DestFieldTraits >
+  template< typename OpType, typename SrcFieldT, typename DestFieldT >
   LinAlgTrilinos&
-  LinAlgTrilinos::operator=( const SpatialOperator<LinAlgTrilinos,OpType,Direction,SrcFieldTraits,DestFieldTraits>& m )
+  LinAlgTrilinos::operator=( const SpatialOperator<LinAlgTrilinos,OpType,SrcFieldT,DestFieldT>& m )
   {
+    /**
+     *  @todo improve efficiency of operator assignment.  See \c LinAlgTrilinos::operator=
+     */
     // jcs this is INEFFICIENT.  It would be better to do this directly.
     reset_entries(0.0);
     return ( (*this)+=m );
   }
   //------------------------------------------------------------------
-  template< typename OpType, typename Direction, typename SrcFieldTraits, typename DestFieldTraits >
+  template< typename OpType, typename SrcFieldT, typename DestFieldT >
   LinAlgTrilinos&
-  LinAlgTrilinos::operator+=( const SpatialOperator<LinAlgTrilinos,OpType,Direction,SrcFieldTraits,DestFieldTraits>& m )
+  LinAlgTrilinos::operator+=( const SpatialOperator<LinAlgTrilinos,OpType,SrcFieldT,DestFieldT>& m )
   {
     EpetraExt::MatrixMatrix::Add( m.get_linalg_mat(), false, 1.0, *mat_, 1.0 );
     return *this;
   }
   //------------------------------------------------------------------
-  template< typename OpType, typename Direction, typename SrcFieldTraits, typename DestFieldTraits >
+  template< typename OpType, typename SrcFieldT, typename DestFieldT >
   LinAlgTrilinos&
-  LinAlgTrilinos::operator-=( const SpatialOperator<LinAlgTrilinos,OpType,Direction,SrcFieldTraits,DestFieldTraits>& m )
+  LinAlgTrilinos::operator-=( const SpatialOperator<LinAlgTrilinos,OpType,SrcFieldT,DestFieldT>& m )
   {
     EpetraExt::MatrixMatrix::Add( m.get_linalg_mat(), false, -1.0, *mat_, 1.0 );
     return *this;

@@ -2,16 +2,19 @@
 #define UT_SpatialField_h
 
 #include <vector>
+#include <set>
 #include <iostream>
 
 // allows compile-time expansion of complex expressions involving SpatialField objects.
 #include <daixtrose/Daixt.h>
 
-
-#include <SpatialOpsDefs.h>
-#include <LinearSystem.h>
 #include <SpatialFieldStore.h>
+#include <SFIterator.h>
 
+// #include <LinearSystem.h>
+
+
+class RHS;
 
 namespace SpatialOps{
 
@@ -75,21 +78,26 @@ namespace SpatialOps{
 
     friend class SpatialFieldStore<MyType>;
 
+
   public:
 
     typedef GhostTraits Ghost;
     typedef FieldLocation Location;
 
+
     /**
      *  Construct a SpatialField.
      *
-     *  @param fieldDims: The number of points (excluding any ghost
-     *  cells) for the domain in each of the three ordinal directions.
+     *  @param npts The number of points (including ghost cells) for
+     *  this field.
      *
-     *  @param fieldValues : Pointer to the field values.  Behavior is
+     *  @param ghostSet A std::set<int> containing the indices
+     *  representing the ghost values for this field.
+     *
+     *  @param fieldValues  Pointer to the field values.  Behavior is
      *  dictated by the choice of StorageMode.
      *
-     *  @param mode : Storage options.  If InternalStorage then the
+     *  @param mode  Storage options.  If InternalStorage then the
      *  fieldValues will be copied into an internal buffer.  If
      *  ExternalStorage then the fieldValues will be stored
      *  externally.  Efficiency suggests that ExternalStorage is best,
@@ -98,7 +106,40 @@ namespace SpatialOps{
      *  corruption and inadvertant deletion of the field's underlying
      *  memory.
      */
-    SpatialField( const std::vector<int> & fieldDims,
+    SpatialField( const int npts,
+		  const std::set<int>& ghostSet,
+		  double * const fieldValues,
+		  const StorageMode mode = InternalStorage );
+
+    /**
+     *  Construct a SpatialField.
+     *
+     *  @param npts The number of points (including ghost cells) for
+     *  this field.
+     *
+     *  @param entriesPerComponent If this field has multiple entries
+     *  (as for a vector field), then this specifies how many entries
+     *  are in each component.  Note that we assume that the component
+     *  index strides slowest through memory.
+     *
+     *  @param ghostSet A std::set<int> containing the indices
+     *  representing the ghost values for this field.
+     *
+     *  @param fieldValues  Pointer to the field values.  Behavior is
+     *  dictated by the choice of StorageMode.
+     *
+     *  @param mode  Storage options.  If InternalStorage then the
+     *  fieldValues will be copied into an internal buffer.  If
+     *  ExternalStorage then the fieldValues will be stored
+     *  externally.  Efficiency suggests that ExternalStorage is best,
+     *  since it will avoid excessive copies.  Safety suggests that
+     *  InternalStorage is best, since it protects against memory
+     *  corruption and inadvertant deletion of the field's underlying
+     *  memory.
+     */
+    SpatialField( const int npts,
+		  const std::vector<int>& entriesPerComponent,
+		  const std::set<int>& ghostSet,
 		  double * const fieldValues,
 		  const StorageMode mode = InternalStorage );
 
@@ -141,7 +182,13 @@ namespace SpatialOps{
      */
     //@{
 
-    inline SpatialField& operator =(const SpatialField&);  ///< Assign a SpatialField to this one.
+    template<typename FieldT> SpatialField& operator= (const FieldT&); ///< No default implementation...
+    template<typename FieldT> SpatialField& operator*=(const FieldT&); ///< No default implementation...
+    template<typename FieldT> SpatialField& operator/=(const FieldT&); ///< No default implementation...
+    template<typename FieldT> SpatialField& operator+=(const FieldT&); ///< No default implementation...
+    template<typename FieldT> SpatialField& operator-=(const FieldT&); ///< No default implementation...
+
+    inline SpatialField& operator= (const SpatialField&);  ///< Assign a SpatialField to this one.
     inline SpatialField& operator+=(const SpatialField&);  ///< Add a SpatialField to this.
     inline SpatialField& operator-=(const SpatialField&);  ///< Subtract a SpatialField from this.
     inline SpatialField& operator*=(const SpatialField&);  ///< Multiply this by a SpatialField
@@ -153,7 +200,7 @@ namespace SpatialOps{
     inline SpatialField& operator*=(const double);  ///< Multiply this field by a constant
     inline SpatialField& operator/=(const double);  ///< Divide this field by a constant
 
-    inline SpatialField& operator =(const RHS&);  ///< Assign a RHS to this field (doesn't affect ghosts)
+    inline SpatialField& operator= (const RHS&);  ///< Assign a RHS to this field (doesn't affect ghosts)
     inline SpatialField& operator+=(const RHS&);  ///< Add a RHS to this field (doesn't affect ghosts)
     inline SpatialField& operator-=(const RHS&);  ///< Subtract a RHS from this field (doesn't affect ghosts)
 
@@ -190,28 +237,7 @@ namespace SpatialOps{
      */
     inline int get_ntotal() const{ return npts_; }
 
-    /**
-     * @brief Obtain the number of ghost cells in the given direction
-     * and side of the patch.
-     */
-    template< typename Dir, typename SideType>
-    static int nghost(){ return GhostTraits::template get<Dir,SideType>(); }
-
-    /**
-     *  Given the patch extent, this returns the total number of
-     *  points in this field (including ghost points).  In general, if
-     *  you have a SpatialField object available, you should use the
-     *  get_ntotal method rather than this method.
-     */
-    static int get_npts( const std::vector<int> & extent );
-
-    /**
-     *  @brief Obtain the domain extent.  This is a vector containing
-     *  the number of points in each direction, excluding ghost cells.
-     */
-    inline const std::vector<int>& get_extent() const{return extent_;}
-
-
+    inline int get_ninterior() const{return npts_-ghostSet_.size(); }
     /**
      *  @name
      *  Obtain a reference to the field using the [] operator.
@@ -238,21 +264,45 @@ namespace SpatialOps{
     inline iterator       end()      {return fieldValues_+npts_;}
     inline const_iterator end() const{return fieldValues_+npts_;}
 
+
+
+    typedef  InteriorIterator<      double*>       interior_iterator;
+    typedef  InteriorIterator<const double*> const_interior_iterator;
+
+    inline       interior_iterator interior_begin();
+    inline const_interior_iterator interior_begin() const;
+
+    inline       interior_iterator interior_end();
+    inline const_interior_iterator interior_end() const;
+
+
+
+    typedef GhostIterator<      double*>       ghost_iterator;
+    typedef GhostIterator<const double*> const_ghost_iterator;
+
+    inline       ghost_iterator ghost_begin();
+    inline const_ghost_iterator ghost_begin() const;
+
+    inline       ghost_iterator ghost_end();
+    inline const_ghost_iterator ghost_end() const;
+
     //@}
 
 
+    int get_entries_per_comp( const int dir ) const{return nptsPerComp_[dir];}
+
     /** Dump information about the field to the given output stream. */
-    void Print( std::ostream& ) const;
+    virtual void Print( std::ostream& ) const;
 
   protected:
     
-    inline bool consistency_check( const SpatialField& s ) const{ return ( npts_ == s.npts_ ); }
 
   private:
 
     VecOps linAlg_;
-    const std::vector<int> extent_;
     const int npts_;
+    std::vector<int> nptsPerComp_;
+    const std::set<int> ghostSet_;
     const StorageMode storageMode_;
     double * const fieldValues_;
     VecType & vec_;
@@ -270,11 +320,13 @@ namespace SpatialOps{
 
 
 
+
   // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   //
   //  Implementation
   //
   // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 
 
@@ -293,22 +345,22 @@ namespace SpatialOps{
   void Evaluate( const Daixt::BinOp<LHS,RHS,OP>& arg )
   {
     Evaluate(arg.lhs());
-    cout << OP::Symbol() << endl;
+    std::cout << OP::Symbol() << std::endl;
     Evaluate( arg.rhs() );
   }
   //------------------------------------------------------------------
   template<typename ARG, typename OP>
   void Evaluate( const Daixt::UnOp<ARG,OP>& arg )
   {
-    cout << OP::Symbol() << endl;
+    std::cout << OP::Symbol() << std::endl;
     Evaluate(arg.arg());
   }
   //------------------------------------------------------------------
   template<typename T>
   void Evaluate( const T& t )
   {
-    t.put(cout);
-    cout << endl;
+    t.put(std::cout);
+    std::cout << std::endl;
   }
   //------------------------------------------------------------------
 
@@ -316,18 +368,154 @@ namespace SpatialOps{
   //==================================================================
 
 
+  //--------------------------------------------------------------------
   template< class VecOps, typename FieldLocation, typename GhostTraits >
-  SpatialField<VecOps,FieldLocation, GhostTraits>::
-  SpatialField( const std::vector<int> & fieldDims,
+  typename SpatialField<VecOps,FieldLocation,GhostTraits>::interior_iterator
+  SpatialField<VecOps,FieldLocation,GhostTraits>::
+  interior_begin()
+  {
+    iterator iter = begin();
+    int ix=0;
+    std::set<int>::const_iterator ig = ghostSet_.begin();
+    const std::set<int>::const_iterator ige = ghostSet_.end();
+    while( *ig == ix  &&  ig!=ige ){ ++ig; ++ix; ++iter; }
+    return interior_iterator(iter,ix,ig,ige);
+  }
+  //--------------------------------------------------------------------
+  template< class VecOps, typename FieldLocation, typename GhostTraits >
+  typename SpatialField<VecOps,FieldLocation,GhostTraits>::const_interior_iterator
+  SpatialField<VecOps,FieldLocation,GhostTraits>::
+  interior_begin() const
+  {
+    const_iterator iter = begin();
+    int ix=0;
+    std::set<int>::const_iterator ig = ghostSet_.begin();
+    const std::set<int>::const_iterator ige = ghostSet_.end();
+    while( *ig == ix && ig!=ige ){ ++ig; ++ix; ++iter; }
+    return const_interior_iterator(iter,ix,ig,ige);
+  }
+  //--------------------------------------------------------------------
+  template< class VecOps, typename FieldLocation, typename GhostTraits >
+  typename SpatialField<VecOps,FieldLocation,GhostTraits>::interior_iterator
+  SpatialField<VecOps,FieldLocation,GhostTraits>::
+  interior_end()
+  {
+    iterator iter = end();
+    std::set<int>::const_iterator ig = ghostSet_.end();
+    const std::set<int>::const_iterator ige = ghostSet_.begin();
+    int ix=npts_;
+    if( ig != ige ){
+      --ig;
+      while( *ig == ix && ig!=ige ){ --ig; --ix; --iter; }
+    }
+    return interior_iterator(iter,ix,ig,ige);
+  }
+  //--------------------------------------------------------------------
+  template< class VecOps, typename FieldLocation, typename GhostTraits >
+  typename SpatialField<VecOps,FieldLocation,GhostTraits>::const_interior_iterator
+  SpatialField<VecOps,FieldLocation,GhostTraits>::
+  interior_end() const
+  {
+    const_iterator iter = end();
+    std::set<int>::const_iterator ig = ghostSet_.end();
+    const std::set<int>::const_iterator ige = ghostSet_.begin();
+    int ix=npts_;
+    if( ig != ige ){
+      --ig;
+      while( *ig == ix && ig!=ige ){ --ig; --ix; --iter; }
+    }
+    return const_interior_iterator(iter,ix,ig,ige);
+  }
+
+  //==================================================================
+
+
+  //--------------------------------------------------------------------
+  template< class VecOps, typename FieldLocation, typename GhostTraits >
+  typename SpatialField<VecOps,FieldLocation,GhostTraits>::ghost_iterator
+  SpatialField<VecOps,FieldLocation,GhostTraits>::
+  ghost_begin()
+  {
+    // jcs this may be wrong
+    const int ig=*(ghostSet_.begin());
+    return ghost_iterator(fieldValues_+ig,ig,ghostSet_);
+  }
+  //--------------------------------------------------------------------
+  template< class VecOps, typename FieldLocation, typename GhostTraits >
+  typename SpatialField<VecOps,FieldLocation,GhostTraits>::const_ghost_iterator
+  SpatialField<VecOps,FieldLocation,GhostTraits>::
+  ghost_begin() const
+  {
+    // jcs this may be wrong
+    const int ig=*(ghostSet_.begin());
+    return const_ghost_iterator(fieldValues_+ig,ig,ghostSet_);
+  }
+  //--------------------------------------------------------------------
+  template< class VecOps, typename FieldLocation, typename GhostTraits >
+  typename SpatialField<VecOps,FieldLocation,GhostTraits>::ghost_iterator
+  SpatialField<VecOps,FieldLocation,GhostTraits>::
+  ghost_end()
+  {
+    // jcs this may be wrong
+    const int ig=*(ghostSet_.end()-1);
+    return ghost_iterator(fieldValues_+ig,ig,ghostSet_);
+  }
+  //--------------------------------------------------------------------
+  template< class VecOps, typename FieldLocation, typename GhostTraits >
+  typename SpatialField<VecOps,FieldLocation,GhostTraits>::const_ghost_iterator
+  SpatialField<VecOps,FieldLocation,GhostTraits>::
+  ghost_end() const
+  {
+    // jcs this may be wrong
+    const int ig=*(ghostSet_.end()-1);
+    return const_ghost_iterator(fieldValues_+ig,ig,ghostSet_);
+  }
+  //--------------------------------------------------------------------
+
+
+  //==================================================================
+
+
+  //------------------------------------------------------------------
+  template< class VecOps, typename FieldLocation, typename GhostTraits >
+  SpatialField<VecOps,FieldLocation,GhostTraits>::
+  SpatialField( const int npts,
+		const std::set<int>& ghostSet,
 		double * const fieldValues,
 		const StorageMode mode )
-    : extent_( fieldDims ),
-      npts_( get_npts(fieldDims) ),
+    : npts_( npts ),
+      nptsPerComp_(3,0),
+      ghostSet_( ghostSet ),
       storageMode_( mode ),
       
       fieldValues_( (storageMode_==ExternalStorage)
 		    ? fieldValues
-		    : new double[ npts_ ] ),
+		    : new double[npts_] ),
+
+      vec_( linAlg_.setup_vector( npts_, fieldValues_ ) ),
+
+      sfStore_( SpatialFieldStore<SpatialField>::self() )
+  {
+    nptsPerComp_[0] = npts;
+
+    if( mode==InternalStorage )  reset_values( npts_, fieldValues );
+  }
+  //------------------------------------------------------------------
+  template< class VecOps, typename FieldLocation, typename GhostTraits >
+  SpatialField<VecOps,FieldLocation,GhostTraits>::
+  SpatialField( const int npts,
+		const std::vector<int>& entriesPerComponent,
+		const std::set<int>& ghostSet,
+		double * const fieldValues,
+		const StorageMode mode )
+    : npts_( npts ),
+      nptsPerComp_( entriesPerComponent ),
+      ghostSet_( ghostSet ),
+      storageMode_( mode ),
+      
+      fieldValues_( (storageMode_==ExternalStorage)
+		    ? fieldValues
+		    : new double[npts_] ),
 
       vec_( linAlg_.setup_vector( npts_, fieldValues_ ) ),
 
@@ -336,10 +524,8 @@ namespace SpatialOps{
     if( mode==InternalStorage )  reset_values( npts_, fieldValues );
   }
   //------------------------------------------------------------------
-  template< class VecOps,
-	    typename FieldLocation,
-	    typename GhostTraits >
-  SpatialField<VecOps,FieldLocation, GhostTraits>::
+  template< class VecOps, typename FieldLocation, typename GhostTraits >
+  SpatialField<VecOps,FieldLocation,GhostTraits>::
   ~SpatialField()
   {
     if( storageMode_ == InternalStorage )  delete [] fieldValues_;
@@ -347,9 +533,11 @@ namespace SpatialOps{
   }
   //------------------------------------------------------------------
   template< class VecOps, typename FieldLocation, typename GhostTraits >
-  SpatialField<VecOps,FieldLocation, GhostTraits>::SpatialField( const SpatialField<VecOps,FieldLocation,GhostTraits>& f )
-    : extent_     ( f.extent_ ),
-      npts_       ( f.npts_ ),
+  SpatialField<VecOps,FieldLocation,GhostTraits>::
+  SpatialField( const SpatialField<VecOps,FieldLocation,GhostTraits>& f )
+    : npts_       ( f.npts_ ),
+      nptsPerComp_( f.nptsPerComp_ ),
+      ghostSet_   ( f.ghostSet_ ),
       storageMode_( InternalStorage ),
       fieldValues_( new double[npts_] ),
       vec_        ( linAlg_.setup_vector(npts_,fieldValues_) ),
@@ -360,7 +548,7 @@ namespace SpatialOps{
   //------------------------------------------------------------------
   template< class VecOps, typename FieldLocation, typename GhostTraits >
   void
-  SpatialField<VecOps,FieldLocation, GhostTraits>::
+  SpatialField<VecOps,FieldLocation,GhostTraits>::
   reset_values( const int npts,
 		const double* const values )
   {
@@ -373,8 +561,8 @@ namespace SpatialOps{
   //------------------------------------------------------------------
   template< class VecOps, typename FieldLocation, typename GhostTraits >
   template<class T>
-  SpatialField<VecOps,FieldLocation, GhostTraits>&
-  SpatialField<VecOps,FieldLocation, GhostTraits>::operator=(const Daixt::Expr<T>&E)
+  SpatialField<VecOps,FieldLocation,GhostTraits>&
+  SpatialField<VecOps,FieldLocation,GhostTraits>::operator=(const Daixt::Expr<T>&E)
   {
     for( int i=0; i<npts_; ++i )
       fieldValues_[i] = Evaluate(E);
@@ -382,10 +570,11 @@ namespace SpatialOps{
   }
   //------------------------------------------------------------------
   template< class VecOps, typename FieldLocation, typename GhostTraits >
-  SpatialField<VecOps,FieldLocation, GhostTraits>&
-  SpatialField<VecOps,FieldLocation, GhostTraits>::
-  operator=(const SpatialField<VecOps,FieldLocation, GhostTraits>& s)
+  SpatialField<VecOps,FieldLocation,GhostTraits>&
+  SpatialField<VecOps,FieldLocation,GhostTraits>::
+  operator=(const SpatialField<VecOps,FieldLocation,GhostTraits>& s)
   {
+    assert( npts_ == s.npts_ );
     typename SpatialField::iterator ifld = this->begin();
     const typename SpatialField::const_iterator iend = this->end();
     typename SpatialField::const_iterator isrc = s.begin();
@@ -394,9 +583,9 @@ namespace SpatialOps{
   }
   //------------------------------------------------------------------
   template< class VecOps, typename FieldLocation, typename GhostTraits >
-  SpatialField<VecOps,FieldLocation, GhostTraits>&
-  SpatialField<VecOps,FieldLocation, GhostTraits>::
-  operator+=(const SpatialField<VecOps,FieldLocation, GhostTraits>& s)
+  SpatialField<VecOps,FieldLocation,GhostTraits>&
+  SpatialField<VecOps,FieldLocation,GhostTraits>::
+  operator+=(const SpatialField<VecOps,FieldLocation,GhostTraits>& s)
   {
     typename SpatialField::iterator ifld = this->begin();
     const typename SpatialField::const_iterator iend = this->end();
@@ -406,9 +595,9 @@ namespace SpatialOps{
   }
   //------------------------------------------------------------------
   template< class VecOps, typename FieldLocation, typename GhostTraits >
-  SpatialField<VecOps,FieldLocation, GhostTraits>& 
-  SpatialField<VecOps,FieldLocation, GhostTraits>::
-  operator-=(const SpatialField<VecOps,FieldLocation, GhostTraits>& s)
+  SpatialField<VecOps,FieldLocation,GhostTraits>& 
+  SpatialField<VecOps,FieldLocation,GhostTraits>::
+  operator-=(const SpatialField<VecOps,FieldLocation,GhostTraits>& s)
   {
     typename SpatialField::iterator ifld = this->begin();
     const typename SpatialField::const_iterator iend = this->end();
@@ -418,9 +607,9 @@ namespace SpatialOps{
   }
   //------------------------------------------------------------------
   template< class VecOps, typename FieldLocation, typename GhostTraits >
-  SpatialField<VecOps,FieldLocation, GhostTraits>& 
-  SpatialField<VecOps,FieldLocation, GhostTraits>::
-  operator*=(const SpatialField<VecOps,FieldLocation, GhostTraits>& s)
+  SpatialField<VecOps,FieldLocation,GhostTraits>& 
+  SpatialField<VecOps,FieldLocation,GhostTraits>::
+  operator*=(const SpatialField<VecOps,FieldLocation,GhostTraits>& s)
   {
     typename SpatialField::iterator ifld = this->begin();
     const typename SpatialField::const_iterator iend = this->end();
@@ -430,9 +619,9 @@ namespace SpatialOps{
   }
   //------------------------------------------------------------------
   template< class VecOps, typename FieldLocation, typename GhostTraits >
-  SpatialField<VecOps,FieldLocation, GhostTraits>& 
-  SpatialField<VecOps,FieldLocation, GhostTraits>::
-  operator/=(const SpatialField<VecOps,FieldLocation, GhostTraits>& s)
+  SpatialField<VecOps,FieldLocation,GhostTraits>& 
+  SpatialField<VecOps,FieldLocation,GhostTraits>::
+  operator/=(const SpatialField<VecOps,FieldLocation,GhostTraits>& s)
   {
     typename SpatialField::iterator ifld = this->begin();
     const typename SpatialField::const_iterator iend = this->end();
@@ -440,10 +629,12 @@ namespace SpatialOps{
     for( ; ifld!=iend; ++ifld, ++isrc ) *ifld /= *isrc;
     return *this;
   }
+
   //------------------------------------------------------------------
+
   template< class VecOps, typename FieldLocation, typename GhostTraits >
-  SpatialField<VecOps,FieldLocation, GhostTraits>&
-  SpatialField<VecOps,FieldLocation, GhostTraits>::
+  SpatialField<VecOps,FieldLocation,GhostTraits>&
+  SpatialField<VecOps,FieldLocation,GhostTraits>::
   operator=(const double a){
     double* f = fieldValues_;
     for( int i=0; i<npts_; ++i ) *f++ = a;
@@ -451,8 +642,8 @@ namespace SpatialOps{
   } 
   //------------------------------------------------------------------
   template< class VecOps, typename FieldLocation, typename GhostTraits >
-  SpatialField<VecOps,FieldLocation, GhostTraits>&
-  SpatialField<VecOps,FieldLocation, GhostTraits>::
+  SpatialField<VecOps,FieldLocation,GhostTraits>&
+  SpatialField<VecOps,FieldLocation,GhostTraits>::
   operator+=(const double a)
   {
     double* f = fieldValues_;
@@ -461,8 +652,8 @@ namespace SpatialOps{
   }
   //------------------------------------------------------------------
   template< class VecOps, typename FieldLocation, typename GhostTraits >
-  SpatialField<VecOps,FieldLocation, GhostTraits>&
-  SpatialField<VecOps,FieldLocation, GhostTraits>::
+  SpatialField<VecOps,FieldLocation,GhostTraits>&
+  SpatialField<VecOps,FieldLocation,GhostTraits>::
   operator-=(const double a)
   {
     double* f = fieldValues_;
@@ -471,169 +662,12 @@ namespace SpatialOps{
   }
   //------------------------------------------------------------------
   template< class VecOps, typename FieldLocation, typename GhostTraits >
-  SpatialField<VecOps,FieldLocation, GhostTraits>&
-  SpatialField<VecOps,FieldLocation, GhostTraits>::
+  SpatialField<VecOps,FieldLocation,GhostTraits>&
+  SpatialField<VecOps,FieldLocation,GhostTraits>::
   operator*=(const double a)
   {
     double* f = fieldValues_;
     for( int i=0; i<npts_; ++i ) *f++ *= a;
-    return *this;
-  }
-  //------------------------------------------------------------------
-  template< class VecOps, typename FieldLocation, typename GhostTraits >
-  int
-  SpatialField<VecOps,FieldLocation, GhostTraits>::
-  get_npts( const std::vector<int> & extent )
-  {
-    int npts = 1;
-    npts *= extent[0]
-      + GhostTraits::template get<XDIR,SideMinus>()
-      + GhostTraits::template get<XDIR,SidePlus >();
-    if( extent[1]>1 ){
-      npts *= extent[1]
-	+ GhostTraits::template get<YDIR,SideMinus>()
-	+ GhostTraits::template get<YDIR,SidePlus >();
-    }
-    if( extent[2]>1 ){
-      npts *= extent[2]
-	+ GhostTraits::template get<ZDIR,SideMinus>()
-	+ GhostTraits::template get<ZDIR,SidePlus >();
-    }
-    return npts;
-  }
-  //------------------------------------------------------------------
-  template< class VecOps, typename FieldLocation, typename GhostTraits >
-  SpatialField<VecOps,FieldLocation, GhostTraits>&
-  SpatialField<VecOps,FieldLocation, GhostTraits>::
-  operator=(const RHS& rhs)
-  {
-    static const int ngxm = GhostTraits::template get<XDIR,SideMinus>();
-    static const int ngxp = GhostTraits::template get<XDIR,SidePlus >();
-    static const int ngym = GhostTraits::template get<YDIR,SideMinus>();
-    static const int ngyp = GhostTraits::template get<YDIR,SidePlus >();
-    static const int ngzm = GhostTraits::template get<ZDIR,SideMinus>();
-
-    const int nx = extent_[0];
-    const int ny = extent_[1];
-    const int nz = extent_[2];
-
-    // get the dimensions of the field
-    const int nxf = nx + ngxm + ngxp;
-    const int nyf= (ny>1) ? ny+ngym+ngyp : 1;
-
-    //
-    // RHS fields do not have ghosting.
-    // Thus, we must be very careful on the indices!
-    //
-    static const int yskip = ngxm+ngxp;
-    const int zskip = nxf * (ngym+ngyp);
-
-    int ixf = ngxm;
-    if( ny>1 )  ixf += nxf*ngym;
-    if( nz>1 )  ixf += nxf*nyf*ngzm;    // must also have extent_[1] > 1
-
-    typename SpatialField::iterator ifld = this->begin() + ixf;
-    typename RHS::const_iterator irfld = rhs.begin();
-
-    for( int k=0; k<nz; ++k ){
-      for( int j=0; j<ny; ++j ){
-	for( int i=0; i<nx; ++i ){
- 	  *ifld++ = *irfld++;
-	}
-	ifld += yskip;
-      }
-      ifld += zskip;
-    }
-    return *this;
-  }
-  //------------------------------------------------------------------
-  template< class VecOps, typename FieldLocation, typename GhostTraits >
-  SpatialField<VecOps,FieldLocation, GhostTraits>&
-  SpatialField<VecOps,FieldLocation, GhostTraits>::
-  operator+=(const RHS& rhs)
-  {
-    static const int ngxm = GhostTraits::template get<XDIR,SideMinus>();
-    static const int ngxp = GhostTraits::template get<XDIR,SidePlus>();
-    static const int ngym = GhostTraits::template get<YDIR,SideMinus>();
-    static const int ngyp = GhostTraits::template get<YDIR,SidePlus>();
-    static const int ngzm = GhostTraits::template get<ZDIR,SideMinus>();
-
-    const int nx = extent_[0];
-    const int ny = extent_[1];
-    const int nz = extent_[2];
-
-    // get the dimensions of the field
-    const int nxf = nx + ngxm + ngxp;
-    const int nyf= (ny>1) ? ny+ngym+ngyp : 1;
-
-    //
-    // RHS fields do not have ghosting.
-    // Thus, we must be very careful on the indices!
-    //
-    static const int yskip = ngxm+ngxp;
-    const int zskip = nxf * (ngym+ngyp);
-
-    int ixf = ngxm;
-    if( ny>1 )  ixf += nxf*ngym;
-    if( nz>1 )  ixf += nxf*nyf*ngzm;    // must also have extent_[1] > 1
-
-    typename SpatialField::iterator ifld = this->begin() + ixf;
-    typename RHS::const_iterator irhs = rhs.begin();
-
-    for( int k=0; k<nz; ++k ){
-      for( int j=0; j<ny; ++j ){
-	for( int i=0; i<nx; ++i ){
-	  *ifld++  +=  *irhs++;
-	}
-	ifld += yskip;
-      }
-      ifld += zskip;
-    }
-    return *this;
-  }
-  //------------------------------------------------------------------
-  template< class VecOps, typename FieldLocation, typename GhostTraits >
-  SpatialField< VecOps, FieldLocation, GhostTraits >&
-  SpatialField< VecOps, FieldLocation, GhostTraits >::
-  operator-=(const RHS& rhs)
-  {
-    static const int ngxm = GhostTraits::template get<XDIR,SideMinus>();
-    static const int ngxp = GhostTraits::template get<XDIR,SidePlus>();
-    static const int ngym = GhostTraits::template get<YDIR,SideMinus>();
-    static const int ngyp = GhostTraits::template get<YDIR,SidePlus>();
-    static const int ngzm = GhostTraits::template get<ZDIR,SideMinus>();
-
-    const int nx = extent_[0];
-    const int ny = extent_[1];
-    const int nz = extent_[2];
-
-    // get the dimensions of the field
-    const int nxf = nx + ngxm + ngxp;
-    const int nyf= (ny>1) ? ny+ngym+ngyp : 1;
-
-    //
-    // RHS fields do not have ghosting.
-    // Thus, we must be very careful on the indices!
-    //
-    static const int yskip = ngxm+ngxp;
-    const int zskip = nxf * (ngym+ngyp);
-
-    int ixf = ngxm;
-    if( ny>1 )  ixf += nxf*ngym;
-    if( nz>1 )  ixf += nxf*nyf*ngzm;    // must also have extent_[1] > 1
-
-    typename SpatialField::iterator ifld = this->begin() + ixf;
-    typename RHS::const_iterator irhs = rhs.begin();
-
-    for( int k=0; k<nz; ++k ){
-      for( int j=0; j<ny; ++j ){
-	for( int i=0; i<nx; ++i ){
-	  *ifld++  -=  *irhs++;
-	}
-	ifld += yskip;
-      }
-      ifld += zskip;
-    }
     return *this;
   }
   //------------------------------------------------------------------
@@ -662,50 +696,50 @@ namespace SpatialOps{
   }
   //------------------------------------------------------------------
   template< class VecOps, typename FieldLocation, typename GhostTraits >
-  SpatFldPtr< SpatialField< VecOps, FieldLocation, GhostTraits > >
-  SpatialField< VecOps, FieldLocation, GhostTraits >::  
+  SpatFldPtr< SpatialField< VecOps, FieldLocation,GhostTraits > >
+  SpatialField< VecOps, FieldLocation,GhostTraits >::  
   operator+( const SpatialField& f ) const
   {
-    SpatFldPtr<SpatialField> result( sfStore_.get(extent_,npts_) );
+    SpatFldPtr<SpatialField> result( sfStore_.get(*this) );
     *result  = *this;
     *result += f;
     return result;
   }
   //------------------------------------------------------------------
   template< class VecOps, typename FieldLocation, typename GhostTraits >
-  SpatFldPtr< SpatialField< VecOps, FieldLocation, GhostTraits > >
-  SpatialField< VecOps, FieldLocation, GhostTraits >::  
+  SpatFldPtr< SpatialField< VecOps, FieldLocation,GhostTraits > >
+  SpatialField< VecOps, FieldLocation,GhostTraits >::  
   operator-( const SpatialField& f ) const
   {
-    SpatFldPtr<SpatialField> result( sfStore_.get(extent_,npts_) );
+    SpatFldPtr<SpatialField> result( sfStore_.get(*this) );
     *result  = *this;
     *result -= f;
     return result;
   }
   //------------------------------------------------------------------
   template< class VecOps, typename FieldLocation, typename GhostTraits >
-  SpatFldPtr< SpatialField< VecOps, FieldLocation, GhostTraits > >
-  SpatialField< VecOps, FieldLocation, GhostTraits >::  
+  SpatFldPtr< SpatialField< VecOps, FieldLocation,GhostTraits > >
+  SpatialField< VecOps, FieldLocation,GhostTraits >::  
   operator*( const SpatialField& f ) const
   {
-    SpatFldPtr<SpatialField> result( sfStore_.get(extent_,npts_) );
+    SpatFldPtr<SpatialField> result( sfStore_.get(*this) );
     *result  = *this;
     *result *= f;
     return result;
   }
   //------------------------------------------------------------------
   template< class VecOps, typename FieldLocation, typename GhostTraits >
-  SpatFldPtr< SpatialField< VecOps, FieldLocation, GhostTraits > >
-  SpatialField< VecOps, FieldLocation, GhostTraits >::  
+  SpatFldPtr< SpatialField< VecOps, FieldLocation,GhostTraits > >
+  SpatialField< VecOps, FieldLocation,GhostTraits >::  
   operator/( const SpatialField& f ) const
   {
-    SpatFldPtr<SpatialField> result( sfStore_.get(extent_,npts_) );
+    SpatFldPtr<SpatialField> result( sfStore_.get(*this) );
     *result  = *this;
     *result /= f;
     return result;
   }
-  //------------------------------------------------------------------
   
+  //------------------------------------------------------------------
 
   //==================================================================
 

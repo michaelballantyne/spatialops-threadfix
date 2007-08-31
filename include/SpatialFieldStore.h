@@ -157,7 +157,7 @@ namespace SpatialOps{
    *  method:
    *
    *  \code
-   *    SpatFldPtr<FieldT> SpatialFieldStore<FieldT>::get( const std::vector<int>& extent )
+   *    SpatFldPtr<FieldT> SpatialFieldStore<FieldT>::get( const FieldT& f )
    *  \endcode
    *
    *  to return a field with the asme dimensions as the provided
@@ -190,17 +190,18 @@ namespace SpatialOps{
     /**
      *  @brief Obtain a temporary field.
      *
-     *  @param extent  The patch extent in each direction.  {nx,ny,nz}
-     *
-     *  @param ntot The total number of points (including ghost cells)
-     *  for this field.
+     *  @param f  A field to model this one after.
      *
      *  Note that you should not dereference the SpatFldPtr object to
      *  store a SpatialField reference.  Doing so can cause memory
      *  corruption.
      */
-    inline SpatFldPtr<FieldT> get( const std::vector<int>& extent,
-				   const int ntot );
+    inline SpatFldPtr<FieldT> get( const FieldT& f );
+
+
+    inline SpatFldPtr<FieldT> get( const int ntot,
+				   const std::vector<int>& entriesPerComponent,
+				   const std::set<int>& ghostSet );
 
   private:
 
@@ -212,11 +213,6 @@ namespace SpatialOps{
      *  memory corruption.
      */
     void restore_field( FieldT& f );
-
-    /**
-     *  This is a convenience method for use with the SpatFldPtr class.
-     */
-    inline SpatFldPtr<FieldT> get( const FieldT& f );
 
     SpatialFieldStore(){};
     ~SpatialFieldStore();
@@ -389,26 +385,38 @@ namespace SpatialOps{
   SpatFldPtr<FieldT>
   SpatialFieldStore<FieldT>::get( const FieldT& f )
   {
-    return get( f.get_extent(), f.get_ntotal() );
+    // find the proper map
+    FieldQueue& q = fqmap_[ f.get_ntotal() ];
+
+    if( q.empty() ){
+      FieldT* fnew = new FieldT( f );
+      q.push( fnew );
+    }
+
+    FieldT* fnew = q.front();
+    q.pop();
+
+    return SpatFldPtr<FieldT>(*fnew,true);
   }
   //------------------------------------------------------------------
   template<typename FieldT>
   SpatFldPtr<FieldT>
-  SpatialFieldStore<FieldT>::get( const std::vector<int>& extent,
-				  const int ntot )
+  SpatialFieldStore<FieldT>::get( const int ntot,
+				  const std::vector<int>& entriesPerComponent,
+				  const std::set<int>& ghostSet )
   {
     // find the proper map
     FieldQueue& q = fqmap_[ ntot ];
 
     if( q.empty() ){
-      FieldT* f = new FieldT( extent, NULL );
-      q.push( f );
+      FieldT* fnew = new FieldT( ntot, entriesPerComponent, ghostSet, NULL );
+      q.push( fnew );
     }
 
-    FieldT* f = q.front();
+    FieldT* fnew = q.front();
     q.pop();
 
-    return SpatFldPtr<FieldT>(*f,true);
+    return SpatFldPtr<FieldT>(*fnew,true);
   }
   //------------------------------------------------------------------
   template<typename FieldT>

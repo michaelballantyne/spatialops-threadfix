@@ -137,11 +137,20 @@ namespace SpatialOps{
 				     std::vector<double> & rowValues,
 				     std::vector<int> & rowIndices )
   {
+    using namespace std;
     const int flag = mat_->InsertMyValues( rownum,
 					   rowValues.size(),
 					   &rowValues[0],
 					   &rowIndices[0] );
-    if( flag!=0 ) std::cout << flag << std::endl;
+    if( flag!=0 ){
+      cout << flag << endl
+	   << "Error inserting values into row: " << rownum << endl
+	   << " nonzero column indices: [ ";
+      for( vector<int>::const_iterator ii=rowIndices.begin(); ii!=rowIndices.end(); ++ii ){
+	cout << *ii << " ";
+      }
+      cout << "]" << endl << endl;
+    }
     assert( flag==0 );
   }
   //------------------------------------------------------------------

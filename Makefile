@@ -24,28 +24,24 @@ EPETRA_LIBS = -lepetra -lepetraext -lblas -llapack
 AZTECOO_LIBS = -laztecoo -lteuchos 
 LIBS = $(AZTECOO_LIBS)  $(EPETRA_LIBS) $(EXTRA_LIBS)
 
-CXXFLAGS = -O3 -Wall -fexpensive-optimizations -funroll-loops
-#CXXFLAGS = -g -Wall
+CXXFLAGS = -O4 -Wall -fexpensive-optimizations -funroll-loops=3
+#CXXFLAGS = -g -Wall -O0
 COMPILE_CXX = g++ -c $(CXXFLAGS) $(INCDIRS)
 #COMPILE_CXX = mpiCC -c $(CXXFLAGS) $(INCDIRS)
 
 LINK = g++ $(CXXFLAGS) $(INCDIRS) $(LIBDIRS)
 
-default: test
+default: testnew
 
 OBJS =		\
-	FVStaggeredSpatialOps.o \
 	LinAlgTrilinos.o \
 	LinearSystem.o
 
-test.o: ./src/test/test.cpp ./include/SpatialField.h ./include/SpatialOperator.h ./include/FVStaggeredSpatialOps.h ./include/LinAlgTrilinos.h ./include/FV2ndOrderTypes.h ./include/FVStaggeredBCTools.h
-	$(COMPILE_CXX) ./src/test/test.cpp
+testNew.o: ./src/test/testNew.cpp ./include/*.h
+	$(COMPILE_CXX) -I./src/test ./src/test/testNew.cpp
 
 LinAlgTrilinos.o: ./src/LinAlgTrilinos.cpp ./include/LinAlgTrilinos.h
 	$(COMPILE_CXX) ./src/LinAlgTrilinos.cpp
-
-FVStaggeredSpatialOps.o: ./src/FVStaggeredSpatialOps.cpp ./include/SpatialField.h ./include/SpatialOperator.h
-	$(COMPILE_CXX) ./src/FVStaggeredSpatialOps.cpp
 
 LinearSystem.o: ./src/LinearSystem.cpp ./include/SpatialOperator.h ./include/SpatialField.h ./include/LinearSystem.h
 	$(COMPILE_CXX) ./src/LinearSystem.cpp
@@ -57,10 +53,7 @@ test_alberto.o: ./src/test/test_alberto.cpp
 lib: $(OBJS)
 	ar -r ./libspatialops.a $(OBJS)
 
-test: lib test_alberto.o
-	$(LINK) test_alberto.o  -lspatialops $(LIBS) -o test.x
-
-smalltest: lib test.o
-	$(LINK) test.o -lspatialops $(LIBS) -o smalltest.x
+testnew: lib testNew.o
+	$(LINK) testNew.o -lspatialops $(LIBS) -o testnew.x
 
 clean: ; @rm *.o libspatialops.a test.x
