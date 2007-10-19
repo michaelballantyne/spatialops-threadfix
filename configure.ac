@@ -1,5 +1,12 @@
-AC_INIT([SpatialOps], [1.0], [james.sutherland@utah.edu])
+AC_INIT([SpatialOps], [0.3a-$Id$], [james.sutherland@utah.edu])
+
+#show where to get all our pieces
+#All the buildsystem pieces are tucked away neatly
+# out of sight in the "buildsys" directory
+AC_CONFIG_AUX_DIR(buildsys)
+
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
+
 #check if the compiler works.
 #Use Fink defaults if available
 if test `uname` = "Darwin" -a -e "/sw/bin/gcc-4"; then
@@ -38,6 +45,11 @@ AC_CONFIG_FILES([
   spatialops-1.0.pc
 ])
 
+#List all the headers in /include
+#so they can get packed into the archive.
+SOPS_HEADERS="`cd $srcdir/include; ls -D *.h|sed -e 's/^/$(srcdir)\/include\//g'| tr '\n' ' '`"
+AC_SUBST(SOPS_HEADERS)
+
 AC_OUTPUT
 
 TRILINOS_VERSION=7.0.6
@@ -53,6 +65,7 @@ TRILINOS_FLAGS=" --prefix=`pwd`\
 "
 #use this to invoke configure on subpackages (trilinos boost etc.)
 if test ! -e "trilinos-7.0.6/config.status"; then
+  pushd $srcdir; tar xzf tarfiles/trilinos-7.0.6.tar.gz; popd
   BUILD_CONFIG_SUBDIR(trilinos-7.0.6,[ ${TRILINOS_FLAGS} ])
   cd trilinos-7.0.6
   make install
@@ -73,6 +86,7 @@ fi
 BOOST_VERSION=1_33_1
 echo "Configuring subpackage boost."
 if test ! -d include/boost; then
+  pushd $srcdir; tar xzf tarfiles/boost_1_33_1.tar.gz; popd
   cp -r boost_1_33_1/boost include/.
 fi
 #BUILD_CONFIG_SUBDIR(boost_1_33_1, [ --prefix=`pwd`/..])
@@ -102,6 +116,7 @@ DAIXTROSE_FLAGS="    \
 
 if test ! -e "daixtrose-0.0.3/config.status"; then
   echo "Configuring subpackage daixtrose."
+  pushd $srcdir; tar xzf tarfiles/daixtrose-0.0.3.tar.gz; popd
   BUILD_CONFIG_SUBDIR("daixtrose-0.0.3",[ ${DAIXTROSE_FLAGS} ])
   cd daixtrose-0.0.3
   make install
@@ -113,6 +128,9 @@ fi
 
 CFLAGS= #nothing; cleanup stray -O2 from children above?
 CXXFLAGS= #nothing
+
+
+
 #what are these for?
 #PKG_CHECK_MODULES(SOPS)
 #AC_SUBST(SOPS_CPPFLAGS)

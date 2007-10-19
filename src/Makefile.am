@@ -8,18 +8,18 @@
 #not the build path. ($srcdir instead of $top_srcdir)
 SOPS_INCDIR	= $(srcdir)/../include
 
-+#XXX change project tree structure?
-+#(first) move all headers from /include to /src
-+#(second) rename /src to /spatialops
-+#(third)  change all includes to #include <spatialops/foo.h>
-+#(fourth) make buildsys install headers to /usr/include/spatialops
-+# Now we can use the same header paths to build the library,
-+# as we can to link with it later on.
+#XXX change project tree structure?
+#(first) move all headers from /include to /src
+#(second) rename /src to /spatialops
+#(third)  change all includes to #include <spatialops/foo.h>
+#(fourth) make buildsys install headers to /usr/include/spatialops
+# Now we can use the same header paths to build the library,
+# as we can to link with it later on.
 
 #Dependency package headers _are_ near our build location
 # (since they're installed on a per-arch basis.)  Therefore
 # they're relative to the build path, not the source path.
-DEPS_INCDIR	= ../include
+DEPS_INCDIR	= $(top_builddir)/include
 
 #preprocessor flags go here
 AM_CPPFLAGS	= \
@@ -43,17 +43,24 @@ libspatialops_a_CXXFLAGS	= -O3 -Wall -fexpensive-optimizations -funroll-loops
 #Sources not listed here might not get packed into the source distribution.
 libspatialops_a_SOURCES	=  \
 	LinAlgTrilinos.cpp \
-	FVStaggeredSpatialOps.cpp \
 	LinearSystem.cpp \
 	$(SOPS_INCDIR)/SpatialField.h \
 	$(SOPS_INCDIR)/SpatialOpsDefs.h \
 	$(SOPS_INCDIR)/SpatialFieldStore.h \
 	$(SOPS_INCDIR)/SpatialOperator.h \
 	$(SOPS_INCDIR)/FVStaggeredBCTools.h \
-	$(SOPS_INCDIR)/FVStaggeredSpatialOps.h \
 	$(SOPS_INCDIR)/LinAlgTrilinos.h \
-	$(SOPS_INCDIR)/FV2ndOrderTypes.h \
 	$(SOPS_INCDIR)/LinearSystem.h
+	$(SOPS_INCDIR)/FVStaggeredBCTools.h 
+	$(SOPS_INCDIR)/FVStaggeredDivergence.h
+	$(SOPS_INCDIR)/FVStaggeredGradient.h
+	$(SOPS_INCDIR)/FVStaggered.h
+	$(SOPS_INCDIR)/FVStaggeredIndexHelper.h
+	$(SOPS_INCDIR)/FVStaggeredInterpolant.h
+	$(SOPS_INCDIR)/FVStaggeredScratch.h
+	$(SOPS_INCDIR)/FVStaggeredTools.h
+	$(SOPS_INCDIR)/FVStaggeredTypes.h
+	$(SOPS_INCDIR)/SFIterator.h
 
 #libspatialops_a_HEADERS = #headers to be installed
 #libspatialops_a_noinst_HEADERS = #headers just used for compiling

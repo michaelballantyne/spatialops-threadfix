@@ -23,8 +23,8 @@ AM_CPPFLAGS	= \
 	-I$(DEPS_INCDIR)/boost \
 	$(SOPS_CPPFLAGS)
 
-TESTS 		= test smalltest #programs to automatically run when 'make check'
-check_PROGRAMS	= test smalltest #targets to build when 'make check' called
+TESTS 		= test smalltest testnew #programs to automatically run when 'make check'
+check_PROGRAMS	= test smalltest testnew #targets to build when 'make check' called
 
 EXTRA_DIST	= test.input #non-source file that needs to be packed up too
 
@@ -39,6 +39,8 @@ test_SOURCES 	= test_alberto.cpp test_alberto/analytical_class.h test_alberto/gr
 test_LDADD	= $(SOPS_LIBS) $(SOPS_LIBDIR)
 test_CPPFLAGS	= -I$(srcdir)/test_alberto $(AM_CPPFLAGS)
 
+testnew_SOURCES	= testNew.cpp Functions.h Grid.h
+testnew_LDADD	= $(SOPS_LIBS) $(SOPS_LIBDIR)
 
 SOPS_LIBDIR 	= -L../ -L$(DEPS_INCDIR)/../lib 
 SOPS_LIBS	= -lspatialops -laztecoo -lteuchos -lepetra -lepetraext -lblas -llapack
