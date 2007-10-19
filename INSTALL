@@ -21,7 +21,9 @@ F77=gfortran
 
 === BUILD INSTRUCTIONS (ALL SYSTEMS): ===
 
-svn co <path to repository>/SpatialOps/trunk <check out path>
+1.  Install the packages 'blas-devel' and 'lapack-devel'
+
+svn co https://software.crsim.utah.edu/svn/SpatialOps/trunk <check out path>
 cd <blah>
 
 #[1] We must first generate the build system itself.
