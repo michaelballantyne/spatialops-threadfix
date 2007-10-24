@@ -1,4 +1,4 @@
-AC_INIT([SpatialOps], [0.3a-$Rev$], [james.sutherland@utah.edu])
+AC_INIT([SpatialOps], [0.3a], [james.sutherland@utah.edu])
 
 #show where to get all our pieces
 #All the buildsystem pieces are tucked away neatly
@@ -23,9 +23,12 @@ AC_PROG_F77
 
 AC_PROG_RANLIB
 
+#set our buildsystem to use C++ tests.
+#AC_LANG(C++)
+
 #check for libraries.
-AC_CHECK_LIB (libblas,  dgemm_ )
-AC_CHECK_LIB (liblapack,dgecon_)
+AC_CHECK_LIB(blas,  dgemm_ )
+AC_CHECK_LIB(lapack,dgecon_)
 #AC_CHECK_LIB (library, function)
 
 
