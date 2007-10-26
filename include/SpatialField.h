@@ -188,6 +188,8 @@ namespace SpatialOps{
     template<typename FieldT> SpatialField& operator+=(const FieldT&); ///< No default implementation...
     template<typename FieldT> SpatialField& operator-=(const FieldT&); ///< No default implementation...
 
+    inline SpatialField& operator= (const SpatFldPtr<SpatialField>&);  ///< Assign a SpatialField to this one.
+
     inline SpatialField& operator= (const SpatialField&);  ///< Assign a SpatialField to this one.
     inline SpatialField& operator+=(const SpatialField&);  ///< Add a SpatialField to this.
     inline SpatialField& operator-=(const SpatialField&);  ///< Subtract a SpatialField from this.
@@ -572,7 +574,15 @@ namespace SpatialOps{
   template< class VecOps, typename FieldLocation, typename GhostTraits >
   SpatialField<VecOps,FieldLocation,GhostTraits>&
   SpatialField<VecOps,FieldLocation,GhostTraits>::
-  operator=(const SpatialField<VecOps,FieldLocation,GhostTraits>& s)
+  operator= (const SpatFldPtr<SpatialField>& s)
+  {
+    return *this = *s;
+  }
+  //------------------------------------------------------------------
+  template< class VecOps, typename FieldLocation, typename GhostTraits >
+  SpatialField<VecOps,FieldLocation,GhostTraits>&
+  SpatialField<VecOps,FieldLocation,GhostTraits>::
+  operator=(const SpatialField& s)
   {
     assert( npts_ == s.npts_ );
     typename SpatialField::iterator ifld = this->begin();
@@ -585,7 +595,7 @@ namespace SpatialOps{
   template< class VecOps, typename FieldLocation, typename GhostTraits >
   SpatialField<VecOps,FieldLocation,GhostTraits>&
   SpatialField<VecOps,FieldLocation,GhostTraits>::
-  operator+=(const SpatialField<VecOps,FieldLocation,GhostTraits>& s)
+  operator+=(const SpatialField& s)
   {
     typename SpatialField::iterator ifld = this->begin();
     const typename SpatialField::const_iterator iend = this->end();
@@ -597,7 +607,7 @@ namespace SpatialOps{
   template< class VecOps, typename FieldLocation, typename GhostTraits >
   SpatialField<VecOps,FieldLocation,GhostTraits>& 
   SpatialField<VecOps,FieldLocation,GhostTraits>::
-  operator-=(const SpatialField<VecOps,FieldLocation,GhostTraits>& s)
+  operator-=(const SpatialField& s)
   {
     typename SpatialField::iterator ifld = this->begin();
     const typename SpatialField::const_iterator iend = this->end();
@@ -609,7 +619,7 @@ namespace SpatialOps{
   template< class VecOps, typename FieldLocation, typename GhostTraits >
   SpatialField<VecOps,FieldLocation,GhostTraits>& 
   SpatialField<VecOps,FieldLocation,GhostTraits>::
-  operator*=(const SpatialField<VecOps,FieldLocation,GhostTraits>& s)
+  operator*=(const SpatialField& s)
   {
     typename SpatialField::iterator ifld = this->begin();
     const typename SpatialField::const_iterator iend = this->end();
@@ -621,7 +631,7 @@ namespace SpatialOps{
   template< class VecOps, typename FieldLocation, typename GhostTraits >
   SpatialField<VecOps,FieldLocation,GhostTraits>& 
   SpatialField<VecOps,FieldLocation,GhostTraits>::
-  operator/=(const SpatialField<VecOps,FieldLocation,GhostTraits>& s)
+  operator/=(const SpatialField& s)
   {
     typename SpatialField::iterator ifld = this->begin();
     const typename SpatialField::const_iterator iend = this->end();

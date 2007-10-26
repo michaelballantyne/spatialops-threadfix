@@ -25,12 +25,16 @@ namespace FVStaggered{
    *  @class  DivergenceAssembler
    *  @author James C. Sutherland
    *
-   *  @brief Assembles divergence operators for staggered meshes.
+   *  @brief Assembles divergence operators for UNIFORM staggered meshes.
    *
    *  An assembler for a divergence operator to be used to construct a
    *  SpatialOperator.  This conforms to the requirements for a
    *  SpatialOperator Assembler as defined in the documentation on the
    *  OpAssemblerSelector.
+   *
+   *  This implementation assumes a UNIFORM MESH spacing.  For
+   *  nonuniform meshes, the sparsity pattern will remain unchanged,
+   *  but the coefficient values will change.
    *
    *  @par Template Parameters
    *    \li \b SrcField The policy for the source field.

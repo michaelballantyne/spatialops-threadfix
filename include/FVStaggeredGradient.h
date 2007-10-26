@@ -30,12 +30,16 @@ namespace FVStaggered{
    *  @class  GradientAssembler
    *  @author James C. Sutherland
    *
-   *  @brief Assembles gradient operators for staggered meshes.
+   *  @brief Assembles gradient operators for UNIFORM staggered meshes.
    *
    *  An assembler for a gradient operator to be used to construct a
    *  SpatialOperator.  This conforms to the requirements for a
    *  SpatialOperator Assembler as defined in the documentation on the
    *  OpAssemblerSelector.
+   *
+   *  This implementation assumes a UNIFORM MESH spacing.  For
+   *  nonuniform meshes, the sparsity pattern will remain unchanged,
+   *  but the coefficient values will change.
    *
    *  @par Template Parameters
    *    \li \b SrcField The type for the source field.

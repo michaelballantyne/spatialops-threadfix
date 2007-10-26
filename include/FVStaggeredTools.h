@@ -4,6 +4,7 @@
 #include <boost/static_assert.hpp>
 
 #include <FVStaggeredTypes.h>
+#include <SpatialOpsTools.h> // for IsSameType
 
 namespace SpatialOps{
 namespace FVStaggered{

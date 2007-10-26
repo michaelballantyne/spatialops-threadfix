@@ -126,13 +126,26 @@ void build_ops( const std::vector<int>& dim,
 
   // interpolants - scalar volume to staggered surfaces (viscosity, dilatation)
   {
-//     InterpSVolXSurf::Assembler Rsvxsa( dim );
-//     InterpSVolYSurf::Assembler Rsvysa( dim );
-//     InterpSVolZSurf::Assembler Rsvzsa( dim );
+//     InterpSVolXSurfX::Assembler Rsvxsxa( dim );
+//     InterpSVolXSurfY::Assembler Rsvxsya( dim );
+//     InterpSVolXSurfZ::Assembler Rsvxsza( dim );
+//     SpatialOpDatabase<InterpSVolXSurfX>::self().register_new_operator( new InterpSVolXSurfX(Rsvxsxa) );
+//     SpatialOpDatabase<InterpSVolXSurfX>::self().register_new_operator( new InterpSVolXSurfX(Rsvxsxa) );
+//     SpatialOpDatabase<InterpSVolXSurfX>::self().register_new_operator( new InterpSVolXSurfX(Rsvxsxa) );
 
-//     SpatialOpDatabase<InterpSVolXSurf>::self().register_new_operator( new InterpSVolXSurf(Rsvxsa) );
-//     SpatialOpDatabase<InterpSVolYSurf>::self().register_new_operator( new InterpSVolYSurf(Rsvysa) );
-//     SpatialOpDatabase<InterpSVolZSurf>::self().register_new_operator( new InterpSVolZSurf(Rsvzsa) );
+//     InterpSVolYSurfX::Assembler Rsvysxa( dim );
+//     InterpSVolYSurfY::Assembler Rsvysya( dim );
+//     InterpSVolYSurfZ::Assembler Rsvysza( dim );
+//     SpatialOpDatabase<InterpSVolYSurfX>::self().register_new_operator( new InterpSVolYSurfX(Rsvysxa) );
+//     SpatialOpDatabase<InterpSVolYSurfY>::self().register_new_operator( new InterpSVolYSurfY(Rsvysya) );
+//     SpatialOpDatabase<InterpSVolYSurfZ>::self().register_new_operator( new InterpSVolYSurfZ(Rsvysza) );
+
+//     InterpSVolZSurfX::Assembler Rsvzsxa( dim );
+//     InterpSVolZSurfY::Assembler Rsvzsya( dim );
+//     InterpSVolZSurfZ::Assembler Rsvzsza( dim );
+//     SpatialOpDatabase<InterpSVolZSurfX>::self().register_new_operator( new InterpSVolZSurfX(Rsvzsxa) );
+//     SpatialOpDatabase<InterpSVolZSurfY>::self().register_new_operator( new InterpSVolZSurfY(Rsvzsya) );
+//     SpatialOpDatabase<InterpSVolZSurfZ>::self().register_new_operator( new InterpSVolZSurfZ(Rsvzsza) );
   }
 
   // interpolants - scalar volume to staggered volume (density)
@@ -166,6 +179,7 @@ void build_ops( const std::vector<int>& dim,
     SpatialOpDatabase<InterpZVolXSurfZ>::self().register_new_operator( new InterpZVolXSurfZ(Rzvxsza) );
     SpatialOpDatabase<InterpZVolYSurfZ>::self().register_new_operator( new InterpZVolYSurfZ(Rzvysza) );
 
+    // interpolants - volume to surface for staggered cells.
     {
 //       InterpXVolXSurf::Assembler Rxvxsa( dim );
 //       SpatialOpDatabase<InterpXVolXSurf>::self().register_new_operator( new InterpXVolXSurf(Rxvxsa) );

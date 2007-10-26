@@ -1,49 +1,17 @@
 #ifndef Test_Functions_h
 #define Test_Functions_h
 
-template<typename FieldT>
-class Function
-{
-public:
-
-  typedef FieldT FieldType;
-
-  Function( const FieldT& x, const FieldT& y, const FieldT& z )
-    : x_(x), y_(y), z_(z)
-  {}
-  Function(){}
-  virtual ~Function(){}
-  virtual void evaluate( FieldT& phi ) const =0;
-
-  virtual void dx( FieldT& gradPhi ) const =0;
-  virtual void dy( FieldT& gradPhi ) const =0;
-  virtual void dz( FieldT& gradPhi ) const =0;
-
-  virtual void d2x( FieldT& gradPhi ) const =0;
-  virtual void d2y( FieldT& gradPhi ) const =0;
-  virtual void d2z( FieldT& gradPhi ) const =0;
-
-
-  const FieldT& get_x() const{return x_;}
-  const FieldT& get_y() const{return y_;}
-  const FieldT& get_z() const{return z_;}
-
-private:
-  const FieldT& x_;
-  const FieldT& y_;
-  const FieldT& z_;
-};
-
+#include <FieldFunctions.h>
 
 //====================================================================
 
 
 template<typename FieldT>
-class LinearFunction : public Function<FieldT>
+class LinearFunction : public SpatialOps::FieldFunction3D<FieldT>
 {
 public:
   LinearFunction( const FieldT& x, const FieldT& y, const FieldT& z )
-    : Function<FieldT>(x,y,z)
+    : SpatialOps::FieldFunction3D<FieldT>(x,y,z)
   {}
   ~LinearFunction(){}
   void evaluate( FieldT& phi ) const
@@ -72,12 +40,12 @@ private:
 
 
 template<typename FieldT>
-class SinFun : public Function<FieldT>
+class SinFun : public SpatialOps::FieldFunction3D<FieldT>
 {
 public:
 
   SinFun( const FieldT& x, const FieldT& y, const FieldT& z )
-    : Function<FieldT>(x,y,z),
+    : SpatialOps::FieldFunction3D<FieldT>(x,y,z),
       pi( 3.141592653589793 )
   {}
   ~SinFun(){}

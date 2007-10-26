@@ -31,18 +31,33 @@ namespace FVStaggered{
    *  @class  LinearInterpolantAssembler
    *  @author James C. Sutherland
    *
-   *  @brief Assembles linear interpolant operators for staggered meshes.
+   *  @brief Assembles linear interpolant operators for UNIFORM staggered meshes.
    *
    *  An assembler for a linear interpolant operator to be used to
    *  construct a SpatialOperator.  This conforms to the requirements
    *  for a SpatialOperator Assembler as defined in the documentation
    *  on the OpAssemblerSelector.
    *
+   *  This implementation assumes a UNIFORM MESH spacing.  For
+   *  nonuniform meshes, the sparsity pattern will remain unchanged,
+   *  but the coefficient values will change.
+   *
    *  @par Template Parameters
    *  <ul>
    *  <li> \b SrcFieldT The type of the source field for the interpolant operator
    *  <li> \b DestFieldT The type of the destination field for the interpolant operator
    *  <\ul>
+   *
+   *  @todo Implement interpolant for scalar volume -> staggered surface (viscosity, dilatation)
+   *  @todo Implement interpolant for XVol -> YSurfX
+   *  @todo Implement interpolant for XVol -> ZSurfX
+   *  @todo Implement interpolant for XVol -> SSurfX  (identity for uniform meshes)
+   *  @todo Implement interpolant for YVol -> XSurfY
+   *  @todo Implement interpolant for YVol -> YSurfY
+   *  @todo Implement interpolant for YVol -> SSurfY  (identity for uniform meshes)
+   *  @todo Implement interpolant for ZVol -> XSurfZ
+   *  @todo Implement interpolant for ZVol -> YSurfZ 
+   *  @todo Implement interpolant for ZVol -> SSurfZ  (identity for uniform meshes)
    */
   template< typename SrcFieldT,
 	    typename DestFieldT >
@@ -103,17 +118,14 @@ namespace FVStaggered{
   //==================================================================
 
   // still need to implement these:
-  template<>  class LinearInterpolantAssembler<SVolField,XSurfField >{};
   template<>  class LinearInterpolantAssembler<SVolField,XSurfXField>{};
   template<>  class LinearInterpolantAssembler<SVolField,XSurfYField>{};
   template<>  class LinearInterpolantAssembler<SVolField,XSurfZField>{};
 
-  template<>  class LinearInterpolantAssembler<SVolField,YSurfField >{};
   template<>  class LinearInterpolantAssembler<SVolField,YSurfXField>{};
   template<>  class LinearInterpolantAssembler<SVolField,YSurfYField>{};
   template<>  class LinearInterpolantAssembler<SVolField,YSurfZField>{};
 
-  template<>  class LinearInterpolantAssembler<SVolField,ZSurfField >{};
   template<>  class LinearInterpolantAssembler<SVolField,ZSurfXField>{};
   template<>  class LinearInterpolantAssembler<SVolField,ZSurfYField>{};
   template<>  class LinearInterpolantAssembler<SVolField,ZSurfZField>{};

@@ -24,8 +24,8 @@ EPETRA_LIBS = -lepetra -lepetraext -lblas -llapack
 AZTECOO_LIBS = -laztecoo -lteuchos 
 LIBS = $(AZTECOO_LIBS)  $(EPETRA_LIBS) $(EXTRA_LIBS)
 
-CXXFLAGS = -O4 -Wall -fexpensive-optimizations -funroll-loops=3
-#CXXFLAGS = -g -Wall -O0
+#CXXFLAGS = -O4 -Wall -fexpensive-optimizations -funroll-loops=3
+CXXFLAGS = -g -Wall -O0
 COMPILE_CXX = g++ -c $(CXXFLAGS) $(INCDIRS)
 #COMPILE_CXX = mpiCC -c $(CXXFLAGS) $(INCDIRS)
 
@@ -37,7 +37,7 @@ OBJS =		\
 	LinAlgTrilinos.o \
 	LinearSystem.o
 
-testNew.o: ./src/test/testNew.cpp ./include/*.h
+testNew.o: ./src/test/testNew.cpp ./include/*.h ./src/test/Functions.h
 	$(COMPILE_CXX) -I./src/test ./src/test/testNew.cpp
 
 LinAlgTrilinos.o: ./src/LinAlgTrilinos.cpp ./include/LinAlgTrilinos.h

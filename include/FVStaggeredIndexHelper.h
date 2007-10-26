@@ -306,6 +306,7 @@ namespace FVStaggered{
     if( dim[2]>1 ) triplet.k += (ZSurfZField::Ghost::NM-ZVolField::Ghost::NM);
   }
 
+  /*
   template<> inline void shift_dest_index<SVolField,SSurfField>( const std::vector<int>& dim, const int irow, IndexTriplet& triplet )
   {
     const std::vector<int> entriesPerComp = get_entries_per_comp<SSurfField>(dim);
@@ -325,6 +326,7 @@ namespace FVStaggered{
       if( dim[1]>1 ) triplet.j += (SVolField::Ghost::NM - SSurfField::Ghost::NM);
     }
   }
+  */
 
   template<> inline void shift_dest_index<SVolField,SSurfXField>( const std::vector<int>& dim, const int irow, IndexTriplet& triplet )
   {

@@ -77,8 +77,6 @@ namespace FVStaggered{
   //-- Interpolant Operators --//
 
   // scalar volume to scalar surfaces (diffusion coefficients)
-//   typedef SpatialOperator< LinAlgTrilinos, Interpolant, SVolField, SSurfField  >  InterpSVolSSurf; //jcs remove this?
-
   typedef SpatialOperator< LinAlgTrilinos, Interpolant, SVolField, SSurfXField >  InterpSVolSSurfX;
   typedef SpatialOperator< LinAlgTrilinos, Interpolant, SVolField, SSurfYField >  InterpSVolSSurfY;
   typedef SpatialOperator< LinAlgTrilinos, Interpolant, SVolField, SSurfZField >  InterpSVolSSurfZ;
@@ -122,10 +120,6 @@ namespace FVStaggered{
   typedef SpatialOperator< LinAlgTrilinos, Interpolant, ZVolField, ZSurfYField >  InterpZVolZSurfY;
   typedef SpatialOperator< LinAlgTrilinos, Interpolant, ZVolField, ZSurfZField >  InterpZVolZSurfZ;
 
-//   typedef SpatialOperator< LinAlgTrilinos, Interpolant, XVolField, XSurfField  >  InterpXVolXSurf;
-//   typedef SpatialOperator< LinAlgTrilinos, Interpolant, YVolField, YSurfField  >  InterpYVolYSurf;
-//   typedef SpatialOperator< LinAlgTrilinos, Interpolant, ZVolField, ZSurfField  >  InterpZVolZSurf;
-
 
   // staggered volumes to staggered surfaces (advecting velocities)
   typedef SpatialOperator< LinAlgTrilinos, Interpolant, XVolField, YSurfXField >  InterpXVolYSurfX;
@@ -136,6 +130,31 @@ namespace FVStaggered{
 
   typedef SpatialOperator< LinAlgTrilinos, Interpolant, ZVolField, XSurfZField >  InterpZVolXSurfZ;
   typedef SpatialOperator< LinAlgTrilinos, Interpolant, ZVolField, YSurfZField >  InterpZVolYSurfZ;
+
+  /*
+   *  NOTE: for UNIFORM MESHES, the following DEGENERACIES exist in
+   *  the interpolant operators:
+   *
+   *    InterpXVolSSurfX = NULL  (identity operator)
+   *    InterpXVolYSurfX = InterpXVolXSurfY
+   *    InterpXVolZSurfX = InterpXVolXSurfZ
+   *
+   *    InterpYVolSSurfY = NULL (identity operator)
+   *    InterpYVolXSurfY = InterpYVolYSurfX
+   *    InterpYVolZSurfY = InterpYVolYSurfZ
+   *
+   *    InterpZVolSSurfZ = NULL (identity operator)
+   *    InterpZVolXSurfZ = InterpZVolZSurfX
+   *    InterpZVolYSurfZ = InterpZVolZSurfY
+   *
+   *  However, while since the ghosting may be different on the
+   *  different fields, we may require individual operators anyway.
+   *
+   *  For nonuniform meshes, these are all unique operators that must
+   *  be independently defined.
+   */
+
+
 
 
   //-- Gradient Operators --//
