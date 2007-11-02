@@ -53,7 +53,7 @@ namespace FVStaggered{
   public:
 
     /** @brief Return the number of nonzero entries for this operator. */
-    int num_nonzeros() const{ return 2; }
+    unsigned int num_nonzeros() const{ return 2; }
 
     /**
      *  @brief Construct a GradientAssembler object.

@@ -126,26 +126,26 @@ void build_ops( const std::vector<int>& dim,
 
   // interpolants - scalar volume to staggered surfaces (viscosity, dilatation)
   {
-//     InterpSVolXSurfX::Assembler Rsvxsxa( dim );
-//     InterpSVolXSurfY::Assembler Rsvxsya( dim );
-//     InterpSVolXSurfZ::Assembler Rsvxsza( dim );
-//     SpatialOpDatabase<InterpSVolXSurfX>::self().register_new_operator( new InterpSVolXSurfX(Rsvxsxa) );
-//     SpatialOpDatabase<InterpSVolXSurfX>::self().register_new_operator( new InterpSVolXSurfX(Rsvxsxa) );
-//     SpatialOpDatabase<InterpSVolXSurfX>::self().register_new_operator( new InterpSVolXSurfX(Rsvxsxa) );
+    InterpSVolXSurfX::Assembler Rsvxsxa( dim );
+    InterpSVolXSurfY::Assembler Rsvxsya( dim );
+    InterpSVolXSurfZ::Assembler Rsvxsza( dim );
+    SpatialOpDatabase<InterpSVolXSurfX>::self().register_new_operator( new InterpSVolXSurfX(Rsvxsxa) );
+    SpatialOpDatabase<InterpSVolXSurfY>::self().register_new_operator( new InterpSVolXSurfY(Rsvxsya) );
+    SpatialOpDatabase<InterpSVolXSurfZ>::self().register_new_operator( new InterpSVolXSurfZ(Rsvxsza) );
 
-//     InterpSVolYSurfX::Assembler Rsvysxa( dim );
-//     InterpSVolYSurfY::Assembler Rsvysya( dim );
-//     InterpSVolYSurfZ::Assembler Rsvysza( dim );
-//     SpatialOpDatabase<InterpSVolYSurfX>::self().register_new_operator( new InterpSVolYSurfX(Rsvysxa) );
-//     SpatialOpDatabase<InterpSVolYSurfY>::self().register_new_operator( new InterpSVolYSurfY(Rsvysya) );
-//     SpatialOpDatabase<InterpSVolYSurfZ>::self().register_new_operator( new InterpSVolYSurfZ(Rsvysza) );
+    InterpSVolYSurfX::Assembler Rsvysxa( dim );
+    InterpSVolYSurfY::Assembler Rsvysya( dim );
+    InterpSVolYSurfZ::Assembler Rsvysza( dim );
+    SpatialOpDatabase<InterpSVolYSurfX>::self().register_new_operator( new InterpSVolYSurfX(Rsvysxa) );
+    SpatialOpDatabase<InterpSVolYSurfY>::self().register_new_operator( new InterpSVolYSurfY(Rsvysya) );
+    SpatialOpDatabase<InterpSVolYSurfZ>::self().register_new_operator( new InterpSVolYSurfZ(Rsvysza) );
 
-//     InterpSVolZSurfX::Assembler Rsvzsxa( dim );
-//     InterpSVolZSurfY::Assembler Rsvzsya( dim );
-//     InterpSVolZSurfZ::Assembler Rsvzsza( dim );
-//     SpatialOpDatabase<InterpSVolZSurfX>::self().register_new_operator( new InterpSVolZSurfX(Rsvzsxa) );
-//     SpatialOpDatabase<InterpSVolZSurfY>::self().register_new_operator( new InterpSVolZSurfY(Rsvzsya) );
-//     SpatialOpDatabase<InterpSVolZSurfZ>::self().register_new_operator( new InterpSVolZSurfZ(Rsvzsza) );
+    InterpSVolZSurfX::Assembler Rsvzsxa( dim );
+    InterpSVolZSurfY::Assembler Rsvzsya( dim );
+    InterpSVolZSurfZ::Assembler Rsvzsza( dim );
+    SpatialOpDatabase<InterpSVolZSurfX>::self().register_new_operator( new InterpSVolZSurfX(Rsvzsxa) );
+    SpatialOpDatabase<InterpSVolZSurfY>::self().register_new_operator( new InterpSVolZSurfY(Rsvzsya) );
+    SpatialOpDatabase<InterpSVolZSurfZ>::self().register_new_operator( new InterpSVolZSurfZ(Rsvzsza) );
   }
 
   // interpolants - scalar volume to staggered volume (density)
@@ -743,11 +743,84 @@ int main()
     cout << "=====================================================" << endl << endl;
   }
 
+  {
+    const SinFun<SVolField>  svolfun( grid.xcoord_svol(),   grid.ycoord_svol(),   grid.zcoord_svol()   );
+
+    const SinFun<XSurfXField> xsurfx( grid.xcoord_xxsurf(), grid.ycoord_xxsurf(), grid.zcoord_xxsurf() );
+    const SinFun<XSurfYField> xsurfy( grid.xcoord_xysurf(), grid.ycoord_xysurf(), grid.zcoord_xysurf() );
+    const SinFun<XSurfZField> xsurfz( grid.xcoord_xzsurf(), grid.ycoord_xzsurf(), grid.zcoord_xzsurf() );
+
+    const SinFun<YSurfXField> ysurfx( grid.xcoord_yxsurf(), grid.ycoord_yxsurf(), grid.zcoord_yxsurf() );
+    const SinFun<YSurfYField> ysurfy( grid.xcoord_yysurf(), grid.ycoord_yysurf(), grid.zcoord_yysurf() );
+    const SinFun<YSurfZField> ysurfz( grid.xcoord_yzsurf(), grid.ycoord_yzsurf(), grid.zcoord_yzsurf() );
+
+    const SinFun<ZSurfXField> zsurfx( grid.xcoord_zxsurf(), grid.ycoord_zxsurf(), grid.zcoord_zxsurf() );
+    const SinFun<ZSurfYField> zsurfy( grid.xcoord_zysurf(), grid.ycoord_zysurf(), grid.zcoord_zysurf() );
+    const SinFun<ZSurfZField> zsurfz( grid.xcoord_zzsurf(), grid.ycoord_zzsurf(), grid.zcoord_zzsurf() );
+
+    cout << "=====================================================" << endl
+	 << "Interpolate scalar volume to staggered surfaces" << endl
+	 << " max abs err | max rel err | avg abs err | avg rel err |" << endl
+	 << "-------------|-------------|-------------|-------------|" << endl;
+    test_interp_op<InterpSVolXSurfX>( grid, svolfun, xsurfx );
+    test_interp_op<InterpSVolXSurfY>( grid, svolfun, xsurfy );
+    test_interp_op<InterpSVolXSurfZ>( grid, svolfun, xsurfz );
+
+    test_interp_op<InterpSVolYSurfX>( grid, svolfun, ysurfx );
+    test_interp_op<InterpSVolYSurfY>( grid, svolfun, ysurfy );
+    test_interp_op<InterpSVolYSurfZ>( grid, svolfun, ysurfz );
+
+    test_interp_op<InterpSVolZSurfX>( grid, svolfun, zsurfx );
+    test_interp_op<InterpSVolZSurfY>( grid, svolfun, zsurfy );
+    test_interp_op<InterpSVolZSurfZ>( grid, svolfun, zsurfz );
+
+    cout << "=====================================================" << endl << endl;
+  }
+
+  // x-Volume to y-volume x-surface and z-volume x-surface
+  if( dim[0]>1 && dim[1]>1 || dim[2]>1 ){
+    const SinFun<XVolField  >   xvolfun( grid.xcoord_xvol(),   grid.ycoord_xvol(),   grid.zcoord_xvol()   );
+    const SinFun<YSurfXField> ysurfxfun( grid.xcoord_yxsurf(), grid.ycoord_yxsurf(), grid.zcoord_yxsurf() );
+    const SinFun<ZSurfXField> zsurfxfun( grid.xcoord_zxsurf(), grid.ycoord_zxsurf(), grid.zcoord_zxsurf() );
+    cout << "=====================================================" << endl
+	 << "Interpolate x volume to y and z volume x-surfaces" << endl
+	 << " max abs err | max rel err | avg abs err | avg rel err |" << endl
+	 << "-------------|-------------|-------------|-------------|" << endl;
+    test_interp_op<InterpXVolYSurfX>( grid, xvolfun, ysurfxfun );
+    test_interp_op<InterpXVolZSurfX>( grid, xvolfun, zsurfxfun );
+    cout << "=====================================================" << endl << endl;
+  }
+
+  // y-volume to x-volume y-surface z-volume y-surface
+  if( dim[1]>1 && dim[0]>1 || dim[2]>1 ){
+    const SinFun<YVolField  >   yvolfun( grid.xcoord_yvol(),   grid.ycoord_yvol(),   grid.zcoord_yvol()   );
+    const SinFun<XSurfYField> xsurfyfun( grid.xcoord_xysurf(), grid.ycoord_xysurf(), grid.zcoord_xysurf() );
+    const SinFun<ZSurfYField> zsurfyfun( grid.xcoord_zysurf(), grid.ycoord_zysurf(), grid.zcoord_zysurf() );
+    cout << "=====================================================" << endl
+	 << "Interpolate y volume to x and z volume y-surfaces" << endl
+	 << " max abs err | max rel err | avg abs err | avg rel err |" << endl
+	 << "-------------|-------------|-------------|-------------|" << endl;
+    test_interp_op<InterpYVolXSurfY>( grid, yvolfun, xsurfyfun );
+    test_interp_op<InterpYVolZSurfY>( grid, yvolfun, zsurfyfun );
+    cout << "=====================================================" << endl << endl;
+  }
+
+  // z-volume to x-volume z-surface y-volume z-surface
+  if( dim[2]>1 && dim[0]>1 || dim[1]>1 ){
+    const SinFun<ZVolField  >   zvolfun( grid.xcoord_zvol(),   grid.ycoord_zvol(),   grid.zcoord_zvol()   );
+    const SinFun<XSurfZField> xsurfzfun( grid.xcoord_xzsurf(), grid.ycoord_xzsurf(), grid.zcoord_xzsurf() );
+    const SinFun<YSurfZField> ysurfzfun( grid.xcoord_yzsurf(), grid.ycoord_yzsurf(), grid.zcoord_yzsurf() );
+    cout << "=====================================================" << endl
+	 << "Interpolate z volume to x and y volume z-surfaces" << endl
+	 << " max abs err | max rel err | avg abs err | avg rel err |" << endl
+	 << "-------------|-------------|-------------|-------------|" << endl;
+    test_interp_op<InterpZVolXSurfZ>( grid, zvolfun, xsurfzfun );
+    test_interp_op<InterpZVolYSurfZ>( grid, zvolfun, ysurfzfun );
+    cout << "=====================================================" << endl << endl;
+  }
 
   // X-volume to x-surface face component gradients
   if( dim[0]>1 ){
-
-    // jcs problems with the y-divergence and z-divergence operators
 
     // sin function
     const SinFun<XVolField  > sinfun ( grid.xcoord_xvol(),   grid.ycoord_xvol(),   grid.zcoord_xvol()   );
@@ -793,8 +866,6 @@ int main()
   // Y-volume to y-surface face component gradients
   if( dim[1]>1 ){
 
-    // jcs we seem to have a problem with the x-divergence and z-divergence operators.
-
     // sin function
     const SinFun<YVolField  > sinfun ( grid.xcoord_yvol(),   grid.ycoord_yvol(),   grid.zcoord_yvol()   );
     const SinFun<YSurfXField> gradX  ( grid.xcoord_yxsurf(), grid.ycoord_yxsurf(), grid.zcoord_yxsurf() );
@@ -838,10 +909,6 @@ int main()
 
   // Z-volume to z-surface face component gradients
   if( dim[2]>1 ){
-
-    // jcs problems with the x-gradient and z-gradient operators.
-    // jcs problems with all of the divergence operators.
-    // jcs problems with all of the interpolant operators
 
     // sin function
     const SinFun<ZVolField  > sinfun ( grid.xcoord_zvol(),   grid.ycoord_zvol(),   grid.zcoord_zvol()   );

@@ -106,7 +106,7 @@ namespace FVStaggered{
   {
   public:
 
-    int num_nonzeros() const;
+    unsigned int num_nonzeros() const;
 
     ScratchAssembler( const std::vector<int>& dimExtent,
 		      const int dir );
@@ -180,7 +180,7 @@ namespace FVStaggered{
   }
   //------------------------------------------------------------------
   template<typename SrcFieldT, typename DestFieldT>
-  int
+  unsigned int
   ScratchAssembler<SrcFieldT,DestFieldT>::
   num_nonzeros() const
   {

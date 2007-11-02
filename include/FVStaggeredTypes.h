@@ -148,7 +148,7 @@ namespace FVStaggered{
    *    InterpZVolYSurfZ = InterpZVolZSurfY
    *
    *  However, while since the ghosting may be different on the
-   *  different fields, we may require individual operators anyway.
+   *  different fields, we require individual operators anyway.
    *
    *  For nonuniform meshes, these are all unique operators that must
    *  be independently defined.

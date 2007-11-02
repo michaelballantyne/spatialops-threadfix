@@ -15,7 +15,13 @@ namespace FVStaggered{
   template<typename T1, typename T2> struct DirSelector<T1,T2,1>{ typedef T1 Type; };
   template<typename T1, typename T2> struct DirSelector<T1,T2,0>{ typedef T2 Type; };
 
-
+  /**
+   *  @class IndexHelper
+   *  @author James C. Sutherland
+   *
+   *  @todo Check on all implementations of shift_dest_index for consistency w.r.t. ghosting.
+   *  @todo Document all of this so it is comprehensible.
+   */
   template< typename SrcFieldT, typename DestFieldT >
   class IndexHelper
   {
@@ -78,154 +84,6 @@ namespace FVStaggered{
   //==================================================================
 
 
-  //------------------------------------------------------------------ 
-  template<typename SrcFieldT, typename DestFieldT>
-  IndexHelper<SrcFieldT,DestFieldT>::
-  IndexHelper( const std::vector<int>& dim )
-    : dim_( dim )
-  {
-  }
-  //------------------------------------------------------------------ 
-  template<typename SrcFieldT, typename DestFieldT>
-  void
-  IndexHelper<SrcFieldT,DestFieldT>::
-  get_cols( const int irow, std::vector<int>& cols ) const
-  {
-    // from the row (flat index of destination field), determine the
-    // ijk indices for the destination field
-    IndexTriplet ijk = flat2ijk<DestFieldT,DestFieldT::Location::IsSurface>::value( dim_, irow );
-
-    shift_dest_index<SrcFieldT,DestFieldT>( dim_, irow, ijk );
-
-    if( ijk.i<0 || ijk.j<0 || ijk.k<0 ) return;
-
-    // from the ijk index, determine the flat index for the source field.
-    const int icol = ijk2flat<SrcFieldT,SrcFieldT::Location::IsSurface>::value( dim_, ijk );
-
-    const int stride = calculate_stride( irow, icol );
-
-    if( is_in_bounds<SrcFieldT,DestFieldT>(dim_,icol,irow) &&
-	is_in_bounds<SrcFieldT,DestFieldT>(dim_,icol+stride,irow) ){
-
-      const IndexTriplet ijk2 = flat2ijk<SrcFieldT,SrcFieldT::Location::IsSurface>::value( dim_, icol+stride );
-
-      if( is_valid_entry( dim_, ijk, ijk2 ) ){
-	cols.push_back( icol        );
-	cols.push_back( icol+stride );
-      }
-
-    }
-  }
-  //------------------------------------------------------------------
-  template<typename SrcFieldT, typename DestFieldT>
-  int
-  IndexHelper<SrcFieldT,DestFieldT>::
-  get_ncol() const
-  {
-    return get_n_tot<SrcFieldT>(dim_);
-  }
-  //------------------------------------------------------------------
-  template<typename SrcFieldT, typename DestFieldT>
-  int
-  IndexHelper<SrcFieldT,DestFieldT>::
-  get_nrow() const
-  {
-    return get_n_tot<DestFieldT>(dim_);
-  }
-  //------------------------------------------------------------------
-  template<typename SrcFieldT, typename DestFieldT>
-  int
-  IndexHelper<SrcFieldT,DestFieldT>::
-  calculate_stride( const int irow, const int icol ) const
-  {
-    typedef typename DirSelector<SrcFieldT,DestFieldT,SrcFieldT::Location::IsSurface>::Type FieldDirSelect;
-
-    int n=-1;
-    switch( FieldDirSelect::Location::Dir::value ){
-    case XDIR::value:
-      n=1;
-      break;
-    case YDIR::value:
-      n = get_nx<SrcFieldT>(dim_[0]);
-      break;
-    case ZDIR::value:
-      n = get_nx<SrcFieldT>(dim_[0]) * get_ny<SrcFieldT>(dim_[1]);
-      break;
-    default:
-      cout << "ERROR: field dir enum value=" << FieldDirSelect::Location::Dir::value << endl;
-      assert(0);
-    }
-    return n;
-  }
-  template<> inline int IndexHelper<SVolField,XVolField>::calculate_stride( const int irow, const int icol ) const
-  {
-    return 1;
-  }
-  template<> inline int IndexHelper<SVolField,YVolField>::calculate_stride( const int irow, const int icol ) const
-  {
-    return get_nx<SVolField>(dim_[0]);
-  }
-  template<> inline int IndexHelper<SVolField,ZVolField>::calculate_stride( const int irow, const int icol ) const
-  {
-    return get_nx<SVolField>(dim_[0]) * get_ny<SVolField>(dim_[1]);
-  }
-  template<> inline int IndexHelper<SVolField,SSurfField>::calculate_stride( const int irow, const int icol ) const
-  {
-    const int nx1 = get_nx_x<SSurfField>(dim_);
-    const int ny1 = get_ny_x<SSurfField>(dim_);
-    const int nz1 = get_nz_x<SSurfField>(dim_);
-    const int n1 = dim_[0]>1 ? nx1*ny1*nz1 : 0;
-
-    if( irow<n1 ) return 1;
-
-    const int nx2 = get_nx_y<SSurfField>(dim_);
-    const int ny2 = get_ny_y<SSurfField>(dim_);
-    const int nz2 = get_nz_y<SSurfField>(dim_);
-    const int n2 = dim_[1]>1 ? n1 + nx2*ny2*nz2 : n1;
-
-    if( irow<n2 ) return get_nx<SVolField>(dim_[0]);
-
-    return get_nx<SVolField>(dim_[0])*get_nx<SVolField>(dim_[1]);
-  }
-  //------------------------------------------------------------------
-
-  // not yet implemented:
-  template<> inline int IndexHelper<XVolField,XSurfField>::calculate_stride( const int irow, const int icol ) const;
-  template<> inline int IndexHelper<YVolField,YSurfField>::calculate_stride( const int irow, const int icol ) const;
-  template<> inline int IndexHelper<ZVolField,ZSurfField>::calculate_stride( const int irow, const int icol ) const;
-
-
-  //==================================================================
-
-  bool is_valid_entry( const std::vector<int>& dim,
-		       const IndexTriplet& ixt1,
-		       const IndexTriplet& ixt2 )
-  {
-    if( std::abs(ixt2.i - ixt1.i) > 1 ) return false;
-    if( std::abs(ixt2.j - ixt1.j) > 1 ) return false;
-    if( std::abs(ixt2.k - ixt1.k) > 1 ) return false;
-    return true;
-  }
-  
-  //==================================================================
-
-  template<typename SrcFieldT, typename DestFieldT>
-  bool is_in_bounds( const std::vector<int>& dim, const int ixs, const int ixd )
-  {
-    const IndexTriplet it = flat2ijk<SrcFieldT,SrcFieldT::Location::IsSurface>::value(dim,ixs);
-
-    if( it.i<0 || it.j<0 || it.k<0 ) return false;
-
-    const int nx = get_nx<SrcFieldT>(dim[0]);
-    const int ny = get_ny<SrcFieldT>(dim[1]);
-    const int nz = get_nz<SrcFieldT>(dim[2]);
-
-    if( it.i<nx && it.j<ny && it.k<nz )  return true;
-
-    return false;
-  }
-
-  //==================================================================
 
   template<typename SrcFieldT, typename DestFieldT>
   void shift_dest_index( const std::vector<int>& dim, const int irow, IndexTriplet& triplet ){}
@@ -353,6 +211,65 @@ namespace FVStaggered{
   template<> inline void shift_dest_index<SVolField,ZVolField>( const std::vector<int>& dim, const int irow, IndexTriplet& triplet )
   { --triplet.k; }
 
+  template<> inline void shift_dest_index<SVolField,XSurfXField>( const std::vector<int>& dim, const int irow, IndexTriplet& triplet )
+  {
+    if( dim[0]>1 ) triplet.i += (SVolField::Ghost::NM - XSurfXField::Ghost::NM) - 1;
+    if( dim[1]>1 ) triplet.j += (SVolField::Ghost::NM - XSurfXField::Ghost::NM);
+    if( dim[2]>1 ) triplet.k += (SVolField::Ghost::NM - XSurfXField::Ghost::NM);
+  }
+  template<> inline void shift_dest_index<SVolField,XSurfYField>( const std::vector<int>& dim, const int irow, IndexTriplet& triplet )
+  {
+    if( dim[0]>1 ) triplet.i += (SVolField::Ghost::NM - XSurfYField::Ghost::NM) - 1;
+    if( dim[1]>1 ) triplet.j += (SVolField::Ghost::NM - XSurfYField::Ghost::NM) - 1;
+    if( dim[2]>1 ) triplet.k += (SVolField::Ghost::NM - XSurfYField::Ghost::NM);
+  }
+  template<> inline void shift_dest_index<SVolField,XSurfZField>( const std::vector<int>& dim, const int irow, IndexTriplet& triplet )
+  {
+    if( dim[0]>1 ) triplet.i += (SVolField::Ghost::NM - XSurfZField::Ghost::NM) - 1;
+    if( dim[1]>1 ) triplet.j += (SVolField::Ghost::NM - XSurfZField::Ghost::NM);
+    if( dim[2]>1 ) triplet.k += (SVolField::Ghost::NM - XSurfZField::Ghost::NM) - 1;
+  }
+
+  template<> inline void shift_dest_index<SVolField,YSurfXField>( const std::vector<int>& dim, const int irow, IndexTriplet& triplet )
+  {
+    if( dim[0]>1 ) triplet.i += (SVolField::Ghost::NM - YSurfXField::Ghost::NM)-1;
+    if( dim[1]>1 ) triplet.j += (SVolField::Ghost::NM - YSurfXField::Ghost::NM)-1;
+    if( dim[2]>1 ) triplet.k += (SVolField::Ghost::NM - YSurfXField::Ghost::NM);
+  }
+  template<> inline void shift_dest_index<SVolField,YSurfYField>( const std::vector<int>& dim, const int irow, IndexTriplet& triplet )
+  {
+    if( dim[0]>1 ) triplet.i += (SVolField::Ghost::NM - YSurfYField::Ghost::NM);
+    if( dim[1]>1 ) triplet.j += (SVolField::Ghost::NM - YSurfYField::Ghost::NM)-1;
+    if( dim[2]>1 ) triplet.k += (SVolField::Ghost::NM - YSurfYField::Ghost::NM);
+  }
+  template<> inline void shift_dest_index<SVolField,YSurfZField>( const std::vector<int>& dim, const int irow, IndexTriplet& triplet )
+  {
+    if( dim[0]>1 ) triplet.i += (SVolField::Ghost::NM - YSurfZField::Ghost::NM);
+    if( dim[1]>1 ) triplet.j += (SVolField::Ghost::NM - YSurfZField::Ghost::NM)-1;
+    if( dim[2]>1 ) triplet.k += (SVolField::Ghost::NM - YSurfZField::Ghost::NM)-1;
+  }
+
+
+  template<> inline void shift_dest_index<SVolField,ZSurfXField>( const std::vector<int>& dim, const int irow, IndexTriplet& triplet )
+  {
+    if( dim[0]>1 ) triplet.i += (SVolField::Ghost::NM - ZSurfXField::Ghost::NM)-1;
+    if( dim[1]>1 ) triplet.j += (SVolField::Ghost::NM - ZSurfXField::Ghost::NM);
+    if( dim[2]>1 ) triplet.k += (SVolField::Ghost::NM - ZSurfXField::Ghost::NM)-1;
+  }
+  template<> inline void shift_dest_index<SVolField,ZSurfYField>( const std::vector<int>& dim, const int irow, IndexTriplet& triplet )
+  {
+    if( dim[0]>1 ) triplet.i += (SVolField::Ghost::NM - ZSurfYField::Ghost::NM);
+    if( dim[1]>1 ) triplet.j += (SVolField::Ghost::NM - ZSurfYField::Ghost::NM)-1;
+    if( dim[2]>1 ) triplet.k += (SVolField::Ghost::NM - ZSurfYField::Ghost::NM)-1;
+  }
+  template<> inline void shift_dest_index<SVolField,ZSurfZField>( const std::vector<int>& dim, const int irow, IndexTriplet& triplet )
+  {
+    if( dim[0]>1 ) triplet.i += (SVolField::Ghost::NM - ZSurfZField::Ghost::NM);
+    if( dim[1]>1 ) triplet.j += (SVolField::Ghost::NM - ZSurfZField::Ghost::NM);
+    if( dim[2]>1 ) triplet.k += (SVolField::Ghost::NM - ZSurfZField::Ghost::NM)-1;
+  }
+
+
   template<> inline void shift_dest_index<XVolField,XSurfXField>( const std::vector<int>& dim, const int irow, IndexTriplet& triplet )
   {
     if( dim[1]>1 ) triplet.j += (XVolField::Ghost::NM - XSurfXField::Ghost::NM);
@@ -367,6 +284,18 @@ namespace FVStaggered{
   {
     if( dim[0]>1 ) triplet.i += (XVolField::Ghost::NM - XSurfYField::Ghost::NM);
     if( dim[1]>1 ) triplet.j += (XVolField::Ghost::NM - XSurfYField::Ghost::NM);
+  }
+  template<> inline void shift_dest_index<XVolField,YSurfXField>( const std::vector<int>& dim, const int irow, IndexTriplet& triplet )
+  {
+    if( dim[0]>1 ) triplet.i += (XVolField::Ghost::NM - YSurfXField::Ghost::NM );
+    if( dim[1]>1 ) triplet.j += (XVolField::Ghost::NM - YSurfXField::Ghost::NM ) -1;
+    if( dim[2]>1 ) triplet.k += (XVolField::Ghost::NM - YSurfXField::Ghost::NM );
+  }
+  template<> inline void shift_dest_index<XVolField,ZSurfXField>( const std::vector<int>& dim, const int irow, IndexTriplet& triplet )
+  {
+    if( dim[0]>1 ) triplet.i += (XVolField::Ghost::NM - ZSurfXField::Ghost::NM );
+    if( dim[1]>1 ) triplet.j += (XVolField::Ghost::NM - ZSurfXField::Ghost::NM );
+    if( dim[2]>1 ) triplet.k += (XVolField::Ghost::NM - ZSurfXField::Ghost::NM ) -1;
   }
 
   template<> inline void shift_dest_index<YVolField,YSurfXField>( const std::vector<int>& dim, const int irow, IndexTriplet& triplet )
@@ -384,6 +313,18 @@ namespace FVStaggered{
     if( dim[0]>1 ) triplet.i += (YVolField::Ghost::NM - YSurfYField::Ghost::NM);
     if( dim[1]>1 ) triplet.j += (YVolField::Ghost::NM - YSurfYField::Ghost::NM);
   }
+  template<> inline void shift_dest_index<YVolField,XSurfYField>( const std::vector<int>& dim, const int irow, IndexTriplet& triplet )
+  {
+    if( dim[0]>1 ) triplet.i += (YVolField::Ghost::NM - XSurfYField::Ghost::NM )-1;
+    if( dim[1]>1 ) triplet.j += (YVolField::Ghost::NM - XSurfYField::Ghost::NM );
+    if( dim[2]>1 ) triplet.k += (YVolField::Ghost::NM - XSurfYField::Ghost::NM );
+  }
+  template<> inline void shift_dest_index<YVolField,ZSurfYField>( const std::vector<int>& dim, const int irow, IndexTriplet& triplet )
+  {
+    if( dim[0]>1 ) triplet.i += (YVolField::Ghost::NM - ZSurfYField::Ghost::NM );
+    if( dim[1]>1 ) triplet.j += (YVolField::Ghost::NM - ZSurfYField::Ghost::NM );
+    if( dim[2]>1 ) triplet.k += (YVolField::Ghost::NM - ZSurfYField::Ghost::NM ) -1;
+  }
 
   template<> inline void shift_dest_index<ZVolField,ZSurfXField>( const std::vector<int>& dim, const int irow, IndexTriplet& triplet )
   {
@@ -400,7 +341,394 @@ namespace FVStaggered{
     if( dim[0]>1 ) triplet.i += (ZVolField::Ghost::NM - ZSurfYField::Ghost::NM);
     if( dim[1]>1 ) triplet.j += (ZVolField::Ghost::NM - ZSurfYField::Ghost::NM);
   }
+  template<> inline void shift_dest_index<ZVolField,XSurfZField>( const std::vector<int>& dim, const int irow, IndexTriplet& triplet )
+  {
+    if( dim[0]>1 ) triplet.i += (ZVolField::Ghost::NM - XSurfZField::Ghost::NM )-1;
+    if( dim[1]>1 ) triplet.j += (ZVolField::Ghost::NM - XSurfZField::Ghost::NM );
+    if( dim[2]>1 ) triplet.k += (ZVolField::Ghost::NM - XSurfZField::Ghost::NM );
+  }
+  template<> inline void shift_dest_index<ZVolField,YSurfZField>( const std::vector<int>& dim, const int irow, IndexTriplet& triplet )
+  {
+    if( dim[0]>1 ) triplet.i += (ZVolField::Ghost::NM - YSurfZField::Ghost::NM );
+    if( dim[1]>1 ) triplet.j += (ZVolField::Ghost::NM - YSurfZField::Ghost::NM )-1;
+    if( dim[2]>1 ) triplet.k += (ZVolField::Ghost::NM - YSurfZField::Ghost::NM );
+  }
 
+  //------------------------------------------------------------------
+
+
+  //==================================================================
+
+
+  //------------------------------------------------------------------ 
+
+  template<typename SrcFieldT, typename DestFieldT>
+  IndexHelper<SrcFieldT,DestFieldT>::
+  IndexHelper( const std::vector<int>& dim )
+    : dim_( dim )
+  {
+  }
+  //------------------------------------------------------------------ 
+  template<typename SrcFieldT, typename DestFieldT>
+  void
+  IndexHelper<SrcFieldT,DestFieldT>::
+  get_cols( const int irow, std::vector<int>& cols ) const
+  {
+    // from the row (flat index of destination field), determine the
+    // ijk indices for the destination field
+    IndexTriplet ijk = flat2ijk<DestFieldT,DestFieldT::Location::IsSurface>::value( dim_, irow );
+
+    shift_dest_index<SrcFieldT,DestFieldT>( dim_, irow, ijk );
+
+    if( ijk.i<0 || ijk.j<0 || ijk.k<0 ) return;
+
+    // from the ijk index, determine the flat index for the source field.
+    const int icol = ijk2flat<SrcFieldT,SrcFieldT::Location::IsSurface>::value( dim_, ijk );
+
+    const int stride = calculate_stride( irow, icol );
+
+    if( is_in_bounds<SrcFieldT,DestFieldT>(dim_,icol,irow) &&
+	is_in_bounds<SrcFieldT,DestFieldT>(dim_,icol+stride,irow) ){
+
+      const IndexTriplet ijk2 = flat2ijk<SrcFieldT,SrcFieldT::Location::IsSurface>::value( dim_, icol+stride );
+
+      if( is_valid_entry( dim_, ijk, ijk2 ) ){
+	cols.push_back( icol        );
+	cols.push_back( icol+stride );
+      }
+
+    }
+  }
+  //------------------------------------------------------------------
+  template<typename SrcFieldT, typename DestFieldT>
+  int
+  IndexHelper<SrcFieldT,DestFieldT>::
+  get_ncol() const
+  {
+    return get_n_tot<SrcFieldT>(dim_);
+  }
+  //------------------------------------------------------------------
+  template<typename SrcFieldT, typename DestFieldT>
+  int
+  IndexHelper<SrcFieldT,DestFieldT>::
+  get_nrow() const
+  {
+    return get_n_tot<DestFieldT>(dim_);
+  }
+  //------------------------------------------------------------------
+  template<typename SrcFieldT, typename DestFieldT>
+  int
+  IndexHelper<SrcFieldT,DestFieldT>::
+  calculate_stride( const int irow, const int icol ) const
+  {
+    typedef typename DirSelector<SrcFieldT,DestFieldT,SrcFieldT::Location::IsSurface>::Type FieldDirSelect;
+
+    int n=-1;
+    switch( FieldDirSelect::Location::Dir::value ){
+    case XDIR::value:
+      n=1;
+      break;
+    case YDIR::value:
+      n = get_nx<SrcFieldT>(dim_[0]);
+      break;
+    case ZDIR::value:
+      n = get_nx<SrcFieldT>(dim_[0]) * get_ny<SrcFieldT>(dim_[1]);
+      break;
+    default:
+      cout << "ERROR: field dir enum value=" << FieldDirSelect::Location::Dir::value << endl;
+      assert(0);
+    }
+    return n;
+  }
+  template<> inline int IndexHelper<SVolField,XVolField>::calculate_stride( const int irow, const int icol ) const
+  {
+    return 1;
+  }
+  template<> inline int IndexHelper<SVolField,YVolField>::calculate_stride( const int irow, const int icol ) const
+  {
+    return get_nx<SVolField>(dim_[0]);
+  }
+  template<> inline int IndexHelper<SVolField,ZVolField>::calculate_stride( const int irow, const int icol ) const
+  {
+    return get_nx<SVolField>(dim_[0]) * get_ny<SVolField>(dim_[1]);
+  }
+  template<> inline int IndexHelper<SVolField,SSurfField>::calculate_stride( const int irow, const int icol ) const
+  {
+    const int nx1 = get_nx_x<SSurfField>(dim_);
+    const int ny1 = get_ny_x<SSurfField>(dim_);
+    const int nz1 = get_nz_x<SSurfField>(dim_);
+    const int n1 = dim_[0]>1 ? nx1*ny1*nz1 : 0;
+
+    if( irow<n1 ) return 1;
+
+    const int nx2 = get_nx_y<SSurfField>(dim_);
+    const int ny2 = get_ny_y<SSurfField>(dim_);
+    const int nz2 = get_nz_y<SSurfField>(dim_);
+    const int n2 = dim_[1]>1 ? n1 + nx2*ny2*nz2 : n1;
+
+    if( irow<n2 ) return get_nx<SVolField>(dim_[0]);
+
+    return get_nx<SVolField>(dim_[0])*get_nx<SVolField>(dim_[1]);
+  }
+  template<> inline int IndexHelper<XVolField,YSurfXField>::calculate_stride( const int irow, const int icol ) const
+  {
+    return get_nx<XVolField>(dim_[0]);
+  }
+  template<> inline int IndexHelper<XVolField,ZSurfXField>::calculate_stride( const int irow, const int icol ) const
+  {
+    return get_nx<XVolField>(dim_[0]) * get_ny<XVolField>(dim_[1]);
+  }
+  template<> inline int IndexHelper<YVolField,XSurfYField>::calculate_stride( const int irow, const int icol ) const
+  {
+    return 1;
+  }
+  template<> inline int IndexHelper<YVolField,ZSurfYField>::calculate_stride( const int irow, const int icol ) const
+  {
+    return get_nx<YVolField>(dim_[0]) * get_ny<YVolField>(dim_[1]);
+  }
+  template<> inline int IndexHelper<ZVolField,XSurfZField>::calculate_stride( const int irow, const int icol ) const
+  {
+    return 1;
+  }
+  template<> inline int IndexHelper<ZVolField,YSurfZField>::calculate_stride( const int irow, const int icol ) const
+  {
+    return get_nx<ZVolField>(dim_[0]);
+  }
+  //------------------------------------------------------------------
+
+  // not yet implemented:
+  template<> inline int IndexHelper<XVolField,XSurfField>::calculate_stride( const int irow, const int icol ) const;
+  template<> inline int IndexHelper<YVolField,YSurfField>::calculate_stride( const int irow, const int icol ) const;
+  template<> inline int IndexHelper<ZVolField,ZSurfField>::calculate_stride( const int irow, const int icol ) const;
+
+
+  //==================================================================
+
+  bool is_valid_entry( const std::vector<int>& dim,
+		       const IndexTriplet& ixt1,
+		       const IndexTriplet& ixt2 )
+  {
+    if( std::abs(ixt2.i - ixt1.i) > 1 ) return false;
+    if( std::abs(ixt2.j - ixt1.j) > 1 ) return false;
+    if( std::abs(ixt2.k - ixt1.k) > 1 ) return false;
+    return true;
+  }
+  
+  //==================================================================
+
+  template<typename SrcFieldT, typename DestFieldT>
+  bool is_in_bounds( const std::vector<int>& dim, const int ixs, const int ixd )
+  {
+    const IndexTriplet it = flat2ijk<SrcFieldT,SrcFieldT::Location::IsSurface>::value(dim,ixs);
+
+    if( it.i<0 || it.j<0 || it.k<0 ) return false;
+
+    const int nx = get_nx<SrcFieldT>(dim[0]);
+    const int ny = get_ny<SrcFieldT>(dim[1]);
+    const int nz = get_nz<SrcFieldT>(dim[2]);
+
+    if( it.i<nx && it.j<ny && it.k<nz )  return true;
+
+    return false;
+  }
+
+  //==================================================================
+
+
+  //------------------------------------------------------------------
+
+  template<> inline void
+  IndexHelper<SVolField,XSurfXField>::
+  get_cols( const int irow, std::vector<int>& cols ) const
+  {
+    IndexTriplet ijk = flat2ijk<XSurfXField,XSurfXField::Location::IsSurface>::value( dim_, irow );
+    shift_dest_index<SVolField,XSurfXField>( dim_, irow, ijk );
+    if( ijk.i<0 || ijk.j<0 || ijk.k<0 ) return;
+    const int icol = ijk2flat<SVolField,SVolField::Location::IsSurface>::value( dim_, ijk );
+    if( is_in_bounds<SVolField,XSurfXField>(dim_,icol,irow) ){
+      cols.push_back( icol );
+    }
+  }
+
+  template<> inline void
+  IndexHelper<SVolField,XSurfYField>::
+  get_cols( const int irow, std::vector<int>& cols ) const
+  {
+    IndexTriplet ijk = flat2ijk<XSurfYField,XSurfYField::Location::IsSurface>::value( dim_, irow );
+    shift_dest_index<SVolField,XSurfYField>( dim_, irow, ijk );
+    if( ijk.i<0 || ijk.j<0 || ijk.k<0 ) return;
+
+    const int icol = ijk2flat<SVolField,SVolField::Location::IsSurface>::value( dim_, ijk );
+    const int icol2 = icol + 1;
+    const int icol3 = icol + get_nx<SVolField>(dim_[0]);
+    const int icol4 = icol3 + 1;
+
+    if( is_in_bounds<SVolField,XSurfYField>(dim_,icol ,irow) &&
+	is_in_bounds<SVolField,XSurfYField>(dim_,icol2,irow) &&
+	is_in_bounds<SVolField,XSurfYField>(dim_,icol3,irow) &&
+	is_in_bounds<SVolField,XSurfYField>(dim_,icol4,irow) ){
+      cols.push_back( icol  );
+      cols.push_back( icol2 );
+      cols.push_back( icol3 );
+      cols.push_back( icol4 );
+    }
+  }
+
+  template<> inline void
+  IndexHelper<SVolField,XSurfZField>::
+  get_cols( const int irow, std::vector<int>& cols ) const
+  {
+    IndexTriplet ijk = flat2ijk<XSurfZField,XSurfZField::Location::IsSurface>::value( dim_, irow );
+    shift_dest_index<SVolField,XSurfZField>( dim_, irow, ijk );
+    if( ijk.i<0 || ijk.j<0 || ijk.k<0 ) return;
+
+    const int icol = ijk2flat<SVolField,SVolField::Location::IsSurface>::value( dim_, ijk );
+    const int icol2 = icol + 1;
+    const int icol3 = icol + get_nx<SVolField>(dim_[0])*get_ny<SVolField>(dim_[1]);
+    const int icol4 = icol3 + 1;
+
+    if( is_in_bounds<SVolField,XSurfZField>(dim_,icol ,irow) &&
+	is_in_bounds<SVolField,XSurfZField>(dim_,icol2,irow) &&
+	is_in_bounds<SVolField,XSurfZField>(dim_,icol3,irow) &&
+	is_in_bounds<SVolField,XSurfZField>(dim_,icol4,irow) ){
+      cols.push_back( icol  );
+      cols.push_back( icol2 );
+      cols.push_back( icol3 );
+      cols.push_back( icol4 );
+    }
+  }
+
+
+  template<> inline void
+  IndexHelper<SVolField,YSurfXField>::
+  get_cols( const int irow, std::vector<int>& cols ) const
+  {
+    IndexTriplet ijk = flat2ijk<YSurfXField,YSurfXField::Location::IsSurface>::value( dim_, irow );
+    shift_dest_index<SVolField,YSurfXField>( dim_, irow, ijk );
+    if( ijk.i<0 || ijk.j<0 || ijk.k<0 ) return;
+
+    const int icol = ijk2flat<SVolField,SVolField::Location::IsSurface>::value( dim_, ijk );
+    const int icol2 = icol + 1;
+    const int icol3 = icol + get_nx<SVolField>(dim_[0]);
+    const int icol4 = icol3 + 1;
+
+    if( is_in_bounds<SVolField,YSurfXField>(dim_,icol ,irow) &&
+	is_in_bounds<SVolField,YSurfXField>(dim_,icol2,irow) &&
+	is_in_bounds<SVolField,YSurfXField>(dim_,icol3,irow) &&
+	is_in_bounds<SVolField,YSurfXField>(dim_,icol4,irow) ){
+      cols.push_back( icol  );
+      cols.push_back( icol2 );
+      cols.push_back( icol3 );
+      cols.push_back( icol4 );
+    }
+  }
+
+  template<> inline void
+  IndexHelper<SVolField,YSurfYField>::
+  get_cols( const int irow, std::vector<int>& cols ) const
+  {
+    IndexTriplet ijk = flat2ijk<YSurfYField,YSurfYField::Location::IsSurface>::value( dim_, irow );
+    shift_dest_index<SVolField,YSurfYField>( dim_, irow, ijk );
+    if( ijk.i<0 || ijk.j<0 || ijk.k<0 ) return;
+    const int icol = ijk2flat<SVolField,SVolField::Location::IsSurface>::value( dim_, ijk );
+    if( is_in_bounds<SVolField,YSurfYField>(dim_,icol,irow) ){
+      cols.push_back( icol );
+    }
+  }
+
+  template<> inline void
+  IndexHelper<SVolField,YSurfZField>::
+  get_cols( const int irow, std::vector<int>& cols ) const
+  {
+    IndexTriplet ijk = flat2ijk<YSurfZField,YSurfZField::Location::IsSurface>::value( dim_, irow );
+    shift_dest_index<SVolField,YSurfZField>( dim_, irow, ijk );
+    if( ijk.i<0 || ijk.j<0 || ijk.k<0 ) return;
+
+    const int nx = get_nx<SVolField>(dim_[0]);
+    const int ny = get_ny<SVolField>(dim_[1]);
+
+    const int icol = ijk2flat<SVolField,SVolField::Location::IsSurface>::value( dim_, ijk );
+    const int icol2 = icol + nx;
+    const int icol3 = icol + nx*ny;
+    const int icol4 = icol3 + nx;
+
+    if( is_in_bounds<SVolField,YSurfZField>(dim_,icol ,irow) &&
+	is_in_bounds<SVolField,YSurfZField>(dim_,icol2,irow) &&
+	is_in_bounds<SVolField,YSurfZField>(dim_,icol3,irow) &&
+	is_in_bounds<SVolField,YSurfZField>(dim_,icol4,irow) ){
+      cols.push_back( icol  );
+      cols.push_back( icol2 );
+      cols.push_back( icol3 );
+      cols.push_back( icol4 );
+    }
+  }
+
+
+  template<> inline void
+  IndexHelper<SVolField,ZSurfXField>::
+  get_cols( const int irow, std::vector<int>& cols ) const
+  {
+    IndexTriplet ijk = flat2ijk<ZSurfXField,ZSurfXField::Location::IsSurface>::value( dim_, irow );
+    shift_dest_index<SVolField,ZSurfXField>( dim_, irow, ijk );
+    if( ijk.i<0 || ijk.j<0 || ijk.k<0 ) return;
+
+    const int icol = ijk2flat<SVolField,SVolField::Location::IsSurface>::value( dim_, ijk );
+    const int icol2 = icol + 1;
+    const int icol3 = icol + get_nx<SVolField>(dim_[0])*get_ny<SVolField>(dim_[1]);
+    const int icol4 = icol3 + 1;
+
+    if( is_in_bounds<SVolField,ZSurfXField>(dim_,icol ,irow) &&
+	is_in_bounds<SVolField,ZSurfXField>(dim_,icol2,irow) &&
+	is_in_bounds<SVolField,ZSurfXField>(dim_,icol3,irow) &&
+	is_in_bounds<SVolField,ZSurfXField>(dim_,icol4,irow) ){
+      cols.push_back( icol  );
+      cols.push_back( icol2 );
+      cols.push_back( icol3 );
+      cols.push_back( icol4 );
+    }
+  }
+
+  template<> inline void
+  IndexHelper<SVolField,ZSurfYField>::
+  get_cols( const int irow, std::vector<int>& cols ) const
+  {
+    IndexTriplet ijk = flat2ijk<ZSurfYField,ZSurfYField::Location::IsSurface>::value( dim_, irow );
+    shift_dest_index<SVolField,ZSurfYField>( dim_, irow, ijk );
+    if( ijk.i<0 || ijk.j<0 || ijk.k<0 ) return;
+
+    const int nx = get_nx<SVolField>(dim_[0]);
+    const int ny = get_ny<SVolField>(dim_[1]);
+
+    const int icol = ijk2flat<SVolField,SVolField::Location::IsSurface>::value( dim_, ijk );
+    const int icol2 = icol + nx;
+    const int icol3 = icol + nx*ny;
+    const int icol4 = icol3 + nx;
+
+    if( is_in_bounds<SVolField,ZSurfYField>(dim_,icol ,irow) &&
+	is_in_bounds<SVolField,ZSurfYField>(dim_,icol2,irow) &&
+	is_in_bounds<SVolField,ZSurfYField>(dim_,icol3,irow) &&
+	is_in_bounds<SVolField,ZSurfYField>(dim_,icol4,irow) ){
+      cols.push_back( icol  );
+      cols.push_back( icol2 );
+      cols.push_back( icol3 );
+      cols.push_back( icol4 );
+    }
+  }
+
+  template<> inline void
+  IndexHelper<SVolField,ZSurfZField>::
+  get_cols( const int irow, std::vector<int>& cols ) const
+  {
+    IndexTriplet ijk = flat2ijk<ZSurfZField,ZSurfZField::Location::IsSurface>::value( dim_, irow );
+    shift_dest_index<SVolField,ZSurfZField>( dim_, irow, ijk );
+    if( ijk.i<0 || ijk.j<0 || ijk.k<0 ) return;
+    const int icol = ijk2flat<SVolField,SVolField::Location::IsSurface>::value( dim_, ijk );
+    if( is_in_bounds<SVolField,ZSurfZField>(dim_,icol,irow) ){
+      cols.push_back( icol );
+    }
+  }
+
+  //------------------------------------------------------------------
 
 }// namespace FVStaggered
 }// namespace SpatialOps

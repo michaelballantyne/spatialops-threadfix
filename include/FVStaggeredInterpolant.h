@@ -65,7 +65,7 @@ namespace FVStaggered{
   {
   public:
 
-    int num_nonzeros() const;
+    unsigned int num_nonzeros() const;
 
     /**
      *  @brief Construct a LinearInterpolantAssembler.
@@ -118,17 +118,14 @@ namespace FVStaggered{
   //==================================================================
 
   // still need to implement these:
-  template<>  class LinearInterpolantAssembler<SVolField,XSurfXField>{};
-  template<>  class LinearInterpolantAssembler<SVolField,XSurfYField>{};
-  template<>  class LinearInterpolantAssembler<SVolField,XSurfZField>{};
+//   template<>  class LinearInterpolantAssembler<SVolField,XSurfYField>;
+//   template<>  class LinearInterpolantAssembler<SVolField,XSurfZField>;
 
-  template<>  class LinearInterpolantAssembler<SVolField,YSurfXField>{};
-  template<>  class LinearInterpolantAssembler<SVolField,YSurfYField>{};
-  template<>  class LinearInterpolantAssembler<SVolField,YSurfZField>{};
+//   template<>  class LinearInterpolantAssembler<SVolField,YSurfXField>;
+//   template<>  class LinearInterpolantAssembler<SVolField,YSurfZField>;
 
-  template<>  class LinearInterpolantAssembler<SVolField,ZSurfXField>{};
-  template<>  class LinearInterpolantAssembler<SVolField,ZSurfYField>{};
-  template<>  class LinearInterpolantAssembler<SVolField,ZSurfZField>{};
+//   template<>  class LinearInterpolantAssembler<SVolField,ZSurfXField>;
+//   template<>  class LinearInterpolantAssembler<SVolField,ZSurfYField>;
 
   //==================================================================
 
@@ -161,7 +158,7 @@ namespace FVStaggered{
   }
   //------------------------------------------------------------------
   template<typename SrcFieldT, typename DestFieldT>
-  int
+  unsigned int
   LinearInterpolantAssembler<SrcFieldT,DestFieldT>::
   num_nonzeros() const
   {
@@ -214,25 +211,16 @@ namespace FVStaggered{
       break;
     }
     indexHelper_.get_cols( irow, ixs );
-    for( std::vector<int>::size_type i=0; i<ixs.size(); ++i ){
-      vals.push_back( 0.5 );
-    }
+    if( !ixs.empty() )  assert( ixs.size() == num_nonzeros() );
+    const double val = 1.0/double(num_nonzeros());
+    vals.assign( num_nonzeros(), val );
   }
   //------------------------------------------------------------------
 
-
   // specializations for XVolField->SSurfXField
-
   template<>
-  inline int LinearInterpolantAssembler<XVolField,SSurfXField>::
-  get_ncols() const{ return get_n_tot<XVolField>(dim_); }
-
-  template<>
-  inline int LinearInterpolantAssembler<XVolField,SSurfXField>::
-  get_nrows() const{ return get_n_tot<SSurfXField>(dim_); }
-
-  template<>
-  inline int LinearInterpolantAssembler<XVolField,SSurfXField>::
+  inline unsigned int
+  LinearInterpolantAssembler<XVolField,SSurfXField>::
   num_nonzeros() const{ return 1; }
 
   template<>
@@ -240,28 +228,26 @@ namespace FVStaggered{
   LinearInterpolantAssembler<XVolField,SSurfXField>::
   get_row_entries( const int irow, std::vector<double> & vals, std::vector<int> & ixs ) const
   {
-    ixs.push_back(irow);
+    if( dim_[0]==1 ) return;
+
+    const int ghostDiff = XVolField::Ghost::NM - SSurfXField::Ghost::NM;
+    int icol = irow + ghostDiff;
+    if( dim_[1]>1 ){
+      icol += ghostDiff * get_nx<XVolField>(dim_[0]);
+    }
+    if( dim_[2]>1 ){
+      icol += (XVolField::Ghost::NM-SSurfXField::Ghost::NM) * get_nx<XVolField>(dim_[0])*get_ny<XVolField>(dim_[1]);
+    }
+    ixs.push_back(icol);
     vals.push_back(1.0);
   }
 
   //------------------------------------------------------------------
 
-  // specializations for XVolField->XSurfXField
-
-  //------------------------------------------------------------------
-
   // specializations for YVolField->SSurfYField
-
   template<>
-  inline int LinearInterpolantAssembler<YVolField,SSurfYField>::
-  get_ncols() const{ return get_n_tot<YVolField>(dim_); }
-
-  template<>
-  inline int LinearInterpolantAssembler<YVolField,SSurfYField>::
-  get_nrows() const{ return get_n_tot<SSurfYField>(dim_); }
-
-  template<>
-  inline int LinearInterpolantAssembler<YVolField,SSurfYField>::
+  inline unsigned int
+  LinearInterpolantAssembler<YVolField,SSurfYField>::
   num_nonzeros() const{ return 1; }
 
   template<>
@@ -269,24 +255,26 @@ namespace FVStaggered{
   LinearInterpolantAssembler<YVolField,SSurfYField>::
   get_row_entries( const int irow, std::vector<double> & vals, std::vector<int> & ixs ) const
   {
-    ixs.push_back(irow);
+    if( dim_[1]==1 ) return;
+
+    const int ghostDiff = YVolField::Ghost::NM - SSurfYField::Ghost::NM;
+    int icol = irow + ghostDiff;
+    if( dim_[0]>1 ){
+      icol += ghostDiff * get_nx<YVolField>(dim_[0]);
+    }
+    if( dim_[2]>1 ){
+      icol += ghostDiff * get_nx<YVolField>(dim_[0]) * get_ny<YVolField>(dim_[2]);
+    }
+    ixs.push_back(icol);
     vals.push_back(1.0);
   }
 
   //------------------------------------------------------------------
 
   // specializations for ZVolField->SSurfZField
-
   template<>
-  inline int LinearInterpolantAssembler<ZVolField,SSurfZField>::
-  get_ncols() const{ return get_n_tot<ZVolField>(dim_); }
-
-  template<>
-  inline int LinearInterpolantAssembler<ZVolField,SSurfZField>::
-  get_nrows() const{ return get_n_tot<SSurfZField>(dim_); }
-
-  template<>
-  inline int LinearInterpolantAssembler<ZVolField,SSurfZField>::
+  inline unsigned int
+  LinearInterpolantAssembler<ZVolField,SSurfZField>::
   num_nonzeros() const{ return 1; }
 
   template<>
@@ -294,9 +282,79 @@ namespace FVStaggered{
   LinearInterpolantAssembler<ZVolField,SSurfZField>::
   get_row_entries( const int irow, std::vector<double> & vals, std::vector<int> & ixs ) const
   {
-    ixs.push_back(irow);
+    if( dim_[2]==1 ) return;
+
+    const int ghostDiff = ZVolField::Ghost::NM - SSurfZField::Ghost::NM;
+    int icol = irow + ghostDiff;
+    if( dim_[0]>1 ){
+      icol += ghostDiff * get_nx<ZVolField>(dim_[0]);
+    }
+    if( dim_[1]>1 ){
+      icol += ghostDiff * get_nx<ZVolField>(dim_[0])*get_ny<ZVolField>(dim_[1]);
+    }
+    ixs.push_back(icol);
     vals.push_back(1.0);
   }
+
+  //--------------------------------------------------------------------
+
+  // specializations for SVolField -> XSurfXField
+  template<>
+  inline unsigned int
+  LinearInterpolantAssembler<SVolField,XSurfXField>::
+  num_nonzeros() const{ return 1; }
+
+  // specializations for SVolField -> XSurfYField
+  template<>
+  inline unsigned int
+  LinearInterpolantAssembler<SVolField,XSurfYField>::
+  num_nonzeros() const{ return 4; }
+
+  // specializations for SVolField -> XSurfZField
+  template<>
+  inline unsigned int
+  LinearInterpolantAssembler<SVolField,XSurfZField>::
+  num_nonzeros() const{ return 4; }
+
+  //------------------------------------------------------------------
+
+  // specializations for SVolField -> YSurfXField
+  template<>
+  inline unsigned int
+  LinearInterpolantAssembler<SVolField,YSurfXField>::
+  num_nonzeros() const{ return 4; }
+
+  // specializations for SVolField -> YSurfYField
+  template<>
+  inline unsigned int
+  LinearInterpolantAssembler<SVolField,YSurfYField>::
+  num_nonzeros() const{ return 1; }
+
+  // specializations for SVolField -> YSurfZField
+  template<>
+  inline unsigned int
+  LinearInterpolantAssembler<SVolField,YSurfZField>::
+  num_nonzeros() const{ return 4; }
+
+  //------------------------------------------------------------------
+
+  // specializations for SVolField -> ZSurfXField
+  template<>
+  inline unsigned int
+  LinearInterpolantAssembler<SVolField,ZSurfXField>::
+  num_nonzeros() const{ return 4; }
+
+  // specializations for SVolField -> ZSurfYField
+  template<>
+  inline unsigned int
+  LinearInterpolantAssembler<SVolField,ZSurfYField>::
+  num_nonzeros() const{ return 4; }
+
+  // specializations for SVolField -> ZSurfZField
+  template<>
+  inline unsigned int
+  LinearInterpolantAssembler<SVolField,ZSurfZField>::
+  num_nonzeros() const{ return 1; }
 
   //==================================================================
 

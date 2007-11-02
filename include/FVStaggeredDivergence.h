@@ -48,7 +48,7 @@ namespace FVStaggered{
   public:
 
     /** @brief Return the number of nonzero entries for this operator. */
-    static int num_nonzeros(){return 2;}
+    static unsigned int num_nonzeros(){return 2;}
 
     /**
      *  @brief Construct a DivergenceAssembler object.
