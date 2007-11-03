@@ -658,6 +658,189 @@ void test_ops()
 
 //--------------------------------------------------------------------
 
+void test_poisson( const Grid& grid, const vector<int>& dim )
+{
+  //
+  // here we use a solution of the form
+  //   phi = ax^2 + by^2 + cz^2
+  // because this should be solved exactly.
+  //
+  // Laplacian(phi) = 2a + 2b + 2c
+  //
+  const double a=2.0, b=3.0, c=4.0;
+
+  cout << "Setting up Poisson equation test...";
+
+  ScratchSVol& Lx = *SpatialOpDatabase<ScratchSVol>::self().retrieve_operator(1);
+  ScratchSVol& Ly = *SpatialOpDatabase<ScratchSVol>::self().retrieve_operator(2);
+  ScratchSVol& Lz = *SpatialOpDatabase<ScratchSVol>::self().retrieve_operator(3);
+
+  LinSysInfo lsi( dim );
+  LinearSystem& linsys = LinSysFactory::self().get_linsys( lsi );
+  RHS& rhs = linsys.get_rhs();
+  LHS& lhs = linsys.get_lhs();
+  lhs.reset();
+
+  const GradSVolSSurfX& Gx = *SpatialOpDatabase<GradSVolSSurfX>::self().retrieve_operator();
+  const GradSVolSSurfY& Gy = *SpatialOpDatabase<GradSVolSSurfY>::self().retrieve_operator();
+  const GradSVolSSurfZ& Gz = *SpatialOpDatabase<GradSVolSSurfZ>::self().retrieve_operator();
+
+  const DivSSurfXSVol& Dx = *SpatialOpDatabase<DivSSurfXSVol>::self().retrieve_operator();  
+  const DivSSurfYSVol& Dy = *SpatialOpDatabase<DivSSurfYSVol>::self().retrieve_operator();  
+  const DivSSurfZSVol& Dz = *SpatialOpDatabase<DivSSurfZSVol>::self().retrieve_operator();  
+
+  //
+  // set up the Laplacian operator in each direction and assemble the
+  // linear system to be solved.
+  //
+  if( dim[0]>1 ){
+    Dx.apply_to_op( Gx, Lx );
+    lhs.add_op_contribution( Lx );
+  }
+  if( dim[1]>1 ){
+    Dy.apply_to_op( Gy, Ly );
+    lhs.add_op_contribution( Ly );
+  }
+  if( dim[2]>1 ){
+    Dz.apply_to_op( Gz, Lz );
+    lhs.add_op_contribution( Lz );
+  }
+
+  const SVolField& x = grid.xcoord_svol();
+  const SVolField& y = grid.ycoord_svol();
+  const SVolField& z = grid.zcoord_svol();
+
+  //
+  // set the RHS field
+  //
+  double q=0;
+  if( dim[0]>1 ) q+=2*a;
+  if( dim[1]>1 ) q+=2*b;
+  if( dim[2]>1 ) q+=2*c;
+  rhs.reset( q );
+
+  //
+  // set the boundary conditions - dirichlet
+  //
+  const int ighost = dim[0]>1 ? SVolField::Ghost::NM : 0;
+  const int jghost = dim[1]>1 ? SVolField::Ghost::NM : 0;
+  const int kghost = dim[2]>1 ? SVolField::Ghost::NM : 0;
+
+  // set bcs: x faces
+  if( dim[0]>1 ){
+    for( int ix=0; ix<2; ++ix ){
+      int i=0;
+      if( ix!=0 ) i=dim[0]-1;
+      for( int j=0; j<dim[1]; ++j ){
+	for( int k=0; k<dim[2]; ++k ){
+	  const IndexTriplet ijk( i+ighost, j+jghost, k+kghost );
+	  const int ii = ijk2flat<SVolField,0>::value(dim,ijk);
+	  double bcval = x[ii]*x[ii]*a;
+	  if( dim[1]>1 ) bcval += y[ii]*y[ii]*b;
+	  if( dim[2]>1 ) bcval += z[ii]*z[ii]*c;
+	  const int irow = i + j*dim[0] + k*dim[0]*dim[1];
+	  linsys.set_dirichlet_condition( irow, bcval );
+	}
+      }
+    }
+  }
+
+  // set bcs: y faces
+  if( dim[1]>1 ){
+    for( int iy=0; iy<2; ++iy ){
+      int j=0;
+      if( iy!=0 ) j=dim[1]-1;
+      for( int i=0; i<dim[0]; ++i ){
+	for( int k=0; k<dim[2]; ++k ){
+	  const IndexTriplet ijk( i+ighost, j+jghost, k+kghost );
+	  const int ii = ijk2flat<SVolField,0>::value(dim,ijk);
+	  double bcval = y[ii]*y[ii]*b;
+	  if( dim[0]>1 ) bcval += x[ii]*x[ii]*a;
+	  if( dim[2]>1 ) bcval += z[ii]*z[ii]*c;
+	  const int irow = i + j*dim[0] + k*dim[0]*dim[1];
+	  linsys.set_dirichlet_condition( irow, bcval );
+	}
+      }
+    }
+  }
+
+  // set bcs: z faces
+  if( dim[2]>1 ){
+    for( int iz=0; iz<2; ++iz ){
+      int k=0;
+      if( iz!=0 ) k=dim[2]-1;
+      for( int i=0; i<dim[0]; ++i ){
+	for( int j=0; j<dim[1]; ++j ){
+	  const IndexTriplet ijk( i+ighost, j+jghost, k+kghost );
+	  const int ii = ijk2flat<SVolField,0>::value(dim,ijk);
+	  double bcval = z[ii]*z[ii]*c;
+	  if( dim[0]>1 ) bcval += x[ii]*x[ii]*a;
+	  if( dim[1]>1 ) bcval += y[ii]*y[ii]*b;
+	  const int irow = i + j*dim[0] + k*dim[0]*dim[1];
+	  linsys.set_dirichlet_condition( irow, bcval );
+	}
+      }
+    }
+  }
+
+//   lhs.Print(cout);
+//   EpetraExt::RowMatrixToMatrixMarketFile( "L.mm", lhs.epetra_mat(), "", "" );
+
+
+  //
+  // Solve the linear system for the solution.
+  //
+  linsys.solve();
+
+  //
+  // examine the solution to determine error
+  //
+  const SOLN& soln = linsys.get_soln_field();
+
+  SVolField::const_interior_iterator ix = x.interior_begin();
+  SVolField::const_interior_iterator iy = y.interior_begin();
+  SVolField::const_interior_iterator iz = z.interior_begin();
+
+  SVolField::const_interior_iterator ixe = x.interior_end();
+
+  SOLN::const_interior_iterator isoln = soln.interior_begin();
+  RHS::const_interior_iterator   irhs = rhs.interior_begin();
+
+  double maxAbsErr=0.0, maxRelErr=0.0;
+  double avgAbsErr=0.0, avgRelErr=0.0;
+  int nrel=0, nabs=0;
+  for( ; ix!=ixe; ++ix, ++iy, ++iz, ++isoln, ++irhs ){
+    const double x=*ix, y=*iy, z=*iz;
+    double phi =0;
+    if( dim[0]>1 ) phi += a*x*x;
+    if( dim[1]>1 ) phi += b*y*y;
+    if( dim[2]>1 ) phi += c*z*z;
+    const double err = abs(phi-*isoln);
+    avgAbsErr += err;
+    maxAbsErr = max(err,maxAbsErr);
+    ++nabs;
+    if( abs(phi)>1e-10 ){
+      const double relErr = abs(err / phi);
+      avgRelErr += relErr;
+      maxRelErr = max(relErr,maxRelErr);
+      ++nrel;
+    }
+  }
+  avgRelErr /= double(nrel);
+  avgAbsErr /= double(nabs);
+
+  if( maxRelErr>1.0e-10 || maxAbsErr>1.0e-10 ){
+    cout << "FAIL" << endl
+	 << "  max abs error: " << setw(12) << maxAbsErr << "  max rel err: " << setw(12) << maxRelErr << endl
+	 << "  avg abs error: " << setw(12) << avgAbsErr << "  avg rel err: " << setw(12) << avgRelErr << endl << endl;
+  }
+  else{
+    cout << "PASS." << endl;
+  }
+}
+
+//--------------------------------------------------------------------
+
 int main()
 {
   vector<int> dim(3,1);
@@ -678,6 +861,8 @@ int main()
 
   build_ops( dim, spacing );
   const Grid grid( dim, spacing );
+
+  test_poisson( grid, dim );
 
   test_bc( grid );
   test_ops();

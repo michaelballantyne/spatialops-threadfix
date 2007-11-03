@@ -266,6 +266,10 @@ typedef RHS SOLN;
  *  @author James C. Sutherland
  *  @date   December, 2006
  *
+ *  @todo Implement ghost support for global distributed system.  This
+ *  means that the RHS field would have ghosting as well.  Somewhat
+ *  strange, but this is how we will do BCs...
+ *
  *  Basic support for a linear system distributed in parallel.
  *
  *  LinearSystem objects are constructed via the LinSysFactory.

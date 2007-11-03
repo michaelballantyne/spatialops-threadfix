@@ -132,9 +132,8 @@ LHS::unit_diagonal_zero_else( const int irow )
 
   for( int i=0; i<n; ++i ){
     vals[i] = 0.0;
-    if( ixs[i] == irow ) rownum = i;
+    if( ixs[i] == irow ) vals[i] = 1.0;
   }
-  vals[rownum] = 1.0;
 }
 //--------------------------------------------------------------------
 void
@@ -263,8 +262,6 @@ LinearSystem::imprint( const std::vector<int> & extent,
   const bool doY = ny > 1;
   const bool doZ = nz > 1;
 
-  assert( doX );
-
   std::vector<double> vals;
   std::vector<int> ixs;
 
@@ -279,6 +276,9 @@ LinearSystem::imprint( const std::vector<int> & extent,
 
     // NOTE: STENCIL IS HARD-CODED!
 
+    ixs.push_back( irow );
+    vals.push_back(1.0);
+
     if( doX ){
       if( i>0 ){
 	const int l = i-1;
@@ -286,8 +286,6 @@ LinearSystem::imprint( const std::vector<int> & extent,
 	ixs.push_back( icol );
 	vals.push_back(1.0);
       }
-      ixs.push_back( irow );
-      vals.push_back(1.0);
       if( i<nx-1 ){
 	const int l = i+1;
 	const int icol = k*(nx*ny) + j*nx + l;
@@ -353,6 +351,14 @@ void
 LinearSystem::set_dirichlet_condition( const int irow,
 				       const double rhsVal )
 {
+  if( irow>npts_ ){
+    std::ostringstream msg;
+    msg << "ERROR: LinearSystem::set_dirichlet_condition()" << std::endl
+	<< "       Invalid position to set dirichlet BC on (row=" << irow << ")." << std::endl
+	<< "       There are only " << npts_ << " rows in the matrix." << std::endl;
+    throw std::runtime_error( msg.str() );
+  }
+
   // set the LHS row.
   lhs_->unit_diagonal_zero_else( irow );
 
