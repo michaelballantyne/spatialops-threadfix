@@ -388,6 +388,10 @@ RHS::add_field_contribution( const FieldType& f,
       *irhs += *ifld;
     }
   }
+  else if( scaleFac==-1 )
+    for( ; ifld!=iflde; ++ifld, ++irhs ){
+      *irhs -= *ifld;
+    }
   else{
     for( ; ifld!=iflde; ++ifld, ++irhs ){
       assert( irhs != irhse );
