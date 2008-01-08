@@ -138,6 +138,10 @@ namespace FVStaggered{
     int ncol; double*vals=0; int*ixs=0;
     op.get_linalg_mat().ExtractMyRowView( irow, ncol, vals, ixs );
 
+    // NOTE: This will NOT work in the case where we have multiple ghost cells!
+    assert( OpT::SrcGhost::NM == OpT::SrcGhost::NP );
+    assert( OpT::SrcGhost::NM == 1 );
+
     double prodsum=0.0; double ghostcoeff=0.0;
     for( int icol=0; icol<ncol; icol++ ){
       if (*ixs == ixf)	ghostcoeff = *vals;
