@@ -856,7 +856,7 @@ int main()
   std::vector<double> length(3,1);
   std::vector<double> spacing(3,1.0);
   for( int i=0; i<3; ++i ){
-    if( dim[i]>1 ) spacing[i] = length[i]/( get_nx<SVolField>(dim[i]-1) );
+    if( dim[i]>1 ) spacing[i] = length[i]/( get_nx<SVolField>(dim[i]) );
   }
 
   build_ops( dim, spacing );
