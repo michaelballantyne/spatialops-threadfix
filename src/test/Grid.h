@@ -225,13 +225,17 @@ Grid::Grid( const std::vector<int>& dim,
     const int jhi = get_ny<SVolField>(dim[1]);
     const int khi = get_nz<SVolField>(dim[2]);
 
+    const int ngxm = dim[0]>1 ? SVolField::Ghost::NM : 0;
+    const int ngym = dim[1]>1 ? SVolField::Ghost::NM : 0;
+    const int ngzm = dim[2]>1 ? SVolField::Ghost::NM : 0;
+
     // set the mesh for the scalar cell
     for( int k=0; k<khi; ++k ){
-      const double z = spacing[2]*k;
+      const double z = spacing[2]*(double(k)+0.5-ngzm);
       for( int j=0; j<jhi; ++j ){
-	const double y = spacing[1]*j;
+	const double y = spacing[1]*(double(j)+0.5-ngym);
 	for( int i=0; i<ihi; ++i ){
-	  const double x = spacing[0]*i;
+	  const double x = spacing[0]*(double(i)+0.5-ngxm);
 	  *isvx = x;
 	  *isvy = y;
 	  *isvz = z;
@@ -244,6 +248,10 @@ Grid::Grid( const std::vector<int>& dim,
 
 
   if( dim[0]>1 ){
+    const int ngxm = dim[0]>1 ? XVolField::Ghost::NM : 0;
+    const int ngym = dim[1]>1 ? XVolField::Ghost::NM : 0;
+    const int ngzm = dim[2]>1 ? XVolField::Ghost::NM : 0;
+
     XVolField::iterator ixvx=xvx_.begin();
     XVolField::iterator ixvy=xvy_.begin();
     XVolField::iterator ixvz=xvz_.begin();
@@ -252,11 +260,11 @@ Grid::Grid( const std::vector<int>& dim,
     const int khi = get_nz<XVolField>(dim[2]);
 
     for( int k=0; k<khi; ++k ){
-      const double z = spacing[2]*k;
+      const double z = spacing[2]*(double(k)+0.5-ngzm);
       for( int j=0; j<jhi; ++j ){
-	const double y = spacing[1]*j;
+	const double y = spacing[1]*(double(j)+0.5-ngym);
 	for( int i=0; i<ihi; ++i ){
-	  const double x = spacing[0]*i - 0.5*spacing[0]; // offset in x.
+	  const double x = spacing[0]*(i-ngxm); // offset in x.
 	  *ixvx = x;
 	  *ixvy = y;
 	  *ixvz = z;
@@ -268,6 +276,10 @@ Grid::Grid( const std::vector<int>& dim,
   }
 
   if( dim[1]>1 ){
+    const int ngxm = dim[0]>1 ? YVolField::Ghost::NM : 0;
+    const int ngym = dim[1]>1 ? YVolField::Ghost::NM : 0;
+    const int ngzm = dim[2]>1 ? YVolField::Ghost::NM : 0;
+
     YVolField::iterator iyvx=yvx_.begin();
     YVolField::iterator iyvy=yvy_.begin();
     YVolField::iterator iyvz=yvz_.begin();
@@ -276,11 +288,11 @@ Grid::Grid( const std::vector<int>& dim,
     const int khi = get_nz<YVolField>(dim[2]);
 
     for( int k=0; k<khi; ++k ){
-      const double z = spacing[2]*k;
+      const double z = spacing[2]*(double(k)+0.5-ngzm);
       for( int j=0; j<jhi; ++j ){
-	const double y = spacing[1]*j - 0.5*spacing[1]; // offset in y.
+	const double y = spacing[1]*(j-ngym); // offset in y.
 	for( int i=0; i<ihi; ++i ){
-	  const double x = spacing[0]*i;
+	  const double x = spacing[0]*(double(i)+0.5-ngxm);
 	  *iyvx = x;
 	  *iyvy = y;
 	  *iyvz = z;
@@ -292,6 +304,10 @@ Grid::Grid( const std::vector<int>& dim,
   }
 
   if( dim[2]>1 ){
+    const int ngxm = dim[0]>1 ? ZVolField::Ghost::NM : 0;
+    const int ngym = dim[1]>1 ? ZVolField::Ghost::NM : 0;
+    const int ngzm = dim[2]>1 ? ZVolField::Ghost::NM : 0;
+
     ZVolField::iterator izvx=zvx_.begin();
     ZVolField::iterator izvy=zvy_.begin();
     ZVolField::iterator izvz=zvz_.begin();
@@ -300,11 +316,11 @@ Grid::Grid( const std::vector<int>& dim,
     const int khi = get_nz<ZVolField>(dim[2]);
 
     for( int k=0; k<khi; ++k ){
-      const double z = spacing[2]*k - 0.5*spacing[2];
+      const double z = spacing[2]*(k-ngzm); // offset in z
       for( int j=0; j<jhi; ++j ){
-	const double y = spacing[1]*j;
+	const double y = spacing[1]*(double(j)+0.5-ngym);
 	for( int i=0; i<ihi; ++i ){
-	  const double x = spacing[0]*i;
+	  const double x = spacing[0]*(double(i)+0.5-ngxm);
 	  *izvx = x;
 	  *izvy = y;
 	  *izvz = z;
@@ -466,7 +482,6 @@ Grid::~Grid()
 void
 Grid::write() const
 {
-  /*
   EpetraExt::VectorToMatrixMarketFile( "svx.mm", svx_.get_linalg_vec(), "", "" );
 
   EpetraExt::VectorToMatrixMarketFile( "xvx.mm", xvx_.get_linalg_vec(), "", "" );
@@ -477,7 +492,6 @@ Grid::write() const
   EpetraExt::VectorToMatrixMarketFile( "xvy.mm", xvy_.get_linalg_vec(), "", "" );
   EpetraExt::VectorToMatrixMarketFile( "yvy.mm", yvy_.get_linalg_vec(), "", "" );
   EpetraExt::VectorToMatrixMarketFile( "zvy.mm", zvy_.get_linalg_vec(), "", "" );
-  */
 }
 
 }

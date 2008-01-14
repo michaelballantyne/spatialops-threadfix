@@ -529,10 +529,7 @@ bool test_bc_helper( const vector<int>&dim,
   op.apply_to_field( f, df );
 
   // verify that the BC was set properly - this is a bit of a hack.
-  IndexTriplet st(ii,jj,kk), dt(ii,jj,kk);
-  bc_adjust_ijk<SrcFieldT,DestFieldT,Dir>( st, dt, dim );
-  
-  const int ix = ijk2flat<DestFieldT,DestFieldT::Location::IsSurface,Dir>::value( dim, dt );
+  const int ix = get_ghost_flat_ix_dest<DestFieldT,Dir>(dim,ii,jj,kk);
 
   const double abserr = abs(df[ix]-bcVal);
   const double relerr = abserr/abs(bcVal);
@@ -856,7 +853,7 @@ int main()
   std::vector<double> length(3,1);
   std::vector<double> spacing(3,1.0);
   for( int i=0; i<3; ++i ){
-    if( dim[i]>1 ) spacing[i] = length[i]/( get_nx<SVolField>(dim[i]) );
+    if( dim[i]>1 ) spacing[i] = length[i]/dim[i];
   }
 
   build_ops( dim, spacing );

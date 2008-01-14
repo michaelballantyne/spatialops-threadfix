@@ -2,6 +2,7 @@
 #define FVStaggeredBCTools_h
 
 #include <FVStaggeredTools.h>
+#include <SpatialOpsDefs.h>
 
 #include <boost/static_assert.hpp>
 
@@ -11,73 +12,53 @@ namespace FVStaggered{
 
   //------------------------------------------------------------------
 
-  template< typename SrcFieldT, typename DestFieldT, typename Dir >
-  inline void bc_adjust_ijk( IndexTriplet& st,
-			     IndexTriplet& dt,
-			     const std::vector<int>& dim )
+  // given ijk indices that are zero based on the interior, this
+  // produces the flat index that is 0-based in the ghost cell.
+  template< typename FieldT, typename Dir >
+  inline int get_ghost_flat_ix_src( const std::vector<int>& dim, int i, int j, int k )
   {
-    switch( Dir::value ){
-
-    case XDIR::value :
-      if( dim[0]<=1 ) return;
-
-      if( st.i==0 ){ --st.i; }
-      else      { ++st.i; ++dt.i; }
-      st.i +=  SrcFieldT::Ghost::NM;
-      dt.i += DestFieldT::Ghost::NM;
-
-      if( dim[1]>1 ){
-	st.j +=  SrcFieldT::Ghost::NM;
-	dt.j += DestFieldT::Ghost::NM;
-      }
-
-      if( dim[2]>1 ){
-	st.k +=  SrcFieldT::Ghost::NM;
-	dt.k += DestFieldT::Ghost::NM;
-      }
-      break;
-
-    case YDIR::value :
-      if( dim[1]<=1 ) return;
-
-      if( st.j==0 ){ --st.j; }
-      else      { ++st.j; ++dt.j; }
-      st.j +=  SrcFieldT::Ghost::NM;
-      dt.j += DestFieldT::Ghost::NM;
-
-      if( dim[0]>1 ){
-	st.i +=  SrcFieldT::Ghost::NM;
-	dt.i += DestFieldT::Ghost::NM;
-      }
-
-      if( dim[2]>1 ){
-	st.k +=  SrcFieldT::Ghost::NM;
-	dt.k += DestFieldT::Ghost::NM;
-      }
-      break;
-
-    case ZDIR::value :
-      if( dim[2]<=1 ) return;
-
-      if( st.k==0 ){ --st.k; }
-      else         { ++st.k; ++dt.k; }
-      st.k +=  SrcFieldT::Ghost::NM;
-      dt.k += DestFieldT::Ghost::NM;
-
-      if( dim[0]>1 ){
-	st.i +=  SrcFieldT::Ghost::NM;
-	dt.i += DestFieldT::Ghost::NM;
-      }
-
-      if( dim[1]>1 ){
-	st.j +=  SrcFieldT::Ghost::NM;
-	dt.j += DestFieldT::Ghost::NM;
-      }
-      break;
-
-    default:
-      assert(1);
+    // 1. shift index by number of ghost cells.
+    // 2. shift index to first ghost cell (from interior cell)
+    if( dim[0]>1 ){
+      if( IsSameType<Dir,XDIR>::result )
+	if( i==0 ) --i; else ++i;
+      i += FieldT::Ghost::NM;
     }
+    if( dim[1]>1 ){
+      if( IsSameType<Dir,YDIR>::result )
+	if( j==0 ) --j; else ++j;
+      j += FieldT::Ghost::NM;
+    }
+    if( dim[2]>1 ){
+      if( IsSameType<Dir,ZDIR>::result )
+	if( k==0 ) --k; else ++k;
+      k += FieldT::Ghost::NM;
+    }
+
+    return ijk2flat<FieldT,FieldT::Location::IsSurface>::value(dim,IndexTriplet(i,j,k));
+  }
+
+  //------------------------------------------------------------------
+
+  template<typename FieldT, typename Dir>
+  inline int get_ghost_flat_ix_dest( const std::vector<int>& dim, int i, int j, int k )
+  {
+    if( dim[0]>1 ){
+      if( IsSameType<Dir,XDIR>::result ) if(i>0) ++i;
+      i += FieldT::Ghost::NM;
+    }
+
+    if( dim[1]>1 ){
+      if( IsSameType<Dir,YDIR>::result ) if(j>0) ++j;
+      j += FieldT::Ghost::NM;
+    }
+
+    if( dim[2]>1 ){
+      if( IsSameType<Dir,ZDIR>::result ) if(k>0) ++k;
+      k += FieldT::Ghost::NM;
+    }
+
+    return ijk2flat<FieldT,FieldT::Location::IsSurface,Dir>::value(dim,IndexTriplet(i,j,k));
   }
 
   //------------------------------------------------------------------
@@ -127,13 +108,8 @@ namespace FVStaggered{
     typedef typename OpT::SrcFieldType  SrcFieldT;
     typedef typename OpT::DestFieldType DestFieldT;
 
-    IndexTriplet st(i,j,k), dt(i,j,k);
-
-    // adjust field indices to include ghost cells
-    bc_adjust_ijk<SrcFieldT,DestFieldT,Dir>( st, dt, dim );
-
-    const int ixf  = ijk2flat< SrcFieldT, SrcFieldT::Location::IsSurface    >::value( dim, st );
-    int irow       = ijk2flat<DestFieldT,DestFieldT::Location::IsSurface,Dir>::value( dim, dt );
+    const int ixf = get_ghost_flat_ix_src <SrcFieldT,Dir >( dim, i, j, k );
+    int irow      = get_ghost_flat_ix_dest<DestFieldT,Dir>( dim, i, j, k );
 
     int ncol; double*vals=0; int*ixs=0;
     op.get_linalg_mat().ExtractMyRowView( irow, ncol, vals, ixs );
