@@ -32,12 +32,16 @@ COMPILE_CXX = g++ -c $(CXXFLAGS) $(INCDIRS)
 LINK = g++ $(CXXFLAGS) $(INCDIRS) $(LIBDIRS)
 
 default: testnew
+all: testnew poisson
 
 OBJS =		\
 	LinAlgTrilinos.o \
 	LinearSystem.o
 
-testNew.o: ./src/test/testNew.cpp ./include/*.h ./src/test/Functions.h
+buildOps.o: ./src/test/buildOps.cpp ./include/*.h
+	$(COMPILE_CXX) -I ./src/test ./src/test/buildOps.cpp
+
+testNew.o: ./src/test/testNew.cpp ./include/*.h ./src/test/*.h
 	$(COMPILE_CXX) -I./src/test ./src/test/testNew.cpp
 
 LinAlgTrilinos.o: ./src/LinAlgTrilinos.cpp ./include/LinAlgTrilinos.h
@@ -49,11 +53,16 @@ LinearSystem.o: ./src/LinearSystem.cpp ./include/SpatialOperator.h ./include/Spa
 test_alberto.o: ./src/test/test_alberto.cpp 
 	$(COMPILE_CXX) ./src/test/test_alberto.cpp -I ./src/test/test_alberto
 
+testPoisson.o: ./src/test/testPoisson.cpp ./include/*.h ./src/test/*.h
+	$(COMPILE_CXX) -I./src/test ./src/test/testPoisson.cpp
 
 lib: $(OBJS)
 	ar -r ./libspatialops.a $(OBJS)
 
-testnew: lib testNew.o
-	$(LINK) testNew.o -lspatialops $(LIBS) -o testnew.x
+testnew: lib testNew.o buildOps.o
+	$(LINK) testNew.o buildOps.o -lspatialops $(LIBS) -o testnew.x
+
+poisson: lib testPoisson.o buildOps.o
+	$(LINK) testPoisson.o buildOps.o -lspatialops $(LIBS) -o testpoisson.x
 
 clean: ; @rm *.o libspatialops.a test.x

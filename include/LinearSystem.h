@@ -151,6 +151,8 @@ public:
 
   inline const std::vector<double> & get_field() const{return field_;}
 
+  inline double& operator[](const int i){return field_[i];}
+
   inline RHS& operator=(const double val){ reset(val); return *this; }
 
 
@@ -224,7 +226,14 @@ public:
    */
   void unit_diagonal_zero_else( const int irow );
 
-  /** add non-ghost elements of the local matrix to this LHS operator */
+  /**
+   *  Add non-ghost elements of the local matrix to this LHS operator.
+   *
+   *  @todo This WILL NOT WORK in PARALLEL because we are eliminating
+   *  important entries!  Need to figure out how to make this general.
+   *  This will require knowing if we are on a processor boundary or a
+   *  domain boundary for each ghost point.  Ouch.
+   */
   template<typename OpType>
   void add_op_contribution( const OpType & localMat,
 			    const double scaleFac = 1.0 );
@@ -266,7 +275,7 @@ typedef RHS SOLN;
  *  @author James C. Sutherland
  *  @date   December, 2006
  *
- *  @todo Implement ghost support for global distributed system.  This
+ *  @todo Implement ghost support for global distributed system?  This
  *  means that the RHS field would have ghosting as well.  Somewhat
  *  strange, but this is how we will do BCs...
  *
@@ -295,6 +304,7 @@ public:
         SOLN & get_soln_field()      { return solnFieldValues_; }
 
   const Epetra_Vector& get_soln_field_epetra_vec() const{ return *x_; }
+  const Epetra_Vector& get_rhs_field_epetra_vec()  const{ return *b_; }
 
   void set_tolerance( const double tol ){ solverTolerance_=tol; }
 

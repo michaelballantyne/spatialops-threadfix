@@ -189,7 +189,8 @@ LinearSystem::LinearSystem( const vector<int> & extent )
   const Epetra_Map & emap = LinSysMapFactory::self().get_map( npts_, *comm_ );
 
   // for now, hard code this for 2nd order.
-  int entriesPerRow = 3;
+  int entriesPerRow = 1;
+  if( extent[0]>1 ) entriesPerRow += 2;
   if( extent[1]>1 ) entriesPerRow += 2;
   if( extent[2]>1 ) entriesPerRow += 2;
 
