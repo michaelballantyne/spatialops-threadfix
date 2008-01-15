@@ -43,12 +43,6 @@ namespace FVStaggered{
 
   //==================================================================
 
-  template<> class IndexHelper<SVolField,XSurfField>{};  // not yet implemented
-  template<> class IndexHelper<SVolField,YSurfField>{};  // not yet implemented
-  template<> class IndexHelper<SVolField,ZSurfField>{};  // not yet implemented
-
-  //==================================================================
-
   inline bool is_valid_entry( const std::vector<int>& dim,
 			      const IndexTriplet& ixt1,
 			      const IndexTriplet& ixt2 );
@@ -452,24 +446,6 @@ namespace FVStaggered{
   {
     return get_nx<SVolField>(dim_[0]) * get_ny<SVolField>(dim_[1]);
   }
-  template<> inline int IndexHelper<SVolField,SSurfField>::calculate_stride( const int irow, const int icol ) const
-  {
-    const int nx1 = get_nx_x<SSurfField>(dim_);
-    const int ny1 = get_ny_x<SSurfField>(dim_);
-    const int nz1 = get_nz_x<SSurfField>(dim_);
-    const int n1 = dim_[0]>1 ? nx1*ny1*nz1 : 0;
-
-    if( irow<n1 ) return 1;
-
-    const int nx2 = get_nx_y<SSurfField>(dim_);
-    const int ny2 = get_ny_y<SSurfField>(dim_);
-    const int nz2 = get_nz_y<SSurfField>(dim_);
-    const int n2 = dim_[1]>1 ? n1 + nx2*ny2*nz2 : n1;
-
-    if( irow<n2 ) return get_nx<SVolField>(dim_[0]);
-
-    return get_nx<SVolField>(dim_[0])*get_nx<SVolField>(dim_[1]);
-  }
   template<> inline int IndexHelper<XVolField,YSurfXField>::calculate_stride( const int irow, const int icol ) const
   {
     return get_nx<XVolField>(dim_[0]);
@@ -495,12 +471,6 @@ namespace FVStaggered{
     return get_nx<ZVolField>(dim_[0]);
   }
   //------------------------------------------------------------------
-
-  // not yet implemented:
-  template<> inline int IndexHelper<XVolField,XSurfField>::calculate_stride( const int irow, const int icol ) const;
-  template<> inline int IndexHelper<YVolField,YSurfField>::calculate_stride( const int irow, const int icol ) const;
-  template<> inline int IndexHelper<ZVolField,ZSurfField>::calculate_stride( const int irow, const int icol ) const;
-
 
   //==================================================================
 

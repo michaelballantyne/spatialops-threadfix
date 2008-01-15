@@ -637,7 +637,7 @@ namespace SpatialOps{
 	msg << "ERROR!  You must provide a unique identifier, since multiple operators have been registered." << endl
 	    << "        registered ids:" << endl;
 	for( iop=opMap_.begin(); iop!=opMap_.end(); ++iop ){
-	  msg << "     (" << iop->first << ")" <<  std::endl;
+	  msg << "     " << iop->first << std::endl;
 	}
 	throw std::runtime_error(msg.str());
       }
@@ -651,7 +651,7 @@ namespace SpatialOps{
 	  << "        Operator type name: " << typeid(SpatialOpType).name() << std::endl
           << "   Registered ids:" << std::endl;
       for( iop=opMap_.begin(); iop!=opMap_.end(); ++iop ){
-	msg << "     (" << iop->first << "," << iop->first << ")" <<  std::endl;
+	msg << "     " << iop->first <<  std::endl;
       }
       throw std::runtime_error( msg.str() );
     }
@@ -679,7 +679,7 @@ namespace SpatialOps{
 	msg << "ERROR!  You must provide a unique identifier, since multiple operators have been registered." << std::endl
 	    << "        registered ids:" << std::endl;
 	for( typename OpMap::const_iterator iop=opMap_.begin(); iop!=opMap_.end(); ++iop ){
-	  msg << "     (" << iop->first << "," << iop->first << ")" <<  std::endl;
+	  msg << "     " << iop->first <<  std::endl;
 	}
 	throw std::runtime_error(msg.str());
       }

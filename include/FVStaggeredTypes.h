@@ -9,29 +9,25 @@ namespace SpatialOps{
 namespace FVStaggered{
 
 
-  struct SVol  { enum{IsSurface=0};  enum{IsVector=0};  typedef NODIR Dir;  typedef NODIR StagDir; };
-  struct SSurf { enum{IsSurface=1};  enum{IsVector=0};  typedef NODIR Dir;  typedef NODIR StagDir; };
-  struct SSurfX{ enum{IsSurface=1};  enum{IsVector=1};  typedef XDIR  Dir;  typedef NODIR StagDir; };
-  struct SSurfY{ enum{IsSurface=1};  enum{IsVector=1};  typedef YDIR  Dir;  typedef NODIR StagDir; };
-  struct SSurfZ{ enum{IsSurface=1};  enum{IsVector=1};  typedef ZDIR  Dir;  typedef NODIR StagDir; };
+  struct SVol  { enum{IsSurface=0};  typedef NODIR Dir;  typedef NODIR StagDir; };
+  struct SSurfX{ enum{IsSurface=1};  typedef XDIR  Dir;  typedef NODIR StagDir; };
+  struct SSurfY{ enum{IsSurface=1};  typedef YDIR  Dir;  typedef NODIR StagDir; };
+  struct SSurfZ{ enum{IsSurface=1};  typedef ZDIR  Dir;  typedef NODIR StagDir; };
 
-  struct XVol  { enum{IsSurface=0};  enum{IsVector=0};  typedef NODIR Dir;  typedef XDIR  StagDir; };
-  struct XSurf { enum{IsSurface=1};  enum{IsVector=0};  typedef NODIR Dir;  typedef XDIR  StagDir; };
-  struct XSurfX{ enum{IsSurface=1};  enum{IsVector=1};  typedef XDIR  Dir;  typedef XDIR  StagDir; };
-  struct XSurfY{ enum{IsSurface=1};  enum{IsVector=1};  typedef YDIR  Dir;  typedef XDIR  StagDir; };
-  struct XSurfZ{ enum{IsSurface=1};  enum{IsVector=1};  typedef ZDIR  Dir;  typedef XDIR  StagDir; };
+  struct XVol  { enum{IsSurface=0};  typedef NODIR Dir;  typedef XDIR  StagDir; };
+  struct XSurfX{ enum{IsSurface=1};  typedef XDIR  Dir;  typedef XDIR  StagDir; };
+  struct XSurfY{ enum{IsSurface=1};  typedef YDIR  Dir;  typedef XDIR  StagDir; };
+  struct XSurfZ{ enum{IsSurface=1};  typedef ZDIR  Dir;  typedef XDIR  StagDir; };
 
-  struct YVol  { enum{IsSurface=0};  enum{IsVector=0};  typedef NODIR Dir;  typedef YDIR  StagDir; };
-  struct YSurf { enum{IsSurface=1};  enum{IsVector=0};  typedef NODIR Dir;  typedef YDIR  StagDir; };
-  struct YSurfX{ enum{IsSurface=1};  enum{IsVector=1};  typedef XDIR  Dir;  typedef YDIR  StagDir; };
-  struct YSurfY{ enum{IsSurface=1};  enum{IsVector=1};  typedef YDIR  Dir;  typedef YDIR  StagDir; };
-  struct YSurfZ{ enum{IsSurface=1};  enum{IsVector=1};  typedef ZDIR  Dir;  typedef YDIR  StagDir; };
+  struct YVol  { enum{IsSurface=0};  typedef NODIR Dir;  typedef YDIR  StagDir; };
+  struct YSurfX{ enum{IsSurface=1};  typedef XDIR  Dir;  typedef YDIR  StagDir; };
+  struct YSurfY{ enum{IsSurface=1};  typedef YDIR  Dir;  typedef YDIR  StagDir; };
+  struct YSurfZ{ enum{IsSurface=1};  typedef ZDIR  Dir;  typedef YDIR  StagDir; };
 
-  struct ZVol  { enum{IsSurface=0};  enum{IsVector=0};  typedef NODIR Dir;  typedef ZDIR  StagDir; };
-  struct ZSurf { enum{IsSurface=1};  enum{IsVector=0};  typedef NODIR Dir;  typedef ZDIR  StagDir; };
-  struct ZSurfX{ enum{IsSurface=1};  enum{IsVector=1};  typedef XDIR  Dir;  typedef ZDIR  StagDir; };
-  struct ZSurfY{ enum{IsSurface=1};  enum{IsVector=1};  typedef YDIR  Dir;  typedef ZDIR  StagDir; };
-  struct ZSurfZ{ enum{IsSurface=1};  enum{IsVector=1};  typedef ZDIR  Dir;  typedef ZDIR  StagDir; };
+  struct ZVol  { enum{IsSurface=0};  typedef NODIR Dir;  typedef ZDIR  StagDir; };
+  struct ZSurfX{ enum{IsSurface=1};  typedef XDIR  Dir;  typedef ZDIR  StagDir; };
+  struct ZSurfY{ enum{IsSurface=1};  typedef YDIR  Dir;  typedef ZDIR  StagDir; };
+  struct ZSurfZ{ enum{IsSurface=1};  typedef ZDIR  Dir;  typedef ZDIR  StagDir; };
 
   struct DefaultGhost{ enum{ NM=1, NP=1 }; };
   struct NoGhost     { enum{ NM=0, NP=0 }; };
@@ -45,28 +41,24 @@ namespace FVStaggered{
   //-- Field Types --//
 
   typedef SpatialField< LinAlgTrilinos, SVol,   DefaultGhost > SVolField;
-  typedef SpatialField< LinAlgTrilinos, SSurf,  NoGhost      > SSurfField;
   typedef SpatialField< LinAlgTrilinos, SSurfX, NoGhost      > SSurfXField;
   typedef SpatialField< LinAlgTrilinos, SSurfY, NoGhost      > SSurfYField;
   typedef SpatialField< LinAlgTrilinos, SSurfZ, NoGhost      > SSurfZField;
   typedef SpatialField< LinAlgTrilinos, SVol,   NoGhost      > SVolRHS;
 
   typedef SpatialField< LinAlgTrilinos, XVol,   DefaultGhost > XVolField;
-  typedef SpatialField< LinAlgTrilinos, XSurf,  NoGhost      > XSurfField;
   typedef SpatialField< LinAlgTrilinos, XSurfX, NoGhost      > XSurfXField;
   typedef SpatialField< LinAlgTrilinos, XSurfY, NoGhost      > XSurfYField;
   typedef SpatialField< LinAlgTrilinos, XSurfZ, NoGhost      > XSurfZField;
   typedef SpatialField< LinAlgTrilinos, XVol,   NoGhost      > XVolRHS;
 
   typedef SpatialField< LinAlgTrilinos, YVol,   DefaultGhost > YVolField;
-  typedef SpatialField< LinAlgTrilinos, YSurf,  NoGhost      > YSurfField;
   typedef SpatialField< LinAlgTrilinos, YSurfX, NoGhost      > YSurfXField;
   typedef SpatialField< LinAlgTrilinos, YSurfY, NoGhost      > YSurfYField;
   typedef SpatialField< LinAlgTrilinos, YSurfZ, NoGhost      > YSurfZField;
   typedef SpatialField< LinAlgTrilinos, YVol,   NoGhost      > YVolRHS;
 
   typedef SpatialField< LinAlgTrilinos, ZVol,   DefaultGhost > ZVolField;
-  typedef SpatialField< LinAlgTrilinos, ZSurf,  NoGhost      > ZSurfField;
   typedef SpatialField< LinAlgTrilinos, ZSurfX, NoGhost      > ZSurfXField;
   typedef SpatialField< LinAlgTrilinos, ZSurfY, NoGhost      > ZSurfYField;
   typedef SpatialField< LinAlgTrilinos, ZSurfZ, NoGhost      > ZSurfZField;

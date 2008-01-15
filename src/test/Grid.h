@@ -108,25 +108,21 @@ private:
   const std::vector<int> dim_;
 
   SVolField  svx_, svy_, svz_;
-//   SSurfField ssx_, ssy_, ssz_;
   SSurfXField ssxx_, ssxy_, ssxz_;
   SSurfYField ssyx_, ssyy_, ssyz_;
   SSurfZField sszx_, sszy_, sszz_;
 
   XVolField  xvx_, xvy_, xvz_;
-//   XSurfField xsx_, xsy_, xsz_;
   XSurfXField xsxx_, xsxy_, xsxz_;
   XSurfYField xsyx_, xsyy_, xsyz_;
   XSurfZField xszx_, xszy_, xszz_;
 
   YVolField  yvx_, yvy_, yvz_;
-//   YSurfField ysx_, ysy_, ysz_;
   YSurfXField ysxx_, ysxy_, ysxz_;
   YSurfYField ysyx_, ysyy_, ysyz_;
   YSurfZField yszx_, yszy_, yszz_;
 
   ZVolField  zvx_, zvy_, zvz_;
-//   ZSurfField zsx_, zsy_, zsz_;
   ZSurfXField zsxx_, zsxy_, zsxz_;
   ZSurfYField zsyx_, zsyy_, zsyz_;
   ZSurfZField zszx_, zszy_, zszz_;
@@ -139,79 +135,64 @@ Grid::Grid( const std::vector<int>& dim,
 	    const std::vector<double>& spacing )
   : dim_( dim ),
 
-    svx_( get_n_tot<SVolField >(dim), get_entries_per_comp<SVolField>(dim), get_ghost_set<SVolField >(dim), NULL ),
-    svy_( get_n_tot<SVolField >(dim), get_entries_per_comp<SVolField>(dim), get_ghost_set<SVolField >(dim), NULL ),
-    svz_( get_n_tot<SVolField >(dim), get_entries_per_comp<SVolField>(dim), get_ghost_set<SVolField >(dim), NULL ),
+    svx_( get_n_tot<SVolField >(dim), get_ghost_set<SVolField >(dim), NULL ),
+    svy_( get_n_tot<SVolField >(dim), get_ghost_set<SVolField >(dim), NULL ),
+    svz_( get_n_tot<SVolField >(dim), get_ghost_set<SVolField >(dim), NULL ),
 
-//     ssx_( get_n_tot<SSurfField>(dim), get_entries_per_comp<SSurfField>(dim), get_ghost_set<SSurfField>(dim), NULL ),
-//     ssy_( get_n_tot<SSurfField>(dim), get_entries_per_comp<SSurfField>(dim), get_ghost_set<SSurfField>(dim), NULL ),
-//     ssz_( get_n_tot<SSurfField>(dim), get_entries_per_comp<SSurfField>(dim), get_ghost_set<SSurfField>(dim), NULL ),
-
-    ssxx_( get_n_tot<SSurfXField>(dim), get_entries_per_comp<SSurfXField>(dim), get_ghost_set<SSurfXField>(dim), NULL ),
-    ssxy_( get_n_tot<SSurfXField>(dim), get_entries_per_comp<SSurfXField>(dim), get_ghost_set<SSurfXField>(dim), NULL ),
-    ssxz_( get_n_tot<SSurfXField>(dim), get_entries_per_comp<SSurfXField>(dim), get_ghost_set<SSurfXField>(dim), NULL ),
-    ssyx_( get_n_tot<SSurfYField>(dim), get_entries_per_comp<SSurfYField>(dim), get_ghost_set<SSurfYField>(dim), NULL ),
-    ssyy_( get_n_tot<SSurfYField>(dim), get_entries_per_comp<SSurfYField>(dim), get_ghost_set<SSurfYField>(dim), NULL ),
-    ssyz_( get_n_tot<SSurfYField>(dim), get_entries_per_comp<SSurfYField>(dim), get_ghost_set<SSurfYField>(dim), NULL ),
-    sszx_( get_n_tot<SSurfZField>(dim), get_entries_per_comp<SSurfZField>(dim), get_ghost_set<SSurfZField>(dim), NULL ),
-    sszy_( get_n_tot<SSurfZField>(dim), get_entries_per_comp<SSurfZField>(dim), get_ghost_set<SSurfZField>(dim), NULL ),
-    sszz_( get_n_tot<SSurfZField>(dim), get_entries_per_comp<SSurfZField>(dim), get_ghost_set<SSurfZField>(dim), NULL ),
+    ssxx_( get_n_tot<SSurfXField>(dim), get_ghost_set<SSurfXField>(dim), NULL ),
+    ssxy_( get_n_tot<SSurfXField>(dim), get_ghost_set<SSurfXField>(dim), NULL ),
+    ssxz_( get_n_tot<SSurfXField>(dim), get_ghost_set<SSurfXField>(dim), NULL ),
+    ssyx_( get_n_tot<SSurfYField>(dim), get_ghost_set<SSurfYField>(dim), NULL ),
+    ssyy_( get_n_tot<SSurfYField>(dim), get_ghost_set<SSurfYField>(dim), NULL ),
+    ssyz_( get_n_tot<SSurfYField>(dim), get_ghost_set<SSurfYField>(dim), NULL ),
+    sszx_( get_n_tot<SSurfZField>(dim), get_ghost_set<SSurfZField>(dim), NULL ),
+    sszy_( get_n_tot<SSurfZField>(dim), get_ghost_set<SSurfZField>(dim), NULL ),
+    sszz_( get_n_tot<SSurfZField>(dim), get_ghost_set<SSurfZField>(dim), NULL ),
 
 
-    xvx_( get_n_tot<XVolField >(dim), get_entries_per_comp<XVolField>(dim), get_ghost_set<XVolField >(dim), NULL ),
-    xvy_( get_n_tot<XVolField >(dim), get_entries_per_comp<XVolField>(dim), get_ghost_set<XVolField >(dim), NULL ),
-    xvz_( get_n_tot<XVolField >(dim), get_entries_per_comp<XVolField>(dim), get_ghost_set<XVolField >(dim), NULL ),
-
-//     xsx_( get_n_tot<XSurfField>(dim), get_entries_per_comp<XSurfField>(dim), get_ghost_set<XSurfField>(dim), NULL ),
-//     xsy_( get_n_tot<XSurfField>(dim), get_entries_per_comp<XSurfField>(dim), get_ghost_set<XSurfField>(dim), NULL ),
-//     xsz_( get_n_tot<XSurfField>(dim), get_entries_per_comp<XSurfField>(dim), get_ghost_set<XSurfField>(dim), NULL ),
-
-    xsxx_( get_n_tot<XSurfXField>(dim), get_entries_per_comp<XSurfXField>(dim), get_ghost_set<XSurfXField>(dim), NULL ),
-    xsxy_( get_n_tot<XSurfXField>(dim), get_entries_per_comp<XSurfXField>(dim), get_ghost_set<XSurfXField>(dim), NULL ),
-    xsxz_( get_n_tot<XSurfXField>(dim), get_entries_per_comp<XSurfXField>(dim), get_ghost_set<XSurfXField>(dim), NULL ),
-    xsyx_( get_n_tot<XSurfYField>(dim), get_entries_per_comp<XSurfYField>(dim), get_ghost_set<XSurfYField>(dim), NULL ),
-    xsyy_( get_n_tot<XSurfYField>(dim), get_entries_per_comp<XSurfYField>(dim), get_ghost_set<XSurfYField>(dim), NULL ),
-    xsyz_( get_n_tot<XSurfYField>(dim), get_entries_per_comp<XSurfYField>(dim), get_ghost_set<XSurfYField>(dim), NULL ),
-    xszx_( get_n_tot<XSurfZField>(dim), get_entries_per_comp<XSurfZField>(dim), get_ghost_set<XSurfZField>(dim), NULL ),
-    xszy_( get_n_tot<XSurfZField>(dim), get_entries_per_comp<XSurfZField>(dim), get_ghost_set<XSurfZField>(dim), NULL ),
-    xszz_( get_n_tot<XSurfZField>(dim), get_entries_per_comp<XSurfZField>(dim), get_ghost_set<XSurfZField>(dim), NULL ),
-
-    yvx_( get_n_tot<YVolField >(dim), get_entries_per_comp<YVolField>(dim), get_ghost_set<YVolField >(dim), NULL ),
-    yvy_( get_n_tot<YVolField >(dim), get_entries_per_comp<YVolField>(dim), get_ghost_set<YVolField >(dim), NULL ),
-    yvz_( get_n_tot<YVolField >(dim), get_entries_per_comp<YVolField>(dim), get_ghost_set<YVolField >(dim), NULL ),
-
-//     ysx_( get_n_tot<YSurfField>(dim), get_entries_per_comp<YSurfField>(dim), get_ghost_set<YSurfField>(dim), NULL ),
-//     ysy_( get_n_tot<YSurfField>(dim), get_entries_per_comp<YSurfField>(dim), get_ghost_set<YSurfField>(dim), NULL ),
-//     ysz_( get_n_tot<YSurfField>(dim), get_entries_per_comp<YSurfField>(dim), get_ghost_set<YSurfField>(dim), NULL ),
-
-    ysxx_( get_n_tot<YSurfXField>(dim), get_entries_per_comp<YSurfXField>(dim), get_ghost_set<YSurfXField>(dim), NULL ),
-    ysxy_( get_n_tot<YSurfXField>(dim), get_entries_per_comp<YSurfXField>(dim), get_ghost_set<YSurfXField>(dim), NULL ),
-    ysxz_( get_n_tot<YSurfXField>(dim), get_entries_per_comp<YSurfXField>(dim), get_ghost_set<YSurfXField>(dim), NULL ),
-    ysyx_( get_n_tot<YSurfYField>(dim), get_entries_per_comp<YSurfYField>(dim), get_ghost_set<YSurfYField>(dim), NULL ),
-    ysyy_( get_n_tot<YSurfYField>(dim), get_entries_per_comp<YSurfYField>(dim), get_ghost_set<YSurfYField>(dim), NULL ),
-    ysyz_( get_n_tot<YSurfYField>(dim), get_entries_per_comp<YSurfYField>(dim), get_ghost_set<YSurfYField>(dim), NULL ),
-    yszx_( get_n_tot<YSurfZField>(dim), get_entries_per_comp<YSurfZField>(dim), get_ghost_set<YSurfZField>(dim), NULL ),
-    yszy_( get_n_tot<YSurfZField>(dim), get_entries_per_comp<YSurfZField>(dim), get_ghost_set<YSurfZField>(dim), NULL ),
-    yszz_( get_n_tot<YSurfZField>(dim), get_entries_per_comp<YSurfZField>(dim), get_ghost_set<YSurfZField>(dim), NULL ),
+    xvx_( get_n_tot<XVolField >(dim), get_ghost_set<XVolField >(dim), NULL ),
+    xvy_( get_n_tot<XVolField >(dim), get_ghost_set<XVolField >(dim), NULL ),
+    xvz_( get_n_tot<XVolField >(dim), get_ghost_set<XVolField >(dim), NULL ),
 
 
-    zvx_( get_n_tot<ZVolField >(dim), get_entries_per_comp<ZVolField>(dim), get_ghost_set<ZVolField >(dim), NULL ),
-    zvy_( get_n_tot<ZVolField >(dim), get_entries_per_comp<ZVolField>(dim), get_ghost_set<ZVolField >(dim), NULL ),
-    zvz_( get_n_tot<ZVolField >(dim), get_entries_per_comp<ZVolField>(dim), get_ghost_set<ZVolField >(dim), NULL ),
+    xsxx_( get_n_tot<XSurfXField>(dim), get_ghost_set<XSurfXField>(dim), NULL ),
+    xsxy_( get_n_tot<XSurfXField>(dim), get_ghost_set<XSurfXField>(dim), NULL ),
+    xsxz_( get_n_tot<XSurfXField>(dim), get_ghost_set<XSurfXField>(dim), NULL ),
+    xsyx_( get_n_tot<XSurfYField>(dim), get_ghost_set<XSurfYField>(dim), NULL ),
+    xsyy_( get_n_tot<XSurfYField>(dim), get_ghost_set<XSurfYField>(dim), NULL ),
+    xsyz_( get_n_tot<XSurfYField>(dim), get_ghost_set<XSurfYField>(dim), NULL ),
+    xszx_( get_n_tot<XSurfZField>(dim), get_ghost_set<XSurfZField>(dim), NULL ),
+    xszy_( get_n_tot<XSurfZField>(dim), get_ghost_set<XSurfZField>(dim), NULL ),
+    xszz_( get_n_tot<XSurfZField>(dim), get_ghost_set<XSurfZField>(dim), NULL ),
 
-//     zsx_( get_n_tot<ZSurfField>(dim), get_entries_per_comp<ZSurfField>(dim), get_ghost_set<ZSurfField>(dim), NULL ),
-//     zsy_( get_n_tot<ZSurfField>(dim), get_entries_per_comp<ZSurfField>(dim), get_ghost_set<ZSurfField>(dim), NULL ),
-//     zsz_( get_n_tot<ZSurfField>(dim), get_entries_per_comp<ZSurfField>(dim), get_ghost_set<ZSurfField>(dim), NULL ),
+    yvx_( get_n_tot<YVolField >(dim), get_ghost_set<YVolField >(dim), NULL ),
+    yvy_( get_n_tot<YVolField >(dim), get_ghost_set<YVolField >(dim), NULL ),
+    yvz_( get_n_tot<YVolField >(dim), get_ghost_set<YVolField >(dim), NULL ),
 
-    zsxx_( get_n_tot<ZSurfXField>(dim), get_entries_per_comp<ZSurfXField>(dim), get_ghost_set<ZSurfXField>(dim), NULL ),
-    zsxy_( get_n_tot<ZSurfXField>(dim), get_entries_per_comp<ZSurfXField>(dim), get_ghost_set<ZSurfXField>(dim), NULL ),
-    zsxz_( get_n_tot<ZSurfXField>(dim), get_entries_per_comp<ZSurfXField>(dim), get_ghost_set<ZSurfXField>(dim), NULL ),
-    zsyx_( get_n_tot<ZSurfYField>(dim), get_entries_per_comp<ZSurfYField>(dim), get_ghost_set<ZSurfYField>(dim), NULL ),
-    zsyy_( get_n_tot<ZSurfYField>(dim), get_entries_per_comp<ZSurfYField>(dim), get_ghost_set<ZSurfYField>(dim), NULL ),
-    zsyz_( get_n_tot<ZSurfYField>(dim), get_entries_per_comp<ZSurfYField>(dim), get_ghost_set<ZSurfYField>(dim), NULL ),
-    zszx_( get_n_tot<ZSurfZField>(dim), get_entries_per_comp<ZSurfZField>(dim), get_ghost_set<ZSurfZField>(dim), NULL ),
-    zszy_( get_n_tot<ZSurfZField>(dim), get_entries_per_comp<ZSurfZField>(dim), get_ghost_set<ZSurfZField>(dim), NULL ),
-    zszz_( get_n_tot<ZSurfZField>(dim), get_entries_per_comp<ZSurfZField>(dim), get_ghost_set<ZSurfZField>(dim), NULL )
+    ysxx_( get_n_tot<YSurfXField>(dim), get_ghost_set<YSurfXField>(dim), NULL ),
+    ysxy_( get_n_tot<YSurfXField>(dim), get_ghost_set<YSurfXField>(dim), NULL ),
+    ysxz_( get_n_tot<YSurfXField>(dim), get_ghost_set<YSurfXField>(dim), NULL ),
+    ysyx_( get_n_tot<YSurfYField>(dim), get_ghost_set<YSurfYField>(dim), NULL ),
+    ysyy_( get_n_tot<YSurfYField>(dim), get_ghost_set<YSurfYField>(dim), NULL ),
+    ysyz_( get_n_tot<YSurfYField>(dim), get_ghost_set<YSurfYField>(dim), NULL ),
+    yszx_( get_n_tot<YSurfZField>(dim), get_ghost_set<YSurfZField>(dim), NULL ),
+    yszy_( get_n_tot<YSurfZField>(dim), get_ghost_set<YSurfZField>(dim), NULL ),
+    yszz_( get_n_tot<YSurfZField>(dim), get_ghost_set<YSurfZField>(dim), NULL ),
+
+
+    zvx_( get_n_tot<ZVolField >(dim), get_ghost_set<ZVolField >(dim), NULL ),
+    zvy_( get_n_tot<ZVolField >(dim), get_ghost_set<ZVolField >(dim), NULL ),
+    zvz_( get_n_tot<ZVolField >(dim), get_ghost_set<ZVolField >(dim), NULL ),
+
+    zsxx_( get_n_tot<ZSurfXField>(dim), get_ghost_set<ZSurfXField>(dim), NULL ),
+    zsxy_( get_n_tot<ZSurfXField>(dim), get_ghost_set<ZSurfXField>(dim), NULL ),
+    zsxz_( get_n_tot<ZSurfXField>(dim), get_ghost_set<ZSurfXField>(dim), NULL ),
+    zsyx_( get_n_tot<ZSurfYField>(dim), get_ghost_set<ZSurfYField>(dim), NULL ),
+    zsyy_( get_n_tot<ZSurfYField>(dim), get_ghost_set<ZSurfYField>(dim), NULL ),
+    zsyz_( get_n_tot<ZSurfYField>(dim), get_ghost_set<ZSurfYField>(dim), NULL ),
+    zszx_( get_n_tot<ZSurfZField>(dim), get_ghost_set<ZSurfZField>(dim), NULL ),
+    zszy_( get_n_tot<ZSurfZField>(dim), get_ghost_set<ZSurfZField>(dim), NULL ),
+    zszz_( get_n_tot<ZSurfZField>(dim), get_ghost_set<ZSurfZField>(dim), NULL )
 {
   using namespace SpatialOps;
   using namespace FVStaggered;

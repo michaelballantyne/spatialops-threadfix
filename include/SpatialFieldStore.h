@@ -200,7 +200,6 @@ namespace SpatialOps{
 
 
     inline SpatFldPtr<FieldT> get( const int ntot,
-				   const std::vector<int>& entriesPerComponent,
 				   const std::set<int>& ghostSet );
 
   private:
@@ -402,14 +401,13 @@ namespace SpatialOps{
   template<typename FieldT>
   SpatFldPtr<FieldT>
   SpatialFieldStore<FieldT>::get( const int ntot,
-				  const std::vector<int>& entriesPerComponent,
 				  const std::set<int>& ghostSet )
   {
     // find the proper map
     FieldQueue& q = fqmap_[ ntot ];
 
     if( q.empty() ){
-      FieldT* fnew = new FieldT( ntot, entriesPerComponent, ghostSet, NULL );
+      FieldT* fnew = new FieldT( ntot, ghostSet, NULL );
       q.push( fnew );
     }
 

@@ -111,38 +111,6 @@ namespace SpatialOps{
 		  double * const fieldValues,
 		  const StorageMode mode = InternalStorage );
 
-    /**
-     *  Construct a SpatialField.
-     *
-     *  @param npts The number of points (including ghost cells) for
-     *  this field.
-     *
-     *  @param entriesPerComponent If this field has multiple entries
-     *  (as for a vector field), then this specifies how many entries
-     *  are in each component.  Note that we assume that the component
-     *  index strides slowest through memory.
-     *
-     *  @param ghostSet A std::set<int> containing the indices
-     *  representing the ghost values for this field.
-     *
-     *  @param fieldValues  Pointer to the field values.  Behavior is
-     *  dictated by the choice of StorageMode.
-     *
-     *  @param mode  Storage options.  If InternalStorage then the
-     *  fieldValues will be copied into an internal buffer.  If
-     *  ExternalStorage then the fieldValues will be stored
-     *  externally.  Efficiency suggests that ExternalStorage is best,
-     *  since it will avoid excessive copies.  Safety suggests that
-     *  InternalStorage is best, since it protects against memory
-     *  corruption and inadvertant deletion of the field's underlying
-     *  memory.
-     */
-    SpatialField( const int npts,
-		  const std::vector<int>& entriesPerComponent,
-		  const std::set<int>& ghostSet,
-		  double * const fieldValues,
-		  const StorageMode mode = InternalStorage );
-
 
     virtual ~SpatialField();
 
@@ -500,29 +468,6 @@ namespace SpatialOps{
   {
     nptsPerComp_[0] = npts;
 
-    if( mode==InternalStorage )  reset_values( npts_, fieldValues );
-  }
-  //------------------------------------------------------------------
-  template< class VecOps, typename FieldLocation, typename GhostTraits >
-  SpatialField<VecOps,FieldLocation,GhostTraits>::
-  SpatialField( const int npts,
-		const std::vector<int>& entriesPerComponent,
-		const std::set<int>& ghostSet,
-		double * const fieldValues,
-		const StorageMode mode )
-    : npts_( npts ),
-      nptsPerComp_( entriesPerComponent ),
-      ghostSet_( ghostSet ),
-      storageMode_( mode ),
-      
-      fieldValues_( (storageMode_==ExternalStorage)
-		    ? fieldValues
-		    : new double[npts_] ),
-
-      vec_( linAlg_.setup_vector( npts_, fieldValues_ ) ),
-
-      sfStore_( SpatialFieldStore<SpatialField>::self() )
-  {
     if( mode==InternalStorage )  reset_values( npts_, fieldValues );
   }
   //------------------------------------------------------------------

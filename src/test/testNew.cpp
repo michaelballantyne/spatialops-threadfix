@@ -376,15 +376,12 @@ void test_grad_op( const Grid& grid,
   if( get_n_tot<SrcFieldT>(dim) == 1 || get_n_tot<DestFieldT>(dim) == 1 ) return;
 
   SrcFieldT  phi      ( get_n_tot<SrcFieldT >(dim),
-			get_entries_per_comp<SrcFieldT >(dim),
 			get_ghost_set<SrcFieldT >(dim),
 			NULL );
   DestFieldT fphi     ( get_n_tot<DestFieldT>(dim),
-			get_entries_per_comp<DestFieldT>(dim),
 			get_ghost_set<DestFieldT>(dim),
 			NULL );
   DestFieldT fphiExact( get_n_tot<DestFieldT>(dim),
-			get_entries_per_comp<DestFieldT>(dim),
 			get_ghost_set<DestFieldT>(dim),
 			NULL );
 
@@ -426,15 +423,12 @@ void test_interp_op( const Grid& grid,
   if( get_n_tot<SrcFieldT>(dim) == 1 || get_n_tot<DestFieldT>(dim) == 1 ) return;
 
   SrcFieldT  phi      ( get_n_tot<SrcFieldT >(dim),
-			get_entries_per_comp<SrcFieldT >(dim),
 			get_ghost_set<SrcFieldT >(dim),
 			NULL );
   DestFieldT fphi     ( get_n_tot<DestFieldT>(dim),
-			get_entries_per_comp<DestFieldT>(dim),
 			get_ghost_set<DestFieldT>(dim),
 			NULL );
   DestFieldT fphiExact( get_n_tot<DestFieldT>(dim),
-			get_entries_per_comp<DestFieldT>(dim),
 			get_ghost_set<DestFieldT>(dim),
 			NULL );
 
@@ -462,15 +456,12 @@ void test_div_op( const Grid& grid,
   if( get_n_tot<SrcFieldT>(dim) == 1 || get_n_tot<DestFieldT>(dim) == 1 ) return;
 
   SrcFieldT  phi      ( get_n_tot<SrcFieldT >(dim),
-			get_entries_per_comp<SrcFieldT >(dim),
 			get_ghost_set<SrcFieldT >(dim),
 			NULL );
   DestFieldT fphi     ( get_n_tot<DestFieldT>(dim),
-			get_entries_per_comp<DestFieldT>(dim),
 			get_ghost_set<DestFieldT>(dim),
 			NULL );
   DestFieldT fphiExact( get_n_tot<DestFieldT>(dim),
-			get_entries_per_comp<DestFieldT>(dim),
 			get_ghost_set<DestFieldT>(dim),
 			NULL );
 
@@ -516,8 +507,8 @@ bool test_bc_helper( const vector<int>&dim,
 
   const OpT& op = *SpatialOpDatabase<OpT>::self().retrieve_operator();
 
-  SrcFieldT   f( get_n_tot<SrcFieldT >(dim), get_entries_per_comp<SrcFieldT >(dim), get_ghost_set<SrcFieldT >(dim), NULL );
-  DestFieldT df( get_n_tot<DestFieldT>(dim), get_entries_per_comp<DestFieldT>(dim), get_ghost_set<DestFieldT>(dim), NULL );
+  SrcFieldT   f( get_n_tot<SrcFieldT >(dim), get_ghost_set<SrcFieldT >(dim), NULL );
+  DestFieldT df( get_n_tot<DestFieldT>(dim), get_ghost_set<DestFieldT>(dim), NULL );
 
   int icnt=0;
   for( typename SrcFieldT::iterator ifld=f.begin(); ifld!=f.end(); ++ifld,++icnt ) *ifld = icnt;
@@ -866,7 +857,7 @@ int main()
 
   // Scalar-Volume to scalar face gradients and laplacians
   {
-    SVolField phi( get_n_tot<SVolField>(dim), get_entries_per_comp<SVolField>(dim), get_ghost_set<SVolField>(dim), NULL );
+    SVolField phi( get_n_tot<SVolField>(dim), get_ghost_set<SVolField>(dim), NULL );
 
     // sin function
     const SinFun<SVolField  > fun     ( grid.xcoord_svol(),   grid.ycoord_svol(),   grid.zcoord_svol()   );
@@ -1158,9 +1149,9 @@ int main()
     const SinFun<SVolField  > fun     ( grid.xcoord_svol(),   grid.ycoord_svol(),   grid.zcoord_svol()   );
     const SinFun<SVolField  > divFun  ( grid.xcoord_svol(),   grid.ycoord_svol(),   grid.zcoord_svol()   );
 
-    SVolField phi       ( get_n_tot<SVolField>(dim), get_entries_per_comp<SVolField>(dim), get_ghost_set<SVolField>(dim), NULL );
-    SVolField d2phi     ( get_n_tot<SVolField>(dim), get_entries_per_comp<SVolField>(dim), get_ghost_set<SVolField>(dim), NULL );
-    SVolField d2phiExact( get_n_tot<SVolField>(dim), get_entries_per_comp<SVolField>(dim), get_ghost_set<SVolField>(dim), NULL );
+    SVolField phi       ( get_n_tot<SVolField>(dim), get_ghost_set<SVolField>(dim), NULL );
+    SVolField d2phi     ( get_n_tot<SVolField>(dim), get_ghost_set<SVolField>(dim), NULL );
+    SVolField d2phiExact( get_n_tot<SVolField>(dim), get_ghost_set<SVolField>(dim), NULL );
 
     fun.evaluate( phi );
 

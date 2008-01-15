@@ -23,7 +23,6 @@ namespace FVStaggered{
     if( nxInterior>1 ){
       npts = nxInterior + G::NM + G::NP;
       if( IsSameType<typename FieldT::Location, SSurfX>::result ) ++npts;
-      if( IsSameType<typename FieldT::Location, SSurf >::result ) ++npts;
       if( IsSameType<typename FieldT::Location, XVol  >::result ) ++npts;
       if( IsSameType<typename FieldT::Location, XSurfX>::result ) npts+=2;
       if( IsSameType<typename FieldT::Location, XSurfY>::result ) ++npts;
@@ -47,7 +46,6 @@ namespace FVStaggered{
     if( nyInterior>1 ){
       npts = nyInterior + G::NM + G::NP;
       if( IsSameType<typename FieldT::Location, SSurfY>::result ) ++npts;
-      if( IsSameType<typename FieldT::Location, SSurf >::result ) ++npts;
       if( IsSameType<typename FieldT::Location, XSurfY>::result ) ++npts;
       if( IsSameType<typename FieldT::Location, YVol  >::result ) ++npts;
       if( IsSameType<typename FieldT::Location, YSurfX>::result ) ++npts;
@@ -71,7 +69,6 @@ namespace FVStaggered{
     if( nzInterior>1 ){
       npts = nzInterior + G::NM + G::NP;
       if( IsSameType<typename FieldT::Location, SSurfZ>::result ) ++npts;
-      if( IsSameType<typename FieldT::Location, SSurf >::result ) ++npts;
       if( IsSameType<typename FieldT::Location, XSurfZ>::result ) ++npts;
       if( IsSameType<typename FieldT::Location, YSurfZ>::result ) ++npts;
       if( IsSameType<typename FieldT::Location, ZVol  >::result ) ++npts;
@@ -428,45 +425,6 @@ namespace FVStaggered{
 
   //==================================================================
 
-  /**
-   *  @brief get the total number of points for each component of a
-   *  field.  Used for fields with more than one entry.
-   */
-  template<typename FieldT>
-  std::vector<int>
-  get_entries_per_comp( const std::vector<int>& dim )
-  {
-    std::vector<int> entries(3,0);
-
-    if( FieldT::Location::IsSurface && !FieldT::Location::IsVector ){
-
-      if( dim[0]>1 ){
-	entries[0] = (            get_nx_x<SSurfField>(dim)       )
-	  *          ( dim[1]>1 ? get_ny_x<SSurfField>(dim)   : 1 )
-	  *          ( dim[2]>1 ? get_nz_x<SSurfField>(dim)   : 1 );
-      }
-      if( dim[1]>1 ){
-	entries[1] = ( dim[0]>1 ? get_nx_y<SSurfField>(dim)   : 1 )
-	  *          (            get_ny_y<SSurfField>(dim) )
-	  *          ( dim[2]>1 ? get_nz_y<SSurfField>(dim)   : 1 );
-      }
-      if( dim[2]>1 ){
-	entries[2] = ( dim[0]>1 ? get_nx_z<SSurfField>(dim)   : 1 )
-	  *          ( dim[1]>1 ? get_ny_z<SSurfField>(dim)   : 1 )
-	  *          (            get_nz_z<SSurfField>(dim)       );
-      }
-    }
-    else{
-      entries[0] = get_n_tot<FieldT>(dim);
-    }
-
-    for( int i=0; i<3; ++i ) if( entries[i]==1 ) entries[i]=0;
-
-    return entries;
-  }
-
-  //==================================================================
-
   inline void _ghost_set_( const int ngm, const int ngp,
 			   const int nxt, const int nyt, const int nzt,
 			   const std::vector<int>& dim,
@@ -545,106 +503,6 @@ namespace FVStaggered{
 		 dim,
 		 ix,
 		 ghostSet );
-    return ghostSet;
-  }
-
-  template<>
-  inline const std::set<int>& get_ghost_set<SSurfField>( const std::vector<int>& dim )
-  {
-    typedef SSurfField::Ghost G;
-    static std::set<int> ghostSet;
-    ghostSet.clear();
-    int ix=0;
-    _ghost_set_( G::NM, G::NP,
-		 get_nx_x<SSurfField>(dim),
-		 get_ny_x<SSurfField>(dim),
-		 get_nz_x<SSurfField>(dim),
-		 dim, ix, ghostSet );
-    _ghost_set_( G::NM, G::NP,
-		 get_nx_y<SSurfField>(dim),
-		 get_ny_y<SSurfField>(dim),
-		 get_nz_y<SSurfField>(dim),
-		 dim, ix, ghostSet );
-    _ghost_set_( G::NM, G::NP,
-		 get_nx_z<SSurfField>(dim),
-		 get_ny_z<SSurfField>(dim),
-		 get_nz_z<SSurfField>(dim),
-		 dim, ix, ghostSet );
-    return ghostSet;
-  }
-
-  template<>
-  inline const std::set<int>& get_ghost_set<XSurfField>( const std::vector<int>& dim )
-  {
-    typedef XSurfField::Ghost G;
-    static std::set<int> ghostSet;
-    ghostSet.clear();
-    int ix=0;
-    _ghost_set_( G::NM, G::NP,
-		 get_nx_x<XSurfField>(dim),
-		 get_ny_x<XSurfField>(dim),
-		 get_nz_x<XSurfField>(dim),
-		 dim, ix, ghostSet );
-    _ghost_set_( G::NM, G::NP,
-		 get_nx_y<XSurfField>(dim),
-		 get_ny_y<XSurfField>(dim),
-		 get_nz_y<XSurfField>(dim),
-		 dim, ix, ghostSet );
-    _ghost_set_( G::NM, G::NP,
-		 get_nx_z<XSurfField>(dim),
-		 get_ny_z<XSurfField>(dim),
-		 get_nz_z<XSurfField>(dim),
-		 dim, ix, ghostSet );
-    return ghostSet;
-  }
-
-  template<>
-  inline const std::set<int>& get_ghost_set<YSurfField>( const std::vector<int>& dim )
-  {
-    typedef YSurfField::Ghost G;
-    static std::set<int> ghostSet;
-    ghostSet.clear();
-    int ix=0;
-    _ghost_set_( G::NM, G::NP,
-		 get_nx_x<YSurfField>(dim),
-		 get_ny_x<YSurfField>(dim),
-		 get_nz_x<YSurfField>(dim),
-		 dim, ix, ghostSet );
-    _ghost_set_( G::NM, G::NP,
-		 get_nx_y<YSurfField>(dim),
-		 get_ny_y<YSurfField>(dim),
-		 get_nz_y<YSurfField>(dim),
-		 dim, ix, ghostSet );
-    _ghost_set_( G::NM, G::NP,
-		 get_nx_z<YSurfField>(dim),
-		 get_ny_z<YSurfField>(dim),
-		 get_nz_z<YSurfField>(dim),
-		 dim, ix, ghostSet );
-    return ghostSet;
-  }
-
-  template<>
-  inline const std::set<int>& get_ghost_set<ZSurfField>( const std::vector<int>& dim )
-  {
-    typedef ZSurfField::Ghost G;
-    static std::set<int> ghostSet;
-    ghostSet.clear();
-    int ix=0;
-    _ghost_set_( G::NM, G::NP,
-		 get_nx_x<ZSurfField>(dim),
-		 get_ny_x<ZSurfField>(dim),
-		 get_nz_x<ZSurfField>(dim),
-		 dim, ix, ghostSet );
-    _ghost_set_( G::NM, G::NP,
-		 get_nx_y<ZSurfField>(dim),
-		 get_ny_y<ZSurfField>(dim),
-		 get_nz_y<ZSurfField>(dim),
-		 dim, ix, ghostSet );
-    _ghost_set_( G::NM, G::NP,
-		 get_nx_z<ZSurfField>(dim),
-		 get_ny_z<ZSurfField>(dim),
-		 get_nz_z<ZSurfField>(dim),
-		 dim, ix, ghostSet );
     return ghostSet;
   }
 
@@ -828,26 +686,6 @@ namespace FVStaggered{
 
     int flat = triplet.i + nxt*triplet.j + nxt*nyt*triplet.k;
 
-    if( IsSameType<FieldT,SSurfField>::result || IsSameType<FieldT,XSurfField>::result ||
-	IsSameType<FieldT,YSurfField>::result || IsSameType<FieldT,ZSurfField>::result )
-      {
-	switch( CompType::value ){
-	case XDIR::value:
-	  break;
-	case YDIR::value:
-	  if( dim[0]>1 && dim[1]>1 )
-	    flat += get_nx_x<FieldT>(dim) * get_ny_x<FieldT>(dim) * get_nz_x<FieldT>(dim);
-	  break;
-	case ZDIR::value:
-	  if( dim[2]>1 ){
-	    if( dim[0]>1 )
-	      flat += get_nx_x<FieldT>(dim) * get_ny_x<FieldT>(dim) * get_nz_x<FieldT>(dim);
-	    if( dim[1]>1 )
-	      flat += get_nx_y<FieldT>(dim) * get_ny_y<FieldT>(dim) * get_nz_y<FieldT>(dim);
-	  }
-	  break;
-	}
-      }
     return flat;
   }
 
