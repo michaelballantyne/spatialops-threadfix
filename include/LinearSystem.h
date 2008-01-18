@@ -390,7 +390,9 @@ RHS::add_field_contribution( const FieldType& f,
   const typename FieldType::const_interior_iterator iflde = f.interior_end();
 
   iterator irhs = begin();
+#ifndef NDEBUG
   const iterator irhse = end();
+#endif
 
   if( scaleFac==1 ){
     for( ; ifld!=iflde; ++ifld, ++irhs ){
@@ -436,20 +438,21 @@ LHS::add_op_contribution( const OpType & op,
     rowDWork_.clear();
     rowIWork_.clear();
 
-    int ncol=0;   double*vals=0;   int*ixs=0;
-    op.get_linalg_mat().ExtractMyRowView( ioprow, ncol, vals, ixs );
+    const typename OpType::MatrixRow row( op.get_row(ioprow) );
+    typename OpType::const_column_iterator icol = row.begin();
+    typename OpType::const_column_iterator icole= row.end();
 
-    for( int icol=0; icol<ncol; ++icol ){
+    for( ; icol!=icole; ++icol ){
 
       // determine the ijk indices for this column.
       // if we are at a ghost entry, skip it.
-      const int colindex = ixs[icol];
+      const int colindex = icol.index();
 
       // check to see if we are at a ghost entry - get the "interior" indices.
       if( op.is_col_ghost( colindex ) ) continue;
 
       // insert this value
-      rowDWork_.push_back( scaleFac*vals[icol] );
+      rowDWork_.push_back( scaleFac * *icol );
 
       // now determine the column index for insertion of this value
       typedef typename OpType::SrcFieldType SrcField;

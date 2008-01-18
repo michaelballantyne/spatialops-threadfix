@@ -429,7 +429,7 @@ namespace FVStaggered{
       n = get_nx<SrcFieldT>(dim_[0]) * get_ny<SrcFieldT>(dim_[1]);
       break;
     default:
-      cout << "ERROR: field dir enum value=" << FieldDirSelect::Location::Dir::value << endl;
+      std::cout << "ERROR: field dir enum value=" << FieldDirSelect::Location::Dir::value << std::endl;
       assert(0);
     }
     return n;

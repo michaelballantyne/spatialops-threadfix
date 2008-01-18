@@ -181,15 +181,23 @@ namespace SpatialOps{
   void
   LinAlgTrilinos::left_scale( const VecType& vec )
   {
+#ifdef NDEBUG
+    mat_->LeftScale( vec );
+#else
     const int flag = mat_->LeftScale( vec );
     assert( flag == 0 );
+#endif
   }
   //------------------------------------------------------------------
   void
   LinAlgTrilinos::right_scale( const VecType& vec )
-  {
+  { 
+#ifdef NDEBUG
+    mat_->RightScale( vec );
+#else
     const int flag = mat_->RightScale( vec );
     assert( flag == 0 );
+#endif
   }
   //------------------------------------------------------------------
   void
@@ -204,6 +212,18 @@ namespace SpatialOps{
   {
     mat_->PutScalar(val);
     return;
+  }
+  //--------------------------------------------------------------------
+  void
+  LinAlgTrilinos::print_vec( std::ostream& s ) const
+  {
+    vec_->Print(s);
+  }
+  //--------------------------------------------------------------------
+  void
+  LinAlgTrilinos::print_mat( std::ostream& s ) const
+  {
+    mat_->Print(s);
   }
   //--------------------------------------------------------------------
 

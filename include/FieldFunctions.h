@@ -60,13 +60,13 @@ public:
 
   virtual void evaluate( FieldT& phi ) const =0;
 
-  virtual void dx( FieldT& gradPhi ) const{ const bool implemented=false; assert(implemented); }
-  virtual void dy( FieldT& gradPhi ) const{ const bool implemented=false; assert(implemented); }
-  virtual void dz( FieldT& gradPhi ) const{ const bool implemented=false; assert(implemented); }
+  virtual void dx( FieldT& gradPhi ) const{ assert(0); }
+  virtual void dy( FieldT& gradPhi ) const{ assert(0); }
+  virtual void dz( FieldT& gradPhi ) const{ assert(0); }
 
-  virtual void d2x( FieldT& gradPhi ) const{ const bool implemented=false; assert(implemented); }
-  virtual void d2y( FieldT& gradPhi ) const{ const bool implemented=false; assert(implemented); }
-  virtual void d2z( FieldT& gradPhi ) const{ const bool implemented=false; assert(implemented); }
+  virtual void d2x( FieldT& gradPhi ) const{ assert(0); }
+  virtual void d2y( FieldT& gradPhi ) const{ assert(0); }
+  virtual void d2z( FieldT& gradPhi ) const{ assert(0); }
 
 
   const FieldT& get_x() const{set_fields(); return *x_;}

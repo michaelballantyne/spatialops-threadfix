@@ -240,7 +240,8 @@ bool test_bc_helper( const vector<int>&dim,
   const double relerr = abserr/abs(bcVal);
 
   bool isOkay = (abserr<1.0e-9 && relerr<1.0e-9);
-  if( !isOkay ) cout << "   " << abserr << "   " << relerr << endl;
+  if( !isOkay ) cout << "  " << abserr << "  " << relerr << "     "
+		     << df[ix] << "  " << bcVal << endl;
   return isOkay;
 }
 

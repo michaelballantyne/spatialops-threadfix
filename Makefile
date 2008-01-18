@@ -1,7 +1,7 @@
 #
 # USE THIS FOR LINUX:
 #
-BOOST_INCLUDE = /home/sutherland/packages/boost_1_33_1
+BOOST_INCLUDE = /home/sutherland/packages/boost_1_34_0
 TRILINOS_INCLUDE = /home/sutherland/apps/trilinos_jcs_opt/include
 TRILINOS_LIB      = /home/sutherland/apps/trilinos_jcs_opt/lib 
 DAIXT_INCLUDE     = /home/sutherland/apps/daixtrose/include
@@ -11,7 +11,7 @@ EXTRA_LIBS =
 #
 # USE THIS FOR MAC
 #
-#BOOST_INCLUDE = /jcs/software/boost_1_33_1
+#BOOST_INCLUDE = /jcs/software/boost_1_34_1
 #TRILINOS_INCLUDE = /jcs/software/trilinos/include
 #TRILINOS_LIB     = /jcs/software/trilinos/lib
 #DAIXT_INCLUDE    = /jcs/software/daixtrose-0.0.3/jcs_install/include
@@ -24,18 +24,19 @@ EPETRA_LIBS = -lepetra -lepetraext -lblas -llapack
 AZTECOO_LIBS = -laztecoo -lteuchos 
 LIBS = $(AZTECOO_LIBS)  $(EPETRA_LIBS) $(EXTRA_LIBS)
 
-CXXFLAGS = -O4 -Wall -fexpensive-optimizations -funroll-loops
-#CXXFLAGS = -g -Wall -O0
+CXXFLAGS = -O4 -Wall -fexpensive-optimizations -funroll-loops -DBOOST_UBLAS_SHALLOW_ARRAY_ADAPTOR -DNDEBUG -pg
+#CXXFLAGS = -g -Wall -O0 -DBOOST_UBLAS_SHALLOW_ARRAY_ADAPTOR
 COMPILE_CXX = g++ -c $(CXXFLAGS) $(INCDIRS)
 #COMPILE_CXX = mpiCC -c $(CXXFLAGS) $(INCDIRS)
 
 LINK = g++ $(CXXFLAGS) $(INCDIRS) $(LIBDIRS)
 
-default: testnew
+default: testnew poisson
 all: testnew poisson
 
 OBJS =		\
 	LinAlgTrilinos.o \
+	LinAlgUBlas.o \
 	LinearSystem.o
 
 buildOps.o: ./src/test/buildOps.cpp ./include/*.h
@@ -46,6 +47,9 @@ testNew.o: ./src/test/testNew.cpp ./include/*.h ./src/test/*.h
 
 LinAlgTrilinos.o: ./src/LinAlgTrilinos.cpp ./include/LinAlgTrilinos.h
 	$(COMPILE_CXX) ./src/LinAlgTrilinos.cpp
+
+LinAlgUBlas.o: ./src/LinAlgUBlas.cpp ./include/LinAlgUBlas.h
+	$(COMPILE_CXX) ./src/LinAlgUBlas.cpp
 
 LinearSystem.o: ./src/LinearSystem.cpp ./include/SpatialOperator.h ./include/SpatialField.h ./include/LinearSystem.h
 	$(COMPILE_CXX) ./src/LinearSystem.cpp

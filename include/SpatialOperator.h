@@ -116,6 +116,16 @@ namespace SpatialOps{
    *    SpatialOperator.  This must define:
    *    <ul>
    *      <li> \b MatType This defines the type for the underlying Matrix operator.
+   *
+   *      <li> \b MatrixRow This defines the type for the
+   *      representation of a Matrix row.
+   *
+   *      <li> \b column_iterator Iterates through columns.  The
+   *      <c>column_iterator</c> must support increment and decrement
+   *      operators, as well as the comparison <c>!=</c> operator and
+   *      <code>double& value()</code> and <c>int index()</c> methods
+   *      to obtain the index and value of the column coefficient.
+   *
    *    </ul>
    *
    *    <li> \b OpType This defines the type of the operator.  This is
@@ -151,6 +161,10 @@ namespace SpatialOps{
 
     typedef LinAlg                         LinAlgType;
     typedef typename LinAlg::MatType       MatType;
+    typedef typename LinAlg::MatrixRow     MatrixRow;
+
+    typedef typename LinAlg::column_iterator       column_iterator;
+    typedef typename LinAlg::const_column_iterator const_column_iterator;
 
     typedef OpType                         Type;
 
@@ -188,6 +202,15 @@ namespace SpatialOps{
 
     virtual ~SpatialOperator();
 
+
+    /**
+     *  @brief Obtain the requested row from this operator.
+     *
+     *  The <c>MatrixRow</c> type is defined by the LinAlg type.
+     */
+    inline MatrixRow get_row(const int irow) const{ return linAlg_.get_row(irow); }
+
+
     /**
      *  @name 
      *  Return the underlying linear algebra matrix representation 
@@ -196,6 +219,7 @@ namespace SpatialOps{
     inline       MatType& get_linalg_mat()      { return mat_; }
     inline const MatType& get_linalg_mat() const{ return mat_; }
     //@}
+
 
     /**
      *  @brief Apply this operator to the supplied source field to
@@ -595,7 +619,7 @@ namespace SpatialOps{
   SpatialOperator<LinAlg,OpType,SrcFieldT,DestFieldT>::
   Print( std::ostream & s ) const
   {
-    mat_.Print( s );
+    linAlg_.print_mat( s );
   }
   //------------------------------------------------------------------
 
@@ -618,7 +642,8 @@ namespace SpatialOps{
   {
     const int id = ++idCounter_;
     std::pair< typename OpMap::const_iterator, bool > result
-      = opMap_.insert( make_pair(id,op) );
+      = opMap_.insert( std::make_pair(id,op) );
+    assert( result.second );
     return id;
   }
   //------------------------------------------------------------------

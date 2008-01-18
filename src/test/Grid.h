@@ -463,6 +463,7 @@ Grid::~Grid()
 void
 Grid::write() const
 {
+  /*
   EpetraExt::VectorToMatrixMarketFile( "svx.mm", svx_.get_linalg_vec(), "", "" );
 
   EpetraExt::VectorToMatrixMarketFile( "xvx.mm", xvx_.get_linalg_vec(), "", "" );
@@ -473,6 +474,7 @@ Grid::write() const
   EpetraExt::VectorToMatrixMarketFile( "xvy.mm", xvy_.get_linalg_vec(), "", "" );
   EpetraExt::VectorToMatrixMarketFile( "yvy.mm", yvy_.get_linalg_vec(), "", "" );
   EpetraExt::VectorToMatrixMarketFile( "zvy.mm", zvy_.get_linalg_vec(), "", "" );
+  */
 }
 
 }

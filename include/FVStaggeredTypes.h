@@ -4,6 +4,10 @@
 #include <SpatialField.h>
 #include <SpatialOperator.h>
 #include <LinAlgTrilinos.h>
+//#include <LinAlgUBlas.h>
+
+typedef SpatialOps::LinAlgTrilinos LinAlg;
+//typedef SpatialOps::LinAlgUBlas LinAlg;
 
 namespace SpatialOps{
 namespace FVStaggered{
@@ -40,88 +44,88 @@ namespace FVStaggered{
 
   //-- Field Types --//
 
-  typedef SpatialField< LinAlgTrilinos, SVol,   DefaultGhost > SVolField;
-  typedef SpatialField< LinAlgTrilinos, SSurfX, NoGhost      > SSurfXField;
-  typedef SpatialField< LinAlgTrilinos, SSurfY, NoGhost      > SSurfYField;
-  typedef SpatialField< LinAlgTrilinos, SSurfZ, NoGhost      > SSurfZField;
-  typedef SpatialField< LinAlgTrilinos, SVol,   NoGhost      > SVolRHS;
+  typedef SpatialField< LinAlg, SVol,   DefaultGhost > SVolField;
+  typedef SpatialField< LinAlg, SSurfX, NoGhost      > SSurfXField;
+  typedef SpatialField< LinAlg, SSurfY, NoGhost      > SSurfYField;
+  typedef SpatialField< LinAlg, SSurfZ, NoGhost      > SSurfZField;
+  typedef SpatialField< LinAlg, SVol,   NoGhost      > SVolRHS;
 
-  typedef SpatialField< LinAlgTrilinos, XVol,   DefaultGhost > XVolField;
-  typedef SpatialField< LinAlgTrilinos, XSurfX, NoGhost      > XSurfXField;
-  typedef SpatialField< LinAlgTrilinos, XSurfY, NoGhost      > XSurfYField;
-  typedef SpatialField< LinAlgTrilinos, XSurfZ, NoGhost      > XSurfZField;
-  typedef SpatialField< LinAlgTrilinos, XVol,   NoGhost      > XVolRHS;
+  typedef SpatialField< LinAlg, XVol,   DefaultGhost > XVolField;
+  typedef SpatialField< LinAlg, XSurfX, NoGhost      > XSurfXField;
+  typedef SpatialField< LinAlg, XSurfY, NoGhost      > XSurfYField;
+  typedef SpatialField< LinAlg, XSurfZ, NoGhost      > XSurfZField;
+  typedef SpatialField< LinAlg, XVol,   NoGhost      > XVolRHS;
 
-  typedef SpatialField< LinAlgTrilinos, YVol,   DefaultGhost > YVolField;
-  typedef SpatialField< LinAlgTrilinos, YSurfX, NoGhost      > YSurfXField;
-  typedef SpatialField< LinAlgTrilinos, YSurfY, NoGhost      > YSurfYField;
-  typedef SpatialField< LinAlgTrilinos, YSurfZ, NoGhost      > YSurfZField;
-  typedef SpatialField< LinAlgTrilinos, YVol,   NoGhost      > YVolRHS;
+  typedef SpatialField< LinAlg, YVol,   DefaultGhost > YVolField;
+  typedef SpatialField< LinAlg, YSurfX, NoGhost      > YSurfXField;
+  typedef SpatialField< LinAlg, YSurfY, NoGhost      > YSurfYField;
+  typedef SpatialField< LinAlg, YSurfZ, NoGhost      > YSurfZField;
+  typedef SpatialField< LinAlg, YVol,   NoGhost      > YVolRHS;
 
-  typedef SpatialField< LinAlgTrilinos, ZVol,   DefaultGhost > ZVolField;
-  typedef SpatialField< LinAlgTrilinos, ZSurfX, NoGhost      > ZSurfXField;
-  typedef SpatialField< LinAlgTrilinos, ZSurfY, NoGhost      > ZSurfYField;
-  typedef SpatialField< LinAlgTrilinos, ZSurfZ, NoGhost      > ZSurfZField;
-  typedef SpatialField< LinAlgTrilinos, ZVol,   NoGhost      > ZVolRHS;
+  typedef SpatialField< LinAlg, ZVol,   DefaultGhost > ZVolField;
+  typedef SpatialField< LinAlg, ZSurfX, NoGhost      > ZSurfXField;
+  typedef SpatialField< LinAlg, ZSurfY, NoGhost      > ZSurfYField;
+  typedef SpatialField< LinAlg, ZSurfZ, NoGhost      > ZSurfZField;
+  typedef SpatialField< LinAlg, ZVol,   NoGhost      > ZVolRHS;
 
 
 
   //-- Interpolant Operators --//
 
   // scalar volume to scalar surfaces (diffusion coefficients)
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, SVolField, SSurfXField >  InterpSVolSSurfX;
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, SVolField, SSurfYField >  InterpSVolSSurfY;
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, SVolField, SSurfZField >  InterpSVolSSurfZ;
+  typedef SpatialOperator< LinAlg, Interpolant, SVolField, SSurfXField >  InterpSVolSSurfX;
+  typedef SpatialOperator< LinAlg, Interpolant, SVolField, SSurfYField >  InterpSVolSSurfY;
+  typedef SpatialOperator< LinAlg, Interpolant, SVolField, SSurfZField >  InterpSVolSSurfZ;
 
   // scalar volume to staggered surfaces (viscosity, dilatation)	      	      	      
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, SVolField, XSurfXField  >  InterpSVolXSurfX;
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, SVolField, XSurfYField  >  InterpSVolXSurfY;
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, SVolField, XSurfZField  >  InterpSVolXSurfZ;
+  typedef SpatialOperator< LinAlg, Interpolant, SVolField, XSurfXField  >  InterpSVolXSurfX;
+  typedef SpatialOperator< LinAlg, Interpolant, SVolField, XSurfYField  >  InterpSVolXSurfY;
+  typedef SpatialOperator< LinAlg, Interpolant, SVolField, XSurfZField  >  InterpSVolXSurfZ;
 
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, SVolField, YSurfXField  >  InterpSVolYSurfX;
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, SVolField, YSurfYField  >  InterpSVolYSurfY;
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, SVolField, YSurfZField  >  InterpSVolYSurfZ;
+  typedef SpatialOperator< LinAlg, Interpolant, SVolField, YSurfXField  >  InterpSVolYSurfX;
+  typedef SpatialOperator< LinAlg, Interpolant, SVolField, YSurfYField  >  InterpSVolYSurfY;
+  typedef SpatialOperator< LinAlg, Interpolant, SVolField, YSurfZField  >  InterpSVolYSurfZ;
 
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, SVolField, ZSurfXField  >  InterpSVolZSurfX;
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, SVolField, ZSurfYField  >  InterpSVolZSurfY;
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, SVolField, ZSurfZField  >  InterpSVolZSurfZ;
+  typedef SpatialOperator< LinAlg, Interpolant, SVolField, ZSurfXField  >  InterpSVolZSurfX;
+  typedef SpatialOperator< LinAlg, Interpolant, SVolField, ZSurfYField  >  InterpSVolZSurfY;
+  typedef SpatialOperator< LinAlg, Interpolant, SVolField, ZSurfZField  >  InterpSVolZSurfZ;
 
 
   // scalar volume to staggered volumes (density)
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, SVolField, XVolField   >  InterpSVolXVol;
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, SVolField, YVolField   >  InterpSVolYVol;
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, SVolField, ZVolField   >  InterpSVolZVol;
+  typedef SpatialOperator< LinAlg, Interpolant, SVolField, XVolField   >  InterpSVolXVol;
+  typedef SpatialOperator< LinAlg, Interpolant, SVolField, YVolField   >  InterpSVolYVol;
+  typedef SpatialOperator< LinAlg, Interpolant, SVolField, ZVolField   >  InterpSVolZVol;
 
 
   // staggered volumes to scalar surface (advecting velocities, etc.)
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, XVolField, SSurfXField >  InterpXVolSSurfX;
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, YVolField, SSurfYField >  InterpYVolSSurfY;
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, ZVolField, SSurfZField >  InterpZVolSSurfZ;
+  typedef SpatialOperator< LinAlg, Interpolant, XVolField, SSurfXField >  InterpXVolSSurfX;
+  typedef SpatialOperator< LinAlg, Interpolant, YVolField, SSurfYField >  InterpYVolSSurfY;
+  typedef SpatialOperator< LinAlg, Interpolant, ZVolField, SSurfZField >  InterpZVolSSurfZ;
 
 
   // staggered volumes to staggered surfaces (momentum solution components)
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, XVolField, XSurfXField >  InterpXVolXSurfX;
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, XVolField, XSurfYField >  InterpXVolXSurfY;
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, XVolField, XSurfZField >  InterpXVolXSurfZ;
+  typedef SpatialOperator< LinAlg, Interpolant, XVolField, XSurfXField >  InterpXVolXSurfX;
+  typedef SpatialOperator< LinAlg, Interpolant, XVolField, XSurfYField >  InterpXVolXSurfY;
+  typedef SpatialOperator< LinAlg, Interpolant, XVolField, XSurfZField >  InterpXVolXSurfZ;
 
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, YVolField, YSurfXField >  InterpYVolYSurfX;
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, YVolField, YSurfYField >  InterpYVolYSurfY;
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, YVolField, YSurfZField >  InterpYVolYSurfZ;
+  typedef SpatialOperator< LinAlg, Interpolant, YVolField, YSurfXField >  InterpYVolYSurfX;
+  typedef SpatialOperator< LinAlg, Interpolant, YVolField, YSurfYField >  InterpYVolYSurfY;
+  typedef SpatialOperator< LinAlg, Interpolant, YVolField, YSurfZField >  InterpYVolYSurfZ;
 
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, ZVolField, ZSurfXField >  InterpZVolZSurfX;
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, ZVolField, ZSurfYField >  InterpZVolZSurfY;
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, ZVolField, ZSurfZField >  InterpZVolZSurfZ;
+  typedef SpatialOperator< LinAlg, Interpolant, ZVolField, ZSurfXField >  InterpZVolZSurfX;
+  typedef SpatialOperator< LinAlg, Interpolant, ZVolField, ZSurfYField >  InterpZVolZSurfY;
+  typedef SpatialOperator< LinAlg, Interpolant, ZVolField, ZSurfZField >  InterpZVolZSurfZ;
 
 
   // staggered volumes to staggered surfaces (advecting velocities)
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, XVolField, YSurfXField >  InterpXVolYSurfX;
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, XVolField, ZSurfXField >  InterpXVolZSurfX;
+  typedef SpatialOperator< LinAlg, Interpolant, XVolField, YSurfXField >  InterpXVolYSurfX;
+  typedef SpatialOperator< LinAlg, Interpolant, XVolField, ZSurfXField >  InterpXVolZSurfX;
 
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, YVolField, XSurfYField >  InterpYVolXSurfY;
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, YVolField, ZSurfYField >  InterpYVolZSurfY;
+  typedef SpatialOperator< LinAlg, Interpolant, YVolField, XSurfYField >  InterpYVolXSurfY;
+  typedef SpatialOperator< LinAlg, Interpolant, YVolField, ZSurfYField >  InterpYVolZSurfY;
 
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, ZVolField, XSurfZField >  InterpZVolXSurfZ;
-  typedef SpatialOperator< LinAlgTrilinos, Interpolant, ZVolField, YSurfZField >  InterpZVolYSurfZ;
+  typedef SpatialOperator< LinAlg, Interpolant, ZVolField, XSurfZField >  InterpZVolXSurfZ;
+  typedef SpatialOperator< LinAlg, Interpolant, ZVolField, YSurfZField >  InterpZVolYSurfZ;
 
   /*
    *  NOTE: for UNIFORM MESHES, the following DEGENERACIES exist in
@@ -151,83 +155,83 @@ namespace FVStaggered{
 
   //-- Gradient Operators --//
 
-  typedef SpatialOperator< LinAlgTrilinos, Gradient, SVolField, SSurfXField >  GradSVolSSurfX;
-  typedef SpatialOperator< LinAlgTrilinos, Gradient, SVolField, SSurfYField >  GradSVolSSurfY;
-  typedef SpatialOperator< LinAlgTrilinos, Gradient, SVolField, SSurfZField >  GradSVolSSurfZ;
+  typedef SpatialOperator< LinAlg, Gradient, SVolField, SSurfXField >  GradSVolSSurfX;
+  typedef SpatialOperator< LinAlg, Gradient, SVolField, SSurfYField >  GradSVolSSurfY;
+  typedef SpatialOperator< LinAlg, Gradient, SVolField, SSurfZField >  GradSVolSSurfZ;
 
-  typedef SpatialOperator< LinAlgTrilinos, Gradient, XVolField, XSurfXField >  GradXVolXSurfX;
-  typedef SpatialOperator< LinAlgTrilinos, Gradient, XVolField, XSurfYField >  GradXVolXSurfY;
-  typedef SpatialOperator< LinAlgTrilinos, Gradient, XVolField, XSurfZField >  GradXVolXSurfZ;
+  typedef SpatialOperator< LinAlg, Gradient, XVolField, XSurfXField >  GradXVolXSurfX;
+  typedef SpatialOperator< LinAlg, Gradient, XVolField, XSurfYField >  GradXVolXSurfY;
+  typedef SpatialOperator< LinAlg, Gradient, XVolField, XSurfZField >  GradXVolXSurfZ;
 
-  typedef SpatialOperator< LinAlgTrilinos, Gradient, YVolField, YSurfXField >  GradYVolYSurfX;
-  typedef SpatialOperator< LinAlgTrilinos, Gradient, YVolField, YSurfYField >  GradYVolYSurfY;
-  typedef SpatialOperator< LinAlgTrilinos, Gradient, YVolField, YSurfZField >  GradYVolYSurfZ;
+  typedef SpatialOperator< LinAlg, Gradient, YVolField, YSurfXField >  GradYVolYSurfX;
+  typedef SpatialOperator< LinAlg, Gradient, YVolField, YSurfYField >  GradYVolYSurfY;
+  typedef SpatialOperator< LinAlg, Gradient, YVolField, YSurfZField >  GradYVolYSurfZ;
 
-  typedef SpatialOperator< LinAlgTrilinos, Gradient, ZVolField, ZSurfXField >  GradZVolZSurfX;
-  typedef SpatialOperator< LinAlgTrilinos, Gradient, ZVolField, ZSurfYField >  GradZVolZSurfY;
-  typedef SpatialOperator< LinAlgTrilinos, Gradient, ZVolField, ZSurfZField >  GradZVolZSurfZ;
+  typedef SpatialOperator< LinAlg, Gradient, ZVolField, ZSurfXField >  GradZVolZSurfX;
+  typedef SpatialOperator< LinAlg, Gradient, ZVolField, ZSurfYField >  GradZVolZSurfY;
+  typedef SpatialOperator< LinAlg, Gradient, ZVolField, ZSurfZField >  GradZVolZSurfZ;
 
 
   //-- Divergence Operators --//
 
-  typedef SpatialOperator< LinAlgTrilinos, Divergence, SSurfXField, SVolField >  DivSSurfXSVol;
-  typedef SpatialOperator< LinAlgTrilinos, Divergence, SSurfYField, SVolField >  DivSSurfYSVol;
-  typedef SpatialOperator< LinAlgTrilinos, Divergence, SSurfZField, SVolField >  DivSSurfZSVol;
+  typedef SpatialOperator< LinAlg, Divergence, SSurfXField, SVolField >  DivSSurfXSVol;
+  typedef SpatialOperator< LinAlg, Divergence, SSurfYField, SVolField >  DivSSurfYSVol;
+  typedef SpatialOperator< LinAlg, Divergence, SSurfZField, SVolField >  DivSSurfZSVol;
 
-  typedef SpatialOperator< LinAlgTrilinos, Divergence, XSurfXField, XVolField >  DivXSurfXXVol;
-  typedef SpatialOperator< LinAlgTrilinos, Divergence, XSurfYField, XVolField >  DivXSurfYXVol;
-  typedef SpatialOperator< LinAlgTrilinos, Divergence, XSurfZField, XVolField >  DivXSurfZXVol;
+  typedef SpatialOperator< LinAlg, Divergence, XSurfXField, XVolField >  DivXSurfXXVol;
+  typedef SpatialOperator< LinAlg, Divergence, XSurfYField, XVolField >  DivXSurfYXVol;
+  typedef SpatialOperator< LinAlg, Divergence, XSurfZField, XVolField >  DivXSurfZXVol;
 
-  typedef SpatialOperator< LinAlgTrilinos, Divergence, YSurfXField, YVolField >  DivYSurfXYVol;
-  typedef SpatialOperator< LinAlgTrilinos, Divergence, YSurfYField, YVolField >  DivYSurfYYVol;
-  typedef SpatialOperator< LinAlgTrilinos, Divergence, YSurfZField, YVolField >  DivYSurfZYVol;
+  typedef SpatialOperator< LinAlg, Divergence, YSurfXField, YVolField >  DivYSurfXYVol;
+  typedef SpatialOperator< LinAlg, Divergence, YSurfYField, YVolField >  DivYSurfYYVol;
+  typedef SpatialOperator< LinAlg, Divergence, YSurfZField, YVolField >  DivYSurfZYVol;
 
-  typedef SpatialOperator< LinAlgTrilinos, Divergence, ZSurfXField, ZVolField >  DivZSurfXZVol;
-  typedef SpatialOperator< LinAlgTrilinos, Divergence, ZSurfYField, ZVolField >  DivZSurfYZVol;
-  typedef SpatialOperator< LinAlgTrilinos, Divergence, ZSurfZField, ZVolField >  DivZSurfZZVol;
+  typedef SpatialOperator< LinAlg, Divergence, ZSurfXField, ZVolField >  DivZSurfXZVol;
+  typedef SpatialOperator< LinAlg, Divergence, ZSurfYField, ZVolField >  DivZSurfYZVol;
+  typedef SpatialOperator< LinAlg, Divergence, ZSurfZField, ZVolField >  DivZSurfZZVol;
 
 
   //-- Scratch Operators --//
 
-  typedef SpatialOperator< LinAlgTrilinos, Scratch, SVolField, SVolField >  ScratchSVol; ///< Used for forming operators such as laplacian
-  typedef SpatialOperator< LinAlgTrilinos, Scratch, XVolField, XVolField >  ScratchXVol; ///< Used for forming operators such as laplacian
-  typedef SpatialOperator< LinAlgTrilinos, Scratch, YVolField, YVolField >  ScratchYVol; ///< Used for forming operators such as laplacian
-  typedef SpatialOperator< LinAlgTrilinos, Scratch, ZVolField, ZVolField >  ScratchZVol; ///< Used for forming operators such as laplacian
+  typedef SpatialOperator< LinAlg, Scratch, SVolField, SVolField >  ScratchSVol; ///< Used for forming operators such as laplacian
+  typedef SpatialOperator< LinAlg, Scratch, XVolField, XVolField >  ScratchXVol; ///< Used for forming operators such as laplacian
+  typedef SpatialOperator< LinAlg, Scratch, YVolField, YVolField >  ScratchYVol; ///< Used for forming operators such as laplacian
+  typedef SpatialOperator< LinAlg, Scratch, ZVolField, ZVolField >  ScratchZVol; ///< Used for forming operators such as laplacian
 
   // jcs need to think about these (and test them)
-  typedef SpatialOperator< LinAlgTrilinos, Scratch, SVolField, SSurfXField > ScratchSVolSSurfX; ///< Used for modified gradient-shaped operators on scalar CV
-  typedef SpatialOperator< LinAlgTrilinos, Scratch, SVolField, SSurfYField > ScratchSVolSSurfY; ///< Used for modified gradient-shaped operators on scalar CV
-  typedef SpatialOperator< LinAlgTrilinos, Scratch, SVolField, SSurfZField > ScratchSVolSSurfZ; ///< Used for modified gradient-shaped operators on scalar CV
+  typedef SpatialOperator< LinAlg, Scratch, SVolField, SSurfXField > ScratchSVolSSurfX; ///< Used for modified gradient-shaped operators on scalar CV
+  typedef SpatialOperator< LinAlg, Scratch, SVolField, SSurfYField > ScratchSVolSSurfY; ///< Used for modified gradient-shaped operators on scalar CV
+  typedef SpatialOperator< LinAlg, Scratch, SVolField, SSurfZField > ScratchSVolSSurfZ; ///< Used for modified gradient-shaped operators on scalar CV
 
-  typedef SpatialOperator< LinAlgTrilinos, Scratch, XVolField, XSurfXField > ScratchXVolXSurfX; ///< Used for modified gradient-shaped operators on scalar CV
-  typedef SpatialOperator< LinAlgTrilinos, Scratch, XVolField, XSurfYField > ScratchXVolXSurfY; ///< Used for modified gradient-shaped operators on scalar CV
-  typedef SpatialOperator< LinAlgTrilinos, Scratch, XVolField, XSurfZField > ScratchXVolXSurfZ; ///< Used for modified gradient-shaped operators on scalar CV
+  typedef SpatialOperator< LinAlg, Scratch, XVolField, XSurfXField > ScratchXVolXSurfX; ///< Used for modified gradient-shaped operators on scalar CV
+  typedef SpatialOperator< LinAlg, Scratch, XVolField, XSurfYField > ScratchXVolXSurfY; ///< Used for modified gradient-shaped operators on scalar CV
+  typedef SpatialOperator< LinAlg, Scratch, XVolField, XSurfZField > ScratchXVolXSurfZ; ///< Used for modified gradient-shaped operators on scalar CV
 
-  typedef SpatialOperator< LinAlgTrilinos, Scratch, YVolField, YSurfXField > ScratchYVolYSurfX; ///< Used for modified gradient-shaped operators on scalar CV
-  typedef SpatialOperator< LinAlgTrilinos, Scratch, YVolField, YSurfYField > ScratchYVolYSurfY; ///< Used for modified gradient-shaped operators on scalar CV
-  typedef SpatialOperator< LinAlgTrilinos, Scratch, YVolField, YSurfZField > ScratchYVolYSurfZ; ///< Used for modified gradient-shaped operators on scalar CV
+  typedef SpatialOperator< LinAlg, Scratch, YVolField, YSurfXField > ScratchYVolYSurfX; ///< Used for modified gradient-shaped operators on scalar CV
+  typedef SpatialOperator< LinAlg, Scratch, YVolField, YSurfYField > ScratchYVolYSurfY; ///< Used for modified gradient-shaped operators on scalar CV
+  typedef SpatialOperator< LinAlg, Scratch, YVolField, YSurfZField > ScratchYVolYSurfZ; ///< Used for modified gradient-shaped operators on scalar CV
 
-  typedef SpatialOperator< LinAlgTrilinos, Scratch, ZVolField, ZSurfXField > ScratchZVolZSurfX; ///< Used for modified gradient-shaped operators on scalar CV
-  typedef SpatialOperator< LinAlgTrilinos, Scratch, ZVolField, ZSurfYField > ScratchZVolZSurfY; ///< Used for modified gradient-shaped operators on scalar CV
-  typedef SpatialOperator< LinAlgTrilinos, Scratch, ZVolField, ZSurfZField > ScratchZVolZSurfZ; ///< Used for modified gradient-shaped operators on scalar CV
+  typedef SpatialOperator< LinAlg, Scratch, ZVolField, ZSurfXField > ScratchZVolZSurfX; ///< Used for modified gradient-shaped operators on scalar CV
+  typedef SpatialOperator< LinAlg, Scratch, ZVolField, ZSurfYField > ScratchZVolZSurfY; ///< Used for modified gradient-shaped operators on scalar CV
+  typedef SpatialOperator< LinAlg, Scratch, ZVolField, ZSurfZField > ScratchZVolZSurfZ; ///< Used for modified gradient-shaped operators on scalar CV
 
 
   // jcs need to test these.
-  typedef SpatialOperator< LinAlgTrilinos, Scratch, SSurfXField, SSurfXField >  ScratchSSurfX;
-  typedef SpatialOperator< LinAlgTrilinos, Scratch, SSurfYField, SSurfYField >  ScratchSSurfY;
-  typedef SpatialOperator< LinAlgTrilinos, Scratch, SSurfZField, SSurfZField >  ScratchSSurfZ;
+  typedef SpatialOperator< LinAlg, Scratch, SSurfXField, SSurfXField >  ScratchSSurfX;
+  typedef SpatialOperator< LinAlg, Scratch, SSurfYField, SSurfYField >  ScratchSSurfY;
+  typedef SpatialOperator< LinAlg, Scratch, SSurfZField, SSurfZField >  ScratchSSurfZ;
 
-  typedef SpatialOperator< LinAlgTrilinos, Scratch, XSurfXField, XSurfXField >  ScratchXSurfX;
-  typedef SpatialOperator< LinAlgTrilinos, Scratch, XSurfYField, XSurfYField >  ScratchXSurfY;
-  typedef SpatialOperator< LinAlgTrilinos, Scratch, XSurfZField, XSurfZField >  ScratchXSurfZ;
+  typedef SpatialOperator< LinAlg, Scratch, XSurfXField, XSurfXField >  ScratchXSurfX;
+  typedef SpatialOperator< LinAlg, Scratch, XSurfYField, XSurfYField >  ScratchXSurfY;
+  typedef SpatialOperator< LinAlg, Scratch, XSurfZField, XSurfZField >  ScratchXSurfZ;
 
-  typedef SpatialOperator< LinAlgTrilinos, Scratch, YSurfXField, YSurfXField >  ScratchYSurfX;
-  typedef SpatialOperator< LinAlgTrilinos, Scratch, YSurfYField, YSurfYField >  ScratchYSurfY;
-  typedef SpatialOperator< LinAlgTrilinos, Scratch, YSurfZField, YSurfZField >  ScratchYSurfZ;
+  typedef SpatialOperator< LinAlg, Scratch, YSurfXField, YSurfXField >  ScratchYSurfX;
+  typedef SpatialOperator< LinAlg, Scratch, YSurfYField, YSurfYField >  ScratchYSurfY;
+  typedef SpatialOperator< LinAlg, Scratch, YSurfZField, YSurfZField >  ScratchYSurfZ;
 
-  typedef SpatialOperator< LinAlgTrilinos, Scratch, ZSurfXField, ZSurfXField >  ScratchZSurfX;
-  typedef SpatialOperator< LinAlgTrilinos, Scratch, ZSurfYField, ZSurfYField >  ScratchZSurfY;
-  typedef SpatialOperator< LinAlgTrilinos, Scratch, ZSurfZField, ZSurfZField >  ScratchZSurfZ;
+  typedef SpatialOperator< LinAlg, Scratch, ZSurfXField, ZSurfXField >  ScratchZSurfX;
+  typedef SpatialOperator< LinAlg, Scratch, ZSurfYField, ZSurfYField >  ScratchZSurfY;
+  typedef SpatialOperator< LinAlg, Scratch, ZSurfZField, ZSurfZField >  ScratchZSurfZ;
 
 
 }// namespace FVStaggered

@@ -113,18 +113,20 @@ namespace FVStaggered{
     const int ixf = get_ghost_flat_ix_src <SrcFieldT,Dir >( dim, i, j, k );
     int irow      = get_ghost_flat_ix_dest<DestFieldT,Dir>( dim, i, j, k );
 
-    int ncol; double*vals=0; int*ixs=0;
-    op.get_linalg_mat().ExtractMyRowView( irow, ncol, vals, ixs );
-
     // NOTE: This will NOT work in the case where we have multiple ghost cells!
     assert( OpT::SrcGhost::NM == OpT::SrcGhost::NP );
     assert( OpT::SrcGhost::NM == 1 );
 
+    const typename OpT::MatrixRow row = op.get_row(irow);
+    typename       OpT::const_column_iterator icol =row.begin();
+    const typename OpT::const_column_iterator icole=row.end();
+
     double prodsum=0.0; double ghostcoeff=0.0;
-    for( int icol=0; icol<ncol; icol++ ){
-      if (*ixs == ixf)	ghostcoeff = *vals;
-      else              prodsum += (*vals) *f[*ixs];
-      ++ixs; ++vals;
+    for( ; icol!=icole; ++icol ){
+      if (icol.index() == uint(ixf) )
+	ghostcoeff = *icol;
+      else
+	prodsum += *icol *f[icol.index()];
     }
 
     assert( ghostcoeff != 0.0 );
@@ -186,31 +188,27 @@ namespace FVStaggered{
     const int ixf  = get_ghost_flat_ix_src <typename BCOpT::SrcFieldType, Dir>( dim, i, j, k );
     int irow       = get_ghost_flat_ix_dest<typename BCOpT::DestFieldType,Dir>( dim, i, j, k );
 
-    int ncol; double*vals=0; int*ixs=0;
-    bcOp.get_linalg_mat().ExtractMyRowView( irow, ncol, vals, ixs );
-    assert( ncol<ncolMax );
-    assert( OpT::SrcGhost::NM == OpT::SrcGhost::NP );
-    assert( OpT::SrcGhost::NM == 1 );
+
+    const typename BCOpT::MatrixRow bcrow = bcOp.get_row(irow);
+    typename       BCOpT::const_column_iterator icolbc = bcrow.begin();
+    const typename BCOpT::const_column_iterator icolbce= bcrow.end();
 
     double prodsum=0.0; double ghostcoeff=0.0;
     BCInfo* bci = &bcinfo[0];
-    for( int icol=0; icol<ncol; ++icol ){
-      if (*ixs == ixf){
-	ghostcoeff = *vals;
+    for( ; icolbc!=icolbce; ++icolbc ){
+      if( icolbc.index() == uint(ixf) ){
+	ghostcoeff = *icolbc;
       }
       else{
-	prodsum += (*vals) * f[*ixs];
-	bci->coef = *vals;
-	bci->ix   = *ixs;
+	prodsum += *icolbc * f[icolbc.index()];
+	bci->coef = *icolbc;
+	bci->ix   = icolbc.index();
 	++bci;
 	++nbcinfo;
       }
-      ++ixs; ++vals;
     }
 
     assert( ghostcoeff != 0.0 );
-    //     const double ghostVal = (bcVal - prodsum) / ghostcoeff;
-
 
 
     // currently, we are basically assuming that the operator here is
@@ -223,21 +221,18 @@ namespace FVStaggered{
     const int ig = get_ghost_flat_ix_src <typename OpT::SrcFieldType, Dir>( dim, i, j, k );
     irow         = get_ghost_flat_ix_dest<typename OpT::DestFieldType,NODIR>( dim, i, j, k );
 
-    op.get_linalg_mat().ExtractMyRowView( irow, ncol, vals, ixs );
-    assert( ncol<ncolMax );
-    assert( OpT::SrcGhost::NM == OpT::SrcGhost::NP );
-    assert( OpT::SrcGhost::NM == 1 );
+    typename OpT::MatrixRow row = op.get_row(irow);
+    typename OpT::column_iterator icol=row.begin();
+    const typename OpT::column_iterator icole=row.end();
 
     double Sg = 0.0;
-    int* iix=ixs;
-    double* ival=vals;
-    for( int icol=0; icol<ncol; ++icol ){
-      if( *iix==ig ){
-	Sg = *ival;
-	*ival = 0.0;
+    for( ; icol!=icole; ++icol ){
+      if( icol.index() == uint(ig) ){
+	double& val = *icol;
+	Sg = val;
+	val = 0.0;
 	break;
       }
-      ++iix; ++ival;
     }
 
     //
@@ -246,18 +241,17 @@ namespace FVStaggered{
     rhs -= bcVal/ghostcoeff*Sg;
 
     // imprint the LHS.
-    ival=vals;
-    iix=ixs;
-    for( int icol=0; icol<ncol; ++icol ){
-      if( *iix!=ig ){
+    typename OpT::column_iterator ic=row.begin();
+    for( ; ic!=icole; ++ic ){
+      const int ix = ic.index();
+      if( ix!=ig ){
 	for( BCInfo* bci=&bcinfo[0]; bci!=&bcinfo[nbcinfo]; ++bci ){
-	  if( bci->ix == *iix ){
-	    *ival -= bci->coef/ghostcoeff * Sg;
+	  if( bci->ix == ix ){
+	    *ic -= bci->coef/ghostcoeff * Sg;
 	    break;
 	  }
 	} // for
       } // if
-      ++iix; ++ival;
     } // column loop
     
   }

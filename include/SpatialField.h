@@ -630,7 +630,7 @@ namespace SpatialOps{
   void
   SpatialField<VecOps,FieldLocation,GhostTraits>::Print(std::ostream& s) const
   {
-    vec_.Print(s);
+    linAlg_.print_vec(s);
   }
   //------------------------------------------------------------------
   template< typename VecOps, typename FieldLocation, typename GhostTraits >
