@@ -519,8 +519,9 @@ namespace SpatialOps{
   {
     // assign the RHS field to this spatial field.
     typename RHS::const_iterator irhs = rhs.begin();
+#ifndef NDEBUG
     const typename RHS::const_iterator irhse = rhs.end();
-    
+#endif
     const interior_iterator iflde = this->interior_end();
     interior_iterator ifld = this->interior_begin();
     
@@ -538,8 +539,9 @@ namespace SpatialOps{
   {
     // assign the RHS field to this spatial field.
     typename RHS::const_iterator irhs = rhs.begin();
+#ifndef NDEBUG
     const typename RHS::const_iterator irhse = rhs.end();
-    
+#endif
     const interior_iterator iflde = this->interior_end();
     interior_iterator ifld = this->interior_begin();
     

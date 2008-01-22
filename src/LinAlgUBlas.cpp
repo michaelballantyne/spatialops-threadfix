@@ -90,9 +90,44 @@ namespace SpatialOps{
   void
   LinAlgUBlas::reset_entries( const double val )
   {
-    // assumes that we have a map as the type (see typedef of MatType)
-    for( MatType::array_type::iterator i = mat_->data().begin();  i != mat_->data().end();  ++i ){
-      i->second = 1.1;
+    typedef MatType::iterator1 RowIter;
+    typedef MatType::iterator2 ColIter;
+    for( RowIter irow = mat_->begin1(); irow!=mat_->end1(); ++irow ){
+      for( ColIter icol=irow.begin(); icol!=irow.end(); ++icol ){
+	*icol = val;
+      }
+    }
+  }
+
+  //--------------------------------------------------------------------
+
+  void
+  LinAlgUBlas::left_scale( const VecType& v )
+  {
+    typedef VecType::const_iterator VecIter;
+    typedef MatType::iterator1 RowIter;
+    typedef MatType::iterator2 ColIter;
+    VecIter ivec = v.begin();
+    for( RowIter irow = mat_->begin1(); irow!=mat_->end1(); ++irow, ++ivec ){
+      for( ColIter icol=irow.begin(); icol!=irow.end(); ++icol ){
+	*icol *= *ivec;
+      }
+    }
+  }
+
+  //--------------------------------------------------------------------
+
+  void
+  LinAlgUBlas::right_scale( const VecType& v )
+  {
+    typedef VecType::const_iterator VecIter;
+    typedef MatType::iterator1 RowIter;
+    typedef MatType::iterator2 ColIter;
+    for( RowIter irow = mat_->begin1(); irow!=mat_->end1(); ++irow ){
+      VecIter ivec = v.begin();
+      for( ColIter icol=irow.begin(); icol!=irow.end(); ++icol, ++ivec ){
+	*icol *= *ivec;
+      }
     }
   }
 

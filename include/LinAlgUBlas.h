@@ -25,7 +25,7 @@ namespace SpatialOps{
   {
   public:
 
-    typedef boost::numeric::ublas::mapped_matrix< double, boost::numeric::ublas::row_major > MatType;
+    typedef boost::numeric::ublas::compressed_matrix< double, boost::numeric::ublas::row_major > MatType;
     typedef boost::numeric::ublas::shallow_array_adaptor<double> ArrayAdaptor;
     typedef boost::numeric::ublas::vector<double,ArrayAdaptor>  VecType;
 
@@ -102,8 +102,8 @@ namespace SpatialOps{
     inline LinAlgUBlas& operator-=( const FieldT& f );
     //@}
 
-    inline void left_scale( const VecType& v );
-    inline void right_scale( const VecType& v );
+    void left_scale( const VecType& v );
+    void right_scale( const VecType& v );
 
     // reset entries in the matrix
     void reset_entries( const double val );
@@ -182,10 +182,10 @@ namespace SpatialOps{
   LinAlgUBlas::multiply( const VecType& src, VecType& dest ) const
   {
     // "noalias" improves performance.  This requires that src and dest are different arrays.
-    noalias(dest) = prod(*mat_,src);
+    //noalias(dest) = prod(*mat_,src);
 
     // alternatively:
-    //boost::numeric::ublas::axpy_prod( *mat_, src, dest, true );
+    boost::numeric::ublas::axpy_prod( *mat_, src, dest, true );
   }
 
   //--------------------------------------------------------------------
@@ -196,7 +196,7 @@ namespace SpatialOps{
     noalias(C) = prod(*mat_,B);
 
     // alternatively:
-    // boost::numeric::ublas::axpy_prod( *mat_, B, C, true );
+    //boost::numeric::ublas::axpy_prod( *mat_, B, C, true );
   }
 
   //--------------------------------------------------------------------
