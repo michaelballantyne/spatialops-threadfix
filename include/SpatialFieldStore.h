@@ -142,6 +142,13 @@ namespace SpatialOps{
     FieldT* f_;
     int* count_;
     bool builtFromStore_;
+
+#ifdef BOOST_HAS_THREADS
+    /**
+     *  Used to lock threads to prevent simultaneous access.
+     */
+    inline boost::mutex& get_mutex(){ static boost::mutex m; return m; }
+#endif
   };
 
 
