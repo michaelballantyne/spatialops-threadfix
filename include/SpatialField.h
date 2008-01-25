@@ -11,8 +11,6 @@
 #include <SpatialFieldStore.h>
 #include <SFIterator.h>
 
-// #include <LinearSystem.h>
-
 
 class RHS;
 

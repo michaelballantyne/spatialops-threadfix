@@ -4,6 +4,9 @@
 #include <queue>
 #include <map>
 
+#ifdef BOOST_HAS_THREADS
+#include <boost/thread/mutex.hpp>
+#endif
 
 namespace SpatialOps{
 
@@ -213,6 +216,13 @@ namespace SpatialOps{
      */
     void restore_field( FieldT& f );
 
+#ifdef BOOST_HAS_THREADS
+    /**
+     *  Used to lock threads to prevent simultaneous access.
+     */
+    inline boost::mutex& get_mutex(){ static boost::mutex m; return m; }
+#endif
+
     SpatialFieldStore(){};
     ~SpatialFieldStore();
 
@@ -298,6 +308,9 @@ namespace SpatialOps{
   SpatFldPtr<FieldT>&
   SpatFldPtr<FieldT>::operator=( const SpatFldPtr& p )
   {
+#ifdef BOOST_HAS_THREADS
+    boost::mutex::scoped_lock lock( this->get_mutex() );
+#endif
     // was this an active SpatFldPtr?
     if( count_ != NULL ){
       // this one is dying so decrement the count.
@@ -322,6 +335,9 @@ namespace SpatialOps{
   SpatFldPtr<FieldT>&
   SpatFldPtr<FieldT>::operator=( FieldT& f )
   {
+#ifdef BOOST_HAS_THREADS
+    boost::mutex::scoped_lock lock( this->get_mutex() );
+#endif
     // was this an active SpatFldPtr?
     if( count_ != NULL ){
       // this one is dying so decrement the count.
@@ -384,6 +400,9 @@ namespace SpatialOps{
   SpatFldPtr<FieldT>
   SpatialFieldStore<FieldT>::get( const FieldT& f )
   {
+#ifdef BOOST_HAS_THREADS
+    boost::mutex::scoped_lock lock( get_mutex() );
+#endif
     // find the proper map
     FieldQueue& q = fqmap_[ f.get_ntotal() ];
 
@@ -403,6 +422,9 @@ namespace SpatialOps{
   SpatialFieldStore<FieldT>::get( const int ntot,
 				  const std::set<int>& ghostSet )
   {
+#ifdef BOOST_HAS_THREADS
+    boost::mutex::scoped_lock lock( get_mutex() );
+#endif
     // find the proper map
     FieldQueue& q = fqmap_[ ntot ];
 
@@ -421,6 +443,9 @@ namespace SpatialOps{
   void
   SpatialFieldStore<FieldT>::restore_field( FieldT& field )
   {
+#ifdef BOOST_HAS_THREADS
+    boost::mutex::scoped_lock lock( get_mutex() );
+#endif
     FieldQueue& q = fqmap_[ field.get_ntotal() ];
     q.push( &field );
   }

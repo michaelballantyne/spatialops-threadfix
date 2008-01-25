@@ -24,7 +24,7 @@ EPETRA_LIBS = -lepetra -lepetraext -lblas -llapack
 AZTECOO_LIBS = -laztecoo -lteuchos 
 LIBS = $(AZTECOO_LIBS)  $(EPETRA_LIBS) $(EXTRA_LIBS)
 
-CXXFLAGS = -O4 -Wall -fexpensive-optimizations -funroll-loops -DBOOST_UBLAS_SHALLOW_ARRAY_ADAPTOR -DNDEBUG -pg
+CXXFLAGS = -O4 -Wall -fexpensive-optimizations -funroll-loops -DBOOST_UBLAS_SHALLOW_ARRAY_ADAPTOR -DNDEBUG
 #CXXFLAGS = -g -Wall -O0 -DBOOST_UBLAS_SHALLOW_ARRAY_ADAPTOR
 COMPILE_CXX = g++ -c $(CXXFLAGS) $(INCDIRS)
 #COMPILE_CXX = mpiCC -c $(CXXFLAGS) $(INCDIRS)
@@ -69,4 +69,4 @@ testnew: lib testNew.o buildOps.o
 poisson: lib testPoisson.o buildOps.o
 	$(LINK) testPoisson.o buildOps.o -lspatialops $(LIBS) -o testpoisson.x
 
-clean: ; @rm *.o libspatialops.a test.x
+clean: ; @rm *.o libspatialops.a testnew.x testpoisson.x
