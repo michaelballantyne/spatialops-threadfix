@@ -7,6 +7,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <fstream>
 #include <stdexcept>
 #include <sstream>
 
@@ -312,6 +313,12 @@ namespace SpatialOps{
     /** @brief Print the operator's entries to the specified output stream. */
     void Print( std::ostream & ) const;
 
+    /**
+     *  @brief Write the operator to a matlab file.
+     *  @param prefix The name of the operator.  The file will be called "load_prefix.m".
+     */
+    void write_matlab( const std::string prefix ) const;
+
 
   protected:
 
@@ -350,8 +357,8 @@ namespace SpatialOps{
     const int nrows_, ncols_;
     std::set<int> ghostCols_, ghostRows_;
     LinAlg linAlg_;
+    const int nNonZero_;
     MatType & mat_;
-
   };
 
 
@@ -464,11 +471,12 @@ namespace SpatialOps{
   SpatialOperator( Assembler & opAssembler )
     : nrows_ ( opAssembler.get_nrows()  ),
       ncols_ ( opAssembler.get_ncols()  ),
-      mat_( linAlg_.setup_matrix( nrows_, ncols_, opAssembler.num_nonzeros() ) )
+      nNonZero_( opAssembler.num_nonzeros() ),
+      mat_( linAlg_.setup_matrix( nrows_, ncols_, nNonZero_ ) )
   {
     // build the operator
-    std::vector<double> vals( opAssembler.num_nonzeros(), 0.0 );
-    std::vector<int>    ixs ( opAssembler.num_nonzeros(), 0   );
+    std::vector<double> vals( nNonZero_, 0.0 );
+    std::vector<int>    ixs ( nNonZero_, 0   );
     for( int i=0; i<nrows_; ++i ){
       vals.clear();
       ixs.clear();
@@ -620,6 +628,44 @@ namespace SpatialOps{
   Print( std::ostream & s ) const
   {
     linAlg_.print_mat( s );
+  }
+  //------------------------------------------------------------------
+  template< typename LinAlg, typename OpType, typename SrcFieldT, typename DestFieldT >
+  void
+  SpatialOperator<LinAlg,OpType,SrcFieldT,DestFieldT>::
+  write_matlab( const std::string prefix ) const
+  {
+    const std::string fname = "load_"+prefix +".m";
+    std::ofstream fout( fname.c_str() );
+    fout << "function A = load_" << prefix << "()" << std::endl;
+
+    // first time through count nonzeros for preallocation in matlab.
+    // second time through, write the entries.
+    for( int writeLoop=0; writeLoop<=1; ++writeLoop ){
+      int i=0;
+      for( int irow=0; irow<nrows_; ++irow ){
+	typename LinAlg::MatrixRow row = linAlg_.get_row( irow );
+	for( typename LinAlg::column_iterator icol = row.begin();
+	     icol!=row.end();
+	     ++icol, ++i )
+	  {
+	    if( writeLoop==1 ){
+	      fout << "row(" << i+1 << ") = " << irow+1 << ";  "
+		   << "col(" << i+1 << ") = " << icol.index()+1 << ";  "
+		   << "val(" << i+1 << ") = " << *icol << ";"
+		   << std::endl;
+	    }
+	  }
+      }
+      if( writeLoop==0 ){
+	fout << "row = zeros(" << i << ",1);  col=row;  val=row;" << std::endl;
+      }
+    }
+      fout << "A = sparse( "
+	   << " row, col, val, "
+	   << nrows_ << ", " << ncols_
+	   << ");" << std::endl;
+    fout.close();
   }
   //------------------------------------------------------------------
 

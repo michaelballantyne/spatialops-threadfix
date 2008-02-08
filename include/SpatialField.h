@@ -4,6 +4,7 @@
 #include <vector>
 #include <set>
 #include <iostream>
+#include <fstream>
 
 // allows compile-time expansion of complex expressions involving SpatialField objects.
 #include <daixtrose/Daixt.h>
@@ -261,6 +262,12 @@ namespace SpatialOps{
 
     /** Dump information about the field to the given output stream. */
     virtual void Print( std::ostream& ) const;
+
+    /**
+     *  @brief Write the field to a matlab file.
+     *  @param prefix The name of the field.  The file will be called "load_prefix.m".
+     */
+    void write_matlab( const std::string prefix ) const;
 
   protected:
     
@@ -629,6 +636,22 @@ namespace SpatialOps{
   SpatialField<VecOps,FieldLocation,GhostTraits>::Print(std::ostream& s) const
   {
     linAlg_.print_vec(s);
+  }
+  //--------------------------------------------------------------------
+  template< typename VecOps, typename FieldLocation, typename GhostTraits >
+  void
+  SpatialField<VecOps,FieldLocation,GhostTraits>::
+  write_matlab( const std::string prefix ) const
+  {
+    const std::string fname = "load_"+prefix+".m";
+    std::ofstream fout( fname.c_str() );
+    fout << "function x = load_" << prefix << "()" << std::endl
+	 << "x = zeros(" << npts_ << ",1);" << std::endl;
+    int ix=1;
+    for( const_iterator i=begin(); i!=end(); ++i, ++ix ){
+      fout << "x(" << ix << ") = " << *i << ";" << std::endl;
+    }
+    fout.close();
   }
   //------------------------------------------------------------------
   template< typename VecOps, typename FieldLocation, typename GhostTraits >

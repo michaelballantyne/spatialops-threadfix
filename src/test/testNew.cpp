@@ -5,9 +5,6 @@
 using namespace std;
 
 
-#include <EpetraExt_VectorOut.h>
-#include <EpetraExt_RowMatrixOut.h>
-
 #include <FVStaggered.h>
 #include <FVStaggeredBCTools.h>
 #include <LinearSystem.h>
@@ -146,13 +143,6 @@ void test_interp_op( const Grid& grid,
   op->apply_to_field( phi, fphi );
 
   report_errors( fphiExact, fphi );
-
-//   EpetraExt::VectorToMatrixMarketFile( "fexact.mm", fphiExact.get_linalg_vec(), "", "" );
-//   EpetraExt::VectorToMatrixMarketFile( "finterp.mm", fphi.get_linalg_vec(), "", "" );
-//   EpetraExt::VectorToMatrixMarketFile( "x.mm", funcFPhi.get_x().get_linalg_vec(), "", "" );
-//   EpetraExt::VectorToMatrixMarketFile( "y.mm", funcFPhi.get_y().get_linalg_vec(), "", "" );
-//   EpetraExt::VectorToMatrixMarketFile( "z.mm", funcFPhi.get_z().get_linalg_vec(), "", "" );
-
 }
 
 //--------------------------------------------------------------------
@@ -350,9 +340,6 @@ void test_ops()
   GradSVolSSurfX&    Gx = *SpatialOpDatabase<GradSVolSSurfX>::self().retrieve_operator();
   Sx.reset_entries(1.0);
 
-//   EpetraExt::RowMatrixToMatrixMarketFile( "Sx.mm", Sx.get_linalg_mat(), "", "" );
-//   EpetraExt::RowMatrixToMatrixMarketFile( "Gx.mm", Gx.get_linalg_mat(), "", "" );
-
   Sx += Gx;
   Sx -= Gx;
 
@@ -490,7 +477,6 @@ void test_poisson( const Grid& grid, const vector<int>& dim )
   }
 
 //   lhs.Print(cout);
-//   EpetraExt::RowMatrixToMatrixMarketFile( "L.mm", lhs.epetra_mat(), "", "" );
 
 
   //
@@ -865,10 +851,8 @@ int main()
     Dsy->apply_to_op( *Gsy, *Ssy );
     Dsz->apply_to_op( *Gsz, *Ssz );
 
-//     EpetraExt::RowMatrixToMatrixMarketFile( "D.mm", Dsx->get_linalg_mat(), "", "" );
-//     EpetraExt::RowMatrixToMatrixMarketFile( "G.mm", Gsx->get_linalg_mat(), "", "" );
-//     cout << "SSurfXField nx_x = " << get_nx_x<SSurfXField>(dim) << endl;
-//     cout << "Div [" << Dsx->nrows() << " x " << Dsx->ncols() << "]" << endl;
+    Dsx->write_matlab("Dx");
+    Gsx->write_matlab("Gx");
 
     const SinFun<SVolField  > fun     ( grid.xcoord_svol(),   grid.ycoord_svol(),   grid.zcoord_svol()   );
     const SinFun<SVolField  > divFun  ( grid.xcoord_svol(),   grid.ycoord_svol(),   grid.zcoord_svol()   );
@@ -876,6 +860,8 @@ int main()
     SVolField phi       ( get_n_tot<SVolField>(dim), get_ghost_set<SVolField>(dim), NULL );
     SVolField d2phi     ( get_n_tot<SVolField>(dim), get_ghost_set<SVolField>(dim), NULL );
     SVolField d2phiExact( get_n_tot<SVolField>(dim), get_ghost_set<SVolField>(dim), NULL );
+
+    phi.write_matlab("phi");
 
     fun.evaluate( phi );
 
@@ -913,10 +899,6 @@ int main()
     Dsx->apply_to_op( *Gsx, *Sxx );
     Dsy->apply_to_op( *Gsy, *Sxy );
     Dsz->apply_to_op( *Gsz, *Sxz );
-
-//     EpetraExt::RowMatrixToMatrixMarketFile( "Sxx.mm", Sxx->get_linalg_mat(), "", "" );
-//     EpetraExt::RowMatrixToMatrixMarketFile( "Sxy.mm", Sxy->get_linalg_mat(), "", "" );
-//     EpetraExt::RowMatrixToMatrixMarketFile( "Sxz.mm", Sxz->get_linalg_mat(), "", "" );
 
     cout << "done" << endl;
   }

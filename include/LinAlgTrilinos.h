@@ -68,6 +68,7 @@ namespace SpatialOps{
       inline column_iterator& operator--(){assert(i_>0);     --i_; return *this; }
 
       inline bool operator!=(const column_iterator c) const{return c.i_!=i_;}
+      inline bool operator==(const column_iterator c) const{return c.i_==i_;}
 
       inline unsigned int index() const{return mr_.get_column_ixs()[i_]; }
 
