@@ -20,7 +20,8 @@ class Grid
 {
 public:
   Grid( const std::vector<int>& dim,
-	const std::vector<double>& spacing );
+	const std::vector<double>& spacing,
+	const std::vector<bool>& bcPlusFlag );
   ~Grid();
 
   const std::vector<int>& extent() const{return dim_;}
@@ -132,67 +133,68 @@ private:
 //====================================================================
 
 Grid::Grid( const std::vector<int>& dim,
-	    const std::vector<double>& spacing )
+	    const std::vector<double>& spacing,
+	    const std::vector<bool>& bcPlusFlag )
   : dim_( dim ),
 
-    svx_( get_n_tot<SVolField >(dim), get_ghost_set<SVolField >(dim), NULL ),
-    svy_( get_n_tot<SVolField >(dim), get_ghost_set<SVolField >(dim), NULL ),
-    svz_( get_n_tot<SVolField >(dim), get_ghost_set<SVolField >(dim), NULL ),
+    svx_( get_n_tot<SVolField >(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<SVolField >(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    svy_( get_n_tot<SVolField >(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<SVolField >(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    svz_( get_n_tot<SVolField >(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<SVolField >(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
 
-    ssxx_( get_n_tot<SSurfXField>(dim), get_ghost_set<SSurfXField>(dim), NULL ),
-    ssxy_( get_n_tot<SSurfXField>(dim), get_ghost_set<SSurfXField>(dim), NULL ),
-    ssxz_( get_n_tot<SSurfXField>(dim), get_ghost_set<SSurfXField>(dim), NULL ),
-    ssyx_( get_n_tot<SSurfYField>(dim), get_ghost_set<SSurfYField>(dim), NULL ),
-    ssyy_( get_n_tot<SSurfYField>(dim), get_ghost_set<SSurfYField>(dim), NULL ),
-    ssyz_( get_n_tot<SSurfYField>(dim), get_ghost_set<SSurfYField>(dim), NULL ),
-    sszx_( get_n_tot<SSurfZField>(dim), get_ghost_set<SSurfZField>(dim), NULL ),
-    sszy_( get_n_tot<SSurfZField>(dim), get_ghost_set<SSurfZField>(dim), NULL ),
-    sszz_( get_n_tot<SSurfZField>(dim), get_ghost_set<SSurfZField>(dim), NULL ),
-
-
-    xvx_( get_n_tot<XVolField >(dim), get_ghost_set<XVolField >(dim), NULL ),
-    xvy_( get_n_tot<XVolField >(dim), get_ghost_set<XVolField >(dim), NULL ),
-    xvz_( get_n_tot<XVolField >(dim), get_ghost_set<XVolField >(dim), NULL ),
+    ssxx_( get_n_tot<SSurfXField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<SSurfXField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    ssxy_( get_n_tot<SSurfXField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<SSurfXField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    ssxz_( get_n_tot<SSurfXField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<SSurfXField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    ssyx_( get_n_tot<SSurfYField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<SSurfYField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    ssyy_( get_n_tot<SSurfYField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<SSurfYField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    ssyz_( get_n_tot<SSurfYField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<SSurfYField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    sszx_( get_n_tot<SSurfZField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<SSurfZField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    sszy_( get_n_tot<SSurfZField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<SSurfZField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    sszz_( get_n_tot<SSurfZField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<SSurfZField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
 
 
-    xsxx_( get_n_tot<XSurfXField>(dim), get_ghost_set<XSurfXField>(dim), NULL ),
-    xsxy_( get_n_tot<XSurfXField>(dim), get_ghost_set<XSurfXField>(dim), NULL ),
-    xsxz_( get_n_tot<XSurfXField>(dim), get_ghost_set<XSurfXField>(dim), NULL ),
-    xsyx_( get_n_tot<XSurfYField>(dim), get_ghost_set<XSurfYField>(dim), NULL ),
-    xsyy_( get_n_tot<XSurfYField>(dim), get_ghost_set<XSurfYField>(dim), NULL ),
-    xsyz_( get_n_tot<XSurfYField>(dim), get_ghost_set<XSurfYField>(dim), NULL ),
-    xszx_( get_n_tot<XSurfZField>(dim), get_ghost_set<XSurfZField>(dim), NULL ),
-    xszy_( get_n_tot<XSurfZField>(dim), get_ghost_set<XSurfZField>(dim), NULL ),
-    xszz_( get_n_tot<XSurfZField>(dim), get_ghost_set<XSurfZField>(dim), NULL ),
-
-    yvx_( get_n_tot<YVolField >(dim), get_ghost_set<YVolField >(dim), NULL ),
-    yvy_( get_n_tot<YVolField >(dim), get_ghost_set<YVolField >(dim), NULL ),
-    yvz_( get_n_tot<YVolField >(dim), get_ghost_set<YVolField >(dim), NULL ),
-
-    ysxx_( get_n_tot<YSurfXField>(dim), get_ghost_set<YSurfXField>(dim), NULL ),
-    ysxy_( get_n_tot<YSurfXField>(dim), get_ghost_set<YSurfXField>(dim), NULL ),
-    ysxz_( get_n_tot<YSurfXField>(dim), get_ghost_set<YSurfXField>(dim), NULL ),
-    ysyx_( get_n_tot<YSurfYField>(dim), get_ghost_set<YSurfYField>(dim), NULL ),
-    ysyy_( get_n_tot<YSurfYField>(dim), get_ghost_set<YSurfYField>(dim), NULL ),
-    ysyz_( get_n_tot<YSurfYField>(dim), get_ghost_set<YSurfYField>(dim), NULL ),
-    yszx_( get_n_tot<YSurfZField>(dim), get_ghost_set<YSurfZField>(dim), NULL ),
-    yszy_( get_n_tot<YSurfZField>(dim), get_ghost_set<YSurfZField>(dim), NULL ),
-    yszz_( get_n_tot<YSurfZField>(dim), get_ghost_set<YSurfZField>(dim), NULL ),
+    xvx_( get_n_tot<XVolField >(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<XVolField >(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    xvy_( get_n_tot<XVolField >(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<XVolField >(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    xvz_( get_n_tot<XVolField >(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<XVolField >(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
 
 
-    zvx_( get_n_tot<ZVolField >(dim), get_ghost_set<ZVolField >(dim), NULL ),
-    zvy_( get_n_tot<ZVolField >(dim), get_ghost_set<ZVolField >(dim), NULL ),
-    zvz_( get_n_tot<ZVolField >(dim), get_ghost_set<ZVolField >(dim), NULL ),
+    xsxx_( get_n_tot<XSurfXField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<XSurfXField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    xsxy_( get_n_tot<XSurfXField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<XSurfXField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    xsxz_( get_n_tot<XSurfXField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<XSurfXField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    xsyx_( get_n_tot<XSurfYField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<XSurfYField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    xsyy_( get_n_tot<XSurfYField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<XSurfYField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    xsyz_( get_n_tot<XSurfYField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<XSurfYField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    xszx_( get_n_tot<XSurfZField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<XSurfZField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    xszy_( get_n_tot<XSurfZField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<XSurfZField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    xszz_( get_n_tot<XSurfZField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<XSurfZField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
 
-    zsxx_( get_n_tot<ZSurfXField>(dim), get_ghost_set<ZSurfXField>(dim), NULL ),
-    zsxy_( get_n_tot<ZSurfXField>(dim), get_ghost_set<ZSurfXField>(dim), NULL ),
-    zsxz_( get_n_tot<ZSurfXField>(dim), get_ghost_set<ZSurfXField>(dim), NULL ),
-    zsyx_( get_n_tot<ZSurfYField>(dim), get_ghost_set<ZSurfYField>(dim), NULL ),
-    zsyy_( get_n_tot<ZSurfYField>(dim), get_ghost_set<ZSurfYField>(dim), NULL ),
-    zsyz_( get_n_tot<ZSurfYField>(dim), get_ghost_set<ZSurfYField>(dim), NULL ),
-    zszx_( get_n_tot<ZSurfZField>(dim), get_ghost_set<ZSurfZField>(dim), NULL ),
-    zszy_( get_n_tot<ZSurfZField>(dim), get_ghost_set<ZSurfZField>(dim), NULL ),
-    zszz_( get_n_tot<ZSurfZField>(dim), get_ghost_set<ZSurfZField>(dim), NULL )
+    yvx_( get_n_tot<YVolField >(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<YVolField >(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    yvy_( get_n_tot<YVolField >(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<YVolField >(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    yvz_( get_n_tot<YVolField >(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<YVolField >(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+
+    ysxx_( get_n_tot<YSurfXField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<YSurfXField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    ysxy_( get_n_tot<YSurfXField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<YSurfXField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    ysxz_( get_n_tot<YSurfXField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<YSurfXField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    ysyx_( get_n_tot<YSurfYField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<YSurfYField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    ysyy_( get_n_tot<YSurfYField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<YSurfYField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    ysyz_( get_n_tot<YSurfYField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<YSurfYField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    yszx_( get_n_tot<YSurfZField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<YSurfZField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    yszy_( get_n_tot<YSurfZField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<YSurfZField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    yszz_( get_n_tot<YSurfZField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<YSurfZField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+
+
+    zvx_( get_n_tot<ZVolField >(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<ZVolField >(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    zvy_( get_n_tot<ZVolField >(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<ZVolField >(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    zvz_( get_n_tot<ZVolField >(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<ZVolField >(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+
+    zsxx_( get_n_tot<ZSurfXField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<ZSurfXField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    zsxy_( get_n_tot<ZSurfXField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<ZSurfXField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    zsxz_( get_n_tot<ZSurfXField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<ZSurfXField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    zsyx_( get_n_tot<ZSurfYField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<ZSurfYField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    zsyy_( get_n_tot<ZSurfYField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<ZSurfYField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    zsyz_( get_n_tot<ZSurfYField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<ZSurfYField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    zszx_( get_n_tot<ZSurfZField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<ZSurfZField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    zszy_( get_n_tot<ZSurfZField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<ZSurfZField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
+    zszz_( get_n_tot<ZSurfZField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<ZSurfZField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL )
 {
   using namespace SpatialOps;
   using namespace FVStaggered;
@@ -202,9 +204,9 @@ Grid::Grid( const std::vector<int>& dim,
     SVolField::iterator isvy=svy_.begin();
     SVolField::iterator isvz=svz_.begin();
 
-    const int ihi = get_nx<SVolField>(dim[0]);
-    const int jhi = get_ny<SVolField>(dim[1]);
-    const int khi = get_nz<SVolField>(dim[2]);
+    const int ihi = get_nx<SVolField>(dim,bcPlusFlag[0]);
+    const int jhi = get_ny<SVolField>(dim,bcPlusFlag[1]);
+    const int khi = get_nz<SVolField>(dim,bcPlusFlag[2]);
 
     const int ngxm = dim[0]>1 ? SVolField::Ghost::NM : 0;
     const int ngym = dim[1]>1 ? SVolField::Ghost::NM : 0;
@@ -236,9 +238,9 @@ Grid::Grid( const std::vector<int>& dim,
     XVolField::iterator ixvx=xvx_.begin();
     XVolField::iterator ixvy=xvy_.begin();
     XVolField::iterator ixvz=xvz_.begin();
-    const int ihi = get_nx<XVolField>(dim[0]);
-    const int jhi = get_ny<XVolField>(dim[1]);
-    const int khi = get_nz<XVolField>(dim[2]);
+    const int ihi = get_nx<XVolField>(dim,bcPlusFlag[0]);
+    const int jhi = get_ny<XVolField>(dim,bcPlusFlag[1]);
+    const int khi = get_nz<XVolField>(dim,bcPlusFlag[2]);
 
     for( int k=0; k<khi; ++k ){
       const double z = spacing[2]*(double(k)+0.5-ngzm);
@@ -264,9 +266,9 @@ Grid::Grid( const std::vector<int>& dim,
     YVolField::iterator iyvx=yvx_.begin();
     YVolField::iterator iyvy=yvy_.begin();
     YVolField::iterator iyvz=yvz_.begin();
-    const int ihi = get_nx<YVolField>(dim[0]);
-    const int jhi = get_ny<YVolField>(dim[1]);
-    const int khi = get_nz<YVolField>(dim[2]);
+    const int ihi = get_nx<YVolField>(dim,bcPlusFlag[0]);
+    const int jhi = get_ny<YVolField>(dim,bcPlusFlag[1]);
+    const int khi = get_nz<YVolField>(dim,bcPlusFlag[2]);
 
     for( int k=0; k<khi; ++k ){
       const double z = spacing[2]*(double(k)+0.5-ngzm);
@@ -292,9 +294,9 @@ Grid::Grid( const std::vector<int>& dim,
     ZVolField::iterator izvx=zvx_.begin();
     ZVolField::iterator izvy=zvy_.begin();
     ZVolField::iterator izvz=zvz_.begin();
-    const int ihi = get_nx<ZVolField>(dim[0]);
-    const int jhi = get_ny<ZVolField>(dim[1]);
-    const int khi = get_nz<ZVolField>(dim[2]);
+    const int ihi = get_nx<ZVolField>(dim,bcPlusFlag[0]);
+    const int jhi = get_ny<ZVolField>(dim,bcPlusFlag[1]);
+    const int khi = get_nz<ZVolField>(dim,bcPlusFlag[2]);
 
     for( int k=0; k<khi; ++k ){
       const double z = spacing[2]*(k-ngzm); // offset in z
@@ -315,29 +317,6 @@ Grid::Grid( const std::vector<int>& dim,
 
   // scalar cell grid coordinates
   {
-
-    // interpolate to get face values.
-//     const InterpSVolSSurf* const Rsvss = SpatialOpDatabase<InterpSVolSSurf>::self().retrieve_operator();
-//     EpetraExt::RowMatrixToMatrixMarketFile( "Rsvss.mm", Rsvss->get_linalg_mat(), "", "" );
-
-//     Rsvss->apply_to_field( svx_, ssx_ );
-//     Rsvss->apply_to_field( svy_, ssy_ );
-//     Rsvss->apply_to_field( svz_, ssz_ );
-
-//     // assign surface values to vector components (for convenience)
-//     ssxx_ = ssx_;
-//     ssxy_ = ssy_;
-//     ssxz_ = ssz_;
-    
-//     ssyx_ = ssx_;
-//     ssyy_ = ssy_;
-//     ssyz_ = ssz_;
-
-//     sszx_ = ssx_;
-//     sszy_ = ssy_;
-//     sszz_ = ssz_;
-
-
     const InterpSVolSSurfX* const Rsvssx = SpatialOpDatabase<InterpSVolSSurfX>::self().retrieve_operator();
     const InterpSVolSSurfY* const Rsvssy = SpatialOpDatabase<InterpSVolSSurfY>::self().retrieve_operator();
     const InterpSVolSSurfZ* const Rsvssz = SpatialOpDatabase<InterpSVolSSurfZ>::self().retrieve_operator();
@@ -357,12 +336,6 @@ Grid::Grid( const std::vector<int>& dim,
 
   // x-cell grid coordinates
   {
-//     const InterpSVolXVol* const Rsvxv = SpatialOpDatabase<InterpSVolXVol>::self().retrieve_operator();
-//     Rsvxv->apply_to_field( svx_, xvx_ );
-//     Rsvxv->apply_to_field( svy_, xvy_ );
-//     Rsvxv->apply_to_field( svz_, xvz_ );
-  
-
     const InterpXVolXSurfX* const Rxvxsx = SpatialOpDatabase<InterpXVolXSurfX>::self().retrieve_operator();
     const InterpXVolXSurfY* const Rxvxsy = SpatialOpDatabase<InterpXVolXSurfY>::self().retrieve_operator();
     const InterpXVolXSurfZ* const Rxvxsz = SpatialOpDatabase<InterpXVolXSurfZ>::self().retrieve_operator();
@@ -377,28 +350,10 @@ Grid::Grid( const std::vector<int>& dim,
     Rxvxsz->apply_to_field( xvx_, xszx_ );
     Rxvxsz->apply_to_field( xvy_, xszy_ );
     Rxvxsz->apply_to_field( xvz_, xszz_ );
-
-//     const InterpSVolXSurf* const Rsvxs = SpatialOpDatabase<InterpSVolXSurf>::self().retrieve_operator();
-//     Rsvxs->apply_to_field( svx_, xsx_ );
-//     Rsvxs->apply_to_field( svy_, xsy_ );
-//     Rsvxs->apply_to_field( svz_, xsz_ );
-
-    /*
-    // assign surface values to vector components (for convenience)
-    xsxx_ = xsx_;    xsxy_ = xsy_;    xsxz_ = xsz_;
-    xsyx_ = xsx_;    xsyy_ = xsy_;    xsyz_ = xsz_;
-    xszx_ = xsx_;    xszy_ = xsy_;    xszz_ = xsz_;
-    */
   }
 
   // y-cell grid coordinates
   {
-//     const InterpSVolYVol* const Rsvyv = SpatialOpDatabase<InterpSVolYVol>::self().retrieve_operator();
-//     Rsvyv->apply_to_field( svx_, yvx_ );
-//     Rsvyv->apply_to_field( svy_, yvy_ );
-//     Rsvyv->apply_to_field( svz_, yvz_ );
-
-
     const InterpYVolYSurfX* const Ryvysx = SpatialOpDatabase<InterpYVolYSurfX>::self().retrieve_operator();
     const InterpYVolYSurfY* const Ryvysy = SpatialOpDatabase<InterpYVolYSurfY>::self().retrieve_operator();
     const InterpYVolYSurfZ* const Ryvysz = SpatialOpDatabase<InterpYVolYSurfZ>::self().retrieve_operator();
@@ -413,22 +368,10 @@ Grid::Grid( const std::vector<int>& dim,
     Ryvysz->apply_to_field( yvx_, yszx_ );
     Ryvysz->apply_to_field( yvy_, yszy_ );
     Ryvysz->apply_to_field( yvz_, yszz_ );
-
-
-//     const InterpSVolYSurf* const Rsvys = SpatialOpDatabase<InterpSVolYSurf>::self().retrieve_operator();
-//     Rsvys->apply_to_field( svx_, ysx_ );
-//     Rsvys->apply_to_field( svy_, ysy_ );
-//     Rsvys->apply_to_field( svy_, ysz_ );
   }
 
   // z-cell grid coordinates
   {
-//     const InterpSVolZVol* const Rsvzv = SpatialOpDatabase<InterpSVolZVol>::self().retrieve_operator();
-//     Rsvzv->apply_to_field( svx_, zvx_ );
-//     Rsvzv->apply_to_field( svy_, zvy_ );
-//     Rsvzv->apply_to_field( svz_, zvz_ );
-
-
     const InterpZVolZSurfX* const Rzvzsx = SpatialOpDatabase<InterpZVolZSurfX>::self().retrieve_operator();
     const InterpZVolZSurfY* const Rzvzsy = SpatialOpDatabase<InterpZVolZSurfY>::self().retrieve_operator();
     const InterpZVolZSurfZ* const Rzvzsz = SpatialOpDatabase<InterpZVolZSurfZ>::self().retrieve_operator();
@@ -443,11 +386,6 @@ Grid::Grid( const std::vector<int>& dim,
     Rzvzsz->apply_to_field( zvx_, zszx_ );
     Rzvzsz->apply_to_field( zvy_, zszy_ );
     Rzvzsz->apply_to_field( zvz_, zszz_ );
-
-//     const InterpSVolZSurf* const Rsvzs = SpatialOpDatabase<InterpSVolZSurf>::self().retrieve_operator();
-//     Rsvzs->apply_to_field( svx_, zsx_ );
-//     Rsvzs->apply_to_field( svy_, zsy_ );
-//     Rsvzs->apply_to_field( svz_, zsz_ );
   }
 
 
@@ -457,24 +395,88 @@ Grid::~Grid()
 {
 }
 
-#include <EpetraExt_VectorOut.h>
-#include <EpetraExt_RowMatrixOut.h>
-
 void
 Grid::write() const
 {
-  /*
-  EpetraExt::VectorToMatrixMarketFile( "svx.mm", svx_.get_linalg_vec(), "", "" );
 
-  EpetraExt::VectorToMatrixMarketFile( "xvx.mm", xvx_.get_linalg_vec(), "", "" );
-  EpetraExt::VectorToMatrixMarketFile( "yvx.mm", yvx_.get_linalg_vec(), "", "" );
-  EpetraExt::VectorToMatrixMarketFile( "zvx.mm", zvx_.get_linalg_vec(), "", "" );
+  if( dim_[0]>1 ){
+    svx_.write_matlab("svx");
+    ssxx_.write_matlab("ssxx");
 
-  EpetraExt::VectorToMatrixMarketFile( "svy.mm", svy_.get_linalg_vec(), "", "" );
-  EpetraExt::VectorToMatrixMarketFile( "xvy.mm", xvy_.get_linalg_vec(), "", "" );
-  EpetraExt::VectorToMatrixMarketFile( "yvy.mm", yvy_.get_linalg_vec(), "", "" );
-  EpetraExt::VectorToMatrixMarketFile( "zvy.mm", zvy_.get_linalg_vec(), "", "" );
-  */
+    xvx_.write_matlab("xvx");
+    xsxx_.write_matlab("xsxx");
+    xsyx_.write_matlab("xsyx");
+    xszx_.write_matlab("xszx");
+
+    if( dim_[1]>1 ){
+      ssxy_.write_matlab("ssxy");
+      xvy_.write_matlab("xvy");
+      xsxy_.write_matlab("xsxy");
+      xsyy_.write_matlab("xsyy");
+      xszy_.write_matlab("xszy");
+    }
+    if( dim_[2]>1 ){
+      ssxz_.write_matlab("ssxz");
+      xvz_.write_matlab("xvz");
+      xsxz_.write_matlab("xsxz");
+      xsyz_.write_matlab("xsyz");
+      xszz_.write_matlab("xszz");
+    }
+  }
+
+  if( dim_[1]>1 ){
+    if( dim_[0]>1 ){
+      ssyx_.write_matlab("ssyx");
+
+      yvx_.write_matlab("yvx");
+      ysxx_.write_matlab("ysxx");
+      ysyx_.write_matlab("ysyx");
+      yszx_.write_matlab("yszx");
+    }
+
+    svy_.write_matlab("svy");
+    ssyy_.write_matlab("ssyy");
+
+    yvy_.write_matlab("yvy");
+    ysxy_.write_matlab("ysxy");
+    ysyy_.write_matlab("ysyy");
+    yszy_.write_matlab("yszy");
+
+    if( dim_[2]>1 ){
+      ssyz_.write_matlab("ssyz");
+      yvz_.write_matlab("yvz");
+      ysxz_.write_matlab("ysxz");
+      ysyz_.write_matlab("ysyz");
+      yszz_.write_matlab("yszz");
+    }
+  }
+
+  if( dim_[2]>1 ){
+    if( dim_[0]>1 ){
+      sszx_.write_matlab("sszx");
+      zvx_.write_matlab("zvx");
+      zsxx_.write_matlab("zsxx");
+      zsyx_.write_matlab("zsyx");
+      zszx_.write_matlab("zszx");
+    }
+
+    if( dim_[1]>1 ){
+      sszy_.write_matlab("sszy");
+      zvy_.write_matlab("zvy");
+      zsxy_.write_matlab("zsxy");
+      zsyy_.write_matlab("zsyy");
+      zszy_.write_matlab("zszy");
+    }
+
+    svz_.write_matlab("svz");
+    sszz_.write_matlab("sszz");
+
+    yvz_.write_matlab("yvz");
+    ysxz_.write_matlab("ysxz");
+    ysyz_.write_matlab("ysyz");
+    yszz_.write_matlab("yszz");
+  }
+
 }
 
 }

@@ -31,7 +31,11 @@ namespace SpatialOps{
     class MatrixRow
     {
     public:
-      MatrixRow( int rowNum, MatType& mat ){ mat.ExtractMyRowView( rowNum, ncols_, values_, indices_ ); }
+      MatrixRow( int rowNum, MatType& mat )
+      {
+	assert(rowNum<mat.NumMyRows());
+	mat.ExtractMyRowView( rowNum, ncols_, values_, indices_ );
+      }
       ~MatrixRow(){}
 
       double& operator()(const int i)      { return values_[i]; }

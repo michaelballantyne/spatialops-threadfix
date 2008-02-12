@@ -5,9 +5,6 @@
 using namespace std;
 
 
-#include <EpetraExt_VectorOut.h>
-#include <EpetraExt_RowMatrixOut.h>
-
 #include <FVStaggered.h>
 #include <FVStaggeredBCTools.h>
 #include <LinearSystem.h>
@@ -32,11 +29,17 @@ template<typename FieldT>
 class QuadFun : public FieldFunction3D<FieldT>
 {
 public:
-  QuadFun( const FieldT& x, const FieldT& y, const FieldT& z, const std::vector<int>& dim )
+  QuadFun( const FieldT& x,
+	   const FieldT& y,
+	   const FieldT& z,
+	   const std::vector<int>& dim,
+	   const std::vector<bool>& bcFlag )
     : FieldFunction3D<FieldT>( x, y, z ),
       a(2.0), b(2.0), c(2.0), d(1.0),
       dim_(dim),
-      tmp( get_n_tot<FieldT>(dim), get_ghost_set<FieldT>(dim), NULL )
+      tmp( get_n_tot<FieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
+	   get_ghost_set<FieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
+	   NULL )
   {}
 
   ~QuadFun(){}
@@ -110,13 +113,16 @@ private:
 
 //--------------------------------------------------------------------
 
-double test_poisson( const Grid& grid, const vector<int>& dim, const BCType bcType )
+double test_poisson( const Grid& grid,
+		     const vector<int>& dim,
+		     const vector<bool>& bcFlag,
+		     const BCType bcType )
 {
   ScratchSVol& Lx = *SpatialOpDatabase<ScratchSVol>::self().retrieve_operator( 1 );
   ScratchSVol& Ly = *SpatialOpDatabase<ScratchSVol>::self().retrieve_operator( 2 );
   ScratchSVol& Lz = *SpatialOpDatabase<ScratchSVol>::self().retrieve_operator( 3 );
 
-  LinSysInfo lsi( dim );
+  LinSysInfo lsi( dim, bcFlag[0], bcFlag[1], bcFlag[2] );
   LinearSystem& linsys = LinSysFactory::self().get_linsys( lsi );
   RHS& rhs = linsys.get_rhs();
   LHS& lhs = linsys.get_lhs();
@@ -142,18 +148,20 @@ double test_poisson( const Grid& grid, const vector<int>& dim, const BCType bcTy
   if( dim[1]>1 )  Dy.apply_to_op( Gy, Ly );
   if( dim[2]>1 )  Dz.apply_to_op( Gz, Lz );
 
-//   cout << endl;
-//   cout << "Rx=" << endl;  Rx.Print(cout);
-//   cout << "Dx=" << endl;  Dx.Print(cout);
-//   cout << "Gx=" << endl;  Gx.Print(cout);
-//   cout << "Lx=Sx (pre-bc)" << endl;  Lx.Print(cout);
+//   Gx.write_matlab("Gx"); Dx.write_matlab("Dx"); Lx.write_matlab("Lxpbc");
+//   Gy.write_matlab("Gy"); Dy.write_matlab("Dy");
+//   Gz.write_matlab("Gz"); Dz.write_matlab("Dz");
 
   //
   // set the RHS field
   //
-  SVolField rhsField( get_n_tot<SVolField>(dim), get_ghost_set<SVolField>(dim), NULL );
-  SVolField tmpField( get_n_tot<SVolField>(dim), get_ghost_set<SVolField>(dim), NULL );
-  QuadFun<SVolField> quadFunVol( grid.xcoord_svol(), grid.ycoord_svol(), grid.zcoord_svol(), dim );
+  SVolField rhsField( get_n_tot<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
+		      get_ghost_set<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
+		      NULL );
+  SVolField tmpField( get_n_tot<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
+		      get_ghost_set<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
+		      NULL );
+  QuadFun<SVolField> quadFunVol( grid.xcoord_svol(), grid.ycoord_svol(), grid.zcoord_svol(), dim, bcFlag );
   rhsField = 0.0;
   if( dim[0]>1 ){ quadFunVol.d2x(rhsField); }
   if( dim[1]>1 ){ quadFunVol.d2y(tmpField); rhsField += tmpField; }
@@ -164,13 +172,13 @@ double test_poisson( const Grid& grid, const vector<int>& dim, const BCType bcTy
 
   // set bcs on scratch matrix that will form the linear system.
   {
-    QuadFun<SSurfXField> bcFunX( grid.xcoord_sxsurf(), grid.ycoord_sxsurf(), grid.zcoord_sxsurf(), dim );
-    QuadFun<SSurfYField> bcFunY( grid.xcoord_sysurf(), grid.ycoord_sysurf(), grid.zcoord_sysurf(), dim );
-    QuadFun<SSurfZField> bcFunZ( grid.xcoord_szsurf(), grid.ycoord_szsurf(), grid.zcoord_szsurf(), dim );
+    QuadFun<SSurfXField> bcFunX( grid.xcoord_sxsurf(), grid.ycoord_sxsurf(), grid.zcoord_sxsurf(), dim, bcFlag );
+    QuadFun<SSurfYField> bcFunY( grid.xcoord_sysurf(), grid.ycoord_sysurf(), grid.zcoord_sysurf(), dim, bcFlag );
+    QuadFun<SSurfZField> bcFunZ( grid.xcoord_szsurf(), grid.ycoord_szsurf(), grid.zcoord_szsurf(), dim, bcFlag );
 
-    SSurfXField bcValX( get_n_tot<SSurfXField>(dim), get_ghost_set<SSurfXField>(dim), NULL );
-    SSurfYField bcValY( get_n_tot<SSurfYField>(dim), get_ghost_set<SSurfYField>(dim), NULL );
-    SSurfZField bcValZ( get_n_tot<SSurfZField>(dim), get_ghost_set<SSurfZField>(dim), NULL );
+    SSurfXField bcValX( get_n_tot<SSurfXField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), get_ghost_set<SSurfXField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), NULL );
+    SSurfYField bcValY( get_n_tot<SSurfYField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), get_ghost_set<SSurfYField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), NULL );
+    SSurfZField bcValZ( get_n_tot<SSurfZField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), get_ghost_set<SSurfZField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), NULL );
 
     switch ( bcType ){
     case DIRICHLET:
@@ -200,22 +208,24 @@ double test_poisson( const Grid& grid, const vector<int>& dim, const BCType bcTy
       for( int ix=0; ix<2; ++ix ){
 	int i=0, ii=0;
 	if( ix!=0 ){
-	  ii=get_nx<SSurfXField>(dim[0])-1;  // set index on bf field, which has different dimensionality than the rhs field
-	  i = dim[0]-1;                      // index for the rhs field.
+	  // set index on bf field, which has different dimensionality than the rhs field
+	  ii = get_nx<SSurfXField>(dim,bcFlag[0]) - SSurfXField::Ghost::NP - SSurfXField::Ghost::NM - 1;
+	  // index for the rhs field.
+	  i = dim[0]-1;
 	}
 	for( int j=0; j<dim[1]; ++j ){
 	  for( int k=0; k<dim[2]; ++k ){
 	    // determine index for x field.
  	    const IndexTriplet ijk( ii+ighost, j+jghost, k+kghost );
- 	    const int iix = ijk2flat<SSurfXField,0>::value(dim,ijk);
+ 	    const int iix = ijk2flat<SSurfXField>::value(dim,ijk,bcFlag[0],bcFlag[1],bcFlag[2]);
 	    const double bcval = bcValX[iix];
 	    const int irow = i + j*dim[0] + k*dim[0]*dim[1];
 	    switch ( bcType ){
 	    case DIRICHLET:
-	      imprint_bc_on_op<InterpSVolSSurfX,XDIR,ScratchSVol>( Rx, i, j, k, dim, bcval, rhsField, Lx, rhs[irow] );
+	      imprint_bc_on_op<InterpSVolSSurfX,XDIR,ScratchSVol>( Rx, i, j, k, dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, rhsField, Lx, rhs[irow] );
 	      break;
 	    case NEUMANN:
-	      imprint_bc_on_op<GradSVolSSurfX,  XDIR,ScratchSVol>( Gx, i, j, k, dim, bcval, rhsField, Lx, rhs[irow] );
+	      imprint_bc_on_op<GradSVolSSurfX,  XDIR,ScratchSVol>( Gx, i, j, k, dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, rhsField, Lx, rhs[irow] );
 	      break;
 	    }
 	  }
@@ -229,24 +239,24 @@ double test_poisson( const Grid& grid, const vector<int>& dim, const BCType bcTy
 	int j=0, jj=0;
 	if( iy!=0 ){
 	  j = dim[1]-1;
-	  jj=get_ny<SSurfYField>(dim[1])-1;
+	  jj = get_ny<SSurfYField>(dim,bcFlag[1]) - SSurfYField::Ghost::NP - SSurfYField::Ghost::NM - 1;
 	}
 	for( int i=0; i<dim[0]; ++i ){
 	  for( int k=0; k<dim[2]; ++k ){
 
 	    // obtain the BC value
 	    const IndexTriplet ijk( i+ighost, jj+jghost, k+kghost );
-	    const int iix = ijk2flat<SSurfYField,0>::value(dim,ijk);
+	    const int iix = ijk2flat<SSurfYField>::value(dim,ijk,bcFlag[0],bcFlag[1],bcFlag[2]);
 	    const int irow = i + j*dim[0] + k*dim[0]*dim[1];
 	    const double bcval = bcValY[iix];
 
 	    // set the BC value:
 	    switch ( bcType ){
 	    case DIRICHLET:
-	      imprint_bc_on_op<InterpSVolSSurfY,YDIR,ScratchSVol>( Ry, i, j, k, dim, bcval, rhsField, Ly, rhs[irow] );
+	      imprint_bc_on_op<InterpSVolSSurfY,YDIR,ScratchSVol>( Ry, i, j, k, dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, rhsField, Ly, rhs[irow] );
 	      break;
 	    case NEUMANN:
-	      imprint_bc_on_op<GradSVolSSurfY,  YDIR,ScratchSVol>( Gy, i, j, k, dim, bcval, rhsField, Ly, rhs[irow] );
+	      imprint_bc_on_op<GradSVolSSurfY,  YDIR,ScratchSVol>( Gy, i, j, k, dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, rhsField, Ly, rhs[irow] );
 	      break;
 	    }
 	  }
@@ -260,20 +270,20 @@ double test_poisson( const Grid& grid, const vector<int>& dim, const BCType bcTy
 	int k=0, kk=0;
 	if( iz!=0 ){
 	  k = dim[2]-1;
-	  kk=get_nz<SSurfZField>(dim[2])-1;
+	  kk = get_nz<SSurfZField>(dim,bcFlag[2]) - SSurfZField::Ghost::NM - SSurfZField::Ghost::NP - 1;
 	}
 	for( int i=0; i<dim[0]; ++i ){
 	  for( int j=0; j<dim[1]; ++j ){
 	    const IndexTriplet ijk( i+ighost, j+jghost, kk+kghost );
-	    const int iix = ijk2flat<SSurfZField,0>::value(dim,ijk);
+	    const int iix = ijk2flat<SSurfZField>::value(dim,ijk,bcFlag[0],bcFlag[1],bcFlag[2]);
 	    const double bcval = bcValZ[iix];
 	    const int irow = i + j*dim[0] + k*dim[0]*dim[1];
 	    switch ( bcType ){
 	    case DIRICHLET:
-	      imprint_bc_on_op<InterpSVolSSurfZ,ZDIR,ScratchSVol>( Rz, i, j, k, dim, bcval, rhsField, Lz, rhs[irow] );
+	      imprint_bc_on_op<InterpSVolSSurfZ,ZDIR,ScratchSVol>( Rz, i, j, k, dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, rhsField, Lz, rhs[irow] );
 	      break;
 	    case NEUMANN:
-	      imprint_bc_on_op<GradSVolSSurfZ,  ZDIR,ScratchSVol>( Gz, i, j, k, dim, bcval, rhsField, Lz, rhs[irow] );
+	      imprint_bc_on_op<GradSVolSSurfZ,  ZDIR,ScratchSVol>( Gz, i, j, k, dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, rhsField, Lz, rhs[irow] );
 	      break;
 	    }
 	  }
@@ -286,31 +296,21 @@ double test_poisson( const Grid& grid, const vector<int>& dim, const BCType bcTy
   if( dim[1]>1 )  lhs.add_op_contribution( Ly );
   if( dim[2]>1 )  lhs.add_op_contribution( Lz );
 
+//   Lx.write_matlab("Lx");
+//   Ly.write_matlab("Ly");
+//   Lz.write_matlab("Lz");
+
   //
   // Solve the linear system for the solution.
   //
   linsys.solve();
 
-  /*
-    cout << "Lx=Sx (post-bc)" << endl;  Lx.Print(cout);
-    cout << "Ly=Sy (post-bc)" << endl;  Ly.Print(cout);
-    cout << "Lz=Sz (post-bc)" << endl;  Lz.Print(cout);
-    cout << "LHS=" << endl;
-    lhs.Print(cout);
-
-    EpetraExt::RowMatrixToMatrixMarketFile( "Lx.mm", Lx.get_linalg_mat(), "", "" );
-    EpetraExt::RowMatrixToMatrixMarketFile( "Ly.mm", Ly.get_linalg_mat(), "", "" );
-    EpetraExt::RowMatrixToMatrixMarketFile( "Lz.mm", Lz.get_linalg_mat(), "", "" );
-    EpetraExt::RowMatrixToMatrixMarketFile( "A.mm", lhs.epetra_mat(), "", "" );
-    EpetraExt::VectorToMatrixMarketFile( "b.mm", linsys.get_rhs_field_epetra_vec(), "", "" );
-    EpetraExt::VectorToMatrixMarketFile( "soln.mm", linsys.get_soln_field_epetra_vec(), "", "" );
-  */
 
   {
     //
     // examine the solution to determine error
     //
-    SVolField phi( get_n_tot<SVolField>(dim), get_ghost_set<SVolField>(dim), NULL );
+    SVolField phi( get_n_tot<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), get_ghost_set<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), NULL );
     quadFunVol.evaluate( phi );
 
 
@@ -338,25 +338,37 @@ double test_poisson( const Grid& grid, const vector<int>& dim, const BCType bcTy
     avgRelErr /= double(nrel);
     avgAbsErr /= double(nabs);
 
+
     /*
       cout << endl
       << scientific << setprecision(2)
       << "  max abs error: " << setw(8) << maxAbsErr << "  max rel err: " << setw(8) << maxRelErr << endl
       << "  avg abs error: " << setw(8) << avgAbsErr << "  avg rel err: " << setw(8) << avgRelErr << endl << endl;
       cout.unsetf(ios::scientific | ios::floatfield );
-      
-      SVolRHS tmp( get_n_tot<SVolRHS>(dim), get_ghost_set<SVolRHS>(dim), NULL );
+
+      SVolRHS tmp( get_n_tot<SVolRHS>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), get_ghost_set<SVolRHS>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), NULL );
+
+      tmp = rhs;  tmp.write_matlab("rhs");
+
       rhs.reset();
       rhs.add_field_contribution( quadFunVol.get_x() );
       tmp = rhs;
-      EpetraExt::VectorToMatrixMarketFile( "x.mm",  tmp.get_linalg_vec(), "", "" );
+      tmp.write_matlab("x");
       
       rhs.reset();
       rhs.add_field_contribution( quadFunVol.get_y() );
       tmp = rhs;
-      EpetraExt::VectorToMatrixMarketFile( "y.mm",  tmp.get_linalg_vec(), "", "" );
-    
-      EpetraExt::VectorToMatrixMarketFile( "phi.mm", linsys.get_soln_field_epetra_vec(), "", "" );
+      tmp.write_matlab("y");
+
+      rhs.reset();
+      rhs.add_field_contribution( phi );
+      tmp = rhs;
+      tmp.write_matlab("phiExact");    
+
+      tmp = linsys.get_soln_field();
+      tmp.write_matlab("phi");
+
+      linsys.get_lhs().write_matlab("A");
     */
 
     return maxAbsErr;
@@ -366,7 +378,8 @@ double test_poisson( const Grid& grid, const vector<int>& dim, const BCType bcTy
 
 //--------------------------------------------------------------------
 
-void driver( const std::vector<int>& dim, const std::vector<double>& length,
+void driver( const std::vector<int>& dim,
+	     const std::vector<double>& length,
 	     const double tol1, const double tol2 )
 {
   std::vector<double> spacing(3,1.0);
@@ -374,11 +387,12 @@ void driver( const std::vector<int>& dim, const std::vector<double>& length,
     if( dim[i]>1 ) spacing[i] = length[i]/dim[i];
   }
 
-  build_ops( dim, spacing );
-  const Grid grid( dim, spacing );
+  std::vector<bool> bcFlag(3,true);
+  build_ops( dim, spacing, bcFlag );
+  const Grid grid( dim, spacing, bcFlag );
 
-  const double err1 = test_poisson( grid, dim, DIRICHLET );
-  const double err2 = test_poisson( grid, dim, NEUMANN   );
+  const double err1 = test_poisson( grid, dim, bcFlag, DIRICHLET );
+  const double err2 = test_poisson( grid, dim, bcFlag, NEUMANN   );
 
   cout << "Poisson eqn: Dirichlet BC ... ";
   if( err1 > tol1 ){
@@ -404,10 +418,11 @@ void driver( const std::vector<int>& dim, const std::vector<double>& length,
 
 int main()
 {
-  vector<int> dim(3,10);
+  vector<int> dim(3,1);
   dim[0] = 21 ;
   dim[1] = 46 ;
   dim[2] = 12;
+
   std::vector<double> length(3,1);
   length[1]=2;
   length[2]=0.5;

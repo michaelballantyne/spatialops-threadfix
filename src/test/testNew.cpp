@@ -70,23 +70,25 @@ void report_errors( const FieldT& phiExact, const FieldT& phi )
 template<typename OpT, typename FuncType1, typename FuncType2>
 void test_grad_op( const Grid& grid,
 		   const FuncType1& funcPhi,
-		   const FuncType2& funcFPhi )
+		   const FuncType2& funcFPhi,
+		   const std::vector<bool>& bcFlag )
 {
   typedef typename OpT::SrcFieldType  SrcFieldT;
   typedef typename OpT::DestFieldType DestFieldT;
 
   const std::vector<int>& dim = grid.extent();
 
-  if( get_n_tot<SrcFieldT>(dim) == 1 || get_n_tot<DestFieldT>(dim) == 1 ) return;
+  if( get_n_tot<SrcFieldT >(dim,bcFlag[0],bcFlag[1],bcFlag[2]) == 1 ||
+      get_n_tot<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]) == 1 ) return;
 
-  SrcFieldT  phi      ( get_n_tot<SrcFieldT >(dim),
-			get_ghost_set<SrcFieldT >(dim),
+  SrcFieldT  phi      ( get_n_tot<SrcFieldT >(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
+			get_ghost_set<SrcFieldT >(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
 			NULL );
-  DestFieldT fphi     ( get_n_tot<DestFieldT>(dim),
-			get_ghost_set<DestFieldT>(dim),
+  DestFieldT fphi     ( get_n_tot<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
+			get_ghost_set<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
 			NULL );
-  DestFieldT fphiExact( get_n_tot<DestFieldT>(dim),
-			get_ghost_set<DestFieldT>(dim),
+  DestFieldT fphiExact( get_n_tot<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
+			get_ghost_set<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
 			NULL );
 
   switch( FuncType2::FieldType::Location::Dir::value ){
@@ -117,23 +119,25 @@ void test_grad_op( const Grid& grid,
 template<typename OpT, typename FuncType1, typename FuncType2>
 void test_interp_op( const Grid& grid,
 		     const FuncType1& funcPhi,
-		     const FuncType2& funcFPhi )
+		     const FuncType2& funcFPhi,
+		     const std::vector<bool>& bcFlag )
 {
   typedef typename OpT::SrcFieldType  SrcFieldT;
   typedef typename OpT::DestFieldType DestFieldT;
 
   const std::vector<int>& dim = grid.extent();
 
-  if( get_n_tot<SrcFieldT>(dim) == 1 || get_n_tot<DestFieldT>(dim) == 1 ) return;
+  if( get_n_tot<SrcFieldT >(dim,bcFlag[0],bcFlag[1],bcFlag[2]) == 1 ||
+      get_n_tot<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]) == 1 ) return;
 
-  SrcFieldT  phi      ( get_n_tot<SrcFieldT >(dim),
-			get_ghost_set<SrcFieldT >(dim),
+  SrcFieldT  phi      ( get_n_tot<SrcFieldT >(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
+			get_ghost_set<SrcFieldT >(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
 			NULL );
-  DestFieldT fphi     ( get_n_tot<DestFieldT>(dim),
-			get_ghost_set<DestFieldT>(dim),
+  DestFieldT fphi     ( get_n_tot<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
+			get_ghost_set<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
 			NULL );
-  DestFieldT fphiExact( get_n_tot<DestFieldT>(dim),
-			get_ghost_set<DestFieldT>(dim),
+  DestFieldT fphiExact( get_n_tot<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
+			get_ghost_set<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
 			NULL );
 
   funcPhi.evaluate( phi );
@@ -150,23 +154,25 @@ void test_interp_op( const Grid& grid,
 template<typename OpT, typename FuncType1, typename FuncType2>
 void test_div_op( const Grid& grid,
 		  const FuncType1& funcPhi,
-		  const FuncType2& funcFPhi )
+		  const FuncType2& funcFPhi,
+		  const std::vector<bool>& bcFlag )
 {
   typedef typename OpT::SrcFieldType  SrcFieldT;
   typedef typename OpT::DestFieldType DestFieldT;
 
   const std::vector<int>& dim = grid.extent();
 
-  if( get_n_tot<SrcFieldT>(dim) == 1 || get_n_tot<DestFieldT>(dim) == 1 ) return;
+  if( get_n_tot<SrcFieldT >(dim,bcFlag[0],bcFlag[1],bcFlag[2]) == 1 ||
+      get_n_tot<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]) == 1 ) return;
 
-  SrcFieldT  phi      ( get_n_tot<SrcFieldT >(dim),
-			get_ghost_set<SrcFieldT >(dim),
+  SrcFieldT  phi      (     get_n_tot<SrcFieldT >(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
+			get_ghost_set<SrcFieldT >(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
 			NULL );
-  DestFieldT fphi     ( get_n_tot<DestFieldT>(dim),
-			get_ghost_set<DestFieldT>(dim),
+  DestFieldT fphi     (     get_n_tot<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
+			get_ghost_set<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
 			NULL );
-  DestFieldT fphiExact( get_n_tot<DestFieldT>(dim),
-			get_ghost_set<DestFieldT>(dim),
+  DestFieldT fphiExact(     get_n_tot<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
+			get_ghost_set<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
 			NULL );
 
   switch( FuncType1::FieldType::Location::Dir::value ){
@@ -198,6 +204,7 @@ void test_div_op( const Grid& grid,
 
 template<typename OpT, typename Dir>
 bool test_bc_helper( const vector<int>&dim,
+		     const std::vector<bool>& bcFlag,
 		     const int ii,
 		     const int jj,
 		     const int kk,
@@ -211,20 +218,24 @@ bool test_bc_helper( const vector<int>&dim,
 
   const OpT& op = *SpatialOpDatabase<OpT>::self().retrieve_operator();
 
-  SrcFieldT   f( get_n_tot<SrcFieldT >(dim), get_ghost_set<SrcFieldT >(dim), NULL );
-  DestFieldT df( get_n_tot<DestFieldT>(dim), get_ghost_set<DestFieldT>(dim), NULL );
+  SrcFieldT   f( get_n_tot<SrcFieldT >(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
+		 get_ghost_set<SrcFieldT >(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
+		 NULL );
+  DestFieldT df( get_n_tot<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
+		 get_ghost_set<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
+		 NULL );
 
   int icnt=0;
   for( typename SrcFieldT::iterator ifld=f.begin(); ifld!=f.end(); ++ifld,++icnt ) *ifld = icnt;
 
   // assign the BC.
-  assign_bc_point<OpT,Dir>( op, ii, jj, kk, dim, bcVal, f );
+  assign_bc_point<OpT,Dir>( op, ii, jj, kk, dim, bcFlag[0], bcFlag[1], bcFlag[2], bcVal, f );
 
   // calculate the dest field
   op.apply_to_field( f, df );
 
   // verify that the BC was set properly - this is a bit of a hack.
-  const int ix = get_ghost_flat_ix_dest<DestFieldT,Dir>(dim,ii,jj,kk);
+  const int ix = get_ghost_flat_ix_dest<DestFieldT,Dir>(dim,bcFlag[0],bcFlag[1],bcFlag[2],ii,jj,kk);
 
   const double abserr = abs(df[ix]-bcVal);
   const double relerr = abserr/abs(bcVal);
@@ -237,7 +248,8 @@ bool test_bc_helper( const vector<int>&dim,
 
 //--------------------------------------------------------------------
 
-void test_bc( const Grid& g )
+void test_bc( const Grid& g,
+	      const std::vector<bool>& bcFlag )
 {
   using namespace SpatialOps;
   using namespace FVStaggered;
@@ -254,8 +266,8 @@ void test_bc( const Grid& g )
     int i=0;
     for( int j=0; j<dim[1]; ++j ){
       for( int k=0; k<dim[2]; ++k ){
-	const bool result1 = test_bc_helper<GradSVolSSurfX, XDIR>( dim, i,j,k, 1.2345  );
-	const bool result2 = test_bc_helper<InterpSVolSSurfX,XDIR>( dim, i,j,k, 123.456 );
+	const bool result1 = test_bc_helper<GradSVolSSurfX,  XDIR>( dim, bcFlag, i,j,k, 1.2345  );
+	const bool result2 = test_bc_helper<InterpSVolSSurfX,XDIR>( dim, bcFlag, i,j,k, 123.456 );
 	if( !result1 || !result2 ) isOkay=false;
       }
     }
@@ -267,8 +279,8 @@ void test_bc( const Grid& g )
     i=dim[0]-1;
     for( int j=0; j<dim[1]; ++j ){
       for( int k=0; k<dim[2]; ++k ){
-	const bool result1 = test_bc_helper<GradSVolSSurfX,  XDIR>( dim, i,j,k, 5.4321 );
-	const bool result2 = test_bc_helper<InterpSVolSSurfX,XDIR>( dim, i,j,k, 123.456 );
+	const bool result1 = test_bc_helper<GradSVolSSurfX,  XDIR>( dim, bcFlag, i,j,k, 5.4321 );
+	const bool result2 = test_bc_helper<InterpSVolSSurfX,XDIR>( dim, bcFlag, i,j,k, 123.456 );
 	if( !result1 || !result2 ) isOkay=false;
       }
     }
@@ -281,8 +293,8 @@ void test_bc( const Grid& g )
     int j=0;
     for( int i=0; i<dim[0]; ++i ){
       for( int k=0; k<dim[2]; ++k ){
-	const bool result1 = test_bc_helper<GradSVolSSurfY, YDIR >( dim, i,j,k, 1.2345 );
-	const bool result2 = test_bc_helper<InterpSVolSSurfY,YDIR>( dim, i,j,k, 123.456 );
+	const bool result1 = test_bc_helper<GradSVolSSurfY, YDIR >( dim, bcFlag, i,j,k, 1.2345 );
+	const bool result2 = test_bc_helper<InterpSVolSSurfY,YDIR>( dim, bcFlag, i,j,k, 123.456 );
 	if( !result1 || !result2 ) isOkay=false;
       }
     }
@@ -294,8 +306,8 @@ void test_bc( const Grid& g )
     j=dim[1]-1;
     for( int i=0; i<dim[0]; ++i ){
       for( int k=0; k<dim[2]; ++k ){
-	const bool result1 = test_bc_helper<GradSVolSSurfY,  YDIR>( dim, i,j,k, 5.4321 );
-	const bool result2 = test_bc_helper<InterpSVolSSurfY,YDIR>( dim, i,j,k, 123.456 );
+	const bool result1 = test_bc_helper<GradSVolSSurfY,  YDIR>( dim, bcFlag, i,j,k, 5.4321 );
+	const bool result2 = test_bc_helper<InterpSVolSSurfY,YDIR>( dim, bcFlag, i,j,k, 123.456 );
 	if( !result1 || !result2 ) isOkay=false;
       }
     }
@@ -308,8 +320,8 @@ void test_bc( const Grid& g )
     int k=0;
     for( int i=0; i<dim[0]; ++i ){
       for( int j=0; j<dim[1]; ++j ){
-	const bool result1 = test_bc_helper<GradSVolSSurfZ,  ZDIR>( dim, i,j,k, 1.2345 );
-	const bool result2 = test_bc_helper<InterpSVolSSurfZ,ZDIR>( dim, i,j,k, 123.456 );
+	const bool result1 = test_bc_helper<GradSVolSSurfZ,  ZDIR>( dim, bcFlag, i,j,k, 1.2345 );
+	const bool result2 = test_bc_helper<InterpSVolSSurfZ,ZDIR>( dim, bcFlag, i,j,k, 123.456 );
 	if( !result1 || !result2 ) isOkay=false;
       }
     }
@@ -321,8 +333,8 @@ void test_bc( const Grid& g )
     k=dim[2]-1;
     for( int i=0; i<dim[0]; ++i ){
       for( int j=0; j<dim[1]; ++j ){
-	const bool result1 = test_bc_helper<GradSVolSSurfZ,  ZDIR>( dim, i,j,k, 5.4321 );
-	const bool result2 = test_bc_helper<InterpSVolSSurfZ,ZDIR>( dim, i,j,k, 123.456 );
+	const bool result1 = test_bc_helper<GradSVolSSurfZ,  ZDIR>( dim, bcFlag, i,j,k, 5.4321 );
+	const bool result2 = test_bc_helper<InterpSVolSSurfZ,ZDIR>( dim, bcFlag, i,j,k, 123.456 );
 	if( !result1 || !result2 ) isOkay=false;
       }
     }
@@ -350,7 +362,9 @@ void test_ops()
 
 //--------------------------------------------------------------------
 
-void test_poisson( const Grid& grid, const vector<int>& dim )
+void test_poisson( const Grid& grid,
+		   const vector<int>& dim,
+		   const vector<bool>& bcFlag )
 {
   //
   // here we use a solution of the form
@@ -367,7 +381,7 @@ void test_poisson( const Grid& grid, const vector<int>& dim )
   ScratchSVol& Ly = *SpatialOpDatabase<ScratchSVol>::self().retrieve_operator(2);
   ScratchSVol& Lz = *SpatialOpDatabase<ScratchSVol>::self().retrieve_operator(3);
 
-  LinSysInfo lsi( dim );
+  LinSysInfo lsi( dim, bcFlag[0], bcFlag[1], bcFlag[2] );
   LinearSystem& linsys = LinSysFactory::self().get_linsys( lsi );
   RHS& rhs = linsys.get_rhs();
   LHS& lhs = linsys.get_lhs();
@@ -427,7 +441,7 @@ void test_poisson( const Grid& grid, const vector<int>& dim )
       for( int j=0; j<dim[1]; ++j ){
 	for( int k=0; k<dim[2]; ++k ){
 	  const IndexTriplet ijk( i+ighost, j+jghost, k+kghost );
-	  const int ii = ijk2flat<SVolField,0>::value(dim,ijk);
+	  const int ii = ijk2flat<SVolField>::value(dim,ijk,bcFlag[0],bcFlag[1],bcFlag[2]);
 	  double bcval = x[ii]*x[ii]*a;
 	  if( dim[1]>1 ) bcval += y[ii]*y[ii]*b;
 	  if( dim[2]>1 ) bcval += z[ii]*z[ii]*c;
@@ -446,7 +460,7 @@ void test_poisson( const Grid& grid, const vector<int>& dim )
       for( int i=0; i<dim[0]; ++i ){
 	for( int k=0; k<dim[2]; ++k ){
 	  const IndexTriplet ijk( i+ighost, j+jghost, k+kghost );
-	  const int ii = ijk2flat<SVolField,0>::value(dim,ijk);
+	  const int ii = ijk2flat<SVolField>::value(dim,ijk,bcFlag[0],bcFlag[1],bcFlag[2]);
 	  double bcval = y[ii]*y[ii]*b;
 	  if( dim[0]>1 ) bcval += x[ii]*x[ii]*a;
 	  if( dim[2]>1 ) bcval += z[ii]*z[ii]*c;
@@ -465,7 +479,7 @@ void test_poisson( const Grid& grid, const vector<int>& dim )
       for( int i=0; i<dim[0]; ++i ){
 	for( int j=0; j<dim[1]; ++j ){
 	  const IndexTriplet ijk( i+ighost, j+jghost, k+kghost );
-	  const int ii = ijk2flat<SVolField,0>::value(dim,ijk);
+	  const int ii = ijk2flat<SVolField>::value(dim,ijk,bcFlag[0],bcFlag[1],bcFlag[2]);
 	  double bcval = z[ii]*z[ii]*c;
 	  if( dim[0]>1 ) bcval += x[ii]*x[ii]*a;
 	  if( dim[1]>1 ) bcval += y[ii]*y[ii]*b;
@@ -536,9 +550,6 @@ void test_poisson( const Grid& grid, const vector<int>& dim )
 int main()
 {
   vector<int> dim(3,1);
-//   dim[0] = 5 ;
-//   dim[1] = 1 ;
-//   dim[2] = 1 ;
 
   cout << "interior nx = "; cin >> dim[0];
   cout << "interior ny = "; cin >> dim[1];
@@ -551,18 +562,20 @@ int main()
     if( dim[i]>1 ) spacing[i] = length[i]/dim[i];
   }
 
-  build_ops( dim, spacing );
-  const Grid grid( dim, spacing );
-  //  grid.write();
+  std::vector<bool> bcFlag(3,true);
 
-  test_poisson( grid, dim );
+  build_ops( dim, spacing, bcFlag );
+  const Grid grid( dim, spacing, bcFlag );
+  //grid.write();
 
-  test_bc( grid );
+  test_poisson( grid, dim, bcFlag );
+
+  test_bc( grid, bcFlag );
   test_ops();
 
   // Scalar-Volume to scalar face gradients and laplacians
   {
-    SVolField phi( get_n_tot<SVolField>(dim), get_ghost_set<SVolField>(dim), NULL );
+    SVolField phi( get_n_tot<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), get_ghost_set<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), NULL );
 
     // sin function
     const SinFun<SVolField  > fun     ( grid.xcoord_svol(),   grid.ycoord_svol(),   grid.zcoord_svol()   );
@@ -578,9 +591,9 @@ int main()
 	 << "Interpolant scalar volume -> scalar surfaces" << endl
 	 << " max abs err | max rel err | avg abs err | avg rel err |" << endl
 	 << "-------------|-------------|-------------|-------------|" << endl;
-    test_interp_op<InterpSVolSSurfX>( grid, fun, interpX );
-    test_interp_op<InterpSVolSSurfY>( grid, fun, interpY );
-    test_interp_op<InterpSVolSSurfZ>( grid, fun, interpZ );
+    test_interp_op<InterpSVolSSurfX>( grid, fun, interpX, bcFlag );
+    test_interp_op<InterpSVolSSurfY>( grid, fun, interpY, bcFlag );
+    test_interp_op<InterpSVolSSurfZ>( grid, fun, interpZ, bcFlag );
     cout << "=====================================================" << endl << endl;
 
 
@@ -588,9 +601,9 @@ int main()
 	 << "Gradient scalar volume -> scalar surfaces" << endl
 	 << " max abs err | max rel err | avg abs err | avg rel err |" << endl
 	 << "-------------|-------------|-------------|-------------|" << endl;
-    test_grad_op<GradSVolSSurfX>( grid, fun, gradFunX );
-    test_grad_op<GradSVolSSurfY>( grid, fun, gradFunY );
-    test_grad_op<GradSVolSSurfZ>( grid, fun, gradFunZ );
+    test_grad_op<GradSVolSSurfX>( grid, fun, gradFunX, bcFlag );
+    test_grad_op<GradSVolSSurfY>( grid, fun, gradFunY, bcFlag );
+    test_grad_op<GradSVolSSurfZ>( grid, fun, gradFunZ, bcFlag );
     cout << "=====================================================" << endl << endl;
 
 
@@ -598,9 +611,9 @@ int main()
 	 << "Divergence scalar surfaces -> scalar volume" << endl
 	 << " max abs err | max rel err | avg abs err | avg rel err |" << endl
 	 << "-------------|-------------|-------------|-------------|" << endl;
-    test_div_op<DivSSurfXSVol>( grid, gradFunX, divFun );
-    test_div_op<DivSSurfYSVol>( grid, gradFunY, divFun );
-    test_div_op<DivSSurfZSVol>( grid, gradFunZ, divFun );
+    test_div_op<DivSSurfXSVol>( grid, gradFunX, divFun, bcFlag );
+    test_div_op<DivSSurfYSVol>( grid, gradFunY, divFun, bcFlag );
+    test_div_op<DivSSurfZSVol>( grid, gradFunZ, divFun, bcFlag );
     cout << "=====================================================" << endl << endl;
   }
 
@@ -615,9 +628,9 @@ int main()
 	 << "Interpolate scalar volume to staggered volumes" << endl
 	 << " max abs err | max rel err | avg abs err | avg rel err |" << endl
 	 << "-------------|-------------|-------------|-------------|" << endl;
-    test_interp_op<InterpSVolXVol>( grid, svolfun, xvolfun );
-    test_interp_op<InterpSVolYVol>( grid, svolfun, yvolfun );
-    test_interp_op<InterpSVolZVol>( grid, svolfun, zvolfun );
+    test_interp_op<InterpSVolXVol>( grid, svolfun, xvolfun, bcFlag );
+    test_interp_op<InterpSVolYVol>( grid, svolfun, yvolfun, bcFlag );
+    test_interp_op<InterpSVolZVol>( grid, svolfun, zvolfun, bcFlag );
     cout << "=====================================================" << endl << endl;
   }
 
@@ -640,17 +653,17 @@ int main()
 	 << "Interpolate scalar volume to staggered surfaces" << endl
 	 << " max abs err | max rel err | avg abs err | avg rel err |" << endl
 	 << "-------------|-------------|-------------|-------------|" << endl;
-    test_interp_op<InterpSVolXSurfX>( grid, svolfun, xsurfx );
-    test_interp_op<InterpSVolXSurfY>( grid, svolfun, xsurfy );
-    test_interp_op<InterpSVolXSurfZ>( grid, svolfun, xsurfz );
+    test_interp_op<InterpSVolXSurfX>( grid, svolfun, xsurfx, bcFlag );
+    test_interp_op<InterpSVolXSurfY>( grid, svolfun, xsurfy, bcFlag );
+    test_interp_op<InterpSVolXSurfZ>( grid, svolfun, xsurfz, bcFlag );
 
-    test_interp_op<InterpSVolYSurfX>( grid, svolfun, ysurfx );
-    test_interp_op<InterpSVolYSurfY>( grid, svolfun, ysurfy );
-    test_interp_op<InterpSVolYSurfZ>( grid, svolfun, ysurfz );
+    test_interp_op<InterpSVolYSurfX>( grid, svolfun, ysurfx, bcFlag );
+    test_interp_op<InterpSVolYSurfY>( grid, svolfun, ysurfy, bcFlag );
+    test_interp_op<InterpSVolYSurfZ>( grid, svolfun, ysurfz, bcFlag );
 
-    test_interp_op<InterpSVolZSurfX>( grid, svolfun, zsurfx );
-    test_interp_op<InterpSVolZSurfY>( grid, svolfun, zsurfy );
-    test_interp_op<InterpSVolZSurfZ>( grid, svolfun, zsurfz );
+    test_interp_op<InterpSVolZSurfX>( grid, svolfun, zsurfx, bcFlag );
+    test_interp_op<InterpSVolZSurfY>( grid, svolfun, zsurfy, bcFlag );
+    test_interp_op<InterpSVolZSurfZ>( grid, svolfun, zsurfz, bcFlag );
 
     cout << "=====================================================" << endl << endl;
   }
@@ -664,8 +677,8 @@ int main()
 	 << "Interpolate x volume to y and z volume x-surfaces" << endl
 	 << " max abs err | max rel err | avg abs err | avg rel err |" << endl
 	 << "-------------|-------------|-------------|-------------|" << endl;
-    test_interp_op<InterpXVolYSurfX>( grid, xvolfun, ysurfxfun );
-    test_interp_op<InterpXVolZSurfX>( grid, xvolfun, zsurfxfun );
+    test_interp_op<InterpXVolYSurfX>( grid, xvolfun, ysurfxfun, bcFlag );
+    test_interp_op<InterpXVolZSurfX>( grid, xvolfun, zsurfxfun, bcFlag );
     cout << "=====================================================" << endl << endl;
   }
 
@@ -678,8 +691,8 @@ int main()
 	 << "Interpolate y volume to x and z volume y-surfaces" << endl
 	 << " max abs err | max rel err | avg abs err | avg rel err |" << endl
 	 << "-------------|-------------|-------------|-------------|" << endl;
-    test_interp_op<InterpYVolXSurfY>( grid, yvolfun, xsurfyfun );
-    test_interp_op<InterpYVolZSurfY>( grid, yvolfun, zsurfyfun );
+    test_interp_op<InterpYVolXSurfY>( grid, yvolfun, xsurfyfun, bcFlag );
+    test_interp_op<InterpYVolZSurfY>( grid, yvolfun, zsurfyfun, bcFlag );
     cout << "=====================================================" << endl << endl;
   }
 
@@ -692,8 +705,8 @@ int main()
 	 << "Interpolate z volume to x and y volume z-surfaces" << endl
 	 << " max abs err | max rel err | avg abs err | avg rel err |" << endl
 	 << "-------------|-------------|-------------|-------------|" << endl;
-    test_interp_op<InterpZVolXSurfZ>( grid, zvolfun, xsurfzfun );
-    test_interp_op<InterpZVolYSurfZ>( grid, zvolfun, ysurfzfun );
+    test_interp_op<InterpZVolXSurfZ>( grid, zvolfun, xsurfzfun, bcFlag );
+    test_interp_op<InterpZVolYSurfZ>( grid, zvolfun, ysurfzfun, bcFlag );
     cout << "=====================================================" << endl << endl;
   }
 
@@ -715,28 +728,27 @@ int main()
 	 << "Gradient x-volume -> x-surface" << endl
 	 << " max abs err | max rel err | avg abs err | avg rel err |" << endl
 	 << "-------------|-------------|-------------|-------------|" << endl;
-    test_grad_op<GradXVolXSurfX>( grid, sinfun, gradX );
-    test_grad_op<GradXVolXSurfY>( grid, sinfun, gradY );
-    test_grad_op<GradXVolXSurfZ>( grid, sinfun, gradZ );
+    test_grad_op<GradXVolXSurfX>( grid, sinfun, gradX, bcFlag );
+    test_grad_op<GradXVolXSurfY>( grid, sinfun, gradY, bcFlag );
+    test_grad_op<GradXVolXSurfZ>( grid, sinfun, gradZ, bcFlag );
     cout << "=====================================================" << endl << endl;
 
     cout << "=====================================================" << endl
 	 << "Divergence x-surface -> x-volume" << endl
 	 << " max abs err | max rel err | avg abs err | avg rel err |" << endl
 	 << "-------------|-------------|-------------|-------------|" << endl;
-    test_div_op<DivXSurfXXVol>( grid, gradX, divFun );
-    test_div_op<DivXSurfYXVol>( grid, gradY, divFun );
-    test_div_op<DivXSurfZXVol>( grid, gradZ, divFun );
+    test_div_op<DivXSurfXXVol>( grid, gradX, divFun, bcFlag );
+    test_div_op<DivXSurfYXVol>( grid, gradY, divFun, bcFlag );
+    test_div_op<DivXSurfZXVol>( grid, gradZ, divFun, bcFlag );
     cout << "=====================================================" << endl << endl;
 
     cout << "=====================================================" << endl
 	 << "Interpolate x-volume -> x-surfaces" << endl
 	 << " max abs err | max rel err | avg abs err | avg rel err |" << endl
 	 << "-------------|-------------|-------------|-------------|" << endl;
-    test_interp_op<InterpXVolXSurfX>( grid, sinfun, interpX );
-    test_interp_op<InterpXVolXSurfY>( grid, sinfun, interpY );
-    test_interp_op<InterpXVolXSurfZ>( grid, sinfun, interpZ );
-//     test_interp_op<InterpXVolXSurf >( grid, sinfun, interp  );
+    test_interp_op<InterpXVolXSurfX>( grid, sinfun, interpX, bcFlag );
+    test_interp_op<InterpXVolXSurfY>( grid, sinfun, interpY, bcFlag );
+    test_interp_op<InterpXVolXSurfZ>( grid, sinfun, interpZ, bcFlag );
     cout << "=====================================================" << endl << endl;
   }
 
@@ -753,34 +765,32 @@ int main()
     const SinFun<YSurfXField> interpX( grid.xcoord_yxsurf(), grid.ycoord_yxsurf(), grid.zcoord_yxsurf() );
     const SinFun<YSurfYField> interpY( grid.xcoord_yysurf(), grid.ycoord_yysurf(), grid.zcoord_yysurf() );
     const SinFun<YSurfZField> interpZ( grid.xcoord_yzsurf(), grid.ycoord_yzsurf(), grid.zcoord_yzsurf() );
-    //    const SinFun<YSurfField > interp ( grid.xcoord_ysurf(),  grid.ycoord_ysurf(),  grid.zcoord_ysurf()  );
 
     cout << "=====================================================" << endl
 	 << "Gradient y-volume -> y-surface" << endl
 	 << " max abs err | max rel err | avg abs err | avg rel err |" << endl
 	 << "-------------|-------------|-------------|-------------|" << endl;
-    test_grad_op<GradYVolYSurfX>( grid, sinfun, gradX );
-    test_grad_op<GradYVolYSurfY>( grid, sinfun, gradY );
-    test_grad_op<GradYVolYSurfZ>( grid, sinfun, gradZ );
+    test_grad_op<GradYVolYSurfX>( grid, sinfun, gradX, bcFlag );
+    test_grad_op<GradYVolYSurfY>( grid, sinfun, gradY, bcFlag );
+    test_grad_op<GradYVolYSurfZ>( grid, sinfun, gradZ, bcFlag );
     cout << "=====================================================" << endl << endl;
 
     cout << "=====================================================" << endl
 	 << "Divergence y-surface -> y-volume" << endl
 	 << " max abs err | max rel err | avg abs err | avg rel err |" << endl
 	 << "-------------|-------------|-------------|-------------|" << endl;
-    test_div_op<DivYSurfXYVol>( grid, gradX, divFun );
-    test_div_op<DivYSurfYYVol>( grid, gradY, divFun );
-    test_div_op<DivYSurfZYVol>( grid, gradZ, divFun );
+    test_div_op<DivYSurfXYVol>( grid, gradX, divFun, bcFlag );
+    test_div_op<DivYSurfYYVol>( grid, gradY, divFun, bcFlag );
+    test_div_op<DivYSurfZYVol>( grid, gradZ, divFun, bcFlag );
     cout << "=====================================================" << endl << endl;
 
     cout << "=====================================================" << endl
 	 << "Interpolate y-volume -> y-surfaces" << endl
 	 << " max abs err | max rel err | avg abs err | avg rel err |" << endl
 	 << "-------------|-------------|-------------|-------------|" << endl;
-    test_interp_op<InterpYVolYSurfX>( grid, sinfun, interpX );
-    test_interp_op<InterpYVolYSurfY>( grid, sinfun, interpY );
-    test_interp_op<InterpYVolYSurfZ>( grid, sinfun, interpZ );
-//     test_interp_op<InterpYVolYSurf >( grid, sinfun, interp  );
+    test_interp_op<InterpYVolYSurfX>( grid, sinfun, interpX, bcFlag );
+    test_interp_op<InterpYVolYSurfY>( grid, sinfun, interpY, bcFlag );
+    test_interp_op<InterpYVolYSurfZ>( grid, sinfun, interpZ, bcFlag );
     cout << "=====================================================" << endl << endl;
   }
 
@@ -797,34 +807,32 @@ int main()
     const SinFun<ZSurfXField> interpX( grid.xcoord_zxsurf(), grid.ycoord_zxsurf(), grid.zcoord_zxsurf() );
     const SinFun<ZSurfYField> interpY( grid.xcoord_zysurf(), grid.ycoord_zysurf(), grid.zcoord_zysurf() );
     const SinFun<ZSurfZField> interpZ( grid.xcoord_zzsurf(), grid.ycoord_zzsurf(), grid.zcoord_zzsurf() );
-//     const SinFun<ZSurfField > interp ( grid.xcoord_zsurf(),  grid.ycoord_zsurf(),  grid.zcoord_zsurf()  );
 
     cout << "=====================================================" << endl
 	 << "Gradient z-volume -> z-surface" << endl
 	 << " max abs err | max rel err | avg abs err | avg rel err |" << endl
 	 << "-------------|-------------|-------------|-------------|" << endl;
-    test_grad_op<GradZVolZSurfX>( grid, sinfun, gradX );
-    test_grad_op<GradZVolZSurfY>( grid, sinfun, gradY );
-    test_grad_op<GradZVolZSurfZ>( grid, sinfun, gradZ );
+    test_grad_op<GradZVolZSurfX>( grid, sinfun, gradX, bcFlag );
+    test_grad_op<GradZVolZSurfY>( grid, sinfun, gradY, bcFlag );
+    test_grad_op<GradZVolZSurfZ>( grid, sinfun, gradZ, bcFlag );
     cout << "=====================================================" << endl << endl;
 
     cout << "=====================================================" << endl
 	 << "Divergence z-surface -> z-volume" << endl
 	 << " max abs err | max rel err | avg abs err | avg rel err |" << endl
 	 << "-------------|-------------|-------------|-------------|" << endl;
-    test_div_op<DivZSurfXZVol>( grid, gradX, divFun );
-    test_div_op<DivZSurfYZVol>( grid, gradY, divFun );
-    test_div_op<DivZSurfZZVol>( grid, gradZ, divFun );
+    test_div_op<DivZSurfXZVol>( grid, gradX, divFun, bcFlag );
+    test_div_op<DivZSurfYZVol>( grid, gradY, divFun, bcFlag );
+    test_div_op<DivZSurfZZVol>( grid, gradZ, divFun, bcFlag );
     cout << "=====================================================" << endl << endl;
 
     cout << "=====================================================" << endl
 	 << "Interpolate z-volume -> z-surfaces" << endl
 	 << " max abs err | max rel err | avg abs err | avg rel err |" << endl
 	 << "-------------|-------------|-------------|-------------|" << endl;
-    test_interp_op<InterpZVolZSurfX>( grid, sinfun, interpX );
-    test_interp_op<InterpZVolZSurfY>( grid, sinfun, interpY );
-    test_interp_op<InterpZVolZSurfZ>( grid, sinfun, interpZ );
-//     test_interp_op<InterpZVolZSurf >( grid, sinfun, interp  );
+    test_interp_op<InterpZVolZSurfX>( grid, sinfun, interpX, bcFlag );
+    test_interp_op<InterpZVolZSurfY>( grid, sinfun, interpY, bcFlag );
+    test_interp_op<InterpZVolZSurfZ>( grid, sinfun, interpZ, bcFlag );
     cout << "=====================================================" << endl << endl;
   }
 
@@ -851,17 +859,17 @@ int main()
     Dsy->apply_to_op( *Gsy, *Ssy );
     Dsz->apply_to_op( *Gsz, *Ssz );
 
-    Dsx->write_matlab("Dx");
-    Gsx->write_matlab("Gx");
+//     Dsx->write_matlab("Dx");
+//     Gsx->write_matlab("Gx");
 
     const SinFun<SVolField  > fun     ( grid.xcoord_svol(),   grid.ycoord_svol(),   grid.zcoord_svol()   );
     const SinFun<SVolField  > divFun  ( grid.xcoord_svol(),   grid.ycoord_svol(),   grid.zcoord_svol()   );
 
-    SVolField phi       ( get_n_tot<SVolField>(dim), get_ghost_set<SVolField>(dim), NULL );
-    SVolField d2phi     ( get_n_tot<SVolField>(dim), get_ghost_set<SVolField>(dim), NULL );
-    SVolField d2phiExact( get_n_tot<SVolField>(dim), get_ghost_set<SVolField>(dim), NULL );
+    SVolField phi       ( get_n_tot<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), get_ghost_set<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), NULL );
+    SVolField d2phi     ( get_n_tot<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), get_ghost_set<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), NULL );
+    SVolField d2phiExact( get_n_tot<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), get_ghost_set<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), NULL );
 
-    phi.write_matlab("phi");
+//     phi.write_matlab("phi");
 
     fun.evaluate( phi );
 

@@ -138,6 +138,9 @@ namespace SpatialOps{
 				     std::vector<int> & rowIndices )
   {
     using namespace std;
+
+    assert( rowValues.size() == rowIndices.size() );
+
     const int flag = mat_->InsertMyValues( rownum,
 					   rowValues.size(),
 					   &rowValues[0],

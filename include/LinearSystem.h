@@ -59,9 +59,15 @@ struct LinSysInfo
 
 #ifdef HAVE_MPI
   LinSysInfo( const std::vector<int> & npts,
+	      const bool hasPlusXSideFaces,
+	      const bool hasPlusYSideFaces,
+	      const bool hasPlusZSideFaces,
 	      MPI_Comm & communicator );
 #else
-  LinSysInfo( const std::vector<int> & npts );
+  LinSysInfo( const std::vector<int> & npts,
+	      const bool hasPlusXSideFaces,
+	      const bool hasPlusYSideFaces,
+	      const bool hasPlusZSideFaces );
 #endif
 
   ~LinSysInfo();
@@ -73,11 +79,12 @@ struct LinSysInfo
   // these are required to build the linear system.
   //
 
-  const std::vector<int> dimExtent;
-
 #ifdef HAVE_MPI
   MPI_Comm & comm;
 #endif
+
+  const std::vector<int> dimExtent;
+  const bool hasPlusXFaces, hasPlusYFaces, hasPlusZFaces;
 
   bool operator ==(const LinSysInfo&) const;
   bool operator < (const LinSysInfo&) const;
@@ -210,6 +217,9 @@ class LHS
 public:
 
   LHS( const std::vector<int> & extent,
+       const bool hasPlusXSideFaces,
+       const bool hasPlusYSideFaces,
+       const bool hasPlusZSideFaces,
        Epetra_CrsMatrix& A );
 
   ~LHS();
@@ -252,10 +262,13 @@ public:
 
   void Print( std::ostream& c ) const;
 
+  void write_matlab( const std::string prefix ) const;
+
 private:
 
   Epetra_CrsMatrix & A_;
   const std::vector<int> extent_;
+  const bool hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_;
   const int nrows_;
   const int ncols_;
 
@@ -331,6 +344,9 @@ protected:
 #ifdef HAVE_MPI
 
   LinearSystem( const std::vector<int> & dimExtent,
+		const bool hasPlusXSideFaces,
+		const bool hasPlusYSideFaces,
+		const bool hasPlusZSideFaces,
 		MPI_Comm & comm );
 
   int LinearSystem::get_global_npts( const std::vector<int> & extent,
@@ -338,7 +354,10 @@ protected:
 
 #else
 
-  LinearSystem( const std::vector<int> & dimExtent );
+  LinearSystem( const std::vector<int> & dimExtent,
+		const bool hasPlusXSideFaces,
+		const bool hasPlusYSideFaces,
+		const bool hasPlusZSideFaces );
 
   int LinearSystem::get_global_npts( const std::vector<int> & extent );
 
@@ -456,7 +475,7 @@ LHS::add_op_contribution( const OpType & op,
 
       // now determine the column index for insertion of this value
       typedef typename OpType::SrcFieldType SrcField;
-      t = FVStaggered::flat2ijk<SrcField,SrcField::Location::IsSurface>::value( extent_, colindex );
+      t = FVStaggered::flat2ijk<SrcField>::value( extent_, colindex );
       if( nx>1 ) t.i -= SrcField::Ghost::NM;
       if( ny>1 ) t.j -= SrcField::Ghost::NM;
       if( nz>1 ) t.k -= SrcField::Ghost::NM;

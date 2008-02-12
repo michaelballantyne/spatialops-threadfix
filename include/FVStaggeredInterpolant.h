@@ -72,7 +72,10 @@ namespace FVStaggered{
      *  @param dimExtent 3-component vector indicating the number of
      *  interior points in each coordinate direction.
      */
-    LinearInterpolantAssembler( const std::vector<int>& dimExtent );
+    LinearInterpolantAssembler( const std::vector<int>& dimExtent,
+				const bool hasPlusXSideFaces = true,
+				const bool hasPlusYSideFaces = true,
+				const bool hasPlusZSideFaces = true );
 
     ~LinearInterpolantAssembler(){}
 
@@ -97,7 +100,7 @@ namespace FVStaggered{
      */
     void get_ghost_cols( std::set<int>& ghostCols ) const
     {
-      ghostCols = get_ghost_set<SrcFieldT>(dim_);
+      ghostCols = get_ghost_set<SrcFieldT>( dim_, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
     }
 
     /**
@@ -105,27 +108,16 @@ namespace FVStaggered{
      */
     void get_ghost_rows( std::set<int>& ghostRows ) const
     {
-      ghostRows = get_ghost_set<DestFieldT>(dim_);
+      ghostRows = get_ghost_set<DestFieldT>( dim_, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
     }
 
   private:
 
     const IndexHelper<SrcFieldT,DestFieldT> indexHelper_;
     const std::vector<int>& dim_;
+    const bool hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_;
 
   };
-
-  //==================================================================
-
-  // still need to implement these:
-//   template<>  class LinearInterpolantAssembler<SVolField,XSurfYField>;
-//   template<>  class LinearInterpolantAssembler<SVolField,XSurfZField>;
-
-//   template<>  class LinearInterpolantAssembler<SVolField,YSurfXField>;
-//   template<>  class LinearInterpolantAssembler<SVolField,YSurfZField>;
-
-//   template<>  class LinearInterpolantAssembler<SVolField,ZSurfXField>;
-//   template<>  class LinearInterpolantAssembler<SVolField,ZSurfYField>;
 
   //==================================================================
 
@@ -151,9 +143,15 @@ namespace FVStaggered{
   //------------------------------------------------------------------
   template<typename SrcFieldT, typename DestFieldT>
   LinearInterpolantAssembler<SrcFieldT,DestFieldT>::
-  LinearInterpolantAssembler( const std::vector<int>& dimExtent )
-    : indexHelper_( dimExtent ),
-      dim_( dimExtent )
+  LinearInterpolantAssembler( const std::vector<int>& dimExtent,
+			      const bool hasPlusXSideFaces,
+			      const bool hasPlusYSideFaces,
+			      const bool hasPlusZSideFaces )
+    : indexHelper_( dimExtent, hasPlusXSideFaces, hasPlusYSideFaces, hasPlusZSideFaces ),
+      dim_( dimExtent ),
+      hasPlusXSideFaces_( hasPlusXSideFaces ),
+      hasPlusYSideFaces_( hasPlusYSideFaces ),
+      hasPlusZSideFaces_( hasPlusZSideFaces )
   {
   }
   //------------------------------------------------------------------
@@ -211,9 +209,11 @@ namespace FVStaggered{
       break;
     }
     indexHelper_.get_cols( irow, ixs );
-    if( !ixs.empty() )  assert( ixs.size() == num_nonzeros() );
-    const double val = 1.0/double(num_nonzeros());
-    vals.assign( num_nonzeros(), val );
+    if( !ixs.empty() ){
+      assert( ixs.size() == num_nonzeros() );
+      const double val = 1.0/double(num_nonzeros());
+      vals.assign( num_nonzeros(), val );
+    }
   }
   //------------------------------------------------------------------
 
@@ -233,10 +233,12 @@ namespace FVStaggered{
     const int ghostDiff = XVolField::Ghost::NM - SSurfXField::Ghost::NM;
     int icol = irow + ghostDiff;
     if( dim_[1]>1 ){
-      icol += ghostDiff * get_nx<XVolField>(dim_[0]);
+      icol += ghostDiff * get_nx<XVolField>(dim_,hasPlusXSideFaces_);
     }
     if( dim_[2]>1 ){
-      icol += (XVolField::Ghost::NM-SSurfXField::Ghost::NM) * get_nx<XVolField>(dim_[0])*get_ny<XVolField>(dim_[1]);
+      icol += (XVolField::Ghost::NM-SSurfXField::Ghost::NM)
+	* get_nx<XVolField>(dim_,hasPlusXSideFaces_)
+	* get_ny<XVolField>(dim_,hasPlusYSideFaces_);
     }
     ixs.push_back(icol);
     vals.push_back(1.0);
@@ -260,10 +262,13 @@ namespace FVStaggered{
     const int ghostDiff = YVolField::Ghost::NM - SSurfYField::Ghost::NM;
     int icol = irow + ghostDiff;
     if( dim_[0]>1 ){
-      icol += ghostDiff * get_nx<YVolField>(dim_[0]);
+      icol += ghostDiff
+	* get_nx<YVolField>(dim_,hasPlusXSideFaces_);
     }
     if( dim_[2]>1 ){
-      icol += ghostDiff * get_nx<YVolField>(dim_[0]) * get_ny<YVolField>(dim_[2]);
+      icol += ghostDiff
+	* get_nx<YVolField>(dim_,hasPlusXSideFaces_)
+	* get_ny<YVolField>(dim_,hasPlusYSideFaces_);
     }
     ixs.push_back(icol);
     vals.push_back(1.0);
@@ -287,10 +292,12 @@ namespace FVStaggered{
     const int ghostDiff = ZVolField::Ghost::NM - SSurfZField::Ghost::NM;
     int icol = irow + ghostDiff;
     if( dim_[0]>1 ){
-      icol += ghostDiff * get_nx<ZVolField>(dim_[0]);
+      icol += ghostDiff * get_nx<ZVolField>(dim_,hasPlusXSideFaces_);
     }
     if( dim_[1]>1 ){
-      icol += ghostDiff * get_nx<ZVolField>(dim_[0])*get_ny<ZVolField>(dim_[1]);
+      icol += ghostDiff
+	* get_nx<ZVolField>(dim_,hasPlusXSideFaces_)
+	* get_ny<ZVolField>(dim_,hasPlusYSideFaces_);
     }
     ixs.push_back(icol);
     vals.push_back(1.0);

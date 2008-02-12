@@ -63,9 +63,24 @@ namespace FVStaggered{
      *
      *  @param dimExtent A vector with three elements indicating the
      *  domain extent (number of cells) in each coordinate direction.
+     *
+     *  @param hasPlusXSideFaces Boolean flag to indicate if the
+     *  operator is to be constructed including face cells on the +X
+     *  side of the domain.
+     *
+     *  @param hasPlusYSideFaces Boolean flag to indicate if the
+     *  operator is to be constructed including face cells on the +Y
+     *  side of the domain.
+     *
+     *  @param hasPlusZSideFaces Boolean flag to indicate if the
+     *  operator is to be constructed including face cells on the +Z
+     *  side of the domain.
      */
     GradientAssembler( const double meshSpacing,
-		       const std::vector<int>& dimExtent );
+		       const std::vector<int>& dimExtent,
+		       const bool hasPlusXSideFaces,
+		       const bool hasPlusYSideFaces,
+		       const bool hasPlusZSideFaces );
 
     ~GradientAssembler(){}
 
@@ -91,7 +106,7 @@ namespace FVStaggered{
      */
     void get_ghost_cols( std::set<int>& ghostCols ) const
     {
-      ghostCols = get_ghost_set<SrcField>(dim_);
+      ghostCols = get_ghost_set<SrcField>( dim_, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
     }
 
     /**
@@ -99,7 +114,7 @@ namespace FVStaggered{
      */
     void get_ghost_rows( std::set<int>& ghostRows ) const
     {
-      ghostRows = get_ghost_set<DestField>(dim_);
+      ghostRows = get_ghost_set<DestField>( dim_, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
     }
 
   private:
@@ -107,7 +122,7 @@ namespace FVStaggered{
     const std::vector<int>& dim_;
     const IndexHelper<SrcField,DestField> indexHelper_;
     const double coef_;
-
+    const bool hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_;
   };
 
 
@@ -132,10 +147,16 @@ namespace FVStaggered{
   template< typename SrcField, typename DestField >
   GradientAssembler<SrcField,DestField>::
   GradientAssembler( const double meshSpacing,
-		     const std::vector<int>& dimExtent )
+		     const std::vector<int>& dimExtent,
+		     const bool hasPlusXSideFaces,
+		     const bool hasPlusYSideFaces,
+		     const bool hasPlusZSideFaces )
     : dim_( dimExtent ),
-      indexHelper_( dimExtent ),
-      coef_( 1.0/meshSpacing )
+      indexHelper_( dimExtent, hasPlusXSideFaces, hasPlusYSideFaces, hasPlusZSideFaces ),
+      coef_( 1.0/meshSpacing ),
+      hasPlusXSideFaces_( hasPlusXSideFaces ),
+      hasPlusYSideFaces_( hasPlusYSideFaces ),
+      hasPlusZSideFaces_( hasPlusZSideFaces )
   {
   }
   //------------------------------------------------------------------
@@ -145,7 +166,7 @@ namespace FVStaggered{
   get_ncols() const
   {
     int n=1;
-    if( get_n_tot<DestField>(dim_)>1 )
+    if( get_n_tot<DestField>( dim_, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ )>1 )
       n = indexHelper_.get_ncol();
     return n;
   }

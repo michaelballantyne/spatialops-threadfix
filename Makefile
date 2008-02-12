@@ -24,8 +24,8 @@ EPETRA_LIBS = -lepetra -lepetraext -lblas -llapack
 AZTECOO_LIBS = -laztecoo -lteuchos 
 LIBS = $(AZTECOO_LIBS)  $(EPETRA_LIBS) $(EXTRA_LIBS)
 
-CXXFLAGS = -O4 -Wall -fexpensive-optimizations -funroll-loops -DBOOST_UBLAS_SHALLOW_ARRAY_ADAPTOR -DNDEBUG
-#CXXFLAGS = -g -Wall -O0 -DBOOST_UBLAS_SHALLOW_ARRAY_ADAPTOR
+#CXXFLAGS = -O4 -Wall -fexpensive-optimizations -funroll-loops -DBOOST_UBLAS_SHALLOW_ARRAY_ADAPTOR -DNDEBUG -DUINTAH_FIELD_TYPES #-DSAMRAI_FIELD_TYPES
+CXXFLAGS = -g -Wall -O0 -DBOOST_UBLAS_SHALLOW_ARRAY_ADAPTOR -DUINTAH_FIELD_TYPES #-DSAMRAI_FIELD_TYPES 
 COMPILE_CXX = g++ -c $(CXXFLAGS) $(INCDIRS)
 #COMPILE_CXX = mpiCC -c $(CXXFLAGS) $(INCDIRS)
 
@@ -53,9 +53,6 @@ LinAlgUBlas.o: ./src/LinAlgUBlas.cpp ./include/LinAlgUBlas.h
 
 LinearSystem.o: ./src/LinearSystem.cpp ./include/SpatialOperator.h ./include/SpatialField.h ./include/LinearSystem.h
 	$(COMPILE_CXX) ./src/LinearSystem.cpp
-
-test_alberto.o: ./src/test/test_alberto.cpp 
-	$(COMPILE_CXX) ./src/test/test_alberto.cpp -I ./src/test/test_alberto
 
 testPoisson.o: ./src/test/testPoisson.cpp ./include/*.h ./src/test/*.h
 	$(COMPILE_CXX) -I./src/test ./src/test/testPoisson.cpp

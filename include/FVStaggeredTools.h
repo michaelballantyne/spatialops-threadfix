@@ -9,51 +9,316 @@
 namespace SpatialOps{
 namespace FVStaggered{
 
-
   //==================================================================
 
   /**
    * @brief get the total number of points (including ghost cells) for
    * a field in the x-direction.
+   *
+   * @param dim A vector containing the number of cells in each
+   * coordinate direction.  This is a three-component vector.
+   *
+   * @param hasPlusXSideFaces A boolean flag to indicate if this patch
+   * is on a +x side physical boundary.  If so, then it is assumed
+   * that there is an extra face on that side of the domain, and face
+   * variable dimensions will be modified accordingly.
    */
-  template<typename FieldT> inline int get_nx( const int nxInterior )
+  template<typename FieldT> inline int get_nx( const std::vector<int>& dim,
+					       const bool hasPlusXSideFaces );
+
+  template<> inline int get_nx<SVolField>( const std::vector<int>& dim,
+					   const bool hasPlusXSideFaces )
   {
-    typedef typename FieldT::Ghost G;
-    int npts=1;
-    if( nxInterior>1 ){
-      npts = nxInterior + G::NM + G::NP;
-      if( IsSameType<typename FieldT::Location, SSurfX>::result ) ++npts;
-      if( IsSameType<typename FieldT::Location, XVol  >::result ) ++npts;
-      if( IsSameType<typename FieldT::Location, XSurfX>::result ) npts+=2;
-      if( IsSameType<typename FieldT::Location, XSurfY>::result ) ++npts;
-      if( IsSameType<typename FieldT::Location, XSurfZ>::result ) ++npts;
-      if( IsSameType<typename FieldT::Location, YSurfX>::result ) ++npts;
-      if( IsSameType<typename FieldT::Location, ZSurfX>::result ) ++npts;
-   }
+    if( dim[0]<=1 ) return 1;
+    return dim[0] + SVolField::Ghost::NM + SVolField::Ghost::NP;
+  }
+  template<> inline int get_nx<SVolRHS>( const std::vector<int>& dim,
+					 const bool hasPlusXSideFaces )
+  {
+    if( dim[0]<=1 ) return 1;
+    return dim[0] + SVolRHS::Ghost::NM + SVolRHS::Ghost::NP;
+  }
+  template<> inline int get_nx<SSurfXField>( const std::vector<int>& dim,
+					     const bool hasPlusXSideFaces )
+  {
+    if( dim[0]<=1 ) return 1;
+    int npts = dim[0] + SSurfXField::Ghost::NM + SSurfXField::Ghost::NP;
+    if( hasPlusXSideFaces ) ++npts;
     return npts;
   }
+  template<> inline int get_nx<SSurfYField>( const std::vector<int>& dim,
+					     const bool hasPlusXSideFaces )
+  {
+    if( dim[0]<=1 || dim[1]<=1 ) return 1;
+    return dim[0] + SSurfYField::Ghost::NM + SSurfYField::Ghost::NP;
+  }
+  template<> inline int get_nx<SSurfZField>( const std::vector<int>& dim,
+					     const bool hasPlusXSideFaces )
+  {
+    if( dim[0]<=1 || dim[2]<=1 ) return 1;
+    return dim[0] + SSurfZField::Ghost::NM + SSurfZField::Ghost::NP;
+  }
+
+  template<> inline int get_nx<XVolField>( const std::vector<int>& dim,
+					   const bool hasPlusXSideFaces )
+  {
+    if( dim[0]<=1 ) return 1;
+    int npts = dim[0] + XVolField::Ghost::NM + XVolField::Ghost::NP;
+    if( hasPlusXSideFaces ) ++npts;
+    return npts;
+  }
+  template<> inline int get_nx<XVolRHS>( const std::vector<int>& dim,
+					 const bool hasPlusXSideFaces )
+  {
+    if( dim[0]<=1 ) return 1;
+    int npts = dim[0] + XVolRHS::Ghost::NM + XVolRHS::Ghost::NP;
+    if( hasPlusXSideFaces ) ++npts;
+    return npts;
+  }
+  template<> inline int get_nx<XSurfXField>( const std::vector<int>& dim,
+					     const bool hasPlusXSideFaces )
+  {
+    if( dim[0]<=1 ) return 1;
+    return dim[0] + XSurfXField::Ghost::NM + XSurfXField::Ghost::NP;
+  }
+  template<> inline int get_nx<XSurfYField>( const std::vector<int>& dim,
+					     const bool hasPlusXSideFaces )
+  {
+    if( dim[0]<=1 || dim[1]<=1 ) return 1;
+    int npts = dim[0] + XSurfYField::Ghost::NM + XSurfYField::Ghost::NP;
+    if( hasPlusXSideFaces ) ++npts;
+    return npts;
+  }
+  template<> inline int get_nx<XSurfZField>( const std::vector<int>& dim,
+					     const bool hasPlusXSideFaces )
+  {
+    if( dim[0]<=1 || dim[2]<=1 ) return 1;
+    int npts = dim[0] + XSurfZField::Ghost::NM + XSurfZField::Ghost::NP;
+    if( hasPlusXSideFaces ) ++npts;
+    return npts;
+  }
+
+  template<> inline int get_nx<YVolField>( const std::vector<int>& dim,
+					   const bool hasPlusXSideFaces )
+  {
+    if( dim[0]<=1 || dim[1]<=1 ) return 1;
+    return dim[0] + YVolField::Ghost::NM + YVolField::Ghost::NP;
+  }
+  template<> inline int get_nx<YVolRHS>( const std::vector<int>& dim,
+					   const bool hasPlusXSideFaces )
+  {
+    if( dim[0]<=1 || dim[1]<=1 ) return 1;
+    return dim[0] + YVolRHS::Ghost::NM + YVolRHS::Ghost::NP;
+  }
+  template<> inline int get_nx<YSurfXField>( const std::vector<int>& dim,
+					     const bool hasPlusXSideFaces )
+  {
+    if( dim[0]<=1 || dim[1]<=1 ) return 1;
+    int npts = dim[0] + YSurfXField::Ghost::NM + YSurfXField::Ghost::NP;
+    if( hasPlusXSideFaces ) ++npts;
+    return npts;
+  }
+  template<> inline int get_nx<YSurfYField>( const std::vector<int>& dim,
+					     const bool hasPlusXSideFaces )
+  {
+    if( dim[0]<=1 || dim[1]<=1 ) return 1;
+    return dim[0] + YSurfYField::Ghost::NM + YSurfYField::Ghost::NP;
+  }
+  template<> inline int get_nx<YSurfZField>( const std::vector<int>& dim,
+					     const bool hasPlusXSideFaces )
+  {
+    if( dim[0]<=1 || dim[1]<=1 || dim[2]<=1 ) return 1;
+    return dim[0] + YSurfZField::Ghost::NM + YSurfZField::Ghost::NP;
+  }
+
+  template<> inline int get_nx<ZVolField>( const std::vector<int>& dim,
+					   const bool hasPlusXSideFaces )
+  {
+    if( dim[0]<=1 || dim[2]<=1 ) return 1;
+    return dim[0] + ZVolField::Ghost::NM + ZVolField::Ghost::NP;
+  }
+  template<> inline int get_nx<ZVolRHS>( const std::vector<int>& dim,
+					   const bool hasPlusXSideFaces )
+  {
+    if( dim[0]<=1 || dim[2]<=1 ) return 1;
+    return dim[0] + ZVolRHS::Ghost::NM + ZVolRHS::Ghost::NP;
+  }
+  template<> inline int get_nx<ZSurfXField>( const std::vector<int>& dim,
+					     const bool hasPlusXSideFaces )
+  {
+    if( dim[0]<=1 || dim[2]<=1 ) return 1;
+    int npts = dim[0] + ZSurfXField::Ghost::NM + ZSurfXField::Ghost::NP;
+    if( hasPlusXSideFaces ) ++npts;
+    return npts;
+  }
+  template<> inline int get_nx<ZSurfYField>( const std::vector<int>& dim,
+					     const bool hasPlusXSideFaces )
+  {
+    if( dim[0]<=1 || dim[1]<=1 || dim[2]<=1 ) return 1;
+    return dim[0] + ZSurfYField::Ghost::NM + ZSurfYField::Ghost::NP;
+  }
+  template<> inline int get_nx<ZSurfZField>( const std::vector<int>& dim,
+					     const bool hasPlusXSideFaces )
+  {
+    if( dim[0]<=1 || dim[2]<=1 ) return 1;
+    return dim[0] + ZSurfZField::Ghost::NM + ZSurfZField::Ghost::NP;
+  }
+
 
   //==================================================================
  
   /**
    * @brief get the total number of points (including ghost cells) for
    * a field in the y-direction.
+   *
+   * @param dim A vector containing the number of cells in each
+   * coordinate direction.  This is a three-component vector.
+   *
+   * @param hasPlusYSideFaces A boolean flag to indicate if this patch
+   * is on a +y side physical boundary.  If so, then it is assumed
+   * that there is an extra face on that side of the domain, and face
+   * variable dimensions will be modified accordingly.
    */
-  template<typename FieldT> inline int get_ny( const int nyInterior )
+  template<typename FieldT> inline int get_ny( const std::vector<int>& dim,
+					       const bool hasPlusYSideFaces );
+
+  template<> inline int get_ny<SVolField>( const std::vector<int>& dim,
+					   const bool hasPlusYSideFaces )
   {
-    typedef typename FieldT::Ghost G;
-    int npts=1;
-    if( nyInterior>1 ){
-      npts = nyInterior + G::NM + G::NP;
-      if( IsSameType<typename FieldT::Location, SSurfY>::result ) ++npts;
-      if( IsSameType<typename FieldT::Location, XSurfY>::result ) ++npts;
-      if( IsSameType<typename FieldT::Location, YVol  >::result ) ++npts;
-      if( IsSameType<typename FieldT::Location, YSurfX>::result ) ++npts;
-      if( IsSameType<typename FieldT::Location, YSurfY>::result ) npts+=2;
-      if( IsSameType<typename FieldT::Location, YSurfZ>::result ) ++npts;
-      if( IsSameType<typename FieldT::Location, ZSurfY>::result ) ++npts;
-   }
+    if( dim[1]<=1 ) return 1;
+    return dim[1] + SVolField::Ghost::NM + SVolField::Ghost::NP;
+  }
+  template<> inline int get_ny<SVolRHS>( const std::vector<int>& dim,
+					   const bool hasPlusYSideFaces )
+  {
+    if( dim[1]<=1 ) return 1;
+    return dim[1] + SVolRHS::Ghost::NM + SVolRHS::Ghost::NP;
+  }
+  template<> inline int get_ny<SSurfXField>( const std::vector<int>& dim,
+					     const bool hasPlusYSideFaces )
+  {
+    if( dim[0]<=1 || dim[1]<=1 ) return 1;
+    return dim[1] + SSurfXField::Ghost::NM + SSurfXField::Ghost::NP;
+  }
+  template<> inline int get_ny<SSurfYField>( const std::vector<int>& dim,
+					     const bool hasPlusYSideFaces )
+  {
+    if( dim[1]<=1 ) return 1;
+    int npts = dim[1] + SSurfYField::Ghost::NM + SSurfYField::Ghost::NP;
+    if( hasPlusYSideFaces ) ++npts;
     return npts;
+  }
+  template<> inline int get_ny<SSurfZField>( const std::vector<int>& dim,
+					     const bool hasPlusYSideFaces )
+  {
+    if( dim[1]<=1 || dim[2]<=1 ) return 1;
+    return dim[1] + SSurfZField::Ghost::NM + SSurfZField::Ghost::NP;
+  }
+
+  template<> inline int get_ny<XVolField>( const std::vector<int>& dim,
+					   const bool hasPlusYSideFaces )
+  {
+    if( dim[0]<=1 || dim[1]<=1 ) return 1;
+    return dim[1] + XVolField::Ghost::NM + XVolField::Ghost::NP;
+  }
+  template<> inline int get_ny<XVolRHS>( const std::vector<int>& dim,
+					   const bool hasPlusYSideFaces )
+  {
+    if( dim[0]<=1 || dim[1]<=1 ) return 1;
+    return dim[1] + XVolRHS::Ghost::NM + XVolRHS::Ghost::NP;
+  }
+  template<> inline int get_ny<XSurfXField>( const std::vector<int>& dim,
+					     const bool hasPlusYSideFaces )
+  {
+    if( dim[0]<=1 || dim[1]<=1 ) return 1;
+    return dim[1] + XSurfXField::Ghost::NM + XSurfXField::Ghost::NP;
+  }
+  template<> inline int get_ny<XSurfYField>( const std::vector<int>& dim,
+					     const bool hasPlusYSideFaces )
+  {
+    if( dim[0]<=1 || dim[1]<=1 ) return 1;
+    int npts = dim[1] + XSurfYField::Ghost::NM + XSurfYField::Ghost::NP;
+    if( hasPlusYSideFaces ) ++npts;
+    return npts;
+  }
+  template<> inline int get_ny<XSurfZField>( const std::vector<int>& dim,
+					     const bool hasPlusYSideFaces )
+  {
+    if( dim[0]<=1 || dim[1]<=1 || dim[2]<=1 ) return 1;
+    return dim[1] + XSurfZField::Ghost::NM + XSurfZField::Ghost::NP;
+  }
+
+  template<> inline int get_ny<YVolField>( const std::vector<int>& dim,
+					   const bool hasPlusYSideFaces )
+  {
+    if( dim[1]<=1 ) return 1;
+    int npts = dim[1] + YVolField::Ghost::NM + YVolField::Ghost::NP;
+    if( hasPlusYSideFaces ) ++npts;
+    return npts;
+  }
+  template<> inline int get_ny<YVolRHS>( const std::vector<int>& dim,
+					   const bool hasPlusYSideFaces )
+  {
+    if( dim[1]<=1 ) return 1;
+    int npts = dim[1] + YVolRHS::Ghost::NM + YVolRHS::Ghost::NP;
+    if( hasPlusYSideFaces ) ++npts;
+    return npts;
+  }
+  template<> inline int get_ny<YSurfXField>( const std::vector<int>& dim,
+					     const bool hasPlusYSideFaces )
+  {
+    if( dim[0]<=1 || dim[1]<=1 ) return 1;
+    int npts = dim[1] + YSurfXField::Ghost::NM + YSurfXField::Ghost::NP;
+    if( hasPlusYSideFaces ) ++npts;
+    return npts;
+  }
+  template<> inline int get_ny<YSurfYField>( const std::vector<int>& dim,
+					     const bool hasPlusYSideFaces )
+  {
+    if( dim[1]<=1 ) return 1;
+    return dim[1] + YSurfYField::Ghost::NM + YSurfYField::Ghost::NP;
+  }
+  template<> inline int get_ny<YSurfZField>( const std::vector<int>& dim,
+					     const bool hasPlusYSideFaces )
+  {
+    if( dim[1]<=1 || dim[2]<=1 ) return 1;
+    int npts = dim[1] + YSurfZField::Ghost::NM + YSurfZField::Ghost::NP;
+    if( hasPlusYSideFaces ) ++npts;
+    return npts;
+  }
+
+
+  template<> inline int get_ny<ZVolField>( const std::vector<int>& dim,
+					   const bool hasPlusYSideFaces )
+  {
+    if( dim[1]<=1 || dim[2]<=1 ) return 1;
+    return dim[1] + ZVolField::Ghost::NM + ZVolField::Ghost::NP;
+  }
+  template<> inline int get_ny<ZVolRHS>( const std::vector<int>& dim,
+					   const bool hasPlusYSideFaces )
+  {
+    if( dim[1]<=1 || dim[2]<=1 ) return 1;
+    return dim[1] + ZVolRHS::Ghost::NM + ZVolRHS::Ghost::NP;
+  }
+  template<> inline int get_ny<ZSurfXField>( const std::vector<int>& dim,
+					     const bool hasPlusYSideFaces )
+  {
+    if( dim[0]<=1 || dim[1]<=1 || dim[2]<=1 ) return 1;
+    return dim[1] + ZSurfXField::Ghost::NM + ZSurfXField::Ghost::NP;
+  }
+  template<> inline int get_ny<ZSurfYField>( const std::vector<int>& dim,
+					     const bool hasPlusYSideFaces )
+  {
+    if( dim[1]<=1 || dim[2]<=1 ) return 1;
+    int npts = dim[1] + ZSurfYField::Ghost::NM + ZSurfYField::Ghost::NP;
+    if( hasPlusYSideFaces ) ++npts;
+    return npts;
+  }
+  template<> inline int get_ny<ZSurfZField>( const std::vector<int>& dim,
+					     const bool hasPlusYSideFaces )
+  {
+    if( dim[1]<=1 || dim[2]<=1 ) return 1;
+    return dim[1] + ZSurfZField::Ghost::NM + ZSurfZField::Ghost::NP;
   }
 
   //==================================================================
@@ -61,373 +326,202 @@ namespace FVStaggered{
   /**
    * @brief get the total number of points (including ghost cells) for
    * a field in the z-direction.
+   *
+   * @param dim A vector containing the number of cells in each
+   * coordinate direction.  This is a three-component vector.
+   *
+   * @param hasPlusZSideFaces A boolean flag to indicate if this patch
+   * is on a +z side physical boundary.  If so, then it is assumed
+   * that there is an extra face on that side of the domain, and face
+   * variable dimensions will be modified accordingly.
    */
-  template<typename FieldT> inline int get_nz( const int nzInterior )
+  template<typename FieldT> inline int get_nz( const std::vector<int>& dim,
+					       const bool hasPlusZSideFaces );
+
+  template<> inline int get_nz<SVolField>( const std::vector<int>& dim,
+					   const bool hasPlusZSideFaces )
   {
-    typedef typename FieldT::Ghost G;
-    int npts=1;
-    if( nzInterior>1 ){
-      npts = nzInterior + G::NM + G::NP;
-      if( IsSameType<typename FieldT::Location, SSurfZ>::result ) ++npts;
-      if( IsSameType<typename FieldT::Location, XSurfZ>::result ) ++npts;
-      if( IsSameType<typename FieldT::Location, YSurfZ>::result ) ++npts;
-      if( IsSameType<typename FieldT::Location, ZVol  >::result ) ++npts;
-      if( IsSameType<typename FieldT::Location, ZSurfX>::result ) ++npts;
-      if( IsSameType<typename FieldT::Location, ZSurfY>::result ) ++npts;
-      if( IsSameType<typename FieldT::Location, ZSurfZ>::result ) npts+=2;
-    }
+    if( dim[2]<=1 ) return 1;
+    return dim[2] + SVolField::Ghost::NM + SVolField::Ghost::NP;
+  }
+  template<> inline int get_nz<SVolRHS>( const std::vector<int>& dim,
+					   const bool hasPlusZSideFaces )
+  {
+    if( dim[2]<=1 ) return 1;
+    return dim[2] + SVolRHS::Ghost::NM + SVolRHS::Ghost::NP;
+  }
+  template<> inline int get_nz<SSurfXField>( const std::vector<int>& dim,
+					     const bool hasPlusZSideFaces )
+  {
+    if( dim[0]<=1 || dim[2]<=1 ) return 1;
+    return dim[2] + SSurfXField::Ghost::NM + SSurfXField::Ghost::NP;
+  }
+  template<> inline int get_nz<SSurfYField>( const std::vector<int>& dim,
+					     const bool hasPlusZSideFaces )
+  {
+    if( dim[1]<=1 || dim[2]<=1 ) return 1;
+    return dim[2] + SSurfYField::Ghost::NM + SSurfYField::Ghost::NP;
+  }
+  template<> inline int get_nz<SSurfZField>( const std::vector<int>& dim,
+					     const bool hasPlusZSideFaces )
+  {
+    if( dim[2]<=1 ) return 1;
+    int npts = dim[2] + SSurfZField::Ghost::NM + SSurfZField::Ghost::NP;
+    if( hasPlusZSideFaces ) ++npts;
     return npts;
   }
 
-  //==================================================================
-
-  /**
-   * @brief get the total number of points in the x-direction
-   * (including ghost cells) for a x-surface field.
-   */
-  template<typename FieldT> inline int get_nx_x( const std::vector<int>& dim )
+  template<> inline int get_nz<XVolField>( const std::vector<int>& dim,
+					   const bool hasPlusZSideFaces )
   {
-    BOOST_STATIC_ASSERT( FieldT::Location::IsSurface );
-    switch( FieldT::Location::StagDir::value ){
-    case YDIR::value: if( dim[1]==1 ) return 1; break;
-    case ZDIR::value: if( dim[2]==1 ) return 1;
-    }
-    return get_nx<FieldT>(dim[0]);
+    if( dim[0]<=1 || dim[2]<=1 ) return 1;
+    return dim[2] + XVolField::Ghost::NM + XVolField::Ghost::NP;
   }
-
-  // explicitly declare functions without implementations for field
-  // types that this doesn't make sense for.
-  template<> int get_nx_x<SSurfYField>( const std::vector<int>& dim );
-  template<> int get_nx_x<SSurfZField>( const std::vector<int>& dim );
-  template<> int get_nx_x<XSurfYField>( const std::vector<int>& dim );
-  template<> int get_nx_x<XSurfZField>( const std::vector<int>& dim );
-  template<> int get_nx_x<YSurfYField>( const std::vector<int>& dim );
-  template<> int get_nx_x<YSurfZField>( const std::vector<int>& dim );
-  template<> int get_nx_x<ZSurfYField>( const std::vector<int>& dim );
-  template<> int get_nx_x<ZSurfZField>( const std::vector<int>& dim );
-
-
-  //==================================================================
-
-  /**
-   * @brief get the total number of points in the x-direction
-   * (including ghost cells) for a y-surface field.
-   */
-  template<typename FieldT> inline int get_nx_y( const std::vector<int>& dim )
+  template<> inline int get_nz<XVolRHS>( const std::vector<int>& dim,
+					   const bool hasPlusZSideFaces )
   {
-    BOOST_STATIC_ASSERT( FieldT::Location::IsSurface );
-    switch( FieldT::Location::StagDir::value ){
-    case XDIR::value: if( dim[0]==1 ) return 1; break;
-    case ZDIR::value: if( dim[2]==1 ) return 1;
-    }
-    int npts = 1;
-    if( dim[0]>1 ) npts = get_nx<FieldT>(dim[0]);
+    if( dim[0]<=1 || dim[2]<=1 ) return 1;
+    return dim[2] + XVolRHS::Ghost::NM + XVolRHS::Ghost::NP;
+  }
+  template<> inline int get_nz<XSurfXField>( const std::vector<int>& dim,
+					     const bool hasPlusZSideFaces )
+  {
+    if( dim[0]<=1 || dim[2]<=1 ) return 1;
+    return dim[2] + XSurfXField::Ghost::NM + XSurfXField::Ghost::NP;
+  }
+  template<> inline int get_nz<XSurfYField>( const std::vector<int>& dim,
+					     const bool hasPlusZSideFaces )
+  {
+    if( dim[0]<=1 || dim[1]<=1 || dim[2]<=1 ) return 1;
+    return dim[2] + XSurfYField::Ghost::NM + XSurfYField::Ghost::NP;
+  }
+  template<> inline int get_nz<XSurfZField>( const std::vector<int>& dim,
+					     const bool hasPlusZSideFaces )
+  {
+    if( dim[0]<=1 || dim[2]<=1 ) return 1;
+    int npts = dim[2] + XSurfZField::Ghost::NM + XSurfZField::Ghost::NP;
+    if( hasPlusZSideFaces ) ++npts;
     return npts;
   }
 
-  // explicitly declare functions without implementations for field
-  // types that this doesn't make sense for.
-  template<> int get_nx_y<SSurfXField>( const std::vector<int>& dim );
-  template<> int get_nx_y<SSurfZField>( const std::vector<int>& dim );
-  template<> int get_nx_y<XSurfXField>( const std::vector<int>& dim );
-  template<> int get_nx_y<XSurfZField>( const std::vector<int>& dim );
-  template<> int get_nx_y<YSurfXField>( const std::vector<int>& dim );
-  template<> int get_nx_y<YSurfZField>( const std::vector<int>& dim );
-  template<> int get_nx_y<ZSurfXField>( const std::vector<int>& dim );
-  template<> int get_nx_y<ZSurfZField>( const std::vector<int>& dim );
-
-  //==================================================================
-
-  /**
-   * @brief get the total number of points in the x-direction
-   * (including ghost cells) for a z-surface field.
-   */
-  template<typename FieldT> inline int get_nx_z( const std::vector<int>& dim )
+  template<> inline int get_nz<YVolField>( const std::vector<int>& dim,
+					   const bool hasPlusZSideFaces )
   {
-    BOOST_STATIC_ASSERT( FieldT::Location::IsSurface );
-    switch( FieldT::Location::StagDir::value ){
-    case XDIR::value: if( dim[0]==1 ) return 1; break;
-    case YDIR::value: if( dim[1]==1 ) return 1;
-    }
-    int npts = 1;
-    if( dim[0]>1 ) npts = get_nx<FieldT>(dim[0]);
+    if( dim[1]<=1 || dim[2]<=1 ) return 1;
+    return dim[2] + YVolField::Ghost::NM + YVolField::Ghost::NP;
+  }
+  template<> inline int get_nz<YVolRHS>( const std::vector<int>& dim,
+					   const bool hasPlusZSideFaces )
+  {
+    if( dim[1]<=1 || dim[2]<=1 ) return 1;
+    return dim[2] + YVolRHS::Ghost::NM + YVolRHS::Ghost::NP;
+  }
+  template<> inline int get_nz<YSurfXField>( const std::vector<int>& dim,
+					     const bool hasPlusZSideFaces )
+  {
+    if( dim[0]<=1 || dim[1]<=1 || dim[2]<=1 ) return 1;
+    return dim[2] + YSurfXField::Ghost::NM + YSurfXField::Ghost::NP;
+  }
+  template<> inline int get_nz<YSurfYField>( const std::vector<int>& dim,
+					     const bool hasPlusZSideFaces )
+  {
+    if( dim[1]<=1 || dim[2]<=1 ) return 1;
+    return dim[2] + YSurfYField::Ghost::NM + YSurfYField::Ghost::NP;
+  }
+  template<> inline int get_nz<YSurfZField>( const std::vector<int>& dim,
+					     const bool hasPlusZSideFaces )
+  {
+    if( dim[1]<=1 || dim[2]<=1 ) return 1;
+    int npts = dim[2] + YSurfZField::Ghost::NM + YSurfZField::Ghost::NP;
+    if( hasPlusZSideFaces ) ++npts;
     return npts;
   }
 
-  // explicitly declare functions without implementations for field
-  // types that this doesn't make sense for.
-  template<> int get_nx_z<SSurfXField>( const std::vector<int>& dim );
-  template<> int get_nx_z<SSurfYField>( const std::vector<int>& dim );
-  template<> int get_nx_z<XSurfXField>( const std::vector<int>& dim );
-  template<> int get_nx_z<XSurfYField>( const std::vector<int>& dim );
-  template<> int get_nx_z<YSurfXField>( const std::vector<int>& dim );
-  template<> int get_nx_z<YSurfYField>( const std::vector<int>& dim );
-  template<> int get_nx_z<ZSurfXField>( const std::vector<int>& dim );
-  template<> int get_nx_z<ZSurfYField>( const std::vector<int>& dim );
-
-  //==================================================================
-
-  /**
-   * @brief get the total number of points in the y-direction
-   * (including ghost cells) for a x-surface field.
-   */
-  template<typename FieldT> inline int get_ny_x( const std::vector<int>& dim )
+  template<> inline int get_nz<ZVolField>( const std::vector<int>& dim,
+					   const bool hasPlusZSideFaces )
   {
-    BOOST_STATIC_ASSERT( FieldT::Location::IsSurface );
-    switch( FieldT::Location::StagDir::value ){
-    case YDIR::value: if( dim[1]==1 ) return 1; break;
-    case ZDIR::value: if( dim[2]==1 ) return 1;
-    }
-    int npts = 1;
-    if( dim[1]>1 ) npts = get_ny<FieldT>(dim[1]);
+    if( dim[2]<=1 ) return 1;
+    int npts = dim[2] + ZVolField::Ghost::NM + ZVolField::Ghost::NP;
+    if( hasPlusZSideFaces ) ++npts;
     return npts;
   }
-
-  // explicitly declare functions without implementations for field
-  // types that this doesn't make sense for.
-  template<> int get_ny_x<SSurfYField>( const std::vector<int>& dim );
-  template<> int get_ny_x<SSurfZField>( const std::vector<int>& dim );
-  template<> int get_ny_x<XSurfYField>( const std::vector<int>& dim );
-  template<> int get_ny_x<XSurfZField>( const std::vector<int>& dim );
-  template<> int get_ny_x<YSurfYField>( const std::vector<int>& dim );
-  template<> int get_ny_x<YSurfZField>( const std::vector<int>& dim );
-  template<> int get_ny_x<ZSurfYField>( const std::vector<int>& dim );
-  template<> int get_ny_x<ZSurfZField>( const std::vector<int>& dim );
-
-  //==================================================================
-
-  /**
-   * @brief get the total number of points in the y-direction
-   * (including ghost cells) for a y-surface field.
-   */
-  template<typename FieldT> inline int get_ny_y( const std::vector<int>& dim )
+  template<> inline int get_nz<ZVolRHS>( const std::vector<int>& dim,
+					   const bool hasPlusZSideFaces )
   {
-    BOOST_STATIC_ASSERT( FieldT::Location::IsSurface );
-    switch( FieldT::Location::StagDir::value ){
-    case XDIR::value: if( dim[0]==1 ) return 1; break;
-    case ZDIR::value: if( dim[2]==1 ) return 1;
-    }
-    return dim[1]>1 ? get_ny<FieldT>(dim[1]) : 1;
-  }
-
-  // explicitly declare functions without implementations for field
-  // types that this doesn't make sense for.
-  template<> int get_ny_y<SSurfXField>( const std::vector<int>& dim );
-  template<> int get_ny_y<SSurfZField>( const std::vector<int>& dim );
-  template<> int get_ny_y<XSurfXField>( const std::vector<int>& dim );
-  template<> int get_ny_y<XSurfZField>( const std::vector<int>& dim );
-  template<> int get_ny_y<YSurfXField>( const std::vector<int>& dim );
-  template<> int get_ny_y<YSurfZField>( const std::vector<int>& dim );
-  template<> int get_ny_y<ZSurfXField>( const std::vector<int>& dim );
-  template<> int get_ny_y<ZSurfZField>( const std::vector<int>& dim );
-
-  //==================================================================
-
-  /**
-   * @brief get the total number of points in the y-direction
-   * (including ghost cells) for a z-surface field.
-   */
-  template<typename FieldT> inline int get_ny_z( const std::vector<int>& dim )
-  {
-    BOOST_STATIC_ASSERT( FieldT::Location::IsSurface );
-    switch( FieldT::Location::StagDir::value ){
-    case XDIR::value: if( dim[0]==1 ) return 1; break;
-    case YDIR::value: if( dim[1]==1 ) return 1;
-    }
-    int npts = 1;
-    if( dim[1]>1 ) npts = get_ny<FieldT>(dim[1]);
+    if( dim[2]<=1 ) return 1;
+    int npts = dim[2] + ZVolRHS::Ghost::NM + ZVolRHS::Ghost::NP;
+    if( hasPlusZSideFaces ) ++npts;
     return npts;
   }
-
-  // explicitly declare functions without implementations for field
-  // types that this doesn't make sense for.
-  template<> int get_ny_z<SSurfXField>( const std::vector<int>& dim );
-  template<> int get_ny_z<SSurfYField>( const std::vector<int>& dim );
-  template<> int get_ny_z<XSurfXField>( const std::vector<int>& dim );
-  template<> int get_ny_z<XSurfYField>( const std::vector<int>& dim );
-  template<> int get_ny_z<YSurfXField>( const std::vector<int>& dim );
-  template<> int get_ny_z<YSurfYField>( const std::vector<int>& dim );
-  template<> int get_ny_z<ZSurfXField>( const std::vector<int>& dim );
-  template<> int get_ny_z<ZSurfYField>( const std::vector<int>& dim );
-
-  //==================================================================
-
-  /**
-   * @brief get the total number of points in the z-direction
-   * (including ghost cells) for a x-surface field.
-   */
-  template<typename FieldT> inline int get_nz_x( const std::vector<int>& dim )
+  template<> inline int get_nz<ZSurfXField>( const std::vector<int>& dim,
+					     const bool hasPlusZSideFaces )
   {
-    BOOST_STATIC_ASSERT( FieldT::Location::IsSurface );
-    switch( FieldT::Location::StagDir::value ){
-    case YDIR::value: if( dim[1]==1 ) return 1; break;
-    case ZDIR::value: if( dim[2]==1 ) return 1;
-    }
-    int npts = 1;
-    if( dim[2]>1 ) npts = get_nz<FieldT>(dim[2]);
+    if( dim[0]<=1 || dim[2]<=1 ) return 1;
+    int npts = dim[2] + ZSurfXField::Ghost::NM + ZSurfXField::Ghost::NP;
+    if( hasPlusZSideFaces ) ++npts;
     return npts;
   }
-
-  // explicitly declare functions without implementations for field
-  // types that this doesn't make sense for.
-  template<> int get_nz_x<SSurfYField>( const std::vector<int>& dim );
-  template<> int get_nz_x<SSurfZField>( const std::vector<int>& dim );
-  template<> int get_nz_x<XSurfYField>( const std::vector<int>& dim );
-  template<> int get_nz_x<XSurfZField>( const std::vector<int>& dim );
-  template<> int get_nz_x<YSurfYField>( const std::vector<int>& dim );
-  template<> int get_nz_x<YSurfZField>( const std::vector<int>& dim );
-  template<> int get_nz_x<ZSurfYField>( const std::vector<int>& dim );
-  template<> int get_nz_x<ZSurfZField>( const std::vector<int>& dim );
-
-  //==================================================================
-
-  /**
-   * @brief get the total number of points in the z-direction
-   * (including ghost cells) for a y-surface field.
-   */
-  template<typename FieldT> inline int get_nz_y( const std::vector<int>& dim )
+  template<> inline int get_nz<ZSurfYField>( const std::vector<int>& dim,
+						    const bool hasPlusZSideFaces )
   {
-    BOOST_STATIC_ASSERT( FieldT::Location::IsSurface );
-    switch( FieldT::Location::StagDir::value ){
-    case XDIR::value: if( dim[0]==1 ) return 1;  break;
-    case ZDIR::value: if( dim[2]==1 ) return 1;
-    }
-    int npts = 1;
-    if( dim[2]>1 ) npts = get_nz<FieldT>(dim[2]);
+    if( dim[1]<=1 || dim[2]<=1 ) return 1;
+    int npts = dim[2] + ZSurfYField::Ghost::NM + ZSurfYField::Ghost::NP;
+    if( hasPlusZSideFaces ) ++npts;
     return npts;
   }
-
-  // explicitly declare functions without implementations for field
-  // types that this doesn't make sense for.
-  template<> int get_nz_y<SSurfXField>( const std::vector<int>& dim );
-  template<> int get_nz_y<SSurfZField>( const std::vector<int>& dim );
-  template<> int get_nz_y<XSurfXField>( const std::vector<int>& dim );
-  template<> int get_nz_y<XSurfZField>( const std::vector<int>& dim );
-  template<> int get_nz_y<YSurfXField>( const std::vector<int>& dim );
-  template<> int get_nz_y<YSurfZField>( const std::vector<int>& dim );
-  template<> int get_nz_y<ZSurfXField>( const std::vector<int>& dim );
-  template<> int get_nz_y<ZSurfZField>( const std::vector<int>& dim );
-
-  //==================================================================
-
-  /**
-   * @brief get the total number of points in the z-direction
-   * (including ghost cells) for a z-surface field.
-   */
-  template<typename FieldT> inline int get_nz_z( const std::vector<int>& dim )
+  template<> inline int get_nz<ZSurfZField>( const std::vector<int>& dim,
+					     const bool hasPlusZSideFaces )
   {
-    BOOST_STATIC_ASSERT( FieldT::Location::IsSurface );
-    switch( FieldT::Location::StagDir::value ){
-    case XDIR::value: if( dim[0]==1 ) return 1;  break;
-    case YDIR::value: if( dim[1]==1 ) return 1;
-    }
-    return dim[2]>1 ? get_nz<FieldT>(dim[2]) : 1;
+    if( dim[2]<=1 ) return 1;
+    return dim[2] + ZSurfZField::Ghost::NM + ZSurfZField::Ghost::NP;
   }
-
-  // explicitly declare functions without implementations for field
-  // types that this doesn't make sense for.
-  template<> int get_nz_z<SSurfXField>( const std::vector<int>& dim );
-  template<> int get_nz_z<SSurfYField>( const std::vector<int>& dim );
-  template<> int get_nz_z<XSurfXField>( const std::vector<int>& dim );
-  template<> int get_nz_z<XSurfYField>( const std::vector<int>& dim );
-  template<> int get_nz_z<YSurfXField>( const std::vector<int>& dim );
-  template<> int get_nz_z<YSurfYField>( const std::vector<int>& dim );
-  template<> int get_nz_z<ZSurfXField>( const std::vector<int>& dim );
-  template<> int get_nz_z<ZSurfYField>( const std::vector<int>& dim );
 
   //==================================================================
 
   /**
    * @brief get the total number of points in a field, including ghost
    * cells.
+   *
+   * @param dim A vector containing the number of cells in each
+   * coordinate direction.  This is a three-component vector.
+   *
+   * @param hasPlusXSideFaces A boolean flag to indicate if this patch
+   * is on a +x side physical boundary.  If so, then it is assumed
+   * that there is an extra face on that side of the domain, and face
+   * variable dimensions will be modified accordingly.
+   *
+   * @param hasPlusYSideFaces A boolean flag to indicate if this patch
+   * is on a +y side physical boundary.  If so, then it is assumed
+   * that there is an extra face on that side of the domain, and face
+   * variable dimensions will be modified accordingly.
+
+   * @param hasPlusZSideFaces A boolean flag to indicate if this patch
+   * is on a +z side physical boundary.  If so, then it is assumed
+   * that there is an extra face on that side of the domain, and face
+   * variable dimensions will be modified accordingly.
+   *
+   * @todo Remove default values.  This is very dangerous for parallel
+   * computations to have a default value for the + side information.
    */
-  template<typename FieldT> int get_n_tot( const std::vector<int>& dim )
+  template<typename FieldT> int get_n_tot( const std::vector<int>& dim,
+					   const bool hasPlusXSideFaces=true,
+					   const bool hasPlusYSideFaces=true,
+					   const bool hasPlusZSideFaces=true )
   {
-    BOOST_STATIC_ASSERT( FieldT::Location::IsSurface );
-
-    switch( FieldT::Location::Dir::value ){
-    case NODIR::value:  // surface fields (scalars located at all faces)
-      {
-	int n=0;
-	if( dim[0]>1 )  // number of points for "x-face" field
-	  n += (            get_nx_x<FieldT>(dim)     )
-	    *  ( dim[1]>1 ? get_ny_x<FieldT>(dim) : 1 )
-	    *  ( dim[2]>1 ? get_nz_x<FieldT>(dim) : 1 );
-	if( dim[1]>1 )  // number of points for 'y-face" field
-	  n += ( dim[0]>1 ? get_nx_y<FieldT>(dim) : 1 )
-	    *  (            get_ny_y<FieldT>(dim)     )
-	    *  ( dim[2]>1 ? get_nz_y<FieldT>(dim) : 1 );
-	if( dim[2]>1 )  // number of points for "z-face" field
-	  n += ( dim[0]>1 ? get_nx_z<FieldT>(dim) : 1 )
-	    *  ( dim[1]>1 ? get_ny_z<FieldT>(dim) : 1 )
-	    *  (            get_nz_z<FieldT>(dim)     );
-	return n;
-      }
-    case XDIR::value:  // x-face vector component
-      {
-	int n=1;
-	if( dim[0]>1 )
-	  n = get_nx_x<FieldT>(dim) * get_ny_x<FieldT>(dim) * get_nz_x<FieldT>(dim);
-	return n;
-      }
-    case YDIR::value:  // y-face vector component
-      {
-	int n=1;
-	if( dim[1]>1 )
-	  n = get_nx_y<FieldT>(dim) * get_ny_y<FieldT>(dim) * get_nz_y<FieldT>(dim);
-	return n;
-      }
-    case ZDIR::value:  // z-face vector component
-      {
-	int n=1;
-	if( dim[2]>1 )
-	  n = get_nx_z<FieldT>(dim) * get_ny_z<FieldT>(dim) * get_nz_z<FieldT>(dim);
-	return n;
-      }
-    }
-    // should never get here.
-    return -1;
-  }
-
-  template<> inline int get_n_tot<SVolField>( const std::vector<int>& dim )
-  {
-    return get_nx<SVolField>(dim[0]) * get_ny<SVolField>(dim[1]) * get_nz<SVolField>(dim[2]);
-  }
-
-  template<> inline int get_n_tot<SVolRHS>( const std::vector<int>& dim )
-  {
-    return get_nx<SVolRHS>(dim[0]) * get_ny<SVolRHS>(dim[1]) * get_nz<SVolRHS>(dim[2]);
-  }
-
-  template<> inline int get_n_tot<XVolField>( const std::vector<int>& dim )
-  {
-    int n=1;
-    if( dim[0]>1 )
-      n = get_nx<XVolField>(dim[0]) * get_ny<XVolField>(dim[1]) * get_nz<XVolField>(dim[2]);
-    return n;
-  }
-
-  template<> inline int get_n_tot<YVolField>( const std::vector<int>& dim )
-  {
-    int n=1;
-    if( dim[1]>1 )
-      n = get_nx<YVolField>(dim[0]) * get_ny<YVolField>(dim[1]) * get_nz<YVolField>(dim[2]);
-    return n;
-  }
-
-  template<> inline int get_n_tot<ZVolField>( const std::vector<int>& dim )
-  {
-    int n=1;
-    if( dim[2]>1 )
-      n = get_nx<ZVolField>(dim[0]) * get_ny<ZVolField>(dim[1]) * get_nz<ZVolField>(dim[2]);
-    return n;
+    return get_nx<FieldT>(dim,hasPlusXSideFaces)
+         * get_ny<FieldT>(dim,hasPlusYSideFaces)
+         * get_nz<FieldT>(dim,hasPlusZSideFaces);
   }
 
   //==================================================================
 
+  // intended for local use only.
   inline void _ghost_set_( const int ngm, const int ngp,
 			   const int nxt, const int nyt, const int nzt,
 			   const std::vector<int>& dim,
+			   const bool hasPlusXSideFaces,
+			   const bool hasPlusYSideFaces,
+			   const bool hasPlusZSideFaces,
 			   int& ix,
 			   std::set<int>& ghostSet )
   {
@@ -488,19 +582,41 @@ namespace FVStaggered{
   /**
    *  @brief Obtain the set of indices corresponding to ghost cells
    *  for this field.
+   *
+   * @param hasPlusXSideFaces A boolean flag to indicate if this patch
+   * is on a +x side physical boundary.  If so, then it is assumed
+   * that there is an extra face on that side of the domain, and face
+   * variable dimensions will be modified accordingly.
+   *
+   * @param hasPlusYSideFaces A boolean flag to indicate if this patch
+   * is on a +y side physical boundary.  If so, then it is assumed
+   * that there is an extra face on that side of the domain, and face
+   * variable dimensions will be modified accordingly.
+
+   * @param hasPlusZSideFaces A boolean flag to indicate if this patch
+   * is on a +z side physical boundary.  If so, then it is assumed
+   * that there is an extra face on that side of the domain, and face
+   * variable dimensions will be modified accordingly.
+   *
+   * @todo Remove default values.  This is very dangerous for parallel
+   * computations to have a default value for the + side information.
    */
   template<typename FieldT> 
-  const std::set<int>& get_ghost_set( const std::vector<int>& dim )
+  const std::set<int>& get_ghost_set( const std::vector<int>& dim,
+				      const bool hasPlusXSideFaces=true,
+				      const bool hasPlusYSideFaces=true,
+				      const bool hasPlusZSideFaces=true )
   {
     typedef typename FieldT::Ghost G;
     static std::set<int> ghostSet;
     ghostSet.clear();
     int ix=0;
     _ghost_set_( G::NM, G::NP,
-		 get_nx<FieldT>(dim[0]),
-		 get_ny<FieldT>(dim[1]),
-		 get_nz<FieldT>(dim[2]),
+		 get_nx<FieldT>(dim,hasPlusXSideFaces),
+		 get_ny<FieldT>(dim,hasPlusYSideFaces),
+		 get_nz<FieldT>(dim,hasPlusZSideFaces),
 		 dim,
+		 hasPlusXSideFaces, hasPlusYSideFaces, hasPlusZSideFaces,
 		 ix,
 		 ghostSet );
     return ghostSet;
@@ -508,6 +624,10 @@ namespace FVStaggered{
 
   //==================================================================
 
+  /**
+   *  @struct IndexTriplet
+   *  @brief  Holds the ijk index.
+   */
   struct IndexTriplet
   {
     IndexTriplet( const int ii, const int jj, const int kk ): i(ii), j(jj), k(kk){}
@@ -522,20 +642,13 @@ namespace FVStaggered{
   /**
    *  @brief Use this to transform a flat index to i,j,k indices.
    */
-  template<typename FieldT, int IsSurfField, typename CompType=NODIR>
+  template<typename FieldT>
   struct flat2ijk
   {
-    static IndexTriplet value( const std::vector<int>& dim, const int ix );
-  };
-  template<typename FieldT>
-  struct flat2ijk<FieldT,0>
-  {
-    static IndexTriplet value( const std::vector<int>& dim, const int ix );
-  };
-  template<typename FieldT>
-  struct flat2ijk<FieldT,1>
-  {
-    static IndexTriplet value( const std::vector<int>& dim, const int ix );
+    static IndexTriplet value( const std::vector<int>& dim, const int ix,
+			       const bool hasPlusXSideFaces=true,
+			       const bool hasPlusYSideFaces=true,
+			       const bool hasPlusZSideFaces=true );
   };
 
   //==================================================================
@@ -543,99 +656,26 @@ namespace FVStaggered{
   /**
    *  @brief Use this to transform i,j,k indices to a flat index.
    */
-  template<typename FieldT, int IsSurfField, typename CompType=NODIR>
+  template<typename FieldT>
   struct ijk2flat
   {
-    static int value( const std::vector<int>& dim, const IndexTriplet& ixt );
-  };
-  template<typename FieldT>
-  struct ijk2flat<FieldT,0>
-  {
-    static int value( const std::vector<int>& dim, const IndexTriplet& ixt );
-  };
-  template<typename FieldT,typename CompType>
-  struct ijk2flat<FieldT,1,CompType>
-  {
-    static int value( const std::vector<int>& dim, const IndexTriplet& ixt );
+    static int value( const std::vector<int>& dim, const IndexTriplet& ixt,
+		      const bool hasPlusXSideFaces=true,
+		      const bool hasPlusYSideFaces=true,
+		      const bool hasPlusZSideFaces=true );
   };
 
+  //====================================================================
 
-  // implementation for all surface fields:
   template<typename FieldT>
   inline IndexTriplet
-  flat2ijk<FieldT,1>::value( const std::vector<int>& dim, const int ix )
+  flat2ijk<FieldT>::value( const std::vector<int>& dim, const int ix,
+			   const bool hasPlusXSideFaces, const bool hasPlusYSideFaces, const bool hasPlusZSideFaces )
   {
     IndexTriplet triplet;
 
-    int nxt=-1, nyt=-1;
-    switch( FieldT::Location::Dir::value ){
-    case XDIR::value:
-      nxt = get_nx_x<FieldT>(dim);
-      nyt = get_ny_x<FieldT>(dim);
-      break;
-    case YDIR::value:
-      nxt = get_nx_y<FieldT>(dim);
-      nyt = get_ny_y<FieldT>(dim);
-      break;
-    case ZDIR::value:
-      nxt = get_nx_z<FieldT>(dim);
-      nyt = get_ny_z<FieldT>(dim);
-      break;
-    case NODIR::value:
-      {
-	const int nx1 = get_nx_x<FieldT>(dim);
-	const int ny1 = get_ny_x<FieldT>(dim);
-	const int nz1 = get_nz_x<FieldT>(dim);
-	const int nx2 = get_nx_y<FieldT>(dim);
-	const int ny2 = get_ny_y<FieldT>(dim);
-	const int nz2 = get_nz_y<FieldT>(dim);
-	const int nx3 = get_nx_z<FieldT>(dim);
-	const int ny3 = get_ny_z<FieldT>(dim);
-	const int nz3 = get_nz_z<FieldT>(dim);
-	const int n1 = dim[0]>1 ? nx1*ny1*nz1 : 0;
-	const int n2 = dim[1]>1 ? n1 + nx2*ny2*nz2 : n1;
-	const int n3 = dim[2]>1 ? n2 + nx3*ny3*nz3 : n2;
-
-	if( ix<n1 ){
-	  triplet.i = ix%nx1;
-	  triplet.j = ix/nx1 % ny1;
-	  triplet.k = ix/(nx1*ny1);
-	}
-	else if( ix<n2 ){
-	  triplet.i = (nx2>1) ? (ix-n1)%nx2 : 0;
-	  triplet.j = (ix-n1)/nx2 % ny2;
-	  triplet.k = (ix-n1)/(nx2*ny2);
-	}
-	else if( ix<n3 ){
-	  triplet.i = (nx3>1) ? (ix-n2)%nx3 : 0;
-	  triplet.j = (ny3>1) ? (ix-n2)/nx3 % ny3 : 0;
-	  triplet.k = (ix-n2)/(nx3*ny3);
-	}
-	else{
-	  assert(0);  // should never get here.
-	}
-	return triplet;
-      }
-    default:
-      assert(0);
-    }
-    triplet.i = ix%nxt;
-    triplet.j = ix/nxt % nyt;
-    triplet.k = ix/(nxt*nyt);
-
-    return triplet;
-  }
-
-  // implementation for all volume fields
-  template<typename FieldT>
-  inline IndexTriplet
-  flat2ijk<FieldT,0>::value( const std::vector<int>& dim, const int ix )
-  {
-    IndexTriplet triplet;
-
-    const int nxt = get_nx<FieldT>(dim[0]);
-    const int nyt = get_ny<FieldT>(dim[1]);
-
+    const int nxt = get_nx<FieldT>(dim,hasPlusXSideFaces);
+    const int nyt = get_ny<FieldT>(dim,hasPlusXSideFaces);
     triplet.i = ix%nxt;
     triplet.j = ix/nxt % nyt;
     triplet.k = ix/(nxt*nyt);
@@ -645,57 +685,13 @@ namespace FVStaggered{
 
   //==================================================================
 
-  // implementation for all surface fields
-  template<typename FieldT,typename CompType>
-  inline int
-  ijk2flat<FieldT,1,CompType>::value( const std::vector<int>& dim, const IndexTriplet& triplet )
-  {
-    int nxt=-1, nyt=-1;
-    switch( FieldT::Location::Dir::value ){
-    case XDIR::value:
-      nxt = get_nx_x<FieldT>(dim);
-      nyt = get_ny_x<FieldT>(dim);
-      break;
-    case YDIR::value:
-      nxt = get_nx_y<FieldT>(dim);
-      nyt = get_ny_y<FieldT>(dim);
-      break;
-    case ZDIR::value:
-      nxt = get_nx_z<FieldT>(dim);
-      nyt = get_ny_z<FieldT>(dim);
-      break;
-    case NODIR::value:
-      {
-	switch( CompType::value ){
-	case XDIR::value:
-	  nxt = get_nx_x<FieldT>(dim);
-	  nyt = get_ny_x<FieldT>(dim);
-	  break;
-	case YDIR::value:
-	  nxt = get_nx_y<FieldT>(dim);
-	  nyt = get_ny_y<FieldT>(dim);
-	  break;
-	case ZDIR::value:
-	  nxt = get_nx_z<FieldT>(dim);
-	  nyt = get_ny_z<FieldT>(dim);
-	  break;
-	}
-	break;
-      }
-    }
-
-    int flat = triplet.i + nxt*triplet.j + nxt*nyt*triplet.k;
-
-    return flat;
-  }
-
-  // implementation for all volume fields
   template<typename FieldT>
   inline int
-  ijk2flat<FieldT,0>::value( const std::vector<int>& dim, const IndexTriplet& triplet )
+  ijk2flat<FieldT>::value( const std::vector<int>& dim, const IndexTriplet& triplet,
+			   const bool hasPlusXSideFaces, const bool hasPlusYSideFaces, const bool hasPlusZSideFaces )
   {
-    const int nxt = get_nx<FieldT>(dim[0]);
-    const int nyt = get_ny<FieldT>(dim[1]);
+    const int nxt = get_nx<FieldT>(dim,hasPlusXSideFaces);
+    const int nyt = get_ny<FieldT>(dim,hasPlusYSideFaces);
       
     return
       triplet.i +

@@ -43,6 +43,33 @@ namespace FVStaggered{
 
 
   //-- Field Types --//
+#if defined UINTAH_FIELD_TYPES
+
+  typedef SpatialField< LinAlg, SVol,   DefaultGhost > SVolField;
+  typedef SpatialField< LinAlg, SSurfX, DefaultGhost > SSurfXField;
+  typedef SpatialField< LinAlg, SSurfY, DefaultGhost > SSurfYField;
+  typedef SpatialField< LinAlg, SSurfZ, DefaultGhost > SSurfZField;
+  typedef SpatialField< LinAlg, SVol,   NoGhost      > SVolRHS;
+
+  typedef SpatialField< LinAlg, XVol,   DefaultGhost > XVolField;
+  typedef SpatialField< LinAlg, XSurfX, DefaultGhost > XSurfXField;
+  typedef SpatialField< LinAlg, XSurfY, DefaultGhost > XSurfYField;
+  typedef SpatialField< LinAlg, XSurfZ, DefaultGhost > XSurfZField;
+  typedef SpatialField< LinAlg, XVol,   NoGhost      > XVolRHS;
+
+  typedef SpatialField< LinAlg, YVol,   DefaultGhost > YVolField;
+  typedef SpatialField< LinAlg, YSurfX, DefaultGhost > YSurfXField;
+  typedef SpatialField< LinAlg, YSurfY, DefaultGhost > YSurfYField;
+  typedef SpatialField< LinAlg, YSurfZ, DefaultGhost > YSurfZField;
+  typedef SpatialField< LinAlg, YVol,   NoGhost      > YVolRHS;
+
+  typedef SpatialField< LinAlg, ZVol,   DefaultGhost > ZVolField;
+  typedef SpatialField< LinAlg, ZSurfX, DefaultGhost > ZSurfXField;
+  typedef SpatialField< LinAlg, ZSurfY, DefaultGhost > ZSurfYField;
+  typedef SpatialField< LinAlg, ZSurfZ, DefaultGhost > ZSurfZField;
+  typedef SpatialField< LinAlg, ZVol,   NoGhost      > ZVolRHS;
+
+#elif defined SAMRAI_FIELD_TYPES
 
   typedef SpatialField< LinAlg, SVol,   DefaultGhost > SVolField;
   typedef SpatialField< LinAlg, SSurfX, NoGhost      > SSurfXField;
@@ -51,23 +78,28 @@ namespace FVStaggered{
   typedef SpatialField< LinAlg, SVol,   NoGhost      > SVolRHS;
 
   typedef SpatialField< LinAlg, XVol,   DefaultGhost > XVolField;
-  typedef SpatialField< LinAlg, XSurfX, NoGhost      > XSurfXField;
+  typedef SpatialField< LinAlg, XSurfX, DefaultGhost > XSurfXField;
   typedef SpatialField< LinAlg, XSurfY, NoGhost      > XSurfYField;
   typedef SpatialField< LinAlg, XSurfZ, NoGhost      > XSurfZField;
   typedef SpatialField< LinAlg, XVol,   NoGhost      > XVolRHS;
 
   typedef SpatialField< LinAlg, YVol,   DefaultGhost > YVolField;
   typedef SpatialField< LinAlg, YSurfX, NoGhost      > YSurfXField;
-  typedef SpatialField< LinAlg, YSurfY, NoGhost      > YSurfYField;
+  typedef SpatialField< LinAlg, YSurfY, DefaultGhost > YSurfYField;
   typedef SpatialField< LinAlg, YSurfZ, NoGhost      > YSurfZField;
   typedef SpatialField< LinAlg, YVol,   NoGhost      > YVolRHS;
 
   typedef SpatialField< LinAlg, ZVol,   DefaultGhost > ZVolField;
   typedef SpatialField< LinAlg, ZSurfX, NoGhost      > ZSurfXField;
   typedef SpatialField< LinAlg, ZSurfY, NoGhost      > ZSurfYField;
-  typedef SpatialField< LinAlg, ZSurfZ, NoGhost      > ZSurfZField;
+  typedef SpatialField< LinAlg, ZSurfZ, DefaultGhost > ZSurfZField;
   typedef SpatialField< LinAlg, ZVol,   NoGhost      > ZVolRHS;
 
+#else
+
+#error No field type scheme defined!
+
+#endif
 
 
   //-- Interpolant Operators --//
@@ -78,17 +110,17 @@ namespace FVStaggered{
   typedef SpatialOperator< LinAlg, Interpolant, SVolField, SSurfZField >  InterpSVolSSurfZ;
 
   // scalar volume to staggered surfaces (viscosity, dilatation)	      	      	      
-  typedef SpatialOperator< LinAlg, Interpolant, SVolField, XSurfXField  >  InterpSVolXSurfX;
-  typedef SpatialOperator< LinAlg, Interpolant, SVolField, XSurfYField  >  InterpSVolXSurfY;
-  typedef SpatialOperator< LinAlg, Interpolant, SVolField, XSurfZField  >  InterpSVolXSurfZ;
+  typedef SpatialOperator< LinAlg, Interpolant, SVolField, XSurfXField >  InterpSVolXSurfX;
+  typedef SpatialOperator< LinAlg, Interpolant, SVolField, XSurfYField >  InterpSVolXSurfY;
+  typedef SpatialOperator< LinAlg, Interpolant, SVolField, XSurfZField >  InterpSVolXSurfZ;
 
-  typedef SpatialOperator< LinAlg, Interpolant, SVolField, YSurfXField  >  InterpSVolYSurfX;
-  typedef SpatialOperator< LinAlg, Interpolant, SVolField, YSurfYField  >  InterpSVolYSurfY;
-  typedef SpatialOperator< LinAlg, Interpolant, SVolField, YSurfZField  >  InterpSVolYSurfZ;
+  typedef SpatialOperator< LinAlg, Interpolant, SVolField, YSurfXField >  InterpSVolYSurfX;
+  typedef SpatialOperator< LinAlg, Interpolant, SVolField, YSurfYField >  InterpSVolYSurfY;
+  typedef SpatialOperator< LinAlg, Interpolant, SVolField, YSurfZField >  InterpSVolYSurfZ;
 
-  typedef SpatialOperator< LinAlg, Interpolant, SVolField, ZSurfXField  >  InterpSVolZSurfX;
-  typedef SpatialOperator< LinAlg, Interpolant, SVolField, ZSurfYField  >  InterpSVolZSurfY;
-  typedef SpatialOperator< LinAlg, Interpolant, SVolField, ZSurfZField  >  InterpSVolZSurfZ;
+  typedef SpatialOperator< LinAlg, Interpolant, SVolField, ZSurfXField >  InterpSVolZSurfX;
+  typedef SpatialOperator< LinAlg, Interpolant, SVolField, ZSurfYField >  InterpSVolZSurfY;
+  typedef SpatialOperator< LinAlg, Interpolant, SVolField, ZSurfZField >  InterpSVolZSurfZ;
 
 
   // scalar volume to staggered volumes (density)

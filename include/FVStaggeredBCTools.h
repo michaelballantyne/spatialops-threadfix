@@ -17,7 +17,9 @@ namespace FVStaggered{
   // given ijk indices that are zero based on the interior, this
   // produces the flat index that is 0-based in the ghost cell.
   template< typename FieldT, typename Dir >
-  inline int get_ghost_flat_ix_src( const std::vector<int>& dim, int i, int j, int k )
+  inline int get_ghost_flat_ix_src( const std::vector<int>& dim,
+				    const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ,
+				    int i, int j, int k )
   {
     // 1. shift index by number of ghost cells.
     // 2. shift index to first ghost cell (from interior cell)
@@ -36,14 +38,15 @@ namespace FVStaggered{
 	if( k==0 ) --k; else ++k;
       k += FieldT::Ghost::NM;
     }
-
-    return ijk2flat<FieldT,FieldT::Location::IsSurface>::value(dim,IndexTriplet(i,j,k));
+    return ijk2flat<FieldT>::value(dim,IndexTriplet(i,j,k),bcFlagX,bcFlagY,bcFlagZ);
   }
 
   //------------------------------------------------------------------
 
   template<typename FieldT, typename Dir>
-  inline int get_ghost_flat_ix_dest( const std::vector<int>& dim, int i, int j, int k )
+  inline int get_ghost_flat_ix_dest( const std::vector<int>& dim,
+				     const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ,
+				     int i, int j, int k )
   {
     if( dim[0]>1 ){
       if( IsSameType<Dir,XDIR>::result ) if(i>0) ++i;
@@ -59,8 +62,7 @@ namespace FVStaggered{
       if( IsSameType<Dir,ZDIR>::result ) if(k>0) ++k;
       k += FieldT::Ghost::NM;
     }
-
-    return ijk2flat<FieldT,FieldT::Location::IsSurface,Dir>::value(dim,IndexTriplet(i,j,k));
+    return ijk2flat<FieldT>::value(dim,IndexTriplet(i,j,k),bcFlagX,bcFlagY,bcFlagZ);
   }
 
   //------------------------------------------------------------------
@@ -76,6 +78,24 @@ namespace FVStaggered{
    *  @param i  The x-direction index for the cell we want to apply the BC to. Index is 0-based on patch interior.
    *  @param j  The y-direction index for the cell we want to apply the BC to. Index is 0-based on patch interior.
    *  @param k  The z-direction index for the cell we want to apply the BC to. Index is 0-based on patch interior.
+   *
+   *  @param dim A vector containing the number of cells in each
+   *  coordinate direction.  This is a three-component vector.
+   *
+   *  @param bcFlagX A boolean flag to indicate if this patch is on a
+   *  +x side physical boundary.  If so, then it is assumed that there
+   *  is an extra face on that side of the domain, and face variable
+   *  dimensions will be modified accordingly.
+   *
+   *  @param bcFlagY A boolean flag to indicate if this patch is on a
+   *  +y side physical boundary.  If so, then it is assumed that there
+   *  is an extra face on that side of the domain, and face variable
+   *  dimensions will be modified accordingly.
+   *
+   *  @param bcFlagZ A boolean flag to indicate if this patch is on a
+   *  +z side physical boundary.  If so, then it is assumed that there
+   *  is an extra face on that side of the domain, and face variable
+   *  dimensions will be modified accordingly.
    *
    *  @param bcVal The value for the boundary condition to set.
    *
@@ -104,14 +124,15 @@ namespace FVStaggered{
 			const int j,
 			const int k,
 			const std::vector<int>& dim,
+			const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ,
 			const double bcVal,
 			typename OpT::SrcFieldType& f )
   {
     typedef typename OpT::SrcFieldType  SrcFieldT;
     typedef typename OpT::DestFieldType DestFieldT;
 
-    const int ixf = get_ghost_flat_ix_src <SrcFieldT,Dir >( dim, i, j, k );
-    int irow      = get_ghost_flat_ix_dest<DestFieldT,Dir>( dim, i, j, k );
+    const int ixf = get_ghost_flat_ix_src <SrcFieldT,Dir >( dim, bcFlagX, bcFlagY, bcFlagZ, i, j, k );
+    int irow      = get_ghost_flat_ix_dest<DestFieldT,Dir>( dim, bcFlagX, bcFlagY, bcFlagZ, i, j, k );
 
     // NOTE: This will NOT work in the case where we have multiple ghost cells!
     assert( OpT::SrcGhost::NM == OpT::SrcGhost::NP );
@@ -151,6 +172,24 @@ namespace FVStaggered{
    *  @param j  The y-direction index for the cell we want to apply the BC to. Index is 0-based on patch interior.
    *  @param k  The z-direction index for the cell we want to apply the BC to. Index is 0-based on patch interior.
    *
+   *  @param dim A vector containing the number of cells in each
+   *  coordinate direction.  This is a three-component vector.
+   *
+   *  @param bcFlagX A boolean flag to indicate if this patch is on a
+   *  +x side physical boundary.  If so, then it is assumed that there
+   *  is an extra face on that side of the domain, and face variable
+   *  dimensions will be modified accordingly.
+   *
+   *  @param bcFlagY A boolean flag to indicate if this patch is on a
+   *  +y side physical boundary.  If so, then it is assumed that there
+   *  is an extra face on that side of the domain, and face variable
+   *  dimensions will be modified accordingly.
+   *
+   *  @param bcFlagZ A boolean flag to indicate if this patch is on a
+   *  +z side physical boundary.  If so, then it is assumed that there
+   *  is an extra face on that side of the domain, and face variable
+   *  dimensions will be modified accordingly.
+   *
    *  @param bcVal The value for the boundary condition to set.
    *
    *  @par Template Parameters
@@ -174,6 +213,7 @@ namespace FVStaggered{
   void imprint_bc_on_op( const BCOpT& bcOp,
 			 const int i, const int j, const int k,
 			 const std::vector<int>& dim,
+			 const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ,
 			 const double bcVal,
 			 const typename BCOpT::SrcFieldType& f,
 			 OpT& op,
@@ -185,8 +225,8 @@ namespace FVStaggered{
     int nbcinfo = 0;
 
     // get the index into the field value at this point.
-    const int ixf  = get_ghost_flat_ix_src <typename BCOpT::SrcFieldType, Dir>( dim, i, j, k );
-    int irow       = get_ghost_flat_ix_dest<typename BCOpT::DestFieldType,Dir>( dim, i, j, k );
+    const int ixf  = get_ghost_flat_ix_src <typename BCOpT::SrcFieldType, Dir>( dim, bcFlagX, bcFlagY, bcFlagZ, i, j, k );
+    int irow       = get_ghost_flat_ix_dest<typename BCOpT::DestFieldType,Dir>( dim, bcFlagX, bcFlagY, bcFlagZ, i, j, k );
 
 
     const typename BCOpT::MatrixRow bcrow = bcOp.get_row(irow);
@@ -218,8 +258,8 @@ namespace FVStaggered{
     //
     // now set the operator value.  We must potentially alter each coefficient in this row.
     //
-    const int ig = get_ghost_flat_ix_src <typename OpT::SrcFieldType, Dir>( dim, i, j, k );
-    irow         = get_ghost_flat_ix_dest<typename OpT::DestFieldType,NODIR>( dim, i, j, k );
+    const int ig = get_ghost_flat_ix_src <typename OpT::SrcFieldType, Dir  >( dim, bcFlagX, bcFlagY, bcFlagZ, i, j, k );
+    irow         = get_ghost_flat_ix_dest<typename OpT::DestFieldType,NODIR>( dim, bcFlagX, bcFlagY, bcFlagZ, i, j, k );
 
     typename OpT::MatrixRow row = op.get_row(irow);
     typename OpT::column_iterator icol=row.begin();

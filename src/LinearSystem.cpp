@@ -7,6 +7,8 @@
 #include <SpatialOperator.h>
 #include <SpatialField.h>
 
+#include <LinAlgTrilinos.h>
+
 #include <Epetra_Map.h>
 #include <Epetra_LinearProblem.h>
 #include <AztecOO.h>
@@ -101,9 +103,15 @@ RHS::reset( const int rownum, const double val )
 
 //--------------------------------------------------------------------
 LHS::LHS( const vector<int> & extent,
+	  const bool hasPlusXSideFaces,
+	  const bool hasPlusYSideFaces,
+	  const bool hasPlusZSideFaces,
 	  Epetra_CrsMatrix& A )
   : A_( A ),
     extent_( extent ),
+    hasPlusXSideFaces_( hasPlusXSideFaces ),
+    hasPlusYSideFaces_( hasPlusYSideFaces ),
+    hasPlusZSideFaces_( hasPlusZSideFaces ),
     nrows_( A.NumMyRows() ),
     ncols_( A.NumMyCols() )
 {
@@ -150,6 +158,42 @@ LHS::Print( std::ostream & c ) const
   A_.Print(c);
 }
 //--------------------------------------------------------------------
+void
+LHS::write_matlab( const std::string prefix ) const
+{
+  const std::string fname = "load_"+prefix +".m";
+  std::ofstream fout( fname.c_str() );
+  fout << "function A = load_" << prefix << "()" << std::endl;
+
+  // first time through count nonzeros for preallocation in matlab.
+  // second time through, write the entries.
+  for( int writeLoop=0; writeLoop<=1; ++writeLoop ){
+    int i=0;
+    for( int irow=0; irow<nrows_; ++irow ){
+      SpatialOps::LinAlgTrilinos::MatrixRow row( irow, A_ );
+      for( SpatialOps::LinAlgTrilinos::column_iterator icol = row.begin();
+	   icol!=row.end();
+	   ++icol, ++i )
+	{
+	  if( writeLoop==1 ){
+	    fout << "row(" << i+1 << ") = " << irow+1 << ";  "
+		 << "col(" << i+1 << ") = " << icol.index()+1 << ";  "
+		 << "val(" << i+1 << ") = " << *icol << ";"
+		 << std::endl;
+	  }
+	}
+    }
+    if( writeLoop==0 ){
+      fout << "row = zeros(" << i << ",1);  col=row;  val=row;" << std::endl;
+    }
+  }
+  fout << "A = sparse( "
+       << " row, col, val, "
+       << nrows_ << ", " << ncols_
+       << ");" << std::endl;
+  fout.close();
+}
+//--------------------------------------------------------------------
 
 
 //====================================================================
@@ -158,10 +202,16 @@ LHS::Print( std::ostream & c ) const
 //--------------------------------------------------------------------
 #ifdef HAVE_MPI
 LinearSystem::LinearSystem( const vector<int> & extent,
+			    const bool hasPlusXSideFaces,
+			    const bool hasPlusYSideFaces,
+			    const bool hasPlusZSideFaces,
 			    MPI_Comm & comm )
   : npts_( get_global_npts(extent,comm) ),
 #else
-LinearSystem::LinearSystem( const vector<int> & extent )
+LinearSystem::LinearSystem( const vector<int> & extent,
+			    const bool hasPlusXSideFaces,
+			    const bool hasPlusYSideFaces,
+			    const bool hasPlusZSideFaces )
   : npts_( get_global_npts(extent) ),
 #endif
 
@@ -199,7 +249,7 @@ LinearSystem::LinearSystem( const vector<int> & extent )
   A_ = new Epetra_CrsMatrix( Copy, emap, entriesPerRow, true );
   imprint( extent, entriesPerRow );
 
-  lhs_ = new LHS( extent_, *A_ );
+  lhs_ = new LHS( extent_, hasPlusXSideFaces, hasPlusYSideFaces, hasPlusZSideFaces, *A_ );
 
   // Build the RHS and LHS vectors - we manage storage (not trilinos)
   x_ = new Epetra_Vector( View, emap, solnFieldValues_.begin() );
@@ -375,13 +425,22 @@ LinearSystem::set_dirichlet_condition( const int irow,
 //--------------------------------------------------------------------
 #ifdef HAVE_MPI
 LinSysInfo::LinSysInfo( const std::vector<int> & npts,
+			const bool hasPlusXSideFaces,
+			const bool hasPlusYSideFaces,
+			const bool hasPlusZSideFaces,
 			MPI_Comm & communicator )
-  : dimExtent( npts ),
-    comm( communicator )
+  : comm( communicator ),
 #else
-LinSysInfo::LinSysInfo( const std::vector<int> & npts )
-  : dimExtent( npts )
+LinSysInfo::LinSysInfo( const std::vector<int> & npts,
+			const bool hasPlusXSideFaces,
+			const bool hasPlusYSideFaces,
+			const bool hasPlusZSideFaces )
+  :
 #endif
+    dimExtent( npts ),
+    hasPlusXFaces( hasPlusXSideFaces ),
+    hasPlusYFaces( hasPlusYSideFaces ),
+    hasPlusZFaces( hasPlusZSideFaces )
 {
   solverPackage  = TRILINOS;
   preconditioner = DEFAULT;
@@ -453,9 +512,16 @@ LinSysFactory::get_linsys( const LinSysInfo& info )
     // build a new linear system.
 
 #ifdef HAVE_MPI
-    LinearSystem * linSys = new LinearSystem( info.dimExtent, info.comm );
+    LinearSystem * linSys = new LinearSystem( info.dimExtent,
+					      info.hasPlusXFaces,
+					      info.hasPlusYFaces,
+					      info.hasPlusZFaces,
+					      info.comm );
 #else
-    LinearSystem * linSys = new LinearSystem( info.dimExtent );
+    LinearSystem * linSys = new LinearSystem( info.dimExtent,
+					      info.hasPlusXFaces,
+					      info.hasPlusYFaces,
+					      info.hasPlusZFaces );
 #endif
 
     std::pair<InfoMap::iterator,bool> result =
