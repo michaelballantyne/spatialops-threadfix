@@ -258,8 +258,6 @@ namespace SpatialOps{
     //@}
 
 
-    int get_entries_per_comp( const int dir ) const{return nptsPerComp_[dir];}
-
     /** Dump information about the field to the given output stream. */
     virtual void Print( std::ostream& ) const;
 
@@ -276,7 +274,6 @@ namespace SpatialOps{
 
     VecOps linAlg_;
     const int npts_;
-    std::vector<int> nptsPerComp_;
     const std::set<int> ghostSet_;
     const StorageMode storageMode_;
     double * const fieldValues_;
@@ -459,7 +456,6 @@ namespace SpatialOps{
 		double * const fieldValues,
 		const StorageMode mode )
     : npts_( npts ),
-      nptsPerComp_(3,0),
       ghostSet_( ghostSet ),
       storageMode_( mode ),
       
@@ -471,8 +467,6 @@ namespace SpatialOps{
 
       sfStore_( SpatialFieldStore<SpatialField>::self() )
   {
-    nptsPerComp_[0] = npts;
-
     if( mode==InternalStorage )  reset_values( npts_, fieldValues );
   }
   //------------------------------------------------------------------
@@ -488,7 +482,6 @@ namespace SpatialOps{
   SpatialField<VecOps,FieldLocation,GhostTraits>::
   SpatialField( const SpatialField<VecOps,FieldLocation,GhostTraits>& f )
     : npts_       ( f.npts_ ),
-      nptsPerComp_( f.nptsPerComp_ ),
       ghostSet_   ( f.ghostSet_ ),
       storageMode_( InternalStorage ),
       fieldValues_( new double[npts_] ),
