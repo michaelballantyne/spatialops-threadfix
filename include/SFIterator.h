@@ -38,7 +38,8 @@ public:
   inline self& operator++();
   inline self  operator++(int);
 
-  inline reference operator*();
+  inline       reference operator*();
+  inline const reference operator*() const;
 
   inline bool operator==(const self& other) const;
   inline bool operator!=(const self& other) const;
@@ -50,7 +51,7 @@ private:
   ForwardIterator current_;
   int ix_;
   std::set<int>::const_iterator ig_;
-  const std::set<int>::const_iterator ige_;
+  std::set<int>::const_iterator ige_; // Can't declare const because of the assignment operator.
 };
 
 
@@ -140,6 +141,7 @@ operator=(const self& other)
   ix_      = other.ix_;
   ig_      = other.ig_;
   ige_     = other.ige_;
+  return *this;
 }
 //--------------------------------------------------------------------
 template<typename ForwardIterator>
@@ -166,6 +168,14 @@ template<typename ForwardIterator>
 typename InteriorIterator<ForwardIterator>::reference
 InteriorIterator<ForwardIterator>::
 operator*()
+{
+  return *current_;
+}
+//--------------------------------------------------------------------
+template<typename ForwardIterator>
+const typename InteriorIterator<ForwardIterator>::reference
+InteriorIterator<ForwardIterator>::
+operator*() const
 {
   return *current_;
 }
