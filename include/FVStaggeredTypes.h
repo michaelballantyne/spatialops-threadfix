@@ -44,7 +44,9 @@ namespace FVStaggered{
 
   //-- Field Types --//
 #ifndef SAMRAI_FIELD_TYPES
-# define UINTAH_FIELD_TYPES  // default to Uintah types if nothing is specified.
+# ifndef UINTAH_FIELD_TYPES
+#  define UINTAH_FIELD_TYPES  // default to Uintah types if nothing is specified.
+# endif
 #endif
 
 #if defined UINTAH_FIELD_TYPES
