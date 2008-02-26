@@ -1,7 +1,7 @@
 #
 # USE THIS FOR LINUX:
 #
-BOOST_INCLUDE = /home/sutherland/packages/boost_1_34_0
+BOOST_INCLUDE = /home/sutherland/packages/boost_1_34_1
 TRILINOS_INCLUDE = /home/sutherland/apps/trilinos_jcs_opt/include
 TRILINOS_LIB      = /home/sutherland/apps/trilinos_jcs_opt/lib 
 DAIXT_INCLUDE     = /home/sutherland/apps/daixtrose/include
@@ -24,8 +24,8 @@ EPETRA_LIBS = -lepetra -lepetraext -lblas -llapack
 AZTECOO_LIBS = -laztecoo -lteuchos 
 LIBS = $(AZTECOO_LIBS)  $(EPETRA_LIBS) $(EXTRA_LIBS)
 
-#CXXFLAGS = -O4 -Wall -fexpensive-optimizations -funroll-loops -DBOOST_UBLAS_SHALLOW_ARRAY_ADAPTOR -DNDEBUG -DUINTAH_FIELD_TYPES #-DSAMRAI_FIELD_TYPES
-CXXFLAGS = -g -Wall -O0 -DBOOST_UBLAS_SHALLOW_ARRAY_ADAPTOR -DUINTAH_FIELD_TYPES #-DSAMRAI_FIELD_TYPES 
+CXXFLAGS = -O4 -Wall -fexpensive-optimizations -funroll-loops -DBOOST_UBLAS_SHALLOW_ARRAY_ADAPTOR -DNDEBUG -DUINTAH_FIELD_TYPES #-DSAMRAI_FIELD_TYPES
+#CXXFLAGS = -g -Wall -O0 -DBOOST_UBLAS_SHALLOW_ARRAY_ADAPTOR -DUINTAH_FIELD_TYPES #-DSAMRAI_FIELD_TYPES 
 COMPILE_CXX = g++ -c $(CXXFLAGS) $(INCDIRS)
 #COMPILE_CXX = mpiCC -c $(CXXFLAGS) $(INCDIRS)
 

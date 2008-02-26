@@ -602,13 +602,13 @@ namespace FVStaggered{
    * computations to have a default value for the + side information.
    */
   template<typename FieldT> 
-  const std::set<int>& get_ghost_set( const std::vector<int>& dim,
-				      const bool hasPlusXSideFaces=true,
-				      const bool hasPlusYSideFaces=true,
-				      const bool hasPlusZSideFaces=true )
+  const std::set<int> get_ghost_set( const std::vector<int>& dim,
+				     const bool hasPlusXSideFaces=true,
+				     const bool hasPlusYSideFaces=true,
+				     const bool hasPlusZSideFaces=true )
   {
     typedef typename FieldT::Ghost G;
-    static std::set<int> ghostSet;
+    std::set<int> ghostSet;
     ghostSet.clear();
     int ix=0;
     _ghost_set_( G::NM, G::NP,
