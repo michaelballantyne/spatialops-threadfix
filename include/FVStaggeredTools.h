@@ -1,6 +1,8 @@
 #ifndef FVStaggeredTools_h
 #define FVStaggeredTools_h
 
+#include <set>
+
 #include <boost/static_assert.hpp>
 
 #include <FVStaggeredTypes.h>

@@ -3,11 +3,14 @@
 
 #include <SpatialField.h>
 #include <SpatialOperator.h>
-#include <LinAlgTrilinos.h>
-//#include <LinAlgUBlas.h>
 
-typedef SpatialOps::LinAlgTrilinos LinAlg;
-//typedef SpatialOps::LinAlgUBlas LinAlg;
+#ifdef LINALG_UBLAS
+#  include <LinAlgUBlas.h>
+   typedef SpatialOps::LinAlgUBlas LinAlg;
+#else
+#  include <LinAlgTrilinos.h>
+   typedef SpatialOps::LinAlgTrilinos LinAlg;
+#endif
 
 namespace SpatialOps{
 namespace FVStaggered{

@@ -144,7 +144,7 @@ namespace FVStaggered{
 
     double prodsum=0.0; double ghostcoeff=0.0;
     for( ; icol!=icole; ++icol ){
-      if (icol.index() == uint(ixf) )
+      if( icol.index() == size_t(ixf) )
 	ghostcoeff = *icol;
       else
 	prodsum += *icol *f[icol.index()];
@@ -236,7 +236,7 @@ namespace FVStaggered{
     double prodsum=0.0; double ghostcoeff=0.0;
     BCInfo* bci = &bcinfo[0];
     for( ; icolbc!=icolbce; ++icolbc ){
-      if( icolbc.index() == uint(ixf) ){
+      if( icolbc.index() == size_t(ixf) ){
 	ghostcoeff = *icolbc;
       }
       else{
@@ -267,7 +267,7 @@ namespace FVStaggered{
 
     double Sg = 0.0;
     for( ; icol!=icole; ++icol ){
-      if( icol.index() == uint(ig) ){
+      if( icol.index() == size_t(ig) ){
 	double& val = *icol;
 	Sg = val;
 	val = 0.0;
