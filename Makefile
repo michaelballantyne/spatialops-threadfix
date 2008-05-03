@@ -1,7 +1,7 @@
 #
 # USE THIS FOR LINUX:
 #
-BOOST_INCLUDE = /home/sutherland/packages/boost_1_34_1
+BOOST_INCLUDE = /home/sutherland/packages/boost_1_35_0
 TRILINOS_INCLUDE = /home/sutherland/apps/trilinos_jcs_opt/include
 TRILINOS_LIB      = /home/sutherland/apps/trilinos_jcs_opt/lib 
 DAIXT_INCLUDE     = /home/sutherland/apps/daixtrose/include
@@ -11,7 +11,7 @@ EXTRA_LIBS =
 #
 # USE THIS FOR MAC
 #
-#BOOST_INCLUDE = /jcs/software/boost_1_34_1
+#BOOST_INCLUDE = /jcs/software/boost_1_35_0
 #TRILINOS_INCLUDE = /jcs/software/trilinos/include
 #TRILINOS_LIB     = /jcs/software/trilinos/lib
 #DAIXT_INCLUDE    = /jcs/software/daixtrose-0.0.3/jcs_install/include

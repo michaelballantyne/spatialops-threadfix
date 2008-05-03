@@ -173,8 +173,8 @@ namespace SpatialOps{
     inline SpatialField& operator+=(const RHS&);  ///< Add a RHS to this field (doesn't affect ghosts)
     inline SpatialField& operator-=(const RHS&);  ///< Subtract a RHS from this field (doesn't affect ghosts)
 
-    inline bool operator==(const SpatialField&);  ///< Is this field equal to the supplied one?
-    inline bool operator!=(const SpatialField&);  ///< Is this field not equal to the supplied one?
+    inline bool operator==(const SpatialField&) const;  ///< Is this field equal to the supplied one?
+    inline bool operator!=(const SpatialField&) const;  ///< Is this field not equal to the supplied one?
 
     //@}
 
@@ -649,7 +649,7 @@ namespace SpatialOps{
   //------------------------------------------------------------------
   template< typename VecOps, typename FieldLocation, typename GhostTraits >
   bool
-  SpatialField<VecOps,FieldLocation,GhostTraits>::operator==(const SpatialField& f)
+  SpatialField<VecOps,FieldLocation,GhostTraits>::operator==(const SpatialField& f) const
   {
     for( int i=0; i<npts_; ++i ){
       if( f[i] != fieldValues_[i] ) return false; 
@@ -659,7 +659,7 @@ namespace SpatialOps{
   //------------------------------------------------------------------
   template< typename VecOps, typename FieldLocation, typename GhostTraits >
   bool
-  SpatialField<VecOps,FieldLocation,GhostTraits>::operator!=(const SpatialField& f)
+  SpatialField<VecOps,FieldLocation,GhostTraits>::operator!=(const SpatialField& f) const
   {
     return !(*this==f);
   }
