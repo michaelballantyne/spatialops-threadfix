@@ -31,7 +31,7 @@ public:
   InteriorIterator( ForwardIterator first, const int ix,
 		    std::set<int>::const_iterator ighost,
 		    const std::set<int>::const_iterator ighostend );
-  InteriorIterator( const InteriorIterator& other );
+  InteriorIterator( const self& other );
 
   // required operators for a forward iterator: ++ (prefix and postfix), *, ==, !=
   //@{
