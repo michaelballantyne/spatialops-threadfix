@@ -349,8 +349,8 @@ protected:
 		const bool hasPlusZSideFaces,
 		MPI_Comm & comm );
 
-  int LinearSystem::get_global_npts( const std::vector<int> & extent,
-				     MPI_Comm & comm );
+  int get_global_npts( const std::vector<int> & extent,
+		       MPI_Comm & comm );
 
 #else
 
@@ -359,7 +359,7 @@ protected:
 		const bool hasPlusYSideFaces,
 		const bool hasPlusZSideFaces );
 
-  int LinearSystem::get_global_npts( const std::vector<int> & extent );
+  int get_global_npts( const std::vector<int> & extent );
 
 #endif
 

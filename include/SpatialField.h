@@ -246,14 +246,14 @@ namespace SpatialOps{
 
 
 
-    typedef GhostIterator<      double*>       ghost_iterator;
-    typedef GhostIterator<const double*> const_ghost_iterator;
+//     typedef GhostIterator<      double*>       ghost_iterator;
+//     typedef GhostIterator<const double*> const_ghost_iterator;
 
-    inline       ghost_iterator ghost_begin();
-    inline const_ghost_iterator ghost_begin() const;
+//     inline       ghost_iterator ghost_begin();
+//     inline const_ghost_iterator ghost_begin() const;
 
-    inline       ghost_iterator ghost_end();
-    inline const_ghost_iterator ghost_end() const;
+//     inline       ghost_iterator ghost_end();
+//     inline const_ghost_iterator ghost_end() const;
 
     //@}
 
@@ -403,45 +403,45 @@ namespace SpatialOps{
 
 
   //--------------------------------------------------------------------
-  template< class VecOps, typename FieldLocation, typename GhostTraits >
-  typename SpatialField<VecOps,FieldLocation,GhostTraits>::ghost_iterator
-  SpatialField<VecOps,FieldLocation,GhostTraits>::
-  ghost_begin()
-  {
-    // jcs this may be wrong
-    const int ig=*(ghostSet_.begin());
-    return ghost_iterator(fieldValues_+ig,ig,ghostSet_);
-  }
-  //--------------------------------------------------------------------
-  template< class VecOps, typename FieldLocation, typename GhostTraits >
-  typename SpatialField<VecOps,FieldLocation,GhostTraits>::const_ghost_iterator
-  SpatialField<VecOps,FieldLocation,GhostTraits>::
-  ghost_begin() const
-  {
-    // jcs this may be wrong
-    const int ig=*(ghostSet_.begin());
-    return const_ghost_iterator(fieldValues_+ig,ig,ghostSet_);
-  }
-  //--------------------------------------------------------------------
-  template< class VecOps, typename FieldLocation, typename GhostTraits >
-  typename SpatialField<VecOps,FieldLocation,GhostTraits>::ghost_iterator
-  SpatialField<VecOps,FieldLocation,GhostTraits>::
-  ghost_end()
-  {
-    // jcs this may be wrong
-    const int ig=*(ghostSet_.end()-1);
-    return ghost_iterator(fieldValues_+ig,ig,ghostSet_);
-  }
-  //--------------------------------------------------------------------
-  template< class VecOps, typename FieldLocation, typename GhostTraits >
-  typename SpatialField<VecOps,FieldLocation,GhostTraits>::const_ghost_iterator
-  SpatialField<VecOps,FieldLocation,GhostTraits>::
-  ghost_end() const
-  {
-    // jcs this may be wrong
-    const int ig=*(ghostSet_.end()-1);
-    return const_ghost_iterator(fieldValues_+ig,ig,ghostSet_);
-  }
+//   template< class VecOps, typename FieldLocation, typename GhostTraits >
+//   typename SpatialField<VecOps,FieldLocation,GhostTraits>::ghost_iterator
+//   SpatialField<VecOps,FieldLocation,GhostTraits>::
+//   ghost_begin()
+//   {
+//     // jcs this may be wrong
+//     const int ig=*(ghostSet_.begin());
+//     return ghost_iterator(fieldValues_+ig,ig,ghostSet_);
+//   }
+//   //--------------------------------------------------------------------
+//   template< class VecOps, typename FieldLocation, typename GhostTraits >
+//   typename SpatialField<VecOps,FieldLocation,GhostTraits>::const_ghost_iterator
+//   SpatialField<VecOps,FieldLocation,GhostTraits>::
+//   ghost_begin() const
+//   {
+//     // jcs this may be wrong
+//     const int ig=*(ghostSet_.begin());
+//     return const_ghost_iterator(fieldValues_+ig,ig,ghostSet_);
+//   }
+//   //--------------------------------------------------------------------
+//   template< class VecOps, typename FieldLocation, typename GhostTraits >
+//   typename SpatialField<VecOps,FieldLocation,GhostTraits>::ghost_iterator
+//   SpatialField<VecOps,FieldLocation,GhostTraits>::
+//   ghost_end()
+//   {
+//     // jcs this may be wrong
+//     const int ig=*(ghostSet_.end()-1);
+//     return ghost_iterator(fieldValues_+ig,ig,ghostSet_);
+//   }
+//   //--------------------------------------------------------------------
+//   template< class VecOps, typename FieldLocation, typename GhostTraits >
+//   typename SpatialField<VecOps,FieldLocation,GhostTraits>::const_ghost_iterator
+//   SpatialField<VecOps,FieldLocation,GhostTraits>::
+//   ghost_end() const
+//   {
+//     // jcs this may be wrong
+//     const int ig=*(ghostSet_.end()-1);
+//     return const_ghost_iterator(fieldValues_+ig,ig,ghostSet_);
+//   }
   //--------------------------------------------------------------------
 
 

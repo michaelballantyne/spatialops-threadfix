@@ -7,6 +7,7 @@ TRILINOS_LIB      = /home/sutherland/apps/trilinos_jcs_opt/lib
 DAIXT_INCLUDE     = /home/sutherland/apps/daixtrose/include
 LIBDIRS = -L./ -L$(TRILINOS_LIB)
 EXTRA_LIBS = 
+CXX = g++4
 
 #
 # USE THIS FOR MAC
@@ -17,6 +18,7 @@ EXTRA_LIBS =
 #DAIXT_INCLUDE    = /jcs/software/daixtrose-0.0.3/jcs_install/include
 #LIBDIRS = -L./ -L$(TRILINOS_LIB) -L/sw/lib/gcc-lib/i386-apple-darwin8/4.0.3
 #EXTRA_LIBS = -lf95
+#CXX = g++
 
 INCDIRS = -I./include -I$(DAIXT_INCLUDE) -I$(TRILINOS_INCLUDE) -I$(BOOST_INCLUDE)
 
@@ -26,10 +28,10 @@ LIBS = $(AZTECOO_LIBS)  $(EPETRA_LIBS) $(EXTRA_LIBS)
 
 CXXFLAGS = -O4 -Wall -fexpensive-optimizations -funroll-loops -DBOOST_UBLAS_SHALLOW_ARRAY_ADAPTOR -DNDEBUG -DUINTAH_FIELD_TYPES #-DSAMRAI_FIELD_TYPES
 #CXXFLAGS = -g -Wall -O0 -DBOOST_UBLAS_SHALLOW_ARRAY_ADAPTOR -DUINTAH_FIELD_TYPES #-DSAMRAI_FIELD_TYPES 
-COMPILE_CXX = g++ -c $(CXXFLAGS) $(INCDIRS)
+COMPILE_CXX = $(CXX) -c $(CXXFLAGS) $(INCDIRS)
 #COMPILE_CXX = mpiCC -c $(CXXFLAGS) $(INCDIRS)
 
-LINK = g++ $(CXXFLAGS) $(INCDIRS) $(LIBDIRS)
+LINK = $(CXX) $(CXXFLAGS) $(INCDIRS) $(LIBDIRS)
 
 default: testnew poisson
 all: testnew poisson
