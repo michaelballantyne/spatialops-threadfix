@@ -168,6 +168,11 @@ namespace FVStaggered{
   typedef SpatialOperator< LinAlg, Interpolant, ZVolField, XSurfZField >  InterpZVolXSurfZ;
   typedef SpatialOperator< LinAlg, Interpolant, ZVolField, YSurfZField >  InterpZVolYSurfZ;
 
+  // scalar surface to staggered volumes (pressure gradients)
+  typedef SpatialOperator< LinAlg, Interpolant, SSurfXField, XVolField >  InterpSSurfXXVol;
+  typedef SpatialOperator< LinAlg, Interpolant, SSurfYField, YVolField >  InterpSSurfYYVol;
+  typedef SpatialOperator< LinAlg, Interpolant, SSurfZField, ZVolField >  InterpSSurfZZVol;
+
   /*
    *  NOTE: for UNIFORM MESHES, the following DEGENERACIES exist in
    *  the interpolant operators:

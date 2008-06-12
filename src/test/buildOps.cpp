@@ -208,6 +208,18 @@ void build_ops( const std::vector<int>& dim,
     SpatialOpDatabase<InterpZVolSSurfZ>::self().register_new_operator( new InterpZVolSSurfZ(Rzvssza) );
   }
 
+  //--------------------------------------------------------
+  // scalar surface to staggered volumes (pressure gradients)
+  //--------------------------------------------------------
+  {
+    InterpSSurfXXVol::Assembler Rsxxva( dim, bcPlus[0], bcPlus[1], bcPlus[2] );
+    InterpSSurfYYVol::Assembler Rsyyva( dim, bcPlus[0], bcPlus[1], bcPlus[2] );
+    InterpSSurfZZVol::Assembler Rszzva( dim, bcPlus[0], bcPlus[1], bcPlus[2] );
+
+    SpatialOpDatabase<InterpSSurfXXVol>::self().register_new_operator( new InterpSSurfXXVol(Rsxxva) );
+    SpatialOpDatabase<InterpSSurfYYVol>::self().register_new_operator( new InterpSSurfYYVol(Rsyyva) );
+    SpatialOpDatabase<InterpSSurfZZVol>::self().register_new_operator( new InterpSSurfZZVol(Rszzva) );
+  }
 
   //--------------------------------------------------------
   // scratch operators

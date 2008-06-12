@@ -668,6 +668,24 @@ int main()
     cout << "=====================================================" << endl << endl;
   }
 
+  {
+    const SinFun<SSurfXField> fsx( grid.xcoord_sxsurf(), grid.ycoord_sxsurf(), grid.zcoord_sxsurf() );
+    const SinFun<SSurfYField> fsy( grid.xcoord_sysurf(), grid.ycoord_sysurf(), grid.zcoord_sysurf() );
+    const SinFun<SSurfZField> fsz( grid.xcoord_szsurf(), grid.ycoord_szsurf(), grid.zcoord_szsurf() );
+    const SinFun<XVolField  > fxv( grid.xcoord_xvol(),   grid.ycoord_xvol(),   grid.zcoord_xvol()   );
+    const SinFun<YVolField  > fyv( grid.xcoord_yvol(),   grid.ycoord_yvol(),   grid.zcoord_yvol()   );
+    const SinFun<ZVolField  > fzv( grid.xcoord_zvol(),   grid.ycoord_zvol(),   grid.zcoord_zvol()   );
+    cout << "=====================================================" << endl
+	 << "Interpolate scalar surface to staggered volumes" << endl
+	 << " max abs err | max rel err | avg abs err | avg rel err |" << endl
+	 << "-------------|-------------|-------------|-------------|" << endl;
+    test_interp_op<InterpSSurfXXVol>( grid, fsx, fxv, bcFlag );
+    test_interp_op<InterpSSurfYYVol>( grid, fsy, fyv, bcFlag );
+    test_interp_op<InterpSSurfZZVol>( grid, fsz, fzv, bcFlag );
+    cout << "=====================================================" << endl << endl;
+  }
+
+
   // x-Volume to y-volume x-surface and z-volume x-surface
   if( dim[0]>1 && dim[1]>1 || dim[2]>1 ){
     const SinFun<XVolField  >   xvolfun( grid.xcoord_xvol(),   grid.ycoord_xvol(),   grid.zcoord_xvol()   );
