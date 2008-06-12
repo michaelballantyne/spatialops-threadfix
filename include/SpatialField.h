@@ -624,6 +624,15 @@ namespace SpatialOps{
     return *this;
   }
   //------------------------------------------------------------------
+  template< class VecOps, typename FieldLocation, typename GhostTraits >
+  SpatialField<VecOps,FieldLocation,GhostTraits>&
+  SpatialField<VecOps,FieldLocation,GhostTraits>::
+  operator/=(const double a)
+  {
+    (*this)/=(1.0/a);
+    return *this;
+  }
+  //------------------------------------------------------------------
   template< typename VecOps, typename FieldLocation, typename GhostTraits >
   void
   SpatialField<VecOps,FieldLocation,GhostTraits>::Print(std::ostream& s) const
