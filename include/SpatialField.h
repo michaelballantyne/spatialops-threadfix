@@ -629,7 +629,7 @@ namespace SpatialOps{
   SpatialField<VecOps,FieldLocation,GhostTraits>::
   operator/=(const double a)
   {
-    (*this)/=(1.0/a);
+    (*this)*=(1.0/a);
     return *this;
   }
   //------------------------------------------------------------------
