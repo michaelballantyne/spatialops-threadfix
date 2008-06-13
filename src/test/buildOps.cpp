@@ -60,35 +60,59 @@ void build_ops( const std::vector<int>& dim,
     GradSVolSSurfX::Assembler Gsvssxa( spacing[0], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
     GradSVolSSurfY::Assembler Gsvssya( spacing[1], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
     GradSVolSSurfZ::Assembler Gsvssza( spacing[2], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
-						      											
-    GradXVolXSurfX::Assembler Gxvxsxa( spacing[0], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
-    GradXVolXSurfY::Assembler Gxvxsya( spacing[1], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
-    GradXVolXSurfZ::Assembler Gxvxsza( spacing[2], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
-						      											
-    GradYVolYSurfX::Assembler Gyvysxa( spacing[0], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
-    GradYVolYSurfY::Assembler Gyvysya( spacing[1], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
-    GradYVolYSurfZ::Assembler Gyvysza( spacing[2], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
-
-    GradZVolZSurfX::Assembler Gzvzsxa( spacing[0], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
-    GradZVolZSurfY::Assembler Gzvzsya( spacing[1], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
-    GradZVolZSurfZ::Assembler Gzvzsza( spacing[2], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
-
     SpatialOpDatabase<GradSVolSSurfX>::self().register_new_operator( new GradSVolSSurfX(Gsvssxa) ); //SpatialOpDatabase<GradSVolSSurfX>::self().retrieve_operator()->write_matlab("Gssx");
     SpatialOpDatabase<GradSVolSSurfY>::self().register_new_operator( new GradSVolSSurfY(Gsvssya) ); //SpatialOpDatabase<GradSVolSSurfY>::self().retrieve_operator()->write_matlab("Gssy");
     SpatialOpDatabase<GradSVolSSurfZ>::self().register_new_operator( new GradSVolSSurfZ(Gsvssza) );
 
+
+    GradXVolXSurfX::Assembler Gxvxsxa( spacing[0], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
+    GradXVolXSurfY::Assembler Gxvxsya( spacing[1], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
+    GradXVolXSurfZ::Assembler Gxvxsza( spacing[2], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
     SpatialOpDatabase<GradXVolXSurfX>::self().register_new_operator( new GradXVolXSurfX(Gxvxsxa) );
     SpatialOpDatabase<GradXVolXSurfY>::self().register_new_operator( new GradXVolXSurfY(Gxvxsya) );
     SpatialOpDatabase<GradXVolXSurfZ>::self().register_new_operator( new GradXVolXSurfZ(Gxvxsza) );
 
+
+    GradYVolYSurfX::Assembler Gyvysxa( spacing[0], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
+    GradYVolYSurfY::Assembler Gyvysya( spacing[1], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
+    GradYVolYSurfZ::Assembler Gyvysza( spacing[2], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
     SpatialOpDatabase<GradYVolYSurfX>::self().register_new_operator( new GradYVolYSurfX(Gyvysxa) );
     SpatialOpDatabase<GradYVolYSurfY>::self().register_new_operator( new GradYVolYSurfY(Gyvysya) );
     SpatialOpDatabase<GradYVolYSurfZ>::self().register_new_operator( new GradYVolYSurfZ(Gyvysza) );
 
+
+    GradZVolZSurfX::Assembler Gzvzsxa( spacing[0], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
+    GradZVolZSurfY::Assembler Gzvzsya( spacing[1], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
+    GradZVolZSurfZ::Assembler Gzvzsza( spacing[2], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
     SpatialOpDatabase<GradZVolZSurfX>::self().register_new_operator( new GradZVolZSurfX(Gzvzsxa) );
     SpatialOpDatabase<GradZVolZSurfY>::self().register_new_operator( new GradZVolZSurfY(Gzvzsya) );
     SpatialOpDatabase<GradZVolZSurfZ>::self().register_new_operator( new GradZVolZSurfZ(Gzvzsza) );
 
+
+    GradSVolXVol  ::Assembler Gsvxva ( spacing[0], dim, bcPlus[0], bcPlus[1], bcPlus[2] );  
+    GradSVolYVol  ::Assembler Gsvyva ( spacing[1], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
+    GradSVolZVol  ::Assembler Gsvzva ( spacing[2], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
+    SpatialOpDatabase<GradSVolXVol>::self().register_new_operator( new GradSVolXVol(Gsvxva) );
+    SpatialOpDatabase<GradSVolYVol>::self().register_new_operator( new GradSVolYVol(Gsvyva) );
+    SpatialOpDatabase<GradSVolZVol>::self().register_new_operator( new GradSVolZVol(Gsvzva) );
+
+
+    GradXVolYSurfX::Assembler Gxvysxa( spacing[1], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
+    GradXVolZSurfX::Assembler Gxvzsxa( spacing[2], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
+    SpatialOpDatabase<GradXVolYSurfX>::self().register_new_operator( new GradXVolYSurfX(Gxvysxa) );
+    SpatialOpDatabase<GradXVolZSurfX>::self().register_new_operator( new GradXVolZSurfX(Gxvzsxa) );
+
+
+    GradYVolXSurfY::Assembler Gyvxsya( spacing[0], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
+    GradYVolZSurfY::Assembler Gyvzsya( spacing[2], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
+    SpatialOpDatabase<GradYVolXSurfY>::self().register_new_operator( new GradYVolXSurfY(Gyvxsya) );
+    SpatialOpDatabase<GradYVolZSurfY>::self().register_new_operator( new GradYVolZSurfY(Gyvzsya) );
+
+
+    GradZVolXSurfZ::Assembler Gzvxsza( spacing[0], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
+    GradZVolYSurfZ::Assembler Gzvysza( spacing[1], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
+    SpatialOpDatabase<GradZVolXSurfZ>::self().register_new_operator( new GradZVolXSurfZ(Gzvxsza) );
+    SpatialOpDatabase<GradZVolYSurfZ>::self().register_new_operator( new GradZVolYSurfZ(Gzvysza) );
   }
 
   //--------------------------------------------------------
@@ -156,10 +180,10 @@ void build_ops( const std::vector<int>& dim,
     InterpZVolXSurfZ::Assembler Rzvxsza( dim, bcPlus[0], bcPlus[1], bcPlus[2] );
     InterpZVolYSurfZ::Assembler Rzvysza( dim, bcPlus[0], bcPlus[1], bcPlus[2] );
 
-    SpatialOpDatabase<InterpXVolYSurfX>::self().register_new_operator( new InterpXVolYSurfX(Rxvysxa) );   //SpatialOpDatabase<InterpXVolYSurfX>::self().retrieve_operator()->write_matlab("Rxvysx");
-    SpatialOpDatabase<InterpXVolZSurfX>::self().register_new_operator( new InterpXVolZSurfX(Rxvzsxa) );	  //
+    SpatialOpDatabase<InterpXVolYSurfX>::self().register_new_operator( new InterpXVolYSurfX(Rxvysxa) );  //SpatialOpDatabase<InterpXVolYSurfX>::self().retrieve_operator()->write_matlab("Rxvysx");
+    SpatialOpDatabase<InterpXVolZSurfX>::self().register_new_operator( new InterpXVolZSurfX(Rxvzsxa) );	 //SpatialOpDatabase<InterpXVolZSurfX>::self().retrieve_operator()->write_matlab("Rxvzsx");
 
-    SpatialOpDatabase<InterpYVolXSurfY>::self().register_new_operator( new InterpYVolXSurfY(Ryvxsya) );
+    SpatialOpDatabase<InterpYVolXSurfY>::self().register_new_operator( new InterpYVolXSurfY(Ryvxsya) );  //SpatialOpDatabase<InterpYVolXSurfY>::self().retrieve_operator()->write_matlab("Ryvxsy");
     SpatialOpDatabase<InterpYVolZSurfY>::self().register_new_operator( new InterpYVolZSurfY(Ryvzsya) );
 
     SpatialOpDatabase<InterpZVolXSurfZ>::self().register_new_operator( new InterpZVolXSurfZ(Rzvxsza) );

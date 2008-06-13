@@ -71,7 +71,8 @@ template<typename OpT, typename FuncType1, typename FuncType2>
 void test_grad_op( const Grid& grid,
 		   const FuncType1& funcPhi,
 		   const FuncType2& funcFPhi,
-		   const std::vector<bool>& bcFlag )
+		   const std::vector<bool>& bcFlag,
+		   const int dir )
 {
   typedef typename OpT::SrcFieldType  SrcFieldT;
   typedef typename OpT::DestFieldType DestFieldT;
@@ -91,21 +92,14 @@ void test_grad_op( const Grid& grid,
 			get_ghost_set<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
 			NULL );
 
-  switch( FuncType2::FieldType::Location::Dir::value ){
-  case XDIR::value :
-    funcPhi.evaluate( phi );
-    funcFPhi.dx( fphiExact );
-    break;
-  case YDIR::value :
-    funcPhi.evaluate( phi );
-    funcFPhi.dy( fphiExact );
-    break;
-  case ZDIR::value :
-    funcPhi.evaluate( phi );
-    funcFPhi.dz( fphiExact );
-    break;
-  default:
-    assert(1);
+  funcPhi.evaluate( phi );
+
+  switch( dir )
+  {
+    case XDIR::value : funcFPhi.dx( fphiExact );  break;
+    case YDIR::value : funcFPhi.dy( fphiExact );  break;
+    case ZDIR::value : funcFPhi.dz( fphiExact );  break;
+    default: assert(0);
   }
 
   const OpT* const op = SpatialOpDatabase<OpT>::self().retrieve_operator();
@@ -147,6 +141,7 @@ void test_interp_op( const Grid& grid,
   op->apply_to_field( phi, fphi );
 
   report_errors( fphiExact, fphi );
+  //jcs phi.write_matlab("f"); fphi.write_matlab("fphi"); fphiExact.write_matlab("fphiExact");
 }
 
 //--------------------------------------------------------------------
@@ -189,7 +184,7 @@ void test_div_op( const Grid& grid,
     funcFPhi.d2z( fphiExact );
     break;
   default:
-    assert(1);
+    assert(0);
   }
 
   const OpT* const op = SpatialOpDatabase<OpT>::self().retrieve_operator();
@@ -601,9 +596,9 @@ int main()
 	 << "Gradient scalar volume -> scalar surfaces" << endl
 	 << " max abs err | max rel err | avg abs err | avg rel err |" << endl
 	 << "-------------|-------------|-------------|-------------|" << endl;
-    test_grad_op<GradSVolSSurfX>( grid, fun, gradFunX, bcFlag );
-    test_grad_op<GradSVolSSurfY>( grid, fun, gradFunY, bcFlag );
-    test_grad_op<GradSVolSSurfZ>( grid, fun, gradFunZ, bcFlag );
+    test_grad_op<GradSVolSSurfX>( grid, fun, gradFunX, bcFlag, XDIR::value );
+    test_grad_op<GradSVolSSurfY>( grid, fun, gradFunY, bcFlag, YDIR::value );
+    test_grad_op<GradSVolSSurfZ>( grid, fun, gradFunZ, bcFlag, ZDIR::value );
     cout << "=====================================================" << endl << endl;
 
 
@@ -631,6 +626,14 @@ int main()
     test_interp_op<InterpSVolXVol>( grid, svolfun, xvolfun, bcFlag );
     test_interp_op<InterpSVolYVol>( grid, svolfun, yvolfun, bcFlag );
     test_interp_op<InterpSVolZVol>( grid, svolfun, zvolfun, bcFlag );
+
+    cout << endl
+	 << "Gradient scalar volume to staggered volumes" << endl
+	 << " max abs err | max rel err | avg abs err | avg rel err |" << endl
+	 << "-------------|-------------|-------------|-------------|" << endl;
+    test_grad_op<GradSVolXVol>( grid, svolfun, xvolfun, bcFlag, XDIR::value );
+    test_grad_op<GradSVolYVol>( grid, svolfun, yvolfun, bcFlag, YDIR::value );
+    test_grad_op<GradSVolZVol>( grid, svolfun, zvolfun, bcFlag, ZDIR::value );
     cout << "=====================================================" << endl << endl;
   }
 
@@ -697,6 +700,13 @@ int main()
 	 << "-------------|-------------|-------------|-------------|" << endl;
     test_interp_op<InterpXVolYSurfX>( grid, xvolfun, ysurfxfun, bcFlag );
     test_interp_op<InterpXVolZSurfX>( grid, xvolfun, zsurfxfun, bcFlag );
+
+    cout << endl
+	 << "Gradient xvol->yvol x surf and xvol->zvol x surf" << endl
+	 << " max abs err | max rel err | avg abs err | avg rel err |" << endl
+	 << "-------------|-------------|-------------|-------------|" << endl;
+    test_grad_op<GradXVolYSurfX>( grid, xvolfun, ysurfxfun, bcFlag, YDIR::value );
+    test_grad_op<GradXVolZSurfX>( grid, xvolfun, zsurfxfun, bcFlag, ZDIR::value );
     cout << "=====================================================" << endl << endl;
   }
 
@@ -711,6 +721,13 @@ int main()
 	 << "-------------|-------------|-------------|-------------|" << endl;
     test_interp_op<InterpYVolXSurfY>( grid, yvolfun, xsurfyfun, bcFlag );
     test_interp_op<InterpYVolZSurfY>( grid, yvolfun, zsurfyfun, bcFlag );
+
+    cout << endl
+	 << "Gradient yvol->xvol y surf and yvol->zvol y surf" << endl
+	 << " max abs err | max rel err | avg abs err | avg rel err |" << endl
+	 << "-------------|-------------|-------------|-------------|" << endl;
+    test_grad_op<GradYVolXSurfY>( grid, yvolfun, xsurfyfun, bcFlag, XDIR::value );
+    test_grad_op<GradYVolZSurfY>( grid, yvolfun, zsurfyfun, bcFlag, ZDIR::value );
     cout << "=====================================================" << endl << endl;
   }
 
@@ -725,6 +742,13 @@ int main()
 	 << "-------------|-------------|-------------|-------------|" << endl;
     test_interp_op<InterpZVolXSurfZ>( grid, zvolfun, xsurfzfun, bcFlag );
     test_interp_op<InterpZVolYSurfZ>( grid, zvolfun, ysurfzfun, bcFlag );
+
+    cout << endl
+	 << "Gradient zvol->xvol z surf and zvol->yvol z surf" << endl
+	 << " max abs err | max rel err | avg abs err | avg rel err |" << endl
+	 << "-------------|-------------|-------------|-------------|" << endl;
+    test_grad_op<GradZVolXSurfZ>( grid, zvolfun, xsurfzfun, bcFlag, XDIR::value );
+    test_grad_op<GradZVolYSurfZ>( grid, zvolfun, ysurfzfun, bcFlag, YDIR::value );
     cout << "=====================================================" << endl << endl;
   }
 
@@ -746,9 +770,9 @@ int main()
 	 << "Gradient x-volume -> x-surface" << endl
 	 << " max abs err | max rel err | avg abs err | avg rel err |" << endl
 	 << "-------------|-------------|-------------|-------------|" << endl;
-    test_grad_op<GradXVolXSurfX>( grid, sinfun, gradX, bcFlag );
-    test_grad_op<GradXVolXSurfY>( grid, sinfun, gradY, bcFlag );
-    test_grad_op<GradXVolXSurfZ>( grid, sinfun, gradZ, bcFlag );
+    test_grad_op<GradXVolXSurfX>( grid, sinfun, gradX, bcFlag, XDIR::value );
+    test_grad_op<GradXVolXSurfY>( grid, sinfun, gradY, bcFlag, YDIR::value );
+    test_grad_op<GradXVolXSurfZ>( grid, sinfun, gradZ, bcFlag, ZDIR::value );
     cout << "=====================================================" << endl << endl;
 
     cout << "=====================================================" << endl
@@ -788,9 +812,9 @@ int main()
 	 << "Gradient y-volume -> y-surface" << endl
 	 << " max abs err | max rel err | avg abs err | avg rel err |" << endl
 	 << "-------------|-------------|-------------|-------------|" << endl;
-    test_grad_op<GradYVolYSurfX>( grid, sinfun, gradX, bcFlag );
-    test_grad_op<GradYVolYSurfY>( grid, sinfun, gradY, bcFlag );
-    test_grad_op<GradYVolYSurfZ>( grid, sinfun, gradZ, bcFlag );
+    test_grad_op<GradYVolYSurfX>( grid, sinfun, gradX, bcFlag, XDIR::value );
+    test_grad_op<GradYVolYSurfY>( grid, sinfun, gradY, bcFlag, YDIR::value );
+    test_grad_op<GradYVolYSurfZ>( grid, sinfun, gradZ, bcFlag, ZDIR::value );
     cout << "=====================================================" << endl << endl;
 
     cout << "=====================================================" << endl
@@ -830,9 +854,9 @@ int main()
 	 << "Gradient z-volume -> z-surface" << endl
 	 << " max abs err | max rel err | avg abs err | avg rel err |" << endl
 	 << "-------------|-------------|-------------|-------------|" << endl;
-    test_grad_op<GradZVolZSurfX>( grid, sinfun, gradX, bcFlag );
-    test_grad_op<GradZVolZSurfY>( grid, sinfun, gradY, bcFlag );
-    test_grad_op<GradZVolZSurfZ>( grid, sinfun, gradZ, bcFlag );
+    test_grad_op<GradZVolZSurfX>( grid, sinfun, gradX, bcFlag, XDIR::value );
+    test_grad_op<GradZVolZSurfY>( grid, sinfun, gradY, bcFlag, YDIR::value );
+    test_grad_op<GradZVolZSurfZ>( grid, sinfun, gradZ, bcFlag, ZDIR::value );
     cout << "=====================================================" << endl << endl;
 
     cout << "=====================================================" << endl

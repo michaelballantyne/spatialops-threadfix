@@ -60,7 +60,7 @@ testPoisson.o: ./src/test/testPoisson.cpp ./include/*.h ./src/test/*.h
 	$(COMPILE_CXX) -I./src/test ./src/test/testPoisson.cpp
 
 lib: $(OBJS)
-	ar -r ./libspatialops.a $(OBJS)
+	ar -r ./libspatialops.a $(OBJS); ranlib ./libspatialops.a
 
 testnew: lib testNew.o buildOps.o
 	$(LINK) testNew.o buildOps.o -lspatialops $(LIBS) -o testnew.x

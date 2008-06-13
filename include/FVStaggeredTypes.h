@@ -201,22 +201,34 @@ namespace FVStaggered{
 
   //-- Gradient Operators --//
 
-  typedef SpatialOperator< LinAlg, Gradient, SVolField, SSurfXField >  GradSVolSSurfX;
-  typedef SpatialOperator< LinAlg, Gradient, SVolField, SSurfYField >  GradSVolSSurfY;
-  typedef SpatialOperator< LinAlg, Gradient, SVolField, SSurfZField >  GradSVolSSurfZ;
+  typedef SpatialOperator< LinAlg, Gradient, SVolField, SSurfXField >  GradSVolSSurfX;  ///< Used to form convection term in scalar equation
+  typedef SpatialOperator< LinAlg, Gradient, SVolField, SSurfYField >  GradSVolSSurfY;  ///< Used to form convection term in scalar equation
+  typedef SpatialOperator< LinAlg, Gradient, SVolField, SSurfZField >  GradSVolSSurfZ;  ///< Used to form convection term in scalar equation
 
-  typedef SpatialOperator< LinAlg, Gradient, XVolField, XSurfXField >  GradXVolXSurfX;
-  typedef SpatialOperator< LinAlg, Gradient, XVolField, XSurfYField >  GradXVolXSurfY;
-  typedef SpatialOperator< LinAlg, Gradient, XVolField, XSurfZField >  GradXVolXSurfZ;
+  typedef SpatialOperator< LinAlg, Gradient, XVolField, XSurfXField >  GradXVolXSurfX;  ///< Used to form convection term in x-momentum equation
+  typedef SpatialOperator< LinAlg, Gradient, XVolField, XSurfYField >  GradXVolXSurfY;  ///< Used to form convection term in x-momentum equation
+  typedef SpatialOperator< LinAlg, Gradient, XVolField, XSurfZField >  GradXVolXSurfZ;  ///< Used to form convection term in x-momentum equation
 
-  typedef SpatialOperator< LinAlg, Gradient, YVolField, YSurfXField >  GradYVolYSurfX;
-  typedef SpatialOperator< LinAlg, Gradient, YVolField, YSurfYField >  GradYVolYSurfY;
-  typedef SpatialOperator< LinAlg, Gradient, YVolField, YSurfZField >  GradYVolYSurfZ;
+  typedef SpatialOperator< LinAlg, Gradient, YVolField, YSurfXField >  GradYVolYSurfX;  ///< Used to form convection term in y-momentum equation
+  typedef SpatialOperator< LinAlg, Gradient, YVolField, YSurfYField >  GradYVolYSurfY;  ///< Used to form convection term in y-momentum equation
+  typedef SpatialOperator< LinAlg, Gradient, YVolField, YSurfZField >  GradYVolYSurfZ;  ///< Used to form convection term in y-momentum equation
 
-  typedef SpatialOperator< LinAlg, Gradient, ZVolField, ZSurfXField >  GradZVolZSurfX;
-  typedef SpatialOperator< LinAlg, Gradient, ZVolField, ZSurfYField >  GradZVolZSurfY;
-  typedef SpatialOperator< LinAlg, Gradient, ZVolField, ZSurfZField >  GradZVolZSurfZ;
+  typedef SpatialOperator< LinAlg, Gradient, ZVolField, ZSurfXField >  GradZVolZSurfX;  ///< Used to form convection term in z-momentum equation
+  typedef SpatialOperator< LinAlg, Gradient, ZVolField, ZSurfYField >  GradZVolZSurfY;  ///< Used to form convection term in z-momentum equation
+  typedef SpatialOperator< LinAlg, Gradient, ZVolField, ZSurfZField >  GradZVolZSurfZ;  ///< Used to form convection term in z-momentum equation
 
+  typedef SpatialOperator< LinAlg, Gradient, SVolField, XVolField   >  GradSVolXVol;    ///< Used to form pressure gradient for x-momentum equation
+  typedef SpatialOperator< LinAlg, Gradient, SVolField, YVolField   >  GradSVolYVol;    ///< Used to form pressure gradient for y-momentum equation
+  typedef SpatialOperator< LinAlg, Gradient, SVolField, ZVolField   >  GradSVolZVol;    ///< Used to form pressure gradient for z-momentum equation
+
+  typedef SpatialOperator< LinAlg, Gradient, XVolField, YSurfXField >  GradXVolYSurfX;  ///< Used to form \f$\frac{\partial u}{\partial y}\f$ for \f$\tau_{yx}\f$
+  typedef SpatialOperator< LinAlg, Gradient, XVolField, ZSurfXField >  GradXVolZSurfX;  ///< Used to form \f$\frac{\partial u}{\partial z}\f$ for \f$\tau_{zx}\f$
+
+  typedef SpatialOperator< LinAlg, Gradient, YVolField, XSurfYField >  GradYVolXSurfY;  ///< Used to form \f$\frac{\partial v}{\partial x}\f$ for \f$\tau_{xy}\f$
+  typedef SpatialOperator< LinAlg, Gradient, YVolField, ZSurfYField >  GradYVolZSurfY;  ///< Used to form \f$\frac{\partial v}{\partial z}\f$ for \f$\tau_{yz}\f$
+
+  typedef SpatialOperator< LinAlg, Gradient, ZVolField, XSurfZField >  GradZVolXSurfZ;  ///< Used to form \f$\frac{\partial w}{\partial x}\f$ for \f$\tau_{zx}\f$
+  typedef SpatialOperator< LinAlg, Gradient, ZVolField, YSurfZField >  GradZVolYSurfZ;  ///< Used to form \f$\frac{\partial w}{\partial y}\f$ for \f$\tau_{zy}\f$
 
   //-- Divergence Operators --//
 
