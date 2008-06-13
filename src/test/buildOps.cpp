@@ -113,6 +113,14 @@ void build_ops( const std::vector<int>& dim,
     GradZVolYSurfZ::Assembler Gzvysza( spacing[1], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
     SpatialOpDatabase<GradZVolXSurfZ>::self().register_new_operator( new GradZVolXSurfZ(Gzvxsza) );
     SpatialOpDatabase<GradZVolYSurfZ>::self().register_new_operator( new GradZVolYSurfZ(Gzvysza) );
+
+    // dilatation
+    GradXVolSVol::Assembler Gxvsva( spacing[0], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
+    GradYVolSVol::Assembler Gyvsva( spacing[1], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
+    GradZVolSVol::Assembler Gzvsva( spacing[2], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
+    SpatialOpDatabase<GradXVolSVol>::self().register_new_operator( new GradXVolSVol(Gxvsva) );
+    SpatialOpDatabase<GradYVolSVol>::self().register_new_operator( new GradYVolSVol(Gyvsva) );
+    SpatialOpDatabase<GradZVolSVol>::self().register_new_operator( new GradZVolSVol(Gzvsva) );
   }
 
   //--------------------------------------------------------

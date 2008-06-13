@@ -230,6 +230,10 @@ namespace FVStaggered{
   typedef SpatialOperator< LinAlg, Gradient, ZVolField, XSurfZField >  GradZVolXSurfZ;  ///< Used to form \f$\frac{\partial w}{\partial x}\f$ for \f$\tau_{zx}\f$
   typedef SpatialOperator< LinAlg, Gradient, ZVolField, YSurfZField >  GradZVolYSurfZ;  ///< Used to form \f$\frac{\partial w}{\partial y}\f$ for \f$\tau_{zy}\f$
 
+  typedef SpatialOperator< LinAlg, Gradient, XVolField, SVolField   >  GradXVolSVol;    ///< Used to form the dilatation at scalar CV centers.
+  typedef SpatialOperator< LinAlg, Gradient, YVolField, SVolField   >  GradYVolSVol;    ///< Used to form the dilatation at scalar CV centers.
+  typedef SpatialOperator< LinAlg, Gradient, ZVolField, SVolField   >  GradZVolSVol;    ///< Used to form the dilatation at scalar CV centers.
+
   //-- Divergence Operators --//
 
   typedef SpatialOperator< LinAlg, Divergence, SSurfXField, SVolField >  DivSSurfXSVol;

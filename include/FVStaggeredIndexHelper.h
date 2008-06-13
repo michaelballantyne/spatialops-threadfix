@@ -540,6 +540,18 @@ namespace FVStaggered{
   {
     return get_nx<ZVolField>(dim_,hasPlusXSideFaces_);
   }
+  template<> inline int IndexHelper<XVolField,SVolField>::calculate_stride( const int irow, const int icol ) const
+  {
+    return 1;
+  }
+  template<> inline int IndexHelper<YVolField,SVolField>::calculate_stride( const int irow, const int icol ) const
+  {
+    return get_nx<YVolField>(dim_,hasPlusXSideFaces_);
+  }
+  template<> inline int IndexHelper<ZVolField,SVolField>::calculate_stride( const int irow, const int icol ) const
+  {
+    return get_nx<ZVolField>(dim_,hasPlusXSideFaces_) * get_ny<ZVolField>(dim_,hasPlusYSideFaces_);
+  }
   //------------------------------------------------------------------
 
   //==================================================================

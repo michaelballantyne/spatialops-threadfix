@@ -688,6 +688,20 @@ int main()
     cout << "=====================================================" << endl << endl;
   }
 
+  {
+    const SinFun<SVolField> svolf( grid.xcoord_svol(), grid.ycoord_svol(), grid.zcoord_svol() );
+    const SinFun<XVolField> xvolf( grid.xcoord_xvol(), grid.ycoord_xvol(), grid.zcoord_xvol() );
+    const SinFun<YVolField> yvolf( grid.xcoord_yvol(), grid.ycoord_yvol(), grid.zcoord_yvol() );
+    const SinFun<ZVolField> zvolf( grid.xcoord_zvol(), grid.ycoord_zvol(), grid.zcoord_zvol() );
+    cout << "=====================================================" << endl
+	 << "Gradient staggered volumes to scalar volume (dilatation)" << endl
+	 << " max abs err | max rel err | avg abs err | avg rel err |" << endl
+	 << "-------------|-------------|-------------|-------------|" << endl;
+    test_grad_op<GradXVolSVol>( grid, xvolf, svolf, bcFlag, XDIR::value );
+    test_grad_op<GradYVolSVol>( grid, yvolf, svolf, bcFlag, YDIR::value );
+    test_grad_op<GradZVolSVol>( grid, zvolf, svolf, bcFlag, ZDIR::value );
+    cout << "=====================================================" << endl;
+  }
 
   // x-Volume to y-volume x-surface and z-volume x-surface
   if( dim[0]>1 && dim[1]>1 || dim[2]>1 ){
