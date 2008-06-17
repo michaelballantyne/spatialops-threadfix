@@ -222,10 +222,10 @@ double test_poisson( const Grid& grid,
 	    const int irow = i + j*dim[0] + k*dim[0]*dim[1];
 	    switch ( bcType ){
 	    case DIRICHLET:
-	      imprint_bc_on_op<InterpSVolSSurfX,XDIR,ScratchSVol>( Rx, i, j, k, dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, rhsField, Lx, rhs[irow] );
+	      imprint_bc_on_op<InterpSVolSSurfX,XDIR,ScratchSVol>( Rx, i, j, k, dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, Lx, rhs[irow] );
 	      break;
 	    case NEUMANN:
-	      imprint_bc_on_op<GradSVolSSurfX,  XDIR,ScratchSVol>( Gx, i, j, k, dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, rhsField, Lx, rhs[irow] );
+	      imprint_bc_on_op<GradSVolSSurfX,  XDIR,ScratchSVol>( Gx, i, j, k, dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, Lx, rhs[irow] );
 	      break;
 	    }
 	  }
@@ -253,10 +253,10 @@ double test_poisson( const Grid& grid,
 	    // set the BC value:
 	    switch ( bcType ){
 	    case DIRICHLET:
-	      imprint_bc_on_op<InterpSVolSSurfY,YDIR,ScratchSVol>( Ry, i, j, k, dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, rhsField, Ly, rhs[irow] );
+	      imprint_bc_on_op<InterpSVolSSurfY,YDIR,ScratchSVol>( Ry, i, j, k, dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, Ly, rhs[irow] );
 	      break;
 	    case NEUMANN:
-	      imprint_bc_on_op<GradSVolSSurfY,  YDIR,ScratchSVol>( Gy, i, j, k, dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, rhsField, Ly, rhs[irow] );
+	      imprint_bc_on_op<GradSVolSSurfY,  YDIR,ScratchSVol>( Gy, i, j, k, dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, Ly, rhs[irow] );
 	      break;
 	    }
 	  }
@@ -280,10 +280,10 @@ double test_poisson( const Grid& grid,
 	    const int irow = i + j*dim[0] + k*dim[0]*dim[1];
 	    switch ( bcType ){
 	    case DIRICHLET:
-	      imprint_bc_on_op<InterpSVolSSurfZ,ZDIR,ScratchSVol>( Rz, i, j, k, dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, rhsField, Lz, rhs[irow] );
+	      imprint_bc_on_op<InterpSVolSSurfZ,ZDIR,ScratchSVol>( Rz, i, j, k, dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, Lz, rhs[irow] );
 	      break;
 	    case NEUMANN:
-	      imprint_bc_on_op<GradSVolSSurfZ,  ZDIR,ScratchSVol>( Gz, i, j, k, dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, rhsField, Lz, rhs[irow] );
+	      imprint_bc_on_op<GradSVolSSurfZ,  ZDIR,ScratchSVol>( Gz, i, j, k, dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, Lz, rhs[irow] );
 	      break;
 	    }
 	  }

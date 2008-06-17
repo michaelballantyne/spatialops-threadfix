@@ -65,7 +65,114 @@ namespace FVStaggered{
     return ijk2flat<FieldT>::value(dim,IndexTriplet(i,j,k),bcFlagX,bcFlagY,bcFlagZ);
   }
 
-  //------------------------------------------------------------------
+  //==================================================================
+
+  /**
+   *  @class  BCPoint 
+   *  @author James C. Sutherland
+   *  @date   June, 2008
+   *
+   *  @brief A simple class to impose BCs on a structured mesh using
+   *  operators.  Intended for use when the BC is not located at the
+   *  storage location for the field values and we need to use ghost
+   *  values to achieve the desired BC.
+   *
+   *  The purpose of this class is to provide a more efficient way to
+   *  impose BCs.  BCPoint objects can be constructed and stored in a
+   *  container.  Much of the cost associated with imposing the BC is
+   *  associated with extracting coefficients from the operator.  This
+   *  is done at construction of a BCPoint object and is not repeated
+   *  when the BC is imposed, leading to a more efficient BC
+   *  implementation.  However, this operation is still applied at a
+   *  point.  If we were to apply it at a set of points, we could
+   *  potentially improve efficiency further.
+   *
+   *  The approach here is to set ghost values in a field to acheive a
+   *  desired BC.  For example, a Dirichlet condition on a field can
+   *  be achieved by using the interpolant operator and setting the
+   *  field value at the ghost location so that the desired BC is
+   *  achieved at the interpolated point.
+   *
+   *  @par Template Parameters
+   *   <ul>
+   *   <li> \b OpT Specifies the type of SpatialOperator that will be
+   *   used to apply this BC.  This must define a few things:
+   *     <ul>
+   *     <li> \b DestFieldType The type for the destination field.
+   *     <li> \b SrcFieldType  The type for the source field.
+   *     </ul>
+   *   <li> \b Dir Specifies the direction (boundary normal) for this BC.
+   *   </ul>
+   */
+  template< typename OpT, typename Dir >
+  class BCPoint
+  {
+    typedef typename OpT::SrcFieldType  SrcFieldT;
+    typedef typename OpT::DestFieldType DestFieldT;
+
+    const double bcVal_;
+    const int ixf_;
+    double val_;
+
+    double ghostCoef_;
+    typedef std::pair<int,double> IxValPair;
+    std::vector<IxValPair> ixVals_;
+
+  public:
+
+    /**
+     *  @param op The operator to use in applying the BC.  Supplying a
+     *            gradient operator results in a Neumann BC; supplying
+     *            an interpolant operator results in a Dirichlet BC.
+     *
+     *  @param i  The x-direction index for the cell we want to apply the BC to. Index is 0-based on patch interior.
+     *  @param j  The y-direction index for the cell we want to apply the BC to. Index is 0-based on patch interior.
+     *  @param k  The z-direction index for the cell we want to apply the BC to. Index is 0-based on patch interior.
+     *
+     *  @param dim A vector containing the number of cells in each
+     *  coordinate direction.  This is a three-component vector.
+     *
+     *  @param bcFlagX A boolean flag to indicate if this patch is on a
+     *  +x side physical boundary.  If so, then it is assumed that there
+     *  is an extra face on that side of the domain, and face variable
+     *  dimensions will be modified accordingly.
+     *
+     *  @param bcFlagY A boolean flag to indicate if this patch is on a
+     *  +y side physical boundary.  If so, then it is assumed that there
+     *  is an extra face on that side of the domain, and face variable
+     *  dimensions will be modified accordingly.
+     *
+     *  @param bcFlagZ A boolean flag to indicate if this patch is on a
+     *  +z side physical boundary.  If so, then it is assumed that there
+     *  is an extra face on that side of the domain, and face variable
+     *  dimensions will be modified accordingly.
+     *
+     *  @param bcVal The value for the boundary condition to set.
+     *
+     *  NOTE: the field to apply the BC on is not supplied here, since
+     *  that would force its address to remain constant.  Rather, it
+     *  is supplied to the BCPoint::operator(...) method.  Not quite
+     *  as efficient, but less restrictive.  If we were guaranteed
+     *  that the address of the field were fixed, then we could bind
+     *  an iterator to the BC value insertion point.
+     */
+    BCPoint( const OpT& op,
+	     const int i,
+	     const int j,
+	     const int k,
+	     const std::vector<int>& dim,
+	     const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ,
+	     const double bcVal );
+
+    ~BCPoint(){}
+
+    /**
+     *  Impose the BC on the supplied field.
+     */
+    void operator()( typename OpT::SrcFieldType& f );
+  };
+
+  //==================================================================
 
   /**
    *  @brief Apply either a Dirichlet or Neumann BC (depending on the
@@ -128,30 +235,33 @@ namespace FVStaggered{
 			const double bcVal,
 			typename OpT::SrcFieldType& f )
   {
-    typedef typename OpT::SrcFieldType  SrcFieldT;
-    typedef typename OpT::DestFieldType DestFieldT;
+    BCPoint<OpT,Dir> bcp(op,i,j,k,dim,bcFlagX,bcFlagY,bcFlagZ,bcVal);
+    bcp(f);
 
-    const int ixf = get_ghost_flat_ix_src <SrcFieldT,Dir >( dim, bcFlagX, bcFlagY, bcFlagZ, i, j, k );
-    int irow      = get_ghost_flat_ix_dest<DestFieldT,Dir>( dim, bcFlagX, bcFlagY, bcFlagZ, i, j, k );
+//     typedef typename OpT::SrcFieldType  SrcFieldT;
+//     typedef typename OpT::DestFieldType DestFieldT;
 
-    // NOTE: This will NOT work in the case where we have multiple ghost cells!
-    assert( OpT::SrcGhost::NM == OpT::SrcGhost::NP );
-    assert( OpT::SrcGhost::NM == 1 );
+//     const int ixf = get_ghost_flat_ix_src <SrcFieldT,Dir >( dim, bcFlagX, bcFlagY, bcFlagZ, i, j, k );
+//     int irow      = get_ghost_flat_ix_dest<DestFieldT,Dir>( dim, bcFlagX, bcFlagY, bcFlagZ, i, j, k );
 
-    const typename OpT::MatrixRow row = op.get_row(irow);
-    typename       OpT::const_column_iterator icol =row.begin();
-    const typename OpT::const_column_iterator icole=row.end();
+//     // NOTE: This will NOT work in the case where we have multiple ghost cells!
+//     assert( OpT::SrcGhost::NM == OpT::SrcGhost::NP );
+//     assert( OpT::SrcGhost::NM == 1 );
 
-    double prodsum=0.0; double ghostcoeff=0.0;
-    for( ; icol!=icole; ++icol ){
-      if( icol.index() == size_t(ixf) )
-	ghostcoeff = *icol;
-      else
-	prodsum += *icol *f[icol.index()];
-    }
+//     const typename OpT::MatrixRow row = op.get_row(irow);
+//     typename       OpT::const_column_iterator icol =row.begin();
+//     const typename OpT::const_column_iterator icole=row.end();
 
-    assert( ghostcoeff != 0.0 );
-    f[ixf] = (bcVal - prodsum) / ghostcoeff;
+//     double prodsum=0.0; double ghostcoeff=0.0;
+//     for( ; icol!=icole; ++icol ){
+//       if( icol.index() == size_t(ixf) )
+// 	ghostcoeff = *icol;
+//       else
+// 	prodsum += *icol *f[icol.index()];
+//     }
+
+//     assert( ghostcoeff != 0.0 );
+//     f[ixf] = (bcVal - prodsum) / ghostcoeff;
   }
 
 
@@ -215,7 +325,6 @@ namespace FVStaggered{
 			 const std::vector<int>& dim,
 			 const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ,
 			 const double bcVal,
-			 const typename BCOpT::SrcFieldType& f,
 			 OpT& op,
 			 double& rhs )
   {
@@ -233,14 +342,13 @@ namespace FVStaggered{
     typename       BCOpT::const_column_iterator icolbc = bcrow.begin();
     const typename BCOpT::const_column_iterator icolbce= bcrow.end();
 
-    double prodsum=0.0; double ghostcoeff=0.0;
+    double ghostcoeff=0.0;
     BCInfo* bci = &bcinfo[0];
     for( ; icolbc!=icolbce; ++icolbc ){
       if( icolbc.index() == size_t(ixf) ){
 	ghostcoeff = *icolbc;
       }
       else{
-	prodsum += *icolbc * f[icolbc.index()];
 	bci->coef = *icolbc;
 	bci->ix   = icolbc.index();
 	++bci;
@@ -270,7 +378,6 @@ namespace FVStaggered{
       if( icol.index() == size_t(ig) ){
 	double& val = *icol;
 	Sg = val;
-	val = 0.0;
 	break;
       }
     }
@@ -295,6 +402,62 @@ namespace FVStaggered{
     } // column loop
     
   }
+
+
+
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//
+//                           IMPLEMENTATIONS
+//
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+template< typename OpT, typename Dir >
+BCPoint<OpT,Dir>::
+BCPoint( const OpT& op,
+	 const int i,
+	 const int j,
+	 const int k,
+	 const std::vector<int>& dim,
+	 const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ,
+	 const double bcVal )
+  : bcVal_( bcVal ),
+    ixf_( get_ghost_flat_ix_src <SrcFieldT,Dir >( dim, bcFlagX, bcFlagY, bcFlagZ, i, j, k ) )
+{
+  int irow = get_ghost_flat_ix_dest<DestFieldT,Dir>( dim, bcFlagX, bcFlagY, bcFlagZ, i, j, k );
+
+  // NOTE: This will NOT work in the case where we have multiple ghost cells!
+  assert( OpT::SrcGhost::NM == OpT::SrcGhost::NP );
+  assert( OpT::SrcGhost::NM == 1 );
+
+  const typename OpT::MatrixRow row = op.get_row(irow);
+  typename       OpT::const_column_iterator icol =row.begin();
+  const typename OpT::const_column_iterator icole=row.end();
+  for( ; icol!=icole; ++icol ){
+    if( icol.index() == size_t(ixf_) )
+      ghostCoef_ = *icol;
+    else{
+      ixVals_.push_back( std::make_pair(icol.index(),*icol) );
+    }
+  }
+  assert( ghostCoef_ != 0.0 );
+}
+
+//--------------------------------------------------------------------
+
+template< typename OpT, typename Dir >
+void
+BCPoint<OpT,Dir>::
+operator()( SrcFieldT& f )
+{
+  double prodsum=0.0;
+  for( std::vector<IxValPair>::iterator ix=ixVals_.begin(); ix!=ixVals_.end(); ++ix ){
+    prodsum += ix->second * f[ix->first];
+  }
+  val_ = (bcVal_ - prodsum) / ghostCoef_;
+  f[ixf_] = val_;
+}
 
 
 }// namespace FVStaggered
