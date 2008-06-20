@@ -103,6 +103,14 @@ namespace FVStaggered{
    *     </ul>
    *   <li> \b Dir Specifies the direction (boundary normal) for this BC.
    *   </ul>
+   *
+   *  @todo Need a way of implementing time-varying BCs.  Perhaps this
+   *  could be achieved via a functor passed into the constructor that
+   *  would calculate the bc value given the coordinates and time?
+   *  Then we would also need to know the coordinates and time,
+   *  however.  The coordinates could be supplied at construction
+   *  time, but the time would need to be an additional argument to
+   *  BCPoint::operator().
    */
   template< typename OpT, typename Dir >
   class BCPoint
@@ -112,7 +120,6 @@ namespace FVStaggered{
 
     const double bcVal_;
     const int ixf_;
-    double val_;
 
     double ghostCoef_;
     typedef std::pair<int,double> IxValPair;
@@ -169,7 +176,7 @@ namespace FVStaggered{
     /**
      *  Impose the BC on the supplied field.
      */
-    void operator()( typename OpT::SrcFieldType& f );
+    void operator()( typename OpT::SrcFieldType& f ) const;
   };
 
   //==================================================================
@@ -222,8 +229,6 @@ namespace FVStaggered{
    *
    *   </ul>
    *
-   *  @todo Implement and test approach for vol->surface interpolant
-   *  operators.  This will be required for dirichlet conditions
    */
   template< typename OpT, typename Dir >
   void assign_bc_point( const OpT& op,
@@ -425,7 +430,7 @@ BCPoint( const OpT& op,
   : bcVal_( bcVal ),
     ixf_( get_ghost_flat_ix_src <SrcFieldT,Dir >( dim, bcFlagX, bcFlagY, bcFlagZ, i, j, k ) )
 {
-  int irow = get_ghost_flat_ix_dest<DestFieldT,Dir>( dim, bcFlagX, bcFlagY, bcFlagZ, i, j, k );
+  const int irow = get_ghost_flat_ix_dest<DestFieldT,Dir>( dim, bcFlagX, bcFlagY, bcFlagZ, i, j, k );
 
   // NOTE: This will NOT work in the case where we have multiple ghost cells!
   assert( OpT::SrcGhost::NM == OpT::SrcGhost::NP );
@@ -449,14 +454,14 @@ BCPoint( const OpT& op,
 template< typename OpT, typename Dir >
 void
 BCPoint<OpT,Dir>::
-operator()( SrcFieldT& f )
+operator()( SrcFieldT& f ) const
 {
   double prodsum=0.0;
-  for( std::vector<IxValPair>::iterator ix=ixVals_.begin(); ix!=ixVals_.end(); ++ix ){
+  for( std::vector<IxValPair>::const_iterator ix=ixVals_.begin(); ix!=ixVals_.end(); ++ix ){
     prodsum += ix->second * f[ix->first];
   }
-  val_ = (bcVal_ - prodsum) / ghostCoef_;
-  f[ixf_] = val_;
+  const double val = (bcVal_ - prodsum) / ghostCoef_;
+  f[ixf_] = val;
 }
 
 

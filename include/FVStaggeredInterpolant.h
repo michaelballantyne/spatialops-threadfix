@@ -47,17 +47,6 @@ namespace FVStaggered{
    *  <li> \b SrcFieldT The type of the source field for the interpolant operator
    *  <li> \b DestFieldT The type of the destination field for the interpolant operator
    *  <\ul>
-   *
-   *  @todo Implement interpolant for scalar volume -> staggered surface (viscosity, dilatation)
-   *  @todo Implement interpolant for XVol -> YSurfX
-   *  @todo Implement interpolant for XVol -> ZSurfX
-   *  @todo Implement interpolant for XVol -> SSurfX  (identity for uniform meshes)
-   *  @todo Implement interpolant for YVol -> XSurfY
-   *  @todo Implement interpolant for YVol -> YSurfY
-   *  @todo Implement interpolant for YVol -> SSurfY  (identity for uniform meshes)
-   *  @todo Implement interpolant for ZVol -> XSurfZ
-   *  @todo Implement interpolant for ZVol -> YSurfZ 
-   *  @todo Implement interpolant for ZVol -> SSurfZ  (identity for uniform meshes)
    */
   template< typename SrcFieldT,
 	    typename DestFieldT >
