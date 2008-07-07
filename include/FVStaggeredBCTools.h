@@ -439,6 +439,7 @@ BCPoint( const OpT& op,
   const typename OpT::MatrixRow row = op.get_row(irow);
   typename       OpT::const_column_iterator icol =row.begin();
   const typename OpT::const_column_iterator icole=row.end();
+  ghostCoef_ = 0.0;
   for( ; icol!=icole; ++icol ){
     if( icol.index() == size_t(ixf_) )
       ghostCoef_ = *icol;
