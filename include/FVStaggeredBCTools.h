@@ -11,7 +11,6 @@
 namespace SpatialOps{
 namespace FVStaggered{
 
-
   //------------------------------------------------------------------
 
   // given ijk indices that are zero based on the interior, this
@@ -63,6 +62,46 @@ namespace FVStaggered{
       k += FieldT::Ghost::NM;
     }
     return ijk2flat<FieldT>::value(dim,IndexTriplet(i,j,k),bcFlagX,bcFlagY,bcFlagZ);
+  }
+
+  template<>
+  int get_ghost_flat_ix_dest<XSurfXField,XDIR>( const std::vector<int>& dim,
+						const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ,
+						int i, int j, int k )
+  {
+    if( dim[0]>1 ){
+      if(i>0) ++i; else if(i==0) --i;
+      i += XSurfXField::Ghost::NM;
+    }
+    if( dim[1]>1 ) j += XSurfXField::Ghost::NM;
+    if( dim[2]>1 ) k += XSurfXField::Ghost::NM;
+    return ijk2flat<XSurfXField>::value(dim,IndexTriplet(i,j,k),bcFlagX,bcFlagY,bcFlagZ);
+  }
+  template<>
+  int get_ghost_flat_ix_dest<YSurfYField,YDIR>( const std::vector<int>& dim,
+						const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ,
+						int i, int j, int k )
+  {
+    if( dim[0]>1 ) i += YSurfYField::Ghost::NM;
+    if( dim[1]>1 ){
+      if(j>0) ++j; else if(j==0) --j;
+      j += YSurfYField::Ghost::NM;
+    }
+    if( dim[2]>1 ) k += YSurfYField::Ghost::NM;
+    return ijk2flat<YSurfYField>::value(dim,IndexTriplet(i,j,k),bcFlagX,bcFlagY,bcFlagZ);
+  }
+  template<>
+  int get_ghost_flat_ix_dest<ZSurfZField,ZDIR>( const std::vector<int>& dim,
+						const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ,
+						int i, int j, int k )
+  {
+    if( dim[0]>1 ) i += ZSurfZField::Ghost::NM;
+    if( dim[1]>1 ) j += ZSurfZField::Ghost::NM;
+    if( dim[2]>1 ){
+      if(k>0) ++k; else if(k==0) --k;
+      k += ZSurfZField::Ghost::NM;
+    }
+    return ijk2flat<ZSurfZField>::value(dim,IndexTriplet(i,j,k),bcFlagX,bcFlagY,bcFlagZ);
   }
 
   //==================================================================
@@ -176,7 +215,7 @@ namespace FVStaggered{
     /**
      *  Impose the BC on the supplied field.
      */
-    void operator()( typename OpT::SrcFieldType& f ) const;
+    inline void operator()( typename OpT::SrcFieldType& f ) const;
   };
 
   //==================================================================
@@ -447,7 +486,20 @@ BCPoint( const OpT& op,
       ixVals_.push_back( std::make_pair(icol.index(),*icol) );
     }
   }
+#ifndef NDEBUG
+  if( ghostCoef_ == 0.0 ){
+    std::cout << "Error in BCPoint." << std::endl
+	      << "trying to set bc value: " << bcVal_ << endl
+	      << "(i,j,k)=("<<i<<","<<j<<","<<k<<")"<<endl
+	      << "ixf_ = " << ixf_ << endl
+	      << "op coefs: ";
+    for( typename OpT::const_column_iterator i=row.begin(); i!=icole; ++i ){
+      cout << "  (" << i.index() << "," << *i << ")";
+    }
+    cout << endl;
+  }
   assert( ghostCoef_ != 0.0 );
+#endif
 }
 
 //--------------------------------------------------------------------

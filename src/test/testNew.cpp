@@ -213,32 +213,73 @@ bool test_bc_helper( const vector<int>&dim,
 
   const OpT& op = *SpatialOpDatabase<OpT>::self().retrieve_operator();
 
-  SrcFieldT   f( get_n_tot<SrcFieldT >(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
-		 get_ghost_set<SrcFieldT >(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
-		 NULL );
-  DestFieldT df( get_n_tot<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
-		 get_ghost_set<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
-		 NULL );
+  SpatFldPtr<SrcFieldT> f = SpatialFieldStore<SrcFieldT>::self().get( get_n_tot<SrcFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
+								      get_ghost_set<SrcFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]) );
+  SpatFldPtr<DestFieldT> df = SpatialFieldStore<DestFieldT>::self().get( get_n_tot<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
+									 get_ghost_set<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]) );
 
   int icnt=0;
-  for( typename SrcFieldT::iterator ifld=f.begin(); ifld!=f.end(); ++ifld,++icnt ) *ifld = icnt;
+  for( typename SrcFieldT::iterator ifld=f->begin(); ifld!=f->end(); ++ifld,++icnt ) *ifld = icnt;
 
   // assign the BC.
-  assign_bc_point<OpT,Dir>( op, ii, jj, kk, dim, bcFlag[0], bcFlag[1], bcFlag[2], bcVal, f );
+  assign_bc_point<OpT,Dir>( op, ii, jj, kk, dim, bcFlag[0], bcFlag[1], bcFlag[2], bcVal, *f );
 
   // calculate the dest field
-  op.apply_to_field( f, df );
+  op.apply_to_field( *f, *df );
 
   // verify that the BC was set properly - this is a bit of a hack.
   const int ix = get_ghost_flat_ix_dest<DestFieldT,Dir>(dim,bcFlag[0],bcFlag[1],bcFlag[2],ii,jj,kk);
 
-  const double abserr = abs(df[ix]-bcVal);
+  const double abserr = abs( (*df)[ix] - bcVal );
   const double relerr = abserr/abs(bcVal);
 
   bool isOkay = (abserr<1.0e-9 && relerr<1.0e-9);
-  if( !isOkay ) cout << "  " << abserr << "  " << relerr << "     "
-		     << df[ix] << "  " << bcVal << endl;
+//   if( !isOkay ) cout << "  " << abserr << "  " << relerr << "     "
+// 		     << df[ix] << "  " << bcVal << endl;
   return isOkay;
+}
+
+//--------------------------------------------------------------------
+
+template<typename OpT, typename Dir>
+void
+test_bc_loop( const std::string opName,
+	      const vector<int>&dim,
+	      const std::vector<bool>& bcFlag,
+	      const int bcFaceIndex,
+	      const double bcVal )
+{
+  bool isFailed = false;
+  cout << std::setw(20) << opName << " ... ";
+
+  if( IsSameType<Dir,XDIR>::result ){
+    const int i=bcFaceIndex;
+    for( int j=0; j<dim[1]; ++j ){
+      for( int k=0; k<dim[2]; ++k ){
+	isFailed = isFailed | !test_bc_helper<OpT,Dir>( dim, bcFlag, i,j,k, bcVal  );
+      }
+    }
+  }
+
+  else if( IsSameType<Dir,YDIR>::result ){
+    const int j=bcFaceIndex;
+    for( int i=0; i<dim[0]; ++i ){
+      for( int k=0; k<dim[2]; ++k ){
+	isFailed = isFailed | !test_bc_helper<OpT,Dir>( dim, bcFlag, i,j,k, 1.2345  );
+      }
+    }
+  }
+
+  else if( IsSameType<Dir,ZDIR>::result ){
+    const int k=bcFaceIndex;
+    for( int i=0; i<dim[0]; ++i ){
+      for( int j=0; j<dim[1]; ++j ){
+	isFailed = isFailed | !test_bc_helper<OpT,Dir>( dim, bcFlag, i,j,k, 1.2345  );
+      }
+    }
+  }
+
+  if( isFailed ) cout << "***FAIL***"; else cout << "PASS"; cout << endl;
 }
 
 //--------------------------------------------------------------------
@@ -253,89 +294,120 @@ void test_bc( const Grid& g,
 
   cout << endl << "Testing BC setting stuff:" << endl;
 
-  bool isOkay = true;;
-
   if( dim[0]>1 ){
     // X BCs - Left side
-    cout << "  X Dir, (-) side ... ";
+    cout << " X Dir, (-) side:" << endl;
     int i=0;
-    for( int j=0; j<dim[1]; ++j ){
-      for( int k=0; k<dim[2]; ++k ){
-	const bool result1 = test_bc_helper<GradSVolSSurfX,  XDIR>( dim, bcFlag, i,j,k, 1.2345  );
-	const bool result2 = test_bc_helper<InterpSVolSSurfX,XDIR>( dim, bcFlag, i,j,k, 123.456 );
-	if( !result1 || !result2 ) isOkay=false;
-      }
+
+    test_bc_loop<GradSVolSSurfX,  XDIR>( "GradSVolSSurfX",   dim, bcFlag, i, 1.2345 );
+    test_bc_loop<InterpSVolSSurfX,XDIR>( "InterpSVolSSurfX", dim, bcFlag, i, 123.45 );
+
+    test_bc_loop<GradXVolXSurfX,  XDIR>( "GradXVolXSurfX",   dim, bcFlag, i, 5.4321 );
+    test_bc_loop<InterpXVolXSurfX,XDIR>( "InterpXVolXSurfX", dim, bcFlag, i, 54.321  );
+
+    if( dim[1]>1 ){
+      test_bc_loop<GradYVolYSurfX,  XDIR>( "GradYVolYSurfX",   dim, bcFlag, i, 5.4321 );
+      test_bc_loop<InterpYVolYSurfX,XDIR>( "InterpYVolXSurfX", dim, bcFlag, i, 54.321  );
     }
-    if( isOkay ) cout << "PASS" << endl;  else cout << "FAIL" << endl;
+    if( dim[2]>1 ){
+      test_bc_loop<GradZVolZSurfX,  XDIR>( "GradZVolZSurfX",   dim, bcFlag, i, 5.4321 );
+      test_bc_loop<InterpZVolZSurfX,XDIR>( "InterpZVolZSurfX", dim, bcFlag, i, 54.321  );
+    }
 
     // X BCs - Right side
-    cout << "  X Dir, (+) side ... ";
-    isOkay = true;
+    cout << " X Dir, (+) side:" << endl;
     i=dim[0]-1;
-    for( int j=0; j<dim[1]; ++j ){
-      for( int k=0; k<dim[2]; ++k ){
-	const bool result1 = test_bc_helper<GradSVolSSurfX,  XDIR>( dim, bcFlag, i,j,k, 5.4321 );
-	const bool result2 = test_bc_helper<InterpSVolSSurfX,XDIR>( dim, bcFlag, i,j,k, 123.456 );
-	if( !result1 || !result2 ) isOkay=false;
-      }
+
+    test_bc_loop<GradSVolSSurfX,  XDIR>( "GradSVolSSurfX",   dim, bcFlag, i, 1.2345 );
+    test_bc_loop<InterpSVolSSurfX,XDIR>( "InterpSVolSSurfX", dim, bcFlag, i, 123.45 );
+
+    test_bc_loop<GradXVolXSurfX,  XDIR>( "GradXVolXSurfX",   dim, bcFlag, i, 5.4321 );
+    test_bc_loop<InterpXVolXSurfX,XDIR>( "InterpXVolXSurfX", dim, bcFlag, i, 54.321  );
+    if( dim[1]>1 ){
+      test_bc_loop<GradYVolYSurfX,  XDIR>( "GradYVolYSurfX",   dim, bcFlag, i, 5.4321 );
+      test_bc_loop<InterpYVolYSurfX,XDIR>( "InterpYVolXSurfX", dim, bcFlag, i, 54.321  );
     }
-    if( isOkay ) cout << "PASS" << endl;  else cout << "FAIL" << endl;
+    if( dim[2]>1 ){
+      test_bc_loop<GradZVolZSurfX,  XDIR>( "GradZVolZSurfX",   dim, bcFlag, i, 5.4321 );
+      test_bc_loop<InterpZVolZSurfX,XDIR>( "InterpZVolZSurfX", dim, bcFlag, i, 54.321  );
+    }
   }
 
   if( dim[1]>1 ){
     // Y BCs - Left side
-    cout << "  Y Dir, (-) side ... ";
+    cout << " Y Dir, (-) side:" << endl;
     int j=0;
-    for( int i=0; i<dim[0]; ++i ){
-      for( int k=0; k<dim[2]; ++k ){
-	const bool result1 = test_bc_helper<GradSVolSSurfY, YDIR >( dim, bcFlag, i,j,k, 1.2345 );
-	const bool result2 = test_bc_helper<InterpSVolSSurfY,YDIR>( dim, bcFlag, i,j,k, 123.456 );
-	if( !result1 || !result2 ) isOkay=false;
-      }
+    test_bc_loop<GradSVolSSurfY,  YDIR>( "GradSVolSSurfY",   dim, bcFlag, j, 1.2345 );
+    test_bc_loop<InterpSVolSSurfY,YDIR>( "InterpSVolSSurfY", dim, bcFlag, j, 123.456 );
+
+    if( dim[0]>1 ){
+      test_bc_loop<GradXVolXSurfY,  YDIR>( "GradXVolXSurfY",   dim, bcFlag, j, 1.2345 );
+      test_bc_loop<InterpXVolXSurfY,YDIR>( "InterpXVolXSurfY", dim, bcFlag, j, 123.456 );
     }
-    if( isOkay ) cout << "PASS" << endl;  else cout << "FAIL" << endl;
+
+    test_bc_loop<GradYVolYSurfY,  YDIR>( "GradYVolYSurfY",   dim, bcFlag, j, 1.2345 );
+    test_bc_loop<InterpYVolYSurfY,YDIR>( "InterpYVolYSurfY", dim, bcFlag, j, 123.456 );
+
+    if( dim[2]>1 ){
+      test_bc_loop<GradZVolZSurfY,  YDIR>( "GradZVolZSurfY",   dim, bcFlag, j, 1.2345 );
+      test_bc_loop<InterpZVolZSurfY,YDIR>( "InterpZVolZSurfY", dim, bcFlag, j, 123.456 );
+    }
 
     // Y BCs - Right side
-    cout << "  Y Dir, (+) side ... ";
-    isOkay = true;
+    cout << " Y Dir, (+) side:" << endl;
     j=dim[1]-1;
-    for( int i=0; i<dim[0]; ++i ){
-      for( int k=0; k<dim[2]; ++k ){
-	const bool result1 = test_bc_helper<GradSVolSSurfY,  YDIR>( dim, bcFlag, i,j,k, 5.4321 );
-	const bool result2 = test_bc_helper<InterpSVolSSurfY,YDIR>( dim, bcFlag, i,j,k, 123.456 );
-	if( !result1 || !result2 ) isOkay=false;
-      }
+    test_bc_loop<GradSVolSSurfY,  YDIR>( "GradSVolSSurfY",   dim, bcFlag, j, 5.4321 );
+    test_bc_loop<InterpSVolSSurfY,YDIR>( "InterpSVolSSurfY", dim, bcFlag, j, 123.456 );
+
+    if( dim[0]>1 ){
+      test_bc_loop<GradXVolXSurfY,  YDIR>( "GradXVolXSurfY",   dim, bcFlag, j, 1.2345 );
+      test_bc_loop<InterpXVolXSurfY,YDIR>( "InterpXVolXSurfY", dim, bcFlag, j, 123.456 );
     }
-    if( isOkay ) cout << "PASS" << endl;  else cout << "FAIL" << endl;
+
+    test_bc_loop<GradYVolYSurfY,  YDIR>( "GradYVolYSurfY",   dim, bcFlag, j, 1.2345 );
+    test_bc_loop<InterpYVolYSurfY,YDIR>( "InterpYVolYSurfY", dim, bcFlag, j, 123.456 );
+
+    if( dim[2]>1 ){
+      test_bc_loop<GradZVolZSurfY,  YDIR>( "GradZVolZSurfY",   dim, bcFlag, j, 1.2345 );
+      test_bc_loop<InterpZVolZSurfY,YDIR>( "InterpZVolZSurfY", dim, bcFlag, j, 123.456 );
+    }
   }
 
   if( dim[2]>1 ){
     // Z BCs - Left side
-    cout << "  Z Dir, (-) side ... ";
+    cout << " Z Dir, (-) side:" << endl;
     int k=0;
-    for( int i=0; i<dim[0]; ++i ){
-      for( int j=0; j<dim[1]; ++j ){
-	const bool result1 = test_bc_helper<GradSVolSSurfZ,  ZDIR>( dim, bcFlag, i,j,k, 1.2345 );
-	const bool result2 = test_bc_helper<InterpSVolSSurfZ,ZDIR>( dim, bcFlag, i,j,k, 123.456 );
-	if( !result1 || !result2 ) isOkay=false;
-      }
+    test_bc_loop<GradSVolSSurfZ,  ZDIR>( "GradSVolSSurfZ",   dim, bcFlag, k, 1.2345 );
+    test_bc_loop<InterpSVolSSurfZ,ZDIR>( "InterpSVolSSurfZ", dim, bcFlag, k, 123.456 );
+
+    if( dim[0]>1 ){
+      test_bc_loop<GradXVolXSurfZ,  ZDIR>( "GradXVolXSurfZ",   dim, bcFlag, k, 1.2345 );
+      test_bc_loop<InterpXVolXSurfZ,ZDIR>( "InterpXVolXSurfZ", dim, bcFlag, k, 123.456 );
     }
-    if( isOkay ) cout << "PASS" << endl;  else cout << "FAIL" << endl;
+    if( dim[1]>1 ){
+      test_bc_loop<GradYVolYSurfZ,  ZDIR>( "GradYVolYSurfZ",   dim, bcFlag, k, 1.2345 );
+      test_bc_loop<InterpYVolYSurfZ,ZDIR>( "InterpYVolYSurfZ", dim, bcFlag, k, 123.456 );
+    }
+    test_bc_loop<GradZVolZSurfZ,  ZDIR>( "GradZVolZSurfZ",   dim, bcFlag, k, 1.2345 );
+    test_bc_loop<InterpZVolZSurfZ,ZDIR>( "InterpZVolZSurfZ", dim, bcFlag, k, 123.456 );
 
     // Z BCs - Right side
-    cout << "  Z Dir, (+) side ... ";
-    isOkay = true;
+    cout << " Z Dir, (+) side:" << endl;
     k=dim[2]-1;
-    for( int i=0; i<dim[0]; ++i ){
-      for( int j=0; j<dim[1]; ++j ){
-	const bool result1 = test_bc_helper<GradSVolSSurfZ,  ZDIR>( dim, bcFlag, i,j,k, 5.4321 );
-	const bool result2 = test_bc_helper<InterpSVolSSurfZ,ZDIR>( dim, bcFlag, i,j,k, 123.456 );
-	if( !result1 || !result2 ) isOkay=false;
-      }
-    }
-    if( isOkay ) cout << "PASS" << endl;  else cout << "FAIL" << endl;
-  }
+    test_bc_loop<GradSVolSSurfZ,  ZDIR>( "GradSVolSSurfZ",   dim, bcFlag, k, 1.2345 );
+    test_bc_loop<InterpSVolSSurfZ,ZDIR>( "InterpSVolSSurfZ", dim, bcFlag, k, 123.456 );
 
+    if( dim[0]>1 ){
+      test_bc_loop<GradXVolXSurfZ,  ZDIR>( "GradXVolXSurfZ",   dim, bcFlag, k, 1.2345 );
+      test_bc_loop<InterpXVolXSurfZ,ZDIR>( "InterpXVolXSurfZ", dim, bcFlag, k, 123.456 );
+    }
+    if( dim[1]>1 ){
+      test_bc_loop<GradYVolYSurfZ,  ZDIR>( "GradYVolYSurfZ",   dim, bcFlag, k, 1.2345 );
+      test_bc_loop<InterpYVolYSurfZ,ZDIR>( "InterpYVolYSurfZ", dim, bcFlag, k, 123.456 );
+    }
+    test_bc_loop<GradZVolZSurfZ,  ZDIR>( "GradZVolZSurfZ",   dim, bcFlag, k, 1.2345 );
+    test_bc_loop<InterpZVolZSurfZ,ZDIR>( "InterpZVolZSurfZ", dim, bcFlag, k, 123.456 );
+  }
   cout << endl;
 }
 
@@ -563,11 +635,6 @@ int main()
   const Grid grid( dim, spacing, bcFlag );
   //grid.write();
 
-  test_poisson( grid, dim, bcFlag );
-
-  test_bc( grid, bcFlag );
-  test_ops();
-
   // Scalar-Volume to scalar face gradients and laplacians
   {
     SVolField phi( get_n_tot<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), get_ghost_set<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), NULL );
@@ -611,7 +678,6 @@ int main()
     test_div_op<DivSSurfZSVol>( grid, gradFunZ, divFun, bcFlag );
     cout << "=====================================================" << endl << endl;
   }
-
 
   {
     const SinFun<SVolField> svolfun( grid.xcoord_svol(), grid.ycoord_svol(), grid.zcoord_svol() );
@@ -808,7 +874,6 @@ int main()
     cout << "=====================================================" << endl << endl;
   }
 
-
   // Y-volume to y-surface face component gradients
   if( dim[1]>1 ){
 
@@ -850,7 +915,6 @@ int main()
     cout << "=====================================================" << endl << endl;
   }
 
-
   // Z-volume to z-surface face component gradients
   if( dim[2]>1 ){
 
@@ -891,9 +955,6 @@ int main()
     test_interp_op<InterpZVolZSurfZ>( grid, sinfun, interpZ, bcFlag );
     cout << "=====================================================" << endl << endl;
   }
-
-
-
 
   {
     cout << endl << "Scalar volume scratch operators" << endl
@@ -966,5 +1027,10 @@ int main()
 
     cout << "done" << endl;
   }
+
+
+  test_ops();
+  test_poisson( grid, dim, bcFlag );
+  test_bc( grid, bcFlag );
 
 }
