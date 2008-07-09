@@ -197,7 +197,7 @@ void test_div_op( const Grid& grid,
 
 //--------------------------------------------------------------------
 
-template<typename OpT, typename Dir>
+template<typename OpT>
 bool test_bc_helper( const vector<int>&dim,
 		     const std::vector<bool>& bcFlag,
 		     const int ii,
@@ -222,13 +222,13 @@ bool test_bc_helper( const vector<int>&dim,
   for( typename SrcFieldT::iterator ifld=f->begin(); ifld!=f->end(); ++ifld,++icnt ) *ifld = icnt;
 
   // assign the BC.
-  assign_bc_point<OpT,Dir>( op, ii, jj, kk, dim, bcFlag[0], bcFlag[1], bcFlag[2], bcVal, *f );
+  assign_bc_point<OpT>( op, ii, jj, kk, dim, bcFlag[0], bcFlag[1], bcFlag[2], bcVal, *f );
 
   // calculate the dest field
   op.apply_to_field( *f, *df );
 
   // verify that the BC was set properly - this is a bit of a hack.
-  const int ix = get_ghost_flat_ix_dest<DestFieldT,Dir>(dim,bcFlag[0],bcFlag[1],bcFlag[2],ii,jj,kk);
+  const int ix = get_ghost_flat_ix<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2],ii,jj,kk);
 
   const double abserr = abs( (*df)[ix] - bcVal );
   const double relerr = abserr/abs(bcVal);
@@ -256,7 +256,7 @@ test_bc_loop( const std::string opName,
     const int i=bcFaceIndex;
     for( int j=0; j<dim[1]; ++j ){
       for( int k=0; k<dim[2]; ++k ){
-	isFailed = isFailed | !test_bc_helper<OpT,Dir>( dim, bcFlag, i,j,k, bcVal  );
+	isFailed = isFailed | !test_bc_helper<OpT>( dim, bcFlag, i,j,k, bcVal  );
       }
     }
   }
@@ -265,7 +265,7 @@ test_bc_loop( const std::string opName,
     const int j=bcFaceIndex;
     for( int i=0; i<dim[0]; ++i ){
       for( int k=0; k<dim[2]; ++k ){
-	isFailed = isFailed | !test_bc_helper<OpT,Dir>( dim, bcFlag, i,j,k, 1.2345  );
+	isFailed = isFailed | !test_bc_helper<OpT>( dim, bcFlag, i,j,k, 1.2345  );
       }
     }
   }
@@ -274,7 +274,7 @@ test_bc_loop( const std::string opName,
     const int k=bcFaceIndex;
     for( int i=0; i<dim[0]; ++i ){
       for( int j=0; j<dim[1]; ++j ){
-	isFailed = isFailed | !test_bc_helper<OpT,Dir>( dim, bcFlag, i,j,k, 1.2345  );
+	isFailed = isFailed | !test_bc_helper<OpT>( dim, bcFlag, i,j,k, 1.2345  );
       }
     }
   }

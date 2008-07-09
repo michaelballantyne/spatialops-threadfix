@@ -13,95 +13,35 @@ namespace FVStaggered{
 
   //------------------------------------------------------------------
 
-  // given ijk indices that are zero based on the interior, this
-  // produces the flat index that is 0-based in the ghost cell.
   template< typename FieldT, typename Dir >
-  inline int get_ghost_flat_ix_src( const std::vector<int>& dim,
-				    const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ,
-				    int i, int j, int k )
+  inline void shift_ghost_ix( const std::vector<int>& dim, IndexTriplet& ijk )
   {
-    // 1. shift index by number of ghost cells.
-    // 2. shift index to first ghost cell (from interior cell)
-    if( dim[0]>1 ){
-      if( IsSameType<Dir,XDIR>::result )
-	if( i==0 ) --i; else ++i;
-      i += FieldT::Ghost::NM;
-    }
-    if( dim[1]>1 ){
-      if( IsSameType<Dir,YDIR>::result )
-	if( j==0 ) --j; else ++j;
-      j += FieldT::Ghost::NM;
-    }
-    if( dim[2]>1 ){
-      if( IsSameType<Dir,ZDIR>::result )
-	if( k==0 ) --k; else ++k;
-      k += FieldT::Ghost::NM;
-    }
-    return ijk2flat<FieldT>::value(dim,IndexTriplet(i,j,k),bcFlagX,bcFlagY,bcFlagZ);
+    if( IsSameType<Dir,XDIR>::result ) if( dim[0]>1 ){ if(ijk.i==0) --ijk.i; else ++ijk.i; }
+    if( IsSameType<Dir,YDIR>::result ) if( dim[1]>1 ){ if(ijk.j==0) --ijk.j; else ++ijk.j; }
+    if( IsSameType<Dir,ZDIR>::result ) if( dim[2]>1 ){ if(ijk.k==0) --ijk.k; else ++ijk.k; }
+  }
+
+  template< typename FieldT, typename Dir >
+  inline void shift_ghost_ix_dest( const std::vector<int>& dim, IndexTriplet& ijk )
+  {
+    if( IsSameType<Dir,XDIR>::result ) if( dim[0]>1 ){ if(ijk.i>0) ++ijk.i; }
+    if( IsSameType<Dir,YDIR>::result ) if( dim[1]>1 ){ if(ijk.j>0) ++ijk.j; }
+    if( IsSameType<Dir,ZDIR>::result ) if( dim[2]>1 ){ if(ijk.k>0) ++ijk.k; }
   }
 
   //------------------------------------------------------------------
 
-  template<typename FieldT, typename Dir>
-  inline int get_ghost_flat_ix_dest( const std::vector<int>& dim,
-				     const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ,
-				     int i, int j, int k )
+  // given ijk indices that are zero based on the interior, this
+  // produces the flat index that is 0-based in the ghost cell.
+  template< typename FieldT >
+  inline int get_ghost_flat_ix( const std::vector<int>& dim,
+				const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ,
+				int i, int j, int k )
   {
-    if( dim[0]>1 ){
-      if( IsSameType<Dir,XDIR>::result ) if(i>0) ++i;
-      i += FieldT::Ghost::NM;
-    }
-
-    if( dim[1]>1 ){
-      if( IsSameType<Dir,YDIR>::result ) if(j>0) ++j;
-      j += FieldT::Ghost::NM;
-    }
-
-    if( dim[2]>1 ){
-      if( IsSameType<Dir,ZDIR>::result ) if(k>0) ++k;
-      k += FieldT::Ghost::NM;
-    }
+    if( dim[0]>1 ) i += FieldT::Ghost::NM;
+    if( dim[1]>1 ) j += FieldT::Ghost::NM;
+    if( dim[2]>1 ) k += FieldT::Ghost::NM;
     return ijk2flat<FieldT>::value(dim,IndexTriplet(i,j,k),bcFlagX,bcFlagY,bcFlagZ);
-  }
-
-  template<>
-  int get_ghost_flat_ix_dest<XSurfXField,XDIR>( const std::vector<int>& dim,
-						const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ,
-						int i, int j, int k )
-  {
-    if( dim[0]>1 ){
-      if(i>0) ++i; else if(i==0) --i;
-      i += XSurfXField::Ghost::NM;
-    }
-    if( dim[1]>1 ) j += XSurfXField::Ghost::NM;
-    if( dim[2]>1 ) k += XSurfXField::Ghost::NM;
-    return ijk2flat<XSurfXField>::value(dim,IndexTriplet(i,j,k),bcFlagX,bcFlagY,bcFlagZ);
-  }
-  template<>
-  int get_ghost_flat_ix_dest<YSurfYField,YDIR>( const std::vector<int>& dim,
-						const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ,
-						int i, int j, int k )
-  {
-    if( dim[0]>1 ) i += YSurfYField::Ghost::NM;
-    if( dim[1]>1 ){
-      if(j>0) ++j; else if(j==0) --j;
-      j += YSurfYField::Ghost::NM;
-    }
-    if( dim[2]>1 ) k += YSurfYField::Ghost::NM;
-    return ijk2flat<YSurfYField>::value(dim,IndexTriplet(i,j,k),bcFlagX,bcFlagY,bcFlagZ);
-  }
-  template<>
-  int get_ghost_flat_ix_dest<ZSurfZField,ZDIR>( const std::vector<int>& dim,
-						const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ,
-						int i, int j, int k )
-  {
-    if( dim[0]>1 ) i += ZSurfZField::Ghost::NM;
-    if( dim[1]>1 ) j += ZSurfZField::Ghost::NM;
-    if( dim[2]>1 ){
-      if(k>0) ++k; else if(k==0) --k;
-      k += ZSurfZField::Ghost::NM;
-    }
-    return ijk2flat<ZSurfZField>::value(dim,IndexTriplet(i,j,k),bcFlagX,bcFlagY,bcFlagZ);
   }
 
   //==================================================================
@@ -140,7 +80,6 @@ namespace FVStaggered{
    *     <li> \b DestFieldType The type for the destination field.
    *     <li> \b SrcFieldType  The type for the source field.
    *     </ul>
-   *   <li> \b Dir Specifies the direction (boundary normal) for this BC.
    *   </ul>
    *
    *  @todo Need a way of implementing time-varying BCs.  Perhaps this
@@ -151,7 +90,7 @@ namespace FVStaggered{
    *  time, but the time would need to be an additional argument to
    *  BCPoint::operator().
    */
-  template< typename OpT, typename Dir >
+  template< typename OpT >
   class BCPoint
   {
     typedef typename OpT::SrcFieldType  SrcFieldT;
@@ -264,12 +203,10 @@ namespace FVStaggered{
    *     <li> \b SrcFieldType  The type for the source field.
    *     </ul>
    *
-   *   <li> \b Dir Specifies the direction (boundary normal) for this BC.
-   *
    *   </ul>
    *
    */
-  template< typename OpT, typename Dir >
+  template< typename OpT >
   void assign_bc_point( const OpT& op,
 			const int i,
 			const int j,
@@ -279,14 +216,14 @@ namespace FVStaggered{
 			const double bcVal,
 			typename OpT::SrcFieldType& f )
   {
-    BCPoint<OpT,Dir> bcp(op,i,j,k,dim,bcFlagX,bcFlagY,bcFlagZ,bcVal);
+    BCPoint<OpT> bcp(op,i,j,k,dim,bcFlagX,bcFlagY,bcFlagZ,bcVal);
     bcp(f);
 
 //     typedef typename OpT::SrcFieldType  SrcFieldT;
 //     typedef typename OpT::DestFieldType DestFieldT;
 
-//     const int ixf = get_ghost_flat_ix_src <SrcFieldT,Dir >( dim, bcFlagX, bcFlagY, bcFlagZ, i, j, k );
-//     int irow      = get_ghost_flat_ix_dest<DestFieldT,Dir>( dim, bcFlagX, bcFlagY, bcFlagZ, i, j, k );
+//     const int ixf = get_ghost_flat_ix<SrcFieldT >( dim, bcFlagX, bcFlagY, bcFlagZ, i, j, k );
+//     int irow      = get_ghost_flat_ix<DestFieldT>( dim, bcFlagX, bcFlagY, bcFlagZ, i, j, k );
 
 //     // NOTE: This will NOT work in the case where we have multiple ghost cells!
 //     assert( OpT::SrcGhost::NM == OpT::SrcGhost::NP );
@@ -372,15 +309,22 @@ namespace FVStaggered{
 			 OpT& op,
 			 double& rhs )
   {
+    typedef typename BCOpT::SrcFieldType  SrcFieldT;
+    typedef typename BCOpT::DestFieldType DestFieldT;
+
     static int ncolMax = 10; // maximum number of nonzero columns
     struct BCInfo{ int ix; double coef; };
     BCInfo bcinfo[ncolMax];
     int nbcinfo = 0;
 
     // get the index into the field value at this point.
-    const int ixf  = get_ghost_flat_ix_src <typename BCOpT::SrcFieldType, Dir>( dim, bcFlagX, bcFlagY, bcFlagZ, i, j, k );
-    int irow       = get_ghost_flat_ix_dest<typename BCOpT::DestFieldType,Dir>( dim, bcFlagX, bcFlagY, bcFlagZ, i, j, k );
+    IndexTriplet ijks(i,j,k);
+    shift_ghost_ix<SrcFieldT,Dir>( dim, ijks );
+    const int ixf  = get_ghost_flat_ix<SrcFieldT >( dim, bcFlagX, bcFlagY, bcFlagZ, ijks.i, ijks.j, ijks.k );
 
+    IndexTriplet ijkd(i,j,k);
+    shift_ghost_ix_dest<DestFieldT,Dir>( dim, ijkd );
+    int irow       = get_ghost_flat_ix<DestFieldT>( dim, bcFlagX, bcFlagY, bcFlagZ, ijkd.i, ijkd.j, ijkd.k );
 
     const typename BCOpT::MatrixRow bcrow = bcOp.get_row(irow);
     typename       BCOpT::const_column_iterator icolbc = bcrow.begin();
@@ -402,7 +346,6 @@ namespace FVStaggered{
 
     assert( ghostcoeff != 0.0 );
 
-
     // currently, we are basically assuming that the operator here is
     // going to a linear system, and that it is like a Laplacian...
     BOOST_STATIC_ASSERT( bool( IsSameType<typename OpT::SrcFieldType, typename OpT::DestFieldType>::result ) );
@@ -410,8 +353,9 @@ namespace FVStaggered{
     //
     // now set the operator value.  We must potentially alter each coefficient in this row.
     //
-    const int ig = get_ghost_flat_ix_src <typename OpT::SrcFieldType, Dir  >( dim, bcFlagX, bcFlagY, bcFlagZ, i, j, k );
-    irow         = get_ghost_flat_ix_dest<typename OpT::DestFieldType,NODIR>( dim, bcFlagX, bcFlagY, bcFlagZ, i, j, k );
+    const int ig = get_ghost_flat_ix<typename OpT::SrcFieldType >( dim, bcFlagX, bcFlagY, bcFlagZ, ijks.i, ijks.j, ijks.k );
+    //    irow         = get_ghost_flat_ix<typename OpT::DestFieldType>( dim, bcFlagX, bcFlagY, bcFlagZ, ijkd.i, ijkd.j, ijkd.k );
+    irow         = get_ghost_flat_ix<typename OpT::DestFieldType>( dim, bcFlagX, bcFlagY, bcFlagZ, i, j, k );
 
     typename OpT::MatrixRow row = op.get_row(irow);
     typename OpT::column_iterator icol=row.begin();
@@ -457,8 +401,8 @@ namespace FVStaggered{
 
 
 
-template< typename OpT, typename Dir >
-BCPoint<OpT,Dir>::
+template< typename OpT >
+BCPoint<OpT>::
 BCPoint( const OpT& op,
 	 const int i,
 	 const int j,
@@ -467,9 +411,9 @@ BCPoint( const OpT& op,
 	 const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ,
 	 const double bcVal )
   : bcVal_( bcVal ),
-    ixf_( get_ghost_flat_ix_src <SrcFieldT,Dir >( dim, bcFlagX, bcFlagY, bcFlagZ, i, j, k ) )
+    ixf_( get_ghost_flat_ix<SrcFieldT>( dim, bcFlagX, bcFlagY, bcFlagZ, i, j, k ) )
 {
-  const int irow = get_ghost_flat_ix_dest<DestFieldT,Dir>( dim, bcFlagX, bcFlagY, bcFlagZ, i, j, k );
+  const int irow = get_ghost_flat_ix<DestFieldT>( dim, bcFlagX, bcFlagY, bcFlagZ, i, j, k );
 
   // NOTE: This will NOT work in the case where we have multiple ghost cells!
   assert( OpT::SrcGhost::NM == OpT::SrcGhost::NP );
@@ -504,9 +448,9 @@ BCPoint( const OpT& op,
 
 //--------------------------------------------------------------------
 
-template< typename OpT, typename Dir >
+template< typename OpT >
 void
-BCPoint<OpT,Dir>::
+BCPoint<OpT>::
 operator()( SrcFieldT& f ) const
 {
   double prodsum=0.0;
@@ -520,5 +464,7 @@ operator()( SrcFieldT& f ) const
 
 }// namespace FVStaggered
 }// namespace SpatialOps
+
+//--------------------------------------------------------------------
 
 #endif
