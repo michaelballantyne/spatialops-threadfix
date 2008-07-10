@@ -33,13 +33,16 @@ COMPILE_CXX = $(CXX) -c $(CXXFLAGS) $(INCDIRS)
 
 LINK = $(CXX) $(CXXFLAGS) $(INCDIRS) $(LIBDIRS)
 
-default: testnew poisson
-all: testnew poisson
+default: testnew poisson simplebc
+all: testnew poisson simplebc
 
 OBJS =		\
 	LinAlgTrilinos.o \
 	LinAlgUBlas.o \
 	LinearSystem.o
+
+bcTest.o: ./test/bcTest.cpp ./include/*.h
+	$(COMPILE_CXX) -I ./ ./test/bcTest.cpp
 
 buildOps.o: ./test/buildOps.cpp ./include/*.h
 	$(COMPILE_CXX) -I ./test ./test/buildOps.cpp
@@ -61,6 +64,9 @@ testPoisson.o: ./test/testPoisson.cpp ./include/*.h ./test/*.h
 
 lib: $(OBJS)
 	ar -r ./libspatialops.a $(OBJS); ranlib ./libspatialops.a
+
+simplebc: lib bcTest.o
+	$(LINK) bcTest.o -lspatialops $(LIBS) -o simplebc.x
 
 testnew: lib testNew.o buildOps.o
 	$(LINK) testNew.o buildOps.o -lspatialops $(LIBS) -o testnew.x

@@ -411,7 +411,7 @@ namespace SpatialOps{
      *  <code>set_default_operator()</code> or
      *  <code>register_new_operator()</code>.
      */
-    SpatialOpType*& retrieve_operator( const int id=-1 );
+    SpatialOpType* retrieve_operator( const int id=-1 ) const;
 
 
     /**
@@ -694,13 +694,13 @@ namespace SpatialOps{
   }
   //------------------------------------------------------------------
   template< class SpatialOpType >
-  SpatialOpType*&
+  SpatialOpType*
   SpatialOpDatabase<SpatialOpType>::
-  retrieve_operator( const int id )
+  retrieve_operator( const int id ) const
   {
     using std::endl;
 
-    typename OpMap::iterator iop = opMap_.begin();
+    typename OpMap::const_iterator iop = opMap_.begin();
 
     if( id==-1 ){
       if( opMap_.size() > 1 ){

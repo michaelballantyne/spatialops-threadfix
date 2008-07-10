@@ -1,249 +1,299 @@
 #ifndef FVStaggeredBCTools_h
 #define FVStaggeredBCTools_h
 
-#include <boost/static_assert.hpp>
-
+#include <SpatialOperator.h>
 #include <FVStaggeredTools.h>
-#include <SpatialOpsDefs.h>
-
-#include <boost/static_assert.hpp>
 
 namespace SpatialOps{
 namespace FVStaggered{
 
-  //------------------------------------------------------------------
-
-  template< typename FieldT, typename Dir >
-  inline void shift_ghost_ix( const std::vector<int>& dim, IndexTriplet& ijk )
-  {
-    if( IsSameType<Dir,XDIR>::result ) if( dim[0]>1 ){ if(ijk.i==0) --ijk.i; else ++ijk.i; }
-    if( IsSameType<Dir,YDIR>::result ) if( dim[1]>1 ){ if(ijk.j==0) --ijk.j; else ++ijk.j; }
-    if( IsSameType<Dir,ZDIR>::result ) if( dim[2]>1 ){ if(ijk.k==0) --ijk.k; else ++ijk.k; }
-  }
-
-  template< typename FieldT, typename Dir >
-  inline void shift_ghost_ix_dest( const std::vector<int>& dim, IndexTriplet& ijk )
-  {
-    if( IsSameType<Dir,XDIR>::result ) if( dim[0]>1 ){ if(ijk.i>0) ++ijk.i; }
-    if( IsSameType<Dir,YDIR>::result ) if( dim[1]>1 ){ if(ijk.j>0) ++ijk.j; }
-    if( IsSameType<Dir,ZDIR>::result ) if( dim[2]>1 ){ if(ijk.k>0) ++ijk.k; }
-  }
-
-  //------------------------------------------------------------------
-
-  // given ijk indices that are zero based on the interior, this
-  // produces the flat index that is 0-based in the ghost cell.
-  template< typename FieldT >
-  inline int get_ghost_flat_ix( const std::vector<int>& dim,
-				const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ,
-				int i, int j, int k )
-  {
-    if( dim[0]>1 ) i += FieldT::Ghost::NM;
-    if( dim[1]>1 ) j += FieldT::Ghost::NM;
-    if( dim[2]>1 ) k += FieldT::Ghost::NM;
-    return ijk2flat<FieldT>::value(dim,IndexTriplet(i,j,k),bcFlagX,bcFlagY,bcFlagZ);
-  }
-
-  //==================================================================
+  /**
+   *  @enum BCSide
+   *  @brief For use with FV schemes.  Specifies the boundary
+   *         condition on a face to the indicated side of the volume.
+   */
+  enum BCSide{
+    X_PLUS_SIDE,
+    X_MINUS_SIDE,
+    Y_PLUS_SIDE,
+    Y_MINUS_SIDE,
+    Z_PLUS_SIDE,
+    Z_MINUS_SIDE,
+    NO_SHIFT
+  };
 
   /**
-   *  @class  BCPoint 
+   *  @brief A convenient way to implement constant valued boundary
+   *  conditions.
+   */
+  struct ConstValEval{
+    ConstValEval( const double val ) : val_(val) {}
+    inline double operator()(const double) const{ return val_; }
+  private:
+    const double val_;
+  };
+
+  /**
+   *  @brief This provides a fixed time value for use when we want a
+   *         constant boundary condition with the BoundaryConditionOp
+   *         class.
+   */
+  struct ConstTimeEval{
+    ConstTimeEval( const double t=0.0 ) : t_(t){}
+    inline double operator()()const{return t_;}
+  private:
+    const double t_;
+  };
+
+
+  struct NullTimeEval{
+    inline void operator()() const {}
+  };
+
+  /**
+   *  @brief Obtain the flat index including ghost cells given the
+   *  IndexTriplet based on the interior.
+   *
+   *  @param dim <code>vector<int></code> contiaining the interior
+   *         domain extent in each direction.
+   *
+   *  @param bcFlagX Flag indicating whether this patch resides on a
+   *         physical domain boundary in the (+x) direction.
+   *
+   *  @param bcFlagY Flag indicating whether this patch resides on a
+   *         physical domain boundary in the (+y) direction.
+   *
+   *  @param bcFlagZ Flag indicating whether this patch resides on a
+   *         physical domain boundary in the (+z) direction.
+   *
+   *  @param ijk The IndexTriplet (i,j,k) for the point, 0-based on
+   *         domain interior (excludes ghost cells).
+   */
+  template< typename FieldT >
+  int get_index_with_ghost( const std::vector<int>& dim,
+			    const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ, 
+			    IndexTriplet ijk );
+
+  /**
+   *  @brief Modify the IndexTriplet as appropriate to obtain the
+   *         proper IndexTriplet for this field in the context of
+   *         setting bcs on it using an operator.
+   *
+   *  @param dim <code>vector<int></code> contiaining the interior
+   *         domain extent in each direction.
+   *
+   *  @param side The BCSide indicating which side (face) of the given
+   *         cell the bc is to be applied on.
+   *
+   *  @param ijk The IndexTriplet (i,j,k) for the point, 0-based on
+   *         domain interior (excludes ghost cells).
+   */
+  template<typename OpT, typename FieldT>
+  IndexTriplet shift_to_ghost_ix( const std::vector<int>& dim,
+				  const BCSide side,
+				  IndexTriplet ijk );
+
+  /**
+   *  @class  BoundaryCondition
    *  @author James C. Sutherland
-   *  @date   June, 2008
+   *  @date   July, 2008
    *
-   *  @brief A simple class to impose BCs on a structured mesh using
-   *  operators.  Intended for use when the BC is not located at the
-   *  storage location for the field values and we need to use ghost
-   *  values to achieve the desired BC.
-   *
-   *  The purpose of this class is to provide a more efficient way to
-   *  impose BCs.  BCPoint objects can be constructed and stored in a
-   *  container.  Much of the cost associated with imposing the BC is
-   *  associated with extracting coefficients from the operator.  This
-   *  is done at construction of a BCPoint object and is not repeated
-   *  when the BC is imposed, leading to a more efficient BC
-   *  implementation.  However, this operation is still applied at a
-   *  point.  If we were to apply it at a set of points, we could
-   *  potentially improve efficiency further.
-   *
-   *  The approach here is to set ghost values in a field to acheive a
-   *  desired BC.  For example, a Dirichlet condition on a field can
-   *  be achieved by using the interpolant operator and setting the
-   *  field value at the ghost location so that the desired BC is
-   *  achieved at the interpolated point.
+   *  @brief Set a boundary condition directly on a variable at a single point.
    *
    *  @par Template Parameters
-   *   <ul>
-   *   <li> \b OpT Specifies the type of SpatialOperator that will be
-   *   used to apply this BC.  This must define a few things:
-   *     <ul>
-   *     <li> \b DestFieldType The type for the destination field.
-   *     <li> \b SrcFieldType  The type for the source field.
-   *     </ul>
-   *   </ul>
+   *  <ul>
+   *   <li> \b FieldT The type of field to set the bounary condition on.
+   *   <li> \b BCEval An object of this type is supplied to calculate
+   *        the boundary condition.  It takes a single argument: time,
+   *        and returns a single value which is the boundary condition
+   *        at the point.
+   *   <li> \b TimeEval An object that evaluates via the operator()
+   *        method and returns the current simulation time.  If this
+   *        template argument is ommitted, then it is assumed that the
+   *        BC is constant in time.
+   *  </ul>
    *
-   *  @todo Need a way of implementing time-varying BCs.  Perhaps this
-   *  could be achieved via a functor passed into the constructor that
-   *  would calculate the bc value given the coordinates and time?
-   *  Then we would also need to know the coordinates and time,
-   *  however.  The coordinates could be supplied at construction
-   *  time, but the time would need to be an additional argument to
-   *  BCPoint::operator().
+   *  @par Design Considerations
+   *  \li BoundaryCondition objects should be destroyed and rebuilt
+   *      when mesh changes occur such as mesh point addition/removal.
+   *      This is because the index for which they were originally
+   *      built is no longer valid.  This convention also eliminates
+   *      concern over operators becoming invalidated.
    */
-  template< typename OpT >
-  class BCPoint
+  template< typename FieldT,
+	    typename BCEval,
+	    typename TimeEval=NullTimeEval >
+  class BoundaryCondition
   {
-    typedef typename OpT::SrcFieldType  SrcFieldT;
-    typedef typename OpT::DestFieldType DestFieldT;
-
-    const double bcVal_;
-    const int ixf_;
-
-    double ghostCoef_;
-    typedef std::pair<int,double> IxValPair;
-    std::vector<IxValPair> ixVals_;
+    const int index_;
+    const BCEval bcEval_;
+    const TimeEval tEval_;
 
   public:
 
     /**
-     *  @param op The operator to use in applying the BC.  Supplying a
-     *            gradient operator results in a Neumann BC; supplying
-     *            an interpolant operator results in a Dirichlet BC.
+     *  @param point The IndexTriplet specifying the location to apply
+     *         this BC.  0-based on patch interior.
      *
-     *  @param i  The x-direction index for the cell we want to apply the BC to. Index is 0-based on patch interior.
-     *  @param j  The y-direction index for the cell we want to apply the BC to. Index is 0-based on patch interior.
-     *  @param k  The z-direction index for the cell we want to apply the BC to. Index is 0-based on patch interior.
+     *  @param dim <code>vector<int></code> of extents in each
+     *         direction (excluding ghost cells)
      *
-     *  @param dim A vector containing the number of cells in each
-     *  coordinate direction.  This is a three-component vector.
+     *  @param bcPlusX Flag indicating whether this patch resides on a
+     *         physical domain boundary in the (+x) direction.
      *
-     *  @param bcFlagX A boolean flag to indicate if this patch is on a
-     *  +x side physical boundary.  If so, then it is assumed that there
-     *  is an extra face on that side of the domain, and face variable
-     *  dimensions will be modified accordingly.
+     *  @param bcPlusY Flag indicating whether this patch resides on a
+     *         physical domain boundary in the (+y) direction.
      *
-     *  @param bcFlagY A boolean flag to indicate if this patch is on a
-     *  +y side physical boundary.  If so, then it is assumed that there
-     *  is an extra face on that side of the domain, and face variable
-     *  dimensions will be modified accordingly.
+     *  @param bcPlusZ Flag indicating whether this patch resides on a
+     *         physical domain boundary in the (+z) direction.
      *
-     *  @param bcFlagZ A boolean flag to indicate if this patch is on a
-     *  +z side physical boundary.  If so, then it is assumed that there
-     *  is an extra face on that side of the domain, and face variable
-     *  dimensions will be modified accordingly.
+     *  @param bcEval A functor providing a method to evaluate the bc.
+     *         It should have the following signature:
+     *         <code>double(double)</code> This is interpreted as
+     *         taking the time and returning the BC value.
      *
-     *  @param bcVal The value for the boundary condition to set.
-     *
-     *  NOTE: the field to apply the BC on is not supplied here, since
-     *  that would force its address to remain constant.  Rather, it
-     *  is supplied to the BCPoint::operator(...) method.  Not quite
-     *  as efficient, but less restrictive.  If we were guaranteed
-     *  that the address of the field were fixed, then we could bind
-     *  an iterator to the BC value insertion point.
+     *  @param tEval A functor to return the current time.  This must
+     *         have the following signature: <code>double()</code>.
+     *         Its return value is suppoed to the bcEval functor.
      */
-    BCPoint( const OpT& op,
-	     const int i,
-	     const int j,
-	     const int k,
-	     const std::vector<int>& dim,
-	     const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ,
-	     const double bcVal );
+    BoundaryCondition( const IndexTriplet point,
+		       const std::vector<int> dim,
+		       const bool bcPlusX,
+		       const bool bcPlusY,
+		       const bool bcPlusZ,
+		       const BCEval bcEval,
+		       const TimeEval tEval );
 
-    ~BCPoint(){}
+    ~BoundaryCondition(){}
 
     /**
-     *  Impose the BC on the supplied field.
+     *  Evaluates the boundary condition.
+     *
+     *  @param f The field that we want to set the BC on.
      */
-    inline void operator()( typename OpT::SrcFieldType& f ) const;
+    inline void operator()( FieldT& f ) const;
+  };
+
+  //====================================================================
+
+  /**
+   *  Partial template specialization for the case when we have a
+   *  constant bc at this point (i.e. does not vary in time).
+   */
+  template< typename FieldT,
+	    typename BCEval >
+  class BoundaryCondition<FieldT,BCEval,NullTimeEval>
+  {
+    const int index_;
+    const double value_;
+  public:
+    BoundaryCondition( const IndexTriplet point,
+		       const std::vector<int> dim,
+		       const bool bcPlusX,
+		       const bool bcPlusY,
+		       const bool bcPlusZ,
+		       const double bcval );
+    inline void operator()( FieldT& f ) const;
   };
 
   //==================================================================
 
   /**
-   *  @brief Apply either a Dirichlet or Neumann BC (depending on the
-   *  operator supplied) to the given field.
+   *  @class BoundaryConditionOp
+   *  @author James C. Sutherland
+   *  @date July, 2008
    *
-   *  @param op The operator to use in applying the BC.  Supplying a
-   *            gradient operator results in a Neumann BC; supplying
-   *            an interpolant operator results in a Dirichlet BC.
+   *  @brief Imposes BCs on a field from a structured mesh using
+   *         operators.  Intended for use when the BC is not located
+   *         at the storage location for the field values and we need
+   *         to use ghost values to achieve the desired BC.
    *
-   *  @param i  The x-direction index for the cell we want to apply the BC to. Index is 0-based on patch interior.
-   *  @param j  The y-direction index for the cell we want to apply the BC to. Index is 0-based on patch interior.
-   *  @param k  The z-direction index for the cell we want to apply the BC to. Index is 0-based on patch interior.
+   *  The basic approach here is that we set the boundary condition on
+   *  a field using an operator.  Supplying an interpolant operator
+   *  results in a Dirichlet condition, while a gradient operator
+   *  results in a Neumann condition.  Specifically, if \f$a_i\f$ are
+   *  the coefficients for the operator at location "1" (the first
+   *  interior mesh point), then the ghost value \f$f_0\f$ that
+   *  produces the desired BC value, \f$f_{bc}\f$, is given as
+   *  \f[
+   *      f_0 = \frac{1}{a_0} \left( f_{bc} + \sum_{i=1}^{n} a_i f_i \right)
+   * \f]
    *
-   *  @param dim A vector containing the number of cells in each
-   *  coordinate direction.  This is a three-component vector.
-   *
-   *  @param bcFlagX A boolean flag to indicate if this patch is on a
-   *  +x side physical boundary.  If so, then it is assumed that there
-   *  is an extra face on that side of the domain, and face variable
-   *  dimensions will be modified accordingly.
-   *
-   *  @param bcFlagY A boolean flag to indicate if this patch is on a
-   *  +y side physical boundary.  If so, then it is assumed that there
-   *  is an extra face on that side of the domain, and face variable
-   *  dimensions will be modified accordingly.
-   *
-   *  @param bcFlagZ A boolean flag to indicate if this patch is on a
-   *  +z side physical boundary.  If so, then it is assumed that there
-   *  is an extra face on that side of the domain, and face variable
-   *  dimensions will be modified accordingly.
-   *
-   *  @param bcVal The value for the boundary condition to set.
-   *
-   *  @param f  The field we want to set the BC on.
+   *  At construction, as much computation as possible is performed.
+   *  This maximizes efficiency of the evaluation phase.
    *
    *  @par Template Parameters
-   *   <ul>
+   *  <ul>
+   *  <li> \b OpT The type of operator that we are using to set the
+   *       BCs.  This must conform to the interface of a
+   *       SpatialOperator.
    *
-   *   <li> \b OpT Specifies the type of SpatialOperator that will be
-   *   used to apply this BC.  This must define a few things:
-   *     <ul>
-   *     <li> \b DestFieldType The type for the destination field.
-   *     <li> \b SrcFieldType  The type for the source field.
-   *     </ul>
+   *  <li> \b BCEval The type for the functor being used to evaluate
+   *       the boundary condition.  Suggestion: consider using
+   *       Boost:Function here.  Any conforming interface
+   *       <code>double(double)</code> should work, however.
    *
-   *   </ul>
+   *  <li> \b TimeEval The type for the functor being used to evaluate
+   *       the time.  This must have the signature
+   *       <code>double()</code>.  In other words, when called, it
+   *       takes no arguments and returns a \c double.
+   *  </ul>
    *
+   *  @par Design Considerations
+   *  \li BoundaryConditionOp objects should be destroyed and rebuilt
+   *      when mesh changes occur such as mesh point addition/removal.
+   *      This is because the index for which they were originally
+   *      built is no longer valid.  This convention also eliminates
+   *      concern over operators becoming invalidated.
    */
-  template< typename OpT >
-  void assign_bc_point( const OpT& op,
-			const int i,
-			const int j,
-			const int k,
-			const std::vector<int>& dim,
-			const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ,
-			const double bcVal,
-			typename OpT::SrcFieldType& f )
+  template< typename OpT,
+	    typename BCEval,
+	    typename TimeEval >
+  class BoundaryConditionOp
   {
-    BCPoint<OpT> bcp(op,i,j,k,dim,bcFlagX,bcFlagY,bcFlagZ,bcVal);
-    bcp(f);
+    const BCEval bcEval_;
+    const TimeEval tEval_;
+    const int index_;
+    double ghostCoef_;
 
-//     typedef typename OpT::SrcFieldType  SrcFieldT;
-//     typedef typename OpT::DestFieldType DestFieldT;
+    typedef std::pair<int,double> IxValPair;
+    std::vector<IxValPair> ixVals_;
 
-//     const int ixf = get_ghost_flat_ix<SrcFieldT >( dim, bcFlagX, bcFlagY, bcFlagZ, i, j, k );
-//     int irow      = get_ghost_flat_ix<DestFieldT>( dim, bcFlagX, bcFlagY, bcFlagZ, i, j, k );
+    typedef typename OpT::SrcFieldType   SrcFieldT;
+    typedef typename OpT::DestFieldType  DestFieldT;
 
-//     // NOTE: This will NOT work in the case where we have multiple ghost cells!
-//     assert( OpT::SrcGhost::NM == OpT::SrcGhost::NP );
-//     assert( OpT::SrcGhost::NM == 1 );
+  public:
+    /**
+     *  @param point The i,j,k location at which we want to specify
+     *         the boundary condition (based on scalar cell center
+     *         index)
+     *
+     *  @param side What side of the given point should be BC be applied to (+/-)?
+     *
+     *  @param eval The evalautor to obtain the bc value at this point.
+     *
+     *  @param soDatabase The database for spatial operators. An
+     *         operator of type OpT will be extracted from this
+     *         database.
+     */
+    BoundaryConditionOp( const std::vector<int> dim,
+			 const bool bcPlusX,
+			 const bool bcPlusY,
+			 const bool bcPlusZ,
+			 const IndexTriplet point,
+			 const BCSide side,
+			 const BCEval bceval,
+			 const TimeEval tEval,
+			 const SpatialOps::SpatialOpDatabase<OpT>& soDatabase );
 
-//     const typename OpT::MatrixRow row = op.get_row(irow);
-//     typename       OpT::const_column_iterator icol =row.begin();
-//     const typename OpT::const_column_iterator icole=row.end();
+    ~BoundaryConditionOp(){}
 
-//     double prodsum=0.0; double ghostcoeff=0.0;
-//     for( ; icol!=icole; ++icol ){
-//       if( icol.index() == size_t(ixf) )
-// 	ghostcoeff = *icol;
-//       else
-// 	prodsum += *icol *f[icol.index()];
-//     }
+    /**
+     *  Impose the boundary condition on the supplied field.
+     */
+    void operator()( SrcFieldT& f ) const;
+  };
 
-//     assert( ghostcoeff != 0.0 );
-//     f[ixf] = (bcVal - prodsum) / ghostcoeff;
-  }
 
 
   /**
@@ -259,72 +309,242 @@ namespace FVStaggered{
    *
    *  @param op   The operator to imprint with the boundary conditions.
    *
-   *  @param i  The x-direction index for the cell we want to apply the BC to. Index is 0-based on patch interior.
-   *  @param j  The y-direction index for the cell we want to apply the BC to. Index is 0-based on patch interior.
-   *  @param k  The z-direction index for the cell we want to apply the BC to. Index is 0-based on patch interior.
+   *  @param ijk  The IndexTriplet for the cell we want to apply the BC to. Indices are 0-based on patch interior.
    *
    *  @param dim A vector containing the number of cells in each
-   *  coordinate direction.  This is a three-component vector.
+   *         coordinate direction.  This is a three-component vector.
    *
    *  @param bcFlagX A boolean flag to indicate if this patch is on a
-   *  +x side physical boundary.  If so, then it is assumed that there
-   *  is an extra face on that side of the domain, and face variable
-   *  dimensions will be modified accordingly.
+   *         +x side physical boundary.  If so, then it is assumed
+   *         that there is an extra face on that side of the domain,
+   *         and face variable dimensions will be modified
+   *         accordingly.
    *
    *  @param bcFlagY A boolean flag to indicate if this patch is on a
-   *  +y side physical boundary.  If so, then it is assumed that there
-   *  is an extra face on that side of the domain, and face variable
-   *  dimensions will be modified accordingly.
+   *         +y side physical boundary.  If so, then it is assumed
+   *         that there is an extra face on that side of the domain,
+   *         and face variable dimensions will be modified
+   *         accordingly.
    *
    *  @param bcFlagZ A boolean flag to indicate if this patch is on a
-   *  +z side physical boundary.  If so, then it is assumed that there
-   *  is an extra face on that side of the domain, and face variable
-   *  dimensions will be modified accordingly.
+   *         +z side physical boundary.  If so, then it is assumed
+   *         that there is an extra face on that side of the domain,
+   *         and face variable dimensions will be modified
+   *         accordingly.
    *
    *  @param bcVal The value for the boundary condition to set.
    *
    *  @par Template Parameters
    *   <ul>
-   *
    *   <li> \b BCOpT Specifies the type of SpatialOperator that will be
-   *   used to apply this BC.  This must define a few things:
-   *     <ul>
-   *     <li> \b DestFieldType The type for the destination field.
-   *     <li> \b SrcFieldType  The type for the source field.
-   *     </ul>
-   *
-   *   <li> \b Dir Specifies the direction (boundary normal) for this BC.
-   *
+   *        used to apply this BC.  
    *   <li> \b OpT Specifies the type of SpatialOperator that will be
-   *   imprinting with this BC.
-   *
+   *        imprinting with this BC.
    *   </ul>
    */
-  template< typename BCOpT, typename Dir, typename OpT >
+  template< typename BCOpT, typename OpT >
   void imprint_bc_on_op( const BCOpT& bcOp,
-			 const int i, const int j, const int k,
+			 const IndexTriplet ijk,
 			 const std::vector<int>& dim,
 			 const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ,
 			 const double bcVal,
+			 const BCSide side,
+			 OpT& op,
+			 double& rhs );
+
+
+
+  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  //
+  //                         Implementation
+  //
+  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+  //------------------------------------------------------------------
+
+  template< typename FieldT, typename BCEval, typename TimeEval >
+  BoundaryCondition<FieldT,BCEval,TimeEval>::
+  BoundaryCondition( const IndexTriplet point,
+		     const std::vector<int> dim,
+		     const bool bcPlusX,
+		     const bool bcPlusY,
+		     const bool bcPlusZ,
+		     const BCEval bcEval,
+		     const TimeEval tEval )
+    : index_( get_index_with_ghost<FieldT>( dim, bcPlusX, bcPlusY, bcPlusZ, point ) ),
+      bcEval_( bcEval ),
+      tEval_ ( tEval  )
+  {}      
+
+  //------------------------------------------------------------------
+
+  template< typename FieldT, typename BCEval, typename TimeEval >
+  void
+  BoundaryCondition<FieldT,BCEval,TimeEval>::
+  operator()( FieldT& f ) const
+  {
+    f[index_] = bcEval_( this->tEval_() );
+  }
+
+  //------------------------------------------------------------------
+
+  template< typename FieldT, typename BCEval >
+  BoundaryCondition<FieldT,BCEval,NullTimeEval>::
+  BoundaryCondition( const IndexTriplet point,
+		     const std::vector<int> dim,
+		     const bool bcPlusX,
+		     const bool bcPlusY,
+		     const bool bcPlusZ,
+		     const double bcval )
+    : index_( get_index_with_ghost<FieldT>( dim, bcPlusX, bcPlusY, bcPlusZ, point ) ),
+      value_( bcval )
+  {}
+
+  //------------------------------------------------------------------
+
+  template< typename FieldT, typename BCEval >
+  void
+  BoundaryCondition<FieldT,BCEval,NullTimeEval>::
+  operator()( FieldT& f ) const
+  {
+    f[index_] = value_;
+  }
+
+  //------------------------------------------------------------------
+
+
+  //==================================================================
+
+
+  //------------------------------------------------------------------
+
+  template< typename OpT, typename BCEval, typename TimeEval >
+  BoundaryConditionOp<OpT,BCEval,TimeEval>::
+  BoundaryConditionOp( const std::vector<int> dim,
+		       const bool bcPlusX,
+		       const bool bcPlusY,
+		       const bool bcPlusZ,
+		       const IndexTriplet point,
+		       const BCSide side,
+		       const BCEval bcEval,
+		       const TimeEval timeEval,
+		       const SpatialOpDatabase<OpT>& soDatabase )
+    : bcEval_( bcEval   ),
+      tEval_ ( timeEval ),
+      index_( get_index_with_ghost<SrcFieldT>( dim, bcPlusX, bcPlusY, bcPlusZ, point ) )
+  {
+    const OpT* op = soDatabase.retrieve_operator();
+    const int irow = get_index_with_ghost<DestFieldT>( dim, bcPlusX, bcPlusY, bcPlusZ, point );
+
+    const typename OpT::MatrixRow row = op->get_row(irow);
+    typename       OpT::const_column_iterator icol =row.begin();
+    const typename OpT::const_column_iterator icole=row.end();
+    ghostCoef_ = 0.0;
+    for( ; icol!=icole; ++icol ){
+      if( icol.index() == size_t(index_) )
+	ghostCoef_ = *icol;
+      else{
+	ixVals_.push_back( std::make_pair(icol.index(),*icol) );
+      }
+    }
+#   ifndef NDEBUG
+    if( ghostCoef_ == 0.0 ){
+      std::cout << "Error in BCPoint." << std::endl
+		<< "(i,j,k)=("<<point.i<<","<< point.j <<","<< point.k <<")"<<endl
+		<< "index_ = " << index_ << endl
+		<< "op coefs: ";
+      for( typename OpT::const_column_iterator i=row.begin(); i!=icole; ++i ){
+	cout << "  (" << i.index() << "," << *i << ")";
+      }
+      cout << endl;
+    }
+    assert( ghostCoef_ != 0.0 );
+#   endif
+  }
+
+  //------------------------------------------------------------------
+
+  template< typename OpT, typename BCEval, typename TimeEval >
+  void
+  BoundaryConditionOp<OpT,BCEval,TimeEval>::
+  operator()( SrcFieldT& f ) const
+  {
+    double prodsum=0.0;
+    for( std::vector<IxValPair>::const_iterator ix=ixVals_.begin(); ix!=ixVals_.end(); ++ix ){
+      prodsum += ix->second * f[ix->first];
+    }
+    const double bcVal = bcEval_( tEval_() );
+    const double val = ( bcVal - prodsum) / ghostCoef_;
+    f[index_] = val;
+  }
+
+  //--------------------------------------------------------------------
+
+  template< typename FieldT >
+  int get_index_with_ghost( const std::vector<int>& dim,
+			    const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ, 
+			    IndexTriplet index )
+  {
+    if( dim[0]>1 )  index.i += FieldT::Ghost::NM;
+    if( dim[1]>1 )  index.j += FieldT::Ghost::NM;
+    if( dim[2]>1 )  index.k += FieldT::Ghost::NM;
+    return ijk2flat<FieldT>::value( dim, index, bcFlagX, bcFlagY, bcFlagZ );
+  }
+
+  template<typename OpT, typename FieldT>
+  IndexTriplet shift_to_ghost_ix( const std::vector<int>& dim,
+				  const BCSide side,
+				  IndexTriplet ijk )
+  {
+    if( IsSameType<typename OpT::SrcFieldType,FieldT>::result ){
+      switch(side){
+      case X_MINUS_SIDE: if(dim[0]>1) --ijk.i; break;
+      case X_PLUS_SIDE : if(dim[0]>1) ++ijk.i; break;
+      case Y_MINUS_SIDE: if(dim[1]>1) --ijk.j; break;
+      case Y_PLUS_SIDE : if(dim[1]>1) ++ijk.j; break;
+      case Z_MINUS_SIDE: if(dim[2]>1) --ijk.k; break;
+      case Z_PLUS_SIDE : if(dim[2]>1) ++ijk.k; break;
+      case NO_SHIFT: assert(1); break;
+      }
+    }
+    else{
+      switch(side){
+      case X_PLUS_SIDE : if(dim[0]>1) ++ijk.i; break;
+      case Y_PLUS_SIDE : if(dim[1]>1) ++ijk.j; break;
+      case Z_PLUS_SIDE : if(dim[2]>1) ++ijk.k; break;
+      case X_MINUS_SIDE: break; // no shifting on (-) side.
+      case Y_MINUS_SIDE: break;
+      case Z_MINUS_SIDE: break;
+      case NO_SHIFT: assert(1); break;
+      }
+    }
+    return ijk;
+  }
+
+  //------------------------------------------------------------------
+
+  template< typename BCOpT, typename OpT >
+  void imprint_bc_on_op( const BCOpT& bcOp,
+			 const IndexTriplet ijk,
+			 const std::vector<int>& dim,
+			 const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ,
+			 const double bcVal,
+			 const BCSide side,
 			 OpT& op,
 			 double& rhs )
   {
-    typedef typename BCOpT::SrcFieldType  SrcFieldT;
-    typedef typename BCOpT::DestFieldType DestFieldT;
-
     static int ncolMax = 10; // maximum number of nonzero columns
     struct BCInfo{ int ix; double coef; };
     BCInfo bcinfo[ncolMax];
     int nbcinfo = 0;
 
     // get the index into the field value at this point.
-    IndexTriplet ijks(i,j,k);
-    shift_ghost_ix<SrcFieldT,Dir>( dim, ijks );
-    const int ixf  = get_ghost_flat_ix<SrcFieldT >( dim, bcFlagX, bcFlagY, bcFlagZ, ijks.i, ijks.j, ijks.k );
-
-    IndexTriplet ijkd(i,j,k);
-    shift_ghost_ix_dest<DestFieldT,Dir>( dim, ijkd );
-    int irow       = get_ghost_flat_ix<DestFieldT>( dim, bcFlagX, bcFlagY, bcFlagZ, ijkd.i, ijkd.j, ijkd.k );
+    IndexTriplet ijks( shift_to_ghost_ix<BCOpT,typename BCOpT::SrcFieldType >(dim,side,ijk) );
+    IndexTriplet ijkd( shift_to_ghost_ix<BCOpT,typename BCOpT::DestFieldType>(dim,side,ijk) );
+    const int ixf = get_index_with_ghost<typename BCOpT::SrcFieldType >( dim, bcFlagX, bcFlagY, bcFlagZ, ijks );
+    int irow      = get_index_with_ghost<typename BCOpT::DestFieldType>( dim, bcFlagX, bcFlagY, bcFlagZ, ijkd );
 
     const typename BCOpT::MatrixRow bcrow = bcOp.get_row(irow);
     typename       BCOpT::const_column_iterator icolbc = bcrow.begin();
@@ -348,14 +568,14 @@ namespace FVStaggered{
 
     // currently, we are basically assuming that the operator here is
     // going to a linear system, and that it is like a Laplacian...
-    BOOST_STATIC_ASSERT( bool( IsSameType<typename OpT::SrcFieldType, typename OpT::DestFieldType>::result ) );
+    BOOST_STATIC_ASSERT( bool( IsSameType<typename   OpT::SrcFieldType, typename OpT::DestFieldType>::result ) );
+    BOOST_STATIC_ASSERT( bool( IsSameType<typename BCOpT::SrcFieldType, typename OpT::SrcFieldType >::result ) );
 
     //
     // now set the operator value.  We must potentially alter each coefficient in this row.
     //
-    const int ig = get_ghost_flat_ix<typename OpT::SrcFieldType >( dim, bcFlagX, bcFlagY, bcFlagZ, ijks.i, ijks.j, ijks.k );
-    //    irow         = get_ghost_flat_ix<typename OpT::DestFieldType>( dim, bcFlagX, bcFlagY, bcFlagZ, ijkd.i, ijkd.j, ijkd.k );
-    irow         = get_ghost_flat_ix<typename OpT::DestFieldType>( dim, bcFlagX, bcFlagY, bcFlagZ, i, j, k );
+    const int ig = ixf;// = get_index_with_ghost<typename OpT::SrcFieldType >( dim, bcFlagX, bcFlagY, bcFlagZ, ijks );
+    irow         = get_index_with_ghost<typename OpT::DestFieldType>( dim, bcFlagX, bcFlagY, bcFlagZ, ijk );
 
     typename OpT::MatrixRow row = op.get_row(irow);
     typename OpT::column_iterator icol=row.begin();
@@ -391,80 +611,8 @@ namespace FVStaggered{
     
   }
 
+} // namespace FVStaggered
+} // namespace SpatialOps
 
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-//
-//                           IMPLEMENTATIONS
-//
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
-template< typename OpT >
-BCPoint<OpT>::
-BCPoint( const OpT& op,
-	 const int i,
-	 const int j,
-	 const int k,
-	 const std::vector<int>& dim,
-	 const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ,
-	 const double bcVal )
-  : bcVal_( bcVal ),
-    ixf_( get_ghost_flat_ix<SrcFieldT>( dim, bcFlagX, bcFlagY, bcFlagZ, i, j, k ) )
-{
-  const int irow = get_ghost_flat_ix<DestFieldT>( dim, bcFlagX, bcFlagY, bcFlagZ, i, j, k );
-
-  // NOTE: This will NOT work in the case where we have multiple ghost cells!
-  assert( OpT::SrcGhost::NM == OpT::SrcGhost::NP );
-  assert( OpT::SrcGhost::NM == 1 );
-
-  const typename OpT::MatrixRow row = op.get_row(irow);
-  typename       OpT::const_column_iterator icol =row.begin();
-  const typename OpT::const_column_iterator icole=row.end();
-  ghostCoef_ = 0.0;
-  for( ; icol!=icole; ++icol ){
-    if( icol.index() == size_t(ixf_) )
-      ghostCoef_ = *icol;
-    else{
-      ixVals_.push_back( std::make_pair(icol.index(),*icol) );
-    }
-  }
-#ifndef NDEBUG
-  if( ghostCoef_ == 0.0 ){
-    std::cout << "Error in BCPoint." << std::endl
-	      << "trying to set bc value: " << bcVal_ << endl
-	      << "(i,j,k)=("<<i<<","<<j<<","<<k<<")"<<endl
-	      << "ixf_ = " << ixf_ << endl
-	      << "op coefs: ";
-    for( typename OpT::const_column_iterator i=row.begin(); i!=icole; ++i ){
-      cout << "  (" << i.index() << "," << *i << ")";
-    }
-    cout << endl;
-  }
-  assert( ghostCoef_ != 0.0 );
-#endif
-}
-
-//--------------------------------------------------------------------
-
-template< typename OpT >
-void
-BCPoint<OpT>::
-operator()( SrcFieldT& f ) const
-{
-  double prodsum=0.0;
-  for( std::vector<IxValPair>::const_iterator ix=ixVals_.begin(); ix!=ixVals_.end(); ++ix ){
-    prodsum += ix->second * f[ix->first];
-  }
-  const double val = (bcVal_ - prodsum) / ghostCoef_;
-  f[ixf_] = val;
-}
-
-
-}// namespace FVStaggered
-}// namespace SpatialOps
-
-//--------------------------------------------------------------------
-
-#endif
+#endif  // Expr_BoundaryCondition_h

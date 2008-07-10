@@ -141,7 +141,6 @@ void test_interp_op( const Grid& grid,
   op->apply_to_field( phi, fphi );
 
   report_errors( fphiExact, fphi );
-  //jcs phi.write_matlab("f"); fphi.write_matlab("fphi"); fphiExact.write_matlab("fphiExact");
 }
 
 //--------------------------------------------------------------------
@@ -200,10 +199,9 @@ void test_div_op( const Grid& grid,
 template<typename OpT>
 bool test_bc_helper( const vector<int>&dim,
 		     const std::vector<bool>& bcFlag,
-		     const int ii,
-		     const int jj,
-		     const int kk,
-		     const double bcVal )
+		     const IndexTriplet ijk,
+		     const double bcVal,
+		     const BCSide side )
 {
   using namespace SpatialOps;
   using namespace FVStaggered;
@@ -222,13 +220,22 @@ bool test_bc_helper( const vector<int>&dim,
   for( typename SrcFieldT::iterator ifld=f->begin(); ifld!=f->end(); ++ifld,++icnt ) *ifld = icnt;
 
   // assign the BC.
-  assign_bc_point<OpT>( op, ii, jj, kk, dim, bcFlag[0], bcFlag[1], bcFlag[2], bcVal, *f );
+  BoundaryConditionOp<OpT,ConstValEval,ConstTimeEval> bc( dim,
+							  bcFlag[0], bcFlag[1], bcFlag[2],
+							  ijk,
+							  side,
+							  ConstValEval(bcVal),
+							  ConstTimeEval(0.0),
+							  SpatialOpDatabase<OpT>::self() );
+
+  // evaluate the BC and set it in the field.
+  bc(*f);
 
   // calculate the dest field
   op.apply_to_field( *f, *df );
 
-  // verify that the BC was set properly - this is a bit of a hack.
-  const int ix = get_ghost_flat_ix<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2],ii,jj,kk);
+  // verify that the BC was set properly.
+  const int ix = get_index_with_ghost<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2],ijk);
 
   const double abserr = abs( (*df)[ix] - bcVal );
   const double relerr = abserr/abs(bcVal);
@@ -241,43 +248,57 @@ bool test_bc_helper( const vector<int>&dim,
 
 //--------------------------------------------------------------------
 
-template<typename OpT, typename Dir>
+template<typename OpT>
 void
 test_bc_loop( const std::string opName,
 	      const vector<int>&dim,
 	      const std::vector<bool>& bcFlag,
+	      const BCSide side,
 	      const int bcFaceIndex,
 	      const double bcVal )
 {
   bool isFailed = false;
   cout << std::setw(20) << opName << " ... ";
 
-  if( IsSameType<Dir,XDIR>::result ){
+  switch(side){
+
+  case X_MINUS_SIDE:
+  case X_PLUS_SIDE: {
     const int i=bcFaceIndex;
     for( int j=0; j<dim[1]; ++j ){
       for( int k=0; k<dim[2]; ++k ){
-	isFailed = isFailed | !test_bc_helper<OpT>( dim, bcFlag, i,j,k, bcVal  );
+	isFailed = isFailed | !test_bc_helper<OpT>( dim, bcFlag, IndexTriplet(i,j,k), bcVal, side );
       }
     }
+    break;
   }
 
-  else if( IsSameType<Dir,YDIR>::result ){
+  case Y_MINUS_SIDE:
+  case Y_PLUS_SIDE: {
     const int j=bcFaceIndex;
     for( int i=0; i<dim[0]; ++i ){
       for( int k=0; k<dim[2]; ++k ){
-	isFailed = isFailed | !test_bc_helper<OpT>( dim, bcFlag, i,j,k, 1.2345  );
+	isFailed = isFailed | !test_bc_helper<OpT>( dim, bcFlag, IndexTriplet(i,j,k), bcVal, side );
       }
     }
+    break;
   }
 
-  else if( IsSameType<Dir,ZDIR>::result ){
+  case Z_MINUS_SIDE:
+  case Z_PLUS_SIDE: {
     const int k=bcFaceIndex;
     for( int i=0; i<dim[0]; ++i ){
       for( int j=0; j<dim[1]; ++j ){
-	isFailed = isFailed | !test_bc_helper<OpT>( dim, bcFlag, i,j,k, 1.2345  );
+	isFailed = isFailed | !test_bc_helper<OpT>( dim, bcFlag, IndexTriplet(i,j,k), bcVal, side );
       }
     }
+    break;
   }
+
+  case NO_SHIFT:
+    assert(1);
+
+  } // switch(side)
 
   if( isFailed ) cout << "***FAIL***"; else cout << "PASS"; cout << endl;
 }
@@ -299,37 +320,37 @@ void test_bc( const Grid& g,
     cout << " X Dir, (-) side:" << endl;
     int i=0;
 
-    test_bc_loop<GradSVolSSurfX,  XDIR>( "GradSVolSSurfX",   dim, bcFlag, i, 1.2345 );
-    test_bc_loop<InterpSVolSSurfX,XDIR>( "InterpSVolSSurfX", dim, bcFlag, i, 123.45 );
+    test_bc_loop<GradSVolSSurfX  >( "GradSVolSSurfX",   dim, bcFlag, X_MINUS_SIDE, i, 1.2345 );
+    test_bc_loop<InterpSVolSSurfX>( "InterpSVolSSurfX", dim, bcFlag, X_MINUS_SIDE, i, 123.45 );
 
-    test_bc_loop<GradXVolXSurfX,  XDIR>( "GradXVolXSurfX",   dim, bcFlag, i, 5.4321 );
-    test_bc_loop<InterpXVolXSurfX,XDIR>( "InterpXVolXSurfX", dim, bcFlag, i, 54.321  );
+    test_bc_loop<GradXVolXSurfX  >( "GradXVolXSurfX",   dim, bcFlag, X_MINUS_SIDE, i, 5.4321 );
+    test_bc_loop<InterpXVolXSurfX>( "InterpXVolXSurfX", dim, bcFlag, X_MINUS_SIDE, i, 54.321  );
 
     if( dim[1]>1 ){
-      test_bc_loop<GradYVolYSurfX,  XDIR>( "GradYVolYSurfX",   dim, bcFlag, i, 5.4321 );
-      test_bc_loop<InterpYVolYSurfX,XDIR>( "InterpYVolXSurfX", dim, bcFlag, i, 54.321  );
+      test_bc_loop<GradYVolYSurfX  >( "GradYVolYSurfX",   dim, bcFlag, X_MINUS_SIDE, i, 5.4321 );
+      test_bc_loop<InterpYVolYSurfX>( "InterpYVolXSurfX", dim, bcFlag, X_MINUS_SIDE, i, 54.321  );
     }
     if( dim[2]>1 ){
-      test_bc_loop<GradZVolZSurfX,  XDIR>( "GradZVolZSurfX",   dim, bcFlag, i, 5.4321 );
-      test_bc_loop<InterpZVolZSurfX,XDIR>( "InterpZVolZSurfX", dim, bcFlag, i, 54.321  );
+      test_bc_loop<GradZVolZSurfX  >( "GradZVolZSurfX",   dim, bcFlag, X_MINUS_SIDE, i, 5.4321 );
+      test_bc_loop<InterpZVolZSurfX>( "InterpZVolZSurfX", dim, bcFlag, X_MINUS_SIDE, i, 54.321  );
     }
 
     // X BCs - Right side
     cout << " X Dir, (+) side:" << endl;
     i=dim[0]-1;
 
-    test_bc_loop<GradSVolSSurfX,  XDIR>( "GradSVolSSurfX",   dim, bcFlag, i, 1.2345 );
-    test_bc_loop<InterpSVolSSurfX,XDIR>( "InterpSVolSSurfX", dim, bcFlag, i, 123.45 );
+    test_bc_loop<GradSVolSSurfX  >( "GradSVolSSurfX",   dim, bcFlag, X_PLUS_SIDE, i, 1.2345 );
+    test_bc_loop<InterpSVolSSurfX>( "InterpSVolSSurfX", dim, bcFlag, X_PLUS_SIDE, i, 123.45 );
 
-    test_bc_loop<GradXVolXSurfX,  XDIR>( "GradXVolXSurfX",   dim, bcFlag, i, 5.4321 );
-    test_bc_loop<InterpXVolXSurfX,XDIR>( "InterpXVolXSurfX", dim, bcFlag, i, 54.321  );
+    test_bc_loop<GradXVolXSurfX  >( "GradXVolXSurfX",   dim, bcFlag, X_PLUS_SIDE, i, 5.4321 );
+    test_bc_loop<InterpXVolXSurfX>( "InterpXVolXSurfX", dim, bcFlag, X_PLUS_SIDE, i, 54.321  );
     if( dim[1]>1 ){
-      test_bc_loop<GradYVolYSurfX,  XDIR>( "GradYVolYSurfX",   dim, bcFlag, i, 5.4321 );
-      test_bc_loop<InterpYVolYSurfX,XDIR>( "InterpYVolXSurfX", dim, bcFlag, i, 54.321  );
+      test_bc_loop<GradYVolYSurfX  >( "GradYVolYSurfX",   dim, bcFlag, X_PLUS_SIDE, i, 5.4321 );
+      test_bc_loop<InterpYVolYSurfX>( "InterpYVolXSurfX", dim, bcFlag, X_PLUS_SIDE, i, 54.321  );
     }
     if( dim[2]>1 ){
-      test_bc_loop<GradZVolZSurfX,  XDIR>( "GradZVolZSurfX",   dim, bcFlag, i, 5.4321 );
-      test_bc_loop<InterpZVolZSurfX,XDIR>( "InterpZVolZSurfX", dim, bcFlag, i, 54.321  );
+      test_bc_loop<GradZVolZSurfX  >( "GradZVolZSurfX",   dim, bcFlag, X_PLUS_SIDE, i, 5.4321 );
+      test_bc_loop<InterpZVolZSurfX>( "InterpZVolZSurfX", dim, bcFlag, X_PLUS_SIDE, i, 54.321  );
     }
   }
 
@@ -337,39 +358,39 @@ void test_bc( const Grid& g,
     // Y BCs - Left side
     cout << " Y Dir, (-) side:" << endl;
     int j=0;
-    test_bc_loop<GradSVolSSurfY,  YDIR>( "GradSVolSSurfY",   dim, bcFlag, j, 1.2345 );
-    test_bc_loop<InterpSVolSSurfY,YDIR>( "InterpSVolSSurfY", dim, bcFlag, j, 123.456 );
+    test_bc_loop<GradSVolSSurfY  >( "GradSVolSSurfY",   dim, bcFlag, Y_MINUS_SIDE, j, 1.2345 );
+    test_bc_loop<InterpSVolSSurfY>( "InterpSVolSSurfY", dim, bcFlag, Y_MINUS_SIDE, j, 123.456 );
 
     if( dim[0]>1 ){
-      test_bc_loop<GradXVolXSurfY,  YDIR>( "GradXVolXSurfY",   dim, bcFlag, j, 1.2345 );
-      test_bc_loop<InterpXVolXSurfY,YDIR>( "InterpXVolXSurfY", dim, bcFlag, j, 123.456 );
+      test_bc_loop<GradXVolXSurfY  >( "GradXVolXSurfY",   dim, bcFlag, Y_MINUS_SIDE, j, 1.2345 );
+      test_bc_loop<InterpXVolXSurfY>( "InterpXVolXSurfY", dim, bcFlag, Y_MINUS_SIDE, j, 123.456 );
     }
 
-    test_bc_loop<GradYVolYSurfY,  YDIR>( "GradYVolYSurfY",   dim, bcFlag, j, 1.2345 );
-    test_bc_loop<InterpYVolYSurfY,YDIR>( "InterpYVolYSurfY", dim, bcFlag, j, 123.456 );
+    test_bc_loop<GradYVolYSurfY  >( "GradYVolYSurfY",   dim, bcFlag, Y_MINUS_SIDE, j, 1.2345 );
+    test_bc_loop<InterpYVolYSurfY>( "InterpYVolYSurfY", dim, bcFlag, Y_MINUS_SIDE, j, 123.456 );
 
     if( dim[2]>1 ){
-      test_bc_loop<GradZVolZSurfY,  YDIR>( "GradZVolZSurfY",   dim, bcFlag, j, 1.2345 );
-      test_bc_loop<InterpZVolZSurfY,YDIR>( "InterpZVolZSurfY", dim, bcFlag, j, 123.456 );
+      test_bc_loop<GradZVolZSurfY  >( "GradZVolZSurfY",   dim, bcFlag, Y_MINUS_SIDE, j, 1.2345 );
+      test_bc_loop<InterpZVolZSurfY>( "InterpZVolZSurfY", dim, bcFlag, Y_MINUS_SIDE, j, 123.456 );
     }
 
     // Y BCs - Right side
     cout << " Y Dir, (+) side:" << endl;
     j=dim[1]-1;
-    test_bc_loop<GradSVolSSurfY,  YDIR>( "GradSVolSSurfY",   dim, bcFlag, j, 5.4321 );
-    test_bc_loop<InterpSVolSSurfY,YDIR>( "InterpSVolSSurfY", dim, bcFlag, j, 123.456 );
+    test_bc_loop<GradSVolSSurfY  >( "GradSVolSSurfY",   dim, bcFlag, Y_PLUS_SIDE, j, 5.4321 );
+    test_bc_loop<InterpSVolSSurfY>( "InterpSVolSSurfY", dim, bcFlag, Y_PLUS_SIDE, j, 123.456 );
 
     if( dim[0]>1 ){
-      test_bc_loop<GradXVolXSurfY,  YDIR>( "GradXVolXSurfY",   dim, bcFlag, j, 1.2345 );
-      test_bc_loop<InterpXVolXSurfY,YDIR>( "InterpXVolXSurfY", dim, bcFlag, j, 123.456 );
+      test_bc_loop<GradXVolXSurfY  >( "GradXVolXSurfY",   dim, bcFlag, Y_PLUS_SIDE, j, 1.2345 );
+      test_bc_loop<InterpXVolXSurfY>( "InterpXVolXSurfY", dim, bcFlag, Y_PLUS_SIDE, j, 123.456 );
     }
 
-    test_bc_loop<GradYVolYSurfY,  YDIR>( "GradYVolYSurfY",   dim, bcFlag, j, 1.2345 );
-    test_bc_loop<InterpYVolYSurfY,YDIR>( "InterpYVolYSurfY", dim, bcFlag, j, 123.456 );
+    test_bc_loop<GradYVolYSurfY  >( "GradYVolYSurfY",   dim, bcFlag, Y_PLUS_SIDE, j, 1.2345 );
+    test_bc_loop<InterpYVolYSurfY>( "InterpYVolYSurfY", dim, bcFlag, Y_PLUS_SIDE, j, 123.456 );
 
     if( dim[2]>1 ){
-      test_bc_loop<GradZVolZSurfY,  YDIR>( "GradZVolZSurfY",   dim, bcFlag, j, 1.2345 );
-      test_bc_loop<InterpZVolZSurfY,YDIR>( "InterpZVolZSurfY", dim, bcFlag, j, 123.456 );
+      test_bc_loop<GradZVolZSurfY  >( "GradZVolZSurfY",   dim, bcFlag, Y_PLUS_SIDE, j, 1.2345 );
+      test_bc_loop<InterpZVolZSurfY>( "InterpZVolZSurfY", dim, bcFlag, Y_PLUS_SIDE, j, 123.456 );
     }
   }
 
@@ -377,36 +398,36 @@ void test_bc( const Grid& g,
     // Z BCs - Left side
     cout << " Z Dir, (-) side:" << endl;
     int k=0;
-    test_bc_loop<GradSVolSSurfZ,  ZDIR>( "GradSVolSSurfZ",   dim, bcFlag, k, 1.2345 );
-    test_bc_loop<InterpSVolSSurfZ,ZDIR>( "InterpSVolSSurfZ", dim, bcFlag, k, 123.456 );
+    test_bc_loop<GradSVolSSurfZ  >( "GradSVolSSurfZ",   dim, bcFlag, Z_MINUS_SIDE, k, 1.2345 );
+    test_bc_loop<InterpSVolSSurfZ>( "InterpSVolSSurfZ", dim, bcFlag, Z_MINUS_SIDE, k, 123.456 );
 
     if( dim[0]>1 ){
-      test_bc_loop<GradXVolXSurfZ,  ZDIR>( "GradXVolXSurfZ",   dim, bcFlag, k, 1.2345 );
-      test_bc_loop<InterpXVolXSurfZ,ZDIR>( "InterpXVolXSurfZ", dim, bcFlag, k, 123.456 );
+      test_bc_loop<GradXVolXSurfZ  >( "GradXVolXSurfZ",   dim, bcFlag, Z_MINUS_SIDE, k, 1.2345 );
+      test_bc_loop<InterpXVolXSurfZ>( "InterpXVolXSurfZ", dim, bcFlag, Z_MINUS_SIDE, k, 123.456 );
     }
     if( dim[1]>1 ){
-      test_bc_loop<GradYVolYSurfZ,  ZDIR>( "GradYVolYSurfZ",   dim, bcFlag, k, 1.2345 );
-      test_bc_loop<InterpYVolYSurfZ,ZDIR>( "InterpYVolYSurfZ", dim, bcFlag, k, 123.456 );
+      test_bc_loop<GradYVolYSurfZ  >( "GradYVolYSurfZ",   dim, bcFlag, Z_MINUS_SIDE, k, 1.2345 );
+      test_bc_loop<InterpYVolYSurfZ>( "InterpYVolYSurfZ", dim, bcFlag, Z_MINUS_SIDE, k, 123.456 );
     }
-    test_bc_loop<GradZVolZSurfZ,  ZDIR>( "GradZVolZSurfZ",   dim, bcFlag, k, 1.2345 );
-    test_bc_loop<InterpZVolZSurfZ,ZDIR>( "InterpZVolZSurfZ", dim, bcFlag, k, 123.456 );
+    test_bc_loop<GradZVolZSurfZ  >( "GradZVolZSurfZ",   dim, bcFlag, Z_MINUS_SIDE, k, 1.2345 );
+    test_bc_loop<InterpZVolZSurfZ>( "InterpZVolZSurfZ", dim, bcFlag, Z_MINUS_SIDE, k, 123.456 );
 
     // Z BCs - Right side
     cout << " Z Dir, (+) side:" << endl;
     k=dim[2]-1;
-    test_bc_loop<GradSVolSSurfZ,  ZDIR>( "GradSVolSSurfZ",   dim, bcFlag, k, 1.2345 );
-    test_bc_loop<InterpSVolSSurfZ,ZDIR>( "InterpSVolSSurfZ", dim, bcFlag, k, 123.456 );
+    test_bc_loop<GradSVolSSurfZ  >( "GradSVolSSurfZ",   dim, bcFlag, Z_PLUS_SIDE, k, 1.2345 );
+    test_bc_loop<InterpSVolSSurfZ>( "InterpSVolSSurfZ", dim, bcFlag, Z_PLUS_SIDE, k, 123.456 );
 
     if( dim[0]>1 ){
-      test_bc_loop<GradXVolXSurfZ,  ZDIR>( "GradXVolXSurfZ",   dim, bcFlag, k, 1.2345 );
-      test_bc_loop<InterpXVolXSurfZ,ZDIR>( "InterpXVolXSurfZ", dim, bcFlag, k, 123.456 );
+      test_bc_loop<GradXVolXSurfZ  >( "GradXVolXSurfZ",   dim, bcFlag, Z_PLUS_SIDE, k, 1.2345 );
+      test_bc_loop<InterpXVolXSurfZ>( "InterpXVolXSurfZ", dim, bcFlag, Z_PLUS_SIDE, k, 123.456 );
     }
     if( dim[1]>1 ){
-      test_bc_loop<GradYVolYSurfZ,  ZDIR>( "GradYVolYSurfZ",   dim, bcFlag, k, 1.2345 );
-      test_bc_loop<InterpYVolYSurfZ,ZDIR>( "InterpYVolYSurfZ", dim, bcFlag, k, 123.456 );
+      test_bc_loop<GradYVolYSurfZ  >( "GradYVolYSurfZ",   dim, bcFlag, Z_PLUS_SIDE, k, 1.2345 );
+      test_bc_loop<InterpYVolYSurfZ>( "InterpYVolYSurfZ", dim, bcFlag, Z_PLUS_SIDE, k, 123.456 );
     }
-    test_bc_loop<GradZVolZSurfZ,  ZDIR>( "GradZVolZSurfZ",   dim, bcFlag, k, 1.2345 );
-    test_bc_loop<InterpZVolZSurfZ,ZDIR>( "InterpZVolZSurfZ", dim, bcFlag, k, 123.456 );
+    test_bc_loop<GradZVolZSurfZ  >( "GradZVolZSurfZ",   dim, bcFlag, Z_PLUS_SIDE, k, 1.2345 );
+    test_bc_loop<InterpZVolZSurfZ>( "InterpZVolZSurfZ", dim, bcFlag, Z_PLUS_SIDE, k, 123.456 );
   }
   cout << endl;
 }
