@@ -41,11 +41,11 @@ OBJS =		\
 	LinAlgUBlas.o \
 	LinearSystem.o
 
-buildOps.o: ./src/test/buildOps.cpp ./include/*.h
-	$(COMPILE_CXX) -I ./src/test ./src/test/buildOps.cpp
+buildOps.o: ./test/buildOps.cpp ./include/*.h
+	$(COMPILE_CXX) -I ./test ./test/buildOps.cpp
 
-testNew.o: ./src/test/testNew.cpp ./include/*.h ./src/test/*.h
-	$(COMPILE_CXX) -I./src/test ./src/test/testNew.cpp
+testNew.o: ./test/testNew.cpp ./include/*.h ./test/*.h
+	$(COMPILE_CXX) -I./test ./test/testNew.cpp
 
 LinAlgTrilinos.o: ./src/LinAlgTrilinos.cpp ./include/LinAlgTrilinos.h
 	$(COMPILE_CXX) ./src/LinAlgTrilinos.cpp
@@ -56,8 +56,8 @@ LinAlgUBlas.o: ./src/LinAlgUBlas.cpp ./include/LinAlgUBlas.h
 LinearSystem.o: ./src/LinearSystem.cpp ./include/SpatialOperator.h ./include/SpatialField.h ./include/LinearSystem.h
 	$(COMPILE_CXX) ./src/LinearSystem.cpp
 
-testPoisson.o: ./src/test/testPoisson.cpp ./include/*.h ./src/test/*.h
-	$(COMPILE_CXX) -I./src/test ./src/test/testPoisson.cpp
+testPoisson.o: ./test/testPoisson.cpp ./include/*.h ./test/*.h
+	$(COMPILE_CXX) -I./test ./test/testPoisson.cpp
 
 lib: $(OBJS)
 	ar -r ./libspatialops.a $(OBJS); ranlib ./libspatialops.a
