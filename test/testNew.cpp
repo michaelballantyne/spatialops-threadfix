@@ -220,13 +220,12 @@ bool test_bc_helper( const vector<int>&dim,
   for( typename SrcFieldT::iterator ifld=f->begin(); ifld!=f->end(); ++ifld,++icnt ) *ifld = icnt;
 
   // assign the BC.
-  BoundaryConditionOp<OpT,ConstValEval,ConstTimeEval> bc( dim,
-							  bcFlag[0], bcFlag[1], bcFlag[2],
-							  ijk,
-							  side,
-							  ConstValEval(bcVal),
-							  ConstTimeEval(0.0),
-							  SpatialOpDatabase<OpT>::self() );
+  BoundaryConditionOp<OpT,ConstValEval> bc( dim,
+					    bcFlag[0], bcFlag[1], bcFlag[2],
+					    ijk,
+					    side,
+					    ConstValEval(bcVal),
+					    SpatialOpDatabase<OpT>::self() );
 
   // evaluate the BC and set it in the field.
   bc(*f);

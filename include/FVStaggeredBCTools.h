@@ -28,26 +28,9 @@ namespace FVStaggered{
    */
   struct ConstValEval{
     ConstValEval( const double val ) : val_(val) {}
-    inline double operator()(const double) const{ return val_; }
+    inline double operator()() const{ return val_; }
   private:
     const double val_;
-  };
-
-  /**
-   *  @brief This provides a fixed time value for use when we want a
-   *         constant boundary condition with the BoundaryConditionOp
-   *         class.
-   */
-  struct ConstTimeEval{
-    ConstTimeEval( const double t=0.0 ) : t_(t){}
-    inline double operator()()const{return t_;}
-  private:
-    const double t_;
-  };
-
-
-  struct NullTimeEval{
-    inline void operator()() const {}
   };
 
   /**
@@ -103,14 +86,18 @@ namespace FVStaggered{
    *  @par Template Parameters
    *  <ul>
    *   <li> \b FieldT The type of field to set the bounary condition on.
+
    *   <li> \b BCEval An object of this type is supplied to calculate
-   *        the boundary condition.  It takes a single argument: time,
-   *        and returns a single value which is the boundary condition
-   *        at the point.
-   *   <li> \b TimeEval An object that evaluates via the operator()
-   *        method and returns the current simulation time.  If this
-   *        template argument is ommitted, then it is assumed that the
-   *        BC is constant in time.
+   *        the boundary condition.  It takes no arguments and returns
+   *        a single value which is the boundary condition at the
+   *        point.  By using functors and bound functions (e.g. via
+   *        boost::function and boost::lambda), you can achieve very
+   *        complicated functors here using function composition.  For
+   *        example, you could bind /f$g() = rho(t)*u(t)/f$ by binding
+   *        a time functor to a functor for \f$rho(t)\f$ and
+   *        \f$u(t)\f$ and then combining these to obtain /f$g() =
+   *        rho(t)*u(t)/f$.
+
    *  </ul>
    *
    *  @par Design Considerations
@@ -121,13 +108,11 @@ namespace FVStaggered{
    *      concern over operators becoming invalidated.
    */
   template< typename FieldT,
-	    typename BCEval,
-	    typename TimeEval=NullTimeEval >
+	    typename BCEval >
   class BoundaryCondition
   {
     const int index_;
     const BCEval bcEval_;
-    const TimeEval tEval_;
 
   public:
 
@@ -149,20 +134,14 @@ namespace FVStaggered{
      *
      *  @param bcEval A functor providing a method to evaluate the bc.
      *         It should have the following signature:
-     *         <code>double(double)</code> This is interpreted as
-     *         taking the time and returning the BC value.
-     *
-     *  @param tEval A functor to return the current time.  This must
-     *         have the following signature: <code>double()</code>.
-     *         Its return value is suppoed to the bcEval functor.
+     *         <code>double()</code>.
      */
     BoundaryCondition( const IndexTriplet point,
 		       const std::vector<int> dim,
 		       const bool bcPlusX,
 		       const bool bcPlusY,
 		       const bool bcPlusZ,
-		       const BCEval bcEval,
-		       const TimeEval tEval );
+		       const BCEval bcEval );
 
     ~BoundaryCondition(){}
 
@@ -171,28 +150,6 @@ namespace FVStaggered{
      *
      *  @param f The field that we want to set the BC on.
      */
-    inline void operator()( FieldT& f ) const;
-  };
-
-  //====================================================================
-
-  /**
-   *  Partial template specialization for the case when we have a
-   *  constant bc at this point (i.e. does not vary in time).
-   */
-  template< typename FieldT,
-	    typename BCEval >
-  class BoundaryCondition<FieldT,BCEval,NullTimeEval>
-  {
-    const int index_;
-    const double value_;
-  public:
-    BoundaryCondition( const IndexTriplet point,
-		       const std::vector<int> dim,
-		       const bool bcPlusX,
-		       const bool bcPlusY,
-		       const bool bcPlusZ,
-		       const double bcval );
     inline void operator()( FieldT& f ) const;
   };
 
@@ -231,12 +188,7 @@ namespace FVStaggered{
    *  <li> \b BCEval The type for the functor being used to evaluate
    *       the boundary condition.  Suggestion: consider using
    *       Boost:Function here.  Any conforming interface
-   *       <code>double(double)</code> should work, however.
-   *
-   *  <li> \b TimeEval The type for the functor being used to evaluate
-   *       the time.  This must have the signature
-   *       <code>double()</code>.  In other words, when called, it
-   *       takes no arguments and returns a \c double.
+   *       <code>double()</code> should work, however.
    *  </ul>
    *
    *  @par Design Considerations
@@ -247,12 +199,10 @@ namespace FVStaggered{
    *      concern over operators becoming invalidated.
    */
   template< typename OpT,
-	    typename BCEval,
-	    typename TimeEval >
+	    typename BCEval >
   class BoundaryConditionOp
   {
     const BCEval bcEval_;
-    const TimeEval tEval_;
     const int index_;
     double ghostCoef_;
 
@@ -283,7 +233,6 @@ namespace FVStaggered{
 			 const IndexTriplet point,
 			 const BCSide side,
 			 const BCEval bceval,
-			 const TimeEval tEval,
 			 const SpatialOps::SpatialOpDatabase<OpT>& soDatabase );
 
     ~BoundaryConditionOp(){}
@@ -364,52 +313,26 @@ namespace FVStaggered{
 
   //------------------------------------------------------------------
 
-  template< typename FieldT, typename BCEval, typename TimeEval >
-  BoundaryCondition<FieldT,BCEval,TimeEval>::
+  template< typename FieldT, typename BCEval >
+  BoundaryCondition<FieldT,BCEval>::
   BoundaryCondition( const IndexTriplet point,
 		     const std::vector<int> dim,
 		     const bool bcPlusX,
 		     const bool bcPlusY,
 		     const bool bcPlusZ,
-		     const BCEval bcEval,
-		     const TimeEval tEval )
+		     const BCEval bcEval )
     : index_( get_index_with_ghost<FieldT>( dim, bcPlusX, bcPlusY, bcPlusZ, point ) ),
-      bcEval_( bcEval ),
-      tEval_ ( tEval  )
+      bcEval_( bcEval )
   {}      
 
   //------------------------------------------------------------------
 
-  template< typename FieldT, typename BCEval, typename TimeEval >
-  void
-  BoundaryCondition<FieldT,BCEval,TimeEval>::
-  operator()( FieldT& f ) const
-  {
-    f[index_] = bcEval_( this->tEval_() );
-  }
-
-  //------------------------------------------------------------------
-
-  template< typename FieldT, typename BCEval >
-  BoundaryCondition<FieldT,BCEval,NullTimeEval>::
-  BoundaryCondition( const IndexTriplet point,
-		     const std::vector<int> dim,
-		     const bool bcPlusX,
-		     const bool bcPlusY,
-		     const bool bcPlusZ,
-		     const double bcval )
-    : index_( get_index_with_ghost<FieldT>( dim, bcPlusX, bcPlusY, bcPlusZ, point ) ),
-      value_( bcval )
-  {}
-
-  //------------------------------------------------------------------
-
   template< typename FieldT, typename BCEval >
   void
-  BoundaryCondition<FieldT,BCEval,NullTimeEval>::
+  BoundaryCondition<FieldT,BCEval>::
   operator()( FieldT& f ) const
   {
-    f[index_] = value_;
+    f[index_] = bcEval_();
   }
 
   //------------------------------------------------------------------
@@ -420,8 +343,8 @@ namespace FVStaggered{
 
   //------------------------------------------------------------------
 
-  template< typename OpT, typename BCEval, typename TimeEval >
-  BoundaryConditionOp<OpT,BCEval,TimeEval>::
+  template< typename OpT, typename BCEval >
+  BoundaryConditionOp<OpT,BCEval>::
   BoundaryConditionOp( const std::vector<int> dim,
 		       const bool bcPlusX,
 		       const bool bcPlusY,
@@ -429,10 +352,8 @@ namespace FVStaggered{
 		       const IndexTriplet point,
 		       const BCSide side,
 		       const BCEval bcEval,
-		       const TimeEval timeEval,
 		       const SpatialOpDatabase<OpT>& soDatabase )
-    : bcEval_( bcEval   ),
-      tEval_ ( timeEval ),
+    : bcEval_( bcEval ),
       index_( get_index_with_ghost<SrcFieldT>( dim, bcPlusX, bcPlusY, bcPlusZ, point ) )
   {
     const OpT* op = soDatabase.retrieve_operator();
@@ -466,17 +387,16 @@ namespace FVStaggered{
 
   //------------------------------------------------------------------
 
-  template< typename OpT, typename BCEval, typename TimeEval >
+  template< typename OpT, typename BCEval >
   void
-  BoundaryConditionOp<OpT,BCEval,TimeEval>::
+  BoundaryConditionOp<OpT,BCEval>::
   operator()( SrcFieldT& f ) const
   {
     double prodsum=0.0;
     for( std::vector<IxValPair>::const_iterator ix=ixVals_.begin(); ix!=ixVals_.end(); ++ix ){
       prodsum += ix->second * f[ix->first];
     }
-    const double bcVal = bcEval_( tEval_() );
-    const double val = ( bcVal - prodsum) / ghostCoef_;
+    const double val = ( bcEval_() - prodsum) / ghostCoef_;
     f[index_] = val;
   }
 

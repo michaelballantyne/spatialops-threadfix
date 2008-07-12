@@ -5,7 +5,7 @@
 #include <FVStaggered.h>
 
 #include <boost/function.hpp>
-//#include <boost/lambda/bind.hpp>  // use if you need to bind function arguments or to bind class member functions...
+#include <boost/lambda/bind.hpp>  // use if you need to bind function arguments or to bind class member functions...
 
 
 //====================================================================
@@ -42,12 +42,12 @@ void test1()
   std::vector<int> dim(3);  dim[0]=nx; dim[1]=ny; dim[2]=nz;
   const bool bcx=true,  bcy=true, bcz=true;
 
-  typedef boost::function< double()       > FuncNoTime;
-  typedef boost::function< double(double) > Func;
-  typedef boost::function< double()       > TimeFun;
-  FuncNoTime fnotime = &tmp;
-  Func f = &tmp2;
-  TimeFun timeFun = &ttmp;
+  typedef boost::function< double() > BCFun;
+  BCFun fnotime = &tmp;
+
+  // composite function:  tmp2( ttmp() )
+  BCFun tfun = boost::lambda::bind( &ttmp );
+  BCFun f = boost::lambda::bind( &tmp2, boost::lambda::bind(&ttmp) );
 
   // pick some points to set bcs on.  Note that they need not actually
   // reside on a boundary.
@@ -74,21 +74,20 @@ void test1()
 
   // apply bcs to the field using a "time varying" function.  We use one function to get the time 
   for( vector<IndexTriplet>::const_iterator ipt=pts.begin(); ipt!=pts.end(); ++ipt ){
-    BoundaryCondition<SVolField,Func,TimeFun> bc( *ipt, dim, bcx, bcy, bcz, f, timeFun );
+    BoundaryCondition<SVolField,BCFun> bc( *ipt, dim, bcx, bcy, bcz, f );
     bc(field);
     // check:
     const int ix = get_index_with_ghost<SVolField>( dim, bcx, bcy, bcz, *ipt );
-    isFailed = abs( field[ix] - f( timeFun() ) ) > ATOL;
+    isFailed = abs( field[ix] - f() ) > ATOL;
   }
 
   // apply constant-time BCs
   for( vector<IndexTriplet>::const_iterator ipt=pts.begin(); ipt!=pts.end(); ++ipt ){
-    const double bcVal = fnotime();
-    BoundaryCondition<SVolField,FuncNoTime> bc( *ipt, dim, bcx, bcy, bcz, bcVal );
+    BoundaryCondition<SVolField,BCFun> bc( *ipt, dim, bcx, bcy, bcz, fnotime );
     bc(field);
     // check:
     const int ix = get_index_with_ghost<SVolField>( dim, bcx, bcy, bcz, *ipt );
-    isFailed = abs( field[ix] - bcVal ) > ATOL;
+    isFailed = abs( field[ix] - fnotime() ) > ATOL;
   }
 
   if( isFailed )
