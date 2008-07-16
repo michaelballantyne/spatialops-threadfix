@@ -51,7 +51,7 @@ namespace FVStaggered{
     int get_ncol() const;
     int get_nrow() const;
 
-    int calculate_stride( const int irow, const int icol ) const;
+    int calculate_stride() const;
 
   private:
     const std::vector<int>& dim_;
@@ -449,7 +449,7 @@ namespace FVStaggered{
     // from the ijk index, determine the flat index for the source field.
     const int icol = ijk2flat<SrcFieldT>::value( dim_, ijk, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
 
-    const int stride = calculate_stride( irow, icol );
+    const int stride = calculate_stride();
 
     if( is_in_bounds<SrcFieldT,DestFieldT>(dim_,icol,       irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) &&
 	is_in_bounds<SrcFieldT,DestFieldT>(dim_,icol+stride,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) ){
@@ -483,7 +483,7 @@ namespace FVStaggered{
   template<typename SrcFieldT, typename DestFieldT>
   int
   IndexHelper<SrcFieldT,DestFieldT>::
-  calculate_stride( const int irow, const int icol ) const
+  calculate_stride() const
   {
     typedef typename DirSelector<SrcFieldT,DestFieldT,SrcFieldT::Location::IsSurface>::Type FieldDirSelect;
 
@@ -504,51 +504,51 @@ namespace FVStaggered{
     }
     return n;
   }
-  template<> inline int IndexHelper<SVolField,XVolField>::calculate_stride( const int irow, const int icol ) const
+  template<> inline int IndexHelper<SVolField,XVolField>::calculate_stride() const
   {
     return 1;
   }
-  template<> inline int IndexHelper<SVolField,YVolField>::calculate_stride( const int irow, const int icol ) const
+  template<> inline int IndexHelper<SVolField,YVolField>::calculate_stride() const
   {
     return get_nx<SVolField>(dim_,hasPlusXSideFaces_);
   }
-  template<> inline int IndexHelper<SVolField,ZVolField>::calculate_stride( const int irow, const int icol ) const
+  template<> inline int IndexHelper<SVolField,ZVolField>::calculate_stride() const
   {
     return get_nx<SVolField>(dim_,hasPlusXSideFaces_) * get_ny<SVolField>(dim_,hasPlusYSideFaces_);
   }
-  template<> inline int IndexHelper<XVolField,YSurfXField>::calculate_stride( const int irow, const int icol ) const
+  template<> inline int IndexHelper<XVolField,YSurfXField>::calculate_stride() const
   {
     return get_nx<XVolField>(dim_,hasPlusXSideFaces_);
   }
-  template<> inline int IndexHelper<XVolField,ZSurfXField>::calculate_stride( const int irow, const int icol ) const
+  template<> inline int IndexHelper<XVolField,ZSurfXField>::calculate_stride() const
   {
     return get_nx<XVolField>(dim_,hasPlusXSideFaces_) * get_ny<XVolField>(dim_,hasPlusYSideFaces_);
   }
-  template<> inline int IndexHelper<YVolField,XSurfYField>::calculate_stride( const int irow, const int icol ) const
+  template<> inline int IndexHelper<YVolField,XSurfYField>::calculate_stride() const
   {
     return 1;
   }
-  template<> inline int IndexHelper<YVolField,ZSurfYField>::calculate_stride( const int irow, const int icol ) const
+  template<> inline int IndexHelper<YVolField,ZSurfYField>::calculate_stride() const
   {
     return get_nx<YVolField>(dim_,hasPlusXSideFaces_) * get_ny<YVolField>(dim_,hasPlusYSideFaces_);
   }
-  template<> inline int IndexHelper<ZVolField,XSurfZField>::calculate_stride( const int irow, const int icol ) const
+  template<> inline int IndexHelper<ZVolField,XSurfZField>::calculate_stride() const
   {
     return 1;
   }
-  template<> inline int IndexHelper<ZVolField,YSurfZField>::calculate_stride( const int irow, const int icol ) const
+  template<> inline int IndexHelper<ZVolField,YSurfZField>::calculate_stride() const
   {
     return get_nx<ZVolField>(dim_,hasPlusXSideFaces_);
   }
-  template<> inline int IndexHelper<XVolField,SVolField>::calculate_stride( const int irow, const int icol ) const
+  template<> inline int IndexHelper<XVolField,SVolField>::calculate_stride() const
   {
     return 1;
   }
-  template<> inline int IndexHelper<YVolField,SVolField>::calculate_stride( const int irow, const int icol ) const
+  template<> inline int IndexHelper<YVolField,SVolField>::calculate_stride() const
   {
     return get_nx<YVolField>(dim_,hasPlusXSideFaces_);
   }
-  template<> inline int IndexHelper<ZVolField,SVolField>::calculate_stride( const int irow, const int icol ) const
+  template<> inline int IndexHelper<ZVolField,SVolField>::calculate_stride() const
   {
     return get_nx<ZVolField>(dim_,hasPlusXSideFaces_) * get_ny<ZVolField>(dim_,hasPlusYSideFaces_);
   }
