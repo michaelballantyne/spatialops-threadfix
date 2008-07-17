@@ -186,7 +186,7 @@ namespace FVStaggered{
 		   std::vector<double> & vals,
 		   std::vector<int> & ixs ) const
   {
-    switch( DestField::Location::Dir::value ){
+    switch( DestField::Location::FaceDir::value ){
     case XDIR::value:
       if( dim_[0]==1 ) return;
       break;
@@ -197,7 +197,7 @@ namespace FVStaggered{
       if( dim_[2]==1 ) return;
       break;
     }
-    switch( DestField::Location::StagDir::value ){
+    switch( DestField::Location::FaceDir::value ){
     case XDIR::value:
       if( dim_[0]==1 ) return;
       break;

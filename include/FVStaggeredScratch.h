@@ -262,13 +262,13 @@ namespace FVStaggered{
       if( dim_[0]>1 ){
 	const int stride = 1;
 	t = flat2ijk<SrcFieldT>::value( dim_, irow+stride, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_  );
-	shift_dest_index<SrcFieldT,DestFieldT>( dim_, t );
+	IndexHelper<SrcFieldT,DestFieldT>::shift_dest_index( dim_, t );
 	if( t.i >= 0 && t.i < nx  &&  trow.j==t.j && trow.k==t.k ){
 	  ixs.push_back( irow+stride );
 	  vals.push_back(-1.0);
 	}
 	t = flat2ijk<SrcFieldT>::value( dim_, irow-stride, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
-	shift_dest_index<SrcFieldT,DestFieldT>( dim_, t );
+	IndexHelper<SrcFieldT,DestFieldT>::shift_dest_index( dim_, t );
 	if( t.i >= 0 && t.i < nx  &&  trow.j==t.j && trow.k==t.k ){
 	  ixs.push_back( irow-stride );
 	  vals.push_back( -1.0 );
@@ -282,13 +282,13 @@ namespace FVStaggered{
 	const int ny = get_ny<SrcFieldT>( dim_, hasPlusYSideFaces_ );
 	const int stride = nx>1 ? nx : 1;
 	t = flat2ijk<SrcFieldT>::value( dim_, irow+stride, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
-	shift_dest_index<SrcFieldT,DestFieldT>( dim_, t );
+	IndexHelper<SrcFieldT,DestFieldT>::shift_dest_index( dim_, t );
 	if( t.j >= 0 && t.j < ny  &&  trow.i==t.i && trow.k==t.k ){
 	  ixs.push_back( irow+stride );
 	  vals.push_back( -1.0 );
 	}
 	t = flat2ijk<SrcFieldT>::value( dim_, irow-stride, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
-	shift_dest_index<SrcFieldT,DestFieldT>( dim_, t );
+	IndexHelper<SrcFieldT,DestFieldT>::shift_dest_index( dim_, t );
 	if( t.j >= 0 && t.j < ny  &&  trow.i==t.i && trow.k==t.k ){
 	  ixs.push_back( irow-stride );
 	  vals.push_back( -1.0 );
@@ -303,13 +303,13 @@ namespace FVStaggered{
 	const int nz = get_nz<SrcFieldT>( dim_, hasPlusZSideFaces_ );
 	const int stride = (nx>1 || ny>1) ? nx*ny : 1;
 	t = flat2ijk<SrcFieldT>::value( dim_, irow+stride, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
-	shift_dest_index<SrcFieldT,DestFieldT>( dim_, t );
+	IndexHelper<SrcFieldT,DestFieldT>::shift_dest_index( dim_, t );
 	if( t.k >= 0 && t.k < nz  &&  trow.i==t.i && trow.j==t.j ){
 	  ixs.push_back( irow+stride );
 	  vals.push_back( -1.0 );
 	}
 	t = flat2ijk<SrcFieldT>::value( dim_, irow-stride, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
-	shift_dest_index<SrcFieldT,DestFieldT>( dim_, t );
+	IndexHelper<SrcFieldT,DestFieldT>::shift_dest_index( dim_, t );
 	if( t.k >= 0 && t.k < nz  &&  trow.i==t.i && trow.j==t.j ){
 	  ixs.push_back( irow-stride );
 	  vals.push_back( -1.0 );

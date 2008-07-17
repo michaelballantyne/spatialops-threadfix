@@ -3,6 +3,7 @@
 
 #include <SpatialField.h>
 #include <SpatialOperator.h>
+#include <SpatialOpsDefs.h>
 
 #ifdef LINALG_UBLAS
 #  include <LinAlgUBlas.h>
@@ -15,26 +16,29 @@
 namespace SpatialOps{
 namespace FVStaggered{
 
+  // FaceDir: The direction relative to its volume field that this field is staggered.
+  // StagLoc: The direction relative to the scalar volume field that this field's volume field is staggered.
+  // IsSurface: Indicates whether this field sits on a CV surface (1) or center (0).
 
-  struct SVol  { enum{IsSurface=0};  typedef NODIR Dir;  typedef NODIR StagDir; };
-  struct SSurfX{ enum{IsSurface=1};  typedef XDIR  Dir;  typedef NODIR StagDir; };
-  struct SSurfY{ enum{IsSurface=1};  typedef YDIR  Dir;  typedef NODIR StagDir; };
-  struct SSurfZ{ enum{IsSurface=1};  typedef ZDIR  Dir;  typedef NODIR StagDir; };
+  struct SVol  { typedef NODIR FaceDir;  typedef NODIR StagLoc; };
+  struct SSurfX{ typedef XDIR  FaceDir;  typedef NODIR StagLoc; };
+  struct SSurfY{ typedef YDIR  FaceDir;  typedef NODIR StagLoc; };
+  struct SSurfZ{ typedef ZDIR  FaceDir;  typedef NODIR StagLoc; };
 
-  struct XVol  { enum{IsSurface=0};  typedef NODIR Dir;  typedef XDIR  StagDir; };
-  struct XSurfX{ enum{IsSurface=1};  typedef XDIR  Dir;  typedef XDIR  StagDir; };
-  struct XSurfY{ enum{IsSurface=1};  typedef YDIR  Dir;  typedef XDIR  StagDir; };
-  struct XSurfZ{ enum{IsSurface=1};  typedef ZDIR  Dir;  typedef XDIR  StagDir; };
+  struct XVol  { typedef NODIR FaceDir;  typedef XDIR  StagLoc; };
+  struct XSurfX{ typedef XDIR  FaceDir;  typedef XDIR  StagLoc; };
+  struct XSurfY{ typedef YDIR  FaceDir;  typedef XDIR  StagLoc; };
+  struct XSurfZ{ typedef ZDIR  FaceDir;  typedef XDIR  StagLoc; };
 
-  struct YVol  { enum{IsSurface=0};  typedef NODIR Dir;  typedef YDIR  StagDir; };
-  struct YSurfX{ enum{IsSurface=1};  typedef XDIR  Dir;  typedef YDIR  StagDir; };
-  struct YSurfY{ enum{IsSurface=1};  typedef YDIR  Dir;  typedef YDIR  StagDir; };
-  struct YSurfZ{ enum{IsSurface=1};  typedef ZDIR  Dir;  typedef YDIR  StagDir; };
+  struct YVol  { typedef NODIR FaceDir;  typedef YDIR  StagLoc; };
+  struct YSurfX{ typedef XDIR  FaceDir;  typedef YDIR  StagLoc; };
+  struct YSurfY{ typedef YDIR  FaceDir;  typedef YDIR  StagLoc; };
+  struct YSurfZ{ typedef ZDIR  FaceDir;  typedef YDIR  StagLoc; };
 
-  struct ZVol  { enum{IsSurface=0};  typedef NODIR Dir;  typedef ZDIR  StagDir; };
-  struct ZSurfX{ enum{IsSurface=1};  typedef XDIR  Dir;  typedef ZDIR  StagDir; };
-  struct ZSurfY{ enum{IsSurface=1};  typedef YDIR  Dir;  typedef ZDIR  StagDir; };
-  struct ZSurfZ{ enum{IsSurface=1};  typedef ZDIR  Dir;  typedef ZDIR  StagDir; };
+  struct ZVol  { typedef NODIR FaceDir;  typedef ZDIR  StagLoc; };
+  struct ZSurfX{ typedef XDIR  FaceDir;  typedef ZDIR  StagLoc; };
+  struct ZSurfY{ typedef YDIR  FaceDir;  typedef ZDIR  StagLoc; };
+  struct ZSurfZ{ typedef ZDIR  FaceDir;  typedef ZDIR  StagLoc; };
 
   struct DefaultGhost{ enum{ NM=1, NP=1 }; };
   struct NoGhost     { enum{ NM=0, NP=0 }; };

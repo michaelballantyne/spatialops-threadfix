@@ -169,7 +169,7 @@ void test_div_op( const Grid& grid,
 			get_ghost_set<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
 			NULL );
 
-  switch( FuncType1::FieldType::Location::Dir::value ){
+  switch( FuncType1::FieldType::Location::FaceDir::value ){
   case XDIR::value :
     funcPhi.dx( phi );
     funcFPhi.d2x( fphiExact );
