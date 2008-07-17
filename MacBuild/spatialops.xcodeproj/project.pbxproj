@@ -48,6 +48,25 @@
 		1A5E77850E2F97920067740F /* LinearSystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1A5E77820E2F97920067740F /* LinearSystem.cpp */; };
 		1A5E781E0E2F9EAB0067740F /* testPoisson.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1A5E781D0E2F9EAB0067740F /* testPoisson.cpp */; };
 		1A5E78410E2FA2130067740F /* testNew.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1A5E78010E2F9E530067740F /* testNew.cpp */; };
+		1A9AF7F00E2FCC04003E8A7D /* FieldFunctions.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A01F0DC0E2FA88C0060F6BD /* FieldFunctions.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		1A9AF7F10E2FCC04003E8A7D /* FVStaggered.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A5E77890E2F97A10067740F /* FVStaggered.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		1A9AF7F20E2FCC04003E8A7D /* FVStaggeredBCTools.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A5E778A0E2F97A10067740F /* FVStaggeredBCTools.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		1A9AF7F30E2FCC04003E8A7D /* FVStaggeredDivergence.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A5E778B0E2F97A10067740F /* FVStaggeredDivergence.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		1A9AF7F40E2FCC04003E8A7D /* FVStaggeredGradient.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A5E778C0E2F97A10067740F /* FVStaggeredGradient.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		1A9AF7F50E2FCC04003E8A7D /* FVStaggeredIndexHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A5E778D0E2F97A10067740F /* FVStaggeredIndexHelper.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		1A9AF7F60E2FCC04003E8A7D /* FVStaggeredInterpolant.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A5E778E0E2F97A10067740F /* FVStaggeredInterpolant.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		1A9AF7F70E2FCC04003E8A7D /* FVStaggeredScratch.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A5E778F0E2F97A10067740F /* FVStaggeredScratch.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		1A9AF7F80E2FCC04003E8A7D /* FVStaggeredTools.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A5E77900E2F97A10067740F /* FVStaggeredTools.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		1A9AF7F90E2FCC04003E8A7D /* FVStaggeredTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A5E77910E2F97A10067740F /* FVStaggeredTypes.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		1A9AF7FA0E2FCC04003E8A7D /* LinAlgTrilinos.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A5E77920E2F97A10067740F /* LinAlgTrilinos.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		1A9AF7FB0E2FCC04003E8A7D /* LinAlgUBlas.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A5E77930E2F97A10067740F /* LinAlgUBlas.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		1A9AF7FC0E2FCC04003E8A7D /* LinearSystem.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A5E77940E2F97A10067740F /* LinearSystem.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		1A9AF7FD0E2FCC04003E8A7D /* SFIterator.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A5E77950E2F97A10067740F /* SFIterator.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		1A9AF7FE0E2FCC04003E8A7D /* SpatialField.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A5E77960E2F97A10067740F /* SpatialField.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		1A9AF7FF0E2FCC04003E8A7D /* SpatialFieldStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A5E77970E2F97A10067740F /* SpatialFieldStore.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		1A9AF8000E2FCC04003E8A7D /* SpatialOperator.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A5E77980E2F97A10067740F /* SpatialOperator.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		1A9AF8010E2FCC04003E8A7D /* SpatialOpsDefs.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A5E77990E2F97A10067740F /* SpatialOpsDefs.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		1A9AF8020E2FCC04003E8A7D /* SpatialOpsTools.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A5E779A0E2F97A10067740F /* SpatialOpsTools.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -306,6 +325,25 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1A9AF7F00E2FCC04003E8A7D /* FieldFunctions.h in Headers */,
+				1A9AF7F10E2FCC04003E8A7D /* FVStaggered.h in Headers */,
+				1A9AF7F20E2FCC04003E8A7D /* FVStaggeredBCTools.h in Headers */,
+				1A9AF7F30E2FCC04003E8A7D /* FVStaggeredDivergence.h in Headers */,
+				1A9AF7F40E2FCC04003E8A7D /* FVStaggeredGradient.h in Headers */,
+				1A9AF7F50E2FCC04003E8A7D /* FVStaggeredIndexHelper.h in Headers */,
+				1A9AF7F60E2FCC04003E8A7D /* FVStaggeredInterpolant.h in Headers */,
+				1A9AF7F70E2FCC04003E8A7D /* FVStaggeredScratch.h in Headers */,
+				1A9AF7F80E2FCC04003E8A7D /* FVStaggeredTools.h in Headers */,
+				1A9AF7F90E2FCC04003E8A7D /* FVStaggeredTypes.h in Headers */,
+				1A9AF7FA0E2FCC04003E8A7D /* LinAlgTrilinos.h in Headers */,
+				1A9AF7FB0E2FCC04003E8A7D /* LinAlgUBlas.h in Headers */,
+				1A9AF7FC0E2FCC04003E8A7D /* LinearSystem.h in Headers */,
+				1A9AF7FD0E2FCC04003E8A7D /* SFIterator.h in Headers */,
+				1A9AF7FE0E2FCC04003E8A7D /* SpatialField.h in Headers */,
+				1A9AF7FF0E2FCC04003E8A7D /* SpatialFieldStore.h in Headers */,
+				1A9AF8000E2FCC04003E8A7D /* SpatialOperator.h in Headers */,
+				1A9AF8010E2FCC04003E8A7D /* SpatialOpsDefs.h in Headers */,
+				1A9AF8020E2FCC04003E8A7D /* SpatialOpsTools.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -876,10 +914,7 @@
 					/jcs/software/boost_1_35_0,
 					/jcs/software/trilinos/include,
 				);
-				LIBRARY_SEARCH_PATHS = (
-					/jcs/software/trilinos/lib,
-					"/sw/lib/gcc-lib/i386-apple-darwin8/4.0.3",
-				);
+				LIBRARY_SEARCH_PATHS = "/sw/lib/gcc-lib/i386-apple-darwin8/4.0.3";
 				PREBINDING = NO;
 				SDKROOT = "$(DEVELOPER_SDK_DIR)/MacOSX10.5.sdk";
 				SKIP_INSTALL = YES;
@@ -905,10 +940,7 @@
 					/jcs/software/boost_1_35_0,
 					/jcs/software/trilinos/include,
 				);
-				LIBRARY_SEARCH_PATHS = (
-					/jcs/software/trilinos/lib,
-					"/sw/lib/gcc-lib/i386-apple-darwin8/4.0.3",
-				);
+				LIBRARY_SEARCH_PATHS = "/sw/lib/gcc-lib/i386-apple-darwin8/4.0.3";
 				PREBINDING = NO;
 				SDKROOT = "$(DEVELOPER_SDK_DIR)/MacOSX10.5.sdk";
 				SKIP_INSTALL = YES;
