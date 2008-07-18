@@ -33,8 +33,8 @@ namespace SpatialOps{
     public:
       MatrixRow( int rowNum, MatType& mat )
       {
-	assert(rowNum<mat.NumMyRows());
-	mat.ExtractMyRowView( rowNum, ncols_, values_, indices_ );
+        assert(rowNum<mat.NumMyRows());
+        mat.ExtractMyRowView( rowNum, ncols_, values_, indices_ );
       }
       ~MatrixRow(){}
 
@@ -65,7 +65,7 @@ namespace SpatialOps{
     class column_iterator{
     public:
       column_iterator( MatrixRow& mr, const int ncol, const int i=0)
-	: mr_(mr), ncol_(ncol), i_(i)
+        : mr_(mr), ncol_(ncol), i_(i)
       {}
 
       inline column_iterator& operator++(){assert(i_<ncol_); ++i_; return *this;}
@@ -87,7 +87,7 @@ namespace SpatialOps{
     class const_column_iterator{
     public:
       const_column_iterator( const MatrixRow& mr, const int ncol, const int i=0)
-	: mr_(mr), ncol_(ncol), i_(i)
+        : mr_(mr), ncol_(ncol), i_(i)
       {}
 
       inline const_column_iterator& operator++(){assert(i_<ncol_); ++i_; return *this;}
@@ -110,15 +110,15 @@ namespace SpatialOps{
     ~LinAlgTrilinos();
 
     VecType& setup_vector( const int npts,
-			   double* const values );
+                           double* const values );
     
     MatType& setup_matrix( const int nrows,
-			   const int ncols,
-			   const int entriesPerRow );
+                           const int ncols,
+                           const int entriesPerRow );
 
     void insert_row_values( const int rownum,
-			    std::vector<double> & rowValues,
-			    std::vector<int> & rowIndices );
+                            std::vector<double> & rowValues,
+                            std::vector<int> & rowIndices );
 
     void destroy_matrix();
     void destroy_vector();
@@ -133,18 +133,18 @@ namespace SpatialOps{
     //@{
 
     template< typename OpType,
-	      typename SrcFieldT,
-	      typename DestFieldT >
+              typename SrcFieldT,
+              typename DestFieldT >
     inline LinAlgTrilinos& operator= ( const SpatialOperator< LinAlgTrilinos, OpType, SrcFieldT, DestFieldT > & m );
 
     template< typename OpType,
-	      typename SrcFieldT,
-	      typename DestFieldT >
+              typename SrcFieldT,
+              typename DestFieldT >
     inline LinAlgTrilinos& operator+=( const SpatialOperator< LinAlgTrilinos, OpType, SrcFieldT, DestFieldT > & m );
 
     template< typename OpType,
-	      typename SrcFieldT,
-	      typename DestFieldT >
+              typename SrcFieldT,
+              typename DestFieldT >
     inline LinAlgTrilinos& operator-=( const  SpatialOperator< LinAlgTrilinos, OpType, SrcFieldT, DestFieldT > & m );
 
     //@}

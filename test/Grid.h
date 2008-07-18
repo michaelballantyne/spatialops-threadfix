@@ -20,8 +20,8 @@ class Grid
 {
 public:
   Grid( const std::vector<int>& dim,
-	const std::vector<double>& spacing,
-	const std::vector<bool>& bcPlusFlag );
+        const std::vector<double>& spacing,
+        const std::vector<bool>& bcPlusFlag );
   ~Grid();
 
   const std::vector<int>& extent() const{return dim_;}
@@ -133,8 +133,8 @@ private:
 //====================================================================
 
 Grid::Grid( const std::vector<int>& dim,
-	    const std::vector<double>& spacing,
-	    const std::vector<bool>& bcPlusFlag )
+            const std::vector<double>& spacing,
+            const std::vector<bool>& bcPlusFlag )
   : dim_( dim ),
 
     svx_( get_n_tot<SVolField >(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<SVolField >(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
@@ -216,14 +216,14 @@ Grid::Grid( const std::vector<int>& dim,
     for( int k=0; k<khi; ++k ){
       const double z = spacing[2]*(double(k)+0.5-ngzm);
       for( int j=0; j<jhi; ++j ){
-	const double y = spacing[1]*(double(j)+0.5-ngym);
-	for( int i=0; i<ihi; ++i ){
-	  const double x = spacing[0]*(double(i)+0.5-ngxm);
-	  *isvx = x;
-	  *isvy = y;
-	  *isvz = z;
-	  ++isvx; ++isvy; ++isvz;
-	}
+        const double y = spacing[1]*(double(j)+0.5-ngym);
+        for( int i=0; i<ihi; ++i ){
+          const double x = spacing[0]*(double(i)+0.5-ngxm);
+          *isvx = x;
+          *isvy = y;
+          *isvz = z;
+          ++isvx; ++isvy; ++isvz;
+        }
       }
     }
 
@@ -245,14 +245,14 @@ Grid::Grid( const std::vector<int>& dim,
     for( int k=0; k<khi; ++k ){
       const double z = spacing[2]*(double(k)+0.5-ngzm);
       for( int j=0; j<jhi; ++j ){
-	const double y = spacing[1]*(double(j)+0.5-ngym);
-	for( int i=0; i<ihi; ++i ){
-	  const double x = spacing[0]*(i-ngxm); // offset in x.
-	  *ixvx = x;
-	  *ixvy = y;
-	  *ixvz = z;
-	  ++ixvx; ++ixvy; ++ixvz;
-	}
+        const double y = spacing[1]*(double(j)+0.5-ngym);
+        for( int i=0; i<ihi; ++i ){
+          const double x = spacing[0]*(i-ngxm); // offset in x.
+          *ixvx = x;
+          *ixvy = y;
+          *ixvz = z;
+          ++ixvx; ++ixvy; ++ixvz;
+        }
       }
     }
 
@@ -273,14 +273,14 @@ Grid::Grid( const std::vector<int>& dim,
     for( int k=0; k<khi; ++k ){
       const double z = spacing[2]*(double(k)+0.5-ngzm);
       for( int j=0; j<jhi; ++j ){
-	const double y = spacing[1]*(j-ngym); // offset in y.
-	for( int i=0; i<ihi; ++i ){
-	  const double x = spacing[0]*(double(i)+0.5-ngxm);
-	  *iyvx = x;
-	  *iyvy = y;
-	  *iyvz = z;
-	  ++iyvx; ++iyvy; ++iyvz;
-	}
+        const double y = spacing[1]*(j-ngym); // offset in y.
+        for( int i=0; i<ihi; ++i ){
+          const double x = spacing[0]*(double(i)+0.5-ngxm);
+          *iyvx = x;
+          *iyvy = y;
+          *iyvz = z;
+          ++iyvx; ++iyvy; ++iyvz;
+        }
       }
     }
 
@@ -301,14 +301,14 @@ Grid::Grid( const std::vector<int>& dim,
     for( int k=0; k<khi; ++k ){
       const double z = spacing[2]*(k-ngzm); // offset in z
       for( int j=0; j<jhi; ++j ){
-	const double y = spacing[1]*(double(j)+0.5-ngym);
-	for( int i=0; i<ihi; ++i ){
-	  const double x = spacing[0]*(double(i)+0.5-ngxm);
-	  *izvx = x;
-	  *izvy = y;
-	  *izvz = z;
-	  ++izvx; ++izvy; ++izvz;
-	}
+        const double y = spacing[1]*(double(j)+0.5-ngym);
+        for( int i=0; i<ihi; ++i ){
+          const double x = spacing[0]*(double(i)+0.5-ngxm);
+          *izvx = x;
+          *izvy = y;
+          *izvz = z;
+          ++izvx; ++izvy; ++izvz;
+        }
       }
     }
 

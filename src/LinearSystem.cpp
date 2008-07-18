@@ -43,7 +43,7 @@ public:
   }
 
   Epetra_Map& get_map( const int npts,
-		       Epetra_Comm & com )
+                       Epetra_Comm & com )
   {
     std::map<int,Epetra_Map*>::const_iterator ii = emap_.find( npts );
     if( ii == emap_.end() ){
@@ -103,10 +103,10 @@ RHS::reset( const int rownum, const double val )
 
 //--------------------------------------------------------------------
 LHS::LHS( const vector<int> & extent,
-	  const bool hasPlusXSideFaces,
-	  const bool hasPlusYSideFaces,
-	  const bool hasPlusZSideFaces,
-	  Epetra_CrsMatrix& A )
+          const bool hasPlusXSideFaces,
+          const bool hasPlusYSideFaces,
+          const bool hasPlusZSideFaces,
+          Epetra_CrsMatrix& A )
   : A_( A ),
     extent_( extent ),
     hasPlusXSideFaces_( hasPlusXSideFaces ),
@@ -172,16 +172,16 @@ LHS::write_matlab( const std::string prefix ) const
     for( int irow=0; irow<nrows_; ++irow ){
       SpatialOps::LinAlgTrilinos::MatrixRow row( irow, A_ );
       for( SpatialOps::LinAlgTrilinos::column_iterator icol = row.begin();
-	   icol!=row.end();
-	   ++icol, ++i )
-	{
-	  if( writeLoop==1 ){
-	    fout << "row(" << i+1 << ") = " << irow+1 << ";  "
-		 << "col(" << i+1 << ") = " << icol.index()+1 << ";  "
-		 << "val(" << i+1 << ") = " << *icol << ";"
-		 << std::endl;
-	  }
-	}
+           icol!=row.end();
+           ++icol, ++i )
+        {
+          if( writeLoop==1 ){
+            fout << "row(" << i+1 << ") = " << irow+1 << ";  "
+                 << "col(" << i+1 << ") = " << icol.index()+1 << ";  "
+                 << "val(" << i+1 << ") = " << *icol << ";"
+                 << std::endl;
+          }
+        }
     }
     if( writeLoop==0 ){
       fout << "row = zeros(" << i << ",1);  col=row;  val=row;" << std::endl;
@@ -202,16 +202,16 @@ LHS::write_matlab( const std::string prefix ) const
 //--------------------------------------------------------------------
 #ifdef HAVE_MPI
 LinearSystem::LinearSystem( const vector<int> & extent,
-			    const bool hasPlusXSideFaces,
-			    const bool hasPlusYSideFaces,
-			    const bool hasPlusZSideFaces,
-			    MPI_Comm & comm )
+                            const bool hasPlusXSideFaces,
+                            const bool hasPlusYSideFaces,
+                            const bool hasPlusZSideFaces,
+                            MPI_Comm & comm )
   : npts_( get_global_npts(extent,comm) ),
 #else
 LinearSystem::LinearSystem( const vector<int> & extent,
-			    const bool hasPlusXSideFaces,
-			    const bool hasPlusYSideFaces,
-			    const bool hasPlusZSideFaces )
+                            const bool hasPlusXSideFaces,
+                            const bool hasPlusYSideFaces,
+                            const bool hasPlusZSideFaces )
   : npts_( get_global_npts(extent) ),
 #endif
 
@@ -282,7 +282,7 @@ LinearSystem::~LinearSystem()
 #ifdef HAVE_MPI
 int
 LinearSystem::get_global_npts( const std::vector<int> & extent,
-			       MPI_Comm & comm )
+                               MPI_Comm & comm )
 {
   // determine the total number of points in each dimension.
   vector<int> tmpPts = extent;
@@ -301,7 +301,7 @@ LinearSystem::get_global_npts( const std::vector<int> & extent )
 //--------------------------------------------------------------------
 void
 LinearSystem::imprint( const std::vector<int> & extent,
-		       const int entriesPerRow )
+                       const int entriesPerRow )
 {
   // set the sparsity pattern
 
@@ -332,46 +332,46 @@ LinearSystem::imprint( const std::vector<int> & extent,
 
     if( doX ){
       if( i>0 ){
-	const int l = i-1;
-	const int icol = k*(nx*ny) + j*nx + l;
-	ixs.push_back( icol );
-	vals.push_back(1.0);
+        const int l = i-1;
+        const int icol = k*(nx*ny) + j*nx + l;
+        ixs.push_back( icol );
+        vals.push_back(1.0);
       }
       if( i<nx-1 ){
-	const int l = i+1;
-	const int icol = k*(nx*ny) + j*nx + l;
-	ixs.push_back( icol );
-	vals.push_back(1.0);
+        const int l = i+1;
+        const int icol = k*(nx*ny) + j*nx + l;
+        ixs.push_back( icol );
+        vals.push_back(1.0);
       }
     }
 
     if( doY ){
       if( j>0 ){
-	const int l = j-1;
-	const int icol = k*(nx*ny) + l*nx + i;
-	ixs.push_back( icol );
-	vals.push_back(1.0);
+        const int l = j-1;
+        const int icol = k*(nx*ny) + l*nx + i;
+        ixs.push_back( icol );
+        vals.push_back(1.0);
       }
       if( j<ny-1 ){
-	const int l = j+1;
-	const int icol = k*(nx*ny) + l*nx + i;
-	ixs.push_back( icol );
-	vals.push_back(1.0);
+        const int l = j+1;
+        const int icol = k*(nx*ny) + l*nx + i;
+        ixs.push_back( icol );
+        vals.push_back(1.0);
       }
     }
 
     if( doZ ){
       if( k>0 ){
-	const int l = k-1;
-	const int icol = l*(nx*ny) + j*nx + i;
-	ixs.push_back( icol );
-	vals.push_back(1.0);
+        const int l = k-1;
+        const int icol = l*(nx*ny) + j*nx + i;
+        ixs.push_back( icol );
+        vals.push_back(1.0);
       }
       if( k<nz-1 ){
-	const int l = k+1;
-	const int icol = l*(nx*ny) + j*nx + i;
-	ixs.push_back( icol );
-	vals.push_back(1.0);
+        const int l = k+1;
+        const int icol = l*(nx*ny) + j*nx + i;
+        ixs.push_back( icol );
+        vals.push_back(1.0);
       }
     }
 
@@ -400,13 +400,13 @@ LinearSystem::solve()
 //--------------------------------------------------------------------
 void
 LinearSystem::set_dirichlet_condition( const int irow,
-				       const double rhsVal )
+                                       const double rhsVal )
 {
   if( irow>npts_ ){
     std::ostringstream msg;
     msg << "ERROR: LinearSystem::set_dirichlet_condition()" << std::endl
-	<< "       Invalid position to set dirichlet BC on (row=" << irow << ")." << std::endl
-	<< "       There are only " << npts_ << " rows in the matrix." << std::endl;
+        << "       Invalid position to set dirichlet BC on (row=" << irow << ")." << std::endl
+        << "       There are only " << npts_ << " rows in the matrix." << std::endl;
     throw std::runtime_error( msg.str() );
   }
 
@@ -425,16 +425,16 @@ LinearSystem::set_dirichlet_condition( const int irow,
 //--------------------------------------------------------------------
 #ifdef HAVE_MPI
 LinSysInfo::LinSysInfo( const std::vector<int> & npts,
-			const bool hasPlusXSideFaces,
-			const bool hasPlusYSideFaces,
-			const bool hasPlusZSideFaces,
-			MPI_Comm & communicator )
+                        const bool hasPlusXSideFaces,
+                        const bool hasPlusYSideFaces,
+                        const bool hasPlusZSideFaces,
+                        MPI_Comm & communicator )
   : comm( communicator ),
 #else
 LinSysInfo::LinSysInfo( const std::vector<int> & npts,
-			const bool hasPlusXSideFaces,
-			const bool hasPlusYSideFaces,
-			const bool hasPlusZSideFaces )
+                        const bool hasPlusXSideFaces,
+                        const bool hasPlusYSideFaces,
+                        const bool hasPlusZSideFaces )
   :
 #endif
     dimExtent( npts ),
@@ -454,10 +454,10 @@ bool
 LinSysInfo::operator==(const LinSysInfo& s) const
 {
   return( s.solverPackage  == solverPackage &&
-	  s.preconditioner == preconditioner &&
-	  s.dimExtent == dimExtent
+          s.preconditioner == preconditioner &&
+          s.dimExtent == dimExtent
 #ifdef HAVE_MPI
-	  && s.comm == comm
+          && s.comm == comm
 #endif
     );
 }
@@ -466,10 +466,10 @@ bool
 LinSysInfo::operator<(const LinSysInfo& s) const
 {
   return( s.solverPackage < solverPackage &&
-	  s.preconditioner< preconditioner &&
-	  s.dimExtent < dimExtent
+          s.preconditioner< preconditioner &&
+          s.dimExtent < dimExtent
 #ifdef HAVE_MPI
-	  && s.comm < comm
+          && s.comm < comm
 #endif
     );
 }
@@ -513,15 +513,15 @@ LinSysFactory::get_linsys( const LinSysInfo& info )
 
 #ifdef HAVE_MPI
     LinearSystem * linSys = new LinearSystem( info.dimExtent,
-					      info.hasPlusXFaces,
-					      info.hasPlusYFaces,
-					      info.hasPlusZFaces,
-					      info.comm );
+                                              info.hasPlusXFaces,
+                                              info.hasPlusYFaces,
+                                              info.hasPlusZFaces,
+                                              info.comm );
 #else
     LinearSystem * linSys = new LinearSystem( info.dimExtent,
-					      info.hasPlusXFaces,
-					      info.hasPlusYFaces,
-					      info.hasPlusZFaces );
+                                              info.hasPlusXFaces,
+                                              info.hasPlusYFaces,
+                                              info.hasPlusZFaces );
 #endif
 
     std::pair<InfoMap::iterator,bool> result =
@@ -536,7 +536,7 @@ LinSysFactory::get_linsys( const LinSysInfo& info )
 //--------------------------------------------------------------------
 void
 LinSysFactory::bind_name_to_info( const LinSysInfo& info,
-				  const std::string & name )
+                                  const std::string & name )
 {
   nameInfoMap_.insert( make_pair(name,info) );
 }
@@ -548,7 +548,7 @@ LinSysFactory::get_linsys( const std::string & name )
   if( ii==nameInfoMap_.end() ){
     std::ostringstream msg;
     msg << "ERROR: No linear system has been assigned to '" << name << "'." << std::endl
-	<< "       You must first bind the name to the linear system information." << std::endl;
+        << "       You must first bind the name to the linear system information." << std::endl;
     throw std::runtime_error( msg.str() );
   }
   return get_linsys( ii->second );

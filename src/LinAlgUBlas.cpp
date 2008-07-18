@@ -45,7 +45,7 @@ namespace SpatialOps{
 
   LinAlgUBlas::VecType&
   LinAlgUBlas::setup_vector( const int npts,
-			     double* const fieldValues )
+                             double* const fieldValues )
   {
     assert( vec_ == NULL );
     vec_ = new VecType( npts, ArrayAdaptor(npts,fieldValues) );
@@ -69,8 +69,8 @@ namespace SpatialOps{
 
   void
   LinAlgUBlas::insert_row_values( const int rownum,
-				  std::vector<double> & rowValues,
-				  std::vector<int> & rowIndices )
+                                  std::vector<double> & rowValues,
+                                  std::vector<int> & rowIndices )
   {
     MatrixRow row( *mat_, rownum );
     std::vector<double>::const_iterator ival = rowValues.begin();
@@ -94,7 +94,7 @@ namespace SpatialOps{
     typedef MatType::iterator2 ColIter;
     for( RowIter irow = mat_->begin1(); irow!=mat_->end1(); ++irow ){
       for( ColIter icol=irow.begin(); icol!=irow.end(); ++icol ){
-	*icol = val;
+        *icol = val;
       }
     }
   }
@@ -110,7 +110,7 @@ namespace SpatialOps{
     VecIter ivec = v.begin();
     for( RowIter irow = mat_->begin1(); irow!=mat_->end1(); ++irow, ++ivec ){
       for( ColIter icol=irow.begin(); icol!=irow.end(); ++icol ){
-	*icol *= *ivec;
+        *icol *= *ivec;
       }
     }
   }
@@ -126,7 +126,7 @@ namespace SpatialOps{
     for( RowIter irow = mat_->begin1(); irow!=mat_->end1(); ++irow ){
       VecIter ivec = v.begin();
       for( ColIter icol=irow.begin(); icol!=irow.end(); ++icol, ++ivec ){
-	*icol *= *ivec;
+        *icol *= *ivec;
       }
     }
   }

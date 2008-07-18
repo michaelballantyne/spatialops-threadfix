@@ -109,10 +109,10 @@ namespace FVStaggered{
     unsigned int num_nonzeros() const;
 
     ScratchAssembler( const std::vector<int>& dimExtent,
-		      const int dir,
-		      const bool hasPlusXSideFaces,
-		      const bool hasPlusYSideFaces,
-		      const bool hasPlusZSideFaces );
+                      const int dir,
+                      const bool hasPlusXSideFaces,
+                      const bool hasPlusYSideFaces,
+                      const bool hasPlusZSideFaces );
 
     ~ScratchAssembler(){}
 
@@ -129,8 +129,8 @@ namespace FVStaggered{
      *         corresponding to each nonzero entry.
      */
     void get_row_entries( const int irow,
-			  std::vector<double> & vals,
-			  std::vector<int> & ixs ) const;
+                          std::vector<double> & vals,
+                          std::vector<int> & ixs ) const;
 
     void get_ghost_cols( std::set<int>& ghostCols ) const
     {
@@ -175,10 +175,10 @@ namespace FVStaggered{
   template<typename SrcFieldT, typename DestFieldT>
   ScratchAssembler<SrcFieldT,DestFieldT>::
   ScratchAssembler( const std::vector<int>& dimExtent,
-		    const int dir,
-		    const bool hasPlusXSideFaces,
-		    const bool hasPlusYSideFaces,
-		    const bool hasPlusZSideFaces )
+                    const int dir,
+                    const bool hasPlusXSideFaces,
+                    const bool hasPlusYSideFaces,
+                    const bool hasPlusZSideFaces )
     : indexHelper_( dimExtent, hasPlusXSideFaces, hasPlusZSideFaces, hasPlusZSideFaces ),
       dim_( dimExtent ),
       dir_( dir ),
@@ -205,11 +205,11 @@ namespace FVStaggered{
     switch( dir_ ){
     case XDIR::value :
       n = get_nx<SrcFieldT>(dim_,hasPlusXSideFaces_);
-      break;								   
-    case YDIR::value :						   
+      break;                                                               
+    case YDIR::value :                                             
       n = get_ny<SrcFieldT>(dim_,hasPlusYSideFaces_);
-      break;								   
-    case ZDIR::value :						   
+      break;                                                               
+    case ZDIR::value :                                             
       n = get_nz<SrcFieldT>(dim_,hasPlusZSideFaces_);
       break;
     }
@@ -226,11 +226,11 @@ namespace FVStaggered{
     switch( dir_ ){
     case XDIR::value :
       n = get_nx<DestFieldT>(dim_,hasPlusXSideFaces_);
-      break;			 					   
-    case YDIR::value :		 				   
+      break;                                                               
+    case YDIR::value :                                             
       n = get_ny<DestFieldT>(dim_,hasPlusYSideFaces_);
-      break;			 					   
-    case ZDIR::value :		 				   
+      break;                                                               
+    case ZDIR::value :                                             
       n = get_nz<DestFieldT>(dim_,hasPlusZSideFaces_);
       break;
     }
@@ -242,8 +242,8 @@ namespace FVStaggered{
   void
   ScratchAssembler<SrcFieldT,DestFieldT>::
   get_row_entries( const int irow,
-		   std::vector<double> & vals,
-		   std::vector<int> & ixs ) const
+                   std::vector<double> & vals,
+                   std::vector<int> & ixs ) const
   {
     // self:
     ixs.push_back( irow );
@@ -260,60 +260,60 @@ namespace FVStaggered{
 
     case XDIR::value : {
       if( dim_[0]>1 ){
-	const int stride = 1;
-	t = flat2ijk<SrcFieldT>::value( dim_, irow+stride, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_  );
-	IndexHelper<SrcFieldT,DestFieldT>::shift_dest_index( dim_, t );
-	if( t.i >= 0 && t.i < nx  &&  trow.j==t.j && trow.k==t.k ){
-	  ixs.push_back( irow+stride );
-	  vals.push_back(-1.0);
-	}
-	t = flat2ijk<SrcFieldT>::value( dim_, irow-stride, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
-	IndexHelper<SrcFieldT,DestFieldT>::shift_dest_index( dim_, t );
-	if( t.i >= 0 && t.i < nx  &&  trow.j==t.j && trow.k==t.k ){
-	  ixs.push_back( irow-stride );
-	  vals.push_back( -1.0 );
-	}
+        const int stride = 1;
+        t = flat2ijk<SrcFieldT>::value( dim_, irow+stride, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_  );
+        IndexHelper<SrcFieldT,DestFieldT>::shift_dest_index( dim_, t );
+        if( t.i >= 0 && t.i < nx  &&  trow.j==t.j && trow.k==t.k ){
+          ixs.push_back( irow+stride );
+          vals.push_back(-1.0);
+        }
+        t = flat2ijk<SrcFieldT>::value( dim_, irow-stride, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
+        IndexHelper<SrcFieldT,DestFieldT>::shift_dest_index( dim_, t );
+        if( t.i >= 0 && t.i < nx  &&  trow.j==t.j && trow.k==t.k ){
+          ixs.push_back( irow-stride );
+          vals.push_back( -1.0 );
+        }
       }
       break;
     }
 
     case YDIR::value : {
       if( dim_[1]>1 ){
-	const int ny = get_ny<SrcFieldT>( dim_, hasPlusYSideFaces_ );
-	const int stride = nx>1 ? nx : 1;
-	t = flat2ijk<SrcFieldT>::value( dim_, irow+stride, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
-	IndexHelper<SrcFieldT,DestFieldT>::shift_dest_index( dim_, t );
-	if( t.j >= 0 && t.j < ny  &&  trow.i==t.i && trow.k==t.k ){
-	  ixs.push_back( irow+stride );
-	  vals.push_back( -1.0 );
-	}
-	t = flat2ijk<SrcFieldT>::value( dim_, irow-stride, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
-	IndexHelper<SrcFieldT,DestFieldT>::shift_dest_index( dim_, t );
-	if( t.j >= 0 && t.j < ny  &&  trow.i==t.i && trow.k==t.k ){
-	  ixs.push_back( irow-stride );
-	  vals.push_back( -1.0 );
-	}
+        const int ny = get_ny<SrcFieldT>( dim_, hasPlusYSideFaces_ );
+        const int stride = nx>1 ? nx : 1;
+        t = flat2ijk<SrcFieldT>::value( dim_, irow+stride, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
+        IndexHelper<SrcFieldT,DestFieldT>::shift_dest_index( dim_, t );
+        if( t.j >= 0 && t.j < ny  &&  trow.i==t.i && trow.k==t.k ){
+          ixs.push_back( irow+stride );
+          vals.push_back( -1.0 );
+        }
+        t = flat2ijk<SrcFieldT>::value( dim_, irow-stride, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
+        IndexHelper<SrcFieldT,DestFieldT>::shift_dest_index( dim_, t );
+        if( t.j >= 0 && t.j < ny  &&  trow.i==t.i && trow.k==t.k ){
+          ixs.push_back( irow-stride );
+          vals.push_back( -1.0 );
+        }
       }
       break;
     }
 
     case ZDIR::value : {
       if( dim_[2]>1 ){
-	const int ny = get_ny<SrcFieldT>( dim_, hasPlusYSideFaces_ );
-	const int nz = get_nz<SrcFieldT>( dim_, hasPlusZSideFaces_ );
-	const int stride = (nx>1 || ny>1) ? nx*ny : 1;
-	t = flat2ijk<SrcFieldT>::value( dim_, irow+stride, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
-	IndexHelper<SrcFieldT,DestFieldT>::shift_dest_index( dim_, t );
-	if( t.k >= 0 && t.k < nz  &&  trow.i==t.i && trow.j==t.j ){
-	  ixs.push_back( irow+stride );
-	  vals.push_back( -1.0 );
-	}
-	t = flat2ijk<SrcFieldT>::value( dim_, irow-stride, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
-	IndexHelper<SrcFieldT,DestFieldT>::shift_dest_index( dim_, t );
-	if( t.k >= 0 && t.k < nz  &&  trow.i==t.i && trow.j==t.j ){
-	  ixs.push_back( irow-stride );
-	  vals.push_back( -1.0 );
-	}
+        const int ny = get_ny<SrcFieldT>( dim_, hasPlusYSideFaces_ );
+        const int nz = get_nz<SrcFieldT>( dim_, hasPlusZSideFaces_ );
+        const int stride = (nx>1 || ny>1) ? nx*ny : 1;
+        t = flat2ijk<SrcFieldT>::value( dim_, irow+stride, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
+        IndexHelper<SrcFieldT,DestFieldT>::shift_dest_index( dim_, t );
+        if( t.k >= 0 && t.k < nz  &&  trow.i==t.i && trow.j==t.j ){
+          ixs.push_back( irow+stride );
+          vals.push_back( -1.0 );
+        }
+        t = flat2ijk<SrcFieldT>::value( dim_, irow-stride, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
+        IndexHelper<SrcFieldT,DestFieldT>::shift_dest_index( dim_, t );
+        if( t.k >= 0 && t.k < nz  &&  trow.i==t.i && trow.j==t.j ){
+          ixs.push_back( irow-stride );
+          vals.push_back( -1.0 );
+        }
       }
       break;
     }

@@ -64,8 +64,8 @@ void test1()
   pts.push_back( IndexTriplet( 2,    ny-1, 1    ) );
 
   SVolField field( get_n_tot<SVolField>(dim,bcx,bcy,bcz),
-		   get_ghost_set<SVolField>(dim,bcx,bcy,bcz),
-		   NULL );
+                   get_ghost_set<SVolField>(dim,bcx,bcy,bcz),
+                   NULL );
   field = 1.0;
 
   bool isFailed = false;

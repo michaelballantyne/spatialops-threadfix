@@ -39,9 +39,9 @@ namespace SpatialOps{
     {
       InfoEpetraMap::const_iterator ii = map_.find( npts );
       if( ii == map_.end() ){
-	Epetra_LocalMap * myMap = new Epetra_LocalMap( npts, 0, *com_ );
-	map_.insert( std::make_pair(npts,myMap) );
-	return *myMap;
+        Epetra_LocalMap * myMap = new Epetra_LocalMap( npts, 0, *com_ );
+        map_.insert( std::make_pair(npts,myMap) );
+        return *myMap;
       }
       return *(ii->second);
     }
@@ -54,7 +54,7 @@ namespace SpatialOps{
     ~MapFactory()
     {
       for( InfoEpetraMap::iterator ii=map_.begin(); ii!=map_.end(); ++ii ){
-	delete ii->second;
+        delete ii->second;
       }
     }
 
@@ -110,7 +110,7 @@ namespace SpatialOps{
   //------------------------------------------------------------------
   Epetra_Vector&
   LinAlgTrilinos::setup_vector( const int npts,
-				double* const fieldValues )
+                                double* const fieldValues )
   {
     const Epetra_LocalMap & epetraMap = MapFactory::self().get_map( npts );
     vec_ = new Epetra_Vector( View, epetraMap, fieldValues );
@@ -119,38 +119,38 @@ namespace SpatialOps{
   //------------------------------------------------------------------
   Epetra_CrsMatrix&
   LinAlgTrilinos::setup_matrix( const int nrows,
-				const int ncols,
-				const int entriesPerRow )
+                                const int ncols,
+                                const int entriesPerRow )
   {
     rowMap_ = &MapFactory::self().get_map( nrows );
     colMap_ = &MapFactory::self().get_map( ncols ),
     mat_ = new Epetra_CrsMatrix( Copy,
-				 *rowMap_,
-				 *colMap_,
-				 entriesPerRow,
-				 true );
+                                 *rowMap_,
+                                 *colMap_,
+                                 entriesPerRow,
+                                 true );
     return *mat_;
   }
   //------------------------------------------------------------------
   void
   LinAlgTrilinos::insert_row_values( const int rownum,
-				     std::vector<double> & rowValues,
-				     std::vector<int> & rowIndices )
+                                     std::vector<double> & rowValues,
+                                     std::vector<int> & rowIndices )
   {
     using namespace std;
 
     assert( rowValues.size() == rowIndices.size() );
 
     const int flag = mat_->InsertMyValues( rownum,
-					   rowValues.size(),
-					   &rowValues[0],
-					   &rowIndices[0] );
+                                           rowValues.size(),
+                                           &rowValues[0],
+                                           &rowIndices[0] );
     if( flag!=0 ){
       cout << flag << endl
-	   << "Error inserting values into row: " << rownum << endl
-	   << " nonzero column indices: [ ";
+           << "Error inserting values into row: " << rownum << endl
+           << " nonzero column indices: [ ";
       for( vector<int>::const_iterator ii=rowIndices.begin(); ii!=rowIndices.end(); ++ii ){
-	cout << *ii << " ";
+        cout << *ii << " ";
       }
       cout << "]" << endl << endl;
     }
@@ -159,20 +159,20 @@ namespace SpatialOps{
   //------------------------------------------------------------------
   void
   LinAlgTrilinos::multiply( const Epetra_CrsMatrix & B,
-			    Epetra_CrsMatrix & C ) const
+                            Epetra_CrsMatrix & C ) const
   {
     const bool useTranspose = false;
     const int flag =
       EpetraExt::MatrixMatrix::Multiply( *mat_, useTranspose,
-					 B, useTranspose,
-					 C );
+                                         B, useTranspose,
+                                         C );
     if( flag!=0 )
       std::cout << std::endl
-		<< "ERROR!  Flag=" << flag
-		<< " returned from EpetraExt::MatrixMatrix::Multiply()." << std::endl
-		<< "        This likely indicates incompatible matrices for multiplication." << std::endl
-		<< "        Check matrix sparsity patterns and dimensions for compatibility."
-		<< std::endl << std::endl;
+                << "ERROR!  Flag=" << flag
+                << " returned from EpetraExt::MatrixMatrix::Multiply()." << std::endl
+                << "        This likely indicates incompatible matrices for multiplication." << std::endl
+                << "        Check matrix sparsity patterns and dimensions for compatibility."
+                << std::endl << std::endl;
   }
   //------------------------------------------------------------------
   void

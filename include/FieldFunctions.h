@@ -196,24 +196,24 @@ private:
  *   NOTE: this populates ghost fields as well.
  */
 template< typename FieldT,
-	  typename PatchT=FFLocal::NULLPatch >
+          typename PatchT=FFLocal::NULLPatch >
 class LinearFunction1D : public FieldFunction1D<FieldT,PatchT>
 {
   typedef typename PatchT::FieldID  FieldID;
 public:
 
   LinearFunction1D( const FieldT& x,
-		    const double slope,
-		    const double intercept )
+                    const double slope,
+                    const double intercept )
     : FieldFunction1D<FieldT,PatchT>(x),
       m_(slope),
       b_(intercept)
   {}
 
   LinearFunction1D( PatchT& p,
-		    const FieldID xid,
-		    const double slope,
-		    const double intercept )
+                    const FieldID xid,
+                    const double slope,
+                    const double intercept )
     : FieldFunction1D<FieldT,PatchT>(p,xid), m_(slope), b_(intercept)
   {}
 
@@ -241,18 +241,18 @@ private:
  *  of the sin function.
  */
 template< typename FieldT,
-	  typename PatchT=FFLocal::NULLPatch >
+          typename PatchT=FFLocal::NULLPatch >
 class SinFunction : public FieldFunction1D<FieldT,PatchT>
 {
   typedef typename PatchT::FieldID FieldID;
  public:
   SinFunction( PatchT& p,
-	       const FieldID xid,
-	       const double amplitude,
-	       const double period );
+               const FieldID xid,
+               const double amplitude,
+               const double period );
   SinFunction( const FieldT& x,
-	       const double amplitude,
-	       const double period );
+               const double amplitude,
+               const double period );
   ~SinFunction(){}
   void evaluate( FieldT& f ) const;
   void dx( FieldT& df ) const;
@@ -447,8 +447,8 @@ d2x( FieldT& f ) const
 template<typename FieldT, typename PatchT>
 SinFunction<FieldT,PatchT>::
 SinFunction( const FieldT& x,
-	     const double a,
-	     const double b )
+             const double a,
+             const double b )
   : FieldFunction1D<FieldT,PatchT>(x),
     a_( a ),
     b_( b )
@@ -458,9 +458,9 @@ SinFunction( const FieldT& x,
 template<typename FieldT, typename PatchT>
 SinFunction<FieldT,PatchT>::
 SinFunction( PatchT& p,
-	     const FieldID xid,
-	     const double a,
-	     const double b )
+             const FieldID xid,
+             const double a,
+             const double b )
   : FieldFunction1D<FieldT,PatchT>( p, xid ),
     a_( a ),
     b_( b )

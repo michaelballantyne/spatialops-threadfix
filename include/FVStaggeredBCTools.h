@@ -54,8 +54,8 @@ namespace FVStaggered{
    */
   template< typename FieldT >
   int get_index_with_ghost( const std::vector<int>& dim,
-			    const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ, 
-			    IndexTriplet ijk );
+                            const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ, 
+                            IndexTriplet ijk );
 
   /**
    *  @brief Modify the IndexTriplet as appropriate to obtain the
@@ -73,8 +73,8 @@ namespace FVStaggered{
    */
   template<typename OpT, typename FieldT>
   IndexTriplet shift_to_ghost_ix( const std::vector<int>& dim,
-				  const BCSide side,
-				  IndexTriplet ijk );
+                                  const BCSide side,
+                                  IndexTriplet ijk );
 
   /**
    *  @class  BoundaryCondition
@@ -108,7 +108,7 @@ namespace FVStaggered{
    *      concern over operators becoming invalidated.
    */
   template< typename FieldT,
-	    typename BCEval >
+            typename BCEval >
   class BoundaryCondition
   {
     const int index_;
@@ -137,11 +137,11 @@ namespace FVStaggered{
      *         <code>double()</code>.
      */
     BoundaryCondition( const IndexTriplet point,
-		       const std::vector<int> dim,
-		       const bool bcPlusX,
-		       const bool bcPlusY,
-		       const bool bcPlusZ,
-		       const BCEval bcEval );
+                       const std::vector<int> dim,
+                       const bool bcPlusX,
+                       const bool bcPlusY,
+                       const bool bcPlusZ,
+                       const BCEval bcEval );
 
     ~BoundaryCondition(){}
 
@@ -199,7 +199,7 @@ namespace FVStaggered{
    *      concern over operators becoming invalidated.
    */
   template< typename OpT,
-	    typename BCEval >
+            typename BCEval >
   class BoundaryConditionOp
   {
     const BCEval bcEval_;
@@ -227,13 +227,13 @@ namespace FVStaggered{
      *         database.
      */
     BoundaryConditionOp( const std::vector<int> dim,
-			 const bool bcPlusX,
-			 const bool bcPlusY,
-			 const bool bcPlusZ,
-			 const IndexTriplet point,
-			 const BCSide side,
-			 const BCEval bceval,
-			 const SpatialOps::SpatialOpDatabase<OpT>& soDatabase );
+                         const bool bcPlusX,
+                         const bool bcPlusY,
+                         const bool bcPlusZ,
+                         const IndexTriplet point,
+                         const BCSide side,
+                         const BCEval bceval,
+                         const SpatialOps::SpatialOpDatabase<OpT>& soDatabase );
 
     ~BoundaryConditionOp(){}
 
@@ -293,13 +293,13 @@ namespace FVStaggered{
    */
   template< typename BCOpT, typename OpT >
   void imprint_bc_on_op( const BCOpT& bcOp,
-			 const IndexTriplet ijk,
-			 const std::vector<int>& dim,
-			 const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ,
-			 const double bcVal,
-			 const BCSide side,
-			 OpT& op,
-			 double& rhs );
+                         const IndexTriplet ijk,
+                         const std::vector<int>& dim,
+                         const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ,
+                         const double bcVal,
+                         const BCSide side,
+                         OpT& op,
+                         double& rhs );
 
 
 
@@ -316,11 +316,11 @@ namespace FVStaggered{
   template< typename FieldT, typename BCEval >
   BoundaryCondition<FieldT,BCEval>::
   BoundaryCondition( const IndexTriplet point,
-		     const std::vector<int> dim,
-		     const bool bcPlusX,
-		     const bool bcPlusY,
-		     const bool bcPlusZ,
-		     const BCEval bcEval )
+                     const std::vector<int> dim,
+                     const bool bcPlusX,
+                     const bool bcPlusY,
+                     const bool bcPlusZ,
+                     const BCEval bcEval )
     : index_( get_index_with_ghost<FieldT>( dim, bcPlusX, bcPlusY, bcPlusZ, point ) ),
       bcEval_( bcEval )
   {}      
@@ -346,13 +346,13 @@ namespace FVStaggered{
   template< typename OpT, typename BCEval >
   BoundaryConditionOp<OpT,BCEval>::
   BoundaryConditionOp( const std::vector<int> dim,
-		       const bool bcPlusX,
-		       const bool bcPlusY,
-		       const bool bcPlusZ,
-		       const IndexTriplet point,
-		       const BCSide side,
-		       const BCEval bcEval,
-		       const SpatialOpDatabase<OpT>& soDatabase )
+                       const bool bcPlusX,
+                       const bool bcPlusY,
+                       const bool bcPlusZ,
+                       const IndexTriplet point,
+                       const BCSide side,
+                       const BCEval bcEval,
+                       const SpatialOpDatabase<OpT>& soDatabase )
     : bcEval_( bcEval ),
       index_( get_index_with_ghost<SrcFieldT>( dim, bcPlusX, bcPlusY, bcPlusZ, point ) )
   {
@@ -365,19 +365,19 @@ namespace FVStaggered{
     ghostCoef_ = 0.0;
     for( ; icol!=icole; ++icol ){
       if( icol.index() == size_t(index_) )
-	ghostCoef_ = *icol;
+        ghostCoef_ = *icol;
       else{
-	ixVals_.push_back( std::make_pair(icol.index(),*icol) );
+        ixVals_.push_back( std::make_pair(icol.index(),*icol) );
       }
     }
 #   ifndef NDEBUG
     if( ghostCoef_ == 0.0 ){
       std::cout << "Error in BCPoint." << std::endl
-		<< "(i,j,k)=("<<point.i<<","<< point.j <<","<< point.k <<")"<<endl
-		<< "index_ = " << index_ << endl
-		<< "op coefs: ";
+                << "(i,j,k)=("<<point.i<<","<< point.j <<","<< point.k <<")"<<endl
+                << "index_ = " << index_ << endl
+                << "op coefs: ";
       for( typename OpT::const_column_iterator i=row.begin(); i!=icole; ++i ){
-	cout << "  (" << i.index() << "," << *i << ")";
+        cout << "  (" << i.index() << "," << *i << ")";
       }
       cout << endl;
     }
@@ -404,8 +404,8 @@ namespace FVStaggered{
 
   template< typename FieldT >
   int get_index_with_ghost( const std::vector<int>& dim,
-			    const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ, 
-			    IndexTriplet index )
+                            const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ, 
+                            IndexTriplet index )
   {
     if( dim[0]>1 )  index.i += FieldT::Ghost::NM;
     if( dim[1]>1 )  index.j += FieldT::Ghost::NM;
@@ -415,8 +415,8 @@ namespace FVStaggered{
 
   template<typename OpT, typename FieldT>
   IndexTriplet shift_to_ghost_ix( const std::vector<int>& dim,
-				  const BCSide side,
-				  IndexTriplet ijk )
+                                  const BCSide side,
+                                  IndexTriplet ijk )
   {
     if( IsSameType<typename OpT::SrcFieldType,FieldT>::result ){
       switch(side){
@@ -447,13 +447,13 @@ namespace FVStaggered{
 
   template< typename BCOpT, typename OpT >
   void imprint_bc_on_op( const BCOpT& bcOp,
-			 const IndexTriplet ijk,
-			 const std::vector<int>& dim,
-			 const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ,
-			 const double bcVal,
-			 const BCSide side,
-			 OpT& op,
-			 double& rhs )
+                         const IndexTriplet ijk,
+                         const std::vector<int>& dim,
+                         const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ,
+                         const double bcVal,
+                         const BCSide side,
+                         OpT& op,
+                         double& rhs )
   {
     static int ncolMax = 10; // maximum number of nonzero columns
     struct BCInfo{ int ix; double coef; };
@@ -474,13 +474,13 @@ namespace FVStaggered{
     BCInfo* bci = &bcinfo[0];
     for( ; icolbc!=icolbce; ++icolbc ){
       if( icolbc.index() == size_t(ixf) ){
-	ghostcoeff = *icolbc;
+        ghostcoeff = *icolbc;
       }
       else{
-	bci->coef = *icolbc;
-	bci->ix   = icolbc.index();
-	++bci;
-	++nbcinfo;
+        bci->coef = *icolbc;
+        bci->ix   = icolbc.index();
+        ++bci;
+        ++nbcinfo;
       }
     }
 
@@ -504,9 +504,9 @@ namespace FVStaggered{
     double Sg = 0.0;
     for( ; icol!=icole; ++icol ){
       if( icol.index() == size_t(ig) ){
-	double& val = *icol;
-	Sg = val;
-	break;
+        double& val = *icol;
+        Sg = val;
+        break;
       }
     }
 
@@ -520,12 +520,12 @@ namespace FVStaggered{
     for( ; ic!=icole; ++ic ){
       const int ix = ic.index();
       if( ix!=ig ){
-	for( BCInfo* bci=&bcinfo[0]; bci!=&bcinfo[nbcinfo]; ++bci ){
-	  if( bci->ix == ix ){
-	    *ic -= bci->coef/ghostcoeff * Sg;
-	    break;
-	  }
-	} // for
+        for( BCInfo* bci=&bcinfo[0]; bci!=&bcinfo[nbcinfo]; ++bci ){
+          if( bci->ix == ix ){
+            *ic -= bci->coef/ghostcoeff * Sg;
+            break;
+          }
+        } // for
       } // if
     } // column loop
     

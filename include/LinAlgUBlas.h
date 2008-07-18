@@ -38,15 +38,15 @@ namespace SpatialOps{
     ~LinAlgUBlas();
 
     VecType& setup_vector( const int npts,
-			   double* const values );
+                           double* const values );
     
     MatType& setup_matrix( const int nrows,
-			   const int ncols,
-			   const int entriesPerRow );
+                           const int ncols,
+                           const int entriesPerRow );
 
     void insert_row_values( const int rownum,
-			    std::vector<double> & rowValues,
-			    std::vector<int> & rowIndices );
+                            std::vector<double> & rowValues,
+                            std::vector<int> & rowIndices );
 
     inline MatrixRow get_row(const int irow) const{ return MatrixRow(*mat_,irow); }
 
@@ -62,24 +62,24 @@ namespace SpatialOps{
     //@{
 
     template< typename OpType,
-	      typename SrcFieldT,
-	      typename DestFieldT >
+              typename SrcFieldT,
+              typename DestFieldT >
     inline LinAlgUBlas& operator= ( const SpatialOperator< LinAlgUBlas, OpType, SrcFieldT, DestFieldT > & m ){
       *mat_ = m.get_linalg_mat();
       return *this;
     }
 
     template< typename OpType,
-	      typename SrcFieldT,
-	      typename DestFieldT >
+              typename SrcFieldT,
+              typename DestFieldT >
     inline LinAlgUBlas& operator+=( const SpatialOperator< LinAlgUBlas, OpType, SrcFieldT, DestFieldT > & m ){
       *mat_ += m.get_linalg_mat();
       return *this;
     }
 
     template< typename OpType,
-	      typename SrcFieldT,
-	      typename DestFieldT >
+              typename SrcFieldT,
+              typename DestFieldT >
     inline LinAlgUBlas& operator-=( const  SpatialOperator< LinAlgUBlas, OpType, SrcFieldT, DestFieldT > & m ){
       *mat_ -= m.get_linalg_mat();
       return *this;

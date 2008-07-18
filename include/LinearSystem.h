@@ -59,15 +59,15 @@ struct LinSysInfo
 
 #ifdef HAVE_MPI
   LinSysInfo( const std::vector<int> & npts,
-	      const bool hasPlusXSideFaces,
-	      const bool hasPlusYSideFaces,
-	      const bool hasPlusZSideFaces,
-	      MPI_Comm & communicator );
+              const bool hasPlusXSideFaces,
+              const bool hasPlusYSideFaces,
+              const bool hasPlusZSideFaces,
+              MPI_Comm & communicator );
 #else
   LinSysInfo( const std::vector<int> & npts,
-	      const bool hasPlusXSideFaces,
-	      const bool hasPlusYSideFaces,
-	      const bool hasPlusZSideFaces );
+              const bool hasPlusXSideFaces,
+              const bool hasPlusYSideFaces,
+              const bool hasPlusZSideFaces );
 #endif
 
   ~LinSysInfo();
@@ -107,7 +107,7 @@ public:
   static LinSysFactory& self();
 
   void bind_name_to_info( const LinSysInfo& info,
-			  const std::string & name );
+                          const std::string & name );
 
   LinearSystem & get_linsys( const LinSysInfo& info );
 
@@ -154,7 +154,7 @@ public:
 
   template< typename FieldType >
   void add_field_contribution( const FieldType & localField,
-			       const double scaleFac = 1.0 );
+                               const double scaleFac = 1.0 );
 
   inline const std::vector<double> & get_field() const{return field_;}
 
@@ -246,12 +246,12 @@ public:
    */
   template<typename OpType>
   void add_op_contribution( const OpType & localMat,
-			    const double scaleFac = 1.0 );
+                            const double scaleFac = 1.0 );
 
   /** add non-ghost elements of the local field to the diagonal of LHS operator */
   template<typename FieldType>
   void add_field_contribution( const FieldType & localField,
-			       const double scaleFac = 1.0 );
+                               const double scaleFac = 1.0 );
 
 
   /** add a constant to the diagonal of the matrix */
@@ -335,7 +335,7 @@ public:
    *  default.
    */
   void set_dirichlet_condition( const int irow,
-				const double rhsVal = 0 );
+                                const double rhsVal = 0 );
 
 
 protected:
@@ -344,20 +344,20 @@ protected:
 #ifdef HAVE_MPI
 
   LinearSystem( const std::vector<int> & dimExtent,
-		const bool hasPlusXSideFaces,
-		const bool hasPlusYSideFaces,
-		const bool hasPlusZSideFaces,
-		MPI_Comm & comm );
+                const bool hasPlusXSideFaces,
+                const bool hasPlusYSideFaces,
+                const bool hasPlusZSideFaces,
+                MPI_Comm & comm );
 
   int get_global_npts( const std::vector<int> & extent,
-		       MPI_Comm & comm );
+                       MPI_Comm & comm );
 
 #else
 
   LinearSystem( const std::vector<int> & dimExtent,
-		const bool hasPlusXSideFaces,
-		const bool hasPlusYSideFaces,
-		const bool hasPlusZSideFaces );
+                const bool hasPlusXSideFaces,
+                const bool hasPlusYSideFaces,
+                const bool hasPlusZSideFaces );
 
   int get_global_npts( const std::vector<int> & extent );
 
@@ -403,7 +403,7 @@ private:
 template<typename FieldType>
 void
 RHS::add_field_contribution( const FieldType& f,
-			     const double scaleFac )
+                             const double scaleFac )
 {
   typename FieldType::const_interior_iterator ifld = f.interior_begin();
   const typename FieldType::const_interior_iterator iflde = f.interior_end();
@@ -438,7 +438,7 @@ RHS::add_field_contribution( const FieldType& f,
 template<typename OpType>
 void
 LHS::add_op_contribution( const OpType & op,
-			  const double scaleFac )
+                          const double scaleFac )
 {
   using namespace SpatialOps;
 
@@ -489,8 +489,8 @@ LHS::add_op_contribution( const OpType & op,
     if( rowDWork_.size() > 0 ){
       const int errCode = A_.SumIntoMyValues( irow, rowDWork_.size(), &rowDWork_[0], &rowIWork_[0] );
       if( errCode != 0 ){
-	std::cout << "ERROR: code '" << errCode << "' returned from trilinos SumIntoMyValues." << std::endl
-		  << "       This is likely due to an invalid column index for summation." << std::endl;
+        std::cout << "ERROR: code '" << errCode << "' returned from trilinos SumIntoMyValues." << std::endl
+                  << "       This is likely due to an invalid column index for summation." << std::endl;
       }
     }
     ++irow;
@@ -501,7 +501,7 @@ LHS::add_op_contribution( const OpType & op,
 template<typename FieldType>
 void
 LHS::add_field_contribution( const FieldType & f,
-			     const double scaleFac )
+                             const double scaleFac )
 {
   using std::vector;
 

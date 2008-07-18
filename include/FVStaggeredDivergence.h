@@ -42,7 +42,7 @@ namespace FVStaggered{
    *
    */
   template< typename SrcField,
-	    typename DestField >
+            typename DestField >
   class DivergenceAssembler
   {
   public:
@@ -74,11 +74,11 @@ namespace FVStaggered{
      *  side of the domain.
      */
     DivergenceAssembler( const std::vector<int>& dimExtent,
-			 const double cellFaceArea,
-			 const double cellVolume,
-			 const bool hasPlusXSideFaces,
-			 const bool hasPlusYSideFaces,
-			 const bool hasPlusZSideFaces );
+                         const double cellFaceArea,
+                         const double cellVolume,
+                         const bool hasPlusXSideFaces,
+                         const bool hasPlusYSideFaces,
+                         const bool hasPlusZSideFaces );
 
     ~DivergenceAssembler(){}
 
@@ -95,8 +95,8 @@ namespace FVStaggered{
      *         corresponding to each nonzero entry.
      */
     void get_row_entries( const int irow,
-			  std::vector<double> & vals,
-			  std::vector<int> & ixs ) const;
+                          std::vector<double> & vals,
+                          std::vector<int> & ixs ) const;
 
     /**
      *  @brief Obtain the set of column indices corresponding to ghost entries.
@@ -145,11 +145,11 @@ namespace FVStaggered{
   template< typename SrcField, typename DestField >
   DivergenceAssembler<SrcField,DestField>::
   DivergenceAssembler( const std::vector<int>& dimExtent,
-		       const double cellFaceArea,
-		       const double cellVolume,
-		       const bool hasPlusXSideFaces,
-		       const bool hasPlusYSideFaces,
-		       const bool hasPlusZSideFaces )
+                       const double cellFaceArea,
+                       const double cellVolume,
+                       const bool hasPlusXSideFaces,
+                       const bool hasPlusYSideFaces,
+                       const bool hasPlusZSideFaces )
     : dim_        ( dimExtent ),
       indexHelper_( dimExtent, hasPlusXSideFaces, hasPlusYSideFaces, hasPlusZSideFaces ),
       extent_     ( dimExtent ),
@@ -183,8 +183,8 @@ namespace FVStaggered{
   void
   DivergenceAssembler<SrcField,DestField>::
   get_row_entries( const int irow,
-		   std::vector<double> & vals,
-		   std::vector<int> & ixs ) const
+                   std::vector<double> & vals,
+                   std::vector<int> & ixs ) const
   {
     switch( SrcField::Location::FaceDir::value ){
     case XDIR::value:

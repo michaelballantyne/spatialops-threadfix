@@ -29,8 +29,8 @@ public:
 
 
   InteriorIterator( ForwardIterator first, const int ix,
-		    std::set<int>::const_iterator ighost,
-		    const std::set<int>::const_iterator ighostend );
+                    std::set<int>::const_iterator ighost,
+                    const std::set<int>::const_iterator ighostend );
   InteriorIterator( const self& other );
 
   // required operators for a forward iterator: ++ (prefix and postfix), *, ==, !=
@@ -83,8 +83,8 @@ public:
 
 
   GhostIterator( ForwardIterator first, const int ix,
-		 std::set<int>::const_iterator ig,
-		 const std::set<int>::const_iterator ige );
+                 std::set<int>::const_iterator ig,
+                 const std::set<int>::const_iterator ige );
   GhostIterator( const GhostIterator& other );
 
   // required operators for a forward iterator: ++ (prefix and postfix), *, ==, !=
@@ -112,9 +112,9 @@ private:
 template<typename ForwardIterator>
 InteriorIterator<ForwardIterator>::
 InteriorIterator( ForwardIterator fi,
-		  const int ix,
-		  std::set<int>::const_iterator ig,
-		  const std::set<int>::const_iterator ige )
+                  const int ix,
+                  std::set<int>::const_iterator ig,
+                  const std::set<int>::const_iterator ige )
   : current_ ( fi ),
     ix_      ( ix ),
     ig_      ( ig ),
@@ -205,9 +205,9 @@ operator==(const self& other) const
 template<typename ForwardIterator>
 GhostIterator<ForwardIterator>::
 GhostIterator( ForwardIterator fi,
-	       const int ix,
-	       std::set<int>::const_iterator ig,
-	       const std::set<int>::const_iterator ige )
+               const int ix,
+               std::set<int>::const_iterator ig,
+               const std::set<int>::const_iterator ige )
   : current_ ( fi ),
     ix_      ( ix ),
     ig_      ( ig ),

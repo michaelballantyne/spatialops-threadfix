@@ -40,9 +40,9 @@ namespace FVStaggered{
      *  side of the domain.
      */
     IndexHelper( const std::vector<int>& dim,
-		 const bool hasPlusXSideFaces,
-		 const bool hasPlusYSideFaces,
-		 const bool hasPlusZSideFaces );
+                 const bool hasPlusXSideFaces,
+                 const bool hasPlusYSideFaces,
+                 const bool hasPlusZSideFaces );
     void get_cols( const int irow, std::vector<int>& cols ) const;
     int get_ncol() const;
     int get_nrow() const;
@@ -58,7 +58,7 @@ namespace FVStaggered{
      *  at the first ghost point.
      */
     static void shift_dest_index( const std::vector<int>& dim,
-			   IndexTriplet& triplet );
+                                  IndexTriplet& triplet );
 
   private:
     const std::vector<int>& dim_;
@@ -79,8 +79,8 @@ namespace FVStaggered{
   //==================================================================
 
   inline bool is_valid_entry( const std::vector<int>& dim,
-			      const IndexTriplet& ixt1,
-			      const IndexTriplet& ixt2 );
+                              const IndexTriplet& ixt1,
+                              const IndexTriplet& ixt2 );
 
   //==================================================================
 
@@ -108,13 +108,13 @@ namespace FVStaggered{
    *  side of the domain.
    */
   template< typename SrcFieldT,
-	    typename DestFieldT >
+            typename DestFieldT >
   bool is_in_bounds( const std::vector<int>& dim,
-		     const int ixs,
-		     const int ixd,
-		     const bool hasPlusXSideFaces,
-		     const bool hasPlusYSideFaces,
-		     const bool hasPlusZSideFaces );
+                     const int ixs,
+                     const int ixd,
+                     const bool hasPlusXSideFaces,
+                     const bool hasPlusYSideFaces,
+                     const bool hasPlusZSideFaces );
 
   //==================================================================
 
@@ -550,9 +550,9 @@ namespace FVStaggered{
   template<typename SrcFieldT, typename DestFieldT>
   IndexHelper<SrcFieldT,DestFieldT>::
   IndexHelper( const std::vector<int>& dim,
-	       const bool hasPlusXSideFaces,
-	       const bool hasPlusYSideFaces,
-	       const bool hasPlusZSideFaces )
+               const bool hasPlusXSideFaces,
+               const bool hasPlusYSideFaces,
+               const bool hasPlusZSideFaces )
     : dim_( dim ),
       hasPlusXSideFaces_( hasPlusXSideFaces ),
       hasPlusYSideFaces_( hasPlusYSideFaces ),
@@ -579,13 +579,13 @@ namespace FVStaggered{
     const int stride = calculate_stride();
 
     if( is_in_bounds<SrcFieldT,DestFieldT>(dim_,icol,       irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) &&
-	is_in_bounds<SrcFieldT,DestFieldT>(dim_,icol+stride,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) ){
+        is_in_bounds<SrcFieldT,DestFieldT>(dim_,icol+stride,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) ){
 
       const IndexTriplet ijk2 = flat2ijk<SrcFieldT>::value( dim_, icol+stride, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
 
       if( is_valid_entry( dim_, ijk, ijk2 ) ){
-	cols.push_back( icol        );
-	cols.push_back( icol+stride );
+        cols.push_back( icol        );
+        cols.push_back( icol+stride );
       }
 
     }
@@ -685,8 +685,8 @@ namespace FVStaggered{
   //==================================================================
 
   bool is_valid_entry( const std::vector<int>& dim,
-		       const IndexTriplet& ixt1,
-		       const IndexTriplet& ixt2 )
+                       const IndexTriplet& ixt1,
+                       const IndexTriplet& ixt2 )
   {
     if( std::abs(ixt2.i - ixt1.i) > 1 ) return false;
     if( std::abs(ixt2.j - ixt1.j) > 1 ) return false;
@@ -698,7 +698,7 @@ namespace FVStaggered{
 
   template<typename SrcFieldT, typename DestFieldT>
   bool is_in_bounds( const std::vector<int>& dim, const int ixs, const int ixd,
-		     const bool hasPlusXSideFaces, const bool hasPlusYSideFaces, const bool hasPlusZSideFaces )
+                     const bool hasPlusXSideFaces, const bool hasPlusYSideFaces, const bool hasPlusZSideFaces )
   {
     const IndexTriplet it = flat2ijk<SrcFieldT>::value(dim,ixs,hasPlusXSideFaces,hasPlusYSideFaces,hasPlusZSideFaces);
 
@@ -745,9 +745,9 @@ namespace FVStaggered{
     const int icol4 = icol3 + 1;
 
     if( is_in_bounds<SVolField,XSurfYField>(dim_,icol ,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) &&
-	is_in_bounds<SVolField,XSurfYField>(dim_,icol2,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) &&
-	is_in_bounds<SVolField,XSurfYField>(dim_,icol3,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) &&
-	is_in_bounds<SVolField,XSurfYField>(dim_,icol4,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) ){
+        is_in_bounds<SVolField,XSurfYField>(dim_,icol2,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) &&
+        is_in_bounds<SVolField,XSurfYField>(dim_,icol3,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) &&
+        is_in_bounds<SVolField,XSurfYField>(dim_,icol4,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) ){
       cols.push_back( icol  );
       cols.push_back( icol2 );
       cols.push_back( icol3 );
@@ -769,9 +769,9 @@ namespace FVStaggered{
     const int icol4 = icol3 + 1;
 
     if( is_in_bounds<SVolField,XSurfZField>(dim_,icol ,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) &&
-	is_in_bounds<SVolField,XSurfZField>(dim_,icol2,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) &&
-	is_in_bounds<SVolField,XSurfZField>(dim_,icol3,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) &&
-	is_in_bounds<SVolField,XSurfZField>(dim_,icol4,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) ){
+        is_in_bounds<SVolField,XSurfZField>(dim_,icol2,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) &&
+        is_in_bounds<SVolField,XSurfZField>(dim_,icol3,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) &&
+        is_in_bounds<SVolField,XSurfZField>(dim_,icol4,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) ){
       cols.push_back( icol  );
       cols.push_back( icol2 );
       cols.push_back( icol3 );
@@ -794,9 +794,9 @@ namespace FVStaggered{
     const int icol4 = icol3 + 1;
 
     if( is_in_bounds<SVolField,YSurfXField>(dim_,icol ,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) &&
-	is_in_bounds<SVolField,YSurfXField>(dim_,icol2,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) &&
-	is_in_bounds<SVolField,YSurfXField>(dim_,icol3,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) &&
-	is_in_bounds<SVolField,YSurfXField>(dim_,icol4,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) ){
+        is_in_bounds<SVolField,YSurfXField>(dim_,icol2,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) &&
+        is_in_bounds<SVolField,YSurfXField>(dim_,icol3,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) &&
+        is_in_bounds<SVolField,YSurfXField>(dim_,icol4,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) ){
       cols.push_back( icol  );
       cols.push_back( icol2 );
       cols.push_back( icol3 );
@@ -834,9 +834,9 @@ namespace FVStaggered{
     const int icol4 = icol3 + nx;
 
     if( is_in_bounds<SVolField,YSurfZField>(dim_,icol ,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) &&
-	is_in_bounds<SVolField,YSurfZField>(dim_,icol2,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) &&
-	is_in_bounds<SVolField,YSurfZField>(dim_,icol3,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) &&
-	is_in_bounds<SVolField,YSurfZField>(dim_,icol4,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) ){
+        is_in_bounds<SVolField,YSurfZField>(dim_,icol2,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) &&
+        is_in_bounds<SVolField,YSurfZField>(dim_,icol3,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) &&
+        is_in_bounds<SVolField,YSurfZField>(dim_,icol4,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) ){
       cols.push_back( icol  );
       cols.push_back( icol2 );
       cols.push_back( icol3 );
@@ -859,9 +859,9 @@ namespace FVStaggered{
     const int icol4 = icol3 + 1;
 
     if( is_in_bounds<SVolField,ZSurfXField>(dim_,icol ,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) &&
-	is_in_bounds<SVolField,ZSurfXField>(dim_,icol2,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) &&
-	is_in_bounds<SVolField,ZSurfXField>(dim_,icol3,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) &&
-	is_in_bounds<SVolField,ZSurfXField>(dim_,icol4,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) ){
+        is_in_bounds<SVolField,ZSurfXField>(dim_,icol2,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) &&
+        is_in_bounds<SVolField,ZSurfXField>(dim_,icol3,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) &&
+        is_in_bounds<SVolField,ZSurfXField>(dim_,icol4,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) ){
       cols.push_back( icol  );
       cols.push_back( icol2 );
       cols.push_back( icol3 );
@@ -886,9 +886,9 @@ namespace FVStaggered{
     const int icol4 = icol3 + nx;
 
     if( is_in_bounds<SVolField,ZSurfYField>(dim_,icol ,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) &&
-	is_in_bounds<SVolField,ZSurfYField>(dim_,icol2,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) &&
-	is_in_bounds<SVolField,ZSurfYField>(dim_,icol3,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) &&
-	is_in_bounds<SVolField,ZSurfYField>(dim_,icol4,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) ){
+        is_in_bounds<SVolField,ZSurfYField>(dim_,icol2,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) &&
+        is_in_bounds<SVolField,ZSurfYField>(dim_,icol3,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) &&
+        is_in_bounds<SVolField,ZSurfYField>(dim_,icol4,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) ){
       cols.push_back( icol  );
       cols.push_back( icol2 );
       cols.push_back( icol3 );

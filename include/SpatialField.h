@@ -67,8 +67,8 @@ namespace SpatialOps{
    *   </ul>
    */
   template< typename VecOps,
-	    typename FieldLocation,
-	    typename GhostTraits >
+            typename FieldLocation,
+            typename GhostTraits >
   class SpatialField
   {
     typedef typename VecOps::VecType VecType;
@@ -106,9 +106,9 @@ namespace SpatialOps{
      *  memory.
      */
     SpatialField( const int npts,
-		  const std::set<int>& ghostSet,
-		  double * const fieldValues,
-		  const StorageMode mode = InternalStorage );
+                  const std::set<int>& ghostSet,
+                  double * const fieldValues,
+                  const StorageMode mode = InternalStorage );
 
 
     virtual ~SpatialField();
@@ -120,7 +120,7 @@ namespace SpatialOps{
      *  @param values : array of values to overwrite with.
      */
     inline void reset_values( const int npts,
-			      const double* const values );
+                              const double* const values );
 
 
     /**
@@ -452,16 +452,16 @@ namespace SpatialOps{
   template< class VecOps, typename FieldLocation, typename GhostTraits >
   SpatialField<VecOps,FieldLocation,GhostTraits>::
   SpatialField( const int npts,
-		const std::set<int>& ghostSet,
-		double * const fieldValues,
-		const StorageMode mode )
+                const std::set<int>& ghostSet,
+                double * const fieldValues,
+                const StorageMode mode )
     : npts_( npts ),
       ghostSet_( ghostSet ),
       storageMode_( mode ),
       
       fieldValues_( (storageMode_==ExternalStorage)
-		    ? fieldValues
-		    : new double[npts_] ),
+                    ? fieldValues
+                    : new double[npts_] ),
 
       vec_( linAlg_.setup_vector( npts_, fieldValues_ ) ),
 
@@ -495,7 +495,7 @@ namespace SpatialOps{
   void
   SpatialField<VecOps,FieldLocation,GhostTraits>::
   reset_values( const int npts,
-		const double* const values )
+                const double* const values )
   {
     assert( npts == npts_ );
     if( NULL == values )
@@ -648,7 +648,7 @@ namespace SpatialOps{
     const std::string fname = "load_"+prefix+".m";
     std::ofstream fout( fname.c_str() );
     fout << "function x = load_" << prefix << "()" << std::endl
-	 << "x = zeros(" << npts_ << ",1);" << std::endl;
+         << "x = zeros(" << npts_ << ",1);" << std::endl;
     int ix=1;
     for( const_iterator i=begin(); i!=end(); ++i, ++ix ){
       fout << "x(" << ix << ") = " << *i << ";" << std::endl;

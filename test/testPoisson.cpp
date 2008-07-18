@@ -30,16 +30,16 @@ class QuadFun : public FieldFunction3D<FieldT>
 {
 public:
   QuadFun( const FieldT& x,
-	   const FieldT& y,
-	   const FieldT& z,
-	   const std::vector<int>& dim,
-	   const std::vector<bool>& bcFlag )
+           const FieldT& y,
+           const FieldT& z,
+           const std::vector<int>& dim,
+           const std::vector<bool>& bcFlag )
     : FieldFunction3D<FieldT>( x, y, z ),
       a(2.0), b(2.0), c(2.0), d(1.0),
       dim_(dim),
       tmp( get_n_tot<FieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
-	   get_ghost_set<FieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
-	   NULL )
+           get_ghost_set<FieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
+           NULL )
   {}
 
   ~QuadFun(){}
@@ -114,9 +114,9 @@ private:
 //--------------------------------------------------------------------
 
 double test_poisson( const Grid& grid,
-		     const vector<int>& dim,
-		     const vector<bool>& bcFlag,
-		     const BCType bcType )
+                     const vector<int>& dim,
+                     const vector<bool>& bcFlag,
+                     const BCType bcType )
 {
   ScratchSVol& Lx = *SpatialOpDatabase<ScratchSVol>::self().retrieve_operator( 1 );
   ScratchSVol& Ly = *SpatialOpDatabase<ScratchSVol>::self().retrieve_operator( 2 );
@@ -156,11 +156,11 @@ double test_poisson( const Grid& grid,
   // set the RHS field
   //
   SVolField rhsField( get_n_tot<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
-		      get_ghost_set<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
-		      NULL );
+                      get_ghost_set<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
+                      NULL );
   SVolField tmpField( get_n_tot<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
-		      get_ghost_set<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
-		      NULL );
+                      get_ghost_set<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
+                      NULL );
   QuadFun<SVolField> quadFunVol( grid.xcoord_svol(), grid.ycoord_svol(), grid.zcoord_svol(), dim, bcFlag );
   rhsField = 0.0;
   if( dim[0]>1 ){ quadFunVol.d2x(rhsField); }
@@ -202,75 +202,75 @@ double test_poisson( const Grid& grid,
     // set bcs: x faces
     if( dim[0]>1 ){
       for( int ix=0; ix<2; ++ix ){
-	const int i = ix==0 ? 0 : dim[0]-1;
-	const BCSide side = ix==0 ? X_MINUS_SIDE : X_PLUS_SIDE;
-	for( int j=0; j<dim[1]; ++j ){
-	  for( int k=0; k<dim[2]; ++k ){
-	    // determine index for x field.
-	    const IndexTriplet ijk = shift_to_ghost_ix<InterpSVolSSurfX,ScratchSVol>( dim, side, IndexTriplet(i,j,k) );
-	    const int iix = get_index_with_ghost<SSurfXField>(dim,bcFlag[0],bcFlag[1],bcFlag[2],ijk);
-  	    const int irhs = i + j*dim[0] + k*dim[0]*dim[1];
-	    const double bcval = bcValX[iix];
-	    switch ( bcType ){
-	    case DIRICHLET:
-	      imprint_bc_on_op<InterpSVolSSurfX,ScratchSVol>( Rx, IndexTriplet(i,j,k), dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, side, Lx, rhs[irhs] );
-	      break;
-	    case NEUMANN:
-	      imprint_bc_on_op<GradSVolSSurfX,  ScratchSVol>( Gx, IndexTriplet(i,j,k), dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, side, Lx, rhs[irhs] );
-	      break;
-	    }
-	  }
-	}
+        const int i = ix==0 ? 0 : dim[0]-1;
+        const BCSide side = ix==0 ? X_MINUS_SIDE : X_PLUS_SIDE;
+        for( int j=0; j<dim[1]; ++j ){
+          for( int k=0; k<dim[2]; ++k ){
+            // determine index for x field.
+            const IndexTriplet ijk = shift_to_ghost_ix<InterpSVolSSurfX,ScratchSVol>( dim, side, IndexTriplet(i,j,k) );
+            const int iix = get_index_with_ghost<SSurfXField>(dim,bcFlag[0],bcFlag[1],bcFlag[2],ijk);
+            const int irhs = i + j*dim[0] + k*dim[0]*dim[1];
+            const double bcval = bcValX[iix];
+            switch ( bcType ){
+            case DIRICHLET:
+              imprint_bc_on_op<InterpSVolSSurfX,ScratchSVol>( Rx, IndexTriplet(i,j,k), dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, side, Lx, rhs[irhs] );
+              break;
+            case NEUMANN:
+              imprint_bc_on_op<GradSVolSSurfX,  ScratchSVol>( Gx, IndexTriplet(i,j,k), dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, side, Lx, rhs[irhs] );
+              break;
+            }
+          }
+        }
       }
     }
 
     // set bcs: y faces
     if( dim[1]>1 ){
       for( int iy=0; iy<2; ++iy ){
-	const int j = iy==0 ? 0 : dim[1]-1;
-	const BCSide side = iy==0 ? Y_MINUS_SIDE : Y_PLUS_SIDE;
-	for( int i=0; i<dim[0]; ++i ){
-	  for( int k=0; k<dim[2]; ++k ){
-	    // obtain the BC value
- 	    const IndexTriplet ijk = shift_to_ghost_ix<InterpSVolSSurfY,ScratchSVol>( dim, side, IndexTriplet(i,j,k) );
-	    const int iix = get_index_with_ghost<SSurfYField>(dim,bcFlag[0],bcFlag[1],bcFlag[2],ijk);
-	    const int irow = i + j*dim[0] + k*dim[0]*dim[1];
-	    const double bcval = bcValY[iix];
-	    // set the BC value:
-	    switch ( bcType ){
-	    case DIRICHLET:
-	      imprint_bc_on_op<InterpSVolSSurfY,ScratchSVol>( Ry, IndexTriplet(i,j,k), dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, side, Ly, rhs[irow] );
-	      break;
-	    case NEUMANN:
-	      imprint_bc_on_op<GradSVolSSurfY, ScratchSVol>( Gy, IndexTriplet(i,j,k), dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, side, Ly, rhs[irow] );
-	      break;
-	    }
-	  }
-	}
+        const int j = iy==0 ? 0 : dim[1]-1;
+        const BCSide side = iy==0 ? Y_MINUS_SIDE : Y_PLUS_SIDE;
+        for( int i=0; i<dim[0]; ++i ){
+          for( int k=0; k<dim[2]; ++k ){
+            // obtain the BC value
+            const IndexTriplet ijk = shift_to_ghost_ix<InterpSVolSSurfY,ScratchSVol>( dim, side, IndexTriplet(i,j,k) );
+            const int iix = get_index_with_ghost<SSurfYField>(dim,bcFlag[0],bcFlag[1],bcFlag[2],ijk);
+            const int irow = i + j*dim[0] + k*dim[0]*dim[1];
+            const double bcval = bcValY[iix];
+            // set the BC value:
+            switch ( bcType ){
+            case DIRICHLET:
+              imprint_bc_on_op<InterpSVolSSurfY,ScratchSVol>( Ry, IndexTriplet(i,j,k), dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, side, Ly, rhs[irow] );
+              break;
+            case NEUMANN:
+              imprint_bc_on_op<GradSVolSSurfY, ScratchSVol>( Gy, IndexTriplet(i,j,k), dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, side, Ly, rhs[irow] );
+              break;
+            }
+          }
+        }
       }
     }
 
     // set bcs: z faces
     if( dim[2]>1 ){
       for( int iz=0; iz<2; ++iz ){
-	const int k = iz==0 ? 0 : dim[2]-1;
-	const BCSide side = iz==0 ? Z_MINUS_SIDE : Z_PLUS_SIDE;
-	for( int i=0; i<dim[0]; ++i ){
-	  for( int j=0; j<dim[1]; ++j ){
- 	    const IndexTriplet ijk = shift_to_ghost_ix<InterpSVolSSurfZ,ScratchSVol>( dim, side, IndexTriplet(i,j,k) );
-	    const int iix = get_index_with_ghost<SSurfZField>(dim,bcFlag[0],bcFlag[1],bcFlag[2],ijk);
- 	    const int irow = i + j*dim[0] + k*dim[0]*dim[1];
-	    const double bcval = bcValZ[iix];
-	    switch ( bcType ){
-	    case DIRICHLET:
-	      imprint_bc_on_op<InterpSVolSSurfZ,ScratchSVol>( Rz, IndexTriplet(i,j,k), dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, side, Lz, rhs[irow] );
-	      break;
-	    case NEUMANN:
-	      imprint_bc_on_op<GradSVolSSurfZ,  ScratchSVol>( Gz, IndexTriplet(i,j,k), dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, side, Lz, rhs[irow] );
-	      break;
-	    }
-	  }
-	}
+        const int k = iz==0 ? 0 : dim[2]-1;
+        const BCSide side = iz==0 ? Z_MINUS_SIDE : Z_PLUS_SIDE;
+        for( int i=0; i<dim[0]; ++i ){
+          for( int j=0; j<dim[1]; ++j ){
+            const IndexTriplet ijk = shift_to_ghost_ix<InterpSVolSSurfZ,ScratchSVol>( dim, side, IndexTriplet(i,j,k) );
+            const int iix = get_index_with_ghost<SSurfZField>(dim,bcFlag[0],bcFlag[1],bcFlag[2],ijk);
+            const int irow = i + j*dim[0] + k*dim[0]*dim[1];
+            const double bcval = bcValZ[iix];
+            switch ( bcType ){
+            case DIRICHLET:
+              imprint_bc_on_op<InterpSVolSSurfZ,ScratchSVol>( Rz, IndexTriplet(i,j,k), dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, side, Lz, rhs[irow] );
+              break;
+            case NEUMANN:
+              imprint_bc_on_op<GradSVolSSurfZ,  ScratchSVol>( Gz, IndexTriplet(i,j,k), dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, side, Lz, rhs[irow] );
+              break;
+            }
+          }
+        }
       }
     }
   }
@@ -312,10 +312,10 @@ double test_poisson( const Grid& grid,
       maxAbsErr = max(err,maxAbsErr);
       ++nabs;
       if( abs(*iphi)>1e-10 ){
-	const double relErr = abs(err / *iphi);
-	avgRelErr += relErr;
-	maxRelErr = max(relErr,maxRelErr);
-	++nrel;
+        const double relErr = abs(err / *iphi);
+        avgRelErr += relErr;
+        maxRelErr = max(relErr,maxRelErr);
+        ++nrel;
       }
     }
     avgRelErr /= double(nrel);
@@ -362,8 +362,8 @@ double test_poisson( const Grid& grid,
 //--------------------------------------------------------------------
 
 void driver( const std::vector<int>& dim,
-	     const std::vector<double>& length,
-	     const double tol1, const double tol2 )
+             const std::vector<double>& length,
+             const double tol1, const double tol2 )
 {
   std::vector<double> spacing(3,1.0);
   for( int i=0; i<3; ++i ){

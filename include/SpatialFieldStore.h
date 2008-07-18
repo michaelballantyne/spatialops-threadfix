@@ -210,7 +210,7 @@ namespace SpatialOps{
 
 
     inline SpatFldPtr<FieldT> get( const int ntot,
-				   const std::set<int>& ghostSet );
+                                   const std::set<int>& ghostSet );
 
   private:
 
@@ -324,8 +324,8 @@ namespace SpatialOps{
       --(*count_);
       // kill the old one if needed
       if( *count_ == 0 ){
-	if( builtFromStore_ ) store_.restore_field( *f_ );
-	delete count_;
+        if( builtFromStore_ ) store_.restore_field( *f_ );
+        delete count_;
       }
     }
     // reassign
@@ -351,8 +351,8 @@ namespace SpatialOps{
       --(*count_);
       // kill the old one if needed
       if( *count_ == 0 ){
-	if( builtFromStore_ ) store_.restore_field( *f_ );
-	delete count_;
+        if( builtFromStore_ ) store_.restore_field( *f_ );
+        delete count_;
       }
     }
     // reassign
@@ -370,8 +370,8 @@ namespace SpatialOps{
     if( count_ != NULL ){
       --(*count_);
       if( *count_ == 0 ){
-	if( builtFromStore_ ) store_.restore_field( *f_ );
-	delete count_;
+        if( builtFromStore_ ) store_.restore_field( *f_ );
+        delete count_;
       }
     }
   }
@@ -388,9 +388,9 @@ namespace SpatialOps{
     for( typename FQMap::iterator ii=fqmap_.begin(); ii!=fqmap_.end(); ++ii ){
       FieldQueue& q = ii->second;
       while( !q.empty() ){
-	FieldT* field = q.front();
-	delete field;
-	q.pop();
+        FieldT* field = q.front();
+        delete field;
+        q.pop();
       }
     }
   }
@@ -427,7 +427,7 @@ namespace SpatialOps{
   template<typename FieldT>
   SpatFldPtr<FieldT>
   SpatialFieldStore<FieldT>::get( const int ntot,
-				  const std::set<int>& ghostSet )
+                                  const std::set<int>& ghostSet )
   {
 #ifdef EXPRESSION_THREADS
     boost::mutex::scoped_lock lock( get_mutex() );

@@ -95,8 +95,8 @@ namespace SpatialOps{
    *   examples of defining assemblers for various operators.
    */
   template< typename OpType,
-	    typename SrcFieldT,
-	    typename DestFieldT >
+            typename SrcFieldT,
+            typename DestFieldT >
   struct OpAssemblerSelector{};
 
 
@@ -153,9 +153,9 @@ namespace SpatialOps{
    *  OpAssemblerSelector for more details.
    */
   template< typename LinAlg,      // linear algebra support for this operator
-	    typename OpType,      // type of operator
-	    typename SrcFieldT,   // information on the source field (field operator acts on)
-	    typename DestFieldT > // information on the dest field (field operator produces)
+            typename OpType,      // type of operator
+            typename SrcFieldT,   // information on the source field (field operator acts on)
+            typename DestFieldT > // information on the dest field (field operator produces)
   class SpatialOperator
   {
   public:
@@ -180,8 +180,8 @@ namespace SpatialOps{
 
     typedef typename OpAssemblerSelector
                        < OpType,
-			 SrcFieldT,
-			 DestFieldT >::Assembler        Assembler;
+                         SrcFieldT,
+                         DestFieldT >::Assembler        Assembler;
 
   public:
 
@@ -232,7 +232,7 @@ namespace SpatialOps{
      *  @param dest The resulting field.
      */
     inline void apply_to_field( const SrcFieldT& src,
-				DestFieldT& dest ) const;
+                                DestFieldT& dest ) const;
 
 
     /**
@@ -331,7 +331,7 @@ namespace SpatialOps{
      */
     template< typename T >
     inline bool compatibility_check( const T& op,
-				     const bool isResultOp ) const;
+                                     const bool isResultOp ) const;
 
     /**
      * Check compatability of a field with this operator.  The base
@@ -344,13 +344,13 @@ namespace SpatialOps{
 
     /** Insert a row into the matrix */
     inline void insert_row_entry( const int rownum,
-				  std::vector<double> & rowValues,
-				  std::vector<int> & rowIndices );
+                                  std::vector<double> & rowValues,
+                                  std::vector<int> & rowIndices );
 
     /** Sum a row into the matrix */
     inline void sum_into_row( const int rownum,
-			      std::vector<double> & rowValues,
-			      std::vector<int> & rowIndices );
+                              std::vector<double> & rowValues,
+                              std::vector<int> & rowIndices );
 
   private:
 
@@ -504,7 +504,7 @@ namespace SpatialOps{
   void
   SpatialOperator<LinAlg,OpType,SrcFieldT,DestFieldT>::
   apply_to_field( const SrcFieldT& src,
-		  DestFieldT& dest ) const
+                  DestFieldT& dest ) const
   {
     linAlg_.multiply( src.get_linalg_vec(), dest.get_linalg_vec() );
   }
@@ -580,18 +580,18 @@ namespace SpatialOps{
 
     if( isResultOp ){
       if( nrows_ != op.nrows() ){
-	cout << "ERROR: Destination matrix must have same number of rows as operator." << endl
-	     << "  Dest [nr,nc] = [" << op.nrows() << "," << op.ncols() << "]" << endl
-	     << "  Op   [nr,nc] = [" << nrows_     << "," << ncols_     << "]" << endl;
-	return false;
+        cout << "ERROR: Destination matrix must have same number of rows as operator." << endl
+             << "  Dest [nr,nc] = [" << op.nrows() << "," << op.ncols() << "]" << endl
+             << "  Op   [nr,nc] = [" << nrows_     << "," << ncols_     << "]" << endl;
+        return false;
       }
     }
     else{
       if( ncols_ != op.nrows() ){
-	cout << "ERROR: Source matrix must have same number of rows as operator has colums." << endl
-	     << "  Dest [nr,nc] = [" << op.nrows() << "," << op.ncols() << "]" << endl
-	     << "  Op   [nr,nc] = [" << nrows_     << "," << ncols_     << "]" << endl;
-	return false;
+        cout << "ERROR: Source matrix must have same number of rows as operator has colums." << endl
+             << "  Dest [nr,nc] = [" << op.nrows() << "," << op.ncols() << "]" << endl
+             << "  Op   [nr,nc] = [" << nrows_     << "," << ncols_     << "]" << endl;
+        return false;
       }
     }
     return true;
@@ -601,25 +601,25 @@ namespace SpatialOps{
   void
   SpatialOperator<LinAlg,OpType,SrcFieldT,DestFieldT>::
   insert_row_entry( const int rownum,
-		    std::vector<double> & rowValues,
-		    std::vector<int> & rowIndices )
+                    std::vector<double> & rowValues,
+                    std::vector<int> & rowIndices )
   {
     linAlg_.insert_row_values( rownum,
-			       rowValues,
-			       rowIndices );
+                               rowValues,
+                               rowIndices );
   }
   //------------------------------------------------------------------
   template< typename LinAlg, typename OpType, typename SrcFieldT, typename DestFieldT >
   void
   SpatialOperator<LinAlg,OpType,SrcFieldT,DestFieldT>::
   sum_into_row( const int rownum,
-		std::vector<double> & rowValues,
-		std::vector<int> & rowIndices )
+                std::vector<double> & rowValues,
+                std::vector<int> & rowIndices )
   {
     linAlg_.sum_in_row_values( rownum,
-			       rowValues.size(),
-			       &rowValues[0],
-			       &rowIndices[0] );
+                               rowValues.size(),
+                               &rowValues[0],
+                               &rowIndices[0] );
   }
   //------------------------------------------------------------------
   template< typename LinAlg, typename OpType, typename SrcFieldT, typename DestFieldT >
@@ -644,27 +644,27 @@ namespace SpatialOps{
     for( int writeLoop=0; writeLoop<=1; ++writeLoop ){
       int i=0;
       for( int irow=0; irow<nrows_; ++irow ){
-	typename LinAlg::MatrixRow row = linAlg_.get_row( irow );
-	for( typename LinAlg::column_iterator icol = row.begin();
-	     icol!=row.end();
-	     ++icol, ++i )
-	  {
-	    if( writeLoop==1 ){
-	      fout << "row(" << i+1 << ") = " << irow+1 << ";  "
-		   << "col(" << i+1 << ") = " << icol.index()+1 << ";  "
-		   << "val(" << i+1 << ") = " << *icol << ";"
-		   << std::endl;
-	    }
-	  }
+        typename LinAlg::MatrixRow row = linAlg_.get_row( irow );
+        for( typename LinAlg::column_iterator icol = row.begin();
+             icol!=row.end();
+             ++icol, ++i )
+          {
+            if( writeLoop==1 ){
+              fout << "row(" << i+1 << ") = " << irow+1 << ";  "
+                   << "col(" << i+1 << ") = " << icol.index()+1 << ";  "
+                   << "val(" << i+1 << ") = " << *icol << ";"
+                   << std::endl;
+            }
+          }
       }
       if( writeLoop==0 ){
-	fout << "row = zeros(" << i << ",1);  col=row;  val=row;" << std::endl;
+        fout << "row = zeros(" << i << ",1);  col=row;  val=row;" << std::endl;
       }
     }
       fout << "A = sparse( "
-	   << " row, col, val, "
-	   << nrows_ << ", " << ncols_
-	   << ");" << std::endl;
+           << " row, col, val, "
+           << nrows_ << ", " << ncols_
+           << ");" << std::endl;
     fout.close();
   }
   //------------------------------------------------------------------
@@ -704,13 +704,13 @@ namespace SpatialOps{
 
     if( id==-1 ){
       if( opMap_.size() > 1 ){
-	std::ostringstream msg;
-	msg << "ERROR!  You must provide a unique identifier, since multiple operators have been registered." << endl
-	    << "        registered ids:" << endl;
-	for( iop=opMap_.begin(); iop!=opMap_.end(); ++iop ){
-	  msg << "     " << iop->first << std::endl;
-	}
-	throw std::runtime_error(msg.str());
+        std::ostringstream msg;
+        msg << "ERROR!  You must provide a unique identifier, since multiple operators have been registered." << endl
+            << "        registered ids:" << endl;
+        for( iop=opMap_.begin(); iop!=opMap_.end(); ++iop ){
+          msg << "     " << iop->first << std::endl;
+        }
+        throw std::runtime_error(msg.str());
       }
     }
     else{
@@ -719,10 +719,10 @@ namespace SpatialOps{
     if( iop == opMap_.end() ){
       std::ostringstream msg;
       msg << "ERROR!  Attempted to retrieve an operator that does not exist." << std::endl
-	  << "        Operator type name: " << typeid(SpatialOpType).name() << std::endl
+          << "        Operator type name: " << typeid(SpatialOpType).name() << std::endl
           << "   Registered ids:" << std::endl;
       for( iop=opMap_.begin(); iop!=opMap_.end(); ++iop ){
-	msg << "     " << iop->first <<  std::endl;
+        msg << "     " << iop->first <<  std::endl;
       }
       throw std::runtime_error( msg.str() );
     }
@@ -746,13 +746,13 @@ namespace SpatialOps{
   {
     if( id==-1 ){
       if( opMap_.size() > 1 ){
-	std::ostringstream msg;
-	msg << "ERROR!  You must provide a unique identifier, since multiple operators have been registered." << std::endl
-	    << "        registered ids:" << std::endl;
-	for( typename OpMap::const_iterator iop=opMap_.begin(); iop!=opMap_.end(); ++iop ){
-	  msg << "     " << iop->first <<  std::endl;
-	}
-	throw std::runtime_error(msg.str());
+        std::ostringstream msg;
+        msg << "ERROR!  You must provide a unique identifier, since multiple operators have been registered." << std::endl
+            << "        registered ids:" << std::endl;
+        for( typename OpMap::const_iterator iop=opMap_.begin(); iop!=opMap_.end(); ++iop ){
+          msg << "     " << iop->first <<  std::endl;
+        }
+        throw std::runtime_error(msg.str());
       }
       return opMap_.size() == 1;
     }
