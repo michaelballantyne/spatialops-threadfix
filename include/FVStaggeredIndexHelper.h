@@ -72,10 +72,6 @@ namespace FVStaggered{
     template<typename T1, typename T2> struct DirSelector<T1,T2,0>{ typedef T2 Type; };
   };
 
-  /**
-   *  @todo Implement scalar volume -> staggered surface index helpers.
-   */
-
   //==================================================================
 
   inline bool is_valid_entry( const std::vector<int>& dim,
@@ -115,8 +111,6 @@ namespace FVStaggered{
                      const bool hasPlusXSideFaces,
                      const bool hasPlusYSideFaces,
                      const bool hasPlusZSideFaces );
-
-  //==================================================================
 
   //==================================================================
 

@@ -197,7 +197,7 @@ namespace FVStaggered{
       if( dim_[2]==1 ) return;
       break;
     }
-    switch( SrcField::Location::FaceDir::value ){
+    switch( SrcField::Location::StagLoc::value ){
     case XDIR::value:
       if( dim_[0]==1 ) return;
       break;

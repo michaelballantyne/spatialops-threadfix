@@ -197,7 +197,7 @@ namespace FVStaggered{
       if( dim_[2]==1 ) return;
       break;
     }
-    switch( DestField::Location::FaceDir::value ){
+    switch( DestField::Location::StagLoc::value ){
     case XDIR::value:
       if( dim_[0]==1 ) return;
       break;
