@@ -16,6 +16,8 @@
 				1A01F1440E2FB59C0060F6BD /* PBXTargetDependency */,
 				1A01F1460E2FB59C0060F6BD /* PBXTargetDependency */,
 				1A01F1480E2FB59C0060F6BD /* PBXTargetDependency */,
+				1A7F84410E31281E00A61671 /* PBXTargetDependency */,
+				1A7F846C0E312BB300A61671 /* PBXTargetDependency */,
 			);
 			name = "test executables";
 			productName = "test executables";
@@ -24,6 +26,7 @@
 
 /* Begin PBXBuildFile section */
 		1A01F13C0E2FB51C0060F6BD /* bcTest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1A5E783E0E2FA1D60067740F /* bcTest.cpp */; };
+		1A136B280E34D73800223ECC /* FVOneDimensional.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A136B270E34D73800223ECC /* FVOneDimensional.h */; };
 		1A4F295C0E2FBFAC00E819DB /* libaztecoo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A4F29590E2FBF9A00E819DB /* libaztecoo.a */; };
 		1A4F295D0E2FBFAC00E819DB /* libepetra.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A4F295A0E2FBF9A00E819DB /* libepetra.a */; };
 		1A4F295E0E2FBFAC00E819DB /* libepetraext.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A4F295B0E2FBF9A00E819DB /* libepetraext.a */; };
@@ -48,6 +51,15 @@
 		1A5E77850E2F97920067740F /* LinearSystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1A5E77820E2F97920067740F /* LinearSystem.cpp */; };
 		1A5E781E0E2F9EAB0067740F /* testPoisson.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1A5E781D0E2F9EAB0067740F /* testPoisson.cpp */; };
 		1A5E78410E2FA2130067740F /* testNew.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1A5E78010E2F9E530067740F /* testNew.cpp */; };
+		1A7F84280E3124DF00A61671 /* LagrangePoly.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1A7F84260E3124D300A61671 /* LagrangePoly.cpp */; };
+		1A7F843F0E31280A00A61671 /* testLagrange.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1A7F84370E3127CD00A61671 /* testLagrange.cpp */; };
+		1A7F84460E3128A100A61671 /* LagrangePoly.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1A7F84260E3124D300A61671 /* LagrangePoly.cpp */; };
+		1A7F84650E312B8900A61671 /* libspatialops.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D2AAC046055464E500DB518D /* libspatialops.a */; };
+		1A7F84660E312BA600A61671 /* libaztecoo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A4F29590E2FBF9A00E819DB /* libaztecoo.a */; };
+		1A7F84670E312BA600A61671 /* libteuchos.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A4F29620E2FBFD700E819DB /* libteuchos.a */; };
+		1A7F84680E312BA600A61671 /* libepetra.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A4F295A0E2FBF9A00E819DB /* libepetra.a */; };
+		1A7F84690E312BA600A61671 /* libepetraext.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A4F295B0E2FBF9A00E819DB /* libepetraext.a */; };
+		1A7F847E0E312E1300A61671 /* testOneDim.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1A7F847D0E312E1300A61671 /* testOneDim.cpp */; };
 		1A9AF7F00E2FCC04003E8A7D /* FieldFunctions.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A01F0DC0E2FA88C0060F6BD /* FieldFunctions.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		1A9AF7F10E2FCC04003E8A7D /* FVStaggered.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A5E77890E2F97A10067740F /* FVStaggered.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		1A9AF7F20E2FCC04003E8A7D /* FVStaggeredBCTools.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A5E778A0E2F97A10067740F /* FVStaggeredBCTools.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -67,6 +79,7 @@
 		1A9AF8000E2FCC04003E8A7D /* SpatialOperator.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A5E77980E2F97A10067740F /* SpatialOperator.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		1A9AF8010E2FCC04003E8A7D /* SpatialOpsDefs.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A5E77990E2F97A10067740F /* SpatialOpsDefs.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		1A9AF8020E2FCC04003E8A7D /* SpatialOpsTools.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A5E779A0E2F97A10067740F /* SpatialOpsTools.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		1AEFAFAF0E34D6D000185CAC /* FVOneDimensional.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1AEFAFAE0E34D6D000185CAC /* FVOneDimensional.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -133,6 +146,27 @@
 			remoteGlobalIDString = D2AAC045055464E500DB518D;
 			remoteInfo = spatialops;
 		};
+		1A7F84400E31281E00A61671 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 1A7F843A0E3127F100A61671;
+			remoteInfo = testLagrange;
+		};
+		1A7F84630E312B7600A61671 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D2AAC045055464E500DB518D;
+			remoteInfo = spatialops;
+		};
+		1A7F846B0E312BB300A61671 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 1A7F845E0E312B6B00A61671;
+			remoteInfo = testOneDim;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -141,6 +175,7 @@
 		1A01F0DA0E2FA8510060F6BD /* Grid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Grid.h; path = ../test/Grid.h; sourceTree = SOURCE_ROOT; };
 		1A01F0DC0E2FA88C0060F6BD /* FieldFunctions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FieldFunctions.h; path = ../include/FieldFunctions.h; sourceTree = SOURCE_ROOT; };
 		1A01F1380E2FB4E00060F6BD /* simplebc */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = simplebc; sourceTree = BUILT_PRODUCTS_DIR; };
+		1A136B270E34D73800223ECC /* FVOneDimensional.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FVOneDimensional.h; path = ../include/FVOneDimensional.h; sourceTree = SOURCE_ROOT; };
 		1A4F29590E2FBF9A00E819DB /* libaztecoo.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libaztecoo.a; path = /jcs/software/trilinos_opt/lib/libaztecoo.a; sourceTree = "<absolute>"; };
 		1A4F295A0E2FBF9A00E819DB /* libepetra.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libepetra.a; path = /jcs/software/trilinos_opt/lib/libepetra.a; sourceTree = "<absolute>"; };
 		1A4F295B0E2FBF9A00E819DB /* libepetraext.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libepetraext.a; path = /jcs/software/trilinos_opt/lib/libepetraext.a; sourceTree = "<absolute>"; };
@@ -173,6 +208,13 @@
 		1A5E78190E2F9E960067740F /* poisson */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = poisson; sourceTree = BUILT_PRODUCTS_DIR; };
 		1A5E781D0E2F9EAB0067740F /* testPoisson.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = testPoisson.cpp; path = ../test/testPoisson.cpp; sourceTree = SOURCE_ROOT; };
 		1A5E783E0E2FA1D60067740F /* bcTest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bcTest.cpp; path = ../test/bcTest.cpp; sourceTree = SOURCE_ROOT; };
+		1A7F84260E3124D300A61671 /* LagrangePoly.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = LagrangePoly.cpp; path = ../src/LagrangePoly.cpp; sourceTree = SOURCE_ROOT; };
+		1A7F84290E3124F400A61671 /* LagrangePoly.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = LagrangePoly.h; path = ../include/LagrangePoly.h; sourceTree = SOURCE_ROOT; };
+		1A7F84370E3127CD00A61671 /* testLagrange.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = testLagrange.cpp; path = ../test/testLagrange.cpp; sourceTree = SOURCE_ROOT; };
+		1A7F843B0E3127F100A61671 /* testLagrange */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = testLagrange; sourceTree = BUILT_PRODUCTS_DIR; };
+		1A7F845F0E312B6B00A61671 /* testOneDim */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = testOneDim; sourceTree = BUILT_PRODUCTS_DIR; };
+		1A7F847D0E312E1300A61671 /* testOneDim.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = testOneDim.cpp; path = ../test/testOneDim.cpp; sourceTree = SOURCE_ROOT; };
+		1AEFAFAE0E34D6D000185CAC /* FVOneDimensional.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = FVOneDimensional.cpp; path = ../src/FVOneDimensional.cpp; sourceTree = SOURCE_ROOT; };
 		D2AAC046055464E500DB518D /* libspatialops.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libspatialops.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -223,6 +265,25 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		1A7F84390E3127F100A61671 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1A7F845D0E312B6B00A61671 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1A7F84660E312BA600A61671 /* libaztecoo.a in Frameworks */,
+				1A7F84670E312BA600A61671 /* libteuchos.a in Frameworks */,
+				1A7F84680E312BA600A61671 /* libepetra.a in Frameworks */,
+				1A7F84690E312BA600A61671 /* libepetraext.a in Frameworks */,
+				1A7F84650E312B8900A61671 /* libspatialops.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D289987405E68DCB004EDB86 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -251,9 +312,12 @@
 		08FB7795FE84155DC02AAC07 /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				1AEFAFAE0E34D6D000185CAC /* FVOneDimensional.cpp */,
 				1A5E783D0E2FA1BD0067740F /* tests */,
+				1A7F84260E3124D300A61671 /* LagrangePoly.cpp */,
 				1A5E77800E2F97920067740F /* LinAlgTrilinos.cpp */,
 				1A5E77810E2F97920067740F /* LinAlgUBlas.cpp */,
+				1A7F847D0E312E1300A61671 /* testOneDim.cpp */,
 				1A5E77820E2F97920067740F /* LinearSystem.cpp */,
 			);
 			name = Source;
@@ -265,6 +329,7 @@
 				1A01F0D80E2FA8510060F6BD /* buildOps.h */,
 				1A01F0D90E2FA8510060F6BD /* Functions.h */,
 				1A01F0DA0E2FA8510060F6BD /* Grid.h */,
+				1A7F84370E3127CD00A61671 /* testLagrange.cpp */,
 				1A5E781D0E2F9EAB0067740F /* testPoisson.cpp */,
 				1A5E77FD0E2F9E530067740F /* buildOps.cpp */,
 				1A5E78010E2F9E530067740F /* testNew.cpp */,
@@ -276,6 +341,7 @@
 		1A5E78530E2FA3CB0067740F /* Include */ = {
 			isa = PBXGroup;
 			children = (
+				1A7F84290E3124F400A61671 /* LagrangePoly.h */,
 				1A01F0DC0E2FA88C0060F6BD /* FieldFunctions.h */,
 				1A5E77890E2F97A10067740F /* FVStaggered.h */,
 				1A5E778A0E2F97A10067740F /* FVStaggeredBCTools.h */,
@@ -285,6 +351,7 @@
 				1A5E778E0E2F97A10067740F /* FVStaggeredInterpolant.h */,
 				1A5E778F0E2F97A10067740F /* FVStaggeredScratch.h */,
 				1A5E77900E2F97A10067740F /* FVStaggeredTools.h */,
+				1A136B270E34D73800223ECC /* FVOneDimensional.h */,
 				1A5E77910E2F97A10067740F /* FVStaggeredTypes.h */,
 				1A5E77920E2F97A10067740F /* LinAlgTrilinos.h */,
 				1A5E77930E2F97A10067740F /* LinAlgUBlas.h */,
@@ -307,6 +374,8 @@
 				1A5E78190E2F9E960067740F /* poisson */,
 				1A01F1380E2FB4E00060F6BD /* simplebc */,
 				1A4F29820E2FC13600E819DB /* buildOps.o */,
+				1A7F843B0E3127F100A61671 /* testLagrange */,
+				1A7F845F0E312B6B00A61671 /* testOneDim */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -344,6 +413,7 @@
 				1A9AF8000E2FCC04003E8A7D /* SpatialOperator.h in Headers */,
 				1A9AF8010E2FCC04003E8A7D /* SpatialOpsDefs.h in Headers */,
 				1A9AF8020E2FCC04003E8A7D /* SpatialOpsTools.h in Headers */,
+				1A136B280E34D73800223ECC /* FVOneDimensional.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -420,6 +490,39 @@
 			productReference = 1A5E78190E2F9E960067740F /* poisson */;
 			productType = "com.apple.product-type.tool";
 		};
+		1A7F843A0E3127F100A61671 /* testLagrange */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1A7F84430E31283C00A61671 /* Build configuration list for PBXNativeTarget "testLagrange" */;
+			buildPhases = (
+				1A7F84380E3127F100A61671 /* Sources */,
+				1A7F84390E3127F100A61671 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = testLagrange;
+			productName = testLagrange;
+			productReference = 1A7F843B0E3127F100A61671 /* testLagrange */;
+			productType = "com.apple.product-type.tool";
+		};
+		1A7F845E0E312B6B00A61671 /* testOneDim */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1A7F84730E312BC600A61671 /* Build configuration list for PBXNativeTarget "testOneDim" */;
+			buildPhases = (
+				1A7F845C0E312B6B00A61671 /* Sources */,
+				1A7F845D0E312B6B00A61671 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				1A7F84640E312B7600A61671 /* PBXTargetDependency */,
+			);
+			name = testOneDim;
+			productName = testOneDim;
+			productReference = 1A7F845F0E312B6B00A61671 /* testOneDim */;
+			productType = "com.apple.product-type.tool";
+		};
 		D2AAC045055464E500DB518D /* spatialops */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 1DEB91EB08733DB70010E9CD /* Build configuration list for PBXNativeTarget "spatialops" */;
@@ -458,6 +561,8 @@
 				1A5E78180E2F9E960067740F /* poisson */,
 				1A01F12E0E2FB4E00060F6BD /* simplebc */,
 				1A4F29810E2FC13600E819DB /* buildOps */,
+				1A7F843A0E3127F100A61671 /* testLagrange */,
+				1A7F845E0E312B6B00A61671 /* testOneDim */,
 			);
 		};
 /* End PBXProject section */
@@ -495,6 +600,23 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		1A7F84380E3127F100A61671 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1A7F84460E3128A100A61671 /* LagrangePoly.cpp in Sources */,
+				1A7F843F0E31280A00A61671 /* testLagrange.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1A7F845C0E312B6B00A61671 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1A7F847E0E312E1300A61671 /* testOneDim.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D2AAC044055464E500DB518D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -502,6 +624,8 @@
 				1A5E77830E2F97920067740F /* LinAlgTrilinos.cpp in Sources */,
 				1A5E77840E2F97920067740F /* LinAlgUBlas.cpp in Sources */,
 				1A5E77850E2F97920067740F /* LinearSystem.cpp in Sources */,
+				1A7F84280E3124DF00A61671 /* LagrangePoly.cpp in Sources */,
+				1AEFAFAF0E34D6D000185CAC /* FVOneDimensional.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -552,6 +676,21 @@
 			isa = PBXTargetDependency;
 			target = D2AAC045055464E500DB518D /* spatialops */;
 			targetProxy = 1A5E78210E2F9ECA0067740F /* PBXContainerItemProxy */;
+		};
+		1A7F84410E31281E00A61671 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 1A7F843A0E3127F100A61671 /* testLagrange */;
+			targetProxy = 1A7F84400E31281E00A61671 /* PBXContainerItemProxy */;
+		};
+		1A7F84640E312B7600A61671 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D2AAC045055464E500DB518D /* spatialops */;
+			targetProxy = 1A7F84630E312B7600A61671 /* PBXContainerItemProxy */;
+		};
+		1A7F846C0E312BB300A61671 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 1A7F845E0E312B6B00A61671 /* testOneDim */;
+			targetProxy = 1A7F846B0E312BB300A61671 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -791,6 +930,110 @@
 			};
 			name = Release;
 		};
+		1A7F843D0E3127F200A61671 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				HEADER_SEARCH_PATHS = (
+					../include,
+					"/jcs/software/daixtrose-0.0.3/jcs_install/include",
+					/jcs/software/boost_1_35_0,
+					/jcs/software/trilinos/include,
+				);
+				INSTALL_PATH = /usr/local/bin;
+				PREBINDING = NO;
+				PRODUCT_NAME = testLagrange;
+			};
+			name = Debug;
+		};
+		1A7F843E0E3127F200A61671 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_MODEL_TUNING = G5;
+				HEADER_SEARCH_PATHS = (
+					../include,
+					"/jcs/software/daixtrose-0.0.3/jcs_install/include",
+					/jcs/software/boost_1_35_0,
+					/jcs/software/trilinos/include,
+				);
+				INSTALL_PATH = /usr/local/bin;
+				PREBINDING = NO;
+				PRODUCT_NAME = testLagrange;
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
+		1A7F84610E312B6B00A61671 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				HEADER_SEARCH_PATHS = (
+					../test,
+					../include,
+					"/jcs/software/daixtrose-0.0.3/jcs_install/include",
+					/jcs/software/boost_1_35_0,
+					/jcs/software/trilinos/include,
+				);
+				INSTALL_PATH = /usr/local/bin;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/jcs/software/trilinos_opt/lib,
+				);
+				OTHER_LDFLAGS = (
+					"-lblas",
+					"-llapack",
+					"-lf95",
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = testOneDim;
+			};
+			name = Debug;
+		};
+		1A7F84620E312B6B00A61671 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_MODEL_TUNING = G5;
+				HEADER_SEARCH_PATHS = (
+					../test,
+					../include,
+					"/jcs/software/daixtrose-0.0.3/jcs_install/include",
+					/jcs/software/boost_1_35_0,
+					/jcs/software/trilinos/include,
+				);
+				INSTALL_PATH = /usr/local/bin;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/jcs/software/trilinos_opt/lib,
+				);
+				OTHER_LDFLAGS = (
+					"-lblas",
+					"-llapack",
+					"-lf95",
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = testOneDim;
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
 		1DEB91EC08733DB70010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -991,6 +1234,24 @@
 			buildConfigurations = (
 				1A5E781B0E2F9E960067740F /* Debug */,
 				1A5E781C0E2F9E960067740F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1A7F84430E31283C00A61671 /* Build configuration list for PBXNativeTarget "testLagrange" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1A7F843D0E3127F200A61671 /* Debug */,
+				1A7F843E0E3127F200A61671 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1A7F84730E312BC600A61671 /* Build configuration list for PBXNativeTarget "testOneDim" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1A7F84610E312B6B00A61671 /* Debug */,
+				1A7F84620E312B6B00A61671 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

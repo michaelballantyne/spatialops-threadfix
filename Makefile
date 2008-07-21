@@ -33,13 +33,15 @@ COMPILE_CXX = $(CXX) -c $(CXXFLAGS) $(INCDIRS)
 
 LINK = $(CXX) $(CXXFLAGS) $(INCDIRS) $(LIBDIRS)
 
-default: testnew poisson simplebc
-all: testnew poisson simplebc
+default: testnew poisson simplebc testOneDim lagrange
+all: testnew poisson simplebc testOneDim lagrange
 
 OBJS =		\
 	LinAlgTrilinos.o \
 	LinAlgUBlas.o \
-	LinearSystem.o
+	LinearSystem.o \
+	LagrangePoly.o \
+	FVOneDimensional.o
 
 bcTest.o: ./test/bcTest.cpp ./include/*.h
 	$(COMPILE_CXX) -I ./ ./test/bcTest.cpp
@@ -59,6 +61,12 @@ LinAlgUBlas.o: ./src/LinAlgUBlas.cpp ./include/LinAlgUBlas.h
 LinearSystem.o: ./src/LinearSystem.cpp ./include/SpatialOperator.h ./include/SpatialField.h ./include/LinearSystem.h
 	$(COMPILE_CXX) ./src/LinearSystem.cpp
 
+LagrangePoly.o: ./src/LagrangePoly.cpp ./include/LagrangePoly.h
+	$(COMPILE_CXX) ./src/LagrangePoly.cpp
+
+FVOneDimensional.o: ./src/FVOneDimensional.cpp ./include/FVOneDimensional.h
+	$(COMPILE_CXX) ./src/FVOneDimensional.cpp
+
 testPoisson.o: ./test/testPoisson.cpp ./include/*.h ./test/*.h
 	$(COMPILE_CXX) -I./test ./test/testPoisson.cpp
 
@@ -73,5 +81,11 @@ testnew: lib testNew.o buildOps.o
 
 poisson: lib testPoisson.o buildOps.o
 	$(LINK) testPoisson.o buildOps.o -lspatialops $(LIBS) -o testpoisson.x
+
+lagrange: lib ./test/testLagrange.cpp
+	$(LINK) ./test/testLagrange.cpp -lspatialops $(LIBS) -o testLagrange.x
+
+testOneDim: lib ./test/testOneDim.cpp
+	$(LINK) -I./test ./test/testOneDim.cpp -lspatialops $(LIBS) -o testOneDim.x
 
 clean: ; @rm *.o libspatialops.a testnew.x testpoisson.x
