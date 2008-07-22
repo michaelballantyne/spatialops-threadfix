@@ -2,6 +2,7 @@
 #define FVStaggeredBCTools_h
 
 #include <SpatialOperator.h>
+#include <OperatorDatabase.h>
 #include <FVStaggeredTools.h>
 
 namespace SpatialOps{
@@ -233,7 +234,7 @@ namespace FVStaggered{
                          const IndexTriplet point,
                          const BCSide side,
                          const BCEval bceval,
-                         const SpatialOps::SpatialOpDatabase<OpT>& soDatabase );
+                         const OperatorDatabase& soDatabase );
 
     ~BoundaryConditionOp(){}
 
@@ -352,11 +353,11 @@ namespace FVStaggered{
                        const IndexTriplet point,
                        const BCSide side,
                        const BCEval bcEval,
-                       const SpatialOpDatabase<OpT>& soDatabase )
+                       const OperatorDatabase& soDatabase )
     : bcEval_( bcEval ),
       index_( get_index_with_ghost<SrcFieldT>( dim, bcPlusX, bcPlusY, bcPlusZ, point ) )
   {
-    const OpT* op = soDatabase.retrieve_operator();
+    const OpT* op = soDatabase.retrieve_operator<OpT>();
     const int irow = get_index_with_ghost<DestFieldT>( dim, bcPlusX, bcPlusY, bcPlusZ, point );
 
     const typename OpT::MatrixRow row = op->get_row(irow);

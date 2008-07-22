@@ -113,14 +113,15 @@ private:
 
 //--------------------------------------------------------------------
 
-double test_poisson( const Grid& grid,
+double test_poisson( const OperatorDatabase& opDB,
+                     const Grid& grid,
                      const vector<int>& dim,
                      const vector<bool>& bcFlag,
                      const BCType bcType )
 {
-  ScratchSVol& Lx = *SpatialOpDatabase<ScratchSVol>::self().retrieve_operator( 1 );
-  ScratchSVol& Ly = *SpatialOpDatabase<ScratchSVol>::self().retrieve_operator( 2 );
-  ScratchSVol& Lz = *SpatialOpDatabase<ScratchSVol>::self().retrieve_operator( 3 );
+  ScratchSVol& Lx = *opDB.retrieve_operator<ScratchSVol>( 1 );
+  ScratchSVol& Ly = *opDB.retrieve_operator<ScratchSVol>( 2 );
+  ScratchSVol& Lz = *opDB.retrieve_operator<ScratchSVol>( 3 );
 
   LinSysInfo lsi( dim, bcFlag[0], bcFlag[1], bcFlag[2] );
   LinearSystem& linsys = LinSysFactory::self().get_linsys( lsi );
@@ -128,17 +129,17 @@ double test_poisson( const Grid& grid,
   LHS& lhs = linsys.get_lhs();
   lhs.reset();
 
-  const GradSVolSSurfX& Gx = *SpatialOpDatabase<GradSVolSSurfX>::self().retrieve_operator();
-  const GradSVolSSurfY& Gy = *SpatialOpDatabase<GradSVolSSurfY>::self().retrieve_operator();
-  const GradSVolSSurfZ& Gz = *SpatialOpDatabase<GradSVolSSurfZ>::self().retrieve_operator();
+  const GradSVolSSurfX& Gx = *opDB.retrieve_operator<GradSVolSSurfX>();
+  const GradSVolSSurfY& Gy = *opDB.retrieve_operator<GradSVolSSurfY>();
+  const GradSVolSSurfZ& Gz = *opDB.retrieve_operator<GradSVolSSurfZ>();
 
-  const DivSSurfXSVol& Dx = *SpatialOpDatabase<DivSSurfXSVol>::self().retrieve_operator();  
-  const DivSSurfYSVol& Dy = *SpatialOpDatabase<DivSSurfYSVol>::self().retrieve_operator();  
-  const DivSSurfZSVol& Dz = *SpatialOpDatabase<DivSSurfZSVol>::self().retrieve_operator();  
+  const DivSSurfXSVol& Dx = *opDB.retrieve_operator<DivSSurfXSVol>();  
+  const DivSSurfYSVol& Dy = *opDB.retrieve_operator<DivSSurfYSVol>();  
+  const DivSSurfZSVol& Dz = *opDB.retrieve_operator<DivSSurfZSVol>();  
 
-  const InterpSVolSSurfX& Rx = *SpatialOpDatabase<InterpSVolSSurfX>::self().retrieve_operator();
-  const InterpSVolSSurfY& Ry = *SpatialOpDatabase<InterpSVolSSurfY>::self().retrieve_operator();
-  const InterpSVolSSurfZ& Rz = *SpatialOpDatabase<InterpSVolSSurfZ>::self().retrieve_operator();
+  const InterpSVolSSurfX& Rx = *opDB.retrieve_operator<InterpSVolSSurfX>();
+  const InterpSVolSSurfY& Ry = *opDB.retrieve_operator<InterpSVolSSurfY>();
+  const InterpSVolSSurfZ& Rz = *opDB.retrieve_operator<InterpSVolSSurfZ>();
 
   //
   // set up the Laplacian operator in each direction and assemble the
@@ -371,10 +372,11 @@ void driver( const std::vector<int>& dim,
   }
 
   std::vector<bool> bcFlag(3,true);
-  build_ops( dim, spacing, bcFlag );
-  const Grid grid( dim, spacing, bcFlag );
+  OperatorDatabase opDB;
+  build_ops( dim, spacing, bcFlag, opDB );
+  const Grid grid( dim, spacing, bcFlag, opDB );
 
-  const double err1 = test_poisson( grid, dim, bcFlag, DIRICHLET );
+  const double err1 = test_poisson( opDB, grid, dim, bcFlag, DIRICHLET );
   cout << "Poisson eqn: Dirichlet BC ... ";
   if( err1 > tol1 ){
     cout << endl << scientific << "*** FAIL *** (" << err1 << ")" << endl;
@@ -384,7 +386,7 @@ void driver( const std::vector<int>& dim,
     cout << "PASS" << endl;
   }
 
-  const double err2 = test_poisson( grid, dim, bcFlag, NEUMANN   );
+  const double err2 = test_poisson( opDB, grid, dim, bcFlag, NEUMANN   );
   cout << "Poisson eqn: Neumann   BC ... ";
   if( err2 > tol1 ){
     cout << endl << scientific << "*** FAIL *** (" << err2 << ")" << endl;

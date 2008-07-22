@@ -1,4 +1,5 @@
 #include <FVStaggered.h>
+#include <OperatorDatabase.h>
 #include <buildOps.h>
 
 using namespace SpatialOps;
@@ -6,10 +7,9 @@ using namespace FVStaggered;
 
 void build_ops( const std::vector<int>& dim,
                 const std::vector<double>& spacing,
-                const std::vector<bool>& bcPlus )
+                const std::vector<bool>& bcPlus,
+                OperatorDatabase& opDB )
 {
-  using SpatialOps::SpatialOpDatabase;
-
   std::vector<double> area(3,1);
   area[0] = spacing[1]*spacing[2];
   area[1] = spacing[0]*spacing[2];
@@ -36,21 +36,21 @@ void build_ops( const std::vector<int>& dim,
     DivZSurfYZVol::Assembler Dzsyzva( dim, area[1], vol, bcPlus[0], bcPlus[1], bcPlus[2] );
     DivZSurfZZVol::Assembler Dzszzva( dim, area[2], vol, bcPlus[0], bcPlus[1], bcPlus[2] );
 
-    SpatialOpDatabase<DivSSurfXSVol>::self().register_new_operator( new DivSSurfXSVol(Dssxsva) ); //SpatialOpDatabase<DivSSurfXSVol>::self().retrieve_operator()->write_matlab("Dsxsv");
-    SpatialOpDatabase<DivSSurfYSVol>::self().register_new_operator( new DivSSurfYSVol(Dssysva) ); //SpatialOpDatabase<DivSSurfYSVol>::self().retrieve_operator()->write_matlab("Dsysv");
-    SpatialOpDatabase<DivSSurfZSVol>::self().register_new_operator( new DivSSurfZSVol(Dsszsva) );
+    opDB.register_new_operator<DivSSurfXSVol>( new DivSSurfXSVol(Dssxsva) ); //opDB.retrieve_operator<DivSSurfXSVol>()->write_matlab("Dsxsv");
+    opDB.register_new_operator<DivSSurfYSVol>( new DivSSurfYSVol(Dssysva) ); //opDB.retrieve_operator<DivSSurfYSVol>()->write_matlab("Dsysv");
+    opDB.register_new_operator<DivSSurfZSVol>( new DivSSurfZSVol(Dsszsva) );
 
-    SpatialOpDatabase<DivXSurfXXVol>::self().register_new_operator( new DivXSurfXXVol(Dxsxxva) ); //SpatialOpDatabase<DivXSurfXXVol>::self().retrieve_operator()->write_matlab("Dxsxxv");
-    SpatialOpDatabase<DivXSurfYXVol>::self().register_new_operator( new DivXSurfYXVol(Dxsyxva) ); //SpatialOpDatabase<DivXSurfYXVol>::self().retrieve_operator()->write_matlab("Dxsyxv");
-    SpatialOpDatabase<DivXSurfZXVol>::self().register_new_operator( new DivXSurfZXVol(Dxszxva) );
+    opDB.register_new_operator<DivXSurfXXVol>( new DivXSurfXXVol(Dxsxxva) ); //opDB.retrieve_operator<DivXSurfXXVol>()->write_matlab("Dxsxxv");
+    opDB.register_new_operator<DivXSurfYXVol>( new DivXSurfYXVol(Dxsyxva) ); //opDB.retrieve_operator<DivXSurfYXVol>()->write_matlab("Dxsyxv");
+    opDB.register_new_operator<DivXSurfZXVol>( new DivXSurfZXVol(Dxszxva) );
 
-    SpatialOpDatabase<DivYSurfXYVol>::self().register_new_operator( new DivYSurfXYVol(Dysxyva) ); //SpatialOpDatabase<DivYSurfXYVol>::self().retrieve_operator()->write_matlab("Dysxyv");
-    SpatialOpDatabase<DivYSurfYYVol>::self().register_new_operator( new DivYSurfYYVol(Dysyyva) ); //SpatialOpDatabase<DivYSurfXYVol>::self().retrieve_operator()->write_matlab("Dysyyv");
-    SpatialOpDatabase<DivYSurfZYVol>::self().register_new_operator( new DivYSurfZYVol(Dyszyva) ); //SpatialOpDatabase<DivYSurfXYVol>::self().retrieve_operator()->write_matlab("Dyszyv");
+    opDB.register_new_operator<DivYSurfXYVol>( new DivYSurfXYVol(Dysxyva) ); //opDB.retrieve_operator<DivYSurfXYVol>()->write_matlab("Dysxyv");
+    opDB.register_new_operator<DivYSurfYYVol>( new DivYSurfYYVol(Dysyyva) ); //opDB.retrieve_operator<DivYSurfXYVol>()->write_matlab("Dysyyv");
+    opDB.register_new_operator<DivYSurfZYVol>( new DivYSurfZYVol(Dyszyva) ); //opDB.retrieve_operator<DivYSurfXYVol>()->write_matlab("Dyszyv");
 
-    SpatialOpDatabase<DivZSurfXZVol>::self().register_new_operator( new DivZSurfXZVol(Dzsxzva) );
-    SpatialOpDatabase<DivZSurfYZVol>::self().register_new_operator( new DivZSurfYZVol(Dzsyzva) );
-    SpatialOpDatabase<DivZSurfZZVol>::self().register_new_operator( new DivZSurfZZVol(Dzszzva) ); //SpatialOpDatabase<DivZSurfZZVol>::self().retrieve_operator()->write_matlab("Dzszzv");
+    opDB.register_new_operator<DivZSurfXZVol>( new DivZSurfXZVol(Dzsxzva) );
+    opDB.register_new_operator<DivZSurfYZVol>( new DivZSurfYZVol(Dzsyzva) );
+    opDB.register_new_operator<DivZSurfZZVol>( new DivZSurfZZVol(Dzszzva) ); //opDB.retrieve_operator<DivZSurfZZVol>()->write_matlab("Dzszzv");
   }
 
   //--------------------------------------------------------
@@ -60,67 +60,67 @@ void build_ops( const std::vector<int>& dim,
     GradSVolSSurfX::Assembler Gsvssxa( spacing[0], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
     GradSVolSSurfY::Assembler Gsvssya( spacing[1], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
     GradSVolSSurfZ::Assembler Gsvssza( spacing[2], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
-    SpatialOpDatabase<GradSVolSSurfX>::self().register_new_operator( new GradSVolSSurfX(Gsvssxa) ); //SpatialOpDatabase<GradSVolSSurfX>::self().retrieve_operator()->write_matlab("Gssx");
-    SpatialOpDatabase<GradSVolSSurfY>::self().register_new_operator( new GradSVolSSurfY(Gsvssya) ); //SpatialOpDatabase<GradSVolSSurfY>::self().retrieve_operator()->write_matlab("Gssy");
-    SpatialOpDatabase<GradSVolSSurfZ>::self().register_new_operator( new GradSVolSSurfZ(Gsvssza) );
+    opDB.register_new_operator<GradSVolSSurfX>( new GradSVolSSurfX(Gsvssxa) ); //opDB.retrieve_operator<GradSVolSSurfX>()->write_matlab("Gssx");
+    opDB.register_new_operator<GradSVolSSurfY>( new GradSVolSSurfY(Gsvssya) ); //opDB.retrieve_operator<GradSVolSSurfY>()->write_matlab("Gssy");
+    opDB.register_new_operator<GradSVolSSurfZ>( new GradSVolSSurfZ(Gsvssza) );
 
 
     GradXVolXSurfX::Assembler Gxvxsxa( spacing[0], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
     GradXVolXSurfY::Assembler Gxvxsya( spacing[1], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
     GradXVolXSurfZ::Assembler Gxvxsza( spacing[2], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
-    SpatialOpDatabase<GradXVolXSurfX>::self().register_new_operator( new GradXVolXSurfX(Gxvxsxa) );
-    SpatialOpDatabase<GradXVolXSurfY>::self().register_new_operator( new GradXVolXSurfY(Gxvxsya) );
-    SpatialOpDatabase<GradXVolXSurfZ>::self().register_new_operator( new GradXVolXSurfZ(Gxvxsza) );
+    opDB.register_new_operator<GradXVolXSurfX>( new GradXVolXSurfX(Gxvxsxa) );
+    opDB.register_new_operator<GradXVolXSurfY>( new GradXVolXSurfY(Gxvxsya) );
+    opDB.register_new_operator<GradXVolXSurfZ>( new GradXVolXSurfZ(Gxvxsza) );
 
 
     GradYVolYSurfX::Assembler Gyvysxa( spacing[0], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
     GradYVolYSurfY::Assembler Gyvysya( spacing[1], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
     GradYVolYSurfZ::Assembler Gyvysza( spacing[2], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
-    SpatialOpDatabase<GradYVolYSurfX>::self().register_new_operator( new GradYVolYSurfX(Gyvysxa) );
-    SpatialOpDatabase<GradYVolYSurfY>::self().register_new_operator( new GradYVolYSurfY(Gyvysya) );
-    SpatialOpDatabase<GradYVolYSurfZ>::self().register_new_operator( new GradYVolYSurfZ(Gyvysza) );
+    opDB.register_new_operator<GradYVolYSurfX>( new GradYVolYSurfX(Gyvysxa) );
+    opDB.register_new_operator<GradYVolYSurfY>( new GradYVolYSurfY(Gyvysya) );
+    opDB.register_new_operator<GradYVolYSurfZ>( new GradYVolYSurfZ(Gyvysza) );
 
 
     GradZVolZSurfX::Assembler Gzvzsxa( spacing[0], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
     GradZVolZSurfY::Assembler Gzvzsya( spacing[1], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
     GradZVolZSurfZ::Assembler Gzvzsza( spacing[2], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
-    SpatialOpDatabase<GradZVolZSurfX>::self().register_new_operator( new GradZVolZSurfX(Gzvzsxa) );
-    SpatialOpDatabase<GradZVolZSurfY>::self().register_new_operator( new GradZVolZSurfY(Gzvzsya) );
-    SpatialOpDatabase<GradZVolZSurfZ>::self().register_new_operator( new GradZVolZSurfZ(Gzvzsza) );
+    opDB.register_new_operator<GradZVolZSurfX>( new GradZVolZSurfX(Gzvzsxa) );
+    opDB.register_new_operator<GradZVolZSurfY>( new GradZVolZSurfY(Gzvzsya) );
+    opDB.register_new_operator<GradZVolZSurfZ>( new GradZVolZSurfZ(Gzvzsza) );
 
 
     GradSVolXVol  ::Assembler Gsvxva ( spacing[0], dim, bcPlus[0], bcPlus[1], bcPlus[2] );  
     GradSVolYVol  ::Assembler Gsvyva ( spacing[1], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
     GradSVolZVol  ::Assembler Gsvzva ( spacing[2], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
-    SpatialOpDatabase<GradSVolXVol>::self().register_new_operator( new GradSVolXVol(Gsvxva) );
-    SpatialOpDatabase<GradSVolYVol>::self().register_new_operator( new GradSVolYVol(Gsvyva) );
-    SpatialOpDatabase<GradSVolZVol>::self().register_new_operator( new GradSVolZVol(Gsvzva) );
+    opDB.register_new_operator<GradSVolXVol>( new GradSVolXVol(Gsvxva) );
+    opDB.register_new_operator<GradSVolYVol>( new GradSVolYVol(Gsvyva) );
+    opDB.register_new_operator<GradSVolZVol>( new GradSVolZVol(Gsvzva) );
 
 
     GradXVolYSurfX::Assembler Gxvysxa( spacing[1], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
     GradXVolZSurfX::Assembler Gxvzsxa( spacing[2], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
-    SpatialOpDatabase<GradXVolYSurfX>::self().register_new_operator( new GradXVolYSurfX(Gxvysxa) );
-    SpatialOpDatabase<GradXVolZSurfX>::self().register_new_operator( new GradXVolZSurfX(Gxvzsxa) );
+    opDB.register_new_operator<GradXVolYSurfX>( new GradXVolYSurfX(Gxvysxa) );
+    opDB.register_new_operator<GradXVolZSurfX>( new GradXVolZSurfX(Gxvzsxa) );
 
 
     GradYVolXSurfY::Assembler Gyvxsya( spacing[0], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
     GradYVolZSurfY::Assembler Gyvzsya( spacing[2], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
-    SpatialOpDatabase<GradYVolXSurfY>::self().register_new_operator( new GradYVolXSurfY(Gyvxsya) );
-    SpatialOpDatabase<GradYVolZSurfY>::self().register_new_operator( new GradYVolZSurfY(Gyvzsya) );
+    opDB.register_new_operator<GradYVolXSurfY>( new GradYVolXSurfY(Gyvxsya) );
+    opDB.register_new_operator<GradYVolZSurfY>( new GradYVolZSurfY(Gyvzsya) );
 
 
     GradZVolXSurfZ::Assembler Gzvxsza( spacing[0], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
     GradZVolYSurfZ::Assembler Gzvysza( spacing[1], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
-    SpatialOpDatabase<GradZVolXSurfZ>::self().register_new_operator( new GradZVolXSurfZ(Gzvxsza) );
-    SpatialOpDatabase<GradZVolYSurfZ>::self().register_new_operator( new GradZVolYSurfZ(Gzvysza) );
+    opDB.register_new_operator<GradZVolXSurfZ>( new GradZVolXSurfZ(Gzvxsza) );
+    opDB.register_new_operator<GradZVolYSurfZ>( new GradZVolYSurfZ(Gzvysza) );
 
     // dilatation
     GradXVolSVol::Assembler Gxvsva( spacing[0], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
     GradYVolSVol::Assembler Gyvsva( spacing[1], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
     GradZVolSVol::Assembler Gzvsva( spacing[2], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
-    SpatialOpDatabase<GradXVolSVol>::self().register_new_operator( new GradXVolSVol(Gxvsva) );
-    SpatialOpDatabase<GradYVolSVol>::self().register_new_operator( new GradYVolSVol(Gyvsva) );
-    SpatialOpDatabase<GradZVolSVol>::self().register_new_operator( new GradZVolSVol(Gzvsva) );
+    opDB.register_new_operator<GradXVolSVol>( new GradXVolSVol(Gxvsva) );
+    opDB.register_new_operator<GradYVolSVol>( new GradYVolSVol(Gyvsva) );
+    opDB.register_new_operator<GradZVolSVol>( new GradZVolSVol(Gzvsva) );
   }
 
   //--------------------------------------------------------
@@ -131,9 +131,9 @@ void build_ops( const std::vector<int>& dim,
     InterpSVolSSurfY::Assembler Rsvssya( dim, bcPlus[0], bcPlus[1], bcPlus[2] );
     InterpSVolSSurfZ::Assembler Rsvssza( dim, bcPlus[0], bcPlus[1], bcPlus[2] );
 
-    SpatialOpDatabase<InterpSVolSSurfX>::self().register_new_operator( new InterpSVolSSurfX(Rsvssxa) );
-    SpatialOpDatabase<InterpSVolSSurfY>::self().register_new_operator( new InterpSVolSSurfY(Rsvssya) );
-    SpatialOpDatabase<InterpSVolSSurfZ>::self().register_new_operator( new InterpSVolSSurfZ(Rsvssza) );
+    opDB.register_new_operator<InterpSVolSSurfX>( new InterpSVolSSurfX(Rsvssxa) );
+    opDB.register_new_operator<InterpSVolSSurfY>( new InterpSVolSSurfY(Rsvssya) );
+    opDB.register_new_operator<InterpSVolSSurfZ>( new InterpSVolSSurfZ(Rsvssza) );
   }
 
   //--------------------------------------------------------
@@ -143,23 +143,23 @@ void build_ops( const std::vector<int>& dim,
     InterpSVolXSurfX::Assembler Rsvxsxa( dim, bcPlus[0], bcPlus[1], bcPlus[2] );
     InterpSVolXSurfY::Assembler Rsvxsya( dim, bcPlus[0], bcPlus[1], bcPlus[2] );
     InterpSVolXSurfZ::Assembler Rsvxsza( dim, bcPlus[0], bcPlus[1], bcPlus[2] );
-    SpatialOpDatabase<InterpSVolXSurfX>::self().register_new_operator( new InterpSVolXSurfX(Rsvxsxa) );  //SpatialOpDatabase<InterpSVolXSurfX>::self().retrieve_operator()->write_matlab("Rsvxsx");
-    SpatialOpDatabase<InterpSVolXSurfY>::self().register_new_operator( new InterpSVolXSurfY(Rsvxsya) );  //SpatialOpDatabase<InterpSVolXSurfY>::self().retrieve_operator()->write_matlab("Rsvxsy");
-    SpatialOpDatabase<InterpSVolXSurfZ>::self().register_new_operator( new InterpSVolXSurfZ(Rsvxsza) );  //SpatialOpDatabase<InterpSVolXSurfZ>::self().retrieve_operator()->write_matlab("Rsvxsz");
+    opDB.register_new_operator<InterpSVolXSurfX>( new InterpSVolXSurfX(Rsvxsxa) );  //opDB.retrieve_operator<InterpSVolXSurfX>()->write_matlab("Rsvxsx");
+    opDB.register_new_operator<InterpSVolXSurfY>( new InterpSVolXSurfY(Rsvxsya) );  //opDB.retrieve_operator<InterpSVolXSurfY>()->write_matlab("Rsvxsy");
+    opDB.register_new_operator<InterpSVolXSurfZ>( new InterpSVolXSurfZ(Rsvxsza) );  //opDB.retrieve_operator<InterpSVolXSurfZ>()->write_matlab("Rsvxsz");
 
     InterpSVolYSurfX::Assembler Rsvysxa( dim, bcPlus[0], bcPlus[1], bcPlus[2] );
     InterpSVolYSurfY::Assembler Rsvysya( dim, bcPlus[0], bcPlus[1], bcPlus[2] );
     InterpSVolYSurfZ::Assembler Rsvysza( dim, bcPlus[0], bcPlus[1], bcPlus[2] );
-    SpatialOpDatabase<InterpSVolYSurfX>::self().register_new_operator( new InterpSVolYSurfX(Rsvysxa) );  //SpatialOpDatabase<InterpSVolYSurfX>::self().retrieve_operator()->write_matlab("Rsvysx");
-    SpatialOpDatabase<InterpSVolYSurfY>::self().register_new_operator( new InterpSVolYSurfY(Rsvysya) );  //SpatialOpDatabase<InterpSVolYSurfY>::self().retrieve_operator()->write_matlab("Rsvysy");
-    SpatialOpDatabase<InterpSVolYSurfZ>::self().register_new_operator( new InterpSVolYSurfZ(Rsvysza) );  //SpatialOpDatabase<InterpSVolYSurfZ>::self().retrieve_operator()->write_matlab("Rsvysz");
+    opDB.register_new_operator<InterpSVolYSurfX>( new InterpSVolYSurfX(Rsvysxa) );  //opDB.retrieve_operator<InterpSVolYSurfX>()->write_matlab("Rsvysx");
+    opDB.register_new_operator<InterpSVolYSurfY>( new InterpSVolYSurfY(Rsvysya) );  //opDB.retrieve_operator<InterpSVolYSurfY>()->write_matlab("Rsvysy");
+    opDB.register_new_operator<InterpSVolYSurfZ>( new InterpSVolYSurfZ(Rsvysza) );  //opDB.retrieve_operator<InterpSVolYSurfZ>()->write_matlab("Rsvysz");
 
     InterpSVolZSurfX::Assembler Rsvzsxa( dim, bcPlus[0], bcPlus[1], bcPlus[2] );
     InterpSVolZSurfY::Assembler Rsvzsya( dim, bcPlus[0], bcPlus[1], bcPlus[2] );
     InterpSVolZSurfZ::Assembler Rsvzsza( dim, bcPlus[0], bcPlus[1], bcPlus[2] );
-    SpatialOpDatabase<InterpSVolZSurfX>::self().register_new_operator( new InterpSVolZSurfX(Rsvzsxa) );  //SpatialOpDatabase<InterpSVolZSurfX>::self().retrieve_operator()->write_matlab("Rsvzsx");
-    SpatialOpDatabase<InterpSVolZSurfY>::self().register_new_operator( new InterpSVolZSurfY(Rsvzsya) );  //SpatialOpDatabase<InterpSVolZSurfY>::self().retrieve_operator()->write_matlab("Rsvzsy");
-    SpatialOpDatabase<InterpSVolZSurfZ>::self().register_new_operator( new InterpSVolZSurfZ(Rsvzsza) );  //SpatialOpDatabase<InterpSVolZSurfZ>::self().retrieve_operator()->write_matlab("Rsvzsz");
+    opDB.register_new_operator<InterpSVolZSurfX>( new InterpSVolZSurfX(Rsvzsxa) );  //opDB.retrieve_operator<InterpSVolZSurfX>()->write_matlab("Rsvzsx");
+    opDB.register_new_operator<InterpSVolZSurfY>( new InterpSVolZSurfY(Rsvzsya) );  //opDB.retrieve_operator<InterpSVolZSurfY>()->write_matlab("Rsvzsy");
+    opDB.register_new_operator<InterpSVolZSurfZ>( new InterpSVolZSurfZ(Rsvzsza) );  //opDB.retrieve_operator<InterpSVolZSurfZ>()->write_matlab("Rsvzsz");
   }
 
   //--------------------------------------------------------
@@ -170,9 +170,9 @@ void build_ops( const std::vector<int>& dim,
     InterpSVolYVol::Assembler Rsvyva( dim, bcPlus[0], bcPlus[1], bcPlus[2] );
     InterpSVolZVol::Assembler Rsvzva( dim, bcPlus[0], bcPlus[1], bcPlus[2] );
 
-    SpatialOpDatabase<InterpSVolXVol>::self().register_new_operator( new InterpSVolXVol(Rsvxva) );  //SpatialOpDatabase<InterpSVolXVol>::self().retrieve_operator()->write_matlab("Rsvxv");
-    SpatialOpDatabase<InterpSVolYVol>::self().register_new_operator( new InterpSVolYVol(Rsvyva) );  //SpatialOpDatabase<InterpSVolYVol>::self().retrieve_operator()->write_matlab("Rsvyv");
-    SpatialOpDatabase<InterpSVolZVol>::self().register_new_operator( new InterpSVolZVol(Rsvzva) );  //SpatialOpDatabase<InterpSVolZVol>::self().retrieve_operator()->write_matlab("Rsvzv");
+    opDB.register_new_operator<InterpSVolXVol>( new InterpSVolXVol(Rsvxva) );  //opDB.retrieve_operator<InterpSVolXVol>()->write_matlab("Rsvxv");
+    opDB.register_new_operator<InterpSVolYVol>( new InterpSVolYVol(Rsvyva) );  //opDB.retrieve_operator<InterpSVolYVol>()->write_matlab("Rsvyv");
+    opDB.register_new_operator<InterpSVolZVol>( new InterpSVolZVol(Rsvzva) );  //opDB.retrieve_operator<InterpSVolZVol>()->write_matlab("Rsvzv");
   }
 
   //--------------------------------------------------------
@@ -188,14 +188,14 @@ void build_ops( const std::vector<int>& dim,
     InterpZVolXSurfZ::Assembler Rzvxsza( dim, bcPlus[0], bcPlus[1], bcPlus[2] );
     InterpZVolYSurfZ::Assembler Rzvysza( dim, bcPlus[0], bcPlus[1], bcPlus[2] );
 
-    SpatialOpDatabase<InterpXVolYSurfX>::self().register_new_operator( new InterpXVolYSurfX(Rxvysxa) );  //SpatialOpDatabase<InterpXVolYSurfX>::self().retrieve_operator()->write_matlab("Rxvysx");
-    SpatialOpDatabase<InterpXVolZSurfX>::self().register_new_operator( new InterpXVolZSurfX(Rxvzsxa) );  //SpatialOpDatabase<InterpXVolZSurfX>::self().retrieve_operator()->write_matlab("Rxvzsx");
+    opDB.register_new_operator<InterpXVolYSurfX>( new InterpXVolYSurfX(Rxvysxa) );  //opDB.retrieve_operator<InterpXVolYSurfX>()->write_matlab("Rxvysx");
+    opDB.register_new_operator<InterpXVolZSurfX>( new InterpXVolZSurfX(Rxvzsxa) );  //opDB.retrieve_operator<InterpXVolZSurfX>()->write_matlab("Rxvzsx");
 
-    SpatialOpDatabase<InterpYVolXSurfY>::self().register_new_operator( new InterpYVolXSurfY(Ryvxsya) );  //SpatialOpDatabase<InterpYVolXSurfY>::self().retrieve_operator()->write_matlab("Ryvxsy");
-    SpatialOpDatabase<InterpYVolZSurfY>::self().register_new_operator( new InterpYVolZSurfY(Ryvzsya) );
+    opDB.register_new_operator<InterpYVolXSurfY>( new InterpYVolXSurfY(Ryvxsya) );  //opDB.retrieve_operator<InterpYVolXSurfY>()->write_matlab("Ryvxsy");
+    opDB.register_new_operator<InterpYVolZSurfY>( new InterpYVolZSurfY(Ryvzsya) );
 
-    SpatialOpDatabase<InterpZVolXSurfZ>::self().register_new_operator( new InterpZVolXSurfZ(Rzvxsza) );
-    SpatialOpDatabase<InterpZVolYSurfZ>::self().register_new_operator( new InterpZVolYSurfZ(Rzvysza) );
+    opDB.register_new_operator<InterpZVolXSurfZ>( new InterpZVolXSurfZ(Rzvxsza) );
+    opDB.register_new_operator<InterpZVolYSurfZ>( new InterpZVolYSurfZ(Rzvysza) );
 
     // interpolants - volume to surface for staggered cells.
     {
@@ -203,27 +203,27 @@ void build_ops( const std::vector<int>& dim,
       InterpXVolXSurfY::Assembler Rxvxsya( dim, bcPlus[0], bcPlus[1], bcPlus[2] );
       InterpXVolXSurfZ::Assembler Rxvxsza( dim, bcPlus[0], bcPlus[1], bcPlus[2] );
 
-      SpatialOpDatabase<InterpXVolXSurfX>::self().register_new_operator( new InterpXVolXSurfX(Rxvxsxa) );  //SpatialOpDatabase<InterpXVolXSurfX>::self().retrieve_operator()->write_matlab("Rxvxsx");
-      SpatialOpDatabase<InterpXVolXSurfY>::self().register_new_operator( new InterpXVolXSurfY(Rxvxsya) );  //SpatialOpDatabase<InterpXVolXSurfY>::self().retrieve_operator()->write_matlab("Rxvxsy");
-      SpatialOpDatabase<InterpXVolXSurfZ>::self().register_new_operator( new InterpXVolXSurfZ(Rxvxsza) );  //SpatialOpDatabase<InterpXVolXSurfZ>::self().retrieve_operator()->write_matlab("Rxvxsz");
+      opDB.register_new_operator<InterpXVolXSurfX>( new InterpXVolXSurfX(Rxvxsxa) );  //opDB.retrieve_operator<InterpXVolXSurfX>()->write_matlab("Rxvxsx");
+      opDB.register_new_operator<InterpXVolXSurfY>( new InterpXVolXSurfY(Rxvxsya) );  //opDB.retrieve_operator<InterpXVolXSurfY>()->write_matlab("Rxvxsy");
+      opDB.register_new_operator<InterpXVolXSurfZ>( new InterpXVolXSurfZ(Rxvxsza) );  //opDB.retrieve_operator<InterpXVolXSurfZ>()->write_matlab("Rxvxsz");
 
 
       InterpYVolYSurfX::Assembler Ryvysxa( dim, bcPlus[0], bcPlus[1], bcPlus[2] );
       InterpYVolYSurfY::Assembler Ryvysya( dim, bcPlus[0], bcPlus[1], bcPlus[2] );
       InterpYVolYSurfZ::Assembler Ryvysza( dim, bcPlus[0], bcPlus[1], bcPlus[2] );
 
-      SpatialOpDatabase<InterpYVolYSurfX>::self().register_new_operator( new InterpYVolYSurfX(Ryvysxa) );
-      SpatialOpDatabase<InterpYVolYSurfY>::self().register_new_operator( new InterpYVolYSurfY(Ryvysya) );
-      SpatialOpDatabase<InterpYVolYSurfZ>::self().register_new_operator( new InterpYVolYSurfZ(Ryvysza) );
+      opDB.register_new_operator<InterpYVolYSurfX>( new InterpYVolYSurfX(Ryvysxa) );
+      opDB.register_new_operator<InterpYVolYSurfY>( new InterpYVolYSurfY(Ryvysya) );
+      opDB.register_new_operator<InterpYVolYSurfZ>( new InterpYVolYSurfZ(Ryvysza) );
 
 
       InterpZVolZSurfX::Assembler Rzvzsxa( dim, bcPlus[0], bcPlus[1], bcPlus[2] );
       InterpZVolZSurfY::Assembler Rzvzsya( dim, bcPlus[0], bcPlus[1], bcPlus[2] );
       InterpZVolZSurfZ::Assembler Rzvzsza( dim, bcPlus[0], bcPlus[1], bcPlus[2] );
 
-      SpatialOpDatabase<InterpZVolZSurfX>::self().register_new_operator( new InterpZVolZSurfX(Rzvzsxa) );  //SpatialOpDatabase<InterpZVolZSurfX>::self().retrieve_operator()->write_matlab("Rzvzsx");
-      SpatialOpDatabase<InterpZVolZSurfY>::self().register_new_operator( new InterpZVolZSurfY(Rzvzsya) );  //
-      SpatialOpDatabase<InterpZVolZSurfZ>::self().register_new_operator( new InterpZVolZSurfZ(Rzvzsza) );  //SpatialOpDatabase<InterpZVolZSurfZ>::self().retrieve_operator()->write_matlab("Rzvzsz");
+      opDB.register_new_operator<InterpZVolZSurfX>( new InterpZVolZSurfX(Rzvzsxa) );  //opDB.retrieve_operator<InterpZVolZSurfX>()->write_matlab("Rzvzsx");
+      opDB.register_new_operator<InterpZVolZSurfY>( new InterpZVolZSurfY(Rzvzsya) );  //
+      opDB.register_new_operator<InterpZVolZSurfZ>( new InterpZVolZSurfZ(Rzvzsza) );  //opDB.retrieve_operator<InterpZVolZSurfZ>()->write_matlab("Rzvzsz");
     }
   }
 
@@ -235,9 +235,9 @@ void build_ops( const std::vector<int>& dim,
     InterpYVolSSurfY::Assembler Ryvssya( dim, bcPlus[0], bcPlus[1], bcPlus[2] );
     InterpZVolSSurfZ::Assembler Rzvssza( dim, bcPlus[0], bcPlus[1], bcPlus[2] );
 
-    SpatialOpDatabase<InterpXVolSSurfX>::self().register_new_operator( new InterpXVolSSurfX(Rxvssxa) );
-    SpatialOpDatabase<InterpYVolSSurfY>::self().register_new_operator( new InterpYVolSSurfY(Ryvssya) );
-    SpatialOpDatabase<InterpZVolSSurfZ>::self().register_new_operator( new InterpZVolSSurfZ(Rzvssza) );
+    opDB.register_new_operator<InterpXVolSSurfX>( new InterpXVolSSurfX(Rxvssxa) );
+    opDB.register_new_operator<InterpYVolSSurfY>( new InterpYVolSSurfY(Ryvssya) );
+    opDB.register_new_operator<InterpZVolSSurfZ>( new InterpZVolSSurfZ(Rzvssza) );
   }
 
   //--------------------------------------------------------
@@ -248,9 +248,9 @@ void build_ops( const std::vector<int>& dim,
     InterpSSurfYYVol::Assembler Rsyyva( dim, bcPlus[0], bcPlus[1], bcPlus[2] );
     InterpSSurfZZVol::Assembler Rszzva( dim, bcPlus[0], bcPlus[1], bcPlus[2] );
 
-    SpatialOpDatabase<InterpSSurfXXVol>::self().register_new_operator( new InterpSSurfXXVol(Rsxxva) );
-    SpatialOpDatabase<InterpSSurfYYVol>::self().register_new_operator( new InterpSSurfYYVol(Rsyyva) );
-    SpatialOpDatabase<InterpSSurfZZVol>::self().register_new_operator( new InterpSSurfZZVol(Rszzva) );
+    opDB.register_new_operator<InterpSSurfXXVol>( new InterpSSurfXXVol(Rsxxva) );
+    opDB.register_new_operator<InterpSSurfYYVol>( new InterpSSurfYYVol(Rsyyva) );
+    opDB.register_new_operator<InterpSSurfZZVol>( new InterpSSurfZZVol(Rszzva) );
   }
 
   //--------------------------------------------------------
@@ -273,21 +273,21 @@ void build_ops( const std::vector<int>& dim,
     ScratchZVol::Assembler Szvya( dim, YDIR::value, bcPlus[0], bcPlus[1], bcPlus[2] );
     ScratchZVol::Assembler Szvza( dim, ZDIR::value, bcPlus[0], bcPlus[1], bcPlus[2] );
     
-    SpatialOpDatabase<ScratchSVol>::self().register_new_operator( new ScratchSVol(Ssvxa) );
-    SpatialOpDatabase<ScratchSVol>::self().register_new_operator( new ScratchSVol(Ssvya) );
-    SpatialOpDatabase<ScratchSVol>::self().register_new_operator( new ScratchSVol(Ssvza) );
+    opDB.register_new_operator<ScratchSVol>( new ScratchSVol(Ssvxa) );
+    opDB.register_new_operator<ScratchSVol>( new ScratchSVol(Ssvya) );
+    opDB.register_new_operator<ScratchSVol>( new ScratchSVol(Ssvza) );
 
-    SpatialOpDatabase<ScratchXVol>::self().register_new_operator( new ScratchXVol(Sxvxa) );
-    SpatialOpDatabase<ScratchXVol>::self().register_new_operator( new ScratchXVol(Sxvya) );
-    SpatialOpDatabase<ScratchXVol>::self().register_new_operator( new ScratchXVol(Sxvza) );
+    opDB.register_new_operator<ScratchXVol>( new ScratchXVol(Sxvxa) );
+    opDB.register_new_operator<ScratchXVol>( new ScratchXVol(Sxvya) );
+    opDB.register_new_operator<ScratchXVol>( new ScratchXVol(Sxvza) );
 
-    SpatialOpDatabase<ScratchYVol>::self().register_new_operator( new ScratchYVol(Syvxa) );
-    SpatialOpDatabase<ScratchYVol>::self().register_new_operator( new ScratchYVol(Syvya) );
-    SpatialOpDatabase<ScratchYVol>::self().register_new_operator( new ScratchYVol(Syvza) );
+    opDB.register_new_operator<ScratchYVol>( new ScratchYVol(Syvxa) );
+    opDB.register_new_operator<ScratchYVol>( new ScratchYVol(Syvya) );
+    opDB.register_new_operator<ScratchYVol>( new ScratchYVol(Syvza) );
 
-    SpatialOpDatabase<ScratchZVol>::self().register_new_operator( new ScratchZVol(Szvxa) );
-    SpatialOpDatabase<ScratchZVol>::self().register_new_operator( new ScratchZVol(Szvya) );
-    SpatialOpDatabase<ScratchZVol>::self().register_new_operator( new ScratchZVol(Szvza) );
+    opDB.register_new_operator<ScratchZVol>( new ScratchZVol(Szvxa) );
+    opDB.register_new_operator<ScratchZVol>( new ScratchZVol(Szvya) );
+    opDB.register_new_operator<ScratchZVol>( new ScratchZVol(Szvza) );
 
 
     // scratch grad ops - need to test these.
@@ -308,29 +308,29 @@ void build_ops( const std::vector<int>& dim,
     ScratchZVolZSurfY::Assembler Szvzsya( spacing[1], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
     ScratchZVolZSurfZ::Assembler Szvzsza( spacing[2], dim, bcPlus[0], bcPlus[1], bcPlus[2] );
 
-    SpatialOpDatabase<ScratchSVolSSurfX>::self().register_new_operator( new ScratchSVolSSurfX(Ssvssxa) );
-    SpatialOpDatabase<ScratchSVolSSurfY>::self().register_new_operator( new ScratchSVolSSurfY(Ssvssya) );
-    SpatialOpDatabase<ScratchSVolSSurfZ>::self().register_new_operator( new ScratchSVolSSurfZ(Ssvssza) );
+    opDB.register_new_operator<ScratchSVolSSurfX>( new ScratchSVolSSurfX(Ssvssxa) );
+    opDB.register_new_operator<ScratchSVolSSurfY>( new ScratchSVolSSurfY(Ssvssya) );
+    opDB.register_new_operator<ScratchSVolSSurfZ>( new ScratchSVolSSurfZ(Ssvssza) );
 
-    SpatialOpDatabase<ScratchXVolXSurfX>::self().register_new_operator( new ScratchXVolXSurfX(Sxvxsxa) );
-    SpatialOpDatabase<ScratchXVolXSurfY>::self().register_new_operator( new ScratchXVolXSurfY(Sxvxsya) );
-    SpatialOpDatabase<ScratchXVolXSurfZ>::self().register_new_operator( new ScratchXVolXSurfZ(Sxvxsza) );
+    opDB.register_new_operator<ScratchXVolXSurfX>( new ScratchXVolXSurfX(Sxvxsxa) );
+    opDB.register_new_operator<ScratchXVolXSurfY>( new ScratchXVolXSurfY(Sxvxsya) );
+    opDB.register_new_operator<ScratchXVolXSurfZ>( new ScratchXVolXSurfZ(Sxvxsza) );
 
-    SpatialOpDatabase<ScratchYVolYSurfX>::self().register_new_operator( new ScratchYVolYSurfX(Syvysxa) );
-    SpatialOpDatabase<ScratchYVolYSurfY>::self().register_new_operator( new ScratchYVolYSurfY(Syvysya) );
-    SpatialOpDatabase<ScratchYVolYSurfZ>::self().register_new_operator( new ScratchYVolYSurfZ(Syvysza) );
+    opDB.register_new_operator<ScratchYVolYSurfX>( new ScratchYVolYSurfX(Syvysxa) );
+    opDB.register_new_operator<ScratchYVolYSurfY>( new ScratchYVolYSurfY(Syvysya) );
+    opDB.register_new_operator<ScratchYVolYSurfZ>( new ScratchYVolYSurfZ(Syvysza) );
 
-    SpatialOpDatabase<ScratchZVolZSurfX>::self().register_new_operator( new ScratchZVolZSurfX(Szvzsxa) );
-    SpatialOpDatabase<ScratchZVolZSurfY>::self().register_new_operator( new ScratchZVolZSurfY(Szvzsya) );
-    SpatialOpDatabase<ScratchZVolZSurfZ>::self().register_new_operator( new ScratchZVolZSurfZ(Szvzsza) );
+    opDB.register_new_operator<ScratchZVolZSurfX>( new ScratchZVolZSurfX(Szvzsxa) );
+    opDB.register_new_operator<ScratchZVolZSurfY>( new ScratchZVolZSurfY(Szvzsya) );
+    opDB.register_new_operator<ScratchZVolZSurfZ>( new ScratchZVolZSurfZ(Szvzsza) );
 
     // bc operators
     ScratchSSurfX::Assembler Sssxa( dim, XDIR::value, bcPlus[0], bcPlus[1], bcPlus[2] );
     ScratchSSurfY::Assembler Sssya( dim, YDIR::value, bcPlus[0], bcPlus[1], bcPlus[2] );
     ScratchSSurfZ::Assembler Sssza( dim, ZDIR::value, bcPlus[0], bcPlus[1], bcPlus[2] );
 
-    SpatialOpDatabase<ScratchSSurfX>::self().register_new_operator( new ScratchSSurfX(Sssxa) );
-    SpatialOpDatabase<ScratchSSurfY>::self().register_new_operator( new ScratchSSurfY(Sssya) );
-    SpatialOpDatabase<ScratchSSurfZ>::self().register_new_operator( new ScratchSSurfZ(Sssza) );
+    opDB.register_new_operator<ScratchSSurfX>( new ScratchSSurfX(Sssxa) );
+    opDB.register_new_operator<ScratchSSurfY>( new ScratchSSurfY(Sssya) );
+    opDB.register_new_operator<ScratchSSurfZ>( new ScratchSSurfZ(Sssza) );
   }
 }

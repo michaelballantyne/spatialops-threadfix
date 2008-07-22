@@ -362,87 +362,7 @@ namespace SpatialOps{
   };
 
 
-  //====================================================================
-
-
-  /**
-   *  @class  SpatialOpDatabase
-   *  @author James C. Sutherland
-   *  @date   December, 2006
-   *
-   *  Factory for SpatialOperator objects.  These objects are registered
-   *  here (created externally, ownership is transferred) and can be
-   *  recalled for later use.
-   *
-   *  Note that one can have multiple operators registered for a given
-   *  type, and activate them as needed.  This allows the potential for
-   *  dynamic operator switching.
-   *
-   *  @todo Need to allow the ability to put multiple operators in a
-   *  database and retrieve them, potentially with locking capability to prevent multiple access.
-   */
-  template< class SpatialOpType >
-  class SpatialOpDatabase
-  {
-  public:
-
-    typedef typename SpatialOpType::SrcGhost    SrcGhost;
-    typedef typename SpatialOpType::DestGhost   DestGhost;
-
-
-    static SpatialOpDatabase& self();
-
-    /**
-     *  Registers a new operator.
-     *
-     *  @param op  The operator itself.  Ownership is transfered.  This
-     *  must be a heap-allocated object (build via "new")
-     *
-     *  @return id  A unique identifier for this operator.
-     */
-    int register_new_operator( SpatialOpType * const op );
-
-    /**
-     *  Obtain the spatial operator with the given id.
-     *  Throws an exception if no match is found.
-     *
-     *  This pointer reference can change if the default operator for
-     *  this type is changed via a call to
-     *  <code>set_default_operator()</code> or
-     *  <code>register_new_operator()</code>.
-     */
-    SpatialOpType* retrieve_operator( const int id=-1 ) const;
-
-
-    /**
-     *  determine if an operator with this id exists in the databse
-     */
-    bool query_operator( const int id=-1 ) const;
-
-    /**
-     *  Remove all registered operators from the database.
-     */
-    void empty_database();
-
-  private:
-
-    SpatialOpDatabase();
-    ~SpatialOpDatabase();
-
-    SpatialOpDatabase(const SpatialOpDatabase&);
-    SpatialOpDatabase&  operator=(const SpatialOpDatabase&);
-
-    typedef std::map< int, SpatialOpType* > OpMap;
-    OpMap opMap_;
-
-    int idCounter_;
-  };
-
-
-  //====================================================================
-
-
-
+  //==================================================================
 
 
 
@@ -454,9 +374,6 @@ namespace SpatialOps{
   //  Implementation
   //
   // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
 
 
 
@@ -668,115 +585,6 @@ namespace SpatialOps{
     fout.close();
   }
   //------------------------------------------------------------------
-
-  //==================================================================
-
-
-  //------------------------------------------------------------------
-  template< class SpatialOpType >
-  SpatialOpDatabase<SpatialOpType>&
-  SpatialOpDatabase<SpatialOpType>::self()
-  {
-    static SpatialOpDatabase<SpatialOpType> s;
-    return s;
-  }
-//--------------------------------------------------------------------
-  template< class SpatialOpType >
-  int
-  SpatialOpDatabase<SpatialOpType>::
-  register_new_operator( SpatialOpType * const op )
-  {
-    const int id = ++idCounter_;
-    std::pair< typename OpMap::const_iterator, bool > result
-      = opMap_.insert( std::make_pair(id,op) );
-    assert( result.second );
-    return id;
-  }
-  //------------------------------------------------------------------
-  template< class SpatialOpType >
-  SpatialOpType*
-  SpatialOpDatabase<SpatialOpType>::
-  retrieve_operator( const int id ) const
-  {
-    using std::endl;
-
-    typename OpMap::const_iterator iop = opMap_.begin();
-
-    if( id==-1 ){
-      if( opMap_.size() > 1 ){
-        std::ostringstream msg;
-        msg << "ERROR!  You must provide a unique identifier, since multiple operators have been registered." << endl
-            << "        registered ids:" << endl;
-        for( iop=opMap_.begin(); iop!=opMap_.end(); ++iop ){
-          msg << "     " << iop->first << std::endl;
-        }
-        throw std::runtime_error(msg.str());
-      }
-    }
-    else{
-      iop = opMap_.find( id );
-    }
-    if( iop == opMap_.end() ){
-      std::ostringstream msg;
-      msg << "ERROR!  Attempted to retrieve an operator that does not exist." << std::endl
-          << "        Operator type name: " << typeid(SpatialOpType).name() << std::endl
-          << "   Registered ids:" << std::endl;
-      for( iop=opMap_.begin(); iop!=opMap_.end(); ++iop ){
-        msg << "     " << iop->first <<  std::endl;
-      }
-      throw std::runtime_error( msg.str() );
-    }
-    return iop->second;
-  }
-  //------------------------------------------------------------------
-  template< class SpatialOpType >
-  void
-  SpatialOpDatabase<SpatialOpType>::
-  empty_database()
-  {
-    for( typename OpMap::iterator jj=opMap_.begin(); jj!=opMap_.end(); ++jj ){
-      delete jj->second;
-    }
-  }
-  //------------------------------------------------------------------
-  template< class SpatialOpType >
-  bool
-  SpatialOpDatabase<SpatialOpType>::
-  query_operator( const int id ) const
-  {
-    if( id==-1 ){
-      if( opMap_.size() > 1 ){
-        std::ostringstream msg;
-        msg << "ERROR!  You must provide a unique identifier, since multiple operators have been registered." << std::endl
-            << "        registered ids:" << std::endl;
-        for( typename OpMap::const_iterator iop=opMap_.begin(); iop!=opMap_.end(); ++iop ){
-          msg << "     " << iop->first <<  std::endl;
-        }
-        throw std::runtime_error(msg.str());
-      }
-      return opMap_.size() == 1;
-    }
-    return( opMap_.find(id) != opMap_.end() );
-  }
-  //------------------------------------------------------------------
-  template< class SpatialOpType >
-  SpatialOpDatabase<SpatialOpType>::
-  SpatialOpDatabase()
-  {
-    idCounter_=0;
-  }
-  //------------------------------------------------------------------
-  template< class SpatialOpType >
-  SpatialOpDatabase<SpatialOpType>::
-  ~SpatialOpDatabase()
-  {
-    empty_database();
-  }
-  //------------------------------------------------------------------
-
-
-  //==================================================================
-
 
 } // namespace SpatialOps
 

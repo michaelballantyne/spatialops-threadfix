@@ -8,6 +8,7 @@ using namespace std;
 #include <FVStaggered.h>
 #include <FVStaggeredBCTools.h>
 #include <LinearSystem.h>
+#include <OperatorDatabase.h>
 
 #include <Grid.h>
 #include <Functions.h>
@@ -15,6 +16,8 @@ using namespace std;
 
 using namespace SpatialOps;
 using namespace FVStaggered;
+
+OperatorDatabase opDB;  // jcs hack global variable
 
 //--------------------------------------------------------------------
 
@@ -102,7 +105,7 @@ void test_grad_op( const Grid& grid,
     default: assert(0);
   }
 
-  const OpT* const op = SpatialOpDatabase<OpT>::self().retrieve_operator();
+  const OpT* const op = opDB.retrieve_operator<OpT>();
 
   op->apply_to_field( phi, fphi );
 
@@ -137,7 +140,7 @@ void test_interp_op( const Grid& grid,
   funcPhi.evaluate( phi );
   funcFPhi.evaluate( fphiExact );
 
-  const OpT* const op = SpatialOpDatabase<OpT>::self().retrieve_operator();
+  const OpT* const op = opDB.retrieve_operator<OpT>();
   op->apply_to_field( phi, fphi );
 
   report_errors( fphiExact, fphi );
@@ -186,7 +189,7 @@ void test_div_op( const Grid& grid,
     assert(0);
   }
 
-  const OpT* const op = SpatialOpDatabase<OpT>::self().retrieve_operator();
+  const OpT* const op = opDB.retrieve_operator<OpT>();
 
   op->apply_to_field( phi, fphi );
 
@@ -209,7 +212,7 @@ bool test_bc_helper( const vector<int>&dim,
   typedef typename OpT::SrcFieldType  SrcFieldT;
   typedef typename OpT::DestFieldType DestFieldT;
 
-  const OpT& op = *SpatialOpDatabase<OpT>::self().retrieve_operator();
+  const OpT& op = *opDB.retrieve_operator<OpT>();
 
   SpatFldPtr<SrcFieldT> f = SpatialFieldStore<SrcFieldT>::self().get( get_n_tot<SrcFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
                                                                       get_ghost_set<SrcFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]) );
@@ -225,7 +228,7 @@ bool test_bc_helper( const vector<int>&dim,
                                             ijk,
                                             side,
                                             ConstValEval(bcVal),
-                                            SpatialOpDatabase<OpT>::self() );
+                                            opDB );
 
   // evaluate the BC and set it in the field.
   bc(*f);
@@ -435,15 +438,15 @@ void test_bc( const Grid& g,
 
 void test_ops()
 {
-  ScratchSVolSSurfX& Sx = *SpatialOpDatabase<ScratchSVolSSurfX>::self().retrieve_operator();
-  GradSVolSSurfX&    Gx = *SpatialOpDatabase<GradSVolSSurfX>::self().retrieve_operator();
+  ScratchSVolSSurfX& Sx = *opDB.retrieve_operator<ScratchSVolSSurfX>();
+  GradSVolSSurfX&    Gx = *opDB.retrieve_operator<GradSVolSSurfX>();
   Sx.reset_entries(1.0);
 
   Sx += Gx;
   Sx -= Gx;
 
-  ScratchSVolSSurfY& Sy = *SpatialOpDatabase<ScratchSVolSSurfY>::self().retrieve_operator();
-  GradSVolSSurfY&    Gy = *SpatialOpDatabase<GradSVolSSurfY>::self().retrieve_operator();
+  ScratchSVolSSurfY& Sy = *opDB.retrieve_operator<ScratchSVolSSurfY>();
+  GradSVolSSurfY&    Gy = *opDB.retrieve_operator<GradSVolSSurfY>();
   Sy += Gy;
 }
 
@@ -464,9 +467,9 @@ void test_poisson( const Grid& grid,
 
   cout << "Setting up Poisson equation test...";
 
-  ScratchSVol& Lx = *SpatialOpDatabase<ScratchSVol>::self().retrieve_operator(1);
-  ScratchSVol& Ly = *SpatialOpDatabase<ScratchSVol>::self().retrieve_operator(2);
-  ScratchSVol& Lz = *SpatialOpDatabase<ScratchSVol>::self().retrieve_operator(3);
+  ScratchSVol& Lx = *opDB.retrieve_operator<ScratchSVol>(1);
+  ScratchSVol& Ly = *opDB.retrieve_operator<ScratchSVol>(2);
+  ScratchSVol& Lz = *opDB.retrieve_operator<ScratchSVol>(3);
 
   LinSysInfo lsi( dim, bcFlag[0], bcFlag[1], bcFlag[2] );
   LinearSystem& linsys = LinSysFactory::self().get_linsys( lsi );
@@ -474,13 +477,13 @@ void test_poisson( const Grid& grid,
   LHS& lhs = linsys.get_lhs();
   lhs.reset();
 
-  const GradSVolSSurfX& Gx = *SpatialOpDatabase<GradSVolSSurfX>::self().retrieve_operator();
-  const GradSVolSSurfY& Gy = *SpatialOpDatabase<GradSVolSSurfY>::self().retrieve_operator();
-  const GradSVolSSurfZ& Gz = *SpatialOpDatabase<GradSVolSSurfZ>::self().retrieve_operator();
+  const GradSVolSSurfX& Gx = *opDB.retrieve_operator<GradSVolSSurfX>();
+  const GradSVolSSurfY& Gy = *opDB.retrieve_operator<GradSVolSSurfY>();
+  const GradSVolSSurfZ& Gz = *opDB.retrieve_operator<GradSVolSSurfZ>();
 
-  const DivSSurfXSVol& Dx = *SpatialOpDatabase<DivSSurfXSVol>::self().retrieve_operator();  
-  const DivSSurfYSVol& Dy = *SpatialOpDatabase<DivSSurfYSVol>::self().retrieve_operator();  
-  const DivSSurfZSVol& Dz = *SpatialOpDatabase<DivSSurfZSVol>::self().retrieve_operator();  
+  const DivSSurfXSVol& Dx = *opDB.retrieve_operator<DivSSurfXSVol>();  
+  const DivSSurfYSVol& Dy = *opDB.retrieve_operator<DivSSurfYSVol>();  
+  const DivSSurfZSVol& Dz = *opDB.retrieve_operator<DivSSurfZSVol>();  
 
   //
   // set up the Laplacian operator in each direction and assemble the
@@ -651,8 +654,8 @@ int main()
 
   std::vector<bool> bcFlag(3,true);
 
-  build_ops( dim, spacing, bcFlag );
-  const Grid grid( dim, spacing, bcFlag );
+  build_ops( dim, spacing, bcFlag, opDB );
+  const Grid grid( dim, spacing, bcFlag, opDB );
   //grid.write();
 
   // Scalar-Volume to scalar face gradients and laplacians
@@ -980,17 +983,17 @@ int main()
     cout << endl << "Scalar volume scratch operators" << endl
          << " max abs err | max rel err | avg abs err | avg rel err |" << endl
          << "-------------|-------------|-------------|-------------|" << endl;
-    ScratchSVol* const Ssx = SpatialOpDatabase<ScratchSVol>::self().retrieve_operator(1);
-    ScratchSVol* const Ssy = SpatialOpDatabase<ScratchSVol>::self().retrieve_operator(2);
-    ScratchSVol* const Ssz = SpatialOpDatabase<ScratchSVol>::self().retrieve_operator(3);
+    ScratchSVol* const Ssx = opDB.retrieve_operator<ScratchSVol>(1);
+    ScratchSVol* const Ssy = opDB.retrieve_operator<ScratchSVol>(2);
+    ScratchSVol* const Ssz = opDB.retrieve_operator<ScratchSVol>(3);
 
-    const GradSVolSSurfX* const Gsx = SpatialOpDatabase<GradSVolSSurfX>::self().retrieve_operator();
-    const GradSVolSSurfY* const Gsy = SpatialOpDatabase<GradSVolSSurfY>::self().retrieve_operator();
-    const GradSVolSSurfZ* const Gsz = SpatialOpDatabase<GradSVolSSurfZ>::self().retrieve_operator();
+    const GradSVolSSurfX* const Gsx = opDB.retrieve_operator<GradSVolSSurfX>();
+    const GradSVolSSurfY* const Gsy = opDB.retrieve_operator<GradSVolSSurfY>();
+    const GradSVolSSurfZ* const Gsz = opDB.retrieve_operator<GradSVolSSurfZ>();
 
-    const DivSSurfXSVol * const Dsx = SpatialOpDatabase<DivSSurfXSVol>::self().retrieve_operator();
-    const DivSSurfYSVol * const Dsy = SpatialOpDatabase<DivSSurfYSVol>::self().retrieve_operator();
-    const DivSSurfZSVol * const Dsz = SpatialOpDatabase<DivSSurfZSVol>::self().retrieve_operator();
+    const DivSSurfXSVol * const Dsx = opDB.retrieve_operator<DivSSurfXSVol>();
+    const DivSSurfYSVol * const Dsy = opDB.retrieve_operator<DivSSurfYSVol>();
+    const DivSSurfZSVol * const Dsz = opDB.retrieve_operator<DivSSurfZSVol>();
 
     Dsx->apply_to_op( *Gsx, *Ssx );
     Dsy->apply_to_op( *Gsy, *Ssy );
@@ -1029,17 +1032,17 @@ int main()
 
   {
     cout << endl << "x-volume scratch operators ... ";
-    ScratchXVol* const Sxx = SpatialOpDatabase<ScratchXVol>::self().retrieve_operator( 1 );
-    ScratchXVol* const Sxy = SpatialOpDatabase<ScratchXVol>::self().retrieve_operator( 2 );
-    ScratchXVol* const Sxz = SpatialOpDatabase<ScratchXVol>::self().retrieve_operator( 3 );
+    ScratchXVol* const Sxx = opDB.retrieve_operator<ScratchXVol>( 1 );
+    ScratchXVol* const Sxy = opDB.retrieve_operator<ScratchXVol>( 2 );
+    ScratchXVol* const Sxz = opDB.retrieve_operator<ScratchXVol>( 3 );
 
-    const GradXVolXSurfX* const Gsx = SpatialOpDatabase<GradXVolXSurfX>::self().retrieve_operator();
-    const GradXVolXSurfY* const Gsy = SpatialOpDatabase<GradXVolXSurfY>::self().retrieve_operator();
-    const GradXVolXSurfZ* const Gsz = SpatialOpDatabase<GradXVolXSurfZ>::self().retrieve_operator();
+    const GradXVolXSurfX* const Gsx = opDB.retrieve_operator<GradXVolXSurfX>();
+    const GradXVolXSurfY* const Gsy = opDB.retrieve_operator<GradXVolXSurfY>();
+    const GradXVolXSurfZ* const Gsz = opDB.retrieve_operator<GradXVolXSurfZ>();
 
-    const DivXSurfXXVol * const Dsx = SpatialOpDatabase<DivXSurfXXVol>::self().retrieve_operator();
-    const DivXSurfYXVol * const Dsy = SpatialOpDatabase<DivXSurfYXVol>::self().retrieve_operator();
-    const DivXSurfZXVol * const Dsz = SpatialOpDatabase<DivXSurfZXVol>::self().retrieve_operator();
+    const DivXSurfXXVol * const Dsx = opDB.retrieve_operator<DivXSurfXXVol>();
+    const DivXSurfYXVol * const Dsy = opDB.retrieve_operator<DivXSurfYXVol>();
+    const DivXSurfZXVol * const Dsz = opDB.retrieve_operator<DivXSurfZXVol>();
 
     Dsx->apply_to_op( *Gsx, *Sxx );
     Dsy->apply_to_op( *Gsy, *Sxy );

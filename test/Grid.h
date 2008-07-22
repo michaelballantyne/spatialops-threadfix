@@ -2,6 +2,7 @@
 #define FVTEST_GRID_H
 
 #include <FVStaggered.h>
+#include <OperatorDatabase.h> //jcs shove into FVStaggered.h?
 
 namespace SpatialOps{
 namespace FVStaggered{
@@ -21,7 +22,8 @@ class Grid
 public:
   Grid( const std::vector<int>& dim,
         const std::vector<double>& spacing,
-        const std::vector<bool>& bcPlusFlag );
+        const std::vector<bool>& bcPlusFlag,
+        const OperatorDatabase& opDB );
   ~Grid();
 
   const std::vector<int>& extent() const{return dim_;}
@@ -134,7 +136,8 @@ private:
 
 Grid::Grid( const std::vector<int>& dim,
             const std::vector<double>& spacing,
-            const std::vector<bool>& bcPlusFlag )
+            const std::vector<bool>& bcPlusFlag,
+            const OperatorDatabase& opDB )
   : dim_( dim ),
 
     svx_( get_n_tot<SVolField >(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<SVolField >(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL ),
@@ -317,9 +320,9 @@ Grid::Grid( const std::vector<int>& dim,
 
   // scalar cell grid coordinates
   {
-    const InterpSVolSSurfX* const Rsvssx = SpatialOpDatabase<InterpSVolSSurfX>::self().retrieve_operator();
-    const InterpSVolSSurfY* const Rsvssy = SpatialOpDatabase<InterpSVolSSurfY>::self().retrieve_operator();
-    const InterpSVolSSurfZ* const Rsvssz = SpatialOpDatabase<InterpSVolSSurfZ>::self().retrieve_operator();
+    const InterpSVolSSurfX* const Rsvssx = opDB.retrieve_operator<InterpSVolSSurfX>();
+    const InterpSVolSSurfY* const Rsvssy = opDB.retrieve_operator<InterpSVolSSurfY>();
+    const InterpSVolSSurfZ* const Rsvssz = opDB.retrieve_operator<InterpSVolSSurfZ>();
     Rsvssx->apply_to_field( svx_, ssxx_ );
     Rsvssx->apply_to_field( svy_, ssxy_ );
     Rsvssx->apply_to_field( svz_, ssxz_ );
@@ -336,9 +339,9 @@ Grid::Grid( const std::vector<int>& dim,
 
   // x-cell grid coordinates
   {
-    const InterpXVolXSurfX* const Rxvxsx = SpatialOpDatabase<InterpXVolXSurfX>::self().retrieve_operator();
-    const InterpXVolXSurfY* const Rxvxsy = SpatialOpDatabase<InterpXVolXSurfY>::self().retrieve_operator();
-    const InterpXVolXSurfZ* const Rxvxsz = SpatialOpDatabase<InterpXVolXSurfZ>::self().retrieve_operator();
+    const InterpXVolXSurfX* const Rxvxsx = opDB.retrieve_operator<InterpXVolXSurfX>();
+    const InterpXVolXSurfY* const Rxvxsy = opDB.retrieve_operator<InterpXVolXSurfY>();
+    const InterpXVolXSurfZ* const Rxvxsz = opDB.retrieve_operator<InterpXVolXSurfZ>();
     Rxvxsx->apply_to_field( xvx_, xsxx_ );
     Rxvxsx->apply_to_field( xvy_, xsxy_ );
     Rxvxsx->apply_to_field( xvz_, xsxz_ );
@@ -354,9 +357,9 @@ Grid::Grid( const std::vector<int>& dim,
 
   // y-cell grid coordinates
   {
-    const InterpYVolYSurfX* const Ryvysx = SpatialOpDatabase<InterpYVolYSurfX>::self().retrieve_operator();
-    const InterpYVolYSurfY* const Ryvysy = SpatialOpDatabase<InterpYVolYSurfY>::self().retrieve_operator();
-    const InterpYVolYSurfZ* const Ryvysz = SpatialOpDatabase<InterpYVolYSurfZ>::self().retrieve_operator();
+    const InterpYVolYSurfX* const Ryvysx = opDB.retrieve_operator<InterpYVolYSurfX>();
+    const InterpYVolYSurfY* const Ryvysy = opDB.retrieve_operator<InterpYVolYSurfY>();
+    const InterpYVolYSurfZ* const Ryvysz = opDB.retrieve_operator<InterpYVolYSurfZ>();
     Ryvysx->apply_to_field( yvx_, ysxx_ );
     Ryvysx->apply_to_field( yvy_, ysxy_ );
     Ryvysx->apply_to_field( yvz_, ysxz_ );
@@ -372,9 +375,9 @@ Grid::Grid( const std::vector<int>& dim,
 
   // z-cell grid coordinates
   {
-    const InterpZVolZSurfX* const Rzvzsx = SpatialOpDatabase<InterpZVolZSurfX>::self().retrieve_operator();
-    const InterpZVolZSurfY* const Rzvzsy = SpatialOpDatabase<InterpZVolZSurfY>::self().retrieve_operator();
-    const InterpZVolZSurfZ* const Rzvzsz = SpatialOpDatabase<InterpZVolZSurfZ>::self().retrieve_operator();
+    const InterpZVolZSurfX* const Rzvzsx = opDB.retrieve_operator<InterpZVolZSurfX>();
+    const InterpZVolZSurfY* const Rzvzsy = opDB.retrieve_operator<InterpZVolZSurfY>();
+    const InterpZVolZSurfZ* const Rzvzsz = opDB.retrieve_operator<InterpZVolZSurfZ>();
     Rzvzsx->apply_to_field( zvx_, zsxx_ );
     Rzvzsx->apply_to_field( zvy_, zsxy_ );
     Rzvzsx->apply_to_field( zvz_, zsxz_ );

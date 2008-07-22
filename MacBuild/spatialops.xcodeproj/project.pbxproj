@@ -79,6 +79,7 @@
 		1A9AF8000E2FCC04003E8A7D /* SpatialOperator.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A5E77980E2F97A10067740F /* SpatialOperator.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		1A9AF8010E2FCC04003E8A7D /* SpatialOpsDefs.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A5E77990E2F97A10067740F /* SpatialOpsDefs.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		1A9AF8020E2FCC04003E8A7D /* SpatialOpsTools.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A5E779A0E2F97A10067740F /* SpatialOpsTools.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		1AB3ABFE0E3653880006F60F /* OperatorDatabase.h in Headers */ = {isa = PBXBuildFile; fileRef = 1AB3ABE20E36536A0006F60F /* OperatorDatabase.h */; };
 		1AEFAFAF0E34D6D000185CAC /* FVOneDimensional.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1AEFAFAE0E34D6D000185CAC /* FVOneDimensional.cpp */; };
 /* End PBXBuildFile section */
 
@@ -208,12 +209,14 @@
 		1A5E78190E2F9E960067740F /* poisson */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = poisson; sourceTree = BUILT_PRODUCTS_DIR; };
 		1A5E781D0E2F9EAB0067740F /* testPoisson.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = testPoisson.cpp; path = ../test/testPoisson.cpp; sourceTree = SOURCE_ROOT; };
 		1A5E783E0E2FA1D60067740F /* bcTest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bcTest.cpp; path = ../test/bcTest.cpp; sourceTree = SOURCE_ROOT; };
+		1A79F2E10E3647DA009BD4C3 /* opStoreTest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = opStoreTest.cpp; path = ../test/opStoreTest.cpp; sourceTree = SOURCE_ROOT; };
 		1A7F84260E3124D300A61671 /* LagrangePoly.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = LagrangePoly.cpp; path = ../src/LagrangePoly.cpp; sourceTree = SOURCE_ROOT; };
 		1A7F84290E3124F400A61671 /* LagrangePoly.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = LagrangePoly.h; path = ../include/LagrangePoly.h; sourceTree = SOURCE_ROOT; };
 		1A7F84370E3127CD00A61671 /* testLagrange.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = testLagrange.cpp; path = ../test/testLagrange.cpp; sourceTree = SOURCE_ROOT; };
 		1A7F843B0E3127F100A61671 /* testLagrange */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = testLagrange; sourceTree = BUILT_PRODUCTS_DIR; };
 		1A7F845F0E312B6B00A61671 /* testOneDim */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = testOneDim; sourceTree = BUILT_PRODUCTS_DIR; };
 		1A7F847D0E312E1300A61671 /* testOneDim.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = testOneDim.cpp; path = ../test/testOneDim.cpp; sourceTree = SOURCE_ROOT; };
+		1AB3ABE20E36536A0006F60F /* OperatorDatabase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OperatorDatabase.h; path = ../include/OperatorDatabase.h; sourceTree = SOURCE_ROOT; };
 		1AEFAFAE0E34D6D000185CAC /* FVOneDimensional.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = FVOneDimensional.cpp; path = ../src/FVOneDimensional.cpp; sourceTree = SOURCE_ROOT; };
 		D2AAC046055464E500DB518D /* libspatialops.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libspatialops.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -297,6 +300,7 @@
 		08FB7794FE84155DC02AAC07 /* spatialops */ = {
 			isa = PBXGroup;
 			children = (
+				1A79F2E10E3647DA009BD4C3 /* opStoreTest.cpp */,
 				1A4F29590E2FBF9A00E819DB /* libaztecoo.a */,
 				1A4F29620E2FBFD700E819DB /* libteuchos.a */,
 				1A4F295A0E2FBF9A00E819DB /* libepetra.a */,
@@ -341,6 +345,7 @@
 		1A5E78530E2FA3CB0067740F /* Include */ = {
 			isa = PBXGroup;
 			children = (
+				1AB3ABE20E36536A0006F60F /* OperatorDatabase.h */,
 				1A7F84290E3124F400A61671 /* LagrangePoly.h */,
 				1A01F0DC0E2FA88C0060F6BD /* FieldFunctions.h */,
 				1A5E77890E2F97A10067740F /* FVStaggered.h */,
@@ -394,6 +399,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1AB3ABFE0E3653880006F60F /* OperatorDatabase.h in Headers */,
 				1A9AF7F00E2FCC04003E8A7D /* FieldFunctions.h in Headers */,
 				1A9AF7F10E2FCC04003E8A7D /* FVStaggered.h in Headers */,
 				1A9AF7F20E2FCC04003E8A7D /* FVStaggeredBCTools.h in Headers */,
