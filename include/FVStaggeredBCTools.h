@@ -227,7 +227,7 @@ namespace FVStaggered{
      *         operator of type OpT will be extracted from this
      *         database.
      */
-    BoundaryConditionOp( const std::vector<int> dim,
+    BoundaryConditionOp( const std::vector<int>& dim,
                          const bool bcPlusX,
                          const bool bcPlusY,
                          const bool bcPlusZ,
@@ -346,7 +346,7 @@ namespace FVStaggered{
 
   template< typename OpT, typename BCEval >
   BoundaryConditionOp<OpT,BCEval>::
-  BoundaryConditionOp( const std::vector<int> dim,
+  BoundaryConditionOp( const std::vector<int>& dim,
                        const bool bcPlusX,
                        const bool bcPlusY,
                        const bool bcPlusZ,
