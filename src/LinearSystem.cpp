@@ -393,7 +393,9 @@ LinearSystem::solve()
 {
   if( NULL == aztec_ ){
     aztec_ = new AztecOO( *linProb_ );
-    aztec_->SetAztecOption(AZ_output,AZ_none);
+    aztec_->SetAztecOption(AZ_output, AZ_none  );
+    aztec_->SetAztecOption(AZ_precond,AZ_Jacobi);
+    aztec_->SetAztecOption(AZ_solver, AZ_gmres ); 
   }
   aztec_->Iterate( maxIterations_, solverTolerance_ );
 }
