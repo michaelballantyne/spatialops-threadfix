@@ -259,7 +259,8 @@ namespace FVStaggered{
    *
    *  @param op   The operator to imprint with the boundary conditions.
    *
-   *  @param ijk  The IndexTriplet for the cell we want to apply the BC to. Indices are 0-based on patch interior.
+   *  @param ijk The IndexTriplet for the cell we want to apply the BC
+   *         to. Indices are 0-based on patch interior.
    *
    *  @param dim A vector containing the number of cells in each
    *         coordinate direction.  This is a three-component vector.
@@ -291,6 +292,9 @@ namespace FVStaggered{
    *   <li> \b OpT Specifies the type of SpatialOperator that will be
    *        imprinting with this BC.
    *   </ul>
+   *
+   *  @todo Need to allow for time-varying BCs. This effects the RHS
+   *  but not the LHS.  This needs to hook into the expression somewhere.
    */
   template< typename BCOpT, typename OpT >
   void imprint_bc_on_op( const BCOpT& bcOp,
@@ -505,8 +509,7 @@ namespace FVStaggered{
     double Sg = 0.0;
     for( ; icol!=icole; ++icol ){
       if( icol.index() == size_t(ig) ){
-        double& val = *icol;
-        Sg = val;
+        Sg = *icol;
         break;
       }
     }
