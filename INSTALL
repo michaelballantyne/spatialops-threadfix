@@ -1,75 +1,32 @@
 === MAC OS X: ===
- 1.  Mac OS X builds require additional tools.  Install:
-  -BSD Subsystem (from Mac OS X Installer) - installed by default
-  -Apple Developer Tools (XCode) 2.4.1 or later http://developer.apple.com/tools/xcode/
-  -Fink (and FinkCommander if desired) - http://finkproject.org/
-  -Fink packages: autoconf automake gcc4 (which includes g++ and gfortran)
-  -A different GFortran is here (untested) :
-    http://www.macresearch.org/xcode_gfortran_plugin_update 
- 2.  Make sure gfortran is in your path! Edit the file ~/.cshrc :
-    export PATH=/sw/bin:$PATH
-  and then []$ source ~/.cshrc
+1. Mac OS X builds require additional tools.  Install:
+    -BSD Subsystem (from Mac OS X Installer) - installed by default
+    -Developer Tools (XCode) >= 2.4.1 http://developer.apple.com/tools/xcode/
+    -Fink (and FinkCommander if desired) - http://finkproject.org/
+    -Fink packages: autoconf automake gcc4 (which includes g++)
 
-=== LINUX: ===
-Make sure your system defaults to gcc compilers, version 4 or greater.  
-If you have older GCCs installed along with version 4 (most Red Hat systems do), 
-you may have to set these variables to force the newer version:
-CC=gcc4
-CXX=g++4
-F77=gfortran
+2. Make sure gcc4 is in your path!
+    echo PATH=/sw/bin:$PATH >> ~/.cshrc
+    source ~/.cshrc
 
 
 === BUILD INSTRUCTIONS (ALL SYSTEMS): ===
+1. You must have GCC version 4 or newer.  If you have other versions installed,
+   you may have to set these variables to force the newer version:
+      CC=gcc4
+      CXX=g++4
 
-1.  Install the packages 'blas-devel' and 'lapack-devel'
+2. Install the packages 'blas-devel' and 'lapack-devel'
 
-svn co https://software.crsim.utah.edu/svn/SpatialOps/trunk <check out path>
-cd <blah>
+3. Install the packages 'boost' >= 1.33.1 and 'trilinos' >= 7.0.6
 
-#[1] We must first generate the build system itself.
-#These steps require autotools 1.9 (automake, autoconf, etc.)
-#which are included with most Linux systems.
-#
-#They will generate the portable buildsystem.  We don't need these
-#steps after the build system is checked-in to the repo
-aclocal
-autoheader
-automake --add-missing
-autoconf
+4. Create a build directory:
+      mkdir sops-build
+      cd sops-build 
 
-#[2] Now get and install boost, trilinos, daixtrose inside trunk's source directory.
-#Someday we might checkin these source trees too.
-tar xzf boost_1_33_1.tar.gz
-tar xzf daixtrose-0.0.3.tar.gz
-tar xzf trilinos-7.0.6.tar.gz
-
-#[3] Trilinos is buggy and doesn't build out-of-the-box.  Remove this line (#733) from a Trilinos source file:
-vi trilinos-7.0.6/packages/epetraext/Makefile.in
-        if [ $(srcdir) != $(top_builddir) ]; then cp -f $(srcdir)/example/inout/matlab.h5 $(top_builddir)/example/inout/matlab.h5 ; fi
-
-#Now we don't even have to touch these packages.  The buildsystem
-#will link into them by itself.
-
-#[4] Now DO NOT attempt to build SpatialOps inside its source tree.  This muddies things up.  Once you have
-#untar'ed the needed packages, create a build directory somewhere
-
-mkdir sops-build
-cd sops-build
-
-#[5] Now while still in your build directory (which is different from the source tree), invoke the config script:
-./<path-to-spatialops-config-script>/configure -C
-#...wait... as dependencies are built first...
-
-make
-make install
-
-#[6] Run a testsuite...
-
-make check
-
-#[7] Once you configure, you can also run a stress-test of the build system.
-#This will pack up the sources, unpack them, build them, install, and 
-#check if any loose parts are left over to muddy up the system.
-
-make distcheck
+5. Configure and make:
+      ../configure <options>	(../configure --help for usage)
+      make
+      make check		(to run the testsuite)
+      make install
 
