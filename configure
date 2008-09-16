@@ -1787,6 +1787,13 @@ am__tar='${AMTAR} chof - "$$tardir"'; am__untar='${AMTAR} xf -'
 
 
 
+
+if test -x "./configure"; then
+	{ { echo "$as_me:$LINENO: error: You cannot configure in the source tree.  Make an empty build directory and configure there instead." >&5
+echo "$as_me: error: You cannot configure in the source tree.  Make an empty build directory and configure there instead." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
 #check if the compiler works.
 #Use Fink defaults if available
 if test `uname` = "Darwin" -a -e "/sw/bin/gcc-4"; then
@@ -3457,7 +3464,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:3460:" \
+echo "$as_me:3467:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -4144,7 +4151,7 @@ fi
 
 
 
-#AX_TRILINOS_BASE(7.0.6, [] , [AC_ERROR([Could not find Trilinos.])])
+#AX_TRILINOS_BASE(7.0.6, [] , [AC_MSG_ERROR([Could not find Trilinos.])])
 #Requisite Trilinos Libraries >=7.0.6
 
 #set our buildsystem to use C++ tests.
@@ -5409,7 +5416,7 @@ done
 #Generate these makefiles when all done.
           ac_config_headers="$ac_config_headers config.h"
 
-                                        ac_config_files="$ac_config_files Makefile src/Makefile test/Makefile spatialops-1.0.pc"
+                    ac_config_files="$ac_config_files Makefile spatialops-1.0.pc"
 
 
 #List all the headers in /include
@@ -5974,8 +5981,6 @@ do
   case "$ac_config_target" in
   # Handling of arguments.
   "Makefile" ) CONFIG_FILES="$CONFIG_FILES Makefile" ;;
-  "src/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
-  "test/Makefile" ) CONFIG_FILES="$CONFIG_FILES test/Makefile" ;;
   "spatialops-1.0.pc" ) CONFIG_FILES="$CONFIG_FILES spatialops-1.0.pc" ;;
   "depfiles" ) CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
   "config.h" ) CONFIG_HEADERS="$CONFIG_HEADERS config.h" ;;

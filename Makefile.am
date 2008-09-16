@@ -1,25 +1,91 @@
-SUBDIRS = src test 
+#Makefile.am - edit me! 
+# Process this file with 'automake' to produce Makefile.in
+# Then ./configure to produce Makefile
+
+# ==== Miscellaneous AutoMake Config
+
+#main include directory
+SOPS_INCDIR	= -I$(top_srcdir)/include -I$(top_srcdir)/test
+#arch-dependent include directory (i.e. Daixtrose, since it's prebuilt at config time)
+DEPS_INCDIR	= -I$(top_builddir)/include
 
 #tarfiles.
-EXTRA_DIST = tarfiles/daixtrose-0.0.3.tar.gz
-
-SOPS_INCDIR=$(top_srcdir)/include
-library_includedir=$(includedir)/spatialops
-#maybe @AC_PACKAGE_STRING@ ? 
-
+EXTRA_DIST 	= tarfiles/daixtrose-0.0.3.tar.gz
 EXTRA_HEADERS	=
 library_include_HEADERS =@SOPS_HEADERS@
+library_includedir	= $(includedir)/@PACKAGE@
+  #maybe @AC_PACKAGE_STRING@ ? 
 
 #distribute the library pkg-config file.
-pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = spatialops-1.0.pc
+pkgconfigdir 	= $(libdir)/pkgconfig
+pkgconfig_DATA 	= spatialops-1.0.pc
 
 #Clean-local: a hook to make daixtrose clean up after itself
 clean-local:
 	cd daixtrose-0.0.3; make uninstall; make distclean
 	rm -f test/converge.out
-#	cd trilinos-7.0.6; make uninstall; make distclean
+	rm -f converge.out
+	rm -rf include/daixtrose
+	if test `ls -l include | wc -l` -le 1; then rm -rf include; fi
 
 distclean-local:
 	rm -r daixtrose-0.0.3
+
+# ==== Library Config ====
+
+lib_LIBRARIES	= libspatialops.a
+
+#preprocessor flags go here
+AM_CPPFLAGS = -DBOOST_UBLAS_SHALLOW_ARRAY_ADAPTOR -DNDEBUG -DUINTAH_FIELD_TYPES \
+	$(SOPS_INCDIR) $(DEPS_INCDIR)/daixtrose
+
+#linker flags go here
+#note: linker is very picky about library precedence order, so leave these as shown
+SOPS_LIBS	= -lspatialops -laztecoo -lteuchos -lepetra -lepetraext -lblas -llapack
+SOPS_LIBDIR 	= -L$(top_builddir) 
+
+#Optimize flags go here.
+libspatialops_a_CXXFLAGS= -O4 -Wall -fexpensive-optimizations -funroll-loops
+
+#Compile these files and pack them into a static library.
+#Sources not listed here might not get packed into the source distribution.
+libspatialops_a_SOURCES	=  \
+	src/FVOneDimensional.cpp \
+	src/LagrangePoly.cpp \
+	src/LinAlgTrilinos.cpp \
+	src/LinAlgUBlas.cpp \
+	src/LinearSystem.cpp
+
+#libspatialops_a_HEADERS = #headers to be installed
+#libspatialops_a_noinst_HEADERS = #headers just used for compiling
+
+
+# ==== Test Suite Config ====
+
+#targets to build when 'make check' is called
+check_PROGRAMS	= simplebc testnew poisson lagrange testOneDim 
+#targets to execute when 'make check' is called
+#'testnew' requires interactive input, so it's disabled
+TESTS 		= simplebc poisson lagrange testOneDim
+#testsuites that are expected to fail when run
+FAIL_TESTS	= #none
+
+simplebc_SOURCES  =test/bcTest.cpp
+simplebc_LDADD    =$(SOPS_LIBS) $(SOPS_LIBDIR)
+
+testnew_SOURCES   =test/testNew.cpp test/buildOps.cpp test/Grid.h test/Functions.h test/buildOps.h
+testnew_LDADD     =$(SOPS_LIBS) $(SOPS_LIBDIR)
+
+poisson_SOURCES   =test/testPoisson.cpp test/buildOps.cpp
+poisson_LDADD     =$(SOPS_LIBS) $(SOPS_LIBDIR)
+
+lagrange_SOURCES  =test/testLagrange.cpp
+lagrange_LDADD    =$(SOPS_LIBS) $(SOPS_LIBDIR)
+
+testOneDim_SOURCES=test/testOneDim.cpp
+testOneDim_LDADD  =$(SOPS_LIBS) $(SOPS_LIBDIR)
+
+#disabled; not up-to-date and doesn't compile
+#smalltest_SOURCES=test/test.cpp
+#smalltest_LDAD   =$(SOPS_LIBS) $(SOPS_LIBDIR)
 

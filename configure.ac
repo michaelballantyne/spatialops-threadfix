@@ -7,6 +7,11 @@ AC_CONFIG_AUX_DIR(buildsys)
 
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 
+
+if test -x "./configure"; then
+	AC_MSG_ERROR([You cannot configure in the source tree.  Make an empty build directory and configure there instead.])
+fi
+
 #check if the compiler works.
 #Use Fink defaults if available
 if test `uname` = "Darwin" -a -e "/sw/bin/gcc-4"; then
@@ -31,7 +36,7 @@ AC_CHECK_LIB(lapack,dgecon_)
 
 AX_BOOST_BASE(1.33.1)
 
-#AX_TRILINOS_BASE(7.0.6, [] , [AC_ERROR([Could not find Trilinos.])])  
+#AX_TRILINOS_BASE(7.0.6, [] , [AC_MSG_ERROR([Could not find Trilinos.])])  
 #Requisite Trilinos Libraries >=7.0.6 
 
 #set our buildsystem to use C++ tests.
@@ -71,8 +76,6 @@ AC_CHECK_FUNCS([sqrt])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([
   Makefile
-  src/Makefile
-  test/Makefile
   spatialops-1.0.pc
 ])
 
