@@ -1,6 +1,7 @@
 #ifndef UT_SpatialField_h
 #define UT_SpatialField_h
 
+#include <cassert>
 #include <vector>
 #include <set>
 #include <iostream>

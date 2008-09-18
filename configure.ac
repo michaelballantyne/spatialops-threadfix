@@ -53,7 +53,7 @@ AC_ARG_WITH([trilinos], [AS_HELP_STRING([--with-trilinos], [Trilinos package, ne
 
 trilinos_fail=no
 AC_CHECK_LIB(aztecoo,	AZ_broadcast,	[], [trilinos_fail=yes])
-AC_CHECK_LIB(epetra,	epetra_dcrssm__,[], [trilinos_fail=yes])
+AC_CHECK_LIB(epetra,	exit,		[], [trilinos_fail=yes])
 AC_CHECK_LIB(epetraext,	main,		[], [trilinos_fail=yes])
 AC_CHECK_LIB(teuchos,	Teuchos_exit_helper,[], [trilinos_fail=yes])
 AC_CHECK_LIB(triutils,	main,		[], [trilinos_fail=yes])
@@ -97,6 +97,7 @@ DAIXTROSE_FLAGS="    \
 if test ! -e "daixtrose-0.0.3/config.status"; then
   echo "Configuring subpackage daixtrose."
   pushd $srcdir; chmod u+w .; tar xzf tarfiles/daixtrose-0.0.3.tar.gz; popd
+  mkdir_p='mkdir -p'
   BUILD_CONFIG_SUBDIR("daixtrose-0.0.3",[ ${DAIXTROSE_FLAGS} ])
   cd daixtrose-0.0.3
   make install

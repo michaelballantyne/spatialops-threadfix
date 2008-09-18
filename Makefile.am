@@ -14,7 +14,6 @@ EXTRA_DIST 	= tarfiles/daixtrose-0.0.3.tar.gz
 EXTRA_HEADERS	=
 library_include_HEADERS =@SOPS_HEADERS@
 library_includedir	= $(includedir)/@PACKAGE@
-  #maybe @AC_PACKAGE_STRING@ ? 
 
 #distribute the library pkg-config file.
 pkgconfigdir 	= $(libdir)/pkgconfig
@@ -40,16 +39,14 @@ nobase_include_HEADERS = \
 	daixtrose/Simplify.h \
 	daixtrose/UnOps.h
 
-#Clean-local: a hook to make daixtrose clean up after itself
-clean-local:
+#Distclean-local: a hook to make daixtrose clean up after itself
+distclean-local:
 	cd daixtrose-0.0.3; make uninstall; make distclean
 	rm -f test/converge.out
 	rm -f converge.out
 	rm -rf include/daixtrose
 	if test `ls -l include | wc -l` -le 6 -a -d "include/error_handling"; then rm -rf include; fi
 	rm -f daixtrose
-
-distclean-local:
 	rm -r daixtrose-0.0.3
 
 # ==== Library Config ====
@@ -62,7 +59,7 @@ AM_CPPFLAGS = -DBOOST_UBLAS_SHALLOW_ARRAY_ADAPTOR -DNDEBUG -DUINTAH_FIELD_TYPES 
 
 #linker flags go here
 #note: linker is very picky about library precedence order, so leave these as shown
-SOPS_LIBS	= -lspatialops -laztecoo -lteuchos -lepetra -lepetraext -lblas -llapack
+SOPS_LIBS	= -lspatialops
 SOPS_LIBDIR 	= -L$(top_builddir) 
 
 #Optimize flags go here.

@@ -51,7 +51,7 @@ void test1()
 
   // pick some points to set bcs on.  Note that they need not actually
   // reside on a boundary.
-  vector<IndexTriplet> pts;
+  std::vector<IndexTriplet> pts;
   pts.push_back( IndexTriplet( 0,    0,    0    ) );
   pts.push_back( IndexTriplet( 1,    0,    0    ) );
   pts.push_back( IndexTriplet( 2,    1,    2    ) );
@@ -73,7 +73,7 @@ void test1()
   cout << "Testing simple BC usage ... " << flush;
 
   // apply bcs to the field using a "time varying" function.  We use one function to get the time 
-  for( vector<IndexTriplet>::const_iterator ipt=pts.begin(); ipt!=pts.end(); ++ipt ){
+  for( std::vector<IndexTriplet>::const_iterator ipt=pts.begin(); ipt!=pts.end(); ++ipt ){
     BoundaryCondition<SVolField,BCFun> bc( *ipt, dim, bcx, bcy, bcz, f );
     bc(field);
     // check:
@@ -82,7 +82,7 @@ void test1()
   }
 
   // apply constant-time BCs
-  for( vector<IndexTriplet>::const_iterator ipt=pts.begin(); ipt!=pts.end(); ++ipt ){
+  for( std::vector<IndexTriplet>::const_iterator ipt=pts.begin(); ipt!=pts.end(); ++ipt ){
     BoundaryCondition<SVolField,BCFun> bc( *ipt, dim, bcx, bcy, bcz, fnotime );
     bc(field);
     // check:

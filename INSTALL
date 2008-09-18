@@ -16,15 +16,19 @@
       CC=gcc4
       CXX=g++4
 
-2. Install the packages 'blas-devel' and 'lapack-devel'
+2. If you got the source code from SVN, you must create the buildsystem:
+      autoreconf --install
+   If you got the source code from a tarball, disregard this step.
 
-3. Install the packages 'boost' >= 1.33.1 and 'trilinos' >= 7.0.6
+3. Install the packages 'blas-devel' and 'lapack-devel'
 
-4. Create a build directory:
+4. Install the packages 'boost' >= 1.33.1 and 'trilinos' >= 7.0.6
+
+5. Create a build directory:
       mkdir sops-build
       cd sops-build 
 
-5. Configure and make:
+6. Configure and make:
       ../configure <options>	(../configure --help for usage)
       make
       make check		(to run the testsuite)

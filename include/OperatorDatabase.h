@@ -172,7 +172,7 @@ template<typename OpT>
 int
 OperatorDatabase::OpStore<OpT>::add( OpT* const op )
 {
-  opMap_.insert( make_pair( ++idCounter_, op ) );
+  opMap_.insert( std::make_pair( ++idCounter_, op ) );
   return idCounter_;
 }
 
