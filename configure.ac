@@ -52,11 +52,11 @@ AC_ARG_WITH([trilinos], [AS_HELP_STRING([--with-trilinos], [Trilinos package, ne
 )
 
 trilinos_fail=no
-AC_CHECK_LIB(aztecoo,	AZ_broadcast,	[], [trilinos_fail=yes])
 AC_CHECK_LIB(epetra,	exit,		[], [trilinos_fail=yes])
 AC_CHECK_LIB(epetraext,	main,		[], [trilinos_fail=yes])
 AC_CHECK_LIB(teuchos,	Teuchos_exit_helper,[], [trilinos_fail=yes])
 AC_CHECK_LIB(triutils,	main,		[], [trilinos_fail=yes])
+AC_CHECK_LIB(aztecoo,	AZ_broadcast,	[], [trilinos_fail=yes])
 
 AS_IF([test "x$trilinos_fail" != "xno"],
   [AC_MSG_FAILURE([Trilinos seems to be improperly installed.])
