@@ -3,7 +3,7 @@ AC_INIT([SpatialOps], [0.3a], [james.sutherland@utah.edu])
 #show where to get all our pieces
 #All the buildsystem pieces are tucked away neatly
 # out of sight in the "buildsys" directory
-AC_CONFIG_AUX_DIR(buildsys)
+AC_CONFIG_AUX_DIR(build-aux)
 
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 
@@ -90,7 +90,7 @@ DAIXTROSE_VERSION=0.0.3
 DAIXTROSE_FLAGS="    \
   --prefix=`pwd` \
   --srcdir='' \
-  --includedir=`pwd`/include/daixtrose
+  --includedir=`pwd`/include
   --with-boost=`pwd`/include   \
 "
 
@@ -101,6 +101,7 @@ if test ! -e "daixtrose-0.0.3/config.status"; then
   cd daixtrose-0.0.3
   make install
   cd ..
+  ln -s include/daixtrose daixtrose
   echo "All done configuring daixtrose."
 else
   echo "Daixtrose seems to be configured already.  Skipping."

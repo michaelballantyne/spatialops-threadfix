@@ -20,13 +20,34 @@ library_includedir	= $(includedir)/@PACKAGE@
 pkgconfigdir 	= $(libdir)/pkgconfig
 pkgconfig_DATA 	= spatialops-1.0.pc
 
+nobase_include_HEADERS = \
+	daixtrose/BinOps.h \
+	daixtrose/ChangeDisambiguation.h \
+	daixtrose/CompileTimeChecks.h \
+	daixtrose/ConstRef.h \
+	daixtrose/CountLeaves.h \
+	daixtrose/CountOccurence.h \
+	daixtrose/Daixt.h \
+	daixtrose/DefaultOps.h \
+	daixtrose/Differentiation.h \
+	daixtrose/Disambiguation.h \
+	daixtrose/Expr.h \
+	daixtrose/ExtractOp.h \
+	daixtrose/MatrixSelect.h \
+	daixtrose/NeutralElements.h \
+	daixtrose/PrettyPrinter.h \
+	daixtrose/Scalar.h \
+	daixtrose/Simplify.h \
+	daixtrose/UnOps.h
+
 #Clean-local: a hook to make daixtrose clean up after itself
 clean-local:
 	cd daixtrose-0.0.3; make uninstall; make distclean
 	rm -f test/converge.out
 	rm -f converge.out
 	rm -rf include/daixtrose
-	if test `ls -l include | wc -l` -le 1; then rm -rf include; fi
+	if test `ls -l include | wc -l` -le 6 -a -d "include/error_handling"; then rm -rf include; fi
+	rm -f daixtrose
 
 distclean-local:
 	rm -r daixtrose-0.0.3
@@ -37,7 +58,7 @@ lib_LIBRARIES	= libspatialops.a
 
 #preprocessor flags go here
 AM_CPPFLAGS = -DBOOST_UBLAS_SHALLOW_ARRAY_ADAPTOR -DNDEBUG -DUINTAH_FIELD_TYPES \
-	$(SOPS_INCDIR) $(DEPS_INCDIR)/daixtrose
+	$(SOPS_INCDIR) $(DEPS_INCDIR)
 
 #linker flags go here
 #note: linker is very picky about library precedence order, so leave these as shown
