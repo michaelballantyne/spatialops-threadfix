@@ -649,9 +649,9 @@ namespace SpatialOps{
     const std::string fname = "load_"+prefix+".m";
     std::ofstream fout( fname.c_str() );
     fout << "function x = load_" << prefix << "()" << std::endl
-         << "x = zeros(" << npts_ << ",1);" << std::endl;
+         << "x = zeros(" << get_ninterior() << ",1);" << std::endl;
     int ix=1;
-    for( const_iterator i=begin(); i!=end(); ++i, ++ix ){
+    for( const_interior_iterator i=interior_begin(); i!=interior_end(); ++i, ++ix ){
       fout << "x(" << ix << ") = " << *i << ";" << std::endl;
     }
     fout.close();

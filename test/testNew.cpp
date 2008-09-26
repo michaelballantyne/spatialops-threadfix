@@ -237,7 +237,8 @@ bool test_bc_helper( const vector<int>&dim,
   op.apply_to_field( *f, *df );
 
   // verify that the BC was set properly.
-  const int ix = get_index_with_ghost<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2],ijk);
+  const int ix = get_index_with_ghost<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2],
+                                                  shift_to_ghost_ix<OpT,typename OpT::DestFieldType>(dim,side,ijk) );
 
   const double abserr = abs( (*df)[ix] - bcVal );
   const double relerr = abserr/abs(bcVal);

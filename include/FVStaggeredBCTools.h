@@ -359,10 +359,12 @@ namespace FVStaggered{
                        const BCEval bcEval,
                        const OperatorDatabase& soDatabase )
     : bcEval_( bcEval ),
-      index_( get_index_with_ghost<SrcFieldT>( dim, bcPlusX, bcPlusY, bcPlusZ, point ) )
+      index_( get_index_with_ghost<SrcFieldT>( dim, bcPlusX, bcPlusY, bcPlusZ,
+                                               shift_to_ghost_ix<OpT,SrcFieldT>(dim,side,point) ) )
   {
     const OpT* op = soDatabase.retrieve_operator<OpT>();
-    const int irow = get_index_with_ghost<DestFieldT>( dim, bcPlusX, bcPlusY, bcPlusZ, point );
+    const int irow = get_index_with_ghost<DestFieldT>( dim, bcPlusX, bcPlusY, bcPlusZ,
+                                                       shift_to_ghost_ix<OpT,DestFieldT>(dim,side,point) );
 
     const typename OpT::MatrixRow row = op->get_row(irow);
     typename       OpT::const_column_iterator icol =row.begin();
@@ -377,12 +379,13 @@ namespace FVStaggered{
     }
 #   ifndef NDEBUG
     if( ghostCoef_ == 0.0 ){
-      std::cout << "Error in BCPoint." << std::endl
+      std::cout << "Error in BoundaryConditionOp." << std::endl
                 << "(i,j,k)=("<<point.i<<","<< point.j <<","<< point.k <<")"<<endl
                 << "index_ = " << index_ << endl
+                << "row = " << irow << endl
                 << "op coefs: ";
-      for( typename OpT::const_column_iterator i=row.begin(); i!=icole; ++i ){
-        cout << "  (" << i.index() << "," << *i << ")";
+      for( typename OpT::const_column_iterator icol=row.begin(); icol!=icole; ++icol ){
+        cout << "  (" << icol.index() << "," << *icol << ")";
       }
       cout << endl;
     }
@@ -426,10 +429,10 @@ namespace FVStaggered{
     if( IsSameType<typename OpT::SrcFieldType,FieldT>::result ){
       switch(side){
       case X_MINUS_SIDE: if(dim[0]>1) --ijk.i; break;
-      case X_PLUS_SIDE : if(dim[0]>1) ++ijk.i; break;
       case Y_MINUS_SIDE: if(dim[1]>1) --ijk.j; break;
-      case Y_PLUS_SIDE : if(dim[1]>1) ++ijk.j; break;
       case Z_MINUS_SIDE: if(dim[2]>1) --ijk.k; break;
+      case X_PLUS_SIDE : if(dim[0]>1) ++ijk.i; break;
+      case Y_PLUS_SIDE : if(dim[1]>1) ++ijk.j; break;
       case Z_PLUS_SIDE : if(dim[2]>1) ++ijk.k; break;
       case NO_SHIFT: assert(1); break;
       }
@@ -439,7 +442,7 @@ namespace FVStaggered{
       case X_PLUS_SIDE : if(dim[0]>1) ++ijk.i; break;
       case Y_PLUS_SIDE : if(dim[1]>1) ++ijk.j; break;
       case Z_PLUS_SIDE : if(dim[2]>1) ++ijk.k; break;
-      case X_MINUS_SIDE: break; // no shifting on (-) side.
+      case X_MINUS_SIDE: break;
       case Y_MINUS_SIDE: break;
       case Z_MINUS_SIDE: break;
       case NO_SHIFT: assert(1); break;
@@ -447,6 +450,165 @@ namespace FVStaggered{
     }
     return ijk;
   }
+
+  template<> IndexTriplet
+  shift_to_ghost_ix<GradXVolXSurfX,XVolField>( const std::vector<int>& dim, const BCSide side, IndexTriplet ijk )
+  {
+    switch(side){
+    case X_MINUS_SIDE: if(dim[0]>1) --ijk.i; break;
+    case X_PLUS_SIDE : if(dim[0]>1) ijk.i+=2; break;
+    // error cases:
+    case Y_MINUS_SIDE:  case Y_PLUS_SIDE:
+    case Z_MINUS_SIDE:  case Z_PLUS_SIDE:
+    case NO_SHIFT: assert(1); break;
+    }
+    return ijk;
+  }
+  template<> IndexTriplet
+  shift_to_ghost_ix<GradXVolXSurfX,XSurfXField>( const std::vector<int>& dim, const BCSide side, IndexTriplet ijk )
+  {
+    switch(side){
+    case X_MINUS_SIDE: if(dim[0]>1) --ijk.i; break;
+    case X_PLUS_SIDE : if(dim[0]>1) ++ijk.i; break;
+    // error cases:
+    case Y_MINUS_SIDE:  case Y_PLUS_SIDE: 
+    case Z_MINUS_SIDE:  case Z_PLUS_SIDE: 
+    case NO_SHIFT: assert(1); break;
+    }
+    return ijk;
+  }
+  template<> IndexTriplet
+  shift_to_ghost_ix<InterpXVolXSurfX,XVolField>( const std::vector<int>& dim, const BCSide side, IndexTriplet ijk )
+  {
+    switch(side){
+    case X_MINUS_SIDE: if(dim[0]>1) --ijk.i; break;
+    case X_PLUS_SIDE : if(dim[0]>1) ijk.i+=2; break;
+    // error cases:
+    case Y_MINUS_SIDE:  case Y_PLUS_SIDE:
+    case Z_MINUS_SIDE:  case Z_PLUS_SIDE:
+    case NO_SHIFT: assert(1); break;
+    }
+    return ijk;
+  }
+  template<> IndexTriplet
+  shift_to_ghost_ix<InterpXVolXSurfX,XSurfXField>( const std::vector<int>& dim, const BCSide side, IndexTriplet ijk )
+  {
+    switch(side){
+    case X_MINUS_SIDE: if(dim[0]>1) --ijk.i; break;
+    case X_PLUS_SIDE : if(dim[0]>1) ++ijk.i; break;
+    // error cases:
+    case Y_MINUS_SIDE:  case Y_PLUS_SIDE: 
+    case Z_MINUS_SIDE:  case Z_PLUS_SIDE: 
+    case NO_SHIFT: assert(1); break;
+    }
+    return ijk;
+  }
+  template<> IndexTriplet
+  shift_to_ghost_ix<GradYVolYSurfY,YVolField>( const std::vector<int>& dim, const BCSide side, IndexTriplet ijk )
+  {
+    switch(side){
+    case Y_MINUS_SIDE: if(dim[1]>1) --ijk.j; break;
+    case Y_PLUS_SIDE : if(dim[1]>1) ijk.j+=2; break;
+    // error cases:
+    case X_MINUS_SIDE:  case X_PLUS_SIDE:
+    case Z_MINUS_SIDE:  case Z_PLUS_SIDE:
+    case NO_SHIFT: assert(1); break;
+    }
+    return ijk;
+  }
+  template<> IndexTriplet
+  shift_to_ghost_ix<GradYVolYSurfY,YSurfYField>( const std::vector<int>& dim, const BCSide side, IndexTriplet ijk )
+  {
+    switch(side){
+    case Y_MINUS_SIDE: if(dim[1]>1) --ijk.j; break;
+    case Y_PLUS_SIDE : if(dim[1]>1) ++ijk.j; break;
+    // error cases:
+    case X_MINUS_SIDE:  case X_PLUS_SIDE: 
+    case Z_MINUS_SIDE:  case Z_PLUS_SIDE: 
+    case NO_SHIFT: assert(1); break;
+    }
+    return ijk;
+  }
+  template<> IndexTriplet
+  shift_to_ghost_ix<InterpYVolYSurfY,YVolField>( const std::vector<int>& dim, const BCSide side, IndexTriplet ijk )
+  {
+    switch(side){
+    case Y_MINUS_SIDE: if(dim[1]>1) --ijk.j; break;
+    case Y_PLUS_SIDE : if(dim[1]>1) ijk.j+=2; break;
+    // error cases:
+    case X_MINUS_SIDE:  case X_PLUS_SIDE:
+    case Z_MINUS_SIDE:  case Z_PLUS_SIDE:
+    case NO_SHIFT: assert(1); break;
+    }
+    return ijk;
+  }
+  template<> IndexTriplet
+  shift_to_ghost_ix<InterpYVolYSurfY,YSurfYField>( const std::vector<int>& dim, const BCSide side, IndexTriplet ijk )
+  {
+    switch(side){
+    case Y_MINUS_SIDE: if(dim[1]>1) --ijk.j; break;
+    case Y_PLUS_SIDE : if(dim[1]>1) ++ijk.j; break;
+    // error cases:
+    case X_MINUS_SIDE:  case X_PLUS_SIDE: 
+    case Z_MINUS_SIDE:  case Z_PLUS_SIDE: 
+    case NO_SHIFT: assert(1); break;
+    }
+    return ijk;
+  }
+
+  template<> IndexTriplet
+  shift_to_ghost_ix<GradZVolZSurfZ,ZVolField>( const std::vector<int>& dim, const BCSide side, IndexTriplet ijk )
+  {
+    switch(side){
+    case Z_MINUS_SIDE: if(dim[2]>1) --ijk.k; break;
+    case Z_PLUS_SIDE : if(dim[2]>1) ijk.k+=2; break;
+    // error cases:
+    case X_MINUS_SIDE:  case X_PLUS_SIDE:
+    case Y_MINUS_SIDE:  case Y_PLUS_SIDE:
+    case NO_SHIFT: assert(1); break;
+    }
+    return ijk;
+  }
+  template<> IndexTriplet
+  shift_to_ghost_ix<GradZVolZSurfZ,ZSurfZField>( const std::vector<int>& dim, const BCSide side, IndexTriplet ijk )
+  {
+    switch(side){
+    case Z_MINUS_SIDE: if(dim[2]>1) --ijk.k; break;
+    case Z_PLUS_SIDE : if(dim[2]>1) ++ijk.k; break;
+    // error cases:
+    case X_MINUS_SIDE:  case X_PLUS_SIDE: 
+    case Y_MINUS_SIDE:  case Y_PLUS_SIDE: 
+    case NO_SHIFT: assert(1); break;
+    }
+    return ijk;
+  }
+  template<> IndexTriplet
+  shift_to_ghost_ix<InterpZVolZSurfZ,ZVolField>( const std::vector<int>& dim, const BCSide side, IndexTriplet ijk )
+  {
+    switch(side){
+    case Z_MINUS_SIDE: if(dim[2]>1) --ijk.k; break;
+    case Z_PLUS_SIDE : if(dim[2]>1) ijk.k+=2; break;
+    // error cases:
+    case X_MINUS_SIDE:  case X_PLUS_SIDE:
+    case Y_MINUS_SIDE:  case Y_PLUS_SIDE:
+    case NO_SHIFT: assert(1); break;
+    }
+    return ijk;
+  }
+  template<> IndexTriplet
+  shift_to_ghost_ix<InterpZVolZSurfZ,ZSurfZField>( const std::vector<int>& dim, const BCSide side, IndexTriplet ijk )
+  {
+    switch(side){
+    case Z_MINUS_SIDE: if(dim[2]>1) --ijk.k; break;
+    case Z_PLUS_SIDE : if(dim[2]>1) ++ijk.k; break;
+    // error cases:
+    case X_MINUS_SIDE:  case X_PLUS_SIDE: 
+    case Y_MINUS_SIDE:  case Y_PLUS_SIDE: 
+    case NO_SHIFT: assert(1); break;
+    }
+    return ijk;
+  }
+
 
   //------------------------------------------------------------------
 
