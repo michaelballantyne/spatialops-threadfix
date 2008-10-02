@@ -55,7 +55,8 @@ lib_LIBRARIES	= libspatialops.a
 
 #preprocessor flags go here
 AM_CPPFLAGS = -DBOOST_UBLAS_SHALLOW_ARRAY_ADAPTOR -DNDEBUG -DUINTAH_FIELD_TYPES \
-	$(SOPS_INCDIR) $(DEPS_INCDIR)
+	$(SOPS_INCDIR) $(DEPS_INCDIR) @BOOST_CPPFLAGS@
+AM_LDFLAGS  = @BOOST_LDFLAGS@
 
 #linker flags go here
 #note: linker is very picky about library precedence order, so leave these as shown
