@@ -10,48 +10,131 @@
 namespace SpatialOps{
 namespace FVStaggered{
 
+
+//--------------------------------------------------------------------
+
+std::vector<double>
+get_x_src( const int nGhost,
+           const std::vector<double>& xsrc,
+           const std::vector<double>& xdest )
+{
+  typedef std::vector<double> DVec;
+  assert( nGhost == 1 );
+  DVec x( xsrc.size()+2*nGhost, 0.0 );
+  std::copy( xsrc.begin(), xsrc.end(), x.begin()+1 );
+
+  assert( nGhost == 1 );
+
+  const bool xIsSurf = ( xdest[0] > xsrc[0] );
+
+  const DVec& xcell = xIsSurf ? xdest : xsrc;
+  const DVec& xsurf = xIsSurf ? xsrc : xdest;
+
+  const double xc0 = 2*xsurf[0] - xcell[0];
+  const double xs0 = 2*xc0 - xsurf[0];
+  const double xcL = 2**(xsurf.end()-1) - *(xcell.end()-1);
+  const double xsL = 2*xcL - *(xsurf.end()-1);
+
+  DVec::iterator ix0 = x.begin();
+  DVec::iterator ixL = x.end()-1;
+
+  if( xIsSurf ){
+    *ix0 = xs0;
+    *ixL = xsL;
+  }
+  else{
+    *ix0 = xc0;
+    *ixL = xcL;
+  }
+
+  return x;
+}
+
+//--------------------------------------------------------------------
+
+std::vector<double>
+get_x_dest( const int nGhost,
+            const std::vector<double>& xsrc,
+            const std::vector<double>& xdest )
+{
+  typedef std::vector<double> DVec;
+  assert( nGhost == 1 );
+  DVec x( xdest.size()+2*nGhost, 0.0 );
+  std::copy( xdest.begin(), xdest.end(), x.begin()+1 );
+
+  assert( nGhost == 1 );
+
+  const bool xIsSurf = ( xdest[0] < xsrc[0] );
+
+  const DVec& xcell = xIsSurf ? xsrc : xdest;
+  const DVec& xsurf = xIsSurf ? xdest : xsrc;
+
+  const double xc0 = 2*xsurf[0] - xcell[0];
+  const double xs0 = 2*xc0 - xsurf[0];
+  const double xcL = 2**(xsurf.end()-1) - *(xcell.end()-1);
+  const double xsL = 2*xcL - *(xsurf.end()-1);
+  
+  DVec::iterator ix0 = x.begin();
+  DVec::iterator ixL = x.end()-1;
+
+  if( xIsSurf ){
+    *ix0 = xs0;
+    *ixL = xsL;
+  }
+  else{
+    *ix0 = xc0;
+    *ixL = xcL;
+  }
+
+  return x;
+}
+
 //--------------------------------------------------------------------
 
 OneDimInterpolantAssembler::
 OneDimInterpolantAssembler( const int polynomialOrder,
-                            const std::vector<double>& x,
-                            const std::vector<double>& xs )
-  : polyOrder_( polynomialOrder ),
-    xsurf_( get_xs(x,xs) ),
-    lagrange_( get_x(x,xs) ),
-    nx_( x.size() )
+                            const int nGhost,
+                            const std::vector<double>& xsrc,
+                            const std::vector<double>& xdest )
+  : ncol_(  xsrc.size() + 2*nGhost ),
+    nrow_( xdest.size() + 2*nGhost ),
+    polyOrder_( polynomialOrder ),
+    xdest_( get_x_dest(nGhost,xsrc,xdest) ),
+    lagrange_( get_x_src(nGhost,xsrc,xdest) ),
+    nx_( xsrc.size()>xdest.size() ? xdest.size() : xsrc.size() )
 {
-  BOOST_STATIC_ASSERT(   SVolField::Ghost::NM == 1 );
-  BOOST_STATIC_ASSERT(   SVolField::Ghost::NP == 1 );
-  BOOST_STATIC_ASSERT( SSurfXField::Ghost::NM == 1 );
-  BOOST_STATIC_ASSERT( SSurfXField::Ghost::NP == 1 );
-
   // determine how many nonzeros we have.  In general we require one
   // more point than the polynomial order.  In the case of a uniform
   // mesh where xs is at x midpoints, we require a smaller stencil.
   numNonzero_ = polynomialOrder+1;
 
   bool isReduced = true;
-  double dx=x[1]-x[0];
+  double dx=xsrc[1]-xsrc[0];
   double dxold=dx;
+  const double TOL = 1e-5;
   typedef std::vector<double> DVec;
-  for( DVec::const_iterator ix=x.begin()+1; ix!=x.end(); ++ix ){
+  for( DVec::const_iterator ix=xsrc.begin()+1; ix!=xsrc.end(); ++ix ){
     dx = *ix - *(ix-1);
-    if( std::fabs(dx-dxold)>1.0e-3*dx ) isReduced = false;
+    if( std::fabs(dx-dxold)>TOL*dx ){
+      isReduced = false;
+      break;
+    }
     dxold = dx;
   }
-  dx = xs[1]-xs[0];
-  dxold = dx;
-  for( DVec::const_iterator ix=xs.begin()+1; ix!=xs.end(); ++ix ){
-    dx = *ix - *(ix-1);
-    if( std::fabs(dx-dxold)>1.0e-3*dx ) isReduced = false;
+  if( !isReduced ){
+    dx = xdest[1]-xdest[0];
     dxold = dx;
+    for( DVec::const_iterator ix=xdest.begin()+1; ix!=xdest.end(); ++ix ){
+      dx = *ix - *(ix-1);
+      if( std::fabs(dx-dxold)>TOL*dx ){
+        isReduced = false;
+        break;
+      }
+      dxold = dx;
+    }
   }
-  // ensure that surface (xs) is at midpoint of volume (x)
-  {
-    const double xmid = 0.5*(x[0]+x[1]);
-    if( std::fabs( xmid-xs[1] ) > 1.0e-8 ) isReduced = false;
-  }
+  const double xmid = 0.5*(xsrc[0]+xsrc[1]);
+  if( std::fabs( xmid-xdest[1] ) > 1.0e-8 ) isReduced = false;
 
   if( isReduced ){
     --numNonzero_;
@@ -66,7 +149,7 @@ int
 OneDimInterpolantAssembler::
 get_ncols() const
 {
-  return nx_+2;
+  return ncol_;
 }
 
 //--------------------------------------------------------------------
@@ -75,7 +158,7 @@ int
 OneDimInterpolantAssembler::
 get_nrows() const
 {
-  return nx_+3;
+  return nrow_;
 }
 
 //--------------------------------------------------------------------
@@ -109,7 +192,11 @@ get_row_entries( const int irow,
                  std::vector<int> & ixs ) const
 {
   // irow -> index for destination field that we want.
-  lagrange_.get_interp_coefs_indices( xsurf_[irow], polyOrder_, vals, ixs );
+  if( size_t(irow) >= xdest_.size() ){
+    std::cout << "problems: " << irow << ", " << xdest_.size() << std::endl;
+    assert( size_t(irow) < xdest_.size() );
+  }
+  lagrange_.get_interp_coefs_indices( xdest_[irow], polyOrder_, vals, ixs );
 //   cout << "row: " << irow << endl
 //        << setw(10) << " ix" << setw(10) << "coefs" << setw(10) << "x" << endl
 //        << "-----------------------------------------" << endl;
@@ -117,56 +204,8 @@ get_row_entries( const int irow,
 //   std::vector<int   >::const_iterator i=ixs.begin();
 //   for( ; i!=ixs.end(); ++i, ++v )
 //     cout << setw(10) << *i << setw(10) << *v << setw(10) << lagrange_.get_x()[*i] << endl;
-//   cout << xsurf_[irow] << endl
+//   cout << xdest_[irow] << endl
 //        << endl;
-}
-
-//--------------------------------------------------------------------
-
-std::vector<double>
-OneDimInterpolantAssembler::
-get_x( const std::vector<double>& x,
-       const std::vector<double>& xs )
-{
-  typedef std::vector<double> DVec;
-  DVec xv( x.size()+2, 0.0 );
-  std::copy( x.begin(), x.end(), xv.begin()+1 );
-
-  xv[0] = 2*xs[0] - x[0];
-
-  DVec::iterator ixv = xv.end()-1;
-  DVec::const_iterator ix=x.end()-1, ixs=xs.end()-1;
-  *ixv = 2*(*ixs) - *ix;
-
-  return xv;
-}
-
-//--------------------------------------------------------------------
-
-std::vector<double>
-OneDimInterpolantAssembler::
-get_xs( const std::vector<double>& x,
-        const std::vector<double>& xs )
-{
-  typedef std::vector<double> DVec;
-  DVec xsurf( xs.size()+2, 0.0 );
-
-  DVec::iterator ixsurf = xsurf.begin();
-  DVec::const_iterator ix=x.begin(), ixs=xs.begin();
-
-  // left side
-  *ixsurf = 3*(*ixs)-2*(*ix);
-
-  // interior
-  for( ixsurf=xsurf.begin()+1, ixs=xs.begin(); ixs!=xs.end(); ++ixsurf, ++ixs )
-    *ixsurf = *ixs;
-
-  // right side
-  ix = x.end()-1;
-  ixs = xs.end()-1;
-  *ixsurf = 3*(*ixs) - 2*(*ix);
-
-  return xsurf;
 }
 
 //--------------------------------------------------------------------
@@ -180,12 +219,15 @@ get_xs( const std::vector<double>& x,
 
 OneDimGradientAssembler::
 OneDimGradientAssembler( const int polynomialOrder,
-                         const std::vector<double>& x,
-                         const std::vector<double>& xs )
-  : polyOrder_( polynomialOrder ),
-    xsurf_( get_xs(x,xs) ),
-    lagrange_( get_x(x,xs) ),
-    nx_( x.size() )
+                         const int nGhost,
+                         const std::vector<double>& xsrc,
+                         const std::vector<double>& xdest )
+  : ncol_(  xsrc.size() + 2*nGhost ),
+    nrow_( xdest.size() + 2*nGhost ),
+    polyOrder_( polynomialOrder ),
+    xdest_( get_x_dest(nGhost,xsrc,xdest) ),
+    lagrange_( get_x_src(nGhost,xsrc,xdest) ),
+    nx_( xsrc.size()>xdest.size() ? xdest.size() : xsrc.size() )
 {
   BOOST_STATIC_ASSERT(   SVolField::Ghost::NM == 1 );
   BOOST_STATIC_ASSERT(   SVolField::Ghost::NP == 1 );
@@ -198,26 +240,24 @@ OneDimGradientAssembler( const int polynomialOrder,
   numNonzero_ = polynomialOrder+1;
 
   bool isReduced = true;
-  double dx=x[1]-x[0];
+  double dx=xsrc[1]-xsrc[0];
   double dxold=dx;
   typedef std::vector<double> DVec;
-  for( DVec::const_iterator ix=x.begin()+1; ix!=x.end(); ++ix ){
+  for( DVec::const_iterator ix=xsrc.begin()+1; ix!=xsrc.end(); ++ix ){
     dx = *ix - *(ix-1);
     if( std::fabs(dx-dxold)>1.0e-3*dx ) isReduced = false;
     dxold = dx;
   }
-  dx = xs[1]-xs[0];
+  dx = xdest[1]-xdest[0];
   dxold = dx;
-  for( DVec::const_iterator ix=xs.begin()+1; ix!=xs.end(); ++ix ){
+  for( DVec::const_iterator ix=xdest.begin()+1; ix!=xdest.end(); ++ix ){
     dx = *ix - *(ix-1);
     if( std::fabs(dx-dxold)>1.0e-3*dx ) isReduced = false;
     dxold = dx;
   }
-  // ensure that surface (xs) is at midpoint of volume (x)
-  {
-    const double xmid = 0.5*(x[0]+x[1]);
-    if( std::fabs( xmid-xs[1] ) > 1.0e-8 ) isReduced = false;
-  }
+
+  const double xmid = 0.5*(xsrc[0]+xsrc[1]);
+  if( std::fabs( xmid-xdest[1] ) > 1.0e-8 ) isReduced = false;
 
 //   if( isReduced ){
 //     --numNonzero_;
@@ -232,7 +272,7 @@ int
 OneDimGradientAssembler::
 get_ncols() const
 {
-  return nx_+2;
+  return ncol_;
 }
 
 //--------------------------------------------------------------------
@@ -241,7 +281,7 @@ int
 OneDimGradientAssembler::
 get_nrows() const
 {
-  return nx_+3;
+  return nrow_;
 }
 
 //--------------------------------------------------------------------
@@ -275,7 +315,8 @@ get_row_entries( const int irow,
                  std::vector<int> & ixs ) const
 {
   // irow -> index for destination field that we want.
-  lagrange_.get_derivative_coefs_indices( xsurf_[irow], polyOrder_, vals, ixs );
+  assert( size_t(irow) < xdest_.size() );
+  lagrange_.get_derivative_coefs_indices( xdest_[irow], polyOrder_, vals, ixs );
 }
 
 //--------------------------------------------------------------------
@@ -287,37 +328,40 @@ get_row_entries( const int irow,
 //--------------------------------------------------------------------
 
 OneDimDivergenceAssembler::
-OneDimDivergenceAssembler( const std::vector<double>& x,
-                           const std::vector<double>& xs )
-  : nx_( x.size() ),
+OneDimDivergenceAssembler( const int nGhost,
+                           const std::vector<double>& xsrc,
+                           const std::vector<double>& xdest )
+  : ncol_( xdest.size() + 2*nGhost ),
+    nrow_(  xsrc.size() + 2*nGhost ),
+    nx_( xsrc.size() ),
     numNonzero_( 2 )
 {
   // ensure that volumes are at surface midpoints
   bool isFailed = false;
-  std::vector<double>::const_iterator ix=x.begin(), ixs=xs.begin();
-  for( ; ix!=x.end(); ++ix, ++ixs ){
-    const double xmid = 0.5*( *(ixs+1) + *ixs );
-    if( std::fabs( xmid-*ix ) > 1.0e-15 ){
+  std::vector<double>::const_iterator ixs=xsrc.begin(), ixd=xdest.begin();
+  for( ; ixs!=xsrc.end(); ++ixs, ++ixd ){
+    const double xmid = 0.5*( *(ixd+1) + *ixd );
+    if( std::fabs( xmid-*ixs ) > 1.0e-15 ){
       isFailed = true;
       // cout << *ix << ", " << xmid << endl;
     }
   }
   if( isFailed ){
     std::ostringstream msg;
-    msg << "Error in forming divergence operator for 1D mesh." << endl
-        << "This operator assumes that volume variables are at" << endl
-        << "the cell centroid.  That assumption has been violated" << endl
-        << "by the given mesh." << endl;
+    msg << "Error in forming divergence operator for 1D mesh." << std::endl
+        << "This operator assumes that volume variables are at" << std::endl
+        << "the cell centroid.  That assumption has been violated" << std::endl
+        << "by the given mesh." << std::endl;
     throw std::runtime_error( msg.str() );
   }
 
   // get all surface locations and then generate coefficients.
-  dxinv_.resize(nx_+2);
-  const std::vector<double> xsurf( OneDimInterpolantAssembler::get_xs(x,xs) );
-  ixs = xsurf.begin();
+  dxinv_.resize(nx_+2*nGhost);
+  const std::vector<double> xd( get_x_dest(nGhost,xsrc,xdest) );
+  std::vector<double>::const_iterator ix=xd.begin();
   std::vector<double>::iterator idx=dxinv_.begin();
-  for( ; idx!=dxinv_.end(); ++ixs, ++idx ){
-    *idx = 1.0/( *(ixs+1)-*ixs );
+  for( ; idx!=dxinv_.end(); ++ix, ++idx ){
+    *idx = 1.0/( *(ix+1)-*ix );
   }
 }
 

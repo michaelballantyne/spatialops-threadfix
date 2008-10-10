@@ -31,12 +31,12 @@ void check( const std::vector<double>& coefs,
   const double* ce = cexpected;
   const int* ie = iexpected;
   for( ; ic!=coefs.end(); ++ic, ++ii, ++ce, ++ie ){
-    isFailed = fabs( *ic - *ce ) > 1e-16;
-    isFailed = *ii != *ie;
+    const double diff = fabs( *ic - *ce );
+    isFailed = diff > 1.0e-14 || *ii != *ie;
     if( isFailed ){
       cout << "***FAIL***" << endl
-	   << " Expected: ix=" << *ie << ", coef=" << *ce << endl
-	   << " Found   : ix=" << *ii << ", coef=" << *ic << endl;
+	   << "  Expected: ix=" << *ie << ", coef=" << setprecision(15) << *ce << endl
+	   << "  Found   : ix=" << *ii << ", coef=" << setprecision(15) << *ic << endl;
       return;
     }
   }
@@ -149,14 +149,25 @@ void test_coefs()
 
     LagrangeCoefficients lagrangeCoefs( xpts );
     lagrangeCoefs.get_interp_coefs_indices( 0.5, 1, coefs, indices );
-    const double c1 [] = { 0.666667, 0.333333 };
+    const double c1 [] = { 0.6666666666666666, 0.3333333333333333 };
     const int    i1 [] = { 3, 4 };
     check( coefs, c1, indices, i1 );
 
     lagrangeCoefs.get_derivative_coefs_indices( 0.5, 1, coefs, indices );
-    const double c2 [] = { 0.0, 0.0 };
+    const double c2 [] = { -6.666666666666668, 6.666666666666668 };
     const int i2 [] = { 3, 4 };
     check( coefs, c2, indices, i2 );
+
+    lagrangeCoefs.get_interp_coefs_indices    ( 0.5, 4, coefs, indices );
+    const double c3 [] = { 0.0411764705882353, -0.170731707317073, 0.861538461538461, 0.318181818181818, -0.0501650429914418 };
+    const int i3 [] = { 1, 2, 3, 4, 5 };
+    check( coefs, c3, indices, i3 );
+
+    lagrangeCoefs.get_derivative_coefs_indices( 0.5, 4, coefs, indices );
+    const double c4 [] = { 0.42156862745098, -1.46341463414634, -5.53846153846154, 7.50, -0.9196924548431 };
+    const int i4 [] = { 1, 2, 3, 4, 5 };
+    check( coefs, c4, indices, i4 );
+
  
     LagrangeInterpolant interp( xpts, xpts );
     assert( std::fabs(interp.value(0.768) - 0.768) < 1.0e-15 );
@@ -182,7 +193,7 @@ void test_coefs()
     check( coefs, cexpected, indices, iexpected );
     
     lagrangeCoefs2.get_derivative_coefs_indices( 0.055, 3, coefs, indices );
-    const double c2 [] = {-8.84583, 7.0375, 2.4625, -0.654167 };
+    const double c2 [] = {-8.84583333333333, 7.0375, 2.4625, -0.654166666666666 };
     const int i2 [] = {0, 1, 2, 3};
     check( coefs, c2, indices, i2 );
 

@@ -55,7 +55,6 @@ setup_mesh( const int npts,
   xs.resize(npts+1,0.0);
 
   const double xend = 3.1415;
-  //const double xend = 1.0;
 
   if( scaleFac==1.0 ){
     const double dx = xend / npts;
@@ -101,7 +100,9 @@ void calculate_fields( const int npts,
                        const double scaleFac,
                        double& interpErr,
                        double& gradErr,
-                       double& divErr )
+                       double& divErr,
+                       double& fcinterpErr,
+                       double& fcgradErr )
 {
   vector<double> xv, xs;
   setup_mesh( npts, xv, xs, scaleFac );
@@ -116,9 +117,11 @@ void calculate_fields( const int npts,
   typedef OneDimGradientAssembler     GradAssembler;
   typedef OneDimDivergenceAssembler   DivAssembler;
 
-  InterpAssembler Rxa(order,xv,xs);
-  GradAssembler   Gxa(order,xv,xs);
-  DivAssembler    Dxa(xv,xs);
+  const int nGhost = SVolField::Ghost::NM;
+
+  InterpAssembler Rxa(order,nGhost,xv,xs);
+  GradAssembler   Gxa(order,nGhost,xv,xs);
+  DivAssembler    Dxa(nGhost,xv,xs);
 
   const Interp Rx(Rxa);
   const Grad   Gx(Gxa);
@@ -141,8 +144,8 @@ void calculate_fields( const int npts,
   SVolField   d2fexact( ntotSVol,  ghostSVol,  NULL );
   SVolField        d2f( ntotSVol,  ghostSVol,  NULL );
 
-  const SVolField    xvol( ntotSVol,  ghostSVol,  &Rxa.get_x (xv,xs)[0] );
-  const SSurfXField xsurf( ntotSSurf, ghostSSurf, &Rxa.get_xs(xv,xs)[0] );
+  const SVolField    xvol( ntotSVol,  ghostSVol,  &get_x_src(nGhost,xv,xs)[0] );
+  const SSurfXField xsurf( ntotSSurf, ghostSSurf, &get_x_dest(nGhost,xv,xs)[0] );
   SVolField    yvol( ntotSVol,  ghostSVol,  NULL );  yvol=0.0;
   SVolField    zvol( ntotSVol,  ghostSVol,  NULL );  zvol=0.0;
   SSurfXField ysurf( ntotSSurf, ghostSSurf, NULL );  ysurf=0.0;
@@ -155,7 +158,7 @@ void calculate_fields( const int npts,
   SinFun<SSurfXField> sinsurf( xsurf, ysurf, zsurf );
   sinvol.evaluate( f );
   sinsurf.evaluate( fxexact );
-  sinsurf.dx( fgexact );
+  sinsurf.dx( fgexact  );
   sinvol.d2x( d2fexact );
 
   //
@@ -177,13 +180,13 @@ void calculate_fields( const int npts,
   Rx.write_matlab("Rx");
   Gx.write_matlab("Gx");
   Dx.write_matlab("Dx");
-  cout << endl
-       << "Interpolant operator has " << Rxa.num_nonzeros() << " nonzero columns" << endl
-       << "Gradient    operator has " << Gxa.num_nonzeros() << " nonzero columns" << endl
-       << "Divergence  operator has " << Dxa.num_nonzeros() << " nonzero columns" << endl
-       << endl;
-  xvol.write_matlab("x");
-  xsurf.write_matlab("xs");
+//   cout << endl
+//        << "Interpolant operator has " << Rxa.num_nonzeros() << " nonzero columns" << endl
+//        << "Gradient    operator has " << Gxa.num_nonzeros() << " nonzero columns" << endl
+//        << "Divergence  operator has " << Dxa.num_nonzeros() << " nonzero columns" << endl
+//        << endl;
+//   xvol.write_matlab("x");
+//   xsurf.write_matlab("xs");
   f.write_matlab("f");
   fxexact.write_matlab("fxexact");
   fxinterp.write_matlab("fxinterp");
@@ -191,6 +194,32 @@ void calculate_fields( const int npts,
   fgrad.write_matlab("df");
   d2fexact.write_matlab("d2fexact");
   d2f.write_matlab("d2f");
+  */
+
+  InterpAssembler Rxsva(order,nGhost,xs,xv);
+  typedef SpatialOperator< LinAlg, Interpolant, SSurfXField, SVolField > InterpFace2Vol;
+  const InterpFace2Vol Rxsv(Rxsva);
+  Rxsv.apply_to_field( fxexact, d2f );
+  compare( f, d2f, fcinterpErr, maxRelErr, avgAbsErr, avgRelErr );
+
+  /*
+  f.write_matlab("ficell");
+  d2f.write_matlab("ficellexact");
+  */
+
+  GradAssembler Gxsva(order,nGhost,xs,xv);
+  typedef SpatialOperator< LinAlg, Gradient, SSurfXField, SVolField > GradFace2Vol;
+  const GradFace2Vol Gxsv(Gxsva);
+  Gxsv.apply_to_field( fxexact, f );
+  sinvol.dx( d2fexact );
+  compare( f, d2fexact, fcgradErr, maxRelErr, avgAbsErr, avgRelErr );
+  /*
+  f.write_matlab( "dfcell" );
+  d2fexact.write_matlab( "dfcellexact" );
+  xvol.write_matlab( "xv" );
+  xsurf.write_matlab("xs");
+  Gxsv.write_matlab("Gxsv");
+  Rxsv.write_matlab("Rxsv");
   */
 }
 
@@ -208,10 +237,10 @@ void driver( const double scalefac,
      << "# npts   Interp     Grad       Div    " << endl;
 
   double idealErr = 0.1;
-  double interpErr, gradErr, divErr;
+  double interpErr, gradErr, divErr, fciErr, fcgErr;
   for( int i=0; i<n; ++i ){
     idealErr /= order;
-    calculate_fields( npts[i], order, scalefac, interpErr, gradErr, divErr );
+    calculate_fields( npts[i], order, scalefac, interpErr, gradErr, divErr, fciErr, fcgErr );
     os << setw(6) << npts[i]
        << scientific << setprecision(2)
        << setw(11) << interpErr
@@ -226,23 +255,40 @@ void driver( const double scalefac,
 //====================================================================
 
 bool check_err( const int npts, const int order, const double scalefac,
-                const double ie, const double ge, const double de )
+                const double ie, const double ge, const double de,
+                const double fcie, const double fcge )
 {
   bool isFailed = false;
-  double ierr, gerr, derr;
-  calculate_fields( npts, order, scalefac, ierr, gerr, derr );
+  double ierr, gerr, derr, fcierr, fcgerr;
+  cout << "running test for " << npts << " points and polynomial order " << order
+       << " with stretch factor " << scalefac << " ... " << flush;
+  calculate_fields( npts, order, scalefac, ierr, gerr, derr, fcierr, fcgerr );
   if( abs(ie-ierr)/ie > 1e-8 ){
     isFailed=true;
-    cout << setprecision(10) << "interpolation failed: " << ie << ", " << ierr << endl;
+    cout << "FAIL" << endl
+         << setprecision(10) << "  interpolation failed: " << ie << ", " << ierr << endl;
   }
   if( abs(ge-gerr)/ge > 1e-8 ){
     isFailed=true;
-    cout << setprecision(10) << "gradient failed: " << ge << ", " << gerr << endl;
+    cout << "FAIL" << endl
+         << setprecision(10) << "  gradient failed: " << ge << ", " << gerr << endl;
   }
   if( abs(de-derr)/de > 1e-8 ){
     isFailed=true;
-    cout << setprecision(10) << "divergence failed: " << de << ", " << derr << endl;
+    cout << "FAIL" << endl
+         << setprecision(10) << "  divergence failed: " << de << ", " << derr << endl;
   }
+  if( abs(fcie-fcierr)/fcie > 1e-8 ){
+    isFailed = true;
+    cout << "FAIL" << endl
+         << setprecision(10) << "  face->cell interp failed: " << fcie << ", " << fcierr << endl;
+  }
+  if( abs(fcge-fcgerr)/fcge > 1e-8 ){
+    isFailed = true;
+    cout << "FAIL" << endl
+         << setprecision(10) << "  face->cell grad failed: " << fcge << ", " << fcgerr << endl;
+  }
+  if( !isFailed ) cout << "PASS" << endl;
   return isFailed;
 }
 
@@ -268,12 +314,22 @@ int main()
 
   bool isFailed = false;
 
-  isFailed = isFailed || check_err( 20, 2, 1.0, 3.0258405e-2, 3.17782874e-2, 1.98599559e-1 );
-  isFailed = isFailed || check_err( 80, 2, 4.0, 3.06998703e-3, 1.99207515e-2, 8.06760267e-2 );
-  isFailed = isFailed || check_err( 25, 4, 4.0, 0.0223312291, 0.1020888904, 0.4327000552 );
+  isFailed = isFailed | check_err( 20, 2, 1.0, 3.02584050e-2, 3.17782874e-2, 1.98599559e-1, 7.410158999e-3, 3.170923728e-2 );
+  isFailed = isFailed | check_err( 40, 2, 1.0, 7.59771580e-3, 7.96273079e-3, 4.99407572e-2, 9.352071377e-4, 7.962443016e-3 );
+  isFailed = isFailed | check_err( 80, 2, 1.0, 1.90123684e-3, 1.99181917e-3, 1.25084456e-2, 1.172462558e-4, 1.991801181e-3 );
 
-  if( isFailed ) cout << "FAIL" << endl;
-  else cout << "PASS" << endl;
+  isFailed = isFailed | check_err( 20, 2, 4.0, 1.44722118e-1, 2.245428298e-1, 1.2583794e-0, 1.037205182e-1, 2.407903611e-1 );
+  isFailed = isFailed | check_err( 40, 2, 4.0, 2.27238703e-2, 7.54298446e-2, 3.33347057e-1, 2.234508564e-2, 6.945968971e-2 );
+  isFailed = isFailed | check_err( 80, 2, 4.0, 3.06998703e-3, 1.99207515e-2, 8.06760267e-2, 3.144696195e-3, 1.777579115e-2 );
+
+  isFailed = isFailed | check_err( 20, 4, 1.0, 1.360662610e-3, 6.591328897e-3, 1.024802205e-1, 3.328861949e-4, 8.587804659e-4 );
+  isFailed = isFailed | check_err( 40, 4, 1.0, 8.639442669e-5, 4.205666662e-4, 2.517237273e-2, 1.061089627e-5, 5.437630461e-5 );
+  isFailed = isFailed | check_err( 80, 4, 1.0, 5.420237124e-6, 2.658622206e-5, 6.266903321e-3, 3.342428068e-7, 3.407858931e-6 );
+  
+  isFailed = isFailed | check_err( 20, 4, 4.0, 0.03979495377, 0.1674880963 , 0.6706331688  , 0.02826635825 , 0.04905237428  );
+  isFailed = isFailed | check_err( 40, 4, 4.0, 3.96734470e-3, 0.02517044905, 0.1514529967  , 0.001911244633, 0.004195780012 );
+  isFailed = isFailed | check_err( 80, 4, 4.0, 1.77251488e-4, 2.06917947e-3, 3.545939321e-2, 7.762276848e-5, 2.846857322e-4 );
+//   isFailed = isFailed | check_err(160, 4, 4.0, 6.18109727e-6, 1.39831006e-4, 8.837083831e-3, 2.645839646e-6, 1.811638886e-5 );
 
 }
 

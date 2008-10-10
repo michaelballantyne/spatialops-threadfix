@@ -30,11 +30,16 @@ get_bounds( const double x,
             int& nhi ) const
 {
   // obtain an iterator to the point on the (-) side that brackets x:
-  const ConstVecIter iterlo = std::lower_bound( xpts_.begin(), xpts_.end(), x ) - 1;
+  ConstVecIter iterlo = std::lower_bound( xpts_.begin(), xpts_.end(), x ) - 1;
+  assert( iterlo != xpts_.end() );
   const int nx = xpts_.size();
   ilo = iterlo - xpts_.begin();
 
   assert( ilo < nx );
+  if( ilo<0 ){
+    ilo-=ilo;
+    iterlo=xpts_.begin();
+  }
 
   const int npts = polyOrder+1;
 
@@ -42,10 +47,14 @@ get_bounds( const double x,
   nlo = nhi;
   if( npts%2 != 0 ){
     // odd number of points.  Are we closer to lower or upper?
-    if( std::fabs(*iterlo-x) > std::fabs(*(iterlo+1)-x) )
-      ++nhi;
-    else
+    if( ilo+1 >= nx )
       ++nlo;
+    else{
+      if( std::fabs(*iterlo-x) > std::fabs(*(iterlo+1)-x) )
+        ++nhi;
+      else
+        ++nlo;
+    }
   }
 
 #ifdef DEBUG_COEFFS
@@ -161,6 +170,7 @@ get_derivative_coefs_indices( const double x,
          << "  num = ";
 #endif
     double num = 0.0;
+    if( polyOrder == 1 ) num=1.0;
     for( int j=ilo-nlo+1; j!=ilo+nhi+1; ++j ){
       const double xj = xpts_[j];
       if( xj == xk ) continue;

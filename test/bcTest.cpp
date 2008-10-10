@@ -70,7 +70,7 @@ void test1()
 
   bool isFailed = false;
 
-  cout << "Testing simple BC usage ... " << flush;
+  std::cout << "Testing simple BC usage ... " << std::flush;
 
   // apply bcs to the field using a "time varying" function.  We use one function to get the time 
   for( std::vector<IndexTriplet>::const_iterator ipt=pts.begin(); ipt!=pts.end(); ++ipt ){
@@ -78,7 +78,7 @@ void test1()
     bc(field);
     // check:
     const int ix = get_index_with_ghost<SVolField>( dim, bcx, bcy, bcz, *ipt );
-    isFailed = abs( field[ix] - f() ) > ATOL;
+    isFailed = std::abs( field[ix] - f() ) > ATOL;
   }
 
   // apply constant-time BCs
@@ -87,13 +87,13 @@ void test1()
     bc(field);
     // check:
     const int ix = get_index_with_ghost<SVolField>( dim, bcx, bcy, bcz, *ipt );
-    isFailed = abs( field[ix] - fnotime() ) > ATOL;
+    isFailed = std::abs( field[ix] - fnotime() ) > ATOL;
   }
 
   if( isFailed )
-    cout << "***FAIL***" << endl << endl;
+    std::cout << "***FAIL***" << std::endl << std::endl;
   else
-    cout << "PASS" << endl << endl;
+    std::cout << "PASS" << std::endl << std::endl;
 }
 
 //====================================================================
