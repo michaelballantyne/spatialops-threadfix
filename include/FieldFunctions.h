@@ -268,6 +268,45 @@ class SinFunction : public FieldFunction1D<FieldT,PatchT>
 
 //====================================================================
 
+/**
+ *  @class GaussianFunction
+ *  @author James C. Sutherland
+ *  @date October, 2008
+ *
+ * \f[
+ *   f(x) = y_0 + a \exp\left( \frac{\left(x-x_0\right)^2 }{2\sigma^2} \right)
+ * \f]
+ */
+template< typename FieldT,
+          typename PatchT=FFLocal::NULLPatch >
+class GaussianFunction : public FieldFunction1D<FieldT,PatchT>
+{
+  typedef typename PatchT::FieldID FieldID;
+ public:
+  GaussianFunction( PatchT& p,
+                    const FieldID xid,
+                    const double a,
+                    const double stddev,
+                    const double mean,
+                    const double yo=0.0 );
+  GaussianFunction( const FieldT& x,
+                    const double stddev,
+                    const double mean,
+                    const double xo,
+                    const double yo=0.0 );
+  ~GaussianFunction(){}
+  void evaluate( FieldT& f ) const;
+  void dx( FieldT& df ) const;
+  void d2x( FieldT& d2f ) const;
+ protected:
+  void evaluate_implement( FieldT& f, const FieldT& x ) const;
+ private:
+  inline double fval(const double x) const;
+  const double a_, b_, xo_, yo_;
+};
+
+//====================================================================
+
 
 
 
@@ -522,6 +561,97 @@ d2x( FieldT& f ) const
 //--------------------------------------------------------------------
 
 
+//====================================================================
+
+
+//--------------------------------------------------------------------
+template<typename FieldT, typename PatchT>
+GaussianFunction<FieldT,PatchT>::
+GaussianFunction( const FieldT& x,
+                  const double a,
+                  const double b,
+                  const double xo,
+                  const double yo )
+  : FieldFunction1D<FieldT,PatchT>(x),
+    a_( a ),
+    b_( 2.0*b*b ),  // b=2*sigma^2
+    xo_( xo ),
+    yo_( yo )
+{
+}
+//--------------------------------------------------------------------
+template<typename FieldT, typename PatchT>
+GaussianFunction<FieldT,PatchT>::
+GaussianFunction( PatchT& p,
+                  const FieldID xid,
+                  const double a,
+                  const double b,
+                  const double xo,
+                  const double yo )
+  : FieldFunction1D<FieldT,PatchT>( p, xid ),
+    a_( a ),
+    b_( 2.0*b*b ), // b=2*sigma^2
+    xo_( xo ),
+    yo_( yo )
+{
+}
+//------------------------------------------------------------------
+template<typename FieldT, typename PatchT>
+void
+GaussianFunction<FieldT,PatchT>::
+evaluate( FieldT& f ) const
+{
+  this->set_fields();
+  typename FieldT::const_iterator ix = this->get_x().begin();
+  typename FieldT::iterator ifld = f.begin();
+  typename FieldT::iterator iflde= f.end();
+
+  for( ; ifld!=iflde; ++ifld, ++ix ){
+    *ifld = fval(*ix) + yo_;
+  }
+}
+//------------------------------------------------------------------
+template<typename FieldT, typename PatchT>
+void
+GaussianFunction<FieldT,PatchT>::
+dx( FieldT& f ) const
+{
+  this->set_fields();
+  typename FieldT::const_iterator ix = this->get_x().begin();
+  typename FieldT::iterator ifld = f.begin();
+  typename FieldT::iterator iflde= f.end();
+
+  for( ; ifld!=iflde; ++ifld, ++ix ){
+    const double tmp = (*ix-xo_);
+    *ifld = -2/b_*tmp*fval(*ix);
+  }
+}
+//------------------------------------------------------------------
+template<typename FieldT, typename PatchT>
+void
+GaussianFunction<FieldT,PatchT>::
+d2x( FieldT& f ) const
+{
+  this->set_fields();
+  typename FieldT::const_iterator ix = this->get_x().begin();
+  typename FieldT::iterator ifld = f.begin();
+  typename FieldT::iterator iflde= f.end();
+
+  for( ; ifld!=iflde; ++ifld, ++ix ){
+    const double tmp = *ix-xo_;
+    *ifld =  -2/b_*fval(*ix) * (1.0-2.0/b_*tmp*tmp);
+  }
+}
+//--------------------------------------------------------------------
+template<typename FieldT, typename PatchT>
+double
+GaussianFunction<FieldT,PatchT>::
+fval( const double x ) const
+{
+  const double tmp = x-xo_;
+  return a_*std::exp(-tmp*tmp/b_);
+}
+//--------------------------------------------------------------------
 
 
 } // namespace SpatialOps
