@@ -249,10 +249,12 @@ class SinFunction : public FieldFunction1D<FieldT,PatchT>
   SinFunction( PatchT& p,
                const FieldID xid,
                const double amplitude,
-               const double period );
+               const double period,
+               const double base=0.0 );
   SinFunction( const FieldT& x,
                const double amplitude,
-               const double period );
+               const double period,
+               const double base=0.0 );
   ~SinFunction(){}
   void evaluate( FieldT& f ) const;
   void dx( FieldT& df ) const;
@@ -261,7 +263,7 @@ class SinFunction : public FieldFunction1D<FieldT,PatchT>
   void evaluate_implement( FieldT& f, const FieldT& x ) const;
 
  private:
-  const double a_, b_;
+  const double a_, b_, base_;
 };
 
 //====================================================================
@@ -448,10 +450,12 @@ template<typename FieldT, typename PatchT>
 SinFunction<FieldT,PatchT>::
 SinFunction( const FieldT& x,
              const double a,
-             const double b )
+             const double b,
+             const double c )
   : FieldFunction1D<FieldT,PatchT>(x),
     a_( a ),
-    b_( b )
+    b_( b ),
+    base_( c )
 {
 }
 //--------------------------------------------------------------------
@@ -460,10 +464,12 @@ SinFunction<FieldT,PatchT>::
 SinFunction( PatchT& p,
              const FieldID xid,
              const double a,
-             const double b )
+             const double b,
+             const double c )
   : FieldFunction1D<FieldT,PatchT>( p, xid ),
     a_( a ),
-    b_( b )
+    b_( b ),
+    base_( c )
 {
 }
 //------------------------------------------------------------------
@@ -473,12 +479,12 @@ SinFunction<FieldT,PatchT>::
 evaluate( FieldT& f ) const
 {
   this->set_fields();
-  typename FieldT::iterator   ix = this->get_x().begin();
+  typename FieldT::const_iterator ix = this->get_x().begin();
   typename FieldT::iterator ifld = f.begin();
   typename FieldT::iterator iflde= f.end();
 
   for( ; ifld!=iflde; ++ifld, ++ix ){
-    *ifld = a_ * std::sin(*ix*b_);
+    *ifld = a_ * std::sin(*ix*b_) + base_;
   }
 }
 //------------------------------------------------------------------
@@ -488,7 +494,7 @@ SinFunction<FieldT,PatchT>::
 dx( FieldT& f ) const
 {
   this->set_fields();
-  typename FieldT::iterator   ix = this->get_x().begin();
+  typename FieldT::const_iterator ix = this->get_x().begin();
   typename FieldT::iterator ifld = f.begin();
   typename FieldT::iterator iflde= f.end();
 
@@ -503,7 +509,7 @@ SinFunction<FieldT,PatchT>::
 d2x( FieldT& f ) const
 {
   this->set_fields();
-  typename FieldT::iterator   ix = this->get_x().begin();
+  typename FieldT::const_iterator ix = this->get_x().begin();
   typename FieldT::iterator ifld = f.begin();
   typename FieldT::iterator iflde= f.end();
 

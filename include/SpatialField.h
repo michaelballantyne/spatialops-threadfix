@@ -657,6 +657,9 @@ namespace SpatialOps{
     fout << "function x = load_" << prefix << "()" << std::endl
          << "x = zeros(" << get_ninterior() << ",1);" << std::endl;
     int ix=1;
+    //    fout.setf(std::ios_base::scientific);
+    fout << std::scientific;
+    fout.precision( 14 );
     for( const_interior_iterator i=interior_begin(); i!=interior_end(); ++i, ++ix ){
       fout << "x(" << ix << ") = " << *i << ";" << std::endl;
     }
