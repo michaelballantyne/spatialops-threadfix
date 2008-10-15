@@ -2,7 +2,7 @@
 #define LagrangePoly_h
 
 #include <vector>
-
+#include <iterator>
 
 //====================================================================
 
@@ -50,6 +50,8 @@ class LagrangeCoefficients
 public:
 
   LagrangeCoefficients( const std::vector<double> xpts );
+  LagrangeCoefficients( const double* const xbegin,
+                        const double* const xend );
 
   ~LagrangeCoefficients();
 

@@ -16,6 +16,14 @@ LagrangeCoefficients::LagrangeCoefficients( const std::vector<double> xpts )
 
 //--------------------------------------------------------------------
 
+LagrangeCoefficients::LagrangeCoefficients( const double* const xbegin,
+                                            const double* const xend )
+  : xpts_( xbegin, xend )
+{
+}
+
+//--------------------------------------------------------------------
+
 LagrangeCoefficients::~LagrangeCoefficients()
 {
 }

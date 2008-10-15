@@ -185,7 +185,7 @@ void test_coefs()
       xpts.push_back( i*dx );
     }
 
-    LagrangeCoefficients lagrangeCoefs2(xpts);
+    LagrangeCoefficients lagrangeCoefs2(&xpts[0],&xpts[npts-1]);
 
     lagrangeCoefs2.get_interp_coefs_indices( 0.48, 1, coefs, indices );
     const double cexpected [] = { 0.2, 0.8 };
