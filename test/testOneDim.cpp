@@ -102,7 +102,8 @@ void calculate_fields( const int npts,
                        double& gradErr,
                        double& divErr,
                        double& fcinterpErr,
-                       double& fcgradErr )
+                       double& fcgradErr,
+                       double& ccgradErr )
 {
   vector<double> xv, xs;
   setup_mesh( npts, xv, xs, scaleFac );
@@ -221,6 +222,16 @@ void calculate_fields( const int npts,
   Gxsv.write_matlab("Gxsv");
   Rxsv.write_matlab("Rxsv");
   */
+
+  GradAssembler Gxvxva(order,nGhost,xv,xv);
+  typedef SpatialOperator<LinAlg,Gradient,SVolField,SVolField> GradC2C;
+  const GradC2C Gvv( Gxvxva );
+  sinvol.evaluate(f);
+  Gvv.apply_to_field( f, d2f );
+  compare( d2f, d2fexact, ccgradErr, maxRelErr, avgAbsErr, avgRelErr );
+//   Gvv.write_matlab( "Gvv" );
+//   d2f.write_matlab("dfdx"); d2fexact.write_matlab("dfdxexact");
+//   xvol.write_matlab("xv");
 }
 
 //====================================================================
@@ -237,10 +248,10 @@ void driver( const double scalefac,
      << "# npts   Interp     Grad       Div    " << endl;
 
   double idealErr = 0.1;
-  double interpErr, gradErr, divErr, fciErr, fcgErr;
+  double interpErr, gradErr, divErr, fciErr, fcgErr, ccgErr;
   for( int i=0; i<n; ++i ){
     idealErr /= order;
-    calculate_fields( npts[i], order, scalefac, interpErr, gradErr, divErr, fciErr, fcgErr );
+    calculate_fields( npts[i], order, scalefac, interpErr, gradErr, divErr, fciErr, fcgErr, ccgErr );
     os << setw(6) << npts[i]
        << scientific << setprecision(2)
        << setw(11) << interpErr
@@ -256,13 +267,13 @@ void driver( const double scalefac,
 
 bool check_err( const int npts, const int order, const double scalefac,
                 const double ie, const double ge, const double de,
-                const double fcie, const double fcge )
+                const double fcie, const double fcge, const double ccge )
 {
   bool isFailed = false;
-  double ierr, gerr, derr, fcierr, fcgerr;
+  double ierr, gerr, derr, fcierr, fcgerr, ccgerr;
   cout << "running test for " << npts << " points and polynomial order " << order
        << " with stretch factor " << scalefac << " ... " << flush;
-  calculate_fields( npts, order, scalefac, ierr, gerr, derr, fcierr, fcgerr );
+  calculate_fields( npts, order, scalefac, ierr, gerr, derr, fcierr, fcgerr, ccgerr );
   if( abs(ie-ierr)/ie > 1e-8 ){
     isFailed=true;
     cout << "FAIL" << endl
@@ -287,6 +298,11 @@ bool check_err( const int npts, const int order, const double scalefac,
     isFailed = true;
     cout << "FAIL" << endl
          << setprecision(10) << "  face->cell grad failed: " << fcge << ", " << fcgerr << endl;
+  }
+  if( abs(ccge-ccgerr)/ccge>1e-8 ){
+    isFailed = true;
+    cout << "FAIL" << endl
+         << setprecision(10) << "  cell->cell grad failed: " << ccge << ", " << ccgerr << endl;
   }
   if( !isFailed ) cout << "PASS" << endl;
   return isFailed;
@@ -314,22 +330,22 @@ int main()
 
   bool isFailed = false;
 
-  isFailed = isFailed | check_err( 20, 2, 1.0, 3.02584050e-2, 3.17782874e-2, 1.98599559e-1, 7.410158999e-3, 3.170923728e-2 );
-  isFailed = isFailed | check_err( 40, 2, 1.0, 7.59771580e-3, 7.96273079e-3, 4.99407572e-2, 9.352071377e-4, 7.962443016e-3 );
-  isFailed = isFailed | check_err( 80, 2, 1.0, 1.90123684e-3, 1.99181917e-3, 1.25084456e-2, 1.172462558e-4, 1.991801181e-3 );
+  isFailed = isFailed | check_err( 20, 2, 1.0, 3.02584050e-2, 3.17782874e-2, 1.98599559e-1, 7.410158999e-3, 3.170923728e-2, 0.1256835881   );
+  isFailed = isFailed | check_err( 40, 2, 1.0, 7.59771580e-3, 7.96273079e-3, 4.99407572e-2, 9.352071377e-4, 7.962443016e-3, 0.03177713888  );
+  isFailed = isFailed | check_err( 80, 2, 1.0, 1.90123684e-3, 1.99181917e-3, 1.25084456e-2, 1.172462558e-4, 1.991801181e-3, 0.007962658853 );
 
-  isFailed = isFailed | check_err( 20, 2, 4.0, 1.44722118e-1, 2.245428298e-1, 1.2583794e-0, 1.037205182e-1, 2.407903611e-1 );
-  isFailed = isFailed | check_err( 40, 2, 4.0, 2.27238703e-2, 7.54298446e-2, 3.33347057e-1, 2.234508564e-2, 6.945968971e-2 );
-  isFailed = isFailed | check_err( 80, 2, 4.0, 3.06998703e-3, 1.99207515e-2, 8.06760267e-2, 3.144696195e-3, 1.777579115e-2 );
+  isFailed = isFailed | check_err( 20, 2, 4.0, 1.44722118e-1, 2.245428298e-1, 1.2583794e-0, 1.037205182e-1, 2.407903611e-1, 0.682537828  );
+  isFailed = isFailed | check_err( 40, 2, 4.0, 2.27238703e-2, 7.54298446e-2, 3.33347057e-1, 2.234508564e-2, 6.945968971e-2, 0.1936764955 );
+  isFailed = isFailed | check_err( 80, 2, 4.0, 3.06998703e-3, 1.99207515e-2, 8.06760267e-2, 3.144696195e-3, 1.777579115e-2, 0.0659789562 );
 
-  isFailed = isFailed | check_err( 20, 4, 1.0, 1.360662610e-3, 6.591328897e-3, 1.024802205e-1, 3.328861949e-4, 8.587804659e-4 );
-  isFailed = isFailed | check_err( 40, 4, 1.0, 8.639442669e-5, 4.205666662e-4, 2.517237273e-2, 1.061089627e-5, 5.437630461e-5 );
-  isFailed = isFailed | check_err( 80, 4, 1.0, 5.420237124e-6, 2.658622206e-5, 6.266903321e-3, 3.342428068e-7, 3.407858931e-6 );
+  isFailed = isFailed | check_err( 20, 4, 1.0, 1.360662610e-3, 6.591328897e-3, 1.024802205e-1, 3.328861949e-4, 8.587804659e-4, 0.0088222634 );
+  isFailed = isFailed | check_err( 40, 4, 1.0, 8.639442669e-5, 4.205666662e-4, 2.517237273e-2, 1.061089627e-5, 5.437630461e-5, 0.0005737300688 );
+  isFailed = isFailed | check_err( 80, 4, 1.0, 5.420237124e-6, 2.658622206e-5, 6.266903321e-3, 3.342428068e-7, 3.407858931e-6, 3.582233267e-05 );
   
-  isFailed = isFailed | check_err( 20, 4, 4.0, 0.03979495377, 0.1674880963 , 0.6706331688  , 0.02826635825 , 0.04905237428  );
-  isFailed = isFailed | check_err( 40, 4, 4.0, 3.96734470e-3, 0.02517044905, 0.1514529967  , 0.001911244633, 0.004195780012 );
-  isFailed = isFailed | check_err( 80, 4, 4.0, 1.77251488e-4, 2.06917947e-3, 3.545939321e-2, 7.762276848e-5, 2.846857322e-4 );
-//   isFailed = isFailed | check_err(160, 4, 4.0, 6.18109727e-6, 1.39831006e-4, 8.837083831e-3, 2.645839646e-6, 1.811638886e-5 );
+  isFailed = isFailed | check_err( 20, 4, 4.0, 0.03979495377, 0.1674880963 , 0.6706331688  , 0.02826635825 , 0.04905237428 , 0.1374255994 );
+  isFailed = isFailed | check_err( 40, 4, 4.0, 3.96734470e-3, 0.02517044905, 0.1514529967  , 0.001911244633, 0.004195780012, 0.05340286527 );
+  isFailed = isFailed | check_err( 80, 4, 4.0, 1.77251488e-4, 2.06917947e-3, 3.545939321e-2, 7.762276848e-5, 2.846857322e-4, 0.01794738432 );
+//   isFailed = isFailed | check_err(160, 4, 4.0, 6.18109727e-6, 1.39831006e-4, 8.837083831e-3, 2.645839646e-6, 1.811638886e-5, 0.008605711392 );
 
 }
 
