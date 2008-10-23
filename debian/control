@@ -1,0 +1,24 @@
+Source: libspatialops
+Priority: extra
+Maintainer: James Sutherland <james.sutherland@utah.edu>
+Build-Depends: debhelper (>= 5), pkg-config, autotools-dev, libboost-dev (>= 1.33.1), libtrilinos-dev (>= 7.0.6), libblas-dev (>= 1.0), liblapack-dev (>= 3.0)
+Standards-Version: 3.7.2
+Section: libs
+Homepage: http://software.crsim.utah.edu
+
+Package: libspatialops-dev
+Section: libdevel
+Architecture: any
+Depends: libspatialops (= ${Source-Version})
+Description: Spatial Operator library to easily solve PDEs (dev headers.) 
+ Development headers for the libspatialops package.
+
+Package: libspatialops
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends},
+Description: Spatial Operator library to easily solve PDEs.
+ SpatialOps is a project to facilitate an operator approach to solving PDEs. For example, the divergence is represented in discrete form as
+ \[ \nabla \cdot \mathbf q \approx [D]_x(q)_x + [D]_y(q)_y + [D]_z(q)_z \]
+ where [D]x is the discrete divergence operator in the x-direction and (q)x represents a flux term in the x-direction. The SpatialOps project defines an abstraction for spatial operators and the fields they act on. Currently, operators and fields are configured for structured, staggered finite volume meshes. However, the approach is sufficiently general to allow arbitrary operators for arbitrary meshes. Fields and operators are strongly typed to provide as much compile-time error checking as possible. 
+

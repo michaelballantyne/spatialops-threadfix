@@ -45,9 +45,10 @@ distclean-local:
 	rm -f test/converge.out
 	rm -f converge.out
 	rm -rf include/daixtrose
-	if test `ls -l include | wc -l` -le 6 -a -d "include/error_handling"; then rm -rf include; fi
 	rm -f daixtrose
 	rm -r daixtrose-0.0.3
+	rm -rf include/tiny include/home include/error_handling include/linalg include/demos
+	if test `ls include | wc -l` -eq 0; then rm -rf include; fi
 
 # ==== Library Config ====
 
@@ -86,8 +87,8 @@ check_PROGRAMS	= simplebc testnew poisson lagrange testOneDim
 #targets to execute when 'make check' is called
 #'testnew' requires interactive input, so it's disabled
 TESTS 		= simplebc poisson lagrange testOneDim
-#testsuites that are expected to fail when run
-FAIL_TESTS	= #none
+#testsuites that are eXpected to fail when run
+XFAIL_TESTS	= testOneDim
 
 simplebc_SOURCES  =test/bcTest.cpp
 simplebc_LDADD    =$(SOPS_LIBS) $(SOPS_LIBDIR)
