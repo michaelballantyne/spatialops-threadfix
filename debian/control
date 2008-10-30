@@ -1,4 +1,4 @@
-Source: libspatialops
+Source: spatialops
 Priority: extra
 Maintainer: James Sutherland <james.sutherland@utah.edu>
 Build-Depends: debhelper (>= 5), pkg-config, autotools-dev, libboost-dev (>= 1.33.1), libtrilinos-dev (>= 7.0.6), libblas-dev (>= 1.0), liblapack-dev (>= 3.0)
@@ -6,14 +6,14 @@ Standards-Version: 3.7.2
 Section: libs
 Homepage: http://software.crsim.utah.edu
 
-Package: libspatialops-dev
+Package: spatialops-dev
 Section: libdevel
 Architecture: any
-Depends: libspatialops (= ${Source-Version})
+Depends: spatialops (= ${Source-Version})
 Description: Spatial Operator library to easily solve PDEs (dev headers.) 
- Development headers for the libspatialops package.
+ Development headers for the spatialops package.
 
-Package: libspatialops
+Package: spatialops
 Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends},

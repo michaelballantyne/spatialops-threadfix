@@ -9,8 +9,14 @@ SOPS_INCDIR	= -I$(top_srcdir)/include -I$(top_srcdir)/test
 #arch-dependent include directory (i.e. Daixtrose, since it's prebuilt at config time)
 DEPS_INCDIR	= -I$(top_builddir)/include
 
-#tarfiles.
-EXTRA_DIST 	= tarfiles/daixtrose-0.0.3.tar.gz
+EXTRA_DIST 	=	\
+	debian/daixtrose-0.0.3.tar.gz \
+	debian/changelog\
+	debian/compat	\
+	debian/control	\
+	debian/copyright\
+	debian/rules
+
 EXTRA_HEADERS	=
 library_include_HEADERS =@SOPS_HEADERS@
 library_includedir	= $(includedir)/@PACKAGE@
@@ -82,6 +88,7 @@ libspatialops_a_SOURCES	=  \
 
 # ==== Test Suite Config ====
 
+test:	check
 #targets to build when 'make check' is called
 check_PROGRAMS	= simplebc testnew poisson lagrange testOneDim 
 #targets to execute when 'make check' is called

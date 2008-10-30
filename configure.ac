@@ -1,4 +1,4 @@
-AC_INIT([libspatialops], [0.3a], [james.sutherland@utah.edu])
+AC_INIT([spatialops], [0.3a], [james.sutherland@utah.edu])
 
 #show where to get all our pieces
 #All the buildsystem pieces are tucked away neatly
@@ -73,7 +73,7 @@ DAIXTROSE_FLAGS="    \
 
 if test ! -e "daixtrose-0.0.3/config.status"; then
   echo "Configuring subpackage daixtrose."
-  pushd $srcdir; chmod u+w .; tar xzf tarfiles/daixtrose-0.0.3.tar.gz; popd
+  pushd $srcdir; chmod u+w .; tar xzf debian/daixtrose-0.0.3.tar.gz; popd
   mkdir_p='mkdir -p'
   BUILD_CONFIG_SUBDIR("daixtrose-0.0.3",[ ${DAIXTROSE_FLAGS} ])
   cd daixtrose-0.0.3

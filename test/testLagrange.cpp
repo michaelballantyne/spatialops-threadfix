@@ -3,6 +3,7 @@
 #include <fstream>
 #include <cmath>
 #include <cassert>
+#include <cstdlib>
 
 #include <LagrangePoly.h>
 
