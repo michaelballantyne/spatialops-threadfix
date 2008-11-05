@@ -34,6 +34,13 @@ namespace FVStaggered{
     const double val_;
   };
 
+  struct ConstValVec{
+    ConstValVec( const std::vector<double>& vec ) : val_( vec ){}
+    inline const std::vector<double>& operator()() const{ return val_; }
+  private:
+    const std::vector<double> val_;
+  };
+
   /**
    *  @brief Obtain the flat index including ghost cells given the
    *  IndexTriplet based on the interior.
@@ -242,7 +249,11 @@ namespace FVStaggered{
      *  Impose the boundary condition on the supplied field.
      */
     void operator()( SrcFieldT& f ) const;
-  };
+
+    void operator()( std::vector<SrcFieldT*>& f ) const;
+
+  }; // class BoundaryConditionOp
+
 
 
 
@@ -409,6 +420,39 @@ namespace FVStaggered{
   }
 
   //--------------------------------------------------------------------
+
+  template< typename OpT, typename BCEval >
+  void
+  BoundaryConditionOp<OpT,BCEval>::
+  operator()( std::vector<SrcFieldT*>& f ) const
+  {
+    const size_t nf = f.size();
+
+    // evaluate the boundary condition values and store them.
+    const std::vector<double>& bcValVec = bcEval_();
+
+    // loop over each field present and set the bc accordingly.
+    assert( bcValVec.size() == nf );
+    std::vector<double>::const_iterator ibcval=bcValVec.begin();
+    for( typename std::vector<SrcFieldT*>::iterator ifld=f.begin();
+         ifld!=f.end();
+         ++ifld, ++ibcval )
+      {
+        SrcFieldT& field = **ifld;
+        double prodsum = 0.0;
+        for( std::vector<IxValPair>::const_iterator ix=ixVals_.begin();
+             ix!=ixVals_.end();
+             ++ix )
+          {
+            prodsum += ix->second * field[ix->first];
+          }
+
+        const double val = (*ibcval-prodsum) / ghostCoef_;
+        field[index_] = val;
+      } // loop over vector components
+  }
+
+  //------------------------------------------------------------------
 
   template< typename FieldT >
   int get_index_with_ghost( const std::vector<int>& dim,
