@@ -264,9 +264,13 @@ namespace SpatialOps{
 
     /**
      *  @brief Write the field to a matlab file.
-     *  @param prefix The name of the field.  The file will be called "load_prefix.m".
+     *  @param prefix The name of the field.  The file will be called
+     *         "load_prefix.m".
+     *  @param includeGhost boolean flag indicating whether ghost
+     *         cells should be included in output.
      */
-    void write_matlab( const std::string prefix ) const;
+    void write_matlab( const std::string prefix,
+                       const bool includeGhost=false ) const;
 
   protected:
     
@@ -644,25 +648,33 @@ namespace SpatialOps{
   template< typename VecOps, typename FieldLocation, typename GhostTraits >
   void
   SpatialField<VecOps,FieldLocation,GhostTraits>::
-  write_matlab( const std::string prefix ) const
+  write_matlab( const std::string prefix,
+                const bool includeGhost ) const
   {
     const std::string fname = "load_"+prefix+".m";
     std::ofstream fout( fname.c_str() );
-//     fout << "function x = load_" << prefix << "()" << std::endl
-//          << "x = zeros(" << get_ntotal() << ",1);" << std::endl;
-//     int ix=1;
-//     for( const_iterator i=begin(); i!=end(); ++i, ++ix ){
-//       fout << "x(" << ix << ") = " << *i << ";" << std::endl;
-//     }
-    fout << "function x = load_" << prefix << "()" << std::endl
-         << "x = zeros(" << get_ninterior() << ",1);" << std::endl;
-    int ix=1;
-    //    fout.setf(std::ios_base::scientific);
-    fout << std::scientific;
-    fout.precision( 14 );
-    for( const_interior_iterator i=interior_begin(); i!=interior_end(); ++i, ++ix ){
-      fout << "x(" << ix << ") = " << *i << ";" << std::endl;
+    if( includeGhost ){
+      fout << "function x = load_" << prefix << "()" << std::endl
+           << "x = zeros(" << get_ntotal() << ",1);" << std::endl;
+      int ix=1;
+      fout << std::scientific;
+      fout.precision( 14 );
+      for( const_iterator i=begin(); i!=end(); ++i, ++ix ){
+        fout << "x(" << ix << ") = " << *i << ";" << std::endl;
+      }
     }
+    else{
+      fout << "function x = load_" << prefix << "()" << std::endl
+           << "x = zeros(" << get_ninterior() << ",1);" << std::endl;
+      int ix=1;
+      //    fout.setf(std::ios_base::scientific);
+      fout << std::scientific;
+      fout.precision( 14 );
+      for( const_interior_iterator i=interior_begin(); i!=interior_end(); ++i, ++ix ){
+        fout << "x(" << ix << ") = " << *i << ";" << std::endl;
+      }
+    }
+
     fout.close();
   }
   //------------------------------------------------------------------

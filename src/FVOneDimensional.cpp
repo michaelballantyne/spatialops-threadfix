@@ -68,7 +68,7 @@ get_x_dest( const int nGhost,
   typedef std::vector<double> DVec;
   assert( nGhost == 1 );
   DVec x( xdest.size()+2*nGhost, 0.0 );
-  std::copy( xdest.begin(), xdest.end(), x.begin()+1 );
+  std::copy( xdest.begin(), xdest.end(), x.begin()+nGhost );
 
   assert( nGhost == 1 );
 
@@ -124,43 +124,43 @@ OneDimInterpolantAssembler( const int polynomialOrder,
   // mesh where xs is at x midpoints, we require a smaller stencil.
   numNonzero_ = polynomialOrder+1;
 
-  bool isReduced = true;
-  double dx=xsrc[1]-xsrc[0];
-  double dxold=dx;
-  const double TOL = 1e-5;
-  typedef std::vector<double> DVec;
-  for( DVec::const_iterator ix=xsrc.begin()+1; ix!=xsrc.end(); ++ix ){
-    dx = *ix - *(ix-1);
-    if( std::fabs(dx-dxold)>TOL*dx ){
-      isReduced = false;
-      break;
-    }
-    dxold = dx;
-  }
-  if( isReduced ){
-    dx = xdest[1]-xdest[0];
-    dxold = dx;
-    for( DVec::const_iterator ix=xdest.begin()+1; ix!=xdest.end(); ++ix ){
-      dx = *ix - *(ix-1);
-      if( std::fabs(dx-dxold)>TOL*dx ){
-        isReduced = false;
-        break;
-      }
-      dxold = dx;
-    }
-  }
+//   bool isReduced = true;
+//   double dx=xsrc[1]-xsrc[0];
+//   double dxold=dx;
+//   const double TOL = 1e-5;
+//   typedef std::vector<double> DVec;
+//   for( DVec::const_iterator ix=xsrc.begin()+1; ix!=xsrc.end(); ++ix ){
+//     dx = *ix - *(ix-1);
+//     if( std::fabs(dx-dxold)>TOL*dx ){
+//       isReduced = false;
+//       break;
+//     }
+//     dxold = dx;
+//   }
+//   if( isReduced ){
+//     dx = xdest[1]-xdest[0];
+//     dxold = dx;
+//     for( DVec::const_iterator ix=xdest.begin()+1; ix!=xdest.end(); ++ix ){
+//       dx = *ix - *(ix-1);
+//       if( std::fabs(dx-dxold)>TOL*dx ){
+//         isReduced = false;
+//         break;
+//       }
+//       dxold = dx;
+//     }
+//   }
 
-  const double xmid = 0.5*(xsrc[0]+xsrc[1]);
-  if( xsrc[0]<xdest[0] )
-    if( std::fabs( xmid-xdest[0] ) > 1.0e-8 ) isReduced = false;
-  else
-    if( std::fabs( xmid-xdest[1] ) > 1.0e-8 ) isReduced = false;
+//   const double xmid = 0.5*(xsrc[0]+xsrc[1]);
+//   if( xsrc[0]<xdest[0] )
+//     if( std::fabs( xmid-xdest[0] ) > 1.0e-8 ) isReduced = false;
+//   else
+//     if( std::fabs( xmid-xdest[1] ) > 1.0e-8 ) isReduced = false;
 
-  if( isReduced ){
-    --numNonzero_;
-    --polyOrder_;
-//     cout << "reducing interpolant stencil because we are on a uniform mesh" << endl;
-  }
+//   if( isReduced ){
+//     --numNonzero_;
+//     --polyOrder_;
+// //     cout << "reducing interpolant stencil because we are on a uniform mesh" << endl;
+//   }
 }
 
 //--------------------------------------------------------------------

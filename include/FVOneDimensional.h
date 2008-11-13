@@ -53,6 +53,11 @@ namespace SpatialOps{
 
 namespace FVStaggered{
 
+  /**
+   * @todo Need to rework setting ghost cell locations so that
+   *       periodic BCs work.  This affects get_x_src and get_x_dest
+   */
+
   std::vector<double>
   get_x_src( const int nGhost,
              const std::vector<double>& xsrc,

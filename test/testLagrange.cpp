@@ -1,5 +1,6 @@
 #include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <fstream>
 #include <cmath>
 #include <cassert>
@@ -100,35 +101,44 @@ test( const int npts,
 
 //--------------------------------------------------------------------
 
-void test2( const int npts,
-	    const int order )
+double test2( const int npts,
+              const int order )
 {
   vector<double> x(npts), y(npts);
   const double dx = 3.1415 / (npts-1);
   vector<double>::iterator ix = x.begin(), iy=y.begin();
   for( int i=0; ix!=x.end(); ++ix, ++iy, ++i ){
     *ix = i*dx;
-    *iy = std::sin( *ix );
+    *iy = std::sin( 2.0**ix );
   }
 
   const LagrangeInterpolant interp( x, y, order );
   const LagrangeDerivative  der   ( x, y, order );
 
-  ofstream fout("./interp.out",ios::out);
-  ofstream dout("./der.out",ios::out);
+  std::ostringstream interpname, dername;
+  interpname << "./interp_" << order << ".out";
+  dername << "./der_" << order << ".out";
+
+  double errnorm = 0.0;
+  srand( npts );
+  ofstream fout( interpname.str().c_str(),ios::out);
+  ofstream dout( dername.str().c_str(),   ios::out);
   fout << "# x yapprox   x  yexact" << endl;
   dout << "# x dyapprox  x  dyexact" << endl;
-    for( ix=x.begin(); ix!=x.end(); ++ix ){
-      const double rn = fabs( dx * (rand()/RAND_MAX-0.5) );
-      const double x = *ix  + rn;
-
-      const double y = interp.value(x);
-      const double dy = der.value(x);
-      fout << x << " " << y  << " " << *ix << " " << sin(*ix) << endl;
-      dout << x << " " << dy << " " << *ix << " " << cos(*ix) << endl;
-    }
-    fout.close();
-    dout.close();
+  for( ix=x.begin(); ix!=x.end(); ++ix ){
+    const double rn = 0.5*double(rand())/double(RAND_MAX);
+    const double x = *ix  + rn*dx;
+    const double y = interp.value(x);
+    const double dy = der.value(x);
+    fout << x << " " << y  << " " << x << " " << sin(2.0*x) << endl;
+    dout << x << " " << dy << " " << x << " " << 2.0*cos(2.0*x) << endl;
+    
+    errnorm += pow(y - sin(x),2);
+  }
+  fout.close();
+  dout.close();
+  errnorm = sqrt(errnorm);
+  return errnorm;
 }
 
 //--------------------------------------------------------------------
@@ -232,8 +242,9 @@ int main()
 	 << setw(15) << ii->errs.second << endl;
   }
   fout.close();
-  
-  //  test2( 10, 2 );
+
+  test2( 20, 2 );
+  test2( 20, 4 );
 }
 
 //--------------------------------------------------------------------

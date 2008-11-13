@@ -5,7 +5,7 @@
 #include <map>
 
 #ifdef EXPRESSION_THREADS
-#include <boost/thread/mutex.hpp>
+# include <boost/thread/mutex.hpp>
 #endif
 
 namespace SpatialOps{
