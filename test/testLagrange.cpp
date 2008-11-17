@@ -10,6 +10,8 @@
 
 using namespace std;
 
+bool globalIsFailed;
+
 //--------------------------------------------------------------------
 
 struct Output
@@ -21,13 +23,13 @@ struct Output
 
 //--------------------------------------------------------------------
 
-void check( const std::vector<double>& coefs,
+bool check( const std::vector<double>& coefs,
 	    const double* const cexpected,
 	    const std::vector<int>& indices,
 	    const int* const iexpected )
 {
   cout << "Checking index & coefficient consistency ... " << flush;
-  bool isFailed = false;
+  bool isFailed = false;;
   vector<double>::const_iterator ic = coefs.begin();
   vector<int>   ::const_iterator ii = indices.begin();
   const double* ce = cexpected;
@@ -39,11 +41,12 @@ void check( const std::vector<double>& coefs,
       cout << "***FAIL***" << endl
 	   << "  Expected: ix=" << *ie << ", coef=" << setprecision(15) << *ce << endl
 	   << "  Found   : ix=" << *ii << ", coef=" << setprecision(15) << *ic << endl;
-      return;
     }
   }
   if( isFailed ) cout << "FAIL" << endl;
   else cout << "PASS" << endl;
+  if( isFailed ) globalIsFailed = true;
+  return isFailed;
 }
 
 //--------------------------------------------------------------------
@@ -96,6 +99,7 @@ test( const int npts,
 	 << endl;
   }
   else cout << "PASS" << endl;
+  if( isFailed ) globalIsFailed = true;
   return Output(npts,make_pair(maxIntErr,maxDerErr));
 }
 
@@ -147,6 +151,8 @@ void test_coefs()
   vector<double> coefs;
   vector<int> indices;
 
+  bool isFailed = false;
+
   // nonuniform mesh
   {
     std::vector<double> xpts;
@@ -162,22 +168,22 @@ void test_coefs()
     lagrangeCoefs.get_interp_coefs_indices( 0.5, 1, coefs, indices );
     const double c1 [] = { 0.6666666666666666, 0.3333333333333333 };
     const int    i1 [] = { 3, 4 };
-    check( coefs, c1, indices, i1 );
+    isFailed = check( coefs, c1, indices, i1 );
 
     lagrangeCoefs.get_derivative_coefs_indices( 0.5, 1, coefs, indices );
     const double c2 [] = { -6.666666666666668, 6.666666666666668 };
     const int i2 [] = { 3, 4 };
-    check( coefs, c2, indices, i2 );
+    isFailed = check( coefs, c2, indices, i2 );
 
     lagrangeCoefs.get_interp_coefs_indices    ( 0.5, 4, coefs, indices );
     const double c3 [] = { 0.0411764705882353, -0.170731707317073, 0.861538461538461, 0.318181818181818, -0.0501650429914418 };
     const int i3 [] = { 1, 2, 3, 4, 5 };
-    check( coefs, c3, indices, i3 );
+    isFailed = check( coefs, c3, indices, i3 );
 
     lagrangeCoefs.get_derivative_coefs_indices( 0.5, 4, coefs, indices );
     const double c4 [] = { 0.42156862745098, -1.46341463414634, -5.53846153846154, 7.50, -0.9196924548431 };
     const int i4 [] = { 1, 2, 3, 4, 5 };
-    check( coefs, c4, indices, i4 );
+    isFailed = check( coefs, c4, indices, i4 );
 
  
     LagrangeInterpolant interp( xpts, xpts );
@@ -201,12 +207,12 @@ void test_coefs()
     lagrangeCoefs2.get_interp_coefs_indices( 0.48, 1, coefs, indices );
     const double cexpected [] = { 0.2, 0.8 };
     const int iexpected [] = { 4, 5 };
-    check( coefs, cexpected, indices, iexpected );
+    isFailed = check( coefs, cexpected, indices, iexpected );
     
     lagrangeCoefs2.get_derivative_coefs_indices( 0.055, 3, coefs, indices );
     const double c2 [] = {-8.84583333333333, 7.0375, 2.4625, -0.654166666666666 };
     const int i2 [] = {0, 1, 2, 3};
-    check( coefs, c2, indices, i2 );
+    isFailed = check( coefs, c2, indices, i2 );
 
     LagrangeInterpolant interp( xpts, xpts );
     assert( 0.47 == interp.value( 0.47 ) );
@@ -220,7 +226,7 @@ void test_coefs()
 
 int main()
 {
-  test_coefs();
+  globalIsFailed = false;
 
   // error tolerances hard-coded for second order polynomial.
   const int order = 2;
@@ -245,6 +251,8 @@ int main()
 
   test2( 20, 2 );
   test2( 20, 4 );
+
+  return globalIsFailed;
 }
 
 //--------------------------------------------------------------------

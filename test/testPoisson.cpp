@@ -362,7 +362,7 @@ double test_poisson( const OperatorDatabase& opDB,
 
 //--------------------------------------------------------------------
 
-void driver( const std::vector<int>& dim,
+bool driver( const std::vector<int>& dim,
              const std::vector<double>& length,
              const double tol1, const double tol2 )
 {
@@ -386,6 +386,7 @@ void driver( const std::vector<int>& dim,
     cout << "PASS" << endl;
   }
 
+  bool isFailed = true;
   const double err2 = test_poisson( opDB, grid, dim, bcFlag, NEUMANN   );
   cout << "Poisson eqn: Neumann   BC ... ";
   if( err2 > tol1 ){
@@ -394,8 +395,9 @@ void driver( const std::vector<int>& dim,
   }
   else{
     cout << "PASS" << endl;
+    isFailed = false;
   }
-
+  return isFailed;
 }
 
 //--------------------------------------------------------------------
@@ -411,7 +413,7 @@ int main()
   length[1]=2;
   length[2]=0.5;
 
-  driver( dim, length, 1.12e-3, 9.4e-4 );
+  return driver( dim, length, 1.12e-3, 9.4e-4 );
 
 //   dim[0]=30;      dim[1]=30;   dim[2]=30;
 //   length[0]=1; length[1]=1; length[2]=1;

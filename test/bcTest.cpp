@@ -31,7 +31,7 @@ double ttmp()
 
 //====================================================================
 
-void test1()
+bool test1()
 {
   using namespace SpatialOps;
   using namespace FVStaggered;
@@ -94,13 +94,15 @@ void test1()
     std::cout << "***FAIL***" << std::endl << std::endl;
   else
     std::cout << "PASS" << std::endl << std::endl;
+
+  return isFailed;
 }
 
 //====================================================================
 
 int main()
 {
-  test1();
+  return test1();
 }
 
 //====================================================================
