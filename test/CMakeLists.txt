@@ -10,8 +10,8 @@ target_link_libraries( lagrange spatialops )
 add_test( lagrange_coefficients lagrange )
 
 set( test_SRC testNew.cpp )
-add_executable( test ${common_SRC} ${test_SRC} )
-target_link_libraries( test spatialops )
+add_executable( testlong ${common_SRC} ${test_SRC} )
+target_link_libraries( testlong spatialops )
 #add_test( operator_suite_test test )
 
 set( bctest_SRC bcTest.cpp )
