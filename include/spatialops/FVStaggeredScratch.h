@@ -1,12 +1,12 @@
 #ifndef FVStaggeredScratch_h
 #define FVStaggeredScratch_h
 
-#include <FVStaggeredIndexHelper.h>
-#include <FVStaggeredTypes.h>
+#include <spatialops/FVStaggeredIndexHelper.h>
+#include <spatialops/FVStaggeredTypes.h>
 
-#include <SpatialField.h>
-#include <SpatialOperator.h>
-#include <SpatialOpsDefs.h>
+#include <spatialops/SpatialField.h>
+#include <spatialops/SpatialOperator.h>
+#include <spatialops/SpatialOpsDefs.h>
 
 #include <algorithm>
 

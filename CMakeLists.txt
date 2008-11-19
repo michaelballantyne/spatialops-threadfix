@@ -76,7 +76,7 @@ add_subdirectory( test )
 #--- INSTALLATION SECTION ---
 # "make install" performs these commands, along with any install commands inside child CMakeLists.txt files.
 # Installation - headers
-file( GLOB so_headers "include/*.h" )
+file( GLOB so_headers "include/spatialops/*.h" )
 install( FILES ${so_headers}
   DESTINATION include/spatialops )
 

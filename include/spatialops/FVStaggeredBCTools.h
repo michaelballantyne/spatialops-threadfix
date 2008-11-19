@@ -1,9 +1,9 @@
 #ifndef FVStaggeredBCTools_h
 #define FVStaggeredBCTools_h
 
-#include <SpatialOperator.h>
-#include <OperatorDatabase.h>
-#include <FVStaggeredTools.h>
+#include <spatialops/SpatialOperator.h>
+#include <spatialops/OperatorDatabase.h>
+#include <spatialops/FVStaggeredTools.h>
 
 namespace SpatialOps{
 namespace FVStaggered{

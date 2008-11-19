@@ -1,7 +1,7 @@
 #include <map>
 #include <iostream>
 
-#include <LinAlgTrilinos.h>
+#include <spatialops/LinAlgTrilinos.h>
 
 //--------------------------------------
 // Trilinos Includes

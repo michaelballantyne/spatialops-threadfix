@@ -6,7 +6,7 @@
 #include <cassert>
 #include <cstdlib>
 
-#include <LagrangePoly.h>
+#include <spatialops/LagrangePoly.h>
 
 using namespace std;
 

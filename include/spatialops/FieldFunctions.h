@@ -3,7 +3,7 @@
 
 #include <boost/static_assert.hpp>
 
-#include <SpatialOpsTools.h>
+#include <spatialops/SpatialOpsTools.h>
 
 
 //====================================================================

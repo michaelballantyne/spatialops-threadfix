@@ -1,4 +1,4 @@
-#include <FVOneDimensional.h>
+#include <spatialops/FVOneDimensional.h>
 
 #include <Functions.h>
 

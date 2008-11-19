@@ -1,8 +1,8 @@
 #ifndef FVTEST_GRID_H
 #define FVTEST_GRID_H
 
-#include <FVStaggered.h>
-#include <OperatorDatabase.h> //jcs shove into FVStaggered.h?
+#include <spatialops/FVStaggered.h>
+#include <spatialops/OperatorDatabase.h> //jcs shove into FVStaggered.h?
 
 namespace SpatialOps{
 namespace FVStaggered{

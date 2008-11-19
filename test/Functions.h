@@ -1,7 +1,7 @@
 #ifndef Test_Functions_h
 #define Test_Functions_h
 
-#include <FieldFunctions.h>
+#include <spatialops/FieldFunctions.h>
 
 //====================================================================
 

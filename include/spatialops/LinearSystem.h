@@ -5,8 +5,8 @@
 #include <map>
 #include <string>
 
-#include <FVStaggeredTools.h>
-#include <SpatialField.h>
+#include <spatialops/FVStaggeredTools.h>
+#include <spatialops/SpatialField.h>
 
 //---------------------------------
 // trilinos includes

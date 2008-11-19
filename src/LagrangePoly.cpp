@@ -2,7 +2,7 @@
 #include <cmath>
 #include <cassert>
 
-#include <LagrangePoly.h>
+#include <spatialops/LagrangePoly.h>
 
 #include <iostream>
 using std::cout; using std::endl;

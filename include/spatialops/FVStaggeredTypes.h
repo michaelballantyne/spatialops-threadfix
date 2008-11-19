@@ -1,15 +1,15 @@
 #ifndef FVStaggeredTypes_h
 #define FVStaggeredTypes_h
 
-#include <SpatialField.h>
-#include <SpatialOperator.h>
-#include <SpatialOpsDefs.h>
+#include <spatialops/SpatialField.h>
+#include <spatialops/SpatialOperator.h>
+#include <spatialops/SpatialOpsDefs.h>
 
 #ifdef LINALG_UBLAS
-#  include <LinAlgUBlas.h>
+#  include <spatialops/LinAlgUBlas.h>
    typedef SpatialOps::LinAlgUBlas LinAlg;
 #else
-#  include <LinAlgTrilinos.h>
+#  include <spatialops/LinAlgTrilinos.h>
    typedef SpatialOps::LinAlgTrilinos LinAlg;
 #endif
 

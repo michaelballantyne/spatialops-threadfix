@@ -11,9 +11,9 @@
 #include <stdexcept>
 #include <sstream>
 
-#include <SpatialOpsDefs.h>
-#include <SpatialOpsTools.h>
-#include <SpatialField.h>
+#include <spatialops/SpatialOpsDefs.h>
+#include <spatialops/SpatialOpsTools.h>
+#include <spatialops/SpatialField.h>
 
 namespace SpatialOps{
 

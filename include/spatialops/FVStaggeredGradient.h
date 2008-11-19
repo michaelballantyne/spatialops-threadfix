@@ -1,10 +1,10 @@
 #ifndef FVSS_GradientAssembler_h
 #define FVSS_GradientAssembler_h
 
-#include <FVStaggeredIndexHelper.h>
+#include <spatialops/FVStaggeredIndexHelper.h>
 
-#include <SpatialField.h>
-#include <SpatialOperator.h>
+#include <spatialops/SpatialField.h>
+#include <spatialops/SpatialOperator.h>
 
 
 namespace SpatialOps{

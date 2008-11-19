@@ -3,8 +3,8 @@
 
 #include <vector>
 
-#include <SpatialOperator.h>
-#include <SpatialField.h>
+#include <spatialops/SpatialOperator.h>
+#include <spatialops/SpatialField.h>
 
 #include <Epetra_CrsMatrix.h>
 #include <EpetraExt_MatrixMatrix.h>

@@ -2,12 +2,12 @@
 #include <sstream>
 #include <stdexcept>
 
-#include <LinearSystem.h>
+#include <spatialops/LinearSystem.h>
 
-#include <SpatialOperator.h>
-#include <SpatialField.h>
+#include <spatialops/SpatialOperator.h>
+#include <spatialops/SpatialField.h>
 
-#include <LinAlgTrilinos.h>
+#include <spatialops/LinAlgTrilinos.h>
 
 #include <Epetra_Map.h>
 #include <Epetra_LinearProblem.h>

@@ -10,8 +10,8 @@
 // allows compile-time expansion of complex expressions involving SpatialField objects.
 #include <daixtrose/Daixt.h>
 
-#include <SpatialFieldStore.h>
-#include <SFIterator.h>
+#include <spatialops/SpatialFieldStore.h>
+#include <spatialops/SFIterator.h>
 
 
 class RHS;

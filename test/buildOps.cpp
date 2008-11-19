@@ -1,5 +1,5 @@
-#include <FVStaggered.h>
-#include <OperatorDatabase.h>
+#include <spatialops/FVStaggered.h>
+#include <spatialops/OperatorDatabase.h>
 #include <buildOps.h>
 
 using namespace SpatialOps;

@@ -1,10 +1,10 @@
 #ifndef FVSS_DivergenceAssembler_h
 #define FVSS_DivergenceAssembler_h
 
-#include <FVStaggeredIndexHelper.h>
+#include <spatialops/FVStaggeredIndexHelper.h>
 
-#include <SpatialField.h>
-#include <SpatialOperator.h>
+#include <spatialops/SpatialField.h>
+#include <spatialops/SpatialOperator.h>
 
 
 namespace SpatialOps{

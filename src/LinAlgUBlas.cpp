@@ -1,4 +1,4 @@
-#include <LinAlgUBlas.h>
+#include <spatialops/LinAlgUBlas.h>
 
 #include <boost/numeric/ublas/io.hpp>
 

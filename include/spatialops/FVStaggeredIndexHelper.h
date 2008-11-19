@@ -2,8 +2,8 @@
 #define FVStaggeredIndexHelper_h
 
 
-#include <FVStaggeredTypes.h>
-#include <FVStaggeredTools.h>
+#include <spatialops/FVStaggeredTypes.h>
+#include <spatialops/FVStaggeredTools.h>
 
 namespace SpatialOps{
 namespace FVStaggered{

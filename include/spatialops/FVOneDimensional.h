@@ -1,11 +1,11 @@
 #ifndef FVStaggeredOneDimStretch_h
 #define FVStaggeredOneDimStretch_h
 
-#include <FVStaggeredTypes.h>
-#include <LagrangePoly.h>
-#include <SpatialField.h>
-#include <SpatialOperator.h>
-#include <FVStaggeredTools.h>
+#include <spatialops/FVStaggeredTypes.h>
+#include <spatialops/LagrangePoly.h>
+#include <spatialops/SpatialField.h>
+#include <spatialops/SpatialOperator.h>
+#include <spatialops/FVStaggeredTools.h>
 
 
 #include <vector>

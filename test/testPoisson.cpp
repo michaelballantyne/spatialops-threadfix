@@ -5,10 +5,10 @@
 using namespace std;
 
 
-#include <FVStaggered.h>
-#include <FVStaggeredBCTools.h>
-#include <LinearSystem.h>
-#include <FieldFunctions.h>
+#include <spatialops/FVStaggered.h>
+#include <spatialops/FVStaggeredBCTools.h>
+#include <spatialops/LinearSystem.h>
+#include <spatialops/FieldFunctions.h>
 
 #include <Grid.h>
 #include <Functions.h>

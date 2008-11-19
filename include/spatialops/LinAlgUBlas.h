@@ -4,8 +4,8 @@
 #include <map>
 #include <vector>
 
-#include <SpatialOperator.h>
-#include <SpatialField.h>
+#include <spatialops/SpatialOperator.h>
+#include <spatialops/SpatialField.h>
 
 #include <boost/numeric/ublas/fwd.hpp>
 #include <boost/numeric/ublas/vector.hpp>

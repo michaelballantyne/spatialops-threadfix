@@ -1,8 +1,8 @@
 #include <vector>
 #include <cmath>
 
-#include <FVStaggeredBCTools.h>
-#include <FVStaggered.h>
+#include <spatialops/FVStaggeredBCTools.h>
+#include <spatialops/FVStaggered.h>
 
 #include <boost/function.hpp>
 #include <boost/lambda/bind.hpp>  // use if you need to bind function arguments or to bind class member functions...
