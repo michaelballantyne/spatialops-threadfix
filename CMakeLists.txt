@@ -5,6 +5,12 @@ project(spatialops)
 #---------------------------------------------------------------------
 # BEGIN USER MODIFIABLE BLOCK
 
+set( CMAKE_BUILD_TYPE  # choose one type below.
+  Release
+# Debug
+# RelWithDebInfo
+  )
+
 #-- Set the path for the trilinos installation on your machine
 set( Trilinos
   /jcs/software/trilinos
@@ -43,7 +49,8 @@ set( CMAKE_INSTALL_PREFIX
 
  # setup the boost library
 set(Boost_USE_MULTITHREAD ON)
-find_package( Boost REQUIRED
+set(Boost_ADDITIONAL_VERSIONS "1.37.0" "1.37" )
+find_package( Boost REQUIRED 
   COMPONENTS  # don't require any compiled boost libs - only headers.
   ) 
 
@@ -64,6 +71,10 @@ link_directories( ${Trilinos_LIBRARY_DIR} )
 # trilinos may require a modification of link order.
 file( GLOB SO_Sources "src/*.cpp" )
 add_definitions( -DBOOST_UBLAS_SHALLOW_ARRAY_ADAPTOR )
+if( CMAKE_BUILD_TYPE STREQUAL Release )
+  add_definitions( -O3 -fexpensive-optimizations )
+  message( STATUS "turning on aggressive optimizations" )
+endif( CMAKE_BUILD_TYPE STREQUAL Release )
 add_library( spatialops STATIC ${SO_Sources} )
 target_link_libraries( spatialops aztecoo epetraext epetra blas lapack teuchos ${EXTRA_LIBS} )
 
