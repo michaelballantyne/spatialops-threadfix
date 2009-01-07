@@ -259,8 +259,6 @@ class SinFunction : public FieldFunction1D<FieldT,PatchT>
   void evaluate( FieldT& f ) const;
   void dx( FieldT& df ) const;
   void d2x( FieldT& d2f ) const;
- protected:
-  void evaluate_implement( FieldT& f, const FieldT& x ) const;
 
  private:
   const double a_, b_, base_;
@@ -298,8 +296,7 @@ class GaussianFunction : public FieldFunction1D<FieldT,PatchT>
   void evaluate( FieldT& f ) const;
   void dx( FieldT& df ) const;
   void d2x( FieldT& d2f ) const;
- protected:
-  void evaluate_implement( FieldT& f, const FieldT& x ) const;
+
  private:
   inline double fval(const double x) const;
   const double a_, b_, xo_, yo_;
