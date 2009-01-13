@@ -120,7 +120,7 @@ namespace FVStaggered{
   class BoundaryCondition
   {
     const int index_;
-    const BCEval bcEval_;
+    BCEval bcEval_;
 
   public:
 
@@ -149,7 +149,7 @@ namespace FVStaggered{
                        const bool bcPlusX,
                        const bool bcPlusY,
                        const bool bcPlusZ,
-                       const BCEval bcEval );
+                       BCEval bcEval );
 
     ~BoundaryCondition(){}
 
@@ -158,7 +158,7 @@ namespace FVStaggered{
      *
      *  @param f The field that we want to set the BC on.
      */
-    inline void operator()( FieldT& f ) const;
+    inline void operator()( FieldT& f );
   };
 
   //==================================================================
@@ -210,7 +210,7 @@ namespace FVStaggered{
             typename BCEval >
   class BoundaryConditionOp
   {
-    const BCEval bcEval_;
+    BCEval bcEval_;
     const int index_;
     double ghostCoef_;
 
@@ -240,7 +240,7 @@ namespace FVStaggered{
                          const bool bcPlusZ,
                          const IndexTriplet point,
                          const BCSide side,
-                         const BCEval bceval,
+                         BCEval bceval,
                          const OperatorDatabase& soDatabase );
 
     ~BoundaryConditionOp(){}
@@ -248,9 +248,9 @@ namespace FVStaggered{
     /**
      *  Impose the boundary condition on the supplied field.
      */
-    void operator()( SrcFieldT& f ) const;
+    void operator()( SrcFieldT& f );
 
-    void operator()( std::vector<SrcFieldT*>& f ) const;
+    void operator()( std::vector<SrcFieldT*>& f );
 
   }; // class BoundaryConditionOp
 
@@ -336,7 +336,7 @@ namespace FVStaggered{
                      const bool bcPlusX,
                      const bool bcPlusY,
                      const bool bcPlusZ,
-                     const BCEval bcEval )
+                     BCEval bcEval )
     : index_( get_index_with_ghost<FieldT>( dim, bcPlusX, bcPlusY, bcPlusZ, point ) ),
       bcEval_( bcEval )
   {}      
@@ -346,7 +346,7 @@ namespace FVStaggered{
   template< typename FieldT, typename BCEval >
   void
   BoundaryCondition<FieldT,BCEval>::
-  operator()( FieldT& f ) const
+  operator()( FieldT& f )
   {
     f[index_] = bcEval_();
   }
@@ -367,7 +367,7 @@ namespace FVStaggered{
                        const bool bcPlusZ,
                        const IndexTriplet point,
                        const BCSide side,
-                       const BCEval bcEval,
+                       BCEval bcEval,
                        const OperatorDatabase& soDatabase )
     : bcEval_( bcEval ),
       index_( get_index_with_ghost<SrcFieldT>( dim, bcPlusX, bcPlusY, bcPlusZ,
@@ -409,7 +409,7 @@ namespace FVStaggered{
   template< typename OpT, typename BCEval >
   void
   BoundaryConditionOp<OpT,BCEval>::
-  operator()( SrcFieldT& f ) const
+  operator()( SrcFieldT& f )
   {
     double prodsum=0.0;
     for( std::vector<IxValPair>::const_iterator ix=ixVals_.begin(); ix!=ixVals_.end(); ++ix ){
@@ -424,7 +424,7 @@ namespace FVStaggered{
   template< typename OpT, typename BCEval >
   void
   BoundaryConditionOp<OpT,BCEval>::
-  operator()( std::vector<SrcFieldT*>& f ) const
+  operator()( std::vector<SrcFieldT*>& f )
   {
     const size_t nf = f.size();
 
