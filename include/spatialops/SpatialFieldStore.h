@@ -143,12 +143,6 @@ namespace SpatialOps{
     int* count_;
     bool builtFromStore_;
 
-#ifdef EXPRESSION_THREADS
-    /**
-     *  Used to lock threads to prevent simultaneous access.
-     */
-    inline boost::mutex& get_mutex(){ static boost::mutex m; return m; }
-#endif
   };
 
 
@@ -315,9 +309,6 @@ namespace SpatialOps{
   SpatFldPtr<FieldT>&
   SpatFldPtr<FieldT>::operator=( const SpatFldPtr& p )
   {
-#ifdef EXPRESSION_THREADS
-    boost::mutex::scoped_lock lock( this->get_mutex() );
-#endif
     // was this an active SpatFldPtr?
     if( count_ != NULL ){
       // this one is dying so decrement the count.
@@ -342,9 +333,6 @@ namespace SpatialOps{
   SpatFldPtr<FieldT>&
   SpatFldPtr<FieldT>::operator=( FieldT& f )
   {
-#ifdef EXPRESSION_THREADS
-    boost::mutex::scoped_lock lock( this->get_mutex() );
-#endif
     // was this an active SpatFldPtr?
     if( count_ != NULL ){
       // this one is dying so decrement the count.
@@ -399,6 +387,9 @@ namespace SpatialOps{
   SpatialFieldStore<FieldT>&
   SpatialFieldStore<FieldT>::self()
   {
+#ifdef EXPRESSION_THREADS
+    boost::mutex::scoped_lock lock( this->get_mutex() );
+#endif
     static SpatialFieldStore<FieldT> s;
     return s;
   }
