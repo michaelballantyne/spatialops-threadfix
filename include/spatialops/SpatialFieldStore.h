@@ -387,9 +387,6 @@ namespace SpatialOps{
   SpatialFieldStore<FieldT>&
   SpatialFieldStore<FieldT>::self()
   {
-#ifdef EXPRESSION_THREADS
-    boost::mutex::scoped_lock lock( this->get_mutex() );
-#endif
     static SpatialFieldStore<FieldT> s;
     return s;
   }
