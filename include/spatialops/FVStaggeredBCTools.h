@@ -426,13 +426,11 @@ namespace FVStaggered{
   BoundaryConditionOp<OpT,BCEval>::
   operator()( std::vector<SrcFieldT*>& f )
   {
-    const size_t nf = f.size();
-
     // evaluate the boundary condition values and store them.
     const std::vector<double>& bcValVec = bcEval_();
 
     // loop over each field present and set the bc accordingly.
-    assert( bcValVec.size() == nf );
+    assert( bcValVec.size() == f.size() );
     std::vector<double>::const_iterator ibcval=bcValVec.begin();
     for( typename std::vector<SrcFieldT*>::iterator ifld=f.begin();
          ifld!=f.end();
