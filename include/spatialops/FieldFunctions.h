@@ -4,6 +4,7 @@
 #include <boost/static_assert.hpp>
 
 #include <spatialops/SpatialOpsTools.h>
+#include<cmath>
 
 
 //====================================================================
@@ -304,9 +305,40 @@ class GaussianFunction : public FieldFunction1D<FieldT,PatchT>
 
 //====================================================================
 
+//====================================================================
 
+/**
+ *  @class Hyperbolic tangent Function 
+ *  @author Naveen Punati
+ *  @date January, 2009
+ *
+ * Implements the function
+ *  \f[
+ *     f(x) = \frac{A}{4} \left(1+\tanh\left(\frac{x-L_1}{w}\right)\right) \left(1-\tanh\left(\frac{x-L_2}{w}\right)\right)
+ *  \f]
+ * with
+ *  - \f$A\f$ Amplitude of the function
+ *  - \f$w\f$ width of the transition
+ *  - \f$L_1\f$ and \f$L_2\f$  Midpoint of transition from low to high (L1) and high to low (L2).
+*/
+template< typename FieldT,
+          typename PatchT=FFLocal::NULLPatch >
+class HyperTanFunction : public FieldFunction1D<FieldT,PatchT>
+{
+  typedef typename PatchT::FieldID FieldID;
+ public:
+  HyperTanFunction( const FieldT& x,
+                    const double amplitude,
+                    const double width,
+                    const double L1,
+                    const double L2 );
+  ~HyperTanFunction(){}
+ void evaluate( FieldT& f ) const;  
+ private:
+  const double amplitude_, width_, L1_, L2_;  
+};
 
-
+//====================================================================
 
 
 
@@ -649,6 +681,38 @@ fval( const double x ) const
   return a_*std::exp(-tmp*tmp/b_);
 }
 //--------------------------------------------------------------------
+
+
+//--------------------------------------------------------------------
+template<typename FieldT, typename PatchT>
+HyperTanFunction<FieldT,PatchT>::
+HyperTanFunction( const FieldT& x,
+                  const double amplitude,
+                  const double width,
+                  const double L1,
+                  const double L2 )
+  : FieldFunction1D<FieldT,PatchT>(x),
+    amplitude_( amplitude ),
+    width_( width ),  
+    L1_( L1 ),
+    L2_( L2 )
+{
+}
+//------------------------------------------------------------------
+template<typename FieldT, typename PatchT>
+void
+HyperTanFunction<FieldT,PatchT>::
+evaluate( FieldT& f ) const
+{
+  this->set_fields();
+  typename FieldT::const_iterator ix = this->get_x().begin(); 
+  typename FieldT::iterator ifld = f.begin();
+  typename FieldT::iterator iflde= f.end();
+  for( ; ifld!=iflde; ++ifld, ++ix ){
+    *ifld = (amplitude_/2) * (1+tanh((*ix-L1_)/width_))* (1-0.5*(1+tanh((*ix-L2_)/width_)));	
+  }
+}
+//------------------------------------------------------------------
 
 
 } // namespace SpatialOps
