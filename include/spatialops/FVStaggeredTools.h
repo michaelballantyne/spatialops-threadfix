@@ -3,10 +3,7 @@
 
 #include <set>
 
-#include <boost/static_assert.hpp>
-
 #include <spatialops/FVStaggeredTypes.h>
-#include <spatialops/SpatialOpsTools.h> // for IsSameType
 
 namespace SpatialOps{
 namespace FVStaggered{

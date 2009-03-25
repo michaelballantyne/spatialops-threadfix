@@ -306,6 +306,11 @@ namespace FVStaggered{
    *
    *  @todo Need to allow for time-varying BCs. This effects the RHS
    *  but not the LHS.  This needs to hook into the expression somewhere.
+   *
+   *  @todo For higher-order operators the imprint will be wrong.
+   *  This is because there may be "interior" rows that have
+   *  coefficients involving ghost points that need to be modified.
+   *  This must be fixed!
    */
   template< typename BCOpT, typename OpT >
   void imprint_bc_on_op( const BCOpT& bcOp,
