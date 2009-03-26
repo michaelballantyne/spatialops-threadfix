@@ -47,6 +47,7 @@ namespace FVStaggered{
   struct Gradient{};
   struct Divergence{};
   struct Scratch{};
+  struct Filter{};
 
 
   //-- Field Types --//
@@ -299,6 +300,9 @@ namespace FVStaggered{
   typedef SpatialOperator< LinAlg, Scratch, ZSurfYField, ZSurfYField >  ScratchZSurfY;
   typedef SpatialOperator< LinAlg, Scratch, ZSurfZField, ZSurfZField >  ScratchZSurfZ;
 
+
+  //-- Filter Operators --//
+  typedef SpatialOperator< LinAlg, Filter, SVolField, SVolField > FilterSVol;
 
 }// namespace FVStaggered
 }// namespace SpatialOps

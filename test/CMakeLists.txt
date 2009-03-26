@@ -28,3 +28,9 @@ set( poisson_SRC testPoisson.cpp )
 add_executable( poisson ${poisson_SRC} ${common_SRC} )
 target_link_libraries( poisson spatialops )
 add_test( poisson_system poisson )
+
+
+set( filter_SRC tophat_test.cpp )
+add_executable( testfilter ${filter_SRC} ${common_SRC} )
+target_link_libraries( testfilter spatialops )
+add_test( test_tophat_filter testfilter )
