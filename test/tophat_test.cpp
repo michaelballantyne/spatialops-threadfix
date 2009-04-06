@@ -3,7 +3,6 @@
 
 
 #include <spatialops/FVStaggered.h>
-#include <spatialops/FVTopHatFilter.h>
 
 #include <Grid.h>
 #include <Functions.h>
@@ -30,7 +29,6 @@ void manual_filter( const std::vector<int>& dim,
                     const SVolField& f,
                     SVolField& fbar )
 {
-  const int ng = SVolField::Ghost::NM;
   const int nside = npts/2;
 
   const int nx = get_nx<SVolField>( dim, true );

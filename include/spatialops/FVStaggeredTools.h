@@ -633,6 +633,8 @@ namespace FVStaggered{
     IndexTriplet(){ i=j=k=-1; }
     IndexTriplet( const IndexTriplet& x ){ i=x.i; j=x.j; k=x.k; }
     IndexTriplet& operator=(const IndexTriplet& x){ i=x.i; j=x.j; k=x.k; return *this; }
+    int& operator[](const int dim)      { switch(dim) { case 0: return i; case 1: return j; case 2: return k; } }
+    int  operator[](const int dim) const{ switch(dim) { case 0: return i; case 1: return j; case 2: return k; } }
     int i,j,k;
   };
 

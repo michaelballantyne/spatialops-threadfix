@@ -6,7 +6,8 @@
 #include <spatialops/FVStaggeredGradient.h>
 #include <spatialops/FVStaggeredDivergence.h>
 #include <spatialops/FVStaggeredScratch.h>
-
+#include <spatialops/FVTopHatFilter.h>
+#include <spatialops/FVRestrictOp.h>
 
 /**
  *  @todo Need to build & test scratch operator assemblers.

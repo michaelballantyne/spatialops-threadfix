@@ -34,3 +34,7 @@ set( filter_SRC tophat_test.cpp )
 add_executable( testfilter ${filter_SRC} ${common_SRC} )
 target_link_libraries( testfilter spatialops )
 add_test( test_tophat_filter testfilter )
+
+add_executable( restriction restriction_test.cpp )
+target_link_libraries( restriction spatialops )
+add_test( test_restriction restriction )
