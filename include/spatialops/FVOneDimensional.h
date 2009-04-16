@@ -28,7 +28,7 @@ namespace SpatialOps{
   // that we should use the InterpolantAssembler to construct
   // Interpolant objects.
   template< typename T1, typename T2 >
-  struct OpAssemblerSelector< FVStaggered::Interpolant, T1, T2 >
+  struct OpAssemblerSelector< Interpolant, T1, T2 >
   {
     typedef FVStaggered::OneDimInterpolantAssembler  Assembler;
   };
@@ -36,7 +36,7 @@ namespace SpatialOps{
 //====================================================================
 
   template< typename T1, typename T2 >
-  struct OpAssemblerSelector< FVStaggered::Gradient, T1, T2 >
+  struct OpAssemblerSelector< Gradient, T1, T2 >
   {
     typedef FVStaggered::OneDimGradientAssembler  Assembler;
   };
@@ -44,7 +44,7 @@ namespace SpatialOps{
 //====================================================================
 
   template<>
-  struct OpAssemblerSelector< FVStaggered::Divergence, FVStaggered::SSurfXField, FVStaggered::SVolField >
+  struct OpAssemblerSelector< Divergence, FVStaggered::SSurfXField, FVStaggered::SVolField >
   {
     typedef FVStaggered::OneDimDivergenceAssembler  Assembler;
   };

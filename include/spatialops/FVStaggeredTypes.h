@@ -43,13 +43,6 @@ namespace FVStaggered{
   struct DefaultGhost{ enum{ NM=1, NP=1 }; };
   struct NoGhost     { enum{ NM=0, NP=0 }; };
 
-  struct Interpolant{};
-  struct Gradient{};
-  struct Divergence{};
-  struct Scratch{};
-  struct Filter{};
-  struct Restriction{};
-
 
   //-- Field Types --//
 #ifndef SAMRAI_FIELD_TYPES

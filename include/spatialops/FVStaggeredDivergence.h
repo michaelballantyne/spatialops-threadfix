@@ -13,7 +13,7 @@ namespace SpatialOps{
   namespace FVStaggered{ template<typename T1,typename T2> class DivergenceAssembler; }
 
   template< typename SrcField, typename DestField >
-  struct OpAssemblerSelector< FVStaggered::Divergence, SrcField, DestField >
+  struct OpAssemblerSelector< Divergence, SrcField, DestField >
   {
     typedef FVStaggered::DivergenceAssembler<SrcField,DestField>  Assembler;
   };

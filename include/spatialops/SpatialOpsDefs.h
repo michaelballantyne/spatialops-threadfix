@@ -7,7 +7,6 @@ namespace SpatialOps{
 
   /**
    * @defgroup DirectionDefinitions
-   *
    * @{
    */
 
@@ -38,6 +37,50 @@ namespace SpatialOps{
 
   /** @} */  // end of Direction group.
 
+
+
+  /**
+   *  @defgroup Operator Types
+   *  @{
+   */
+
+  /**
+   *  @struct Interpolant
+   *  @brief  Defines a type for Interpolant operators.
+   */
+  struct Interpolant{};
+
+  /**
+   *  @struct Gradient
+   *  @brief  Defines a type for Gradient operators.
+   */
+  struct Gradient{};
+
+  /**
+   *  @struct Divergence
+   *  @brief  Defines a type for Divergence operators.
+   */
+  struct Divergence{};
+
+  /**
+   *  @struct Scratch
+   *  @brief  Defines a type for Scratch operators.
+   */
+  struct Scratch{};
+
+  /**
+   *  @struct Filter
+   *  @brief  Defines a type for Filter operators.
+   */
+  struct Filter{};
+
+  /**
+   *  @struct Restriction
+   *  @brief  Defines a type for Restriction operators.
+   */
+  struct Restriction{};
+
+  /** @} */  // end of Operator Types group
 
   //==================================================================
 

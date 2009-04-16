@@ -18,7 +18,7 @@ namespace SpatialOps{
   // that we should use the LinearInterpolantAssembler to construct
   // Interpolant objects.
   template< typename SrcFieldT, typename DestFieldT >
-  struct OpAssemblerSelector< FVStaggered::Interpolant, SrcFieldT, DestFieldT >
+  struct OpAssemblerSelector< Interpolant, SrcFieldT, DestFieldT >
   {
     typedef FVStaggered::LinearInterpolantAssembler<SrcFieldT,DestFieldT>  Assembler;
   };

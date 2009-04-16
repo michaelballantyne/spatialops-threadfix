@@ -14,7 +14,7 @@ namespace SpatialOps{
   namespace FVStaggered{ template<typename T1,typename T2> class GradientAssembler; }
 
   template< typename SrcField, typename DestField >
-  struct OpAssemblerSelector< FVStaggered::Gradient, SrcField, DestField >
+  struct OpAssemblerSelector< Gradient, SrcField, DestField >
   {
     typedef FVStaggered::GradientAssembler<SrcField,DestField>  Assembler;
   };

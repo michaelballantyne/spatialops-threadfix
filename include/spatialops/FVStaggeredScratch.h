@@ -20,24 +20,24 @@ namespace SpatialOps{
   // that we should use the ScratchAssembler to construct
   // Scratch objects.
   template< typename SrcFieldT, typename DestFieldT >
-  struct OpAssemblerSelector< FVStaggered::Scratch, SrcFieldT, DestFieldT >
+  struct OpAssemblerSelector< Scratch, SrcFieldT, DestFieldT >
   {
     typedef FVStaggered::ScratchAssembler<SrcFieldT,DestFieldT>  Assembler;
   };
 
   // scratch ops that look like grad ops
   template<>
-  struct OpAssemblerSelector< FVStaggered::Scratch, FVStaggered::SVolField, FVStaggered::SSurfXField >
+  struct OpAssemblerSelector< Scratch, FVStaggered::SVolField, FVStaggered::SSurfXField >
   {
     typedef FVStaggered::GradientAssembler<FVStaggered::SVolField,FVStaggered::SSurfXField> Assembler;
   };
   template<>
-  struct OpAssemblerSelector< FVStaggered::Scratch, FVStaggered::SVolField, FVStaggered::SSurfYField >
+  struct OpAssemblerSelector< Scratch, FVStaggered::SVolField, FVStaggered::SSurfYField >
   {
     typedef FVStaggered::GradientAssembler<FVStaggered::SVolField,FVStaggered::SSurfYField> Assembler;
   };
   template<>
-  struct OpAssemblerSelector< FVStaggered::Scratch, FVStaggered::SVolField, FVStaggered::SSurfZField >
+  struct OpAssemblerSelector< Scratch, FVStaggered::SVolField, FVStaggered::SSurfZField >
   {
     typedef FVStaggered::GradientAssembler<FVStaggered::SVolField,FVStaggered::SSurfZField> Assembler;
   };
@@ -45,51 +45,51 @@ namespace SpatialOps{
 
 
   template<>
-  struct OpAssemblerSelector< FVStaggered::Scratch, FVStaggered::XVolField, FVStaggered::XSurfXField >
+  struct OpAssemblerSelector< Scratch, FVStaggered::XVolField, FVStaggered::XSurfXField >
   {
     typedef FVStaggered::GradientAssembler<FVStaggered::XVolField,FVStaggered::XSurfXField> Assembler;
   };
   template<>
-  struct OpAssemblerSelector< FVStaggered::Scratch, FVStaggered::XVolField, FVStaggered::XSurfYField >
+  struct OpAssemblerSelector< Scratch, FVStaggered::XVolField, FVStaggered::XSurfYField >
   {
     typedef FVStaggered::GradientAssembler<FVStaggered::XVolField,FVStaggered::XSurfYField> Assembler;
   };
   template<>
-  struct OpAssemblerSelector< FVStaggered::Scratch, FVStaggered::XVolField, FVStaggered::XSurfZField >
+  struct OpAssemblerSelector< Scratch, FVStaggered::XVolField, FVStaggered::XSurfZField >
   {
     typedef FVStaggered::GradientAssembler<FVStaggered::XVolField,FVStaggered::XSurfZField> Assembler;
   };
 
 
   template<>
-  struct OpAssemblerSelector< FVStaggered::Scratch, FVStaggered::YVolField, FVStaggered::YSurfXField >
+  struct OpAssemblerSelector< Scratch, FVStaggered::YVolField, FVStaggered::YSurfXField >
   {
     typedef FVStaggered::GradientAssembler<FVStaggered::YVolField,FVStaggered::YSurfXField> Assembler;
   };
   template<>
-  struct OpAssemblerSelector< FVStaggered::Scratch, FVStaggered::YVolField, FVStaggered::YSurfYField >
+  struct OpAssemblerSelector< Scratch, FVStaggered::YVolField, FVStaggered::YSurfYField >
   {
     typedef FVStaggered::GradientAssembler<FVStaggered::YVolField,FVStaggered::YSurfYField> Assembler;
   };
   template<>
-  struct OpAssemblerSelector< FVStaggered::Scratch, FVStaggered::YVolField, FVStaggered::YSurfZField >
+  struct OpAssemblerSelector< Scratch, FVStaggered::YVolField, FVStaggered::YSurfZField >
   {
     typedef FVStaggered::GradientAssembler<FVStaggered::YVolField,FVStaggered::YSurfZField> Assembler;
   };
 
 
   template<>
-  struct OpAssemblerSelector< FVStaggered::Scratch, FVStaggered::ZVolField, FVStaggered::ZSurfXField >
+  struct OpAssemblerSelector< Scratch, FVStaggered::ZVolField, FVStaggered::ZSurfXField >
   {
     typedef FVStaggered::GradientAssembler<FVStaggered::ZVolField,FVStaggered::ZSurfXField> Assembler;
   };
   template<>
-  struct OpAssemblerSelector< FVStaggered::Scratch, FVStaggered::ZVolField, FVStaggered::ZSurfYField >
+  struct OpAssemblerSelector< Scratch, FVStaggered::ZVolField, FVStaggered::ZSurfYField >
   {
     typedef FVStaggered::GradientAssembler<FVStaggered::ZVolField,FVStaggered::ZSurfYField> Assembler;
   };
   template<>
-  struct OpAssemblerSelector< FVStaggered::Scratch, FVStaggered::ZVolField, FVStaggered::ZSurfZField >
+  struct OpAssemblerSelector< Scratch, FVStaggered::ZVolField, FVStaggered::ZSurfZField >
   {
     typedef FVStaggered::GradientAssembler<FVStaggered::ZVolField,FVStaggered::ZSurfZField> Assembler;
   };
