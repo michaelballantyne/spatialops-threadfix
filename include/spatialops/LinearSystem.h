@@ -5,7 +5,7 @@
 #include <map>
 #include <string>
 
-#include <spatialops/FVStaggeredTools.h>
+#include <spatialops/FVToolsTemplates.h>
 #include <spatialops/SpatialField.h>
 
 //---------------------------------

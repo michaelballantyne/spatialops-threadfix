@@ -1,7 +1,7 @@
 #ifndef FVRestrictOperator_h
 #define FVRestrictOperator_h
 
-#include <spatialops/FVStaggeredTools.h>
+#include <spatialops/FVToolsTemplates.h>
 #include <spatialops/SpatialOperator.h>
 
 namespace SpatialOps{

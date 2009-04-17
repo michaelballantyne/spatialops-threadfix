@@ -4,26 +4,12 @@
 #include <set>
 
 #include <spatialops/FVStaggeredTypes.h>
+#include <spatialops/FVToolsTemplates.h>
 
 namespace SpatialOps{
 namespace FVStaggered{
 
   //==================================================================
-
-  /**
-   * @brief get the total number of points (including ghost cells) for
-   * a field in the x-direction.
-   *
-   * @param dim A vector containing the number of cells in each
-   * coordinate direction.  This is a three-component vector.
-   *
-   * @param hasPlusXSideFaces A boolean flag to indicate if this patch
-   * is on a +x side physical boundary.  If so, then it is assumed
-   * that there is an extra face on that side of the domain, and face
-   * variable dimensions will be modified accordingly.
-   */
-  template<typename FieldT> inline int get_nx( const std::vector<int>& dim,
-                                               const bool hasPlusXSideFaces );
 
   template<> inline int get_nx<SVolField>( const std::vector<int>& dim,
                                            const bool hasPlusXSideFaces )
@@ -163,24 +149,8 @@ namespace FVStaggered{
     return dim[0] + ZSurfZField::Ghost::NM + ZSurfZField::Ghost::NP;
   }
 
-
   //==================================================================
  
-  /**
-   * @brief get the total number of points (including ghost cells) for
-   * a field in the y-direction.
-   *
-   * @param dim A vector containing the number of cells in each
-   * coordinate direction.  This is a three-component vector.
-   *
-   * @param hasPlusYSideFaces A boolean flag to indicate if this patch
-   * is on a +y side physical boundary.  If so, then it is assumed
-   * that there is an extra face on that side of the domain, and face
-   * variable dimensions will be modified accordingly.
-   */
-  template<typename FieldT> inline int get_ny( const std::vector<int>& dim,
-                                               const bool hasPlusYSideFaces );
-
   template<> inline int get_ny<SVolField>( const std::vector<int>& dim,
                                            const bool hasPlusYSideFaces )
   {
@@ -322,21 +292,6 @@ namespace FVStaggered{
 
   //==================================================================
 
-  /**
-   * @brief get the total number of points (including ghost cells) for
-   * a field in the z-direction.
-   *
-   * @param dim A vector containing the number of cells in each
-   * coordinate direction.  This is a three-component vector.
-   *
-   * @param hasPlusZSideFaces A boolean flag to indicate if this patch
-   * is on a +z side physical boundary.  If so, then it is assumed
-   * that there is an extra face on that side of the domain, and face
-   * variable dimensions will be modified accordingly.
-   */
-  template<typename FieldT> inline int get_nz( const std::vector<int>& dim,
-                                               const bool hasPlusZSideFaces );
-
   template<> inline int get_nz<SVolField>( const std::vector<int>& dim,
                                            const bool hasPlusZSideFaces )
   {
@@ -476,232 +431,6 @@ namespace FVStaggered{
   }
 
   //==================================================================
-
-  /**
-   * @brief get the total number of points in a field, including ghost
-   * cells.
-   *
-   * @param dim A vector containing the number of cells in each
-   * coordinate direction.  This is a three-component vector.
-   *
-   * @param hasPlusXSideFaces A boolean flag to indicate if this patch
-   * is on a +x side physical boundary.  If so, then it is assumed
-   * that there is an extra face on that side of the domain, and face
-   * variable dimensions will be modified accordingly.
-   *
-   * @param hasPlusYSideFaces A boolean flag to indicate if this patch
-   * is on a +y side physical boundary.  If so, then it is assumed
-   * that there is an extra face on that side of the domain, and face
-   * variable dimensions will be modified accordingly.
-
-   * @param hasPlusZSideFaces A boolean flag to indicate if this patch
-   * is on a +z side physical boundary.  If so, then it is assumed
-   * that there is an extra face on that side of the domain, and face
-   * variable dimensions will be modified accordingly.
-   *
-   * @todo Remove default values.  This is very dangerous for parallel
-   * computations to have a default value for the + side information.
-   */
-  template<typename FieldT> int get_n_tot( const std::vector<int>& dim,
-                                           const bool hasPlusXSideFaces=true,
-                                           const bool hasPlusYSideFaces=true,
-                                           const bool hasPlusZSideFaces=true )
-  {
-    return get_nx<FieldT>(dim,hasPlusXSideFaces)
-         * get_ny<FieldT>(dim,hasPlusYSideFaces)
-         * get_nz<FieldT>(dim,hasPlusZSideFaces);
-  }
-
-  //==================================================================
-
-  // intended for local use only.
-  inline void _ghost_set_( const int ngm, const int ngp,
-                           const int nxt, const int nyt, const int nzt,
-                           const std::vector<int>& dim,
-                           const bool hasPlusXSideFaces,
-                           const bool hasPlusYSideFaces,
-                           const bool hasPlusZSideFaces,
-                           int& ix,
-                           std::set<int>& ghostSet )
-  {
-    const int ngxm = dim[0]>1 ? ngm : 0;
-    const int ngxp = dim[0]>1 ? ngp : 0;
-    const int ngym = dim[1]>1 ? ngm : 0;
-    const int ngyp = dim[1]>1 ? ngp : 0;
-    const int ngzm = dim[2]>1 ? ngm : 0;
-    const int ngzp = dim[2]>1 ? ngp : 0;
-
-    // -z side ghost layer
-    if( dim[2]>1 ){
-      for( int kg=0; kg<ngzm; ++kg )
-        for( int j=0; j<nyt; ++j )
-          for( int i=0; i<nxt; ++i )
-            ghostSet.insert(ix++);
-    }
-
-    // z interior
-    for( int k=ngzm; k<nzt-ngzp; ++k ){
-
-      // -y side ghost layer
-      if( dim[1]>1 ){
-        for( int i=0; i<nxt; ++i )
-          for( int jg=0; jg<ngym; ++jg )
-            ghostSet.insert(ix++);
-      }
-
-      // y interior
-      for( int j=ngym; j<nyt-ngyp; ++j ){
-        // -x side ghost layer
-        if( dim[0]>1 ) for( int ig=0; ig<ngxm; ++ig ) ghostSet.insert(ix++);
-        // x interior
-        ix+=nxt-ngxm-ngxp;
-        // +x side ghost layer
-        if( dim[0]>1 ) for( int ig=0; ig<ngxp; ++ig ) ghostSet.insert(ix++);
-      }
-
-      // +y side ghost layer
-      if( dim[1]>1 ){
-        for( int i=0; i<nxt; ++i )
-          for( int jg=0; jg<ngyp; ++jg )
-            ghostSet.insert(ix++);
-      }
-    }
-
-    // +z side ghost layer
-    if( dim[2]>1 ){
-      for( int kg=0; kg<ngzp; ++kg )
-        for( int i=0; i<nxt; ++i )
-          for( int j=0; j<nyt; ++j )
-            ghostSet.insert(ix++);
-    }
-  }
-
-  //==================================================================
-
-  /**
-   *  @brief Obtain the set of indices corresponding to ghost cells
-   *  for this field.
-   *
-   * @param hasPlusXSideFaces A boolean flag to indicate if this patch
-   * is on a +x side physical boundary.  If so, then it is assumed
-   * that there is an extra face on that side of the domain, and face
-   * variable dimensions will be modified accordingly.
-   *
-   * @param hasPlusYSideFaces A boolean flag to indicate if this patch
-   * is on a +y side physical boundary.  If so, then it is assumed
-   * that there is an extra face on that side of the domain, and face
-   * variable dimensions will be modified accordingly.
-
-   * @param hasPlusZSideFaces A boolean flag to indicate if this patch
-   * is on a +z side physical boundary.  If so, then it is assumed
-   * that there is an extra face on that side of the domain, and face
-   * variable dimensions will be modified accordingly.
-   *
-   * @todo Remove default values.  This is very dangerous for parallel
-   * computations to have a default value for the + side information.
-   */
-  template<typename FieldT> 
-  const std::set<int> get_ghost_set( const std::vector<int>& dim,
-                                     const bool hasPlusXSideFaces=true,
-                                     const bool hasPlusYSideFaces=true,
-                                     const bool hasPlusZSideFaces=true )
-  {
-    typedef typename FieldT::Ghost G;
-    std::set<int> ghostSet;
-    ghostSet.clear();
-    int ix=0;
-    _ghost_set_( G::NM, G::NP,
-                 get_nx<FieldT>(dim,hasPlusXSideFaces),
-                 get_ny<FieldT>(dim,hasPlusYSideFaces),
-                 get_nz<FieldT>(dim,hasPlusZSideFaces),
-                 dim,
-                 hasPlusXSideFaces, hasPlusYSideFaces, hasPlusZSideFaces,
-                 ix,
-                 ghostSet );
-    return ghostSet;
-  }
-
-  //==================================================================
-
-  /**
-   *  @struct IndexTriplet
-   *  @brief  Holds the ijk index.
-   */
-  struct IndexTriplet
-  {
-    IndexTriplet( const int ii, const int jj, const int kk ): i(ii), j(jj), k(kk){}
-    IndexTriplet(){ i=j=k=-1; }
-    IndexTriplet( const IndexTriplet& x ){ i=x.i; j=x.j; k=x.k; }
-    IndexTriplet& operator=(const IndexTriplet& x){ i=x.i; j=x.j; k=x.k; return *this; }
-    int& operator[](const int dim)      { switch(dim) { case 0: return i; case 1: return j; case 2: return k; } }
-    int  operator[](const int dim) const{ switch(dim) { case 0: return i; case 1: return j; case 2: return k; } }
-    int i,j,k;
-  };
-
-  //==================================================================
-
-  /**
-   *  @brief Use this to transform a flat index to i,j,k indices.
-   */
-  template<typename FieldT>
-  struct flat2ijk
-  {
-    static IndexTriplet value( const std::vector<int>& dim, const int ix,
-                               const bool hasPlusXSideFaces=true,
-                               const bool hasPlusYSideFaces=true,
-                               const bool hasPlusZSideFaces=true );
-  };
-
-  //==================================================================
-
-  /**
-   *  @brief Use this to transform i,j,k indices to a flat index.
-   */
-  template<typename FieldT>
-  struct ijk2flat
-  {
-    static int value( const std::vector<int>& dim, const IndexTriplet& ixt,
-                      const bool hasPlusXSideFaces=true,
-                      const bool hasPlusYSideFaces=true,
-                      const bool hasPlusZSideFaces=true );
-  };
-
-  //====================================================================
-
-  template<typename FieldT>
-  inline IndexTriplet
-  flat2ijk<FieldT>::value( const std::vector<int>& dim, const int ix,
-                           const bool hasPlusXSideFaces, const bool hasPlusYSideFaces, const bool hasPlusZSideFaces )
-  {
-    IndexTriplet triplet;
-
-    const int nxt = get_nx<FieldT>(dim,hasPlusXSideFaces);
-    const int nyt = get_ny<FieldT>(dim,hasPlusXSideFaces);
-    triplet.i = ix%nxt;
-    triplet.j = ix/nxt % nyt;
-    triplet.k = ix/(nxt*nyt);
-
-    return triplet;
-  }
-
-  //==================================================================
-
-  template<typename FieldT>
-  inline int
-  ijk2flat<FieldT>::value( const std::vector<int>& dim, const IndexTriplet& triplet,
-                           const bool hasPlusXSideFaces, const bool hasPlusYSideFaces, const bool hasPlusZSideFaces )
-  {
-    const int nxt = get_nx<FieldT>(dim,hasPlusXSideFaces);
-    const int nyt = get_ny<FieldT>(dim,hasPlusYSideFaces);
-      
-    return
-      triplet.i +
-      triplet.j * nxt +
-      triplet.k * nxt*nyt;
-  }
-
-  //==================================================================
-
 
 }// namespace FVStaggered
 }// namespace SpatialOps
