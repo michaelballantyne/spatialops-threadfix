@@ -57,7 +57,10 @@ public:
    *        be deduced currently.
    */
   template<typename OpT>
-  inline int register_new_operator( OpT* const op );
+  int register_new_operator( OpT* const op );
+  
+  template<typename OpT>
+  int register_new_operator( typename OpT::Assembler assembler );
 
   /**
    *  \brief Retrieve an operator of the requested type.
@@ -125,6 +128,15 @@ OperatorDatabase::register_new_operator( OpT* const op )
   }
   // add the operator 
   return store->add(op);
+}
+
+//--------------------------------------------------------------------
+
+template<typename OpT>
+int
+OperatorDatabase::register_new_operator( typename OpT::Assembler assembler )
+{
+  return register_new_operator( new OpT(assembler) );
 }
 
 //--------------------------------------------------------------------

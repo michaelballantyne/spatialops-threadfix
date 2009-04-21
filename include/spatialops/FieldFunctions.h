@@ -106,7 +106,7 @@ private:
  *  @author James C. Sutherland
  *  @date  September, 2007
  *
- *  @brief Supports implementation of 1D functions to assign values to
+ *  @brief Supports implementation of 2D functions to assign values to
  *  SpatialField objects.
  *
  *  See documentation on FieldFunction3D for more information about template parameters.
