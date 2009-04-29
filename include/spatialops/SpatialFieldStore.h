@@ -215,7 +215,7 @@ namespace SpatialOps{
      *  by SpatFldPtr objects.  Calling it anywhere else can result in
      *  memory corruption.
      */
-    void restore_field( FieldT& f );
+    inline void restore_field( FieldT& f );
 
 #ifdef EXPRESSION_THREADS
     /**
@@ -450,6 +450,30 @@ namespace SpatialOps{
   //====================================================================
 
 
+
+  // specialized for doubles masquerading as spatialfields
+  template<>
+  inline void
+  SpatialFieldStore<double>::restore_field( double& d )
+  {}
+
+  template<>
+  SpatFldPtr<double>
+  inline SpatialFieldStore<double>::get( const double& d )
+  {
+    double* dnew = new double;
+    return SpatFldPtr<double>( *dnew, true );
+  }
+
+  template<>
+  inline SpatFldPtr<double>
+  SpatialFieldStore<double>::get( const int ntot,
+                                  const std::set<int>& ghostSet )
+  {
+    double* dnew = new double;
+    return SpatFldPtr<double>( *dnew, true );
+  }
+  
 } // namespace SpatialOps
 
 #endif
