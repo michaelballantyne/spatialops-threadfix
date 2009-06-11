@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 2.6)
 project(spatialops)
 
+set( MAJOR_VERSION "0" )
+set( MINOR_VERSION "1" )
+set( PATCH_VERSION "0" )
+
 #=====================================================================
 #---------------------------------------------------------------------
 # BEGIN USER MODIFIABLE BLOCK
@@ -75,14 +79,47 @@ add_subdirectory( test )
 
 #--- INSTALLATION SECTION ---
 # "make install" performs these commands, along with any install commands inside child CMakeLists.txt files.
-# Installation - headers
+message( STATUS "Files will be installed to: " ${CMAKE_INSTALL_PREFIX} )
+
+# package spatialops headers
 file( GLOB so_headers "include/spatialops/*.h" )
 install( FILES ${so_headers}
-  DESTINATION include/spatialops )
+  DESTINATION include/spatialops
+  PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+  )
 
-# INSTALLATION - libraries
-install( TARGETS spatialops
-  ARCHIVE DESTINATION lib )
+# package the spatialops library
+install( TARGETS spatialops ARCHIVE DESTINATION lib )
+
+# package daixtrose locally so that we can keep it locally
+install( DIRECTORY ${Daixtrose_INCLUDE_DIR}/daixtrose
+  DESTINATION include
+  FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+  )
+
+# package trilinos components required by spatialops
+file( GLOB trilinos_headers
+  ${Trilinos_INCLUDE_DIR}/Epetra*.h
+  ${Trilinos_INCLUDE_DIR}/Teuchos*.h*
+  ${Trilinos_INCLUDE_DIR}/Az*.h
+  )
+set( trilinos_libs
+  ${Trilinos_LIBRARY_DIR}/libaztecoo.a
+  ${Trilinos_LIBRARY_DIR}/libepetra.a
+  ${Trilinos_LIBRARY_DIR}/libepetraext.a
+  ${Trilinos_LIBRARY_DIR}/libteuchos.a
+  )
+install( FILES ${trilinos_headers}
+  DESTINATION include
+  PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+  )
+install( FILES ${trilinos_libs} DESTINATION lib )
 
 
-message( STATUS "Files will be installed to: " ${CMAKE_INSTALL_PREFIX} )
+
+# Information for creating packages
+set( CPACK_PACKAGE_VENDOR "James C. Sutherland (james.sutherland@utah.edu" )
+set( CPACK_PACKAGE_VERSION_MAJOR ${MAJOR_VERSION} )
+set( CPACK_PACKAGE_VERSION_MINOR ${MINOR_VERSION} )
+set( CPACK_PACKAGE_VERSION_PATCH ${PATCH_VERSION} )
+include( CPack )
