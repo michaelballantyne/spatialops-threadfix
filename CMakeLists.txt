@@ -40,9 +40,10 @@ set( CMAKE_INSTALL_PREFIX
 #--------------------------------------
 # resolve required libraries
 
- # setup the boost library
+# setup the boost library
+set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREAD ON)
-set(Boost_ADDITIONAL_VERSIONS "1.37.0" "1.37" )
+set(Boost_ADDITIONAL_VERSIONS "1.37.0" "1.37" "1.39" "1.39.0" )
 find_package( Boost REQUIRED 
   COMPONENTS  # don't require any compiled boost libs - only headers.
   ) 
