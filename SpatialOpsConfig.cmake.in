@@ -1,0 +1,37 @@
+# SpatialOpsConfig.cmake - defines variables to assist in applications
+# that link with SpatialOps
+# 
+# The following variables are defined:
+# 
+# SpatialOps_FOUND - true (1)
+# 
+# SpatialOps_INCLUDE_DIR - include directories for SpatialOps
+# 
+# SpatialOps_TPL_INCLUDE_DIRS - include directories for TPLS that SpatialOps uses.
+#
+# SpatialOps_LIBRARIES - Fully qualified library to link against
+#
+# SpatialOps_USE_FILE - include this file to set up builds using SpatialOps
+#
+
+set( SpatialOps_FOUND 1 )
+
+set( SpatialOps_INCLUDE_DIR "@SpatialOps_INCLUDE@" )
+set( SpatialOps_TPL_INCLUDE_DIRS "@TPL_INCLUDE_DIRS@" )
+
+set( SpatialOps_LIBRARIES "@CMAKE_INSTALL_PREFIX@/lib/spatialops/@SOInstallLib@" )
+
+set( SpatialOps_BUILD_SETTINGS_FILE
+  "@CMAKE_INSTALL_PREFIX@/lib/spatialops/SpatialOpsBuildSettings.cmake"
+  )
+
+include(
+  "@CMAKE_INSTALL_PREFIX@/lib/spatialops/SpatialOpsLibraryDepends.cmake"
+  )
+
+set( SpatialOps_USE_FILE
+  "@CMAKE_INSTALL_PREFIX@/lib/spatialops/SpatialOpsUse.cmake"
+  )
+
+#set( BLAS_FOUND @BLAS_FOUND@ )
+#set( LAPACK_FOUND @LAPACK_FOUND@ )

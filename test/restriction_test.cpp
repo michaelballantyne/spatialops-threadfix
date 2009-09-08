@@ -1,7 +1,6 @@
 #include <vector>
 #include <iostream>
 
-
 #include <spatialops/FVStaggered.h>
 #include <spatialops/OperatorDatabase.h>
 

@@ -1,6 +1,8 @@
 #ifndef UT_LinearSystem_h
 #define UT_LinearSystem_h
 
+#include <spatialops/SpatialOpsConfigure.h>
+
 #include <vector>
 #include <map>
 #include <string>
@@ -10,6 +12,10 @@
 
 //---------------------------------
 // trilinos includes
+#ifndef LINALG_TRILINOS
+# error LinearSystem support requires Trilinos
+#endif // LINALG_TRILINOS
+
 #include <Epetra_Vector.h>
 #include <Epetra_CrsMatrix.h>
 

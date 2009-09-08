@@ -1,6 +1,8 @@
 #ifndef UT_SpatialOpsDefs_h
 #define UT_SpatialOpsDefs_h
 
+#include <spatialops/SpatialOpsConfigure.h>
+
 namespace SpatialOps{
 
   //==================================================================

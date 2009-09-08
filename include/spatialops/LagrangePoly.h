@@ -1,6 +1,8 @@
 #ifndef LagrangePoly_h
 #define LagrangePoly_h
 
+#include <spatialops/SpatialOpsConfigure.h>
+
 #include <vector>
 #include <iterator>
 

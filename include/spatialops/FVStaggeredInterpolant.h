@@ -1,6 +1,8 @@
 #ifndef FVStaggeredInterpolant_h
 #define FVStaggeredInterpolant_h
 
+#include <spatialops/SpatialOpsConfigure.h>
+
 #include <spatialops/FVStaggeredIndexHelper.h>
 #include <spatialops/FVStaggeredTypes.h>
 

@@ -1,6 +1,8 @@
 #ifndef FVStaggeredTools_h
 #define FVStaggeredTools_h
 
+#include <spatialops/SpatialOpsConfigure.h>
+
 #include <set>
 
 #include <spatialops/FVStaggeredTypes.h>

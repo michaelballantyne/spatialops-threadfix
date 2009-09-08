@@ -1,8 +1,11 @@
 #ifndef UT_SpatialFieldStore_h
 #define UT_SpatialFieldStore_h
 
+#include <spatialops/SpatialOpsConfigure.h>
+
 #include <queue>
 #include <map>
+#include <set>
 
 #ifdef EXPRESSION_THREADS
 # include <boost/thread/mutex.hpp>

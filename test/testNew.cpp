@@ -7,8 +7,11 @@ using namespace std;
 
 #include <spatialops/FVStaggered.h>
 #include <spatialops/FVStaggeredBCTools.h>
-#include <spatialops/LinearSystem.h>
 #include <spatialops/OperatorDatabase.h>
+
+#ifdef LINALG_TRILINOS
+# include <spatialops/LinearSystem.h>
+#endif
 
 #include <Grid.h>
 #include <Functions.h>
@@ -457,6 +460,7 @@ void test_poisson( const Grid& grid,
                    const vector<int>& dim,
                    const vector<bool>& bcFlag )
 {
+# ifdef LINALG_TRILINOS
   //
   // here we use a solution of the form
   //   phi = ax^2 + by^2 + cz^2
@@ -634,6 +638,7 @@ void test_poisson( const Grid& grid,
   else{
     cout << "PASS." << endl;
   }
+# endif // LINALG_TRILINOS
 }
 
 //--------------------------------------------------------------------

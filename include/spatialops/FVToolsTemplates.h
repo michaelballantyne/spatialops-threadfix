@@ -1,6 +1,8 @@
 #ifndef FVToolsTemplates_h
 #define FVToolsTemplates_h
 
+#include <spatialops/SpatialOpsConfigure.h>
+
 #include <vector>
 #include <set>
 

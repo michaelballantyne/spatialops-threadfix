@@ -1,6 +1,8 @@
 #ifndef FieldFunctions_h
 #define FieldFunctions_h
 
+#include <spatialops/SpatialOpsConfigure.h>
+
 #include <boost/static_assert.hpp>
 
 #include <spatialops/SpatialOpsTools.h>

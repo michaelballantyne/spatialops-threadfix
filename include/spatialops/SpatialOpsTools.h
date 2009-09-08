@@ -1,6 +1,7 @@
 #ifndef SpatialOpsTools_h
 #define SpatialOpsTools_h
 
+#include <spatialops/SpatialOpsConfigure.h>
 
 namespace SpatialOps{
 

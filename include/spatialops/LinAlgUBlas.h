@@ -1,6 +1,8 @@
 #ifndef LinAlgUBlasBoost_h
 #define LinAlgUBlasBoost_h
 
+#include <spatialops/SpatialOpsConfigure.h>
+
 #include <map>
 #include <vector>
 
@@ -12,6 +14,11 @@
 #include <boost/numeric/ublas/matrix_sparse.hpp>
 #include <boost/numeric/ublas/matrix_proxy.hpp>
 #include <boost/numeric/ublas/operation.hpp>
+
+#ifndef LINALG_UBLAS
+# error must define LINALG_UBLAS
+#endif
+#define BOOST_UBLAS_SHALLOW_ARRAY_ADAPTOR
 
 namespace SpatialOps{
 

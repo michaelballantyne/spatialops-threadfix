@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.6)
-project(spatialops)
+project( SpatialOps CXX C Fortran )
 
 set( MAJOR_VERSION "0" )
 set( MINOR_VERSION "1" )
@@ -15,20 +15,29 @@ set( CMAKE_BUILD_TYPE  # choose one type below.
 # RelWithDebInfo
   )
 
-#-- Set the path for the trilinos installation on your machine
-set( Trilinos
-  /jcs/software/trilinos902_opt
+# Set the path for the trilinos installation on your machine.  If
+# empty, SpatialOps will be built without trilinos (using UBLAS
+# instead) comment this out to build without trilinos
+set( Trilinos_path
+  ""
+  CACHE PATH "path to trilinos intallation"
   )
 
-#-- Set the path for the Daixtrose installation on your machine
+# Set the path for the Daixtrose installation on your machine
+# daixtrose is used for expression templates - we support only a few
+# thus far.  If empty then SpatialOps will be built without Daixtrose
+# support
 set( Daixtrose
-  /jcs/software/daixtrose-0.0.3/jcs_install
+  ""
+  CACHE PATH "path to daixtrose installation (optional)"
   )
 
-#-- Set the location for the installation.  Comment this out to install to /usr/local
-set( CMAKE_INSTALL_PREFIX
-  ${CMAKE_CURRENT_BINARY_DIR}
-  )
+# Set the location for the installation.  Comment this out to install
+# to /usr/local.  Or set it to the location where you want to install
+# the library to.
+#set( CMAKE_INSTALL_PREFIX
+#  ${CMAKE_CURRENT_BINARY_DIR}
+#  )
 
 # END USER MODIFIABLE BLOCK
 #---------------------------------------------------------------------
@@ -43,34 +52,99 @@ set( CMAKE_INSTALL_PREFIX
 # setup the boost library
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREAD ON)
-set(Boost_ADDITIONAL_VERSIONS "1.37.0" "1.37" "1.39" "1.39.0" )
+set(Boost_ADDITIONAL_VERSIONS "1.39" "1.39.0" )
 find_package( Boost REQUIRED 
   COMPONENTS  # don't require any compiled boost libs - only headers.
   ) 
+set( TPL_INCLUDE_DIRS ${TPL_INCLUDE_DIRS} ${Boost_INCLUDE_DIR} )
 
 # until we get a package finder for trilinos, we will need these:
-set( Trilinos_INCLUDE_DIR ${Trilinos}/include )
-set( Trilinos_LIBRARY_DIR ${Trilinos}/lib )
+set( LINALG_TRILINOS OFF CACHE BOOL "use Trilinos for linear algebra - also requires definition of {Trilinos_path}" )
+set( LINALG_UBLAS ON CACHE BOOL "use UBLAS for linear algebra - cannot solve linear systems" )
+
+if( Trilinos_path )
+  message( STATUS "Using Trilinos for linear algebra" )
+  set( Trilinos_INCLUDE_DIR ${Trilinos_path}/include )
+  set( Trilinos_LIBRARY_DIR ${Trilinos_path}/lib )
+  set( Trilinos_libs
+    ${Trilinos_LIBRARY_DIR}/libaztecoo.a
+    ${Trilinos_LIBRARY_DIR}/libepetraext.a
+    ${Trilinos_LIBRARY_DIR}/libepetra.a
+    ${Trilinos_LIBRARY_DIR}/libteuchos.a
+    )
+  set( TPL_INCLUDE_DIRS ${TPL_INCLUDE_DIRS} ${Trilinos_INCLUDE_DIR} )
+  set( TPL_LIBRARIES ${TPL_LIBRARIES} ${Trilinos_libs} )
+
+  # find BLAS and LAPACK (required for trilinos)
+  find_package( BLAS REQUIRED )
+  find_package( LAPACK REQUIRED )
+  set( TPL_LIBRARIES ${TPL_LIBRARIES}
+    ${LAPACK_LIBRARIES}
+    ${BLAS_LIBRARIES}
+    )
+
+  set( LINALG_TRILINOS ON )
+  set( LINALG_UBLAS OFF )
+else( Trilinos_path )
+  message( STATUS "Using UBLAS for linear algebra" )
+  set( LINALG_UBLAS ON )
+  set( LINALG_TRILINOS OFF )
+endif( Trilinos_path )
 
 # until we get a package finder for daixtrose, we will need this:
-set( Daixtrose_INCLUDE_DIR ${Daixtrose}/include )
+if( Daixtrose )
+  set( Daixtrose_INCLUDE_DIR ${Daixtrose}/include )
+  set( TPL_INCLUDE_DIRS ${TPL_INCLUDE_DIRS} ${Daixtrose_INCLUDE_DIR} )
+  set( HAVE_DAIXTROSE ON )
+endif()
 #--------------------------------------
 
-include_directories( ${Trilinos_INCLUDE_DIR} ${Daixtrose_INCLUDE_DIR} ${Boost_INCLUDE_DIR} include )
-link_directories( ${Trilinos_LIBRARY_DIR} )
+
+include_directories(
+  include
+  ${TPL_INCLUDE_DIRS}
+  )
+
+
+# build the configure file using the information defined here.
+configure_file(
+  ${PROJECT_SOURCE_DIR}/SpatialOpsConfigure.h.in
+  ${PROJECT_BINARY_DIR}/config/spatialops/SpatialOpsConfigure.h
+  )
+include_directories( ${PROJECT_BINARY_DIR}/config )
 
 
 # setup the build for the spatialops library.  Note that the linker
 # order is important, and future revisions to libraries such as
 # trilinos may require a modification of link order.
-file( GLOB SO_Sources "src/*.cpp" )
-add_definitions( -DBOOST_UBLAS_SHALLOW_ARRAY_ADAPTOR )
+set( SO_Sources
+  src/LagrangePoly.cpp
+  src/FVOneDimensional.cpp
+  src/FVToolsTemplates.cpp
+  )
+if( LINALG_TRILINOS )
+  set( SO_Sources ${SO_Sources}
+    src/LinAlgTrilinos.cpp
+    src/LinearSystem.cpp
+    )
+endif()
+if( LINALG_UBLAS )
+  set( SO_Sources ${SO_Sources} src/LinAlgUBlas.cpp )
+endif()
+
+
 if( CMAKE_BUILD_TYPE STREQUAL Release )
   add_definitions( -O3 -fexpensive-optimizations )
   message( STATUS "turning on aggressive optimizations" )
 endif( CMAKE_BUILD_TYPE STREQUAL Release )
-add_library( spatialops STATIC ${SO_Sources} )
-target_link_libraries( spatialops aztecoo epetraext epetra blas lapack teuchos ${EXTRA_LIBS} )
+
+set( SpatialOps_LIBRARY spatialops )
+add_library( ${SpatialOps_LIBRARY}
+  STATIC
+  ${SO_Sources}
+  )
+target_link_libraries( ${SpatialOps_LIBRARY} ${TPL_LIBRARIES} )
+
 
 # this will compile all of the test cases.  Use "make test" to execute
 # them and see a summary.
@@ -78,44 +152,67 @@ enable_testing()
 add_subdirectory( test )
 
 
+
+
+
 #--- INSTALLATION SECTION ---
 # "make install" performs these commands, along with any install commands inside child CMakeLists.txt files.
 message( STATUS "Files will be installed to: " ${CMAKE_INSTALL_PREFIX} )
 
-# package spatialops headers
+# install spatialops headers
 file( GLOB so_headers "include/spatialops/*.h" )
-install( FILES ${so_headers}
+set( so_headers
+  ${so_headers}
+  ${PROJECT_BINARY_DIR}/config/spatialops/SpatialOpsConfigure.h
+  )
+install( FILES
+  ${so_headers}
   DESTINATION include/spatialops
   PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
   )
 
-# package the spatialops library
-install( TARGETS spatialops ARCHIVE DESTINATION lib )
-
-# package daixtrose locally so that we can keep it locally
-install( DIRECTORY ${Daixtrose_INCLUDE_DIR}/daixtrose
-  DESTINATION include
-  FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+# install the spatialops library
+install( TARGETS
+  ${SpatialOps_LIBRARY}
+  ARCHIVE
+  DESTINATION lib/spatialops/
   )
 
-# package trilinos components required by spatialops
-file( GLOB trilinos_headers
-  ${Trilinos_INCLUDE_DIR}/Epetra*.h
-  ${Trilinos_INCLUDE_DIR}/Teuchos*.h*
-  ${Trilinos_INCLUDE_DIR}/Az*.h
-  )
-set( trilinos_libs
-  ${Trilinos_LIBRARY_DIR}/libaztecoo.a
-  ${Trilinos_LIBRARY_DIR}/libepetra.a
-  ${Trilinos_LIBRARY_DIR}/libepetraext.a
-  ${Trilinos_LIBRARY_DIR}/libteuchos.a
-  )
-install( FILES ${trilinos_headers}
-  DESTINATION include
-  PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
-  )
-install( FILES ${trilinos_libs} DESTINATION lib )
+# ------------------------------------------------------------------
+# configuration for projects using SpatialOps this section defines
+# variables that are used for building the configuration file for the
+# SpatialOps installation.  This can be used by other CMake build
+# systems that use the SpatialOps library.
 
+# get the location for the installed library
+get_target_property( SOLocation ${SpatialOps_LIBRARY} LOCATION )
+
+# get the full name for the installed library
+get_filename_component( SOInstallLib ${SOLocation} NAME )
+
+set( SpatialOps_INCLUDE ${CMAKE_INSTALL_PREFIX}/include )
+
+# at this point, all of the required variables are defined to generate
+# the configure file
+configure_file(
+  ${PROJECT_SOURCE_DIR}/SpatialOpsConfig.cmake.in
+  ${PROJECT_BINARY_DIR}/config/SpatialOpsConfig.cmake
+  )
+
+# dump CMake's information about this build
+include( CMakeExportBuildSettings )
+cmake_export_build_settings( ${PROJECT_BINARY_DIR}/config/SpatialOpsBuildSettings.cmake )
+export_library_dependencies( ${PROJECT_BINARY_DIR}/config/SpatialOpsLibraryDepends.cmake )
+
+# install all of these files into the spatial ops lib dir
+install( FILES
+  ${PROJECT_SOURCE_DIR}/SpatialOpsUse.cmake
+  ${PROJECT_BINARY_DIR}/config/SpatialOpsConfig.cmake
+  ${PROJECT_BINARY_DIR}/config/SpatialOpsLibraryDepends.cmake
+  ${PROJECT_BINARY_DIR}/config/SpatialOpsBuildSettings.cmake
+  DESTINATION lib/spatialops/
+  )
+#-----------------------------------------------------------------
 
 
 # Information for creating packages

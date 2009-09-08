@@ -1,6 +1,11 @@
 #ifndef LinAlgTrilinos_h
 #define LinAlgTrilinos_h
 
+#include <spatialops/SpatialOpsConfigure.h>
+#ifndef LINALG_TRILINOS
+# error Must define LINALG_TRILINOS if you are including this header.
+#endif
+
 #include <vector>
 
 #include <spatialops/SpatialOperator.h>

@@ -1,6 +1,7 @@
 #ifndef FVStaggeredOneDimStretch_h
 #define FVStaggeredOneDimStretch_h
 
+#include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/FVStaggeredTypes.h>
 #include <spatialops/LagrangePoly.h>
 #include <spatialops/SpatialField.h>

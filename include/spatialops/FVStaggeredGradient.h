@@ -1,6 +1,8 @@
 #ifndef FVSS_GradientAssembler_h
 #define FVSS_GradientAssembler_h
 
+#include <spatialops/SpatialOpsConfigure.h>
+
 #include <spatialops/FVStaggeredIndexHelper.h>
 
 #include <spatialops/SpatialField.h>

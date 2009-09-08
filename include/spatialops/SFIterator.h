@@ -1,6 +1,8 @@
 #ifndef SFIterator_h
 #define SFIterator_h
 
+#include <spatialops/SpatialOpsConfigure.h>
+
 #include <iterator>
 
 

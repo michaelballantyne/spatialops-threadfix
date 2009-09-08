@@ -1,16 +1,19 @@
 #ifndef FVStaggeredTypes_h
 #define FVStaggeredTypes_h
 
+#include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/SpatialField.h>
 #include <spatialops/SpatialOperator.h>
 #include <spatialops/SpatialOpsDefs.h>
 
-#ifdef LINALG_UBLAS
+#if defined(LINALG_UBLAS)
 #  include <spatialops/LinAlgUBlas.h>
    typedef SpatialOps::LinAlgUBlas LinAlg;
-#else
+#elif defined(LINALG_TRILINOS)
 #  include <spatialops/LinAlgTrilinos.h>
    typedef SpatialOps::LinAlgTrilinos LinAlg;
+#else
+#  error No LinAlg typedef was made!
 #endif
 
 namespace SpatialOps{
@@ -44,12 +47,7 @@ namespace FVStaggered{
   struct NoGhost     { enum{ NM=0, NP=0 }; };
 
 
-  //-- Field Types --//
-#ifndef SAMRAI_FIELD_TYPES
-# ifndef UINTAH_FIELD_TYPES
-#  define UINTAH_FIELD_TYPES  // default to Uintah types if nothing is specified.
-# endif
-#endif
+//-- Field Types --//
 
 #if defined UINTAH_FIELD_TYPES
 

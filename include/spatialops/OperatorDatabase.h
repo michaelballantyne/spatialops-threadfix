@@ -1,6 +1,8 @@
 #ifndef SpatialOpDatabase_h
 #define SpatialOpDatabase_h
 
+#include <spatialops/SpatialOpsConfigure.h>
+
 #include <boost/any.hpp>
 #include <boost/shared_ptr.hpp>
 

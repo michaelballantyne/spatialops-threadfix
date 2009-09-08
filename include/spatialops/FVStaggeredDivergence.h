@@ -1,6 +1,8 @@
 #ifndef FVSS_DivergenceAssembler_h
 #define FVSS_DivergenceAssembler_h
 
+#include <spatialops/SpatialOpsConfigure.h>
+
 #include <spatialops/FVStaggeredIndexHelper.h>
 
 #include <spatialops/SpatialField.h>

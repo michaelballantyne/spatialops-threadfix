@@ -1,6 +1,7 @@
 #ifndef FVStaggeredBCTools_h
 #define FVStaggeredBCTools_h
 
+#include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/SpatialOperator.h>
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/FVStaggeredTools.h>
@@ -396,14 +397,14 @@ namespace FVStaggered{
 #   ifndef NDEBUG
     if( ghostCoef_ == 0.0 ){
       std::cout << "Error in BoundaryConditionOp." << std::endl
-                << "(i,j,k)=("<<point.i<<","<< point.j <<","<< point.k <<")"<<endl
-                << "index_ = " << index_ << endl
-                << "row = " << irow << endl
+                << "(i,j,k)=("<<point.i<<","<< point.j <<","<< point.k <<")" << std::endl
+                << "index_ = " << index_ << std::endl
+                << "row = " << irow << std::endl
                 << "op coefs: ";
       for( typename OpT::const_column_iterator icol=row.begin(); icol!=icole; ++icol ){
-        cout << "  (" << icol.index() << "," << *icol << ")";
+        std::cout << "  (" << icol.index() << "," << *icol << ")";
       }
-      cout << endl;
+      std::cout << std::endl;
     }
     assert( ghostCoef_ != 0.0 );
 #   endif

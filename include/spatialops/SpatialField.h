@@ -1,6 +1,8 @@
 #ifndef UT_SpatialField_h
 #define UT_SpatialField_h
 
+#include <spatialops/SpatialOpsConfigure.h>
+
 #include <cassert>
 #include <vector>
 #include <set>
@@ -8,7 +10,9 @@
 #include <fstream>
 
 // allows compile-time expansion of complex expressions involving SpatialField objects.
-#include <daixtrose/Daixt.h>
+#ifdef HAVE_DAIXTROSE
+# include <daixtrose/Daixt.h>
+#endif
 
 #include <spatialops/SpatialFieldStore.h>
 #include <spatialops/SFIterator.h>
@@ -180,6 +184,7 @@ namespace SpatialOps{
     //@}
 
 
+#   ifdef HAVE_DAIXTROSE
     /**
      * @brief This provides support for Daixtrose - an expression template
      * engine to allow compund expressions involving SpatialField
@@ -187,7 +192,7 @@ namespace SpatialOps{
      */
     template<class T>
     inline SpatialField& operator=(const Daixt::Expr<T>&E);
-
+#   endif
     //@}
 
 
@@ -312,6 +317,7 @@ namespace SpatialOps{
 
 
   //------------------------------------------------------------------
+# ifdef HAVE_DAIXTROSE
   template<typename T>
   void Evaluate( const Daixt::Expr<T>& arg )
   {
@@ -339,6 +345,7 @@ namespace SpatialOps{
     t.put(std::cout);
     std::cout << std::endl;
   }
+# endif // HAVE_DAIXTROSE
   //------------------------------------------------------------------
 
 
@@ -509,6 +516,7 @@ namespace SpatialOps{
       for( int i=0; i<npts; ++i ) fieldValues_[i] = values[i];
   }
   //------------------------------------------------------------------
+# ifdef HAVE_DAIXTROSE
   template< class VecOps, typename FieldLocation, typename GhostTraits >
   template<class T>
   SpatialField<VecOps,FieldLocation,GhostTraits>&
@@ -518,6 +526,7 @@ namespace SpatialOps{
       fieldValues_[i] = Evaluate(E);
     return *this;
   }
+# endif // HAVE_DAIXTROSE
   //------------------------------------------------------------------
   template< class VecOps, typename FieldLocation, typename GhostTraits >
   SpatialField<VecOps,FieldLocation,GhostTraits>&

@@ -1,6 +1,7 @@
 #ifndef FVStaggeredIndexHelper_h
 #define FVStaggeredIndexHelper_h
 
+#include <spatialops/SpatialOpsConfigure.h>
 
 #include <spatialops/FVStaggeredTypes.h>
 #include <spatialops/FVStaggeredTools.h>
