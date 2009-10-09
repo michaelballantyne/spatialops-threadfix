@@ -51,6 +51,8 @@ namespace SpatialOps{
  *   case where a patch is not being used, or where field references
  *   are available at construction, this template parameter may be
  *   omitted.
+ *
+ *   </ul>
  */
 template<typename FieldT, typename PatchT=FFLocal::NULLPatch>
 class FieldFunction3D
@@ -111,7 +113,8 @@ private:
  *  @brief Supports implementation of 2D functions to assign values to
  *  SpatialField objects.
  *
- *  See documentation on FieldFunction3D for more information about template parameters.
+ *  See documentation on FieldFunction3D for more information about
+ *  template parameters.
  */
 template<typename FieldT, typename PatchT=FFLocal::NULLPatch>
 class FieldFunction2D
@@ -161,7 +164,8 @@ private:
  *  @brief Supports implementation of 1D functions to assign values to
  *  SpatialField objects.
  *
- *  See documentation on FieldFunction3D for more information about template parameters.
+ *  See documentation on FieldFunction3D for more information about
+ *  template parameters.
  */
 template< typename FieldT, typename PatchT=FFLocal::NULLPatch >
 class FieldFunction1D
@@ -321,7 +325,8 @@ class GaussianFunction : public FieldFunction1D<FieldT,PatchT>
  * with
  *  - \f$A\f$ Amplitude of the function
  *  - \f$w\f$ width of the transition
- *  - \f$L_1\f$ and \f$L_2\f$  Midpoint of transition from low to high (L1) and high to low (L2).
+ * - \f$L_1\f$ and \f$L_2\f$ Midpoint of transition from low to high
+      (L1) and high to low (L2).
 */
 template< typename FieldT,
           typename PatchT=FFLocal::NULLPatch >

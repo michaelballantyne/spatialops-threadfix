@@ -4,7 +4,8 @@
 #include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/SpatialOperator.h>
 #include <spatialops/OperatorDatabase.h>
-#include <spatialops/FVStaggeredTools.h>
+#include <spatialops/FVStaggeredTypes.h>
+#include <spatialops/FVTools.h>
 
 namespace SpatialOps{
 namespace FVStaggered{

@@ -120,7 +120,7 @@ include_directories( ${PROJECT_BINARY_DIR}/config )
 set( SO_Sources
   src/LagrangePoly.cpp
   src/FVOneDimensional.cpp
-  src/FVToolsTemplates.cpp
+  src/FVTools.cpp
   )
 if( LINALG_TRILINOS )
   set( SO_Sources ${SO_Sources}

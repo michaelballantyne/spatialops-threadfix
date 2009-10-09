@@ -2,6 +2,7 @@
 #define FVToolsTemplates_h
 
 #include <spatialops/SpatialOpsConfigure.h>
+#include <spatialops/SpatialOpsDefs.h>
 
 #include <vector>
 #include <set>
@@ -17,6 +18,30 @@ namespace FVStaggered{
    *  @todo Move these tools out of the FVStaggered namespace.
    */
 
+
+  /**
+   *  @brief obtain the number of points for this field type in the requested direction
+   *
+   *  @param dir The direction.  See XDIR, YDIR, ZDIR.
+   *  @param dim The dimensions of the mesh in each direction.
+   *  @param hasPlusFace bool indicating if the patch has a physical
+   *         boundary in the dir direction.  In that case, the fields
+   *         have an extra point.
+   */
+  template<typename FieldT>
+  inline size_t npts( size_t dir, const std::vector<int>& dim, const bool hasPlusFace )
+  {
+    size_t n = dim[dir];
+    if( n>1 ){
+      n += FieldT::Ghost::NM + FieldT::Ghost::NP;
+      if( hasPlusFace && (dir == FieldT::Location::FaceDir::value) ){
+        ++n;
+      }
+    }
+    return n;
+  }
+
+
   /**
    * @brief get the total number of points (including ghost cells) for
    * a field in the x-direction.
@@ -30,8 +55,11 @@ namespace FVStaggered{
    * variable dimensions will be modified accordingly.
    */
   template<typename FieldT>
-  inline int get_nx( const std::vector<int>& dim,
-                     const bool hasPlusXSideFaces );
+  inline size_t get_nx( const std::vector<int>& dim,
+                        const bool hasPlusXSideFaces )
+  {
+    return npts<FieldT>( XDIR::value, dim, hasPlusXSideFaces );
+  }
 
   /**
    * @brief get the total number of points (including ghost cells) for
@@ -45,8 +73,11 @@ namespace FVStaggered{
    * that there is an extra face on that side of the domain, and face
    * variable dimensions will be modified accordingly.
    */
-  template<typename FieldT> inline int get_ny( const std::vector<int>& dim,
-                                               const bool hasPlusYSideFaces );
+  template<typename FieldT> inline size_t get_ny( const std::vector<int>& dim,
+                                                  const bool hasPlusYSideFaces )
+  {
+    return npts<FieldT>( YDIR::value, dim, hasPlusYSideFaces );
+  }
 
 
   /**
@@ -61,8 +92,11 @@ namespace FVStaggered{
    * that there is an extra face on that side of the domain, and face
    * variable dimensions will be modified accordingly.
    */
-  template<typename FieldT> inline int get_nz( const std::vector<int>& dim,
-                                               const bool hasPlusZSideFaces );
+  template<typename FieldT> inline size_t get_nz( const std::vector<int>& dim,
+                                                  const bool hasPlusZSideFaces )
+  {
+    return npts<FieldT>( ZDIR::value, dim, hasPlusZSideFaces );
+  }
 
   //==================================================================
 

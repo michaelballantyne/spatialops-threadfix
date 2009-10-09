@@ -3,10 +3,10 @@
 
 #include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/FVStaggeredTypes.h>
+#include <spatialops/FVTools.h>
 #include <spatialops/LagrangePoly.h>
 #include <spatialops/SpatialField.h>
 #include <spatialops/SpatialOperator.h>
-#include <spatialops/FVStaggeredTools.h>
 
 
 #include <vector>

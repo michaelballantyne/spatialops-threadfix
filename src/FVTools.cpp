@@ -1,4 +1,4 @@
-#include <spatialops/FVToolsTemplates.h>
+#include <spatialops/FVTools.h>
 
 namespace SpatialOps{
 namespace FVStaggered{

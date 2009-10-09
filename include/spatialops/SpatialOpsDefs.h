@@ -36,7 +36,6 @@ namespace SpatialOps{
    */
   struct NODIR{ enum{value=-10}; };
 
-
   /** @} */  // end of Direction group.
 
 
