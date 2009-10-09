@@ -70,6 +70,19 @@ namespace SpatialOps{
    *   faces of a patch.
    *
    *   </ul>
+   *
+   *  @todo Consider providing implicit type conversions to other
+   *  SpatialFields via application of a SpatialOperator.  This would
+   *  need to be done in a manner that would avoid memory allocation,
+   *  so it may be best to implement this using SpatFldPtr objects
+   *  rather than SpatialField objects.  Implicit type conversion via
+   *  operators would allow a great deal more flexibility in code
+   *  design.  For example, a null operator would result in a pointer
+   *  swap to define a new field rather than a full memory copy.
+   *  Similarly, a real operator would result in a valid field
+   *  transformation.  Ghost information could become out of date with
+   *  careless use of this, however.  We would need to safeguard
+   *  against that.
    */
   template< typename VecOps,
             typename FieldLocation,

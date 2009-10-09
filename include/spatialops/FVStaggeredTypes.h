@@ -174,7 +174,7 @@ namespace FVStaggered{
    *  NOTE: for UNIFORM MESHES, the following DEGENERACIES exist in
    *  the interpolant operators:
    *
-   *    InterpXVolSSurfX = NULL  (identity operator)
+   *    InterpXVolSSurfX = NULL (identity operator)
    *    InterpXVolYSurfX = InterpXVolXSurfY
    *    InterpXVolZSurfX = InterpXVolXSurfZ
    *

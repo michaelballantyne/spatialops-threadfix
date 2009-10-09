@@ -240,8 +240,8 @@ private:
  *  @author James C. Sutherland
  *  @date September, 2007
  *
- *  Evaluates a*sin(b*x), where a is the amplitude and b is the period
- *  of the sin function.
+ *  @brief Evaluates a*sin(b*x), where a is the amplitude and b is the
+ *  period of the sin function.
  */
 template< typename FieldT,
           typename PatchT=FFLocal::NULLPatch >
@@ -273,10 +273,10 @@ class SinFunction : public FieldFunction1D<FieldT,PatchT>
  *  @class GaussianFunction
  *  @author James C. Sutherland
  *  @date October, 2008
- *
- * \f[
+ *  @brief Evaluates a gaussian function,
+ *  \f$
  *   f(x) = y_0 + a \exp\left( \frac{\left(x-x_0\right)^2 }{2\sigma^2} \right)
- * \f]
+ *  \f$
  */
 template< typename FieldT,
           typename PatchT=FFLocal::NULLPatch >
