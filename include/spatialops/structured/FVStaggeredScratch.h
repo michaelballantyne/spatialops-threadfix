@@ -3,12 +3,12 @@
 
 #include <spatialops/SpatialOpsConfigure.h>
 
-#include <spatialops/FVStaggeredIndexHelper.h>
-#include <spatialops/FVStaggeredTypes.h>
-
 #include <spatialops/SpatialField.h>
 #include <spatialops/SpatialOperator.h>
 #include <spatialops/SpatialOpsDefs.h>
+
+#include <spatialops/structured/FVStaggeredIndexHelper.h>
+#include <spatialops/structured/FVStaggeredTypes.h>
 
 #include <algorithm>
 
@@ -16,7 +16,7 @@ namespace SpatialOps{
 
 
   // forward declaration.
-  namespace FVStaggered{ template<typename T1,typename T2> class ScratchAssembler; }
+  namespace structured{ template<typename T1,typename T2> class ScratchAssembler; }
 
   // this is required for the SpatialOperator class.  It specifies
   // that we should use the ScratchAssembler to construct
@@ -24,83 +24,83 @@ namespace SpatialOps{
   template< typename SrcFieldT, typename DestFieldT >
   struct OpAssemblerSelector< Scratch, SrcFieldT, DestFieldT >
   {
-    typedef FVStaggered::ScratchAssembler<SrcFieldT,DestFieldT>  Assembler;
+    typedef structured::ScratchAssembler<SrcFieldT,DestFieldT>  Assembler;
   };
 
   // scratch ops that look like grad ops
   template<>
-  struct OpAssemblerSelector< Scratch, FVStaggered::SVolField, FVStaggered::SSurfXField >
+  struct OpAssemblerSelector< Scratch, structured::SVolField, structured::SSurfXField >
   {
-    typedef FVStaggered::GradientAssembler<FVStaggered::SVolField,FVStaggered::SSurfXField> Assembler;
+    typedef structured::GradientAssembler<structured::SVolField,structured::SSurfXField> Assembler;
   };
   template<>
-  struct OpAssemblerSelector< Scratch, FVStaggered::SVolField, FVStaggered::SSurfYField >
+  struct OpAssemblerSelector< Scratch, structured::SVolField, structured::SSurfYField >
   {
-    typedef FVStaggered::GradientAssembler<FVStaggered::SVolField,FVStaggered::SSurfYField> Assembler;
+    typedef structured::GradientAssembler<structured::SVolField,structured::SSurfYField> Assembler;
   };
   template<>
-  struct OpAssemblerSelector< Scratch, FVStaggered::SVolField, FVStaggered::SSurfZField >
+  struct OpAssemblerSelector< Scratch, structured::SVolField, structured::SSurfZField >
   {
-    typedef FVStaggered::GradientAssembler<FVStaggered::SVolField,FVStaggered::SSurfZField> Assembler;
-  };
-
-
-
-  template<>
-  struct OpAssemblerSelector< Scratch, FVStaggered::XVolField, FVStaggered::XSurfXField >
-  {
-    typedef FVStaggered::GradientAssembler<FVStaggered::XVolField,FVStaggered::XSurfXField> Assembler;
-  };
-  template<>
-  struct OpAssemblerSelector< Scratch, FVStaggered::XVolField, FVStaggered::XSurfYField >
-  {
-    typedef FVStaggered::GradientAssembler<FVStaggered::XVolField,FVStaggered::XSurfYField> Assembler;
-  };
-  template<>
-  struct OpAssemblerSelector< Scratch, FVStaggered::XVolField, FVStaggered::XSurfZField >
-  {
-    typedef FVStaggered::GradientAssembler<FVStaggered::XVolField,FVStaggered::XSurfZField> Assembler;
+    typedef structured::GradientAssembler<structured::SVolField,structured::SSurfZField> Assembler;
   };
 
 
+
   template<>
-  struct OpAssemblerSelector< Scratch, FVStaggered::YVolField, FVStaggered::YSurfXField >
+  struct OpAssemblerSelector< Scratch, structured::XVolField, structured::XSurfXField >
   {
-    typedef FVStaggered::GradientAssembler<FVStaggered::YVolField,FVStaggered::YSurfXField> Assembler;
+    typedef structured::GradientAssembler<structured::XVolField,structured::XSurfXField> Assembler;
   };
   template<>
-  struct OpAssemblerSelector< Scratch, FVStaggered::YVolField, FVStaggered::YSurfYField >
+  struct OpAssemblerSelector< Scratch, structured::XVolField, structured::XSurfYField >
   {
-    typedef FVStaggered::GradientAssembler<FVStaggered::YVolField,FVStaggered::YSurfYField> Assembler;
+    typedef structured::GradientAssembler<structured::XVolField,structured::XSurfYField> Assembler;
   };
   template<>
-  struct OpAssemblerSelector< Scratch, FVStaggered::YVolField, FVStaggered::YSurfZField >
+  struct OpAssemblerSelector< Scratch, structured::XVolField, structured::XSurfZField >
   {
-    typedef FVStaggered::GradientAssembler<FVStaggered::YVolField,FVStaggered::YSurfZField> Assembler;
+    typedef structured::GradientAssembler<structured::XVolField,structured::XSurfZField> Assembler;
   };
 
 
   template<>
-  struct OpAssemblerSelector< Scratch, FVStaggered::ZVolField, FVStaggered::ZSurfXField >
+  struct OpAssemblerSelector< Scratch, structured::YVolField, structured::YSurfXField >
   {
-    typedef FVStaggered::GradientAssembler<FVStaggered::ZVolField,FVStaggered::ZSurfXField> Assembler;
+    typedef structured::GradientAssembler<structured::YVolField,structured::YSurfXField> Assembler;
   };
   template<>
-  struct OpAssemblerSelector< Scratch, FVStaggered::ZVolField, FVStaggered::ZSurfYField >
+  struct OpAssemblerSelector< Scratch, structured::YVolField, structured::YSurfYField >
   {
-    typedef FVStaggered::GradientAssembler<FVStaggered::ZVolField,FVStaggered::ZSurfYField> Assembler;
+    typedef structured::GradientAssembler<structured::YVolField,structured::YSurfYField> Assembler;
   };
   template<>
-  struct OpAssemblerSelector< Scratch, FVStaggered::ZVolField, FVStaggered::ZSurfZField >
+  struct OpAssemblerSelector< Scratch, structured::YVolField, structured::YSurfZField >
   {
-    typedef FVStaggered::GradientAssembler<FVStaggered::ZVolField,FVStaggered::ZSurfZField> Assembler;
+    typedef structured::GradientAssembler<structured::YVolField,structured::YSurfZField> Assembler;
+  };
+
+
+  template<>
+  struct OpAssemblerSelector< Scratch, structured::ZVolField, structured::ZSurfXField >
+  {
+    typedef structured::GradientAssembler<structured::ZVolField,structured::ZSurfXField> Assembler;
+  };
+  template<>
+  struct OpAssemblerSelector< Scratch, structured::ZVolField, structured::ZSurfYField >
+  {
+    typedef structured::GradientAssembler<structured::ZVolField,structured::ZSurfYField> Assembler;
+  };
+  template<>
+  struct OpAssemblerSelector< Scratch, structured::ZVolField, structured::ZSurfZField >
+  {
+    typedef structured::GradientAssembler<structured::ZVolField,structured::ZSurfZField> Assembler;
   };
 
 
 
 
 
-namespace FVStaggered{
+namespace structured{
 
 
   template< typename SrcFieldT, typename DestFieldT >
@@ -326,7 +326,7 @@ namespace FVStaggered{
 
 
 
-}// namespace FVStaggered
+}// namespace structured
 }// namespace SpatialOps
 
 #endif

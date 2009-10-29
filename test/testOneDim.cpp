@@ -1,6 +1,6 @@
-#include <spatialops/FVOneDimensional.h>
+#include <spatialops/structured/FVOneDimensional.h>
 
-#include <Functions.h>
+#include "Functions.h"
 
 #include <iostream>
 #include <iomanip>
@@ -10,7 +10,7 @@
 
 using namespace std;
 using namespace SpatialOps;
-using namespace FVStaggered;
+using namespace structured;
 
 //====================================================================
 

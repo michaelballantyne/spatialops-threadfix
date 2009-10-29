@@ -1,4 +1,4 @@
-#include <spatialops/FVOneDimensional.h>
+#include <spatialops/structured/FVOneDimensional.h>
 
 #include <boost/static_assert.hpp>
 
@@ -8,7 +8,7 @@
 #include <sstream>
 
 namespace SpatialOps{
-namespace FVStaggered{
+namespace structured{
 
 
 //--------------------------------------------------------------------
@@ -427,5 +427,5 @@ get_ghost_rows( std::set<int>& ghostRows ) const
 
 //--------------------------------------------------------------------
 
+} // namespace structured
 } // namespace SpatialOps
-} // namespace FVStaggered

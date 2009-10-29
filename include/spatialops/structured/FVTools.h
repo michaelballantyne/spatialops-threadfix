@@ -8,14 +8,12 @@
 #include <set>
 
 namespace SpatialOps{
-namespace FVStaggered{
+namespace structured{
 
   /** @file FVToolsTemplates.h
    *  @brief Provides function templates useful for field and operator
    *  creation for structured meshes.  Specialize these templates to
    *  your needs.
-   *
-   *  @todo Move these tools out of the FVStaggered namespace.
    */
 
 
@@ -273,7 +271,7 @@ namespace FVStaggered{
 
   //==================================================================
 
-}// namespace FVStaggered
+}// namespace structured
 }// namespace SpatialOps
 
 #endif

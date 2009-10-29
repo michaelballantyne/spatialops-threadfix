@@ -1,9 +1,10 @@
-#include <spatialops/FVStaggered.h>
 #include <spatialops/OperatorDatabase.h>
-#include <buildOps.h>
+#include <spatialops/structured/FVStaggered.h>
+
+#include "buildOps.h"
 
 using namespace SpatialOps;
-using namespace FVStaggered;
+using namespace structured;
 
 void build_ops( const std::vector<int>& dim,
                 const std::vector<double>& spacing,

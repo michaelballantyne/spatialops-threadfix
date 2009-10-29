@@ -2,8 +2,9 @@
 #define FVRestrictOperator_h
 
 #include <spatialops/SpatialOpsConfigure.h>
-#include <spatialops/FVTools.h>
 #include <spatialops/SpatialOperator.h>
+
+#include <spatialops/structured/FVTools.h>
 
 namespace SpatialOps{
 
@@ -90,7 +91,7 @@ namespace SpatialOps{
      */
     void get_ghost_cols( std::set<int>& ghostCols ) const
     {
-      ghostCols = FVStaggered::get_ghost_set<FieldT>( dimSrc_, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
+      ghostCols = structured::get_ghost_set<FieldT>( dimSrc_, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
     }
 
     /**
@@ -98,7 +99,7 @@ namespace SpatialOps{
      */
     void get_ghost_rows( std::set<int>& ghostRows ) const
     {
-      ghostRows = FVStaggered::get_ghost_set<FieldT>( dimDest_, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
+      ghostRows = structured::get_ghost_set<FieldT>( dimDest_, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
     }
 
   private:
@@ -184,7 +185,7 @@ namespace SpatialOps{
   RestrictionAssembler<FieldT>::
   get_ncols() const
   {
-    return FVStaggered::get_n_tot<FieldT>( dimSrc_, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
+    return structured::get_n_tot<FieldT>( dimSrc_, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
   }
 
   //----------------------------------------------------------------
@@ -194,7 +195,7 @@ namespace SpatialOps{
   RestrictionAssembler<FieldT>::
   get_nrows() const
   {
-    return FVStaggered::get_n_tot<FieldT>( dimDest_, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
+    return structured::get_n_tot<FieldT>( dimDest_, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
   }
 
   //----------------------------------------------------------------
@@ -206,7 +207,7 @@ namespace SpatialOps{
                    std::vector<double> & vals,
                    std::vector<int> & ixs ) const
   {
-    const FVStaggered::IndexTriplet ijkDest( FVStaggered::flat2ijk<FieldT>::value( dimDest_, irow, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ ) );
+    const structured::IndexTriplet ijkDest( structured::flat2ijk<FieldT>::value( dimDest_, irow, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ ) );
 
     const int ngM = FieldT::Ghost::NM; // number of ghost points
     const int ngP = FieldT::Ghost::NP; // number of ghost points
@@ -215,7 +216,7 @@ namespace SpatialOps{
     const int ndest = dimDest_[activeDim_];
     const int idest = ijkDest [activeDim_] - ngM;
 
-    FVStaggered::IndexTriplet ijkSrc = ijkDest;
+    structured::IndexTriplet ijkSrc = ijkDest;
 
     if( ijkDest[activeDim_] < ngM )
       ijkSrc[activeDim_] = 0;
@@ -224,7 +225,7 @@ namespace SpatialOps{
     else
       ijkSrc[activeDim_] = int( float(idest*nsrc)/float(ndest) + ngM );
 
-    const int index = FVStaggered::ijk2flat<FieldT>::value( dimSrc_, ijkSrc, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
+    const int index = structured::ijk2flat<FieldT>::value( dimSrc_, ijkSrc, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
 
     ixs.push_back( index );
     vals.push_back( 1.0 );

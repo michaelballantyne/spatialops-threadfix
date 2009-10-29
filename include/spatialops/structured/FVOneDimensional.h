@@ -2,11 +2,12 @@
 #define FVStaggeredOneDimStretch_h
 
 #include <spatialops/SpatialOpsConfigure.h>
-#include <spatialops/FVStaggeredTypes.h>
-#include <spatialops/FVTools.h>
 #include <spatialops/LagrangePoly.h>
 #include <spatialops/SpatialField.h>
 #include <spatialops/SpatialOperator.h>
+
+#include <spatialops/structured/FVStaggeredTypes.h>
+#include <spatialops/structured/FVTools.h>
 
 
 #include <vector>
@@ -17,7 +18,7 @@ namespace SpatialOps{
 //====================================================================
 
   // forward declaration.
-  namespace FVStaggered{
+  namespace structured{
     class OneDimInterpolantAssembler;
     class OneDimGradientAssembler;
     class OneDimDivergenceAssembler;
@@ -31,7 +32,7 @@ namespace SpatialOps{
   template< typename T1, typename T2 >
   struct OpAssemblerSelector< Interpolant, T1, T2 >
   {
-    typedef FVStaggered::OneDimInterpolantAssembler  Assembler;
+    typedef structured::OneDimInterpolantAssembler  Assembler;
   };
 
 //====================================================================
@@ -39,20 +40,20 @@ namespace SpatialOps{
   template< typename T1, typename T2 >
   struct OpAssemblerSelector< Gradient, T1, T2 >
   {
-    typedef FVStaggered::OneDimGradientAssembler  Assembler;
+    typedef structured::OneDimGradientAssembler  Assembler;
   };
 
 //====================================================================
 
   template<>
-  struct OpAssemblerSelector< Divergence, FVStaggered::SSurfXField, FVStaggered::SVolField >
+  struct OpAssemblerSelector< Divergence, structured::SSurfXField, structured::SVolField >
   {
-    typedef FVStaggered::OneDimDivergenceAssembler  Assembler;
+    typedef structured::OneDimDivergenceAssembler  Assembler;
   };
 
 //====================================================================
 
-namespace FVStaggered{
+namespace structured{
 
   /**
    * @todo Need to rework setting ghost cell locations so that
@@ -213,7 +214,7 @@ namespace FVStaggered{
 
   //==================================================================
 
-} // namespace FVStaggered
+} // namespace structured
 } // namespace SpatialOps
 
 #endif

@@ -3,8 +3,9 @@
 
 #include <spatialops/SpatialOpsConfigure.h>
 
-#include <spatialops/FVTools.h>
 #include <spatialops/SpatialOperator.h>
+
+#include <spatialops/structured/FVTools.h>
 
 namespace SpatialOps{
 
@@ -82,7 +83,7 @@ namespace SpatialOps{
      */
     void get_ghost_cols( std::set<int>& ghostCols ) const
     {
-      ghostCols = FVStaggered::get_ghost_set<FieldT>( dim_, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
+      ghostCols = structured::get_ghost_set<FieldT>( dim_, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
     }
 
     /**
@@ -90,12 +91,12 @@ namespace SpatialOps{
      */
     void get_ghost_rows( std::set<int>& ghostRows ) const
     {
-      ghostRows = FVStaggered::get_ghost_set<FieldT>( dim_, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
+      ghostRows = structured::get_ghost_set<FieldT>( dim_, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
     }
 
   private:
 
-    void get_npts( const FVStaggered::IndexTriplet& loc,
+    void get_npts( const structured::IndexTriplet& loc,
                    int& ntot,
                    std::vector<int>& nxyz ) const;
 
@@ -172,7 +173,7 @@ namespace SpatialOps{
   TopHatFilterAssembler<FieldT>::
   get_ncols() const
   {
-    return FVStaggered::get_n_tot<FieldT>(dim_,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_);
+    return structured::get_n_tot<FieldT>(dim_,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_);
   }
 
   //------------------------------------------------------------------
@@ -208,7 +209,7 @@ namespace SpatialOps{
                    std::vector<double> & vals,
                    std::vector<int> & ixs ) const
   {
-    const FVStaggered::IndexTriplet ijk( FVStaggered::flat2ijk<FieldT>::value( dim_, irow, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ ) );
+    const structured::IndexTriplet ijk( structured::flat2ijk<FieldT>::value( dim_, irow, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ ) );
 
     int ntot=1;
     std::vector<int> nxyz(3,1), nside(3,1);
@@ -219,8 +220,8 @@ namespace SpatialOps{
     for( int ipts=-nside[0]; ipts<=nside[0]; ++ipts ){
       for( int jpts=-nside[1]; jpts<=nside[1]; ++jpts ){
         for( int kpts=-nside[2]; kpts<=nside[2]; ++kpts ){
-          const FVStaggered::IndexTriplet ixt( ijk.i+ipts, ijk.j+jpts, ijk.k+kpts );
-          ixs.push_back( FVStaggered::ijk2flat<FieldT>::value( dim_, ixt, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ ) );
+          const structured::IndexTriplet ixt( ijk.i+ipts, ijk.j+jpts, ijk.k+kpts );
+          ixs.push_back( structured::ijk2flat<FieldT>::value( dim_, ixt, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ ) );
           vals.push_back( fac );
         }
       }
@@ -232,13 +233,13 @@ namespace SpatialOps{
   template<typename FieldT>
   void
   TopHatFilterAssembler<FieldT>::
-  get_npts( const FVStaggered::IndexTriplet& loc,
+  get_npts( const structured::IndexTriplet& loc,
             int& ntot,
             std::vector<int>& nxyz ) const
   {
     ntot = 1;
     if( dim_[0] > 1 ){
-      const int nx = FVStaggered::get_nx<FieldT>(dim_,hasPlusXSideFaces_);
+      const int nx = structured::get_nx<FieldT>(dim_,hasPlusXSideFaces_);
       const int nside = npts_[0] / 2;
       nxyz[0] = 1 + 2 * std::min( std::min( nside, loc.i ),
                                   std::min( nside, nx-loc.i-1 ) );
@@ -246,7 +247,7 @@ namespace SpatialOps{
     }
 
     if( dim_[1] > 1 ){
-      const int ny = FVStaggered::get_ny<FieldT>(dim_,hasPlusYSideFaces_);
+      const int ny = structured::get_ny<FieldT>(dim_,hasPlusYSideFaces_);
       const int nside = npts_[1] / 2;
       nxyz[1] = 1 + 2 * std::min( std::min( nside, loc.j),
                                   std::min( nside, ny-loc.j-1) );
@@ -254,7 +255,7 @@ namespace SpatialOps{
     }
 
     if( dim_[2] > 1 ){
-      const int nz = FVStaggered::get_nz<FieldT>(dim_,hasPlusZSideFaces_);
+      const int nz = structured::get_nz<FieldT>(dim_,hasPlusZSideFaces_);
       const int nside = npts_[2] / 2;
       nxyz[2] = 1 + 2 * std::min( std::min( nside, loc.k),
                                   std::min( nside, nz-loc.k-1) );

@@ -2,12 +2,13 @@
 #define FVStaggeredIndexHelper_h
 
 #include <spatialops/SpatialOpsConfigure.h>
-#include <spatialops/FVTools.h>
-#include <spatialops/FVStaggeredTypes.h>
+
+#include <spatialops/structured/FVTools.h>
+#include <spatialops/structured/FVStaggeredTypes.h>
 
 
 namespace SpatialOps{
-namespace FVStaggered{
+namespace structured{
 
 
   //==================================================================
@@ -906,7 +907,7 @@ namespace FVStaggered{
 
   //------------------------------------------------------------------
 
-}// namespace FVStaggered
+}// namespace structured
 }// namespace SpatialOps
 
 #endif

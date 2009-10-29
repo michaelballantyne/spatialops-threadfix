@@ -17,7 +17,7 @@
 #endif
 
 namespace SpatialOps{
-namespace FVStaggered{
+namespace structured{
 
   // FaceDir: The direction relative to its volume field that this field is staggered.
   // StagLoc: The direction relative to the scalar volume field that this field's volume field is staggered.
@@ -299,7 +299,7 @@ namespace FVStaggered{
   //-- Restriction Operators --//
   typedef SpatialOperator< LinAlg, Restriction, SVolField, SVolField > RestrictSVol;
 
-}// namespace FVStaggered
+}// namespace structured
 }// namespace SpatialOps
 
 #endif

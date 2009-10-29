@@ -1,11 +1,11 @@
 #ifndef FVTEST_GRID_H
 #define FVTEST_GRID_H
 
-#include <spatialops/FVStaggered.h>
+#include <spatialops/structured/FVStaggered.h>
 #include <spatialops/OperatorDatabase.h> //jcs shove into FVStaggered.h?
 
 namespace SpatialOps{
-namespace FVStaggered{
+namespace structured{
 
 
   /**
@@ -200,7 +200,7 @@ Grid::Grid( const std::vector<int>& dim,
     zszz_( get_n_tot<ZSurfZField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), get_ghost_set<ZSurfZField>(dim,bcPlusFlag[0],bcPlusFlag[1],bcPlusFlag[2]), NULL )
 {
   using namespace SpatialOps;
-  using namespace FVStaggered;
+  using namespace structured;
 
   {
     SVolField::iterator isvx=svx_.begin();

@@ -3,18 +3,19 @@
 
 #include <spatialops/SpatialOpsConfigure.h>
 
-#include <spatialops/FVStaggeredIndexHelper.h>
-#include <spatialops/FVStaggeredTypes.h>
-
 #include <spatialops/SpatialField.h>
 #include <spatialops/SpatialOperator.h>
 #include <spatialops/SpatialOpsDefs.h>
+
+#include <spatialops/structured/FVStaggeredIndexHelper.h>
+#include <spatialops/structured/FVStaggeredTypes.h>
+
 
 namespace SpatialOps{
 
 
   // forward declaration.
-  namespace FVStaggered{ template<typename T1,typename T2> class LinearInterpolantAssembler; }
+  namespace structured{ template<typename T1,typename T2> class LinearInterpolantAssembler; }
 
   // this is required for the SpatialOperator class.  It specifies
   // that we should use the LinearInterpolantAssembler to construct
@@ -22,11 +23,11 @@ namespace SpatialOps{
   template< typename SrcFieldT, typename DestFieldT >
   struct OpAssemblerSelector< Interpolant, SrcFieldT, DestFieldT >
   {
-    typedef FVStaggered::LinearInterpolantAssembler<SrcFieldT,DestFieldT>  Assembler;
+    typedef structured::LinearInterpolantAssembler<SrcFieldT,DestFieldT>  Assembler;
   };
 
 
-namespace FVStaggered{
+namespace structured{
 
 
   /**
@@ -357,7 +358,7 @@ namespace FVStaggered{
   //==================================================================
 
 
-} // namespace FVStaggered
+} // namespace structured
 } // namespace SpatialOps
 
 #endif

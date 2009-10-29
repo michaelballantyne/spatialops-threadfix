@@ -1,8 +1,8 @@
 #include <vector>
 #include <cmath>
 
-#include <spatialops/FVStaggeredBCTools.h>
-#include <spatialops/FVStaggered.h>
+#include <spatialops/structured/FVStaggeredBCTools.h>
+#include <spatialops/structured/FVStaggered.h>
 
 #include <boost/function.hpp>
 #include <boost/lambda/bind.hpp>  // use if you need to bind function arguments or to bind class member functions...
@@ -34,7 +34,7 @@ double ttmp()
 bool test1()
 {
   using namespace SpatialOps;
-  using namespace FVStaggered;
+  using namespace structured;
 
   const double ATOL = 1.0e-5;
   const int nx=3, ny=4, nz=5;

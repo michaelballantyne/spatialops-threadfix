@@ -1,7 +1,7 @@
-#include <spatialops/FVTools.h>
+#include <spatialops/structured/FVTools.h>
 
 namespace SpatialOps{
-namespace FVStaggered{
+namespace structured{
 
   void _ghost_set_( const int ngm, const int ngp,
                     const int nxt, const int nyt, const int nzt,
@@ -64,5 +64,5 @@ namespace FVStaggered{
     }
   }
 
-} // namespace FVStaggered
+} // namespace structured
 } // namespace SpatialOps

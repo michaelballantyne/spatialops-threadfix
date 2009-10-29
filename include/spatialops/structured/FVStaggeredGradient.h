@@ -3,26 +3,26 @@
 
 #include <spatialops/SpatialOpsConfigure.h>
 
-#include <spatialops/FVStaggeredIndexHelper.h>
-
 #include <spatialops/SpatialField.h>
 #include <spatialops/SpatialOperator.h>
+
+#include <spatialops/structured/FVStaggeredIndexHelper.h>
 
 
 namespace SpatialOps{
 
 
   // forward declaration.
-  namespace FVStaggered{ template<typename T1,typename T2> class GradientAssembler; }
+  namespace structured{ template<typename T1,typename T2> class GradientAssembler; }
 
   template< typename SrcField, typename DestField >
   struct OpAssemblerSelector< Gradient, SrcField, DestField >
   {
-    typedef FVStaggered::GradientAssembler<SrcField,DestField>  Assembler;
+    typedef structured::GradientAssembler<SrcField,DestField>  Assembler;
   };
 
 
-namespace FVStaggered{
+namespace structured{
 
 
   //==================================================================
@@ -218,7 +218,7 @@ namespace FVStaggered{
   }
   //------------------------------------------------------------------
 
-}
-}
+} // namespace structured
+} // namespace SpatialOps
 
 #endif

@@ -4,11 +4,12 @@
 #include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/SpatialOperator.h>
 #include <spatialops/OperatorDatabase.h>
-#include <spatialops/FVStaggeredTypes.h>
-#include <spatialops/FVTools.h>
+
+#include <spatialops/structured/FVStaggeredTypes.h>
+#include <spatialops/structured/FVTools.h>
 
 namespace SpatialOps{
-namespace FVStaggered{
+namespace structured{
 
   /**
    *  @enum BCSide
@@ -746,7 +747,7 @@ namespace FVStaggered{
     
   }
 
-} // namespace FVStaggered
+} // namespace structured
 } // namespace SpatialOps
 
 

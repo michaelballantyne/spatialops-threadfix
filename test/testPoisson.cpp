@@ -15,7 +15,7 @@ using namespace std;
 #include <buildOps.h>
 
 using namespace SpatialOps;
-using namespace FVStaggered;
+using namespace structured;
 
 enum BCType
 {

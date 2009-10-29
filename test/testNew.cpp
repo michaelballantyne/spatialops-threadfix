@@ -4,21 +4,21 @@
 #include <limits>
 using namespace std;
 
-
-#include <spatialops/FVStaggered.h>
-#include <spatialops/FVStaggeredBCTools.h>
 #include <spatialops/OperatorDatabase.h>
+
+#include <spatialops/structured/FVStaggered.h>
+#include <spatialops/structured/FVStaggeredBCTools.h>
 
 #ifdef LINALG_TRILINOS
 # include <spatialops/LinearSystem.h>
 #endif
 
-#include <Grid.h>
-#include <Functions.h>
-#include <buildOps.h>
+#include "Grid.h"
+#include "Functions.h"
+#include "buildOps.h"
 
 using namespace SpatialOps;
-using namespace FVStaggered;
+using namespace structured;
 
 OperatorDatabase opDB;  // jcs hack global variable
 
@@ -210,7 +210,7 @@ bool test_bc_helper( const vector<int>&dim,
                      const BCSide side )
 {
   using namespace SpatialOps;
-  using namespace FVStaggered;
+  using namespace structured;
 
   typedef typename OpT::SrcFieldType  SrcFieldT;
   typedef typename OpT::DestFieldType DestFieldT;
@@ -315,7 +315,7 @@ void test_bc( const Grid& g,
               const std::vector<bool>& bcFlag )
 {
   using namespace SpatialOps;
-  using namespace FVStaggered;
+  using namespace structured;
 
   const vector<int>& dim = g.extent();
 

@@ -3,25 +3,25 @@
 
 #include <spatialops/SpatialOpsConfigure.h>
 
-#include <spatialops/FVStaggeredIndexHelper.h>
-
 #include <spatialops/SpatialField.h>
 #include <spatialops/SpatialOperator.h>
+
+#include <spatialops/structured/FVStaggeredIndexHelper.h>
 
 
 namespace SpatialOps{
 
   // forward declaration.
-  namespace FVStaggered{ template<typename T1,typename T2> class DivergenceAssembler; }
+  namespace structured{ template<typename T1,typename T2> class DivergenceAssembler; }
 
   template< typename SrcField, typename DestField >
   struct OpAssemblerSelector< Divergence, SrcField, DestField >
   {
-    typedef FVStaggered::DivergenceAssembler<SrcField,DestField>  Assembler;
+    typedef structured::DivergenceAssembler<SrcField,DestField>  Assembler;
   };
 
 
-namespace FVStaggered{
+namespace structured{
 
   /**
    *  @class  DivergenceAssembler
@@ -219,7 +219,7 @@ namespace FVStaggered{
   //------------------------------------------------------------------
 
 
-}
-}
+} // namespace staggered
+} // namespace SpatialOps
 
 #endif

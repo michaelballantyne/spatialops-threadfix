@@ -2,14 +2,14 @@
 #include <iostream>
 
 
-#include <spatialops/FVStaggered.h>
+#include <spatialops/structured/FVStaggered.h>
 
-#include <Grid.h>
-#include <Functions.h>
-#include <buildOps.h>
+#include "Grid.h"
+#include "Functions.h"
+#include "buildOps.h"
 
 using namespace SpatialOps;
-using namespace FVStaggered;
+using namespace structured;
 
 //====================================================================
 

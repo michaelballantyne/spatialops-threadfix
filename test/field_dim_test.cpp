@@ -1,5 +1,5 @@
-#include <spatialops/FVStaggeredTypes.h>
-#include <spatialops/FVTools.h>
+#include <spatialops/structured/FVStaggeredTypes.h>
+#include <spatialops/structured/FVTools.h>
 
 #include "TestHelper.h"
 
@@ -7,7 +7,7 @@
 int main()
 {
   using namespace SpatialOps;
-  using namespace FVStaggered;
+  using namespace structured;
 
   std::vector<int> n(3,10);
 

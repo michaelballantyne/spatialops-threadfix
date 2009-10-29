@@ -1,14 +1,14 @@
 #include <vector>
 #include <iostream>
 
-#include <spatialops/FVStaggered.h>
 #include <spatialops/OperatorDatabase.h>
+#include <spatialops/structured/FVStaggered.h>
 
-#include <Functions.h>
+#include "Functions.h"
 
 using namespace std;
 using namespace SpatialOps;
-using namespace FVStaggered;
+using namespace structured;
 
 //====================================================================
 

@@ -32,12 +32,13 @@ set( Daixtrose
   CACHE PATH "path to daixtrose installation (optional)"
   )
 
-# Set the location for the installation.  Comment this out to install
-# to /usr/local.  Or set it to the location where you want to install
-# the library to.
-#set( CMAKE_INSTALL_PREFIX
-#  ${CMAKE_CURRENT_BINARY_DIR}
-#  )
+# Set the location for the installation.
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  set (CMAKE_INSTALL_PREFIX
+    ${CMAKE_CURRENT_BINARY_DIR}
+    CACHE PATH "Installation directory" FORCE
+    )
+endif()
 
 # END USER MODIFIABLE BLOCK
 #---------------------------------------------------------------------
@@ -161,6 +162,7 @@ message( STATUS "Files will be installed to: " ${CMAKE_INSTALL_PREFIX} )
 
 # install spatialops headers
 file( GLOB so_headers "include/spatialops/*.h" )
+file( GLOB so_structured_headers "include/spatialops/structured/*.h" )
 set( so_headers
   ${so_headers}
   ${PROJECT_BINARY_DIR}/config/spatialops/SpatialOpsConfigure.h
@@ -168,6 +170,11 @@ set( so_headers
 install( FILES
   ${so_headers}
   DESTINATION include/spatialops
+  PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+  )
+install( FILES
+  ${so_structured_headers}
+  DESTINATION include/spatialops/structured
   PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
   )
 

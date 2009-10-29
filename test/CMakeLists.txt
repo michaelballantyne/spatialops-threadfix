@@ -1,5 +1,4 @@
-include_directories( ${spatialops_SOURCE_DIR}/include . )
-#link_directories( ${spatialops_BINARY_DIR} )
+include_directories( ${spatialops_SOURCE_DIR}/include )
 
 # commonly required file:
 set( common_SRC buildOps.cpp )
