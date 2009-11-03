@@ -33,8 +33,8 @@ int main()
                   SpatialOps::structured::get_ghost_set<CellField>( dim, true, true, true ),
                   NULL );
 
-  Particle::ParticleField pCoord( np, std::set<int>(), NULL );
-  Particle::ParticleField ptmp  ( np, std::set<int>(), NULL );
+  SpatialOps::Particle::ParticleField pCoord( np, std::set<int>(), NULL );
+  SpatialOps::Particle::ParticleField ptmp  ( np, std::set<int>(), NULL );
                   
   //
   // set the cCoord coordinates.  These go from -0.5 to 10.5
@@ -55,7 +55,7 @@ int main()
   //
   // build the operator
   //
-  typedef Particle::CellToParticle<CellField> C2P;
+  typedef SpatialOps::Particle::CellToParticle<CellField> C2P;
   const C2P* const c2p = new C2P( pCoord, cCoord );
 
   //

@@ -3,6 +3,7 @@
 
 #include <spatialops/particles/ParticleFieldTypes.h>
 
+namespace SpatialOps{
 namespace Particle{
 
 //   /**
@@ -177,5 +178,6 @@ namespace Particle{
   //------------------------------------------------------------------
 
 } // namespace Particle
+} // namespace SpatialOps
 
 #endif // ParticleOperators_h

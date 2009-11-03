@@ -1,5 +1,6 @@
 #include <spatialops/particles/ParticleFieldTypes.h>
 
+namespace SpatialOps{
 namespace Particle{
 
   ParticleLinAlg::ParticleLinAlg()
@@ -33,3 +34,4 @@ namespace Particle{
   }
 
 } // namespace Particle
+} // namespace SpatialOps
