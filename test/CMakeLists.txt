@@ -43,3 +43,8 @@ add_test( test_restriction restriction )
 add_executable( fielddim field_dim_test.cpp )
 target_link_libraries( fielddim ${SpatialOps_LIBRARY} )
 add_test( field_dims fielddim )
+
+
+add_executable( particleOps TestParticleOperators.cpp )
+target_link_libraries( particleOps ${SpatialOps_LIBRARY} )
+add_test( particle_ops particleOps )

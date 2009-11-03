@@ -7,7 +7,7 @@
 #include <map>
 #include <string>
 
-#include <spatialops/FVToolsTemplates.h>
+#include <spatialops/structured/FVTools.h>
 #include <spatialops/SpatialField.h>
 
 //---------------------------------
@@ -453,7 +453,7 @@ LHS::add_op_contribution( const OpType & op,
   const int ny=extent_[1];
   const int nz=extent_[2];
 
-  FVStaggered::IndexTriplet t;
+  structured::IndexTriplet t;
 
   int irow = 0;
   for( int ioprow=0; ioprow<op.nrows(); ++ioprow ){
@@ -481,7 +481,7 @@ LHS::add_op_contribution( const OpType & op,
 
       // now determine the column index for insertion of this value
       typedef typename OpType::SrcFieldType SrcField;
-      t = FVStaggered::flat2ijk<SrcField>::value( extent_, colindex );
+      t = structured::flat2ijk<SrcField>::value( extent_, colindex );
       if( nx>1 ) t.i -= SrcField::Ghost::NM;
       if( ny>1 ) t.j -= SrcField::Ghost::NM;
       if( nz>1 ) t.k -= SrcField::Ghost::NM;

@@ -122,6 +122,7 @@ set( SO_Sources
   src/LagrangePoly.cpp
   src/FVOneDimensional.cpp
   src/FVTools.cpp
+  include/spatialops/particles/ParticleFieldTypes.cpp
   )
 if( LINALG_TRILINOS )
   set( SO_Sources ${SO_Sources}
@@ -163,6 +164,7 @@ message( STATUS "Files will be installed to: " ${CMAKE_INSTALL_PREFIX} )
 # install spatialops headers
 file( GLOB so_headers "include/spatialops/*.h" )
 file( GLOB so_structured_headers "include/spatialops/structured/*.h" )
+file( GLOB so_particle_headers "include/spatialops/particles/*.h" )
 set( so_headers
   ${so_headers}
   ${PROJECT_BINARY_DIR}/config/spatialops/SpatialOpsConfigure.h
@@ -175,6 +177,11 @@ install( FILES
 install( FILES
   ${so_structured_headers}
   DESTINATION include/spatialops/structured
+  PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+  )
+install( FILES
+  ${so_particle_headers}
+  DESTINATION include/spatialops/particles
   PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
   )
 

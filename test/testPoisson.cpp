@@ -5,14 +5,14 @@
 using namespace std;
 
 
-#include <spatialops/FVStaggered.h>
-#include <spatialops/FVStaggeredBCTools.h>
+#include <spatialops/structured/FVStaggered.h>
+#include <spatialops/structured/FVStaggeredBCTools.h>
 #include <spatialops/LinearSystem.h>
 #include <spatialops/FieldFunctions.h>
 
-#include <Grid.h>
-#include <Functions.h>
-#include <buildOps.h>
+#include "Grid.h"
+#include "Functions.h"
+#include "buildOps.h"
 
 using namespace SpatialOps;
 using namespace structured;
