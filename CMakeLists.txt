@@ -9,19 +9,17 @@ set( PATCH_VERSION "0" )
 #---------------------------------------------------------------------
 # BEGIN USER MODIFIABLE BLOCK
 
+
+option( LINALG_TRILINOS "use Trilinos for linear algebra - also requires definition of {Trilinos_path}"  OFF )
+option( LINALG_UBLAS    "use UBLAS for linear algebra - cannot solve linear systems"  ON )
+
+
 set( CMAKE_BUILD_TYPE  # choose one type below.
   Release
 # Debug
 # RelWithDebInfo
   )
 
-# Set the path for the trilinos installation on your machine.  If
-# empty, SpatialOps will be built without trilinos (using UBLAS
-# instead) comment this out to build without trilinos
-set( Trilinos_path
-  ""
-  CACHE PATH "path to trilinos intallation"
-  )
 
 # Set the path for the Daixtrose installation on your machine
 # daixtrose is used for expression templates - we support only a few
@@ -45,6 +43,15 @@ endif()
 #=====================================================================
 
 
+if( LINALG_TRILINOS )
+# Set the path for the trilinos installation on your machine.  If
+# empty, SpatialOps will be built without trilinos (using UBLAS
+# instead) comment this out to build without trilinos
+set( Trilinos_path
+  ""
+  CACHE PATH "path to trilinos intallation"
+  )
+endif()
 
 
 #--------------------------------------
@@ -58,12 +65,9 @@ find_package( Boost REQUIRED
   COMPONENTS  # don't require any compiled boost libs - only headers.
   ) 
 set( TPL_INCLUDE_DIRS ${TPL_INCLUDE_DIRS} ${Boost_INCLUDE_DIR} )
+set( TPL_LIBRARIES ${TPL_LIBRARIES} ${Boost_LIBRARIES} )
 
-# until we get a package finder for trilinos, we will need these:
-set( LINALG_TRILINOS OFF CACHE BOOL "use Trilinos for linear algebra - also requires definition of {Trilinos_path}" )
-set( LINALG_UBLAS ON CACHE BOOL "use UBLAS for linear algebra - cannot solve linear systems" )
-
-if( Trilinos_path )
+if( LINALG_TRILINOS )
   message( STATUS "Using Trilinos for linear algebra" )
   set( Trilinos_INCLUDE_DIR ${Trilinos_path}/include )
   set( Trilinos_LIBRARY_DIR ${Trilinos_path}/lib )
@@ -90,7 +94,7 @@ else( Trilinos_path )
   message( STATUS "Using UBLAS for linear algebra" )
   set( LINALG_UBLAS ON )
   set( LINALG_TRILINOS OFF )
-endif( Trilinos_path )
+endif()
 
 # until we get a package finder for daixtrose, we will need this:
 if( Daixtrose )
@@ -145,15 +149,12 @@ add_library( ${SpatialOps_LIBRARY}
   STATIC
   ${SO_Sources}
   )
-target_link_libraries( ${SpatialOps_LIBRARY} ${TPL_LIBRARIES} )
 
 
 # this will compile all of the test cases.  Use "make test" to execute
 # them and see a summary.
 enable_testing()
 add_subdirectory( test )
-
-
 
 
 
@@ -192,6 +193,8 @@ install( TARGETS
   DESTINATION lib/spatialops/
   )
 
+
+
 # ------------------------------------------------------------------
 # configuration for projects using SpatialOps this section defines
 # variables that are used for building the configuration file for the
@@ -211,27 +214,23 @@ set( SpatialOps_INCLUDE ${CMAKE_INSTALL_PREFIX}/include )
 configure_file(
   ${PROJECT_SOURCE_DIR}/SpatialOpsConfig.cmake.in
   ${PROJECT_BINARY_DIR}/config/SpatialOpsConfig.cmake
+  @ONLY
   )
 
-# dump CMake's information about this build
-include( CMakeExportBuildSettings )
-cmake_export_build_settings( ${PROJECT_BINARY_DIR}/config/SpatialOpsBuildSettings.cmake )
-export_library_dependencies( ${PROJECT_BINARY_DIR}/config/SpatialOpsLibraryDepends.cmake )
+install( TARGETS ${SpatialOps_LIBRARY} EXPORT SpatialOps DESTINATION lib/spatialops )
+install( EXPORT SpatialOps DESTINATION lib/spatialops )
 
 # install all of these files into the spatial ops lib dir
 install( FILES
-  ${PROJECT_SOURCE_DIR}/SpatialOpsUse.cmake
   ${PROJECT_BINARY_DIR}/config/SpatialOpsConfig.cmake
-  ${PROJECT_BINARY_DIR}/config/SpatialOpsLibraryDepends.cmake
-  ${PROJECT_BINARY_DIR}/config/SpatialOpsBuildSettings.cmake
-  DESTINATION lib/spatialops/
-  )
+   DESTINATION lib/spatialops/
+   )
 #-----------------------------------------------------------------
 
 
 # Information for creating packages
-set( CPACK_PACKAGE_VENDOR "James C. Sutherland (james.sutherland@utah.edu" )
-set( CPACK_PACKAGE_VERSION_MAJOR ${MAJOR_VERSION} )
-set( CPACK_PACKAGE_VERSION_MINOR ${MINOR_VERSION} )
-set( CPACK_PACKAGE_VERSION_PATCH ${PATCH_VERSION} )
-include( CPack )
+#set( CPACK_PACKAGE_VENDOR "James C. Sutherland (james.sutherland@utah.edu" )
+#set( CPACK_PACKAGE_VERSION_MAJOR ${MAJOR_VERSION} )
+#set( CPACK_PACKAGE_VERSION_MINOR ${MINOR_VERSION} )
+#set( CPACK_PACKAGE_VERSION_PATCH ${PATCH_VERSION} )
+#include( CPack )

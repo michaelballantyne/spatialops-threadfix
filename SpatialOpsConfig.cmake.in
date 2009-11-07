@@ -11,26 +11,29 @@
 #
 # SpatialOps_LIBRARIES - Fully qualified library to link against
 #
-# SpatialOps_USE_FILE - include this file to set up builds using SpatialOps
-#
 
 set( SpatialOps_FOUND 1 )
 
 set( SpatialOps_INCLUDE_DIR "@SpatialOps_INCLUDE@" )
 set( SpatialOps_TPL_INCLUDE_DIRS "@TPL_INCLUDE_DIRS@" )
 
-set( SpatialOps_LIBRARIES "@CMAKE_INSTALL_PREFIX@/lib/spatialops/@SOInstallLib@" )
+include( @CMAKE_INSTALL_PREFIX@/lib/spatialops/SpatialOps.cmake )
 
-set( SpatialOps_BUILD_SETTINGS_FILE
-  "@CMAKE_INSTALL_PREFIX@/lib/spatialops/SpatialOpsBuildSettings.cmake"
+include_directories(
+  @TPL_INCLUDE_DIRS@
+  @SpatialOps_INCLUDE@
   )
 
-include(
-  "@CMAKE_INSTALL_PREFIX@/lib/spatialops/SpatialOpsLibraryDepends.cmake"
+set( SpatialOps_LIBRARIES
+  @CMAKE_INSTALL_PREFIX@/lib/spatialops/@SOInstallLib@
+  @TPL_LIBRARIES@
   )
 
-set( SpatialOps_USE_FILE
-  "@CMAKE_INSTALL_PREFIX@/lib/spatialops/SpatialOpsUse.cmake"
+
+message( STATUS
+  "SpatialOps include paths: "
+  ${SpatialOps_INCLUDE_DIR}
+  ${SpatialOps_TPL_INCLUDE_DIRS}
   )
 
 #set( BLAS_FOUND @BLAS_FOUND@ )
