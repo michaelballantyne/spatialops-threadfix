@@ -39,6 +39,11 @@ namespace structured{
     return n;
   }
 
+  template<> inline size_t npts<double>( size_t dir, const std::vector<int>& dim, const bool hasPlusFace )
+  {
+    return dim[dir];
+  }
+
 
   /**
    * @brief get the total number of points (including ghost cells) for

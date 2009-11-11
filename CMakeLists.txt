@@ -18,6 +18,7 @@ set( CMAKE_BUILD_TYPE  # choose one type below.
   Release
 # Debug
 # RelWithDebInfo
+CACHE STRING "set build type"
   )
 
 
@@ -149,6 +150,7 @@ add_library( ${SpatialOps_LIBRARY}
   STATIC
   ${SO_Sources}
   )
+target_link_libraries( ${SpatialOps_LIBRARY} ${TPL_LIBRARIES} )
 
 
 # this will compile all of the test cases.  Use "make test" to execute

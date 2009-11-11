@@ -7,34 +7,15 @@
 # 
 # SpatialOps_INCLUDE_DIR - include directories for SpatialOps
 # 
-# SpatialOps_TPL_INCLUDE_DIRS - include directories for TPLS that SpatialOps uses.
-#
-# SpatialOps_LIBRARIES - Fully qualified library to link against
+# Typical useage:
+#    find_package( SpatialOps )
+#    include_directories( ${SpatialOps_INCLUDE_DIR} )
+#    target_link_libraries( ... spatialops )
 #
 
-set( SpatialOps_FOUND 1 )
-
-set( SpatialOps_INCLUDE_DIR "@SpatialOps_INCLUDE@" )
-set( SpatialOps_TPL_INCLUDE_DIRS "@TPL_INCLUDE_DIRS@" )
+set( SpatialOps_INCLUDE_DIR
+  @SpatialOps_INCLUDE@
+  @TPL_INCLUDE_DIRS@
+  )
 
 include( @CMAKE_INSTALL_PREFIX@/lib/spatialops/SpatialOps.cmake )
-
-include_directories(
-  @TPL_INCLUDE_DIRS@
-  @SpatialOps_INCLUDE@
-  )
-
-set( SpatialOps_LIBRARIES
-  @CMAKE_INSTALL_PREFIX@/lib/spatialops/@SOInstallLib@
-  @TPL_LIBRARIES@
-  )
-
-
-message( STATUS
-  "SpatialOps include paths: "
-  ${SpatialOps_INCLUDE_DIR}
-  ${SpatialOps_TPL_INCLUDE_DIRS}
-  )
-
-#set( BLAS_FOUND @BLAS_FOUND@ )
-#set( LAPACK_FOUND @LAPACK_FOUND@ )
