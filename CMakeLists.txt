@@ -12,6 +12,7 @@ set( PATCH_VERSION "0" )
 
 option( LINALG_TRILINOS "use Trilinos for linear algebra - also requires definition of {Trilinos_path}"  OFF )
 option( LINALG_UBLAS    "use UBLAS for linear algebra - cannot solve linear systems"  ON )
+option( BOOST_CMAKE "Boost was built with CMake" OFF )
 
 
 set( CMAKE_BUILD_TYPE  # choose one type below.
@@ -66,14 +67,20 @@ endif()
 # resolve required libraries
 
 # setup the boost library
-set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREAD ON)
-set(Boost_ADDITIONAL_VERSIONS "1.39" "1.39.0" )
-find_package( Boost REQUIRED 
-  COMPONENTS  # don't require any compiled boost libs - only headers.
-  NO_MODULE
-  ) 
-set( TPL_INCLUDE_DIRS ${TPL_INCLUDE_DIRS} ${Boost_INCLUDE_DIR} )
+set(Boost_ADDITIONAL_VERSIONS "1.39.0" "1.40.0" "1.41.0" )
+set( boost_comps ${boost_comps} "thread;signals;program_options" )
+if( BOOST_CMAKE )
+  set(Boost_USE_STATIC ON)
+  find_package( Boost REQUIRED COMPONENTS ${boost_comps} NO_MODULE )
+else()
+  set(Boost_USE_STATIC_LIBS ON)
+  find_package( Boost REQUIRED COMPONENTS ${boost_comps} )
+endif()
+set( TPL_INCLUDE_DIRS ${TPL_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIR}
+  ${ThreadPool_DIR}/include
+  )
 set( TPL_LIBRARIES ${TPL_LIBRARIES} ${Boost_LIBRARIES} )
 
 if( LINALG_TRILINOS )
