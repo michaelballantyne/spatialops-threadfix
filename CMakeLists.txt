@@ -39,6 +39,13 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     )
 endif()
 
+
+set( SpatialOps_CONFIG_INSTALL
+  ${CMAKE_INSTALL_PREFIX}/share
+  CACHE PATH
+  "Location to install configuration files"
+  )
+
 # END USER MODIFIABLE BLOCK
 #---------------------------------------------------------------------
 #=====================================================================
@@ -64,6 +71,7 @@ set(Boost_USE_MULTITHREAD ON)
 set(Boost_ADDITIONAL_VERSIONS "1.39" "1.39.0" )
 find_package( Boost REQUIRED 
   COMPONENTS  # don't require any compiled boost libs - only headers.
+  NO_MODULE
   ) 
 set( TPL_INCLUDE_DIRS ${TPL_INCLUDE_DIRS} ${Boost_INCLUDE_DIR} )
 set( TPL_LIBRARIES ${TPL_LIBRARIES} ${Boost_LIBRARIES} )
@@ -225,7 +233,7 @@ install( EXPORT SpatialOps DESTINATION lib/spatialops )
 # install all of these files into the spatial ops lib dir
 install( FILES
   ${PROJECT_BINARY_DIR}/config/SpatialOpsConfig.cmake
-   DESTINATION lib/spatialops/
+   DESTINATION ${SpatialOps_CONFIG_INSTALL}
    )
 #-----------------------------------------------------------------
 
