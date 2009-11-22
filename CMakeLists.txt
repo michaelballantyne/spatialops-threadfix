@@ -12,7 +12,7 @@ set( PATCH_VERSION "0" )
 
 option( LINALG_TRILINOS "use Trilinos for linear algebra - also requires definition of {Trilinos_path}"  OFF )
 option( LINALG_UBLAS    "use UBLAS for linear algebra - cannot solve linear systems"  ON )
-option( BOOST_CMAKE "Boost was built with CMake" OFF )
+option( BOOST_CMAKE "Boost was built with CMake" ON )
 
 
 set( CMAKE_BUILD_TYPE  # choose one type below.
