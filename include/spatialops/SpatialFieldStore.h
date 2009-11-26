@@ -458,12 +458,20 @@ namespace SpatialOps{
   template<>
   inline void
   SpatialFieldStore<double>::restore_field( double& d )
-  {}
+  {
+#ifdef EXPRESSION_THREADS
+    boost::mutex::scoped_lock lock( get_mutex() );
+#endif
+    delete &d;
+  }
 
   template<>
   SpatFldPtr<double>
   inline SpatialFieldStore<double>::get( const double& d )
   {
+#ifdef EXPRESSION_THREADS
+    boost::mutex::scoped_lock lock( get_mutex() );
+#endif
     double* dnew = new double;
     return SpatFldPtr<double>( *dnew, true );
   }
@@ -473,6 +481,9 @@ namespace SpatialOps{
   SpatialFieldStore<double>::get( const int ntot,
                                   const std::set<int>& ghostSet )
   {
+#ifdef EXPRESSION_THREADS
+    boost::mutex::scoped_lock lock( get_mutex() );
+#endif
     double* dnew = new double;
     return SpatFldPtr<double>( *dnew, true );
   }
