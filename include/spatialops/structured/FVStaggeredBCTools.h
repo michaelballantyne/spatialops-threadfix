@@ -123,7 +123,7 @@ namespace structured{
   class BoundaryCondition
   {
     const int index_;
-    BCEval bcEval_;
+    const BCEval bcEval_;
 
   public:
 
@@ -152,7 +152,7 @@ namespace structured{
                        const bool bcPlusX,
                        const bool bcPlusY,
                        const bool bcPlusZ,
-                       BCEval bcEval );
+                       const BCEval bcEval );
 
     ~BoundaryCondition(){}
 
@@ -161,7 +161,7 @@ namespace structured{
      *
      *  @param f The field that we want to set the BC on.
      */
-    inline void operator()( FieldT& f );
+    inline void operator()( FieldT& f ) const;
   };
 
   //==================================================================
@@ -213,7 +213,7 @@ namespace structured{
             typename BCEval >
   class BoundaryConditionOp
   {
-    BCEval bcEval_;
+    const BCEval bcEval_;
     const int index_;
     double ghostCoef_;
 
@@ -243,7 +243,7 @@ namespace structured{
                          const bool bcPlusZ,
                          const IndexTriplet point,
                          const BCSide side,
-                         BCEval bceval,
+                         const BCEval bceval,
                          const OperatorDatabase& soDatabase );
 
     ~BoundaryConditionOp(){}
@@ -251,9 +251,9 @@ namespace structured{
     /**
      *  Impose the boundary condition on the supplied field.
      */
-    void operator()( SrcFieldT& f );
+    void operator()( SrcFieldT& f ) const;
 
-    void operator()( std::vector<SrcFieldT*>& f );
+    void operator()( std::vector<SrcFieldT*>& f ) const;
 
   }; // class BoundaryConditionOp
 
@@ -344,7 +344,7 @@ namespace structured{
                      const bool bcPlusX,
                      const bool bcPlusY,
                      const bool bcPlusZ,
-                     BCEval bcEval )
+                     const BCEval bcEval )
     : index_( get_index_with_ghost<FieldT>( dim, bcPlusX, bcPlusY, bcPlusZ, point ) ),
       bcEval_( bcEval )
   {}      
@@ -354,7 +354,7 @@ namespace structured{
   template< typename FieldT, typename BCEval >
   void
   BoundaryCondition<FieldT,BCEval>::
-  operator()( FieldT& f )
+  operator()( FieldT& f ) const
   {
     f[index_] = bcEval_();
   }
@@ -417,7 +417,7 @@ namespace structured{
   template< typename OpT, typename BCEval >
   void
   BoundaryConditionOp<OpT,BCEval>::
-  operator()( SrcFieldT& f )
+  operator()( SrcFieldT& f ) const
   {
     double prodsum=0.0;
     for( std::vector<IxValPair>::const_iterator ix=ixVals_.begin(); ix!=ixVals_.end(); ++ix ){
@@ -432,7 +432,7 @@ namespace structured{
   template< typename OpT, typename BCEval >
   void
   BoundaryConditionOp<OpT,BCEval>::
-  operator()( std::vector<SrcFieldT*>& f )
+  operator()( std::vector<SrcFieldT*>& f ) const
   {
     // evaluate the boundary condition values and store them.
     const std::vector<double>& bcValVec = bcEval_();
