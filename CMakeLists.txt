@@ -79,7 +79,6 @@ else()
 endif()
 set( TPL_INCLUDE_DIRS ${TPL_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIR}
-  ${ThreadPool_DIR}/include
   )
 set( TPL_LIBRARIES ${TPL_LIBRARIES} ${Boost_LIBRARIES} )
 
