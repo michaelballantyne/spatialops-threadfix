@@ -164,7 +164,7 @@ namespace SpatialOps{
    *  method:
    *
    *  \code
-   *    SpatFldPtr<FieldT> SpatialFieldStore<FieldT>::get( const FieldT& f )
+   *    SpatFldPtr<FieldT> field = SpatialFieldStore<FieldT>::get( const FieldT& f )
    *  \endcode
    *
    *  to return a field with the asme dimensions as the provided
