@@ -56,12 +56,12 @@ int main()
   // build the operator
   //
   typedef SpatialOps::Particle::CellToParticle<CellField> C2P;
-  const C2P* const c2p = new C2P( pCoord, cCoord );
+  const C2P* const c2p = new C2P( cCoord );
 
   //
   // interpolate to particles
   //
-  c2p->apply_to_field( ctmp, ptmp );
+  c2p->apply_to_field( pCoord, ctmp, ptmp );
 
   TestHelper status;
 

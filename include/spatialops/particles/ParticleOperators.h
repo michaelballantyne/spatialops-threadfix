@@ -55,13 +55,12 @@ namespace Particle{
      *  @param particleCoord Field of coordinates for all particles
      *  @param meshCoord Field of coordinates for the underlying mesh
      */
-    CellToParticle( const ParticleField& particleCoord,
-                    const CellField& meshCoord );
+    CellToParticle( const CellField& meshCoord );
 
-    void apply_to_field( const SrcFieldType&,
+    void apply_to_field( const ParticleField& particleCoord,
+                         const SrcFieldType&,
                          DestFieldType& ) const;
   private:
-    const ParticleField& pCoord_;
     const CellField& cCoord_;
     const double dx_, xo_;
   };
@@ -125,10 +124,8 @@ namespace Particle{
 
   template< typename CellField >
   CellToParticle<CellField>::
-  CellToParticle( const ParticleField& particleCoord,
-                  const CellField& meshCoord )
-    : pCoord_( particleCoord ),
-      cCoord_( meshCoord ),
+  CellToParticle( const CellField& meshCoord )
+    : cCoord_( meshCoord ),
       dx_( meshCoord[1]-meshCoord[0] ),
       xo_( meshCoord[0] )
   {
@@ -151,16 +148,17 @@ namespace Particle{
   template<typename CellField>
   void
   CellToParticle<CellField>::
-  apply_to_field( const SrcFieldType& src,
+  apply_to_field( const ParticleField& particleCoord,
+                  const SrcFieldType& src,
                   DestFieldType& dest ) const
   {
     dest = 0.0;
-    ParticleField::const_iterator ipx= pCoord_.begin();
+    ParticleField::const_iterator ipx= particleCoord.begin();
     ParticleField::iterator idest = dest.begin();
 
     const double halfwidth = 0.5*dx_;
 
-    for( ; ipx!=pCoord_.end(); ++ipx, ++idest ){
+    for( ; ipx!=particleCoord.end(); ++ipx, ++idest ){
       // given the current particle coordinate, determine what cell it
       // is located in.  Then interpolate the src values (from the
       // mesh) onto the particle using linear interpolation
