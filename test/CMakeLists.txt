@@ -52,6 +52,6 @@ target_link_libraries( particleOps ${libs} )
 add_test( particle_ops particleOps )
 
 
-# add_executable( simple_field SimpleFieldTest.cpp )
-# target_link_libraries( simple_field ${libs} )
-# add_test( simple_field simple field )
+add_executable( simple_field SimpleFieldTest.cpp )
+target_link_libraries( simple_field ${libs} )
+add_test( simple_field simple_field )

@@ -121,7 +121,7 @@ endif()
 
 
 include_directories(
-  include
+  ${PROJECT_SOURCE_DIR}/include
   ${TPL_INCLUDE_DIRS}
   )
 
