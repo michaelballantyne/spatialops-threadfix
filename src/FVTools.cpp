@@ -9,8 +9,8 @@ namespace structured{
                     const bool hasPlusXSideFaces,
                     const bool hasPlusYSideFaces,
                     const bool hasPlusZSideFaces,
-                    int& ix,
-                    std::set<int>& ghostSet )
+                    size_t& ix,
+                    std::set<size_t>& ghostSet )
   {
     const int ngxm = dim[0]>1 ? ngm : 0;
     const int ngxp = dim[0]>1 ? ngp : 0;

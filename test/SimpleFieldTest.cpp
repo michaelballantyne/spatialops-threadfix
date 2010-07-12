@@ -5,7 +5,7 @@ int main()
   const int nx=10, ny=12, nz=14;
   const int npts = nx*ny*nz;
 
-  std::set<int> ghostIndices;
+  std::set<size_t> ghostIndices;
 
   typedef SpatialOps::structured::SVolField Field;
 

@@ -106,8 +106,8 @@ namespace structured{
                           std::vector<double> & vals,
                           std::vector<int> & ixs ) const;
 
-    void get_ghost_cols( std::set<int>& ghostCols ) const;
-    void get_ghost_rows( std::set<int>& ghostRows ) const;
+    void get_ghost_cols( std::set<size_t>& ghostCols ) const;
+    void get_ghost_rows( std::set<size_t>& ghostRows ) const;
 
   private:
 
@@ -156,8 +156,8 @@ namespace structured{
                           std::vector<double> & vals,
                           std::vector<int> & ixs ) const;
 
-    void get_ghost_cols( std::set<int>& ghostCols ) const;
-    void get_ghost_rows( std::set<int>& ghostRows ) const;
+    void get_ghost_cols( std::set<size_t>& ghostCols ) const;
+    void get_ghost_rows( std::set<size_t>& ghostRows ) const;
 
   private:
 
@@ -200,8 +200,8 @@ namespace structured{
                           std::vector<double> & vals,
                           std::vector<int> & ixs ) const;
 
-    void get_ghost_cols( std::set<int>& ghostCols ) const;
-    void get_ghost_rows( std::set<int>& ghostRows ) const;
+    void get_ghost_cols( std::set<size_t>& ghostCols ) const;
+    void get_ghost_rows( std::set<size_t>& ghostRows ) const;
 
   private:
 

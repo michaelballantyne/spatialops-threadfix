@@ -207,7 +207,7 @@ namespace SpatialOps{
 
 
     inline SpatFldPtr<FieldT> get( const int ntot,
-                                   const std::set<int>& ghostSet );
+                                   const std::set<size_t>& ghostSet );
 
   private:
 
@@ -418,7 +418,7 @@ namespace SpatialOps{
   template<typename FieldT>
   SpatFldPtr<FieldT>
   SpatialFieldStore<FieldT>::get( const int ntot,
-                                  const std::set<int>& ghostSet )
+                                  const std::set<size_t>& ghostSet )
   {
 #ifdef EXPRESSION_THREADS
     boost::mutex::scoped_lock lock( get_mutex() );
@@ -479,7 +479,7 @@ namespace SpatialOps{
   template<>
   inline SpatFldPtr<double>
   SpatialFieldStore<double>::get( const int ntot,
-                                  const std::set<int>& ghostSet )
+                                  const std::set<size_t>& ghostSet )
   {
 #ifdef EXPRESSION_THREADS
     boost::mutex::scoped_lock lock( get_mutex() );

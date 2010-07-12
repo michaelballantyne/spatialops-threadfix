@@ -33,8 +33,8 @@ int main()
                   SpatialOps::structured::get_ghost_set<CellField>( dim, true, true, true ),
                   NULL );
 
-  SpatialOps::Particle::ParticleField pCoord( np, std::set<int>(), NULL );
-  SpatialOps::Particle::ParticleField ptmp  ( np, std::set<int>(), NULL );
+  SpatialOps::Particle::ParticleField pCoord( np, std::set<size_t>(), NULL );
+  SpatialOps::Particle::ParticleField ptmp  ( np, std::set<size_t>(), NULL );
                   
   //
   // set the cCoord coordinates.  These go from -0.5 to 10.5

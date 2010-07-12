@@ -103,7 +103,7 @@ namespace structured{
     /**
      *  @brief Obtain the set of column indices corresponding to ghost entries.
      */
-    void get_ghost_cols( std::set<int>& ghostCols ) const
+    void get_ghost_cols( std::set<size_t>& ghostCols ) const
     {
       ghostCols = get_ghost_set<SrcField>( dim_, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
     }
@@ -111,7 +111,7 @@ namespace structured{
     /**
      *  @brief Obtain the set of row indices corresponding to ghost entries.
      */
-    void get_ghost_rows( std::set<int>& ghostRows ) const
+    void get_ghost_rows( std::set<size_t>& ghostRows ) const
     {
       ghostRows = get_ghost_set<DestField>( dim_, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
     }

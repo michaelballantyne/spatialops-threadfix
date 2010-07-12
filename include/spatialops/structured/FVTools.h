@@ -27,19 +27,19 @@ namespace structured{
    *         have an extra point.
    */
   template<typename FieldT>
-  inline size_t npts( size_t dir, const std::vector<int>& dim, const bool hasPlusFace )
+  inline int npts( size_t dir, const std::vector<int>& dim, const bool hasPlusFace )
   {
     size_t n = dim[dir];
     if( n>1 ){
       n += FieldT::Ghost::NM + FieldT::Ghost::NP;
-      if( hasPlusFace && (dir == FieldT::Location::FaceDir::value) ){
+      if( hasPlusFace && (int(dir) == FieldT::Location::FaceDir::value) ){
         ++n;
       }
     }
     return n;
   }
 
-  template<> inline size_t npts<double>( size_t dir, const std::vector<int>& dim, const bool hasPlusFace )
+  template<> inline int npts<double>( size_t dir, const std::vector<int>& dim, const bool hasPlusFace )
   {
     return dim[dir];
   }
@@ -147,8 +147,8 @@ namespace structured{
                     const bool hasPlusXSideFaces,
                     const bool hasPlusYSideFaces,
                     const bool hasPlusZSideFaces,
-                    int& ix,
-                    std::set<int>& ghostSet );
+                    size_t& ix,
+                    std::set<size_t>& ghostSet );
 
   //==================================================================
 
@@ -175,15 +175,15 @@ namespace structured{
    * computations to have a default value for the + side information.
    */
   template<typename FieldT> 
-  const std::set<int> get_ghost_set( const std::vector<int>& dim,
-                                     const bool hasPlusXSideFaces=true,
-                                     const bool hasPlusYSideFaces=true,
-                                     const bool hasPlusZSideFaces=true )
+  const std::set<size_t> get_ghost_set( const std::vector<int>& dim,
+                                        const bool hasPlusXSideFaces=true,
+                                        const bool hasPlusYSideFaces=true,
+                                        const bool hasPlusZSideFaces=true )
   {
     typedef typename FieldT::Ghost G;
-    std::set<int> ghostSet;
+    std::set<size_t> ghostSet;
     ghostSet.clear();
-    int ix=0;
+    size_t ix=0;
     _ghost_set_( G::NM, G::NP,
                  get_nx<FieldT>(dim,hasPlusXSideFaces),
                  get_ny<FieldT>(dim,hasPlusYSideFaces),

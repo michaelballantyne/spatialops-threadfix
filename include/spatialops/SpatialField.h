@@ -108,7 +108,7 @@ namespace SpatialOps{
      *  @param npts The number of points (including ghost cells) for
      *  this field.
      *
-     *  @param ghostSet A std::set<int> containing the indices
+     *  @param ghostSet A std::set<size_t> containing the indices
      *  representing the ghost values for this field.
      *
      *  @param fieldValues  Pointer to the field values.  Behavior is
@@ -123,8 +123,8 @@ namespace SpatialOps{
      *  corruption and inadvertant deletion of the field's underlying
      *  memory.
      */
-    SpatialField( const int npts,
-                  const std::set<int>& ghostSet,
+    SpatialField( const size_t npts,
+                  const std::set<size_t>& ghostSet,
                   double * const fieldValues,
                   const StorageMode mode = InternalStorage );
 
@@ -137,7 +137,7 @@ namespace SpatialOps{
      *  @param npts : number of points (including ghost cells)
      *  @param values : array of values to overwrite with.
      */
-    inline void reset_values( const int npts,
+    inline void reset_values( const size_t npts,
                               const double* const values );
 
 
@@ -223,9 +223,9 @@ namespace SpatialOps{
      * @brief Get the total number of points (including ghost layers)
      * in this SpatialField.
      */
-    inline int get_ntotal() const{ return npts_; }
+    inline size_t get_ntotal() const{ return npts_; }
 
-    inline int get_ninterior() const{return npts_-ghostSet_.size(); }
+    inline size_t get_ninterior() const{return npts_-ghostSet_.size(); }
     /**
      *  @name
      *  Obtain a reference to the field using the [] operator.
@@ -233,8 +233,8 @@ namespace SpatialOps{
      *  performance.
      */
     //@{
-    inline       double& operator[](const int i)      { return fieldValues_[i]; }
-    inline const double& operator[](const int i) const{ return fieldValues_[i]; }
+    inline       double& operator[](const size_t i)      { return fieldValues_[i]; }
+    inline const double& operator[](const size_t i) const{ return fieldValues_[i]; }
     //@}
 
 
@@ -296,8 +296,8 @@ namespace SpatialOps{
   private:
 
     VecOps linAlg_;
-    const int npts_;
-    const std::set<int> ghostSet_;
+    const size_t npts_;
+    const std::set<size_t> ghostSet_;
     const StorageMode storageMode_;
     double * const fieldValues_;
     VecType & vec_;
@@ -372,9 +372,9 @@ namespace SpatialOps{
   interior_begin()
   {
     iterator iter = begin();
-    int ix=0;
-    std::set<int>::const_iterator ig = ghostSet_.begin();
-    const std::set<int>::const_iterator ige = ghostSet_.end();
+    size_t ix=0;
+    std::set<size_t>::const_iterator ig = ghostSet_.begin();
+    const std::set<size_t>::const_iterator ige = ghostSet_.end();
     while( *ig == ix  &&  ig!=ige ){ ++ig; ++ix; ++iter; }
     return interior_iterator(iter,ix,ig,ige);
   }
@@ -385,9 +385,9 @@ namespace SpatialOps{
   interior_begin() const
   {
     const_iterator iter = begin();
-    int ix=0;
-    std::set<int>::const_iterator ig = ghostSet_.begin();
-    const std::set<int>::const_iterator ige = ghostSet_.end();
+    size_t ix=0;
+    std::set<size_t>::const_iterator ig = ghostSet_.begin();
+    const std::set<size_t>::const_iterator ige = ghostSet_.end();
     while( *ig == ix && ig!=ige ){ ++ig; ++ix; ++iter; }
     return const_interior_iterator(iter,ix,ig,ige);
   }
@@ -398,9 +398,9 @@ namespace SpatialOps{
   interior_end()
   {
     iterator iter = end();
-    std::set<int>::const_iterator ig = ghostSet_.end();
-    const std::set<int>::const_iterator ige = ghostSet_.begin();
-    int ix=npts_;
+    std::set<size_t>::const_iterator ig = ghostSet_.end();
+    const std::set<size_t>::const_iterator ige = ghostSet_.begin();
+    size_t ix=npts_;
     if( ig != ige ){
       --ig;
       while( *ig == ix && ig!=ige ){ --ig; --ix; --iter; }
@@ -414,9 +414,9 @@ namespace SpatialOps{
   interior_end() const
   {
     const_iterator iter = end();
-    std::set<int>::const_iterator ig = ghostSet_.end();
-    const std::set<int>::const_iterator ige = ghostSet_.begin();
-    int ix=npts_;
+    std::set<size_t>::const_iterator ig = ghostSet_.end();
+    const std::set<size_t>::const_iterator ige = ghostSet_.begin();
+    size_t ix=npts_;
     if( ig != ige ){
       --ig;
       while( *ig == ix && ig!=ige ){ --ig; --ix; --iter; }
@@ -476,8 +476,8 @@ namespace SpatialOps{
   //------------------------------------------------------------------
   template< class VecOps, typename FieldLocation, typename GhostTraits >
   SpatialField<VecOps,FieldLocation,GhostTraits>::
-  SpatialField( const int npts,
-                const std::set<int>& ghostSet,
+  SpatialField( const size_t npts,
+                const std::set<size_t>& ghostSet,
                 double * const fieldValues,
                 const StorageMode mode )
     : npts_( npts ),
@@ -519,14 +519,14 @@ namespace SpatialOps{
   template< class VecOps, typename FieldLocation, typename GhostTraits >
   void
   SpatialField<VecOps,FieldLocation,GhostTraits>::
-  reset_values( const int npts,
+  reset_values( const size_t npts,
                 const double* const values )
   {
     assert( npts == npts_ );
     if( NULL == values )
-      for( int i=0; i<npts; ++i ) fieldValues_[i] = 0.0;
+      for( size_t i=0; i<npts; ++i ) fieldValues_[i] = 0.0;
     else
-      for( int i=0; i<npts; ++i ) fieldValues_[i] = values[i];
+      for( size_t i=0; i<npts; ++i ) fieldValues_[i] = values[i];
   }
   //------------------------------------------------------------------
 # ifdef HAVE_DAIXTROSE
@@ -535,7 +535,7 @@ namespace SpatialOps{
   SpatialField<VecOps,FieldLocation,GhostTraits>&
   SpatialField<VecOps,FieldLocation,GhostTraits>::operator=(const Daixt::Expr<T>&E)
   {
-    for( int i=0; i<npts_; ++i )
+    for( size_t i=0; i<npts_; ++i )
       fieldValues_[i] = Evaluate(E);
     return *this;
   }
@@ -617,7 +617,7 @@ namespace SpatialOps{
   SpatialField<VecOps,FieldLocation,GhostTraits>::
   operator=(const double a){
     double* f = fieldValues_;
-    for( int i=0; i<npts_; ++i ) *f++ = a;
+    for( size_t i=0; i<npts_; ++i ) *f++ = a;
     return *this;
   } 
   //------------------------------------------------------------------
@@ -627,7 +627,7 @@ namespace SpatialOps{
   operator+=(const double a)
   {
     double* f = fieldValues_;
-    for( int i=0; i<npts_; ++i ) *f++ += a;
+    for( size_t i=0; i<npts_; ++i ) *f++ += a;
     return *this;
   }
   //------------------------------------------------------------------
@@ -637,7 +637,7 @@ namespace SpatialOps{
   operator-=(const double a)
   {
     double* f = fieldValues_;
-    for( int i=0; i<npts_; ++i ) *f++ -= a;
+    for( size_t i=0; i<npts_; ++i ) *f++ -= a;
     return *this;
   }
   //------------------------------------------------------------------
@@ -647,7 +647,7 @@ namespace SpatialOps{
   operator*=(const double a)
   {
     double* f = fieldValues_;
-    for( int i=0; i<npts_; ++i ) *f++ *= a;
+    for( size_t i=0; i<npts_; ++i ) *f++ *= a;
     return *this;
   }
   //------------------------------------------------------------------
@@ -678,7 +678,7 @@ namespace SpatialOps{
     if( includeGhost ){
       fout << "function x = load_" << prefix << "()" << std::endl
            << "x = zeros(" << get_ntotal() << ",1);" << std::endl;
-      int ix=1;
+      size_t ix=1;
       fout << std::scientific;
       fout.precision( 14 );
       for( const_iterator i=begin(); i!=end(); ++i, ++ix ){
@@ -688,7 +688,7 @@ namespace SpatialOps{
     else{
       fout << "function x = load_" << prefix << "()" << std::endl
            << "x = zeros(" << get_ninterior() << ",1);" << std::endl;
-      int ix=1;
+      size_t ix=1;
       //    fout.setf(std::ios_base::scientific);
       fout << std::scientific;
       fout.precision( 14 );
@@ -704,7 +704,7 @@ namespace SpatialOps{
   bool
   SpatialField<VecOps,FieldLocation,GhostTraits>::operator==(const SpatialField& f) const
   {
-    for( int i=0; i<npts_; ++i ){
+    for( size_t i=0; i<npts_; ++i ){
       if( f[i] != fieldValues_[i] ) return false; 
     }
     return true;

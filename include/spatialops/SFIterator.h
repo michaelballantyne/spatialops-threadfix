@@ -30,9 +30,9 @@ public:
   typedef          std::forward_iterator_tag                              iterator_category;
 
 
-  InteriorIterator( ForwardIterator first, const int ix,
-                    std::set<int>::const_iterator ighost,
-                    const std::set<int>::const_iterator ighostend );
+  InteriorIterator( ForwardIterator first, const size_t ix,
+                    std::set<size_t>::const_iterator ighost,
+                    const std::set<size_t>::const_iterator ighostend );
   InteriorIterator( const self& other );
 
   // required operators for a forward iterator: ++ (prefix and postfix), *, ==, !=
@@ -51,9 +51,9 @@ public:
 
 private:
   ForwardIterator current_;
-  int ix_;
-  std::set<int>::const_iterator ig_;
-  std::set<int>::const_iterator ige_; // Can't declare const because of the assignment operator.
+  size_t ix_;
+  std::set<size_t>::const_iterator ig_;
+  std::set<size_t>::const_iterator ige_; // Can't declare const because of the assignment operator.
 };
 
 
@@ -84,9 +84,9 @@ public:
   typedef          std::forward_iterator_tag                              iterator_category;
 
 
-  GhostIterator( ForwardIterator first, const int ix,
-                 std::set<int>::const_iterator ig,
-                 const std::set<int>::const_iterator ige );
+  GhostIterator( ForwardIterator first, const size_t ix,
+                 std::set<size_t>::const_iterator ig,
+                 const std::set<size_t>::const_iterator ige );
   GhostIterator( const GhostIterator& other );
 
   // required operators for a forward iterator: ++ (prefix and postfix), *, ==, !=
@@ -104,9 +104,9 @@ public:
 
 private:
   ForwardIterator current_;
-  int ix_;
-  std::set<int>::const_iterator ig_;
-  const std::set<int>::const_iterator ige_;
+  size_t ix_;
+  std::set<size_t>::const_iterator ig_;
+  const std::set<size_t>::const_iterator ige_;
 };
 
 
@@ -114,9 +114,9 @@ private:
 template<typename ForwardIterator>
 InteriorIterator<ForwardIterator>::
 InteriorIterator( ForwardIterator fi,
-                  const int ix,
-                  std::set<int>::const_iterator ig,
-                  const std::set<int>::const_iterator ige )
+                  const size_t ix,
+                  std::set<size_t>::const_iterator ig,
+                  const std::set<size_t>::const_iterator ige )
   : current_ ( fi ),
     ix_      ( ix ),
     ig_      ( ig ),
@@ -207,9 +207,9 @@ operator==(const self& other) const
 template<typename ForwardIterator>
 GhostIterator<ForwardIterator>::
 GhostIterator( ForwardIterator fi,
-               const int ix,
-               std::set<int>::const_iterator ig,
-               const std::set<int>::const_iterator ige )
+               const size_t ix,
+               std::set<size_t>::const_iterator ig,
+               const std::set<size_t>::const_iterator ige )
   : current_ ( fi ),
     ix_      ( ix ),
     ig_      ( ig ),

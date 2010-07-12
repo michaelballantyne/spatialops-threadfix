@@ -37,7 +37,7 @@ void manual_filter( const std::vector<int>& dim,
 
   fbar = 0.0;
 
-  for( int ipt=0; ipt<f.get_ntotal(); ++ipt ){
+  for( size_t ipt=0; ipt<f.get_ntotal(); ++ipt ){
 
     const IndexTriplet ijk = flat2ijk<SVolField>::value( dim, ipt, true, true, true );
 

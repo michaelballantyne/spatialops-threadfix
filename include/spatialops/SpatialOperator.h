@@ -356,7 +356,7 @@ namespace SpatialOps{
   private:
 
     const int nrows_, ncols_;
-    std::set<int> ghostCols_, ghostRows_;
+    std::set<size_t> ghostCols_, ghostRows_;
     LinAlg linAlg_;
     const int nNonZero_;
     MatType & mat_;

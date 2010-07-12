@@ -185,7 +185,7 @@ get_nrows() const
 
 void
 OneDimInterpolantAssembler::
-get_ghost_cols( std::set<int>& ghostCols ) const
+get_ghost_cols( std::set<size_t>& ghostCols ) const
 {
   ghostCols.clear();
   ghostCols.insert( 0 );
@@ -196,7 +196,7 @@ get_ghost_cols( std::set<int>& ghostCols ) const
 
 void
 OneDimInterpolantAssembler::
-get_ghost_rows( std::set<int>& ghostRows ) const
+get_ghost_rows( std::set<size_t>& ghostRows ) const
 {
   ghostRows.clear();
   ghostRows.insert( 0 );
@@ -311,7 +311,7 @@ get_nrows() const
 
 void
 OneDimGradientAssembler::
-get_ghost_cols( std::set<int>& ghostCols ) const
+get_ghost_cols( std::set<size_t>& ghostCols ) const
 {
   ghostCols.clear();
   ghostCols.insert( 0 );
@@ -322,7 +322,7 @@ get_ghost_cols( std::set<int>& ghostCols ) const
 
 void
 OneDimGradientAssembler::
-get_ghost_rows( std::set<int>& ghostRows ) const
+get_ghost_rows( std::set<size_t>& ghostRows ) const
 {
   ghostRows.clear();
   ghostRows.insert( 0 );
@@ -407,7 +407,7 @@ get_row_entries( const int irow,
 
 void
 OneDimDivergenceAssembler::
-get_ghost_cols( std::set<int>& ghostCols ) const
+get_ghost_cols( std::set<size_t>& ghostCols ) const
 {
   ghostCols.clear();
   ghostCols.insert( 0 );
@@ -418,7 +418,7 @@ get_ghost_cols( std::set<int>& ghostCols ) const
 
 void
 OneDimDivergenceAssembler::
-get_ghost_rows( std::set<int>& ghostRows ) const
+get_ghost_rows( std::set<size_t>& ghostRows ) const
 {
   ghostRows.clear();
   ghostRows.insert( 0 );

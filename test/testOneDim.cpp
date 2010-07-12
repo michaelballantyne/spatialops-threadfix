@@ -134,8 +134,8 @@ void calculate_fields( const int npts,
   vector<int> dim(3,1); dim[0]=npts;
   const int ntotSVol  = get_n_tot<SVolField  >(dim,true,true,true);
   const int ntotSSurf = get_n_tot<SSurfXField>(dim,true,true,true);
-  const set<int> ghostSVol  = get_ghost_set<SVolField  >(dim,true,true,true);
-  const set<int> ghostSSurf = get_ghost_set<SSurfXField>(dim,true,true,true);
+  const set<size_t> ghostSVol  = get_ghost_set<SVolField  >(dim,true,true,true);
+  const set<size_t> ghostSSurf = get_ghost_set<SSurfXField>(dim,true,true,true);
 
   SVolField          f( ntotSVol,  ghostSVol,  NULL );
   SSurfXField  fxexact( ntotSSurf, ghostSSurf, NULL );
