@@ -6,6 +6,7 @@
 #include <spatialops/SpatialField.h>
 #include <spatialops/SpatialOperator.h>
 
+#include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/FVStaggeredIndexHelper.h>
 
 
