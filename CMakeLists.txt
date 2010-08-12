@@ -32,6 +32,13 @@ set( Daixtrose
   CACHE PATH "path to daixtrose installation (optional)"
   )
 
+# default to release builds
+if( NOT CMAKE_BUILD_TYPE )
+  set( CMAKE_BUILD_TYPE "Release" CACHE STRING
+    "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel."
+    FORCE )
+endif( NOT CMAKE_BUILD_TYPE )
+
 # Set the location for the installation.
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   set (CMAKE_INSTALL_PREFIX
