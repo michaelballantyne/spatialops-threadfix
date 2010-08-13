@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.6)
-project( SpatialOps CXX C Fortran )
+project( SpatialOps CXX C )
 
 set( MAJOR_VERSION "0" )
 set( MINOR_VERSION "1" )
@@ -60,13 +60,13 @@ set( SpatialOps_CONFIG_INSTALL
 
 
 if( LINALG_TRILINOS )
-# Set the path for the trilinos installation on your machine.  If
-# empty, SpatialOps will be built without trilinos (using UBLAS
-# instead) comment this out to build without trilinos
-set( Trilinos_path
-  ""
-  CACHE PATH "path to trilinos intallation"
-  )
+  # Set the path for the trilinos installation on your machine.  If
+  # empty, SpatialOps will be built without trilinos (using UBLAS
+  # instead) comment this out to build without trilinos
+  set( Trilinos_path
+    ""
+    CACHE PATH "path to trilinos intallation"
+    )
 endif()
 
 
@@ -103,6 +103,7 @@ if( LINALG_TRILINOS )
   set( TPL_LIBRARIES ${TPL_LIBRARIES} ${Trilinos_libs} )
 
   # find BLAS and LAPACK (required for trilinos)
+  enable_language( Fortran )
   find_package( BLAS REQUIRED )
   find_package( LAPACK REQUIRED )
   set( TPL_LIBRARIES ${TPL_LIBRARIES}
