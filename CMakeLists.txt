@@ -14,15 +14,6 @@ option( LINALG_TRILINOS "use Trilinos for linear algebra - also requires definit
 option( LINALG_UBLAS    "use UBLAS for linear algebra - cannot solve linear systems"  ON )
 option( BOOST_CMAKE "Boost was built with CMake" ON )
 
-
-set( CMAKE_BUILD_TYPE  # choose one type below.
-  Release
-# Debug
-# RelWithDebInfo
-CACHE STRING "set build type"
-  )
-
-
 # Set the path for the Daixtrose installation on your machine
 # daixtrose is used for expression templates - we support only a few
 # thus far.  If empty then SpatialOps will be built without Daixtrose
