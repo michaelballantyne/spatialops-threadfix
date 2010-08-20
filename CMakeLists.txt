@@ -66,19 +66,22 @@ endif()
 
 # setup the boost library
 set(Boost_USE_MULTITHREAD ON)
-set(Boost_ADDITIONAL_VERSIONS "1.39.0" "1.40.0" "1.41.0" )
-set( boost_comps ${boost_comps} "thread;signals;program_options" )
+#set( boost_comps ${boost_comps} "program_options" )
 if( BOOST_CMAKE )
   set(Boost_USE_STATIC ON)
   find_package( Boost REQUIRED COMPONENTS ${boost_comps} NO_MODULE )
 else()
+  set(Boost_ADDITIONAL_VERSIONS "1.39.0" "1.40.0" "1.41.0" )
   set(Boost_USE_STATIC_LIBS ON)
   find_package( Boost REQUIRED COMPONENTS ${boost_comps} )
 endif()
 set( TPL_INCLUDE_DIRS ${TPL_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIR}
   )
-set( TPL_LIBRARIES ${TPL_LIBRARIES} ${Boost_LIBRARIES} )
+if( boost_comps )
+  set( TPL_LIBRARIES ${TPL_LIBRARIES} ${Boost_LIBRARIES} )
+  message( STATUS ${Boost_LIBRARIES} )
+endif( boost_comps )
 
 if( LINALG_TRILINOS )
   message( STATUS "Using Trilinos for linear algebra" )
