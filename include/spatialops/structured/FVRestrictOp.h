@@ -209,21 +209,20 @@ namespace SpatialOps{
   {
     const structured::IndexTriplet ijkDest( structured::flat2ijk<FieldT>::value( dimDest_, irow, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ ) );
 
-    const int ngM = FieldT::Ghost::NM; // number of ghost points
-    const int ngP = FieldT::Ghost::NP; // number of ghost points
+    const int ng = FieldT::Ghost::NGHOST; // number of ghost points
 
     const int nsrc  = dimSrc_ [activeDim_];
     const int ndest = dimDest_[activeDim_];
-    const int idest = ijkDest [activeDim_] - ngM;
+    const int idest = ijkDest [activeDim_] - ng;
 
     structured::IndexTriplet ijkSrc = ijkDest;
 
-    if( ijkDest[activeDim_] < ngM )
+    if( ijkDest[activeDim_] < ng )
       ijkSrc[activeDim_] = 0;
-    else if( ijkDest[activeDim_]-ngM >= dimDest_[activeDim_] )
-      ijkSrc[activeDim_] = dimSrc_[activeDim_]+ngP;
+    else if( ijkDest[activeDim_]-ng >= dimDest_[activeDim_] )
+      ijkSrc[activeDim_] = dimSrc_[activeDim_]+ng;
     else
-      ijkSrc[activeDim_] = int( float(idest*nsrc)/float(ndest) + ngM );
+      ijkSrc[activeDim_] = int( float(idest*nsrc)/float(ndest) + ng );
 
     const int index = structured::ijk2flat<FieldT>::value( dimSrc_, ijkSrc, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
 

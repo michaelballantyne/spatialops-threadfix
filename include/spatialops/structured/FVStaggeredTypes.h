@@ -43,8 +43,8 @@ namespace structured{
   struct ZSurfY{ typedef YDIR  FaceDir;  typedef ZDIR  StagLoc; };
   struct ZSurfZ{ typedef ZDIR  FaceDir;  typedef ZDIR  StagLoc; };
 
-  struct DefaultGhost{ enum{ NM=1, NP=1 }; };
-  struct NoGhost     { enum{ NM=0, NP=0 }; };
+  struct DefaultGhost{ enum{ NGHOST=1 }; };
+  struct NoGhost     { enum{ NGHOST=0 }; };
 
 
 //-- Field Types --//

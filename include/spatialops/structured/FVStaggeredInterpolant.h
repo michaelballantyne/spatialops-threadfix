@@ -223,13 +223,13 @@ namespace structured{
   {
     if( dim_[0]==1 ) return;
 
-    const int ghostDiff = XVolField::Ghost::NM - SSurfXField::Ghost::NM;
+    const int ghostDiff = XVolField::Ghost::NGHOST - SSurfXField::Ghost::NGHOST;
     int icol = irow + ghostDiff;
     if( dim_[1]>1 ){
       icol += ghostDiff * get_nx<XVolField>(dim_,hasPlusXSideFaces_);
     }
     if( dim_[2]>1 ){
-      icol += (XVolField::Ghost::NM-SSurfXField::Ghost::NM)
+      icol += (XVolField::Ghost::NGHOST-SSurfXField::Ghost::NGHOST)
         * get_nx<XVolField>(dim_,hasPlusXSideFaces_)
         * get_ny<XVolField>(dim_,hasPlusYSideFaces_);
     }
@@ -252,7 +252,7 @@ namespace structured{
   {
     if( dim_[1]==1 ) return;
 
-    const int ghostDiff = YVolField::Ghost::NM - SSurfYField::Ghost::NM;
+    const int ghostDiff = YVolField::Ghost::NGHOST - SSurfYField::Ghost::NGHOST;
     int icol = irow + ghostDiff;
     if( dim_[0]>1 ){
       icol += ghostDiff
@@ -282,7 +282,7 @@ namespace structured{
   {
     if( dim_[2]==1 ) return;
 
-    const int ghostDiff = ZVolField::Ghost::NM - SSurfZField::Ghost::NM;
+    const int ghostDiff = ZVolField::Ghost::NGHOST - SSurfZField::Ghost::NGHOST;
     int icol = irow + ghostDiff;
     if( dim_[0]>1 ){
       icol += ghostDiff * get_nx<ZVolField>(dim_,hasPlusXSideFaces_);

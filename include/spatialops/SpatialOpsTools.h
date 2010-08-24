@@ -13,7 +13,7 @@ namespace SpatialOps{
 
 
   template<typename FieldT>
-  inline size_t nghost(){ return FieldT::Ghost::NM + FieldT::Ghost::NP; }
+  inline size_t nghost(){ return 2*FieldT::Ghost::NGHOST; }
 
   template<>
   inline size_t nghost<double>(){ return 0; }

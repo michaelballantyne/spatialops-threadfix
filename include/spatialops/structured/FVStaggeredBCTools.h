@@ -465,9 +465,9 @@ namespace structured{
                             const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ, 
                             IndexTriplet index )
   {
-    if( dim[0]>1 )  index.i += FieldT::Ghost::NM;
-    if( dim[1]>1 )  index.j += FieldT::Ghost::NM;
-    if( dim[2]>1 )  index.k += FieldT::Ghost::NM;
+    if( dim[0]>1 )  index.i += FieldT::Ghost::NGHOST;
+    if( dim[1]>1 )  index.j += FieldT::Ghost::NGHOST;
+    if( dim[2]>1 )  index.k += FieldT::Ghost::NGHOST;
     return ijk2flat<FieldT>::value( dim, index, bcFlagX, bcFlagY, bcFlagZ );
   }
 

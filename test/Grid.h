@@ -211,9 +211,9 @@ Grid::Grid( const std::vector<int>& dim,
     const int jhi = get_ny<SVolField>(dim,bcPlusFlag[1]);
     const int khi = get_nz<SVolField>(dim,bcPlusFlag[2]);
 
-    const int ngxm = dim[0]>1 ? SVolField::Ghost::NM : 0;
-    const int ngym = dim[1]>1 ? SVolField::Ghost::NM : 0;
-    const int ngzm = dim[2]>1 ? SVolField::Ghost::NM : 0;
+    const int ngxm = dim[0]>1 ? SVolField::Ghost::NGHOST : 0;
+    const int ngym = dim[1]>1 ? SVolField::Ghost::NGHOST : 0;
+    const int ngzm = dim[2]>1 ? SVolField::Ghost::NGHOST : 0;
 
     // set the mesh for the scalar cell
     for( int k=0; k<khi; ++k ){
@@ -234,9 +234,9 @@ Grid::Grid( const std::vector<int>& dim,
 
 
   if( dim[0]>1 ){
-    const int ngxm = dim[0]>1 ? XVolField::Ghost::NM : 0;
-    const int ngym = dim[1]>1 ? XVolField::Ghost::NM : 0;
-    const int ngzm = dim[2]>1 ? XVolField::Ghost::NM : 0;
+    const int ngxm = dim[0]>1 ? XVolField::Ghost::NGHOST : 0;
+    const int ngym = dim[1]>1 ? XVolField::Ghost::NGHOST : 0;
+    const int ngzm = dim[2]>1 ? XVolField::Ghost::NGHOST : 0;
 
     XVolField::iterator ixvx=xvx_.begin();
     XVolField::iterator ixvy=xvy_.begin();
@@ -262,9 +262,9 @@ Grid::Grid( const std::vector<int>& dim,
   }
 
   if( dim[1]>1 ){
-    const int ngxm = dim[0]>1 ? YVolField::Ghost::NM : 0;
-    const int ngym = dim[1]>1 ? YVolField::Ghost::NM : 0;
-    const int ngzm = dim[2]>1 ? YVolField::Ghost::NM : 0;
+    const int ngxm = dim[0]>1 ? YVolField::Ghost::NGHOST : 0;
+    const int ngym = dim[1]>1 ? YVolField::Ghost::NGHOST : 0;
+    const int ngzm = dim[2]>1 ? YVolField::Ghost::NGHOST : 0;
 
     YVolField::iterator iyvx=yvx_.begin();
     YVolField::iterator iyvy=yvy_.begin();
@@ -290,9 +290,9 @@ Grid::Grid( const std::vector<int>& dim,
   }
 
   if( dim[2]>1 ){
-    const int ngxm = dim[0]>1 ? ZVolField::Ghost::NM : 0;
-    const int ngym = dim[1]>1 ? ZVolField::Ghost::NM : 0;
-    const int ngzm = dim[2]>1 ? ZVolField::Ghost::NM : 0;
+    const int ngxm = dim[0]>1 ? ZVolField::Ghost::NGHOST : 0;
+    const int ngym = dim[1]>1 ? ZVolField::Ghost::NGHOST : 0;
+    const int ngzm = dim[2]>1 ? ZVolField::Ghost::NGHOST : 0;
 
     ZVolField::iterator izvx=zvx_.begin();
     ZVolField::iterator izvy=zvy_.begin();

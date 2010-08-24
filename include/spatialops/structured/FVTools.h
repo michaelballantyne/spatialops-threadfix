@@ -31,7 +31,7 @@ namespace structured{
   {
     size_t n = dim[dir];
     if( n>1 ){
-      n += FieldT::Ghost::NM + FieldT::Ghost::NP;
+      n += 2*FieldT::Ghost::NGHOST;
       if( hasPlusFace && (int(dir) == FieldT::Location::FaceDir::value) ){
         ++n;
       }
@@ -141,7 +141,7 @@ namespace structured{
   //====================================================================
 
   // intended for local use only.
-  void _ghost_set_( const int ngm, const int ngp,
+  void _ghost_set_( const int ng,
                     const int nxt, const int nyt, const int nzt,
                     const std::vector<int>& dim,
                     const bool hasPlusXSideFaces,
@@ -184,7 +184,7 @@ namespace structured{
     std::set<size_t> ghostSet;
     ghostSet.clear();
     size_t ix=0;
-    _ghost_set_( G::NM, G::NP,
+    _ghost_set_( G::NGHOST,
                  get_nx<FieldT>(dim,hasPlusXSideFaces),
                  get_ny<FieldT>(dim,hasPlusYSideFaces),
                  get_nz<FieldT>(dim,hasPlusZSideFaces),

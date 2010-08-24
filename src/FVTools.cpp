@@ -3,7 +3,7 @@
 namespace SpatialOps{
 namespace structured{
 
-  void _ghost_set_( const int ngm, const int ngp,
+  void _ghost_set_( const int ng,
                     const int nxt, const int nyt, const int nzt,
                     const std::vector<int>& dim,
                     const bool hasPlusXSideFaces,
@@ -12,12 +12,12 @@ namespace structured{
                     size_t& ix,
                     std::set<size_t>& ghostSet )
   {
-    const int ngxm = dim[0]>1 ? ngm : 0;
-    const int ngxp = dim[0]>1 ? ngp : 0;
-    const int ngym = dim[1]>1 ? ngm : 0;
-    const int ngyp = dim[1]>1 ? ngp : 0;
-    const int ngzm = dim[2]>1 ? ngm : 0;
-    const int ngzp = dim[2]>1 ? ngp : 0;
+    const int ngxm = dim[0]>1 ? ng : 0;
+    const int ngxp = dim[0]>1 ? ng : 0;
+    const int ngym = dim[1]>1 ? ng : 0;
+    const int ngyp = dim[1]>1 ? ng : 0;
+    const int ngzm = dim[2]>1 ? ng : 0;
+    const int ngzp = dim[2]>1 ? ng : 0;
 
     // -z side ghost layer
     if( dim[2]>1 ){

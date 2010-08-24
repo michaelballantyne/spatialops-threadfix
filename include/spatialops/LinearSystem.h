@@ -482,9 +482,9 @@ LHS::add_op_contribution( const OpType & op,
       // now determine the column index for insertion of this value
       typedef typename OpType::SrcFieldType SrcField;
       t = structured::flat2ijk<SrcField>::value( extent_, colindex );
-      if( nx>1 ) t.i -= SrcField::Ghost::NM;
-      if( ny>1 ) t.j -= SrcField::Ghost::NM;
-      if( nz>1 ) t.k -= SrcField::Ghost::NM;
+      if( nx>1 ) t.i -= SrcField::Ghost::NGHOST;
+      if( ny>1 ) t.j -= SrcField::Ghost::NGHOST;
+      if( nz>1 ) t.k -= SrcField::Ghost::NGHOST;
 
       const int iflat = t.k*(nx*ny) + t.j*(nx) + t.i;
       rowIWork_.push_back( iflat );

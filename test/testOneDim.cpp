@@ -118,7 +118,7 @@ void calculate_fields( const int npts,
   typedef OneDimGradientAssembler     GradAssembler;
   typedef OneDimDivergenceAssembler   DivAssembler;
 
-  const int nGhost = SVolField::Ghost::NM;
+  const int nGhost = SVolField::Ghost::NGHOST;
 
   InterpAssembler Rxa(order,nGhost,xv,xs);
   GradAssembler   Gxa(order,nGhost,xv,xs);

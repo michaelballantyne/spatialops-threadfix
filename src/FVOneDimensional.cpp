@@ -249,10 +249,10 @@ OneDimGradientAssembler( const int polynomialOrder,
     lagrange_( get_x_src(nGhost,xsrc,xdest) ),
     nx_( xsrc.size()>xdest.size() ? xdest.size() : xsrc.size() )
 {
-  BOOST_STATIC_ASSERT(   SVolField::Ghost::NM == 1 );
-  BOOST_STATIC_ASSERT(   SVolField::Ghost::NP == 1 );
-  BOOST_STATIC_ASSERT( SSurfXField::Ghost::NM == 1 );
-  BOOST_STATIC_ASSERT( SSurfXField::Ghost::NP == 1 );
+  BOOST_STATIC_ASSERT(   SVolField::Ghost::NGHOST == 1 );
+  BOOST_STATIC_ASSERT(   SVolField::Ghost::NGHOST == 1 );
+  BOOST_STATIC_ASSERT( SSurfXField::Ghost::NGHOST == 1 );
+  BOOST_STATIC_ASSERT( SSurfXField::Ghost::NGHOST == 1 );
 
   // determine how many nonzeros we have.  In general we require one
   // more point than the polynomial order.  In the case of a uniform

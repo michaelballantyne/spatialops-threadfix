@@ -16,7 +16,7 @@ namespace Particle{
    *  mesh fields.
    */
 
-  struct ParticleGhostTraits{ enum{ NM=0, NP=0 }; };
+  struct ParticleGhostTraits{ enum{ NGHOST=0 }; };
 
   struct ParticleFieldTraits{};
 

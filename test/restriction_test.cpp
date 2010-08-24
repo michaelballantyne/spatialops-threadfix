@@ -43,16 +43,16 @@ void build_mesh( const vector<int>& dim, SVolField& x, SVolField& y, SVolField& 
   const int jhi = get_ny<SVolField>(dim,true);
   const int khi = get_nz<SVolField>(dim,true);
 
-  const int ngxm = dim[0]>1 ? SVolField::Ghost::NM : 0;
-  const int ngym = dim[1]>1 ? SVolField::Ghost::NM : 0;
-  const int ngzm = dim[2]>1 ? SVolField::Ghost::NM : 0;
+  const int ngx = dim[0]>1 ? SVolField::Ghost::NGHOST : 0;
+  const int ngy = dim[1]>1 ? SVolField::Ghost::NGHOST : 0;
+  const int ngz = dim[2]>1 ? SVolField::Ghost::NGHOST : 0;
 
   for( int k=0; k<khi; ++k ){
-    const double z = spacing[2]*(double(k)+0.5-ngzm);
+    const double z = spacing[2]*(double(k)+0.5-ngz);
     for( int j=0; j<jhi; ++j ){
-      const double y = spacing[1]*(double(j)+0.5-ngym);
+      const double y = spacing[1]*(double(j)+0.5-ngy);
       for( int i=0; i<ihi; ++i ){
-        const double x = spacing[0]*(double(i)+0.5-ngxm);
+        const double x = spacing[0]*(double(i)+0.5-ngx);
         *isvx = x;   *isvy = y;   *isvz = z;
         ++isvx;      ++isvy;      ++isvz;
       }
