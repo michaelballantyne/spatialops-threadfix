@@ -36,10 +36,10 @@
 \cite_engine basic
 \use_bibtopic false
 \paperorientation portrait
-\leftmargin 2cm
-\topmargin 2cm
-\rightmargin 2cm
-\bottommargin 2cm
+\leftmargin 0.5in
+\topmargin 0.7in
+\rightmargin 0.5in
+\bottommargin 0.7in
 \secnumdepth 3
 \tocdepth 3
 \paragraph_separation indent
@@ -119,7 +119,7 @@ Consider the continuity and momentum equations:
  where 
 \begin_inset Formula \begin{eqnarray}
 \mathbf{F} & = & -(\rho\mathbf{u}\otimes\mathbf{u})-\boldsymbol{\tau},\label{eq:Fvec}\\
-\mathbf{f} & = & \rho\mathbf{g}.\end{eqnarray}
+\mathbf{f} & = & \rho\mathbf{g}.\label{eq:fvec}\end{eqnarray}
 
 \end_inset
 
@@ -890,12 +890,6 @@ reference "eq:momVecEqn"
 
 \end_inset
 
- with 
-\begin_inset Formula \begin{equation}
-\mathbf{F}=-\oint_{\mathsf{s}_{\vec{x}}}\rho\mathbf{u}\otimes\mathbf{u}\cdot\mathbf{n}_{\vec{x}}\,\mathrm{d}\mathsf{s}_{\vec{x}}-\oint_{\mathsf{s}_{\vec{x}}}\boldsymbol{\tau}\cdot\mathbf{n}_{\vec{x}}\,\mathrm{d}\mathsf{s}_{\vec{x}}+\int_{\mathsf{v}_{\vec{x}}}\rho\mathbf{g}\mathrm{d}\mathsf{v}_{\vec{x}}.\label{eq:FV_Fvec}\end{equation}
-
-\end_inset
-
  Here the 
 \begin_inset Formula $\mathsf{s},$
 \end_inset
@@ -933,8 +927,9 @@ reference "eq:contFV"
 \end_inset
 
  we obtain 
-\begin_inset Formula \begin{equation}
-\VolInt{\del{^{2}\rho}{t^{2}}}=-\SurfInt{\del{\rho\mathbf{u}}t}=-\VolInt{\nabla\cdot\del{\rho\mathbf{u}}t}.\label{eq:FV-pre-poisson}\end{equation}
+\begin_inset Formula \begin{eqnarray}
+\VolInt{\del{^{2}\rho}{t^{2}}} & = & -\SurfInt{\del{\rho\mathbf{u}}t}\label{eq:FV-pre-poisson-surf}\\
+ & = & -\VolInt{\nabla\cdot\del{\rho\mathbf{u}}t}.\label{eq:FV-pre-poisson-vol}\end{eqnarray}
 
 \end_inset
 
@@ -962,12 +957,25 @@ reference "eq:zmomFV"
  since they apply on different volumes than 
 \begin_inset CommandInset ref
 LatexCommand eqref
-reference "eq:FV-pre-poisson"
+reference "eq:FV-pre-poisson-surf"
 
 \end_inset
 
  does.
- 
+ Thus, the discrete form of 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:FV-pre-poisson-surf"
+
+\end_inset
+
+ is given as 
+\begin_inset Formula \begin{equation}
+\Op I{s_{v}}{s_{v}}\left(\del{^{2}\rho}{t^{2}}\right)=-\Op I{s_{x}}{s_{v}}\Op R{x_{v}}{s_{z}}\left(\del{\rho u}t\right)-\Op I{s_{y}}{s_{v}}\Op R{y_{v}}{s_{z}}\left(\del{\rho v}t\right)-\Op I{s_{z}}{s_{v}}\Op R{z_{v}}{s_{z}}\left(\del{\rho w}t\right)\label{eq:pre-poisson-surf-disc}\end{equation}
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsection
@@ -1052,12 +1060,12 @@ reference "eq:ymomFV-alt"
 
  as 
 \begin_inset Formula \begin{eqnarray}
-\Op I{x_{v}}{x_{v}}\frac{\partial\rho u}{\partial t} & = & \Op I{x_{x}}{x_{v}}\left(F_{xx}\right)+\Op I{x_{y}}{x_{v}}\left(F_{yx}\right)+\Op I{x_{z}}{x_{v}}\left(F_{zx}\right)-\Op I{x_{v}}{x_{v}}\Op R{s_{x}}{x_{v}}\Op G{s_{v}}{s_{x}}\left(p\right),\\
- & = & \Op I{x_{x}}{x_{v}}\left(F_{xx}\right)+\Op I{x_{y}}{x_{v}}\left(F_{yx}\right)+\Op I{x_{z}}{x_{v}}\left(F_{zx}\right)-\Op I{x_{v}}{x_{v}}\Op R{s_{v}}{x_{x}}\left(p\right),\\
-\left[I^{y_{\mathsf{v}}}\right]\frac{\partial\rho v}{\partial t} & = & \Op I{y_{x}}{y_{v}}\left(F_{xy}\right)+\Op I{y_{y}}{y_{v}}\left(F_{yy}\right)+\Op I{y_{z}}{y_{v}}\left(F_{zy}\right)-\Op I{y_{v}}{y_{v}}\Op R{s_{y}}{y_{v}}\Op G{s_{v}}{s_{y}}\left(p\right),\\
- & = & \Op I{y_{x}}{y_{v}}\left(F_{xy}\right)+\Op I{y_{y}}{y_{v}}\left(F_{yy}\right)+\Op I{y_{z}}{y_{v}}\left(F_{zy}\right)-\Op I{y_{y}}{y_{v}}\Op R{s_{v}}{y_{y}}\left(p\right),\\
-\left[I^{z_{\mathsf{v}}}\right]\frac{\partial\rho w}{\partial t} & = & \Op I{z_{x}}{z_{v}}\left(F_{xz}\right)+\Op I{z_{y}}{z_{v}}\left(F_{yz}\right)+\Op I{z_{z}}{z_{v}}\left(F_{zz}\right)-\Op I{z_{v}}{z_{v}}\Op R{s_{z}}{z_{v}}\Op G{s_{v}}{s_{z}}\left(p\right),\\
- & = & \Op I{z_{x}}{z_{v}}\left(F_{xz}\right)+\Op I{z_{y}}{z_{v}}\left(F_{yz}\right)+\Op I{z_{z}}{z_{v}}\left(F_{zz}\right)-\Op I{z_{z}}{z_{v}}\Op R{s_{v}}{z_{z}}\left(p\right).\end{eqnarray}
+\Op I{x_{v}}{x_{v}}\frac{\partial\rho u}{\partial t} & = & \Op I{x_{x}}{x_{v}}\left(F_{xx}\right)+\Op I{x_{y}}{x_{v}}\left(F_{yx}\right)+\Op I{x_{z}}{x_{v}}\left(F_{zx}\right)-\Op I{x_{v}}{x_{v}}\Op R{s_{x}}{x_{v}}\Op G{s_{v}}{s_{x}}\left(p\right),\label{eq:xmom-disc-1}\\
+ & = & \Op I{x_{x}}{x_{v}}\left(F_{xx}\right)+\Op I{x_{y}}{x_{v}}\left(F_{yx}\right)+\Op I{x_{z}}{x_{v}}\left(F_{zx}\right)-\Op I{x_{v}}{x_{v}}\Op R{s_{v}}{x_{x}}\left(p\right),\label{eq:xmom-disc-2}\\
+\left[I^{y_{\mathsf{v}}}\right]\frac{\partial\rho v}{\partial t} & = & \Op I{y_{x}}{y_{v}}\left(F_{xy}\right)+\Op I{y_{y}}{y_{v}}\left(F_{yy}\right)+\Op I{y_{z}}{y_{v}}\left(F_{zy}\right)-\Op I{y_{v}}{y_{v}}\Op R{s_{y}}{y_{v}}\Op G{s_{v}}{s_{y}}\left(p\right),\label{eq:ymom-disc-1}\\
+ & = & \Op I{y_{x}}{y_{v}}\left(F_{xy}\right)+\Op I{y_{y}}{y_{v}}\left(F_{yy}\right)+\Op I{y_{z}}{y_{v}}\left(F_{zy}\right)-\Op I{y_{y}}{y_{v}}\Op R{s_{v}}{y_{y}}\left(p\right),\label{eq:ymom-disc-2}\\
+\left[I^{z_{\mathsf{v}}}\right]\frac{\partial\rho w}{\partial t} & = & \Op I{z_{x}}{z_{v}}\left(F_{xz}\right)+\Op I{z_{y}}{z_{v}}\left(F_{yz}\right)+\Op I{z_{z}}{z_{v}}\left(F_{zz}\right)-\Op I{z_{v}}{z_{v}}\Op R{s_{z}}{z_{v}}\Op G{s_{v}}{s_{z}}\left(p\right),\label{eq:zmom-disc-1}\\
+ & = & \Op I{z_{x}}{z_{v}}\left(F_{xz}\right)+\Op I{z_{y}}{z_{v}}\left(F_{yz}\right)+\Op I{z_{z}}{z_{v}}\left(F_{zz}\right)-\Op I{z_{z}}{z_{v}}\Op R{s_{v}}{z_{z}}\left(p\right).\label{eq:zmom-disc-2}\end{eqnarray}
 
 \end_inset
 
@@ -1262,164 +1270,224 @@ reference "eqn:genPoisson"
 \end_layout
 
 \begin_layout Enumerate
-Define the discrete gradient operator 
-\begin_inset Formula $\left[G^{s_{\mathsf{s}}\vec{x}_{\mathsf{v}}}\right]$
-\end_inset
-
- such that 
-\begin_inset Formula $\left[G^{s_{\mathsf{s}}\vec{x}_{\mathsf{v}}}\right]\left(p\right)$
-\end_inset
-
- produces the gradient at scalar cell 
-\emph on
-faces
-\emph default
-.
- Then one must interpolate back to cell centers for the contribution to
- the momentum equations.
- However, there would be no need to interpolate when forming the LHS for
- the Poisson equation.
- In this case, the discrete form of 
-\begin_inset CommandInset ref
-LatexCommand eqref
-reference "eq:FVPoisson"
-
-\end_inset
-
- is 
-\begin_inset Formula \begin{equation}
-\left[I^{s_{\mathsf{s}}s_{\mathsf{v}}}\right]\left[G^{s_{\mathsf{s}}\vec{x}_{\mathsf{v}}}\right]\left(p\right)=\left[I^{s_{\mathsf{v}}}\right]\left(\frac{\partial^{2}\rho}{\partial t^{2}}\right)+\left[I^{s_{\mathsf{s}}s_{\mathsf{v}}}\right]\left[R^{\vec{x}\mathsf{_{V}}s_{\mathsf{s}}}\right]\left(\mathbf{F}\right).\label{eq:discPoisson_1}\end{equation}
-
-\end_inset
-
-
-\end_layout
-
-\begin_deeper
-\begin_layout Enumerate
-In the case where we have a uniform mesh, 
-\begin_inset Formula $\left[R^{\vec{x}\mathsf{_{V}}s_{\mathsf{s}}}\right]$
-\end_inset
-
- is the identity operator.
-\end_layout
-
-\end_deeper
-\begin_layout Enumerate
-Define a discrete gradient operator 
-\begin_inset Formula $\left[G^{s_{\mathsf{v}}\vec{x}_{\mathsf{s}}}\right]$
-\end_inset
-
- that produces 
 \begin_inset Formula $\nabla p$
 \end_inset
 
- at cell 
-\emph on
-centers
-\emph default
-.
- Then we need not interpolate 
-\begin_inset Formula $\nabla p$
+ is calculated at scalar faces so that 
+\begin_inset Formula $\del px$
 \end_inset
 
- to obtain its contribution to the momentum equations, but we do need to
- interpolate 
-\begin_inset Formula $\nabla p$
-\end_inset
-
- to cell faces for use in 
-\begin_inset CommandInset ref
-LatexCommand eqref
-reference "eq:FVPoisson"
-
+ is given discretely as 
+\begin_inset Formula $\Op G{s_{v}}{s_{x}}\left(p\right)$
 \end_inset
 
 .
- In this case, the discrete form of 
+ Then the term in the momentum equation is 
+\begin_inset Formula $\Op I{x_{v}}{x_{v}}\Op R{s_{x}}{x_{v}}\Op G{s_{v}}{s_{x}}\left(p\right).$
+\end_inset
+
+ Substituting 
 \begin_inset CommandInset ref
 LatexCommand eqref
-reference "eq:FVPoisson"
-
-\end_inset
-
- is 
-\begin_inset Formula \begin{equation}
-\left[I^{s_{\mathsf{s}}s_{\mathsf{v}}}\right]\left[R^{\vec{x}_{\mathsf{v}}s_{\mathsf{s}}}\right]\left[G^{s_{\mathsf{v}}\vec{x}_{\mathsf{s}}}\right]\left(p\right)=\left[I^{s_{\mathsf{v}}}\right]\left(\frac{\partial^{2}\rho}{\partial t^{2}}\right)+\left[I^{s_{\mathsf{s}}s_{\mathsf{v}}}\right]\left[R^{\vec{x}\mathsf{_{V}}s_{\mathsf{s}}}\right]\left(\mathbf{F}\right).\label{eq:discPoisson_2}\end{equation}
-
-\end_inset
-
-
-\end_layout
-
-\begin_deeper
-\begin_layout Enumerate
-As previously, in the case of a uniform mesh, 
-\begin_inset Formula $\left[R^{\vec{x}_{\mathsf{v}}s_{\mathsf{s}}}\right]$
-\end_inset
-
- is the identity operator.
-\end_layout
-
-\end_deeper
-\begin_layout Enumerate
-If we treat the pressure term in the momentum equations as a surface integral
- as in 
-\begin_inset CommandInset ref
-LatexCommand eqref
-reference "eq:FVPoisson_alt"
-
-\end_inset
-
- then we have 
-\begin_inset Formula \begin{equation}
-\left[I^{s_{\mathsf{s}}s_{\mathsf{v}}}\right]\left[R^{\vec{x}_{\mathsf{v}}s_{\mathsf{s}}}\right]\left[I^{\vec{x}_{\mathsf{s}}\vec{x}_{\mathsf{v}}}\right]\left[R^{p}\right]\left(p\right)=\left[I^{s_{\mathsf{v}}}\right]\left(\frac{\partial^{2}\rho}{\partial t^{2}}\right)+\left[I^{s_{\mathsf{s}}s_{\mathsf{v}}}\right]\left[R^{\vec{x}\mathsf{_{V}}s_{\mathsf{s}}}\right]\left(\mathbf{F}\right),\label{eq:discPoisson_3}\end{equation}
-
-\end_inset
-
-
-\begin_inset Formula \[
-\left[\left[I^{s_{\mathsf{s}}s_{\mathsf{v}}}\right]\left[R^{x_{\mathsf{v}}s_{\mathsf{s}}}\right]\left[I^{x_{\mathsf{s}}x_{\mathsf{v}}}\right]\left[R^{p_{x}}\right]+\left[I^{s_{\mathsf{s}}s_{\mathsf{v}}}\right]\left[R^{y_{\mathsf{v}}s_{\mathsf{s}}}\right]\left[I^{y_{\mathsf{s}}y_{\mathsf{v}}}\right]\left[R^{p_{y}}\right]+\left[I^{s_{\mathsf{s}}s_{\mathsf{v}}}\right]\left[R^{z_{\mathsf{v}}s_{\mathsf{s}}}\right]\left[I^{z_{s}z_{\mathsf{v}}}\right]\left[R^{p_{x}}\right]\right]\left(p\right)\]
-
-\end_inset
-
-where 
-\begin_inset Formula $\left[R^{p}\right]$
-\end_inset
-
- interpolates the pressure from where it is stored to the momentum cell
- surfaces.
- If pressure is stored at scalar cell centers, then 
-\begin_inset Formula $\left[R^{p}\right]=\left[R^{s_{\mathsf{v}}\vec{x}_{\mathsf{s}}}\right].$
-\end_inset
-
- 
-\end_layout
-
-\begin_layout Standard
-Equations 
-\begin_inset CommandInset ref
-LatexCommand eqref
-reference "eq:discPoisson_1"
+reference "eq:xmom-disc-1"
 
 \end_inset
 
 , 
 \begin_inset CommandInset ref
 LatexCommand eqref
-reference "eq:discPoisson_2"
+reference "eq:ymom-disc-1"
 
 \end_inset
 
  and 
 \begin_inset CommandInset ref
 LatexCommand eqref
-reference "eq:discPoisson_3"
+reference "eq:zmom-disc-1"
 
 \end_inset
 
- are Poisson-type equations to solve for 
+ into 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:pre-poisson-surf-disc"
+
+\end_inset
+
+, we find 
+\begin_inset Formula \begin{eqnarray}
+\Op I{s_{v}}{s_{v}}\left(\del{^{2}\rho}{t^{2}}\right) & = & -\Op I{s_{x}}{s_{v}}\Op R{x_{v}}{s_{x}}\Op I{x_{x}}{x_{v}}\left(F_{xx}\right)-\Op I{s_{x}}{s_{v}}\Op R{x_{v}}{s_{x}}\Op I{x_{y}}{x_{v}}\left(F_{yx}\right)-\Op I{s_{x}}{s_{v}}\Op R{x_{v}}{s_{x}}\Op I{x_{z}}{x_{v}}\left(F_{zx}\right)\nonumber \\
+ &  & +\Op I{s_{x}}{s_{v}}\Op R{x_{v}}{s_{x}}\Op I{x_{v}}{x_{v}}\Op R{s_{x}}{x_{v}}\Op G{s_{v}}{s_{x}}\left(p\right),\nonumber \\
+ &  & -\Op I{s_{y}}{s_{v}}\Op R{y_{v}}{s_{y}}\Op I{y_{x}}{y_{v}}\left(F_{xy}\right)-\Op I{s_{y}}{s_{v}}\Op R{y_{v}}{s_{y}}\Op I{y_{y}}{y_{v}}\left(F_{yy}\right)-\Op I{s_{y}}{s_{v}}\Op R{y_{v}}{s_{y}}\Op I{y_{z}}{y_{v}}\left(F_{zy}\right)\nonumber \\
+ &  & +\Op I{s_{y}}{s_{v}}\Op R{y_{v}}{s_{y}}\Op I{y_{v}}{y_{v}}\Op R{s_{y}}{y_{v}}\Op G{s_{v}}{s_{y}}\left(p\right)\nonumber \\
+ &  & -\Op I{s_{z}}{s_{v}}\Op R{z_{v}}{s_{z}}\Op I{z_{x}}{z_{v}}\left(F_{xz}\right)-\Op I{s_{z}}{s_{v}}\Op R{z_{v}}{s_{z}}\Op I{z_{y}}{z_{v}}\left(F_{yz}\right)-\Op I{s_{z}}{s_{v}}\Op R{z_{v}}{s_{z}}\Op I{z_{z}}{z_{v}}\left(F_{zz}\right)\nonumber \\
+ &  & +\Op I{s_{z}}{s_{v}}\Op R{z_{v}}{s_{z}}\Op I{z_{v}}{z_{v}}\Op R{s_{z}}{z_{v}}\Op G{s_{v}}{s_{z}}\left(p\right).\label{eq:pre-poisson-option1-disc}\end{eqnarray}
+
+\end_inset
+
+Combining the terms on 
 \begin_inset Formula $p$
+\end_inset
+
+ and rearranging,
+\begin_inset Formula \begin{eqnarray}
+\left[\begin{array}{c}
+\Op I{s_{x}}{s_{v}}\Op R{x_{v}}{s_{z}}\Op I{x_{v}}{x_{v}}\Op R{s_{x}}{x_{v}}\Op G{s_{v}}{s_{x}}+\\
+\Op I{s_{y}}{s_{v}}\Op R{y_{v}}{s_{z}}\Op I{y_{v}}{y_{v}}\Op R{s_{y}}{y_{v}}\Op G{s_{v}}{s_{y}}+\\
+\Op I{s_{z}}{s_{v}}\Op R{z_{v}}{s_{z}}\Op I{z_{v}}{z_{v}}\Op R{s_{z}}{z_{v}}\Op G{s_{v}}{s_{z}}\end{array}\right]\left(p\right) & = & \Op I{s_{v}}{s_{v}}\left(\del{^{2}\rho}{t^{2}}\right)\nonumber \\
+ & + & \Op I{s_{x}}{s_{v}}\Op R{x_{v}}{s_{x}}\Op I{x_{x}}{x_{v}}\left(F_{xx}\right)+\Op I{s_{x}}{s_{v}}\Op R{x_{v}}{s_{x}}\Op I{x_{y}}{x_{v}}\left(F_{yx}\right)+\Op I{s_{x}}{s_{v}}\Op R{x_{v}}{s_{x}}\Op I{x_{z}}{x_{v}}\left(F_{zx}\right)\nonumber \\
+ & + & \Op I{s_{y}}{s_{v}}\Op R{y_{v}}{s_{y}}\Op I{y_{x}}{y_{v}}\left(F_{xy}\right)+\Op I{s_{y}}{s_{v}}\Op R{y_{v}}{s_{y}}\Op I{y_{y}}{y_{v}}\left(F_{yy}\right)+\Op I{s_{y}}{s_{v}}\Op R{y_{v}}{s_{y}}\Op I{y_{z}}{y_{v}}\left(F_{zy}\right)\nonumber \\
+ & + & \Op I{s_{z}}{s_{v}}\Op R{z_{v}}{s_{z}}\Op I{z_{x}}{z_{v}}\left(F_{xz}\right)+\Op I{s_{z}}{s_{v}}\Op R{z_{v}}{s_{z}}\Op I{z_{y}}{z_{v}}\left(F_{yz}\right)+\Op I{s_{z}}{s_{v}}\Op R{z_{v}}{s_{z}}\Op I{z_{z}}{z_{v}}\left(F_{zz}\right)\label{eq:posson-option1-disc}\end{eqnarray}
+
+\end_inset
+
+Note that in the case where we have a uniform mesh, 
+\begin_inset Formula $\Op R{s_{x}}{x_{v}},$
+\end_inset
+
+ 
+\begin_inset Formula $\Op R{x_{v}}{s_{x}}$
+\end_inset
+
+ and their corresponding 
+\begin_inset Formula $y$
+\end_inset
+
+ and 
+\begin_inset Formula $z$
+\end_inset
+
+ operators are all identity operators.
+ For stretched meshes, however, these are not identity operators and will
+ affect ghost cell availability.
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $\nabla p$
+\end_inset
+
+ is calculated at momentum volumes so that 
+\begin_inset Formula $\del px$
+\end_inset
+
+ is given discretely as 
+\begin_inset Formula $\Op G{s_{v}}{x_{v}}\left(p\right).$
+\end_inset
+
+ The pressure term in the momentum equations is thus 
+\begin_inset Formula $\Op I{x_{v}}{x_{v}}\Op G{s_{v}}{x_{v}}\left(p\right).$
+\end_inset
+
+ Substituting 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:xmom-disc-1"
+
+\end_inset
+
+, 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:ymom-disc-1"
+
+\end_inset
+
+ and 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:zmom-disc-1"
+
+\end_inset
+
+ into 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:pre-poisson-surf-disc"
+
+\end_inset
+
+, we find
+\begin_inset Formula \begin{eqnarray}
+\Op I{s_{v}}{s_{v}}\left(\del{^{2}\rho}{t^{2}}\right) & = & -\Op I{s_{x}}{s_{v}}\Op R{x_{v}}{s_{x}}\Op I{x_{x}}{x_{v}}\left(F_{xx}\right)-\Op I{s_{x}}{s_{v}}\Op R{x_{v}}{s_{x}}\Op I{x_{y}}{x_{v}}\left(F_{yx}\right)-\Op I{s_{x}}{s_{v}}\Op R{x_{v}}{s_{x}}\Op I{x_{z}}{x_{v}}\left(F_{zx}\right)\nonumber \\
+ &  & +\Op I{s_{x}}{s_{v}}\Op R{x_{v}}{s_{x}}\Op I{x_{v}}{x_{v}}\Op G{s_{v}}{x_{v}}\left(p\right)\nonumber \\
+ &  & -\Op I{s_{y}}{s_{v}}\Op R{y_{v}}{s_{y}}\Op I{y_{x}}{y_{v}}\left(F_{xy}\right)-\Op I{s_{y}}{s_{v}}\Op R{y_{v}}{s_{y}}\Op I{y_{y}}{y_{v}}\left(F_{yy}\right)-\Op I{s_{y}}{s_{v}}\Op R{y_{v}}{s_{y}}\Op I{y_{z}}{y_{v}}\left(F_{zy}\right)\nonumber \\
+ &  & +\Op I{s_{y}}{s_{v}}\Op R{y_{v}}{s_{y}}\Op I{y_{v}}{y_{v}}\Op G{s_{v}}{y_{v}}\left(p\right)\nonumber \\
+ &  & -\Op I{s_{z}}{s_{v}}\Op R{z_{v}}{s_{z}}\Op I{z_{x}}{z_{v}}\left(F_{xz}\right)-\Op I{s_{z}}{s_{v}}\Op R{z_{v}}{s_{z}}\Op I{z_{y}}{z_{v}}\left(F_{yz}\right)-\Op I{s_{z}}{s_{v}}\Op R{z_{v}}{s_{z}}\Op I{z_{z}}{z_{v}}\left(F_{zz}\right)\nonumber \\
+ &  & +\Op I{s_{z}}{s_{v}}\Op R{z_{v}}{s_{z}}\Op I{z_{v}}{z_{v}}\Op G{s_{v}}{z_{v}}\left(p\right).\label{eq:pre-poisson-option2-disc}\end{eqnarray}
+
+\end_inset
+
+ Note that this is very similar to 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:pre-poisson-option1-disc"
+
+\end_inset
+
+ but the pressure gradient is calculated differently, eliminating the requiremen
+t for an extra interpolant.
+ 
+\begin_inset Formula \begin{eqnarray}
+\left[\begin{array}{c}
+\Op I{s_{x}}{s_{v}}\Op R{x_{v}}{s_{x}}\Op I{x_{v}}{x_{v}}\Op G{s_{v}}{x_{v}}+\\
+\Op I{s_{y}}{s_{v}}\Op R{y_{v}}{s_{y}}\Op I{y_{v}}{y_{v}}\Op G{s_{v}}{y_{v}}+\\
+\Op I{s_{z}}{s_{v}}\Op R{z_{v}}{s_{z}}\Op I{z_{v}}{z_{v}}\Op G{s_{v}}{z_{v}}\end{array}\right]\left(p\right) & = & \Op I{s_{v}}{s_{v}}\left(\del{^{2}\rho}{t^{2}}\right)\nonumber \\
+ & + & \Op I{s_{x}}{s_{v}}\Op R{x_{v}}{s_{x}}\Op I{x_{x}}{x_{v}}\left(F_{xx}\right)+\Op I{s_{x}}{s_{v}}\Op R{x_{v}}{s_{x}}\Op I{x_{y}}{x_{v}}\left(F_{yx}\right)+\Op I{s_{x}}{s_{v}}\Op R{x_{v}}{s_{x}}\Op I{x_{z}}{x_{v}}\left(F_{zx}\right)\nonumber \\
+ & + & \Op I{s_{y}}{s_{v}}\Op R{y_{v}}{s_{y}}\Op I{y_{x}}{y_{v}}\left(F_{xy}\right)+\Op I{s_{y}}{s_{v}}\Op R{y_{v}}{s_{y}}\Op I{y_{y}}{y_{v}}\left(F_{yy}\right)+\Op I{s_{y}}{s_{v}}\Op R{y_{v}}{s_{y}}\Op I{y_{z}}{y_{v}}\left(F_{zy}\right)\nonumber \\
+ & + & \Op I{s_{z}}{s_{v}}\Op R{z_{v}}{s_{z}}\Op I{z_{x}}{z_{v}}\left(F_{xz}\right)+\Op I{s_{z}}{s_{v}}\Op R{z_{v}}{s_{z}}\Op I{z_{y}}{z_{v}}\left(F_{yz}\right)+\Op I{s_{z}}{s_{v}}\Op R{z_{v}}{s_{z}}\Op I{z_{z}}{z_{v}}\left(F_{zz}\right)\label{eq:poisson-option2-disc}\end{eqnarray}
+
+\end_inset
+
+As previously, in the case of a uniform mesh, 
+\begin_inset Formula $\Op R{x_{v}}{s_{x}}$
+\end_inset
+
+ and the corresponding 
+\begin_inset Formula $y$
+\end_inset
+
+ and 
+\begin_inset Formula $z$
+\end_inset
+
+ direction operators are identity operators.
+\end_layout
+
+\begin_layout Enumerate
+If we treat the pressure term in the momentum equations as a surface integral
+ as in 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:xmom-disc-2"
+
+\end_inset
+
+, 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:ymom-disc-2"
+
+\end_inset
+
+ and 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:zmom-disc-2"
+
+\end_inset
+
+, then we have variants of 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:posson-option1-disc"
+
+\end_inset
+
+ and 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:poisson-option2-disc"
+
 \end_inset
 
 .
