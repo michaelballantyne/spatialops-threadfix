@@ -17,6 +17,9 @@ namespace structured{
    *  @class IndexHelper
    *  @author James C. Sutherland
    *
+   *  Note that this class will only work properly with the field
+   *  types defined in FVStaggeredTypes.h.
+   *
    *  @todo Check on all implementations of shift_dest_index for consistency w.r.t. ghosting.
    *  @todo Document all of this so it is comprehensible.
    */
@@ -133,8 +136,6 @@ namespace structured{
 
 
   //==================================================================
-
-
 
   template<typename SrcFieldT, typename DestFieldT>
   void
