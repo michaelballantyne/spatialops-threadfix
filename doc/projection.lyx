@@ -1173,26 +1173,6 @@ JCS: need to carefully go through the ghost information.
  
 \end_layout
 
-\begin_layout Standard
-The stress for the 
-\begin_inset Formula $y$
-\end_inset
-
-- and 
-\begin_inset Formula $z$
-\end_inset
-
--momentum equations is obtained analogously.
- Note that in forming the stress tensor we chose to take gradients of the
- velocities at their natural locations.
- This requires a special gradient operator.
- There are alternatives such as 
-\begin_inset Formula $\left[G^{y_{\mathsf{v}}x_{\mathsf{s}}}\right]\left(v^{y_{\mathsf{v}}}\right)\approx\left[G^{x_{\mathsf{v}}x_{\mathsf{s}_{}}}\right]\left[R^{y_{\mathsf{v}}x_{\mathsf{v}}}\right]\left(v^{y_{\mathsf{v}}}\right).$
-\end_inset
-
-
-\end_layout
-
 \begin_layout Paragraph
 The advecting velocities.
 \end_layout
