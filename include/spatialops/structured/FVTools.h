@@ -180,11 +180,10 @@ namespace structured{
                                         const bool hasPlusYSideFaces=true,
                                         const bool hasPlusZSideFaces=true )
   {
-    typedef typename FieldT::Ghost G;
     std::set<size_t> ghostSet;
     ghostSet.clear();
     size_t ix=0;
-    _ghost_set_( G::NGHOST,
+    _ghost_set_( FieldT::Ghost::NGHOST,
                  get_nx<FieldT>(dim,hasPlusXSideFaces),
                  get_ny<FieldT>(dim,hasPlusYSideFaces),
                  get_nz<FieldT>(dim,hasPlusZSideFaces),
