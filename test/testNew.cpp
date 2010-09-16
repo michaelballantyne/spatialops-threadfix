@@ -1064,6 +1064,6 @@ int main()
 
   test_ops();
   test_poisson( grid, dim, bcFlag );
-  //jcs not working since change:  test_bc( grid, bcFlag );
+  test_bc( grid, bcFlag );
 
 }
