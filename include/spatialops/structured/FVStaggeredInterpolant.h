@@ -208,18 +208,12 @@ namespace structured{
       vals.assign( num_nonzeros(), val );
     }
   }
+
   //------------------------------------------------------------------
-
   // specializations for XVolField->SSurfXField
-  template<>
-  inline unsigned int
-  LinearInterpolantAssembler<XVolField,SSurfXField>::
-  num_nonzeros() const{ return 1; }
+  template<> inline unsigned int LinearInterpolantAssembler<XVolField,SSurfXField>::num_nonzeros() const{ return 1; }
 
-  template<>
-  inline void
-  LinearInterpolantAssembler<XVolField,SSurfXField>::
-  get_row_entries( const int irow, std::vector<double> & vals, std::vector<int> & ixs ) const
+  template<> inline void LinearInterpolantAssembler<XVolField,SSurfXField>::get_row_entries( const int irow, std::vector<double> & vals, std::vector<int> & ixs ) const
   {
     if( dim_[0]==1 ) return;
 
@@ -238,17 +232,10 @@ namespace structured{
   }
 
   //------------------------------------------------------------------
-
   // specializations for YVolField->SSurfYField
-  template<>
-  inline unsigned int
-  LinearInterpolantAssembler<YVolField,SSurfYField>::
-  num_nonzeros() const{ return 1; }
+  template<> inline unsigned int LinearInterpolantAssembler<YVolField,SSurfYField>::num_nonzeros() const{ return 1; }
 
-  template<>
-  inline void
-  LinearInterpolantAssembler<YVolField,SSurfYField>::
-  get_row_entries( const int irow, std::vector<double> & vals, std::vector<int> & ixs ) const
+  template<> inline void LinearInterpolantAssembler<YVolField,SSurfYField>::get_row_entries( const int irow, std::vector<double> & vals, std::vector<int> & ixs ) const
   {
     if( dim_[1]==1 ) return;
 
@@ -268,17 +255,10 @@ namespace structured{
   }
 
   //------------------------------------------------------------------
-
   // specializations for ZVolField->SSurfZField
-  template<>
-  inline unsigned int
-  LinearInterpolantAssembler<ZVolField,SSurfZField>::
-  num_nonzeros() const{ return 1; }
+  template<> inline unsigned int LinearInterpolantAssembler<ZVolField,SSurfZField>::num_nonzeros() const{ return 1; }
 
-  template<>
-  inline void
-  LinearInterpolantAssembler<ZVolField,SSurfZField>::
-  get_row_entries( const int irow, std::vector<double> & vals, std::vector<int> & ixs ) const
+  template<> inline void LinearInterpolantAssembler<ZVolField,SSurfZField>::get_row_entries( const int irow, std::vector<double> & vals, std::vector<int> & ixs ) const
   {
     if( dim_[2]==1 ) return;
 
@@ -297,64 +277,22 @@ namespace structured{
   }
 
   //--------------------------------------------------------------------
-
-  // specializations for SVolField -> XSurfXField
-  template<>
-  inline unsigned int
-  LinearInterpolantAssembler<SVolField,XSurfXField>::
-  num_nonzeros() const{ return 1; }
-
-  // specializations for SVolField -> XSurfYField
-  template<>
-  inline unsigned int
-  LinearInterpolantAssembler<SVolField,XSurfYField>::
-  num_nonzeros() const{ return 4; }
-
-  // specializations for SVolField -> XSurfZField
-  template<>
-  inline unsigned int
-  LinearInterpolantAssembler<SVolField,XSurfZField>::
-  num_nonzeros() const{ return 4; }
+  // specializations for SVolField -> XSurf fields
+  template<> inline unsigned int LinearInterpolantAssembler<SVolField,XSurfXField>::num_nonzeros() const{ return 1; }
+  template<> inline unsigned int LinearInterpolantAssembler<SVolField,XSurfYField>::num_nonzeros() const{ return 4; }
+  template<> inline unsigned int LinearInterpolantAssembler<SVolField,XSurfZField>::num_nonzeros() const{ return 4; }
 
   //------------------------------------------------------------------
-
-  // specializations for SVolField -> YSurfXField
-  template<>
-  inline unsigned int
-  LinearInterpolantAssembler<SVolField,YSurfXField>::
-  num_nonzeros() const{ return 4; }
-
-  // specializations for SVolField -> YSurfYField
-  template<>
-  inline unsigned int
-  LinearInterpolantAssembler<SVolField,YSurfYField>::
-  num_nonzeros() const{ return 1; }
-
-  // specializations for SVolField -> YSurfZField
-  template<>
-  inline unsigned int
-  LinearInterpolantAssembler<SVolField,YSurfZField>::
-  num_nonzeros() const{ return 4; }
+  // specializations for SVolField -> YSurf fields
+  template<> inline unsigned int LinearInterpolantAssembler<SVolField,YSurfXField>::num_nonzeros() const{ return 4; }
+  template<> inline unsigned int LinearInterpolantAssembler<SVolField,YSurfYField>::num_nonzeros() const{ return 1; }
+  template<> inline unsigned int LinearInterpolantAssembler<SVolField,YSurfZField>::num_nonzeros() const{ return 4; }
 
   //------------------------------------------------------------------
-
-  // specializations for SVolField -> ZSurfXField
-  template<>
-  inline unsigned int
-  LinearInterpolantAssembler<SVolField,ZSurfXField>::
-  num_nonzeros() const{ return 4; }
-
-  // specializations for SVolField -> ZSurfYField
-  template<>
-  inline unsigned int
-  LinearInterpolantAssembler<SVolField,ZSurfYField>::
-  num_nonzeros() const{ return 4; }
-
-  // specializations for SVolField -> ZSurfZField
-  template<>
-  inline unsigned int
-  LinearInterpolantAssembler<SVolField,ZSurfZField>::
-  num_nonzeros() const{ return 1; }
+  // specializations for SVolField -> ZSurf fields
+  template<> inline unsigned int LinearInterpolantAssembler<SVolField,ZSurfXField>::num_nonzeros() const{ return 4; }
+  template<> inline unsigned int LinearInterpolantAssembler<SVolField,ZSurfYField>::num_nonzeros() const{ return 4; }
+  template<> inline unsigned int LinearInterpolantAssembler<SVolField,ZSurfZField>::num_nonzeros() const{ return 1; }
 
   //==================================================================
 

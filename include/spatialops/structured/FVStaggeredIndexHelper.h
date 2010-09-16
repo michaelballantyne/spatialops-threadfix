@@ -20,7 +20,7 @@ namespace structured{
    *  Note that this class will only work properly with the field
    *  types defined in FVStaggeredTypes.h.
    *
-   *  @todo Check on all implementations of shift_dest_index for consistency w.r.t. ghosting.
+   *  @todo Check on all implementations of shift_dest_to_src for consistency w.r.t. ghosting.
    *  @todo Document all of this so it is comprehensible.
    */
   template< typename SrcFieldT, typename DestFieldT >
@@ -51,19 +51,6 @@ namespace structured{
     void get_cols( const int irow, std::vector<int>& cols ) const;
     int get_ncol() const;
     int get_nrow() const;
-
-    /**
-     *  @brief Shift the index for the destination field to include ghost cells.
-     *
-     *  @param dim A vector with three elements indicating the domain
-     *  extent (number of cells) in each coordinate direction.
-     *
-     *  @param triplet The ijk location. On entry, this contains the
-     *  interior location (0-based at interior). On exit, it is 0-based
-     *  at the first ghost point.
-     */
-    static void shift_dest_index( const std::vector<int>& dim,
-                                  IndexTriplet& triplet );
 
   private:
     const std::vector<int>& dim_;
@@ -132,404 +119,208 @@ namespace structured{
 
 
 
-
-
-
-  //==================================================================
-
-  template<typename SrcFieldT, typename DestFieldT>
-  void
-  IndexHelper<SrcFieldT,DestFieldT>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet ){}
-
-  template<>
-  inline void
-  IndexHelper<SSurfXField,SVolField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
+  /**
+   *  @brief Given the IndexTriplet for the destination, convert it
+   *  to an IndexTriplet for the source field.
+   *
+   *  @param dim A vector with three elements indicating the domain
+   *  extent (number of cells) in each coordinate direction.
+   *
+   *  @param triplet The ijk location. On entry, this contains the
+   *  location for the destination field. On exit it contains the ijk
+   *  location for the source field.
+   */
+  template< typename SrcT, typename DestT >
+  void shift_dest_to_src( const std::vector<int>& dim,
+                          IndexTriplet& triplet )
   {
-    if( dim[0]>1 ) triplet.i += (SSurfXField::Ghost::NGHOST-SVolField::Ghost::NGHOST);
+    if( dim[0]>1 ) triplet.i += (DestT::Ghost::NGHOST-SrcT::Ghost::NGHOST);
+    if( dim[1]>1 ) triplet.j += (DestT::Ghost::NGHOST-SrcT::Ghost::NGHOST);
+    if( dim[2]>1 ) triplet.k += (DestT::Ghost::NGHOST-SrcT::Ghost::NGHOST);
+  }
+
+  // Scalar volume to surface operations (e.g. gradient, interpolant)
+  template<> inline void shift_dest_to_src<SVolField,SSurfXField>( const std::vector<int>& dim, IndexTriplet& triplet )
+  {
+    if( dim[0]>1 ) triplet.i += (SSurfXField::Ghost::NGHOST-SVolField::Ghost::NGHOST)-1;
     if( dim[1]>1 ) triplet.j += (SSurfXField::Ghost::NGHOST-SVolField::Ghost::NGHOST);
     if( dim[2]>1 ) triplet.k += (SSurfXField::Ghost::NGHOST-SVolField::Ghost::NGHOST);
   }
-  template<>
-  inline void
-  IndexHelper<SSurfYField,SVolField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
+  template<> inline void shift_dest_to_src<SVolField,SSurfYField>( const std::vector<int>& dim, IndexTriplet& triplet )
   {
     if( dim[0]>1 ) triplet.i += (SSurfYField::Ghost::NGHOST-SVolField::Ghost::NGHOST);
-    if( dim[1]>1 ) triplet.j += (SSurfYField::Ghost::NGHOST-SVolField::Ghost::NGHOST);
+    if( dim[1]>1 ) triplet.j += (SSurfYField::Ghost::NGHOST-SVolField::Ghost::NGHOST)-1;
     if( dim[2]>1 ) triplet.k += (SSurfYField::Ghost::NGHOST-SVolField::Ghost::NGHOST);
   }
-  template<>
-  inline void
-  IndexHelper<SSurfZField,SVolField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
+  template<> inline void shift_dest_to_src<SVolField,SSurfZField>( const std::vector<int>& dim, IndexTriplet& triplet )
   {
     if( dim[0]>1 ) triplet.i += (SSurfZField::Ghost::NGHOST-SVolField::Ghost::NGHOST);
     if( dim[1]>1 ) triplet.j += (SSurfZField::Ghost::NGHOST-SVolField::Ghost::NGHOST);
-    if( dim[2]>1 ) triplet.k += (SSurfZField::Ghost::NGHOST-SVolField::Ghost::NGHOST);
+    if( dim[2]>1 ) triplet.k += (SSurfZField::Ghost::NGHOST-SVolField::Ghost::NGHOST)-1;
   }
 
-  template<>
-  inline void
-  IndexHelper<XSurfXField,XVolField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
+
+  // X volume to surface operations (e.g. gradient, interpolant)
+  template<> inline void shift_dest_to_src<XVolField,XSurfXField>( const std::vector<int>& dim, IndexTriplet& triplet )
   {
     if( dim[0]>1 ) triplet.i += (XSurfXField::Ghost::NGHOST-XVolField::Ghost::NGHOST)-1;
     if( dim[1]>1 ) triplet.j += (XSurfXField::Ghost::NGHOST-XVolField::Ghost::NGHOST);
     if( dim[2]>1 ) triplet.k += (XSurfXField::Ghost::NGHOST-XVolField::Ghost::NGHOST);
   }
-  template<>
-  inline void
-  IndexHelper<XSurfYField,XVolField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
+  template<> inline void shift_dest_to_src<XVolField,XSurfYField>( const std::vector<int>& dim, IndexTriplet& triplet )
   {
     if( dim[0]>1 ) triplet.i += (XSurfYField::Ghost::NGHOST-XVolField::Ghost::NGHOST);
-    if( dim[1]>1 ) triplet.j += (XSurfYField::Ghost::NGHOST-XVolField::Ghost::NGHOST);
+    if( dim[1]>1 ) triplet.j += (XSurfYField::Ghost::NGHOST-XVolField::Ghost::NGHOST)-1;
     if( dim[2]>1 ) triplet.k += (XSurfYField::Ghost::NGHOST-XVolField::Ghost::NGHOST);
   }
-  template<>
-  inline void
-  IndexHelper<XSurfZField,XVolField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
+  template<> inline void shift_dest_to_src<XVolField,XSurfZField>( const std::vector<int>& dim, IndexTriplet& triplet )
   {
     if( dim[0]>1 ) triplet.i += (XSurfZField::Ghost::NGHOST-XVolField::Ghost::NGHOST);
     if( dim[1]>1 ) triplet.j += (XSurfZField::Ghost::NGHOST-XVolField::Ghost::NGHOST);
-    if( dim[2]>1 ) triplet.k += (XSurfZField::Ghost::NGHOST-XVolField::Ghost::NGHOST);
+    if( dim[2]>1 ) triplet.k += (XSurfZField::Ghost::NGHOST-XVolField::Ghost::NGHOST)-1;
   }
 
-  template<>
-  inline void
-  IndexHelper<YSurfXField,YVolField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
+
+  // Y volume to surface operations (e.g. gradient, interpolant)
+  template<> inline void shift_dest_to_src<YVolField,YSurfXField>( const std::vector<int>& dim, IndexTriplet& triplet )
   {
-    if( dim[0]>1 ) triplet.i += (YSurfXField::Ghost::NGHOST-YVolField::Ghost::NGHOST);
+    if( dim[0]>1 ) triplet.i += (YSurfXField::Ghost::NGHOST-YVolField::Ghost::NGHOST)-1;
     if( dim[1]>1 ) triplet.j += (YSurfXField::Ghost::NGHOST-YVolField::Ghost::NGHOST);
     if( dim[2]>1 ) triplet.k += (YSurfXField::Ghost::NGHOST-YVolField::Ghost::NGHOST);
   }
-  template<>
-  inline void
-  IndexHelper<YSurfYField,YVolField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
+  template<> inline void shift_dest_to_src<YVolField,YSurfYField>( const std::vector<int>& dim, IndexTriplet& triplet )
   {
     if( dim[0]>1 ) triplet.i += (YSurfYField::Ghost::NGHOST-YVolField::Ghost::NGHOST);
     if( dim[1]>1 ) triplet.j += (YSurfYField::Ghost::NGHOST-YVolField::Ghost::NGHOST)-1;
     if( dim[2]>1 ) triplet.k += (YSurfYField::Ghost::NGHOST-YVolField::Ghost::NGHOST);
   }
-  template<>
-  inline void
-  IndexHelper<YSurfZField,YVolField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
+  template<> inline void shift_dest_to_src<YVolField,YSurfZField>( const std::vector<int>& dim, IndexTriplet& triplet )
   {
     if( dim[0]>1 ) triplet.i += (YSurfZField::Ghost::NGHOST-YVolField::Ghost::NGHOST);
     if( dim[1]>1 ) triplet.j += (YSurfZField::Ghost::NGHOST-YVolField::Ghost::NGHOST);
-    if( dim[2]>1 ) triplet.k += (YSurfZField::Ghost::NGHOST-YVolField::Ghost::NGHOST);
+    if( dim[2]>1 ) triplet.k += (YSurfZField::Ghost::NGHOST-YVolField::Ghost::NGHOST)-1;
   }
 
-  template<>
-  inline void
-  IndexHelper<ZSurfXField,ZVolField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
+
+  // Z volume to surface operations (e.g. gradient, interpolant)
+  template<> inline void shift_dest_to_src<ZVolField,ZSurfXField>( const std::vector<int>& dim, IndexTriplet& triplet )
   {
-    if( dim[0]>1 ) triplet.i += (ZSurfXField::Ghost::NGHOST-ZVolField::Ghost::NGHOST);
+    if( dim[0]>1 ) triplet.i += (ZSurfXField::Ghost::NGHOST-ZVolField::Ghost::NGHOST)-1;
     if( dim[1]>1 ) triplet.j += (ZSurfXField::Ghost::NGHOST-ZVolField::Ghost::NGHOST);
     if( dim[2]>1 ) triplet.k += (ZSurfXField::Ghost::NGHOST-ZVolField::Ghost::NGHOST);
   }
-  template<>
-  inline void
-  IndexHelper<ZSurfYField,ZVolField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
+  template<> inline void shift_dest_to_src<ZVolField,ZSurfYField>( const std::vector<int>& dim, IndexTriplet& triplet )
   {
     if( dim[0]>1 ) triplet.i += (ZSurfYField::Ghost::NGHOST-ZVolField::Ghost::NGHOST);
-    if( dim[1]>1 ) triplet.j += (ZSurfYField::Ghost::NGHOST-ZVolField::Ghost::NGHOST);
+    if( dim[1]>1 ) triplet.j += (ZSurfYField::Ghost::NGHOST-ZVolField::Ghost::NGHOST)-1;
     if( dim[2]>1 ) triplet.k += (ZSurfYField::Ghost::NGHOST-ZVolField::Ghost::NGHOST);
   }
-  template<>
-  inline void
-  IndexHelper<ZSurfZField,ZVolField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
+  template<> inline void shift_dest_to_src<ZVolField,ZSurfZField>( const std::vector<int>& dim, IndexTriplet& triplet )
   {
     if( dim[0]>1 ) triplet.i += (ZSurfZField::Ghost::NGHOST-ZVolField::Ghost::NGHOST);
     if( dim[1]>1 ) triplet.j += (ZSurfZField::Ghost::NGHOST-ZVolField::Ghost::NGHOST);
     if( dim[2]>1 ) triplet.k += (ZSurfZField::Ghost::NGHOST-ZVolField::Ghost::NGHOST)-1;
   }
 
-  template<>
-  inline void
-  IndexHelper<SVolField,SSurfXField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
-  {
-    if( dim[0]>1 ) triplet.i += (SVolField::Ghost::NGHOST - SSurfXField::Ghost::NGHOST)-1;
-    if( dim[1]>1 ) triplet.j += (SVolField::Ghost::NGHOST - SSurfXField::Ghost::NGHOST);
-    if( dim[2]>1 ) triplet.k += (SVolField::Ghost::NGHOST - SSurfXField::Ghost::NGHOST);
-  }
-  template<>
-  inline void
-  IndexHelper<SVolField,SSurfYField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
-  {
-    if( dim[0]>1 ) triplet.i += (SVolField::Ghost::NGHOST - SSurfYField::Ghost::NGHOST);
-    if( dim[1]>1 ) triplet.j += (SVolField::Ghost::NGHOST - SSurfYField::Ghost::NGHOST)-1;
-    if( dim[2]>1 ) triplet.k += (SVolField::Ghost::NGHOST - SSurfYField::Ghost::NGHOST);
-  }
-  template<>
-  inline void
-  IndexHelper<SVolField,SSurfZField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
-  {
-    if( dim[0]>1 ) triplet.i += (SVolField::Ghost::NGHOST - SSurfZField::Ghost::NGHOST);
-    if( dim[1]>1 ) triplet.j += (SVolField::Ghost::NGHOST - SSurfZField::Ghost::NGHOST);
-    if( dim[2]>1 ) triplet.k += (SVolField::Ghost::NGHOST - SSurfZField::Ghost::NGHOST)-1;
-  }
 
-  template<>
-  inline void
-  IndexHelper<SVolField,XVolField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
-  {
-    if( dim[0]>1 ) triplet.i += (SVolField::Ghost::NGHOST - XVolField::Ghost::NGHOST)-1;
-    if( dim[1]>1 ) triplet.j += (SVolField::Ghost::NGHOST - XVolField::Ghost::NGHOST);
-    if( dim[2]>1 ) triplet.k += (SVolField::Ghost::NGHOST - XVolField::Ghost::NGHOST);
-  }
+  // Scalar volume to staggered volume
+  template<> inline void shift_dest_to_src<SVolField,XVolField>( const std::vector<int>& dim, IndexTriplet& triplet ){ shift_dest_to_src<SVolField,SSurfXField>( dim, triplet ); }
+  template<> inline void shift_dest_to_src<SVolField,YVolField>( const std::vector<int>& dim, IndexTriplet& triplet ){ shift_dest_to_src<SVolField,SSurfYField>( dim, triplet ); }
+  template<> inline void shift_dest_to_src<SVolField,ZVolField>( const std::vector<int>& dim, IndexTriplet& triplet ){ shift_dest_to_src<SVolField,SSurfZField>( dim, triplet ); }
 
-  template<>
-  inline void
-  IndexHelper<SVolField,YVolField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
+  // Scalar volume to staggered surfaces
+  template<> inline void shift_dest_to_src<SVolField,XSurfXField>( const std::vector<int>& dim, IndexTriplet& triplet )
   {
-    if( dim[0]>1 ) triplet.i += (SVolField::Ghost::NGHOST - YVolField::Ghost::NGHOST);
-    if( dim[1]>1 ) triplet.j += (SVolField::Ghost::NGHOST - YVolField::Ghost::NGHOST)-1;
-    if( dim[2]>1 ) triplet.k += (SVolField::Ghost::NGHOST - YVolField::Ghost::NGHOST);
+    if( dim[0]>1 ) triplet.i += (SVolField::Ghost::NGHOST-XSurfXField::Ghost::NGHOST)-1;
+    if( dim[1]>1 ) triplet.j += (SVolField::Ghost::NGHOST-XSurfXField::Ghost::NGHOST);
+    if( dim[2]>1 ) triplet.k += (SVolField::Ghost::NGHOST-XSurfXField::Ghost::NGHOST);
   }
-
-  template<>
-  inline void
-  IndexHelper<SVolField,ZVolField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
+  template<> inline void shift_dest_to_src<SVolField,XSurfYField>( const std::vector<int>& dim, IndexTriplet& triplet )
   {
-    if( dim[0]>1 ) triplet.i += (SVolField::Ghost::NGHOST - ZVolField::Ghost::NGHOST);
-    if( dim[1]>1 ) triplet.j += (SVolField::Ghost::NGHOST - ZVolField::Ghost::NGHOST);
-    if( dim[2]>1 ) triplet.k += (SVolField::Ghost::NGHOST - ZVolField::Ghost::NGHOST)-1;
+    if( dim[0]>1 ) triplet.i += (SVolField::Ghost::NGHOST-XSurfYField::Ghost::NGHOST)-1;
+    if( dim[1]>1 ) triplet.j += (SVolField::Ghost::NGHOST-XSurfYField::Ghost::NGHOST)-1;
+    if( dim[2]>1 ) triplet.k += (SVolField::Ghost::NGHOST-XSurfYField::Ghost::NGHOST);
   }
-
-  template<>
-  inline void
-  IndexHelper<SVolField,XSurfXField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
+  template<> inline void shift_dest_to_src<SVolField,XSurfZField>( const std::vector<int>& dim, IndexTriplet& triplet )
   {
-    if( dim[0]>1 ) triplet.i += (SVolField::Ghost::NGHOST - XSurfXField::Ghost::NGHOST);
-    if( dim[1]>1 ) triplet.j += (SVolField::Ghost::NGHOST - XSurfXField::Ghost::NGHOST);
-    if( dim[2]>1 ) triplet.k += (SVolField::Ghost::NGHOST - XSurfXField::Ghost::NGHOST);
+    if( dim[0]>1 ) triplet.i += (SVolField::Ghost::NGHOST-XSurfZField::Ghost::NGHOST)-1;
+    if( dim[1]>1 ) triplet.j += (SVolField::Ghost::NGHOST-XSurfZField::Ghost::NGHOST);
+    if( dim[2]>1 ) triplet.k += (SVolField::Ghost::NGHOST-XSurfZField::Ghost::NGHOST)-1;
   }
-  template<>
-  inline void
-  IndexHelper<SVolField,XSurfYField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
+  template<> inline void shift_dest_to_src<SVolField,YSurfXField>( const std::vector<int>& dim, IndexTriplet& triplet )
   {
-    if( dim[0]>1 ) triplet.i += (SVolField::Ghost::NGHOST - XSurfYField::Ghost::NGHOST)-1;
-    if( dim[1]>1 ) triplet.j += (SVolField::Ghost::NGHOST - XSurfYField::Ghost::NGHOST)-1;
-    if( dim[2]>1 ) triplet.k += (SVolField::Ghost::NGHOST - XSurfYField::Ghost::NGHOST);
+    if( dim[0]>1 ) triplet.i += (SVolField::Ghost::NGHOST-YSurfXField::Ghost::NGHOST)-1;
+    if( dim[1]>1 ) triplet.j += (SVolField::Ghost::NGHOST-YSurfXField::Ghost::NGHOST)-1;
+    if( dim[2]>1 ) triplet.k += (SVolField::Ghost::NGHOST-YSurfXField::Ghost::NGHOST);
   }
-  template<>
-  inline void
-  IndexHelper<SVolField,XSurfZField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
+  template<> inline void shift_dest_to_src<SVolField,YSurfYField>( const std::vector<int>& dim, IndexTriplet& triplet )
   {
-    if( dim[0]>1 ) triplet.i += (SVolField::Ghost::NGHOST - XSurfZField::Ghost::NGHOST)-1;
-    if( dim[1]>1 ) triplet.j += (SVolField::Ghost::NGHOST - XSurfZField::Ghost::NGHOST);
-    if( dim[2]>1 ) triplet.k += (SVolField::Ghost::NGHOST - XSurfZField::Ghost::NGHOST)-1;
+    if( dim[0]>1 ) triplet.i += (SVolField::Ghost::NGHOST-YSurfYField::Ghost::NGHOST);
+    if( dim[1]>1 ) triplet.j += (SVolField::Ghost::NGHOST-YSurfYField::Ghost::NGHOST)-1;
+    if( dim[2]>1 ) triplet.k += (SVolField::Ghost::NGHOST-YSurfYField::Ghost::NGHOST);
   }
-
-  template<>
-  inline void
-  IndexHelper<SVolField,YSurfXField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
+  template<> inline void shift_dest_to_src<SVolField,YSurfZField>( const std::vector<int>& dim, IndexTriplet& triplet )
   {
-    if( dim[0]>1 ) triplet.i += (SVolField::Ghost::NGHOST - YSurfXField::Ghost::NGHOST)-1;
-    if( dim[1]>1 ) triplet.j += (SVolField::Ghost::NGHOST - YSurfXField::Ghost::NGHOST)-1;
-    if( dim[2]>1 ) triplet.k += (SVolField::Ghost::NGHOST - YSurfXField::Ghost::NGHOST);
+    if( dim[0]>1 ) triplet.i += (SVolField::Ghost::NGHOST-YSurfZField::Ghost::NGHOST);
+    if( dim[1]>1 ) triplet.j += (SVolField::Ghost::NGHOST-YSurfZField::Ghost::NGHOST)-1;
+    if( dim[2]>1 ) triplet.k += (SVolField::Ghost::NGHOST-YSurfZField::Ghost::NGHOST)-1;
   }
-  template<>
-  inline void
-  IndexHelper<SVolField,YSurfYField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
+  template<> inline void shift_dest_to_src<SVolField,ZSurfXField>( const std::vector<int>& dim, IndexTriplet& triplet )
   {
-    if( dim[0]>1 ) triplet.i += (SVolField::Ghost::NGHOST - YSurfYField::Ghost::NGHOST);
-    if( dim[1]>1 ) triplet.j += (SVolField::Ghost::NGHOST - YSurfYField::Ghost::NGHOST);
-    if( dim[2]>1 ) triplet.k += (SVolField::Ghost::NGHOST - YSurfYField::Ghost::NGHOST);
+    if( dim[0]>1 ) triplet.i += (SVolField::Ghost::NGHOST-ZSurfXField::Ghost::NGHOST)-1;
+    if( dim[1]>1 ) triplet.j += (SVolField::Ghost::NGHOST-ZSurfXField::Ghost::NGHOST);
+    if( dim[2]>1 ) triplet.k += (SVolField::Ghost::NGHOST-ZSurfXField::Ghost::NGHOST)-1;
   }
-  template<>
-  inline void
-  IndexHelper<SVolField,YSurfZField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
+  template<> inline void shift_dest_to_src<SVolField,ZSurfYField>( const std::vector<int>& dim, IndexTriplet& triplet )
   {
-    if( dim[0]>1 ) triplet.i += (SVolField::Ghost::NGHOST - YSurfZField::Ghost::NGHOST);
-    if( dim[1]>1 ) triplet.j += (SVolField::Ghost::NGHOST - YSurfZField::Ghost::NGHOST)-1;
-    if( dim[2]>1 ) triplet.k += (SVolField::Ghost::NGHOST - YSurfZField::Ghost::NGHOST)-1;
+    if( dim[0]>1 ) triplet.i += (SVolField::Ghost::NGHOST-ZSurfYField::Ghost::NGHOST);
+    if( dim[1]>1 ) triplet.j += (SVolField::Ghost::NGHOST-ZSurfYField::Ghost::NGHOST)-1;
+    if( dim[2]>1 ) triplet.k += (SVolField::Ghost::NGHOST-ZSurfYField::Ghost::NGHOST)-1;
+  }
+  template<> inline void shift_dest_to_src<SVolField,ZSurfZField>( const std::vector<int>& dim, IndexTriplet& triplet )
+  {
+    if( dim[0]>1 ) triplet.i += (SVolField::Ghost::NGHOST-ZSurfZField::Ghost::NGHOST);
+    if( dim[1]>1 ) triplet.j += (SVolField::Ghost::NGHOST-ZSurfZField::Ghost::NGHOST);
+    if( dim[2]>1 ) triplet.k += (SVolField::Ghost::NGHOST-ZSurfZField::Ghost::NGHOST)-1;
   }
 
 
-  template<>
-  inline void
-  IndexHelper<SVolField,ZSurfXField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
-  {
-    if( dim[0]>1 ) triplet.i += (SVolField::Ghost::NGHOST - ZSurfXField::Ghost::NGHOST)-1;
-    if( dim[1]>1 ) triplet.j += (SVolField::Ghost::NGHOST - ZSurfXField::Ghost::NGHOST);
-    if( dim[2]>1 ) triplet.k += (SVolField::Ghost::NGHOST - ZSurfXField::Ghost::NGHOST)-1;
-  }
-  template<>
-  inline void
-  IndexHelper<SVolField,ZSurfYField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
-  {
-    if( dim[0]>1 ) triplet.i += (SVolField::Ghost::NGHOST - ZSurfYField::Ghost::NGHOST);
-    if( dim[1]>1 ) triplet.j += (SVolField::Ghost::NGHOST - ZSurfYField::Ghost::NGHOST)-1;
-    if( dim[2]>1 ) triplet.k += (SVolField::Ghost::NGHOST - ZSurfYField::Ghost::NGHOST)-1;
-  }
-  template<>
-  inline void
-  IndexHelper<SVolField,ZSurfZField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
-  {
-    if( dim[0]>1 ) triplet.i += (SVolField::Ghost::NGHOST - ZSurfZField::Ghost::NGHOST);
-    if( dim[1]>1 ) triplet.j += (SVolField::Ghost::NGHOST - ZSurfZField::Ghost::NGHOST);
-    if( dim[2]>1 ) triplet.k += (SVolField::Ghost::NGHOST - ZSurfZField::Ghost::NGHOST);
-  }
-
-
-  template<>
-  inline void
-  IndexHelper<XVolField,XSurfXField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
-  {
-    if( dim[0]>1 ) triplet.i += (XVolField::Ghost::NGHOST - XSurfXField::Ghost::NGHOST);
-    if( dim[1]>1 ) triplet.j += (XVolField::Ghost::NGHOST - XSurfXField::Ghost::NGHOST);
-    if( dim[2]>1 ) triplet.k += (XVolField::Ghost::NGHOST - XSurfXField::Ghost::NGHOST);
-  }
-  template<>
-  inline void
-  IndexHelper<XVolField,XSurfYField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
-  {
-    if( dim[0]>1 ) triplet.i += (XVolField::Ghost::NGHOST - XSurfYField::Ghost::NGHOST);
-    if( dim[1]>1 ) triplet.j += (XVolField::Ghost::NGHOST - XSurfYField::Ghost::NGHOST)-1;
-    if( dim[2]>1 ) triplet.k += (XVolField::Ghost::NGHOST - XSurfYField::Ghost::NGHOST);
-  }
-  template<>
-  inline void
-  IndexHelper<XVolField,XSurfZField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
-  {
-    if( dim[0]>1 ) triplet.i += (XVolField::Ghost::NGHOST - XSurfZField::Ghost::NGHOST);
-    if( dim[1]>1 ) triplet.j += (XVolField::Ghost::NGHOST - XSurfZField::Ghost::NGHOST);
-    if( dim[2]>1 ) triplet.k += (XVolField::Ghost::NGHOST - XSurfZField::Ghost::NGHOST)-1;
-  }
-  template<>
-  inline void
-  IndexHelper<XVolField,YSurfXField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
+  // jcs ....
+  // x-staggered to y-staggered
+  template<> inline void shift_dest_to_src<XVolField,YSurfXField>( const std::vector<int>& dim, IndexTriplet& triplet )
   {
     if( dim[0]>1 ) triplet.i += (XVolField::Ghost::NGHOST - YSurfXField::Ghost::NGHOST);
     if( dim[1]>1 ) triplet.j += (XVolField::Ghost::NGHOST - YSurfXField::Ghost::NGHOST)-1;
     if( dim[2]>1 ) triplet.k += (XVolField::Ghost::NGHOST - YSurfXField::Ghost::NGHOST);
   }
-  template<>
-  inline void
-  IndexHelper<XVolField,ZSurfXField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
+
+  template<> inline void shift_dest_to_src<XVolField,ZSurfXField>( const std::vector<int>& dim, IndexTriplet& triplet )
   {
     if( dim[0]>1 ) triplet.i += (XVolField::Ghost::NGHOST - ZSurfXField::Ghost::NGHOST);
     if( dim[1]>1 ) triplet.j += (XVolField::Ghost::NGHOST - ZSurfXField::Ghost::NGHOST);
     if( dim[2]>1 ) triplet.k += (XVolField::Ghost::NGHOST - ZSurfXField::Ghost::NGHOST)-1;
   }
 
-  template<>
-  inline void
-  IndexHelper<YVolField,YSurfXField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
-  {
-    if( dim[0]>1 ) triplet.i += (YVolField::Ghost::NGHOST - YSurfXField::Ghost::NGHOST)-1;
-    if( dim[1]>1 ) triplet.j += (YVolField::Ghost::NGHOST - YSurfXField::Ghost::NGHOST);
-    if( dim[2]>1 ) triplet.k += (YVolField::Ghost::NGHOST - YSurfXField::Ghost::NGHOST);
-  }
-  template<>
-  inline void
-  IndexHelper<YVolField,YSurfYField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
-  {
-    if( dim[0]>1 ) triplet.i += (YVolField::Ghost::NGHOST - YSurfYField::Ghost::NGHOST);
-    if( dim[1]>1 ) triplet.j += (YVolField::Ghost::NGHOST - YSurfYField::Ghost::NGHOST);
-    if( dim[2]>1 ) triplet.k += (YVolField::Ghost::NGHOST - YSurfYField::Ghost::NGHOST);
-  }
-  template<>
-  inline void
-  IndexHelper<YVolField,YSurfZField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
-  {
-    if( dim[0]>1 ) triplet.i += (YVolField::Ghost::NGHOST - YSurfZField::Ghost::NGHOST);
-    if( dim[1]>1 ) triplet.j += (YVolField::Ghost::NGHOST - YSurfZField::Ghost::NGHOST);
-    if( dim[2]>1 ) triplet.k += (YVolField::Ghost::NGHOST - YSurfZField::Ghost::NGHOST)-1;
-  }
-  template<>
-  inline void
-  IndexHelper<YVolField,XSurfYField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
+  template<> inline void shift_dest_to_src<YVolField,XSurfYField>( const std::vector<int>& dim, IndexTriplet& triplet )
   {
     if( dim[0]>1 ) triplet.i += (YVolField::Ghost::NGHOST - XSurfYField::Ghost::NGHOST)-1;
     if( dim[1]>1 ) triplet.j += (YVolField::Ghost::NGHOST - XSurfYField::Ghost::NGHOST);
     if( dim[2]>1 ) triplet.k += (YVolField::Ghost::NGHOST - XSurfYField::Ghost::NGHOST);
   }
-  template<>
-  inline void
-  IndexHelper<YVolField,ZSurfYField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
+  template<> inline void shift_dest_to_src<YVolField,ZSurfYField>( const std::vector<int>& dim, IndexTriplet& triplet )
   {
     if( dim[0]>1 ) triplet.i += (YVolField::Ghost::NGHOST - ZSurfYField::Ghost::NGHOST);
     if( dim[1]>1 ) triplet.j += (YVolField::Ghost::NGHOST - ZSurfYField::Ghost::NGHOST);
     if( dim[2]>1 ) triplet.k += (YVolField::Ghost::NGHOST - ZSurfYField::Ghost::NGHOST)-1;
   }
 
-  template<>
-  inline void
-  IndexHelper<ZVolField,ZSurfXField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
-  {
-    if( dim[0]>1 ) triplet.i += (ZVolField::Ghost::NGHOST - ZSurfXField::Ghost::NGHOST)-1;
-    if( dim[1]>1 ) triplet.j += (ZVolField::Ghost::NGHOST - ZSurfXField::Ghost::NGHOST);
-    if( dim[2]>1 ) triplet.k += (ZVolField::Ghost::NGHOST - ZSurfXField::Ghost::NGHOST);
-  }
-  template<>
-  inline void
-  IndexHelper<ZVolField,ZSurfYField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
-  {
-    if( dim[0]>1 ) triplet.i += (ZVolField::Ghost::NGHOST - ZSurfYField::Ghost::NGHOST);
-    if( dim[1]>1 ) triplet.j += (ZVolField::Ghost::NGHOST - ZSurfYField::Ghost::NGHOST)-1;
-    if( dim[2]>1 ) triplet.k += (ZVolField::Ghost::NGHOST - ZSurfYField::Ghost::NGHOST);
-  }
-  template<>
-  inline void
-  IndexHelper<ZVolField,ZSurfZField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
-  {
-    if( dim[0]>1 ) triplet.i += (ZVolField::Ghost::NGHOST - ZSurfZField::Ghost::NGHOST);
-    if( dim[1]>1 ) triplet.j += (ZVolField::Ghost::NGHOST - ZSurfZField::Ghost::NGHOST);
-    if( dim[2]>1 ) triplet.k += (ZVolField::Ghost::NGHOST - ZSurfZField::Ghost::NGHOST);
-  }
-  template<>
-  inline void
-  IndexHelper<ZVolField,XSurfZField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
+  template<> inline void shift_dest_to_src<ZVolField,XSurfZField>( const std::vector<int>& dim, IndexTriplet& triplet )
   {
     if( dim[0]>1 ) triplet.i += (ZVolField::Ghost::NGHOST - XSurfZField::Ghost::NGHOST)-1;
     if( dim[1]>1 ) triplet.j += (ZVolField::Ghost::NGHOST - XSurfZField::Ghost::NGHOST);
     if( dim[2]>1 ) triplet.k += (ZVolField::Ghost::NGHOST - XSurfZField::Ghost::NGHOST);
   }
-  template<>
-  inline void
-  IndexHelper<ZVolField,YSurfZField>::
-  shift_dest_index( const std::vector<int>& dim, IndexTriplet& triplet )
+  template<> inline void shift_dest_to_src<ZVolField,YSurfZField>( const std::vector<int>& dim, IndexTriplet& triplet )
   {
     if( dim[0]>1 ) triplet.i += (ZVolField::Ghost::NGHOST - YSurfZField::Ghost::NGHOST);
     if( dim[1]>1 ) triplet.j += (ZVolField::Ghost::NGHOST - YSurfZField::Ghost::NGHOST)-1;
@@ -554,8 +345,7 @@ namespace structured{
       hasPlusXSideFaces_( hasPlusXSideFaces ),
       hasPlusYSideFaces_( hasPlusYSideFaces ),
       hasPlusZSideFaces_( hasPlusZSideFaces )
-  {
-  }
+  {}
   //------------------------------------------------------------------ 
   template<typename SrcFieldT, typename DestFieldT>
   void
@@ -565,8 +355,8 @@ namespace structured{
     // from the row (flat index of destination field), determine the
     // ijk indices for the destination field
     IndexTriplet ijk = flat2ijk<DestFieldT>::value( dim_, irow, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
-
-    shift_dest_index( dim_, ijk );
+    
+    shift_dest_to_src<SrcFieldT,DestFieldT>( dim_, ijk );
 
     if( ijk.i<0 || ijk.j<0 || ijk.k<0 ) return;
 
@@ -720,7 +510,7 @@ namespace structured{
   get_cols( const int irow, std::vector<int>& cols ) const
   {
     IndexTriplet ijk = flat2ijk<XSurfXField>::value( dim_, irow, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
-    this->shift_dest_index( dim_, ijk );
+    shift_dest_to_src<SVolField,XSurfXField>( dim_, ijk );
     if( ijk.i<0 || ijk.j<0 || ijk.k<0 ) return;
     const int icol = ijk2flat<SVolField>::value( dim_, ijk, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
     if( is_in_bounds<SVolField,XSurfXField>(dim_,icol,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) ){
@@ -733,7 +523,7 @@ namespace structured{
   get_cols( const int irow, std::vector<int>& cols ) const
   {
     IndexTriplet ijk = flat2ijk<XSurfYField>::value( dim_, irow, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
-    shift_dest_index( dim_, ijk );
+    shift_dest_to_src<SVolField,XSurfYField>( dim_, ijk );
     if( ijk.i<0 || ijk.j<0 || ijk.k<0 ) return;
 
     const int icol = ijk2flat<SVolField>::value( dim_, ijk, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
@@ -757,7 +547,7 @@ namespace structured{
   get_cols( const int irow, std::vector<int>& cols ) const
   {
     IndexTriplet ijk = flat2ijk<XSurfZField>::value( dim_, irow, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
-    shift_dest_index( dim_, ijk );
+    shift_dest_to_src<SVolField,XSurfZField>( dim_, ijk );
     if( ijk.i<0 || ijk.j<0 || ijk.k<0 ) return;
 
     const int icol = ijk2flat<SVolField>::value( dim_, ijk, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
@@ -782,7 +572,7 @@ namespace structured{
   get_cols( const int irow, std::vector<int>& cols ) const
   {
     IndexTriplet ijk = flat2ijk<YSurfXField>::value( dim_, irow, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
-    shift_dest_index( dim_, ijk );
+    shift_dest_to_src<SVolField,YSurfXField>( dim_, ijk );
     if( ijk.i<0 || ijk.j<0 || ijk.k<0 ) return;
 
     const int icol = ijk2flat<SVolField>::value( dim_, ijk, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
@@ -806,7 +596,7 @@ namespace structured{
   get_cols( const int irow, std::vector<int>& cols ) const
   {
     IndexTriplet ijk = flat2ijk<YSurfYField>::value( dim_, irow, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
-    shift_dest_index( dim_, ijk );
+    shift_dest_to_src<SVolField,YSurfYField>( dim_, ijk );
     if( ijk.i<0 || ijk.j<0 || ijk.k<0 ) return;
     const int icol = ijk2flat<SVolField>::value( dim_, ijk, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
     if( is_in_bounds<SVolField,YSurfYField>(dim_,icol,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) ){
@@ -819,7 +609,7 @@ namespace structured{
   get_cols( const int irow, std::vector<int>& cols ) const
   {
     IndexTriplet ijk = flat2ijk<YSurfZField>::value( dim_, irow, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
-    shift_dest_index( dim_, ijk );
+    shift_dest_to_src<SVolField,YSurfZField>( dim_, ijk );
     if( ijk.i<0 || ijk.j<0 || ijk.k<0 ) return;
 
     const int nx = get_nx<SVolField>(dim_,hasPlusXSideFaces_);
@@ -847,7 +637,7 @@ namespace structured{
   get_cols( const int irow, std::vector<int>& cols ) const
   {
     IndexTriplet ijk = flat2ijk<ZSurfXField>::value( dim_, irow, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
-    shift_dest_index( dim_, ijk );
+    shift_dest_to_src<SVolField,ZSurfXField>( dim_, ijk );
     if( ijk.i<0 || ijk.j<0 || ijk.k<0 ) return;
 
     const int icol = ijk2flat<SVolField>::value( dim_, ijk, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
@@ -871,7 +661,7 @@ namespace structured{
   get_cols( const int irow, std::vector<int>& cols ) const
   {
     IndexTriplet ijk = flat2ijk<ZSurfYField>::value( dim_, irow, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
-    shift_dest_index( dim_, ijk );
+    shift_dest_to_src<SVolField,ZSurfYField>( dim_, ijk );
     if( ijk.i<0 || ijk.j<0 || ijk.k<0 ) return;
 
     const int nx = get_nx<SVolField>(dim_,hasPlusXSideFaces_);
@@ -898,7 +688,7 @@ namespace structured{
   get_cols( const int irow, std::vector<int>& cols ) const
   {
     IndexTriplet ijk = flat2ijk<ZSurfZField>::value( dim_, irow, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
-    shift_dest_index( dim_, ijk );
+    shift_dest_to_src<SVolField,ZSurfZField>( dim_, ijk );
     if( ijk.i<0 || ijk.j<0 || ijk.k<0 ) return;
     const int icol = ijk2flat<SVolField>::value( dim_, ijk, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
     if( is_in_bounds<SVolField,ZSurfZField>(dim_,icol,irow,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) ){

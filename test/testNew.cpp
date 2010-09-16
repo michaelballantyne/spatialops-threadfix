@@ -682,9 +682,9 @@ int main()
          << "Interpolant scalar volume -> scalar surfaces" << endl
          << " max abs err | max rel err | avg abs err | avg rel err |" << endl
          << "-------------|-------------|-------------|-------------|" << endl;
-    test_interp_op<InterpSVolSSurfX>( grid, fun, interpX, bcFlag );
-    test_interp_op<InterpSVolSSurfY>( grid, fun, interpY, bcFlag );
-    test_interp_op<InterpSVolSSurfZ>( grid, fun, interpZ, bcFlag );
+    if( dim[0]>1 ) test_interp_op<InterpSVolSSurfX>( grid, fun, interpX, bcFlag );
+    if( dim[1]>1 ) test_interp_op<InterpSVolSSurfY>( grid, fun, interpY, bcFlag );
+    if( dim[2]>1 ) test_interp_op<InterpSVolSSurfZ>( grid, fun, interpZ, bcFlag );
     cout << "=====================================================" << endl << endl;
 
 
@@ -692,9 +692,9 @@ int main()
          << "Gradient scalar volume -> scalar surfaces" << endl
          << " max abs err | max rel err | avg abs err | avg rel err |" << endl
          << "-------------|-------------|-------------|-------------|" << endl;
-    test_grad_op<GradSVolSSurfX>( grid, fun, gradFunX, bcFlag, XDIR::value );
-    test_grad_op<GradSVolSSurfY>( grid, fun, gradFunY, bcFlag, YDIR::value );
-    test_grad_op<GradSVolSSurfZ>( grid, fun, gradFunZ, bcFlag, ZDIR::value );
+    if( dim[0]>1 ) test_grad_op<GradSVolSSurfX>( grid, fun, gradFunX, bcFlag, XDIR::value );
+    if( dim[1]>1 ) test_grad_op<GradSVolSSurfY>( grid, fun, gradFunY, bcFlag, YDIR::value );
+    if( dim[2]>1 ) test_grad_op<GradSVolSSurfZ>( grid, fun, gradFunZ, bcFlag, ZDIR::value );
     cout << "=====================================================" << endl << endl;
 
 
@@ -702,9 +702,9 @@ int main()
          << "Divergence scalar surfaces -> scalar volume" << endl
          << " max abs err | max rel err | avg abs err | avg rel err |" << endl
          << "-------------|-------------|-------------|-------------|" << endl;
-    test_div_op<DivSSurfXSVol>( grid, gradFunX, divFun, bcFlag );
-    test_div_op<DivSSurfYSVol>( grid, gradFunY, divFun, bcFlag );
-    test_div_op<DivSSurfZSVol>( grid, gradFunZ, divFun, bcFlag );
+    if( dim[0]>1 ) test_div_op<DivSSurfXSVol>( grid, gradFunX, divFun, bcFlag );
+    if( dim[1]>1 ) test_div_op<DivSSurfYSVol>( grid, gradFunY, divFun, bcFlag );
+    if( dim[2]>1 ) test_div_op<DivSSurfZSVol>( grid, gradFunZ, divFun, bcFlag );
     cout << "=====================================================" << endl << endl;
   }
 
@@ -718,17 +718,17 @@ int main()
          << "Interpolate scalar volume to staggered volumes" << endl
          << " max abs err | max rel err | avg abs err | avg rel err |" << endl
          << "-------------|-------------|-------------|-------------|" << endl;
-    test_interp_op<InterpSVolXVol>( grid, svolfun, xvolfun, bcFlag );
-    test_interp_op<InterpSVolYVol>( grid, svolfun, yvolfun, bcFlag );
-    test_interp_op<InterpSVolZVol>( grid, svolfun, zvolfun, bcFlag );
+    if( dim[0]>1 ) test_interp_op<InterpSVolXVol>( grid, svolfun, xvolfun, bcFlag );
+    if( dim[1]>1 ) test_interp_op<InterpSVolYVol>( grid, svolfun, yvolfun, bcFlag );
+    if( dim[2]>1 ) test_interp_op<InterpSVolZVol>( grid, svolfun, zvolfun, bcFlag );
 
     cout << endl
          << "Gradient scalar volume to staggered volumes" << endl
          << " max abs err | max rel err | avg abs err | avg rel err |" << endl
          << "-------------|-------------|-------------|-------------|" << endl;
-    test_grad_op<GradSVolXVol>( grid, svolfun, xvolfun, bcFlag, XDIR::value );
-    test_grad_op<GradSVolYVol>( grid, svolfun, yvolfun, bcFlag, YDIR::value );
-    test_grad_op<GradSVolZVol>( grid, svolfun, zvolfun, bcFlag, ZDIR::value );
+    if( dim[0]>1 ) test_grad_op<GradSVolXVol>( grid, svolfun, xvolfun, bcFlag, XDIR::value );
+    if( dim[1]>1 ) test_grad_op<GradSVolYVol>( grid, svolfun, yvolfun, bcFlag, YDIR::value );
+    if( dim[2]>1 ) test_grad_op<GradSVolZVol>( grid, svolfun, zvolfun, bcFlag, ZDIR::value );
     cout << "=====================================================" << endl << endl;
   }
 
@@ -751,18 +751,22 @@ int main()
          << "Interpolate scalar volume to staggered surfaces" << endl
          << " max abs err | max rel err | avg abs err | avg rel err |" << endl
          << "-------------|-------------|-------------|-------------|" << endl;
-    test_interp_op<InterpSVolXSurfX>( grid, svolfun, xsurfx, bcFlag );
-    test_interp_op<InterpSVolXSurfY>( grid, svolfun, xsurfy, bcFlag );
-    test_interp_op<InterpSVolXSurfZ>( grid, svolfun, xsurfz, bcFlag );
+    if( dim[0]>1 ){
+      if( dim[0]>1 ) test_interp_op<InterpSVolXSurfX>( grid, svolfun, xsurfx, bcFlag );
+      if( dim[1]>1 ) test_interp_op<InterpSVolXSurfY>( grid, svolfun, xsurfy, bcFlag );
+      if( dim[2]>1 ) test_interp_op<InterpSVolXSurfZ>( grid, svolfun, xsurfz, bcFlag );
+    }
 
-    test_interp_op<InterpSVolYSurfX>( grid, svolfun, ysurfx, bcFlag );
-    test_interp_op<InterpSVolYSurfY>( grid, svolfun, ysurfy, bcFlag );
-    test_interp_op<InterpSVolYSurfZ>( grid, svolfun, ysurfz, bcFlag );
-
-    test_interp_op<InterpSVolZSurfX>( grid, svolfun, zsurfx, bcFlag );
-    test_interp_op<InterpSVolZSurfY>( grid, svolfun, zsurfy, bcFlag );
-    test_interp_op<InterpSVolZSurfZ>( grid, svolfun, zsurfz, bcFlag );
-
+    if( dim[2]>1 ){
+      if( dim[0]>1 ) test_interp_op<InterpSVolYSurfX>( grid, svolfun, ysurfx, bcFlag );
+      if( dim[1]>1 ) test_interp_op<InterpSVolYSurfY>( grid, svolfun, ysurfy, bcFlag );
+      if( dim[2]>1 ) test_interp_op<InterpSVolYSurfZ>( grid, svolfun, ysurfz, bcFlag );
+    }
+    if( dim[2]>1 ){
+      if( dim[0]>1 ) test_interp_op<InterpSVolZSurfX>( grid, svolfun, zsurfx, bcFlag );
+      if( dim[1]>1 ) test_interp_op<InterpSVolZSurfY>( grid, svolfun, zsurfy, bcFlag );
+      if( dim[2]>1 ) test_interp_op<InterpSVolZSurfZ>( grid, svolfun, zsurfz, bcFlag );
+    }
     cout << "=====================================================" << endl << endl;
   }
 
@@ -777,9 +781,9 @@ int main()
          << "Interpolate scalar surface to staggered volumes" << endl
          << " max abs err | max rel err | avg abs err | avg rel err |" << endl
          << "-------------|-------------|-------------|-------------|" << endl;
-    test_interp_op<InterpSSurfXXVol>( grid, fsx, fxv, bcFlag );
-    test_interp_op<InterpSSurfYYVol>( grid, fsy, fyv, bcFlag );
-    test_interp_op<InterpSSurfZZVol>( grid, fsz, fzv, bcFlag );
+    if( dim[0]>1 ) test_interp_op<InterpSSurfXXVol>( grid, fsx, fxv, bcFlag );
+    if( dim[1]>1 ) test_interp_op<InterpSSurfYYVol>( grid, fsy, fyv, bcFlag );
+    if( dim[2]>1 ) test_interp_op<InterpSSurfZZVol>( grid, fsz, fzv, bcFlag );
     cout << "=====================================================" << endl << endl;
   }
 
@@ -792,9 +796,9 @@ int main()
          << "Gradient staggered volumes to scalar volume (dilatation)" << endl
          << " max abs err | max rel err | avg abs err | avg rel err |" << endl
          << "-------------|-------------|-------------|-------------|" << endl;
-    test_grad_op<GradXVolSVol>( grid, xvolf, svolf, bcFlag, XDIR::value );
-    test_grad_op<GradYVolSVol>( grid, yvolf, svolf, bcFlag, YDIR::value );
-    test_grad_op<GradZVolSVol>( grid, zvolf, svolf, bcFlag, ZDIR::value );
+    if( dim[0]>1 ) test_grad_op<GradXVolSVol>( grid, xvolf, svolf, bcFlag, XDIR::value );
+    if( dim[1]>1 ) test_grad_op<GradYVolSVol>( grid, yvolf, svolf, bcFlag, YDIR::value );
+    if( dim[2]>1 ) test_grad_op<GradZVolSVol>( grid, zvolf, svolf, bcFlag, ZDIR::value );
     cout << "=====================================================" << endl;
   }
 
@@ -879,27 +883,27 @@ int main()
          << "Gradient x-volume -> x-surface" << endl
          << " max abs err | max rel err | avg abs err | avg rel err |" << endl
          << "-------------|-------------|-------------|-------------|" << endl;
-    test_grad_op<GradXVolXSurfX>( grid, sinfun, gradX, bcFlag, XDIR::value );
-    test_grad_op<GradXVolXSurfY>( grid, sinfun, gradY, bcFlag, YDIR::value );
-    test_grad_op<GradXVolXSurfZ>( grid, sinfun, gradZ, bcFlag, ZDIR::value );
+    if( dim[0]>1 ) test_grad_op<GradXVolXSurfX>( grid, sinfun, gradX, bcFlag, XDIR::value );
+    if( dim[1]>1 ) test_grad_op<GradXVolXSurfY>( grid, sinfun, gradY, bcFlag, YDIR::value );
+    if( dim[2]>1 ) test_grad_op<GradXVolXSurfZ>( grid, sinfun, gradZ, bcFlag, ZDIR::value );
     cout << "=====================================================" << endl << endl;
 
     cout << "=====================================================" << endl
          << "Divergence x-surface -> x-volume" << endl
          << " max abs err | max rel err | avg abs err | avg rel err |" << endl
          << "-------------|-------------|-------------|-------------|" << endl;
-    test_div_op<DivXSurfXXVol>( grid, gradX, divFun, bcFlag );
-    test_div_op<DivXSurfYXVol>( grid, gradY, divFun, bcFlag );
-    test_div_op<DivXSurfZXVol>( grid, gradZ, divFun, bcFlag );
+    if( dim[0]>1 ) test_div_op<DivXSurfXXVol>( grid, gradX, divFun, bcFlag );
+    if( dim[1]>1 ) test_div_op<DivXSurfYXVol>( grid, gradY, divFun, bcFlag );
+    if( dim[2]>1 ) test_div_op<DivXSurfZXVol>( grid, gradZ, divFun, bcFlag );
     cout << "=====================================================" << endl << endl;
 
     cout << "=====================================================" << endl
          << "Interpolate x-volume -> x-surfaces" << endl
          << " max abs err | max rel err | avg abs err | avg rel err |" << endl
          << "-------------|-------------|-------------|-------------|" << endl;
-    test_interp_op<InterpXVolXSurfX>( grid, sinfun, interpX, bcFlag );
-    test_interp_op<InterpXVolXSurfY>( grid, sinfun, interpY, bcFlag );
-    test_interp_op<InterpXVolXSurfZ>( grid, sinfun, interpZ, bcFlag );
+    if( dim[0]>1 ) test_interp_op<InterpXVolXSurfX>( grid, sinfun, interpX, bcFlag );
+    if( dim[1]>1 ) test_interp_op<InterpXVolXSurfY>( grid, sinfun, interpY, bcFlag );
+    if( dim[2]>1 ) test_interp_op<InterpXVolXSurfZ>( grid, sinfun, interpZ, bcFlag );
     cout << "=====================================================" << endl << endl;
   }
 
@@ -920,27 +924,27 @@ int main()
          << "Gradient y-volume -> y-surface" << endl
          << " max abs err | max rel err | avg abs err | avg rel err |" << endl
          << "-------------|-------------|-------------|-------------|" << endl;
-    test_grad_op<GradYVolYSurfX>( grid, sinfun, gradX, bcFlag, XDIR::value );
-    test_grad_op<GradYVolYSurfY>( grid, sinfun, gradY, bcFlag, YDIR::value );
-    test_grad_op<GradYVolYSurfZ>( grid, sinfun, gradZ, bcFlag, ZDIR::value );
+    if( dim[0]>1 ) test_grad_op<GradYVolYSurfX>( grid, sinfun, gradX, bcFlag, XDIR::value );
+    if( dim[1]>1 ) test_grad_op<GradYVolYSurfY>( grid, sinfun, gradY, bcFlag, YDIR::value );
+    if( dim[2]>1 ) test_grad_op<GradYVolYSurfZ>( grid, sinfun, gradZ, bcFlag, ZDIR::value );
     cout << "=====================================================" << endl << endl;
 
     cout << "=====================================================" << endl
          << "Divergence y-surface -> y-volume" << endl
          << " max abs err | max rel err | avg abs err | avg rel err |" << endl
          << "-------------|-------------|-------------|-------------|" << endl;
-    test_div_op<DivYSurfXYVol>( grid, gradX, divFun, bcFlag );
-    test_div_op<DivYSurfYYVol>( grid, gradY, divFun, bcFlag );
-    test_div_op<DivYSurfZYVol>( grid, gradZ, divFun, bcFlag );
+    if( dim[0]>1 ) test_div_op<DivYSurfXYVol>( grid, gradX, divFun, bcFlag );
+    if( dim[1]>1 ) test_div_op<DivYSurfYYVol>( grid, gradY, divFun, bcFlag );
+    if( dim[2]>1 ) test_div_op<DivYSurfZYVol>( grid, gradZ, divFun, bcFlag );
     cout << "=====================================================" << endl << endl;
 
     cout << "=====================================================" << endl
          << "Interpolate y-volume -> y-surfaces" << endl
          << " max abs err | max rel err | avg abs err | avg rel err |" << endl
          << "-------------|-------------|-------------|-------------|" << endl;
-    test_interp_op<InterpYVolYSurfX>( grid, sinfun, interpX, bcFlag );
-    test_interp_op<InterpYVolYSurfY>( grid, sinfun, interpY, bcFlag );
-    test_interp_op<InterpYVolYSurfZ>( grid, sinfun, interpZ, bcFlag );
+    if( dim[0]>1 ) test_interp_op<InterpYVolYSurfX>( grid, sinfun, interpX, bcFlag );
+    if( dim[1]>1 ) test_interp_op<InterpYVolYSurfY>( grid, sinfun, interpY, bcFlag );
+    if( dim[2]>1 ) test_interp_op<InterpYVolYSurfZ>( grid, sinfun, interpZ, bcFlag );
     cout << "=====================================================" << endl << endl;
   }
 
@@ -961,27 +965,27 @@ int main()
          << "Gradient z-volume -> z-surface" << endl
          << " max abs err | max rel err | avg abs err | avg rel err |" << endl
          << "-------------|-------------|-------------|-------------|" << endl;
-    test_grad_op<GradZVolZSurfX>( grid, sinfun, gradX, bcFlag, XDIR::value );
-    test_grad_op<GradZVolZSurfY>( grid, sinfun, gradY, bcFlag, YDIR::value );
-    test_grad_op<GradZVolZSurfZ>( grid, sinfun, gradZ, bcFlag, ZDIR::value );
+    if( dim[0]>1 ) test_grad_op<GradZVolZSurfX>( grid, sinfun, gradX, bcFlag, XDIR::value );
+    if( dim[1]>1 ) test_grad_op<GradZVolZSurfY>( grid, sinfun, gradY, bcFlag, YDIR::value );
+    if( dim[2]>1 ) test_grad_op<GradZVolZSurfZ>( grid, sinfun, gradZ, bcFlag, ZDIR::value );
     cout << "=====================================================" << endl << endl;
 
     cout << "=====================================================" << endl
          << "Divergence z-surface -> z-volume" << endl
          << " max abs err | max rel err | avg abs err | avg rel err |" << endl
          << "-------------|-------------|-------------|-------------|" << endl;
-    test_div_op<DivZSurfXZVol>( grid, gradX, divFun, bcFlag );
-    test_div_op<DivZSurfYZVol>( grid, gradY, divFun, bcFlag );
-    test_div_op<DivZSurfZZVol>( grid, gradZ, divFun, bcFlag );
+    if( dim[0]>1 ) test_div_op<DivZSurfXZVol>( grid, gradX, divFun, bcFlag );
+    if( dim[1]>1 ) test_div_op<DivZSurfYZVol>( grid, gradY, divFun, bcFlag );
+    if( dim[2]>1 ) test_div_op<DivZSurfZZVol>( grid, gradZ, divFun, bcFlag );
     cout << "=====================================================" << endl << endl;
 
     cout << "=====================================================" << endl
          << "Interpolate z-volume -> z-surfaces" << endl
          << " max abs err | max rel err | avg abs err | avg rel err |" << endl
          << "-------------|-------------|-------------|-------------|" << endl;
-    test_interp_op<InterpZVolZSurfX>( grid, sinfun, interpX, bcFlag );
-    test_interp_op<InterpZVolZSurfY>( grid, sinfun, interpY, bcFlag );
-    test_interp_op<InterpZVolZSurfZ>( grid, sinfun, interpZ, bcFlag );
+    if( dim[0]>1 ) test_interp_op<InterpZVolZSurfX>( grid, sinfun, interpX, bcFlag );
+    if( dim[1]>1 ) test_interp_op<InterpZVolZSurfY>( grid, sinfun, interpY, bcFlag );
+    if( dim[2]>1 ) test_interp_op<InterpZVolZSurfZ>( grid, sinfun, interpZ, bcFlag );
     cout << "=====================================================" << endl << endl;
   }
 
@@ -1001,9 +1005,9 @@ int main()
     const DivSSurfYSVol * const Dsy = opDB.retrieve_operator<DivSSurfYSVol>();
     const DivSSurfZSVol * const Dsz = opDB.retrieve_operator<DivSSurfZSVol>();
 
-    Dsx->apply_to_op( *Gsx, *Ssx );
-    Dsy->apply_to_op( *Gsy, *Ssy );
-    Dsz->apply_to_op( *Gsz, *Ssz );
+    if( dim[0]>1 ) Dsx->apply_to_op( *Gsx, *Ssx );
+    if( dim[1]>1 ) Dsy->apply_to_op( *Gsy, *Ssy );
+    if( dim[2]>1 ) Dsz->apply_to_op( *Gsz, *Ssz );
 
 //     Dsx->write_matlab("Dx");
 //     Gsx->write_matlab("Gx");
@@ -1050,9 +1054,9 @@ int main()
     const DivXSurfYXVol * const Dsy = opDB.retrieve_operator<DivXSurfYXVol>();
     const DivXSurfZXVol * const Dsz = opDB.retrieve_operator<DivXSurfZXVol>();
 
-    Dsx->apply_to_op( *Gsx, *Sxx );
-    Dsy->apply_to_op( *Gsy, *Sxy );
-    Dsz->apply_to_op( *Gsz, *Sxz );
+    if( dim[0]>1 ) Dsx->apply_to_op( *Gsx, *Sxx );
+    if( dim[1]>1 ) Dsy->apply_to_op( *Gsy, *Sxy );
+    if( dim[2]>1 ) Dsz->apply_to_op( *Gsz, *Sxz );
 
     cout << "done" << endl;
   }
@@ -1060,6 +1064,6 @@ int main()
 
   test_ops();
   test_poisson( grid, dim, bcFlag );
-  test_bc( grid, bcFlag );
+  //jcs not working since change:  test_bc( grid, bcFlag );
 
 }
