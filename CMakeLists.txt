@@ -12,7 +12,7 @@ set( PATCH_VERSION "0" )
 
 option( LINALG_TRILINOS "use Trilinos for linear algebra - also requires definition of {Trilinos_path}"  OFF )
 option( LINALG_UBLAS    "use UBLAS for linear algebra - cannot solve linear systems"  ON )
-option( BOOST_CMAKE "Boost was built with CMake" ON )
+option( BOOST_CMAKE "Boost was built with CMake" OFF )
 
 # Set the path for the Daixtrose installation on your machine
 # daixtrose is used for expression templates - we support only a few
