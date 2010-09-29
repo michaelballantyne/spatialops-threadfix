@@ -145,19 +145,19 @@ include_directories( ${PROJECT_BINARY_DIR}/config )
 # order is important, and future revisions to libraries such as
 # trilinos may require a modification of link order.
 set( SO_Sources
-  src/LagrangePoly.cpp
-  src/FVOneDimensional.cpp
-  src/FVTools.cpp
-  include/spatialops/particles/ParticleFieldTypes.cpp
+  spatialops/LagrangePoly.cpp
+  spatialops/structured/FVOneDimensional.cpp
+  spatialops/structured/FVTools.cpp
+  spatialops/particles/ParticleFieldTypes.cpp
   )
 if( LINALG_TRILINOS )
   set( SO_Sources ${SO_Sources}
-    src/LinAlgTrilinos.cpp
-    src/LinearSystem.cpp
+    spatialops/LinAlgTrilinos.cpp
+    spatialops/LinearSystem.cpp
     )
 endif()
 if( LINALG_UBLAS )
-  set( SO_Sources ${SO_Sources} src/LinAlgUBlas.cpp )
+  set( SO_Sources ${SO_Sources} spatialops/LinAlgUBlas.cpp )
 endif()
 
 
@@ -186,9 +186,9 @@ add_subdirectory( test )
 message( STATUS "Files will be installed to: " ${CMAKE_INSTALL_PREFIX} )
 
 # install spatialops headers
-file( GLOB so_headers "include/spatialops/*.h" )
-file( GLOB so_structured_headers "include/spatialops/structured/*.h" )
-file( GLOB so_particle_headers "include/spatialops/particles/*.h" )
+file( GLOB so_headers "spatialops/*.h" )
+file( GLOB so_structured_headers "spatialops/structured/*.h" )
+file( GLOB so_particle_headers "spatialops/particles/*.h" )
 set( so_headers
   ${so_headers}
   ${PROJECT_BINARY_DIR}/config/spatialops/SpatialOpsConfigure.h
