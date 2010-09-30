@@ -34,7 +34,7 @@ namespace structured{
   {
     int ny = nyNoGhost;
     if( nyNoGhost>1 ) ny += 2*FieldT::Ghost::NGHOST;
-    if( hasPlusFaceY && (0==FieldT::Location::FaceDir::value) ) ny+=1;
+    if( hasPlusFaceY && (1==FieldT::Location::FaceDir::value) ) ny+=1;
     return ny;
   }
 
@@ -43,7 +43,7 @@ namespace structured{
   {
     int nz = nzNoGhost;
     if( nzNoGhost>1 ) nz += 2*FieldT::Ghost::NGHOST;
-    if( hasPlusFaceZ && (0==FieldT::Location::FaceDir::value) ) nz+=1;
+    if( hasPlusFaceZ && (2==FieldT::Location::FaceDir::value) ) nz+=1;
     return nz;
   }
 
