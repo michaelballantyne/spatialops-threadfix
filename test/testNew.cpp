@@ -657,8 +657,6 @@ int main()
 
   // Scalar-Volume to scalar face gradients and laplacians
   {
-    SVolField phi( svolWindow, NULL );
-
     // sin function
     const SinFun<SVolField  > fun     ( grid.xcoord_svol(),   grid.ycoord_svol(),   grid.zcoord_svol()   );
     const SinFun<SSurfXField> gradFunX( grid.xcoord_sxsurf(), grid.ycoord_sxsurf(), grid.zcoord_sxsurf() );
@@ -1010,7 +1008,7 @@ int main()
     SVolField d2phi     ( svolWindow, NULL );
     SVolField d2phiExact( svolWindow, NULL );
 
-//     phi.write_matlab("phi");
+//     write_matlab(phi,"phi");
 
     fun.evaluate( phi );
 

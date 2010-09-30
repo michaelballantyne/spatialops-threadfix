@@ -106,6 +106,9 @@ namespace structured{
      */
     inline int flat_index( IntVec loc ) const
     {
+      assert( loc[0] < extent_[0] );
+      assert( loc[1] < extent_[1] );
+      assert( loc[2] < extent_[2] );
       for( size_t i=0; i<3; ++i ) loc[i] += offset_[i];
       return loc[0] + loc[1]*nptsGlob_[0] + loc[2]*nptsGlob_[0]*nptsGlob_[1];
     }
