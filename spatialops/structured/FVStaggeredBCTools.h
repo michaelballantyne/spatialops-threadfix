@@ -66,11 +66,11 @@ namespace structured{
   template< typename FieldT >
   int get_index_with_ghost( const IntVec& dim,
                             const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ, 
-                            IndexTriplet ijk );
+                            IntVec ijk );
 
   /**
-   *  @brief Modify the IndexTriplet as appropriate to obtain the
-   *         proper IndexTriplet for this field in the context of
+   *  @brief Modify the IntVec as appropriate to obtain the
+   *         proper IntVec for this field in the context of
    *         setting bcs on it using an operator.
    *
    *  @param dim <code>vector<int></code> contiaining the interior
@@ -79,13 +79,13 @@ namespace structured{
    *  @param side The BCSide indicating which side (face) of the given
    *         cell the bc is to be applied on.
    *
-   *  @param ijk The IndexTriplet (i,j,k) for the point, 0-based on
+   *  @param ijk The IntVec (i,j,k) for the point, 0-based on
    *         domain interior (excludes ghost cells).
    */
   template<typename OpT, typename FieldT>
-  IndexTriplet shift_to_ghost_ix( const IntVec& dim,
-                                  const BCSide side,
-                                  IndexTriplet ijk );
+  IntVec shift_to_ghost_ix( const IntVec& dim,
+                            const BCSide side,
+                            IntVec ijk );
 
   /**
    *  @class  BoundaryCondition
@@ -128,7 +128,7 @@ namespace structured{
   public:
 
     /**
-     *  @param point The IndexTriplet specifying the location to apply
+     *  @param point The IntVec specifying the location to apply
      *         this BC.  0-based on patch interior.
      *
      *  @param dim <code>vector<int></code> of extents in each
@@ -147,7 +147,7 @@ namespace structured{
      *         It should have the following signature:
      *         <code>double()</code>.
      */
-    BoundaryCondition( const IndexTriplet point,
+    BoundaryCondition( const IntVec point,
                        const IntVec dim,
                        const bool bcPlusX,
                        const bool bcPlusY,
@@ -241,7 +241,7 @@ namespace structured{
                          const bool bcPlusX,
                          const bool bcPlusY,
                          const bool bcPlusZ,
-                         const IndexTriplet point,
+                         const IntVec point,
                          const BCSide side,
                          const BCEval bceval,
                          const OperatorDatabase& soDatabase );
@@ -273,7 +273,7 @@ namespace structured{
    *
    *  @param op   The operator to imprint with the boundary conditions.
    *
-   *  @param ijk The IndexTriplet for the cell we want to apply the BC
+   *  @param ijk The IntVec for the cell we want to apply the BC
    *         to. Indices are 0-based on patch interior.
    *
    *  @param dim A vector containing the number of cells in each
@@ -317,7 +317,7 @@ namespace structured{
    */
   template< typename BCOpT, typename OpT >
   void imprint_bc_on_op( const BCOpT& bcOp,
-                         const IndexTriplet ijk,
+                         const IntVec ijk,
                          const IntVec& dim,
                          const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ,
                          const double bcVal,
@@ -339,7 +339,7 @@ namespace structured{
 
   template< typename FieldT, typename BCEval >
   BoundaryCondition<FieldT,BCEval>::
-  BoundaryCondition( const IndexTriplet point,
+  BoundaryCondition( const IntVec point,
                      const IntVec dim,
                      const bool bcPlusX,
                      const bool bcPlusY,
@@ -373,7 +373,7 @@ namespace structured{
                        const bool bcPlusX,
                        const bool bcPlusY,
                        const bool bcPlusZ,
-                       const IndexTriplet point,
+                       const IntVec point,
                        const BCSide side,
                        BCEval bcEval,
                        const OperatorDatabase& soDatabase )
@@ -399,7 +399,7 @@ namespace structured{
 #   ifndef NDEBUG
     if( ghostCoef_ == 0.0 ){
       std::cout << "Error in BoundaryConditionOp." << std::endl
-                << "(i,j,k)=("<<point.i<<","<< point.j <<","<< point.k <<")" << std::endl
+                << "(i,j,k)=("<<point[0]<<","<< point[1] <<","<< point[3] <<")" << std::endl
                 << "index_ = " << index_ << std::endl
                 << "row = " << irow << std::endl
                 << "op coefs: ";
@@ -463,35 +463,35 @@ namespace structured{
   template< typename FieldT >
   int get_index_with_ghost( const IntVec& dim,
                             const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ, 
-                            IndexTriplet index )
+                            IntVec index )
   {
-    if( dim[0]>1 )  index.i += FieldT::Ghost::NGHOST;
-    if( dim[1]>1 )  index.j += FieldT::Ghost::NGHOST;
-    if( dim[2]>1 )  index.k += FieldT::Ghost::NGHOST;
+    if( dim[0]>1 )  index[0] += FieldT::Ghost::NGHOST;
+    if( dim[1]>1 )  index[1] += FieldT::Ghost::NGHOST;
+    if( dim[2]>1 )  index[3] += FieldT::Ghost::NGHOST;
     return ijk2flat<FieldT>::value( dim, index, bcFlagX, bcFlagY, bcFlagZ );
   }
 
   template<typename OpT, typename FieldT>
-  IndexTriplet shift_to_ghost_ix( const IntVec& dim,
-                                  const BCSide side,
-                                  IndexTriplet ijk )
+  IntVec shift_to_ghost_ix( const IntVec& dim,
+                            const BCSide side,
+                            IntVec ijk )
   {
     if( IsSameType<typename OpT::SrcFieldType,FieldT>::result ){
       switch(side){
-      case X_MINUS_SIDE: if(dim[0]>1) --ijk.i; break;
-      case Y_MINUS_SIDE: if(dim[1]>1) --ijk.j; break;
-      case Z_MINUS_SIDE: if(dim[2]>1) --ijk.k; break;
-      case X_PLUS_SIDE : if(dim[0]>1) ++ijk.i; break;
-      case Y_PLUS_SIDE : if(dim[1]>1) ++ijk.j; break;
-      case Z_PLUS_SIDE : if(dim[2]>1) ++ijk.k; break;
+      case X_MINUS_SIDE: if(dim[0]>1) --ijk[0]; break;
+      case Y_MINUS_SIDE: if(dim[1]>1) --ijk[1]; break;
+      case Z_MINUS_SIDE: if(dim[2]>1) --ijk[3]; break;
+      case X_PLUS_SIDE : if(dim[0]>1) ++ijk[0]; break;
+      case Y_PLUS_SIDE : if(dim[1]>1) ++ijk[1]; break;
+      case Z_PLUS_SIDE : if(dim[2]>1) ++ijk[3]; break;
       case NO_SHIFT: assert(1); break;
       }
     }
     else{
       switch(side){
-      case X_PLUS_SIDE : if(dim[0]>1) ++ijk.i; break;
-      case Y_PLUS_SIDE : if(dim[1]>1) ++ijk.j; break;
-      case Z_PLUS_SIDE : if(dim[2]>1) ++ijk.k; break;
+      case X_PLUS_SIDE : if(dim[0]>1) ++ijk[0]; break;
+      case Y_PLUS_SIDE : if(dim[1]>1) ++ijk[1]; break;
+      case Z_PLUS_SIDE : if(dim[2]>1) ++ijk[3]; break;
       case X_MINUS_SIDE: break;
       case Y_MINUS_SIDE: break;
       case Z_MINUS_SIDE: break;
@@ -501,12 +501,12 @@ namespace structured{
     return ijk;
   }
 
-  template<> IndexTriplet
-  shift_to_ghost_ix<GradXVolXSurfX,XVolField>( const IntVec& dim, const BCSide side, IndexTriplet ijk )
+  template<> IntVec
+  shift_to_ghost_ix<GradXVolXSurfX,XVolField>( const IntVec& dim, const BCSide side, IntVec ijk )
   {
     switch(side){
-    case X_MINUS_SIDE: if(dim[0]>1) --ijk.i; break;
-    case X_PLUS_SIDE : if(dim[0]>1) ijk.i+=2; break;
+    case X_MINUS_SIDE: if(dim[0]>1) --ijk[0]; break;
+    case X_PLUS_SIDE : if(dim[0]>1) ijk[0]+=2; break;
     // error cases:
     case Y_MINUS_SIDE:  case Y_PLUS_SIDE:
     case Z_MINUS_SIDE:  case Z_PLUS_SIDE:
@@ -514,12 +514,12 @@ namespace structured{
     }
     return ijk;
   }
-  template<> IndexTriplet
-  shift_to_ghost_ix<GradXVolXSurfX,XSurfXField>( const IntVec& dim, const BCSide side, IndexTriplet ijk )
+  template<> IntVec
+  shift_to_ghost_ix<GradXVolXSurfX,XSurfXField>( const IntVec& dim, const BCSide side, IntVec ijk )
   {
     switch(side){
-    case X_MINUS_SIDE: if(dim[0]>1) --ijk.i; break;
-    case X_PLUS_SIDE : if(dim[0]>1) ++ijk.i; break;
+    case X_MINUS_SIDE: if(dim[0]>1) --ijk[0]; break;
+    case X_PLUS_SIDE : if(dim[0]>1) ++ijk[0]; break;
     // error cases:
     case Y_MINUS_SIDE:  case Y_PLUS_SIDE: 
     case Z_MINUS_SIDE:  case Z_PLUS_SIDE: 
@@ -527,12 +527,12 @@ namespace structured{
     }
     return ijk;
   }
-  template<> IndexTriplet
-  shift_to_ghost_ix<InterpXVolXSurfX,XVolField>( const IntVec& dim, const BCSide side, IndexTriplet ijk )
+  template<> IntVec
+  shift_to_ghost_ix<InterpXVolXSurfX,XVolField>( const IntVec& dim, const BCSide side, IntVec ijk )
   {
     switch(side){
-    case X_MINUS_SIDE: if(dim[0]>1) --ijk.i; break;
-    case X_PLUS_SIDE : if(dim[0]>1) ijk.i+=2; break;
+    case X_MINUS_SIDE: if(dim[0]>1) --ijk[0]; break;
+    case X_PLUS_SIDE : if(dim[0]>1) ijk[0]+=2; break;
     // error cases:
     case Y_MINUS_SIDE:  case Y_PLUS_SIDE:
     case Z_MINUS_SIDE:  case Z_PLUS_SIDE:
@@ -540,12 +540,12 @@ namespace structured{
     }
     return ijk;
   }
-  template<> IndexTriplet
-  shift_to_ghost_ix<InterpXVolXSurfX,XSurfXField>( const IntVec& dim, const BCSide side, IndexTriplet ijk )
+  template<> IntVec
+  shift_to_ghost_ix<InterpXVolXSurfX,XSurfXField>( const IntVec& dim, const BCSide side, IntVec ijk )
   {
     switch(side){
-    case X_MINUS_SIDE: if(dim[0]>1) --ijk.i; break;
-    case X_PLUS_SIDE : if(dim[0]>1) ++ijk.i; break;
+    case X_MINUS_SIDE: if(dim[0]>1) --ijk[0]; break;
+    case X_PLUS_SIDE : if(dim[0]>1) ++ijk[0]; break;
     // error cases:
     case Y_MINUS_SIDE:  case Y_PLUS_SIDE: 
     case Z_MINUS_SIDE:  case Z_PLUS_SIDE: 
@@ -553,12 +553,12 @@ namespace structured{
     }
     return ijk;
   }
-  template<> IndexTriplet
-  shift_to_ghost_ix<GradYVolYSurfY,YVolField>( const IntVec& dim, const BCSide side, IndexTriplet ijk )
+  template<> IntVec
+  shift_to_ghost_ix<GradYVolYSurfY,YVolField>( const IntVec& dim, const BCSide side, IntVec ijk )
   {
     switch(side){
-    case Y_MINUS_SIDE: if(dim[1]>1) --ijk.j; break;
-    case Y_PLUS_SIDE : if(dim[1]>1) ijk.j+=2; break;
+    case Y_MINUS_SIDE: if(dim[1]>1) --ijk[1]; break;
+    case Y_PLUS_SIDE : if(dim[1]>1) ijk[1]+=2; break;
     // error cases:
     case X_MINUS_SIDE:  case X_PLUS_SIDE:
     case Z_MINUS_SIDE:  case Z_PLUS_SIDE:
@@ -566,12 +566,12 @@ namespace structured{
     }
     return ijk;
   }
-  template<> IndexTriplet
-  shift_to_ghost_ix<GradYVolYSurfY,YSurfYField>( const IntVec& dim, const BCSide side, IndexTriplet ijk )
+  template<> IntVec
+  shift_to_ghost_ix<GradYVolYSurfY,YSurfYField>( const IntVec& dim, const BCSide side, IntVec ijk )
   {
     switch(side){
-    case Y_MINUS_SIDE: if(dim[1]>1) --ijk.j; break;
-    case Y_PLUS_SIDE : if(dim[1]>1) ++ijk.j; break;
+    case Y_MINUS_SIDE: if(dim[1]>1) --ijk[1]; break;
+    case Y_PLUS_SIDE : if(dim[1]>1) ++ijk[1]; break;
     // error cases:
     case X_MINUS_SIDE:  case X_PLUS_SIDE: 
     case Z_MINUS_SIDE:  case Z_PLUS_SIDE: 
@@ -579,12 +579,12 @@ namespace structured{
     }
     return ijk;
   }
-  template<> IndexTriplet
-  shift_to_ghost_ix<InterpYVolYSurfY,YVolField>( const IntVec& dim, const BCSide side, IndexTriplet ijk )
+  template<> IntVec
+  shift_to_ghost_ix<InterpYVolYSurfY,YVolField>( const IntVec& dim, const BCSide side, IntVec ijk )
   {
     switch(side){
-    case Y_MINUS_SIDE: if(dim[1]>1) --ijk.j; break;
-    case Y_PLUS_SIDE : if(dim[1]>1) ijk.j+=2; break;
+    case Y_MINUS_SIDE: if(dim[1]>1) --ijk[1]; break;
+    case Y_PLUS_SIDE : if(dim[1]>1) ijk[1]+=2; break;
     // error cases:
     case X_MINUS_SIDE:  case X_PLUS_SIDE:
     case Z_MINUS_SIDE:  case Z_PLUS_SIDE:
@@ -592,12 +592,12 @@ namespace structured{
     }
     return ijk;
   }
-  template<> IndexTriplet
-  shift_to_ghost_ix<InterpYVolYSurfY,YSurfYField>( const IntVec& dim, const BCSide side, IndexTriplet ijk )
+  template<> IntVec
+  shift_to_ghost_ix<InterpYVolYSurfY,YSurfYField>( const IntVec& dim, const BCSide side, IntVec ijk )
   {
     switch(side){
-    case Y_MINUS_SIDE: if(dim[1]>1) --ijk.j; break;
-    case Y_PLUS_SIDE : if(dim[1]>1) ++ijk.j; break;
+    case Y_MINUS_SIDE: if(dim[1]>1) --ijk[1]; break;
+    case Y_PLUS_SIDE : if(dim[1]>1) ++ijk[1]; break;
     // error cases:
     case X_MINUS_SIDE:  case X_PLUS_SIDE: 
     case Z_MINUS_SIDE:  case Z_PLUS_SIDE: 
@@ -606,12 +606,12 @@ namespace structured{
     return ijk;
   }
 
-  template<> IndexTriplet
-  shift_to_ghost_ix<GradZVolZSurfZ,ZVolField>( const IntVec& dim, const BCSide side, IndexTriplet ijk )
+  template<> IntVec
+  shift_to_ghost_ix<GradZVolZSurfZ,ZVolField>( const IntVec& dim, const BCSide side, IntVec ijk )
   {
     switch(side){
-    case Z_MINUS_SIDE: if(dim[2]>1) --ijk.k; break;
-    case Z_PLUS_SIDE : if(dim[2]>1) ijk.k+=2; break;
+    case Z_MINUS_SIDE: if(dim[2]>1) --ijk[3]; break;
+    case Z_PLUS_SIDE : if(dim[2]>1) ijk[3]+=2; break;
     // error cases:
     case X_MINUS_SIDE:  case X_PLUS_SIDE:
     case Y_MINUS_SIDE:  case Y_PLUS_SIDE:
@@ -619,12 +619,12 @@ namespace structured{
     }
     return ijk;
   }
-  template<> IndexTriplet
-  shift_to_ghost_ix<GradZVolZSurfZ,ZSurfZField>( const IntVec& dim, const BCSide side, IndexTriplet ijk )
+  template<> IntVec
+  shift_to_ghost_ix<GradZVolZSurfZ,ZSurfZField>( const IntVec& dim, const BCSide side, IntVec ijk )
   {
     switch(side){
-    case Z_MINUS_SIDE: if(dim[2]>1) --ijk.k; break;
-    case Z_PLUS_SIDE : if(dim[2]>1) ++ijk.k; break;
+    case Z_MINUS_SIDE: if(dim[2]>1) --ijk[3]; break;
+    case Z_PLUS_SIDE : if(dim[2]>1) ++ijk[3]; break;
     // error cases:
     case X_MINUS_SIDE:  case X_PLUS_SIDE: 
     case Y_MINUS_SIDE:  case Y_PLUS_SIDE: 
@@ -632,12 +632,12 @@ namespace structured{
     }
     return ijk;
   }
-  template<> IndexTriplet
-  shift_to_ghost_ix<InterpZVolZSurfZ,ZVolField>( const IntVec& dim, const BCSide side, IndexTriplet ijk )
+  template<> IntVec
+  shift_to_ghost_ix<InterpZVolZSurfZ,ZVolField>( const IntVec& dim, const BCSide side, IntVec ijk )
   {
     switch(side){
-    case Z_MINUS_SIDE: if(dim[2]>1) --ijk.k; break;
-    case Z_PLUS_SIDE : if(dim[2]>1) ijk.k+=2; break;
+    case Z_MINUS_SIDE: if(dim[2]>1) --ijk[3]; break;
+    case Z_PLUS_SIDE : if(dim[2]>1) ijk[3]+=2; break;
     // error cases:
     case X_MINUS_SIDE:  case X_PLUS_SIDE:
     case Y_MINUS_SIDE:  case Y_PLUS_SIDE:
@@ -645,12 +645,12 @@ namespace structured{
     }
     return ijk;
   }
-  template<> IndexTriplet
-  shift_to_ghost_ix<InterpZVolZSurfZ,ZSurfZField>( const IntVec& dim, const BCSide side, IndexTriplet ijk )
+  template<> IntVec
+  shift_to_ghost_ix<InterpZVolZSurfZ,ZSurfZField>( const IntVec& dim, const BCSide side, IntVec ijk )
   {
     switch(side){
-    case Z_MINUS_SIDE: if(dim[2]>1) --ijk.k; break;
-    case Z_PLUS_SIDE : if(dim[2]>1) ++ijk.k; break;
+    case Z_MINUS_SIDE: if(dim[2]>1) --ijk[3]; break;
+    case Z_PLUS_SIDE : if(dim[2]>1) ++ijk[3]; break;
     // error cases:
     case X_MINUS_SIDE:  case X_PLUS_SIDE: 
     case Y_MINUS_SIDE:  case Y_PLUS_SIDE: 
@@ -664,7 +664,7 @@ namespace structured{
 
   template< typename BCOpT, typename OpT >
   void imprint_bc_on_op( const BCOpT& bcOp,
-                         const IndexTriplet ijk,
+                         const IntVec ijk,
                          const IntVec& dim,
                          const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ,
                          const double bcVal,
@@ -678,8 +678,8 @@ namespace structured{
     int nbcinfo = 0;
 
     // get the index into the field value at this point.
-    IndexTriplet ijks( shift_to_ghost_ix<BCOpT,typename BCOpT::SrcFieldType >(dim,side,ijk) );
-    IndexTriplet ijkd( shift_to_ghost_ix<BCOpT,typename BCOpT::DestFieldType>(dim,side,ijk) );
+    IntVec ijks( shift_to_ghost_ix<BCOpT,typename BCOpT::SrcFieldType >(dim,side,ijk) );
+    IntVec ijkd( shift_to_ghost_ix<BCOpT,typename BCOpT::DestFieldType>(dim,side,ijk) );
     const int ixf = get_index_with_ghost<typename BCOpT::SrcFieldType >( dim, bcFlagX, bcFlagY, bcFlagZ, ijks );
     int irow      = get_index_with_ghost<typename BCOpT::DestFieldType>( dim, bcFlagX, bcFlagY, bcFlagZ, ijkd );
 

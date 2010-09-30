@@ -29,16 +29,21 @@ namespace structured{
 
     const bool builtField_;
 
+    VecOps linAlg_;
+    VecType& vec_;
+
+    inline void reset_values( const T* values );
+
   public:
 
     typedef GhostTraits Ghost;
     typedef FieldLocation Location;
 
-    typedef FieldIterator<      T*>       iterator;
-    typedef FieldIterator<const T*> const_iterator;
+    typedef FieldIterator<T*      >       iterator;
+    typedef FieldIterator<T const*> const_iterator;
 
-    typedef FieldIterator<      T*>       interior_iterator;
-    typedef FieldIterator<const T*> const_interior_iterator;
+    typedef FieldIterator<T*      >       interior_iterator;
+    typedef FieldIterator<T const*> const_interior_iterator;
 
     /**
      *  \brief Construct a SpatialField
@@ -95,6 +100,17 @@ namespace structured{
     inline MyType& operator*=(const T);
     inline MyType& operator/=(const T);
 
+
+    /**
+     * @name
+     * Obtain the underlying VecType object that corresponds to
+     * the LinAlg strategy.
+     */
+    //@{
+    inline       VecType & get_linalg_vec()      { return vec_; }
+    inline const VecType & get_linalg_vec() const{ return vec_; }
+    //@}
+
   };
 
   //==================================================================
@@ -113,7 +129,8 @@ namespace structured{
       fieldValues_( (mode==ExternalStorage)
                     ? fieldValues
                     : new T[ window.glob_dim(0) * window.glob_dim(1) * window.glob_dim(2) ] ),
-      builtField_( mode==InternalStorage )
+      builtField_( mode==InternalStorage ),
+      vec_( linAlg_.setup_vector( fieldWindow_.npts(), fieldValues_ ) )
   {
     for( size_t i=0; i<3; ++i ){
       if( window.extent(i)>1 ){
@@ -121,6 +138,7 @@ namespace structured{
         interiorFieldWindow_.offset(i) +=   GhostTraits::NGHOST;
       }
     }
+    if( mode==InternalStorage )  reset_values( fieldValues );
   }
 
   //------------------------------------------------------------------
@@ -135,7 +153,8 @@ namespace structured{
       fieldValues_( (mode==ExternalStorage)
                     ? fieldValues
                     : new T[npts[0]*npts[1]*npts[2]] ),
-      builtField_( mode==InternalStorage )
+      builtField_( mode==InternalStorage ),
+      vec_( linAlg_.setup_vector( fieldWindow_.npts(), fieldValues_ ) )
   {
     for( size_t i=0; i<3; ++i ){
       if( npts[i]>1 ){
@@ -152,6 +171,23 @@ namespace structured{
   ~SpatialField()
   {
     if( builtField_ ) delete [] fieldValues_;
+  }
+
+  //------------------------------------------------------------------
+
+  template< class VecOps, typename FieldLocation, typename GhostTraits, typename T >
+  void
+  SpatialField<VecOps,FieldLocation,GhostTraits,T>::
+  reset_values( const T* values )
+  {
+    iterator ifld=begin();
+    const iterator iflde=end();
+    if( NULL == values ){
+      for( ; ifld!=iflde; ++ifld ) *ifld = 0.0;
+    }
+    else{
+      for( ; ifld!=iflde; ++ifld, ++values )  *ifld = *values;
+    }
   }
 
   //------------------------------------------------------------------

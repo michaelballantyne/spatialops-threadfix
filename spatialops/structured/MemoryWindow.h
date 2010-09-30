@@ -122,14 +122,7 @@ namespace structured{
       return ijk;
     }
 
-    inline int npts() const
-    {
-      IntVec vec(extent_);
-      if( vec[0]>1 ) --vec[0];
-      if( vec[1]>1 ) --vec[1];
-      if( vec[2]>1 ) --vec[2];
-      return 1+flat_index( vec );
-    }
+    inline int npts() const{ return extent_[0] * extent_[1] * extent_[2]; }
 
     inline int glob_dim( const size_t i ) const{ return nptsGlob_[i]; }
     inline int offset  ( const size_t i ) const{ return offset_[i]; }
@@ -175,11 +168,11 @@ namespace structured{
 
   public:
     typedef FieldIterator<T> self;
-    typedef typename std::iterator_traits<T>::value_type   value_type;
+    typedef typename std::iterator_traits<T>::value_type      value_type;
     typedef typename std::iterator_traits<T>::reference       reference;
     typedef typename std::iterator_traits<T>::pointer         pointer;
     typedef typename std::iterator_traits<T>::difference_type difference_type;
-    typedef          std::forward_iterator_tag                              iterator_category;
+    typedef          std::forward_iterator_tag                iterator_category;
 
     FieldIterator( T t, const MemoryWindow window )
       : current_( t ),

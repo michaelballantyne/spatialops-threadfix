@@ -2,6 +2,8 @@
 #define FVStaggered_h
 
 #include <spatialops/SpatialOpsConfigure.h>
+#include <spatialops/OperatorDatabase.h>
+
 #include <spatialops/structured/FVStaggeredTypes.h>
 #include <spatialops/structured/FVStaggeredInterpolant.h>
 #include <spatialops/structured/FVStaggeredGradient.h>

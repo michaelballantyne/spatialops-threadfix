@@ -102,139 +102,6 @@ namespace structured{
     return MemoryWindow( dimGlob, offset, dimLoc );
   }
 
-  //------------------------------------------------------------------
-
-  /**
-   *  @brief obtain the number of points for this field type in the requested direction
-   *
-   *  @param dir The direction.  See XDIR, YDIR, ZDIR.
-   *  @param dim The dimensions of the mesh in each direction.
-   *  @param hasPlusFace bool indicating if the patch has a physical
-   *         boundary in the dir direction.  In that case, the fields
-   *         have an extra point.
-   *
-   *  \deprecated{ this should phase out, as it does not allow functionality with MemoryWindow}
-   */
-  template<typename FieldT>
-  inline int npts( size_t dir, const std::vector<int>& dim, const bool hasPlusFace )
-  {
-    size_t n = dim[dir];
-    if( n>1 ){
-      n += 2*FieldT::Ghost::NGHOST;
-      if( hasPlusFace && (int(dir) == FieldT::Location::FaceDir::value) ){
-        ++n;
-      }
-    }
-    return n;
-  }
-
-  template<> inline int npts<double>( size_t dir, const std::vector<int>& dim, const bool hasPlusFace )
-  {
-    return dim[dir];
-  }
-
-
-  /**
-   * @brief get the total number of points (including ghost cells) for
-   * a field in the x-direction.
-   *
-   * @param dim A vector containing the number of cells in each
-   * coordinate direction.  This is a three-component vector.
-   *
-   * @param hasPlusXSideFaces A boolean flag to indicate if this patch
-   * is on a +x side physical boundary.  If so, then it is assumed
-   * that there is an extra face on that side of the domain, and face
-   * variable dimensions will be modified accordingly.
-   *
-   *  \deprecated{ this should phase out, as it does not allow functionality with MemoryWindow}
-   */
-  template<typename FieldT>
-  inline size_t get_nx( const std::vector<int>& dim,
-                        const bool hasPlusXSideFaces )
-  {
-    return npts<FieldT>( XDIR::value, dim, hasPlusXSideFaces );
-  }
-
-  /**
-   * @brief get the total number of points (including ghost cells) for
-   * a field in the y-direction.
-   *
-   * @param dim A vector containing the number of cells in each
-   * coordinate direction.  This is a three-component vector.
-   *
-   * @param hasPlusYSideFaces A boolean flag to indicate if this patch
-   * is on a +y side physical boundary.  If so, then it is assumed
-   * that there is an extra face on that side of the domain, and face
-   * variable dimensions will be modified accordingly.
-   *
-   *  \deprecated{ this should phase out, as it does not allow functionality with MemoryWindow}
-   */
-  template<typename FieldT> inline size_t get_ny( const std::vector<int>& dim,
-                                                  const bool hasPlusYSideFaces )
-  {
-    return npts<FieldT>( YDIR::value, dim, hasPlusYSideFaces );
-  }
-
-
-  /**
-   * @brief get the total number of points (including ghost cells) for
-   * a field in the z-direction.
-   *
-   * @param dim A vector containing the number of cells in each
-   * coordinate direction.  This is a three-component vector.
-   *
-   * @param hasPlusZSideFaces A boolean flag to indicate if this patch
-   * is on a +z side physical boundary.  If so, then it is assumed
-   * that there is an extra face on that side of the domain, and face
-   * variable dimensions will be modified accordingly.
-   *
-   *  \deprecated{ this should phase out, as it does not allow functionality with MemoryWindow}
-   */
-  template<typename FieldT> inline size_t get_nz( const std::vector<int>& dim,
-                                                  const bool hasPlusZSideFaces )
-  {
-    return npts<FieldT>( ZDIR::value, dim, hasPlusZSideFaces );
-  }
-
-  //==================================================================
-
-  /**
-   * @brief get the total number of points in a field, including ghost
-   * cells.
-   *
-   * @param dim A vector containing the number of cells in each
-   * coordinate direction.  This is a three-component vector.
-   *
-   * @param hasPlusXSideFaces A boolean flag to indicate if this patch
-   * is on a +x side physical boundary.  If so, then it is assumed
-   * that there is an extra face on that side of the domain, and face
-   * variable dimensions will be modified accordingly.
-   *
-   * @param hasPlusYSideFaces A boolean flag to indicate if this patch
-   * is on a +y side physical boundary.  If so, then it is assumed
-   * that there is an extra face on that side of the domain, and face
-   * variable dimensions will be modified accordingly.
-
-   * @param hasPlusZSideFaces A boolean flag to indicate if this patch
-   * is on a +z side physical boundary.  If so, then it is assumed
-   * that there is an extra face on that side of the domain, and face
-   * variable dimensions will be modified accordingly.
-   *
-   * @todo Remove default values.  This is very dangerous for parallel
-   * computations to have a default value for the + side information.
-   *
-   *  \deprecated{ this should phase out, as it does not allow functionality with MemoryWindow}
-   */
-  template<typename FieldT> int get_n_tot( const std::vector<int>& dim,
-                                           const bool hasPlusXSideFaces=true,
-                                           const bool hasPlusYSideFaces=true,
-                                           const bool hasPlusZSideFaces=true )
-  {
-    return get_nx<FieldT>(dim,hasPlusXSideFaces)
-         * get_ny<FieldT>(dim,hasPlusYSideFaces)
-         * get_nz<FieldT>(dim,hasPlusZSideFaces);
-  }
-
   //====================================================================
 
   // intended for local use only.
@@ -298,32 +165,15 @@ namespace structured{
   //==================================================================
 
   /**
-   *  @struct IndexTriplet
-   *  @brief  Holds the ijk index.
-   */
-  struct IndexTriplet
-  {
-    IndexTriplet( const int ii, const int jj, const int kk ): i(ii), j(jj), k(kk){}
-    IndexTriplet(){ i=j=k=-1; }
-    IndexTriplet( const IndexTriplet& x ){ i=x.i; j=x.j; k=x.k; }
-    IndexTriplet& operator=(const IndexTriplet& x){ i=x.i; j=x.j; k=x.k; return *this; }
-    int& operator[](const int dim)      { switch(dim) { case 0: return i; case 1: return j; case 2: return k; } }
-    int  operator[](const int dim) const{ switch(dim) { case 0: return i; case 1: return j; case 2: return k; } }
-    int i,j,k;
-  };
-
-  //==================================================================
-
-  /**
    *  @brief Use this to transform a flat index to i,j,k indices.
    */
   template<typename FieldT>
   struct flat2ijk
   {
-    static IndexTriplet value( const IntVec& dim, const int ix,
-                               const bool hasPlusXSideFaces=true,
-                               const bool hasPlusYSideFaces=true,
-                               const bool hasPlusZSideFaces=true );
+    static IntVec value( const IntVec& dim, const int ix,
+                         const bool hasPlusXSideFaces=true,
+                         const bool hasPlusYSideFaces=true,
+                         const bool hasPlusZSideFaces=true );
   };
 
   //==================================================================
@@ -334,7 +184,7 @@ namespace structured{
   template<typename FieldT>
   struct ijk2flat
   {
-    static int value( const IntVec& dim, const IndexTriplet& ixt,
+    static int value( const IntVec& dim, const IntVec& ixt,
                       const bool hasPlusXSideFaces=true,
                       const bool hasPlusYSideFaces=true,
                       const bool hasPlusZSideFaces=true );
@@ -343,17 +193,17 @@ namespace structured{
   //====================================================================
 
   template<typename FieldT>
-  inline IndexTriplet
+  inline IntVec
   flat2ijk<FieldT>::value( const IntVec& dim, const int ix,
                            const bool hasPlusXSideFaces, const bool hasPlusYSideFaces, const bool hasPlusZSideFaces )
   {
-    IndexTriplet triplet;
+    IntVec triplet(0,0,0);
 
     const int nxt = get_nx_with_ghost<FieldT>(dim[0],hasPlusXSideFaces);
     const int nyt = get_ny_with_ghost<FieldT>(dim[1],hasPlusXSideFaces);
-    triplet.i = ix%nxt;
-    triplet.j = ix/nxt % nyt;
-    triplet.k = ix/(nxt*nyt);
+    triplet[0] = ix%nxt;
+    triplet[1] = ix/nxt % nyt;
+    triplet[2] = ix/(nxt*nyt);
 
     return triplet;
   }
@@ -362,16 +212,16 @@ namespace structured{
 
   template<typename FieldT>
   inline int
-  ijk2flat<FieldT>::value( const IntVec& dim, const IndexTriplet& triplet,
+  ijk2flat<FieldT>::value( const IntVec& dim, const IntVec& triplet,
                            const bool hasPlusXSideFaces, const bool hasPlusYSideFaces, const bool hasPlusZSideFaces )
   {
     const int nxt = get_nx_with_ghost<FieldT>(dim[0],hasPlusXSideFaces);
     const int nyt = get_ny_with_ghost<FieldT>(dim[1],hasPlusYSideFaces);
       
     return
-      triplet.i +
-      triplet.j * nxt +
-      triplet.k * nxt*nyt;
+      triplet[0] +
+      triplet[1] * nxt +
+      triplet[2] * nxt*nyt;
   }
 
   //==================================================================

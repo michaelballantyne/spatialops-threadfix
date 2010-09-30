@@ -250,8 +250,8 @@ namespace structured{
 
     const int nx = get_nx_with_ghost<SrcFieldT>( dim_[0], hasPlusXSideFaces_ );
 
-    const IndexTriplet trow = flat2ijk<DestFieldT>::value( dim_, irow, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
-    IndexTriplet t;
+    const IntVec trow = flat2ijk<DestFieldT>::value( dim_, irow, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
+    IntVec t(0,0,0);
 
     switch ( dir_ ){
 
@@ -260,13 +260,13 @@ namespace structured{
         const int stride = 1;
         t = flat2ijk<SrcFieldT>::value( dim_, irow+stride, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_  );
         shift_dest_to_src<SrcFieldT,DestFieldT>( dim_, t );
-        if( t.i >= 0 && t.i < nx  &&  trow.j==t.j && trow.k==t.k ){
+        if( t[0] >= 0 && t[0] < nx  &&  trow[1]==t[1] && trow[2]==t[2] ){
           ixs.push_back( irow+stride );
           vals.push_back(-1.0);
         }
         t = flat2ijk<SrcFieldT>::value( dim_, irow-stride, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
         shift_dest_to_src<SrcFieldT,DestFieldT>( dim_, t );
-        if( t.i >= 0 && t.i < nx  &&  trow.j==t.j && trow.k==t.k ){
+        if( t[0] >= 0 && t[0] < nx  &&  trow[1]==t[1] && trow[2]==t[2] ){
           ixs.push_back( irow-stride );
           vals.push_back( -1.0 );
         }
@@ -280,13 +280,13 @@ namespace structured{
         const int stride = nx>1 ? nx : 1;
         t = flat2ijk<SrcFieldT>::value( dim_, irow+stride, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
         shift_dest_to_src<SrcFieldT,DestFieldT>( dim_, t );
-        if( t.j >= 0 && t.j < ny  &&  trow.i==t.i && trow.k==t.k ){
+        if( t[1] >= 0 && t[1] < ny  &&  trow[0]==t[0] && trow[2]==t[2] ){
           ixs.push_back( irow+stride );
           vals.push_back( -1.0 );
         }
         t = flat2ijk<SrcFieldT>::value( dim_, irow-stride, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
         shift_dest_to_src<SrcFieldT,DestFieldT>( dim_, t );
-        if( t.j >= 0 && t.j < ny  &&  trow.i==t.i && trow.k==t.k ){
+        if( t[1] >= 0 && t[1] < ny  &&  trow[0]==t[0] && trow[2]==t[2] ){
           ixs.push_back( irow-stride );
           vals.push_back( -1.0 );
         }
@@ -301,13 +301,13 @@ namespace structured{
         const int stride = (nx>1 || ny>1) ? nx*ny : 1;
         t = flat2ijk<SrcFieldT>::value( dim_, irow+stride, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
         shift_dest_to_src<SrcFieldT,DestFieldT>( dim_, t );
-        if( t.k >= 0 && t.k < nz  &&  trow.i==t.i && trow.j==t.j ){
+        if( t[2] >= 0 && t[2] < nz  &&  trow[0]==t[0] && trow[1]==t[1] ){
           ixs.push_back( irow+stride );
           vals.push_back( -1.0 );
         }
         t = flat2ijk<SrcFieldT>::value( dim_, irow-stride, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
         shift_dest_to_src<SrcFieldT,DestFieldT>( dim_, t );
-        if( t.k >= 0 && t.k < nz  &&  trow.i==t.i && trow.j==t.j ){
+        if( t[2] >= 0 && t[2] < nz  &&  trow[0]==t[0] && trow[1]==t[1] ){
           ixs.push_back( irow-stride );
           vals.push_back( -1.0 );
         }

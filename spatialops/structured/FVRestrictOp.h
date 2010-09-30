@@ -209,7 +209,7 @@ namespace structured{
                    std::vector<double> & vals,
                    std::vector<int> & ixs ) const
   {
-    const structured::IndexTriplet ijkDest( structured::flat2ijk<FieldT>::value( dimDest_, irow, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ ) );
+    const IntVec ijkDest( structured::flat2ijk<FieldT>::value( dimDest_, irow, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ ) );
 
     const int ng = FieldT::Ghost::NGHOST; // number of ghost points
 
@@ -217,7 +217,7 @@ namespace structured{
     const int ndest = dimDest_[activeDim_];
     const int idest = ijkDest [activeDim_] - ng;
 
-    structured::IndexTriplet ijkSrc = ijkDest;
+    IntVec ijkSrc = ijkDest;
 
     if( ijkDest[activeDim_] < ng )
       ijkSrc[activeDim_] = 0;
@@ -226,7 +226,7 @@ namespace structured{
     else
       ijkSrc[activeDim_] = int( float(idest*nsrc)/float(ndest) + ng );
 
-    const int index = structured::ijk2flat<FieldT>::value( dimSrc_, ijkSrc, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
+    const int index = ijk2flat<FieldT>::value( dimSrc_, ijkSrc, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
 
     ixs.push_back( index );
     vals.push_back( 1.0 );

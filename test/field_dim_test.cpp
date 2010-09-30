@@ -9,78 +9,74 @@ int main()
   using namespace SpatialOps;
   using namespace structured;
 
-  std::vector<int> n(3,10);
+  IntVec n(10,10,10);
 
   bool hasPlusFace[] = {true, true, true};
 
   TestHelper status(true);
 
-  const size_t xdir = SpatialOps::XDIR::value;
-  const size_t ydir = SpatialOps::YDIR::value;
-  const size_t zdir = SpatialOps::ZDIR::value;
+  status( get_nx_with_ghost<SVolField  >( n[0], hasPlusFace[0] ) == n[0]+2, "SVol nx" );
+  status( get_nx_with_ghost<SSurfXField>( n[0], hasPlusFace[0] ) == n[0]+3, "SSX  nx" );
+  status( get_nx_with_ghost<SSurfYField>( n[0], hasPlusFace[0] ) == n[0]+2, "SSY  nx" );
+  status( get_nx_with_ghost<SSurfZField>( n[0], hasPlusFace[0] ) == n[0]+2, "SSZ  nx" );
 
-  status( npts<SVolField  >( xdir, n, hasPlusFace[xdir] ) == n[0]+2, "SVol nx" );
-  status( npts<SSurfXField>( xdir, n, hasPlusFace[xdir] ) == n[0]+3, "SSX  nx" );
-  status( npts<SSurfYField>( xdir, n, hasPlusFace[xdir] ) == n[0]+2, "SSY  nx" );
-  status( npts<SSurfZField>( xdir, n, hasPlusFace[xdir] ) == n[0]+2, "SSZ  nx" );
+  status( get_ny_with_ghost<SVolField  >( n[1], hasPlusFace[1] ) == n[1]+2, "SVol ny" );
+  status( get_ny_with_ghost<SSurfXField>( n[1], hasPlusFace[1] ) == n[1]+2, "SSX  ny" );
+  status( get_ny_with_ghost<SSurfYField>( n[1], hasPlusFace[1] ) == n[1]+3, "SSY  ny" );
+  status( get_ny_with_ghost<SSurfZField>( n[1], hasPlusFace[1] ) == n[1]+2, "SSZ  ny" );
 
-  status( npts<SVolField  >( ydir, n, hasPlusFace[ydir] ) == n[1]+2, "SVol ny" );
-  status( npts<SSurfXField>( ydir, n, hasPlusFace[ydir] ) == n[1]+2, "SSX  ny" );
-  status( npts<SSurfYField>( ydir, n, hasPlusFace[ydir] ) == n[1]+3, "SSY  ny" );
-  status( npts<SSurfZField>( ydir, n, hasPlusFace[ydir] ) == n[1]+2, "SSZ  ny" );
-
-  status( npts<SVolField  >( zdir, n, hasPlusFace[zdir] ) == n[2]+2, "SVol nz" );
-  status( npts<SSurfXField>( zdir, n, hasPlusFace[zdir] ) == n[2]+2, "SSX  nz" );
-  status( npts<SSurfYField>( zdir, n, hasPlusFace[zdir] ) == n[2]+2, "SSY  nz" );
-  status( npts<SSurfZField>( zdir, n, hasPlusFace[zdir] ) == n[2]+3, "SSZ  nz" );
+  status( get_nz_with_ghost<SVolField  >( n[2], hasPlusFace[2] ) == n[2]+2, "SVol nz" );
+  status( get_nz_with_ghost<SSurfXField>( n[2], hasPlusFace[2] ) == n[2]+2, "SSX  nz" );
+  status( get_nz_with_ghost<SSurfYField>( n[2], hasPlusFace[2] ) == n[2]+2, "SSY  nz" );
+  status( get_nz_with_ghost<SSurfZField>( n[2], hasPlusFace[2] ) == n[2]+3, "SSZ  nz" );
 
 
-  status( npts<XVolField  >( xdir, n, hasPlusFace[xdir] ) == n[0]+2, "XVol nx" );
-  status( npts<XSurfXField>( xdir, n, hasPlusFace[xdir] ) == n[0]+3, "XSX  nx" );
-  status( npts<XSurfYField>( xdir, n, hasPlusFace[xdir] ) == n[0]+2, "XSY  nx" );
-  status( npts<XSurfZField>( xdir, n, hasPlusFace[xdir] ) == n[0]+2, "XSZ  nx" );
+  status( get_nx_with_ghost<XVolField  >( n[0], hasPlusFace[0] ) == n[0]+2, "XVol nx" );
+  status( get_nx_with_ghost<XSurfXField>( n[0], hasPlusFace[0] ) == n[0]+3, "XSX  nx" );
+  status( get_nx_with_ghost<XSurfYField>( n[0], hasPlusFace[0] ) == n[0]+2, "XSY  nx" );
+  status( get_nx_with_ghost<XSurfZField>( n[0], hasPlusFace[0] ) == n[0]+2, "XSZ  nx" );
 
-  status( npts<XVolField  >( ydir, n, hasPlusFace[ydir] ) == n[1]+2, "XVol ny" );
-  status( npts<XSurfXField>( ydir, n, hasPlusFace[ydir] ) == n[1]+2, "XSX  ny" );
-  status( npts<XSurfYField>( ydir, n, hasPlusFace[ydir] ) == n[1]+3, "XSY  ny" );
-  status( npts<XSurfZField>( ydir, n, hasPlusFace[ydir] ) == n[1]+2, "XSZ  ny" );
+  status( get_ny_with_ghost<XVolField  >( n[1], hasPlusFace[1] ) == n[1]+2, "XVol ny" );
+  status( get_ny_with_ghost<XSurfXField>( n[1], hasPlusFace[1] ) == n[1]+2, "XSX  ny" );
+  status( get_ny_with_ghost<XSurfYField>( n[1], hasPlusFace[1] ) == n[1]+3, "XSY  ny" );
+  status( get_ny_with_ghost<XSurfZField>( n[1], hasPlusFace[1] ) == n[1]+2, "XSZ  ny" );
 
-  status( npts<XVolField  >( zdir, n, hasPlusFace[zdir] ) == n[2]+2, "XVol nz" );
-  status( npts<XSurfXField>( zdir, n, hasPlusFace[zdir] ) == n[2]+2, "XSX  nz" );
-  status( npts<XSurfYField>( zdir, n, hasPlusFace[zdir] ) == n[2]+2, "XSY  nz" );
-  status( npts<XSurfZField>( zdir, n, hasPlusFace[zdir] ) == n[2]+3, "XSZ  nz" );
-
-
-  status( npts<YVolField  >( xdir, n, hasPlusFace[xdir] ) == n[0]+2, "YVol nx" );
-  status( npts<YSurfXField>( xdir, n, hasPlusFace[xdir] ) == n[0]+3, "YSX  nx" );
-  status( npts<YSurfYField>( xdir, n, hasPlusFace[xdir] ) == n[0]+2, "YSY  nx" );
-  status( npts<YSurfZField>( xdir, n, hasPlusFace[xdir] ) == n[0]+2, "YSZ  nx" );
-
-  status( npts<YVolField  >( ydir, n, hasPlusFace[ydir] ) == n[1]+2, "YVol ny" );
-  status( npts<YSurfXField>( ydir, n, hasPlusFace[ydir] ) == n[1]+2, "YSX  ny" );
-  status( npts<YSurfYField>( ydir, n, hasPlusFace[ydir] ) == n[1]+3, "YSY  ny" );
-  status( npts<YSurfZField>( ydir, n, hasPlusFace[ydir] ) == n[1]+2, "YSZ  ny" );
-
-  status( npts<YVolField  >( zdir, n, hasPlusFace[zdir] ) == n[2]+2, "YVol nz" );
-  status( npts<YSurfXField>( zdir, n, hasPlusFace[zdir] ) == n[2]+2, "YSX  nz" );
-  status( npts<YSurfYField>( zdir, n, hasPlusFace[zdir] ) == n[2]+2, "YSY  nz" );
-  status( npts<YSurfZField>( zdir, n, hasPlusFace[zdir] ) == n[2]+3, "YSZ  nz" );
+  status( get_nz_with_ghost<XVolField  >( n[2], hasPlusFace[2] ) == n[2]+2, "XVol nz" );
+  status( get_nz_with_ghost<XSurfXField>( n[2], hasPlusFace[2] ) == n[2]+2, "XSX  nz" );
+  status( get_nz_with_ghost<XSurfYField>( n[2], hasPlusFace[2] ) == n[2]+2, "XSY  nz" );
+  status( get_nz_with_ghost<XSurfZField>( n[2], hasPlusFace[2] ) == n[2]+3, "XSZ  nz" );
 
 
-  status( npts<ZVolField  >( xdir, n, hasPlusFace[xdir] ) == n[0]+2, "ZVol nx" );
-  status( npts<ZSurfXField>( xdir, n, hasPlusFace[xdir] ) == n[0]+3, "ZSX  nx" );
-  status( npts<ZSurfYField>( xdir, n, hasPlusFace[xdir] ) == n[0]+2, "ZSY  nx" );
-  status( npts<ZSurfZField>( xdir, n, hasPlusFace[xdir] ) == n[0]+2, "ZSZ  nx" );
+  status( get_nx_with_ghost<YVolField  >( n[0], hasPlusFace[0] ) == n[0]+2, "YVol nx" );
+  status( get_nx_with_ghost<YSurfXField>( n[0], hasPlusFace[0] ) == n[0]+3, "YSX  nx" );
+  status( get_nx_with_ghost<YSurfYField>( n[0], hasPlusFace[0] ) == n[0]+2, "YSY  nx" );
+  status( get_nx_with_ghost<YSurfZField>( n[0], hasPlusFace[0] ) == n[0]+2, "YSZ  nx" );
 
-  status( npts<ZVolField  >( ydir, n, hasPlusFace[ydir] ) == n[1]+2, "ZVol ny" );
-  status( npts<ZSurfXField>( ydir, n, hasPlusFace[ydir] ) == n[1]+2, "ZSX  ny" );
-  status( npts<ZSurfYField>( ydir, n, hasPlusFace[ydir] ) == n[1]+3, "ZSY  ny" );
-  status( npts<ZSurfZField>( ydir, n, hasPlusFace[ydir] ) == n[1]+2, "ZSZ  ny" );
+  status( get_ny_with_ghost<YVolField  >( n[1], hasPlusFace[1] ) == n[1]+2, "YVol ny" );
+  status( get_ny_with_ghost<YSurfXField>( n[1], hasPlusFace[1] ) == n[1]+2, "YSX  ny" );
+  status( get_ny_with_ghost<YSurfYField>( n[1], hasPlusFace[1] ) == n[1]+3, "YSY  ny" );
+  status( get_ny_with_ghost<YSurfZField>( n[1], hasPlusFace[1] ) == n[1]+2, "YSZ  ny" );
 
-  status( npts<ZVolField  >( zdir, n, hasPlusFace[zdir] ) == n[2]+2, "ZVol nz" );
-  status( npts<ZSurfXField>( zdir, n, hasPlusFace[zdir] ) == n[2]+2, "ZSX  nz" );
-  status( npts<ZSurfYField>( zdir, n, hasPlusFace[zdir] ) == n[2]+2, "ZSY  nz" );
-  status( npts<ZSurfZField>( zdir, n, hasPlusFace[zdir] ) == n[2]+3, "ZSZ  nz" );
+  status( get_nz_with_ghost<YVolField  >( n[2], hasPlusFace[2] ) == n[2]+2, "YVol nz" );
+  status( get_nz_with_ghost<YSurfXField>( n[2], hasPlusFace[2] ) == n[2]+2, "YSX  nz" );
+  status( get_nz_with_ghost<YSurfYField>( n[2], hasPlusFace[2] ) == n[2]+2, "YSY  nz" );
+  status( get_nz_with_ghost<YSurfZField>( n[2], hasPlusFace[2] ) == n[2]+3, "YSZ  nz" );
+
+
+  status( get_nx_with_ghost<ZVolField  >( n[0], hasPlusFace[0] ) == n[0]+2, "ZVol nx" );
+  status( get_nx_with_ghost<ZSurfXField>( n[0], hasPlusFace[0] ) == n[0]+3, "ZSX  nx" );
+  status( get_nx_with_ghost<ZSurfYField>( n[0], hasPlusFace[0] ) == n[0]+2, "ZSY  nx" );
+  status( get_nx_with_ghost<ZSurfZField>( n[0], hasPlusFace[0] ) == n[0]+2, "ZSZ  nx" );
+
+  status( get_ny_with_ghost<ZVolField  >( n[1], hasPlusFace[1] ) == n[1]+2, "ZVol ny" );
+  status( get_ny_with_ghost<ZSurfXField>( n[1], hasPlusFace[1] ) == n[1]+2, "ZSX  ny" );
+  status( get_ny_with_ghost<ZSurfYField>( n[1], hasPlusFace[1] ) == n[1]+3, "ZSY  ny" );
+  status( get_ny_with_ghost<ZSurfZField>( n[1], hasPlusFace[1] ) == n[1]+2, "ZSZ  ny" );
+
+  status( get_nz_with_ghost<ZVolField  >( n[2], hasPlusFace[2] ) == n[2]+2, "ZVol nz" );
+  status( get_nz_with_ghost<ZSurfXField>( n[2], hasPlusFace[2] ) == n[2]+2, "ZSX  nz" );
+  status( get_nz_with_ghost<ZSurfYField>( n[2], hasPlusFace[2] ) == n[2]+2, "ZSY  nz" );
+  status( get_nz_with_ghost<ZSurfZField>( n[2], hasPlusFace[2] ) == n[2]+3, "ZSZ  nz" );
 
   if( status.ok() ) return 0;
   return -1;
