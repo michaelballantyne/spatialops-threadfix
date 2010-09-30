@@ -12,6 +12,8 @@
 #include <spatialops/structured/FVTopHatFilter.h>
 #include <spatialops/structured/FVRestrictOp.h>
 
+#include <spatialops/structured/SpatialFieldStore.h>
+
 /**
  *  @todo Need to build & test scratch operator assemblers.
  *  @todo Need to fix linear system interface for spatial operators.

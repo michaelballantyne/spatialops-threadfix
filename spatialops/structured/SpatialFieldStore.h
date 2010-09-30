@@ -3,6 +3,8 @@
 
 #include <spatialops/SpatialOpsConfigure.h>
 
+#include <spatialops/structured/MemoryWindow.h>
+
 #include <queue>
 #include <map>
 #include <set>
@@ -205,9 +207,7 @@ namespace SpatialOps{
      */
     inline SpatFldPtr<FieldT> get( const FieldT& f );
 
-
-    inline SpatFldPtr<FieldT> get( const int ntot,
-                                   const std::set<size_t>& ghostSet );
+    inline SpatFldPtr<FieldT> get( const structured::MemoryWindow& window );
 
   private:
 
@@ -402,7 +402,9 @@ namespace SpatialOps{
     boost::mutex::scoped_lock lock( get_mutex() );
 #endif
     // find the proper map
-    FieldQueue& q = fqmap_[ f.get_ntotal() ];
+    const structured::MemoryWindow& w = f.window();
+    const int ntot = w.extent(0) * w.extent(1) * w.extent(2);
+    FieldQueue& q = fqmap_[ ntot ];
 
     if( q.empty() ){
       FieldT* fnew = new FieldT( f );
@@ -417,17 +419,17 @@ namespace SpatialOps{
   //------------------------------------------------------------------
   template<typename FieldT>
   SpatFldPtr<FieldT>
-  SpatialFieldStore<FieldT>::get( const int ntot,
-                                  const std::set<size_t>& ghostSet )
+  SpatialFieldStore<FieldT>::get( const structured::MemoryWindow& window )
   {
 #ifdef EXPRESSION_THREADS
     boost::mutex::scoped_lock lock( get_mutex() );
 #endif
     // find the proper map
+    const int ntot = window.extent(0) * window.extent(1) * window.extent(2);
     FieldQueue& q = fqmap_[ ntot ];
 
     if( q.empty() ){
-      FieldT* fnew = new FieldT( ntot, ghostSet, NULL );
+      FieldT* fnew = new FieldT( window, NULL );
       q.push( fnew );
     }
 
@@ -444,7 +446,9 @@ namespace SpatialOps{
 #ifdef EXPRESSION_THREADS
     boost::mutex::scoped_lock lock( get_mutex() );
 #endif
-    FieldQueue& q = fqmap_[ field.get_ntotal() ];
+    const structured::MemoryWindow& w = field.window();
+    const int ntot = w.extent(0) * w.extent(1) * w.extent(2);
+    FieldQueue& q = fqmap_[ ntot ];
     q.push( &field );
   }
   //------------------------------------------------------------------
@@ -478,8 +482,7 @@ namespace SpatialOps{
 
   template<>
   inline SpatFldPtr<double>
-  SpatialFieldStore<double>::get( const int ntot,
-                                  const std::set<size_t>& ghostSet )
+  SpatialFieldStore<double>::get( const structured::MemoryWindow& w )
   {
 #ifdef EXPRESSION_THREADS
     boost::mutex::scoped_lock lock( get_mutex() );
