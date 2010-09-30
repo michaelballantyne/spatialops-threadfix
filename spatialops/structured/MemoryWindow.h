@@ -153,6 +153,7 @@ namespace structured{
 
   };
 
+  template<typename T> class ConstFieldIterator; // forward
 
   /**
    *  \class FieldIterator
@@ -167,6 +168,7 @@ namespace structured{
   template<typename T>
   class FieldIterator
   {
+    friend class ConstFieldIterator<T>;
     T* current_;
     const MemoryWindow& window_;
     size_t i_,j_,k_;
@@ -228,9 +230,6 @@ namespace structured{
 
     inline       reference operator*()      { return *current_; }
     inline const reference operator*() const{ return *current_; }
-
-    inline const MemoryWindow& window() const{ return window_; }
-
   };
 
 
@@ -277,8 +276,12 @@ namespace structured{
     }
 
     ConstFieldIterator( const FieldIterator<T> t )
-      : current_( &*t ), window_( t.window() )
-    {}
+      : current_( t.current_ ), window_( t.window_ )
+    {
+      i_ = t.i_;
+      j_ = t.j_;
+      k_ = t.k_;
+    }
 
     inline self& operator++()
     {
