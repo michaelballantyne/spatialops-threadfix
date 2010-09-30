@@ -39,11 +39,11 @@ namespace structured{
     typedef GhostTraits Ghost;
     typedef FieldLocation Location;
 
-    typedef FieldIterator<T*      >       iterator;
-    typedef FieldIterator<T const*> const_iterator;
+    typedef FieldIterator<T>       iterator;
+    typedef FieldIterator<T>       interior_iterator;
 
-    typedef FieldIterator<T*      >       interior_iterator;
-    typedef FieldIterator<T const*> const_interior_iterator;
+    typedef ConstFieldIterator<T> const_iterator;
+    typedef ConstFieldIterator<T> const_interior_iterator;
 
     /**
      *  \brief Construct a SpatialField
@@ -100,7 +100,6 @@ namespace structured{
     inline MyType& operator*=(const T);
     inline MyType& operator/=(const T);
 
-
     /**
      * @name
      * Obtain the underlying VecType object that corresponds to
@@ -110,6 +109,8 @@ namespace structured{
     inline       VecType & get_linalg_vec()      { return vec_; }
     inline const VecType & get_linalg_vec() const{ return vec_; }
     //@}
+
+    const MemoryWindow& window() const{ return fieldWindow_; }
 
   };
 

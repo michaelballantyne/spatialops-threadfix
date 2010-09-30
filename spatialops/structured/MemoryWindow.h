@@ -4,6 +4,8 @@
 #include <cassert>
 #include <iterator>
 
+#include <boost/type_traits.hpp>
+
 namespace SpatialOps{
 namespace structured{
 
@@ -162,24 +164,117 @@ namespace structured{
   template<typename T>
   class FieldIterator
   {
-    T current_;
-    const MemoryWindow window_;
+    T* current_;
+    const MemoryWindow& window_;
     size_t i_,j_,k_;
 
   public:
     typedef FieldIterator<T> self;
-    typedef typename std::iterator_traits<T>::value_type      value_type;
-    typedef typename std::iterator_traits<T>::reference       reference;
-    typedef typename std::iterator_traits<T>::pointer         pointer;
-    typedef typename std::iterator_traits<T>::difference_type difference_type;
+    typedef typename std::iterator_traits<T*>::value_type      value_type;
+    typedef typename std::iterator_traits<T*>::reference       reference;
+    typedef typename std::iterator_traits<T*>::pointer         pointer;
+    typedef typename std::iterator_traits<T*>::difference_type difference_type;
     typedef          std::forward_iterator_tag                iterator_category;
 
-    FieldIterator( T t, const MemoryWindow window )
+    FieldIterator( const self& other )
+      : current_( other.current_ ),
+        window_( other.window_ )
+    {
+      i_=other.i_; j_=other.j_; k_=other.k_;
+    }
+    
+    FieldIterator( T* t, const MemoryWindow& window )
       : current_( t ),
         window_( window )
     {
       i_ = j_ = k_ = 0;
     }
+
+    inline self& operator++()
+    {
+      if( i_<window_.extent(0) ){
+        ++i_;
+        ++current_;
+      }
+      else{
+        i_=0;
+        ++j_;
+        current_ += 1+window_.stride(0);
+      }
+      if( j_>=window_.extent(1) ){
+        j_=0;
+        ++k_;
+        current_ += window_.stride(0) * window_.stride(1);
+      }
+      assert( k_ < window_.extent(2) );
+    }
+
+    inline bool operator==( const self& other ) const{ return current_==other.current_; }
+
+    inline bool operator!=( const self& other ) const{ return current_!=other.current_; }
+
+    inline self& operator=( const self& other )
+    {
+      current_ = other.current_;
+      i_ = other.i_;
+      j_ = other.j_;
+      k_ = other.k_;
+      return *this;
+    }
+
+    inline       reference operator*()      { return *current_; }
+    inline const reference operator*() const{ return *current_; }
+
+    inline const MemoryWindow& window() const{ return window_; }
+
+  };
+
+
+  //==================================================================
+
+
+  /**
+   *  \class ConstFieldIterator
+   *  \author James C. Sutherland
+   *  \date September, 2010
+   *
+   *  \brief Provides a forward iterator for a field that is
+   *         associated with a MemoryWindow, allowing one to iterate
+   *         over the "local" portion of that field as defined by the
+   *         MemoryWindow.
+   */
+  template<typename T>
+  class ConstFieldIterator
+  {
+    const T* current_;
+    const MemoryWindow& window_;
+    size_t i_,j_,k_;
+
+  public:
+    typedef ConstFieldIterator<T> self;
+    typedef typename std::iterator_traits<const T*>::value_type      value_type;
+    typedef typename std::iterator_traits<const T*>::reference       reference;
+    typedef typename std::iterator_traits<const T*>::pointer         pointer;
+    typedef typename std::iterator_traits<const T*>::difference_type difference_type;
+    typedef          std::forward_iterator_tag                       iterator_category;
+
+    ConstFieldIterator( const self& other )
+      : current_( other.current_ ),
+        window_( other.window_ )
+    {
+      i_=other.i_; j_=other.j_; k_=other.k_;
+    }
+    
+    ConstFieldIterator( const T* t, const MemoryWindow& window )
+      : current_( t ),
+        window_( window )
+    {
+      i_ = j_ = k_ = 0;
+    }
+
+    ConstFieldIterator( const FieldIterator<T> t )
+      : current_( &*t ), window_( t.window() )
+    {}
 
     inline self& operator++()
     {
