@@ -128,7 +128,7 @@ endif()
 
 
 include_directories(
-  ${PROJECT_SOURCE_DIR}/include
+  ${PROJECT_SOURCE_DIR}
   ${TPL_INCLUDE_DIRS}
   )
 
@@ -177,7 +177,8 @@ target_link_libraries( ${SpatialOps_LIBRARY} ${TPL_LIBRARIES} )
 # this will compile all of the test cases.  Use "make test" to execute
 # them and see a summary.
 enable_testing()
-add_subdirectory( test )
+#add_subdirectory( test )
+add_subdirectory( spatialops/structured/test )
 
 
 

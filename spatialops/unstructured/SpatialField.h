@@ -140,26 +140,6 @@ namespace SpatialOps{
     inline void reset_values( const size_t npts,
                               const double* const values );
 
-
-    /**
-     *  @name Binary Operators for SpatialField objects.
-     *
-     *  These all return a SpatFldPtr object.  Since binary operations
-     *  require a new field to hold the result, a SpatFldPtr is used.
-     *  This only results in new memory allocation when required,
-     *  otherwise, a temporary is used from the SpatialFieldStore.
-     *  The resulting SpatFldPtr object should NOT be dereferenced and
-     *  stored as a reference to an underlying SpatialField.  This
-     *  will cause severe memory corruption.
-     */
-    //@{
-    inline SpatFldPtr<SpatialField> operator+(const SpatialField&) const;  ///< Add two fields to produce a third: A=B+C
-    inline SpatFldPtr<SpatialField> operator-(const SpatialField&) const;  ///< Subtract two fields to produce a third: A=B-C
-    inline SpatFldPtr<SpatialField> operator*(const SpatialField&) const;  ///< Multiply two fields to produce a third: A=B*C
-    inline SpatFldPtr<SpatialField> operator/(const SpatialField&) const;  ///< Divide two fields to produce a third: A=B/C
-    //@}
-
-
     /**
      *  @name Unary Operators for SpatialField objects
      *
@@ -301,8 +281,6 @@ namespace SpatialOps{
     const StorageMode storageMode_;
     double * const fieldValues_;
     VecType & vec_;
-
-    SpatialFieldStore<SpatialField>& sfStore_;
 
     SpatialField( const SpatialField& );
     SpatialField();
@@ -488,9 +466,7 @@ namespace SpatialOps{
                     ? fieldValues
                     : new double[npts_] ),
 
-      vec_( linAlg_.setup_vector( npts_, fieldValues_ ) ),
-
-      sfStore_( SpatialFieldStore<SpatialField>::self() )
+      vec_( linAlg_.setup_vector( npts_, fieldValues_ ) )
   {
     if( mode==InternalStorage )  reset_values( npts_, fieldValues );
   }
@@ -510,8 +486,7 @@ namespace SpatialOps{
       ghostSet_   ( f.ghostSet_ ),
       storageMode_( InternalStorage ),
       fieldValues_( new double[npts_] ),
-      vec_        ( linAlg_.setup_vector(npts_,fieldValues_) ),
-      sfStore_( SpatialFieldStore<SpatialField>::self() )
+      vec_        ( linAlg_.setup_vector(npts_,fieldValues_) )
   {
     reset_values( npts_, f.fieldValues_ );
   }
@@ -716,51 +691,6 @@ namespace SpatialOps{
   {
     return !(*this==f);
   }
-  //------------------------------------------------------------------
-  template< class VecOps, typename FieldLocation, typename GhostTraits >
-  SpatFldPtr< SpatialField< VecOps, FieldLocation,GhostTraits > >
-  SpatialField< VecOps, FieldLocation,GhostTraits >::  
-  operator+( const SpatialField& f ) const
-  {
-    SpatFldPtr<SpatialField> result( sfStore_.get(*this) );
-    *result  = *this;
-    *result += f;
-    return result;
-  }
-  //------------------------------------------------------------------
-  template< class VecOps, typename FieldLocation, typename GhostTraits >
-  SpatFldPtr< SpatialField< VecOps, FieldLocation,GhostTraits > >
-  SpatialField< VecOps, FieldLocation,GhostTraits >::  
-  operator-( const SpatialField& f ) const
-  {
-    SpatFldPtr<SpatialField> result( sfStore_.get(*this) );
-    *result  = *this;
-    *result -= f;
-    return result;
-  }
-  //------------------------------------------------------------------
-  template< class VecOps, typename FieldLocation, typename GhostTraits >
-  SpatFldPtr< SpatialField< VecOps, FieldLocation,GhostTraits > >
-  SpatialField< VecOps, FieldLocation,GhostTraits >::  
-  operator*( const SpatialField& f ) const
-  {
-    SpatFldPtr<SpatialField> result( sfStore_.get(*this) );
-    *result  = *this;
-    *result *= f;
-    return result;
-  }
-  //------------------------------------------------------------------
-  template< class VecOps, typename FieldLocation, typename GhostTraits >
-  SpatFldPtr< SpatialField< VecOps, FieldLocation,GhostTraits > >
-  SpatialField< VecOps, FieldLocation,GhostTraits >::  
-  operator/( const SpatialField& f ) const
-  {
-    SpatFldPtr<SpatialField> result( sfStore_.get(*this) );
-    *result  = *this;
-    *result /= f;
-    return result;
-  }
-  
   //------------------------------------------------------------------
 
   //==================================================================

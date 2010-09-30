@@ -1,6 +1,9 @@
 #ifndef SpatialOps_MemoryWindow_h
 #define SpatialOps_MemoryWindow_h
 
+#include <cassert>
+#include <iterator>
+
 namespace SpatialOps{
 namespace structured{
 
@@ -13,6 +16,32 @@ namespace structured{
   //    write_matlab - take begin and end iterators as arguments.
   //    Print
 
+  class IntVec
+  {
+    int ijk[3];
+  public:
+    inline IntVec( const int i, const int j, const int k )
+    {
+      ijk[0]=i; ijk[1]=j; ijk[2]=k;
+    }
+    inline IntVec( const int vec[3] )
+    {
+      ijk[0]=vec[0];  ijk[1]=vec[1];  ijk[2]=vec[2];
+    }
+    inline IntVec( const IntVec& x )
+    {
+      ijk[0]=x.ijk[0];  ijk[1]=x.ijk[1];  ijk[2]=x.ijk[2];
+    }
+
+    inline const int  operator[](const size_t i) const{ return ijk[i]; }
+    inline       int& operator[](const size_t i)      { return ijk[i]; }
+
+    IntVec& operator=(const IntVec& x)
+    {
+      for( size_t i=0; i<3; ++i ) ijk[i] = x.ijk[i];
+      return *this;
+    }
+  };
 
   /**
    *  \class MemoryWindow
@@ -28,9 +57,7 @@ namespace structured{
    */
   class MemoryWindow{
 
-    const int[3] nptsGlob_;
-    const int[3] offset_;
-    const int[3] extent_;
+    IntVec nptsGlob_, offset_, extent_;
 
   public:
 
@@ -40,9 +67,9 @@ namespace structured{
      *  \param offset the offset into the memory
      *  \param extent the size of the block that we are considering
      */
-    MemoryWindow( const int[3] npts,
-                  const int[3] offset,
-                  const int[3] extent )
+    MemoryWindow( const int npts[3],
+                  const int offset[3],
+                  const int extent[3] )
       : nptsGlob_( npts ), offset_( offset ), extent_( extent )
     {}
 
@@ -50,14 +77,12 @@ namespace structured{
      *  \brief construct a MemoryWindow object
      *  \param npts the total (global) number of points in each direction
      */
-    MemoryWindow( const int[3] npts )
-      : nptsGlob_( npts ), offset_( npts ), extent_( npts )
+    MemoryWindow( const int npts[3] )
+      : nptsGlob_( npts ), offset_(0,0,0), extent_( npts )
     {}
 
     MemoryWindow( const MemoryWindow& other )
-      : nptsGlob_( other.nptsGlob_ ),
-        offset_( other.offset_ ),
-        extent_( other.extent_ )
+      : nptsGlob_( other.nptsGlob_ ), offset_( other.offset_ ), extent_( other.extent_ )
     {}
 
     ~MemoryWindow(){}
@@ -67,10 +92,10 @@ namespace structured{
      *         window), obtain the flat index in the global memory
      *         space.
      */
-    inline int flat_index( int[3] loc ) const
+    inline int flat_index( IntVec loc ) const
     {
-      for( size_t i=0; i<3; ++i ) loc[i]+=offset[i];
-      return loc[0] + loc[1]*npts[1] + loc[2]*npts[1]*npts[2];
+      for( size_t i=0; i<3; ++i ) loc[i] += offset_[i];
+      return loc[0] + loc[1]*nptsGlob_[0] + loc[2]*nptsGlob_[0]*nptsGlob_[1];
     }
 
     /**
@@ -78,13 +103,22 @@ namespace structured{
      *         window), obtain the ijk index in the global memory
      *         space.
      */
-    inline int[3] ijk_index( const int loc ) const
+    inline IntVec ijk_index( const int loc ) const
     {
-      int[3] ijk={0 0 0};
+      IntVec ijk( 0,0,0 );
       ijk[0] = loc % extent_[0]              + offset_[0];
       ijk[1] = loc / extent_[0] % extent_[1] + offset_[1];
       ijk[2] = loc / (extent_[0]*extent_[1]) + offset_[2];
       return ijk;
+    }
+
+    inline int npts() const
+    {
+      IntVec vec(extent_);
+      if( vec[0]>1 ) --vec[0];
+      if( vec[1]>1 ) --vec[1];
+      if( vec[2]>1 ) --vec[2];
+      return 1+flat_index( vec );
     }
 
     inline int glob_dim( const size_t i ) const{ return nptsGlob_[i]; }
@@ -95,19 +129,20 @@ namespace structured{
     inline int& offset  ( const size_t i ){ return offset_[i]; }
     inline int& extent  ( const size_t i ){ return extent_[i]; }
 
-    inline int[3] extent  () const{ return extent_; }
-    inline int[3] offset  () const{ return offset_; }
-    inline int[3] glob_dim() const{ return nptsGlob_; }
+    inline IntVec extent  () const{ return extent_; }
+    inline IntVec offset  () const{ return offset_; }
+    inline IntVec glob_dim() const{ return nptsGlob_; }
 
-    inline int[3]& extent  (){ return extent_; }
-    inline int[3]& offset  (){ return offset_; }
-    inline int[3]& glob_dim(){ return nptsGlob_; }
+    inline IntVec& extent  (){ return extent_; }
+    inline IntVec& offset  (){ return offset_; }
+    inline IntVec& glob_dim(){ return nptsGlob_; }
 
 
     /**
      *  \brief obtain the stride in the requested direction.
      */
     inline int stride( const size_t i ) const{ return nptsGlob_[i] - extent_[i]; }
+
   };
 
 
@@ -136,14 +171,11 @@ namespace structured{
     typedef typename std::iterator_traits<T>::difference_type difference_type;
     typedef          std::forward_iterator_tag                              iterator_category;
 
-    FieldIterator( T first, const MemoryWindow window )
-      : current_( first ),
-        window_( window ),
+    FieldIterator( T t, const MemoryWindow window )
+      : current_( t ),
+        window_( window )
     {
       i_ = j_ = k_ = 0;
-
-      // shift current to the beginning
-      current_ += window_.flat_index( {0,0,0} );
     }
 
     inline self& operator++()
@@ -155,14 +187,14 @@ namespace structured{
       else{
         i_=0;
         ++j_;
-        current_ += window_.stride(0);
+        current_ += 1+window_.stride(0);
       }
       if( j_>=window_.extent(1) ){
         j_=0;
         ++k_;
         current_ += window_.stride(0) * window_.stride(1);
       }
-      assert( k_<window_.extent(2) );
+      assert( k_ < window_.extent(2) );
     }
 
     inline bool operator==( const self& other ) const{ return current_==other.current_; }
@@ -177,6 +209,10 @@ namespace structured{
       k_ = other.k_;
       return *this;
     }
+
+    inline       reference operator*()      { return *current_; }
+    inline const reference operator*() const{ return *current_; }
+
   };
 
 } // namespace structured

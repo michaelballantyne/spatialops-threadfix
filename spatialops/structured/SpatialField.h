@@ -1,9 +1,10 @@
 #ifndef SpatialOps_SpatialField_h
 #define SpatialOps_SpatialField_h
 
-#include <MemoryWindow.h>
+#include <spatialops/structured/MemoryWindow.h>
 
 namespace SpatialOps{
+namespace structured{
 
   enum StorageMode
     {
@@ -19,14 +20,14 @@ namespace SpatialOps{
   {
     typedef typename VecOps::VecType VecType;
 
-    typedef SpatialField<VecOps,FieldLocation,GhostTraits> MyType;
-
-    friend class SpatialFieldStore<MyType>;
+    typedef SpatialField<VecOps,FieldLocation,GhostTraits,T> MyType;
 
     const MemoryWindow fieldWindow_;
     MemoryWindow interiorFieldWindow_;
 
     T* const fieldValues_;
+
+    const bool builtField_;
 
   public:
 
@@ -37,7 +38,7 @@ namespace SpatialOps{
     typedef FieldIterator<const T*> const_iterator;
 
     typedef FieldIterator<      T*>       interior_iterator;
-    typedef FieldIterator>const T*> const_interior_iterator;
+    typedef FieldIterator<const T*> const_interior_iterator;
 
     /**
      *  \brief Construct a SpatialField
@@ -56,30 +57,47 @@ namespace SpatialOps{
                   T* const fieldValues,
                   const StorageMode mode = InternalStorage );
 
-    SpatialField( const int[3] npts,
+    SpatialField( const IntVec npts,
                   T* const fieldValues,
                   const StorageMode mode = InternalStorage );
+
+    // warning: slow
+    T& operator()( const int i, const int j, const int k )
+    {
+      return fieldValues_[ fieldWindow_.flat_index(IntVec(i,j,k)) ];
+    }
+
+    T operator()( const int i, const int j, const int k ) const
+    {
+      return fieldValues_[ fieldWindow_.flat_index(IntVec(i,j,k)) ];
+    }
 
     virtual ~SpatialField();
 
 
-    inline SpatialField& operator=(const SpatialField&);
-    inline SpatialField& operator+=(const SpatialField&);
-    inline SpatialField& operator-=(const SpatialField&);
-    inline SpatialField& operator*=(const SpatialField&);
-    inline SpatialField& operator/=(const SpatialField&);
+    inline MyType& operator =(const MyType&);
+    inline MyType& operator+=(const MyType&);
+    inline MyType& operator-=(const MyType&);
+    inline MyType& operator*=(const MyType&);
+    inline MyType& operator/=(const MyType&);
 
-    inline const_iterator begin() const{ return const_iterator(fieldWindow_); }
-    inline       iterator begin()      { return       iterator(fieldWindow_); }
+    inline MyType& operator =(const T);
+    inline MyType& operator+=(const T);
+    inline MyType& operator-=(const T);
+    inline MyType& operator*=(const T);
+    inline MyType& operator/=(const T);
 
-    inline const_iterator end() const{ return const_iterator( fieldValues_ + fieldWindow_.flat_index( fieldWindow_.extent() ) ); }
-    inline       iterator end() const{ return       iterator( fieldValues_ + fieldWindow_.flat_index( fieldWindow_.extent() ) ); }
+    inline const_iterator begin() const{ return const_iterator(fieldValues_+fieldWindow_.flat_index(IntVec(0,0,0)),fieldWindow_); }
+    inline       iterator begin()      { return       iterator(fieldValues_+fieldWindow_.flat_index(IntVec(0,0,0)),fieldWindow_); }
 
-    inline const_interior_iterator interior_begin() const{ return const_interior_iterator(interiorFieldWindow_;) }
-    inline       interior_iterator interior_begin()      { return       interior_iterator(interiorFieldWindow_;) }
+    inline const_iterator end() const{ return const_iterator(fieldValues_ + fieldWindow_.npts(), fieldWindow_); }
+    inline       iterator end()      { return       iterator(fieldValues_ + fieldWindow_.npts(), fieldWindow_); }
 
-    inline const_interior_iterator interior_end() const{ return const_interior_iterator( fieldValues_ + interiorFieldWindow_.flat_index( interiorFieldWindow_.extent() ) ); }
-    inline       interior_iterator interior_end()      { return       interior_iterator( fieldValues_ + interiorFieldWindow_.flat_index( interiorFieldWindow_.extent() ) ); }
+    inline const_interior_iterator interior_begin() const{ return const_interior_iterator(fieldValues_+interiorFieldWindow_.flat_index(IntVec(0,0,0)),interiorFieldWindow_); }
+    inline       interior_iterator interior_begin()      { return       interior_iterator(fieldValues_+interiorFieldWindow_.flat_index(IntVec(0,0,0)),interiorFieldWindow_); }
+
+    inline const_interior_iterator interior_end() const{ return const_interior_iterator(fieldValues_ + interiorFieldWindow_.npts(), interiorFieldWindow_); }
+    inline       interior_iterator interior_end()      { return       interior_iterator(fieldValues_ + interiorFieldWindow_.npts(), interiorFieldWindow_); }
 
   };
 
@@ -94,16 +112,17 @@ namespace SpatialOps{
   SpatialField( const MemoryWindow window,
                 T* const fieldValues,
                 const StorageMode mode )
-    : fieldWindow_( window )
+    : fieldWindow_( window ),
       interiorFieldWindow_( window ),
       fieldValues_( (mode==ExternalStorage)
                     ? fieldValues
-                    : new T[ window.glob_dim(0) * window.glob_dim(1) * window.glob_dim(2) ] )
+                    : new T[ window.glob_dim(0) * window.glob_dim(1) * window.glob_dim(2) ] ),
+      builtField_( mode==InternalStorage )
   {
     for( size_t i=0; i<3; ++i ){
-      if( window.extent[i]>1 ){
-        interiorFieldWindow_.extent(i) -= GhostTraits::NGHOST;
-        interiorFieldWindow_.offset(i) += GhostTraits::NGHOST;
+      if( window.extent(i)>1 ){
+        interiorFieldWindow_.extent(i) -= 2*GhostTraits::NGHOST;
+        interiorFieldWindow_.offset(i) +=   GhostTraits::NGHOST;
       }
     }
   }
@@ -112,19 +131,20 @@ namespace SpatialOps{
 
   template< typename VecOps, typename Location, typename GhostTraits, typename T >
   SpatialField<VecOps,Location,GhostTraits,T>::
-  SpatialField( const int[3] npts,
+  SpatialField( const IntVec npts,
                 T* const fieldValues,
                 const StorageMode mode )
-    : fieldWindow_( npts, {0,0,0}, npts )
-      interiorFieldWindow_( window ),
+    : fieldWindow_( npts, IntVec(0,0,0), npts ),
+      interiorFieldWindow_( npts ),
       fieldValues_( (mode==ExternalStorage)
                     ? fieldValues
-                    : new T[npts[0]*npts[1]*npts[2]] )
+                    : new T[npts[0]*npts[1]*npts[2]] ),
+      builtField_( mode==InternalStorage )
   {
     for( size_t i=0; i<3; ++i ){
-      if( window.extent[i]>1 ){
-        interiorFieldWindow_.extent(i) -= GhostTraits::NGHOST;
-        interiorFieldWindow_.offset(i) += GhostTraits::NGHOST;
+      if( npts[i]>1 ){
+        interiorFieldWindow_.extent(i) -= 2*GhostTraits::NGHOST;
+        interiorFieldWindow_.offset(i) +=   GhostTraits::NGHOST;
       }
     }
   }
@@ -132,12 +152,22 @@ namespace SpatialOps{
   //------------------------------------------------------------------
 
   template< typename VecOps, typename Location, typename GhostTraits, typename T >
-  typename SpatialField<VecOps,Location,GhostTraits,T>&
+  SpatialField<VecOps,Location,GhostTraits,T>::
+  ~SpatialField()
+  {
+    if( builtField_ ) delete [] fieldValues_;
+  }
+
+  //------------------------------------------------------------------
+
+  template< typename VecOps, typename Location, typename GhostTraits, typename T >
+  SpatialField<VecOps,Location,GhostTraits,T>&
   SpatialField<VecOps,Location,GhostTraits,T>::
   operator=(const MyType& other )
   {
-    for( iterator ifld=this->begin(), const_iterator iother=other.begin();
-         ifld!=this->end(); ++ifld, ++iother ){
+    const_iterator iother=other.begin();
+    iterator iend=this->end();
+    for( iterator ifld=this->begin(); ifld!=iend; ++ifld, ++iother ){
       *ifld = *iother;
     }
     return *this;
@@ -146,12 +176,12 @@ namespace SpatialOps{
   //------------------------------------------------------------------
 
   template< typename VecOps, typename Location, typename GhostTraits, typename T >
-  typename SpatialField<VecOps,Location,GhostTraits,T>&
+  SpatialField<VecOps,Location,GhostTraits,T>&
   SpatialField<VecOps,Location,GhostTraits,T>::
   operator+=(const MyType& other )
   {
-    for( iterator ifld=this->begin(), const_iterator iother=other.begin();
-         ifld!=this->end(); ++ifld, ++iother ){
+    const_iterator iother=other.begin();
+    for( iterator ifld=this->begin(); ifld!=this->end(); ++ifld, ++iother ){
       *ifld += *iother;
     }
     return *this;
@@ -160,12 +190,12 @@ namespace SpatialOps{
   //------------------------------------------------------------------
 
   template< typename VecOps, typename Location, typename GhostTraits, typename T >
-  typename SpatialField<VecOps,Location,GhostTraits,T>&
+  SpatialField<VecOps,Location,GhostTraits,T>&
   SpatialField<VecOps,Location,GhostTraits,T>::
   operator-=(const MyType& other )
   {
-    for( iterator ifld=this->begin(), const_iterator iother=other.begin();
-         ifld!=this->end(); ++ifld, ++iother ){
+    const_iterator iother=other.begin();
+    for( iterator ifld=this->begin(); ifld!=this->end(); ++ifld, ++iother ){
       *ifld -= *iother;
     }
     return *this;
@@ -174,12 +204,12 @@ namespace SpatialOps{
   //------------------------------------------------------------------
 
   template< typename VecOps, typename Location, typename GhostTraits, typename T >
-  typename SpatialField<VecOps,Location,GhostTraits,T>&
+  SpatialField<VecOps,Location,GhostTraits,T>&
   SpatialField<VecOps,Location,GhostTraits,T>::
   operator*=(const MyType& other )
   {
-    for( iterator ifld=this->begin(), const_iterator iother=other.begin();
-         ifld!=this->end(); ++ifld, ++iother ){
+    const_iterator iother=other.begin();
+    for( iterator ifld=this->begin(); ifld!=this->end(); ++ifld, ++iother ){
       *ifld *= *iother;
     }
     return *this;
@@ -188,12 +218,12 @@ namespace SpatialOps{
   //------------------------------------------------------------------
 
   template< typename VecOps, typename Location, typename GhostTraits, typename T >
-  typename SpatialField<VecOps,Location,GhostTraits,T>&
+  SpatialField<VecOps,Location,GhostTraits,T>&
   SpatialField<VecOps,Location,GhostTraits,T>::
   operator/=(const MyType& other )
   {
-    for( iterator ifld=this->begin(), const_iterator iother=other.begin();
-         ifld!=this->end(); ++ifld, ++iother ){
+    const_iterator iother=other.begin();
+    for( iterator ifld=this->begin(); ifld!=this->end(); ++ifld, ++iother ){
       *ifld /= *iother;
     }
     return *this;
@@ -202,60 +232,62 @@ namespace SpatialOps{
   //------------------------------------------------------------------
 
   template< typename VecOps, typename Location, typename GhostTraits, typename T >
-  typename SpatialField<VecOps,Location,GhostTraits,T>&
+  SpatialField<VecOps,Location,GhostTraits,T>&
   SpatialField<VecOps,Location,GhostTraits,T>::
   operator=(const T a)
   {
-    for( iterator ifld=this->begin(), ifld!=this->end(); ++ifld ) *ifld = a;
+    iterator iend=this->end();
+    for( iterator ifld=this->begin(); ifld!=iend; ++ifld ) *ifld = a;
     return *this;
   }
 
   //------------------------------------------------------------------
 
   template< typename VecOps, typename Location, typename GhostTraits, typename T >
-  typename SpatialField<VecOps,Location,GhostTraits,T>&
+  SpatialField<VecOps,Location,GhostTraits,T>&
   SpatialField<VecOps,Location,GhostTraits,T>::
   operator+=(const T a)
   {
-    for( iterator ifld=this->begin(), ifld!=this->end(); ++ifld ) *ifld += a;
+    for( iterator ifld=this->begin(); ifld!=this->end(); ++ifld ) *ifld += a;
     return *this;
   }
 
   //------------------------------------------------------------------
 
   template< typename VecOps, typename Location, typename GhostTraits, typename T >
-  typename SpatialField<VecOps,Location,GhostTraits,T>&
+  SpatialField<VecOps,Location,GhostTraits,T>&
   SpatialField<VecOps,Location,GhostTraits,T>::
   operator-=(const T a)
   {
-    for( iterator ifld=this->begin(), ifld!=this->end(); ++ifld ) *ifld -= a;
+    for( iterator ifld=this->begin(); ifld!=this->end(); ++ifld ) *ifld -= a;
     return *this;
   }
 
   //------------------------------------------------------------------
 
   template< typename VecOps, typename Location, typename GhostTraits, typename T >
-  typename SpatialField<VecOps,Location,GhostTraits,T>&
+  SpatialField<VecOps,Location,GhostTraits,T>&
   SpatialField<VecOps,Location,GhostTraits,T>::
   operator*=(const T a)
   {
-    for( iterator ifld=this->begin(), ifld!=this->end(); ++ifld ) *ifld *= a;
+    for( iterator ifld=this->begin(); ifld!=this->end(); ++ifld ) *ifld *= a;
     return *this;
   }
 
   //------------------------------------------------------------------
 
   template< typename VecOps, typename Location, typename GhostTraits, typename T >
-  typename SpatialField<VecOps,Location,GhostTraits,T>&
+  SpatialField<VecOps,Location,GhostTraits,T>&
   SpatialField<VecOps,Location,GhostTraits,T>::
   operator/=(const T a)
   {
-    for( iterator ifld=this->begin(), ifld!=this->end(); ++ifld ) *ifld /= a;
+    for( iterator ifld=this->begin(); ifld!=this->end(); ++ifld ) *ifld /= a;
     return *this;
   }
 
   //------------------------------------------------------------------
 
+} // namespace structured
 } // namespace SpatialOps
 
 #endif // SpatialOps_SpatialField_h
