@@ -207,6 +207,7 @@ namespace structured{
         current_ += window_.stride(0) * window_.stride(1);
       }
       assert( k_ < window_.extent(2) );
+      return *this;
     }
 
     inline bool operator==( const self& other ) const{ return current_==other.current_; }
@@ -293,6 +294,7 @@ namespace structured{
         current_ += window_.stride(0) * window_.stride(1);
       }
       assert( k_ < window_.extent(2) );
+      return *this;
     }
 
     inline bool operator==( const self& other ) const{ return current_==other.current_; }
