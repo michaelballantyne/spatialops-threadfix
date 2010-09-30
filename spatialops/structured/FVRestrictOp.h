@@ -9,7 +9,7 @@
 namespace SpatialOps{
 
   // forward declaration.
-  template<typename T1> class RestrictionAssembler;
+  namespace structured{ template<typename T1> class RestrictionAssembler; }
 
   // this is required for the SpatialOperator class.  It specifies
   // that we should use the RestrictionAssembler class to construct
@@ -17,9 +17,11 @@ namespace SpatialOps{
   template< typename FieldT >
   struct OpAssemblerSelector< Restriction, FieldT, FieldT >
   {
-    typedef RestrictionAssembler<FieldT>  Assembler;
+    typedef structured::RestrictionAssembler<FieldT>  Assembler;
   };
 
+
+namespace structured{
 
   /**
    *  @class  RestrictionAssembler
@@ -59,8 +61,8 @@ namespace SpatialOps{
      *         the z-direction.
      *
      */
-    RestrictionAssembler( const std::vector<int>& dimExtentSrc,
-                          const std::vector<int>& dimExtentDest,
+    RestrictionAssembler( const IntVec& dimExtentSrc,
+                          const IntVec& dimExtentDest,
                           const bool hasPlusXSideFaces = true,
                           const bool hasPlusYSideFaces = true,
                           const bool hasPlusZSideFaces = true  );
@@ -104,11 +106,11 @@ namespace SpatialOps{
 
   private:
 
-    static unsigned int get_active_dim( const std::vector<int>& dimSrc,
-                                        const std::vector<int>& dimDest );
+    static unsigned int get_active_dim( const IntVec& dimSrc,
+                                        const IntVec& dimDest );
 
     const unsigned int activeDim_;
-    const std::vector<int> dimSrc_, dimDest_;
+    const IntVec dimSrc_, dimDest_;
     const bool hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_;
   };
 
@@ -138,8 +140,8 @@ namespace SpatialOps{
 
   template<typename FieldT>
   RestrictionAssembler<FieldT>::
-  RestrictionAssembler( const std::vector<int>& dimExtentSrc,
-                        const std::vector<int>& dimExtentDest,
+  RestrictionAssembler( const IntVec& dimExtentSrc,
+                        const IntVec& dimExtentDest,
                         const bool hasPlusXSideFaces,
                         const bool hasPlusYSideFaces,
                         const bool hasPlusZSideFaces )
@@ -164,11 +166,11 @@ namespace SpatialOps{
   template<typename FieldT>
   unsigned int
   RestrictionAssembler<FieldT>::
-  get_active_dim( const std::vector<int>& dimSrc,
-                  const std::vector<int>& dimDest )
+  get_active_dim( const IntVec& dimSrc,
+                  const IntVec& dimDest )
   {
     unsigned int dim = 99;
-    for( size_t i=0; i<dimSrc.size(); ++i ){
+    for( size_t i=0; i<3; ++i ){
       if( dimSrc[i] != dimDest[i] ){
         dim = i;
         break;
@@ -185,7 +187,7 @@ namespace SpatialOps{
   RestrictionAssembler<FieldT>::
   get_ncols() const
   {
-    return structured::get_n_tot<FieldT>( dimSrc_, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
+    return structured::get_ntot_with_ghost<FieldT>( dimSrc_, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
   }
 
   //----------------------------------------------------------------
@@ -195,7 +197,7 @@ namespace SpatialOps{
   RestrictionAssembler<FieldT>::
   get_nrows() const
   {
-    return structured::get_n_tot<FieldT>( dimDest_, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
+    return structured::get_ntot_with_ghost<FieldT>( dimDest_, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
   }
 
   //----------------------------------------------------------------
@@ -233,5 +235,6 @@ namespace SpatialOps{
   //----------------------------------------------------------------
 
 } // namespace SpatialOps
+} // namespace structured
 
 #endif  // FVRestrictOperator_h

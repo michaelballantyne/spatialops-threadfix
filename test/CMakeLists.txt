@@ -3,7 +3,7 @@ include_directories( ${spatialops_SOURCE_DIR}/include )
 set( libs ${SpatialOps_LIBRARY} ${TPL_LIBRARIES} )
 
 # commonly required file:
-set( common_SRC buildOps.cpp )
+set( common_SRC buildOps.cpp Grid.cpp )
 add_library( testlib STATIC ${common_SRC} )
 
 set( lagrange_SRC testLagrange.cpp )

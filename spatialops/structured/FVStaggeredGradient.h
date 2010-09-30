@@ -1,11 +1,7 @@
 #ifndef FVSS_GradientAssembler_h
 #define FVSS_GradientAssembler_h
 
-#include <spatialops/SpatialOpsConfigure.h>
-
-#include <spatialops/SpatialField.h>
-#include <spatialops/SpatialOperator.h>
-
+#include <spatialops/structured/FVStaggeredTypes.h>
 #include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/FVStaggeredIndexHelper.h>
 
@@ -80,7 +76,7 @@ namespace structured{
      *  side of the domain.
      */
     GradientAssembler( const double meshSpacing,
-                       const std::vector<int>& dimExtent,
+                       const IntVec& dimExtent,
                        const bool hasPlusXSideFaces,
                        const bool hasPlusYSideFaces,
                        const bool hasPlusZSideFaces );
@@ -122,7 +118,7 @@ namespace structured{
 
   private:
 
-    const std::vector<int>& dim_;
+    const IntVec dim_;
     const IndexHelper<SrcField,DestField> indexHelper_;
     const double coef_;
     const bool hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_;
@@ -150,7 +146,7 @@ namespace structured{
   template< typename SrcField, typename DestField >
   GradientAssembler<SrcField,DestField>::
   GradientAssembler( const double meshSpacing,
-                     const std::vector<int>& dimExtent,
+                     const IntVec& dimExtent,
                      const bool hasPlusXSideFaces,
                      const bool hasPlusYSideFaces,
                      const bool hasPlusZSideFaces )
@@ -169,7 +165,7 @@ namespace structured{
   get_ncols() const
   {
     int n=1;
-    if( get_n_tot<DestField>( dim_, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ )>1 )
+    if( get_ntot_with_ghost<DestField>( dim_, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ ) > 1 )
       n = indexHelper_.get_ncol();
     return n;
   }

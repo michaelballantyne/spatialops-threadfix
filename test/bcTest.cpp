@@ -39,7 +39,7 @@ bool test1()
   const double ATOL = 1.0e-5;
   const int nx=3, ny=4, nz=5;
 
-  std::vector<int> dim(3);  dim[0]=nx; dim[1]=ny; dim[2]=nz;
+  IntVec dim(nx,ny,nz);
   const bool bcx=true,  bcy=true, bcz=true;
 
   typedef boost::function< double() > BCFun;
@@ -63,9 +63,7 @@ bool test1()
   pts.push_back( IndexTriplet( 0,    0,    nz-1 ) );
   pts.push_back( IndexTriplet( 2,    ny-1, 1    ) );
 
-  SVolField field( get_n_tot<SVolField>(dim,bcx,bcy,bcz),
-                   get_ghost_set<SVolField>(dim,bcx,bcy,bcz),
-                   NULL );
+  SVolField field( get_window_with_ghost<SVolField>(dim,bcx,bcy,bcz), NULL );
   field = 1.0;
 
   bool isFailed = false;

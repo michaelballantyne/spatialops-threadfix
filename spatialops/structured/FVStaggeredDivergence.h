@@ -1,11 +1,7 @@
 #ifndef FVSS_DivergenceAssembler_h
 #define FVSS_DivergenceAssembler_h
 
-#include <spatialops/SpatialOpsConfigure.h>
-
-#include <spatialops/SpatialField.h>
-#include <spatialops/SpatialOperator.h>
-
+#include <spatialops/structured/FVStaggeredTypes.h>
 #include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/FVStaggeredIndexHelper.h>
 
@@ -76,7 +72,7 @@ namespace structured{
      *  operator is to be constructed including face cells on the +Z
      *  side of the domain.
      */
-    DivergenceAssembler( const std::vector<int>& dimExtent,
+    DivergenceAssembler( const IntVec& dimExtent,
                          const double cellFaceArea,
                          const double cellVolume,
                          const bool hasPlusXSideFaces,
@@ -119,9 +115,9 @@ namespace structured{
 
   private:
 
-    const std::vector<int>& dim_;
+    const IntVec dim_;
     const IndexHelper<SrcField,DestField> indexHelper_;
-    const std::vector<int> extent_;
+    const IntVec extent_;
     const double coefValue_;
     const bool hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_;
   };
@@ -147,7 +143,7 @@ namespace structured{
   //------------------------------------------------------------------
   template< typename SrcField, typename DestField >
   DivergenceAssembler<SrcField,DestField>::
-  DivergenceAssembler( const std::vector<int>& dimExtent,
+  DivergenceAssembler( const IntVec& dimExtent,
                        const double cellFaceArea,
                        const double cellVolume,
                        const bool hasPlusXSideFaces,
@@ -177,7 +173,7 @@ namespace structured{
   get_nrows() const
   {
     int n=1;
-    if( get_n_tot<SrcField>(dim_,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) > 1 )
+    if( get_ntot_with_ghost<SrcField>(dim_,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) > 1 )
       n=indexHelper_.get_nrow();
     return n;
   }

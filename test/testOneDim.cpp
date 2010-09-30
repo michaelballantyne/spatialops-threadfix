@@ -131,26 +131,25 @@ void calculate_fields( const int npts,
   //
   // build fields
   // 
-  vector<int> dim(3,1); dim[0]=npts;
-  const int ntotSVol  = get_n_tot<SVolField  >(dim,true,true,true);
-  const int ntotSSurf = get_n_tot<SSurfXField>(dim,true,true,true);
-  const set<size_t> ghostSVol  = get_ghost_set<SVolField  >(dim,true,true,true);
-  const set<size_t> ghostSSurf = get_ghost_set<SSurfXField>(dim,true,true,true);
+  IntVec dim(npts,1,1);
 
-  SVolField          f( ntotSVol,  ghostSVol,  NULL );
-  SSurfXField  fxexact( ntotSSurf, ghostSSurf, NULL );
-  SSurfXField fxinterp( ntotSSurf, ghostSSurf, NULL );
-  SSurfXField    fgrad( ntotSSurf, ghostSSurf, NULL );
-  SSurfXField  fgexact( ntotSSurf, ghostSSurf, NULL );
-  SVolField   d2fexact( ntotSVol,  ghostSVol,  NULL );
-  SVolField        d2f( ntotSVol,  ghostSVol,  NULL );
+  const MemoryWindow svolWindow( get_window_with_ghost<SVolField  >(dim,true,true,true) );
+  const MemoryWindow ssxWindow ( get_window_with_ghost<SSurfXField>(dim,true,true,true) );
 
-  const SVolField    xvol( ntotSVol,  ghostSVol,  &get_x_src(nGhost,xv,xs)[0] );
-  const SSurfXField xsurf( ntotSSurf, ghostSSurf, &get_x_dest(nGhost,xv,xs)[0] );
-  SVolField    yvol( ntotSVol,  ghostSVol,  NULL );  yvol=0.0;
-  SVolField    zvol( ntotSVol,  ghostSVol,  NULL );  zvol=0.0;
-  SSurfXField ysurf( ntotSSurf, ghostSSurf, NULL );  ysurf=0.0;
-  SSurfXField zsurf( ntotSSurf, ghostSSurf, NULL );  zsurf=0.0;
+  SVolField          f( svolWindow, NULL );
+  SSurfXField  fxexact( ssxWindow,  NULL );
+  SSurfXField fxinterp( ssxWindow,  NULL );
+  SSurfXField    fgrad( ssxWindow,  NULL );
+  SSurfXField  fgexact( ssxWindow,  NULL );
+  SVolField   d2fexact( svolWindow, NULL );
+  SVolField        d2f( svolWindow, NULL );
+
+  const SVolField    xvol( svolWindow, &get_x_src (nGhost,xv,xs)[0] );
+  const SSurfXField xsurf( ssxWindow,  &get_x_dest(nGhost,xv,xs)[0] );
+  SVolField    yvol( svolWindow, NULL );  yvol=0.0;
+  SVolField    zvol( svolWindow, NULL );  zvol=0.0;
+  SSurfXField ysurf( ssxWindow,  NULL );  ysurf=0.0;
+  SSurfXField zsurf( ssxWindow,  NULL );  zsurf=0.0;
 
   //
   // build mesh functions for testing and get exact solutions.

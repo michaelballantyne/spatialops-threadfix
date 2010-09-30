@@ -61,31 +61,15 @@ namespace structured{
                   T* const fieldValues,
                   const StorageMode mode = InternalStorage );
 
-    // warning: slow
-    T& operator()( const int i, const int j, const int k )
-    {
-      return fieldValues_[ fieldWindow_.flat_index(IntVec(i,j,k)) ];
-    }
-
-    T operator()( const int i, const int j, const int k ) const
-    {
-      return fieldValues_[ fieldWindow_.flat_index(IntVec(i,j,k)) ];
-    }
-
     virtual ~SpatialField();
 
+    // warning: slow
+    T& operator()( const int i, const int j, const int k );
+    T  operator()( const int i, const int j, const int k ) const;
 
-    inline MyType& operator =(const MyType&);
-    inline MyType& operator+=(const MyType&);
-    inline MyType& operator-=(const MyType&);
-    inline MyType& operator*=(const MyType&);
-    inline MyType& operator/=(const MyType&);
-
-    inline MyType& operator =(const T);
-    inline MyType& operator+=(const T);
-    inline MyType& operator-=(const T);
-    inline MyType& operator*=(const T);
-    inline MyType& operator/=(const T);
+    // warning: slow
+    T& operator[]( const size_t i );
+    T  operator[]( const size_t i ) const;
 
     inline const_iterator begin() const{ return const_iterator(fieldValues_+fieldWindow_.flat_index(IntVec(0,0,0)),fieldWindow_); }
     inline       iterator begin()      { return       iterator(fieldValues_+fieldWindow_.flat_index(IntVec(0,0,0)),fieldWindow_); }
@@ -98,6 +82,18 @@ namespace structured{
 
     inline const_interior_iterator interior_end() const{ return const_interior_iterator(fieldValues_ + interiorFieldWindow_.npts(), interiorFieldWindow_); }
     inline       interior_iterator interior_end()      { return       interior_iterator(fieldValues_ + interiorFieldWindow_.npts(), interiorFieldWindow_); }
+
+    inline MyType& operator =(const MyType&);
+    inline MyType& operator+=(const MyType&);
+    inline MyType& operator-=(const MyType&);
+    inline MyType& operator*=(const MyType&);
+    inline MyType& operator/=(const MyType&);
+
+    inline MyType& operator =(const T);
+    inline MyType& operator+=(const T);
+    inline MyType& operator-=(const T);
+    inline MyType& operator*=(const T);
+    inline MyType& operator/=(const T);
 
   };
 
@@ -156,6 +152,46 @@ namespace structured{
   ~SpatialField()
   {
     if( builtField_ ) delete [] fieldValues_;
+  }
+
+  //------------------------------------------------------------------
+
+  template< typename VecOps, typename Location, typename GhostTraits, typename T >
+  T&
+  SpatialField<VecOps,Location,GhostTraits,T>::
+  operator()( const int i, const int j, const int k )
+  {
+    return fieldValues_[ fieldWindow_.flat_index(IntVec(i,j,k)) ];
+  }
+
+  //------------------------------------------------------------------
+
+  template< typename VecOps, typename Location, typename GhostTraits, typename T >
+  T
+  SpatialField<VecOps,Location,GhostTraits,T>::
+  operator()( const int i, const int j, const int k ) const
+  {
+    return fieldValues_[ fieldWindow_.flat_index(IntVec(i,j,k)) ];
+  }
+
+  //------------------------------------------------------------------
+
+  template< typename VecOps, typename Location, typename GhostTraits, typename T >
+  T&
+  SpatialField<VecOps,Location,GhostTraits,T>::
+  operator[]( const size_t i )
+  {
+    return fieldValues_[ fieldWindow_.flat_index( fieldWindow_.ijk_index(i) ) ];
+  }
+
+  //------------------------------------------------------------------
+
+  template< typename VecOps, typename Location, typename GhostTraits, typename T >
+  T
+  SpatialField<VecOps,Location,GhostTraits,T>::
+  operator[]( const size_t i ) const
+  {
+    return fieldValues_[ fieldWindow_.flat_index( fieldWindow_.ijk_index(i) ) ];
   }
 
   //------------------------------------------------------------------

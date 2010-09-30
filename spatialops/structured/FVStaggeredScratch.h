@@ -1,15 +1,9 @@
 #ifndef FVStaggeredScratch_h
 #define FVStaggeredScratch_h
 
-#include <spatialops/SpatialOpsConfigure.h>
-
-#include <spatialops/SpatialField.h>
-#include <spatialops/SpatialOperator.h>
-#include <spatialops/SpatialOpsDefs.h>
-
+#include <spatialops/structured/FVStaggeredTypes.h>
 #include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/FVStaggeredIndexHelper.h>
-#include <spatialops/structured/FVStaggeredTypes.h>
 
 #include <algorithm>
 
@@ -111,7 +105,7 @@ namespace structured{
 
     unsigned int num_nonzeros() const;
 
-    ScratchAssembler( const std::vector<int>& dimExtent,
+    ScratchAssembler( const IntVec& dimExtent,
                       const int dir,
                       const bool hasPlusXSideFaces,
                       const bool hasPlusYSideFaces,
@@ -147,7 +141,7 @@ namespace structured{
   private:
 
     IndexHelper<SrcFieldT,DestFieldT> indexHelper_;
-    const std::vector<int>& dim_;
+    const IntVec dim_;
     const int dir_;
     const bool hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_;
   };
@@ -177,7 +171,7 @@ namespace structured{
   //------------------------------------------------------------------
   template<typename SrcFieldT, typename DestFieldT>
   ScratchAssembler<SrcFieldT,DestFieldT>::
-  ScratchAssembler( const std::vector<int>& dimExtent,
+  ScratchAssembler( const IntVec& dimExtent,
                     const int dir,
                     const bool hasPlusXSideFaces,
                     const bool hasPlusYSideFaces,
@@ -207,16 +201,16 @@ namespace structured{
     int n=1;
     switch( dir_ ){
     case XDIR::value :
-      n = get_nx<SrcFieldT>(dim_,hasPlusXSideFaces_);
+      n = get_nx_with_ghost<SrcFieldT>(dim_[0],hasPlusXSideFaces_);
       break;                                                               
     case YDIR::value :                                             
-      n = get_ny<SrcFieldT>(dim_,hasPlusYSideFaces_);
+      n = get_ny_with_ghost<SrcFieldT>(dim_[1],hasPlusYSideFaces_);
       break;                                                               
     case ZDIR::value :                                             
-      n = get_nz<SrcFieldT>(dim_,hasPlusZSideFaces_);
+      n = get_nz_with_ghost<SrcFieldT>(dim_[2],hasPlusZSideFaces_);
       break;
     }
-    if( n>1 ) n = get_n_tot<SrcFieldT>(dim_,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_);
+    if( n>1 ) n = get_ntot_with_ghost<SrcFieldT>(dim_,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_);
     return n;
   }
   //------------------------------------------------------------------
@@ -228,16 +222,16 @@ namespace structured{
     int n=1;
     switch( dir_ ){
     case XDIR::value :
-      n = get_nx<DestFieldT>(dim_,hasPlusXSideFaces_);
+      n = get_nx_with_ghost<DestFieldT>(dim_[0],hasPlusXSideFaces_);
       break;                                                               
     case YDIR::value :                                             
-      n = get_ny<DestFieldT>(dim_,hasPlusYSideFaces_);
+      n = get_ny_with_ghost<DestFieldT>(dim_[1],hasPlusYSideFaces_);
       break;                                                               
     case ZDIR::value :                                             
-      n = get_nz<DestFieldT>(dim_,hasPlusZSideFaces_);
+      n = get_nz_with_ghost<DestFieldT>(dim_[2],hasPlusZSideFaces_);
       break;
     }
-    if( n>1 ) n = get_n_tot<DestFieldT>(dim_,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_);
+    if( n>1 ) n = get_ntot_with_ghost<DestFieldT>(dim_,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_);
     return n;
   }
   //------------------------------------------------------------------
@@ -254,7 +248,7 @@ namespace structured{
 
     if( get_nrows() <= 1 ) return;
 
-    const int nx = get_nx<SrcFieldT>( dim_, hasPlusXSideFaces_ );
+    const int nx = get_nx_with_ghost<SrcFieldT>( dim_[0], hasPlusXSideFaces_ );
 
     const IndexTriplet trow = flat2ijk<DestFieldT>::value( dim_, irow, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
     IndexTriplet t;
@@ -282,7 +276,7 @@ namespace structured{
 
     case YDIR::value : {
       if( dim_[1]>1 ){
-        const int ny = get_ny<SrcFieldT>( dim_, hasPlusYSideFaces_ );
+        const int ny = get_ny_with_ghost<SrcFieldT>( dim_[1], hasPlusYSideFaces_ );
         const int stride = nx>1 ? nx : 1;
         t = flat2ijk<SrcFieldT>::value( dim_, irow+stride, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
         shift_dest_to_src<SrcFieldT,DestFieldT>( dim_, t );
@@ -302,8 +296,8 @@ namespace structured{
 
     case ZDIR::value : {
       if( dim_[2]>1 ){
-        const int ny = get_ny<SrcFieldT>( dim_, hasPlusYSideFaces_ );
-        const int nz = get_nz<SrcFieldT>( dim_, hasPlusZSideFaces_ );
+        const int ny = get_ny_with_ghost<SrcFieldT>( dim_[1], hasPlusYSideFaces_ );
+        const int nz = get_nz_with_ghost<SrcFieldT>( dim_[2], hasPlusZSideFaces_ );
         const int stride = (nx>1 || ny>1) ? nx*ny : 1;
         t = flat2ijk<SrcFieldT>::value( dim_, irow+stride, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
         shift_dest_to_src<SrcFieldT,DestFieldT>( dim_, t );

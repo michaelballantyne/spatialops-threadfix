@@ -64,7 +64,7 @@ namespace structured{
    *         domain interior (excludes ghost cells).
    */
   template< typename FieldT >
-  int get_index_with_ghost( const std::vector<int>& dim,
+  int get_index_with_ghost( const IntVec& dim,
                             const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ, 
                             IndexTriplet ijk );
 
@@ -83,7 +83,7 @@ namespace structured{
    *         domain interior (excludes ghost cells).
    */
   template<typename OpT, typename FieldT>
-  IndexTriplet shift_to_ghost_ix( const std::vector<int>& dim,
+  IndexTriplet shift_to_ghost_ix( const IntVec& dim,
                                   const BCSide side,
                                   IndexTriplet ijk );
 
@@ -148,7 +148,7 @@ namespace structured{
      *         <code>double()</code>.
      */
     BoundaryCondition( const IndexTriplet point,
-                       const std::vector<int> dim,
+                       const IntVec dim,
                        const bool bcPlusX,
                        const bool bcPlusY,
                        const bool bcPlusZ,
@@ -237,7 +237,7 @@ namespace structured{
      *         operator of type OpT will be extracted from this
      *         database.
      */
-    BoundaryConditionOp( const std::vector<int>& dim,
+    BoundaryConditionOp( const IntVec& dim,
                          const bool bcPlusX,
                          const bool bcPlusY,
                          const bool bcPlusZ,
@@ -318,7 +318,7 @@ namespace structured{
   template< typename BCOpT, typename OpT >
   void imprint_bc_on_op( const BCOpT& bcOp,
                          const IndexTriplet ijk,
-                         const std::vector<int>& dim,
+                         const IntVec& dim,
                          const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ,
                          const double bcVal,
                          const BCSide side,
@@ -340,7 +340,7 @@ namespace structured{
   template< typename FieldT, typename BCEval >
   BoundaryCondition<FieldT,BCEval>::
   BoundaryCondition( const IndexTriplet point,
-                     const std::vector<int> dim,
+                     const IntVec dim,
                      const bool bcPlusX,
                      const bool bcPlusY,
                      const bool bcPlusZ,
@@ -369,7 +369,7 @@ namespace structured{
 
   template< typename OpT, typename BCEval >
   BoundaryConditionOp<OpT,BCEval>::
-  BoundaryConditionOp( const std::vector<int>& dim,
+  BoundaryConditionOp( const IntVec& dim,
                        const bool bcPlusX,
                        const bool bcPlusY,
                        const bool bcPlusZ,
@@ -461,7 +461,7 @@ namespace structured{
   //------------------------------------------------------------------
 
   template< typename FieldT >
-  int get_index_with_ghost( const std::vector<int>& dim,
+  int get_index_with_ghost( const IntVec& dim,
                             const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ, 
                             IndexTriplet index )
   {
@@ -472,7 +472,7 @@ namespace structured{
   }
 
   template<typename OpT, typename FieldT>
-  IndexTriplet shift_to_ghost_ix( const std::vector<int>& dim,
+  IndexTriplet shift_to_ghost_ix( const IntVec& dim,
                                   const BCSide side,
                                   IndexTriplet ijk )
   {
@@ -502,7 +502,7 @@ namespace structured{
   }
 
   template<> IndexTriplet
-  shift_to_ghost_ix<GradXVolXSurfX,XVolField>( const std::vector<int>& dim, const BCSide side, IndexTriplet ijk )
+  shift_to_ghost_ix<GradXVolXSurfX,XVolField>( const IntVec& dim, const BCSide side, IndexTriplet ijk )
   {
     switch(side){
     case X_MINUS_SIDE: if(dim[0]>1) --ijk.i; break;
@@ -515,7 +515,7 @@ namespace structured{
     return ijk;
   }
   template<> IndexTriplet
-  shift_to_ghost_ix<GradXVolXSurfX,XSurfXField>( const std::vector<int>& dim, const BCSide side, IndexTriplet ijk )
+  shift_to_ghost_ix<GradXVolXSurfX,XSurfXField>( const IntVec& dim, const BCSide side, IndexTriplet ijk )
   {
     switch(side){
     case X_MINUS_SIDE: if(dim[0]>1) --ijk.i; break;
@@ -528,7 +528,7 @@ namespace structured{
     return ijk;
   }
   template<> IndexTriplet
-  shift_to_ghost_ix<InterpXVolXSurfX,XVolField>( const std::vector<int>& dim, const BCSide side, IndexTriplet ijk )
+  shift_to_ghost_ix<InterpXVolXSurfX,XVolField>( const IntVec& dim, const BCSide side, IndexTriplet ijk )
   {
     switch(side){
     case X_MINUS_SIDE: if(dim[0]>1) --ijk.i; break;
@@ -541,7 +541,7 @@ namespace structured{
     return ijk;
   }
   template<> IndexTriplet
-  shift_to_ghost_ix<InterpXVolXSurfX,XSurfXField>( const std::vector<int>& dim, const BCSide side, IndexTriplet ijk )
+  shift_to_ghost_ix<InterpXVolXSurfX,XSurfXField>( const IntVec& dim, const BCSide side, IndexTriplet ijk )
   {
     switch(side){
     case X_MINUS_SIDE: if(dim[0]>1) --ijk.i; break;
@@ -554,7 +554,7 @@ namespace structured{
     return ijk;
   }
   template<> IndexTriplet
-  shift_to_ghost_ix<GradYVolYSurfY,YVolField>( const std::vector<int>& dim, const BCSide side, IndexTriplet ijk )
+  shift_to_ghost_ix<GradYVolYSurfY,YVolField>( const IntVec& dim, const BCSide side, IndexTriplet ijk )
   {
     switch(side){
     case Y_MINUS_SIDE: if(dim[1]>1) --ijk.j; break;
@@ -567,7 +567,7 @@ namespace structured{
     return ijk;
   }
   template<> IndexTriplet
-  shift_to_ghost_ix<GradYVolYSurfY,YSurfYField>( const std::vector<int>& dim, const BCSide side, IndexTriplet ijk )
+  shift_to_ghost_ix<GradYVolYSurfY,YSurfYField>( const IntVec& dim, const BCSide side, IndexTriplet ijk )
   {
     switch(side){
     case Y_MINUS_SIDE: if(dim[1]>1) --ijk.j; break;
@@ -580,7 +580,7 @@ namespace structured{
     return ijk;
   }
   template<> IndexTriplet
-  shift_to_ghost_ix<InterpYVolYSurfY,YVolField>( const std::vector<int>& dim, const BCSide side, IndexTriplet ijk )
+  shift_to_ghost_ix<InterpYVolYSurfY,YVolField>( const IntVec& dim, const BCSide side, IndexTriplet ijk )
   {
     switch(side){
     case Y_MINUS_SIDE: if(dim[1]>1) --ijk.j; break;
@@ -593,7 +593,7 @@ namespace structured{
     return ijk;
   }
   template<> IndexTriplet
-  shift_to_ghost_ix<InterpYVolYSurfY,YSurfYField>( const std::vector<int>& dim, const BCSide side, IndexTriplet ijk )
+  shift_to_ghost_ix<InterpYVolYSurfY,YSurfYField>( const IntVec& dim, const BCSide side, IndexTriplet ijk )
   {
     switch(side){
     case Y_MINUS_SIDE: if(dim[1]>1) --ijk.j; break;
@@ -607,7 +607,7 @@ namespace structured{
   }
 
   template<> IndexTriplet
-  shift_to_ghost_ix<GradZVolZSurfZ,ZVolField>( const std::vector<int>& dim, const BCSide side, IndexTriplet ijk )
+  shift_to_ghost_ix<GradZVolZSurfZ,ZVolField>( const IntVec& dim, const BCSide side, IndexTriplet ijk )
   {
     switch(side){
     case Z_MINUS_SIDE: if(dim[2]>1) --ijk.k; break;
@@ -620,7 +620,7 @@ namespace structured{
     return ijk;
   }
   template<> IndexTriplet
-  shift_to_ghost_ix<GradZVolZSurfZ,ZSurfZField>( const std::vector<int>& dim, const BCSide side, IndexTriplet ijk )
+  shift_to_ghost_ix<GradZVolZSurfZ,ZSurfZField>( const IntVec& dim, const BCSide side, IndexTriplet ijk )
   {
     switch(side){
     case Z_MINUS_SIDE: if(dim[2]>1) --ijk.k; break;
@@ -633,7 +633,7 @@ namespace structured{
     return ijk;
   }
   template<> IndexTriplet
-  shift_to_ghost_ix<InterpZVolZSurfZ,ZVolField>( const std::vector<int>& dim, const BCSide side, IndexTriplet ijk )
+  shift_to_ghost_ix<InterpZVolZSurfZ,ZVolField>( const IntVec& dim, const BCSide side, IndexTriplet ijk )
   {
     switch(side){
     case Z_MINUS_SIDE: if(dim[2]>1) --ijk.k; break;
@@ -646,7 +646,7 @@ namespace structured{
     return ijk;
   }
   template<> IndexTriplet
-  shift_to_ghost_ix<InterpZVolZSurfZ,ZSurfZField>( const std::vector<int>& dim, const BCSide side, IndexTriplet ijk )
+  shift_to_ghost_ix<InterpZVolZSurfZ,ZSurfZField>( const IntVec& dim, const BCSide side, IndexTriplet ijk )
   {
     switch(side){
     case Z_MINUS_SIDE: if(dim[2]>1) --ijk.k; break;
@@ -665,7 +665,7 @@ namespace structured{
   template< typename BCOpT, typename OpT >
   void imprint_bc_on_op( const BCOpT& bcOp,
                          const IndexTriplet ijk,
-                         const std::vector<int>& dim,
+                         const IntVec& dim,
                          const bool bcFlagX, const bool bcFlagY, const bool bcFlagZ,
                          const double bcVal,
                          const BCSide side,

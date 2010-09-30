@@ -16,6 +16,10 @@ namespace structured{
   //    write_matlab - take begin and end iterators as arguments.
   //    Print
 
+  /**
+   *  \class IntVec
+   *  \brief provides a lightweight class to deal with a 3D vector of integers.
+   */
   class IntVec
   {
     int ijk[3];
@@ -72,12 +76,18 @@ namespace structured{
                   const int extent[3] )
       : nptsGlob_( npts ), offset_( offset ), extent_( extent )
     {}
+    MemoryWindow( const IntVec& npts, const IntVec& offset, const IntVec& extent )
+      : nptsGlob_( npts ), offset_( offset ), extent_( extent )
+    {}
 
     /**
      *  \brief construct a MemoryWindow object
      *  \param npts the total (global) number of points in each direction
      */
     MemoryWindow( const int npts[3] )
+      : nptsGlob_( npts ), offset_(0,0,0), extent_( npts )
+    {}
+    MemoryWindow( const IntVec npts )
       : nptsGlob_( npts ), offset_(0,0,0), extent_( npts )
     {}
 

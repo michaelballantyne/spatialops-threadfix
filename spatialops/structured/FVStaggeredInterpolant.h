@@ -1,15 +1,9 @@
 #ifndef FVStaggeredInterpolant_h
 #define FVStaggeredInterpolant_h
 
-#include <spatialops/SpatialOpsConfigure.h>
-
-#include <spatialops/SpatialField.h>
-#include <spatialops/SpatialOperator.h>
-#include <spatialops/SpatialOpsDefs.h>
-
+#include <spatialops/structured/FVStaggeredTypes.h>
 #include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/FVStaggeredIndexHelper.h>
-#include <spatialops/structured/FVStaggeredTypes.h>
 
 
 namespace SpatialOps{
@@ -65,7 +59,7 @@ namespace structured{
      *  @param dimExtent 3-component vector indicating the number of
      *  interior points in each coordinate direction.
      */
-    LinearInterpolantAssembler( const std::vector<int>& dimExtent,
+    LinearInterpolantAssembler( const IntVec& dimExtent,
                                 const bool hasPlusXSideFaces = true,
                                 const bool hasPlusYSideFaces = true,
                                 const bool hasPlusZSideFaces = true );
@@ -107,7 +101,7 @@ namespace structured{
   private:
 
     const IndexHelper<SrcFieldT,DestFieldT> indexHelper_;
-    const std::vector<int>& dim_;
+    const IntVec dim_;
     const bool hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_;
 
   };
@@ -136,7 +130,7 @@ namespace structured{
   //------------------------------------------------------------------
   template<typename SrcFieldT, typename DestFieldT>
   LinearInterpolantAssembler<SrcFieldT,DestFieldT>::
-  LinearInterpolantAssembler( const std::vector<int>& dimExtent,
+  LinearInterpolantAssembler( const IntVec& dimExtent,
                               const bool hasPlusXSideFaces,
                               const bool hasPlusYSideFaces,
                               const bool hasPlusZSideFaces )
@@ -220,12 +214,12 @@ namespace structured{
     const int ghostDiff = XVolField::Ghost::NGHOST - SSurfXField::Ghost::NGHOST;
     int icol = irow + ghostDiff;
     if( dim_[1]>1 ){
-      icol += ghostDiff * get_nx<XVolField>(dim_,hasPlusXSideFaces_);
+      icol += ghostDiff * get_nx_with_ghost<XVolField>(dim_[0],hasPlusXSideFaces_);
     }
     if( dim_[2]>1 ){
       icol += (XVolField::Ghost::NGHOST-SSurfXField::Ghost::NGHOST)
-        * get_nx<XVolField>(dim_,hasPlusXSideFaces_)
-        * get_ny<XVolField>(dim_,hasPlusYSideFaces_);
+        * get_nx_with_ghost<XVolField>(dim_[0],hasPlusXSideFaces_)
+        * get_ny_with_ghost<XVolField>(dim_[1],hasPlusYSideFaces_);
     }
     ixs.push_back(icol);
     vals.push_back(1.0);
@@ -243,12 +237,12 @@ namespace structured{
     int icol = irow + ghostDiff;
     if( dim_[0]>1 ){
       icol += ghostDiff
-        * get_nx<YVolField>(dim_,hasPlusXSideFaces_);
+        * get_nx_with_ghost<YVolField>(dim_[0],hasPlusXSideFaces_);
     }
     if( dim_[2]>1 ){
       icol += ghostDiff
-        * get_nx<YVolField>(dim_,hasPlusXSideFaces_)
-        * get_ny<YVolField>(dim_,hasPlusYSideFaces_);
+        * get_nx_with_ghost<YVolField>(dim_[0],hasPlusXSideFaces_)
+        * get_ny_with_ghost<YVolField>(dim_[1],hasPlusYSideFaces_);
     }
     ixs.push_back(icol);
     vals.push_back(1.0);
@@ -265,12 +259,12 @@ namespace structured{
     const int ghostDiff = ZVolField::Ghost::NGHOST - SSurfZField::Ghost::NGHOST;
     int icol = irow + ghostDiff;
     if( dim_[0]>1 ){
-      icol += ghostDiff * get_nx<ZVolField>(dim_,hasPlusXSideFaces_);
+      icol += ghostDiff * get_nx_with_ghost<ZVolField>(dim_[0],hasPlusXSideFaces_);
     }
     if( dim_[1]>1 ){
       icol += ghostDiff
-        * get_nx<ZVolField>(dim_,hasPlusXSideFaces_)
-        * get_ny<ZVolField>(dim_,hasPlusYSideFaces_);
+        * get_nx_with_ghost<ZVolField>(dim_[0],hasPlusXSideFaces_)
+        * get_ny_with_ghost<ZVolField>(dim_[1],hasPlusYSideFaces_);
     }
     ixs.push_back(icol);
     vals.push_back(1.0);

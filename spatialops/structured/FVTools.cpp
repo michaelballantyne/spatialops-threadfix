@@ -5,7 +5,7 @@ namespace structured{
 
   void _ghost_set_( const int ng,
                     const int nxt, const int nyt, const int nzt,
-                    const std::vector<int>& dim,
+                    const IntVec& dim,
                     const bool hasPlusXSideFaces,
                     const bool hasPlusYSideFaces,
                     const bool hasPlusZSideFaces,
