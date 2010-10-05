@@ -189,7 +189,7 @@ namespace structured{
                    std::vector<double> & vals,
                    std::vector<int> & ixs ) const
   {
-    switch( DestField::Location::FaceDir::value ){
+    switch( int(DestField::Location::FaceDir::value) ){
     case XDIR::value:
       if( dim_[0]==1 ) return;
       break;
@@ -200,7 +200,7 @@ namespace structured{
       if( dim_[2]==1 ) return;
       break;
     }
-    switch( DestField::Location::StagLoc::value ){
+    switch( int(DestField::Location::StagLoc::value) ){
     case XDIR::value:
       if( dim_[0]==1 ) return;
       break;
