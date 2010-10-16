@@ -4,7 +4,6 @@
 #include <cassert>
 #include <vector>
 #include <iterator>
-#include <boost/type_traits.hpp>
 
 namespace SpatialOps{
 namespace structured{

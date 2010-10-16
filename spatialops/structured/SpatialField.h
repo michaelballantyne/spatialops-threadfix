@@ -66,6 +66,8 @@ namespace structured{
                   T* const fieldValues,
                   const StorageMode mode = InternalStorage );
 
+    SpatialField( const SpatialField& other );
+
     virtual ~SpatialField();
 
     // warning: slow
@@ -166,6 +168,19 @@ namespace structured{
         interiorFieldWindow_.offset(i) +=   GhostTraits::NGHOST;
       }
     }
+  }
+
+  //------------------------------------------------------------------
+
+  template< typename VecOps, typename Location, typename GhostTraits, typename T >
+  SpatialField<VecOps,Location,GhostTraits,T>::
+  SpatialField( const SpatialField& other )
+    : fieldWindow_( other.fieldWindow_ ),
+      interiorFieldWindow_( other.interiorFieldWindow_ ),
+      fieldValues_( new T[ fieldWindow_.glob_dim(0) * fieldWindow_.glob_dim(1) * fieldWindow_.glob_dim(2) ] ),
+      builtField_( true ),
+      vec_( linAlg_.setup_vector( fieldWindow_.npts(), fieldValues_ ) )
+  {
   }
 
   //------------------------------------------------------------------
