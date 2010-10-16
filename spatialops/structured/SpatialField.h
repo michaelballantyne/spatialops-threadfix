@@ -415,6 +415,9 @@ namespace structured{
   //------------------------------------------------------------------
 
 } // namespace structured
+
+#include <spatialops/FieldOperations.h>
+
 } // namespace SpatialOps
 
 #endif // SpatialOps_SpatialField_h
