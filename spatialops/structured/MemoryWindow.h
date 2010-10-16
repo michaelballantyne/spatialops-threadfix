@@ -2,6 +2,7 @@
 #define SpatialOps_MemoryWindow_h
 
 #include <cassert>
+#include <vector>
 #include <iterator>
 #include <boost/type_traits.hpp>
 
@@ -23,6 +24,10 @@ namespace structured{
     inline IntVec( const int vec[3] )
     {
       ijk[0]=vec[0];  ijk[1]=vec[1];  ijk[2]=vec[2];
+    }
+    IntVec( const std::vector<int>& vec )
+    {
+      ijk[0]=vec[0]; ijk[1]=vec[1]; ijk[2]=vec[2];
     }
     inline IntVec( const IntVec& x )
     {

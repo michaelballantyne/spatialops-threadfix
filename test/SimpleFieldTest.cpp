@@ -33,4 +33,6 @@ int main()
 
   c *= a;
   c /= a;
+
+  return 0;
 }

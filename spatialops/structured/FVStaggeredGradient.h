@@ -76,7 +76,7 @@ namespace structured{
      *  side of the domain.
      */
     GradientAssembler( const double meshSpacing,
-                       const IntVec& dimExtent,
+                       const IntVec dimExtent,
                        const bool hasPlusXSideFaces,
                        const bool hasPlusYSideFaces,
                        const bool hasPlusZSideFaces );
@@ -146,7 +146,7 @@ namespace structured{
   template< typename SrcField, typename DestField >
   GradientAssembler<SrcField,DestField>::
   GradientAssembler( const double meshSpacing,
-                     const IntVec& dimExtent,
+                     const IntVec dimExtent,
                      const bool hasPlusXSideFaces,
                      const bool hasPlusYSideFaces,
                      const bool hasPlusZSideFaces )
