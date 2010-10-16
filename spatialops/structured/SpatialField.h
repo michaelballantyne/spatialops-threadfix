@@ -371,7 +371,7 @@ namespace structured{
   operator!=(const MyType& other) const
   {
     const_iterator iother=other.begin();
-    const iterator iend=this->end();
+    const_iterator iend=this->end();
     for( const_iterator ifld=this->begin(); ifld!=iend; ++ifld, ++iother ){
       if( *ifld == *iother ) return false;
     }
@@ -386,7 +386,7 @@ namespace structured{
   operator==(const MyType& other) const
   {
     const_iterator iother=other.begin();
-    const iterator iend=this->end();
+    const_iterator iend=this->end();
     for( const_iterator ifld=this->begin(); ifld!=iend; ++ifld, ++iother ){
       if( *ifld != *iother ) return false;
     }
