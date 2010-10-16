@@ -194,11 +194,8 @@ int main()
       for( int j=0; j<npts[1]; ++j ){
         for( int i=0; i<npts[0]; ++i ){
           const double ans = (i + j + k);
-          status( ans==svol1(i,j,k) );
-          if( svol1(i,j,k) != ans ){
-            cout << "(i,j,k)=("<<i<<","<<j<<","<<k<<"),  "
-                 << svol1(i,j,k) << ", " << ans << endl;
-          }
+          std::ostringstream msg;  msg << ("<<i<<","<<j<<","<<k<<") << ",  found " << svol1(i,j,k) << ", expected " << ans;
+          status( ans==svol1(i,j,k), msg.str() );
         }
       }
     }
