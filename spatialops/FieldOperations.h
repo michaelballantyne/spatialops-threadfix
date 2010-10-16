@@ -6,7 +6,7 @@ namespace SpatialOps{
   /*
    *
    * cwearl's additions:
-   * SpatialField<VecOps,FieldLocation,GhostTraits>
+   * SpatialField<VecOps,FieldLocation,GhostTraits,T>
    */
   
   typedef double D;
@@ -17,7 +17,7 @@ namespace SpatialOps{
 
   struct Scalar;
 
-  template<typename VecOps, typename FieldLocation, typename GhostTraits>
+  template<typename VecOps, typename FieldLocation, typename GhostTraits, typename T>
     struct FieldForm;
 
   template<int ArgNum>
@@ -78,14 +78,14 @@ namespace SpatialOps{
   };
   
   /* Internal representation of vector/SpatialField */
-  template<typename VecOps, typename FieldLocation, typename GhostTraits>
+  template<typename VecOps, typename FieldLocation, typename GhostTraits, typename T>
     struct FieldForm {
-      SpatialField<VecOps,FieldLocation,GhostTraits>*fptr;
-      typename SpatialField<VecOps,FieldLocation,GhostTraits>::const_iterator iter;
+      SpatialField<VecOps,FieldLocation,GhostTraits,T>*fptr;
+      typename SpatialField<VecOps,FieldLocation,GhostTraits,T>::const_iterator iter;
       
       //assumption: const_iterator is a pointer
       //TOCONSIDER: should iter be initialized?
-    FieldForm(SpatialField<VecOps,FieldLocation,GhostTraits>* field)
+    FieldForm(SpatialField<VecOps,FieldLocation,GhostTraits,T>* field)
     : fptr(field), iter(field->begin())
       {};
     };
@@ -172,12 +172,12 @@ namespace SpatialOps{
   };
 
   /* Convert Field into FieldForm. */
-  template<typename VecOps, typename FieldLocation, typename GhostTraits>
-    struct Convert<SpatialField<VecOps,FieldLocation,GhostTraits> > {
-    FieldForm<VecOps,FieldLocation,GhostTraits> typedef ResultType;
+  template<typename VecOps, typename FieldLocation, typename GhostTraits, typename T>
+    struct Convert<SpatialField<VecOps,FieldLocation,GhostTraits,T> > {
+    FieldForm<VecOps,FieldLocation,GhostTraits,T> typedef ResultType;
   
-    static FieldForm<VecOps,FieldLocation,GhostTraits> convert(SpatialField<VecOps,FieldLocation,GhostTraits>& given) { 
-      return FieldForm<VecOps,FieldLocation,GhostTraits>(& given);
+    static FieldForm<VecOps,FieldLocation,GhostTraits,T> convert(SpatialField<VecOps,FieldLocation,GhostTraits,T>& given) { 
+      return FieldForm<VecOps,FieldLocation,GhostTraits,T>(& given);
     };
   };
 
@@ -201,11 +201,11 @@ namespace SpatialOps{
   };
 
   /* Applying an parameter to a FieldForm changes nothing. */
-  template<typename VecOps, typename FieldLocation, typename GhostTraits, int CurrentArg, typename ArgType>
-    struct ArgApply<FieldForm<VecOps,FieldLocation,GhostTraits>,CurrentArg,ArgType> {
-    typedef FieldForm<VecOps,FieldLocation,GhostTraits> ReturnType;
+  template<typename VecOps, typename FieldLocation, typename GhostTraits, typename T, int CurrentArg, typename ArgType>
+    struct ArgApply<FieldForm<VecOps,FieldLocation,GhostTraits,T>,CurrentArg,ArgType> {
+    typedef FieldForm<VecOps,FieldLocation,GhostTraits,T> ReturnType;
   
-    static inline ReturnType apply(FieldForm<VecOps,FieldLocation,GhostTraits> state,
+    static inline ReturnType apply(FieldForm<VecOps,FieldLocation,GhostTraits,T> state,
 				   ArgType arg) {
       return state;
     };
@@ -460,17 +460,17 @@ namespace SpatialOps{
   };
 
   /* Inline FieldForms: */
-  template<typename VecOps, typename FieldLocation, typename GhostTraits>
-    struct Inline<FieldForm<VecOps,FieldLocation,GhostTraits> > {
-    static inline void init (FieldForm<VecOps,FieldLocation,GhostTraits>& field) {
+  template<typename VecOps, typename FieldLocation, typename GhostTraits, typename T>
+    struct Inline<FieldForm<VecOps,FieldLocation,GhostTraits,T> > {
+    static inline void init (FieldForm<VecOps,FieldLocation,GhostTraits,T>& field) {
       field.iter = field.fptr->begin();
     }
   
-    static inline void next (FieldForm<VecOps,FieldLocation,GhostTraits>& field) {
+    static inline void next (FieldForm<VecOps,FieldLocation,GhostTraits,T>& field) {
       ++field.iter;
     }
   
-    static inline D eval (FieldForm<VecOps,FieldLocation,GhostTraits>& field) {
+    static inline D eval (FieldForm<VecOps,FieldLocation,GhostTraits,T>& field) {
       return *field.iter;
     }
   };
@@ -612,8 +612,8 @@ namespace SpatialOps{
 #define SCALAR_PRIMATIVE_TYPE D
 #define SCALAR_REFERENCE 
 
-#define FIELD_TYPE FieldForm<VecOps,FieldLocation,GhostTraits>
-#define FIELD_PRIMATIVE_TYPE SpatialField<VecOps,FieldLocation,GhostTraits>&
+#define FIELD_TYPE FieldForm<VecOps,FieldLocation,GhostTraits,T>
+#define FIELD_PRIMATIVE_TYPE SpatialField<VecOps,FieldLocation,GhostTraits,T>&
 #define FIELD_REFERENCE &
 
   /*
@@ -621,7 +621,7 @@ namespace SpatialOps{
    */
 
   /* Scalar X Field */
-  template<typename VecOps, typename FieldLocation, typename GhostTraits>
+  template<typename VecOps, typename FieldLocation, typename GhostTraits, typename T>
   BinOp<SCALAR_TYPE,FIELD_TYPE> app (D (*fcn)(D, D),
 				     SCALAR_PRIMATIVE_TYPE first,
 				     FIELD_PRIMATIVE_TYPE second) {
@@ -670,7 +670,7 @@ namespace SpatialOps{
    */
 
   /* Field X Scalar */
-  template<typename VecOps, typename FieldLocation, typename GhostTraits>
+  template<typename VecOps, typename FieldLocation, typename GhostTraits, typename T>
   BinOp<FIELD_TYPE,SCALAR_TYPE> app (D (*fcn)(D, D),
 				     FIELD_PRIMATIVE_TYPE first,
 				     SCALAR_PRIMATIVE_TYPE second) {
@@ -680,7 +680,7 @@ namespace SpatialOps{
   };
 
   /* Field X Field */
-  template<typename VecOps, typename FieldLocation, typename GhostTraits>
+  template<typename VecOps, typename FieldLocation, typename GhostTraits, typename T>
   BinOp<FIELD_TYPE,FIELD_TYPE> app (D (*fcn)(D, D),
 				    FIELD_PRIMATIVE_TYPE first,
 				    FIELD_PRIMATIVE_TYPE second) {
@@ -690,7 +690,7 @@ namespace SpatialOps{
   };
 
   /* Field X StructType */
-  template<typename VecOps, typename FieldLocation, typename GhostTraits, typename Operand>
+  template<typename VecOps, typename FieldLocation, typename GhostTraits, typename T, typename Operand>
     BinOp<FIELD_TYPE,Operand> app (D (*fcn)(D, D),
 				   FIELD_PRIMATIVE_TYPE first,
 				   Operand second) {
@@ -700,7 +700,7 @@ namespace SpatialOps{
   };
 
   /* Field X AnonArg */
-  template<typename VecOps, typename FieldLocation, typename GhostTraits, int NumOfArg>
+  template<typename VecOps, typename FieldLocation, typename GhostTraits, typename T, int NumOfArg>
     FcnForm<BinOp<FIELD_TYPE,ArgForm<NumOfArg> >,
     0,
     ArgNum<NumOfArg + 1> > app (D (* fcn)(D, D),
@@ -714,7 +714,7 @@ namespace SpatialOps{
   };
 
   /* Field X AnonFcn */
-  template<typename VecOps, typename FieldLocation, typename GhostTraits, typename ArgExp, typename max>
+  template<typename VecOps, typename FieldLocation, typename GhostTraits, typename T, typename ArgExp, typename max>
     FcnForm<BinOp<FIELD_TYPE,ArgExp>,0,max> app (D (* fcn)(D, D),
 						 FIELD_PRIMATIVE_TYPE first,
 						 FcnForm<ArgExp,0,max> second) {
@@ -739,7 +739,7 @@ namespace SpatialOps{
   };
 
   /* StructType X Field */
-  template<typename VecOps, typename FieldLocation, typename GhostTraits, typename Operand>
+  template<typename VecOps, typename FieldLocation, typename GhostTraits, typename T, typename Operand>
     BinOp<Operand,FIELD_TYPE> app (D (*fcn)(D, D),
 				   Operand first,
 				   FIELD_PRIMATIVE_TYPE second) {
@@ -802,7 +802,7 @@ namespace SpatialOps{
   };
 
   /* AnonArg X Field */
-  template<typename VecOps, typename FieldLocation, typename GhostTraits, int NumOfArg>
+  template<typename VecOps, typename FieldLocation, typename GhostTraits, typename T, int NumOfArg>
     FcnForm<BinOp<ArgForm<NumOfArg>,FIELD_TYPE>,
     0,
     ArgNum<NumOfArg + 1> > app (D (*fcn)(D, D),
@@ -882,7 +882,7 @@ namespace SpatialOps{
   };
 
   /* AnonFcn X Field */
-  template<typename VecOps, typename FieldLocation, typename GhostTraits, typename ArgExp, typename max>
+  template<typename VecOps, typename FieldLocation, typename GhostTraits, typename T, typename ArgExp, typename max>
     FcnForm<BinOp<ArgExp,FIELD_TYPE>,0,max> app (D (*fcn)(D, D),
 						 FcnForm<ArgExp,0,max> first,
 						 FIELD_PRIMATIVE_TYPE second) {
@@ -937,7 +937,7 @@ namespace SpatialOps{
    */									\
 									\
     /* Scalar X Field */						\
-    template<typename VecOps, typename FieldLocation, typename GhostTraits> \
+    template<typename VecOps, typename FieldLocation, typename GhostTraits, typename T> \
       RETURN_TYPE<SCALAR_TYPE,FIELD_TYPE> FUNCTION_NAME (SCALAR_PRIMATIVE_TYPE first, \
 							 FIELD_PRIMATIVE_TYPE second) { \
       return RETURN_TYPE<SCALAR_TYPE,FIELD_TYPE> (SCALAR_TYPE(SCALAR_REFERENCE first), \
@@ -981,7 +981,7 @@ namespace SpatialOps{
      */									\
 									\
     /* Field X Scalar */						\
-    template<typename VecOps, typename FieldLocation, typename GhostTraits> \
+    template<typename VecOps, typename FieldLocation, typename GhostTraits, typename T> \
       RETURN_TYPE<FIELD_TYPE,SCALAR_TYPE> FUNCTION_NAME (FIELD_PRIMATIVE_TYPE first, \
 							 SCALAR_PRIMATIVE_TYPE second) { \
       return RETURN_TYPE<FIELD_TYPE,SCALAR_TYPE> (FIELD_TYPE(FIELD_REFERENCE first), \
@@ -989,7 +989,7 @@ namespace SpatialOps{
     };									\
 									\
     /* Field X Field */							\
-    template<typename VecOps, typename FieldLocation, typename GhostTraits> \
+    template<typename VecOps, typename FieldLocation, typename GhostTraits, typename T> \
     RETURN_TYPE<FIELD_TYPE,FIELD_TYPE> FUNCTION_NAME (FIELD_PRIMATIVE_TYPE first, \
 						      FIELD_PRIMATIVE_TYPE second) { \
       return RETURN_TYPE<FIELD_TYPE,FIELD_TYPE> (FIELD_TYPE(FIELD_REFERENCE first), \
@@ -997,7 +997,7 @@ namespace SpatialOps{
     };									\
 									\
     /* Field X StructType */						\
-    template<typename VecOps, typename FieldLocation, typename GhostTraits, typename Operand> \
+    template<typename VecOps, typename FieldLocation, typename GhostTraits, typename T, typename Operand> \
       RETURN_TYPE<FIELD_TYPE,Operand> FUNCTION_NAME (FIELD_PRIMATIVE_TYPE first, \
 						     Operand second) {	\
       return RETURN_TYPE<FIELD_TYPE,Operand> (FIELD_TYPE(FIELD_REFERENCE first), \
@@ -1006,7 +1006,7 @@ namespace SpatialOps{
 									\
 									\
     /* Field X AnonArg */						\
-    template<typename VecOps, typename FieldLocation, typename GhostTraits, int NumOfArg> \
+    template<typename VecOps, typename FieldLocation, typename GhostTraits, typename T, int NumOfArg> \
       FcnForm<RETURN_TYPE<FIELD_TYPE,ArgForm<NumOfArg> >,		\
       0,								\
       ArgNum<NumOfArg + 1> > FUNCTION_NAME (FIELD_PRIMATIVE_TYPE first, \
@@ -1018,7 +1018,7 @@ namespace SpatialOps{
     };									\
 									\
     /* Field X AnonFcn */						\
-    template<typename VecOps, typename FieldLocation, typename GhostTraits, typename ArgExp, typename max> \
+    template<typename VecOps, typename FieldLocation, typename GhostTraits, typename T, typename ArgExp, typename max> \
       FcnForm<RETURN_TYPE<FIELD_TYPE,ArgExp>,				\
       0,								\
       max> FUNCTION_NAME (FIELD_PRIMATIVE_TYPE first,			\
@@ -1042,7 +1042,7 @@ namespace SpatialOps{
     };									\
 									\
     /* StructType X Field */						\
-    template<typename VecOps, typename FieldLocation, typename GhostTraits, typename Operand> \
+    template<typename VecOps, typename FieldLocation, typename GhostTraits, typename T, typename Operand> \
       RETURN_TYPE<Operand,FIELD_TYPE> FUNCTION_NAME (Operand first,	\
 						     FIELD_PRIMATIVE_TYPE second) { \
       return RETURN_TYPE<Operand,FIELD_TYPE> (first,			\
@@ -1098,7 +1098,7 @@ namespace SpatialOps{
     };									\
 									\
     /* AnonArg X Field */						\
-    template<typename VecOps, typename FieldLocation, typename GhostTraits, int NumOfArg> \
+    template<typename VecOps, typename FieldLocation, typename GhostTraits, typename T, int NumOfArg> \
       FcnForm<RETURN_TYPE<ArgForm<NumOfArg>,FIELD_TYPE>,		\
       0,								\
       ArgNum<NumOfArg + 1> > FUNCTION_NAME (ArgForm<NumOfArg> first,	\
@@ -1171,7 +1171,7 @@ namespace SpatialOps{
     };									\
 									\
     /* AnonFcn X Field */						\
-    template<typename VecOps, typename FieldLocation, typename GhostTraits, typename ArgExp, typename max> \
+    template<typename VecOps, typename FieldLocation, typename GhostTraits, typename T, typename ArgExp, typename max> \
       FcnForm<RETURN_TYPE<ArgExp,FIELD_TYPE>,				\
       0,								\
       max> FUNCTION_NAME (FcnForm<ArgExp,0,max> first,			\
@@ -1241,7 +1241,7 @@ namespace SpatialOps{
   };
 
   /* Field */
-  template<typename VecOps, typename FieldLocation, typename GhostTraits>
+  template<typename VecOps, typename FieldLocation, typename GhostTraits, typename T>
   UnOp<FIELD_TYPE> app (SCALAR_PRIMATIVE_TYPE (*fcn)(SCALAR_PRIMATIVE_TYPE),
 			FIELD_PRIMATIVE_TYPE operand) {
     return UnOp<FIELD_TYPE> (fcn,
@@ -1283,7 +1283,7 @@ namespace SpatialOps{
 #define BUILD_UNARY_INTERFACE(RETURN_TYPE, FUNCTION_NAME)		\
 									\
   /* Field */								\
-    template<typename VecOps, typename FieldLocation, typename GhostTraits> \
+    template<typename VecOps, typename FieldLocation, typename GhostTraits, typename T> \
       RETURN_TYPE<FIELD_TYPE> FUNCTION_NAME (FIELD_PRIMATIVE_TYPE operand) { \
       return RETURN_TYPE<FIELD_TYPE> (FIELD_TYPE(FIELD_REFERENCE operand)); \
     };									\
@@ -1319,9 +1319,9 @@ namespace SpatialOps{
    * Assignment interface:
    */
 
-  template<typename VecOps, typename FieldLocation, typename GhostTraits, typename StructTypeTemplate>
-    static inline void assign (SpatialField<VecOps,FieldLocation,GhostTraits>& lhs, StructTypeTemplate state) {
-    typename SpatialField<VecOps,FieldLocation,GhostTraits>::iterator iter = lhs.begin();
+  template<typename VecOps, typename FieldLocation, typename GhostTraits, typename T, typename StructTypeTemplate>
+    static inline void assign (SpatialField<VecOps,FieldLocation,GhostTraits,T>& lhs, StructTypeTemplate state) {
+    typename SpatialField<VecOps,FieldLocation,GhostTraits,T>::iterator iter = lhs.begin();
   
 /*     typename Convert<StructTypeTemplate>::ResultType typedef ActualType; */
 /*     ActualType realState = Convert<StructTypeTemplate>::convert(state); */
