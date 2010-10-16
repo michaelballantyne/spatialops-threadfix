@@ -2,7 +2,7 @@ npts=20, poly order=2, stretch factor=1
 interpolation    : 0.0073503
 gradient         : 0.0317783
 divergence       : 0.1986
-face-cell interp : 0.00739658
+face-cell interp : 0.00741016
 face-cell grad   : 0.0317092
 cell-cell grad   : 0.125684
 
@@ -23,44 +23,44 @@ face-cell grad   : 0.0019918
 cell-cell grad   : 0.00796266
 
 npts=20, poly order=2, stretch factor=4
-interpolation    : 0.0423066
-gradient         : 0.148451
+interpolation    : 0.144722
+gradient         : 0.224543
 divergence       : 1.25838
-face-cell interp : 0.0501342
-face-cell grad   : 0.0968058
-cell-cell grad   : 0.366635
+face-cell interp : 0.103721
+face-cell grad   : 0.24079
+cell-cell grad   : 0.682538
 
 npts=40, poly order=2, stretch factor=4
-interpolation    : 0.0165278
+interpolation    : 0.0227239
 gradient         : 0.0754298
 divergence       : 0.333347
-face-cell interp : 0.0110179
-face-cell grad   : 0.0466427
-cell-cell grad   : 0.186068
+face-cell interp : 0.0223451
+face-cell grad   : 0.0694597
+cell-cell grad   : 0.193676
 
 npts=80, poly order=2, stretch factor=4
-interpolation    : 0.00291357
+interpolation    : 0.00306999
 gradient         : 0.0199208
 divergence       : 0.080676
-face-cell interp : 0.00291633
-face-cell grad   : 0.0165555
+face-cell interp : 0.0031447
+face-cell grad   : 0.0177758
 cell-cell grad   : 0.065979
 
 npts=20, poly order=4, stretch factor=1
-interpolation    : 0.000630837
-gradient         : 0.00563639
+interpolation    : 0.000761629
+gradient         : 0.00659133
 divergence       : 0.10248
-face-cell interp : 0.00032791
+face-cell interp : 0.000332886
 face-cell grad   : 0.00085878
-cell-cell grad   : 0.00714474
+cell-cell grad   : 0.00882226
 
 npts=40, poly order=4, stretch factor=1
-interpolation    : 2.36197e-05
-gradient         : 0.000410116
+interpolation    : 2.45591e-05
+gradient         : 0.000420567
 divergence       : 0.0251724
 face-cell interp : 1.06109e-05
 face-cell grad   : 5.43763e-05
-cell-cell grad   : 0.000546625
+cell-cell grad   : 0.00057373
 
 npts=80, poly order=4, stretch factor=1
 interpolation    : 7.70415e-07
@@ -71,26 +71,26 @@ face-cell grad   : 3.40786e-06
 cell-cell grad   : 3.58223e-05
 
 npts=20, poly order=4, stretch factor=4
-interpolation    : 0.0071432
-gradient         : 0.0313862
+interpolation    : 0.039795
+gradient         : 0.167488
 divergence       : 0.670633
-face-cell interp : 0.0141842
-face-cell grad   : 0.0125077
-cell-cell grad   : 0.0638099
+face-cell interp : 0.0282664
+face-cell grad   : 0.0490524
+cell-cell grad   : 0.137426
 
 npts=40, poly order=4, stretch factor=4
-interpolation    : 0.00135811
-gradient         : 0.00490881
+interpolation    : 0.00396734
+gradient         : 0.0251704
 divergence       : 0.151453
-face-cell interp : 0.000850864
-face-cell grad   : 0.00265289
-cell-cell grad   : 0.0330269
+face-cell interp : 0.00191124
+face-cell grad   : 0.00419578
+cell-cell grad   : 0.0534029
 
 npts=80, poly order=4, stretch factor=4
-interpolation    : 6.97435e-05
-gradient         : 0.000342431
+interpolation    : 0.000177251
+gradient         : 0.00206918
 divergence       : 0.0354594
-face-cell interp : 6.95078e-05
-face-cell grad   : 0.000209386
-cell-cell grad   : 0.0169527
+face-cell interp : 7.76228e-05
+face-cell grad   : 0.000284686
+cell-cell grad   : 0.0179474
 
