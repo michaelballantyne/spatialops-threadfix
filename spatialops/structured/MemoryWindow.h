@@ -3,20 +3,10 @@
 
 #include <cassert>
 #include <iterator>
-
 #include <boost/type_traits.hpp>
 
 namespace SpatialOps{
 namespace structured{
-
-  // james: consider re-implementing SpatialField here.
-  //  spatial field would take a MemoryWindow object to its constructor?  That way we could define appropriate sizes as well as iterators.
-  //  special case for interior_begin would use a MemoryWindow that excluded the ghost cells.  This would enable interior iterators without any problem.
-  //  general iterator would use 
-  //
-  // implement some of the current member functions as free functions:
-  //    write_matlab - take begin and end iterators as arguments.
-  //    Print
 
   /**
    *  \class IntVec
@@ -106,9 +96,11 @@ namespace structured{
      */
     inline int flat_index( IntVec loc ) const
     {
-      assert( loc[0] < extent_[0] );
-      assert( loc[1] < extent_[1] );
-      assert( loc[2] < extent_[2] );
+#     ifndef NDEBUG
+      if( extent_[0]>1 ) assert( loc[0] < extent_[0] );
+      if( extent_[1]>1 ) assert( loc[1] < extent_[1] );
+      if( extent_[2]>1 ) assert( loc[2] < extent_[2] );
+#     endif
       for( size_t i=0; i<3; ++i ) loc[i] += offset_[i];
       return loc[0] + loc[1]*nptsGlob_[0] + loc[2]*nptsGlob_[0]*nptsGlob_[1];
     }
@@ -127,6 +119,10 @@ namespace structured{
       return ijk;
     }
 
+    /**
+     *  \brief obtain the number of points in the field.  Note that
+     *  this is not necessarily contiguous memory
+     */
     inline int npts() const{ return extent_[0] * extent_[1] * extent_[2]; }
 
     inline int glob_dim( const size_t i ) const{ return nptsGlob_[i]; }
@@ -145,13 +141,27 @@ namespace structured{
     inline IntVec& offset  (){ return offset_; }
     inline IntVec& glob_dim(){ return nptsGlob_; }
 
-
     /**
      *  \brief obtain the stride in the requested direction.
      */
-    inline int stride( const size_t i ) const{ return nptsGlob_[i] - extent_[i]; }
+    inline int stride( const size_t i ) const{
+      const int n = 1 + nptsGlob_[i] - extent_[i];
+      return n;
+    }
 
   };
+
+  template<int Dir> size_t stride( const MemoryWindow& mw );
+
+  template<> inline size_t stride<0>( const MemoryWindow& mw ){ return 1; }
+  template<> inline size_t stride<1>( const MemoryWindow& mw ){ return stride<0>(mw) + mw.glob_dim(0)-mw.extent(0); }
+  template<> inline size_t stride<2>( const MemoryWindow& mw )
+  {
+    return stride<0>(mw)
+      + ( mw.glob_dim(0)-mw.extent(0) ) * mw.glob_dim(1)
+      + ( mw.glob_dim(1)-mw.extent(1) );
+  }
+
 
   template<typename T> class ConstFieldIterator; // forward
 
@@ -170,6 +180,7 @@ namespace structured{
   {
     friend class ConstFieldIterator<T>;
     T* current_;
+    T* first_;
     const MemoryWindow& window_;
     size_t i_,j_,k_;
 
@@ -183,35 +194,47 @@ namespace structured{
 
     FieldIterator( const self& other )
       : current_( other.current_ ),
-        window_( other.window_ )
+        first_  ( other.first_   ),
+        window_ ( other.window_  )
     {
       i_=other.i_; j_=other.j_; k_=other.k_;
     }
     
-    FieldIterator( T* t, const MemoryWindow& window )
-      : current_( t ),
-        window_( window )
+    FieldIterator( T* t, const size_t offset, const MemoryWindow& window )
+      : current_( t+offset ),
+        first_  ( t        ),
+        window_ ( window   )
     {
       i_ = j_ = k_ = 0;
     }
 
     inline self& operator++()
     {
+      if( window_.extent(2) > 1 )  assert( k_ < window_.extent(2) );
+      ++i_;
       if( i_<window_.extent(0) ){
-        ++i_;
-        ++current_;
+        current_ += stride<0>(window_);
       }
       else{
         i_=0;
         ++j_;
-        current_ += 1+window_.stride(0);
+        if( j_ < window_.extent(1) ){
+          current_ += stride<1>(window_);
+        }
+        else{
+          j_=0;
+          ++k_;
+          if( k_ < window_.extent(2) ){
+            current_ += stride<2>(window_);
+          }
+          else{
+            IntVec ijkend = window_.extent();
+            --ijkend[0]; --ijkend[1]; --ijkend[2];
+            const size_t last = window_.flat_index( ijkend ) + 1;
+            current_ = first_ + last;
+          }
+        }
       }
-      if( j_>=window_.extent(1) ){
-        j_=0;
-        ++k_;
-        current_ += window_.stride(0) * window_.stride(1);
-      }
-      assert( k_ < window_.extent(2) );
       return *this;
     }
 
@@ -222,9 +245,10 @@ namespace structured{
     inline self& operator=( const self& other )
     {
       current_ = other.current_;
-      i_ = other.i_;
-      j_ = other.j_;
-      k_ = other.k_;
+      first_   = other.first_;
+      i_       = other.i_;
+      j_       = other.j_;
+      k_       = other.k_;
       return *this;
     }
 
@@ -250,6 +274,7 @@ namespace structured{
   class ConstFieldIterator
   {
     const T* current_;
+    const T* first_;
     const MemoryWindow& window_;
     size_t i_,j_,k_;
 
@@ -263,20 +288,24 @@ namespace structured{
 
     ConstFieldIterator( const self& other )
       : current_( other.current_ ),
-        window_( other.window_ )
+        first_  ( other.first_   ),
+        window_ ( other.window_  )
     {
       i_=other.i_; j_=other.j_; k_=other.k_;
     }
     
-    ConstFieldIterator( const T* t, const MemoryWindow& window )
-      : current_( t ),
-        window_( window )
+    ConstFieldIterator( const T* t, const size_t offset, const MemoryWindow& window )
+      : current_( t+offset ),
+        first_  ( t        ),
+        window_ ( window   )
     {
       i_ = j_ = k_ = 0;
     }
 
     ConstFieldIterator( const FieldIterator<T> t )
-      : current_( t.current_ ), window_( t.window_ )
+      : current_( t.current_ ),
+        first_  ( t.first_   ),
+        window_ ( t.window_  )
     {
       i_ = t.i_;
       j_ = t.j_;
@@ -285,21 +314,31 @@ namespace structured{
 
     inline self& operator++()
     {
+      if( window_.extent(2) > 1 )  assert( k_ < window_.extent(2) );
+      ++i_;
       if( i_<window_.extent(0) ){
-        ++i_;
-        ++current_;
+        current_ += stride<0>(window_);
       }
       else{
         i_=0;
         ++j_;
-        current_ += 1+window_.stride(0);
+        if( j_ < window_.extent(1) ){
+          current_ += stride<1>(window_);
+        }
+        else{
+          j_=0;
+          ++k_;
+          if( k_ < window_.extent(2) ){
+            current_ += stride<2>(window_);
+          }
+          else{
+            IntVec ijkend = window_.extent();
+            --ijkend[0]; --ijkend[1]; --ijkend[2];
+            const size_t last = window_.flat_index( ijkend ) + 1;
+            current_ = first_ + last;
+          }
+        }
       }
-      if( j_>=window_.extent(1) ){
-        j_=0;
-        ++k_;
-        current_ += window_.stride(0) * window_.stride(1);
-      }
-      assert( k_ < window_.extent(2) );
       return *this;
     }
 
@@ -310,13 +349,13 @@ namespace structured{
     inline self& operator=( const self& other )
     {
       current_ = other.current_;
+      first_   = other.first_;
       i_ = other.i_;
       j_ = other.j_;
       k_ = other.k_;
       return *this;
     }
 
-    inline       reference operator*()      { return *current_; }
     inline const reference operator*() const{ return *current_; }
 
   };

@@ -76,17 +76,17 @@ namespace structured{
     T& operator[]( const size_t i );
     T  operator[]( const size_t i ) const;
 
-    inline const_iterator begin() const{ return const_iterator(fieldValues_+fieldWindow_.flat_index(IntVec(0,0,0)),fieldWindow_); }
-    inline       iterator begin()      { return       iterator(fieldValues_+fieldWindow_.flat_index(IntVec(0,0,0)),fieldWindow_); }
+    inline const_iterator begin() const{ return const_iterator(fieldValues_,fieldWindow_.flat_index(IntVec(0,0,0)),fieldWindow_); }
+    inline       iterator begin()      { return       iterator(fieldValues_,fieldWindow_.flat_index(IntVec(0,0,0)),fieldWindow_); }
 
-    inline const_iterator end() const{ return const_iterator(fieldValues_ + fieldWindow_.npts(), fieldWindow_); }
-    inline       iterator end()      { return       iterator(fieldValues_ + fieldWindow_.npts(), fieldWindow_); }
+    inline const_iterator end() const;
+    inline       iterator end();
 
-    inline const_interior_iterator interior_begin() const{ return const_interior_iterator(fieldValues_+interiorFieldWindow_.flat_index(IntVec(0,0,0)),interiorFieldWindow_); }
-    inline       interior_iterator interior_begin()      { return       interior_iterator(fieldValues_+interiorFieldWindow_.flat_index(IntVec(0,0,0)),interiorFieldWindow_); }
+    inline const_interior_iterator interior_begin() const{ return const_interior_iterator(fieldValues_,interiorFieldWindow_.flat_index(IntVec(0,0,0)),interiorFieldWindow_); }
+    inline       interior_iterator interior_begin()      { return       interior_iterator(fieldValues_,interiorFieldWindow_.flat_index(IntVec(0,0,0)),interiorFieldWindow_); }
 
-    inline const_interior_iterator interior_end() const{ return const_interior_iterator(fieldValues_ + interiorFieldWindow_.npts(), interiorFieldWindow_); }
-    inline       interior_iterator interior_end()      { return       interior_iterator(fieldValues_ + interiorFieldWindow_.npts(), interiorFieldWindow_); }
+    inline const_interior_iterator interior_end() const;
+    inline       interior_iterator interior_end();
 
     inline MyType& operator =(const MyType&);
     inline MyType& operator+=(const MyType&);
@@ -194,10 +194,61 @@ namespace structured{
   //------------------------------------------------------------------
 
   template< typename VecOps, typename Location, typename GhostTraits, typename T >
+  typename SpatialField<VecOps,Location,GhostTraits,T>::const_iterator
+  SpatialField<VecOps,Location,GhostTraits,T>::end() const
+  {
+    IntVec ijk = fieldWindow_.extent();
+    for( size_t i=0; i<3; ++i ) ijk[i] -= 1;
+    const size_t n = 1+fieldWindow_.flat_index( ijk );
+    return const_iterator(fieldValues_, n, fieldWindow_);
+  }
+
+  //------------------------------------------------------------------
+
+  template< typename VecOps, typename Location, typename GhostTraits, typename T >
+  typename SpatialField<VecOps,Location,GhostTraits,T>::iterator
+  SpatialField<VecOps,Location,GhostTraits,T>::end()
+  {
+    IntVec ijk = fieldWindow_.extent();
+    for( size_t i=0; i<3; ++i ) ijk[i] -= 1;
+    const size_t n = 1+fieldWindow_.flat_index( ijk );
+    return iterator(fieldValues_, n, fieldWindow_);
+  }
+
+  //------------------------------------------------------------------
+
+  template< typename VecOps, typename Location, typename GhostTraits, typename T >
+  typename SpatialField<VecOps,Location,GhostTraits,T>::const_interior_iterator
+  SpatialField<VecOps,Location,GhostTraits,T>::interior_end() const
+  {
+    IntVec ijk = interiorFieldWindow_.extent();
+    for( size_t i=0; i<3; ++i ) ijk[i] -= 1;
+    const size_t n = 1+interiorFieldWindow_.flat_index( ijk );
+    return const_interior_iterator( fieldValues_, n, interiorFieldWindow_ );
+  }
+
+  //------------------------------------------------------------------
+
+  template< typename VecOps, typename Location, typename GhostTraits, typename T >
+  typename SpatialField<VecOps,Location,GhostTraits,T>::interior_iterator
+  SpatialField<VecOps,Location,GhostTraits,T>::interior_end()
+  {
+    IntVec ijk = interiorFieldWindow_.extent();
+    for( size_t i=0; i<3; ++i ) ijk[i] -= 1;
+    const size_t n = 1+interiorFieldWindow_.flat_index( ijk );
+    return interior_iterator( fieldValues_, n, interiorFieldWindow_ );
+  }
+
+  //------------------------------------------------------------------
+
+  template< typename VecOps, typename Location, typename GhostTraits, typename T >
   T&
   SpatialField<VecOps,Location,GhostTraits,T>::
   operator()( const int i, const int j, const int k )
   {
+    assert( i < fieldWindow_.extent(0) );
+    assert( j < fieldWindow_.extent(1) );
+    assert( k < fieldWindow_.extent(2) );
     return fieldValues_[ fieldWindow_.flat_index(IntVec(i,j,k)) ];
   }
 
@@ -208,6 +259,9 @@ namespace structured{
   SpatialField<VecOps,Location,GhostTraits,T>::
   operator()( const int i, const int j, const int k ) const
   {
+    assert( i < fieldWindow_.extent(0) );
+    assert( j < fieldWindow_.extent(1) );
+    assert( k < fieldWindow_.extent(2) );
     return fieldValues_[ fieldWindow_.flat_index(IntVec(i,j,k)) ];
   }
 
