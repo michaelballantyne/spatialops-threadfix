@@ -79,6 +79,10 @@ namespace structured{
     return MemoryWindow( dim );
   }
 
+  template<> inline int get_nx_with_ghost<double>( const int nxNoGhost, const bool hasPlusFaceX ){ return nxNoGhost; }
+  template<> inline int get_ny_with_ghost<double>( const int nyNoGhost, const bool hasPlusFaceY ){ return nyNoGhost; }
+  template<> inline int get_nz_with_ghost<double>( const int nzNoGhost, const bool hasPlusFaceZ ){ return nzNoGhost; }
+
   //------------------------------------------------------------------
 
   /**
