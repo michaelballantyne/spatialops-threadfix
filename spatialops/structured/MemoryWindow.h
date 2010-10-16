@@ -2,8 +2,8 @@
 #define SpatialOps_MemoryWindow_h
 
 #include <cassert>
+#include <vector>
 #include <iterator>
-#include <boost/type_traits.hpp>
 
 namespace SpatialOps{
 namespace structured{
@@ -16,6 +16,7 @@ namespace structured{
   {
     int ijk[3];
   public:
+    IntVec(){ ijk[0]=0; ijk[1]=0; ijk[2]=0; }
     inline IntVec( const int i, const int j, const int k )
     {
       ijk[0]=i; ijk[1]=j; ijk[2]=k;
@@ -23,6 +24,10 @@ namespace structured{
     inline IntVec( const int vec[3] )
     {
       ijk[0]=vec[0];  ijk[1]=vec[1];  ijk[2]=vec[2];
+    }
+    IntVec( const std::vector<int>& vec )
+    {
+      ijk[0]=vec[0]; ijk[1]=vec[1]; ijk[2]=vec[2];
     }
     inline IntVec( const IntVec& x )
     {
@@ -182,6 +187,7 @@ namespace structured{
     T* current_;
     T* first_;
     const MemoryWindow& window_;
+    IntVec stride_;
     size_t i_,j_,k_;
 
   public:
@@ -197,6 +203,7 @@ namespace structured{
         first_  ( other.first_   ),
         window_ ( other.window_  )
     {
+      stride_ = other.stride_;
       i_=other.i_; j_=other.j_; k_=other.k_;
     }
     
@@ -205,6 +212,9 @@ namespace structured{
         first_  ( t        ),
         window_ ( window   )
     {
+      stride_[0] = stride<0>(window);
+      stride_[1] = stride<1>(window);
+      stride_[2] = stride<2>(window);
       i_ = j_ = k_ = 0;
     }
 
@@ -213,20 +223,16 @@ namespace structured{
       if( window_.extent(2) > 1 )  assert( k_ < window_.extent(2) );
       ++i_;
       if( i_<window_.extent(0) ){
-        current_ += stride<0>(window_);
+        current_ += stride_[0];
       }
       else{
         i_=0;
         ++j_;
-        if( j_ < window_.extent(1) ){
-          current_ += stride<1>(window_);
-        }
+        if( j_ < window_.extent(1) )  current_ += stride_[1];
         else{
           j_=0;
           ++k_;
-          if( k_ < window_.extent(2) ){
-            current_ += stride<2>(window_);
-          }
+          if( k_ < window_.extent(2) ) current_ += stride_[2];
           else{
             IntVec ijkend = window_.extent();
             --ijkend[0]; --ijkend[1]; --ijkend[2];
@@ -276,6 +282,7 @@ namespace structured{
     const T* current_;
     const T* first_;
     const MemoryWindow& window_;
+    IntVec stride_;
     size_t i_,j_,k_;
 
   public:
@@ -291,6 +298,7 @@ namespace structured{
         first_  ( other.first_   ),
         window_ ( other.window_  )
     {
+      stride_ = other.stride_;
       i_=other.i_; j_=other.j_; k_=other.k_;
     }
     
@@ -299,6 +307,9 @@ namespace structured{
         first_  ( t        ),
         window_ ( window   )
     {
+      stride_[0] = stride<0>(window);
+      stride_[1] = stride<1>(window);
+      stride_[2] = stride<2>(window);
       i_ = j_ = k_ = 0;
     }
 
@@ -307,6 +318,7 @@ namespace structured{
         first_  ( t.first_   ),
         window_ ( t.window_  )
     {
+      stride_ = t.stride_;
       i_ = t.i_;
       j_ = t.j_;
       k_ = t.k_;
@@ -316,21 +328,15 @@ namespace structured{
     {
       if( window_.extent(2) > 1 )  assert( k_ < window_.extent(2) );
       ++i_;
-      if( i_<window_.extent(0) ){
-        current_ += stride<0>(window_);
-      }
+      if( i_<window_.extent(0) )  current_ += stride_[0];
       else{
         i_=0;
         ++j_;
-        if( j_ < window_.extent(1) ){
-          current_ += stride<1>(window_);
-        }
+        if( j_ < window_.extent(1) )  current_ += stride_[1];
         else{
           j_=0;
           ++k_;
-          if( k_ < window_.extent(2) ){
-            current_ += stride<2>(window_);
-          }
+          if( k_ < window_.extent(2) )  current_ += stride_[2];
           else{
             IntVec ijkend = window_.extent();
             --ijkend[0]; --ijkend[1]; --ijkend[2];

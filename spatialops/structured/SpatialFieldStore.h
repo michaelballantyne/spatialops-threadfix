@@ -71,7 +71,7 @@ namespace SpatialOps{
      *  @param builtFromStore if true, then SpatFldPtr will return the
      *  memory it owns to the SpatialFieldStore class once the last
      *  reference is destroyed.  If false then this will simply alias
-     *  a FieldT object and provide binary operations.
+     *  a FieldT object.
      */
     SpatFldPtr( FieldT& field, const bool builtFromStore );
 
@@ -99,25 +99,6 @@ namespace SpatialOps{
     inline const FieldT* operator->() const{return f_;}
 
     inline bool isnull() const{ return f_ == NULL; }
-
-    /**
-     *  @name binary Operators
-     *
-     *  These operators only result in new memory allocation when
-     *  required, otherwise, a temporary is used from the
-     *  SpatialFieldStore.  The resulting SpatFldPtr object should NOT
-     *  be dereferenced and stored as a reference to an underlying
-     *  SpatialField.  This will cause severe memory corruption.
-     *
-     *  These operator simply call through to the ones defined on the
-     *  underlying SpatialField object.
-     */
-    //@{
-    inline SpatFldPtr operator+(const SpatFldPtr& p) const{return (*f_ + *p);}  ///< Add two fields to produce a third: A=B+C
-    inline SpatFldPtr operator-(const SpatFldPtr& p) const{return (*f_ - *p);}  ///< Subtract two fields to produce a third: A=B-C
-    inline SpatFldPtr operator*(const SpatFldPtr& p) const{return (*f_ * *p);}  ///< Multiply two fields to produce a third: A=B*C
-    inline SpatFldPtr operator/(const SpatFldPtr& p) const{return (*f_ / *p);}  ///< Divide two fields to produce a third: A=B/C
-    //@}
 
 
     /**
