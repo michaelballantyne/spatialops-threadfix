@@ -14,6 +14,9 @@ namespace structured{
    */
   class IntVec
   {
+    friend std::ostream& operator<<(std::ostream&, const IntVec&);
+    friend void write( std::ostream&, const IntVec& );
+
     int ijk[3];
   public:
     IntVec(){ ijk[0]=0; ijk[1]=0; ijk[2]=0; }
@@ -57,6 +60,9 @@ namespace structured{
    *  to help with this.
    */
   class MemoryWindow{
+
+    friend std::ostream& operator<<( std::ostream&, const MemoryWindow& );
+    friend void write( std::ostream&, const MemoryWindow& );
 
     IntVec nptsGlob_, offset_, extent_;
 

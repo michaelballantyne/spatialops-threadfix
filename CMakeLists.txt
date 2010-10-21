@@ -148,6 +148,7 @@ set( SO_Sources
   spatialops/LagrangePoly.cpp
   spatialops/structured/FVOneDimensional.cpp
   spatialops/structured/FVTools.cpp
+  spatialops/structured/MemoryWindow.cpp
   spatialops/particles/ParticleFieldTypes.cpp
   )
 if( LINALG_TRILINOS )

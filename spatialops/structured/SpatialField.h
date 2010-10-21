@@ -36,8 +36,9 @@ namespace structured{
 
   public:
 
-    typedef GhostTraits Ghost;
+    typedef GhostTraits   Ghost;
     typedef FieldLocation Location;
+    typedef T             AtomicT;
 
     typedef FieldIterator<T>       iterator;
     typedef FieldIterator<T>       interior_iterator;
@@ -115,7 +116,8 @@ namespace structured{
     inline const VecType & get_linalg_vec() const{ return vec_; }
     //@}
 
-    const MemoryWindow& window() const{ return fieldWindow_; }
+    const MemoryWindow& window_without_ghost() const{ return interiorFieldWindow_; }
+    const MemoryWindow& window_with_ghost() const{ return fieldWindow_; }
 
   };
 
