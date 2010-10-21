@@ -29,6 +29,13 @@ void test_iterator( const IntVec npts,
     *if2 += *if1;
   }
 
+  if2 = f2.begin() + 2;
+  status( f2[2] == *if2, "iterator + operator" );
+  status( &f2[2] == &(*if2), "iterator + operator address" );
+
+  if2 += 3;
+  status( &f2[5] == &(*if2), "iterator += address" );
+
   const size_t ng = SVolField::Ghost::NGHOST;
   const size_t ihi = npts[0]>1 ? npts[0] + 2*ng : 1;
   const size_t jhi = npts[1]>1 ? npts[1] + 2*ng : 1;

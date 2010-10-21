@@ -220,7 +220,6 @@ namespace structured{
 
     inline self& operator++()
     {
-      if( window_.extent(2) > 1 )  assert( k_ < window_.extent(2) );
       ++i_;
       if( i_<window_.extent(0) ){
         current_ += stride_[0];
@@ -244,6 +243,18 @@ namespace structured{
       return *this;
     }
 
+    inline self& operator+( const size_t n )
+    {
+      for( size_t i=0; i<n; ++i )  ++(*this);
+      return *this;
+    }
+
+    inline self& operator+=( const size_t n )
+    {
+      for( size_t i=0; i<n; ++i )  ++(*this);
+      return *this;
+    }
+
     inline bool operator==( const self& other ) const{ return current_==other.current_; }
 
     inline bool operator!=( const self& other ) const{ return current_!=other.current_; }
@@ -258,8 +269,25 @@ namespace structured{
       return *this;
     }
 
-    inline       reference operator*()      { return *current_; }
-    inline const reference operator*() const{ return *current_; }
+    inline reference operator*()
+    {
+#     ifndef NDEBUG
+      if( window_.extent(2) > 1 )  assert( k_ < window_.extent(2) );
+      if( window_.extent(1) > 1 )  assert( j_ < window_.extent(1) );
+      if( window_.extent(0) > 1 )  assert( i_ < window_.extent(0) );
+#     endif
+      return *current_;
+    }
+
+    inline const reference operator*() const
+    {
+#     ifndef NDEBUG
+      if( window_.extent(2) > 1 )  assert( k_ < window_.extent(2) );
+      if( window_.extent(1) > 1 )  assert( j_ < window_.extent(1) );
+      if( window_.extent(0) > 1 )  assert( i_ < window_.extent(0) );
+#     endif
+      return *current_;
+    }
   };
 
 
@@ -326,7 +354,6 @@ namespace structured{
 
     inline self& operator++()
     {
-      if( window_.extent(2) > 1 )  assert( k_ < window_.extent(2) );
       ++i_;
       if( i_<window_.extent(0) )  current_ += stride_[0];
       else{
@@ -348,6 +375,18 @@ namespace structured{
       return *this;
     }
 
+    inline self& operator+( const size_t n )
+    {
+      for( size_t i=0; i<n; ++i )  ++(*this);
+      return *this;
+    }
+
+    inline self& operator+=( const size_t n )
+    {
+      for( size_t i=0; i<n; ++i )  ++(*this);
+      return *this;
+    }
+
     inline bool operator==( const self& other ) const{ return current_==other.current_; }
 
     inline bool operator!=( const self& other ) const{ return current_!=other.current_; }
@@ -356,13 +395,21 @@ namespace structured{
     {
       current_ = other.current_;
       first_   = other.first_;
-      i_ = other.i_;
-      j_ = other.j_;
-      k_ = other.k_;
+      i_       = other.i_;
+      j_       = other.j_;
+      k_       = other.k_;
       return *this;
     }
 
-    inline const reference operator*() const{ return *current_; }
+    inline const reference operator*() const
+    {
+#     ifndef NDEBUG
+      if( window_.extent(2) > 1 )  assert( k_ < window_.extent(2) );
+      if( window_.extent(1) > 1 )  assert( j_ < window_.extent(1) );
+      if( window_.extent(0) > 1 )  assert( i_ < window_.extent(0) );
+#     endif
+      return *current_;
+    }
 
   };
 
