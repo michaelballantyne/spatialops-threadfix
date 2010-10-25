@@ -20,7 +20,7 @@ namespace structured{
     for( size_t k=0; k<w.extent(2); ++k ){
       for( size_t j=0; j<w.extent(1); ++j ){
         // should be contiguous in x dir
-        const typename FieldT::AtomicT val = field(0,j,k);
+        const typename FieldT::AtomicT& val = field(0,j,k);
         os.write( reinterpret_cast<const char*>(&val),
                   sizeof(typename FieldT::AtomicT) * w.extent(0) );
       }
