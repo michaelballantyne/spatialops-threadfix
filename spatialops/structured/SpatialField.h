@@ -3,6 +3,10 @@
 
 #include <spatialops/structured/MemoryWindow.h>
 
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/split_member.hpp>
+#include <boost/serialization/binary_object.hpp>
+
 namespace SpatialOps{
 namespace structured{
 
@@ -25,7 +29,7 @@ namespace structured{
     const MemoryWindow fieldWindow_;
     MemoryWindow interiorFieldWindow_;
 
-    T* const fieldValues_;
+    T* fieldValues_;
 
     const bool builtField_;
 
@@ -33,6 +37,45 @@ namespace structured{
     VecType& vec_;
 
     inline void reset_values( const T* values );
+
+    friend class boost::serialization::access;
+
+    template<typename Archive>
+    void save( Archive& ar, const unsigned int version ) const
+    {
+      ar << fieldWindow_;
+      ar << interiorFieldWindow_; 
+      ar << builtField_;
+
+      const size_t npts = fieldWindow_.glob_dim(0)
+                        * fieldWindow_.glob_dim(1)
+                        * fieldWindow_.glob_dim(2);
+      ar << npts;
+      for( size_t i=0; i<npts; ++i ){
+        ar << fieldValues_[i];
+      }
+      
+    }
+
+    template<typename Archive>
+    void load( Archive& ar, const unsigned int version )
+    {
+      ar >> const_cast<MemoryWindow&>(fieldWindow_);
+      ar >> interiorFieldWindow_;
+      ar >> const_cast<bool&>(builtField_);
+
+      size_t npts;
+      ar >> npts;
+      if( builtField_ ){
+        fieldValues_ = new T[ npts ];
+      }
+
+      for( size_t i=0; i<npts; ++i ){
+        ar >> fieldValues_[i];
+      }
+    }
+
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
 
   public:
 
@@ -73,11 +116,11 @@ namespace structured{
 
     // warning: slow
     T& operator()( const int i, const int j, const int k );
-    T  operator()( const int i, const int j, const int k ) const;
+    T& operator()( const int i, const int j, const int k ) const;
 
     // warning: slow
     T& operator[]( const size_t i );
-    T  operator[]( const size_t i ) const;
+    T& operator[]( const size_t i ) const;
 
     inline const_iterator begin() const{ return const_iterator(fieldValues_,fieldWindow_.flat_index(IntVec(0,0,0)),fieldWindow_); }
     inline       iterator begin()      { return       iterator(fieldValues_,fieldWindow_.flat_index(IntVec(0,0,0)),fieldWindow_); }
@@ -275,7 +318,7 @@ namespace structured{
   //------------------------------------------------------------------
 
   template< typename VecOps, typename Location, typename GhostTraits, typename T >
-  T
+  T&
   SpatialField<VecOps,Location,GhostTraits,T>::
   operator()( const int i, const int j, const int k ) const
   {
@@ -298,7 +341,7 @@ namespace structured{
   //------------------------------------------------------------------
 
   template< typename VecOps, typename Location, typename GhostTraits, typename T >
-  T
+  T&
   SpatialField<VecOps,Location,GhostTraits,T>::
   operator[]( const size_t i ) const
   {
@@ -474,5 +517,40 @@ namespace structured{
 
 } // namespace structured
 } // namespace SpatialOps
+
+
+namespace boost{
+namespace serialization{
+
+
+//   template<typename Archive,typename VO, typename FL, typename GT, typename T>
+//   inline void save_construct_data( Archive& ar,
+//                                    const SpatialOps::structured::SpatialField<VO,FL,GT,T>* f,
+//                                    const unsigned int version )
+//   {
+//     ar << f->fieldWindow_;
+//     ar << f->fieldValues_;
+//     ar << f->builtField_;
+//   }
+
+//   template<typename Archive,typename VO, typename FL, typename GT, typename T>
+//   inline void load_construct_data( Archive& ar,
+//                                    const SpatialOps::structured::SpatialField<VO,FL,GT,T>* f,
+//                                    const unsigned int version )
+//   {
+//     typedef SpatialOps::structured::SpatialField<VO,FL,GT,T> MyType;
+//     SpatialOps::structured::MemoryWindow w;
+//     T* const v;
+//     bool builtVals;
+//     ar >> w >> v >> builtVals;
+//     const SpatialOps::structured::StorageMode mode = builtVals
+//       ? SpatialOps::structured::InternalStorage
+//       : SpatialOps::structured::ExternalStorage;
+//     ::new(f)MyType( w, v, mode );
+//   }
+
+} // namespace boost
+} // namespace serialization
+
 
 #endif // SpatialOps_SpatialField_h

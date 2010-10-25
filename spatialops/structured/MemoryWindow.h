@@ -5,6 +5,8 @@
 #include <vector>
 #include <iterator>
 
+#include <boost/serialization/serialization.hpp>
+
 namespace SpatialOps{
 namespace structured{
 
@@ -18,6 +20,14 @@ namespace structured{
     friend void write( std::ostream&, const IntVec& );
 
     int ijk[3];
+
+    friend class boost::serialization::access;
+    template<typename Archive>
+    void serialize( Archive& ar, const unsigned int version )
+    {
+      ar & ijk;
+    }
+
   public:
     IntVec(){ ijk[0]=0; ijk[1]=0; ijk[2]=0; }
     inline IntVec( const int i, const int j, const int k )
@@ -45,6 +55,15 @@ namespace structured{
       for( size_t i=0; i<3; ++i ) ijk[i] = x.ijk[i];
       return *this;
     }
+
+    inline bool operator==(const IntVec& v) const
+    {
+      return ijk[0]==v.ijk[0] & ijk[1]==v.ijk[1] & ijk[2]==v.ijk[2];
+    }
+    inline bool operator!=(const IntVec& v) const
+    {
+      return ijk[0]!=v.ijk[0] | ijk[1]!=v.ijk[1] | ijk[2]!=v.ijk[2];
+    }
   };
 
   /**
@@ -65,6 +84,30 @@ namespace structured{
     friend void write( std::ostream&, const MemoryWindow& );
 
     IntVec nptsGlob_, offset_, extent_;
+
+    friend class boost::serialization::access;
+
+    template<typename Archive>
+    void serialize( Archive& ar, const unsigned int version )
+    {
+      ar & nptsGlob_;
+      ar & offset_;
+      ar & extent_;
+    }
+
+    template<typename Archive>
+    void save_construct_data( Archive& ar, const MemoryWindow* w, const unsigned int version )
+    {
+      ar << w->nptsGlob_ << w->offset_ << w->extent_;
+    }
+
+    template<typename Archive>
+    void load_construct_data( Archive& ar, const MemoryWindow* w, const unsigned int version )
+    {
+      IntVec npg, ofs, ext;
+      ar >> npg >> ofs >> ext;
+      ::new(w)MemoryWindow( npg, ofs, ext );
+    }
 
   public:
 
@@ -158,6 +201,16 @@ namespace structured{
     inline int stride( const size_t i ) const{
       const int n = 1 + nptsGlob_[i] - extent_[i];
       return n;
+    }
+
+    inline bool operator==( const MemoryWindow& w ) const
+    {
+      return ( (nptsGlob_==w.nptsGlob_) & (extent_==w.extent_) & (offset_==w.offset_) );
+    }
+
+    inline bool operator!=( const MemoryWindow& w ) const
+    {
+      return nptsGlob_!=w.nptsGlob_ | extent_!=w.extent_ | offset_!=w.offset_;
     }
 
   };
@@ -294,6 +347,10 @@ namespace structured{
 #     endif
       return *current_;
     }
+
+    inline size_t i(){ return i_; }
+    inline size_t j(){ return j_; }
+    inline size_t k(){ return k_; }
   };
 
 
