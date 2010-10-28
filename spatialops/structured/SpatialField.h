@@ -176,22 +176,22 @@ namespace structured{
                 T* const fieldValues,
                 const StorageMode mode )
     : fieldWindow_( window ),
-			interiorFieldWindow_( window ), // reset with correct info later
+      interiorFieldWindow_( window ), // reset with correct info later
       fieldValues_( (mode==ExternalStorage)
                     ? fieldValues
                     : new T[ window.glob_dim(0) * window.glob_dim(1) * window.glob_dim(2) ] ),
       builtField_( mode==InternalStorage ),
       vec_( linAlg_.setup_vector( fieldWindow_.npts(), fieldValues_ ) )
   {
-		IntVec ext = window.extent();
-		IntVec ofs = window.offset();
+    IntVec ext = window.extent();
+    IntVec ofs = window.offset();
     for( size_t i=0; i<3; ++i ){
       if( ext[i]>1 ){
         ext[i] -= 2*GhostTraits::NGHOST;
         ofs[i] +=   GhostTraits::NGHOST;
       }
     }
-		interiorFieldWindow_ = MemoryWindow( window.glob_dim(), ext, ofs );
+    interiorFieldWindow_ = MemoryWindow( window.glob_dim(), ofs, ext );
     if( mode==InternalStorage )  reset_values( fieldValues );
   }
 
@@ -203,22 +203,22 @@ namespace structured{
                 T* const fieldValues,
                 const StorageMode mode )
     : fieldWindow_( npts, IntVec(0,0,0), npts ),
-			interiorFieldWindow_( IntVec(0,0,0) ), // reset with correct info later
+      interiorFieldWindow_( IntVec(0,0,0) ), // reset with correct info later
       fieldValues_( (mode==ExternalStorage)
                     ? fieldValues
                     : new T[npts[0]*npts[1]*npts[2]] ),
       builtField_( mode==InternalStorage ),
       vec_( linAlg_.setup_vector( fieldWindow_.npts(), fieldValues_ ) )
   {
-		IntVec ext = fieldWindow_.extent();
-		IntVec ofs = fieldWindow_.offset();
+    IntVec ext = fieldWindow_.extent();
+    IntVec ofs = fieldWindow_.offset();
     for( size_t i=0; i<3; ++i ){
       if( ext[i]>1 ){
         ext[i] -= 2*GhostTraits::NGHOST;
         ofs[i] +=   GhostTraits::NGHOST;
       }
     }
-		interiorFieldWindow_ = MemoryWindow( fieldWindow_.glob_dim(), ext, ofs );
+    interiorFieldWindow_ = MemoryWindow( fieldWindow_.glob_dim(), ofs, ext );
   }
 
   //------------------------------------------------------------------
