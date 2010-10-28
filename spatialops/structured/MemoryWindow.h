@@ -178,13 +178,13 @@ namespace structured{
      */
     inline size_t npts() const{ return extent_[0] * extent_[1] * extent_[2]; }
 
-//     inline size_t glob_dim( const size_t i ) const{ return size_t(nptsGlob_[i]); }
-//     inline size_t offset  ( const size_t i ) const{ return size_t(offset_[i]); }
-//     inline size_t extent  ( const size_t i ) const{ return size_t(extent_[i]); }
+    inline size_t glob_dim( const size_t i ) const{ return size_t(nptsGlob_[i]); }
+    inline size_t offset  ( const size_t i ) const{ return size_t(offset_[i]); }
+    inline size_t extent  ( const size_t i ) const{ return size_t(extent_[i]); }
 
-    inline int glob_dim( const size_t i ) const{ return nptsGlob_[i]; }
-    inline int offset  ( const size_t i ) const{ return offset_[i]; }
-    inline int extent  ( const size_t i ) const{ return extent_[i]; }
+//     inline int glob_dim( const size_t i ) const{ return nptsGlob_[i]; }
+//     inline int offset  ( const size_t i ) const{ return offset_[i]; }
+//     inline int extent  ( const size_t i ) const{ return extent_[i]; }
 
     inline IntVec extent  () const{ return extent_; }
     inline IntVec offset  () const{ return offset_; }
