@@ -73,6 +73,27 @@ int main()
     status( fz==zf, "z field" );
   }
 
+  {
+    std::stringstream out;
+    OutputArchive ar(out);
+    ar << npts << window << fx << fy << fz;
+
+    InputArchive arin(out);
+    IntVec n2;
+    MemoryWindow w2(n2);
+    SVolField xf( w2, NULL );
+    SVolField yf( w2, NULL );
+    SVolField zf( w2, NULL );
+
+    arin >> n2 >> w2 >> xf >> yf >> zf;
+
+    status( npts==n2, "IntVec - stringstream" );
+    status( window==w2, "MemoryWindow - stringstream" );
+    status( fx==xf, "x field - stringstream" );
+    status( fy==yf, "y field - stringstream" );
+    status( fz==zf, "z field - stringstream" );
+  }
+
   if( status.ok() ) return 0;
   return -1;
 }
