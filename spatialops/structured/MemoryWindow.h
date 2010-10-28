@@ -57,11 +57,11 @@ namespace structured{
 
     inline bool operator==(const IntVec& v) const
     {
-      return ijk[0]==v.ijk[0] & ijk[1]==v.ijk[1] & ijk[2]==v.ijk[2];
+      return (ijk[0]==v.ijk[0]) & (ijk[1]==v.ijk[1]) & (ijk[2]==v.ijk[2]);
     }
     inline bool operator!=(const IntVec& v) const
     {
-      return ijk[0]!=v.ijk[0] | ijk[1]!=v.ijk[1] | ijk[2]!=v.ijk[2];
+      return (ijk[0]!=v.ijk[0]) | (ijk[1]!=v.ijk[1]) | (ijk[2]!=v.ijk[2]);
     }
   };
 
@@ -117,11 +117,11 @@ namespace structured{
      */
     MemoryWindow( const int npts[3],
                   const int offset[3],
-									const int extent[3] );
+                  const int extent[3] );
 		
     MemoryWindow( const IntVec& npts,
-									const IntVec& offset,
-									const IntVec& extent );
+                  const IntVec& offset,
+                  const IntVec& extent );
 
     /**
      *  \brief construct a MemoryWindow object
@@ -197,7 +197,7 @@ namespace structured{
 
     inline bool operator!=( const MemoryWindow& w ) const
     {
-      return nptsGlob_!=w.nptsGlob_ | extent_!=w.extent_ | offset_!=w.offset_;
+      return (nptsGlob_!=w.nptsGlob_) | (extent_!=w.extent_) | (offset_!=w.offset_);
     }
 
   };
