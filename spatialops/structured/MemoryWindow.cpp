@@ -12,13 +12,6 @@ namespace structured{
     return os;
   }
 
-  void write( ostream& os, const MemoryWindow& w )
-  {
-    write( os, w.nptsGlob_ );
-    write( os, w.offset_   );
-    write( os, w.extent_   );
-  }
-
   ostream& operator<<(ostream& os, const IntVec& v )
   {
     os << "[ " << v[0]
@@ -26,11 +19,6 @@ namespace structured{
        << ","  << v[2]
        << " ]" << endl;
     return os;
-  }
-
-  void write(ostream& os, const IntVec& v )
-  {
-    os.write( reinterpret_cast<const char*>(&(v.ijk[0])), 3*sizeof(int) );
   }
 
 } // namespace structured

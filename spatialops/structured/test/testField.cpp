@@ -1,7 +1,6 @@
 #include <spatialops/structured/FVStaggeredTypes.h>
 #include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/SpatialFieldStore.h>
-#include <spatialops/structured/FieldWriter.h>
 #include <test/TestHelper.h>
 
 #include <sstream>
@@ -12,37 +11,6 @@ using namespace structured;
 using std::cout;
 using std::endl;
 
-
-bool test_field_writer()
-{
-  IntVec npts(10,11,12);
-  const MemoryWindow w( get_window_with_ghost<SVolField>(npts,true,true,true) );
-  SVolField fx(w,NULL);
-  SVolField fy(w,NULL);
-  SVolField fz(w,NULL);
-  for( size_t k=0; k<npts[2]; ++k ){
-    for( size_t j=0; j<npts[1]; ++j ){
-      for( size_t i=0; i<npts[0]; ++i ){
-        fx(i,j,k) = i;
-        fy(i,j,k) = j;
-        fz(i,j,k) = k;
-      }
-    }
-  }
-  {
-    std::fstream os("fields.bin",std::ios_base::binary|std::ios_base::out|std::ios_base::trunc);
-    write(os,"fx",fx,false);
-    write(os,"fy",fy,false);
-    write(os,"fz",fz,false);
-  }
-//   {
-//     std::fstream os("fields.txt",std::ios_base::out|std::ios_base::trunc);
-//     os << "fx" << endl << fx << endl
-//        << "fy" << endl << fy << endl
-//        << "fz" << endl << fz << endl;
-//   }
-  return true;
-}
 
 void test_iterator( const IntVec npts,
                     TestHelper& overall )
@@ -246,8 +214,6 @@ int main()
       *sv3 = svol1;
       status( *sv3 == svol1, "spatial field pointer from store" );
     }
-
-    overall( test_field_writer(), "field I/O" );
 
     overall( status.ok(), "field operations" );
   }
