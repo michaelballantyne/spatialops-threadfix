@@ -455,9 +455,8 @@ FieldFunction2D<FieldT,PatchT>::set_fields() const
 template<typename FieldT,typename PatchT>
 FieldFunction3D<FieldT,PatchT>::FieldFunction3D( const FieldT& x, const FieldT& y, const FieldT& z )
   : patch_( NULL ),
-    x_( &x ),
-    y_( &y ),
-    z_( &z )
+    xid_(),   yid_(),   zid_(),
+    x_( &x ), y_( &y ), z_( &z )
 {}
 //--------------------------------------------------------------------
 template<typename FieldT,typename PatchT>

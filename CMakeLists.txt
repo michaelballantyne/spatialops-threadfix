@@ -67,6 +67,7 @@ endif()
 # setup the boost library
 set(Boost_USE_MULTITHREAD ON)
 #set( boost_comps ${boost_comps} "program_options" )
+set( boost_comps ${boost_comps} "serialization" )
 if( BOOST_CMAKE )
   set(Boost_USE_STATIC ON)
   find_package( Boost REQUIRED COMPONENTS ${boost_comps} NO_MODULE )
@@ -148,6 +149,7 @@ set( SO_Sources
   spatialops/LagrangePoly.cpp
   spatialops/structured/FVOneDimensional.cpp
   spatialops/structured/FVTools.cpp
+  spatialops/structured/MemoryWindow.cpp
   spatialops/particles/ParticleFieldTypes.cpp
   )
 if( LINALG_TRILINOS )

@@ -5,6 +5,8 @@
 #include <vector>
 #include <iterator>
 
+#include <boost/serialization/serialization.hpp>
+
 namespace SpatialOps{
 namespace structured{
 
@@ -14,7 +16,18 @@ namespace structured{
    */
   class IntVec
   {
+    friend std::ostream& operator<<(std::ostream&, const IntVec&);
+    friend void write( std::ostream&, const IntVec& );
+
     int ijk[3];
+
+    friend class boost::serialization::access;
+    template<typename Archive>
+    void serialize( Archive& ar, const unsigned int version )
+    {
+      ar & ijk;
+    }
+
   public:
     IntVec(){ ijk[0]=0; ijk[1]=0; ijk[2]=0; }
     inline IntVec( const int i, const int j, const int k )
@@ -42,6 +55,15 @@ namespace structured{
       for( size_t i=0; i<3; ++i ) ijk[i] = x.ijk[i];
       return *this;
     }
+
+    inline bool operator==(const IntVec& v) const
+    {
+      return ijk[0]==v.ijk[0] & ijk[1]==v.ijk[1] & ijk[2]==v.ijk[2];
+    }
+    inline bool operator!=(const IntVec& v) const
+    {
+      return ijk[0]!=v.ijk[0] | ijk[1]!=v.ijk[1] | ijk[2]!=v.ijk[2];
+    }
   };
 
   /**
@@ -58,7 +80,34 @@ namespace structured{
    */
   class MemoryWindow{
 
+    friend std::ostream& operator<<( std::ostream&, const MemoryWindow& );
+    friend void write( std::ostream&, const MemoryWindow& );
+
     IntVec nptsGlob_, offset_, extent_;
+
+    friend class boost::serialization::access;
+
+    template<typename Archive>
+    void serialize( Archive& ar, const unsigned int version )
+    {
+      ar & nptsGlob_;
+      ar & offset_;
+      ar & extent_;
+    }
+
+    template<typename Archive>
+    void save_construct_data( Archive& ar, const MemoryWindow* w, const unsigned int version )
+    {
+      ar << w->nptsGlob_ << w->offset_ << w->extent_;
+    }
+
+    template<typename Archive>
+    void load_construct_data( Archive& ar, const MemoryWindow* w, const unsigned int version )
+    {
+      IntVec npg, ofs, ext;
+      ar >> npg >> ofs >> ext;
+      ::new(w)MemoryWindow( npg, ofs, ext );
+    }
 
   public:
 
@@ -154,6 +203,16 @@ namespace structured{
       return n;
     }
 
+    inline bool operator==( const MemoryWindow& w ) const
+    {
+      return ( (nptsGlob_==w.nptsGlob_) & (extent_==w.extent_) & (offset_==w.offset_) );
+    }
+
+    inline bool operator!=( const MemoryWindow& w ) const
+    {
+      return nptsGlob_!=w.nptsGlob_ | extent_!=w.extent_ | offset_!=w.offset_;
+    }
+
   };
 
   template<int Dir> size_t stride( const MemoryWindow& mw );
@@ -220,7 +279,6 @@ namespace structured{
 
     inline self& operator++()
     {
-      if( window_.extent(2) > 1 )  assert( k_ < window_.extent(2) );
       ++i_;
       if( i_<window_.extent(0) ){
         current_ += stride_[0];
@@ -244,6 +302,18 @@ namespace structured{
       return *this;
     }
 
+    inline self& operator+( const size_t n )
+    {
+      for( size_t i=0; i<n; ++i )  ++(*this);
+      return *this;
+    }
+
+    inline self& operator+=( const size_t n )
+    {
+      for( size_t i=0; i<n; ++i )  ++(*this);
+      return *this;
+    }
+
     inline bool operator==( const self& other ) const{ return current_==other.current_; }
 
     inline bool operator!=( const self& other ) const{ return current_!=other.current_; }
@@ -258,8 +328,29 @@ namespace structured{
       return *this;
     }
 
-    inline       reference operator*()      { return *current_; }
-    inline const reference operator*() const{ return *current_; }
+    inline reference operator*()
+    {
+#     ifndef NDEBUG
+      if( window_.extent(2) > 1 )  assert( k_ < window_.extent(2) );
+      if( window_.extent(1) > 1 )  assert( j_ < window_.extent(1) );
+      if( window_.extent(0) > 1 )  assert( i_ < window_.extent(0) );
+#     endif
+      return *current_;
+    }
+
+    inline const reference operator*() const
+    {
+#     ifndef NDEBUG
+      if( window_.extent(2) > 1 )  assert( k_ < window_.extent(2) );
+      if( window_.extent(1) > 1 )  assert( j_ < window_.extent(1) );
+      if( window_.extent(0) > 1 )  assert( i_ < window_.extent(0) );
+#     endif
+      return *current_;
+    }
+
+    inline size_t i(){ return i_; }
+    inline size_t j(){ return j_; }
+    inline size_t k(){ return k_; }
   };
 
 
@@ -326,7 +417,6 @@ namespace structured{
 
     inline self& operator++()
     {
-      if( window_.extent(2) > 1 )  assert( k_ < window_.extent(2) );
       ++i_;
       if( i_<window_.extent(0) )  current_ += stride_[0];
       else{
@@ -348,6 +438,18 @@ namespace structured{
       return *this;
     }
 
+    inline self& operator+( const size_t n )
+    {
+      for( size_t i=0; i<n; ++i )  ++(*this);
+      return *this;
+    }
+
+    inline self& operator+=( const size_t n )
+    {
+      for( size_t i=0; i<n; ++i )  ++(*this);
+      return *this;
+    }
+
     inline bool operator==( const self& other ) const{ return current_==other.current_; }
 
     inline bool operator!=( const self& other ) const{ return current_!=other.current_; }
@@ -356,13 +458,21 @@ namespace structured{
     {
       current_ = other.current_;
       first_   = other.first_;
-      i_ = other.i_;
-      j_ = other.j_;
-      k_ = other.k_;
+      i_       = other.i_;
+      j_       = other.j_;
+      k_       = other.k_;
       return *this;
     }
 
-    inline const reference operator*() const{ return *current_; }
+    inline const reference operator*() const
+    {
+#     ifndef NDEBUG
+      if( window_.extent(2) > 1 )  assert( k_ < window_.extent(2) );
+      if( window_.extent(1) > 1 )  assert( j_ < window_.extent(1) );
+      if( window_.extent(0) > 1 )  assert( i_ < window_.extent(0) );
+#     endif
+      return *current_;
+    }
 
   };
 

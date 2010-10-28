@@ -383,7 +383,7 @@ namespace SpatialOps{
     boost::mutex::scoped_lock lock( get_mutex() );
 #endif
     // find the proper map
-    const structured::MemoryWindow& w = f.window();
+    const structured::MemoryWindow& w = f.window_with_ghost();
     const int ntot = w.extent(0) * w.extent(1) * w.extent(2);
     FieldQueue& q = fqmap_[ ntot ];
 
@@ -427,7 +427,7 @@ namespace SpatialOps{
 #ifdef EXPRESSION_THREADS
     boost::mutex::scoped_lock lock( get_mutex() );
 #endif
-    const structured::MemoryWindow& w = field.window();
+    const structured::MemoryWindow& w = field.window_with_ghost();
     const int ntot = w.extent(0) * w.extent(1) * w.extent(2);
     FieldQueue& q = fqmap_[ ntot ];
     q.push( &field );

@@ -476,7 +476,6 @@ namespace SpatialOps{
   ~SpatialField()
   {
     if( storageMode_ == InternalStorage )  delete [] fieldValues_;
-    linAlg_.destroy_vector();
   }
   //------------------------------------------------------------------
   template< class VecOps, typename FieldLocation, typename GhostTraits >
