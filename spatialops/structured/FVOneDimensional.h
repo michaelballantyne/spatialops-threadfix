@@ -3,9 +3,9 @@
 
 #include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/LagrangePoly.h>
-#include <spatialops/SpatialField.h>
 #include <spatialops/SpatialOperator.h>
 
+#include <spatialops/structured/SpatialField.h>
 #include <spatialops/structured/FVStaggeredTypes.h>
 #include <spatialops/structured/FVTools.h>
 

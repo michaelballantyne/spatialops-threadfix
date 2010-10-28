@@ -1,7 +1,7 @@
 #ifndef ParticleFieldTypes_h
 #define ParticleFieldTypes_h
 
-#include <spatialops/SpatialField.h>
+#include <spatialops/structured/SpatialField.h>
 
 namespace SpatialOps{
 namespace Particle{
@@ -34,7 +34,7 @@ namespace Particle{
     size_t length;
   };
 
-  typedef SpatialOps::SpatialField<
+  typedef SpatialOps::structured::SpatialField<
     ParticleLinAlg,
     ParticleFieldTraits,
     ParticleGhostTraits  > ParticleField;

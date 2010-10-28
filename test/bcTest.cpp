@@ -39,7 +39,7 @@ bool test1()
   const double ATOL = 1.0e-5;
   const int nx=3, ny=4, nz=5;
 
-  std::vector<int> dim(3);  dim[0]=nx; dim[1]=ny; dim[2]=nz;
+  IntVec dim(nx,ny,nz);
   const bool bcx=true,  bcy=true, bcz=true;
 
   typedef boost::function< double() > BCFun;
@@ -51,21 +51,19 @@ bool test1()
 
   // pick some points to set bcs on.  Note that they need not actually
   // reside on a boundary.
-  std::vector<IndexTriplet> pts;
-  pts.push_back( IndexTriplet( 0,    0,    0    ) );
-  pts.push_back( IndexTriplet( 1,    0,    0    ) );
-  pts.push_back( IndexTriplet( 2,    1,    2    ) );
-  pts.push_back( IndexTriplet( 0,    0,    1    ) );
-  pts.push_back( IndexTriplet( 0,    1,    0    ) );
-  pts.push_back( IndexTriplet( 0,    1,    0    ) );
-  pts.push_back( IndexTriplet( nx-1, ny-1, nz-1 ) );
-  pts.push_back( IndexTriplet( 0,    ny-1, 0    ) );
-  pts.push_back( IndexTriplet( 0,    0,    nz-1 ) );
-  pts.push_back( IndexTriplet( 2,    ny-1, 1    ) );
+  std::vector<IntVec> pts;
+  pts.push_back( IntVec( 0,    0,    0    ) );
+  pts.push_back( IntVec( 1,    0,    0    ) );
+  pts.push_back( IntVec( 2,    1,    2    ) );
+  pts.push_back( IntVec( 0,    0,    1    ) );
+  pts.push_back( IntVec( 0,    1,    0    ) );
+  pts.push_back( IntVec( 0,    1,    0    ) );
+  pts.push_back( IntVec( nx-1, ny-1, nz-1 ) );
+  pts.push_back( IntVec( 0,    ny-1, 0    ) );
+  pts.push_back( IntVec( 0,    0,    nz-1 ) );
+  pts.push_back( IntVec( 2,    ny-1, 1    ) );
 
-  SVolField field( get_n_tot<SVolField>(dim,bcx,bcy,bcz),
-                   get_ghost_set<SVolField>(dim,bcx,bcy,bcz),
-                   NULL );
+  SVolField field( get_window_with_ghost<SVolField>(dim,bcx,bcy,bcz), NULL );
   field = 1.0;
 
   bool isFailed = false;
@@ -73,7 +71,7 @@ bool test1()
   std::cout << "Testing simple BC usage ... " << std::flush;
 
   // apply bcs to the field using a "time varying" function.  We use one function to get the time 
-  for( std::vector<IndexTriplet>::const_iterator ipt=pts.begin(); ipt!=pts.end(); ++ipt ){
+  for( std::vector<IntVec>::const_iterator ipt=pts.begin(); ipt!=pts.end(); ++ipt ){
     BoundaryCondition<SVolField,BCFun> bc( *ipt, dim, bcx, bcy, bcz, f );
     bc(field);
     // check:
@@ -82,7 +80,7 @@ bool test1()
   }
 
   // apply constant-time BCs
-  for( std::vector<IndexTriplet>::const_iterator ipt=pts.begin(); ipt!=pts.end(); ++ipt ){
+  for( std::vector<IntVec>::const_iterator ipt=pts.begin(); ipt!=pts.end(); ++ipt ){
     BoundaryCondition<SVolField,BCFun> bc( *ipt, dim, bcx, bcy, bcz, fnotime );
     bc(field);
     // check:

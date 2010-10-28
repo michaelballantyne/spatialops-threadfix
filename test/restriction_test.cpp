@@ -28,33 +28,30 @@ bool is_result_valid( const SVolField& f1,
 
 //====================================================================
 
-void build_mesh( const vector<int>& dim, SVolField& x, SVolField& y, SVolField& z )
+void build_mesh( const IntVec& dim, SVolField& x, SVolField& y, SVolField& z )
 {
   vector<double> spacing(3,1.0);
   for( int i=0; i<3; ++i ){
     spacing[i] = 1.0 / dim[i];
   }
 
-  SVolField::iterator isvx=x.begin();
-  SVolField::iterator isvy=y.begin();
-  SVolField::iterator isvz=z.begin();
-
-  const int ihi = get_nx<SVolField>(dim,true);
-  const int jhi = get_ny<SVolField>(dim,true);
-  const int khi = get_nz<SVolField>(dim,true);
+  const int ihi = get_nx_with_ghost<SVolField>(dim[0],true);
+  const int jhi = get_ny_with_ghost<SVolField>(dim[1],true);
+  const int khi = get_nz_with_ghost<SVolField>(dim[2],true);
 
   const int ngx = dim[0]>1 ? SVolField::Ghost::NGHOST : 0;
   const int ngy = dim[1]>1 ? SVolField::Ghost::NGHOST : 0;
   const int ngz = dim[2]>1 ? SVolField::Ghost::NGHOST : 0;
 
   for( int k=0; k<khi; ++k ){
-    const double z = spacing[2]*(double(k)+0.5-ngz);
+    const double zval = spacing[2]*(double(k)+0.5-ngz);
     for( int j=0; j<jhi; ++j ){
-      const double y = spacing[1]*(double(j)+0.5-ngy);
+      const double yval = spacing[1]*(double(j)+0.5-ngy);
       for( int i=0; i<ihi; ++i ){
-        const double x = spacing[0]*(double(i)+0.5-ngx);
-        *isvx = x;   *isvy = y;   *isvz = z;
-        ++isvx;      ++isvy;      ++isvz;
+        const double xval = spacing[0]*(double(i)+0.5-ngx);
+        x(i,j,k) = xval;
+        y(i,j,k) = yval;
+        z(i,j,k) = zval;
       }
     }
   }
@@ -63,25 +60,25 @@ void build_mesh( const vector<int>& dim, SVolField& x, SVolField& y, SVolField& 
 //====================================================================
 
 bool restrict_test( const int activeDim,
-                    const vector<int>& dimSrc, 
-                    const vector<int>& dimDest )
+                    const IntVec& dimSrc, 
+                    const IntVec& dimDest )
 {
   OperatorDatabase opDB;
 
   RestrictionAssembler<SVolField> ra( dimSrc, dimDest, true, true, true );
   opDB.register_new_operator< RestrictSVol >( new RestrictSVol(ra) );
 
-  SVolField coarse( get_n_tot<SVolField>(dimSrc, true,true,true), get_ghost_set<SVolField>(dimSrc, true,true,true), NULL );
-  SVolField fine  ( get_n_tot<SVolField>(dimDest,true,true,true), get_ghost_set<SVolField>(dimDest,true,true,true), NULL );
-  SVolField fine2 ( get_n_tot<SVolField>(dimDest,true,true,true), get_ghost_set<SVolField>(dimDest,true,true,true), NULL );
+  SVolField coarse( get_dim_with_ghost<SVolField>(dimSrc, true,true,true), NULL );
+  SVolField fine  ( get_dim_with_ghost<SVolField>(dimDest,true,true,true), NULL );
+  SVolField fine2 ( get_dim_with_ghost<SVolField>(dimDest,true,true,true), NULL );
 
-  SVolField xcoarse( get_n_tot<SVolField>(dimSrc,true,true,true), get_ghost_set<SVolField>(dimSrc,true,true,true), NULL );
-  SVolField ycoarse( get_n_tot<SVolField>(dimSrc,true,true,true), get_ghost_set<SVolField>(dimSrc,true,true,true), NULL );
-  SVolField zcoarse( get_n_tot<SVolField>(dimSrc,true,true,true), get_ghost_set<SVolField>(dimSrc,true,true,true), NULL );
+  SVolField xcoarse( get_dim_with_ghost<SVolField>(dimSrc,true,true,true), NULL );
+  SVolField ycoarse( get_dim_with_ghost<SVolField>(dimSrc,true,true,true), NULL );
+  SVolField zcoarse( get_dim_with_ghost<SVolField>(dimSrc,true,true,true), NULL );
 
-  SVolField xfine( get_n_tot<SVolField>(dimDest,true,true,true), get_ghost_set<SVolField>(dimDest,true,true,true), NULL );
-  SVolField yfine( get_n_tot<SVolField>(dimDest,true,true,true), get_ghost_set<SVolField>(dimDest,true,true,true), NULL );
-  SVolField zfine( get_n_tot<SVolField>(dimDest,true,true,true), get_ghost_set<SVolField>(dimDest,true,true,true), NULL );
+  SVolField xfine( get_dim_with_ghost<SVolField>(dimDest,true,true,true), NULL );
+  SVolField yfine( get_dim_with_ghost<SVolField>(dimDest,true,true,true), NULL );
+  SVolField zfine( get_dim_with_ghost<SVolField>(dimDest,true,true,true), NULL );
 
   build_mesh( dimSrc, xcoarse, ycoarse, zcoarse );
 
@@ -123,7 +120,7 @@ bool restrict_test( const int activeDim,
 
 int main()
 {
-  vector<int> dimSrc(3,1), dimDest(3,1);
+  IntVec dimSrc(1,1,1), dimDest(1,1,1);
 
   dimSrc [0] = 3;    dimSrc [1] = 10;    dimSrc [2] = 5;
   dimDest[0] = 16;   dimDest[1] = 10;    dimDest[2] = 5;

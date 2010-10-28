@@ -83,20 +83,17 @@ void test_grad_op( const Grid& grid,
   typedef typename OpT::SrcFieldType  SrcFieldT;
   typedef typename OpT::DestFieldType DestFieldT;
 
-  const std::vector<int>& dim = grid.extent();
+  const IntVec& dim = grid.extent();
 
-  if( get_n_tot<SrcFieldT >(dim,bcFlag[0],bcFlag[1],bcFlag[2]) == 1 ||
-      get_n_tot<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]) == 1 ) return;
+  if( get_ntot_with_ghost<SrcFieldT >(dim,bcFlag[0],bcFlag[1],bcFlag[2]) == 1 ||
+      get_ntot_with_ghost<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]) == 1 ) return;
 
-  SrcFieldT  phi      ( get_n_tot<SrcFieldT >(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
-                        get_ghost_set<SrcFieldT >(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
-                        NULL );
-  DestFieldT fphi     ( get_n_tot<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
-                        get_ghost_set<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
-                        NULL );
-  DestFieldT fphiExact( get_n_tot<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
-                        get_ghost_set<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
-                        NULL );
+  const MemoryWindow srcWindow( get_window_with_ghost<SrcFieldT >(dim,bcFlag[0],bcFlag[1],bcFlag[2]));
+  const MemoryWindow dstWindow( get_window_with_ghost<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]));
+
+  SrcFieldT  phi      ( srcWindow, NULL );
+  DestFieldT fphi     ( dstWindow, NULL );
+  DestFieldT fphiExact( dstWindow, NULL );
 
   funcPhi.evaluate( phi );
 
@@ -125,20 +122,17 @@ void test_interp_op( const Grid& grid,
   typedef typename OpT::SrcFieldType  SrcFieldT;
   typedef typename OpT::DestFieldType DestFieldT;
 
-  const std::vector<int>& dim = grid.extent();
+  const IntVec& dim = grid.extent();
 
-  if( get_n_tot<SrcFieldT >(dim,bcFlag[0],bcFlag[1],bcFlag[2]) == 1 ||
-      get_n_tot<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]) == 1 ) return;
+  if( get_ntot_with_ghost<SrcFieldT >(dim,bcFlag[0],bcFlag[1],bcFlag[2]) == 1 ||
+      get_ntot_with_ghost<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]) == 1 ) return;
 
-  SrcFieldT  phi      ( get_n_tot<SrcFieldT >(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
-                        get_ghost_set<SrcFieldT >(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
-                        NULL );
-  DestFieldT fphi     ( get_n_tot<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
-                        get_ghost_set<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
-                        NULL );
-  DestFieldT fphiExact( get_n_tot<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
-                        get_ghost_set<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
-                        NULL );
+  const MemoryWindow srcWindow( get_window_with_ghost<SrcFieldT >(dim,bcFlag[0],bcFlag[1],bcFlag[2]));
+  const MemoryWindow dstWindow( get_window_with_ghost<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]));
+
+  SrcFieldT  phi      ( srcWindow, NULL );
+  DestFieldT fphi     ( dstWindow, NULL );
+  DestFieldT fphiExact( dstWindow, NULL );
 
   funcPhi.evaluate( phi );
   funcFPhi.evaluate( fphiExact );
@@ -160,20 +154,17 @@ void test_div_op( const Grid& grid,
   typedef typename OpT::SrcFieldType  SrcFieldT;
   typedef typename OpT::DestFieldType DestFieldT;
 
-  const std::vector<int>& dim = grid.extent();
+  const IntVec& dim = grid.extent();
 
-  if( get_n_tot<SrcFieldT >(dim,bcFlag[0],bcFlag[1],bcFlag[2]) == 1 ||
-      get_n_tot<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]) == 1 ) return;
+  if( get_ntot_with_ghost<SrcFieldT >(dim,bcFlag[0],bcFlag[1],bcFlag[2]) == 1 ||
+      get_ntot_with_ghost<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]) == 1 ) return;
 
-  SrcFieldT  phi      (     get_n_tot<SrcFieldT >(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
-                        get_ghost_set<SrcFieldT >(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
-                        NULL );
-  DestFieldT fphi     (     get_n_tot<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
-                        get_ghost_set<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
-                        NULL );
-  DestFieldT fphiExact(     get_n_tot<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
-                        get_ghost_set<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
-                        NULL );
+  const MemoryWindow srcWindow( get_window_with_ghost<SrcFieldT >(dim,bcFlag[0],bcFlag[1],bcFlag[2]));
+  const MemoryWindow dstWindow( get_window_with_ghost<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]));
+
+  SrcFieldT  phi      ( srcWindow, NULL );
+  DestFieldT fphi     ( dstWindow, NULL );
+  DestFieldT fphiExact( dstWindow, NULL );
 
   switch( FuncType1::FieldType::Location::FaceDir::value ){
   case XDIR::value :
@@ -203,9 +194,9 @@ void test_div_op( const Grid& grid,
 //--------------------------------------------------------------------
 
 template<typename OpT>
-bool test_bc_helper( const vector<int>&dim,
+bool test_bc_helper( const IntVec&dim,
                      const std::vector<bool>& bcFlag,
-                     const IndexTriplet ijk,
+                     const IntVec ijk,
                      const double bcVal,
                      const BCSide side )
 {
@@ -217,10 +208,8 @@ bool test_bc_helper( const vector<int>&dim,
 
   const OpT& op = *opDB.retrieve_operator<OpT>();
 
-  SpatFldPtr<SrcFieldT> f = SpatialFieldStore<SrcFieldT>::self().get( get_n_tot<SrcFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
-                                                                      get_ghost_set<SrcFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]) );
-  SpatFldPtr<DestFieldT> df = SpatialFieldStore<DestFieldT>::self().get( get_n_tot<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
-                                                                         get_ghost_set<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]) );
+  SpatFldPtr<SrcFieldT > f  = SpatialFieldStore<SrcFieldT >::self().get( get_window_with_ghost<SrcFieldT >(dim,bcFlag[0],bcFlag[1],bcFlag[2]) );
+  SpatFldPtr<DestFieldT> df = SpatialFieldStore<DestFieldT>::self().get( get_window_with_ghost<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]) );
 
   int icnt=0;
   for( typename SrcFieldT::iterator ifld=f->begin(); ifld!=f->end(); ++ifld,++icnt ) *ifld = icnt;
@@ -257,7 +246,7 @@ bool test_bc_helper( const vector<int>&dim,
 template<typename OpT>
 void
 test_bc_loop( const std::string opName,
-              const vector<int>&dim,
+              const IntVec& dim,
               const std::vector<bool>& bcFlag,
               const BCSide side,
               const int bcFaceIndex,
@@ -273,7 +262,7 @@ test_bc_loop( const std::string opName,
     const int i=bcFaceIndex;
     for( int j=0; j<dim[1]; ++j ){
       for( int k=0; k<dim[2]; ++k ){
-        isFailed = isFailed | !test_bc_helper<OpT>( dim, bcFlag, IndexTriplet(i,j,k), bcVal, side );
+        isFailed = isFailed | !test_bc_helper<OpT>( dim, bcFlag, IntVec(i,j,k), bcVal, side );
       }
     }
     break;
@@ -284,7 +273,7 @@ test_bc_loop( const std::string opName,
     const int j=bcFaceIndex;
     for( int i=0; i<dim[0]; ++i ){
       for( int k=0; k<dim[2]; ++k ){
-        isFailed = isFailed | !test_bc_helper<OpT>( dim, bcFlag, IndexTriplet(i,j,k), bcVal, side );
+        isFailed = isFailed | !test_bc_helper<OpT>( dim, bcFlag, IntVec(i,j,k), bcVal, side );
       }
     }
     break;
@@ -295,7 +284,7 @@ test_bc_loop( const std::string opName,
     const int k=bcFaceIndex;
     for( int i=0; i<dim[0]; ++i ){
       for( int j=0; j<dim[1]; ++j ){
-        isFailed = isFailed | !test_bc_helper<OpT>( dim, bcFlag, IndexTriplet(i,j,k), bcVal, side );
+        isFailed = isFailed | !test_bc_helper<OpT>( dim, bcFlag, IntVec(i,j,k), bcVal, side );
       }
     }
     break;
@@ -317,7 +306,7 @@ void test_bc( const Grid& g,
   using namespace SpatialOps;
   using namespace structured;
 
-  const vector<int>& dim = g.extent();
+  const IntVec& dim = g.extent();
 
   cout << endl << "Testing BC setting stuff:" << endl;
 
@@ -457,7 +446,7 @@ void test_ops()
 //--------------------------------------------------------------------
 
 void test_poisson( const Grid& grid,
-                   const vector<int>& dim,
+                   const IntVec& dim,
                    const vector<bool>& bcFlag )
 {
 # ifdef LINALG_TRILINOS
@@ -535,7 +524,7 @@ void test_poisson( const Grid& grid,
       if( ix!=0 ) i=dim[0]-1;
       for( int j=0; j<dim[1]; ++j ){
         for( int k=0; k<dim[2]; ++k ){
-          const IndexTriplet ijk( i+ighost, j+jghost, k+kghost );
+          const IntVec ijk( i+ighost, j+jghost, k+kghost );
           const int ii = ijk2flat<SVolField>::value(dim,ijk,bcFlag[0],bcFlag[1],bcFlag[2]);
           double bcval = x[ii]*x[ii]*a;
           if( dim[1]>1 ) bcval += y[ii]*y[ii]*b;
@@ -554,7 +543,7 @@ void test_poisson( const Grid& grid,
       if( iy!=0 ) j=dim[1]-1;
       for( int i=0; i<dim[0]; ++i ){
         for( int k=0; k<dim[2]; ++k ){
-          const IndexTriplet ijk( i+ighost, j+jghost, k+kghost );
+          const IntVec ijk( i+ighost, j+jghost, k+kghost );
           const int ii = ijk2flat<SVolField>::value(dim,ijk,bcFlag[0],bcFlag[1],bcFlag[2]);
           double bcval = y[ii]*y[ii]*b;
           if( dim[0]>1 ) bcval += x[ii]*x[ii]*a;
@@ -573,7 +562,7 @@ void test_poisson( const Grid& grid,
       if( iz!=0 ) k=dim[2]-1;
       for( int i=0; i<dim[0]; ++i ){
         for( int j=0; j<dim[1]; ++j ){
-          const IndexTriplet ijk( i+ighost, j+jghost, k+kghost );
+          const IntVec ijk( i+ighost, j+jghost, k+kghost );
           const int ii = ijk2flat<SVolField>::value(dim,ijk,bcFlag[0],bcFlag[1],bcFlag[2]);
           double bcval = z[ii]*z[ii]*c;
           if( dim[0]>1 ) bcval += x[ii]*x[ii]*a;
@@ -645,7 +634,7 @@ void test_poisson( const Grid& grid,
 
 int main()
 {
-  vector<int> dim(3,1);
+  IntVec dim(1,1,1);
 
   cout << "interior nx = "; cin >> dim[0];
   cout << "interior ny = "; cin >> dim[1];
@@ -664,10 +653,10 @@ int main()
   const Grid grid( dim, spacing, bcFlag, opDB );
   //grid.write();
 
+  const MemoryWindow svolWindow( get_window_with_ghost<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]) );
+
   // Scalar-Volume to scalar face gradients and laplacians
   {
-    SVolField phi( get_n_tot<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), get_ghost_set<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), NULL );
-
     // sin function
     const SinFun<SVolField  > fun     ( grid.xcoord_svol(),   grid.ycoord_svol(),   grid.zcoord_svol()   );
     const SinFun<SSurfXField> gradFunX( grid.xcoord_sxsurf(), grid.ycoord_sxsurf(), grid.zcoord_sxsurf() );
@@ -1015,11 +1004,11 @@ int main()
     const SinFun<SVolField  > fun     ( grid.xcoord_svol(),   grid.ycoord_svol(),   grid.zcoord_svol()   );
     const SinFun<SVolField  > divFun  ( grid.xcoord_svol(),   grid.ycoord_svol(),   grid.zcoord_svol()   );
 
-    SVolField phi       ( get_n_tot<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), get_ghost_set<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), NULL );
-    SVolField d2phi     ( get_n_tot<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), get_ghost_set<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), NULL );
-    SVolField d2phiExact( get_n_tot<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), get_ghost_set<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), NULL );
+    SVolField phi       ( svolWindow, NULL );
+    SVolField d2phi     ( svolWindow, NULL );
+    SVolField d2phiExact( svolWindow, NULL );
 
-//     phi.write_matlab("phi");
+//     write_matlab(phi,"phi");
 
     fun.evaluate( phi );
 

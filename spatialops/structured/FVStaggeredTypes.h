@@ -2,7 +2,7 @@
 #define FVStaggeredTypes_h
 
 #include <spatialops/SpatialOpsConfigure.h>
-#include <spatialops/SpatialField.h>
+#include <spatialops/structured/SpatialField.h>
 #include <spatialops/SpatialOperator.h>
 #include <spatialops/SpatialOpsDefs.h>
 

@@ -67,6 +67,7 @@ endif()
 # setup the boost library
 set(Boost_USE_MULTITHREAD ON)
 #set( boost_comps ${boost_comps} "program_options" )
+set( boost_comps ${boost_comps} "serialization" )
 if( BOOST_CMAKE )
   set(Boost_USE_STATIC ON)
   find_package( Boost REQUIRED COMPONENTS ${boost_comps} NO_MODULE )
@@ -128,7 +129,7 @@ endif()
 
 
 include_directories(
-  ${PROJECT_SOURCE_DIR}/include
+  ${PROJECT_SOURCE_DIR}
   ${TPL_INCLUDE_DIRS}
   )
 
@@ -145,19 +146,20 @@ include_directories( ${PROJECT_BINARY_DIR}/config )
 # order is important, and future revisions to libraries such as
 # trilinos may require a modification of link order.
 set( SO_Sources
-  src/LagrangePoly.cpp
-  src/FVOneDimensional.cpp
-  src/FVTools.cpp
-  include/spatialops/particles/ParticleFieldTypes.cpp
+  spatialops/LagrangePoly.cpp
+  spatialops/structured/FVOneDimensional.cpp
+  spatialops/structured/FVTools.cpp
+  spatialops/structured/MemoryWindow.cpp
+  spatialops/particles/ParticleFieldTypes.cpp
   )
 if( LINALG_TRILINOS )
   set( SO_Sources ${SO_Sources}
-    src/LinAlgTrilinos.cpp
-    src/LinearSystem.cpp
+    spatialops/LinAlgTrilinos.cpp
+    spatialops/LinearSystem.cpp
     )
 endif()
 if( LINALG_UBLAS )
-  set( SO_Sources ${SO_Sources} src/LinAlgUBlas.cpp )
+  set( SO_Sources ${SO_Sources} spatialops/LinAlgUBlas.cpp )
 endif()
 
 
@@ -178,6 +180,7 @@ target_link_libraries( ${SpatialOps_LIBRARY} ${TPL_LIBRARIES} )
 # them and see a summary.
 enable_testing()
 add_subdirectory( test )
+add_subdirectory( spatialops/structured/test )
 
 
 
@@ -186,9 +189,9 @@ add_subdirectory( test )
 message( STATUS "Files will be installed to: " ${CMAKE_INSTALL_PREFIX} )
 
 # install spatialops headers
-file( GLOB so_headers "include/spatialops/*.h" )
-file( GLOB so_structured_headers "include/spatialops/structured/*.h" )
-file( GLOB so_particle_headers "include/spatialops/particles/*.h" )
+file( GLOB so_headers "spatialops/*.h" )
+file( GLOB so_structured_headers "spatialops/structured/*.h" )
+file( GLOB so_particle_headers "spatialops/particles/*.h" )
 set( so_headers
   ${so_headers}
   ${PROJECT_BINARY_DIR}/config/spatialops/SpatialOpsConfigure.h

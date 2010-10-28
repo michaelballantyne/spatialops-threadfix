@@ -2,6 +2,8 @@
 #define FVStaggered_h
 
 #include <spatialops/SpatialOpsConfigure.h>
+#include <spatialops/OperatorDatabase.h>
+
 #include <spatialops/structured/FVStaggeredTypes.h>
 #include <spatialops/structured/FVStaggeredInterpolant.h>
 #include <spatialops/structured/FVStaggeredGradient.h>
@@ -9,6 +11,8 @@
 #include <spatialops/structured/FVStaggeredScratch.h>
 #include <spatialops/structured/FVTopHatFilter.h>
 #include <spatialops/structured/FVRestrictOp.h>
+
+#include <spatialops/structured/SpatialFieldStore.h>
 
 /**
  *  @todo Need to build & test scratch operator assemblers.

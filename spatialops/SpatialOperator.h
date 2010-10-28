@@ -5,6 +5,7 @@
 
 #include <map>
 #include <vector>
+#include <set>
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -14,7 +15,6 @@
 #include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/SpatialOpsDefs.h>
 #include <spatialops/SpatialOpsTools.h>
-#include <spatialops/SpatialField.h>
 
 namespace SpatialOps{
 

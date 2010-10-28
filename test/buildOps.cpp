@@ -6,7 +6,7 @@
 using namespace SpatialOps;
 using namespace structured;
 
-void build_ops( const std::vector<int>& dim,
+void build_ops( const IntVec& dim,
                 const std::vector<double>& spacing,
                 const std::vector<bool>& bcPlus,
                 OperatorDatabase& opDB )

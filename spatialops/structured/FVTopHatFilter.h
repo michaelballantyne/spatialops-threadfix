@@ -10,7 +10,7 @@
 namespace SpatialOps{
 
   // forward declaration.
-  template<typename T1> class TopHatFilterAssembler;
+  namespace structured{ template<typename T1> class TopHatFilterAssembler; }
 
   // this is required for the SpatialOperator class.  It specifies
   // that we should use the TopHatFilterAssembler class to construct
@@ -18,9 +18,11 @@ namespace SpatialOps{
   template< typename FieldT >
   struct OpAssemblerSelector< Filter, FieldT, FieldT >
   {
-    typedef TopHatFilterAssembler<FieldT>  Assembler;
+    typedef structured::TopHatFilterAssembler<FieldT>  Assembler;
   };
 
+
+namespace structured{
 
   /**
    *  @class TopHatFilterAssembler
@@ -42,7 +44,7 @@ namespace SpatialOps{
      *  @param npts The number of points to include in the filter stencil.
      */
     TopHatFilterAssembler( const int npts,
-                           const std::vector<int>& dimExtent,
+                           const IntVec& dimExtent,
                            const bool hasPlusXSideFaces = true,
                            const bool hasPlusYSideFaces = true,
                            const bool hasPlusZSideFaces = true  );
@@ -53,7 +55,7 @@ namespace SpatialOps{
      */
     TopHatFilterAssembler( const double width,
                            const std::vector<double>& meshSpacing,
-                           const std::vector<int>& dimExtent,
+                           const IntVec& dimExtent,
                            const bool hasPlusXSideFaces = true,
                            const bool hasPlusYSideFaces = true,
                            const bool hasPlusZSideFaces = true  );
@@ -83,7 +85,7 @@ namespace SpatialOps{
      */
     void get_ghost_cols( std::set<size_t>& ghostCols ) const
     {
-      ghostCols = structured::get_ghost_set<FieldT>( dim_, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
+      ghostCols = get_ghost_set<FieldT>( dim_, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
     }
 
     /**
@@ -91,16 +93,16 @@ namespace SpatialOps{
      */
     void get_ghost_rows( std::set<size_t>& ghostRows ) const
     {
-      ghostRows = structured::get_ghost_set<FieldT>( dim_, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
+      ghostRows = get_ghost_set<FieldT>( dim_, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ );
     }
 
   private:
 
-    void get_npts( const structured::IndexTriplet& loc,
+    void get_npts( const IntVec& loc,
                    int& ntot,
-                   std::vector<int>& nxyz ) const;
+                   IntVec& nxyz ) const;
 
-    const std::vector<int> dim_;
+    const IntVec dim_;
     const bool hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_;
     std::vector<unsigned int> npts_;
     
@@ -133,7 +135,7 @@ namespace SpatialOps{
   TopHatFilterAssembler<FieldT>::
   TopHatFilterAssembler( const double width,
                          const std::vector<double>& meshSpacing,
-                         const std::vector<int>& dimExtent,
+                         const IntVec& dimExtent,
                          const bool hasPlusXSideFaces,
                          const bool hasPlusYSideFaces,
                          const bool hasPlusZSideFaces )
@@ -143,7 +145,7 @@ namespace SpatialOps{
       hasPlusZSideFaces_( hasPlusZSideFaces ),
       npts_(3,0)
   {
-    for( size_t i=0; i<dimExtent.size(); ++i ){
+    for( size_t i=0; i<3; ++i ){
       npts_[i] = 1 + width / meshSpacing[i];
       if( npts_[i]%2 ) ++npts_[i];
     }
@@ -154,7 +156,7 @@ namespace SpatialOps{
   template<typename FieldT>
   TopHatFilterAssembler<FieldT>::
   TopHatFilterAssembler( const int npts,
-                         const std::vector<int>& dimExtent,
+                         const IntVec& dimExtent,
                          const bool hasPlusXSideFaces,
                          const bool hasPlusYSideFaces,
                          const bool hasPlusZSideFaces )
@@ -173,7 +175,7 @@ namespace SpatialOps{
   TopHatFilterAssembler<FieldT>::
   get_ncols() const
   {
-    return structured::get_n_tot<FieldT>(dim_,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_);
+    return get_ntot_with_ghost<FieldT>(dim_,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_);
   }
 
   //------------------------------------------------------------------
@@ -209,19 +211,19 @@ namespace SpatialOps{
                    std::vector<double> & vals,
                    std::vector<int> & ixs ) const
   {
-    const structured::IndexTriplet ijk( structured::flat2ijk<FieldT>::value( dim_, irow, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ ) );
+    const IntVec ijk( flat2ijk<FieldT>::value( dim_, irow, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ ) );
 
     int ntot=1;
-    std::vector<int> nxyz(3,1), nside(3,1);
+    IntVec nxyz(1,1,1), nside(1,1,1);
     get_npts(ijk,ntot,nxyz);
-    for( int i=0; i<3; ++i ) nside[i] = nxyz[i]/2;
+    for( size_t i=0; i<3; ++i ) nside[i] = nxyz[i]/2;
     const double fac = 1.0/double( ntot );
 
     for( int ipts=-nside[0]; ipts<=nside[0]; ++ipts ){
       for( int jpts=-nside[1]; jpts<=nside[1]; ++jpts ){
         for( int kpts=-nside[2]; kpts<=nside[2]; ++kpts ){
-          const structured::IndexTriplet ixt( ijk.i+ipts, ijk.j+jpts, ijk.k+kpts );
-          ixs.push_back( structured::ijk2flat<FieldT>::value( dim_, ixt, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ ) );
+          const IntVec ixt( ijk[0]+ipts, ijk[1]+jpts, ijk[2]+kpts );
+          ixs.push_back( ijk2flat<FieldT>::value( dim_, ixt, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ ) );
           vals.push_back( fac );
         }
       }
@@ -233,38 +235,39 @@ namespace SpatialOps{
   template<typename FieldT>
   void
   TopHatFilterAssembler<FieldT>::
-  get_npts( const structured::IndexTriplet& loc,
+  get_npts( const IntVec& loc,
             int& ntot,
-            std::vector<int>& nxyz ) const
+            IntVec& nxyz ) const
   {
     ntot = 1;
     if( dim_[0] > 1 ){
-      const int nx = structured::get_nx<FieldT>(dim_,hasPlusXSideFaces_);
+      const int nx = get_nx_with_ghost<FieldT>(dim_[0],hasPlusXSideFaces_);
       const int nside = npts_[0] / 2;
-      nxyz[0] = 1 + 2 * std::min( std::min( nside, loc.i ),
-                                  std::min( nside, nx-loc.i-1 ) );
+      nxyz[0] = 1 + 2 * std::min( std::min( nside, loc[0] ),
+                                  std::min( nside, nx-loc[0]-1 ) );
       ntot *= nxyz[0];
     }
 
     if( dim_[1] > 1 ){
-      const int ny = structured::get_ny<FieldT>(dim_,hasPlusYSideFaces_);
+      const int ny = get_ny_with_ghost<FieldT>(dim_[1],hasPlusYSideFaces_);
       const int nside = npts_[1] / 2;
-      nxyz[1] = 1 + 2 * std::min( std::min( nside, loc.j),
-                                  std::min( nside, ny-loc.j-1) );
+      nxyz[1] = 1 + 2 * std::min( std::min( nside, loc[1]),
+                                  std::min( nside, ny-loc[1]-1) );
       ntot *= nxyz[1];
     }
 
     if( dim_[2] > 1 ){
-      const int nz = structured::get_nz<FieldT>(dim_,hasPlusZSideFaces_);
+      const int nz = get_nz_with_ghost<FieldT>(dim_[2],hasPlusZSideFaces_);
       const int nside = npts_[2] / 2;
-      nxyz[2] = 1 + 2 * std::min( std::min( nside, loc.k),
-                                  std::min( nside, nz-loc.k-1) );
+      nxyz[2] = 1 + 2 * std::min( std::min( nside, loc[2]),
+                                  std::min( nside, nz-loc[2]-1) );
       ntot *= nxyz[2];
     }
   }
 
   //------------------------------------------------------------------
 
+} // namespace structured
 } // namespace Spatialops
 
 #endif

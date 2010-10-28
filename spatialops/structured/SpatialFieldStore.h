@@ -3,6 +3,8 @@
 
 #include <spatialops/SpatialOpsConfigure.h>
 
+#include <spatialops/structured/MemoryWindow.h>
+
 #include <queue>
 #include <map>
 #include <set>
@@ -69,7 +71,7 @@ namespace SpatialOps{
      *  @param builtFromStore if true, then SpatFldPtr will return the
      *  memory it owns to the SpatialFieldStore class once the last
      *  reference is destroyed.  If false then this will simply alias
-     *  a FieldT object and provide binary operations.
+     *  a FieldT object.
      */
     SpatFldPtr( FieldT& field, const bool builtFromStore );
 
@@ -97,25 +99,6 @@ namespace SpatialOps{
     inline const FieldT* operator->() const{return f_;}
 
     inline bool isnull() const{ return f_ == NULL; }
-
-    /**
-     *  @name binary Operators
-     *
-     *  These operators only result in new memory allocation when
-     *  required, otherwise, a temporary is used from the
-     *  SpatialFieldStore.  The resulting SpatFldPtr object should NOT
-     *  be dereferenced and stored as a reference to an underlying
-     *  SpatialField.  This will cause severe memory corruption.
-     *
-     *  These operator simply call through to the ones defined on the
-     *  underlying SpatialField object.
-     */
-    //@{
-    inline SpatFldPtr operator+(const SpatFldPtr& p) const{return (*f_ + *p);}  ///< Add two fields to produce a third: A=B+C
-    inline SpatFldPtr operator-(const SpatFldPtr& p) const{return (*f_ - *p);}  ///< Subtract two fields to produce a third: A=B-C
-    inline SpatFldPtr operator*(const SpatFldPtr& p) const{return (*f_ * *p);}  ///< Multiply two fields to produce a third: A=B*C
-    inline SpatFldPtr operator/(const SpatFldPtr& p) const{return (*f_ / *p);}  ///< Divide two fields to produce a third: A=B/C
-    //@}
 
 
     /**
@@ -205,9 +188,7 @@ namespace SpatialOps{
      */
     inline SpatFldPtr<FieldT> get( const FieldT& f );
 
-
-    inline SpatFldPtr<FieldT> get( const int ntot,
-                                   const std::set<size_t>& ghostSet );
+    inline SpatFldPtr<FieldT> get( const structured::MemoryWindow& window );
 
   private:
 
@@ -402,7 +383,9 @@ namespace SpatialOps{
     boost::mutex::scoped_lock lock( get_mutex() );
 #endif
     // find the proper map
-    FieldQueue& q = fqmap_[ f.get_ntotal() ];
+    const structured::MemoryWindow& w = f.window_with_ghost();
+    const int ntot = w.extent(0) * w.extent(1) * w.extent(2);
+    FieldQueue& q = fqmap_[ ntot ];
 
     if( q.empty() ){
       FieldT* fnew = new FieldT( f );
@@ -417,17 +400,17 @@ namespace SpatialOps{
   //------------------------------------------------------------------
   template<typename FieldT>
   SpatFldPtr<FieldT>
-  SpatialFieldStore<FieldT>::get( const int ntot,
-                                  const std::set<size_t>& ghostSet )
+  SpatialFieldStore<FieldT>::get( const structured::MemoryWindow& window )
   {
 #ifdef EXPRESSION_THREADS
     boost::mutex::scoped_lock lock( get_mutex() );
 #endif
     // find the proper map
+    const int ntot = window.extent(0) * window.extent(1) * window.extent(2);
     FieldQueue& q = fqmap_[ ntot ];
 
     if( q.empty() ){
-      FieldT* fnew = new FieldT( ntot, ghostSet, NULL );
+      FieldT* fnew = new FieldT( window, NULL );
       q.push( fnew );
     }
 
@@ -444,7 +427,9 @@ namespace SpatialOps{
 #ifdef EXPRESSION_THREADS
     boost::mutex::scoped_lock lock( get_mutex() );
 #endif
-    FieldQueue& q = fqmap_[ field.get_ntotal() ];
+    const structured::MemoryWindow& w = field.window_with_ghost();
+    const int ntot = w.extent(0) * w.extent(1) * w.extent(2);
+    FieldQueue& q = fqmap_[ ntot ];
     q.push( &field );
   }
   //------------------------------------------------------------------
@@ -478,8 +463,7 @@ namespace SpatialOps{
 
   template<>
   inline SpatFldPtr<double>
-  SpatialFieldStore<double>::get( const int ntot,
-                                  const std::set<size_t>& ghostSet )
+  SpatialFieldStore<double>::get( const structured::MemoryWindow& w )
   {
 #ifdef EXPRESSION_THREADS
     boost::mutex::scoped_lock lock( get_mutex() );

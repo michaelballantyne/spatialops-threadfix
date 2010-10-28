@@ -1,41 +1,32 @@
-#ifndef FVSS_GradientAssembler_h
-#define FVSS_GradientAssembler_h
+#ifndef FVSS_DivergenceAssembler_h
+#define FVSS_DivergenceAssembler_h
 
-#include <spatialops/SpatialOpsConfigure.h>
-
-#include <spatialops/SpatialField.h>
-#include <spatialops/SpatialOperator.h>
-
+#include <spatialops/structured/FVStaggeredTypes.h>
 #include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/FVStaggeredIndexHelper.h>
 
 
 namespace SpatialOps{
 
-
   // forward declaration.
-  namespace structured{ template<typename T1,typename T2> class GradientAssembler; }
+  namespace structured{ template<typename T1,typename T2> class DivergenceAssembler; }
 
   template< typename SrcField, typename DestField >
-  struct OpAssemblerSelector< Gradient, SrcField, DestField >
+  struct OpAssemblerSelector< Divergence, SrcField, DestField >
   {
-    typedef structured::GradientAssembler<SrcField,DestField>  Assembler;
+    typedef structured::DivergenceAssembler<SrcField,DestField>  Assembler;
   };
 
 
 namespace structured{
 
-
-  //==================================================================
-
-
   /**
-   *  @class  GradientAssembler
+   *  @class  DivergenceAssembler
    *  @author James C. Sutherland
    *
-   *  @brief Assembles gradient operators for UNIFORM staggered meshes.
+   *  @brief Assembles divergence operators for UNIFORM staggered meshes.
    *
-   *  An assembler for a gradient operator to be used to construct a
+   *  An assembler for a divergence operator to be used to construct a
    *  SpatialOperator.  This conforms to the requirements for a
    *  SpatialOperator Assembler as defined in the documentation on the
    *  OpAssemblerSelector.
@@ -45,27 +36,29 @@ namespace structured{
    *  but the coefficient values will change.
    *
    *  @par Template Parameters
-   *    \li \b SrcField The type for the source field.
-   *    \li \b DestField The type for the destination field.
+   *    \li \b SrcField The policy for the source field.
+   *    \li \b DestField The policy for the destination field.
    *
    */
   template< typename SrcField,
             typename DestField >
-  class GradientAssembler
+  class DivergenceAssembler
   {
   public:
 
     /** @brief Return the number of nonzero entries for this operator. */
-    unsigned int num_nonzeros() const{ return 2; }
+    static unsigned int num_nonzeros(){return 2;}
 
     /**
-     *  @brief Construct a GradientAssembler object.
-     *
-     *  @param meshSpacing The grid spacing (assumed uniform) in the
-     *  direction that this gradient operator applies to.
+     *  @brief Construct a DivergenceAssembler object.
      *
      *  @param dimExtent A vector with three elements indicating the
      *  domain extent (number of cells) in each coordinate direction.
+     *
+     *  @param cellFaceArea The cell area (assumed constant) for the
+     *  face normal to the direction of this divergence operator.
+     *
+     *  @param cellVolume The volume of the cell (assumed constant).
      *
      *  @param hasPlusXSideFaces Boolean flag to indicate if the
      *  operator is to be constructed including face cells on the +X
@@ -79,16 +72,17 @@ namespace structured{
      *  operator is to be constructed including face cells on the +Z
      *  side of the domain.
      */
-    GradientAssembler( const double meshSpacing,
-                       const std::vector<int>& dimExtent,
-                       const bool hasPlusXSideFaces,
-                       const bool hasPlusYSideFaces,
-                       const bool hasPlusZSideFaces );
+    DivergenceAssembler( const IntVec& dimExtent,
+                         const double cellFaceArea,
+                         const double cellVolume,
+                         const bool hasPlusXSideFaces,
+                         const bool hasPlusYSideFaces,
+                         const bool hasPlusZSideFaces );
 
-    ~GradientAssembler(){}
+    ~DivergenceAssembler(){}
 
-    int get_ncols() const;
-    int get_nrows() const;
+    int get_ncols() const;   ///< Return the number of columns in this operator
+    int get_nrows() const;   ///< Return the number of rows in this operator
 
     /**
      *  @brief Obtain the nonzero values for this operator on the given row.
@@ -102,7 +96,6 @@ namespace structured{
     void get_row_entries( const int irow,
                           std::vector<double> & vals,
                           std::vector<int> & ixs ) const;
-
 
     /**
      *  @brief Obtain the set of column indices corresponding to ghost entries.
@@ -122,9 +115,10 @@ namespace structured{
 
   private:
 
-    const std::vector<int>& dim_;
+    const IntVec dim_;
     const IndexHelper<SrcField,DestField> indexHelper_;
-    const double coef_;
+    const IntVec extent_;
+    const double coefValue_;
     const bool hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_;
   };
 
@@ -134,11 +128,11 @@ namespace structured{
 
 
 
-  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   //
-  //  Implementations
+  //                          Implementation
   //
-  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 
@@ -148,48 +142,50 @@ namespace structured{
 
   //------------------------------------------------------------------
   template< typename SrcField, typename DestField >
-  GradientAssembler<SrcField,DestField>::
-  GradientAssembler( const double meshSpacing,
-                     const std::vector<int>& dimExtent,
-                     const bool hasPlusXSideFaces,
-                     const bool hasPlusYSideFaces,
-                     const bool hasPlusZSideFaces )
-    : dim_( dimExtent ),
+  DivergenceAssembler<SrcField,DestField>::
+  DivergenceAssembler( const IntVec& dimExtent,
+                       const double cellFaceArea,
+                       const double cellVolume,
+                       const bool hasPlusXSideFaces,
+                       const bool hasPlusYSideFaces,
+                       const bool hasPlusZSideFaces )
+    : dim_        ( dimExtent ),
       indexHelper_( dimExtent, hasPlusXSideFaces, hasPlusYSideFaces, hasPlusZSideFaces ),
-      coef_( 1.0/meshSpacing ),
+      extent_     ( dimExtent ),
+      coefValue_  ( cellFaceArea/cellVolume ),
       hasPlusXSideFaces_( hasPlusXSideFaces ),
       hasPlusYSideFaces_( hasPlusYSideFaces ),
       hasPlusZSideFaces_( hasPlusZSideFaces )
   {
   }
-  //------------------------------------------------------------------
+  //--------------------------------------------------------------------
   template< typename SrcField, typename DestField >
   int
-  GradientAssembler<SrcField,DestField>::
+  DivergenceAssembler<SrcField,DestField>::
   get_ncols() const
   {
-    int n=1;
-    if( get_n_tot<DestField>( dim_, hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_ )>1 )
-      n = indexHelper_.get_ncol();
-    return n;
+    return indexHelper_.get_ncol();
   }
-  //------------------------------------------------------------------
+  //--------------------------------------------------------------------
   template< typename SrcField, typename DestField >
   int
-  GradientAssembler<SrcField,DestField>::
+  DivergenceAssembler<SrcField,DestField>::
   get_nrows() const
   {
-    return indexHelper_.get_nrow();
+    int n=1;
+    if( get_ntot_with_ghost<SrcField>(dim_,hasPlusXSideFaces_,hasPlusYSideFaces_,hasPlusZSideFaces_) > 1 )
+      n=indexHelper_.get_nrow();
+    return n;
   }
-  //------------------------------------------------------------------
+  //--------------------------------------------------------------------
   template< typename SrcField, typename DestField >
   void
-  GradientAssembler<SrcField,DestField>::
+  DivergenceAssembler<SrcField,DestField>::
   get_row_entries( const int irow,
                    std::vector<double> & vals,
                    std::vector<int> & ixs ) const
   {
-    switch( int(DestField::Location::FaceDir::value) ){
+    switch( int(SrcField::Location::FaceDir::value) ){
     case XDIR::value:
       if( dim_[0]==1 ) return;
       break;
@@ -200,7 +196,7 @@ namespace structured{
       if( dim_[2]==1 ) return;
       break;
     }
-    switch( int(DestField::Location::StagLoc::value) ){
+    switch( int(SrcField::Location::StagLoc::value) ){
     case XDIR::value:
       if( dim_[0]==1 ) return;
       break;
@@ -213,13 +209,14 @@ namespace structured{
     }
     indexHelper_.get_cols( irow, ixs );
     if( ixs.size() == 2 ){
-      vals.push_back( -coef_ );
-      vals.push_back(  coef_ );
+      vals.push_back( -coefValue_ );
+      vals.push_back(  coefValue_ );
     }
   }
   //------------------------------------------------------------------
 
-} // namespace structured
+
+} // namespace staggered
 } // namespace SpatialOps
 
 #endif
