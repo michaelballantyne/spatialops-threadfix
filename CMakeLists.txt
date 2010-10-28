@@ -14,6 +14,7 @@ option( LINALG_TRILINOS "use Trilinos for linear algebra - also requires definit
 option( LINALG_UBLAS    "use UBLAS for linear algebra - cannot solve linear systems"  ON )
 option( BOOST_CMAKE "Boost was built with CMake" OFF )
 option( ENABLE_BOOST_SERIALIZATION "allow serialization of information via the boost library" OFF )
+option( ENABLE_TESTS "Enable building of regression tests (recommended)" ON )
 
 # Set the path for the Daixtrose installation on your machine
 # daixtrose is used for expression templates - we support only a few
@@ -183,9 +184,11 @@ target_link_libraries( ${SpatialOps_LIBRARY} ${TPL_LIBRARIES} )
 
 # this will compile all of the test cases.  Use "make test" to execute
 # them and see a summary.
-enable_testing()
-add_subdirectory( test )
-add_subdirectory( spatialops/structured/test )
+if( ENABLE_TESTS )
+  enable_testing()
+  add_subdirectory( test )
+  add_subdirectory( spatialops/structured/test )
+endif()
 
 
 
