@@ -32,13 +32,12 @@ public:
   QuadFun( const FieldT& x,
            const FieldT& y,
            const FieldT& z,
-           const std::vector<int>& dim,
+           const IntVec& dim,
            const std::vector<bool>& bcFlag )
     : FieldFunction3D<FieldT>( x, y, z ),
       a(2.0), b(2.0), c(2.0), d(1.0),
       dim_(dim),
-      tmp( get_n_tot<FieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
-           get_ghost_set<FieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
+      tmp( get_window_with_ghost<FieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
            NULL )
   {}
 
@@ -107,7 +106,7 @@ public:
 
 private:
   const double a, b, c, d;
-  const std::vector<int> dim_;
+  const IntVec dim_;
   mutable FieldT tmp;
 };
 
@@ -115,7 +114,7 @@ private:
 
 double test_poisson( const OperatorDatabase& opDB,
                      const Grid& grid,
-                     const vector<int>& dim,
+                     const IntVec& dim,
                      const vector<bool>& bcFlag,
                      const BCType bcType )
 {
@@ -156,11 +155,9 @@ double test_poisson( const OperatorDatabase& opDB,
   //
   // set the RHS field
   //
-  SVolField rhsField( get_n_tot<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
-                      get_ghost_set<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
+  SVolField rhsField( get_window_with_ghost<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
                       NULL );
-  SVolField tmpField( get_n_tot<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
-                      get_ghost_set<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
+  SVolField tmpField( get_window_with_ghost<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]),
                       NULL );
   QuadFun<SVolField> quadFunVol( grid.xcoord_svol(), grid.ycoord_svol(), grid.zcoord_svol(), dim, bcFlag );
   rhsField = 0.0;
@@ -177,9 +174,9 @@ double test_poisson( const OperatorDatabase& opDB,
     QuadFun<SSurfYField> bcFunY( grid.xcoord_sysurf(), grid.ycoord_sysurf(), grid.zcoord_sysurf(), dim, bcFlag );
     QuadFun<SSurfZField> bcFunZ( grid.xcoord_szsurf(), grid.ycoord_szsurf(), grid.zcoord_szsurf(), dim, bcFlag );
 
-    SSurfXField bcValX( get_n_tot<SSurfXField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), get_ghost_set<SSurfXField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), NULL );
-    SSurfYField bcValY( get_n_tot<SSurfYField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), get_ghost_set<SSurfYField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), NULL );
-    SSurfZField bcValZ( get_n_tot<SSurfZField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), get_ghost_set<SSurfZField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), NULL );
+    SSurfXField bcValX( get_window_with_ghost<SSurfXField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), NULL );
+    SSurfYField bcValY( get_window_with_ghost<SSurfYField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), NULL );
+    SSurfZField bcValZ( get_window_with_ghost<SSurfZField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), NULL );
 
     switch ( bcType ){
     case DIRICHLET:
@@ -294,7 +291,7 @@ double test_poisson( const OperatorDatabase& opDB,
     //
     // examine the solution to determine error
     //
-    SVolField phi( get_n_tot<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), get_ghost_set<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), NULL );
+    SVolField phi( get_window_with_ghost<SVolField>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), NULL );
     quadFunVol.evaluate( phi );
 
 
@@ -330,7 +327,7 @@ double test_poisson( const OperatorDatabase& opDB,
       << "  avg abs error: " << setw(8) << avgAbsErr << "  avg rel err: " << setw(8) << avgRelErr << endl << endl;
       cout.unsetf(ios::scientific | ios::floatfield );
 
-      SVolRHS tmp( get_n_tot<SVolRHS>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), get_ghost_set<SVolRHS>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), NULL );
+      SVolRHS tmp( get_window_with_ghost<SVolRHS>(dim,bcFlag[0],bcFlag[1],bcFlag[2]), NULL );
 
       tmp = rhs;  tmp.write_matlab("rhs");
 

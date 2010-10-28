@@ -266,7 +266,6 @@ void driver( const double scalefac,
 
 void check_err( ofstream& fout, const int npts, const int order, const double scalefac )
 {
-  bool isFailed = false;
   double ierr, gerr, derr, fcierr, fcgerr, ccgerr;
   cout << "running test for " << npts << " points and polynomial order " << order
        << " with stretch factor " << scalefac << endl;

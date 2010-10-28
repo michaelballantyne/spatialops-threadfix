@@ -115,8 +115,8 @@ namespace structured{
     virtual ~SpatialField();
 
     // warning: slow
-    T& operator()( const int i, const int j, const int k );
-    T& operator()( const int i, const int j, const int k ) const;
+    T& operator()( const size_t i, const size_t j, const size_t k );
+    T& operator()( const size_t i, const size_t j, const size_t k ) const;
 
     // warning: slow
     T& operator[]( const size_t i );
@@ -176,19 +176,22 @@ namespace structured{
                 T* const fieldValues,
                 const StorageMode mode )
     : fieldWindow_( window ),
-      interiorFieldWindow_( window ),
+			interiorFieldWindow_( window ), // reset with correct info later
       fieldValues_( (mode==ExternalStorage)
                     ? fieldValues
                     : new T[ window.glob_dim(0) * window.glob_dim(1) * window.glob_dim(2) ] ),
       builtField_( mode==InternalStorage ),
       vec_( linAlg_.setup_vector( fieldWindow_.npts(), fieldValues_ ) )
   {
+		IntVec ext = window.extent();
+		IntVec ofs = window.offset();
     for( size_t i=0; i<3; ++i ){
-      if( window.extent(i)>1 ){
-        interiorFieldWindow_.extent(i) -= 2*GhostTraits::NGHOST;
-        interiorFieldWindow_.offset(i) +=   GhostTraits::NGHOST;
+      if( ext[i]>1 ){
+        ext[i] -= 2*GhostTraits::NGHOST;
+        ofs[i] +=   GhostTraits::NGHOST;
       }
     }
+		interiorFieldWindow_ = MemoryWindow( window.glob_dim(), ext, ofs );
     if( mode==InternalStorage )  reset_values( fieldValues );
   }
 
@@ -200,19 +203,22 @@ namespace structured{
                 T* const fieldValues,
                 const StorageMode mode )
     : fieldWindow_( npts, IntVec(0,0,0), npts ),
-      interiorFieldWindow_( npts ),
+			interiorFieldWindow_( IntVec(0,0,0) ), // reset with correct info later
       fieldValues_( (mode==ExternalStorage)
                     ? fieldValues
                     : new T[npts[0]*npts[1]*npts[2]] ),
       builtField_( mode==InternalStorage ),
       vec_( linAlg_.setup_vector( fieldWindow_.npts(), fieldValues_ ) )
   {
+		IntVec ext = fieldWindow_.extent();
+		IntVec ofs = fieldWindow_.offset();
     for( size_t i=0; i<3; ++i ){
-      if( npts[i]>1 ){
-        interiorFieldWindow_.extent(i) -= 2*GhostTraits::NGHOST;
-        interiorFieldWindow_.offset(i) +=   GhostTraits::NGHOST;
+      if( ext[i]>1 ){
+        ext[i] -= 2*GhostTraits::NGHOST;
+        ofs[i] +=   GhostTraits::NGHOST;
       }
     }
+		interiorFieldWindow_ = MemoryWindow( fieldWindow_.glob_dim(), ext, ofs );
   }
 
   //------------------------------------------------------------------
@@ -307,7 +313,7 @@ namespace structured{
   template< typename VecOps, typename Location, typename GhostTraits, typename T >
   T&
   SpatialField<VecOps,Location,GhostTraits,T>::
-  operator()( const int i, const int j, const int k )
+  operator()( const size_t i, const size_t j, const size_t k )
   {
     assert( i < fieldWindow_.extent(0) );
     assert( j < fieldWindow_.extent(1) );
@@ -320,7 +326,7 @@ namespace structured{
   template< typename VecOps, typename Location, typename GhostTraits, typename T >
   T&
   SpatialField<VecOps,Location,GhostTraits,T>::
-  operator()( const int i, const int j, const int k ) const
+  operator()( const size_t i, const size_t j, const size_t k ) const
   {
     assert( i < fieldWindow_.extent(0) );
     assert( j < fieldWindow_.extent(1) );

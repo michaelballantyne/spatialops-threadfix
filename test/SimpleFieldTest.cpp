@@ -7,7 +7,6 @@ using namespace structured;
 int main()
 {
   const int nx=10, ny=12, nz=14;
-  const int npts = nx*ny*nz;
 
   typedef SVolField Field;
 

@@ -117,29 +117,22 @@ namespace structured{
      */
     MemoryWindow( const int npts[3],
                   const int offset[3],
-                  const int extent[3] )
-      : nptsGlob_( npts ), offset_( offset ), extent_( extent )
-    {}
-    MemoryWindow( const IntVec& npts, const IntVec& offset, const IntVec& extent )
-      : nptsGlob_( npts ), offset_( offset ), extent_( extent )
-    {}
+									const int extent[3] );
+		
+    MemoryWindow( const IntVec& npts,
+									const IntVec& offset,
+									const IntVec& extent );
 
     /**
      *  \brief construct a MemoryWindow object
      *  \param npts the total (global) number of points in each direction
      */
-    MemoryWindow( const int npts[3] )
-      : nptsGlob_( npts ), offset_(0,0,0), extent_( npts )
-    {}
-    MemoryWindow( const IntVec npts )
-      : nptsGlob_( npts ), offset_(0,0,0), extent_( npts )
-    {}
+    MemoryWindow( const int npts[3] );
+    MemoryWindow( const IntVec npts );
 
-    MemoryWindow( const MemoryWindow& other )
-      : nptsGlob_( other.nptsGlob_ ), offset_( other.offset_ ), extent_( other.extent_ )
-    {}
-
-    ~MemoryWindow(){}
+    MemoryWindow( const MemoryWindow& other );
+		
+    ~MemoryWindow();
 
     /**
      *  \brief given the local ijk location (0-based on the local
@@ -175,15 +168,11 @@ namespace structured{
      *  \brief obtain the number of points in the field.  Note that
      *  this is not necessarily contiguous memory
      */
-    inline int npts() const{ return extent_[0] * extent_[1] * extent_[2]; }
+    inline size_t npts() const{ return extent_[0] * extent_[1] * extent_[2]; }
 
-    inline int glob_dim( const size_t i ) const{ return nptsGlob_[i]; }
-    inline int offset  ( const size_t i ) const{ return offset_[i]; }
-    inline int extent  ( const size_t i ) const{ return extent_[i]; }
-
-    inline int& glob_dim( const size_t i ){ return nptsGlob_[i]; }
-    inline int& offset  ( const size_t i ){ return offset_[i]; }
-    inline int& extent  ( const size_t i ){ return extent_[i]; }
+    inline size_t glob_dim( const size_t i ) const{ return size_t(nptsGlob_[i]); }
+    inline size_t offset  ( const size_t i ) const{ return size_t(offset_[i]); }
+    inline size_t extent  ( const size_t i ) const{ return size_t(extent_[i]); }
 
     inline IntVec extent  () const{ return extent_; }
     inline IntVec offset  () const{ return offset_; }
