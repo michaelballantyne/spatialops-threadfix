@@ -13,6 +13,7 @@ set( PATCH_VERSION "0" )
 option( LINALG_TRILINOS "use Trilinos for linear algebra - also requires definition of {Trilinos_path}"  OFF )
 option( LINALG_UBLAS    "use UBLAS for linear algebra - cannot solve linear systems"  ON )
 option( BOOST_CMAKE "Boost was built with CMake" OFF )
+option( ENABLE_BOOST_SERIALIZATION "allow serialization of information via the boost library" OFF )
 
 # Set the path for the Daixtrose installation on your machine
 # daixtrose is used for expression templates - we support only a few
@@ -66,8 +67,12 @@ endif()
 
 # setup the boost library
 set(Boost_USE_MULTITHREAD ON)
-#set( boost_comps ${boost_comps} "program_options" )
-set( boost_comps ${boost_comps} "serialization" )
+if( ENABLE_BOOST_SERIALIZATION )
+  set( SOPS_BOOST_SERIALIZATION ON )
+  set( boost_comps ${boost_comps} "serialization" )
+else()
+  set( SOPS_BOOST_SERIALIZATION OFF )
+endif()
 if( BOOST_CMAKE )
   set(Boost_USE_STATIC ON)
   find_package( Boost REQUIRED COMPONENTS ${boost_comps} NO_MODULE )

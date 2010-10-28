@@ -5,7 +5,11 @@
 #include <vector>
 #include <iterator>
 
-#include <boost/serialization/serialization.hpp>
+#include <spatialops/SpatialOpsConfigure.h>
+
+#ifdef SOPS_BOOST_SERIALIZATION
+# include <boost/serialization/serialization.hpp>
+#endif
 
 namespace SpatialOps{
 namespace structured{
@@ -20,12 +24,14 @@ namespace structured{
 
     int ijk[3];
 
+#   ifdef SOPS_BOOST_SERIALIZATION
     friend class boost::serialization::access;
     template<typename Archive>
     void serialize( Archive& ar, const unsigned int version )
     {
       ar & ijk;
     }
+#   endif
 
   public:
     IntVec(){ ijk[0]=0; ijk[1]=0; ijk[2]=0; }
@@ -83,6 +89,7 @@ namespace structured{
 
     IntVec nptsGlob_, offset_, extent_;
 
+#   ifdef SOPS_BOOST_SERIALIZATION
     friend class boost::serialization::access;
 
     template<typename Archive>
@@ -106,6 +113,7 @@ namespace structured{
       ar >> npg >> ofs >> ext;
       ::new(w)MemoryWindow( npg, ofs, ext );
     }
+#   endif
 
   public:
 

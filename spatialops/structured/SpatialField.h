@@ -1,11 +1,14 @@
 #ifndef SpatialOps_SpatialField_h
 #define SpatialOps_SpatialField_h
 
+#include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/structured/MemoryWindow.h>
 
-#include <boost/serialization/serialization.hpp>
-#include <boost/serialization/split_member.hpp>
-#include <boost/serialization/binary_object.hpp>
+#ifdef SOPS_BOOST_SERIALIZATION
+# include <boost/serialization/serialization.hpp>
+# include <boost/serialization/split_member.hpp>
+# include <boost/serialization/binary_object.hpp>
+#endif
 
 namespace SpatialOps{
 namespace structured{
@@ -38,6 +41,7 @@ namespace structured{
 
     inline void reset_values( const T* values );
 
+#ifdef SOPS_BOOST_SERIALIZATION
     friend class boost::serialization::access;
 
     template<typename Archive>
@@ -76,6 +80,7 @@ namespace structured{
     }
 
     BOOST_SERIALIZATION_SPLIT_MEMBER()
+#endif
 
   public:
 
@@ -523,40 +528,5 @@ namespace structured{
 
 } // namespace structured
 } // namespace SpatialOps
-
-
-namespace boost{
-namespace serialization{
-
-
-//   template<typename Archive,typename VO, typename FL, typename GT, typename T>
-//   inline void save_construct_data( Archive& ar,
-//                                    const SpatialOps::structured::SpatialField<VO,FL,GT,T>* f,
-//                                    const unsigned int version )
-//   {
-//     ar << f->fieldWindow_;
-//     ar << f->fieldValues_;
-//     ar << f->builtField_;
-//   }
-
-//   template<typename Archive,typename VO, typename FL, typename GT, typename T>
-//   inline void load_construct_data( Archive& ar,
-//                                    const SpatialOps::structured::SpatialField<VO,FL,GT,T>* f,
-//                                    const unsigned int version )
-//   {
-//     typedef SpatialOps::structured::SpatialField<VO,FL,GT,T> MyType;
-//     SpatialOps::structured::MemoryWindow w;
-//     T* const v;
-//     bool builtVals;
-//     ar >> w >> v >> builtVals;
-//     const SpatialOps::structured::StorageMode mode = builtVals
-//       ? SpatialOps::structured::InternalStorage
-//       : SpatialOps::structured::ExternalStorage;
-//     ::new(f)MyType( w, v, mode );
-//   }
-
-} // namespace boost
-} // namespace serialization
-
 
 #endif // SpatialOps_SpatialField_h
