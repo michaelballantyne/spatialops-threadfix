@@ -4,12 +4,9 @@
 namespace SpatialOps{
   
   /*
-   * structure prototypes:
+   * representation structure prototypes:
    */
   
-  template<int ArgNum, typename UserType>
-    struct ArgForm;
-
   template<typename AtomicType>
     struct Scalar;
 
@@ -30,9 +27,23 @@ namespace SpatialOps{
   template <typename Operand, typename UserType>	\
     struct NAME;
 
+  template<int ArgNum, typename UserType>
+    struct ArgForm;
+  
+  /*
+   * Container/wrapper structure prototypes:
+   */
+  
   template<typename ExprType, typename UserType>
     struct Expression;
 
+  template<typename ExprType, int CrtArgNum, typename Max, typename UserType>
+    struct FcnForm;
+  
+  /*
+   * Auxiliary/type-juggling structure prototypes:
+   */
+  
   template<int Num>
     struct ArgNum;
 
@@ -59,27 +70,18 @@ namespace SpatialOps{
 
   template<typename BeginType, int CrtArgNum, typename Max, typename ArgType, typename UserType>
     struct AppResultFinder;
-
-  template<typename ExprType, int CrtArgNum, typename Max, typename UserType>
-    struct FcnForm;
   
-  /* General definition. */
+  /*
+   * Inliner structure prototype:
+   */
+  
   template <typename StructTypeTemplate>
     struct Inline;
   
 
   /*
-   * structure definitions:
+   * representation structure definitions:
    */
-
-  /* Internal represenation of anonymous argument */
-  template<int ArgNum, typename UserType>
-    struct ArgForm {
-      UserType typedef field_type;
-  
-      ArgForm()
-      {};
-    };
 
   /* Internal representation of constant doubles */
   template<typename AtomicType>
@@ -162,8 +164,21 @@ namespace SpatialOps{
       {};						\
     };
 
-
-  /* Wrapper/Container for passing AtomicType and UserType to expressions */
+  /* Internal represenation of anonymous argument */
+  template<int ArgNum, typename UserType>
+    struct ArgForm {
+      UserType typedef field_type;
+  
+      ArgForm()
+      {};
+    };
+  
+  
+  /*
+   * Container/wrapper structure definitions:
+   */
+  
+  /* Wrapper/Container for passing expressions around (no anonymous arguments). */
   template<typename Operand, typename UserType>
     struct Expression {
       UserType typedef field_type;
@@ -175,6 +190,101 @@ namespace SpatialOps{
       {};
     };
 
+  /* FcnForm contains/wraps expressions that have arguments still in them. */
+  /* Contains definition of application (of up to three arguments at once). */
+  template<typename ExprType, int CrtArgNum, int MaxArgNum, typename UserType>
+    struct FcnForm<ExprType,CrtArgNum,ArgNum<MaxArgNum>,UserType> {
+    UserType typedef field_type;
+    ExprType typedef expr_type;
+  
+    ExprType expr;
+  
+  FcnForm(ExprType given)
+    :expr(given)
+    {};
+  
+    /* operator () definition (one argument version). */
+    /* Most of the code here is to make sure the type rules match up. */
+    template<typename ArgType>
+      typename AppResultFinder<ExprType,
+      CrtArgNum,
+      ArgNum<MaxArgNum>,
+      typename StandardizeArg<ArgType,
+      UserType>::StandardType,
+      UserType>::ResultType operator () (ArgType const & arg) {
+    
+      /* Wrapper type - if all arguments have been bound, wrapper is Expression; otherwise, wrapper is FcnForm. */
+      typename AppResultFinder<ExprType,
+	CrtArgNum,
+	ArgNum<MaxArgNum>,
+	typename StandardizeArg<ArgType,
+	UserType>::StandardType,
+	UserType>::ResultType typedef WrapperNextType;
+  
+      /* Actual type of expression after application of (standardized) ArgType. */
+      ArgApply<ExprType,
+	CrtArgNum,
+	typename StandardizeArg<ArgType,
+	UserType>::StandardType> typedef ActualNextType;
+    
+      /* Actual code that runs: Call correct apply function followed by a typecast. */
+      return WrapperNextType(ActualNextType::apply(expr,
+						   StandardizeArg<ArgType,
+						   UserType>::standardType(arg)));
+    };
+  
+    /*
+     * Multiple arguments/currying the uncurried:
+     */
+  
+    /* Two arguments. */
+    template<typename Arg1, typename Arg2>
+      typename AppResultFinder<typename ArgApply<ExprType,
+      CrtArgNum,
+      typename StandardizeArg<Arg1,
+      UserType>::StandardType>::ReturnType,
+      CrtArgNum + 1,
+      ArgNum<MaxArgNum>,
+      typename StandardizeArg<Arg2,
+      UserType>::StandardType,
+      UserType>::ResultType operator () (Arg1 const & arg1,
+					 Arg2 const & arg2) {
+      return this -> operator ()
+	(arg1)
+	(arg2);
+    };
+  
+    /* Three arguments. */
+    template<typename Arg1, typename Arg2, typename Arg3>
+      typename AppResultFinder<typename ArgApply<typename ArgApply<ExprType,
+      CrtArgNum,
+      typename StandardizeArg<Arg1,
+      UserType>::StandardType>::ReturnType,
+      CrtArgNum + 1,
+      typename StandardizeArg<Arg2,
+      UserType>::StandardType>::ReturnType,
+      CrtArgNum + 2,
+      ArgNum<MaxArgNum>,
+      typename StandardizeArg<Arg3,
+      UserType>::StandardType,
+      UserType>::ResultType operator () (Arg1 const & arg1,
+					 Arg2 const & arg2,
+					 Arg3 const & arg3) {
+      return this -> operator ()
+	(StandardizeArg<Arg1,
+	 UserType>::standardType(arg1))
+	(StandardizeArg<Arg2,
+	 UserType>::standardType(arg2))
+	(StandardizeArg<Arg3,
+	 UserType>::standardType(arg3));
+    };
+  };
+  
+  
+  /*
+   * Auxiliary/type-juggling structure prototypes:
+   */
+  
   /* An interger (number of argument) in type form. */
   template<int Num>
     struct ArgNum {};
@@ -185,7 +295,7 @@ namespace SpatialOps{
     struct CompareMaxArg<ArgNum<Num1>,ArgNum<Num2> > {
     typename InternalCompareMaxArg<Num1,Num2,(Num1 > Num2)>::Max typedef Max;
   };
-
+  
   /* If comparison is true, return first number. */
   template<int Num1, int Num2>
     struct InternalCompareMaxArg<Num1,Num2,true> {
@@ -426,10 +536,7 @@ namespace SpatialOps{
   };
   
   
-  /* 
-   * ArgApply returns the type/state of applying an argument to an expression with anonymous arguments.
-   */
-
+  /* ArgApply returns the type/state of applying an argument to an expression with anonymous arguments. */
   /* Applying an parameter to a Scalar changes nothing. */
   template<int CurrentArg, typename ArgType, typename AtomicType>
     struct ArgApply<Scalar<AtomicType>,CurrentArg,ArgType> {
@@ -535,10 +642,7 @@ namespace SpatialOps{
   };
 
 
-  /*
-   * AppResultFinder returns final result: Either wrapped in a FcnForm or not (remaining arguments or not).
-   */
-
+  /* AppResultFinder returns final result: Either wrapped in a FcnForm or not (remaining arguments or not). */
   /* Final argument is applied: No FcnForm wrapper. */
   template<typename BeginType, int CrtArgNum, typename ArgType, typename UserType>
     struct AppResultFinder<BeginType,CrtArgNum,ArgNum<CrtArgNum + 1>,ArgType,UserType> {
@@ -555,103 +659,10 @@ namespace SpatialOps{
   };
 
   /*
-   * FcnForm wraps expressions that have arguments still in them.
+   * Inliner structure definitions:
    */
-
-  /* General definition. */
-  template<typename ExprType, int CrtArgNum, int MaxArgNum, typename UserType>
-    struct FcnForm<ExprType,CrtArgNum,ArgNum<MaxArgNum>,UserType> {
-    UserType typedef field_type;
-    ExprType typedef expr_type;
   
-    ExprType expr;
-  
-  FcnForm(ExprType given)
-    :expr(given)
-    {};
-  
-    /* operator () definition (one argument version). */
-    /* Most of the code here is to make sure the type rules match up. */
-    template<typename ArgType>
-      typename AppResultFinder<ExprType,
-      CrtArgNum,
-      ArgNum<MaxArgNum>,
-      typename StandardizeArg<ArgType,
-      UserType>::StandardType,
-      UserType>::ResultType operator () (ArgType const & arg) {
-    
-      /* Wrapper type - if all arguments have been bound, wrapper is Expression; otherwise, wrapper is FcnForm. */
-      typename AppResultFinder<ExprType,
-	CrtArgNum,
-	ArgNum<MaxArgNum>,
-	typename StandardizeArg<ArgType,
-	UserType>::StandardType,
-	UserType>::ResultType typedef WrapperNextType;
-  
-      /* Actual type of expression after application of (standardized) ArgType. */
-      ArgApply<ExprType,
-	CrtArgNum,
-	typename StandardizeArg<ArgType,
-	UserType>::StandardType> typedef ActualNextType;
-    
-      /* Actual code that runs: Call correct apply function followed by a typecast. */
-      return WrapperNextType(ActualNextType::apply(expr,
-						   StandardizeArg<ArgType,
-						   UserType>::standardType(arg)));
-    };
-  
-    /*
-     * Multiple arguments/currying the uncurried:
-     */
-  
-    /* Two arguments. */
-    template<typename Arg1, typename Arg2>
-      typename AppResultFinder<typename ArgApply<ExprType,
-      CrtArgNum,
-      typename StandardizeArg<Arg1,
-      UserType>::StandardType>::ReturnType,
-      CrtArgNum + 1,
-      ArgNum<MaxArgNum>,
-      typename StandardizeArg<Arg2,
-      UserType>::StandardType,
-      UserType>::ResultType operator () (Arg1 const & arg1,
-					 Arg2 const & arg2) {
-      return this -> operator ()
-	(arg1)
-	(arg2);
-    };
-  
-    /* Three arguments. */
-    template<typename Arg1, typename Arg2, typename Arg3>
-      typename AppResultFinder<typename ArgApply<typename ArgApply<ExprType,
-      CrtArgNum,
-      typename StandardizeArg<Arg1,
-      UserType>::StandardType>::ReturnType,
-      CrtArgNum + 1,
-      typename StandardizeArg<Arg2,
-      UserType>::StandardType>::ReturnType,
-      CrtArgNum + 2,
-      ArgNum<MaxArgNum>,
-      typename StandardizeArg<Arg3,
-      UserType>::StandardType,
-      UserType>::ResultType operator () (Arg1 const & arg1,
-					 Arg2 const & arg2,
-					 Arg3 const & arg3) {
-      return this -> operator ()
-	(StandardizeArg<Arg1,
-	 UserType>::standardType(arg1))
-	(StandardizeArg<Arg2,
-	 UserType>::standardType(arg2))
-	(StandardizeArg<Arg3,
-	 UserType>::standardType(arg3));
-    };
-  };
-
-
-  /*
-   * Inline inlines the correct functions and operators where appropriate.
-   */
-
+  /* Inline inlines the correct functions and operators where appropriate. */
   /* Inline Scalars: */
   template<typename AtomicType>
     struct Inline<Scalar<AtomicType> > {
@@ -809,7 +820,7 @@ namespace SpatialOps{
 
 
   /*
-   * State/Expression Binary Operation interface:
+   * Binary Operator/Function interface:
    */
 
   /*
@@ -820,6 +831,9 @@ namespace SpatialOps{
    * Input X Scalar
    * Scalar X Input
    * Scalar X Scalar
+   *
+   *
+   * Input \in {UserType, Expression, ArgForm, FcnForm}
    *
    */
 
@@ -1034,7 +1048,18 @@ namespace SpatialOps{
   
   
   /*
-   * Unary Function Application
+   * UnaryFunction interface:
+   */
+
+  /*
+   * 
+   * Case for building unary operations:
+   * 
+   * Input
+   *
+   *
+   * Input \in {UserType, Expression, ArgForm, FcnForm}
+   *
    */
 
   /* Input: */
@@ -1090,7 +1115,7 @@ namespace SpatialOps{
 
 
   /*
-   * Assignment interface:
+   * Assignment defintions/interface:
    */
 
   /* Assign a value_type to a UserType. */
