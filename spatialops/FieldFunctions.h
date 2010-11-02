@@ -401,7 +401,7 @@ FieldFunction1D<FieldT,PatchT>::FieldFunction1D( PatchT& p, const FieldID xid )
   : patch_( &p ),
     xid_( xid )
 {
-  BOOST_STATIC_ASSERT( bool(!SpatialOps::IsSameType<PatchT,FFLocal::NULLPatch>::result) );
+  BOOST_STATIC_ASSERT( bool(!IsSameType<PatchT,FFLocal::NULLPatch>::result) );
   x_ = NULL;
 }
 //--------------------------------------------------------------------
@@ -432,7 +432,7 @@ FieldFunction2D<FieldT,PatchT>::FieldFunction2D( PatchT& p, const FieldID xid, c
   : patch_(&p),
   xid_(xid), yid_(yid)
 {
-  BOOST_STATIC_ASSERT( bool(!SpatialOps::IsSameType<PatchT,FFLocal::NULLPatch>::result) );
+  BOOST_STATIC_ASSERT( bool(!IsSameType<PatchT,FFLocal::NULLPatch>::result) );
   x_ = y_ = NULL;
 }
 //--------------------------------------------------------------------
@@ -464,7 +464,7 @@ FieldFunction3D<FieldT,PatchT>::FieldFunction3D( PatchT& p, const FieldID xid, c
   : patch_( &p ),
     xid_(xid), yid_(yid), zid_(zid)
 {
-  BOOST_STATIC_ASSERT( bool(!SpatialOps::IsSameType<PatchT,FFLocal::NULLPatch>::result) );
+  BOOST_STATIC_ASSERT( bool(!IsSameType<PatchT,FFLocal::NULLPatch>::result) );
   x_ = y_ = z_ = NULL;
 }
 //--------------------------------------------------------------------

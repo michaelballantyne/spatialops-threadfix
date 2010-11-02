@@ -242,7 +242,7 @@ int main()
     }
 
     {
-      SpatialOps::SpatFldPtr<SVolField> sv3 = SpatialOps::SpatialFieldStore<SVolField>::self().get( svol1 );
+      SpatFldPtr<SVolField> sv3 = SpatialFieldStore<SVolField>::self().get( svol1 );
       *sv3 = svol1;
       status( *sv3 == svol1, "spatial field pointer from store" );
     }
