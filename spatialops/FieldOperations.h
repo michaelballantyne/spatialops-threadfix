@@ -7,37 +7,274 @@ namespace SpatialOps{
    * representation structure prototypes:
    */
   
+  /**
+   *  @struct 
+   *  @author Christopher Earl
+   *  @date October, 2010
+   *  
+   *  @brief 
+   *  
+   *  @par Template Parameters
+   *   \li \b 
+   *  
+   *  
+   */
+
+  /**
+   *  @struct Scalar
+   *  @author Christopher Earl
+   *  @date October, 2010
+   *  
+   *  @brief Meta-computation representation of an element (AtomicType).
+   *  
+   *  @par Template Parameters
+   *   \li \b AtomicType Basic element type.
+   *  
+   *  Scalar is a simple container structure that generalizes the use of AtomicType's in meta-computation.
+   */
   template<typename AtomicType>
     struct Scalar;
 
-  template<typename UserType>
+  /**
+   *  @struct FieldForm
+   *  @author Christopher Earl
+   *  @date October, 2010
+   *  
+   *  @brief Meta-computation representation of a field (FieldType).
+   *  
+   *  @par Template Parameters
+   *   \li \b FieldType Field type.
+   *  
+   *  @par
+   *  
+   *  FieldType is a simple container structure that generalizes the use of FieldType's in meta-computation.
+   *
+   *  FieldType must provide the following typedefs:
+   *  
+   *   \li \c field_type FieldType's own type. For example, if \c SpatialField is a FieldType, 
+   *       then SpatialField must contain: \code typedef SpatialField field_type \endcode
+   *  
+   *   \li \c value_type FieldType's element/atomic type.  Similar to \c field_type, except
+   *       \c value_type is the type of the elements contained within FieldType.  Usually
+   *       referred to as AtomicType elsewhere in this documentation.
+   *  
+   *   \li \c iterator Type: \c value_type*.
+   *  
+   *   \li \c const_iterator Type: \c value_type \c const*.
+   *  
+   *  FieldType must provide the following methods:
+   *  
+   *   \li \code iterator begin() \endcode Returns a pointer to the first element in current FieldType.
+   *  
+   *   \li \code iterator end() \endcode Returns a pointer to the final element in current FieldType.
+   *  
+   *   \li \code iterator operator ++ (iterator &) \endcode and
+   *       \code const_iterator operator ++ (const_iterator &) \endcode Increments given iterator/const_iterator. Return value is not used; only the side-effect is important.
+   */
+  template<typename FieldType>
     struct FieldForm;
 
-  template <typename Operand1, typename Operand2, typename UserType>
+  /**
+   *  @struct BinOp/SpecificBinOp
+   *  @author Christopher Earl
+   *  @date October, 2010
+   *  
+   *  @brief General/specialized meta-computation representation of a binary operation/function.
+   *  
+   *  @par Template Parameters
+   *   \li \b Operand1 First operand's type.
+   *   \li \b Operand2 Second operand's type.
+   *   \li \b FieldType Field type.
+   *  
+   *  @par BinOp
+   *   BinOp is the non-optimized representation of a binary function and therefore requires the function be passed to it.
+   *   Briefly, to use a function, \c fcn, that does not have a SpecificBinOp defined for it, with operands \c op1 and \c op2, the \c app function is called:
+   *   \code app(fcn, op1, op2) \endcode.  The signature for \c app is:
+   *   \code
+   *   BinOp<Operand1, Operand2, FieldType> app (typename FieldType::value_type (*)(typename FieldType::value_type, typename FieldType::value_type),
+   *                                             Operand1 const &,
+   *                                             Operand2 const &)
+   *   \endcode
+   *  
+   *  @par SpecificBinOp
+   *   Commonly used binary operators and functions have been given individual representations, for both optimization and ease-of-use reasons.
+   *   (These optimized BinOp-like structures are generated with macros by the preprocessor and so do not show up directly in the documentation.)
+   *   To use these sturctures, the name given to the macro is used - usually identical to the operator or function itself.
+   *   For example, for addition of two operands, \c op1 and \c op2, use the '+' symbol with infix notation:
+   *   \code
+   *   op1 + op2
+   *   \endcode
+   *   The macros, \c BUILD_BINARY_OPERATOR and \c BUILD_BINARY_FUNCTION, define binary operators and functions respectively.
+   *   Note that usual C/C++ order of operations applies to binary operators defined in this way.
+   */
+  template <typename Operand1, typename Operand2, typename FieldType>
     struct BinOp;
-
+  
 #define BUILD_BINARY_TYPE_PROTOTYPE(NAME)				\
-  template <typename Operand1, typename Operand2, typename UserType>	\
+  template <typename Operand1, typename Operand2, typename FieldType>	\
     struct NAME;
 
-  template <typename Operand, typename UserType>
+  /**
+   *  @struct UnOp/SpecificUnOp
+   *  @author Christopher Earl
+   *  @date October, 2010
+   *  
+   *  @brief General/specialized meta-computation representation of a unary function.
+   *  
+   *  @par Template Parameters
+   *   \li \b Operand Operand's type.
+   *   \li \b FieldType Field type.
+   *  
+   *  @par UnOp UnOp is the non-optimized representation of a unary function and therefore requires the function be passed to it.
+   *  Briefly, to use a function, \c fcn, that does not have a SpecificUnOp defined for it, with operand \c op, the \c app function is called:
+   *  \code
+   *  app(fcn, op)
+   *  \endcode
+   *  The signature for \c app is:
+   *  \code
+   *  UnOp<Operand, FieldType> app (typename FieldType::value_type (*)(typename FieldType::value_type),
+   *                                Operand const &)
+   *  \endcode
+   *  
+   *  @par SpecificUnOp Commonly used unary functions have been given individual representations, for both optimization and ease-of-use reasons.
+   *  (These optimized UnOp-like structures are generated with macros by the preprocessor and so do not show up directly in the documentation.)
+   *  To use these sturctures, the name given to the macro is used - usually identical to the function itself.
+   *  For example, for sin of the operand, \c op, usage is identical to applying sin to a double:
+   *  \code
+   *  sin(op)
+   *  \endcode
+   *  The macro, \c BUILD_UNARY_FUNCTION, defines unary functions.
+   *  Note that usual C/C++ unary operators can be defined by macros very similar to \c BUILD_UNARY_FUNCTION; however, this macro has not been coded, because there is no immediate use.
+   */
+  template <typename Operand, typename FieldType>
     struct UnOp;
 
 #define BUILD_UNARY_TYPE_PROTOTYPE(NAME)		\
-  template <typename Operand, typename UserType>	\
+  template <typename Operand, typename FieldType>	\
     struct NAME;
 
-  template<int ArgNum, typename UserType>
+  /**
+   *  @struct ArgForm
+   *  @author Christopher Earl
+   *  @date October, 2010
+   *  
+   *  @brief Meta-computation representation of an anonymous argument.
+   *  
+   *  @par Template Parameters
+   *   \li \b Num Argument number.
+   *   \li \b FieldType Field type.
+   *  
+   *  @par
+   *   
+   *   Anonymous arguments are used to create anonymous functions (FcnForm).
+   *   (Recursive definition: An anonymous function is an Expression containing at least one anonymous argument.)
+   *   When expressions are applied to an anonymous function, each in order is associated with an integer, beginning at 0, for the argument it replaces.
+   *   So in the following Expression,
+   *   \code
+   *   (4 + ($1 - $0))(a, b)
+   *   \endcode
+   *   the expression \c a is associated with 0, and the expression \c b with 1.
+   *   When applying an argument, everywhere the ArgForm with the associated number appears, it is replaced by the argument.
+   *   Reusing the above example,
+   *   \code
+   *   (4 + ($1 - $0))(a, b)
+   *   \endcode
+   *   becomes
+   *   \code
+   *   (4 + ($1 - a))(b)
+   *   \endcode
+   *   which itself becomes
+   *   \code
+   *   (4 + (b - a))
+   *   \endcode
+   *   For more information on ArgForm, see FcnForm.
+   *   
+   *  @todo Add application functionality to simple/bare ArgForm.
+   *   With this it will be possible to apply parameters to ArgForm directly.
+   *   For example,
+   *   \code
+   *   ArgForm<0,FieldType>(4)
+   *   \endcode
+   *   will return a Scalar, with a value of 4, rather than causing a compilation error.
+   */
+  template<int Num, typename FieldType>
     struct ArgForm;
   
   /*
    * Container/wrapper structure prototypes:
    */
   
-  template<typename ExprType, typename UserType>
+  /**
+   *  @struct Expression
+   *  @author Christopher Earl
+   *  @date October, 2010
+   *  
+   *  @brief Meta-computation representation of an expression to evaluate.
+   *  
+   *  @par Template Parameters
+   *   \li \b ExprType The type representing the actual expression represented.
+   *   \li \b FieldType Field type.
+   *  
+   *  @par
+   *  
+   *  An Expression represents an expression to evaluate.
+   *  An Expression is either:
+   *   \li A Scalar (based on an AtomicType, \c typename \c FieldType::value_type),
+   *   \li A FieldForm (based on a FieldType),
+   *   \li A BinOp of two expressions,
+   *   \li A SpecificBinOp (see BinOp) of two expressions,
+   *   \li A UnOp of an expression,
+   *   \li A SpecificUnOp (see UnOp) of an expression, or
+   *   \li The result of a FcnForm after all its arguments have been applied (see FcnForm for more information).
+   *  
+   *  @par
+   *  
+   *  The Expression structure itself is a container structure and does not contain itself, even though two Expressions may be used as operands to build a new Expression.
+   *  Equivalently, the Expression structure only appears at the top of Expression and never appears in a subexpression.
+   *  For an example, consider the following situation:
+   *   \li \c FT is the current FieldType,
+   *   \li \c AT is the current AtomicType (\c typename \c FieldType::value_type),
+   *   \li \c a has type \c FT,
+   *   \li \c 4 has type \c AT,
+   *   \li \c operator \c + has the return type \c SumOp defined for it using the macro \c BUILD_BINARY_OPERATOR (see BinOp for more information), and
+   *   \li the expression
+   *  \code
+   *  a + 4
+   *  \endcode
+   *   appears in the program, and so needs to be evaluated.
+   *  
+   *  To determine the type of this expression, the compiler goes through a recursive process.
+   *  First, it finds the type of the first subexpression \c a.
+   *  This examination finds the following return type:
+   *  \code
+   *  Expression<FieldForm<FT>, FT>
+   *  \endcode
+   *  Next, the compiler finds the type of the second subexpression \c 4.
+   *  This examination finds the following return type:
+   *  \code
+   *  Expression<Scalar<AT>, FT>
+   *  \endcode
+   *  Finally, the two subexpressions are stripped of their Expression containers and used in a \c SumOp type; so the expression
+   *  \code
+   *  a + 4
+   *  \endcode
+   *  returns the type:
+   *  \code
+   *  Expression<SumOp<FieldForm<FT>,
+   *                   Scalar<AT>,
+   *                   FT>,
+   *             FT>
+   *  \endcode
+   *
+   *  \note There is currently no (direct) way to have a function that takes three or more arguments in an Expression.
+   *  This can be added very easily (the implementation will be extremely similar to that of BinOp).
+   *  There is no current use, so it was not implemented.
+   */
+  template<typename ExprType, typename FieldType>
     struct Expression;
 
-  template<typename ExprType, int CrtArgNum, typename Max, typename UserType>
+  /* doxygen description below at partial specification */
+  template<typename ExprType, int CrtNum, typename Max, typename FieldType>
     struct FcnForm;
   
   /*
@@ -53,22 +290,22 @@ namespace SpatialOps{
   template<int Num1, int Num2, bool answer>
     struct InternalCompareMaxArg;
 
-  template<typename Input, typename UserType>
+  template<typename Input, typename FieldType>
     struct StandardizeTerm;
 
-  template<typename NewType, typename OldType, typename UserType>
+  template<typename NewType, typename OldType, typename FieldType>
     struct LiftTerm;
 
-  template<typename NewType, typename Type1, typename Type2, typename UserType>
+  template<typename NewType, typename Type1, typename Type2, typename FieldType>
     struct CombineTerms;
 
-  template<typename Arg, typename UserType>
+  template<typename Arg, typename FieldType>
     struct StandardizeArg;
 
   template<typename BeginType, int CurrentArg, typename ArgType>
     struct ArgApply;
 
-  template<typename BeginType, int CrtArgNum, typename Max, typename ArgType, typename UserType>
+  template<typename BeginType, int CrtNum, typename Max, typename ArgType, typename FieldType>
     struct AppResultFinder;
   
   /*
@@ -94,22 +331,22 @@ namespace SpatialOps{
     };
 
   /* Internal representation of vector/SpatialField */
-  template<typename UserType>
+  template<typename FieldType>
     struct FieldForm {
-      UserType const *fptr;
-      typename UserType::const_iterator iter;
+      FieldType const *fptr;
+      typename FieldType::const_iterator iter;
   
       //assumption: const_iterator is a pointer
       //TOCONSIDER: should iter be initialized?
-    FieldForm(UserType const & field)
+    FieldForm(FieldType const & field)
     : fptr(&field), iter(field.begin())
       {};
     };
 
   /* Internal representation of generic binary operation */
-  template <typename Operand1, typename Operand2, typename UserType>
+  template <typename Operand1, typename Operand2, typename FieldType>
     struct BinOp {
-      typename UserType::value_type typedef AtomicType;
+      typename FieldType::value_type typedef AtomicType;
   
       AtomicType (*op)(AtomicType, AtomicType);
       Operand1 operand1;
@@ -124,9 +361,9 @@ namespace SpatialOps{
 
   /* Internal representation of specialized binary operation */
 #define BUILD_BINARY_STRUCT(NAME)					\
-  template <typename Operand1, typename Operand2, typename UserType>	\
+  template <typename Operand1, typename Operand2, typename FieldType>	\
     struct NAME {							\
-    typename UserType::value_type typedef AtomicType;			\
+    typename FieldType::value_type typedef AtomicType;			\
     									\
     Operand1 operand1;							\
     Operand2 operand2;							\
@@ -138,9 +375,9 @@ namespace SpatialOps{
     };
   
   /* Internal representation of generic unary operation */
-  template <typename Operand, typename UserType>
+  template <typename Operand, typename FieldType>
     struct UnOp {
-      typename UserType::value_type typedef AtomicType;
+      typename FieldType::value_type typedef AtomicType;
   
       AtomicType (*op)(AtomicType);
       Operand operand;
@@ -153,9 +390,9 @@ namespace SpatialOps{
 
   /* Internal representation of specialized unary operation */
 #define BUILD_UNARY_STRUCT(NAME)			\
-  template <typename Operand, typename UserType>	\
+  template <typename Operand, typename FieldType>	\
     struct NAME {					\
-    typename UserType::value_type typedef AtomicType;	\
+    typename FieldType::value_type typedef AtomicType;	\
     							\
     Operand operand;					\
     							\
@@ -165,9 +402,9 @@ namespace SpatialOps{
     };
 
   /* Internal represenation of anonymous argument */
-  template<int ArgNum, typename UserType>
+  template<int Num, typename FieldType>
     struct ArgForm {
-      UserType typedef field_type;
+      FieldType typedef field_type;
   
       ArgForm()
       {};
@@ -179,9 +416,9 @@ namespace SpatialOps{
    */
   
   /* Wrapper/Container for passing expressions around (no anonymous arguments). */
-  template<typename Operand, typename UserType>
+  template<typename Operand, typename FieldType>
     struct Expression {
-      UserType typedef field_type;
+      FieldType typedef field_type;
   
       Operand expr;
   
@@ -190,11 +427,52 @@ namespace SpatialOps{
       {};
     };
 
-  /* FcnForm contains/wraps expressions that have arguments still in them. */
-  /* Contains definition of application (of up to three arguments at once). */
-  template<typename ExprType, int CrtArgNum, int MaxArgNum, typename UserType>
-    struct FcnForm<ExprType,CrtArgNum,ArgNum<MaxArgNum>,UserType> {
-    UserType typedef field_type;
+  /**
+   *  @author Christopher Earl
+   *  @date October, 2010
+   *  
+   *  @brief Meta-computation representation of an anonymous function.
+   *  
+   *  @par Template Parameters
+   *   \li \b ExprType The type representing the function's body/actual expression represented.
+   *   \li \b CrtNum Integer representing the next argument to be applied.
+   *   \li \b MaxNum Integer representing the total number of arguments that need to be applied.
+   *   \li \b FieldType Field type.
+   *  
+   *  An anonymous function is an Expression that contains at least one anonymous argument (see ArgForm).
+   *  A FcnForm takes the place of Expression as the container structure used to standardize type interactions.
+   *  A FcnForm also controls/regulates application of arguments.
+   *  
+   *  @par Application
+   *   Application of arguments to an anonymous function simulates textual substitution.
+   *   That is, when an Expression is applied to a FcnForm, wherever the next argument appears in the ExprType it is replaced by the applied Expression.
+   *   The next argument is determined by the value in CrtNum, which is incremented after every application.
+   *   (See the extended example below for a high-level demonstration.)
+   *   Because of this (quasi-)textual substitution, the difference between running a fully-applied anonymous function and the expression it represents is very small.
+   *   For a brief example, evaluating (at run-time) the anonymous function,
+   *  \code
+   *  ($1 + $0)(4, a)
+   *  \endcode
+   *   and the expression
+   *  \code
+   *  (a + 4)
+   *  \endcode
+   *   takes roughly the same amount of time, with only slightly higher overhead for the anonymous function (which is independent from the size or complexity of the FieldType).
+   *  
+   *  @par Reversion back to Expression
+   *   Once all the arguments that appear in an anonymous function are replaced by expressions via application, the container structure FcnForm is replaced by the general container structure Expression.
+   *   This means that any fully-applied anonymous function can be treated like an Expression and used wherever an Expression is appropriate.
+   *   The extended example below demonstrates this replacement.
+   *  
+   *  @par Currying
+   *   Currying is the idea that
+   *
+   *  @par Extended example
+   *   Consider the
+   */
+  template<typename ExprType, int CrtNum, int MaxNum, typename FieldType>
+    struct FcnForm<ExprType,CrtNum,ArgNum<MaxNum>,FieldType> {
+    FieldType typedef field_type;
     ExprType typedef expr_type;
   
     ExprType expr;
@@ -207,30 +485,30 @@ namespace SpatialOps{
     /* Most of the code here is to make sure the type rules match up. */
     template<typename ArgType>
       typename AppResultFinder<ExprType,
-      CrtArgNum,
-      ArgNum<MaxArgNum>,
+      CrtNum,
+      ArgNum<MaxNum>,
       typename StandardizeArg<ArgType,
-      UserType>::StandardType,
-      UserType>::ResultType operator () (ArgType const & arg) {
+      FieldType>::StandardType,
+      FieldType>::ResultType operator () (ArgType const & arg) {
     
       /* Wrapper type - if all arguments have been bound, wrapper is Expression; otherwise, wrapper is FcnForm. */
       typename AppResultFinder<ExprType,
-	CrtArgNum,
-	ArgNum<MaxArgNum>,
+	CrtNum,
+	ArgNum<MaxNum>,
 	typename StandardizeArg<ArgType,
-	UserType>::StandardType,
-	UserType>::ResultType typedef WrapperNextType;
+	FieldType>::StandardType,
+	FieldType>::ResultType typedef WrapperNextType;
   
       /* Actual type of expression after application of (standardized) ArgType. */
       ArgApply<ExprType,
-	CrtArgNum,
+	CrtNum,
 	typename StandardizeArg<ArgType,
-	UserType>::StandardType> typedef ActualNextType;
+	FieldType>::StandardType> typedef ActualNextType;
     
       /* Actual code that runs: Call correct apply function followed by a typecast. */
       return WrapperNextType(ActualNextType::apply(expr,
 						   StandardizeArg<ArgType,
-						   UserType>::standardType(arg)));
+						   FieldType>::standardType(arg)));
     };
   
     /*
@@ -240,14 +518,14 @@ namespace SpatialOps{
     /* Two arguments. */
     template<typename Arg1, typename Arg2>
       typename AppResultFinder<typename ArgApply<ExprType,
-      CrtArgNum,
+      CrtNum,
       typename StandardizeArg<Arg1,
-      UserType>::StandardType>::ReturnType,
-      CrtArgNum + 1,
-      ArgNum<MaxArgNum>,
+      FieldType>::StandardType>::ReturnType,
+      CrtNum + 1,
+      ArgNum<MaxNum>,
       typename StandardizeArg<Arg2,
-      UserType>::StandardType,
-      UserType>::ResultType operator () (Arg1 const & arg1,
+      FieldType>::StandardType,
+      FieldType>::ResultType operator () (Arg1 const & arg1,
 					 Arg2 const & arg2) {
       return this -> operator ()
 	(arg1)
@@ -257,26 +535,26 @@ namespace SpatialOps{
     /* Three arguments. */
     template<typename Arg1, typename Arg2, typename Arg3>
       typename AppResultFinder<typename ArgApply<typename ArgApply<ExprType,
-      CrtArgNum,
+      CrtNum,
       typename StandardizeArg<Arg1,
-      UserType>::StandardType>::ReturnType,
-      CrtArgNum + 1,
+      FieldType>::StandardType>::ReturnType,
+      CrtNum + 1,
       typename StandardizeArg<Arg2,
-      UserType>::StandardType>::ReturnType,
-      CrtArgNum + 2,
-      ArgNum<MaxArgNum>,
+      FieldType>::StandardType>::ReturnType,
+      CrtNum + 2,
+      ArgNum<MaxNum>,
       typename StandardizeArg<Arg3,
-      UserType>::StandardType,
-      UserType>::ResultType operator () (Arg1 const & arg1,
+      FieldType>::StandardType,
+      FieldType>::ResultType operator () (Arg1 const & arg1,
 					 Arg2 const & arg2,
 					 Arg3 const & arg3) {
       return this -> operator ()
 	(StandardizeArg<Arg1,
-	 UserType>::standardType(arg1))
+	 FieldType>::standardType(arg1))
 	(StandardizeArg<Arg2,
-	 UserType>::standardType(arg2))
+	 FieldType>::standardType(arg2))
 	(StandardizeArg<Arg3,
-	 UserType>::standardType(arg3));
+	 FieldType>::standardType(arg3));
     };
   };
   
@@ -308,77 +586,77 @@ namespace SpatialOps{
     ArgNum<Num2> typedef Max;
   };
 
-  /* Standardize UserType into Expression. */
-  template<typename UserType>
-    struct StandardizeTerm<UserType,UserType> {
-    FieldForm<UserType> typedef StandardType;
-    Expression<StandardType, UserType> typedef StandardTerm;
+  /* Standardize FieldType into Expression. */
+  template<typename FieldType>
+    struct StandardizeTerm<FieldType,FieldType> {
+    FieldForm<FieldType> typedef StandardType;
+    Expression<StandardType, FieldType> typedef StandardTerm;
   
-    static inline StandardType standardType (UserType const & given) {
+    static inline StandardType standardType (FieldType const & given) {
       return StandardType(given);
     };
   
-    static inline StandardTerm standardTerm (UserType const & given) {
+    static inline StandardTerm standardTerm (FieldType const & given) {
       return StandardTerm(StandardType(given));
     };
   
   };
 
   /* Standardize Expression into itself. */
-  template<typename ExprType, typename UserType>
-    struct StandardizeTerm<Expression<ExprType,UserType>,UserType> {
+  template<typename ExprType, typename FieldType>
+    struct StandardizeTerm<Expression<ExprType,FieldType>,FieldType> {
     ExprType typedef StandardType;
-    Expression<StandardType,UserType> typedef StandardTerm;
+    Expression<StandardType,FieldType> typedef StandardTerm;
   
-    static inline StandardType const & standardType (Expression<ExprType,UserType> const & given) {
+    static inline StandardType const & standardType (Expression<ExprType,FieldType> const & given) {
       return given.expr;
     };
   
-    static inline StandardTerm const & standardTerm (Expression<ExprType,UserType> const & given) {
+    static inline StandardTerm const & standardTerm (Expression<ExprType,FieldType> const & given) {
       return given;
     };
   
   };
 
   /* Standardize ArgForm into FcnForm. */
-  template<int Num, typename UserType>
-    struct StandardizeTerm<ArgForm<Num,UserType>,UserType> {
-    ArgForm<Num,UserType> typedef StandardType;
-    FcnForm<StandardType,0,ArgNum<Num + 1>,UserType> typedef StandardTerm;
+  template<int Num, typename FieldType>
+    struct StandardizeTerm<ArgForm<Num,FieldType>,FieldType> {
+    ArgForm<Num,FieldType> typedef StandardType;
+    FcnForm<StandardType,0,ArgNum<Num + 1>,FieldType> typedef StandardTerm;
   
-    static inline StandardType const & standardType (ArgForm<Num,UserType> const & given) {
+    static inline StandardType const & standardType (ArgForm<Num,FieldType> const & given) {
       return given;
     };
   
-    static inline StandardTerm standardTerm (ArgForm<Num,UserType> const & given) {
+    static inline StandardTerm standardTerm (ArgForm<Num,FieldType> const & given) {
       return StandardTerm(given);
     };
   
   };
 
   /* Standardize FcnForm into itself. */
-  template<typename ExprType, typename Max, typename UserType>
-    struct StandardizeTerm<FcnForm<ExprType,0,Max,UserType>,UserType> {
+  template<typename ExprType, typename Max, typename FieldType>
+    struct StandardizeTerm<FcnForm<ExprType,0,Max,FieldType>,FieldType> {
     ExprType typedef StandardType;
-    FcnForm<StandardType,0,Max,UserType> typedef StandardTerm;
+    FcnForm<StandardType,0,Max,FieldType> typedef StandardTerm;
   
-    static inline StandardType const & standardType (FcnForm<ExprType,0,Max,UserType> const & given) {
+    static inline StandardType const & standardType (FcnForm<ExprType,0,Max,FieldType> const & given) {
       return given.expr;
     };
   
-    static inline StandardTerm const & standardTerm (FcnForm<ExprType,0,Max,UserType> const & given) {
+    static inline StandardTerm const & standardTerm (FcnForm<ExprType,0,Max,FieldType> const & given) {
       return given;
     };
   
   };
 
   /* Lift an Expresssion around a new type. */
-  template<typename NewType, typename OldType, typename UserType>
+  template<typename NewType, typename OldType, typename FieldType>
     struct LiftTerm<NewType,
-    Expression<OldType,UserType>,
-    UserType> {
+    Expression<OldType,FieldType>,
+    FieldType> {
     NewType typedef StandardType;
-    Expression<NewType,UserType> typedef StandardTerm;
+    Expression<NewType,FieldType> typedef StandardTerm;
   
     static inline StandardType const & standardType (NewType const & given) {
       return given;
@@ -390,12 +668,12 @@ namespace SpatialOps{
   };
 
   /* Lift a FcnForm around a new type. */
-  template<typename NewType, typename OldType, typename Max, typename UserType>
+  template<typename NewType, typename OldType, typename Max, typename FieldType>
     struct LiftTerm<NewType,
-    FcnForm<OldType,0,Max,UserType>,
-    UserType> {
+    FcnForm<OldType,0,Max,FieldType>,
+    FieldType> {
     NewType typedef StandardType;
-    FcnForm<NewType,0,Max,UserType> typedef StandardTerm;
+    FcnForm<NewType,0,Max,FieldType> typedef StandardTerm;
   
     static inline StandardType const & standardType (NewType const & given) {
       return given;
@@ -407,13 +685,13 @@ namespace SpatialOps{
   };
 
   /* Combine two Expressions into a single Expression. */
-  template<typename NewType, typename ExprType1, typename ExprType2, typename UserType>
+  template<typename NewType, typename ExprType1, typename ExprType2, typename FieldType>
     struct CombineTerms<NewType,
-    Expression<ExprType1,UserType>,
-    Expression<ExprType2,UserType>,
-    UserType> {
+    Expression<ExprType1,FieldType>,
+    Expression<ExprType2,FieldType>,
+    FieldType> {
     NewType typedef StandardType;
-    Expression<NewType,UserType> typedef StandardTerm;
+    Expression<NewType,FieldType> typedef StandardTerm;
   
     static inline StandardType const & standardType (NewType const & given) {
       return given;
@@ -426,13 +704,13 @@ namespace SpatialOps{
   };
 
   /* Combine Expression and FcnForm into a FcnForm. */
-  template<typename NewType, typename ExprType1, typename ExprType2, typename Max2, typename UserType>
+  template<typename NewType, typename ExprType1, typename ExprType2, typename Max2, typename FieldType>
     struct CombineTerms<NewType,
-    Expression<ExprType1,UserType>,
-    FcnForm<ExprType2,0,Max2,UserType>,
-    UserType> {
+    Expression<ExprType1,FieldType>,
+    FcnForm<ExprType2,0,Max2,FieldType>,
+    FieldType> {
     NewType typedef StandardType;
-    FcnForm<NewType,0,Max2,UserType> typedef StandardTerm;
+    FcnForm<NewType,0,Max2,FieldType> typedef StandardTerm;
   
     static inline StandardType const & standardType (NewType const & given) {
       return given;
@@ -445,13 +723,13 @@ namespace SpatialOps{
   };
 
   /* Combine FcnForm and Expression into a FcnForm. */
-  template<typename NewType, typename ExprType1, typename Max1, typename ExprType2, typename UserType>
+  template<typename NewType, typename ExprType1, typename Max1, typename ExprType2, typename FieldType>
     struct CombineTerms<NewType,
-    FcnForm<ExprType1,0,Max1,UserType>,
-    Expression<ExprType2,UserType>,
-    UserType> {
+    FcnForm<ExprType1,0,Max1,FieldType>,
+    Expression<ExprType2,FieldType>,
+    FieldType> {
     NewType typedef StandardType;
-    FcnForm<NewType,0,Max1,UserType> typedef StandardTerm;
+    FcnForm<NewType,0,Max1,FieldType> typedef StandardTerm;
   
     static inline StandardType const & standardType (NewType const & given) {
       return given;
@@ -464,16 +742,16 @@ namespace SpatialOps{
   };
 
   /* Combine two FcnForms into a single FcnForm. */
-  template<typename NewType, typename ExprType1, typename Max1, typename ExprType2, typename Max2, typename UserType>
+  template<typename NewType, typename ExprType1, typename Max1, typename ExprType2, typename Max2, typename FieldType>
     struct CombineTerms<NewType,
-    FcnForm<ExprType1,0,Max1,UserType>,
-    FcnForm<ExprType2,0,Max2,UserType>,
-    UserType> {
+    FcnForm<ExprType1,0,Max1,FieldType>,
+    FcnForm<ExprType2,0,Max2,FieldType>,
+    FieldType> {
     NewType typedef StandardType;
     FcnForm<NewType,
       0,
       typename CompareMaxArg<Max1,Max2>::Max,
-      UserType> typedef StandardTerm;
+      FieldType> typedef StandardTerm;
   
     static inline StandardType const & standardType (NewType const & given) {
       return given;
@@ -487,11 +765,11 @@ namespace SpatialOps{
 
 
   /* Standardize value_type into Scalar. */
-  template<typename UserType>
-    struct StandardizeArg<typename UserType::value_type,UserType> {
-    typename UserType::value_type typedef AtomicType;
+  template<typename FieldType>
+    struct StandardizeArg<typename FieldType::value_type,FieldType> {
+    typename FieldType::value_type typedef AtomicType;
     Scalar<AtomicType> typedef StandardType;
-    Expression<StandardType,UserType> typedef StandardTerm;
+    Expression<StandardType,FieldType> typedef StandardTerm;
   
     static inline StandardType standardType (AtomicType const & given) {
       return StandardType(given);
@@ -503,33 +781,33 @@ namespace SpatialOps{
   
   };
 
-  /* Standardize UserType into FieldForm. */
-  template<typename UserType>
-    struct StandardizeArg<UserType,UserType> {
-    FieldForm<UserType> typedef StandardType;
-    Expression<StandardType,UserType> typedef StandardTerm;
+  /* Standardize FieldType into FieldForm. */
+  template<typename FieldType>
+    struct StandardizeArg<FieldType,FieldType> {
+    FieldForm<FieldType> typedef StandardType;
+    Expression<StandardType,FieldType> typedef StandardTerm;
   
-    static inline StandardType standardType (UserType const & given) {
+    static inline StandardType standardType (FieldType const & given) {
       return StandardType(given);
     };
   
-    static inline StandardTerm standardTerm (UserType const & given) {
+    static inline StandardTerm standardTerm (FieldType const & given) {
       return StandardTerm(StandardType(given));
     };
   
   };
 
   /* Standardize Expression into itself. */
-  template<typename ExprType, typename UserType>
-    struct StandardizeArg<Expression<ExprType,UserType>,UserType> {
+  template<typename ExprType, typename FieldType>
+    struct StandardizeArg<Expression<ExprType,FieldType>,FieldType> {
     ExprType typedef StandardType;
-    Expression<StandardType,UserType> typedef StandardTerm;
+    Expression<StandardType,FieldType> typedef StandardTerm;
   
-    static inline StandardType standardType (Expression<ExprType,UserType> const & given) {
+    static inline StandardType standardType (Expression<ExprType,FieldType> const & given) {
       return given.expr;
     };
   
-    static inline StandardTerm standardTerm (Expression<ExprType,UserType> const & given) {
+    static inline StandardTerm standardTerm (Expression<ExprType,FieldType> const & given) {
       return given;
     };
   
@@ -549,46 +827,46 @@ namespace SpatialOps{
   };
 
   /* Applying an parameter to a FieldForm changes nothing. */
-  template<int CurrentArg, typename ArgType, typename UserType>
-    struct ArgApply<FieldForm<UserType>,CurrentArg,ArgType> {
-    FieldForm<UserType> typedef ReturnType;
+  template<int CurrentArg, typename ArgType, typename FieldType>
+    struct ArgApply<FieldForm<FieldType>,CurrentArg,ArgType> {
+    FieldForm<FieldType> typedef ReturnType;
   
-    static inline ReturnType const & apply(FieldForm<UserType> const & state,
+    static inline ReturnType const & apply(FieldForm<FieldType> const & state,
 					   ArgType const & arg) {
       return state;
     };
   };
 
   /* Applying an parameter to the correct argument returns the parameter. */
-  template<int ArgNum, typename ArgType, typename UserType>
-    struct ArgApply<ArgForm<ArgNum,UserType>,ArgNum,ArgType> {
+  template<int Num, typename ArgType, typename FieldType>
+    struct ArgApply<ArgForm<Num,FieldType>,Num,ArgType> {
     ArgType typedef ReturnType;
   
-    static inline ReturnType const & apply(ArgForm<ArgNum,UserType> const & state,
+    static inline ReturnType const & apply(ArgForm<Num,FieldType> const & state,
 					   ArgType const & arg) {
       return arg;
     };
   };
 
   /* Applying an parameter to the wrong argument changes nothing. */
-  template<int ArgNum, int CurrentArg, typename ArgType, typename UserType>
-    struct ArgApply<ArgForm<ArgNum,UserType>,CurrentArg,ArgType> {
-    ArgForm<ArgNum,UserType> typedef ReturnType;
+  template<int Num, int CurrentArg, typename ArgType, typename FieldType>
+    struct ArgApply<ArgForm<Num,FieldType>,CurrentArg,ArgType> {
+    ArgForm<Num,FieldType> typedef ReturnType;
   
-    static inline ReturnType const & apply(ArgForm<ArgNum,UserType> const & state,
+    static inline ReturnType const & apply(ArgForm<Num,FieldType> const & state,
 					   ArgType const & arg) {
       return state;
     };
   };
 
   /* Applying an parameter to a binary expression recurses on the subexpressions. */
-  template<typename Operand1, typename Operand2, int CurrentArg, typename ArgType, typename UserType> 
-    struct ArgApply<BinOp<Operand1,Operand2,UserType>,CurrentArg,ArgType> {
+  template<typename Operand1, typename Operand2, int CurrentArg, typename ArgType, typename FieldType> 
+    struct ArgApply<BinOp<Operand1,Operand2,FieldType>,CurrentArg,ArgType> {
     BinOp<typename ArgApply<Operand1,CurrentArg,ArgType>::ReturnType,
       typename ArgApply<Operand2,CurrentArg,ArgType>::ReturnType,
-      UserType> typedef ReturnType;
+      FieldType> typedef ReturnType;
   
-    static inline ReturnType apply(BinOp<Operand1,Operand2,UserType> const & state,
+    static inline ReturnType apply(BinOp<Operand1,Operand2,FieldType> const & state,
 				   ArgType const & arg) {
       return ReturnType(state.op,
 			ArgApply<Operand1,CurrentArg,ArgType>::apply(state.operand1,
@@ -600,13 +878,13 @@ namespace SpatialOps{
 
   /* Applying an parameter to a binary expression recurses on the subexpressions. */
 #define BUILD_BINARY_ARGUMENT_APPLY(NAME)				\
-  template <typename Operand1, typename Operand2, int CurrentArg, typename ArgType, typename UserType> \
-    struct ArgApply<NAME<Operand1,Operand2,UserType>,CurrentArg,ArgType> { \
+  template <typename Operand1, typename Operand2, int CurrentArg, typename ArgType, typename FieldType> \
+    struct ArgApply<NAME<Operand1,Operand2,FieldType>,CurrentArg,ArgType> { \
     NAME<typename ArgApply<Operand1,CurrentArg,ArgType>::ReturnType,	\
       typename ArgApply<Operand2,CurrentArg,ArgType>::ReturnType,	\
-      UserType> typedef ReturnType;					\
+      FieldType> typedef ReturnType;					\
     									\
-    static inline ReturnType apply(NAME<Operand1,Operand2,UserType> const & state, \
+    static inline ReturnType apply(NAME<Operand1,Operand2,FieldType> const & state, \
 				   ArgType const & arg) {		\
       return ReturnType(ArgApply<Operand1,CurrentArg,ArgType>::apply(state.operand1, \
 								     arg), \
@@ -616,11 +894,11 @@ namespace SpatialOps{
   };
 
   /* Applying an parameter to an unary expression recurses on the subexpression. */
-  template<typename Operand, int CurrentArg, typename ArgType, typename UserType>
-    struct ArgApply<UnOp<Operand,UserType>,CurrentArg,ArgType> {
-    UnOp<typename ArgApply<Operand,CurrentArg,ArgType>::ReturnType,UserType> typedef ReturnType;
+  template<typename Operand, int CurrentArg, typename ArgType, typename FieldType>
+    struct ArgApply<UnOp<Operand,FieldType>,CurrentArg,ArgType> {
+    UnOp<typename ArgApply<Operand,CurrentArg,ArgType>::ReturnType,FieldType> typedef ReturnType;
   
-    static inline ReturnType apply(UnOp<Operand,UserType> const & state,
+    static inline ReturnType apply(UnOp<Operand,FieldType> const & state,
 				   ArgType const & arg) {
       return ReturnType(state.op,
 			ArgApply<Operand,CurrentArg,ArgType>::apply(state.operand,
@@ -630,11 +908,11 @@ namespace SpatialOps{
 
   /* Applying an parameter to an unary expression recurses on the subexpression. */
 #define BUILD_UNARY_ARGUMENT_APPLY(NAME)				\
-  template <typename Operand, int CurrentArg, typename ArgType, typename UserType> \
-    struct ArgApply<NAME<Operand,UserType>,CurrentArg,ArgType> {	\
-    NAME<typename ArgApply<Operand,CurrentArg,ArgType>::ReturnType,UserType> typedef ReturnType; \
+  template <typename Operand, int CurrentArg, typename ArgType, typename FieldType> \
+    struct ArgApply<NAME<Operand,FieldType>,CurrentArg,ArgType> {	\
+    NAME<typename ArgApply<Operand,CurrentArg,ArgType>::ReturnType,FieldType> typedef ReturnType; \
 									\
-    static inline ReturnType apply(NAME<Operand,UserType> const & state, \
+    static inline ReturnType apply(NAME<Operand,FieldType> const & state, \
 				   ArgType const & arg) {		\
       return ReturnType(ArgApply<Operand,CurrentArg,ArgType>::apply(state.operand, \
 								    arg)); \
@@ -644,18 +922,18 @@ namespace SpatialOps{
 
   /* AppResultFinder returns final result: Either wrapped in a FcnForm or not (remaining arguments or not). */
   /* Final argument is applied: No FcnForm wrapper. */
-  template<typename BeginType, int CrtArgNum, typename ArgType, typename UserType>
-    struct AppResultFinder<BeginType,CrtArgNum,ArgNum<CrtArgNum + 1>,ArgType,UserType> {
-    Expression<typename ArgApply<BeginType,CrtArgNum,ArgType>::ReturnType,UserType> typedef ResultType;
+  template<typename BeginType, int CrtNum, typename ArgType, typename FieldType>
+    struct AppResultFinder<BeginType,CrtNum,ArgNum<CrtNum + 1>,ArgType,FieldType> {
+    Expression<typename ArgApply<BeginType,CrtNum,ArgType>::ReturnType,FieldType> typedef ResultType;
   };
 
   /* Final argument has not been applied: Need FcnForm wrapper. */
-  template<typename BeginType, int CrtArgNum, int MaxArgNum, typename ArgType, typename UserType>
-    struct AppResultFinder<BeginType,CrtArgNum,ArgNum<MaxArgNum>,ArgType,UserType> {
-    FcnForm<typename ArgApply<BeginType,CrtArgNum,ArgType>::ReturnType,
-      CrtArgNum + 1,
-      ArgNum<MaxArgNum>,
-      UserType> typedef ResultType;
+  template<typename BeginType, int CrtNum, int MaxNum, typename ArgType, typename FieldType>
+    struct AppResultFinder<BeginType,CrtNum,ArgNum<MaxNum>,ArgType,FieldType> {
+    FcnForm<typename ArgApply<BeginType,CrtNum,ArgType>::ReturnType,
+      CrtNum + 1,
+      ArgNum<MaxNum>,
+      FieldType> typedef ResultType;
   };
 
   /*
@@ -678,27 +956,27 @@ namespace SpatialOps{
   };
 
   /* Inline FieldForms: */
-  template <typename UserType>
-    struct Inline<FieldForm<UserType> > {
-    typename UserType::value_type typedef AtomicType;
+  template <typename FieldType>
+    struct Inline<FieldForm<FieldType> > {
+    typename FieldType::value_type typedef AtomicType;
   
-    static inline void init (FieldForm<UserType> & field) {
+    static inline void init (FieldForm<FieldType> & field) {
       field.iter = field.fptr->begin();
     };
   
-    static inline void next (FieldForm<UserType> & field) {
+    static inline void next (FieldForm<FieldType> & field) {
       ++field.iter;
     };
   
-    static inline AtomicType const & eval (FieldForm<UserType> const & field) {
+    static inline AtomicType const & eval (FieldForm<FieldType> const & field) {
       return *field.iter;
     };
   };
 
   /* Inline Expressions: */
-  template <typename ExprType, typename UserType>
-    struct Inline<Expression<ExprType,UserType> > {
-    typename UserType::value_type typedef AtomicType;
+  template <typename ExprType, typename FieldType>
+    struct Inline<Expression<ExprType,FieldType> > {
+    typename FieldType::value_type typedef AtomicType;
   
     static inline void init (ExprType & expr) {
       Inline<ExprType>::init(expr);
@@ -714,21 +992,21 @@ namespace SpatialOps{
   };
 
   /* Inline BinOps: */
-  template <typename Operand1, typename Operand2, typename UserType> 
-    struct Inline<BinOp<Operand1,Operand2,UserType> > {
-    typename UserType::value_type typedef AtomicType;
+  template <typename Operand1, typename Operand2, typename FieldType> 
+    struct Inline<BinOp<Operand1,Operand2,FieldType> > {
+    typename FieldType::value_type typedef AtomicType;
   
-    static inline void init (BinOp<Operand1,Operand2,UserType> & opStruct) {
+    static inline void init (BinOp<Operand1,Operand2,FieldType> & opStruct) {
       Inline<Operand1>::init(opStruct.operand1);
       Inline<Operand2>::init(opStruct.operand2);
     };
   
-    static inline void next (BinOp<Operand1,Operand2,UserType> & opStruct) {
+    static inline void next (BinOp<Operand1,Operand2,FieldType> & opStruct) {
       Inline<Operand1>::next(opStruct.operand1);
       Inline<Operand2>::next(opStruct.operand2);
     };
   
-    static inline AtomicType eval (BinOp<Operand1,Operand2,UserType> const & opStruct) {
+    static inline AtomicType eval (BinOp<Operand1,Operand2,FieldType> const & opStruct) {
       return opStruct.op(Inline<Operand1>::eval(opStruct.operand1),
 			 Inline<Operand2>::eval(opStruct.operand2));
     };
@@ -737,21 +1015,21 @@ namespace SpatialOps{
   /* Inline Binary Operators: */
 #define BUILD_BINARY_OPERATOR_INLINER(TYPE, OPERATOR)			\
 									\
-  template <typename Operand1, typename Operand2, typename UserType>	\
-    struct Inline<TYPE<Operand1,Operand2,UserType> > {			\
-    typename UserType::value_type typedef AtomicType;			\
+  template <typename Operand1, typename Operand2, typename FieldType>	\
+    struct Inline<TYPE<Operand1,Operand2,FieldType> > {			\
+    typename FieldType::value_type typedef AtomicType;			\
 									\
-    static inline void init (TYPE<Operand1,Operand2,UserType> & opStruct) { \
+    static inline void init (TYPE<Operand1,Operand2,FieldType> & opStruct) { \
       Inline<Operand1>::init(opStruct.operand1);			\
       Inline<Operand2>::init(opStruct.operand2);			\
     };									\
 									\
-    static inline void next (TYPE<Operand1,Operand2,UserType> & opStruct) { \
+    static inline void next (TYPE<Operand1,Operand2,FieldType> & opStruct) { \
       Inline<Operand1>::next(opStruct.operand1);			\
       Inline<Operand2>::next(opStruct.operand2);			\
     };									\
     									\
-    static inline AtomicType eval (TYPE<Operand1,Operand2,UserType> const & opStruct) { \
+    static inline AtomicType eval (TYPE<Operand1,Operand2,FieldType> const & opStruct) { \
       return Inline<Operand1>::eval(opStruct.operand1) OPERATOR		\
 	Inline<Operand2>::eval(opStruct.operand2);			\
     };									\
@@ -760,40 +1038,40 @@ namespace SpatialOps{
   /* Inline Binary Functions: */
 #define BUILD_BINARY_FUNCTION_INLINER(TYPE, FUNCTION)			\
 									\
-  template <typename Operand1, typename Operand2, typename UserType>	\
-    struct Inline<TYPE<Operand1,Operand2,UserType> > {			\
-    typename UserType::value_type typedef AtomicType;			\
+  template <typename Operand1, typename Operand2, typename FieldType>	\
+    struct Inline<TYPE<Operand1,Operand2,FieldType> > {			\
+    typename FieldType::value_type typedef AtomicType;			\
 									\
-    static inline void init (TYPE<Operand1,Operand2,UserType> & opStruct) { \
+    static inline void init (TYPE<Operand1,Operand2,FieldType> & opStruct) { \
       Inline<Operand1>::init(opStruct.operand1);			\
       Inline<Operand2>::init(opStruct.operand2);			\
     };									\
 									\
-    static inline void next (TYPE<Operand1,Operand2,UserType> & opStruct) { \
+    static inline void next (TYPE<Operand1,Operand2,FieldType> & opStruct) { \
       Inline<Operand1>::next(opStruct.operand1);			\
       Inline<Operand2>::next(opStruct.operand2);			\
     };									\
     									\
-    static inline AtomicType eval (TYPE<Operand1,Operand2,UserType> const & opStruct) { \
+    static inline AtomicType eval (TYPE<Operand1,Operand2,FieldType> const & opStruct) { \
       return FUNCTION(Inline<Operand1>::eval(opStruct.operand1),	\
 		      Inline<Operand2>::eval(opStruct.operand2));	\
     };									\
   };
 
   /* Inline UnOps: */
-  template <typename Operand, typename UserType>
-    struct Inline<UnOp<Operand,UserType> > {
-    typename UserType::value_type typedef AtomicType;
+  template <typename Operand, typename FieldType>
+    struct Inline<UnOp<Operand,FieldType> > {
+    typename FieldType::value_type typedef AtomicType;
   
-    static inline void init (UnOp<Operand,UserType> & opStruct) {
+    static inline void init (UnOp<Operand,FieldType> & opStruct) {
       Inline<Operand>::init(opStruct.operand);
     };
   
-    static inline void next (UnOp<Operand,UserType> & opStruct) {
+    static inline void next (UnOp<Operand,FieldType> & opStruct) {
       Inline<Operand>::next(opStruct.operand);
     };
   
-    static inline AtomicType eval (UnOp<Operand,UserType> const & opStruct) {
+    static inline AtomicType eval (UnOp<Operand,FieldType> const & opStruct) {
       return opStruct.op(Inline<Operand>::eval(opStruct.operand));
     };
   };
@@ -801,19 +1079,19 @@ namespace SpatialOps{
   /* Inline Unary Functions: */
 #define BUILD_UNARY_FUNCTION_INLINER(TYPE, FUNCTION)			\
 									\
-  template <typename Operand, typename UserType>			\
-    struct Inline<TYPE<Operand,UserType> > {				\
-    typename UserType::value_type typedef AtomicType;			\
+  template <typename Operand, typename FieldType>			\
+    struct Inline<TYPE<Operand,FieldType> > {				\
+    typename FieldType::value_type typedef AtomicType;			\
 									\
-    static inline void init (TYPE<Operand,UserType> & opStruct) {	\
+    static inline void init (TYPE<Operand,FieldType> & opStruct) {	\
       Inline<Operand>::init(opStruct.operand);				\
     }									\
     									\
-    static inline void next (TYPE<Operand,UserType> & opStruct) {	\
+    static inline void next (TYPE<Operand,FieldType> & opStruct) {	\
       Inline<Operand>::next(opStruct.operand);				\
     }									\
     									\
-    static inline AtomicType eval (TYPE<Operand,UserType> const & opStruct) { \
+    static inline AtomicType eval (TYPE<Operand,FieldType> const & opStruct) { \
       return FUNCTION(Inline<Operand>::eval(opStruct.operand));		\
     };									\
   };
@@ -833,7 +1111,7 @@ namespace SpatialOps{
    * Scalar X Scalar
    *
    *
-   * Input \in {UserType, Expression, ArgForm, FcnForm}
+   * Input \in {FieldType, Expression, ArgForm, FcnForm}
    *
    */
 
@@ -854,23 +1132,23 @@ namespace SpatialOps{
 	 SubExpr1 const & first,
 	 SubExpr2 const & second) {
   
-    typename SubExpr1::field_type typedef UserType;
+    typename SubExpr1::field_type typedef FieldType;
   
-    typename StandardizeTerm<SubExpr1,UserType>::StandardTerm typedef Term1;
-    typename StandardizeTerm<SubExpr2,UserType>::StandardTerm typedef Term2;
+    typename StandardizeTerm<SubExpr1,FieldType>::StandardTerm typedef Term1;
+    typename StandardizeTerm<SubExpr2,FieldType>::StandardTerm typedef Term2;
   
-    typename StandardizeTerm<SubExpr1,UserType>::StandardType typedef Type1;
-    typename StandardizeTerm<SubExpr2,UserType>::StandardType typedef Type2;
+    typename StandardizeTerm<SubExpr1,FieldType>::StandardType typedef Type1;
+    typename StandardizeTerm<SubExpr2,FieldType>::StandardType typedef Type2;
   
-    BinOp<Type1,Type2,UserType> typedef ReturnType;
+    BinOp<Type1,Type2,FieldType> typedef ReturnType;
     typename CombineTerms<ReturnType,
       Term1,
       Term2,
-      UserType>::StandardTerm typedef ReturnTerm;
+      FieldType>::StandardTerm typedef ReturnTerm;
   
     return ReturnTerm(ReturnType(fcn,
-				 StandardizeTerm<SubExpr1,UserType>::standardType(first),
-				 StandardizeTerm<SubExpr2,UserType>::standardType(second)));
+				 StandardizeTerm<SubExpr1,FieldType>::standardType(first),
+				 StandardizeTerm<SubExpr2,FieldType>::standardType(second)));
   };
 
   /* Input X Scalar: */
@@ -889,23 +1167,23 @@ namespace SpatialOps{
 	 SubExpr const & first,
 	 typename SubExpr::field_type::value_type const & second) {
   
-    typename SubExpr::field_type typedef UserType;
-    typename UserType::value_type typedef AtomicType;
+    typename SubExpr::field_type typedef FieldType;
+    typename FieldType::value_type typedef AtomicType;
   
-    typename StandardizeTerm<SubExpr,UserType>::StandardTerm typedef Term1;
-    Expression<Scalar<AtomicType>,UserType> typedef Term2;
+    typename StandardizeTerm<SubExpr,FieldType>::StandardTerm typedef Term1;
+    Expression<Scalar<AtomicType>,FieldType> typedef Term2;
   
-    typename StandardizeTerm<SubExpr,UserType>::StandardType typedef Type1;
+    typename StandardizeTerm<SubExpr,FieldType>::StandardType typedef Type1;
     Scalar<AtomicType> typedef Type2;
   
-    BinOp<Type1,Type2,UserType> typedef ReturnType;
+    BinOp<Type1,Type2,FieldType> typedef ReturnType;
     typename CombineTerms<ReturnType,
       Term1,
       Term2,
-      UserType>::StandardTerm typedef ReturnTerm;
+      FieldType>::StandardTerm typedef ReturnTerm;
   
     return ReturnTerm(ReturnType(fcn,
-				 StandardizeTerm<SubExpr,UserType>::standardType(first),
+				 StandardizeTerm<SubExpr,FieldType>::standardType(first),
 				 Type2(second)));
   };
 
@@ -925,24 +1203,24 @@ namespace SpatialOps{
 	 typename SubExpr::field_type::value_type const & first,
 	 SubExpr const & second) {
   
-    typename SubExpr::field_type typedef UserType;
-    typename UserType::value_type typedef AtomicType;
+    typename SubExpr::field_type typedef FieldType;
+    typename FieldType::value_type typedef AtomicType;
   
-    Expression<Scalar<AtomicType>,UserType> typedef Term1;
-    typename StandardizeTerm<SubExpr,UserType>::StandardTerm typedef Term2;
+    Expression<Scalar<AtomicType>,FieldType> typedef Term1;
+    typename StandardizeTerm<SubExpr,FieldType>::StandardTerm typedef Term2;
   
     Scalar<AtomicType> typedef Type1;
-    typename StandardizeTerm<SubExpr,UserType>::StandardType typedef Type2;
+    typename StandardizeTerm<SubExpr,FieldType>::StandardType typedef Type2;
   
-    BinOp<Type1,Type2,UserType> typedef ReturnType;
+    BinOp<Type1,Type2,FieldType> typedef ReturnType;
     typename CombineTerms<ReturnType,
       Term1,
       Term2,
-      UserType>::StandardTerm typedef ReturnTerm;
+      FieldType>::StandardTerm typedef ReturnTerm;
   
     return ReturnTerm(ReturnType(fcn,
 				 Type1(first),
-				 StandardizeTerm<SubExpr,UserType>::standardType(second)));
+				 StandardizeTerm<SubExpr,FieldType>::standardType(second)));
   };
 
 
@@ -962,22 +1240,22 @@ namespace SpatialOps{
       FUNCTION_NAME (SubExpr1 const & first,				\
 		     SubExpr2 const & second) {				\
 									\
-      typename SubExpr1::field_type typedef UserType;			\
+      typename SubExpr1::field_type typedef FieldType;			\
 									\
-      typename StandardizeTerm<SubExpr1,UserType>::StandardTerm typedef Term1; \
-      typename StandardizeTerm<SubExpr2,UserType>::StandardTerm typedef Term2; \
+      typename StandardizeTerm<SubExpr1,FieldType>::StandardTerm typedef Term1; \
+      typename StandardizeTerm<SubExpr2,FieldType>::StandardTerm typedef Term2; \
 									\
-      typename StandardizeTerm<SubExpr1,UserType>::StandardType typedef Type1; \
-      typename StandardizeTerm<SubExpr2,UserType>::StandardType typedef Type2; \
+      typename StandardizeTerm<SubExpr1,FieldType>::StandardType typedef Type1; \
+      typename StandardizeTerm<SubExpr2,FieldType>::StandardType typedef Type2; \
 									\
-      RETURN_TYPE<Type1,Type2,UserType> typedef ReturnType;		\
+      RETURN_TYPE<Type1,Type2,FieldType> typedef ReturnType;		\
       typename CombineTerms<ReturnType,					\
 	Term1,								\
 	Term2,								\
-	UserType>::StandardTerm typedef ReturnTerm;			\
+	FieldType>::StandardTerm typedef ReturnTerm;			\
 									\
-      return ReturnTerm(ReturnType(StandardizeTerm<SubExpr1,UserType>::standardType(first), \
-				   StandardizeTerm<SubExpr2,UserType>::standardType(second))); \
+      return ReturnTerm(ReturnType(StandardizeTerm<SubExpr1,FieldType>::standardType(first), \
+				   StandardizeTerm<SubExpr2,FieldType>::standardType(second))); \
     };									\
   									\
     /* Input X Scalar: */						\
@@ -994,22 +1272,22 @@ namespace SpatialOps{
       FUNCTION_NAME (SubExpr const & first,				\
 		     typename SubExpr::field_type::value_type const & second) { \
 									\
-      typename SubExpr::field_type typedef UserType;			\
-      typename UserType::value_type typedef AtomicType;			\
+      typename SubExpr::field_type typedef FieldType;			\
+      typename FieldType::value_type typedef AtomicType;			\
 									\
-      typename StandardizeTerm<SubExpr,UserType>::StandardTerm typedef Term1; \
-      Expression<Scalar<AtomicType>,UserType> typedef Term2;		\
+      typename StandardizeTerm<SubExpr,FieldType>::StandardTerm typedef Term1; \
+      Expression<Scalar<AtomicType>,FieldType> typedef Term2;		\
 									\
-      typename StandardizeTerm<SubExpr,UserType>::StandardType typedef Type1; \
+      typename StandardizeTerm<SubExpr,FieldType>::StandardType typedef Type1; \
       Scalar<AtomicType> typedef Type2;					\
     									\
-      RETURN_TYPE<Type1,Type2,UserType> typedef ReturnType;		\
+      RETURN_TYPE<Type1,Type2,FieldType> typedef ReturnType;		\
       typename CombineTerms<ReturnType,					\
 	Term1,								\
 	Term2,								\
-	UserType>::StandardTerm typedef ReturnTerm;			\
+	FieldType>::StandardTerm typedef ReturnTerm;			\
 									\
-      return ReturnTerm(ReturnType(StandardizeTerm<SubExpr,UserType>::standardType(first), \
+      return ReturnTerm(ReturnType(StandardizeTerm<SubExpr,FieldType>::standardType(first), \
 				   Type2(second)));			\
     };									\
 									\
@@ -1027,23 +1305,23 @@ namespace SpatialOps{
       FUNCTION_NAME (typename SubExpr::field_type::value_type const & first, \
 		     SubExpr const & second) {				\
     									\
-      typename SubExpr::field_type typedef UserType;			\
-      typename UserType::value_type typedef AtomicType;			\
+      typename SubExpr::field_type typedef FieldType;			\
+      typename FieldType::value_type typedef AtomicType;			\
 									\
-      Expression<Scalar<AtomicType>,UserType> typedef Term1;		\
-      typename StandardizeTerm<SubExpr,UserType>::StandardTerm typedef Term2; \
+      Expression<Scalar<AtomicType>,FieldType> typedef Term1;		\
+      typename StandardizeTerm<SubExpr,FieldType>::StandardTerm typedef Term2; \
 									\
       Scalar<AtomicType> typedef Type1;					\
-      typename StandardizeTerm<SubExpr,UserType>::StandardType typedef Type2; \
+      typename StandardizeTerm<SubExpr,FieldType>::StandardType typedef Type2; \
 									\
-      RETURN_TYPE<Type1,Type2,UserType> typedef ReturnType;		\
+      RETURN_TYPE<Type1,Type2,FieldType> typedef ReturnType;		\
       typename CombineTerms<ReturnType,					\
 	Term1,								\
 	Term2,								\
-	UserType>::StandardTerm typedef ReturnTerm;			\
+	FieldType>::StandardTerm typedef ReturnTerm;			\
 									\
       return ReturnTerm(ReturnType(Type1(first),			\
-				   StandardizeTerm<SubExpr,UserType>::standardType(second))); \
+				   StandardizeTerm<SubExpr,FieldType>::standardType(second))); \
     };
   
   
@@ -1058,7 +1336,7 @@ namespace SpatialOps{
    * Input
    *
    *
-   * Input \in {UserType, Expression, ArgForm, FcnForm}
+   * Input \in {FieldType, Expression, ArgForm, FcnForm}
    *
    */
 
@@ -1073,19 +1351,19 @@ namespace SpatialOps{
     app (typename SubExpr::field_type::value_type (*fcn)(typename SubExpr::field_type::value_type),
 	 SubExpr const & argument) {
   
-    typename SubExpr::field_type typedef UserType;
+    typename SubExpr::field_type typedef FieldType;
   
-    typename StandardizeTerm<SubExpr,UserType>::StandardTerm typedef Term;
+    typename StandardizeTerm<SubExpr,FieldType>::StandardTerm typedef Term;
   
-    typename StandardizeTerm<SubExpr,UserType>::StandardType typedef Type;
+    typename StandardizeTerm<SubExpr,FieldType>::StandardType typedef Type;
   
-    UnOp<Type,UserType> typedef ReturnType;
+    UnOp<Type,FieldType> typedef ReturnType;
     typename LiftTerm<ReturnType,
       Term,
-      UserType>::StandardTerm typedef ReturnTerm;
+      FieldType>::StandardTerm typedef ReturnTerm;
   
     return ReturnTerm(ReturnType(fcn,
-				 StandardizeTerm<SubExpr,UserType>::standardType(argument)));
+				 StandardizeTerm<SubExpr,FieldType>::standardType(argument)));
   };
 
 #define BUILD_UNARY_INTERFACE(RETURN_TYPE, FUNCTION_NAME)		\
@@ -1099,18 +1377,18 @@ namespace SpatialOps{
       typename SubExpr::field_type>::StandardTerm			\
       FUNCTION_NAME (SubExpr const & argument) {			\
     									\
-      typename SubExpr::field_type typedef UserType;			\
+      typename SubExpr::field_type typedef FieldType;			\
 									\
-      typename StandardizeTerm<SubExpr,UserType>::StandardTerm typedef Term; \
+      typename StandardizeTerm<SubExpr,FieldType>::StandardTerm typedef Term; \
 									\
-      typename StandardizeTerm<SubExpr,UserType>::StandardType typedef Type; \
+      typename StandardizeTerm<SubExpr,FieldType>::StandardType typedef Type; \
 									\
-      RETURN_TYPE<Type,UserType> typedef ReturnType;			\
+      RETURN_TYPE<Type,FieldType> typedef ReturnType;			\
       typename LiftTerm<ReturnType,					\
 	Term,								\
-	UserType>::StandardTerm typedef ReturnTerm;			\
+	FieldType>::StandardTerm typedef ReturnTerm;			\
 									\
-      return ReturnTerm(ReturnType(StandardizeTerm<SubExpr,UserType>::standardType(argument))); \
+      return ReturnTerm(ReturnType(StandardizeTerm<SubExpr,FieldType>::standardType(argument))); \
     };
 
 
@@ -1118,16 +1396,16 @@ namespace SpatialOps{
    * Assignment defintions/interface:
    */
 
-  /* Assign a value_type to a UserType. */
-  template <typename UserType>
-    static inline void assign (UserType & lhs,
-			       typename UserType::value_type const & given) {
-    typename UserType::value_type typedef AtomicType;
+  /* Assign a value_type to a FieldType. */
+  template <typename FieldType>
+    static inline void assign (FieldType & lhs,
+			       typename FieldType::value_type const & given) {
+    typename FieldType::value_type typedef AtomicType;
     Scalar<AtomicType> typedef ExprType;
   
     ExprType state = ExprType(given);
   
-    typename UserType::iterator iter = lhs.begin();
+    typename FieldType::iterator iter = lhs.begin();
   
     Inline<ExprType>::init(state);
   
@@ -1139,15 +1417,15 @@ namespace SpatialOps{
   
   };
 
-  /* Assign a UserType to a UserType. */
-  template <typename UserType>
-    static inline void assign (UserType & lhs,
-			       UserType const & given) {
-    FieldForm<UserType> typedef ExprType;
+  /* Assign a FieldType to a FieldType. */
+  template <typename FieldType>
+    static inline void assign (FieldType & lhs,
+			       FieldType const & given) {
+    FieldForm<FieldType> typedef ExprType;
   
     ExprType state = ExprType(given);
   
-    typename UserType::iterator iter = lhs.begin();
+    typename FieldType::iterator iter = lhs.begin();
   
     Inline<ExprType>::init(state);
   
@@ -1159,12 +1437,12 @@ namespace SpatialOps{
   
   };
 
-  /* Assign an Expression to a UserType. */
-  template <typename ExprType, typename UserType>
-    static inline void assign (UserType & lhs,
+  /* Assign an Expression to a FieldType. */
+  template <typename ExprType, typename FieldType>
+    static inline void assign (FieldType & lhs,
 			       Expression<ExprType,
-			       UserType> state) {
-    typename UserType::iterator iter = lhs.begin();
+			       FieldType> state) {
+    typename FieldType::iterator iter = lhs.begin();
   
     Inline<ExprType>::init(state.expr);
   
