@@ -1472,19 +1472,19 @@ namespace SpatialOps{
     BUILD_BINARY_OPERATOR(DivOp, /)
 
 
-    double add (double first, double second) {
+  inline double add (double first, double second) {
     return first + second;
   };
 
-  double subt (double first, double second) {
+  inline double subt (double first, double second) {
     return first - second;
   };
 
-  double mult (double first, double second) {
+  inline double mult (double first, double second) {
     return first * second;
   };
 
-  double div (double first, double second) {
+  inline double div (double first, double second) {
     return first / second;
   };
 

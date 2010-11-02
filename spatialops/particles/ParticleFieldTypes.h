@@ -34,7 +34,7 @@ namespace Particle{
     size_t length;
   };
 
-  typedef SpatialOps::structured::SpatialField<
+  typedef structured::SpatialField<
     ParticleLinAlg,
     ParticleFieldTraits,
     ParticleGhostTraits  > ParticleField;

@@ -200,9 +200,6 @@ bool test_bc_helper( const IntVec&dim,
                      const double bcVal,
                      const BCSide side )
 {
-  using namespace SpatialOps;
-  using namespace structured;
-
   typedef typename OpT::SrcFieldType  SrcFieldT;
   typedef typename OpT::DestFieldType DestFieldT;
 
@@ -303,9 +300,6 @@ test_bc_loop( const std::string opName,
 void test_bc( const Grid& g,
               const std::vector<bool>& bcFlag )
 {
-  using namespace SpatialOps;
-  using namespace structured;
-
   const IntVec& dim = g.extent();
 
   cout << endl << "Testing BC setting stuff:" << endl;
