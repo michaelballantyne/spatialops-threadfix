@@ -79,7 +79,7 @@ namespace structured{
     os << "[ " << v[0]
        << ","  << v[1]
        << ","  << v[2]
-       << " ]" << endl;
+       << " ]";
     return os;
   }
 
