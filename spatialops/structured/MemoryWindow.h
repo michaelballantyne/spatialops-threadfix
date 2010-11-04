@@ -83,9 +83,10 @@ namespace structured{
     inline bool operator>=(const IntVec& v ) const{
       return (ijk[0]>=v.ijk[0]) & (ijk[1]>=v.ijk[1]) & (ijk[2]>=v.ijk[2]);
     }
-    inline IntVec& operator+( const IntVec& v ){
-      ijk[0]+=v.ijk[0]; ijk[1]+=v.ijk[1]; ijk[2]+=v.ijk[2]; 
-      return *this;
+    inline IntVec operator+( const IntVec& v ){
+      return IntVec( ijk[0] + v.ijk[0],
+                     ijk[1] + v.ijk[1],
+                     ijk[2] + v.ijk[2] );
     }
   };
 
@@ -381,16 +382,18 @@ namespace structured{
       return *this;
     }
 
-    inline self& operator+( const size_t n )
+    inline self operator+( const size_t n )
     {
-      for( size_t i=0; i<n; ++i )  ++(*this);
-      return *this;
+      self iter(*this);
+      iter+=n;
+      return iter;
     }
 
-    inline self& operator-( const size_t n )
+    inline self operator-( const size_t n )
     {
-      for( size_t i=0; i<n; ++i )  --(*this);
-      return *this;
+      self iter(*this);
+      iter -= n;
+      return iter;
     }
 
     inline self& operator+=( const size_t n )
@@ -567,16 +570,18 @@ namespace structured{
       return *this;
     }
 
-    inline self& operator+( const size_t n )
+    inline self operator+( const size_t n )
     {
-      for( size_t i=0; i<n; ++i )  ++(*this);
-      return *this;
+      self iter(*this);
+      iter += n;
+      return iter;
     }
 
-    inline self& operator-( const size_t n )
+    inline self operator-( const size_t n )
     {
-      for( size_t i=0; i<n; ++i )  --(*this);
-      return *this;
+      self iter(*this);
+      iter -= n;
+      return iter;
     }
 
     inline self& operator+=( const size_t n )
