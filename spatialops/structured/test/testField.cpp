@@ -69,6 +69,9 @@ void test_iterator( const IntVec npts,
     }
   }
 
+  status( if1 == f1.end(), "iterator end (1)" );
+  status( if2 == f2.end(), "iterator end (2)" );
+
   f1 = 2.0;
   f2 = 1.0;
   f2 += f1;
@@ -78,6 +81,19 @@ void test_iterator( const IntVec npts,
         std::ostringstream msg;
         msg << "test_iterator 2: [" << i << "," << j << "," << k << "],  found: " << f2(i,j,k) << ", expected: 3.0";
         status( f2(i,j,k) == 3.0, msg.str() );
+      }
+    }
+  }
+
+  //  status.report_status(true);
+  SVolField::iterator iter=f1.end()-1;
+  for( size_t k=khi; k>0; --k ){
+    for( size_t j=jhi; j>0; --j ){
+      for( size_t i=ihi; i>0; --i ){
+        std::ostringstream msg;
+        msg << "test_iterator backward iterator mem check f1: [" << i-1 << "," << j-1 << "," << k-1 << "]";
+        status( &f1(i-1,j-1,k-1) == &*iter, msg.str() );
+        --iter;
       }
     }
   }

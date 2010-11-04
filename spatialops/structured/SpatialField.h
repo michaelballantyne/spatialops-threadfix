@@ -273,8 +273,9 @@ namespace structured{
   {
     IntVec ijk = fieldWindow_.extent();
     for( size_t i=0; i<3; ++i ) ijk[i] -= 1;
-    const size_t n = 1+fieldWindow_.flat_index( ijk );
-    return const_iterator(fieldValues_, n, fieldWindow_);
+    const size_t n = fieldWindow_.flat_index( ijk );
+    const_iterator i(fieldValues_, n, fieldWindow_);
+    return ++i;
   }
 
   //------------------------------------------------------------------
@@ -285,8 +286,9 @@ namespace structured{
   {
     IntVec ijk = fieldWindow_.extent();
     for( size_t i=0; i<3; ++i ) ijk[i] -= 1;
-    const size_t n = 1+fieldWindow_.flat_index( ijk );
-    return iterator(fieldValues_, n, fieldWindow_);
+    const size_t n = fieldWindow_.flat_index( ijk );
+    iterator i(fieldValues_, n, fieldWindow_);
+    return ++i;
   }
 
   //------------------------------------------------------------------
@@ -297,8 +299,8 @@ namespace structured{
   {
     IntVec ijk = interiorFieldWindow_.extent();
     for( size_t i=0; i<3; ++i ) ijk[i] -= 1;
-    const size_t n = 1+interiorFieldWindow_.flat_index( ijk );
-    return const_interior_iterator( fieldValues_, n, interiorFieldWindow_ );
+    const_interior_iterator i( fieldValues_, interiorFieldWindow_.flat_index( ijk ), interiorFieldWindow_ );
+    return ++i;
   }
 
   //------------------------------------------------------------------
@@ -309,8 +311,8 @@ namespace structured{
   {
     IntVec ijk = interiorFieldWindow_.extent();
     for( size_t i=0; i<3; ++i ) ijk[i] -= 1;
-    const size_t n = 1+interiorFieldWindow_.flat_index( ijk );
-    return interior_iterator( fieldValues_, n, interiorFieldWindow_ );
+    interior_iterator i( fieldValues_, interiorFieldWindow_.flat_index( ijk ), interiorFieldWindow_ );
+    return ++i;
   }
 
   //------------------------------------------------------------------
@@ -320,9 +322,11 @@ namespace structured{
   SpatialField<VecOps,Location,GhostTraits,T>::
   operator()( const size_t i, const size_t j, const size_t k )
   {
+#   ifndef NDEBUG
     assert( i < fieldWindow_.extent(0) );
     assert( j < fieldWindow_.extent(1) );
     assert( k < fieldWindow_.extent(2) );
+#   endif
     return fieldValues_[ fieldWindow_.flat_index(IntVec(i,j,k)) ];
   }
 
@@ -333,9 +337,11 @@ namespace structured{
   SpatialField<VecOps,Location,GhostTraits,T>::
   operator()( const size_t i, const size_t j, const size_t k ) const
   {
+#   ifndef NDEBUG
     assert( i < fieldWindow_.extent(0) );
     assert( j < fieldWindow_.extent(1) );
     assert( k < fieldWindow_.extent(2) );
+#   endif
     return fieldValues_[ fieldWindow_.flat_index(IntVec(i,j,k)) ];
   }
 
@@ -346,7 +352,7 @@ namespace structured{
   SpatialField<VecOps,Location,GhostTraits,T>::
   operator[]( const size_t i )
   {
-    return fieldValues_[ fieldWindow_.flat_index( fieldWindow_.ijk_index(i) ) ];
+    return fieldValues_[ fieldWindow_.flat_index( fieldWindow_.ijk_index_from_local(i) ) ];
   }
 
   //------------------------------------------------------------------
@@ -356,7 +362,7 @@ namespace structured{
   SpatialField<VecOps,Location,GhostTraits,T>::
   operator[]( const size_t i ) const
   {
-    return fieldValues_[ fieldWindow_.flat_index( fieldWindow_.ijk_index(i) ) ];
+    return fieldValues_[ fieldWindow_.flat_index( fieldWindow_.ijk_index_from_local(i) ) ];
   }
 
   //------------------------------------------------------------------

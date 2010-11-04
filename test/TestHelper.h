@@ -39,9 +39,11 @@ public:
     }
   }
 
-  bool ok() const{ return isokay; }
+  inline bool ok() const{ return isokay; }
 
-  bool isfailed() const{ return !isokay; }
+  inline bool isfailed() const{ return !isokay; }
+
+  inline void report_status( const bool r ){ report=r; }
 
 };
 
