@@ -1,7 +1,6 @@
 #ifndef SpatialOps_MemoryWindow_h
 #define SpatialOps_MemoryWindow_h
 
-#include <cassert>
 #include <vector>
 #include <iterator>
 
@@ -9,6 +8,12 @@
 
 #ifdef SOPS_BOOST_SERIALIZATION
 # include <boost/serialization/serialization.hpp>
+#endif
+
+#ifndef NDEBUG
+# include <cassert>
+# include <sstream>
+# include <stdexcept>
 #endif
 
 namespace SpatialOps{
@@ -69,6 +74,19 @@ namespace structured{
     {
       return (ijk[0]!=v.ijk[0]) | (ijk[1]!=v.ijk[1]) | (ijk[2]!=v.ijk[2]);
     }
+    inline bool operator<(const IntVec& v ) const{
+      return (ijk[0]<v.ijk[0]) & (ijk[1]<v.ijk[1]) & (ijk[2]<v.ijk[2]);
+    }
+    inline bool operator>(const IntVec& v ) const{
+      return (ijk[0]>v.ijk[0]) & (ijk[1]>v.ijk[1]) & (ijk[2]>v.ijk[2]);
+    }
+    inline bool operator>=(const IntVec& v ) const{
+      return (ijk[0]>=v.ijk[0]) & (ijk[1]>=v.ijk[1]) & (ijk[2]>=v.ijk[2]);
+    }
+    inline IntVec& operator+( const IntVec& v ){
+      ijk[0]+=v.ijk[0]; ijk[1]+=v.ijk[1]; ijk[2]+=v.ijk[2]; 
+      return *this;
+    }
   };
 
   /**
@@ -127,15 +145,26 @@ namespace structured{
                   const int offset[3],
                   const int extent[3] );
 		
+    /**
+     *  \brief construct a MemoryWindow object
+     *  \param npts the total (global) number of points in each direction
+     *  \param offset the offset into the memory
+     *  \param extent the size of the block that we are considering
+     */
     MemoryWindow( const IntVec& npts,
                   const IntVec& offset,
                   const IntVec& extent );
 
-    /**
-     *  \brief construct a MemoryWindow object
+    /** 
+     *  \brief construct a MemoryWindow object where there is no "window"
      *  \param npts the total (global) number of points in each direction
      */
     MemoryWindow( const int npts[3] );
+
+    /**
+     *  \brief construct a MemoryWindow object where there is no "window"
+     *  \param npts the total (global) number of points in each direction
+     */
     MemoryWindow( const IntVec& npts );
 
     MemoryWindow( const MemoryWindow& other );
@@ -393,9 +422,11 @@ namespace structured{
     inline reference operator*()
     {
 #     ifndef NDEBUG
-      if( window_.extent(2) > 1 )  assert( k_ < (window_.extent(2)+window_.offset(2)) );
-      if( window_.extent(1) > 1 )  assert( j_ < (window_.extent(1)+window_.offset(1)) );
-      if( window_.extent(0) > 1 )  assert( i_ < (window_.extent(0)+window_.offset(0)) );
+      if( IntVec(i_,j_,k_) >= window_.extent()+window_.offset() ){
+        std::ostringstream msg;
+        msg << __FILE__ << " : " << __LINE__ << "iterator is in an invalid state for dereference";
+        throw std::runtime_error( msg.str() );
+      }
 #     endif
       return *current_;
     }
@@ -403,9 +434,11 @@ namespace structured{
     inline const reference operator*() const
     {
 #     ifndef NDEBUG
-      if( window_.extent(2) > 1 )  assert( k_ < (window_.extent(2)+window_.offset(2)) );
-      if( window_.extent(1) > 1 )  assert( j_ < (window_.extent(1)+window_.offset(1)) );
-      if( window_.extent(0) > 1 )  assert( i_ < (window_.extent(0)+window_.offset(0)) );
+      if( IntVec(i_,j_,k_) >= window_.extent()+window_.offset() ){
+        std::ostringstream msg;
+        msg << __FILE__ << " : " << __LINE__ << "iterator is in an invalid state for dereference";
+        throw std::runtime_error( msg.str() );
+      }
 #     endif
       return *current_;
     }
@@ -576,9 +609,11 @@ namespace structured{
     inline const reference operator*() const
     {
 #     ifndef NDEBUG
-      if( window_.extent(2) > 1 )  assert( k_ < (window_.extent(2)+window_.offset(2)) );
-      if( window_.extent(1) > 1 )  assert( j_ < (window_.extent(1)+window_.offset(1)) );
-      if( window_.extent(0) > 1 )  assert( i_ < (window_.extent(0)+window_.offset(0)) );
+      if( IntVec(i_,j_,k_) >= window_.extent()+window_.offset() ){
+        std::ostringstream msg;
+        msg << __FILE__ << " : " << __LINE__ << "iterator is in an invalid state for dereference";
+        throw std::runtime_error( msg.str() );
+      }
 #     endif
       return *current_;
     }
