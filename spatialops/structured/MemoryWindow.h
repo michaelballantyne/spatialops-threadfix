@@ -83,7 +83,7 @@ namespace structured{
     inline bool operator>=(const IntVec& v ) const{
       return (ijk[0]>=v.ijk[0]) & (ijk[1]>=v.ijk[1]) & (ijk[2]>=v.ijk[2]);
     }
-    inline IntVec operator+( const IntVec& v ){
+    inline IntVec operator+( const IntVec& v ) const{
       return IntVec( ijk[0] + v.ijk[0],
                      ijk[1] + v.ijk[1],
                      ijk[2] + v.ijk[2] );
@@ -254,15 +254,14 @@ namespace structured{
 
   };
 
-  template<int Dir> size_t stride( const MemoryWindow& mw );
+  template<int Dir> size_t stride( const MemoryWindow& );
 
   template<> inline size_t stride<0>( const MemoryWindow& mw ){ return 1; }
   template<> inline size_t stride<1>( const MemoryWindow& mw ){ return stride<0>(mw) + mw.glob_dim(0)-mw.extent(0); }
   template<> inline size_t stride<2>( const MemoryWindow& mw )
   {
-    return stride<0>(mw)
-      + ( mw.glob_dim(0)-mw.extent(0) ) * mw.glob_dim(1)
-      + ( mw.glob_dim(1)-mw.extent(1) );
+    return stride<1>(mw)
+      + ( mw.glob_dim(0) ) * ( mw.glob_dim(1)-mw.extent(1) );
   }
 
 
@@ -382,14 +381,14 @@ namespace structured{
       return *this;
     }
 
-    inline self operator+( const size_t n )
+    inline self operator+( const size_t n ) const
     {
       self iter(*this);
       iter+=n;
       return iter;
     }
 
-    inline self operator-( const size_t n )
+    inline self operator-( const size_t n ) const
     {
       self iter(*this);
       iter -= n;
@@ -570,14 +569,14 @@ namespace structured{
       return *this;
     }
 
-    inline self operator+( const size_t n )
+    inline self operator+( const size_t n ) const
     {
       self iter(*this);
       iter += n;
       return iter;
     }
 
-    inline self operator-( const size_t n )
+    inline self operator-( const size_t n ) const
     {
       self iter(*this);
       iter -= n;
