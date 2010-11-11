@@ -9,7 +9,7 @@ target_link_libraries( test_memwindow ${SpatialOps_LIBRARY} )
 add_test( test_memwindow test_memwindow )
 
 add_executable( test_memw_ops testOperator.cpp )
-target_link_libraries( test_memw_ops ${SpatialOps_LIBRARY} testlib )
+target_link_libraries( test_memw_ops testlib ${SpatialOps_LIBRARY} )
 
 if( ENABLE_BOOST_SERIALIZATION )
   add_executable( test_serialize testSerialization.cpp )
