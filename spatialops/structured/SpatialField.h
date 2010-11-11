@@ -1,6 +1,8 @@
 #ifndef SpatialOps_SpatialField_h
 #define SpatialOps_SpatialField_h
 
+#include <cassert>
+
 #include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/structured/MemoryWindow.h>
 
@@ -160,8 +162,8 @@ namespace structured{
      * the LinAlg strategy.
      */
     //@{
-    inline       VecType & get_linalg_vec()      { return vec_; }
-    inline const VecType & get_linalg_vec() const{ return vec_; }
+    inline       VecType & get_linalg_vec()      { assert( fieldWindow_.glob_dim() == fieldWindow_.extent() ); return vec_; }
+    inline const VecType & get_linalg_vec() const{ assert( fieldWindow_.glob_dim() == fieldWindow_.extent() ); return vec_; }
     //@}
 
     const MemoryWindow& window_without_ghost() const{ return interiorFieldWindow_; }
