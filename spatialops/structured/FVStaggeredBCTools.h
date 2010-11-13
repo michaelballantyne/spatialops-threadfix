@@ -399,7 +399,7 @@ namespace structured{
 #   ifndef NDEBUG
     if( ghostCoef_ == 0.0 ){
       std::cout << "Error in BoundaryConditionOp." << std::endl
-                << "(i,j,k)=("<<point[0]<<","<< point[1] <<","<< point[3] <<")" << std::endl
+                << "(i,j,k)=("<<point[0]<<","<< point[1] <<","<< point[2] <<")" << std::endl
                 << "index_ = " << index_ << std::endl
                 << "row = " << irow << std::endl
                 << "op coefs: ";
@@ -467,7 +467,7 @@ namespace structured{
   {
     if( dim[0]>1 )  index[0] += FieldT::Ghost::NGHOST;
     if( dim[1]>1 )  index[1] += FieldT::Ghost::NGHOST;
-    if( dim[2]>1 )  index[3] += FieldT::Ghost::NGHOST;
+    if( dim[2]>1 )  index[2] += FieldT::Ghost::NGHOST;
     return ijk2flat<FieldT>::value( dim, index, bcFlagX, bcFlagY, bcFlagZ );
   }
 
@@ -480,10 +480,10 @@ namespace structured{
       switch(side){
       case X_MINUS_SIDE: if(dim[0]>1) --ijk[0]; break;
       case Y_MINUS_SIDE: if(dim[1]>1) --ijk[1]; break;
-      case Z_MINUS_SIDE: if(dim[2]>1) --ijk[3]; break;
+      case Z_MINUS_SIDE: if(dim[2]>1) --ijk[2]; break;
       case X_PLUS_SIDE : if(dim[0]>1) ++ijk[0]; break;
       case Y_PLUS_SIDE : if(dim[1]>1) ++ijk[1]; break;
-      case Z_PLUS_SIDE : if(dim[2]>1) ++ijk[3]; break;
+      case Z_PLUS_SIDE : if(dim[2]>1) ++ijk[2]; break;
       case NO_SHIFT: assert(1); break;
       }
     }
@@ -491,7 +491,7 @@ namespace structured{
       switch(side){
       case X_PLUS_SIDE : if(dim[0]>1) ++ijk[0]; break;
       case Y_PLUS_SIDE : if(dim[1]>1) ++ijk[1]; break;
-      case Z_PLUS_SIDE : if(dim[2]>1) ++ijk[3]; break;
+      case Z_PLUS_SIDE : if(dim[2]>1) ++ijk[2]; break;
       case X_MINUS_SIDE: break;
       case Y_MINUS_SIDE: break;
       case Z_MINUS_SIDE: break;
@@ -500,165 +500,6 @@ namespace structured{
     }
     return ijk;
   }
-
-  template<> IntVec
-  shift_to_ghost_ix<GradXVolXSurfX,XVolField>( const IntVec& dim, const BCSide side, IntVec ijk )
-  {
-    switch(side){
-    case X_MINUS_SIDE: if(dim[0]>1) --ijk[0]; break;
-    case X_PLUS_SIDE : if(dim[0]>1) ijk[0]+=2; break;
-    // error cases:
-    case Y_MINUS_SIDE:  case Y_PLUS_SIDE:
-    case Z_MINUS_SIDE:  case Z_PLUS_SIDE:
-    case NO_SHIFT: assert(1); break;
-    }
-    return ijk;
-  }
-  template<> IntVec
-  shift_to_ghost_ix<GradXVolXSurfX,XSurfXField>( const IntVec& dim, const BCSide side, IntVec ijk )
-  {
-    switch(side){
-    case X_MINUS_SIDE: if(dim[0]>1) --ijk[0]; break;
-    case X_PLUS_SIDE : if(dim[0]>1) ++ijk[0]; break;
-    // error cases:
-    case Y_MINUS_SIDE:  case Y_PLUS_SIDE: 
-    case Z_MINUS_SIDE:  case Z_PLUS_SIDE: 
-    case NO_SHIFT: assert(1); break;
-    }
-    return ijk;
-  }
-  template<> IntVec
-  shift_to_ghost_ix<InterpXVolXSurfX,XVolField>( const IntVec& dim, const BCSide side, IntVec ijk )
-  {
-    switch(side){
-    case X_MINUS_SIDE: if(dim[0]>1) --ijk[0]; break;
-    case X_PLUS_SIDE : if(dim[0]>1) ijk[0]+=2; break;
-    // error cases:
-    case Y_MINUS_SIDE:  case Y_PLUS_SIDE:
-    case Z_MINUS_SIDE:  case Z_PLUS_SIDE:
-    case NO_SHIFT: assert(1); break;
-    }
-    return ijk;
-  }
-  template<> IntVec
-  shift_to_ghost_ix<InterpXVolXSurfX,XSurfXField>( const IntVec& dim, const BCSide side, IntVec ijk )
-  {
-    switch(side){
-    case X_MINUS_SIDE: if(dim[0]>1) --ijk[0]; break;
-    case X_PLUS_SIDE : if(dim[0]>1) ++ijk[0]; break;
-    // error cases:
-    case Y_MINUS_SIDE:  case Y_PLUS_SIDE: 
-    case Z_MINUS_SIDE:  case Z_PLUS_SIDE: 
-    case NO_SHIFT: assert(1); break;
-    }
-    return ijk;
-  }
-  template<> IntVec
-  shift_to_ghost_ix<GradYVolYSurfY,YVolField>( const IntVec& dim, const BCSide side, IntVec ijk )
-  {
-    switch(side){
-    case Y_MINUS_SIDE: if(dim[1]>1) --ijk[1]; break;
-    case Y_PLUS_SIDE : if(dim[1]>1) ijk[1]+=2; break;
-    // error cases:
-    case X_MINUS_SIDE:  case X_PLUS_SIDE:
-    case Z_MINUS_SIDE:  case Z_PLUS_SIDE:
-    case NO_SHIFT: assert(1); break;
-    }
-    return ijk;
-  }
-  template<> IntVec
-  shift_to_ghost_ix<GradYVolYSurfY,YSurfYField>( const IntVec& dim, const BCSide side, IntVec ijk )
-  {
-    switch(side){
-    case Y_MINUS_SIDE: if(dim[1]>1) --ijk[1]; break;
-    case Y_PLUS_SIDE : if(dim[1]>1) ++ijk[1]; break;
-    // error cases:
-    case X_MINUS_SIDE:  case X_PLUS_SIDE: 
-    case Z_MINUS_SIDE:  case Z_PLUS_SIDE: 
-    case NO_SHIFT: assert(1); break;
-    }
-    return ijk;
-  }
-  template<> IntVec
-  shift_to_ghost_ix<InterpYVolYSurfY,YVolField>( const IntVec& dim, const BCSide side, IntVec ijk )
-  {
-    switch(side){
-    case Y_MINUS_SIDE: if(dim[1]>1) --ijk[1]; break;
-    case Y_PLUS_SIDE : if(dim[1]>1) ijk[1]+=2; break;
-    // error cases:
-    case X_MINUS_SIDE:  case X_PLUS_SIDE:
-    case Z_MINUS_SIDE:  case Z_PLUS_SIDE:
-    case NO_SHIFT: assert(1); break;
-    }
-    return ijk;
-  }
-  template<> IntVec
-  shift_to_ghost_ix<InterpYVolYSurfY,YSurfYField>( const IntVec& dim, const BCSide side, IntVec ijk )
-  {
-    switch(side){
-    case Y_MINUS_SIDE: if(dim[1]>1) --ijk[1]; break;
-    case Y_PLUS_SIDE : if(dim[1]>1) ++ijk[1]; break;
-    // error cases:
-    case X_MINUS_SIDE:  case X_PLUS_SIDE: 
-    case Z_MINUS_SIDE:  case Z_PLUS_SIDE: 
-    case NO_SHIFT: assert(1); break;
-    }
-    return ijk;
-  }
-
-  template<> IntVec
-  shift_to_ghost_ix<GradZVolZSurfZ,ZVolField>( const IntVec& dim, const BCSide side, IntVec ijk )
-  {
-    switch(side){
-    case Z_MINUS_SIDE: if(dim[2]>1) --ijk[3]; break;
-    case Z_PLUS_SIDE : if(dim[2]>1) ijk[3]+=2; break;
-    // error cases:
-    case X_MINUS_SIDE:  case X_PLUS_SIDE:
-    case Y_MINUS_SIDE:  case Y_PLUS_SIDE:
-    case NO_SHIFT: assert(1); break;
-    }
-    return ijk;
-  }
-  template<> IntVec
-  shift_to_ghost_ix<GradZVolZSurfZ,ZSurfZField>( const IntVec& dim, const BCSide side, IntVec ijk )
-  {
-    switch(side){
-    case Z_MINUS_SIDE: if(dim[2]>1) --ijk[3]; break;
-    case Z_PLUS_SIDE : if(dim[2]>1) ++ijk[3]; break;
-    // error cases:
-    case X_MINUS_SIDE:  case X_PLUS_SIDE: 
-    case Y_MINUS_SIDE:  case Y_PLUS_SIDE: 
-    case NO_SHIFT: assert(1); break;
-    }
-    return ijk;
-  }
-  template<> IntVec
-  shift_to_ghost_ix<InterpZVolZSurfZ,ZVolField>( const IntVec& dim, const BCSide side, IntVec ijk )
-  {
-    switch(side){
-    case Z_MINUS_SIDE: if(dim[2]>1) --ijk[3]; break;
-    case Z_PLUS_SIDE : if(dim[2]>1) ijk[3]+=2; break;
-    // error cases:
-    case X_MINUS_SIDE:  case X_PLUS_SIDE:
-    case Y_MINUS_SIDE:  case Y_PLUS_SIDE:
-    case NO_SHIFT: assert(1); break;
-    }
-    return ijk;
-  }
-  template<> IntVec
-  shift_to_ghost_ix<InterpZVolZSurfZ,ZSurfZField>( const IntVec& dim, const BCSide side, IntVec ijk )
-  {
-    switch(side){
-    case Z_MINUS_SIDE: if(dim[2]>1) --ijk[3]; break;
-    case Z_PLUS_SIDE : if(dim[2]>1) ++ijk[3]; break;
-    // error cases:
-    case X_MINUS_SIDE:  case X_PLUS_SIDE: 
-    case Y_MINUS_SIDE:  case Y_PLUS_SIDE: 
-    case NO_SHIFT: assert(1); break;
-    }
-    return ijk;
-  }
-
 
   //------------------------------------------------------------------
 

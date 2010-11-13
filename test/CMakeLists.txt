@@ -11,6 +11,10 @@ add_executable( lagrange ${lagrange_SRC} )
 target_link_libraries( lagrange ${libs} )
 add_test( lagrange_coefficients lagrange )
 
+add_executable( bcOpTest testOpBC.cpp )
+target_link_libraries( bcOpTest testlib ${libs} )
+add_test( test_bc_op bcOpTest )
+
 set( test_SRC testNew.cpp )
 add_executable( longtest ${test_SRC} )
 target_link_libraries( longtest testlib ${libs} )
