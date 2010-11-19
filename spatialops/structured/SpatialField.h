@@ -1,6 +1,7 @@
 #ifndef SpatialOps_SpatialField_h
 #define SpatialOps_SpatialField_h
 
+#include <iostream>
 #include <cassert>
 
 #include <spatialops/SpatialOpsConfigure.h>
@@ -239,6 +240,7 @@ namespace structured{
       builtField_( true ),
       vec_( linAlg_.setup_vector( fieldWindow_.npts(), fieldValues_ ) )
   {
+    (*this) = other;
   }
 
   //------------------------------------------------------------------
