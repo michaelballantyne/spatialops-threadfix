@@ -87,6 +87,9 @@ else()
   set(Boost_USE_STATIC_LIBS ON)
   find_package( Boost REQUIRED COMPONENTS ${boost_comps} )
 endif()
+if( NOT Boost_FOUND )
+  message( FATAL_ERROR "Boost was not found.  Try setting BOOST_ROOT to the path where boost is installed and try again" )
+endif()
 set( TPL_INCLUDE_DIRS ${TPL_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIR}
   )
