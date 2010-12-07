@@ -25,7 +25,7 @@ namespace structured{
     typedef typename VecOps::VecType VecType;
 
     typedef SpatialField<VecOps,FieldLocation,GhostTraits,T> MyType;
-
+    
     const MemoryWindow fieldWindow_;
     MemoryWindow interiorFieldWindow_;
 
@@ -82,6 +82,9 @@ namespace structured{
     typedef GhostTraits   Ghost;
     typedef FieldLocation Location;
     typedef T             AtomicT;
+
+    typedef SpatialField<VecOps,FieldLocation,GhostTraits,T> field_type;
+    typedef T value_type;
 
     typedef FieldIterator<T>       iterator;
     typedef FieldIterator<T>       interior_iterator;
@@ -517,7 +520,7 @@ namespace structured{
 
 } // namespace structured
 
-#include <spatialops/FieldOperations.h>
+//#include <spatialops/FieldOperations.h>
 
 } // namespace SpatialOps
 
