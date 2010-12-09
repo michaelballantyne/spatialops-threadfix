@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 project( SpatialOps CXX C )
 
-set( MAJOR_VERSION "0" )
+set( MAJOR_VERSION "1" )
 set( MINOR_VERSION "1" )
 set( PATCH_VERSION "0" )
 
@@ -13,6 +13,8 @@ set( PATCH_VERSION "0" )
 option( LINALG_TRILINOS "use Trilinos for linear algebra - also requires definition of {Trilinos_path}"  OFF )
 option( LINALG_UBLAS    "use UBLAS for linear algebra - cannot solve linear systems"  ON )
 option( BOOST_CMAKE "Boost was built with CMake" OFF )
+option( ENABLE_BOOST_SERIALIZATION "allow serialization of information via the boost library" OFF )
+option( ENABLE_TESTS "Enable building of regression tests (recommended)" ON )
 
 # Set the path for the Daixtrose installation on your machine
 # daixtrose is used for expression templates - we support only a few
@@ -66,8 +68,12 @@ endif()
 
 # setup the boost library
 set(Boost_USE_MULTITHREAD ON)
-#set( boost_comps ${boost_comps} "program_options" )
-set( boost_comps ${boost_comps} "serialization" )
+if( ENABLE_BOOST_SERIALIZATION )
+  set( SOPS_BOOST_SERIALIZATION ON )
+  set( boost_comps ${boost_comps} "serialization" )
+else()
+  set( SOPS_BOOST_SERIALIZATION OFF )
+endif()
 if( BOOST_CMAKE )
   set(Boost_USE_STATIC ON)
   find_package( Boost REQUIRED COMPONENTS ${boost_comps} NO_MODULE )
@@ -80,6 +86,9 @@ else()
   set(Boost_ADDITIONAL_VERSIONS "1.44.0" "1.43.0" "1.42.0" "1.41.0" )
   set(Boost_USE_STATIC_LIBS ON)
   find_package( Boost REQUIRED COMPONENTS ${boost_comps} )
+endif()
+if( NOT Boost_FOUND )
+  message( FATAL_ERROR "Boost was not found.  Try setting BOOST_ROOT to the path where boost is installed and try again" )
 endif()
 set( TPL_INCLUDE_DIRS ${TPL_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIR}
@@ -178,9 +187,11 @@ target_link_libraries( ${SpatialOps_LIBRARY} ${TPL_LIBRARIES} )
 
 # this will compile all of the test cases.  Use "make test" to execute
 # them and see a summary.
-enable_testing()
-add_subdirectory( test )
-add_subdirectory( spatialops/structured/test )
+if( ENABLE_TESTS )
+  enable_testing()
+  add_subdirectory( test )
+  add_subdirectory( spatialops/structured/test )
+endif()
 
 
 

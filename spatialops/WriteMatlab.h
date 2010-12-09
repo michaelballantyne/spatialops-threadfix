@@ -1,6 +1,9 @@
 #ifndef SpatialOps_WriteMatlab_h
 #define SpatialOps_WriteMatlab_h
 
+#include <fstream>
+#include <iomanip>
+
 namespace SpatialOps{
 
   /**

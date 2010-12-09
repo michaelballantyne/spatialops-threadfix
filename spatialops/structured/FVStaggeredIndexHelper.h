@@ -51,13 +51,20 @@ namespace structured{
     void get_cols( const int irow, std::vector<int>& cols ) const;
     int get_ncol() const;
     int get_nrow() const;
+    /**
+     *  \brief Calculates the stride in a given direction based on the source
+     *  and destination fields of the IndexHelper instance. One can determine
+     *  the face direction from the destination field type and based on that
+     *  the function calculates how many cells to stride.
+     */    
+    int calculate_stride() const;
+
 
   private:
     const IntVec& dim_;
     const bool hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_;
 
 
-    int calculate_stride() const;
 
     template<typename T1, typename T2, int IsSurf> struct DirSelector{};
     template<typename T1, typename T2> struct DirSelector<T1,T2,1>{ typedef T1 Type; };

@@ -1,7 +1,6 @@
 #include <spatialops/structured/FVStaggeredTypes.h>
 #include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/SpatialFieldStore.h>
-#include <spatialops/structured/FieldWriter.h>
 #include <test/TestHelper.h>
 
 #include <sstream>
@@ -13,51 +12,21 @@ using std::cout;
 using std::endl;
 
 
-bool test_field_writer()
+template<typename FieldT>
+bool test_iterator( const IntVec npts,
+                    const bool verboseOutput )
 {
-  IntVec npts(10,11,12);
-  const MemoryWindow w( get_window_with_ghost<SVolField>(npts,true,true,true) );
-  SVolField fx(w,NULL);
-  SVolField fy(w,NULL);
-  SVolField fz(w,NULL);
-  for( size_t k=0; k<npts[2]; ++k ){
-    for( size_t j=0; j<npts[1]; ++j ){
-      for( size_t i=0; i<npts[0]; ++i ){
-        fx(i,j,k) = i;
-        fy(i,j,k) = j;
-        fz(i,j,k) = k;
-      }
-    }
-  }
-  {
-    std::fstream os("fields.bin",std::ios_base::binary|std::ios_base::out|std::ios_base::trunc);
-    write(os,"fx",fx,false);
-    write(os,"fy",fy,false);
-    write(os,"fz",fz,false);
-  }
-//   {
-//     std::fstream os("fields.txt",std::ios_base::out|std::ios_base::trunc);
-//     os << "fx" << endl << fx << endl
-//        << "fy" << endl << fy << endl
-//        << "fz" << endl << fz << endl;
-//   }
-  return true;
-}
+  TestHelper status(verboseOutput);
 
-void test_iterator( const IntVec npts,
-                    TestHelper& overall )
-{
-  TestHelper status(false);
-
-  const MemoryWindow window( get_window_with_ghost<SVolField>(npts,true,true,true) );
-  SVolField f1( window, NULL );
-  SVolField f2( window, NULL );
+  const MemoryWindow window( get_window_with_ghost<FieldT>(npts,true,true,true) );
+  FieldT f1( window, NULL );
+  FieldT f2( window, NULL );
   f1 = 2.0;
   f2 = 1.0;
 
-  SVolField::iterator if2=f2.begin();
-  const SVolField::iterator if2e=f2.end();
-  SVolField::const_iterator if1=f1.begin();
+  typename FieldT::iterator if2=f2.begin();
+  const typename FieldT::iterator if2e=f2.end();
+  typename FieldT::const_iterator if1=f1.begin();
   for( ; if2!=if2e; ++if1, ++if2 ){
     *if2 += *if1;
   }
@@ -69,16 +38,13 @@ void test_iterator( const IntVec npts,
   if2 += 3;
   status( &f2[5] == &(*if2), "iterator += address" );
 
-  const size_t ng = SVolField::Ghost::NGHOST;
-  const size_t ihi = npts[0]>1 ? npts[0] + 2*ng : 1;
-  const size_t jhi = npts[1]>1 ? npts[1] + 2*ng : 1;
-  const size_t khi = npts[2]>1 ? npts[2] + 2*ng : 1;
+  const IntVec& hi = window.glob_dim();
 
   if1=f1.begin();
   if2=f2.begin();
-  for( size_t k=0; k<khi; ++k ){
-    for( size_t j=0; j<jhi; ++j ){
-      for( size_t i=0; i<ihi; ++i ){
+  for( size_t k=0; k<hi[2]; ++k ){
+    for( size_t j=0; j<hi[1]; ++j ){
+      for( size_t i=0; i<hi[0]; ++i ){
         {
           std::ostringstream msg;
           msg << "test_iterator 1.1: [" << i << "," << j << "," << k << "],  found: " << f2(i,j,k) << ", expected: 3.0";
@@ -101,12 +67,15 @@ void test_iterator( const IntVec npts,
     }
   }
 
+  status( if1 == f1.end(), "iterator end (1)" );
+  status( if2 == f2.end(), "iterator end (2)" );
+
   f1 = 2.0;
   f2 = 1.0;
   f2 += f1;
-  for( size_t k=0; k<khi; ++k ){
-    for( size_t j=0; j<jhi; ++j ){
-      for( size_t i=0; i<ihi; ++i ){
+  for( size_t k=0; k<hi[2]; ++k ){
+    for( size_t j=0; j<hi[1]; ++j ){
+      for( size_t i=0; i<hi[0]; ++i ){
         std::ostringstream msg;
         msg << "test_iterator 2: [" << i << "," << j << "," << k << "],  found: " << f2(i,j,k) << ", expected: 3.0";
         status( f2(i,j,k) == 3.0, msg.str() );
@@ -114,48 +83,58 @@ void test_iterator( const IntVec npts,
     }
   }
 
-  std::ostringstream msg;
-  msg << "full iterator test " << npts[0] << "x" << npts[1] << "x" << npts[2];
-  overall( status.ok(), msg.str() );
+  typename FieldT::iterator iter=f1.end()-1;
+  for( size_t k=hi[2]; k>0; --k ){
+    for( size_t j=hi[1]; j>0; --j ){
+      for( size_t i=hi[0]; i>0; --i ){
+        std::ostringstream msg;
+        msg << "test_iterator backward iterator mem check f1: [" << i-1 << "," << j-1 << "," << k-1 << "]";
+        status( &f1(i-1,j-1,k-1) == &*iter, msg.str() );
+        --iter;
+      }
+    }
+  }
+
+  for( typename FieldT::iterator i=f1.begin(); i!=f1.end(); ++i ){
+    *i = 0.0;
+  }
+  return status.ok();
 }
 
 //--------------------------------------------------------------------
 
-void test_interior( const IntVec npts,
-                    TestHelper& overall )
+template< typename FieldT >
+bool test_interior( const IntVec npts,
+                    const bool verbose )
 {
-  const MemoryWindow window( get_window_with_ghost<SVolField>(npts,true,true,true) );
-  SVolField f1( window, NULL );
-  SVolField f2( window, NULL );
+  const MemoryWindow window( get_window_with_ghost<FieldT>(npts,true,true,true) );
+  FieldT f1( window, NULL );
+  FieldT f2( window, NULL );
   f1 = 2.0;
 
-  const int ng = SVolField::Ghost::NGHOST;
-  const size_t ilo = npts[0]>1 ? ng : 0;
-  const size_t jlo = npts[1]>1 ? ng : 0;
-  const size_t klo = npts[2]>1 ? ng : 0;
-  const size_t ihi = npts[0]>1 ? npts[0]+ng : 1;
-  const size_t jhi = npts[1]>1 ? npts[1]+ng : 1;
-  const size_t khi = npts[2]>1 ? npts[2]+ng : 1;
+  const MemoryWindow& interiorWindow = f1.window_without_ghost();
+  const IntVec& lo = interiorWindow.offset();
+  const IntVec& hi = lo + interiorWindow.extent();
 
   f2 = 0.0;
   // set interior values
-  for( size_t k=klo; k<khi; ++k ){
-    for( size_t j=jlo; j<jhi; ++j ){
-      for( size_t i=ilo; i<ihi; ++i ){
+  for( size_t k=lo[2]; k<hi[2]; ++k ){
+    for( size_t j=lo[1]; j<hi[1]; ++j ){
+      for( size_t i=lo[0]; i<hi[0]; ++i ){
         f2(i,j,k) = 1+i+j+k;
       }
     }
   }
 
-  TestHelper status(false);
+  TestHelper status(verbose);
 
-  SVolField::interior_iterator if2=f2.interior_begin();
-  const SVolField::interior_iterator if2e=f2.interior_end();
-  SVolField::const_interior_iterator if1=f1.interior_begin();
-  const SVolField::interior_iterator if1e=f1.interior_end();
-  for( size_t k=klo; k<khi; ++k ){
-    for( size_t j=jlo; j<jhi; ++j ){
-      for( size_t i=ilo; i<ihi; ++i ){
+  typename FieldT::interior_iterator if2=f2.interior_begin();
+  const typename FieldT::interior_iterator if2e=f2.interior_end();
+  typename FieldT::const_interior_iterator if1=f1.interior_begin();
+  const typename FieldT::interior_iterator if1e=f1.interior_end();
+  for( size_t k=lo[2]; k<hi[2]; ++k ){
+    for( size_t j=lo[1]; j<hi[1]; ++j ){
+      for( size_t i=lo[0]; i<hi[0]; ++i ){
         {
           const double& f2pt = f2(i,j,k);
           const double* f2pti = &*if2;
@@ -179,18 +158,16 @@ void test_interior( const IntVec npts,
     *if2 += *if1;
   }
 
-  for( size_t k=klo; k<khi; ++k ){
-    for( size_t j=jlo; j<jhi; ++j ){
-      for( size_t i=ilo; i<ihi; ++i ){
+  for( size_t k=lo[2]; k<hi[2]; ++k ){
+    for( size_t j=lo[1]; j<hi[1]; ++j ){
+      for( size_t i=lo[0]; i<hi[0]; ++i ){
         const double val = 1+i+j+k + 2.0;
         std::ostringstream msg;  msg << i<<","<<j<<","<<k << ",  found " << f2(i,j,k) << ", expected " << val;
         status( f2(i,j,k) == val, msg.str() );
       }
     }
   }
-  std::ostringstream msg;
-  msg << "interior iterator test " << npts[0] << "x" << npts[1] << "x" << npts[2] << std::endl;
-  overall( status.ok(), msg.str() );
+  return status.ok();
 }
 
 //--------------------------------------------------------------------
@@ -199,14 +176,127 @@ int main()
 {
   TestHelper overall(true);
 
-  // test iterators
-  test_iterator( IntVec(3,3,3), overall );
-  test_iterator( IntVec(3,4,1), overall );
-  test_iterator( IntVec(4,3,2), overall );
+  bool verbose = false;
+
+  overall( test_iterator<SVolField>( IntVec(3,3,3), verbose ), "test_iterator (3,3,3) SVolField" );
+  overall( test_iterator<SVolField>( IntVec(3,4,1), verbose ), "test_iterator (3,4,1) SVolField" );
+  overall( test_iterator<SVolField>( IntVec(4,3,2), verbose ), "test_iterator (4,3,2) SVolField" );
+
+  std::cout << std::endl;
+
+  overall( test_iterator<SSurfXField>( IntVec(3,3,3), verbose ), "test_iterator (3,3,3) SSurfXField" );
+  overall( test_iterator<SSurfXField>( IntVec(3,4,1), verbose ), "test_iterator (3,4,1) SSurfXField" );
+  overall( test_iterator<SSurfXField>( IntVec(4,3,2), verbose ), "test_iterator (4,3,2) SSurfXField" );
+
+  std::cout << std::endl;
+
+  overall( test_iterator<SSurfYField>( IntVec(3,3,3), verbose ), "test_iterator (3,3,3) SSurfYField" );
+  overall( test_iterator<SSurfYField>( IntVec(3,4,1), verbose ), "test_iterator (3,4,1) SSurfYField" );
+  overall( test_iterator<SSurfYField>( IntVec(4,3,2), verbose ), "test_iterator (4,3,2) SSurfYField" );
+
+  std::cout << std::endl;
+
+  overall( test_iterator<SSurfZField>( IntVec(3,3,3), verbose ), "test_iterator (3,3,3) SSurfZField" );
+  overall( test_iterator<SSurfZField>( IntVec(3,4,1), verbose ), "test_iterator (3,4,1) SSurfZField" );
+  overall( test_iterator<SSurfZField>( IntVec(4,3,2), verbose ), "test_iterator (4,3,2) SSurfZField" );
 
   std::cout << std::endl << std::endl;
 
-  test_interior( IntVec(3,3,3), overall );
+  overall( test_iterator<XVolField>( IntVec(3,3,3), verbose ), "test_iterator (3,3,3) XVolField" );
+  overall( test_iterator<XVolField>( IntVec(3,4,1), verbose ), "test_iterator (3,4,1) XVolField" );
+  overall( test_iterator<XVolField>( IntVec(4,3,2), verbose ), "test_iterator (4,3,2) XVolField" );
+
+  std::cout << std::endl;
+
+  overall( test_iterator<XSurfXField>( IntVec(3,3,3), verbose ), "test_iterator (3,3,3) XSurfXField" );
+  overall( test_iterator<XSurfXField>( IntVec(3,4,1), verbose ), "test_iterator (3,4,1) XSurfXField" );
+  overall( test_iterator<XSurfXField>( IntVec(4,3,2), verbose ), "test_iterator (4,3,2) XSurfXField" );
+
+  std::cout << std::endl;
+
+  overall( test_iterator<XSurfYField>( IntVec(3,3,3), verbose ), "test_iterator (3,3,3) XSurfYField" );
+  overall( test_iterator<XSurfYField>( IntVec(3,4,1), verbose ), "test_iterator (3,4,1) XSurfYField" );
+  overall( test_iterator<XSurfYField>( IntVec(4,3,2), verbose ), "test_iterator (4,3,2) XSurfYField" );
+
+  std::cout << std::endl;
+
+  overall( test_iterator<XSurfZField>( IntVec(3,3,3), verbose ), "test_iterator (3,3,3) XSurfZField" );
+  overall( test_iterator<XSurfZField>( IntVec(3,4,1), verbose ), "test_iterator (3,4,1) XSurfZField" );
+  overall( test_iterator<XSurfZField>( IntVec(4,3,2), verbose ), "test_iterator (4,3,2) XSurfZField" );
+
+  std::cout << std::endl << std::endl;
+
+  overall( test_iterator<YVolField>( IntVec(3,3,3), verbose ), "test_iterator (3,3,3) YVolField" );
+  overall( test_iterator<YVolField>( IntVec(3,4,1), verbose ), "test_iterator (3,4,1) YVolField" );
+  overall( test_iterator<YVolField>( IntVec(4,3,2), verbose ), "test_iterator (4,3,2) YVolField" );
+
+  std::cout << std::endl;
+
+  overall( test_iterator<YSurfXField>( IntVec(3,3,3), verbose ), "test_iterator (3,3,3) YSurfXField" );
+  overall( test_iterator<YSurfXField>( IntVec(3,4,1), verbose ), "test_iterator (3,4,1) YSurfXField" );
+  overall( test_iterator<YSurfXField>( IntVec(4,3,2), verbose ), "test_iterator (4,3,2) YSurfXField" );
+
+  std::cout << std::endl;
+
+  overall( test_iterator<YSurfYField>( IntVec(3,3,3), verbose ), "test_iterator (3,3,3) YSurfYField" );
+  overall( test_iterator<YSurfYField>( IntVec(3,4,1), verbose ), "test_iterator (3,4,1) YSurfYField" );
+  overall( test_iterator<YSurfYField>( IntVec(4,3,2), verbose ), "test_iterator (4,3,2) YSurfYField" );
+
+  std::cout << std::endl;
+
+  overall( test_iterator<YSurfZField>( IntVec(3,3,3), verbose ), "test_iterator (3,3,3) YSurfZField" );
+  overall( test_iterator<YSurfZField>( IntVec(3,4,1), verbose ), "test_iterator (3,4,1) YSurfZField" );
+  overall( test_iterator<YSurfZField>( IntVec(4,3,2), verbose ), "test_iterator (4,3,2) YSurfZField" );
+
+  std::cout << std::endl << std::endl;
+
+  overall( test_iterator<ZVolField>( IntVec(3,3,3), verbose ), "test_iterator (3,3,3) ZVolField" );
+  overall( test_iterator<ZVolField>( IntVec(3,4,1), verbose ), "test_iterator (3,4,1) ZVolField" );
+  overall( test_iterator<ZVolField>( IntVec(4,3,2), verbose ), "test_iterator (4,3,2) ZVolField" );
+
+  std::cout << std::endl;
+
+  overall( test_iterator<ZSurfXField>( IntVec(3,3,3), verbose ), "test_iterator (3,3,3) ZSurfXField" );
+  overall( test_iterator<ZSurfXField>( IntVec(3,4,1), verbose ), "test_iterator (3,4,1) ZSurfXField" );
+  overall( test_iterator<ZSurfXField>( IntVec(4,3,2), verbose ), "test_iterator (4,3,2) ZSurfXField" );
+
+  std::cout << std::endl;
+
+  overall( test_iterator<ZSurfYField>( IntVec(3,3,3), verbose ), "test_iterator (3,3,3) ZSurfYField" );
+  overall( test_iterator<ZSurfYField>( IntVec(3,4,1), verbose ), "test_iterator (3,4,1) ZSurfYField" );
+  overall( test_iterator<ZSurfYField>( IntVec(4,3,2), verbose ), "test_iterator (4,3,2) ZSurfYField" );
+
+  std::cout << std::endl;
+
+  overall( test_iterator<ZSurfZField>( IntVec(3,3,3), verbose ), "test_iterator (3,3,3) ZSurfZField" );
+  overall( test_iterator<ZSurfZField>( IntVec(3,4,1), verbose ), "test_iterator (3,4,1) ZSurfZField" );
+  overall( test_iterator<ZSurfZField>( IntVec(4,3,2), verbose ), "test_iterator (4,3,2) ZSurfZField" );
+
+  std::cout << std::endl << std::endl;
+
+  // -------------------------------------------------------------- //
+  // --------------------  Test interior Iterators ---------------- //
+  // -------------------------------------------------------------- //
+  verbose=false;
+  overall( test_interior<SVolField  >( IntVec(3,3,3), verbose ), "test_interior (3,3,3) SVolField" );
+  overall( test_interior<SSurfXField>( IntVec(3,3,3), verbose ), "test_interior (3,3,3) SSurfXField" );
+  overall( test_interior<SSurfYField>( IntVec(3,3,3), verbose ), "test_interior (3,3,3) SSurfYField" );
+  overall( test_interior<SSurfZField>( IntVec(3,3,3), verbose ), "test_interior (3,3,3) SSurfZField" );
+
+  overall( test_interior<XVolField  >( IntVec(3,3,3), verbose ), "test_interior (3,3,3) XVolField" );
+  overall( test_interior<XSurfXField>( IntVec(3,3,3), verbose ), "test_interior (3,3,3) XSurfXField" );
+  overall( test_interior<XSurfYField>( IntVec(3,3,3), verbose ), "test_interior (3,3,3) XSurfYField" );
+  overall( test_interior<XSurfZField>( IntVec(3,3,3), verbose ), "test_interior (3,3,3) XSurfZField" );
+
+  overall( test_interior<YVolField  >( IntVec(3,3,3), verbose ), "test_interior (3,3,3) YVolField" );
+  overall( test_interior<YSurfXField>( IntVec(3,3,3), verbose ), "test_interior (3,3,3) YSurfXField" );
+  overall( test_interior<YSurfYField>( IntVec(3,3,3), verbose ), "test_interior (3,3,3) YSurfYField" );
+  overall( test_interior<YSurfZField>( IntVec(3,3,3), verbose ), "test_interior (3,3,3) YSurfZField" );
+
+  overall( test_interior<ZVolField  >( IntVec(3,3,3), verbose ), "test_interior (3,3,3) ZVolField" );
+  overall( test_interior<ZSurfXField>( IntVec(3,3,3), verbose ), "test_interior (3,3,3) ZSurfXField" );
+  overall( test_interior<ZSurfYField>( IntVec(3,3,3), verbose ), "test_interior (3,3,3) ZSurfYField" );
+  overall( test_interior<ZSurfZField>( IntVec(3,3,3), verbose ), "test_interior (3,3,3) ZSurfZField" );
 
   // test basic layout and operators
   {
@@ -235,7 +325,7 @@ int main()
       for( int j=0; j<npts[1]; ++j ){
         for( int i=0; i<npts[0]; ++i ){
           const double ans = (i + j + k);
-          std::ostringstream msg;  msg << ("<<i<<","<<j<<","<<k<<") << ",  found " << svol1(i,j,k) << ", expected " << ans;
+          std::ostringstream msg;  msg << "("<<i<<","<<j<<","<<k<<")" << ",  found " << svol1(i,j,k) << ", expected " << ans;
           status( ans==svol1(i,j,k), msg.str() );
         }
       }
@@ -246,8 +336,6 @@ int main()
       *sv3 = svol1;
       status( *sv3 == svol1, "spatial field pointer from store" );
     }
-
-    overall( test_field_writer(), "field I/O" );
 
     overall( status.ok(), "field operations" );
   }
