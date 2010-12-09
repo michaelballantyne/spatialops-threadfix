@@ -37,7 +37,7 @@ bool test( const SS::IntVec dim )
       *i2 = sin( *ix ) + 3.0;
       tmp( *i1 == *i2 );
     }
-    status( tmp.ok(), "sin(x)" );
+    status( tmp.ok(), "sin(x)+3" );
   }
 
   {
@@ -58,7 +58,7 @@ bool test( const SS::IntVec dim )
       *i4 = *i1 + (*i2 * *i1) - *i2 / *i1;
       tmp( *i4 == *i3 );
     }
-    status( tmp.ok(), "a+(a*b)-b" );
+    status( tmp.ok(), "a+(a*b)-b/a" );
   }
 
   return true;
