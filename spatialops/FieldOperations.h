@@ -397,8 +397,8 @@ namespace SpatialOps{
        *  Increments operands.
        */
       inline void next() {
-	operand1.init();
-	operand2.init();
+	operand1.next();
+	operand2.next();
       };
       
       /**
@@ -445,8 +445,8 @@ namespace SpatialOps{
     };									\
     									\
     inline void next() {						\
-      operand1.init();							\
-      operand2.init();							\
+      operand1.next();							\
+      operand2.next();							\
     };									\
     									\
     inline AtomicType eval() const {					\
@@ -486,8 +486,8 @@ namespace SpatialOps{
     };									\
     									\
     inline void next() {						\
-      operand1.init();							\
-      operand2.init();							\
+      operand1.next();							\
+      operand2.next();							\
     };									\
     									\
     inline AtomicType eval() const {					\
@@ -602,7 +602,7 @@ namespace SpatialOps{
        *  Increments operand.
        */
       inline void next() {
-	operand.init();
+	operand.next();
       };
       
       /**
@@ -641,7 +641,7 @@ namespace SpatialOps{
     };								\
 								\
     inline void next() {					\
-      operand.init();						\
+      operand.next();						\
     };								\
     								\
     inline AtomicType eval() const {				\
