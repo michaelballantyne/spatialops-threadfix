@@ -55,7 +55,7 @@ bool test( const SS::IntVec dim )
 
     constiter i1=f1.begin(), i2=f2.begin(), i3=f3.begin();
     for( iter i4=f4.begin(); i4!=f4.end(); ++i4, ++i3, ++i2, ++i1 ){
-      *i4 = *i1 + (*i2 * *i1);
+      *i4 = *i1 + (*i2 * *i1) - *i2;
       tmp( *i4 == *i3 );
     }
     status( tmp.ok(), "a+(a*b)-b" );
