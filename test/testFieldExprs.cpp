@@ -66,6 +66,14 @@ bool test( const SS::IntVec dim )
     const double pi = 3.141592653589793;
     f3 <<= cos( pi*x*0.5 ) + sin(x*pi) + tanh(x+exp(x/2));
     f3 <<= f3 * cos(f3);
+    f3 <<= f3 + f1*f2;
+
+    f1 = -1.0;
+    f1 <<= abs(f1);
+    for( constiter i1=f1.begin(); i1!=f1.end(); ++i1 ){
+      tmp( *i1 == 1.0 );
+    }
+    status( tmp.ok(), "abs(-1.0) == 1.0" );
   }
 
   return true;
