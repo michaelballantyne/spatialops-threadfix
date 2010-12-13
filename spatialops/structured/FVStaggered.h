@@ -14,6 +14,8 @@
 
 #include <spatialops/structured/SpatialFieldStore.h>
 
+#include <spatialops/FieldOperationDefinitions.h>
+
 /**
  *  @todo Need to build & test scratch operator assemblers.
  *  @todo Need to fix linear system interface for spatial operators.

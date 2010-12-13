@@ -65,6 +65,7 @@ bool test( const SS::IntVec dim )
     // ensure that this compiles
     const double pi = 3.141592653589793;
     f3 <<= cos( pi*x*0.5 ) + sin(x*pi) + tanh(x+exp(x/2));
+    f3 <<= f3 * cos(f3);
   }
 
   return true;
