@@ -1,4 +1,4 @@
-#LyX 1.6.7 created this file. For more info see http://www.lyx.org/
+#LyX 1.6.8 created this file. For more info see http://www.lyx.org/
 \lyxformat 345
 \begin_document
 \begin_header
@@ -962,16 +962,95 @@ reference "eq:FV-pre-poisson-surf"
 \end_inset
 
  does.
- Thus, the discrete form of 
+ Rewriting 
 \begin_inset CommandInset ref
 LatexCommand eqref
 reference "eq:FV-pre-poisson-surf"
 
 \end_inset
 
- is given as 
+ by substituting 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:momVecEqn"
+
+\end_inset
+
+, we find 
 \begin_inset Formula \begin{equation}
-\Op I{s_{v}}{s_{v}}\left(\del{^{2}\rho}{t^{2}}\right)=-\Op I{s_{x}}{s_{v}}\Op R{x_{v}}{s_{z}}\left(\del{\rho u}t\right)-\Op I{s_{y}}{s_{v}}\Op R{y_{v}}{s_{z}}\left(\del{\rho v}t\right)-\Op I{s_{z}}{s_{v}}\Op R{z_{v}}{s_{z}}\left(\del{\rho w}t\right)\label{eq:pre-poisson-surf-disc}\end{equation}
+\VolInt[s]{\del{^{2}\rho}{t^{2}}}=\SurfInt[s]{\nabla\cdot\left(\rho\mathbf{uu}+\boldsymbol{\tau}\right)}+\SurfInt[s]{\nabla p}.\label{eq:FV-pre-poisson-momsubs}\end{equation}
+
+\end_inset
+
+ We now must determine how to evaluate 
+\begin_inset Formula $\nabla\cdot\left(\rho\mathbf{uu}+\boldsymbol{\tau}\right)$
+\end_inset
+
+ and 
+\begin_inset Formula $\nabla p$
+\end_inset
+
+ in 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:FV-pre-poisson-momsubs"
+
+\end_inset
+
+.
+ We consider two reasonable alternatives:
+\end_layout
+
+\begin_layout Itemize
+Evaluate 
+\begin_inset Formula $\del{\rho\mathbf{u}}t$
+\end_inset
+
+ on the staggered volumes and then interpolate it to scalar surfaces for
+ use in 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:FV-pre-poisson-momsubs"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Itemize
+Evaluate 
+\begin_inset Formula $\del{\rho\mathbf{u}}t$
+\end_inset
+
+ on the scalar volume and then interpolate it to scalar surfaces.
+\end_layout
+
+\begin_layout Standard
+The first option is more consistent with the momentum equation that is solved
+ on the staggered volumes.
+ Adopting this, 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:FV-pre-poisson-momsubs"
+
+\end_inset
+
+ is written as 
+\begin_inset Formula \[
+\VolInt[s]{\del{^{2}\rho}{t^{2}}}=\SurfInt[s]{\left[\SurfInt[x]{\left(\rho u\mathbf{u}+\tau_{\ast x}+p\mathbf{n}_{x}\right)}+\SurfInt[y]{\left(\rho v\mathbf{u}+\tau_{\ast y}+p\mathbf{n}_{y}\right)}+\SurfInt[z]{\left(\rho w\mathbf{u}+\tau_{\ast z}+p\mathbf{n}_{z}\right)}\right]}\]
+
+\end_inset
+
+ Isolating terms involving 
+\begin_inset Formula $p$
+\end_inset
+
+ we find 
+\begin_inset Formula \begin{eqnarray}
+\SurfInt[s]{\left[\SurfInt[x]{p\mathbf{n}_{x}}+\SurfInt[y]{p\mathbf{n}_{y}}+\SurfInt[z]{p\mathbf{n}_{z}}\right]} & = & \VolInt[s]{\del{^{2}\rho}{t^{2}}}\nonumber \\
+ &  & -\SurfInt[s]{\left(\SurfInt[x]{\left(\rho u\mathbf{u}+\tau_{\ast x}\right)}\right)}\nonumber \\
+ &  & -\SurfInt[s]{\left(\SurfInt[y]{\left(\rho v\mathbf{u}+\tau_{\ast y}\right)}\right)}\nonumber \\
+ &  & -\SurfInt[s]{\left(\SurfInt[z]{\left(\rho w\mathbf{u}+\tau_{\ast y}\right)}\right)}.\label{eq:FV-poisson-continuous}\end{eqnarray}
 
 \end_inset
 
@@ -1060,11 +1139,11 @@ reference "eq:ymomFV-alt"
 
  as 
 \begin_inset Formula \begin{eqnarray}
-\Op I{x_{v}}{x_{v}}\frac{\partial\rho u}{\partial t} & = & \Op I{x_{x}}{x_{v}}\left(F_{xx}\right)+\Op I{x_{y}}{x_{v}}\left(F_{yx}\right)+\Op I{x_{z}}{x_{v}}\left(F_{zx}\right)-\Op I{x_{v}}{x_{v}}\Op R{s_{x}}{x_{v}}\Op G{s_{v}}{s_{x}}\left(p\right),\label{eq:xmom-disc-1}\\
+\Op I{x_{v}}{x_{v}}\left(\frac{\partial\rho u}{\partial t}\right) & = & \Op I{x_{x}}{x_{v}}\left(F_{xx}\right)+\Op I{x_{y}}{x_{v}}\left(F_{yx}\right)+\Op I{x_{z}}{x_{v}}\left(F_{zx}\right)-\Op I{x_{v}}{x_{v}}\Op R{s_{x}}{x_{v}}\Op G{s_{v}}{s_{x}}\left(p\right),\label{eq:xmom-disc-1}\\
  & = & \Op I{x_{x}}{x_{v}}\left(F_{xx}\right)+\Op I{x_{y}}{x_{v}}\left(F_{yx}\right)+\Op I{x_{z}}{x_{v}}\left(F_{zx}\right)-\Op I{x_{v}}{x_{v}}\Op R{s_{v}}{x_{x}}\left(p\right),\label{eq:xmom-disc-2}\\
-\left[I^{y_{\mathsf{v}}}\right]\frac{\partial\rho v}{\partial t} & = & \Op I{y_{x}}{y_{v}}\left(F_{xy}\right)+\Op I{y_{y}}{y_{v}}\left(F_{yy}\right)+\Op I{y_{z}}{y_{v}}\left(F_{zy}\right)-\Op I{y_{v}}{y_{v}}\Op R{s_{y}}{y_{v}}\Op G{s_{v}}{s_{y}}\left(p\right),\label{eq:ymom-disc-1}\\
+\left[I^{y_{\mathsf{v}}}\right]\left(\frac{\partial\rho v}{\partial t}\right) & = & \Op I{y_{x}}{y_{v}}\left(F_{xy}\right)+\Op I{y_{y}}{y_{v}}\left(F_{yy}\right)+\Op I{y_{z}}{y_{v}}\left(F_{zy}\right)-\Op I{y_{v}}{y_{v}}\Op R{s_{y}}{y_{v}}\Op G{s_{v}}{s_{y}}\left(p\right),\label{eq:ymom-disc-1}\\
  & = & \Op I{y_{x}}{y_{v}}\left(F_{xy}\right)+\Op I{y_{y}}{y_{v}}\left(F_{yy}\right)+\Op I{y_{z}}{y_{v}}\left(F_{zy}\right)-\Op I{y_{y}}{y_{v}}\Op R{s_{v}}{y_{y}}\left(p\right),\label{eq:ymom-disc-2}\\
-\left[I^{z_{\mathsf{v}}}\right]\frac{\partial\rho w}{\partial t} & = & \Op I{z_{x}}{z_{v}}\left(F_{xz}\right)+\Op I{z_{y}}{z_{v}}\left(F_{yz}\right)+\Op I{z_{z}}{z_{v}}\left(F_{zz}\right)-\Op I{z_{v}}{z_{v}}\Op R{s_{z}}{z_{v}}\Op G{s_{v}}{s_{z}}\left(p\right),\label{eq:zmom-disc-1}\\
+\left[I^{z_{\mathsf{v}}}\right]\left(\frac{\partial\rho w}{\partial t}\right) & = & \Op I{z_{x}}{z_{v}}\left(F_{xz}\right)+\Op I{z_{y}}{z_{v}}\left(F_{yz}\right)+\Op I{z_{z}}{z_{v}}\left(F_{zz}\right)-\Op I{z_{v}}{z_{v}}\Op R{s_{z}}{z_{v}}\Op G{s_{v}}{s_{z}}\left(p\right),\label{eq:zmom-disc-1}\\
  & = & \Op I{z_{x}}{z_{v}}\left(F_{xz}\right)+\Op I{z_{y}}{z_{v}}\left(F_{yz}\right)+\Op I{z_{z}}{z_{v}}\left(F_{zz}\right)-\Op I{z_{z}}{z_{v}}\Op R{s_{v}}{z_{z}}\left(p\right).\label{eq:zmom-disc-2}\end{eqnarray}
 
 \end_inset
@@ -1228,242 +1307,62 @@ name "sub:discPoisson"
 \end_layout
 
 \begin_layout Standard
-Here are a few possible discretization approaches for equation 
+The discrete form of 
 \begin_inset CommandInset ref
 LatexCommand eqref
-reference "eqn:genPoisson"
+reference "eq:FV-poisson-continuous"
 
 \end_inset
 
- and the 
-\begin_inset Formula $\nabla p$
-\end_inset
-
- term in the momentum equations:
-\end_layout
-
-\begin_layout Enumerate
-\begin_inset Formula $\nabla p$
-\end_inset
-
- is calculated at scalar faces so that 
-\begin_inset Formula $\del px$
-\end_inset
-
- is given discretely as 
-\begin_inset Formula $\Op G{s_{v}}{s_{x}}\left(p\right)$
-\end_inset
-
-.
- Then the term in the momentum equation is 
-\begin_inset Formula $\Op I{x_{v}}{x_{v}}\Op R{s_{x}}{x_{v}}\Op G{s_{v}}{s_{x}}\left(p\right).$
-\end_inset
-
- Substituting 
-\begin_inset CommandInset ref
-LatexCommand eqref
-reference "eq:xmom-disc-1"
+ is given as
+\begin_inset Formula \begin{equation}
+\begin{array}{c}
+\Op L{s_{v}}{s_{v}}\left(p\right)\end{array}=\Op I{S_{v}}{S_{v}}\left(\del{^{2}\rho}{t^{2}}\right)-\Omega_{x}-\Omega_{y}-\Omega_{z},\label{eq:FV-poisson-discrete}\end{equation}
 
 \end_inset
 
-, 
-\begin_inset CommandInset ref
-LatexCommand eqref
-reference "eq:ymom-disc-1"
-
-\end_inset
-
- and 
-\begin_inset CommandInset ref
-LatexCommand eqref
-reference "eq:zmom-disc-1"
-
-\end_inset
-
- into 
-\begin_inset CommandInset ref
-LatexCommand eqref
-reference "eq:pre-poisson-surf-disc"
-
-\end_inset
-
-, we find 
+ where 
 \begin_inset Formula \begin{eqnarray}
-\Op I{s_{v}}{s_{v}}\left(\del{^{2}\rho}{t^{2}}\right) & = & -\Op I{s_{x}}{s_{v}}\Op R{x_{v}}{s_{x}}\Op I{x_{x}}{x_{v}}\left(F_{xx}\right)-\Op I{s_{x}}{s_{v}}\Op R{x_{v}}{s_{x}}\Op I{x_{y}}{x_{v}}\left(F_{yx}\right)-\Op I{s_{x}}{s_{v}}\Op R{x_{v}}{s_{x}}\Op I{x_{z}}{x_{v}}\left(F_{zx}\right)\nonumber \\
- &  & +\Op I{s_{x}}{s_{v}}\Op R{x_{v}}{s_{x}}\Op I{x_{v}}{x_{v}}\Op R{s_{x}}{x_{v}}\Op G{s_{v}}{s_{x}}\left(p\right),\nonumber \\
- &  & -\Op I{s_{y}}{s_{v}}\Op R{y_{v}}{s_{y}}\Op I{y_{x}}{y_{v}}\left(F_{xy}\right)-\Op I{s_{y}}{s_{v}}\Op R{y_{v}}{s_{y}}\Op I{y_{y}}{y_{v}}\left(F_{yy}\right)-\Op I{s_{y}}{s_{v}}\Op R{y_{v}}{s_{y}}\Op I{y_{z}}{y_{v}}\left(F_{zy}\right)\nonumber \\
- &  & +\Op I{s_{y}}{s_{v}}\Op R{y_{v}}{s_{y}}\Op I{y_{v}}{y_{v}}\Op R{s_{y}}{y_{v}}\Op G{s_{v}}{s_{y}}\left(p\right)\nonumber \\
- &  & -\Op I{s_{z}}{s_{v}}\Op R{z_{v}}{s_{z}}\Op I{z_{x}}{z_{v}}\left(F_{xz}\right)-\Op I{s_{z}}{s_{v}}\Op R{z_{v}}{s_{z}}\Op I{z_{y}}{z_{v}}\left(F_{yz}\right)-\Op I{s_{z}}{s_{v}}\Op R{z_{v}}{s_{z}}\Op I{z_{z}}{z_{v}}\left(F_{zz}\right)\nonumber \\
- &  & +\Op I{s_{z}}{s_{v}}\Op R{z_{v}}{s_{z}}\Op I{z_{v}}{z_{v}}\Op R{s_{z}}{z_{v}}\Op G{s_{v}}{s_{z}}\left(p\right).\label{eq:pre-poisson-option1-disc}\end{eqnarray}
+\Op L{s_{v}}{s_{v}} & \equiv & \Op I{s_{s}}{s_{v}}\Op R{x_{v}}{s_{x}}\Op I{x_{x}}{x_{v}}\Op R{s_{v}}{x_{x}}\nonumber \\
+ &  & +\Op I{s_{s}}{s_{v}}\Op R{y_{v}}{s_{y}}\Op I{y_{y}}{y_{v}}\Op R{s_{v}}{y_{y}}\nonumber \\
+ &  & +\Op I{s_{s}}{s_{v}}\Op I{s_{s}}{s_{v}}\Op R{z_{v}}{s_{z}}\Op I{z_{z}}{z_{v}}\Op R{s_{v}}{z_{z}}\\
+\Omega_{x} & \equiv & \Op I{s_{x}}{s_{v}}\Op R{x_{v}}{s_{x}}\Op I{x_{x}}{x_{v}}\left(\rho uu+\tau_{xx}\right)\nonumber \\
+ &  & +\Op I{s_{y}}{s_{v}}\Op R{x_{v}}{s_{y}}\Op I{x_{y}}{x_{v}}\left(\rho uv+\tau_{yx}\right)\nonumber \\
+ &  & +\Op I{s_{z}}{s_{v}}\Op R{x_{v}}{s_{z}}\Op I{x_{z}}{x_{v}}\left(\rho uw+\tau_{zx}\right),\label{eq:FV-poisson-xrhs}\\
+\Omega_{y} & \equiv & \Op I{s_{y}}{s_{v}}\Op R{y_{v}}{s_{y}}\Op I{y_{x}}{y_{v}}\left(\rho vu+\tau_{xy}\right)\nonumber \\
+ &  & +\Op I{s_{y}}{s_{v}}\Op R{y_{v}}{s_{y}}\Op I{y_{y}}{y_{v}}\left(\rho vv+\tau_{yy}\right)\nonumber \\
+ &  & +\Op I{s_{z}}{s_{v}}\Op R{y_{v}}{s_{z}}\Op I{y_{z}}{y_{v}}\left(\rho vw+\tau_{zy}\right),\label{eq:FV-poisson-yrhs}\\
+\Omega_{z} & \equiv & \Op I{s_{z}}{s_{v}}\Op R{z_{v}}{s_{z}}\Op I{z_{x}}{z_{v}}\left(\rho wu+\tau_{xz}\right)\nonumber \\
+ &  & +\Op I{s_{y}}{s_{v}}\Op R{z_{v}}{s_{y}}\Op I{z_{y}}{z_{v}}\left(\rho uv+\tau_{yz}\right)\nonumber \\
+ &  & +\Op I{s_{z}}{s_{v}}\Op R{z_{v}}{s_{z}}\Op I{z_{z}}{z_{v}}\left(\rho uw+\tau_{zz}\right).\label{eq:FV-poisson-zrhs}\end{eqnarray}
 
 \end_inset
 
-Combining the terms on 
-\begin_inset Formula $p$
-\end_inset
-
- and rearranging,
-\begin_inset Formula \begin{eqnarray}
-\left[\begin{array}{c}
-\Op I{s_{x}}{s_{v}}\Op R{x_{v}}{s_{z}}\Op I{x_{v}}{x_{v}}\Op R{s_{x}}{x_{v}}\Op G{s_{v}}{s_{x}}+\\
-\Op I{s_{y}}{s_{v}}\Op R{y_{v}}{s_{z}}\Op I{y_{v}}{y_{v}}\Op R{s_{y}}{y_{v}}\Op G{s_{v}}{s_{y}}+\\
-\Op I{s_{z}}{s_{v}}\Op R{z_{v}}{s_{z}}\Op I{z_{v}}{z_{v}}\Op R{s_{z}}{z_{v}}\Op G{s_{v}}{s_{z}}\end{array}\right]\left(p\right) & = & \Op I{s_{v}}{s_{v}}\left(\del{^{2}\rho}{t^{2}}\right)\nonumber \\
- & + & \Op I{s_{x}}{s_{v}}\Op R{x_{v}}{s_{x}}\Op I{x_{x}}{x_{v}}\left(F_{xx}\right)+\Op I{s_{x}}{s_{v}}\Op R{x_{v}}{s_{x}}\Op I{x_{y}}{x_{v}}\left(F_{yx}\right)+\Op I{s_{x}}{s_{v}}\Op R{x_{v}}{s_{x}}\Op I{x_{z}}{x_{v}}\left(F_{zx}\right)\nonumber \\
- & + & \Op I{s_{y}}{s_{v}}\Op R{y_{v}}{s_{y}}\Op I{y_{x}}{y_{v}}\left(F_{xy}\right)+\Op I{s_{y}}{s_{v}}\Op R{y_{v}}{s_{y}}\Op I{y_{y}}{y_{v}}\left(F_{yy}\right)+\Op I{s_{y}}{s_{v}}\Op R{y_{v}}{s_{y}}\Op I{y_{z}}{y_{v}}\left(F_{zy}\right)\nonumber \\
- & + & \Op I{s_{z}}{s_{v}}\Op R{z_{v}}{s_{z}}\Op I{z_{x}}{z_{v}}\left(F_{xz}\right)+\Op I{s_{z}}{s_{v}}\Op R{z_{v}}{s_{z}}\Op I{z_{y}}{z_{v}}\left(F_{yz}\right)+\Op I{s_{z}}{s_{v}}\Op R{z_{v}}{s_{z}}\Op I{z_{z}}{z_{v}}\left(F_{zz}\right)\label{eq:posson-option1-disc}\end{eqnarray}
-
-\end_inset
-
-Note that in the case where we have a uniform mesh, 
-\begin_inset Formula $\Op R{s_{x}}{x_{v}},$
+ Note that on a uniformly spaced staggered mesh, 
+\begin_inset Formula $\Op R{s_{v}}{x_{x}},$
 \end_inset
 
  
-\begin_inset Formula $\Op R{x_{v}}{s_{x}}$
+\begin_inset Formula $\Op R{s_{v}}{y_{y}},$
 \end_inset
 
- and their corresponding 
-\begin_inset Formula $y$
-\end_inset
-
- and 
-\begin_inset Formula $z$
-\end_inset
-
- operators are all identity operators.
- For stretched meshes, however, these are not identity operators and will
- affect ghost cell availability.
-\end_layout
-
-\begin_layout Enumerate
-\begin_inset Formula $\nabla p$
-\end_inset
-
- is calculated at momentum volumes so that 
-\begin_inset Formula $\del px$
-\end_inset
-
- is given discretely as 
-\begin_inset Formula $\Op G{s_{v}}{x_{v}}\left(p\right).$
-\end_inset
-
- The pressure term in the momentum equations is thus 
-\begin_inset Formula $\Op I{x_{v}}{x_{v}}\Op G{s_{v}}{x_{v}}\left(p\right).$
-\end_inset
-
- Substituting 
-\begin_inset CommandInset ref
-LatexCommand eqref
-reference "eq:xmom-disc-1"
-
-\end_inset
-
-, 
-\begin_inset CommandInset ref
-LatexCommand eqref
-reference "eq:ymom-disc-1"
-
-\end_inset
-
- and 
-\begin_inset CommandInset ref
-LatexCommand eqref
-reference "eq:zmom-disc-1"
-
-\end_inset
-
- into 
-\begin_inset CommandInset ref
-LatexCommand eqref
-reference "eq:pre-poisson-surf-disc"
-
-\end_inset
-
-, we find
-\begin_inset Formula \begin{eqnarray}
-\Op I{s_{v}}{s_{v}}\left(\del{^{2}\rho}{t^{2}}\right) & = & -\Op I{s_{x}}{s_{v}}\Op R{x_{v}}{s_{x}}\Op I{x_{x}}{x_{v}}\left(F_{xx}\right)-\Op I{s_{x}}{s_{v}}\Op R{x_{v}}{s_{x}}\Op I{x_{y}}{x_{v}}\left(F_{yx}\right)-\Op I{s_{x}}{s_{v}}\Op R{x_{v}}{s_{x}}\Op I{x_{z}}{x_{v}}\left(F_{zx}\right)\nonumber \\
- &  & +\Op I{s_{x}}{s_{v}}\Op R{x_{v}}{s_{x}}\Op I{x_{v}}{x_{v}}\Op G{s_{v}}{x_{v}}\left(p\right)\nonumber \\
- &  & -\Op I{s_{y}}{s_{v}}\Op R{y_{v}}{s_{y}}\Op I{y_{x}}{y_{v}}\left(F_{xy}\right)-\Op I{s_{y}}{s_{v}}\Op R{y_{v}}{s_{y}}\Op I{y_{y}}{y_{v}}\left(F_{yy}\right)-\Op I{s_{y}}{s_{v}}\Op R{y_{v}}{s_{y}}\Op I{y_{z}}{y_{v}}\left(F_{zy}\right)\nonumber \\
- &  & +\Op I{s_{y}}{s_{v}}\Op R{y_{v}}{s_{y}}\Op I{y_{v}}{y_{v}}\Op G{s_{v}}{y_{v}}\left(p\right)\nonumber \\
- &  & -\Op I{s_{z}}{s_{v}}\Op R{z_{v}}{s_{z}}\Op I{z_{x}}{z_{v}}\left(F_{xz}\right)-\Op I{s_{z}}{s_{v}}\Op R{z_{v}}{s_{z}}\Op I{z_{y}}{z_{v}}\left(F_{yz}\right)-\Op I{s_{z}}{s_{v}}\Op R{z_{v}}{s_{z}}\Op I{z_{z}}{z_{v}}\left(F_{zz}\right)\nonumber \\
- &  & +\Op I{s_{z}}{s_{v}}\Op R{z_{v}}{s_{z}}\Op I{z_{v}}{z_{v}}\Op G{s_{v}}{z_{v}}\left(p\right).\label{eq:pre-poisson-option2-disc}\end{eqnarray}
-
-\end_inset
-
- Note that this is very similar to 
-\begin_inset CommandInset ref
-LatexCommand eqref
-reference "eq:pre-poisson-option1-disc"
-
-\end_inset
-
- but the pressure gradient is calculated differently, eliminating the requiremen
-t for an extra interpolant.
  
-\begin_inset Formula \begin{eqnarray}
-\left[\begin{array}{c}
-\Op I{s_{x}}{s_{v}}\Op R{x_{v}}{s_{x}}\Op I{x_{v}}{x_{v}}\Op G{s_{v}}{x_{v}}+\\
-\Op I{s_{y}}{s_{v}}\Op R{y_{v}}{s_{y}}\Op I{y_{v}}{y_{v}}\Op G{s_{v}}{y_{v}}+\\
-\Op I{s_{z}}{s_{v}}\Op R{z_{v}}{s_{z}}\Op I{z_{v}}{z_{v}}\Op G{s_{v}}{z_{v}}\end{array}\right]\left(p\right) & = & \Op I{s_{v}}{s_{v}}\left(\del{^{2}\rho}{t^{2}}\right)\nonumber \\
- & + & \Op I{s_{x}}{s_{v}}\Op R{x_{v}}{s_{x}}\Op I{x_{x}}{x_{v}}\left(F_{xx}\right)+\Op I{s_{x}}{s_{v}}\Op R{x_{v}}{s_{x}}\Op I{x_{y}}{x_{v}}\left(F_{yx}\right)+\Op I{s_{x}}{s_{v}}\Op R{x_{v}}{s_{x}}\Op I{x_{z}}{x_{v}}\left(F_{zx}\right)\nonumber \\
- & + & \Op I{s_{y}}{s_{v}}\Op R{y_{v}}{s_{y}}\Op I{y_{x}}{y_{v}}\left(F_{xy}\right)+\Op I{s_{y}}{s_{v}}\Op R{y_{v}}{s_{y}}\Op I{y_{y}}{y_{v}}\left(F_{yy}\right)+\Op I{s_{y}}{s_{v}}\Op R{y_{v}}{s_{y}}\Op I{y_{z}}{y_{v}}\left(F_{zy}\right)\nonumber \\
- & + & \Op I{s_{z}}{s_{v}}\Op R{z_{v}}{s_{z}}\Op I{z_{x}}{z_{v}}\left(F_{xz}\right)+\Op I{s_{z}}{s_{v}}\Op R{z_{v}}{s_{z}}\Op I{z_{y}}{z_{v}}\left(F_{yz}\right)+\Op I{s_{z}}{s_{v}}\Op R{z_{v}}{s_{z}}\Op I{z_{z}}{z_{v}}\left(F_{zz}\right)\label{eq:poisson-option2-disc}\end{eqnarray}
-
+\begin_inset Formula $\Op R{s_{z}}{z_{z}},$
 \end_inset
 
-As previously, in the case of a uniform mesh, 
-\begin_inset Formula $\Op R{x_{v}}{s_{x}}$
+ and their complimentary operators 
+\begin_inset Formula $\Op R{x_{v}}{s_{x}},$
 \end_inset
 
- and the corresponding 
-\begin_inset Formula $y$
+ 
+\begin_inset Formula $\Op R{y_{v}}{s_{y}},$
 \end_inset
 
- and 
-\begin_inset Formula $z$
+ 
+\begin_inset Formula $\Op R{z_{v}}{s_{z}}$
 \end_inset
 
- direction operators are identity operators.
-\end_layout
-
-\begin_layout Enumerate
-If we treat the pressure term in the momentum equations as a surface integral
- as in 
-\begin_inset CommandInset ref
-LatexCommand eqref
-reference "eq:xmom-disc-2"
-
-\end_inset
-
-, 
-\begin_inset CommandInset ref
-LatexCommand eqref
-reference "eq:ymom-disc-2"
-
-\end_inset
-
- and 
-\begin_inset CommandInset ref
-LatexCommand eqref
-reference "eq:zmom-disc-2"
-
-\end_inset
-
-, then we have variants of 
-\begin_inset CommandInset ref
-LatexCommand eqref
-reference "eq:posson-option1-disc"
-
-\end_inset
-
- and 
-\begin_inset CommandInset ref
-LatexCommand eqref
-reference "eq:poisson-option2-disc"
-
-\end_inset
-
-.
+ are all the identity operator.
 \end_layout
 
 \begin_layout Paragraph
@@ -1495,7 +1394,14 @@ James: perhaps the BC paper can shed some light on this.
 \end_layout
 
 \begin_layout Subsection
-Time Integration
+Time Integration 
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Time-Integration"
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -1571,23 +1477,22 @@ Estimate
 \begin_inset Formula $\frac{\partial^{2}\rho}{\partial t^{2}}.$
 \end_inset
 
- Could do this by setting 
-\begin_inset Formula \[
-\left(\frac{\partial^{2}\rho}{\partial t^{2}}\right)^{n}\approx\frac{-\nabla\cdot\left(\rho\mathbf{u}\right)-\left(\frac{\partial\rho}{\partial t}\right)^{n}}{\Delta t},\]
+ We could do this by using a backward difference in time on 
+\begin_inset Formula $\del{^{2}\rho}{t^{2}}$
+\end_inset
+
+, 
+\begin_inset Formula \begin{equation}
+\left(\frac{\partial^{2}\rho}{\partial t^{2}}\right)^{n}\approx\frac{\left(\del{\rho}t\right)^{n}-\left(\del{\rho}t\right)^{n-1}}{\Delta t}=\frac{-\nabla\cdot\left(\rho\mathbf{u}\right)^{n}-\left(\frac{\partial\rho}{\partial t}\right)^{n-1}}{\Delta t},\end{equation}
 
 \end_inset
 
  which would require storage of 
-\begin_inset Formula $\frac{\partial\rho}{\partial t},$
+\begin_inset Formula $\frac{\partial\rho}{\partial t}.$
 \end_inset
 
- and implies 
-\begin_inset Formula \[
-\left(\frac{\partial\rho}{\partial t}\right)^{n+1}\approx-\nabla\cdot\left(\rho\mathbf{u}\right)^{n}.\]
-
-\end_inset
-
- Alternatively, we could use backward-difference expansions on 
+ Alternatively, we could use backward-difference expansions directly on
+ 
 \begin_inset Formula $\rho$
 \end_inset
 
@@ -1600,23 +1505,10 @@ Calculate
 \begin_inset Formula $p$
 \end_inset
 
- from one of the Poisson equations described in 
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-S
-\end_layout
-
-\end_inset
-
-
+ by solving 
 \begin_inset CommandInset ref
-LatexCommand ref
-reference "sub:discPoisson"
+LatexCommand eqref
+reference "eq:FV-poisson-discrete"
 
 \end_inset
 
@@ -1624,11 +1516,7 @@ reference "sub:discPoisson"
 \end_layout
 
 \begin_layout Enumerate
-Calculate the full RHS of the momentum equations as 
-\begin_inset Formula $\frac{\partial\rho\mathbf{u}}{\partial t}=\mathbf{F}-\nabla p.$
-\end_inset
-
-
+Calculate the full RHS of the momentum equations.
 \end_layout
 
 \begin_layout Enumerate
@@ -1674,7 +1562,13 @@ If we are transporting
 \begin_inset Formula $\rho^{n+1}=\mathcal{G}\left(\eta_{i}^{n+1}\right)$
 \end_inset
 
-? 
+ and verify that 
+\begin_inset Formula \[
+\sum_{i=1}^{n_{\eta}}\frac{\partial\eta_{i}}{\partial t}\frac{\partial\rho}{\partial\eta_{i}}\stackrel{?}{=}-\nabla\cdot\left(\rho\mathbf{u}\right).\]
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Enumerate
@@ -1682,7 +1576,7 @@ If we are transporting
 \begin_inset Formula $\left(\rho\eta_{i}\right)$
 \end_inset
 
- find 
+, find 
 \begin_inset Formula $\left(\rho\eta_{i}\right)^{n+1}$
 \end_inset
 
@@ -1711,16 +1605,56 @@ If we are transporting
 
 .
  
-\end_layout
+\begin_inset Newline newline
+\end_inset
 
-\begin_layout Enumerate
-Check to see if 
-\begin_inset Formula \[
-\sum_{i=1}^{n_{\eta}}\frac{\partial\eta_{i}}{\partial t}\frac{\partial\rho}{\partial\eta_{i}}\stackrel{?}{=}-\nabla\cdot\left(\rho\mathbf{u}\right).\]
+Alternatively, if we define our state relationship in terms of 
+\begin_inset Formula $\rho\eta$
+\end_inset
 
+ rather than 
+\begin_inset Formula $\eta,$
 \end_inset
 
  
+\begin_inset Formula $\rho=\mathcal{H}\left(\rho\eta_{i}\right),$
+\end_inset
+
+ then we do not need to solve the nonlinear system.
+ Rather, we have a direct lookup of 
+\begin_inset Formula $\rho$
+\end_inset
+
+ from 
+\begin_inset Formula $\rho\eta.$
+\end_inset
+
+ The difficulty here may be in determining presumed-shape PDFs for 
+\begin_inset Formula $\rho\eta.$
+\end_inset
+
+ For example, if 
+\begin_inset Formula $\eta$
+\end_inset
+
+ is the mixture fraction, 
+\begin_inset Formula $f,$
+\end_inset
+
+ then we know 
+\begin_inset Formula $p(f)$
+\end_inset
+
+ can be approximated by a 
+\begin_inset Formula $\beta$
+\end_inset
+
+-PDF.
+ However, it is not clear how to approximate 
+\begin_inset Formula $p(\rho f).$
+\end_inset
+
+
 \end_layout
 
 \end_deeper
@@ -1732,34 +1666,104 @@ Set
  and return to step 1.
 \end_layout
 
+\begin_layout Section
+Issues
+\end_layout
+
+\begin_layout Subsection
+Initial Condition
+\end_layout
+
 \begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-Discuss the issue of transporting 
-\begin_inset Formula $\rho\mathbf{u}$
+What happens if the velocity field at 
+\begin_inset Formula $t=0$
 \end_inset
 
- versus 
-\begin_inset Formula $\mathbf{u}$
+ does not satisfy continuity? This cannot be corrected since we don't know
+ 
+\begin_inset Formula $\del{^{2}\rho}{t^{2}}$
 \end_inset
 
- and using 
-\begin_inset Formula $\rho^{n}\mathbf{u}^{n}$
+ at 
+\begin_inset Formula $t=0.$
 \end_inset
 
- versus 
-\begin_inset Formula $\left(\rho\mathbf{u}\right)^{n}$
-\end_inset
-
-.
  
 \end_layout
 
+\begin_layout Standard
+Assume that we know 
+\begin_inset Formula $\eta_{i},$
+\end_inset
+
+ 
+\begin_inset Formula $\mathbf{u}$
+\end_inset
+
+ at 
+\begin_inset Formula $t=0.$
+\end_inset
+
+ Knowledge of 
+\begin_inset Formula $\eta_{i}$
+\end_inset
+
+ implies knowledge of 
+\begin_inset Formula $\rho$
+\end_inset
+
+ (through the equation of state) and, therefore, 
+\begin_inset Formula $\rho\mathbf{u}$
+\end_inset
+
+ at 
+\begin_inset Formula $t=0.$
+\end_inset
+
+ Thus, 
+\begin_inset Formula $\del{\rho}t=-\nabla\cdot\rho\mathbf{u}$
+\end_inset
+
+ can be calculated directly from the initial conditions.
+ However, 
+\begin_inset Formula $\del{^{2}\rho}{t^{2}}$
+\end_inset
+
+ cannot be readily estimated.
+ And estimating it improperly will result in an invalid mass balance at
+ 
+\begin_inset Formula $t=0.$
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+A possible solution is: 
+\end_layout
+
+\begin_layout Itemize
+Calculate 
+\begin_inset Formula $\rho$
+\end_inset
+
+ from 
+\begin_inset Formula $\eta$
+\end_inset
+
+ and then calculate 
+\begin_inset Formula $p$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Itemize
+Calculate 
+\begin_inset Formula $\left(\del{\rho}t\right)^{0}=-\nabla\cdot\left(\rho\mathbf{u}\right)^{0}$
+\end_inset
+
+ and 
 \end_layout
 
 \end_body
