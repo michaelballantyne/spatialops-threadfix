@@ -21,6 +21,7 @@ namespace structured{
 
   /**
    *  \class IntVec
+   *  \ingroup structured
    *  \brief provides a lightweight class to deal with a 3D vector of integers.
    */
   class IntVec
@@ -95,6 +96,7 @@ namespace structured{
    *  \author James C. Sutherland
    *  \date September 2010
    *
+   *  \ingroup structured
    *  \brief Provides tools to index into a sub-block of memory.
    *
    *  Given a block of memory, [Nx,Ny,Nz], assume that we want to deal
@@ -272,6 +274,7 @@ namespace structured{
    *  \author James C. Sutherland
    *  \date September, 2010
    *
+   *  \ingroup structured
    *  \brief Provides a forward iterator for a field that is
    *         associated with a MemoryWindow, allowing one to iterate
    *         over the "local" portion of that field as defined by the
@@ -459,6 +462,7 @@ namespace structured{
    *  \author James C. Sutherland
    *  \date September, 2010
    *
+   *  \ingroup structured
    *  \brief Provides a forward iterator for a field that is
    *         associated with a MemoryWindow, allowing one to iterate
    *         over the "local" portion of that field as defined by the

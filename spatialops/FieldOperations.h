@@ -2,9 +2,14 @@
 #define SpatialOps_FieldOperations_h
 
 namespace SpatialOps{
+  /**
+   *  @file FieldOperations.h
+   */
+
 
   /**
-   *  \defgroup fieldexpression FieldExpression
+   *  @page expressiontemplates
+   *  @ingroup ExpressionTemplates
    *  @par Introduction
    *   The FieldExpression structure and \c operator \c <<= allow assignment-style statements that compute a given expression involving fields and assign the results to another given field.
    *   \c operator \c <<= uses the given FieldExpression object to construct a loop using forward iterators to evaluate the given expression for each element of the fields, one at a time.
@@ -24,9 +29,9 @@ namespace SpatialOps{
    *    extended_vector::const_iterator b_iter = b.begin();
    *    while(c_iter != c.end()) {
    *       *c_iter = a_iter + sin(b_iter);
-   *       c_iter++;
-   *       a_iter++;
-   *       b_iter++;
+   *       ++c_iter;
+   *       ++a_iter;
+   *       ++b_iter;
    *    };
    *   \endcode
    *  

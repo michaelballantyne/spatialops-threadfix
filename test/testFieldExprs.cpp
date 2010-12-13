@@ -50,6 +50,8 @@ bool test( const SS::IntVec dim )
         *i2 = std::cos( *ix ) + 3.0;
       }
     }
+    f3 <<= cos(x);
+    status( f3 == f2, "cos(x)" );
 
     f3 <<= f1+(f2*f1)-f2/f1;
 
@@ -59,6 +61,10 @@ bool test( const SS::IntVec dim )
       tmp( *i4 == *i3 );
     }
     status( tmp.ok(), "a+(a*b)-b/a" );
+
+    // ensure that this compiles
+    const double pi = 3.141592653589793;
+    f3 <<= cos( pi*x*0.5 ) + sin(x*pi) + tanh(x+exp(x/2));
   }
 
   return true;

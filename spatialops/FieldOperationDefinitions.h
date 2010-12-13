@@ -5,11 +5,32 @@
 #include <cmath>
 
 namespace SpatialOps{
+
+  /**
+   *  @file FieldOperationsDefinitions.h
+   */
+
+  /**
+   *  @page expressiontemplates
+   *  @ingroup ExpressionTemplates
+   *  @par Supported operations
+   *
+   *  The following expressions are supported.  Here, \c a \c b and \c
+   *  c can be other valid expressions.
+   *  \code
+   *    a <<= sin(b); 
+   *    a <<= cos(b);
+   *    a <<= tan(c);
+   *    a <<= tanh(c);
+   *    a <<= exp(c);
+   *  \endcode
+   */
   
   /**
    *  @struct SumOp
    *  @author Christopher Earl
    *  @date October, 2010
+   *  @ingroup ExpressionTemplatesDetail
    *  
    *  @brief Specialized FieldExpression-style representation of the addition operator, \c operator \c +.
    *  
@@ -103,6 +124,7 @@ namespace SpatialOps{
    *  @struct DiffOp
    *  @author Christopher Earl
    *  @date October, 2010
+   *  @ingroup ExpressionTemplatesDetail
    *  
    *  @brief Specialized FieldExpression-style representation of the subtraction operator, \c operator \c -.
    *  
@@ -196,6 +218,7 @@ namespace SpatialOps{
    *  @struct ProdOp
    *  @author Christopher Earl
    *  @date October, 2010
+   *  @ingroup ExpressionTemplatesDetail
    *  
    *  @brief Specialized FieldExpression-style representation of the multiplication operator, \c operator \c *.
    *  
@@ -291,6 +314,7 @@ namespace SpatialOps{
    *  @struct DivOp
    *  @author Christopher Earl
    *  @date October, 2010
+   *  @ingroup ExpressionTemplatesDetail
    *  
    *  @brief Specialized FieldExpression-style representation of the division operator, \c operator \c /.
    *  
@@ -466,6 +490,7 @@ namespace SpatialOps{
    *  @struct SumFcn
    *  @author Christopher Earl
    *  @date October, 2010
+   *  @ingroup ExpressionTemplatesDetail
    *  
    *  @brief Specialized FieldExpression-style representation of the add function.
    *  
@@ -550,6 +575,7 @@ namespace SpatialOps{
    *  @struct DiffFcn
    *  @author Christopher Earl
    *  @date October, 2010
+   *  @ingroup ExpressionTemplatesDetail
    *  
    *  @brief Specialized FieldExpression-style representation of the subt function.
    *  
@@ -634,6 +660,7 @@ namespace SpatialOps{
    *  @struct MultFcn
    *  @author Christopher Earl
    *  @date October, 2010
+   *  @ingroup ExpressionTemplatesDetail
    *  
    *  @brief Specialized FieldExpression-style representation of the mult function.
    *  
@@ -718,6 +745,7 @@ namespace SpatialOps{
    *  @struct DivFcn
    *  @author Christopher Earl
    *  @date October, 2010
+   *  @ingroup ExpressionTemplatesDetail
    *  
    *  @brief Specialized FieldExpression-style representation of the div function.
    *  
@@ -802,6 +830,7 @@ namespace SpatialOps{
    *  @struct SinFcn
    *  @author Christopher Earl
    *  @date October, 2010
+   *  @ingroup ExpressionTemplatesDetail
    *  
    *  @brief Specialized FieldExpression-style representation of the sin function.
    *  
@@ -878,6 +907,12 @@ namespace SpatialOps{
    *  Computes and returns the result of applying operand's current element to sin.
    */
   BUILD_UNARY_FUNCTION(SinFcn, std::sin, sin);
+  BUILD_UNARY_FUNCTION(CosFcn, std::cos, cos);
+  BUILD_UNARY_FUNCTION(TanFcn, std::tan, tan);
+
+  BUILD_UNARY_FUNCTION(ExpFcn, std::exp, exp);
+
+  BUILD_UNARY_FUNCTION(TanhFcn, std::tanh, tanh);
 
 } // namespace SpatialOps
 

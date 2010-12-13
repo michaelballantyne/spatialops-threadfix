@@ -12,7 +12,8 @@
 namespace SpatialOps{
 namespace structured{
 
-  /** @file FVToolsTemplates.h
+  /** @file FVTools.h
+   *  @ingroup structured
    *  @brief Provides function templates useful for field and operator
    *  creation for structured meshes.  Specialize these templates to
    *  your needs.
@@ -20,6 +21,22 @@ namespace structured{
 
   //------------------------------------------------------------------
 
+  /**
+   *  \fn int get_nx_with_ghost( const int, const bool )
+   *
+   *  \brief obtain the number of points in the x direction
+   *  \ingroup structured
+   *
+   *  \param nxNoGhost number of points in the x-direction excluding
+   *    ghost cells
+   *
+   *  \param hasPlusFaceX - is the (+) side a physical domain
+   *    boundary?  If so, x-face fields get an extra entry.
+   *
+   *  \result the number of points in the x-direction, including ghost cells.
+   *
+   *  \tparam FieldT the type of field that we want NX for.
+   */
   template<typename FieldT>
   int get_nx_with_ghost( const int nxNoGhost, const bool hasPlusFaceX )
   {
@@ -29,6 +46,22 @@ namespace structured{
     return nx;
   }
 
+  /**
+   *  \fn int get_ny_with_ghost( const int, const bool )
+   *
+   *  \brief obtain the number of points in the y direction
+   *  \ingroup structured
+   *
+   *  \param nyNoGhost number of points in the y-direction excluding
+   *    ghost cells
+   *
+   *  \param hasPlusFaceY - is the (+) side a physical domain
+   *    boundary?  If so, y-face fields get an extra entry.
+   *
+   *  \result the number of points in the y-direction, including ghost cells.
+   *
+   *  \tparam FieldT the type of field that we want NY for.
+   */
   template<typename FieldT>
   int get_ny_with_ghost( const int nyNoGhost, const bool hasPlusFaceY )
   {
@@ -38,6 +71,22 @@ namespace structured{
     return ny;
   }
 
+  /**
+   *  \fn int get_nz_with_ghost( const int, const bool )
+   *
+   *  \brief obtain the number of points in the z direction
+   *  \ingroup structured
+   *
+   *  \param nzNoGhost number of points in the z-direction excluding
+   *    ghost cells
+   *
+   *  \param hasPlusFaceZ - is the (+) side a physical domain
+   *    boundary?  If so, z-face fields get an extra entry.
+   *
+   *  \result the number of points in the z-direction, including ghost cells.
+   *
+   *  \tparam FieldT the type of field that we want NZ for.
+   */
   template<typename FieldT>
   int get_nz_with_ghost( const int nzNoGhost, const bool hasPlusFaceZ )
   {
@@ -47,6 +96,28 @@ namespace structured{
     return nz;
   }
 
+  /**
+   *  \fn int get_dim_with_ghost( const IntVec&, const bool, const bool, const bool )
+   *
+   *  \brief obtain the number of points in each direction for the given field type
+   *  \ingroup structured
+   *
+   *  \param dimNoGhost number of points in each direction excluding
+   *    ghost cells
+   *
+   *  \param hasPlusFaceX - is the (+) side a physical domain
+   *    boundary?  If so, x-face fields get an extra entry.
+   *
+   *  \param hasPlusFaceY - is the (+) side a physical domain
+   *    boundary?  If so, y-face fields get an extra entry.
+   *
+   *  \param hasPlusFaceZ - is the (+) side a physical domain
+   *    boundary?  If so, z-face fields get an extra entry.
+   *
+   *  \result the number of points in each direction, including ghost cells.
+   *
+   *  \tparam FieldT the type of field that we want (NX,NY,NZ) for.
+   */
   template<typename FieldT>
   IntVec get_dim_with_ghost( const IntVec& dimNoGhost,
                              const bool hasPlusFaceX, const bool hasPlusFaceY, const bool hasPlusFaceZ )
@@ -56,7 +127,28 @@ namespace structured{
                    get_nz_with_ghost<FieldT>(dimNoGhost[2],hasPlusFaceZ) );
   }
 
-  template<typename FieldT>
+  /**
+   *  \fn int get_ntot_with_ghost( const IntVec&, const bool, const bool, const bool )
+   *  \brief get the total number of points including ghost cells
+   *  \ingroup structured
+   *
+   *  \param dimNoGhost number of points in each direction excluding
+   *    ghost cells
+   *
+   *  \param hasPlusFaceX - is the (+) side a physical domain
+   *    boundary?  If so, x-face fields get an extra entry.
+   *
+   *  \param hasPlusFaceY - is the (+) side a physical domain
+   *    boundary?  If so, y-face fields get an extra entry.
+   *
+   *  \param hasPlusFaceZ - is the (+) side a physical domain
+   *    boundary?  If so, z-face fields get an extra entry.
+   *
+   *  \result the total number of points in the field, including ghost cells.
+   *
+   *  \tparam FieldT the type of field that we want (NX,NY,NZ) for.
+   */
+   template<typename FieldT>
   int get_ntot_with_ghost( const IntVec& dimNoGhost,
                            const bool hasPlusFaceX, const bool hasPlusFaceY, const bool hasPlusFaceZ )
   {
@@ -66,8 +158,25 @@ namespace structured{
 
 
   /**
+   *  \fn MemoryWindow get_window_with_ghost( const IntVec&, const bool, const bool, const bool )
    *  \brief Obtain the memory window for a field on a patch that is a single, contiguous memory block
-   *  \param localDim  the dimensionality of the field in consideration (without ghost cells)
+   *  \ingroup structured
+   *
+   *  \param dimNoGhost number of points in each direction excluding
+   *    ghost cells
+   *
+   *  \param hasPlusFaceX - is the (+) side a physical domain
+   *    boundary?  If so, x-face fields get an extra entry.
+   *
+   *  \param hasPlusFaceY - is the (+) side a physical domain
+   *    boundary?  If so, y-face fields get an extra entry.
+   *
+   *  \param hasPlusFaceZ - is the (+) side a physical domain
+   *    boundary?  If so, z-face fields get an extra entry.
+   *
+   *  \result the total number of points in the field, including ghost cells.
+   *
+   *  \tparam FieldT the type of field that we want (NX,NY,NZ) for.
    */
   template<typename FieldT>
   MemoryWindow
@@ -91,6 +200,15 @@ namespace structured{
    *  \param globalDim the global dimensionality of the memory block (without ghost cells)
    *  \param localDim  the dimensionality of the field in consideration (without ghost cells)
    *  \param offset    the offset (start ijk index) of the local field in the global address space.
+   *
+   *  \param hasPlusFaceX - is the (+) side a physical domain
+   *    boundary?  If so, x-face fields get an extra entry.
+   *
+   *  \param hasPlusFaceY - is the (+) side a physical domain
+   *    boundary?  If so, y-face fields get an extra entry.
+   *
+   *  \param hasPlusFaceZ - is the (+) side a physical domain
+   *    boundary?  If so, z-face fields get an extra entry.
    */
   template<typename FieldT>
   MemoryWindow
@@ -227,7 +345,7 @@ namespace structured{
       triplet[1] * nxt +
       triplet[2] * nxt*nyt;
   }
-
+  
   //==================================================================
 
 }// namespace structured

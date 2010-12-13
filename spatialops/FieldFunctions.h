@@ -200,46 +200,6 @@ private:
 
 
 /**
- *   NOTE: this populates ghost fields as well.
- */
-template< typename FieldT,
-          typename PatchT=FFLocal::NULLPatch >
-class LinearFunction1D : public FieldFunction1D<FieldT,PatchT>
-{
-  typedef typename PatchT::FieldID  FieldID;
-public:
-
-  LinearFunction1D( const FieldT& x,
-                    const double slope,
-                    const double intercept )
-    : FieldFunction1D<FieldT,PatchT>(x),
-      m_(slope),
-      b_(intercept)
-  {}
-
-  LinearFunction1D( PatchT& p,
-                    const FieldID xid,
-                    const double slope,
-                    const double intercept )
-    : FieldFunction1D<FieldT,PatchT>(p,xid), m_(slope), b_(intercept)
-  {}
-
-  ~LinearFunction1D(){}
-
-  void evaluate( FieldT& f ) const;
-  void dx( FieldT& gradPhi ) const;
-  void d2x( FieldT& gradPhi ) const;
-
-protected:
-
-private:
-  const double m_, b_;
-};
-
-
-//====================================================================
-
-/**
  *  @class SinFunction
  *  @author James C. Sutherland
  *  @date September, 2007
@@ -305,7 +265,6 @@ class GaussianFunction : public FieldFunction1D<FieldT,PatchT>
   void d2x( FieldT& d2f ) const;
 
  private:
-  inline double fval(const double x) const;
   const double a_, b_, xo_, yo_;
 };
 
@@ -379,9 +338,7 @@ namespace FFLocal{
   template<typename FieldT>
   struct FieldSetter<FieldT,NULLPatch>
   {
-    static void set( const FieldT* const f, NULLPatch* p, typename NULLPatch::FieldID id )
-    {
-    }
+    static void set( const FieldT* const f, NULLPatch* p, typename NULLPatch::FieldID id ){}
   };
 }
 
@@ -481,44 +438,6 @@ FieldFunction3D<FieldT,PatchT>::set_fields() const
 
 //====================================================================
 
-
-//------------------------------------------------------------------
-template<typename FieldT, typename PatchT>
-void
-LinearFunction1D<FieldT,PatchT>::
-evaluate( FieldT& f ) const
-{
-  this->set_fields();
-  typename FieldT::const_iterator ix = this->get_x().begin();
-  typename FieldT::iterator ifld = f.begin();
-  typename FieldT::iterator iflde= f.end();
-
-  for( ; ifld!=iflde; ++ifld, ++ix ){
-    *ifld = *ix*m_ + b_;
-  }
-}
-//------------------------------------------------------------------
-template<typename FieldT, typename PatchT>
-void
-LinearFunction1D<FieldT,PatchT>::
-dx( FieldT& f ) const
-{
-  f = m_;
-}
-//------------------------------------------------------------------
-template<typename FieldT, typename PatchT>
-void
-LinearFunction1D<FieldT,PatchT>::
-d2x( FieldT& f ) const
-{
-  f = 0.0;
-}
-//--------------------------------------------------------------------
-
-
-//====================================================================
-
-
 //--------------------------------------------------------------------
 template<typename FieldT, typename PatchT>
 SinFunction<FieldT,PatchT>::
@@ -553,13 +472,7 @@ SinFunction<FieldT,PatchT>::
 evaluate( FieldT& f ) const
 {
   this->set_fields();
-  typename FieldT::const_iterator ix = this->get_x().begin();
-  typename FieldT::iterator ifld = f.begin();
-  typename FieldT::iterator iflde= f.end();
-
-  for( ; ifld!=iflde; ++ifld, ++ix ){
-    *ifld = a_ * std::sin(*ix*b_) + base_;
-  }
+  f = a_ * sin( this->get_x() * b_ ) + base_;
 }
 //------------------------------------------------------------------
 template<typename FieldT, typename PatchT>
@@ -637,13 +550,8 @@ GaussianFunction<FieldT,PatchT>::
 evaluate( FieldT& f ) const
 {
   this->set_fields();
-  typename FieldT::const_iterator ix = this->get_x().begin();
-  typename FieldT::iterator ifld = f.begin();
-  typename FieldT::iterator iflde= f.end();
-
-  for( ; ifld!=iflde; ++ifld, ++ix ){
-    *ifld = fval(*ix) + yo_;
-  }
+  const FieldT& x = this->get_x()();
+  f = a_*exp(-(x-xo_)*(x-xo_)/b_) + yo_;
 }
 //------------------------------------------------------------------
 template<typename FieldT, typename PatchT>
@@ -652,14 +560,8 @@ GaussianFunction<FieldT,PatchT>::
 dx( FieldT& f ) const
 {
   this->set_fields();
-  typename FieldT::const_iterator ix = this->get_x().begin();
-  typename FieldT::iterator ifld = f.begin();
-  typename FieldT::iterator iflde= f.end();
-
-  for( ; ifld!=iflde; ++ifld, ++ix ){
-    const double tmp = (*ix-xo_);
-    *ifld = -2/b_*tmp*fval(*ix);
-  }
+  const FieldT& x = this->get_x()();
+  f = -2/b_ * (x-xo_)*(x-xo_)*exp(-(x-xo_)*(x-xo_)/b_) + yo_;
 }
 //------------------------------------------------------------------
 template<typename FieldT, typename PatchT>
@@ -668,23 +570,8 @@ GaussianFunction<FieldT,PatchT>::
 d2x( FieldT& f ) const
 {
   this->set_fields();
-  typename FieldT::const_iterator ix = this->get_x().begin();
-  typename FieldT::iterator ifld = f.begin();
-  typename FieldT::iterator iflde= f.end();
-
-  for( ; ifld!=iflde; ++ifld, ++ix ){
-    const double tmp = *ix-xo_;
-    *ifld =  -2/b_*fval(*ix) * (1.0-2.0/b_*tmp*tmp);
-  }
-}
-//--------------------------------------------------------------------
-template<typename FieldT, typename PatchT>
-double
-GaussianFunction<FieldT,PatchT>::
-fval( const double x ) const
-{
-  const double tmp = x-xo_;
-  return a_*std::exp(-tmp*tmp/b_);
+  const FieldT& x = this->get_x();
+  f = -2/b_ * ( a_*exp(-(x-xo_)*(x-xo_)/b_) ) * (1.0-2.0/b_*(x-xo_)*(x-xo_));
 }
 //--------------------------------------------------------------------
 

@@ -2,6 +2,7 @@
 #define Test_Functions_h
 
 #include <spatialops/FieldFunctions.h>
+#include <spatialops/FieldOperationDefinitions.h>
 
 //====================================================================
 
@@ -16,12 +17,10 @@ public:
   ~LinearFunction(){}
   void evaluate( FieldT& phi ) const
   {
-    typename FieldT::const_iterator ix=this->get_x().begin();
-    typename FieldT::const_iterator iy=this->get_y().begin();
-    typename FieldT::const_iterator iz=this->get_z().begin();
-    for( typename FieldT::iterator iphi=phi.begin(); iphi!=phi.end(); ++iphi,++ix,++iy,++iz ){
-      *iphi = 2*(*ix)+3*(*iy)+4*(*iz);
-    }
+    const FieldT& x=this->get_x();
+    const FieldT& y=this->get_y();
+    const FieldT& z=this->get_z();
+    phi <<= 2*x+3*y+4*z;
   }
 
   void dx( FieldT& gradPhi ) const{ gradPhi = 2.0; }
@@ -51,62 +50,48 @@ public:
   ~SinFun(){}
   void evaluate( FieldT& phi ) const
   {
-    typename FieldT::const_iterator ix=this->get_x().begin();
-    typename FieldT::const_iterator iy=this->get_y().begin();
-    typename FieldT::const_iterator iz=this->get_z().begin();
-    for( typename FieldT::iterator iphi=phi.begin(); iphi!=phi.end(); ++iphi,++ix,++iy,++iz ){
-      *iphi = std::sin(*ix*pi) + std::sin(0.5**iy*pi) + std::cos(*iz*pi) + 1;
-    }
+    const FieldT& x=this->get_x();
+    const FieldT& y=this->get_y();
+    const FieldT& z=this->get_z();
+    phi <<= sin(x*pi) + sin(0.5*pi*y) + cos(pi*z) + 1.0;
   }
 
   void dx( FieldT& gradPhi ) const
   {
-    typename FieldT::const_iterator ix=this->get_x().begin();
-    for( typename FieldT::iterator igrad=gradPhi.begin(); igrad!=gradPhi.end(); ++igrad,++ix ){
-      *igrad = pi*std::cos(*ix*pi);
-    }
+    const FieldT& x=this->get_x();
+    gradPhi <<= pi*cos(x*pi);
   }
 
   void dy( FieldT& grad ) const
   {
-    typename FieldT::const_iterator iy=this->get_y().begin();
-    for( typename FieldT::iterator igrad=grad.begin(); igrad!=grad.end(); ++igrad,++iy ){
-      *igrad = 0.5*pi*std::cos(0.5**iy*pi);
-    }
+    const FieldT& y=this->get_y();
+    grad <<= 0.5*pi*cos(0.5*pi*y);
   }
 
   void dz( FieldT& grad ) const
   {
-    typename FieldT::const_iterator iz=this->get_z().begin();
-    for( typename FieldT::iterator igrad=grad.begin(); igrad!=grad.end(); ++igrad,++iz ){
-      *igrad =  -pi*std::sin(*iz*pi);
-    }
+    const FieldT& z=this->get_z();
+    grad <<=  -pi*sin(pi*z);
   }
 
 
   void d2x( FieldT& d2phi ) const
   {
-    typename FieldT::const_iterator ix=this->get_x().begin();
-    for( typename FieldT::iterator iphi=d2phi.begin(); iphi!=d2phi.end(); ++iphi,++ix ){
-      *iphi = -pi*pi*std::sin(*ix*pi);
-    }
+    const FieldT& x=this->get_x();
+    d2phi <<= -pi*pi*sin(x*pi);
   }
 
 
   void d2y( FieldT& d2phi ) const
   {
-    typename FieldT::const_iterator iy=this->get_y().begin();
-    for( typename FieldT::iterator iphi=d2phi.begin(); iphi!=d2phi.end(); ++iphi,++iy ){
-      *iphi = -0.25*pi*pi*std::sin(0.5**iy*pi);
-    }
+    const FieldT& y=this->get_y();
+    d2phi <<= -0.25*pi*pi*sin(0.5*pi*y);
   }
 
   void d2z( FieldT& d2phi ) const
   {
-    typename FieldT::const_iterator iz=this->get_z().begin();
-    for( typename FieldT::iterator iphi=d2phi.begin(); iphi!=d2phi.end(); ++iphi,++iz ){
-      *iphi = -pi*pi*std::cos(*iz*pi);
-    }
+    const FieldT& z=this->get_z();
+    d2phi <<= -pi*pi*cos(z*pi);
   }
 
 private:
@@ -114,5 +99,4 @@ private:
 };
 
 
-
-#endif
+#endif // Test_Functions_h

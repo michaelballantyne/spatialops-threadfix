@@ -22,6 +22,41 @@ namespace structured{
       ExternalStorage
     };
 
+  /**
+   *  \class SpatialField
+   *  \ingroup structured
+   *  \author James C. Sutherland
+   *
+   *  \brief Abstracts a field.
+   *
+   *  \tparam VecOps - the scheme to use in performing linear algebra
+   *    operations on this field.  This must be compatible with the
+   *    scheme used for operators that operate on this field.
+   *
+   *  \tparam FieldLocation - type traits to describe the location of
+   *    this field.  On staggered meshes, this will describe the mesh
+   *    this field is associated with.  It also defines whether this
+   *    field is on a volume or surface.
+   *
+   *  \tparam GhostTraits - The ghost type traits.  Must define an
+   *    enum value \c NGHOST that gives the number of ghost cells for
+   *    this field.
+   *
+   *  \tparam T - the underlying datatype (defaults to \c double)
+   *
+   *  \par Related classes:
+   *   - \ref MemoryWindow
+   *   - \ref SpatialFieldStore
+   *   - \ref SpatialOperator
+   *
+   *  \par Public Typedefs
+   *   - \c field_type - this field's type
+   *   - \c Ghost - the ghost type traits
+   *   - \c Location - the location type traits
+   *   - \c value_type  - the type of underlying data being stored in this SpatialField
+   *   - \c iterator, \c const_iterator - iterators to the elements in this field
+   *   - \c interior_iterator, \c const_interior_iterator - iterators to the interior elements in this field (excludes ghost cells).
+   */
   template< typename VecOps,
             typename FieldLocation,
             typename GhostTraits,
