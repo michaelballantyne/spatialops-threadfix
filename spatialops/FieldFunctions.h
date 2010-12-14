@@ -6,6 +6,8 @@
 #include <boost/static_assert.hpp>
 
 #include <spatialops/SpatialOpsTools.h>
+#include <spatialops/FieldOperationDefinitions.h>
+
 #include<cmath>
 
 
@@ -200,7 +202,47 @@ private:
 
 
 /**
- *  @class SinFunction
+ *   NOTE: this populates ghost fields as well.
+ */
+template< typename FieldT,
+          typename PatchT=FFLocal::NULLPatch >
+class LinearFunction1D : public FieldFunction1D<FieldT,PatchT>
+{
+  typedef typename PatchT::FieldID  FieldID;
+public:
+
+  LinearFunction1D( const FieldT& x,
+                    const double slope,
+                    const double intercept )
+    : FieldFunction1D<FieldT,PatchT>(x),
+      m_(slope),
+      b_(intercept)
+  {}
+
+  LinearFunction1D( PatchT& p,
+                    const FieldID xid,
+                    const double slope,
+                    const double intercept )
+    : FieldFunction1D<FieldT,PatchT>(p,xid), m_(slope), b_(intercept)
+  {}
+
+  ~LinearFunction1D(){}
+
+  void evaluate( FieldT& f ) const;
+  void dx( FieldT& gradPhi ) const;
+  void d2x( FieldT& gradPhi ) const;
+
+protected:
+
+private:
+  const double m_, b_;
+};
+
+
+//====================================================================
+
+/**
+  *  @class SinFunction
  *  @author James C. Sutherland
  *  @date September, 2007
  *
@@ -436,7 +478,41 @@ FieldFunction3D<FieldT,PatchT>::set_fields() const
   }
 }
 
+
 //====================================================================
+
+
+//------------------------------------------------------------------
+template<typename FieldT, typename PatchT>
+void
+LinearFunction1D<FieldT,PatchT>::
+evaluate( FieldT& f ) const
+{
+  this->set_fields();
+  const FieldT& x = this->get_x();
+  f <<= x*m_ + b_;
+}
+//------------------------------------------------------------------
+template<typename FieldT, typename PatchT>
+void
+LinearFunction1D<FieldT,PatchT>::
+dx( FieldT& f ) const
+{
+  f = m_;
+}
+//------------------------------------------------------------------
+template<typename FieldT, typename PatchT>
+void
+LinearFunction1D<FieldT,PatchT>::
+d2x( FieldT& f ) const
+{
+  f = 0.0;
+}
+//--------------------------------------------------------------------
+
+
+//====================================================================
+
 
 //--------------------------------------------------------------------
 template<typename FieldT, typename PatchT>
@@ -538,8 +614,8 @@ GaussianFunction<FieldT,PatchT>::
 evaluate( FieldT& f ) const
 {
   this->set_fields();
-  const FieldT& x = this->get_x()();
-  f <<= a_*exp(-(x-xo_)*(x-xo_)/b_) + yo_;
+  const FieldT& x = this->get_x();
+  f <<= a_*exp(-1.0/b_ * (x-xo_)*(x-xo_) ) + yo_;
 }
 //------------------------------------------------------------------
 template<typename FieldT, typename PatchT>
@@ -548,8 +624,8 @@ GaussianFunction<FieldT,PatchT>::
 dx( FieldT& f ) const
 {
   this->set_fields();
-  const FieldT& x = this->get_x()();
-  f <<= -2/b_ * (x-xo_)*(x-xo_)*exp(-(x-xo_)*(x-xo_)/b_) + yo_;
+  const FieldT& x = this->get_x();
+  f <<= -2/b_ * (x-xo_)*(x-xo_)*exp(-1.0/b_ * (x-xo_)*(x-xo_) ) + yo_;
 }
 //------------------------------------------------------------------
 template<typename FieldT, typename PatchT>
@@ -559,7 +635,7 @@ d2x( FieldT& f ) const
 {
   this->set_fields();
   const FieldT& x = this->get_x();
-  f <<= -2/b_ * ( a_*exp(-(x-xo_)*(x-xo_)/b_) ) * (1.0-2.0/b_*(x-xo_)*(x-xo_));
+  f <<= -2/b_ * ( a_*exp(-1.0/b_ * (x-xo_)*(x-xo_) ) ) * (1.0-2.0/b_*(x-xo_)*(x-xo_));
 }
 //--------------------------------------------------------------------
 
