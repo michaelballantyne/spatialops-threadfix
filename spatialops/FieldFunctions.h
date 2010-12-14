@@ -472,7 +472,7 @@ SinFunction<FieldT,PatchT>::
 evaluate( FieldT& f ) const
 {
   this->set_fields();
-  f = a_ * sin( this->get_x() * b_ ) + base_;
+  f <<= a_ * sin( this->get_x() * b_ ) + base_;
 }
 //------------------------------------------------------------------
 template<typename FieldT, typename PatchT>
@@ -481,13 +481,8 @@ SinFunction<FieldT,PatchT>::
 dx( FieldT& f ) const
 {
   this->set_fields();
-  typename FieldT::const_iterator ix = this->get_x().begin();
-  typename FieldT::iterator ifld = f.begin();
-  typename FieldT::iterator iflde= f.end();
-
-  for( ; ifld!=iflde; ++ifld, ++ix ){
-    *ifld = a_*b_ * std::cos(*ix*b_);
-  }
+  const FieldT& x = this->get_x();
+  f <<= a_*b_ * cos(x*b_);
 }
 //------------------------------------------------------------------
 template<typename FieldT, typename PatchT>
@@ -496,15 +491,8 @@ SinFunction<FieldT,PatchT>::
 d2x( FieldT& f ) const
 {
   this->set_fields();
-  typename FieldT::const_iterator ix = this->get_x().begin();
-  typename FieldT::iterator ifld = f.begin();
-  typename FieldT::iterator iflde= f.end();
-
-  const double tmp = a_*b_*b_;
-
-  for( ; ifld!=iflde; ++ifld, ++ix ){
-    *ifld =  -tmp * std::sin(*ix*b_);
-  }
+  const FieldT& x = this->get_x();
+  f <<= -a_*b_*b_ * sin(x*b_);
 }
 //--------------------------------------------------------------------
 
@@ -551,7 +539,7 @@ evaluate( FieldT& f ) const
 {
   this->set_fields();
   const FieldT& x = this->get_x()();
-  f = a_*exp(-(x-xo_)*(x-xo_)/b_) + yo_;
+  f <<= a_*exp(-(x-xo_)*(x-xo_)/b_) + yo_;
 }
 //------------------------------------------------------------------
 template<typename FieldT, typename PatchT>
@@ -561,7 +549,7 @@ dx( FieldT& f ) const
 {
   this->set_fields();
   const FieldT& x = this->get_x()();
-  f = -2/b_ * (x-xo_)*(x-xo_)*exp(-(x-xo_)*(x-xo_)/b_) + yo_;
+  f <<= -2/b_ * (x-xo_)*(x-xo_)*exp(-(x-xo_)*(x-xo_)/b_) + yo_;
 }
 //------------------------------------------------------------------
 template<typename FieldT, typename PatchT>
@@ -571,7 +559,7 @@ d2x( FieldT& f ) const
 {
   this->set_fields();
   const FieldT& x = this->get_x();
-  f = -2/b_ * ( a_*exp(-(x-xo_)*(x-xo_)/b_) ) * (1.0-2.0/b_*(x-xo_)*(x-xo_));
+  f <<= -2/b_ * ( a_*exp(-(x-xo_)*(x-xo_)/b_) ) * (1.0-2.0/b_*(x-xo_)*(x-xo_));
 }
 //--------------------------------------------------------------------
 
@@ -598,12 +586,8 @@ HyperTanFunction<FieldT,PatchT>::
 evaluate( FieldT& f ) const
 {
   this->set_fields();
-  typename FieldT::const_iterator ix = this->get_x().begin(); 
-  typename FieldT::iterator ifld = f.begin();
-  typename FieldT::iterator iflde= f.end();
-  for( ; ifld!=iflde; ++ifld, ++ix ){
-    *ifld = (amplitude_/2) * (1+tanh((*ix-L1_)/width_))* (1-0.5*(1+tanh((*ix-L2_)/width_)));	
-  }
+  const FieldT& x = this->get_x(); 
+  f <<= (amplitude_/2) * ( 1.0 + tanh((x-L1_)/width_)) * (1.0-0.5*(1.0+tanh((x-L2_)/width_)));
 }
 //------------------------------------------------------------------
 
