@@ -67,18 +67,18 @@ namespace SpatialOps{
   template<typename FieldType>
     struct FieldForm;
 
-  template <typename Operand1, typename Operand2, typename FieldType>
+  template<typename Operand1, typename Operand2, typename FieldType>
     struct BinOp;
   
 #define BUILD_BINARY_TYPE_PROTOTYPE(OBJECT_NAME)			\
-  template <typename Operand1, typename Operand2, typename FieldType>	\
+  template<typename Operand1, typename Operand2, typename FieldType>	\
     struct OBJECT_NAME
 
-  template <typename Operand, typename FieldType>
+  template<typename Operand, typename FieldType>
     struct UnOp;
 
 #define BUILD_UNARY_TYPE_PROTOTYPE(OBJECT_NAME)		\
-  template <typename Operand, typename FieldType>	\
+  template<typename Operand, typename FieldType>	\
     struct OBJECT_NAME
 
   template<int Num, typename FieldType>
@@ -179,6 +179,28 @@ namespace SpatialOps{
       inline AtomicType const & eval() const {
 	return val;
       };
+      
+      /**
+       *  @brief Predicate: Current position is the end?
+       *  
+       *  \return false; a Scalar is never at the end.
+       *  
+       *  Returns false.
+       */
+      inline bool at_end() const {
+	return false;
+      };
+      
+      /**
+       *  @brief Predicate: Can reach end position?
+       *  
+       *  \return false; a Scalar cannot reach the end.
+       *  
+       *  Returns false.
+       */
+      inline bool has_length() const {
+	return false;
+      };
     };
 
   /**
@@ -277,6 +299,30 @@ namespace SpatialOps{
       inline typename FieldType::value_type const & eval() const {
 	return *iter;
       };
+      
+      /**
+       *  @brief Predicate: Current position is the end?
+       *  
+       *  \return Boolean; true, if currently at end; false; if not.
+       *  
+       *  Returns whether or not current position is the end/last position.
+       *  
+       *  \note There is probably a more efficient way to do this.
+       */
+      inline bool at_end() const {
+	return iter == fptr->end();
+      };
+      
+      /**
+       *  @brief Predicate: Can reach end position?
+       *  
+       *  \return true; a FieldForm can reach the end.
+       *  
+       *  Returns true.
+       */
+      inline bool has_length() const {
+	return true;
+      };
     };
 
   /**
@@ -315,7 +361,7 @@ namespace SpatialOps{
    *   For each member function in BinOp, there is an equivalent member function in each SpecificBinOp (without the function parameter).
    *   Note that usual C/C++ order of operations applies to binary operators defined in this way.
    */
-  template <typename Operand1, typename Operand2, typename FieldType>
+  template<typename Operand1, typename Operand2, typename FieldType>
     struct BinOp {
       
       /**
@@ -417,10 +463,34 @@ namespace SpatialOps{
 	return op(operand1.eval(),
 		  operand2.eval());
       };
+      
+      /**
+       *  @brief Predicate: Current position is the end?
+       *  
+       *  \return Boolean; true, if currently at end; false; if not.
+       *  
+       *  Returns whether or not either operands' current position is the end/last position.
+       */
+      inline bool at_end() const {
+	return operand1.at_end()
+	  || operand2.at_end();
+      };
+      
+      /**
+       *  @brief Predicate: Can reach end position?
+       *  
+       *  \return Boolean; true, if one or both operands can reach the end.
+       *  
+       *  Returns whether or not either operands can reach the end position.
+       */
+      inline bool has_length() const {
+	return operand1.has_length()
+	  || operand2.has_length();
+      };
     };
   
 #define BUILD_BINARY_OPERATOR_STRUCT(OBJECT_NAME, INTERNAL_NAME)	\
-  template <typename Operand1, typename Operand2, typename FieldType>	\
+  template<typename Operand1, typename Operand2, typename FieldType>	\
     struct OBJECT_NAME {						\
 									\
     typename FieldType::value_type typedef AtomicType;			\
@@ -458,10 +528,20 @@ namespace SpatialOps{
       return operand1.eval() INTERNAL_NAME				\
 	operand2.eval();						\
     };									\
+									\
+    inline bool at_end() const {					\
+      return operand1.at_end()						\
+	|| operand2.at_end();						\
+    };									\
+									\
+    inline bool has_length() const {					\
+      return operand1.at_end()						\
+	|| operand2.at_end();						\
+    };									\
     }
   
 #define BUILD_BINARY_FUNCTION_STRUCT(OBJECT_NAME, INTERNAL_NAME)	\
-  template <typename Operand1, typename Operand2, typename FieldType>	\
+  template<typename Operand1, typename Operand2, typename FieldType>	\
     struct OBJECT_NAME {						\
     									\
     typename FieldType::value_type typedef AtomicType;			\
@@ -499,6 +579,16 @@ namespace SpatialOps{
       return INTERNAL_NAME(operand1.eval(),				\
 			   operand2.eval());				\
     };									\
+									\
+    inline bool at_end() const {					\
+      return operand1.at_end()						\
+	|| operand2.at_end();						\
+    };									\
+									\
+    inline bool has_length() const {					\
+      return operand1.at_end()						\
+	|| operand2.at_end();						\
+    };									\
     }
   
   /**
@@ -533,9 +623,9 @@ namespace SpatialOps{
    *  \endcode
    *  The macro, \c BUILD_UNARY_FUNCTION, defines unary functions.
    *   For each member function in UnOp, there is an equivalent member function in each SpecificUnOp (without the function parameter).
-   *  Note that usual C/C++ unary operators can be defined by macros very similar to \c BUILD_UNARY_FUNCTION; however, this macro has not been implemented, because there is no immediate use.
+   *  Note that usual C/C++ unary operators can be defined by macros very similar to \c BUILD_UNARY_FUNCTION; however, this macro has not been implemented, because there is no OAimmediate use.
    */
-  template <typename Operand, typename FieldType>
+  template<typename Operand, typename FieldType>
     struct UnOp {
       
       /**
@@ -620,10 +710,32 @@ namespace SpatialOps{
       inline AtomicType eval() const {
 	return op(operand.eval());
       };
+      
+      /**
+       *  @brief Predicate: Current position is the end?
+       *  
+       *  \return Boolean; true, if currently at end; false; if not.
+       *  
+       *  Returns whether or not operand's current position is the end/last position.
+       */
+      inline bool at_end() const {
+	return operand.at_end();
+      };
+      
+      /**
+       *  @brief Predicate: Can reach end position?
+       *  
+       *  \return Boolean; true, if operand can reach the end.
+       *  
+       *  Returns whether or not operand can reach the end position.
+       */
+      inline bool has_length() const {
+	return operand.has_length();
+      };
     };
 
 #define BUILD_UNARY_STRUCT(OBJECT_NAME, INTERNAL_NAME)		\
-  template <typename Operand, typename FieldType>		\
+  template<typename Operand, typename FieldType>		\
     struct OBJECT_NAME {					\
     								\
     typename FieldType::value_type typedef AtomicType;		\
@@ -652,6 +764,14 @@ namespace SpatialOps{
     inline AtomicType eval() const {				\
       return INTERNAL_NAME(operand.eval());			\
     };								\
+    								\
+    inline bool at_end() const {					\
+      return operand.at_end();						\
+    };									\
+    									\
+    inline bool has_length() const {					\
+      return operand.at_end();						\
+    };									\
     }
   
   /**
@@ -2811,7 +2931,7 @@ namespace SpatialOps{
   /* (For specialized templates, doxygen documentation must refer to the type by proximity to the specialization.) */
   /* (This macro defines a specialization, so these two requirements conflict.) */
 #define BUILD_BINARY_ARGUMENT_REPLACE(OBJECT_NAME)			\
-  template <typename Operand1, typename Operand2, int CurrentArg, typename ArgType, typename FieldType> \
+  template<typename Operand1, typename Operand2, int CurrentArg, typename ArgType, typename FieldType> \
     struct ArgReplace<OBJECT_NAME<Operand1,Operand2,FieldType>,CurrentArg,ArgType> { \
     /* ResultType is  SpecificBinOp<ArgReplace<Operand1, ...>::ResultType, */ \
     /*                              ArgReplace<Operand2, ...>::ResultType, ...> */ \
@@ -2918,7 +3038,7 @@ namespace SpatialOps{
   /* (For specialized templates, doxygen documentation must refer to the type by proximity to the specialization.) */
   /* (This macro defines a specialization, so these two requirements conflict.) */
 #define BUILD_UNARY_ARGUMENT_REPLACE(OBJECT_NAME)			\
-  template <typename Operand, int CurrentArg, typename ArgType, typename FieldType> \
+  template<typename Operand, int CurrentArg, typename ArgType, typename FieldType> \
     struct ArgReplace<OBJECT_NAME<Operand,FieldType>,CurrentArg,ArgType> { \
     /* ResultType is  SpecificBinOp<ArgReplace<Operand1, ...>::ResultType, ...> */ \
     OBJECT_NAME<typename ArgReplace<Operand,CurrentArg,ArgType>::ResultType,FieldType> typedef ResultType; \
@@ -3389,9 +3509,9 @@ namespace SpatialOps{
    *  
    *  This instance of operator <<= wraps rhs in a FieldExpression and then calls itself.
    */
-  template <typename FieldType>
-    static inline FieldType const & operator <<= (FieldType & lhs,
-						  typename FieldType::value_type const & rhs) {
+  template<typename FieldType>
+    inline FieldType const & operator <<= (FieldType & lhs,
+					   typename FieldType::value_type const & rhs) {
     Scalar<typename FieldType::value_type> typedef ExprType;
     
     return lhs <<= FieldExpression<ExprType,FieldType>(ExprType(rhs));
@@ -3414,9 +3534,9 @@ namespace SpatialOps{
    *  
    *  This instance of operator <<= wraps rhs in a FieldExpression and then calls itself.
    */
-  template <typename FieldType>
-    static inline FieldType const & operator <<= (FieldType & lhs,
-						  FieldType const & rhs) {
+  template<typename FieldType>
+    inline FieldType const & operator <<= (FieldType & lhs,
+					   FieldType const & rhs) {
     FieldForm<FieldType> typedef ExprType;
     
     return lhs <<= FieldExpression<ExprType,FieldType>(ExprType(rhs));
@@ -3447,10 +3567,10 @@ namespace SpatialOps{
    *  \note There are no checks here to make sure that lhs and rhs are the same size.
    *  (The number of iterations of the loop is based on the size of lhs.)
    */
-  template <typename ExprType, typename FieldType>
-    static inline FieldType const & operator <<= (FieldType & lhs,
-						  FieldExpression<ExprType,
-						  FieldType> rhs) {
+  template<typename ExprType, typename FieldType>
+    inline FieldType const & operator <<= (FieldType & lhs,
+					   FieldExpression<ExprType,
+					   FieldType> rhs) {
     //initialize:
     typename FieldType::iterator iter = lhs.begin();
     //initialize rhs:
@@ -3466,7 +3586,81 @@ namespace SpatialOps{
     
     return lhs;
   };
-
+  
+  /* Fold for different return type.  */
+  template<typename ResultType, typename ExprType, typename FieldType>
+    inline ResultType fold(ResultType(*proc)(ResultType const &,
+					     typename FieldType::value_type const &),
+			   ResultType const & initialValue,
+			   FieldExpression<ExprType,FieldType> fexpr) {
+    ResultType result = initialValue;
+    
+    ExprType expr = fexpr.expression();
+    
+    expr.init();
+    
+    while(!expr.at_end()) {
+      result = proc(result,
+		    expr.eval());
+      expr.next();
+    };
+    
+    return result;
+  };
+  
+  /* Fold for AtomicType.  */
+  template<typename ExprType, typename FieldType>
+    inline typename FieldType::value_type fold(typename FieldType::value_type(*proc)(typename FieldType::value_type const &,
+										     typename FieldType::value_type const &),
+					       FieldExpression<ExprType,FieldType> fexpr) {
+    typename FieldType::value_type typedef AtomicType;
+    
+    ExprType expr = fexpr.expression();
+    
+    expr.init();
+    
+    AtomicType result = expr.eval();
+    expr.next();
+    
+    while(!expr.at_end()) {
+      result = proc(result,
+		    expr.eval());
+      
+      expr.next();
+    };
+    
+    return result;
+  };
+  
+  /* Template max */
+  template<typename AtomicType>
+    AtomicType at_max (AtomicType const & first,
+		       AtomicType const & second) {
+    if(first > second)
+      return first;
+    else
+      return second;
+  };
+  
+  /* Field version of max */
+  template<typename FieldType>
+    inline typename FieldType::value_type field_max(FieldType field) {
+    FieldForm<FieldType> typedef ExprType;
+    
+    return field_max(FieldExpression<ExprType,FieldType>(ExprType(field)));
+  };
+  
+  /* Field version of max */
+  template<typename ExprType, typename FieldType>
+    inline typename FieldType::value_type field_max(FieldExpression<ExprType,FieldType> fexpr) {
+    typename FieldType::value_type typedef AtomicType;
+    
+    ExprType expr = fexpr.expression();
+    expr.init();
+    
+    return fold(at_max<AtomicType>, fexpr);
+  };
+  
 #define BUILD_BINARY_OPERATOR(OBJECT_NAME, INTERNAL_NAME, EXTERNAL_NAME) \
   BUILD_BINARY_TYPE_PROTOTYPE(OBJECT_NAME);				\
   BUILD_BINARY_OPERATOR_STRUCT(OBJECT_NAME, INTERNAL_NAME);		\

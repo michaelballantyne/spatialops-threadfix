@@ -117,6 +117,24 @@ namespace SpatialOps{
    *  \return current element: sum of operands' current elements.
    *  
    *  Computes and returns sum of operands' current elements.
+   *  
+   *  
+   *  
+   *  @fn bool SumOp::at_end() const
+   *  @brief Predicate: Current position is the end?
+   *  
+   *  \return Boolean; true, if currently at end; false; if not.
+   *  
+   *  Returns whether or not either operands' current position is the end/last position.
+   *  
+   *  
+   *  
+   *  @fn bool SumOp::has_length() const
+   *  @brief Predicate: Can reach end position?
+   *  
+   *  \return Boolean; true, if one or both operands can reach the end.
+   *  
+   *  Returns whether or not either operands can reach the end position.
    */
   BUILD_BINARY_OPERATOR(SumOp, +, operator +);
   
@@ -211,6 +229,24 @@ namespace SpatialOps{
    *  \return current element: difference of operands' current elements.
    *  
    *  Computes and returns difference of operands' current elements.
+   *  
+   *  
+   *  
+   *  @fn bool DiffOp::at_end() const
+   *  @brief Predicate: Current position is the end?
+   *  
+   *  \return Boolean; true, if currently at end; false; if not.
+   *  
+   *  Returns whether or not either operands' current position is the end/last position.
+   *  
+   *  
+   *  
+   *  @fn bool DiffOp::has_length() const
+   *  @brief Predicate: Can reach end position?
+   *  
+   *  \return Boolean; true, if one or both operands can reach the end.
+   *  
+   *  Returns whether or not either operands can reach the end position.
    */
   BUILD_BINARY_OPERATOR(DiffOp, -, operator -);
 
@@ -307,6 +343,24 @@ namespace SpatialOps{
    *  \return current element: product of operands' current elements.
    *  
    *  Computes and returns product of operands' current elements.
+   *  
+   *  
+   *  
+   *  @fn bool ProdOp::at_end() const
+   *  @brief Predicate: Current position is the end?
+   *  
+   *  \return Boolean; true, if currently at end; false; if not.
+   *  
+   *  Returns whether or not either operands' current position is the end/last position.
+   *  
+   *  
+   *  
+   *  @fn bool ProdOp::has_length() const
+   *  @brief Predicate: Can reach end position?
+   *  
+   *  \return Boolean; true, if one or both operands can reach the end.
+   *  
+   *  Returns whether or not either operands can reach the end position.
    */
   BUILD_BINARY_OPERATOR(ProdOp, *, operator *);
 
@@ -403,6 +457,24 @@ namespace SpatialOps{
    *  \return current element: division of operands' current elements.
    *  
    *  Computes and returns division of operands' current elements.
+   *  
+   *  
+   *  
+   *  @fn bool DivOp::at_end() const
+   *  @brief Predicate: Current position is the end?
+   *  
+   *  \return Boolean; true, if currently at end; false; if not.
+   *  
+   *  Returns whether or not either operands' current position is the end/last position.
+   *  
+   *  
+   *  
+   *  @fn bool DivOp::has_length() const
+   *  @brief Predicate: Can reach end position?
+   *  
+   *  \return Boolean; true, if one or both operands can reach the end.
+   *  
+   *  Returns whether or not either operands can reach the end position.
    */
   BUILD_BINARY_OPERATOR(DivOp, /, operator /);
   
@@ -568,6 +640,24 @@ namespace SpatialOps{
    *  \return current element: the result of applying operands' current elements to add.
    *  
    *  Computes and returns the result of applying operands' current elements to add.
+   *  
+   *  
+   *  
+   *  @fn bool sumFcn::at_end() const
+   *  @brief Predicate: Current position is the end?
+   *  
+   *  \return Boolean; true, if currently at end; false; if not.
+   *  
+   *  Returns whether or not either operands' current position is the end/last position.
+   *  
+   *  
+   *  
+   *  @fn bool sumFcn::has_length() const
+   *  @brief Predicate: Can reach end position?
+   *  
+   *  \return Boolean; true, if one or both operands can reach the end.
+   *  
+   *  Returns whether or not either operands can reach the end position.
    */
   BUILD_BINARY_FUNCTION(SumFcn, add, add);
 
@@ -653,6 +743,24 @@ namespace SpatialOps{
    *  \return current element: the result of applying operands' current elements to subt.
    *  
    *  Computes and returns the result of applying operands' current elements to subt.
+   *  
+   *  
+   *  
+   *  @fn bool DiffFcn::at_end() const
+   *  @brief Predicate: Current position is the end?
+   *  
+   *  \return Boolean; true, if currently at end; false; if not.
+   *  
+   *  Returns whether or not either operands' current position is the end/last position.
+   *  
+   *  
+   *  
+   *  @fn bool DiffFcn::has_length() const
+   *  @brief Predicate: Can reach end position?
+   *  
+   *  \return Boolean; true, if one or both operands can reach the end.
+   *  
+   *  Returns whether or not either operands can reach the end position.
    */
   BUILD_BINARY_FUNCTION(DiffFcn, subt, subt);
 
@@ -738,6 +846,24 @@ namespace SpatialOps{
    *  \return current element: the result of applying operands' current elements to mult.
    *  
    *  Computes and returns the result of applying operands' current elements to mult.
+   *  
+   *  
+   *  
+   *  @fn bool MultFcn::at_end() const
+   *  @brief Predicate: Current position is the end?
+   *  
+   *  \return Boolean; true, if currently at end; false; if not.
+   *  
+   *  Returns whether or not either operands' current position is the end/last position.
+   *  
+   *  
+   *  
+   *  @fn bool MultFcn::has_length() const
+   *  @brief Predicate: Can reach end position?
+   *  
+   *  \return Boolean; true, if one or both operands can reach the end.
+   *  
+   *  Returns whether or not either operands can reach the end position.
    */
   BUILD_BINARY_FUNCTION(MultFcn, mult, mult);
 
@@ -823,6 +949,24 @@ namespace SpatialOps{
    *  \return current element: the result of applying operands' current elements to div.
    *  
    *  Computes and returns the result of applying operands' current elements to div.
+   *  
+   *  
+   *  
+   *  @fn bool DivFcn::at_end() const
+   *  @brief Predicate: Current position is the end?
+   *  
+   *  \return Boolean; true, if currently at end; false; if not.
+   *  
+   *  Returns whether or not either operands' current position is the end/last position.
+   *  
+   *  
+   *  
+   *  @fn bool DivFcn::has_length() const
+   *  @brief Predicate: Can reach end position?
+   *  
+   *  \return Boolean; true, if one or both operands can reach the end.
+   *  
+   *  Returns whether or not either operands can reach the end position.
    */
   BUILD_BINARY_FUNCTION(DivFcn, div, div);
   
@@ -905,6 +1049,24 @@ namespace SpatialOps{
    *  \return current element: the result of applying operand's current element to sin.
    *  
    *  Computes and returns the result of applying operand's current element to sin.
+   *  
+   *  
+   *  
+   *  @fn bool SinFcn::at_end() const
+   *  @brief Predicate: Current position is the end?
+   *  
+   *  \return Boolean; true, if currently at end; false; if not.
+   *  
+   *  Returns whether or not operand's current position is the end/last position.
+   *  
+   *  
+   *  
+   *  @fn bool SinFcn::has_length() const
+   *  @brief Predicate: Can reach end position?
+   *  
+   *  \return Boolean; true, if operand can reach the end.
+   *  
+   *  Returns whether or not operand can reach the end position.
    */
   BUILD_UNARY_FUNCTION(SinFcn, std::sin, sin);
   BUILD_UNARY_FUNCTION(CosFcn, std::cos, cos);

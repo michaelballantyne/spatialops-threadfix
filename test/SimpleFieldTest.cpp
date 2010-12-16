@@ -3,6 +3,8 @@
 #include <spatialops/FieldOperations.h>
 #include <spatialops/FieldOperationDefinitions.h>
 
+#include <iostream>
+
 using namespace SpatialOps;
 using namespace structured;
 
@@ -18,9 +20,14 @@ int main()
   Field b( window, NULL );
   Field c( window, NULL );
 
-  a = 1.0;
-  b = 1.0;
   
+  Field::iterator ia1 = a.begin();
+  for(int i = 0; ia1!=a.end(); i++, ++ia1 ){
+    *ia1 = i;
+  }
+
+  b = 1.0;
+
   DEFINE_$_ANONYMOUS_ARGUMENTS(Field);
   
   // example of what we would like to do:
@@ -42,6 +49,9 @@ int main()
   c <<= (($1 * $2) - $0)(3 * a, a)(3.0);
   c <<= (($1 * $2) - $0)(3 * a)(a, 3.0);
   c <<= (($1 * $2) - $0)(3 * a)(a)(3.0);
+  
+  std::cout << field_max(a + 2) << std::endl;
+  std::cout << field_max(a) << std::endl;
   
   // what we currently must do:
   Field::const_iterator ia = a.begin();
