@@ -79,8 +79,8 @@ bool test( const SS::IntVec dim )
   }
 
 
-  const SS::MemoryWindow pw(100,1,1);
-  SpatialOps::Particle::ParticleField pf1(pw), pf2(pw), pf3(pw);
+  const SS::MemoryWindow pw( SpatialOps::structured::IntVec(100,1,1) );
+  SpatialOps::Particle::ParticleField pf1(pw,NULL), pf2(pw,NULL), pf3(pw,NULL);
   pf1 = 1.0;
   pf3 = 2.0;
   pf2 <<= pf1 * pf3;
