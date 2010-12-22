@@ -2,6 +2,8 @@
 #include <spatialops/structured/FVStaggeredTypes.h>
 #include <spatialops/structured/FVTools.h>
 
+#include <spatialops/particles/ParticleFieldTypes.h>
+
 #include "TestHelper.h"
 
 namespace SS = SpatialOps::structured;
@@ -75,6 +77,13 @@ bool test( const SS::IntVec dim )
     }
     status( tmp.ok(), "abs(-1.0) == 1.0" );
   }
+
+
+  const SS::MemoryWindow pw(100,1,1);
+  SpatialOps::Particle::ParticleField pf1(pw), pf2(pw), pf3(pw);
+  pf1 = 1.0;
+  pf3 = 2.0;
+  pf2 <<= pf1 * pf3;
 
   return true;
 }
