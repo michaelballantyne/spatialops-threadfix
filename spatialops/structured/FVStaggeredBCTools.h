@@ -223,6 +223,9 @@ namespace structured{
     typedef typename OpT::SrcFieldType   SrcFieldT;
     typedef typename OpT::DestFieldType  DestFieldT;
 
+    BoundaryConditionOp& operator=( const BoundaryConditionOp& ); // no assignment
+    BoundaryConditionOp(); // no default constructor
+
   public:
     /**
      *  @param point The i,j,k location at which we want to specify
@@ -246,7 +249,10 @@ namespace structured{
                          const BCEval bceval,
                          const OperatorDatabase& soDatabase );
 
-    ~BoundaryConditionOp(){}
+    // copy constructor
+    BoundaryConditionOp( const BoundaryConditionOp& );
+
+    ~BoundaryConditionOp();
 
     /**
      *  Impose the boundary condition on the supplied field.
@@ -411,6 +417,23 @@ namespace structured{
     assert( ghostCoef_ != 0.0 );
 #   endif
   }
+
+  //------------------------------------------------------------------
+
+  template< typename OpT, typename BCEval >
+  BoundaryConditionOp<OpT,BCEval>::
+  BoundaryConditionOp( const BoundaryConditionOp<OpT,BCEval>& other )
+    : bcEval_( other.bcEval_ ),
+      index_( other.index_ ),
+      ghostCoef_( other.ghostCoef_ ),
+      ixVals_( other.ixVals_ )
+  {}
+
+  //------------------------------------------------------------------
+
+  template< typename OpT, typename BCEval >
+  BoundaryConditionOp<OpT,BCEval>::~BoundaryConditionOp()
+  {}
 
   //------------------------------------------------------------------
 
