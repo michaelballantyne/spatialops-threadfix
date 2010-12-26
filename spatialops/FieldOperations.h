@@ -3513,24 +3513,12 @@ namespace SpatialOps{
    *  This instance of operator <<= wraps rhs in a FieldExpression and then calls itself.
    */
   template<typename FieldType>
-    inline void operator <<= (FieldType & lhs,
-			      double
-			      //typename FieldType::value_type 
-			      const & rhs) {
-    //Scalar<typename FieldType::value_type> typedef ExprType;
+    inline FieldType const & operator <<= (FieldType & lhs,
+					   typename FieldType::value_type const & rhs) {
+    Scalar<typename FieldType::value_type> typedef ExprType;
     
-    std::cout << "Running\n";
-    //return lhs;
-    //return lhs <<= FieldExpression<ExprType,FieldType>(ExprType(rhs));
+    return lhs <<= FieldExpression<ExprType,FieldType>(ExprType(rhs));
   };
-  
-/*   template<typename FieldType> */
-/*     inline FieldType const & operator <<= (FieldType & lhs, */
-/* 					   typename FieldType::value_type const & rhs) { */
-/*     Scalar<typename FieldType::value_type> typedef ExprType; */
-    
-/*     return lhs <<= FieldExpression<ExprType,FieldType>(ExprType(rhs)); */
-/*   }; */
   
   /**
    *  @author Christopher Earl
