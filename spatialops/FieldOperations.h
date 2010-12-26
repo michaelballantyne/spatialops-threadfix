@@ -1,12 +1,15 @@
 #ifndef SpatialOps_FieldOperations_h
 #define SpatialOps_FieldOperations_h
 
+#include<vector>
+#include<iostream>
+
 namespace SpatialOps{
   /**
    *  @file FieldOperations.h
    */
-
-
+  
+  
   /**
    *  @page expressiontemplates
    *  @ingroup ExpressionTemplates
@@ -3510,12 +3513,24 @@ namespace SpatialOps{
    *  This instance of operator <<= wraps rhs in a FieldExpression and then calls itself.
    */
   template<typename FieldType>
-    inline FieldType const & operator <<= (FieldType & lhs,
-					   typename FieldType::value_type const & rhs) {
-    Scalar<typename FieldType::value_type> typedef ExprType;
+    inline void operator <<= (FieldType & lhs,
+			      double
+			      //typename FieldType::value_type 
+			      const & rhs) {
+    //Scalar<typename FieldType::value_type> typedef ExprType;
     
-    return lhs <<= FieldExpression<ExprType,FieldType>(ExprType(rhs));
+    std::cout << "Running\n";
+    //return lhs;
+    //return lhs <<= FieldExpression<ExprType,FieldType>(ExprType(rhs));
   };
+  
+/*   template<typename FieldType> */
+/*     inline FieldType const & operator <<= (FieldType & lhs, */
+/* 					   typename FieldType::value_type const & rhs) { */
+/*     Scalar<typename FieldType::value_type> typedef ExprType; */
+    
+/*     return lhs <<= FieldExpression<ExprType,FieldType>(ExprType(rhs)); */
+/*   }; */
   
   /**
    *  @author Christopher Earl
@@ -3559,7 +3574,7 @@ namespace SpatialOps{
    *  \return a reference to the newly-assigned lhs.
    *  
    *  This instance of operator <<= does the actual assignment.
-   *  The while loop that iterates over the elements in rhs is explicit here.
+   *  The for loop that iterates over the elements in rhs is explicit here.
    *  The body of the loop evaluates the current element of the rhs and assigns it to the current element of the lhs.
    *  
    *  The evaluation of an element is via the eval from the ExprType object within rhs.
@@ -3608,11 +3623,11 @@ namespace SpatialOps{
     return result;
   };
   
-  /* Fold for AtomicType.  */
+  /* Reduce for AtomicType.  */
   template<typename ExprType, typename FieldType>
-    inline typename FieldType::value_type fold(typename FieldType::value_type(*proc)(typename FieldType::value_type const &,
-										     typename FieldType::value_type const &),
-					       FieldExpression<ExprType,FieldType> fexpr) {
+    inline typename FieldType::value_type reduce(typename FieldType::value_type(*proc)(typename FieldType::value_type const &,
+										       typename FieldType::value_type const &),
+						 FieldExpression<ExprType,FieldType> fexpr) {
     typename FieldType::value_type typedef AtomicType;
     
     ExprType expr = fexpr.expression();
@@ -3636,10 +3651,7 @@ namespace SpatialOps{
   template<typename AtomicType>
     AtomicType at_max (AtomicType const & first,
 		       AtomicType const & second) {
-    if(first > second)
-      return first;
-    else
-      return second;
+    return (first > second) ? first : second;
   };
   
   /* Field version of max */
@@ -3658,7 +3670,104 @@ namespace SpatialOps{
     ExprType expr = fexpr.expression();
     expr.init();
     
-    return fold(at_max<AtomicType>, fexpr);
+    return reduce(at_max<AtomicType>, fexpr);
+  };
+  
+  /* ff_vector_convert: vector<FieldType> -> vector<FieldForm<FieldType> */
+  template<typename FieldType>
+    inline std::vector<FieldForm<FieldType> > const & ff_vector_convert(std::vector<FieldType> const & inputs,
+									std::vector<FieldForm<FieldType> > & results) {
+    
+    //    std::vector<FieldForm<FieldType> > result = std::vector<FieldForm<FieldType> >();
+    typename std::vector<FieldType>::const_iterator ii = inputs.begin();
+    
+    while(ii != inputs.end()) {
+      results.push_back(FieldForm<FieldType>(*ii));
+      ++ii;
+    };
+    
+    return results;
+  };
+  
+  /* ff_vector_init: initializes each element in vector */
+  template<typename FieldType>
+    inline void ff_vector_init(std::vector<FieldForm<FieldType> > & sources) {
+    
+    typename std::vector<FieldForm<FieldType> >::iterator is = sources.begin();
+    
+    while(is != sources.end()) {
+      is->init();
+      ++is;
+    };
+  };
+  
+  /* ff_vector_eval: puts current element of each FieldForm in result */
+  template<typename FieldType>
+    inline std::vector<typename FieldType::value_type> const & ff_vector_eval(std::vector<FieldForm<FieldType> > const & sources,
+									      std::vector<typename FieldType::value_type> & buffer) {
+    buffer.clear();
+    
+    typename std::vector<FieldForm<FieldType> >::const_iterator is = sources.begin();
+    
+    while(is != sources.end()) {
+      buffer.push_back(is->eval());
+      ++is;
+    };
+    
+    return buffer;
+  };
+  
+  /* ff_vector_next: increment each element in vector */
+  template<typename FieldType>
+    inline void ff_vector_next(std::vector<FieldForm<FieldType> > & sources) {
+    
+    typename std::vector<FieldForm<FieldType> >::iterator is = sources.begin();
+    
+    while(is != sources.end()) {
+      is->next();
+      ++is;
+    };
+  };
+  
+  /* Field version of map */
+  template<typename FieldType>
+    inline FieldType const & field_map(typename FieldType::value_type(*proc)(std::vector<typename FieldType::value_type> const &),
+				       std::vector<FieldForm<FieldType> > & sources,
+				       FieldType & result) {
+    typename FieldType::value_type typedef AtomicType;
+    
+    std::vector<AtomicType> current_buffer = std::vector<AtomicType>();
+    
+    //initialize:
+    ff_vector_init<FieldType>(sources);
+    typename FieldType::iterator ir = result.begin();
+    
+    //run map:
+    while(ir != result.end()) {
+      //grap current values:
+      ff_vector_eval(sources, current_buffer);
+      
+      //evaluate result:
+      *ir = proc(current_buffer);
+      
+      //increment:
+      ++ir;
+      ff_vector_next(sources);
+    };
+    
+    return result;
+  };
+  
+  /* Field version of map */
+  template<typename FieldType>
+    inline FieldType const & field_map(typename FieldType::value_type(*proc)(std::vector<typename FieldType::value_type> const &),
+				       std::vector<FieldType> const & inputs,
+				       FieldType & result) {
+    
+    std::vector<FieldForm<FieldType> > sources = std::vector<FieldForm<FieldType> >();
+    ff_vector_convert(inputs, sources);
+    
+    return field_map(proc, sources, result);
   };
   
 #define BUILD_BINARY_OPERATOR(OBJECT_NAME, INTERNAL_NAME, EXTERNAL_NAME) \

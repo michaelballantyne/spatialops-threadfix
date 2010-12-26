@@ -4,9 +4,48 @@
 #include <spatialops/FieldOperationDefinitions.h>
 
 #include <iostream>
+#include <vector>
 
 using namespace SpatialOps;
 using namespace structured;
+
+int print_length = 8;
+
+template<typename Field>
+void print(Field const & given) {
+  typename Field::const_iterator ig = given.begin();
+  
+  for(int i = 0; i < print_length; i++) {
+    std::cout << *ig << std::endl;
+    ++ig;
+  };
+  
+  std::cout << std::endl;
+};
+
+double add_vec(std::vector<double> const & inputs) {
+  double answer = 0;
+  
+  for(std::vector<double>::const_iterator ii = inputs.begin();
+      ii != inputs.end();
+      ++ii) {
+    answer += *ii;
+  };
+  
+  return answer;
+};
+
+double mult_vec(std::vector<double> const & inputs) {
+  double answer = 1;
+  
+  for(std::vector<double>::const_iterator ii = inputs.begin();
+      ii != inputs.end();
+      ++ii) {
+    answer *= *ii;
+  };
+  
+  return answer;
+};
 
 int main()
 {
@@ -19,14 +58,15 @@ int main()
   Field a( window, NULL );
   Field b( window, NULL );
   Field c( window, NULL );
-
+  
+  std::vector<Field> vec = std::vector<Field>();
   
   Field::iterator ia1 = a.begin();
   for(int i = 0; ia1!=a.end(); i++, ++ia1 ){
     *ia1 = i;
   }
 
-  b = 1.0;
+  b = 2.0;
 
   DEFINE_$_ANONYMOUS_ARGUMENTS(Field);
   
@@ -50,8 +90,18 @@ int main()
   c <<= (($1 * $2) - $0)(3 * a)(a, 3.0);
   c <<= (($1 * $2) - $0)(3 * a)(a)(3.0);
   
-  std::cout << field_max(a + 2) << std::endl;
   std::cout << field_max(a) << std::endl;
+  
+  vec.push_back(a);
+  vec.push_back(b);
+  
+  print(a);
+  
+  field_map(add_vec, vec, c);
+  print(c);
+  
+  field_map(mult_vec, vec, c);
+  print(c);
   
   // what we currently must do:
   Field::const_iterator ia = a.begin();
