@@ -7,7 +7,7 @@
 #include "TestHelper.h"
 
 namespace SS = SpatialOps::structured;
-
+using namespace SpatialOps;
 
 template< typename FieldT >
 bool test( const SS::IntVec dim )
