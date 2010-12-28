@@ -7,7 +7,7 @@
 #include "TestHelper.h"
 
 namespace SS = SpatialOps::structured;
-using namespace SpatialOps;
+namespace SP = SpatialOps::Particle;
 
 template< typename FieldT >
 bool test( const SS::IntVec dim )
@@ -78,9 +78,12 @@ bool test( const SS::IntVec dim )
     status( tmp.ok(), "abs(-1.0) == 1.0" );
   }
 
+  using namespace SpatialOps;  // not sure why we must have this here.
+                               // Particle stuff doesn't compile
+                               // otherwise...
 
   const SS::MemoryWindow pw( SpatialOps::structured::IntVec(100,1,1) );
-  SpatialOps::Particle::ParticleField pf1(pw,NULL), pf2(pw,NULL), pf3(pw,NULL);
+  SP::ParticleField pf1(pw,NULL), pf2(pw,NULL), pf3(pw,NULL);
   pf1 = 1.0;
   pf3 = 2.0;
   pf2 <<= pf1 * pf3;
