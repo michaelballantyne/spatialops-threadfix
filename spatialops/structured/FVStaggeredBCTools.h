@@ -227,6 +227,12 @@ namespace structured{
     BoundaryConditionOp(); // no default constructor
 
   public:
+    
+    /**
+     *  Expose the bcevaluator type.
+     */
+    typedef BCEval BCEvalT;
+    
     /**
      *  @param point The i,j,k location at which we want to specify
      *         the boundary condition (based on scalar cell center

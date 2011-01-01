@@ -322,7 +322,7 @@ namespace structured{
     IntVec triplet(0,0,0);
 
     const int nxt = get_nx_with_ghost<FieldT>(dim[0],hasPlusXSideFaces);
-    const int nyt = get_ny_with_ghost<FieldT>(dim[1],hasPlusXSideFaces);
+    const int nyt = get_ny_with_ghost<FieldT>(dim[1],hasPlusYSideFaces);
     triplet[0] = ix%nxt;
     triplet[1] = ix/nxt % nyt;
     triplet[2] = ix/(nxt*nyt);
