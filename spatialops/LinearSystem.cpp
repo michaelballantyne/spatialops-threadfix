@@ -3,10 +3,7 @@
 #include <stdexcept>
 
 #include <spatialops/LinearSystem.h>
-
 #include <spatialops/SpatialOperator.h>
-#include <spatialops/SpatialField.h>
-
 #include <spatialops/LinAlgTrilinos.h>
 
 #include <Epetra_Map.h>
@@ -102,7 +99,7 @@ RHS::reset( const int rownum, const double val )
 
 
 //--------------------------------------------------------------------
-LHS::LHS( const vector<int> & extent,
+LHS::LHS( const SpatialOps::structured::IntVec& extent,
           const bool hasPlusXSideFaces,
           const bool hasPlusYSideFaces,
           const bool hasPlusZSideFaces,
@@ -201,14 +198,14 @@ LHS::write_matlab( const std::string prefix ) const
 
 //--------------------------------------------------------------------
 #ifdef HAVE_MPI
-LinearSystem::LinearSystem( const vector<int> & extent,
+LinearSystem::LinearSystem( const SpatialOps::structured::IntVec & extent,
                             const bool hasPlusXSideFaces,
                             const bool hasPlusYSideFaces,
                             const bool hasPlusZSideFaces,
                             MPI_Comm & comm )
   : npts_( get_global_npts(extent,comm) ),
 #else
-LinearSystem::LinearSystem( const vector<int> & extent,
+LinearSystem::LinearSystem( const SpatialOps::structured::IntVec & extent,
                             const bool hasPlusXSideFaces,
                             const bool hasPlusYSideFaces,
                             const bool hasPlusZSideFaces )
@@ -281,26 +278,26 @@ LinearSystem::~LinearSystem()
 //--------------------------------------------------------------------
 #ifdef HAVE_MPI
 int
-LinearSystem::get_global_npts( const std::vector<int> & extent,
+LinearSystem::get_global_npts( const SpatialOps::structured::IntVec & extent,
                                MPI_Comm & comm )
 {
   // determine the total number of points in each dimension.
-  vector<int> tmpPts = extent;
-  vector<int> globPoints( extent.size(), 0 );
+  SpatialOps::structured::IntVec tmpPts = extent;
+  SpatialOps::structured::IntVec globPoints( extent.size(), 0 );
   MPI_Allreduce( &tmpPts[0], &globPoints[0], extent.size(), MPI_INT, MPI_SUM, comm );
 
   return std::accumulate( globPoints.begin(), globPoints.end(), 1, std::multiplies<int>() );
 }
 #else
 int
-LinearSystem::get_global_npts( const std::vector<int> & extent )
+LinearSystem::get_global_npts( const SpatialOps::structured::IntVec & extent )
 {
-  return std::accumulate(extent.begin(),extent.end(),1,std::multiplies<int>() );
+  return extent[0]*extent[1]*extent[2];
 }
 #endif
 //--------------------------------------------------------------------
 void
-LinearSystem::imprint( const std::vector<int> & extent,
+LinearSystem::imprint( const SpatialOps::structured::IntVec& extent,
                        const int entriesPerRow )
 {
   // set the sparsity pattern
@@ -426,14 +423,14 @@ LinearSystem::set_dirichlet_condition( const int irow,
 
 //--------------------------------------------------------------------
 #ifdef HAVE_MPI
-LinSysInfo::LinSysInfo( const std::vector<int> & npts,
+LinSysInfo::LinSysInfo( const SpatialOps::structured::IntVec& npts,
                         const bool hasPlusXSideFaces,
                         const bool hasPlusYSideFaces,
                         const bool hasPlusZSideFaces,
                         MPI_Comm & communicator )
   : comm( communicator ),
 #else
-LinSysInfo::LinSysInfo( const std::vector<int> & npts,
+LinSysInfo::LinSysInfo( const SpatialOps::structured::IntVec& npts,
                         const bool hasPlusXSideFaces,
                         const bool hasPlusYSideFaces,
                         const bool hasPlusZSideFaces )

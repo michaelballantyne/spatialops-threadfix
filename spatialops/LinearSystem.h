@@ -8,7 +8,7 @@
 #include <string>
 
 #include <spatialops/structured/FVTools.h>
-#include <spatialops/SpatialField.h>
+#include <spatialops/structured/SpatialField.h>
 
 //---------------------------------
 // trilinos includes
@@ -64,13 +64,13 @@ struct LinSysInfo
   };
 
 #ifdef HAVE_MPI
-  LinSysInfo( const std::vector<int> & npts,
+  LinSysInfo( const SpatialOps::structured::IntVec& npts,
               const bool hasPlusXSideFaces,
               const bool hasPlusYSideFaces,
               const bool hasPlusZSideFaces,
               MPI_Comm & communicator );
 #else
-  LinSysInfo( const std::vector<int> & npts,
+  LinSysInfo( const SpatialOps::structured::IntVec& npts,
               const bool hasPlusXSideFaces,
               const bool hasPlusYSideFaces,
               const bool hasPlusZSideFaces );
@@ -89,7 +89,7 @@ struct LinSysInfo
   MPI_Comm & comm;
 #endif
 
-  const std::vector<int> dimExtent;
+  const SpatialOps::structured::IntVec dimExtent;
   const bool hasPlusXFaces, hasPlusYFaces, hasPlusZFaces;
 
   bool operator ==(const LinSysInfo&) const;
@@ -222,7 +222,7 @@ class LHS
 {
 public:
 
-  LHS( const std::vector<int> & extent,
+  LHS( const SpatialOps::structured::IntVec& extent,
        const bool hasPlusXSideFaces,
        const bool hasPlusYSideFaces,
        const bool hasPlusZSideFaces,
@@ -273,7 +273,7 @@ public:
 private:
 
   Epetra_CrsMatrix & A_;
-  const std::vector<int> extent_;
+  const SpatialOps::structured::IntVec extent_;
   const bool hasPlusXSideFaces_, hasPlusYSideFaces_, hasPlusZSideFaces_;
   const int nrows_;
   const int ncols_;
@@ -349,33 +349,33 @@ protected:
 
 #ifdef HAVE_MPI
 
-  LinearSystem( const std::vector<int> & dimExtent,
+  LinearSystem( const SpatialOps::structured::IntVec& dimExtent,
                 const bool hasPlusXSideFaces,
                 const bool hasPlusYSideFaces,
                 const bool hasPlusZSideFaces,
                 MPI_Comm & comm );
 
-  int get_global_npts( const std::vector<int> & extent,
+  int get_global_npts( const SpatialOps::structured::IntVec & extent,
                        MPI_Comm & comm );
 
 #else
 
-  LinearSystem( const std::vector<int> & dimExtent,
+  LinearSystem( const SpatialOps::structured::IntVec & dimExtent,
                 const bool hasPlusXSideFaces,
                 const bool hasPlusYSideFaces,
                 const bool hasPlusZSideFaces );
 
-  int get_global_npts( const std::vector<int> & extent );
+  int get_global_npts( const SpatialOps::structured::IntVec & extent );
 
 #endif
 
   ~LinearSystem();
 
 
-  void imprint( const std::vector<int> &, const int );
+  void imprint( const SpatialOps::structured::IntVec&, const int );
 
   const int npts_;
-  const std::vector<int> extent_;
+  const SpatialOps::structured::IntVec extent_;
   RHS   rhs_;
   LHS * lhs_;
   SOLN  solnFieldValues_;
@@ -453,7 +453,7 @@ LHS::add_op_contribution( const OpType & op,
   const int ny=extent_[1];
   const int nz=extent_[2];
 
-  structured::IndexTriplet t;
+  structured::IntVec t;
 
   int irow = 0;
   for( int ioprow=0; ioprow<op.nrows(); ++ioprow ){
@@ -482,11 +482,11 @@ LHS::add_op_contribution( const OpType & op,
       // now determine the column index for insertion of this value
       typedef typename OpType::SrcFieldType SrcField;
       t = structured::flat2ijk<SrcField>::value( extent_, colindex );
-      if( nx>1 ) t.i -= SrcField::Ghost::NGHOST;
-      if( ny>1 ) t.j -= SrcField::Ghost::NGHOST;
-      if( nz>1 ) t.k -= SrcField::Ghost::NGHOST;
+      if( nx>1 ) t[0] -= SrcField::Ghost::NGHOST;
+      if( ny>1 ) t[1] -= SrcField::Ghost::NGHOST;
+      if( nz>1 ) t[2] -= SrcField::Ghost::NGHOST;
 
-      const int iflat = t.k*(nx*ny) + t.j*(nx) + t.i;
+      const int iflat = t[2]*(nx*ny) + t[1]*(nx) + t[0];
       rowIWork_.push_back( iflat );
 
     } // column loop
@@ -536,10 +536,11 @@ LHS::add_field_contribution( const FieldType & f,
 //====================================================================
 
 namespace SpatialOps{
+namespace structured{
 
-  template< class VecOps, typename FieldLocation, typename GhostTraits >
-  SpatialField<VecOps,FieldLocation,GhostTraits>&
-  SpatialField<VecOps,FieldLocation,GhostTraits>::
+  template< class VecOps, typename FieldLocation, typename GhostTraits, typename T >
+  SpatialField<VecOps,FieldLocation,GhostTraits,T>&
+  SpatialField<VecOps,FieldLocation,GhostTraits,T>::
   operator=( const RHS& rhs )
   {
     // assign the RHS field to this spatial field.
@@ -557,9 +558,9 @@ namespace SpatialOps{
     return *this;
   }
   //------------------------------------------------------------------
-  template< class VecOps, typename FieldLocation, typename GhostTraits >
-  SpatialField<VecOps,FieldLocation,GhostTraits>&
-  SpatialField<VecOps,FieldLocation,GhostTraits>::
+  template< class VecOps, typename FieldLocation, typename GhostTraits, typename T >
+  SpatialField<VecOps,FieldLocation,GhostTraits,T>&
+  SpatialField<VecOps,FieldLocation,GhostTraits,T>::
   operator+=( const RHS& rhs )
   {
     // assign the RHS field to this spatial field.
@@ -577,9 +578,9 @@ namespace SpatialOps{
     return *this;
   }
   //------------------------------------------------------------------
-  template< class VecOps, typename FieldLocation, typename GhostTraits >
-  SpatialField<VecOps,FieldLocation,GhostTraits>&
-  SpatialField<VecOps,FieldLocation,GhostTraits>::
+  template< class VecOps, typename FieldLocation, typename GhostTraits, typename T >
+  SpatialField<VecOps,FieldLocation,GhostTraits,T>&
+  SpatialField<VecOps,FieldLocation,GhostTraits,T>::
   operator-=( const RHS& rhs )
   {
     // assign the RHS field to this spatial field.
@@ -595,6 +596,8 @@ namespace SpatialOps{
     }
     return *this;
   }
+
+}// namespace structured
 }// namespace SpatialOps
 
 #endif
