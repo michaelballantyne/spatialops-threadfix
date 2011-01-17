@@ -1,7 +1,7 @@
 #ifndef FVStaggeredInterpolant_h
 #define FVStaggeredInterpolant_h
 
-#include <spatialops/structured/FVStaggeredTypes.h>
+#include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/FVStaggeredIndexHelper.h>
 

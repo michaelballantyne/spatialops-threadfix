@@ -4,7 +4,7 @@
 #include <spatialops/SpatialOpsConfigure.h>
 
 #include <spatialops/structured/FVTools.h>
-#include <spatialops/structured/FVStaggeredTypes.h>
+#include <spatialops/structured/FVStaggeredFieldTypes.h>
 
 
 namespace SpatialOps{

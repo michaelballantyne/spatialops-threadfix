@@ -1,4 +1,4 @@
-#include <spatialops/structured/FVStaggeredTypes.h>
+#include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/SpatialFieldStore.h>
 #include <test/TestHelper.h>

@@ -1,5 +1,5 @@
 #include <spatialops/FieldOperationDefinitions.h>
-#include <spatialops/structured/FVStaggeredTypes.h>
+#include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/structured/FVTools.h>
 
 #include "TestHelper.h"

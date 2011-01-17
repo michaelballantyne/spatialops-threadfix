@@ -25,6 +25,7 @@ namespace structured{
   /**
    *  \class SpatialField
    *  \ingroup structured
+   *  \ingroup fields
    *  \author James C. Sutherland
    *
    *  \brief Abstracts a field.

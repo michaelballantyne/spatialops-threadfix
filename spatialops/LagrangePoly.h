@@ -10,10 +10,10 @@
 
 
 /**
- *  @class LagrangeCoefficients
- *  @author James C. Sutherland
- *  @date July, 2008
- *  @brief Provides Lagrange polynomial coefficients for interpolant
+ *  \class LagrangeCoefficients
+ *  \author James C. Sutherland
+ *  \date July, 2008
+ *  \brief Provides Lagrange polynomial coefficients for interpolant
  *         and first derivatives.
  *
  *  This class is primarily intended for use by the
@@ -75,10 +75,10 @@ public:
 
 
 /**
- *  @class LagrangeInterpolant
- *  @author James C. Sutherland
- *  @date   July, 2008
- *  @brief Implements interpolants based on Lagrange polynomials.
+ *  \class LagrangeInterpolant
+ *  \author James C. Sutherland
+ *  \date   July, 2008
+ *  \brief Implements interpolants based on Lagrange polynomials.
  */
 class LagrangeInterpolant
 {
@@ -87,9 +87,9 @@ public:
   /**
    *  Constructs a LagrangeInterpolant from the set of data.
    *
-   *  @param xpts The independent values.
-   *  @param ypts The dependent (function) values.
-   *  @param order OPTIONAL.  If supplied at construction, this will
+   *  \param xpts The independent values.
+   *  \param ypts The dependent (function) values.
+   *  \param order OPTIONAL.  If supplied at construction, this will
    *         be used as the default polynomial order for the
    *         interpolant.  The polynomial order can also be specified
    *         when the interpolated value is requested.  This value
@@ -104,30 +104,30 @@ public:
   ~LagrangeInterpolant();
 
   /**
-   *  @brief Obtain the interpolated function value at the specified point.
+   *  \brief Obtain the interpolated function value at the specified point.
    *
-   *  @param x The value at which we want the interpolated function.
+   *  \param x The value at which we want the interpolated function.
    *         It will use an interpolant of the polynomial order
    *         specified at construction (defaults to 2).
    */  
   inline double value( const double x ) const{ return value(x,order_); }
 
   /**
-   *  @brief Obtain the interpolated function value at the specified point.
-   *  @param x The value at which we want the interpolated function.
-   *  @param order The polynomial order of interpolant to use.
+   *  \brief Obtain the interpolated function value at the specified point.
+   *  \param x The value at which we want the interpolated function.
+   *  \param order The polynomial order of interpolant to use.
    */
   double value( const double x, const int order ) const;
 
   /**
-   *  @brief Obtain the coefficient values and the indices on the
+   *  \brief Obtain the coefficient values and the indices on the
    *         original x vector that are used to form the interpolated
    *         value.
-   *  @param x The value at which we want to evaluate the coefficients
-   *  @param order The polynomial order of the interpolant.
-   *  @param coefs The coefficients to be used in weighting the
+   *  \param x The value at which we want to evaluate the coefficients
+   *  \param order The polynomial order of the interpolant.
+   *  \param coefs The coefficients to be used in weighting the
    *         original function values to form the interpolated value.
-   *  @param indices The indices of the original function values to be
+   *  \param indices The indices of the original function values to be
    *         used with the above coefficients.
    */
   void get_coefs_indices( const double x,
@@ -149,10 +149,10 @@ private:
 
 
 /**
- *  @class  LagrangeDerivative
- *  @author James C. Sutherland
- *  @date   July, 2008
- *  @brief  Implements derivatives based on Lagrange polynomials.
+ *  \class  LagrangeDerivative
+ *  \author James C. Sutherland
+ *  \date   July, 2008
+ *  \brief  Implements derivatives based on Lagrange polynomials.
  */
 class LagrangeDerivative
 {
@@ -161,9 +161,9 @@ public:
   /**
    *  Constructs a LagrangeDerivative from the set of data.
    *
-   *  @param xpts The independent values.
-   *  @param ypts The dependent (function) values.
-   *  @param order OPTIONAL.  If supplied at construction, this will
+   *  \param xpts The independent values.
+   *  \param ypts The dependent (function) values.
+   *  \param order OPTIONAL.  If supplied at construction, this will
    *         be used as the default polynomial order for the
    *         interpolant.  The polynomial order can also be specified
    *         when the interpolated value is requested.  This value
@@ -178,9 +178,9 @@ public:
   ~LagrangeDerivative();
 
   /**
-   *  @brief Obtain the interpolated function value at the specified point.
+   *  \brief Obtain the interpolated function value at the specified point.
    *
-   *  @param x The value at which we want the interpolated function.
+   *  \param x The value at which we want the interpolated function.
    *         It will use an interpolant of the polynomial order
    *         specified at construction (defaults to 2).  The
    *         derivative order will be one less than this.
@@ -188,23 +188,23 @@ public:
   inline double value( const double x ) const{ return value(x,order_); }
 
   /**
-   *  @brief Obtain the interpolated function value at the specified point.
-   *  @param x The value at which we want the interpolated function.
-   *  @param order The polynomial order to use.  Derivative order will
+   *  \brief Obtain the interpolated function value at the specified point.
+   *  \param x The value at which we want the interpolated function.
+   *  \param order The polynomial order to use.  Derivative order will
    *         be one less than this.
    */
   double value( const double x, const int order ) const;
 
   /**
-   *  @brief Obtain the coefficient values and the indices on the
+   *  \brief Obtain the coefficient values and the indices on the
    *         original x vector that are used to form the interpolated
    *         value.
-   *  @param x The value at which we want to evaluate the coefficients
-   *  @param order The polynomial order.  The derivative order of
+   *  \param x The value at which we want to evaluate the coefficients
+   *  \param order The polynomial order.  The derivative order of
    *         accuracy will be one less than this.
-   *  @param coefs The coefficients to be used in weighting the
+   *  \param coefs The coefficients to be used in weighting the
    *         original function values to form the interpolated value.
-   *  @param indices The indices of the original function values to be
+   *  \param indices The indices of the original function values to be
    *         used with the above coefficients.
    */
   void get_coefs_indices( const double x,

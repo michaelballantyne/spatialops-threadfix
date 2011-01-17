@@ -12,9 +12,14 @@
 namespace SpatialOps{
 namespace structured{
 
-  /** @file FVTools.h
-   *  @ingroup structured
-   *  @brief Provides function templates useful for field and operator
+  /** \file FVTools.h
+   *
+   *  \addtogroup structured
+   *  @{
+   *  \addtogroup fields
+   *  @{
+   *
+   *  \brief Provides function templates useful for field and operator
    *  creation for structured meshes.  Specialize these templates to
    *  your needs.
    */
@@ -25,7 +30,6 @@ namespace structured{
    *  \fn int get_nx_with_ghost( const int, const bool )
    *
    *  \brief obtain the number of points in the x direction
-   *  \ingroup structured
    *
    *  \param nxNoGhost number of points in the x-direction excluding
    *    ghost cells
@@ -50,7 +54,6 @@ namespace structured{
    *  \fn int get_ny_with_ghost( const int, const bool )
    *
    *  \brief obtain the number of points in the y direction
-   *  \ingroup structured
    *
    *  \param nyNoGhost number of points in the y-direction excluding
    *    ghost cells
@@ -75,7 +78,6 @@ namespace structured{
    *  \fn int get_nz_with_ghost( const int, const bool )
    *
    *  \brief obtain the number of points in the z direction
-   *  \ingroup structured
    *
    *  \param nzNoGhost number of points in the z-direction excluding
    *    ghost cells
@@ -100,7 +102,6 @@ namespace structured{
    *  \fn int get_dim_with_ghost( const IntVec&, const bool, const bool, const bool )
    *
    *  \brief obtain the number of points in each direction for the given field type
-   *  \ingroup structured
    *
    *  \param dimNoGhost number of points in each direction excluding
    *    ghost cells
@@ -130,7 +131,6 @@ namespace structured{
   /**
    *  \fn int get_ntot_with_ghost( const IntVec&, const bool, const bool, const bool )
    *  \brief get the total number of points including ghost cells
-   *  \ingroup structured
    *
    *  \param dimNoGhost number of points in each direction excluding
    *    ghost cells
@@ -160,7 +160,6 @@ namespace structured{
   /**
    *  \fn MemoryWindow get_window_with_ghost( const IntVec&, const bool, const bool, const bool )
    *  \brief Obtain the memory window for a field on a patch that is a single, contiguous memory block
-   *  \ingroup structured
    *
    *  \param dimNoGhost number of points in each direction excluding
    *    ghost cells
@@ -239,25 +238,25 @@ namespace structured{
   //==================================================================
 
   /**
-   *  @brief Obtain the set of indices corresponding to ghost cells
+   *  \brief Obtain the set of indices corresponding to ghost cells
    *  for this field.
    *
-   * @param hasPlusXSideFaces A boolean flag to indicate if this patch
+   * \param hasPlusXSideFaces A boolean flag to indicate if this patch
    * is on a +x side physical boundary.  If so, then it is assumed
    * that there is an extra face on that side of the domain, and face
    * variable dimensions will be modified accordingly.
    *
-   * @param hasPlusYSideFaces A boolean flag to indicate if this patch
+   * \param hasPlusYSideFaces A boolean flag to indicate if this patch
    * is on a +y side physical boundary.  If so, then it is assumed
    * that there is an extra face on that side of the domain, and face
    * variable dimensions will be modified accordingly.
 
-   * @param hasPlusZSideFaces A boolean flag to indicate if this patch
+   * \param hasPlusZSideFaces A boolean flag to indicate if this patch
    * is on a +z side physical boundary.  If so, then it is assumed
    * that there is an extra face on that side of the domain, and face
    * variable dimensions will be modified accordingly.
    *
-   * @todo Remove default values.  This is very dangerous for parallel
+   * \todo Remove default values.  This is very dangerous for parallel
    * computations to have a default value for the + side information.
    *
    *  \todo JCS: need to rework this.  It only works for the "old"
@@ -287,7 +286,7 @@ namespace structured{
   //==================================================================
 
   /**
-   *  @brief Use this to transform a flat index to i,j,k indices.
+   *  \brief Use this to transform a flat index to i,j,k indices.
    */
   template<typename FieldT>
   struct flat2ijk
@@ -301,7 +300,7 @@ namespace structured{
   //==================================================================
 
   /**
-   *  @brief Use this to transform i,j,k indices to a flat index.
+   *  \brief Use this to transform i,j,k indices to a flat index.
    */
   template<typename FieldT>
   struct ijk2flat
@@ -347,6 +346,12 @@ namespace structured{
   }
   
   //==================================================================
+
+
+  /**
+   *  @}
+   *  @}
+   */
 
 }// namespace structured
 }// namespace SpatialOps

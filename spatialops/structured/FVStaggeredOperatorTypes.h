@@ -1,112 +1,21 @@
-#ifndef FVStaggeredTypes_h
-#define FVStaggeredTypes_h
+#ifndef SpatialOps_FVStaggeredOps_h
+#define SpatialOps_FVStaggeredOps_h
 
 #include <spatialops/SpatialOpsConfigure.h>
-#include <spatialops/structured/SpatialField.h>
 #include <spatialops/SpatialOperator.h>
-#include <spatialops/SpatialOpsDefs.h>
-
-#if defined(LINALG_UBLAS)
-#  include <spatialops/LinAlgUBlas.h>
-   typedef SpatialOps::LinAlgUBlas LinAlg;
-#elif defined(LINALG_TRILINOS)
-#  include <spatialops/LinAlgTrilinos.h>
-   typedef SpatialOps::LinAlgTrilinos LinAlg;
-#else
-#  error No LinAlg typedef was made!
-#endif
+#include "FVStaggeredFieldTypes.h"
 
 namespace SpatialOps{
 namespace structured{
 
-  // FaceDir: The direction relative to its volume field that this field is staggered.
-  // StagLoc: The direction relative to the scalar volume field that this field's volume field is staggered.
-  // IsSurface: Indicates whether this field sits on a CV surface (1) or center (0).
-
-  struct SVol  { typedef NODIR FaceDir;  typedef NODIR StagLoc; };
-  struct SSurfX{ typedef XDIR  FaceDir;  typedef NODIR StagLoc; };
-  struct SSurfY{ typedef YDIR  FaceDir;  typedef NODIR StagLoc; };
-  struct SSurfZ{ typedef ZDIR  FaceDir;  typedef NODIR StagLoc; };
-
-  struct XVol  { typedef NODIR FaceDir;  typedef XDIR  StagLoc; };
-  struct XSurfX{ typedef XDIR  FaceDir;  typedef XDIR  StagLoc; };
-  struct XSurfY{ typedef YDIR  FaceDir;  typedef XDIR  StagLoc; };
-  struct XSurfZ{ typedef ZDIR  FaceDir;  typedef XDIR  StagLoc; };
-
-  struct YVol  { typedef NODIR FaceDir;  typedef YDIR  StagLoc; };
-  struct YSurfX{ typedef XDIR  FaceDir;  typedef YDIR  StagLoc; };
-  struct YSurfY{ typedef YDIR  FaceDir;  typedef YDIR  StagLoc; };
-  struct YSurfZ{ typedef ZDIR  FaceDir;  typedef YDIR  StagLoc; };
-
-  struct ZVol  { typedef NODIR FaceDir;  typedef ZDIR  StagLoc; };
-  struct ZSurfX{ typedef XDIR  FaceDir;  typedef ZDIR  StagLoc; };
-  struct ZSurfY{ typedef YDIR  FaceDir;  typedef ZDIR  StagLoc; };
-  struct ZSurfZ{ typedef ZDIR  FaceDir;  typedef ZDIR  StagLoc; };
-
-  struct DefaultGhost{ enum{ NGHOST=1 }; };
-  struct NoGhost     { enum{ NGHOST=0 }; };
-
-
-//-- Field Types --//
-
-#if defined UINTAH_FIELD_TYPES
-
-  typedef SpatialField< LinAlg, SVol,   DefaultGhost > SVolField;
-  typedef SpatialField< LinAlg, SSurfX, DefaultGhost > SSurfXField;
-  typedef SpatialField< LinAlg, SSurfY, DefaultGhost > SSurfYField;
-  typedef SpatialField< LinAlg, SSurfZ, DefaultGhost > SSurfZField;
-  typedef SpatialField< LinAlg, SVol,   NoGhost      > SVolRHS;
-
-  typedef SpatialField< LinAlg, XVol,   DefaultGhost > XVolField;
-  typedef SpatialField< LinAlg, XSurfX, DefaultGhost > XSurfXField;
-  typedef SpatialField< LinAlg, XSurfY, DefaultGhost > XSurfYField;
-  typedef SpatialField< LinAlg, XSurfZ, DefaultGhost > XSurfZField;
-  typedef SpatialField< LinAlg, XVol,   NoGhost      > XVolRHS;
-
-  typedef SpatialField< LinAlg, YVol,   DefaultGhost > YVolField;
-  typedef SpatialField< LinAlg, YSurfX, DefaultGhost > YSurfXField;
-  typedef SpatialField< LinAlg, YSurfY, DefaultGhost > YSurfYField;
-  typedef SpatialField< LinAlg, YSurfZ, DefaultGhost > YSurfZField;
-  typedef SpatialField< LinAlg, YVol,   NoGhost      > YVolRHS;
-
-  typedef SpatialField< LinAlg, ZVol,   DefaultGhost > ZVolField;
-  typedef SpatialField< LinAlg, ZSurfX, DefaultGhost > ZSurfXField;
-  typedef SpatialField< LinAlg, ZSurfY, DefaultGhost > ZSurfYField;
-  typedef SpatialField< LinAlg, ZSurfZ, DefaultGhost > ZSurfZField;
-  typedef SpatialField< LinAlg, ZVol,   NoGhost      > ZVolRHS;
-
-#elif defined SAMRAI_FIELD_TYPES
-
-  typedef SpatialField< LinAlg, SVol,   DefaultGhost > SVolField;
-  typedef SpatialField< LinAlg, SSurfX, NoGhost      > SSurfXField;
-  typedef SpatialField< LinAlg, SSurfY, NoGhost      > SSurfYField;
-  typedef SpatialField< LinAlg, SSurfZ, NoGhost      > SSurfZField;
-  typedef SpatialField< LinAlg, SVol,   NoGhost      > SVolRHS;
-
-  typedef SpatialField< LinAlg, XVol,   DefaultGhost > XVolField;
-  typedef SpatialField< LinAlg, XSurfX, DefaultGhost > XSurfXField;
-  typedef SpatialField< LinAlg, XSurfY, NoGhost      > XSurfYField;
-  typedef SpatialField< LinAlg, XSurfZ, NoGhost      > XSurfZField;
-  typedef SpatialField< LinAlg, XVol,   NoGhost      > XVolRHS;
-
-  typedef SpatialField< LinAlg, YVol,   DefaultGhost > YVolField;
-  typedef SpatialField< LinAlg, YSurfX, NoGhost      > YSurfXField;
-  typedef SpatialField< LinAlg, YSurfY, DefaultGhost > YSurfYField;
-  typedef SpatialField< LinAlg, YSurfZ, NoGhost      > YSurfZField;
-  typedef SpatialField< LinAlg, YVol,   NoGhost      > YVolRHS;
-
-  typedef SpatialField< LinAlg, ZVol,   DefaultGhost > ZVolField;
-  typedef SpatialField< LinAlg, ZSurfX, NoGhost      > ZSurfXField;
-  typedef SpatialField< LinAlg, ZSurfY, NoGhost      > ZSurfYField;
-  typedef SpatialField< LinAlg, ZSurfZ, DefaultGhost > ZSurfZField;
-  typedef SpatialField< LinAlg, ZVol,   NoGhost      > ZVolRHS;
-
-#else
-
-#error No field type scheme defined!
-
-#endif
-
+  /**
+   *  \file FVStaggeredOps.h
+   *
+   *  \addtogroup structured
+   *  @{
+   *  \addtogroup operators
+   *  @{
+   */
 
   //-- Interpolant Operators --//
 
@@ -299,7 +208,14 @@ namespace structured{
   //-- Restriction Operators --//
   typedef SpatialOperator< LinAlg, Restriction, SVolField, SVolField > RestrictSVol;
 
-}// namespace structured
-}// namespace SpatialOps
 
-#endif
+  /**
+   *  @}
+   *  @}
+   */
+
+
+} // namespace structured
+} // namespace SpatialOps
+
+#endif // SpatialOps_FVStaggeredOps_h
