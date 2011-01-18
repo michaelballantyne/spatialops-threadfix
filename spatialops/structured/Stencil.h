@@ -4,27 +4,41 @@
 namespace SpatialOps{
 namespace structured{
 
-
-  template< typename SrcT, typename DestT > IntVec high( const MemoryWindow& );  ///< upper bounds for mesh loop
-  template< typename SrcT, typename DestT > IntVec  low( const MemoryWindow& );  ///< lower bounds for mesh loop
-
-  template< typename SrcT, typename DestT > IntVec src_increment( const MemoryWindow& );  ///< increment count after each loop for source field
-  template< typename SrcT, typename DestT > IntVec dest_increment( const MemoryWindow& );  ///< increment count after each loop for dest field
-
-  template< typename SrcT, typename DestT > size_t src_offset_lo( const MemoryWindow& );
-  template< typename SrcT, typename DestT > size_t src_offset_hi( const MemoryWindow& );
-
-  template< typename SrcT, typename DestT > size_t dest_offset( const MemoryWindow& );
-
+  /**
+   *  \struct Stencil2Helper
+   *
+   *  \brief Provides methods to adjust iterator positions when
+   *         applying 2-point stencils to fields.  See also Stencil2
+   */
+  template< typename SrcT, typename DestT >
+  struct Stencil2Helper
+  {
+    Stencil2Helper( const MemoryWindow& wsrc, ///< MemoryWindow for the source field
+                    const MemoryWindow& wdest ///< MemoryWindow for the destination field
+                    );
+    IntVec high() const;           ///< upper bounds for mesh loop over dest field
+    IntVec low() const;            ///< lower bounds for mesh loop over dest field
+    IntVec src_increment() const;  ///< source field increment count after each loop (x,y,z)
+    IntVec dest_increment() const; ///< destination field increment count after each loop (x,y,z)
+    size_t src_offset_lo() const;  ///< offset for the "low" (minus-side) source field iterator
+    size_t src_offset_hi() const;  ///< offset for the "high" (plus-side) source field iterator
+    size_t dest_offset() const;    ///< offset for the destination field iterator (nominally 0)
+  };
 
   /**
-   *  \class Stencil
+   *  \class Stencil2
+   *
+   *  \brief Support for implementing simple two-point stencils in
+   *         one-dimension on structured meshes.
+   *
    *  \tparam OpT - the type of operator
    *  \tparam SrcT - the type of field the operator is applied to
    *  \tparam DestT - the type of field the operator produces
+   *
+   *  See also Stencil2Helper
    */
   template< typename OperatorT, typename SrcFieldT, typename DestFieldT >
-  class Stencil
+  class Stencil2
   {
     const double coefLo_, coefHi_;
   public:
@@ -33,28 +47,33 @@ namespace structured{
     typedef SrcFieldT  SrcT;
     typedef DestFieldT DestT;
 
-    Stencil( const double coefLo, const double coefHi )
+    /**
+     *  \brief construct a stencil with the specified coefficients
+     *  \param coefLo the coefficient to multiply the (-) side field by
+     *  \param coefHi the coefficient to multiply the (+) side field by
+     */
+    Stencil2( const double coefLo, const double coefHi )
       : coefLo_( coefLo ),
         coefHi_( coefHi )
     {}
 
-    ~Stencil(){}
+    ~Stencil2(){}
 
     void
     apply_to_field( const SrcT& src, DestT& dest ) const
     {
-      const MemoryWindow& wsrc  = src.window_with_ghost();
-      const MemoryWindow& wdest = dest.window_with_ghost();
+      const Stencil2Helper<SrcT,DestT> helper( src.window_with_ghost(),
+                                               dest.window_with_ghost() );
 
-      const IntVec sinc =  src_increment<SrcT,DestT>( wsrc  );
-      const IntVec dinc = dest_increment<SrcT,DestT>( wdest );
+      const IntVec sinc = helper.src_increment();
+      const IntVec dinc = helper.dest_increment();
 
-      typename DestT::iterator idest = dest.begin() + dest_offset<SrcT,DestT>(wdest);
-      typename SrcT::const_iterator isrcm = src.begin() + src_offset_lo<SrcT,DestT>(wsrc);
-      typename SrcT::const_iterator isrcp = src.begin() + src_offset_hi<SrcT,DestT>(wsrc);
+      typename DestT::iterator idest = dest.begin() + helper.dest_offset();
+      typename SrcT::const_iterator isrcm = src.begin() + helper.src_offset_lo();
+      typename SrcT::const_iterator isrcp = src.begin() + helper.src_offset_hi();
 
-      const IntVec lo = low<SrcT,DestT>(wdest);
-      const IntVec hi = high<SrcT,DestT>(wdest);
+      const IntVec lo = helper.low ();
+      const IntVec hi = helper.high();
 
       for( int k=lo[2]; k<hi[2]; ++k ){
         for( int j=lo[1]; j<hi[1]; ++j ){
@@ -76,144 +95,178 @@ namespace structured{
   };
 
 
+  /**
+   *  \brief Stencil2Helper for Stencil2 operators moving from volume to x-surfaces
+   *
+   *  SVol -> SSurfX  (Grad, Interp)
+   *  XVol -> XSurfX  (Grad, Interp)
+   *  YVol -> YSurfX  (Grad, Interp)
+   *  ZVol -> ZSurfX  (Grad, Interp)
+   *
+   *  \todo this breaks on dest_increment if we have physical boundaries...
+   */
+  template<typename VolT>
+  struct Stencil2Helper< VolT,typename FaceTypes<VolT>::XFace >
+  {
+    Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest ) : wsrc_( wsrc ), wdest_( wdest ){}
+    size_t dest_offset  () const{ return 1; }
+    size_t src_offset_lo() const{ return 0; }
+    size_t src_offset_hi() const{ return 1; }
+    
+    IntVec src_increment () const{ return IntVec( wsrc_.extent(0)>1 ? 1 : 0, wsrc_.extent(1)>1 ? 1 : 0, wsrc_.extent(2)>1 ? 1 : 0 ); }
+    IntVec dest_increment() const{ return IntVec( 1, 0, 0 ); }
 
-  // --- SVol -> SSurfX
-  template<> size_t dest_offset  <SVolField,SSurfXField>( const MemoryWindow& w ){ return 0; }
-  template<> size_t src_offset_lo<SVolField,SSurfXField>( const MemoryWindow& w ){ return 0; }
-  template<> size_t src_offset_hi<SVolField,SSurfXField>( const MemoryWindow& w ){ return 1; }
-
-  template<> IntVec src_increment <SVolField,SSurfXField>( const MemoryWindow& w ){ return IntVec( w.extent(0)>1 ? 1 : 0, w.extent(1)>1 ? 1 : 0, w.extent(2)>1 ? 1 : 0 ); }
-  template<> IntVec dest_increment<SVolField,SSurfXField>( const MemoryWindow& w ){ return IntVec( 1, 0, 0 ); }
-
-  template<> IntVec low <SVolField,SSurfXField>( const MemoryWindow& w ){ return w.offset(); }
-  template<> IntVec high<SVolField,SSurfXField>( const MemoryWindow& w ){ return w.extent(); }
-
-  // --- SVol -> SSurfY
-  template<> size_t dest_offset  <SVolField,SSurfYField>( const MemoryWindow& w ){ return w.extent(0); }
-  template<> size_t src_offset_lo<SVolField,SSurfYField>( const MemoryWindow& w ){ return 0; }
-  template<> size_t src_offset_hi<SVolField,SSurfYField>( const MemoryWindow& w ){ return w.extent(0); }
-
-  template<> IntVec src_increment <SVolField,SSurfYField>( const MemoryWindow& w ){ return IntVec( w.extent(0)>1 ? 1 : 0, w.extent(1)>1 ? 1 : 0, w.extent(2)>1 ? 1 : 0 ); }
-  template<> IntVec dest_increment<SVolField,SSurfYField>( const MemoryWindow& w ){ return IntVec( 1, 0, 0 ); }
-
-  template<> IntVec low <SVolField,SSurfYField>( const MemoryWindow& w ){ return w.offset(); }
-  template<> IntVec high<SVolField,SSurfYField>( const MemoryWindow& w ){ return w.extent() - IntVec(0,2,0); }
-
-  // --- SVol -> SSurfZ
-  template<> size_t dest_offset  <SVolField,SSurfZField>( const MemoryWindow& w ){ return w.extent(0); }
-  template<> size_t src_offset_lo<SVolField,SSurfZField>( const MemoryWindow& w ){ return 0; }
-  template<> size_t src_offset_hi<SVolField,SSurfZField>( const MemoryWindow& w ){ return w.extent(0)*w.extent(1); }
-
-  template<> IntVec src_increment <SVolField,SSurfZField>( const MemoryWindow& w ){ return IntVec( 1, 0, 1 ); }
-  template<> IntVec dest_increment<SVolField,SSurfZField>( const MemoryWindow& w ){ return IntVec( 1, 0, 0 ); }
-
-  template<> IntVec low <SVolField,SSurfZField>( const MemoryWindow& w ){ return w.offset(); }
-  template<> IntVec high<SVolField,SSurfZField>( const MemoryWindow& w ){ return w.extent() - IntVec(0,0,2); }
+    IntVec low () const{ return wdest_.offset(); }
+    IntVec high() const{ return wdest_.extent(); }
+  private:
+    const MemoryWindow &wsrc_, &wdest_;
+  };
 
 
+  /**
+   *  \brief Stencil2Helper for Stencil2 operators moving from volume to y-surfaces
+   *
+   *  SVol -> SSurfY  (Grad, Interp)
+   *  XVol -> XSurfY  (Grad, Interp)
+   *  YVol -> YSurfY  (Grad, Interp)
+   *  ZVol -> ZSurfY  (Grad, Interp)
+   *
+   *  \todo this breaks on dest_increment if we have physical boundaries...
+   */
+  template<typename VolT>
+  struct Stencil2Helper< VolT,typename FaceTypes<VolT>::YFace >
+  {
+    Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest ) : wsrc_( wsrc ), wdest_( wdest ){}
+    size_t dest_offset  () const{ return 0; }
+    size_t src_offset_lo() const{ return 0; }
+    size_t src_offset_hi() const{ return wsrc_.extent(0); }
+    
+    IntVec src_increment () const{ return IntVec( 1, 0, 0 ); }
+    IntVec dest_increment() const{ return IntVec( 1, 0, 0 ); }
 
-  // --- XVol -> XSurfX
-  template<> size_t dest_offset  <XVolField,XSurfXField>( const MemoryWindow& w ){ return dest_offset<SVolField,SSurfXField>(w); }
-  template<> size_t src_offset_lo<XVolField,XSurfXField>( const MemoryWindow& w ){ return src_offset_lo<SVolField,SSurfXField>(w); }
-  template<> size_t src_offset_hi<XVolField,XSurfXField>( const MemoryWindow& w ){ return src_offset_hi<SVolField,SSurfXField>(w); }
-
-  template<> IntVec src_increment <XVolField,XSurfXField>( const MemoryWindow& w ){ return src_increment<SVolField,SSurfXField>(w); }
-  template<> IntVec dest_increment<XVolField,XSurfXField>( const MemoryWindow& w ){ return dest_increment<SVolField,SSurfXField>(w); }
-
-  template<> IntVec low <XVolField,XSurfXField>( const MemoryWindow& w ){ return low<SVolField,SSurfXField>(w); }
-  template<> IntVec high<XVolField,XSurfXField>( const MemoryWindow& w ){ return high<SVolField,SSurfXField>(w); }
-
-  // --- XVol -> XSurfY
-  template<> size_t dest_offset  <XVolField,XSurfYField>( const MemoryWindow& w ){ return dest_offset<SVolField,SSurfYField>(w); }
-  template<> size_t src_offset_lo<XVolField,XSurfYField>( const MemoryWindow& w ){ return src_offset_lo<SVolField,SSurfYField>(w); }
-  template<> size_t src_offset_hi<XVolField,XSurfYField>( const MemoryWindow& w ){ return src_offset_hi<SVolField,SSurfYField>(w); }
-
-  template<> IntVec src_increment <XVolField,XSurfYField>( const MemoryWindow& w ){ return src_increment<SVolField,SSurfYField>(w); }
-  template<> IntVec dest_increment<XVolField,XSurfYField>( const MemoryWindow& w ){ return dest_increment<SVolField,SSurfYField>(w); }
-
-  template<> IntVec low <XVolField,XSurfYField>( const MemoryWindow& w ){ return low<SVolField,SSurfYField>(w); }
-  template<> IntVec high<XVolField,XSurfYField>( const MemoryWindow& w ){ return high<SVolField,SSurfYField>(w); }
-
-  // --- XVol -> XSurfZ
-  template<> size_t dest_offset  <XVolField,XSurfZField>( const MemoryWindow& w ){ return dest_offset<SVolField,SSurfZField>(w); }
-  template<> size_t src_offset_lo<XVolField,XSurfZField>( const MemoryWindow& w ){ return src_offset_lo<SVolField,SSurfZField>(w); }
-  template<> size_t src_offset_hi<XVolField,XSurfZField>( const MemoryWindow& w ){ return src_offset_hi<SVolField,SSurfZField>(w); }
-
-  template<> IntVec src_increment <XVolField,XSurfZField>( const MemoryWindow& w ){ return src_increment<SVolField,SSurfZField>(w); }
-  template<> IntVec dest_increment<XVolField,XSurfZField>( const MemoryWindow& w ){ return dest_increment<SVolField,SSurfZField>(w); }
-
-  template<> IntVec low <XVolField,XSurfZField>( const MemoryWindow& w ){ return low<SVolField,SSurfZField>(w); }
-  template<> IntVec high<XVolField,XSurfZField>( const MemoryWindow& w ){ return high<SVolField,SSurfZField>(w); }
+    IntVec low () const{ return wdest_.offset(); }
+    IntVec high() const{ return wdest_.extent(); }
+  private:
+    const MemoryWindow &wsrc_, &wdest_;
+  };
 
 
+  /**
+   *  \brief Stencil2Helper for Stencil2 operators moving from volume to z-surfaces
+   *
+   *  SVol -> SSurfZ  (Grad, Interp)
+   *  XVol -> XSurfZ  (Grad, Interp)
+   *  YVol -> YSurfZ  (Grad, Interp)
+   *  ZVol -> ZSurfZ  (Grad, Interp)
+   *
+   *  \todo this breaks on dest_increment if we have physical boundaries...
+   */
+  template<typename VolT>
+  struct Stencil2Helper< VolT,typename FaceTypes<VolT>::ZFace >
+  {
+    Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest ) : wsrc_( wsrc ), wdest_( wdest ){}
+    size_t dest_offset  () const{ return 0; }
+    size_t src_offset_lo() const{ return 0; }
+    size_t src_offset_hi() const{ return wsrc_.extent(0)*wsrc_.extent(1); }
+    
+    IntVec src_increment () const{ return IntVec( 1, 0, 0 ); }
+    IntVec dest_increment() const{ return IntVec( 1, 0, 0 ); }
 
-  // --- YVol -> YSurfX
-  template<> size_t dest_offset  <YVolField,YSurfXField>( const MemoryWindow& w ){ return dest_offset<SVolField,SSurfXField>(w); }
-  template<> size_t src_offset_lo<YVolField,YSurfXField>( const MemoryWindow& w ){ return src_offset_lo<SVolField,SSurfXField>(w); }
-  template<> size_t src_offset_hi<YVolField,YSurfXField>( const MemoryWindow& w ){ return src_offset_hi<SVolField,SSurfXField>(w); }
-
-  template<> IntVec src_increment <YVolField,YSurfXField>( const MemoryWindow& w ){ return src_increment<SVolField,SSurfXField>(w); }
-  template<> IntVec dest_increment<YVolField,YSurfXField>( const MemoryWindow& w ){ return dest_increment<SVolField,SSurfXField>(w); }
-
-  template<> IntVec low <YVolField,YSurfXField>( const MemoryWindow& w ){ return low<SVolField,SSurfXField>(w); }
-  template<> IntVec high<YVolField,YSurfXField>( const MemoryWindow& w ){ return high<SVolField,SSurfXField>(w); }
-
-  // --- YVol -> YSurfY
-  template<> size_t dest_offset  <YVolField,YSurfYField>( const MemoryWindow& w ){ return dest_offset<SVolField,SSurfYField>(w); }
-  template<> size_t src_offset_lo<YVolField,YSurfYField>( const MemoryWindow& w ){ return src_offset_lo<SVolField,SSurfYField>(w); }
-  template<> size_t src_offset_hi<YVolField,YSurfYField>( const MemoryWindow& w ){ return src_offset_hi<SVolField,SSurfYField>(w); }
-
-  template<> IntVec src_increment <YVolField,YSurfYField>( const MemoryWindow& w ){ return src_increment<SVolField,SSurfYField>(w); }
-  template<> IntVec dest_increment<YVolField,YSurfYField>( const MemoryWindow& w ){ return dest_increment<SVolField,SSurfYField>(w); }
-
-  template<> IntVec low <YVolField,YSurfYField>( const MemoryWindow& w ){ return low<SVolField,SSurfYField>(w); }
-  template<> IntVec high<YVolField,YSurfYField>( const MemoryWindow& w ){ return high<SVolField,SSurfYField>(w); }
-
-  // --- YVol -> YSurfZ
-  template<> size_t dest_offset  <YVolField,YSurfZField>( const MemoryWindow& w ){ return dest_offset<SVolField,SSurfZField>(w); }
-  template<> size_t src_offset_lo<YVolField,YSurfZField>( const MemoryWindow& w ){ return src_offset_lo<SVolField,SSurfZField>(w); }
-  template<> size_t src_offset_hi<YVolField,YSurfZField>( const MemoryWindow& w ){ return src_offset_hi<SVolField,SSurfZField>(w); }
-
-  template<> IntVec src_increment <YVolField,YSurfZField>( const MemoryWindow& w ){ return src_increment<SVolField,SSurfZField>(w); }
-  template<> IntVec dest_increment<YVolField,YSurfZField>( const MemoryWindow& w ){ return dest_increment<SVolField,SSurfZField>(w); }
-
-  template<> IntVec low <YVolField,YSurfZField>( const MemoryWindow& w ){ return low<SVolField,SSurfZField>(w); }
-  template<> IntVec high<YVolField,YSurfZField>( const MemoryWindow& w ){ return high<SVolField,SSurfZField>(w); }
+    IntVec low () const{ return wdest_.offset(); }
+    IntVec high() const{ return wdest_.extent(); }
+  private:
+    const MemoryWindow &wsrc_, &wdest_;
+  };
 
 
 
-  // --- ZVol -> ZSurfX
-  template<> size_t dest_offset  <ZVolField,ZSurfXField>( const MemoryWindow& w ){ return dest_offset<SVolField,SSurfXField>(w); }
-  template<> size_t src_offset_lo<ZVolField,ZSurfXField>( const MemoryWindow& w ){ return src_offset_lo<SVolField,SSurfXField>(w); }
-  template<> size_t src_offset_hi<ZVolField,ZSurfXField>( const MemoryWindow& w ){ return src_offset_hi<SVolField,SSurfXField>(w); }
+  /**
+   *  \brief Stencil2Helper for Stencil2 operators moving from x-surfaces to volumes
+   *
+   *  SSurfX -> SVol  (Div)
+   *  XSurfX -> XVol  (Div)
+   *  YSurfX -> YVol  (Div)
+   *  ZSurfX -> ZVol  (Div)
+   *
+   *  \todo this breaks on src_increment if we have physical boundaries.
+   */
+  template<typename VolT>
+  struct Stencil2Helper< typename FaceTypes<VolT>::XFace, VolT >
+  {
+    Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest ) : wsrc_( wsrc ), wdest_( wdest ){}
 
-  template<> IntVec src_increment <ZVolField,ZSurfXField>( const MemoryWindow& w ){ return src_increment<SVolField,SSurfXField>(w); }
-  template<> IntVec dest_increment<ZVolField,ZSurfXField>( const MemoryWindow& w ){ return dest_increment<SVolField,SSurfXField>(w); }
+    size_t dest_offset  () const{ return 0; }
+    size_t src_offset_lo() const{ return 0; }
+    size_t src_offset_hi() const{ return 1; }
+    
+    IntVec src_increment () const{ return IntVec( 1, 0, 0 ); }
+    IntVec dest_increment() const{ return IntVec( 1, 0, 0 ); }
 
-  template<> IntVec low <ZVolField,ZSurfXField>( const MemoryWindow& w ){ return low<SVolField,SSurfXField>(w); }
-  template<> IntVec high<ZVolField,ZSurfXField>( const MemoryWindow& w ){ return high<SVolField,SSurfXField>(w); }
+    IntVec low () const{ return wdest_.offset(); }
+    IntVec high() const{ return wdest_.extent(); }
 
-  // --- ZVol -> ZSurfY
-  template<> size_t dest_offset  <ZVolField,ZSurfYField>( const MemoryWindow& w ){ return dest_offset<SVolField,SSurfYField>(w); }
-  template<> size_t src_offset_lo<ZVolField,ZSurfYField>( const MemoryWindow& w ){ return src_offset_lo<SVolField,SSurfYField>(w); }
-  template<> size_t src_offset_hi<ZVolField,ZSurfYField>( const MemoryWindow& w ){ return src_offset_hi<SVolField,SSurfYField>(w); }
+  private:
+    const MemoryWindow &wsrc_, &wdest_;
+  };
 
-  template<> IntVec src_increment <ZVolField,ZSurfYField>( const MemoryWindow& w ){ return src_increment<SVolField,SSurfYField>(w); }
-  template<> IntVec dest_increment<ZVolField,ZSurfYField>( const MemoryWindow& w ){ return dest_increment<SVolField,SSurfYField>(w); }
+  /**
+   *  \brief Stencil2Helper for Stencil2 operators moving from y-surfaces to volumes
+   *
+   *  SSurfY -> SVol  (Div)
+   *  XSurfY -> XVol  (Div)
+   *  YSurfY -> YVol  (Div)
+   *  ZSurfY -> ZVol  (Div)
+   *
+   *  \todo this breaks on src_increment if we have physical boundaries.
+   */
+  template<typename VolT>
+  struct Stencil2Helper< typename FaceTypes<VolT>::YFace, VolT >
+  {
+    Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest ) : wsrc_( wsrc ), wdest_( wdest ){}
 
-  template<> IntVec low <ZVolField,ZSurfYField>( const MemoryWindow& w ){ return low<SVolField,SSurfYField>(w); }
-  template<> IntVec high<ZVolField,ZSurfYField>( const MemoryWindow& w ){ return high<SVolField,SSurfYField>(w); }
+    size_t dest_offset  () const{ return 0; }
+    size_t src_offset_lo() const{ return 0; }
+    size_t src_offset_hi() const{ return wsrc_.extent(0); }
+    
+    IntVec src_increment () const{ return IntVec( 1, 0, 0 ); }
+    IntVec dest_increment() const{ return IntVec( 1, 0, 0 ); }
 
-  // --- ZVol -> ZSurfZ
-  template<> size_t dest_offset  <ZVolField,ZSurfZField>( const MemoryWindow& w ){ return dest_offset<SVolField,SSurfZField>(w); }
-  template<> size_t src_offset_lo<ZVolField,ZSurfZField>( const MemoryWindow& w ){ return src_offset_lo<SVolField,SSurfZField>(w); }
-  template<> size_t src_offset_hi<ZVolField,ZSurfZField>( const MemoryWindow& w ){ return src_offset_hi<SVolField,SSurfZField>(w); }
+    IntVec low () const{ return wdest_.offset(); }
+    IntVec high() const{ return wdest_.extent(); }
 
-  template<> IntVec src_increment <ZVolField,ZSurfZField>( const MemoryWindow& w ){ return src_increment<SVolField,SSurfZField>(w); }
-  template<> IntVec dest_increment<ZVolField,ZSurfZField>( const MemoryWindow& w ){ return dest_increment<SVolField,SSurfZField>(w); }
+  private:
+    const MemoryWindow &wsrc_, &wdest_;
+  };
 
-  template<> IntVec low <ZVolField,ZSurfZField>( const MemoryWindow& w ){ return low<SVolField,SSurfZField>(w); }
-  template<> IntVec high<ZVolField,ZSurfZField>( const MemoryWindow& w ){ return high<SVolField,SSurfZField>(w); }
+  /**
+   *  \brief Stencil2Helper for Stencil2 operators moving from z-surfaces to volumes
+   *
+   *  SSurfZ -> SVol  (Div)
+   *  XSurfZ -> XVol  (Div)
+   *  YSurfZ -> YVol  (Div)
+   *  ZSurfZ -> ZVol  (Div)
+   *
+   *  \todo this breaks on src_increment if we have physical boundaries.
+   */
+  template<typename VolT>
+  struct Stencil2Helper< typename FaceTypes<VolT>::ZFace, VolT >
+  {
+    Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest ) : wsrc_( wsrc ), wdest_( wdest ){}
+
+    size_t dest_offset  () const{ return 0; }
+    size_t src_offset_lo() const{ return 0; }
+    size_t src_offset_hi() const{ return wsrc_.extent(0)*wsrc_.extent(1); }
+    
+    IntVec src_increment () const{ return IntVec( 1, 0, 0 ); }
+    IntVec dest_increment() const{ return IntVec( 1, 0, 0 ); }
+
+    IntVec low () const{ return wdest_.offset(); }
+    IntVec high() const{ return wdest_.extent(); }
+
+  private:
+    const MemoryWindow &wsrc_, &wdest_;
+  };
+
 
 } // namespace structured
 } // namespace SpatialOps
