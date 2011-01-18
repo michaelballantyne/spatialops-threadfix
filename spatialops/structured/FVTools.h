@@ -45,8 +45,10 @@ namespace structured{
   int get_nx_with_ghost( const int nxNoGhost, const bool hasPlusFaceX )
   {
     int nx = nxNoGhost;
-    if( nxNoGhost>1 ) nx += 2*FieldT::Ghost::NGHOST;
-    if( hasPlusFaceX && (0==FieldT::Location::FaceDir::value) ) nx+=1;
+    if( nxNoGhost>1 ){
+      nx += 2*FieldT::Ghost::NGHOST;
+      if( hasPlusFaceX && (0==FieldT::Location::FaceDir::value) ) nx+=1;
+    }
     return nx;
   }
 
@@ -69,8 +71,10 @@ namespace structured{
   int get_ny_with_ghost( const int nyNoGhost, const bool hasPlusFaceY )
   {
     int ny = nyNoGhost;
-    if( nyNoGhost>1 ) ny += 2*FieldT::Ghost::NGHOST;
-    if( hasPlusFaceY && (1==FieldT::Location::FaceDir::value) ) ny+=1;
+    if( nyNoGhost>1 ){
+      ny += 2*FieldT::Ghost::NGHOST;
+      if( hasPlusFaceY && (1==FieldT::Location::FaceDir::value) ) ny+=1;
+    }
     return ny;
   }
 
@@ -93,8 +97,10 @@ namespace structured{
   int get_nz_with_ghost( const int nzNoGhost, const bool hasPlusFaceZ )
   {
     int nz = nzNoGhost;
-    if( nzNoGhost>1 ) nz += 2*FieldT::Ghost::NGHOST;
-    if( hasPlusFaceZ && (2==FieldT::Location::FaceDir::value) ) nz+=1;
+    if( nzNoGhost>1 ){
+      nz += 2*FieldT::Ghost::NGHOST;
+      if( hasPlusFaceZ && (2==FieldT::Location::FaceDir::value) ) nz+=1;
+    }
     return nz;
   }
 
