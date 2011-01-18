@@ -12,6 +12,9 @@ add_executable( test_memw_ops testOperator.cpp )
 target_link_libraries( test_memw_ops testlib ${SpatialOps_LIBRARY} )
 add_test( test_memw_ops test_memw_ops )
 
+add_executable( test_stencil test_stencil.cpp )
+target_link_libraries( test_stencil ${SpatialOps_LIBRARY} )
+
 if( ENABLE_BOOST_SERIALIZATION )
   add_executable( test_serialize testSerialization.cpp )
   target_link_libraries( test_serialize ${SpatialOps_LIBRARY} ${Boost_LIBRARIES} )
