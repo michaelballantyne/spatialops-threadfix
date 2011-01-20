@@ -272,21 +272,21 @@ namespace structured{
    */
   template<typename FaceT> struct VolType;
 
-  template<> struct VolType<SSurfXField>{ typedef SpatialOps::structured::SVolField SVolField; }
-  template<> struct VolType<SSurfYField>{ typedef SpatialOps::structured::SVolField SVolField; }
-  template<> struct VolType<SSurfZField>{ typedef SpatialOps::structured::SVolField SVolField; }
+  template<> struct VolType<SSurfXField>{ typedef SpatialOps::structured::SVolField VolField; };
+  template<> struct VolType<SSurfYField>{ typedef SpatialOps::structured::SVolField VolField; };
+  template<> struct VolType<SSurfZField>{ typedef SpatialOps::structured::SVolField VolField; };
 
-  template<> struct VolType<XSurfXField>{ typedef SpatialOps::structured::SVolField XVolField; }
-  template<> struct VolType<XSurfYField>{ typedef SpatialOps::structured::SVolField XVolField; }
-  template<> struct VolType<XSurfZField>{ typedef SpatialOps::structured::SVolField XVolField; }
+  template<> struct VolType<XSurfXField>{ typedef SpatialOps::structured::XVolField VolField; };
+  template<> struct VolType<XSurfYField>{ typedef SpatialOps::structured::XVolField VolField; };
+  template<> struct VolType<XSurfZField>{ typedef SpatialOps::structured::XVolField VolField; };
 
-  template<> struct VolType<YSurfXField>{ typedef SpatialOps::structured::SVolField YVolField; }
-  template<> struct VolType<YSurfYField>{ typedef SpatialOps::structured::SVolField YVolField; }
-  template<> struct VolType<YSurfZField>{ typedef SpatialOps::structured::SVolField YVolField; }
+  template<> struct VolType<YSurfXField>{ typedef SpatialOps::structured::YVolField VolField; };
+  template<> struct VolType<YSurfYField>{ typedef SpatialOps::structured::YVolField VolField; };
+  template<> struct VolType<YSurfZField>{ typedef SpatialOps::structured::YVolField VolField; };
 
-  template<> struct VolType<ZSurfXField>{ typedef SpatialOps::structured::SVolField ZVolField; }
-  template<> struct VolType<ZSurfYField>{ typedef SpatialOps::structured::SVolField ZVolField; }
-  template<> struct VolType<ZSurfZField>{ typedef SpatialOps::structured::SVolField ZVolField; }
+  template<> struct VolType<ZSurfXField>{ typedef SpatialOps::structured::ZVolField VolField; };
+  template<> struct VolType<ZSurfYField>{ typedef SpatialOps::structured::ZVolField VolField; };
+  template<> struct VolType<ZSurfZField>{ typedef SpatialOps::structured::ZVolField VolField; };
 
   /**
    *  @}
