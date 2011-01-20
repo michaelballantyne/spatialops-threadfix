@@ -5,8 +5,6 @@
  * Configuration options for SpatialOps.
  */
 
-#cmakedefine HAVE_DAIXTROSE
-
 #cmakedefine LINALG_UBLAS
 #cmakedefine LINALG_TRILINOS
 
