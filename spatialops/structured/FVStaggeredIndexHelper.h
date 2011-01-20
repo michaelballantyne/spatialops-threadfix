@@ -409,18 +409,15 @@ namespace structured{
     // jcs this is not robust at all...
     typedef typename DirSelector< SrcFieldT, DestFieldT, IsSameType<typename DestFieldT::Location::FaceDir,NODIR>::result >::Type FieldDirSelect;
 
+    const int dirVal = FieldDirSelect::Location::FaceDir::value;
     int n=-1;
-    switch( FieldDirSelect::Location::FaceDir::value ){
-    case XDIR::value:
+    if( dirVal == int(XDIR::value) )
       n=1;
-      break;
-    case YDIR::value:
+    else if( dirVal == int(YDIR::value) )
       n = get_nx_with_ghost<SrcFieldT>(dim_[0],hasPlusXSideFaces_);
-      break;
-    case ZDIR::value:
+    else if( dirVal == int(ZDIR::value) )
       n = get_nx_with_ghost<SrcFieldT>(dim_[0],hasPlusXSideFaces_) * get_ny_with_ghost<SrcFieldT>(dim_[1],hasPlusYSideFaces_);
-      break;
-    default:
+    else{
       std::cout << "ERROR: field location enum value=" << FieldDirSelect::Location::FaceDir::value << std::endl;
       assert(0);
     }

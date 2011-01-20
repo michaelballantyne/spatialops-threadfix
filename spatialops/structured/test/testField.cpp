@@ -42,9 +42,9 @@ bool test_iterator( const IntVec npts,
 
   if1=f1.begin();
   if2=f2.begin();
-  for( size_t k=0; k<hi[2]; ++k ){
-    for( size_t j=0; j<hi[1]; ++j ){
-      for( size_t i=0; i<hi[0]; ++i ){
+  for( int k=0; k<hi[2]; ++k ){
+    for( int j=0; j<hi[1]; ++j ){
+      for( int i=0; i<hi[0]; ++i ){
         {
           std::ostringstream msg;
           msg << "test_iterator 1.1: [" << i << "," << j << "," << k << "],  found: " << f2(i,j,k) << ", expected: 3.0";
@@ -73,9 +73,9 @@ bool test_iterator( const IntVec npts,
   f1 = 2.0;
   f2 = 1.0;
   f2 += f1;
-  for( size_t k=0; k<hi[2]; ++k ){
-    for( size_t j=0; j<hi[1]; ++j ){
-      for( size_t i=0; i<hi[0]; ++i ){
+  for( int k=0; k<hi[2]; ++k ){
+    for( int j=0; j<hi[1]; ++j ){
+      for( int i=0; i<hi[0]; ++i ){
         std::ostringstream msg;
         msg << "test_iterator 2: [" << i << "," << j << "," << k << "],  found: " << f2(i,j,k) << ", expected: 3.0";
         status( f2(i,j,k) == 3.0, msg.str() );
@@ -118,9 +118,9 @@ bool test_interior( const IntVec npts,
 
   f2 = 0.0;
   // set interior values
-  for( size_t k=lo[2]; k<hi[2]; ++k ){
-    for( size_t j=lo[1]; j<hi[1]; ++j ){
-      for( size_t i=lo[0]; i<hi[0]; ++i ){
+  for( int k=lo[2]; k<hi[2]; ++k ){
+    for( int j=lo[1]; j<hi[1]; ++j ){
+      for( int i=lo[0]; i<hi[0]; ++i ){
         f2(i,j,k) = 1+i+j+k;
       }
     }
@@ -132,9 +132,9 @@ bool test_interior( const IntVec npts,
   const typename FieldT::interior_iterator if2e=f2.interior_end();
   typename FieldT::const_interior_iterator if1=f1.interior_begin();
   const typename FieldT::interior_iterator if1e=f1.interior_end();
-  for( size_t k=lo[2]; k<hi[2]; ++k ){
-    for( size_t j=lo[1]; j<hi[1]; ++j ){
-      for( size_t i=lo[0]; i<hi[0]; ++i ){
+  for( int k=lo[2]; k<hi[2]; ++k ){
+    for( int j=lo[1]; j<hi[1]; ++j ){
+      for( int i=lo[0]; i<hi[0]; ++i ){
         {
           const double& f2pt = f2(i,j,k);
           const double* f2pti = &*if2;
@@ -158,9 +158,9 @@ bool test_interior( const IntVec npts,
     *if2 += *if1;
   }
 
-  for( size_t k=lo[2]; k<hi[2]; ++k ){
-    for( size_t j=lo[1]; j<hi[1]; ++j ){
-      for( size_t i=lo[0]; i<hi[0]; ++i ){
+  for( int k=lo[2]; k<hi[2]; ++k ){
+    for( int j=lo[1]; j<hi[1]; ++j ){
+      for( int i=lo[0]; i<hi[0]; ++i ){
         const double val = 1+i+j+k + 2.0;
         std::ostringstream msg;  msg << i<<","<<j<<","<<k << ",  found " << f2(i,j,k) << ", expected " << val;
         status( f2(i,j,k) == val, msg.str() );
