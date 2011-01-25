@@ -1,6 +1,6 @@
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/structured/FVTools.h>
-#include <spatialops/structured/Stencil.h>
+#include <spatialops/structured/Stencil2.h>
 
 #include <spatialops/WriteMatlab.h>
 
