@@ -75,15 +75,6 @@ namespace structured{
     {
       return (ijk[0]!=v.ijk[0]) | (ijk[1]!=v.ijk[1]) | (ijk[2]!=v.ijk[2]);
     }
-    inline bool operator<(const IntVec& v ) const{
-      return (ijk[0]<v.ijk[0]) & (ijk[1]<v.ijk[1]) & (ijk[2]<v.ijk[2]);
-    }
-    inline bool operator>(const IntVec& v ) const{
-      return (ijk[0]>v.ijk[0]) & (ijk[1]>v.ijk[1]) & (ijk[2]>v.ijk[2]);
-    }
-    inline bool operator>=(const IntVec& v ) const{
-      return (ijk[0]>=v.ijk[0]) & (ijk[1]>=v.ijk[1]) & (ijk[2]>=v.ijk[2]);
-    }
 
     inline IntVec operator+( const IntVec& v ) const{
       return IntVec( ijk[0] + v.ijk[0],
@@ -446,7 +437,9 @@ namespace structured{
     inline reference operator*()
     {
 #     ifndef NDEBUG
-      if( IntVec(i_,j_,k_) >= window_.extent()+window_.offset() ){
+      if( i_ >= window_.extent(0) + window_.offset(0) ||
+          j_ >= window_.extent(1) + window_.offset(1) ||
+          k_ >= window_.extent(2) + window_.offset(2) ){
         std::ostringstream msg;
         msg << __FILE__ << " : " << __LINE__ << "iterator is in an invalid state for dereference";
         throw std::runtime_error( msg.str() );
@@ -458,7 +451,9 @@ namespace structured{
     inline const reference operator*() const
     {
 #     ifndef NDEBUG
-      if( IntVec(i_,j_,k_) >= window_.extent()+window_.offset() ){
+      if( i_ >= window_.extent(0) + window_.offset(0) ||
+          j_ >= window_.extent(1) + window_.offset(1) ||
+          k_ >= window_.extent(2) + window_.offset(2) ){
         std::ostringstream msg;
         msg << __FILE__ << " : " << __LINE__ << "iterator is in an invalid state for dereference";
         throw std::runtime_error( msg.str() );
@@ -636,7 +631,9 @@ namespace structured{
     inline const reference operator*() const
     {
 #     ifndef NDEBUG
-      if( IntVec(i_,j_,k_) >= window_.extent()+window_.offset() ){
+      if( i_ >= window_.extent(0) + window_.offset(0) ||
+          j_ >= window_.extent(1) + window_.offset(1) ||
+          k_ >= window_.extent(2) + window_.offset(2) ){
         std::ostringstream msg;
         msg << __FILE__ << " : " << __LINE__ << "iterator is in an invalid state for dereference";
         throw std::runtime_error( msg.str() );
