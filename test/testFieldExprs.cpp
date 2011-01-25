@@ -17,9 +17,9 @@ bool test( const SS::IntVec dim )
 
   const SS::IntVec& globDim = w.glob_dim();
   const double dx = 3.1415 / (globDim[0]-1);
-  for( size_t k=0; k<globDim[2]; ++k ){
-    for( size_t j=0; j<globDim[1]; ++j ){
-      for( size_t i=0; i<globDim[0]; ++i ){
+  for( int k=0; k<globDim[2]; ++k ){
+    for( int j=0; j<globDim[1]; ++j ){
+      for( int i=0; i<globDim[0]; ++i ){
         const size_t ix = w.flat_index( SS::IntVec(i,j,k) );
         x[ ix ] = dx*i;
       }

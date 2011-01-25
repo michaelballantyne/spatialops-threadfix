@@ -77,7 +77,7 @@ int main()
   pfield[2] = 40;
   pfield[3] = 70;
 
-   for (int i=0;i<np;++i)
+   for( size_t i=0; i<np; ++i )
     std::cout<<"  particle coord : "<<pCoord[i]<<"  particle field : "<<pfield[i]<<std::endl;
 
 
@@ -96,7 +96,7 @@ int main()
   p2c->apply_to_field( pCoord,pSize, pfield, ctmp ); 
  
 
-  for (int i=0;i<np;++i)
+  for( size_t i=0; i<np; ++i )
     std::cout<<"  Interpolated particle field : "<<ptmp[i]<<std::endl;
 
   icoord = ctmp.begin();

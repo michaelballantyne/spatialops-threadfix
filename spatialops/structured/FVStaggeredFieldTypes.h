@@ -247,6 +247,48 @@ namespace structured{
 
 
   /**
+   *  \struct FaceTypes
+   *  \brief Define Volume field types in terms of a face field type.
+   *
+   *  Class template specializations exist for the following field types:
+   *   - SSurfXField
+   *   - SSurfYField
+   *   - SSurfZField
+   *   - XSurfXField
+   *   - XSurfYField
+   *   - XSurfZField
+   *   - YSurfXField
+   *   - YSurfYField
+   *   - YSurfZField
+   *   - ZSurfXField
+   *   - ZSurfYField
+   *   - ZSurfZField
+   *
+   *  Example usage:
+   *  \code
+   *  typedef FaceTypes< FaceT       >::VolField FieldT;
+   *  typedef FaceTypes< SSurfZField >::VolField FieldT;
+   *  \endcode
+   */
+  template<typename FaceT> struct VolType;
+
+  template<> struct VolType<SSurfXField>{ typedef SpatialOps::structured::SVolField VolField; };
+  template<> struct VolType<SSurfYField>{ typedef SpatialOps::structured::SVolField VolField; };
+  template<> struct VolType<SSurfZField>{ typedef SpatialOps::structured::SVolField VolField; };
+
+  template<> struct VolType<XSurfXField>{ typedef SpatialOps::structured::XVolField VolField; };
+  template<> struct VolType<XSurfYField>{ typedef SpatialOps::structured::XVolField VolField; };
+  template<> struct VolType<XSurfZField>{ typedef SpatialOps::structured::XVolField VolField; };
+
+  template<> struct VolType<YSurfXField>{ typedef SpatialOps::structured::YVolField VolField; };
+  template<> struct VolType<YSurfYField>{ typedef SpatialOps::structured::YVolField VolField; };
+  template<> struct VolType<YSurfZField>{ typedef SpatialOps::structured::YVolField VolField; };
+
+  template<> struct VolType<ZSurfXField>{ typedef SpatialOps::structured::ZVolField VolField; };
+  template<> struct VolType<ZSurfYField>{ typedef SpatialOps::structured::ZVolField VolField; };
+  template<> struct VolType<ZSurfZField>{ typedef SpatialOps::structured::ZVolField VolField; };
+
+  /**
    *  @}
    *  @}
    */

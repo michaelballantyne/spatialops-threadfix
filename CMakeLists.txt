@@ -15,15 +15,6 @@ option( LINALG_UBLAS    "use UBLAS for linear algebra - cannot solve linear syst
 option( ENABLE_BOOST_SERIALIZATION "allow serialization of information via the boost library" OFF )
 option( ENABLE_TESTS "Enable building of regression tests (recommended)" ON )
 
-# Set the path for the Daixtrose installation on your machine
-# daixtrose is used for expression templates - we support only a few
-# thus far.  If empty then SpatialOps will be built without Daixtrose
-# support
-set( Daixtrose
-  ""
-  CACHE PATH "path to daixtrose installation (optional)"
-  )
-
 # default to release builds
 if( NOT CMAKE_BUILD_TYPE )
   set( CMAKE_BUILD_TYPE "Release" CACHE STRING
@@ -121,13 +112,6 @@ else( Trilinos_path )
   message( STATUS "Using UBLAS for linear algebra" )
   set( LINALG_UBLAS ON )
   set( LINALG_TRILINOS OFF )
-endif()
-
-# until we get a package finder for daixtrose, we will need this:
-if( Daixtrose )
-  set( Daixtrose_INCLUDE_DIR ${Daixtrose}/include )
-  set( TPL_INCLUDE_DIRS ${TPL_INCLUDE_DIRS} ${Daixtrose_INCLUDE_DIR} )
-  set( HAVE_DAIXTROSE ON )
 endif()
 #--------------------------------------
 
