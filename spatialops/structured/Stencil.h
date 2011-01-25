@@ -102,24 +102,34 @@ namespace structured{
    *  XVol -> XSurfX  (Grad, Interp)
    *  YVol -> YSurfX  (Grad, Interp)
    *  ZVol -> ZSurfX  (Grad, Interp)
-   *
-   *  \todo this breaks on dest_increment if we have physical boundaries...
    */
   template<typename VolT>
   struct Stencil2Helper< VolT,typename FaceTypes<VolT>::XFace >
   {
-    Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest ) : wsrc_( wsrc ), wdest_( wdest ){}
+    Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest )
+      : hiBounds_( wdest.extent() ),
+        srcInc_ ( 1, 0, 0 ),
+        destInc_( 1, 0, 0 )
+    {
+      if( wsrc.extent(0) != wdest.extent(0) ){
+        // physical boundary present
+        --hiBounds_[0];
+        ++srcInc_[1];
+        ++destInc_[1];
+      }
+    }
+
     size_t dest_offset  () const{ return 1; }
     size_t src_offset_lo() const{ return 0; }
     size_t src_offset_hi() const{ return 1; }
     
-    IntVec src_increment () const{ return IntVec( wsrc_.extent(0)>1 ? 1 : 0, wsrc_.extent(1)>1 ? 1 : 0, wsrc_.extent(2)>1 ? 1 : 0 ); }
-    IntVec dest_increment() const{ return IntVec( 1, 0, 0 ); }
+    IntVec src_increment () const{ return srcInc_; }
+    IntVec dest_increment() const{ return destInc_; }
 
-    IntVec low () const{ return wdest_.offset(); }
-    IntVec high() const{ return wdest_.extent(); }
+    IntVec low () const{ return IntVec(1,0,0); }
+    IntVec high() const{ return hiBounds_; }
   private:
-    const MemoryWindow &wsrc_, &wdest_;
+    IntVec srcInc_, destInc_, hiBounds_;
   };
 
 
@@ -130,24 +140,35 @@ namespace structured{
    *  XVol -> XSurfY  (Grad, Interp)
    *  YVol -> YSurfY  (Grad, Interp)
    *  ZVol -> ZSurfY  (Grad, Interp)
-   *
-   *  \todo this breaks on dest_increment if we have physical boundaries...
    */
   template<typename VolT>
   struct Stencil2Helper< VolT,typename FaceTypes<VolT>::YFace >
   {
-    Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest ) : wsrc_( wsrc ), wdest_( wdest ){}
-    size_t dest_offset  () const{ return 0; }
+    Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest )
+      : wsrc_( wsrc ), wdest_( wdest ),
+        srcInc_ ( 1, 0, 0 ),
+        destInc_( 1, 0, 0 ),
+        hiBounds_( wdest.extent() )
+    {
+      if( wsrc.extent(1) != wdest.extent(1) ){
+        // physical boundary present
+        --hiBounds_[1];
+        ++srcInc_[2];
+        ++destInc_[2];
+      }
+    }
+    size_t dest_offset  () const{ return wdest_.extent(0); }
     size_t src_offset_lo() const{ return 0; }
     size_t src_offset_hi() const{ return wsrc_.extent(0); }
     
-    IntVec src_increment () const{ return IntVec( 1, 0, 0 ); }
-    IntVec dest_increment() const{ return IntVec( 1, 0, 0 ); }
+    IntVec src_increment () const{ return srcInc_; }
+    IntVec dest_increment() const{ return destInc_; }
 
-    IntVec low () const{ return wdest_.offset(); }
-    IntVec high() const{ return wdest_.extent(); }
+    IntVec low () const{ return IntVec(0,1,0); }
+    IntVec high() const{ return hiBounds_; }
   private:
     const MemoryWindow &wsrc_, &wdest_;
+    IntVec srcInc_, destInc_, hiBounds_;
   };
 
 
@@ -158,24 +179,31 @@ namespace structured{
    *  XVol -> XSurfZ  (Grad, Interp)
    *  YVol -> YSurfZ  (Grad, Interp)
    *  ZVol -> ZSurfZ  (Grad, Interp)
-   *
-   *  \todo this breaks on dest_increment if we have physical boundaries...
    */
   template<typename VolT>
   struct Stencil2Helper< VolT,typename FaceTypes<VolT>::ZFace >
   {
-    Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest ) : wsrc_( wsrc ), wdest_( wdest ){}
-    size_t dest_offset  () const{ return 0; }
+    Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest )
+      : wsrc_( wsrc ), wdest_( wdest ),
+        hiBounds_( wdest.extent() )
+    {
+      if( wsrc.extent(2) != wdest.extent(2) ){
+        // physical boundary present
+        --hiBounds_[2];
+      }
+    }
+    size_t dest_offset  () const{ return wdest_.extent(0)*wdest_.extent(1); }
     size_t src_offset_lo() const{ return 0; }
     size_t src_offset_hi() const{ return wsrc_.extent(0)*wsrc_.extent(1); }
     
     IntVec src_increment () const{ return IntVec( 1, 0, 0 ); }
     IntVec dest_increment() const{ return IntVec( 1, 0, 0 ); }
 
-    IntVec low () const{ return wdest_.offset(); }
-    IntVec high() const{ return wdest_.extent(); }
+    IntVec low () const{ return IntVec(0,0,1); }
+    IntVec high() const{ return hiBounds_; }
   private:
     const MemoryWindow &wsrc_, &wdest_;
+    IntVec hiBounds_;
   };
 
 
@@ -187,26 +215,33 @@ namespace structured{
    *  XSurfX -> XVol  (Div)
    *  YSurfX -> YVol  (Div)
    *  ZSurfX -> ZVol  (Div)
-   *
-   *  \todo this breaks on src_increment if we have physical boundaries.
    */
   template<typename VolT>
   struct Stencil2Helper< typename FaceTypes<VolT>::XFace, VolT >
   {
-    Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest ) : wsrc_( wsrc ), wdest_( wdest ){}
+    Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest )
+      : hiBounds_( wdest.extent() ),
+        destInc_( 1, 0, 0 )
+    {
+      if( wsrc.extent(0) != wdest.extent(0) ){
+        // physical boundary present
+        --hiBounds_[0];
+        ++destInc_[1];
+      }
+    }
 
     size_t dest_offset  () const{ return 0; }
     size_t src_offset_lo() const{ return 0; }
     size_t src_offset_hi() const{ return 1; }
     
     IntVec src_increment () const{ return IntVec( 1, 0, 0 ); }
-    IntVec dest_increment() const{ return IntVec( 1, 0, 0 ); }
+    IntVec dest_increment() const{ return destInc_; }
 
-    IntVec low () const{ return wdest_.offset(); }
-    IntVec high() const{ return wdest_.extent(); }
+    IntVec low () const{ return IntVec(0,0,0); }
+    IntVec high() const{ return hiBounds_; }
 
   private:
-    const MemoryWindow &wsrc_, &wdest_;
+    IntVec hiBounds_, destInc_;
   };
 
   /**
@@ -216,26 +251,37 @@ namespace structured{
    *  XSurfY -> XVol  (Div)
    *  YSurfY -> YVol  (Div)
    *  ZSurfY -> ZVol  (Div)
-   *
-   *  \todo this breaks on src_increment if we have physical boundaries.
    */
   template<typename VolT>
   struct Stencil2Helper< typename FaceTypes<VolT>::YFace, VolT >
   {
-    Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest ) : wsrc_( wsrc ), wdest_( wdest ){}
+    Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest )
+      : wsrc_( wsrc ),
+        hiBounds_( wdest.extent()-IntVec(0,1,0) ),
+        srcInc_ ( 1, 0, 1 ),
+        destInc_( 1, 0, 2 )
+    {
+      if( wsrc.extent(1) != wdest.extent(1) ){
+        // physical boundary present
+        ++hiBounds_[1];
+        --srcInc_[2];
+        --destInc_[2];
+      }
+    }
 
     size_t dest_offset  () const{ return 0; }
     size_t src_offset_lo() const{ return 0; }
     size_t src_offset_hi() const{ return wsrc_.extent(0); }
     
-    IntVec src_increment () const{ return IntVec( 1, 0, 0 ); }
-    IntVec dest_increment() const{ return IntVec( 1, 0, 0 ); }
+    IntVec src_increment () const{ return srcInc_; }
+    IntVec dest_increment() const{ return destInc_; }
 
-    IntVec low () const{ return wdest_.offset(); }
-    IntVec high() const{ return wdest_.extent(); }
+    IntVec low () const{ return IntVec(0,0,0); }
+    IntVec high() const{ return hiBounds_; }
 
   private:
-    const MemoryWindow &wsrc_, &wdest_;
+    const MemoryWindow &wsrc_;
+    IntVec hiBounds_, srcInc_, destInc_;
   };
 
   /**
@@ -245,13 +291,19 @@ namespace structured{
    *  XSurfZ -> XVol  (Div)
    *  YSurfZ -> YVol  (Div)
    *  ZSurfZ -> ZVol  (Div)
-   *
-   *  \todo this breaks on src_increment if we have physical boundaries.
    */
   template<typename VolT>
   struct Stencil2Helper< typename FaceTypes<VolT>::ZFace, VolT >
   {
-    Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest ) : wsrc_( wsrc ), wdest_( wdest ){}
+    Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest )
+      : wsrc_( wsrc ),
+        hiBounds_( wdest.extent()-IntVec(0,0,1) )
+    {
+      if( wsrc.extent(1) != wdest.extent(1) ){
+        // physical boundary present
+        ++hiBounds_[2];
+      }
+    }
 
     size_t dest_offset  () const{ return 0; }
     size_t src_offset_lo() const{ return 0; }
@@ -260,11 +312,12 @@ namespace structured{
     IntVec src_increment () const{ return IntVec( 1, 0, 0 ); }
     IntVec dest_increment() const{ return IntVec( 1, 0, 0 ); }
 
-    IntVec low () const{ return wdest_.offset(); }
-    IntVec high() const{ return wdest_.extent(); }
+    IntVec low () const{ return IntVec(0,0,0); }
+    IntVec high() const{ return hiBounds_; }
 
   private:
-    const MemoryWindow &wsrc_, &wdest_;
+    const MemoryWindow &wsrc_;
+    IntVec hiBounds_;
   };
 
 
