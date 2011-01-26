@@ -20,13 +20,12 @@ namespace structured{
   {
     Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest )
       : hiBounds_( wdest.extent() ),
-        srcInc_ ( 1, 0, 0 ),
-        destInc_( 1, 0, 0 )
+        srcInc_ ( 1, 1, 0 ),
+        destInc_( 1, 1, 0 )
     {
       if( wsrc.extent(0) != wdest.extent(0) ){
         // physical boundary present
         --hiBounds_[0];
-        ++srcInc_[1];
         ++destInc_[1];
       }
     }
@@ -55,19 +54,18 @@ namespace structured{
    *  ZVol -> ZSurfY  (Grad, Interp)
    */
   template<typename VolT>
-  struct Stencil2Helper< VolT,typename FaceTypes<VolT>::YFace >
+  struct Stencil2Helper< VolT, typename FaceTypes<VolT>::YFace >
   {
     Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest )
       : wsrc_( wsrc ), wdest_( wdest ),
-        srcInc_ ( 1, 0, 0 ),
+        srcInc_ ( 1, 0, wsrc.extent(0) ),
         destInc_( 1, 0, 0 ),
         hiBounds_( wdest.extent() )
     {
       if( wsrc.extent(1) != wdest.extent(1) ){
         // physical boundary present
         --hiBounds_[1];
-        ++srcInc_[2];
-        ++destInc_[2];
+        destInc_[2] += wdest.extent(0);
       }
     }
     unsigned int dest_offset  () const{ return wdest_.extent(0); }
@@ -172,31 +170,30 @@ namespace structured{
   struct Stencil2Helper< typename FaceTypes<VolT>::YFace, VolT >
   {
     Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest )
-      : wsrc_( wsrc ),
-        hiBounds_( wdest.extent()-IntVec(0,1,0) ),
-        srcInc_ ( 1, 0, 1 ),
-        destInc_( 1, 0, 2 )
+      : wsrc_( wsrc ),  wdest_( wdest ),
+        hiBounds_( wdest.extent() ),
+        srcInc_ ( 1, 0, wsrc.extent(0) ),
+        destInc_( 1, 0, wdest.extent(0) )
     {
       if( wsrc.extent(1) != wdest.extent(1) ){
         // physical boundary present
-        ++hiBounds_[1];
-        --srcInc_[2];
-        --destInc_[2];
+        --hiBounds_[1];
+        destInc_[2] += wdest.extent(0);
       }
     }
 
-    unsigned int dest_offset  () const{ return 0; }
+    unsigned int dest_offset  () const{ return wdest_.extent(0); }
     unsigned int src_offset_lo() const{ return 0; }
     unsigned int src_offset_hi() const{ return wsrc_.extent(0); }
     
     IntVec src_increment () const{ return srcInc_; }
     IntVec dest_increment() const{ return destInc_; }
 
-    IntVec low () const{ return IntVec(0,0,0); }
+    IntVec low () const{ return IntVec(0,1,0); }
     IntVec high() const{ return hiBounds_; }
 
   private:
-    const MemoryWindow &wsrc_;
+    const MemoryWindow &wsrc_, &wdest_;
     IntVec hiBounds_, srcInc_, destInc_;
   };
 
@@ -213,8 +210,8 @@ namespace structured{
   struct Stencil2Helper< typename FaceTypes<VolT>::ZFace, VolT >
   {
     Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest )
-      : wsrc_( wsrc ),
-        hiBounds_( wdest.extent()-IntVec(0,0,1) )
+      : wsrc_( wsrc ), wdest_( wdest ),
+        hiBounds_( wdest.extent() )
     {
       if( wsrc.extent(1) != wdest.extent(1) ){
         // physical boundary present
@@ -222,19 +219,214 @@ namespace structured{
       }
     }
 
-    unsigned int dest_offset  () const{ return 0; }
+    unsigned int dest_offset  () const{ return wdest_.extent(0)*wdest_.extent(1); }
     unsigned int src_offset_lo() const{ return 0; }
     unsigned int src_offset_hi() const{ return wsrc_.extent(0)*wsrc_.extent(1); }
     
     IntVec src_increment () const{ return IntVec( 1, 0, 0 ); }
     IntVec dest_increment() const{ return IntVec( 1, 0, 0 ); }
 
-    IntVec low () const{ return IntVec(0,0,0); }
+    IntVec low () const{ return IntVec(0,0,1); }
     IntVec high() const{ return hiBounds_; }
 
   private:
-    const MemoryWindow &wsrc_;
+    const MemoryWindow &wsrc_, &wdest_;
     IntVec hiBounds_;
+  };
+
+  /**
+   *  \brief Specialization for XVol->YSurfX (advecting velocity)
+   */
+  template<>
+  struct Stencil2Helper< XVolField, YSurfXField >
+  {
+    Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest )
+      : wsrc_( wsrc ), wdest_( wdest ),
+        hiBounds_( wdest.extent() ),
+        srcInc_ ( 1, 0, wsrc.extent(0) ),
+        destInc_( 1, 0, 0 )
+    {
+      if( wsrc.extent(0) != wdest.extent(0) ){
+        // physical boundary present
+        --hiBounds_[0];
+        ++destInc_[1];
+      }
+    }
+
+    unsigned int dest_offset  () const{ return wdest_.extent(0); }
+    unsigned int src_offset_lo() const{ return 0; }
+    unsigned int src_offset_hi() const{ return wsrc_.extent(0); }
+    
+    IntVec src_increment () const{ return srcInc_; }
+    IntVec dest_increment() const{ return destInc_; }
+
+    IntVec low () const{ return IntVec(0,1,0); }
+    IntVec high() const{ return hiBounds_; }
+
+  private:
+    const MemoryWindow &wsrc_, &wdest_;
+    IntVec hiBounds_, srcInc_, destInc_;
+  };
+
+  /**
+   *  \brief Specialization for XVol->ZSurfX (advecting velocity)
+   */
+  template<>
+  struct Stencil2Helper< XVolField, ZSurfXField >
+  {
+    Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest )
+      : wsrc_( wsrc ), wdest_( wdest ),
+        hiBounds_( wdest.extent() ),
+        destInc_( 1, 0, 0 )
+    {
+      if( wsrc.extent(0) != wdest.extent(0) ){
+        // physical boundary present
+        --hiBounds_[0];
+        ++destInc_[1];
+      }
+    }
+
+    unsigned int dest_offset  () const{ return wdest_.extent(0) * wdest_.extent(1); }
+    unsigned int src_offset_lo() const{ return 0; }
+    unsigned int src_offset_hi() const{ return wsrc_.extent(0) * wdest_.extent(1); }
+    
+    IntVec src_increment () const{ return IntVec(1,0,wsrc_.extent(0)); }
+    IntVec dest_increment() const{ return destInc_; }
+
+    IntVec low () const{ return IntVec(0,0,1); }
+    IntVec high() const{ return hiBounds_; }
+
+  private:
+    const MemoryWindow &wsrc_, &wdest_;
+    IntVec hiBounds_, destInc_;
+  };
+
+  /**
+   *  \brief Specialization for YVol->XSurfY (advecting velocity)
+   */
+  template<>
+  struct Stencil2Helper< YVolField, XSurfYField >
+  {
+    Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest )
+      : hiBounds_( wdest.extent() ),
+        srcInc_ ( 1, 1, 0 ),
+        destInc_( 1, 1, 0 )
+    {
+      if( wsrc.extent(1) != wdest.extent(1) ){
+        // physical boundary present
+        --hiBounds_[0];
+        destInc_[2] += wdest.extent(0);
+      }
+    }
+
+    unsigned int dest_offset  () const{ return 1; }
+    unsigned int src_offset_lo() const{ return 0; }
+    unsigned int src_offset_hi() const{ return 1; }
+    
+    IntVec src_increment () const{ return srcInc_; }
+    IntVec dest_increment() const{ return destInc_; }
+
+    IntVec low () const{ return IntVec(1,0,0); }
+    IntVec high() const{ return hiBounds_; }
+  private:
+    IntVec hiBounds_, srcInc_, destInc_;
+  };
+
+  /**
+   *  \brief Specialization for YVol->ZSurfY (advecting velocity)
+   */
+  template<>
+  struct Stencil2Helper< YVolField, ZSurfYField >
+  {
+    Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest )
+      : wsrc_( wsrc ), wdest_( wdest ),
+        hiBounds_( wdest.extent() ),
+        srcInc_ ( 1, 0, 0 ),
+        destInc_( 1, 0, 0 )
+    {
+      if( wsrc.extent(1) != wdest.extent(1) ){
+        // physical boundary present - skip the extra face
+        --hiBounds_[1];
+        destInc_[2] += wdest.extent(0);
+      }
+    }
+
+    unsigned int dest_offset  () const{ return wdest_.extent(0)*wdest_.extent(1); }
+    unsigned int src_offset_lo() const{ return 0; }
+    unsigned int src_offset_hi() const{ return wsrc_.extent(0)*wsrc_.extent(1); }
+    
+    IntVec src_increment () const{ return srcInc_; }
+    IntVec dest_increment() const{ return destInc_; }
+
+    IntVec low () const{ return IntVec(0,0,1); }
+    IntVec high() const{ return hiBounds_; }
+  private:
+    const MemoryWindow &wsrc_, &wdest_;
+    IntVec hiBounds_, srcInc_, destInc_;
+  };
+
+  /**
+   *  \brief Specialization for ZVol->XSurfZ (advecting velocity)
+   */
+  template<>
+  struct Stencil2Helper< ZVolField, XSurfZField >
+  {
+    Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest )
+      : wsrc_( wsrc ), wdest_( wdest ),
+        hiBounds_( wdest.extent() ),
+        srcInc_ ( 1, 1, 0 ),
+        destInc_( 1, 1, 0 )
+    {
+      if( wsrc.extent(2) != wdest.extent(2) ){
+        // physical boundary present
+        --hiBounds_[2];
+      }
+    }
+
+    unsigned int dest_offset  () const{ return 1; }
+    unsigned int src_offset_lo() const{ return 0; }
+    unsigned int src_offset_hi() const{ return 1; }
+    
+    IntVec src_increment () const{ return srcInc_; }
+    IntVec dest_increment() const{ return destInc_; }
+
+    IntVec low () const{ return IntVec(1,0,0); }
+    IntVec high() const{ return hiBounds_; }
+  private:
+    const MemoryWindow &wsrc_, &wdest_;
+    IntVec hiBounds_, srcInc_, destInc_;
+  };
+
+  /**
+   *  \brief Specialization for ZVol->YSurfZ (advecting velocity)
+   */
+  template<>
+  struct Stencil2Helper< ZVolField, YSurfZField >
+  {
+    Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest )
+      : wsrc_( wsrc ), wdest_( wdest ),
+        hiBounds_( wdest.extent() ),
+        srcInc_ ( 1, 0, wsrc.extent(0) ),
+        destInc_( 1, 0, wdest.extent(0) )
+    {
+      if( wsrc.extent(2) != wdest.extent(2) ){
+        // physical boundary present
+        --hiBounds_[2];
+      }
+    }
+
+    unsigned int dest_offset  () const{ return wdest_.extent(0); }
+    unsigned int src_offset_lo() const{ return 0; }
+    unsigned int src_offset_hi() const{ return wsrc_.extent(0); }
+    
+    IntVec src_increment () const{ return srcInc_; }
+    IntVec dest_increment() const{ return destInc_; }
+
+    IntVec low () const{ return IntVec(0,1,0); }
+    IntVec high() const{ return hiBounds_; }
+  private:
+    const MemoryWindow &wsrc_, &wdest_;
+    IntVec hiBounds_, srcInc_, destInc_;
   };
 
   //==================================================================
@@ -309,6 +501,15 @@ namespace structured{
   DECLARE_BASIC_VARIANTS( XVolField );
   DECLARE_BASIC_VARIANTS( YVolField );
   DECLARE_BASIC_VARIANTS( ZVolField );
+
+  template class Stencil2< Interpolant, XVolField, YSurfXField >;
+  template class Stencil2< Interpolant, XVolField, ZSurfXField >;
+
+  template class Stencil2< Interpolant, YVolField, XSurfYField >;
+  template class Stencil2< Interpolant, YVolField, ZSurfYField >;
+
+  template class Stencil2< Interpolant, ZVolField, XSurfZField >;
+  template class Stencil2< Interpolant, ZVolField, YSurfZField >;
   //
   //==================================================================
 
