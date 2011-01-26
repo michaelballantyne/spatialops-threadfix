@@ -2,7 +2,11 @@
 #include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/Stencil2.h>
 
+#include <spatialops/FieldOperationDefinitions.h>
+
 #include <spatialops/WriteMatlab.h>
+
+#include "Grid.h"
 
 using namespace SpatialOps;
 using namespace structured;
@@ -11,46 +15,125 @@ using namespace structured;
 using std::cout;
 using std::endl;
 
+template< typename FieldT >
+void function( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& f )
+{
+  f <<= sin(x) + cos(y) + sin(z);
+}
+
+template< typename CoordT, typename FieldT >
+struct FunctionDer{ void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& df ); };
+
+template< typename FieldT >
+struct FunctionDer<XDIR,FieldT>
+{
+  static void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& df )
+  {
+    df <<= cos(x);
+  }
+};
+template< typename FieldT >
+struct FunctionDer<YDIR,FieldT>
+{
+  static void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& df )
+  {
+    df <<= -1.0*sin(y);
+  }
+};
+template< typename FieldT >
+struct FunctionDer<ZDIR,FieldT>
+{
+  static void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& df )
+  {
+    df <<= cos(z);
+  }
+};
+
+template< typename CoordT, typename FieldT > struct Function2Der;
+
+template< typename FieldT > struct Function2Der<XDIR,FieldT>
+{
+  static void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& df )
+  {
+    df <<= -1.0*sin(x);
+  }
+};
+template< typename FieldT > struct Function2Der<YDIR,FieldT>
+{
+  static void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& df )
+  {
+    df <<= -1.0*cos(y);
+  }
+};
+template< typename FieldT > struct Function2Der<ZDIR,FieldT>
+{
+  static void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& df )
+  {
+    df <<= -1.0*cos(z);
+  }
+};
+
 //--------------------------------------------------------------------
 
-template< typename OpT, typename SrcT, typename DestT >
+template< typename VolT, typename FaceT >
 void
-apply_stencil( const Stencil2<OpT,SrcT,DestT>& op, const IntVec& npts, const bool* bcPlus )
+apply_stencil( const IntVec& npts, const bool* bcPlus )
 {
-  const MemoryWindow smw = get_window_with_ghost<SrcT >( npts, bcPlus[0], bcPlus[1], bcPlus[2] );
-  const MemoryWindow dmw = get_window_with_ghost<DestT>( npts, bcPlus[0], bcPlus[1], bcPlus[2] );
+  const MemoryWindow vmw = get_window_with_ghost<VolT >( npts, bcPlus[0], bcPlus[1], bcPlus[2] );
+  const MemoryWindow fmw = get_window_with_ghost<FaceT>( npts, bcPlus[0], bcPlus[1], bcPlus[2] );
 
-  SrcT   src( smw, NULL );
-  DestT dest( dmw, NULL );
+  std::vector<double> length(3,10.0);
+  const Grid grid( npts, length );
 
-  const double dx = 1.0;
-  const double dy = 1.0;
-  const double dz = 1.0;
+  VolT   vol( vmw, NULL ), xvol(vmw,NULL), yvol(vmw,NULL), zvol(vmw,NULL);
+  FaceT face( fmw, NULL ), xface(fmw,NULL), yface(fmw,NULL), zface(fmw,NULL);
 
-  const int ilo = smw.offset(0);
-  const int ihi = ilo + smw.extent(0);
+  grid.set_coord<XDIR>( xvol );
+  grid.set_coord<YDIR>( yvol );
+  grid.set_coord<ZDIR>( zvol );
 
-  const int jlo = smw.offset(1);
-  const int jhi = jlo + smw.extent(1);
+  grid.set_coord<XDIR>( xface );
+  grid.set_coord<YDIR>( yface );
+  grid.set_coord<ZDIR>( zface );
 
-  const int klo = smw.offset(2);
-  const int khi = klo + smw.extent(2);
+  // set the function value
+  function( xvol, yvol, zvol, vol );
 
-  for( int k=klo; k!=khi; ++k ){
-    for( int j=jlo; j!=jhi; ++j ){
-      for( int i=ilo; i!=ihi; ++i ){
-        const double x = i*dx;
-        const double y = j*dy;
-        const double z = k*dz;
-        src[ smw.flat_index( IntVec(i,j,k) ) ] = x*x + y*y + z*z;
-      }
-    }
+  FaceT faceExact( fmw, NULL );
+
+  // interpolant
+  {
+    const Stencil2< Interpolant, VolT, FaceT > interpOp( 0.5, 0.5 );
+    interpOp.apply_to_field( vol, face );
+    function( xface, yface, zface, faceExact );
+
+    // interpNorm = norm( face-faceExact );
   }
 
-  op.apply_to_field( src, dest );
+  // gradient
+  {
+    const double spc = grid.spacing<typename FaceT::Location::FaceDir>();
+    const Stencil2< Gradient, VolT, FaceT > gradOp( -1.0/spc, 1.0/spc );
+    gradOp.apply_to_field( vol, face );
 
-//   write_matlab( src,  "src"  );
-//   write_matlab( dest, "dest" );
+    // set the exact gradient value
+    FunctionDer<typename FaceT::Location::FaceDir,FaceT>::value( xface, yface, zface, faceExact );
+
+    // gradNorm = norm( face-faceExact );
+  }
+
+  // divergence
+  {
+    const double spc = grid.spacing<typename FaceT::Location::FaceDir>();
+    Stencil2< Divergence, FaceT, VolT > divOp( -1.0/spc, 1.0/spc );
+
+    divOp.apply_to_field( faceExact, vol );
+
+    // set the exact gradient value
+    VolT volExact( vmw, NULL );
+    Function2Der<typename FaceT::Location::FaceDir,VolT>::value( xvol, yvol, zvol, volExact );
+    // divNorm = norm( vol-volExact );
+  }
 }
 
 //--------------------------------------------------------------------
@@ -63,17 +146,9 @@ run_variants( const IntVec& npts, const bool* bcPlus )
   typedef typename FaceTypes<Vol>::YFace  YFace;
   typedef typename FaceTypes<Vol>::ZFace  ZFace;
 
-  apply_stencil< Interpolant, Vol, XFace >( Stencil2<Interpolant,Vol,XFace>(0.5,0.5), npts, bcPlus );
-  apply_stencil< Interpolant, Vol, YFace >( Stencil2<Interpolant,Vol,YFace>(0.5,0.5), npts, bcPlus );
-  apply_stencil< Interpolant, Vol, ZFace >( Stencil2<Interpolant,Vol,ZFace>(0.5,0.5), npts, bcPlus );
-
-  apply_stencil< Gradient, Vol, XFace >( Stencil2<Gradient,Vol,XFace>(-1,1), npts, bcPlus );
-  apply_stencil< Gradient, Vol, YFace >( Stencil2<Gradient,Vol,YFace>(-1,1), npts, bcPlus );
-  apply_stencil< Gradient, Vol, ZFace >( Stencil2<Gradient,Vol,ZFace>(-1,1), npts, bcPlus );
-
-  apply_stencil< Divergence, XFace, Vol >( Stencil2<Divergence,XFace,Vol>(-1,1), npts, bcPlus );
-  apply_stencil< Divergence, YFace, Vol >( Stencil2<Divergence,YFace,Vol>(-1,1), npts, bcPlus );
-  apply_stencil< Divergence, ZFace, Vol >( Stencil2<Divergence,ZFace,Vol>(-1,1), npts, bcPlus );
+  apply_stencil< Vol, XFace >( npts, bcPlus );
+  apply_stencil< Vol, YFace >( npts, bcPlus );
+  apply_stencil< Vol, ZFace >( npts, bcPlus );
 }
 
 //--------------------------------------------------------------------

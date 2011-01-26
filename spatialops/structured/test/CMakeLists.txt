@@ -1,4 +1,4 @@
-include_directories( ${spatialops_SOURCE_DIR}/include )
+include_directories( ${spatialops_SOURCE_DIR}/include . )
 
 add_executable( test_field testField.cpp )
 target_link_libraries( test_field ${SpatialOps_LIBRARY} ${TPL_LIBRARIES} )
@@ -12,7 +12,7 @@ add_executable( test_memw_ops testOperator.cpp )
 target_link_libraries( test_memw_ops testlib ${SpatialOps_LIBRARY} )
 add_test( test_memw_ops test_memw_ops )
 
-add_executable( test_stencil test_stencil.cpp )
+add_executable( test_stencil test_stencil.cpp Grid.cpp )
 target_link_libraries( test_stencil ${SpatialOps_LIBRARY} )
 
 if( ENABLE_BOOST_SERIALIZATION )
