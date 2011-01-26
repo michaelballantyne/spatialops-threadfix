@@ -2,7 +2,8 @@
 #define SpatialOps_FieldOperations_h
 
 #include<vector>
-#include<iostream>
+//#include<iostream>
+#include<algorithm>
 
 namespace SpatialOps{
   /**
@@ -70,6 +71,9 @@ namespace SpatialOps{
   template<typename FieldType>
     struct FieldForm;
 
+  template<typename FieldType>
+    struct MFieldForm;
+  
   template<typename Operand1, typename Operand2, typename FieldType>
     struct BinOp;
   
@@ -78,7 +82,7 @@ namespace SpatialOps{
     struct OBJECT_NAME
 
   template<typename Operand, typename FieldType>
-    struct UnOp;
+    struct UnFcn;
 
 #define BUILD_UNARY_TYPE_PROTOTYPE(OBJECT_NAME)		\
   template<typename Operand, typename FieldType>	\
@@ -89,6 +93,10 @@ namespace SpatialOps{
   
   template<typename ExprType, typename FieldType>
     struct FieldExpression;
+
+#define BUILD_COMPARISON_TYPE_PROTOTYPE(OBJECT_NAME)			\
+  template<typename FieldExpr1, typename FieldExpr2, typename FieldType> \
+    struct OBJECT_NAME
 
   template<typename ExprType, int CrtNum, typename Max, typename FieldType>
     struct FcnForm;
@@ -300,6 +308,91 @@ namespace SpatialOps{
        *  Returns a constant reference to the current element in the contained field.
        */
       inline typename FieldType::value_type const & eval() const {
+	return *iter;
+      };
+      
+      /**
+       *  @brief Predicate: Current position is the end?
+       *  
+       *  \return Boolean; true, if currently at end; false; if not.
+       *  
+       *  Returns whether or not current position is the end/last position.
+       *  
+       *  \note There is probably a more efficient way to do this.
+       */
+      inline bool at_end() const {
+	return iter == fptr->end();
+      };
+      
+      /**
+       *  @brief Predicate: Can reach end position?
+       *  
+       *  \return true; a FieldForm can reach the end.
+       *  
+       *  Returns true.
+       */
+      inline bool has_length() const {
+	return true;
+      };
+    };
+  
+  //Mutable Field Form
+  template<typename FieldType>
+    struct MFieldForm {
+    private:
+      FieldType * fptr;
+      typename FieldType::iterator iter;
+      
+    public:
+      
+      /**
+       *  @brief Constructor for FieldForm.
+       *  
+       *  \param field a FieldType (template parameter to FieldForm).
+       *  \return a new FieldForm containing field.
+       *  
+       *  Constructs a new Fieldform containing field.
+       *
+       *  Current implementation initializes field (may be redundant with init() function).
+       */
+    MFieldForm(FieldType & field)
+    : fptr(&field), iter(field.begin())
+      {};
+      
+      /**
+       *  @brief Initializer.
+       *  
+       *  \return nothing. Called for side-effects.
+       *  
+       *  Initializes internal iterator to beginning the contained field.
+       */
+      inline void init() {
+	iter = fptr->begin();
+      };
+      
+      /**
+       *  @brief Incrementer.
+       *  
+       *  \return nothing. Called for side-effects.
+       *  
+       *  Increments internal iterator to next element in the contained field.
+       */
+      inline void next() {
+	++iter;
+      };
+      
+      /**
+       *  @brief Reference to current element.
+       *  
+       *  \return a constant reference to the current element (an AtomicType/FieldType::value_type object) in the field.
+       *  
+       *  Returns a constant reference to the current element in the contained field.
+       */
+      inline typename FieldType::value_type const & eval() const {
+	return *iter;
+      };
+      
+      inline typename FieldType::value_type & reference() const {
 	return *iter;
       };
       
@@ -595,7 +688,7 @@ namespace SpatialOps{
     }
   
   /**
-   *  @struct UnOp/SpecificUnOp
+   *  @struct UnFcn/SpecificUnFcn
    *  @author Christopher Earl
    *  @date October, 2010
    *  
@@ -604,32 +697,32 @@ namespace SpatialOps{
    *  \tparam Operand Operand's type.
    *  \tparam FieldType Field type.
    *  
-   *  @par UnOp
-   *   UnOp is the non-optimized representation of a unary function and therefore requires the function be passed to it.
-   *  Briefly, to use a function, \c fcn, that does not have a SpecificUnOp defined for it, with operand \c op, the \c app function is called:
+   *  @par UnFcn
+   *   UnFcn is the non-optimized representation of a unary function and therefore requires the function be passed to it.
+   *  Briefly, to use a function, \c fcn, that does not have a SpecificUnFcn defined for it, with operand \c op, the \c app function is called:
    *  \code
    *  app(fcn, op)
    *  \endcode
    *  The signature for \c app is:
    *  \code
-   *  UnOp<Operand, FieldType> app (typename FieldType::value_type (*)(typename FieldType::value_type),
+   *  UnFcn<Operand, FieldType> app (typename FieldType::value_type (*)(typename FieldType::value_type),
    *                                Operand const &)
    *  \endcode
    *  
-   *  @par SpecificUnOp
+   *  @par SpecificUnFcn
    *  Commonly used unary functions have been given individual representations, for both optimization and ease-of-use reasons.
-   *  (These optimized UnOp-like structures are generated with macros by the preprocessor and so do not show up directly in this documentation.)
+   *  (These optimized UnFcn-like structures are generated with macros by the preprocessor and so do not show up directly in this documentation.)
    *  To use these sturctures, the name given to the macro is used - usually identical to the function itself.
    *  For example, for sin of the operand, \c op, usage is identical to applying sin to a double:
    *  \code
    *  sin(op)
    *  \endcode
    *  The macro, \c BUILD_UNARY_FUNCTION, defines unary functions.
-   *   For each member function in UnOp, there is an equivalent member function in each SpecificUnOp (without the function parameter).
+   *   For each member function in UnFcn, there is an equivalent member function in each SpecificUnFcn (without the function parameter).
    *  Note that usual C/C++ unary operators can be defined by macros very similar to \c BUILD_UNARY_FUNCTION; however, this macro has not been implemented, because there is no OAimmediate use.
    */
   template<typename Operand, typename FieldType>
-    struct UnOp {
+    struct UnFcn {
       
       /**
        *  @brief Typedef for AtomicType.
@@ -646,15 +739,15 @@ namespace SpatialOps{
     public:
       
       /**
-       *  @brief Constructor for UnOp.
+       *  @brief Constructor for UnFcn.
        *  
        *  \param operation a function that takes an AtomicType object and returns an AtomicType object.
        *  \param oper an Operand object.
-       *  \return a new UnOp containing operation and oper.
+       *  \return a new UnFcn containing operation and oper.
        *  
-       *  Constructs a new UnOp containing operation and oper.
+       *  Constructs a new UnFcn containing operation and oper.
        */
-    UnOp(AtomicType (*operation)(AtomicType, AtomicType),
+    UnFcn(AtomicType (*operation)(AtomicType, AtomicType),
 	 Operand oper)
     : op(operation), operand(oper)
       {};
@@ -842,8 +935,8 @@ namespace SpatialOps{
    *   \li A FieldForm (based on a FieldType),
    *   \li A BinOp of two expressions,
    *   \li A SpecificBinOp (see BinOp) of two expressions,
-   *   \li A UnOp of an expression,
-   *   \li A SpecificUnOp (see UnOp) of an expression, or
+   *   \li A UnFcn of an expression,
+   *   \li A SpecificUnFcn (see UnFcn) of an expression, or
    *   \li The result of a FcnForm after all its arguments have been applied (see FcnForm for more information).
    *  
    *  @par
@@ -920,7 +1013,155 @@ namespace SpatialOps{
       Operand const & expression() const {
 	return expr;
       };
+      
+      /**
+       *  @brief Initializer.
+       *  
+       *  \return nothing. Called for side-effects.
+       *  
+       *  Initializes state of the internal expression.
+       */
+      inline void init() {
+	expr.init();
+      };
+      
+      /**
+       *  @brief Incrementer.
+       *  
+       *  \return nothing. Called for side-effects.
+       *  
+       *  Increments state of the internal expression.
+       */
+      inline void next() {
+	expr.next();
+      };
+      
+      /**
+       *  @brief Reference to current element.
+       *  
+       *  \return the current element (an AtomicType/FieldType::value_type object) of the internal expression.
+       *  
+       *  Returns the current element of the internal expression.
+       */
+      inline typename FieldType::value_type eval() const {
+	return expr.eval();
+      };
+      
+      /**
+       *  @brief Predicate: Current position is the end?
+       *  
+       *  \return Boolean; true, if currently at end; false; if not.
+       *  
+       *  Returns whether or not current position of the internal expression is the end/last position.
+       */
+      inline bool at_end() const {
+	return expr.at_end();
+      };
+      
+      /**
+       *  @brief Predicate: Can reach end position?
+       *  
+       *  \return Boolean; true if the internal expression can reach end; false if not.
+       *  
+       *  Returns whether or not internal expression can reach the end of its array.
+       */
+      inline bool has_length() const {
+	return expr.has_length();
+      };
     };
+  
+      /**
+       *  @brief Accessor for internal expression.
+       *
+       *  \return constant reference to internal expression.
+       *
+       *  Returns constant reference to internal expression.
+       */
+      /**
+       *  @brief Initializer.
+       *  
+       *  \return nothing. Called for side-effects.
+       *  
+       *  Initializes state of the internal expression.
+       */
+      /**
+       *  @brief Incrementer.
+       *  
+       *  \return nothing. Called for side-effects.
+       *  
+       *  Increments state of the internal expression.
+       */
+      /**
+       *  @brief Reference to current element.
+       *  
+       *  \return the current element (an AtomicType/FieldType::value_type object) of the internal expression.
+       *  
+       *  Returns the current element of the internal expression.
+       */
+      /**
+       *  @brief Predicate: Current position is the end?
+       *  
+       *  \return Boolean; true, if currently at end; false; if not.
+       *  
+       *  Returns whether or not current position of the internal expression is the end/last position.
+       */
+      /**
+       *  @brief Predicate: Can reach end position?
+       *  
+       *  \return Boolean; true if the internal expression can reach end; false if not.
+       *  
+       *  Returns whether or not internal expression can reach the end of its array.
+       */
+#define BUILD_COMPARISON_STRUT(OBJECT_NAME, INTERNAL_NAME)		\
+  template<typename FieldExpr1, typename FieldExpr2, typename FieldType> \
+    struct OBJECT_NAME {						\
+    public:								\
+    FieldType typedef field_type;					\
+    									\
+    private:								\
+    FieldExpr1 fexpr1;							\
+    FieldExpr2 fexpr2;							\
+    									\
+    public:								\
+    OBJECT_NAME(FieldExpr1 const & given1,				\
+		FieldExpr2 const & given2)				\
+    : fexpr1(given1),							\
+      fexpr2(given2)							\
+      {};								\
+    									\
+    FieldExpr1 const & fexpression1() const {				\
+      return fexpr1;							\
+    };									\
+    									\
+    FieldExpr2 const & fexpression2() const {				\
+      return fexpr2;							\
+    };									\
+									\
+    inline void init() {						\
+      fexpr1.init();							\
+      fexpr2.init();							\
+    };									\
+									\
+    inline void next() {						\
+      fexpr1.next();							\
+      fexpr2.next();							\
+    };									\
+									\
+    inline bool test() const {						\
+      return								\
+	fexpr1.eval() INTERNAL_NAME fexpr2.eval();			\
+    };									\
+									\
+    inline bool at_end() const {					\
+      return								\
+	fexpr1.at_end() || fexpr2.at_end();				\
+    };									\
+									\
+    inline bool has_length() const {					\
+      return								\
+	fexpr1.has_length() || fexpr2.has_length();			\
+    };									\
+    }
   
   /**
    *  @author Christopher Earl
@@ -2559,12 +2800,12 @@ namespace SpatialOps{
    *  <td> SpecificBinOp<ArgReplace<Operand1, ...>::ResultType, ArgReplace<Operand2, ...>::ResultType, ...> </td>
    *  </tr>
    *  <tr>
-   *  <td> UnOp<Operand, ...> </td>
-   *  <td> UnOp<ArgReplace<Operand, ...>::ResultType, ...> </td>
+   *  <td> UnFcn<Operand, ...> </td>
+   *  <td> UnFcn<ArgReplace<Operand, ...>::ResultType, ...> </td>
    *  </tr>
    *  <tr>
-   *  <td> SpecificUnOp<Operand, ...> </td>
-   *  <td> SpecificUnOp<ArgReplace<Operand, ...>::ResultType, ...> </td>
+   *  <td> SpecificUnFcn<Operand, ...> </td>
+   *  <td> SpecificUnFcn<ArgReplace<Operand, ...>::ResultType, ...> </td>
    *  </tr>
    *  </table>
    *  
@@ -2641,12 +2882,12 @@ namespace SpatialOps{
    *  <td> SpecificBinOp<ArgReplace<Operand1, ...>::ResultType, ArgReplace<Operand2, ...>::ResultType, ...> </td>
    *  </tr>
    *  <tr>
-   *  <td> UnOp<Operand, ...> </td>
-   *  <td> UnOp<ArgReplace<Operand, ...>::ResultType, ...> </td>
+   *  <td> UnFcn<Operand, ...> </td>
+   *  <td> UnFcn<ArgReplace<Operand, ...>::ResultType, ...> </td>
    *  </tr>
    *  <tr>
-   *  <td> SpecificUnOp<Operand, ...> </td>
-   *  <td> SpecificUnOp<ArgReplace<Operand, ...>::ResultType, ...> </td>
+   *  <td> SpecificUnFcn<Operand, ...> </td>
+   *  <td> SpecificUnFcn<ArgReplace<Operand, ...>::ResultType, ...> </td>
    *  </tr>
    *  </table>
    *  
@@ -2723,12 +2964,12 @@ namespace SpatialOps{
    *  <td> SpecificBinOp<ArgReplace<Operand1, ...>::ResultType, ArgReplace<Operand2, ...>::ResultType, ...> </td>
    *  </tr>
    *  <tr>
-   *  <td> UnOp<Operand, ...> </td>
-   *  <td> UnOp<ArgReplace<Operand, ...>::ResultType, ...> </td>
+   *  <td> UnFcn<Operand, ...> </td>
+   *  <td> UnFcn<ArgReplace<Operand, ...>::ResultType, ...> </td>
    *  </tr>
    *  <tr>
-   *  <td> SpecificUnOp<Operand, ...> </td>
-   *  <td> SpecificUnOp<ArgReplace<Operand, ...>::ResultType, ...> </td>
+   *  <td> SpecificUnFcn<Operand, ...> </td>
+   *  <td> SpecificUnFcn<ArgReplace<Operand, ...>::ResultType, ...> </td>
    *  </tr>
    *  </table>
    *  
@@ -2805,12 +3046,12 @@ namespace SpatialOps{
    *  <td> SpecificBinOp<ArgReplace<Operand1, ...>::ResultType, ArgReplace<Operand2, ...>::ResultType, ...> </td>
    *  </tr>
    *  <tr>
-   *  <td> UnOp<Operand, ...> </td>
-   *  <td> UnOp<ArgReplace<Operand, ...>::ResultType, ...> </td>
+   *  <td> UnFcn<Operand, ...> </td>
+   *  <td> UnFcn<ArgReplace<Operand, ...>::ResultType, ...> </td>
    *  </tr>
    *  <tr>
-   *  <td> SpecificUnOp<Operand, ...> </td>
-   *  <td> SpecificUnOp<ArgReplace<Operand, ...>::ResultType, ...> </td>
+   *  <td> SpecificUnFcn<Operand, ...> </td>
+   *  <td> SpecificUnFcn<ArgReplace<Operand, ...>::ResultType, ...> </td>
    *  </tr>
    *  </table>
    *  
@@ -2887,12 +3128,12 @@ namespace SpatialOps{
    *  <td> SpecificBinOp<ArgReplace<Operand1, ...>::ResultType, ArgReplace<Operand2, ...>::ResultType, ...> </td>
    *  </tr>
    *  <tr>
-   *  <td> UnOp<Operand, ...> </td>
-   *  <td> UnOp<ArgReplace<Operand, ...>::ResultType, ...> </td>
+   *  <td> UnFcn<Operand, ...> </td>
+   *  <td> UnFcn<ArgReplace<Operand, ...>::ResultType, ...> </td>
    *  </tr>
    *  <tr>
-   *  <td> SpecificUnOp<Operand, ...> </td>
-   *  <td> SpecificUnOp<ArgReplace<Operand, ...>::ResultType, ...> </td>
+   *  <td> SpecificUnFcn<Operand, ...> </td>
+   *  <td> SpecificUnFcn<ArgReplace<Operand, ...>::ResultType, ...> </td>
    *  </tr>
    *  </table>
    *  
@@ -2956,9 +3197,9 @@ namespace SpatialOps{
    *  @author Christopher Earl
    *  @date October, 2010
    *  
-   *  @brief Structure encoding the ArgReplace type conversions (type juggling) for applying arguments to a FcnForm. (UnOp case.)
+   *  @brief Structure encoding the ArgReplace type conversions (type juggling) for applying arguments to a FcnForm. (UnFcn case.)
    *  
-   *  \tparam BeginType A FieldExpression-style type, which is the representation of an expression/anonymous function; here, UnOp<Operand, ...>.
+   *  \tparam BeginType A FieldExpression-style type, which is the representation of an expression/anonymous function; here, UnFcn<Operand, ...>.
    *  \tparam CurrentArg An integer, representing the current argument to replace.
    *  \tparam ArgType A FieldExpression-style type, which is the actual argument to replace any ArgForm<CurrentArg, ..>.
    *  
@@ -2997,38 +3238,38 @@ namespace SpatialOps{
    *  <td> SpecificBinOp<ArgReplace<Operand1, ...>::ResultType, ArgReplace<Operand2, ...>::ResultType, ...> </td>
    *  </tr>
    *  <tr>
-   *  <td> UnOp<Operand, ...> </td>
-   *  <td> UnOp<ArgReplace<Operand, ...>::ResultType, ...> </td>
+   *  <td> UnFcn<Operand, ...> </td>
+   *  <td> UnFcn<ArgReplace<Operand, ...>::ResultType, ...> </td>
    *  <td> (Current case.) </td>
    *  </tr>
    *  <tr>
-   *  <td> SpecificUnOp<Operand, ...> </td>
-   *  <td> SpecificUnOp<ArgReplace<Operand, ...>::ResultType, ...> </td>
+   *  <td> SpecificUnFcn<Operand, ...> </td>
+   *  <td> SpecificUnFcn<ArgReplace<Operand, ...>::ResultType, ...> </td>
    *  </tr>
    *  </table>
    *  
    *  ArgReplace should never be instantiated; its sole purpose is type conversion/juggling.
    */
   template<typename Operand, int CurrentArg, typename ArgType, typename FieldType>
-    struct ArgReplace<UnOp<Operand,FieldType>,CurrentArg,ArgType> {
+    struct ArgReplace<UnFcn<Operand,FieldType>,CurrentArg,ArgType> {
     
     /**
      *  @brief Typedef for ResultType.
      *  
-     *  Typedef for ResultType, here UnOp<ArgReplace<Operand, ...>::ResultType, ...>.
+     *  Typedef for ResultType, here UnFcn<ArgReplace<Operand, ...>::ResultType, ...>.
      */
-    UnOp<typename ArgReplace<Operand,CurrentArg,ArgType>::ResultType,FieldType> typedef ResultType;
+    UnFcn<typename ArgReplace<Operand,CurrentArg,ArgType>::ResultType,FieldType> typedef ResultType;
     
     /**
      *  @brief Converts to ResultType.
      *  
-     *  \param state A UnOp<Operand, ...> object.
+     *  \param state A UnFcn<Operand, ...> object.
      *  \param arg An ArgType object.
-     *  \return a new UnOp<ArgReplace<Operand, ...>::ResultType, ...> object.
+     *  \return a new UnFcn<ArgReplace<Operand, ...>::ResultType, ...> object.
      *  
      *  Builds and returns a new ResultType object based upon the ResultTypes of the ArgReplace'ed Operand type.
      */
-    static inline ResultType apply(UnOp<Operand,FieldType> const & state,
+    static inline ResultType apply(UnFcn<Operand,FieldType> const & state,
 				   ArgType const & arg) {
       return ResultType(state.op,
 			ArgReplace<Operand,CurrentArg,ArgType>::apply(state.operand,
@@ -3416,19 +3657,116 @@ namespace SpatialOps{
 				   StandardizeTerm<SubExpr,FieldType>::standardType(second))); \
     }
   
+  /* No doxygen comments for the code generated by this macro.  This is a design-limitation of doxygen. */
+  /* (For marco-generated types/functions, doxygen documentation must refer to the type/function by name.) */
+  /* (For specialized templates, doxygen documentation must refer to the type/function by proximity to the specialization.) */
+  /* (This macro defines a specialization, so these two requirements conflict.) */
+#define BUILD_COMPARISON_INTERFACE(OBJECT_NAME, EXTERNAL_NAME)		\
+  /* SubExpr X SubExpr: */						\
+    template<typename SubExpr1, typename SubExpr2>			\
+      OBJECT_NAME<SubExpr1,						\
+      SubExpr2,								\
+      typename SubExpr1::field_type>					\
+      EXTERNAL_NAME (SubExpr1 const & first,				\
+		     SubExpr2 const & second) {				\
+									\
+      typename SubExpr1::field_type typedef FieldType;			\
+									\
+      typename StandardizeTerm<SubExpr1,FieldType>::StandardTerm typedef Term1; \
+      typename StandardizeTerm<SubExpr2,FieldType>::StandardTerm typedef Term2; \
+									\
+      typename StandardizeTerm<SubExpr1,FieldType>::StandardType typedef Type1; \
+      typename StandardizeTerm<SubExpr2,FieldType>::StandardType typedef Type2; \
+									\
+      OBJECT_NAME<Type1,Type2,FieldType> typedef ReturnType;		\
+      typename CombineTerms<ReturnType,					\
+	Term1,								\
+	Term2,								\
+	FieldType>::StandardTerm typedef ReturnTerm;			\
+									\
+      return ReturnTerm(ReturnType(StandardizeTerm<SubExpr1,FieldType>::standardType(first), \
+				   StandardizeTerm<SubExpr2,FieldType>::standardType(second))); \
+    };									\
+  									\
+    /* SubExpr X Scalar: */						\
+    template<typename SubExpr>						\
+      typename CombineTerms<OBJECT_NAME<typename StandardizeTerm<SubExpr, \
+      typename SubExpr::field_type>::StandardType,			\
+      Scalar<typename SubExpr::field_type::value_type>,			\
+      typename SubExpr::field_type>,					\
+      typename StandardizeTerm<SubExpr,					\
+      typename SubExpr::field_type>::StandardTerm,			\
+      FieldExpression<Scalar<typename SubExpr::field_type::value_type>,	\
+      typename SubExpr::field_type>,					\
+      typename SubExpr::field_type>::StandardTerm			\
+      EXTERNAL_NAME (SubExpr const & first,				\
+		     typename SubExpr::field_type::value_type const & second) { \
+      									\
+      typename SubExpr::field_type typedef FieldType;			\
+      typename FieldType::value_type typedef AtomicType;		\
+									\
+      typename StandardizeTerm<SubExpr,FieldType>::StandardTerm typedef Term1; \
+      FieldExpression<Scalar<AtomicType>,FieldType> typedef Term2;		\
+									\
+      typename StandardizeTerm<SubExpr,FieldType>::StandardType typedef Type1; \
+      Scalar<AtomicType> typedef Type2;					\
+    									\
+      OBJECT_NAME<Type1,Type2,FieldType> typedef ReturnType;		\
+      typename CombineTerms<ReturnType,					\
+	Term1,								\
+	Term2,								\
+	FieldType>::StandardTerm typedef ReturnTerm;			\
+									\
+      return ReturnTerm(ReturnType(StandardizeTerm<SubExpr,FieldType>::standardType(first), \
+				   Type2(second)));			\
+    };									\
+									\
+    /* Scalar X SubExpr: */						\
+    template<typename SubExpr>						\
+      typename CombineTerms<OBJECT_NAME<Scalar<typename SubExpr::field_type::value_type>, \
+      typename StandardizeTerm<SubExpr,					\
+      typename SubExpr::field_type>::StandardType,			\
+      typename SubExpr::field_type>,					\
+      FieldExpression<Scalar<typename SubExpr::field_type::value_type>,	\
+      typename SubExpr::field_type>,					\
+      typename StandardizeTerm<SubExpr,					\
+      typename SubExpr::field_type>::StandardTerm,			\
+      typename SubExpr::field_type>::StandardTerm			\
+      EXTERNAL_NAME (typename SubExpr::field_type::value_type const & first, \
+		     SubExpr const & second) {				\
+    									\
+      typename SubExpr::field_type typedef FieldType;			\
+      typename FieldType::value_type typedef AtomicType;		\
+									\
+      FieldExpression<Scalar<AtomicType>,FieldType> typedef Term1;		\
+      typename StandardizeTerm<SubExpr,FieldType>::StandardTerm typedef Term2; \
+									\
+      Scalar<AtomicType> typedef Type1;					\
+      typename StandardizeTerm<SubExpr,FieldType>::StandardType typedef Type2; \
+									\
+      OBJECT_NAME<Type1,Type2,FieldType> typedef ReturnType;		\
+      typename CombineTerms<ReturnType,					\
+	Term1,								\
+	Term2,								\
+	FieldType>::StandardTerm typedef ReturnTerm;			\
+									\
+      return ReturnTerm(ReturnType(Type1(first),			\
+				   StandardizeTerm<SubExpr,FieldType>::standardType(second))); \
+    }
+  
   /**
    *  @author Christopher Earl
    *  @date October, 2010
    *  
    *  @brief Definition of app for argument SubExpr.
    *  
-   *  @relates UnOp
+   *  @relates UnFcn
    *  
    *  \tparam SubExpr Operand's type.
    *  
    *  \param argument A SubExpr1 object.
    *
-   *  \return the Standard Term that is the result of creating an UnOp with argument as its operand.
+   *  \return the Standard Term that is the result of creating an UnFcn with argument as its operand.
    *  
    *  A SubExpr can be a FieldType, a FieldExpression, an ArgForm, or an FcnForm.
    *  Basically, a SubExpr can be any FieldExpression except for Scalar<AtomicType>.
@@ -3438,11 +3776,11 @@ namespace SpatialOps{
    *  Scalar<AtomicType> cannot be used as an argument type.
    *  (However, where \c app(fcn, \c value) is desired, \c fcn(value) will work.)
    *  
-   *  All app does is build the correct StandardTerm type (and the correct StandardTerm object) for an UnOp object with argument as operand.
+   *  All app does is build the correct StandardTerm type (and the correct StandardTerm object) for an UnFcn object with argument as operand.
    *  Since a SubExpr can be any one of many different types, StandardizeTerm is used to find and build the correct types and objects.
    */
   template<typename SubExpr>
-    typename LiftTerm<UnOp<typename StandardizeTerm<SubExpr,
+    typename LiftTerm<UnFcn<typename StandardizeTerm<SubExpr,
     typename SubExpr::field_type>::StandardType,
     typename SubExpr::field_type>,
     typename StandardizeTerm<SubExpr,
@@ -3457,11 +3795,11 @@ namespace SpatialOps{
   
     typename StandardizeTerm<SubExpr,FieldType>::StandardType typedef Type;
   
-    UnOp<Type,FieldType> typedef ReturnType;
+    UnFcn<Type,FieldType> typedef ReturnType;
     typename LiftTerm<ReturnType,
       Term,
       FieldType>::StandardTerm typedef ReturnTerm;
-  
+    
     return ReturnTerm(ReturnType(fcn,
 				 StandardizeTerm<SubExpr,FieldType>::standardType(argument)));
   };
@@ -3575,187 +3913,18 @@ namespace SpatialOps{
 					   FieldExpression<ExprType,
 					   FieldType> rhs) {
     //initialize:
-    typename FieldType::iterator iter = lhs.begin();
-    //initialize rhs:
-    ExprType expr = rhs.expression();
-    expr.init();
+    MFieldForm<FieldType> field(lhs);
+    field.init();
+    rhs.init();
     
-    while(iter != lhs.end()) {
-      *iter = expr.eval();
+    while(!field.at_end()) {//is there a better method?
+      field.reference() = rhs.eval();
       //increment:
-      ++iter;
-      expr.next();
+      field.next();
+      rhs.next();
     };
     
     return lhs;
-  };
-  
-  /* Fold for different return type.  */
-  template<typename ResultType, typename ExprType, typename FieldType>
-    inline ResultType fold(ResultType(*proc)(ResultType const &,
-					     typename FieldType::value_type const &),
-			   ResultType const & initialValue,
-			   FieldExpression<ExprType,FieldType> fexpr) {
-    ResultType result = initialValue;
-    
-    ExprType expr = fexpr.expression();
-    
-    expr.init();
-    
-    while(!expr.at_end()) {
-      result = proc(result,
-		    expr.eval());
-      expr.next();
-    };
-    
-    return result;
-  };
-  
-  /* Reduce for AtomicType.  */
-  template<typename ExprType, typename FieldType>
-    inline typename FieldType::value_type reduce(typename FieldType::value_type(*proc)(typename FieldType::value_type const &,
-										       typename FieldType::value_type const &),
-						 FieldExpression<ExprType,FieldType> fexpr) {
-    typename FieldType::value_type typedef AtomicType;
-    
-    ExprType expr = fexpr.expression();
-    
-    expr.init();
-    
-    AtomicType result = expr.eval();
-    expr.next();
-    
-    while(!expr.at_end()) {
-      result = proc(result,
-		    expr.eval());
-      
-      expr.next();
-    };
-    
-    return result;
-  };
-  
-  /* Template max */
-  template<typename AtomicType>
-    AtomicType at_max (AtomicType const & first,
-		       AtomicType const & second) {
-    return (first > second) ? first : second;
-  };
-  
-  /* Field version of max */
-  template<typename FieldType>
-    inline typename FieldType::value_type field_max(FieldType field) {
-    FieldForm<FieldType> typedef ExprType;
-    
-    return field_max(FieldExpression<ExprType,FieldType>(ExprType(field)));
-  };
-  
-  /* Field version of max */
-  template<typename ExprType, typename FieldType>
-    inline typename FieldType::value_type field_max(FieldExpression<ExprType,FieldType> fexpr) {
-    typename FieldType::value_type typedef AtomicType;
-    
-    ExprType expr = fexpr.expression();
-    expr.init();
-    
-    return reduce(at_max<AtomicType>, fexpr);
-  };
-  
-  /* ff_vector_convert: vector<FieldType> -> vector<FieldForm<FieldType> */
-  template<typename FieldType>
-    inline std::vector<FieldForm<FieldType> > const & ff_vector_convert(std::vector<FieldType> const & inputs,
-									std::vector<FieldForm<FieldType> > & results) {
-    
-    //    std::vector<FieldForm<FieldType> > result = std::vector<FieldForm<FieldType> >();
-    typename std::vector<FieldType>::const_iterator ii = inputs.begin();
-    
-    while(ii != inputs.end()) {
-      results.push_back(FieldForm<FieldType>(*ii));
-      ++ii;
-    };
-    
-    return results;
-  };
-  
-  /* ff_vector_init: initializes each element in vector */
-  template<typename FieldType>
-    inline void ff_vector_init(std::vector<FieldForm<FieldType> > & sources) {
-    
-    typename std::vector<FieldForm<FieldType> >::iterator is = sources.begin();
-    
-    while(is != sources.end()) {
-      is->init();
-      ++is;
-    };
-  };
-  
-  /* ff_vector_eval: puts current element of each FieldForm in result */
-  template<typename FieldType>
-    inline std::vector<typename FieldType::value_type> const & ff_vector_eval(std::vector<FieldForm<FieldType> > const & sources,
-									      std::vector<typename FieldType::value_type> & buffer) {
-    buffer.clear();
-    
-    typename std::vector<FieldForm<FieldType> >::const_iterator is = sources.begin();
-    
-    while(is != sources.end()) {
-      buffer.push_back(is->eval());
-      ++is;
-    };
-    
-    return buffer;
-  };
-  
-  /* ff_vector_next: increment each element in vector */
-  template<typename FieldType>
-    inline void ff_vector_next(std::vector<FieldForm<FieldType> > & sources) {
-    
-    typename std::vector<FieldForm<FieldType> >::iterator is = sources.begin();
-    
-    while(is != sources.end()) {
-      is->next();
-      ++is;
-    };
-  };
-  
-  /* Field version of map */
-  template<typename FieldType>
-    inline FieldType const & field_map(typename FieldType::value_type(*proc)(std::vector<typename FieldType::value_type> const &),
-				       std::vector<FieldForm<FieldType> > & sources,
-				       FieldType & result) {
-    typename FieldType::value_type typedef AtomicType;
-    
-    std::vector<AtomicType> current_buffer = std::vector<AtomicType>();
-    
-    //initialize:
-    ff_vector_init<FieldType>(sources);
-    typename FieldType::iterator ir = result.begin();
-    
-    //run map:
-    while(ir != result.end()) {
-      //grap current values:
-      ff_vector_eval(sources, current_buffer);
-      
-      //evaluate result:
-      *ir = proc(current_buffer);
-      
-      //increment:
-      ++ir;
-      ff_vector_next(sources);
-    };
-    
-    return result;
-  };
-  
-  /* Field version of map */
-  template<typename FieldType>
-    inline FieldType const & field_map(typename FieldType::value_type(*proc)(std::vector<typename FieldType::value_type> const &),
-				       std::vector<FieldType> const & inputs,
-				       FieldType & result) {
-    
-    std::vector<FieldForm<FieldType> > sources = std::vector<FieldForm<FieldType> >();
-    ff_vector_convert(inputs, sources);
-    
-    return field_map(proc, sources, result);
   };
   
 #define BUILD_BINARY_OPERATOR(OBJECT_NAME, INTERNAL_NAME, EXTERNAL_NAME) \

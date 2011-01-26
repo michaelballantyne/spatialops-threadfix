@@ -1077,7 +1077,10 @@ namespace SpatialOps{
   BUILD_UNARY_FUNCTION(TanhFcn, std::tanh, tanh);
 
   BUILD_UNARY_FUNCTION(AbsFcn, std::abs, abs);
-
+  BUILD_UNARY_FUNCTION(NegFcn, -, operator -);
+  
+  BUILD_BINARY_FUNCTION(PowFcn, std::pow, pow);
+  
 } // namespace SpatialOps
 
 #endif // SpatialOps_FieldOperationDefinitions_h
