@@ -502,14 +502,14 @@ namespace structured{
   DECLARE_BASIC_VARIANTS( YVolField );
   DECLARE_BASIC_VARIANTS( ZVolField );
 
-  template class Stencil2< Interpolant, XVolField, YSurfXField >;
-  template class Stencil2< Interpolant, XVolField, ZSurfXField >;
+  template class Stencil2< Interpolant, XVolField, YSurfXField >;  // advecting velocity
+  template class Stencil2< Interpolant, XVolField, ZSurfXField >;  // advecting velocity
 
-  template class Stencil2< Interpolant, YVolField, XSurfYField >;
-  template class Stencil2< Interpolant, YVolField, ZSurfYField >;
+  template class Stencil2< Interpolant, YVolField, XSurfYField >;  // advecting velocity
+  template class Stencil2< Interpolant, YVolField, ZSurfYField >;  // advecting velocity
 
-  template class Stencil2< Interpolant, ZVolField, XSurfZField >;
-  template class Stencil2< Interpolant, ZVolField, YSurfZField >;
+  template class Stencil2< Interpolant, ZVolField, XSurfZField >;  // advecting velocity
+  template class Stencil2< Interpolant, ZVolField, YSurfZField >;  // advecting velocity
   //
   //==================================================================
 
