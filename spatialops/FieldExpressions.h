@@ -1,5 +1,5 @@
-#ifndef SpatialOps_FieldOperations_h
-#define SpatialOps_FieldOperations_h
+#ifndef SpatialOps_FieldExpressions_h
+#define SpatialOps_FieldExpressions_h
 
 #include<vector>
 //#include<iostream>
@@ -7,7 +7,7 @@
 
 namespace SpatialOps{
   /**
-   *  @file FieldOperations.h
+   *  @file FieldExpressions.h
    */
   
   
@@ -3965,4 +3965,4 @@ namespace SpatialOps{
   
   } // namespace SpatialOps
 
-#endif // SpatialOps_FieldOperations_h
+#endif // SpatialOps_FieldExpressions_h

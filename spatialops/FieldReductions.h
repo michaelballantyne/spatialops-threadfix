@@ -1,8 +1,8 @@
 #ifndef SpatialOps_FieldReductions_h
 #define SpatialOps_FieldReductionss_h
 
-#include <spatialops/FieldOperations.h>
-#include <spatialops/FieldOperationDefinitions.h>
+#include <spatialops/FieldExpressions.h>
+#include <spatialops/FieldExpressionsExtended.h>
 
 namespace SpatialOps{
 

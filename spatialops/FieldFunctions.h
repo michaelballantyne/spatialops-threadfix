@@ -6,7 +6,7 @@
 #include <boost/static_assert.hpp>
 
 #include <spatialops/SpatialOpsTools.h>
-#include <spatialops/FieldOperationDefinitions.h>
+#include <spatialops/FieldExpressionsExtended.h>
 
 #include<cmath>
 

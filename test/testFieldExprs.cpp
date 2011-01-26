@@ -1,4 +1,4 @@
-#include <spatialops/FieldOperationDefinitions.h>
+#include <spatialops/FieldExpressionsExtended.h>
 #include <spatialops/structured/FVStaggeredTypes.h>
 #include <spatialops/structured/FVTools.h>
 

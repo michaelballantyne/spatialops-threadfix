@@ -14,7 +14,7 @@
 
 #include <spatialops/structured/SpatialFieldStore.h>
 
-#include <spatialops/FieldOperationDefinitions.h>
+#include <spatialops/FieldExpressionsExtended.h>
 
 /**
  *  @todo Need to build & test scratch operator assemblers.
