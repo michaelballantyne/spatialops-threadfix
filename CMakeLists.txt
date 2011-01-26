@@ -139,6 +139,7 @@ set( SO_Sources
   spatialops/structured/FVTools.cpp
   spatialops/structured/MemoryWindow.cpp
   spatialops/structured/Stencil2.cpp
+  spatialops/structured/NullStencil.cpp
   spatialops/particles/ParticleFieldTypes.cpp
   )
 if( LINALG_TRILINOS )
