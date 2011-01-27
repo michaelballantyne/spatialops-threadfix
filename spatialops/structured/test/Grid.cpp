@@ -6,29 +6,24 @@ namespace structured{
 
   // the amount that the volume coordinate for the mesh is shifted
   template< typename CoordT, typename StagT >
-  struct StagShift
-  {
+  struct StagShift{
+    static double value(){ return 0.0; }
+  };
+
+  template< typename DirT >
+  struct StagShift<DirT,DirT>{
+    static double value(){ return -0.5; }
+  };
+
+  template< typename CoordT, typename FaceT >
+  struct FaceShift{
     static double value(){ return 0.5; }
   };
 
   template< typename DirT >
-  struct StagShift<DirT,DirT>
-  {
-    // e.g. x-coord on x-staggered volume
-    static double value(){ return 0.0; }
-  };
-
-  template< typename CoordT, typename FaceT >
-  struct FaceShift
-  {
-    static double value(){return 0.5;}
-  };
-
-  template< typename DirT >
-  struct FaceShift<DirT,DirT>
-  {
+  struct FaceShift<DirT,DirT>{
     // e.g. x-coordinate on an x-face.
-    static double value(){return 0.0;}
+    static double value(){ return 0.0; }
   };
 
   template< typename CoordT, typename StagT, typename FaceT >
@@ -54,7 +49,7 @@ namespace structured{
   {
     assert( length.size() == 3 );
     for( size_t i=0; i<3; ++i ){
-      spacing_.push_back( npts[i] / length[i] );
+      spacing_.push_back( length[i] / double(npts[i]) );
     }
   }
 
@@ -83,15 +78,18 @@ namespace structured{
 
     FieldIter iter=f.begin();
 
-    const MemoryWindow& mw = f.window_without_ghost();
-    const IntVec& lo = mw.offset();
-    const IntVec  hi = lo + mw.extent();
+    const MemoryWindow& mwInterior = f.window_without_ghost();
+    const MemoryWindow& mw         = f.window_with_ghost();
 
+    const IntVec lo(0,0,0);
+    const IntVec hi( mw.extent() );
+
+    const int ixOffset = mwInterior.offset(dir);
     IntVec ix;
     for( ix[2]=lo[2]; ix[2]<hi[2]; ++ix[2] ){
       for( ix[1]=lo[1]; ix[1]<hi[1]; ++ix[1] ){
         for( ix[0]=lo[0]; ix[0]<hi[0]; ++ix[0] ){
-          *iter = spacing_[dir] * ix[dir] + offset;
+          *iter = spacing_[dir] * (ix[dir]-ixOffset) + offset;
           ++iter;
         }
       }
