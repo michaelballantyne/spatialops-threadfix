@@ -57,6 +57,7 @@ endif()
 # resolve required libraries
 
 # setup the boost library
+set( boost_comps "program_options" )
 set(Boost_USE_MULTITHREAD ON)
 if( ENABLE_BOOST_SERIALIZATION )
   set( SOPS_BOOST_SERIALIZATION ON )

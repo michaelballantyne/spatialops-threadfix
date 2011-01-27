@@ -59,7 +59,7 @@ namespace structured{
     Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest )
       : wsrc_( wsrc ), wdest_( wdest ),
         srcInc_ ( 1, 0, wsrc.extent(0) ),
-        destInc_( 1, 0, 0 ),
+        destInc_( 1, 0, wdest.extent(0) ),
         hiBounds_( wdest.extent() )
     {
       if( wsrc.extent(1) != wdest.extent(1) ){
@@ -133,13 +133,14 @@ namespace structured{
   struct Stencil2Helper< typename FaceTypes<VolT>::XFace, VolT >
   {
     Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest )
-      : hiBounds_( wdest.extent() ),
-        destInc_( 1, 0, 0 )
+      : hiBounds_( wdest.extent() - IntVec(1,0,0) ),
+        srcInc_ ( 1, 1, 0 ),
+        destInc_( 1, 1, 0 )
     {
       if( wsrc.extent(0) != wdest.extent(0) ){
-        // physical boundary present
-        --hiBounds_[0];
-        ++destInc_[1];
+        // physical boundary present - include the "ghost" cell on the right
+        ++hiBounds_[0];
+        --destInc_[1];
       }
     }
 
@@ -147,14 +148,14 @@ namespace structured{
     unsigned int src_offset_lo() const{ return 0; }
     unsigned int src_offset_hi() const{ return 1; }
     
-    IntVec src_increment () const{ return IntVec( 1, 0, 0 ); }
+    IntVec src_increment () const{ return srcInc_; }
     IntVec dest_increment() const{ return destInc_; }
 
     IntVec low () const{ return IntVec(0,0,0); }
     IntVec high() const{ return hiBounds_; }
 
   private:
-    IntVec hiBounds_, destInc_;
+    IntVec hiBounds_, srcInc_, destInc_;
   };
 
   /**
@@ -171,25 +172,25 @@ namespace structured{
   {
     Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest )
       : wsrc_( wsrc ),  wdest_( wdest ),
-        hiBounds_( wdest.extent() ),
+        hiBounds_( wdest.extent() - IntVec(0,1,0) ),
         srcInc_ ( 1, 0, wsrc.extent(0) ),
         destInc_( 1, 0, wdest.extent(0) )
     {
       if( wsrc.extent(1) != wdest.extent(1) ){
         // physical boundary present
-        --hiBounds_[1];
-        destInc_[2] += wdest.extent(0);
+        ++hiBounds_[1];
+        destInc_[2] -= wdest.extent(0);
       }
     }
 
-    unsigned int dest_offset  () const{ return wdest_.extent(0); }
+    unsigned int dest_offset  () const{ return 0; }
     unsigned int src_offset_lo() const{ return 0; }
     unsigned int src_offset_hi() const{ return wsrc_.extent(0); }
     
     IntVec src_increment () const{ return srcInc_; }
     IntVec dest_increment() const{ return destInc_; }
 
-    IntVec low () const{ return IntVec(0,1,0); }
+    IntVec low () const{ return IntVec(0,0,0); }
     IntVec high() const{ return hiBounds_; }
 
   private:
@@ -211,22 +212,22 @@ namespace structured{
   {
     Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest )
       : wsrc_( wsrc ), wdest_( wdest ),
-        hiBounds_( wdest.extent() )
+        hiBounds_( wdest.extent() - IntVec(0,0,1) )
     {
-      if( wsrc.extent(1) != wdest.extent(1) ){
+      if( wsrc.extent(2) != wdest.extent(2) ){
         // physical boundary present
         ++hiBounds_[2];
       }
     }
 
-    unsigned int dest_offset  () const{ return wdest_.extent(0)*wdest_.extent(1); }
+    unsigned int dest_offset  () const{ return 0; }
     unsigned int src_offset_lo() const{ return 0; }
     unsigned int src_offset_hi() const{ return wsrc_.extent(0)*wsrc_.extent(1); }
     
     IntVec src_increment () const{ return IntVec( 1, 0, 0 ); }
     IntVec dest_increment() const{ return IntVec( 1, 0, 0 ); }
 
-    IntVec low () const{ return IntVec(0,0,1); }
+    IntVec low () const{ return IntVec(0,0,0); }
     IntVec high() const{ return hiBounds_; }
 
   private:

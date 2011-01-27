@@ -14,6 +14,17 @@ add_test( test_memw_ops test_memw_ops )
 
 add_executable( test_stencil test_stencil.cpp Grid.cpp )
 target_link_libraries( test_stencil ${SpatialOps_LIBRARY} )
+add_test( stencil2_bcxyz  test_stencil  --bcx --bcy --bcz )
+add_test( stencil2_bcxy   test_stencil  --bcx --bcy )
+add_test( stencil2_bcxz   test_stencil  --bcx --bcz )
+add_test( stencil2_bcyz   test_stencil  --bcz --bcy )
+add_test( stencil2_bcx    test_stencil  --bcx )
+add_test( stencil2_bcy    test_stencil  --bcy )
+add_test( stencil2_bcz    test_stencil  --bcz )
+add_test( stencil2_no_bc  test_stencil  --bcz )
+add_test( stencil2_no_bc2  test_stencil --nx 5 --ny 6 --nz 7 )
+add_test( stencil2_no_bc3  test_stencil --nx 6 --ny 7 --nz 5 )
+
 
 if( ENABLE_BOOST_SERIALIZATION )
   add_executable( test_serialize testSerialization.cpp )
