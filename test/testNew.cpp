@@ -276,9 +276,9 @@ void test_poisson( const Grid& grid,
   // set the boundary conditions - dirichlet at the cell centers.  In
   // practice we won't know this usually.
   //
-  const int ighost = dim[0]>1 ? SVolField::Ghost::NM : 0;
-  const int jghost = dim[1]>1 ? SVolField::Ghost::NM : 0;
-  const int kghost = dim[2]>1 ? SVolField::Ghost::NM : 0;
+  const int ighost = dim[0]>1 ? SVolField::Ghost::NGHOST : 0;
+  const int jghost = dim[1]>1 ? SVolField::Ghost::NGHOST : 0;
+  const int kghost = dim[2]>1 ? SVolField::Ghost::NGHOST : 0;
 
   // set bcs: x faces
   if( dim[0]>1 ){

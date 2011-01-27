@@ -5,21 +5,11 @@
  * Configuration options for SpatialOps.
  */
 
-#cmakedefine HAVE_DAIXTROSE
-
 #cmakedefine LINALG_UBLAS
 #cmakedefine LINALG_TRILINOS
 
 #ifdef LINALG_UBLAS
 # define BOOST_UBLAS_SHALLOW_ARRAY_ADAPTOR
-#endif
-
-#cmakedefine SAMRAI_FIELD_TYPES
-#cmakedefine UINTAH_FIELD_TYPES
-#ifndef SAMRAI_FIELD_TYPES
-# ifndef UINTAH_FIELD_TYPES
-#  define UINTAH_FIELD_TYPES  // default to Uintah types if nothing is specified.
-# endif
 #endif
 
 #cmakedefine SOPS_BOOST_SERIALIZATION

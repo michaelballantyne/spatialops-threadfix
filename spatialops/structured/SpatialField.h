@@ -13,6 +13,8 @@
 # include <boost/serialization/binary_object.hpp>
 #endif
 
+class RHS;
+
 namespace SpatialOps{
 namespace structured{
 
@@ -25,6 +27,7 @@ namespace structured{
   /**
    *  \class SpatialField
    *  \ingroup structured
+   *  \ingroup fields
    *  \author James C. Sutherland
    *
    *  \brief Abstracts a field.
@@ -191,6 +194,10 @@ namespace structured{
     inline MyType& operator-=(const T);
     inline MyType& operator*=(const T);
     inline MyType& operator/=(const T);
+
+    inline SpatialField& operator= (const RHS&);  ///< Assign a RHS to this field (doesn't affect ghosts)
+    inline SpatialField& operator+=(const RHS&);  ///< Add a RHS to this field (doesn't affect ghosts)
+    inline SpatialField& operator-=(const RHS&);  ///< Subtract a RHS from this field (doesn't affect ghosts)
 
     bool operator!=(const MyType&) const;
     bool operator==(const MyType&) const;

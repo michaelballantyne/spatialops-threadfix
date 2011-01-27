@@ -2,7 +2,7 @@
 #define SpatialOps_WriteMatlab_h
 
 #include <string>
-#include <ostream>
+#include <fstream>
 #include <iomanip>
 
 namespace SpatialOps{
@@ -23,17 +23,21 @@ namespace SpatialOps{
     fout << std::scientific;
     fout.precision( 14 );
     if( includeGhost ){
-      typename FieldT::const_iterator i=field.begin(), iend=field.end();
+      typename FieldT::const_iterator
+        i    = field.begin(),
+        iend = field.end();
       fout << "x = [ " << *i;
       ++i;
-      for( ; i!=iend; ++i )  fout << ", " << *i << std::endl;
+      for( ; i!=iend; ++i )  fout << std::endl << ", " << *i;
       fout << " ];" << std::endl;
     }
     else{
-      typename FieldT::const_interior_iterator i=field.interior_begin(), iend=field.interior_end();
+      typename FieldT::const_interior_iterator
+        i    = field.interior_begin(),
+        iend = field.interior_end();
       fout << "x = [ " << *i;
       ++i;
-      for( ; i!=iend; ++i )  fout << ", " << *i << std::endl;
+      for( ; i!=iend; ++i )  fout << std::endl << ", " << *i;
       fout << " ];" << std::endl;
     }
     fout.close();

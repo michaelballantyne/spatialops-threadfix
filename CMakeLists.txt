@@ -12,18 +12,8 @@ set( PATCH_VERSION "0" )
 
 option( LINALG_TRILINOS "use Trilinos for linear algebra - also requires definition of {Trilinos_path}"  OFF )
 option( LINALG_UBLAS    "use UBLAS for linear algebra - cannot solve linear systems"  ON )
-option( BOOST_CMAKE "Boost was built with CMake" OFF )
 option( ENABLE_BOOST_SERIALIZATION "allow serialization of information via the boost library" OFF )
 option( ENABLE_TESTS "Enable building of regression tests (recommended)" ON )
-
-# Set the path for the Daixtrose installation on your machine
-# daixtrose is used for expression templates - we support only a few
-# thus far.  If empty then SpatialOps will be built without Daixtrose
-# support
-set( Daixtrose
-  ""
-  CACHE PATH "path to daixtrose installation (optional)"
-  )
 
 # default to release builds
 if( NOT CMAKE_BUILD_TYPE )
@@ -74,19 +64,15 @@ if( ENABLE_BOOST_SERIALIZATION )
 else()
   set( SOPS_BOOST_SERIALIZATION OFF )
 endif()
-if( BOOST_CMAKE )
-  set(Boost_USE_STATIC ON)
-  find_package( Boost REQUIRED COMPONENTS ${boost_comps} NO_MODULE )
-else()
-  if( Boost_DIR ) # give location hints
-    set( BOOST_ROOT ${Boost_DIR} )
-    set( ENV{BOOST_INCLUDEDIR} ${Boost_DIR}/include )
-    set( ENV{BOOST_LIBRARYDIR} ${Boost_DIR}/lib )
-  endif( Boost_DIR )
-  set(Boost_ADDITIONAL_VERSIONS "1.44.0" "1.43.0" "1.42.0" "1.41.0" )
-  set(Boost_USE_STATIC_LIBS ON)
-  find_package( Boost REQUIRED COMPONENTS ${boost_comps} )
-endif()
+
+if( Boost_DIR ) # give location hints
+  set( BOOST_ROOT ${Boost_DIR} )
+  set( ENV{BOOST_INCLUDEDIR} ${Boost_DIR}/include )
+  set( ENV{BOOST_LIBRARYDIR} ${Boost_DIR}/lib )
+endif( Boost_DIR )
+set(Boost_ADDITIONAL_VERSIONS "1.44.0" "1.43.0" "1.42.0" "1.41.0" )
+set(Boost_USE_STATIC_LIBS ON)
+find_package( Boost REQUIRED COMPONENTS ${boost_comps} )
 if( NOT Boost_FOUND )
   message( FATAL_ERROR "Boost was not found.  Try setting BOOST_ROOT to the path where boost is installed and try again" )
 endif()
@@ -126,13 +112,6 @@ else( Trilinos_path )
   message( STATUS "Using UBLAS for linear algebra" )
   set( LINALG_UBLAS ON )
   set( LINALG_TRILINOS OFF )
-endif()
-
-# until we get a package finder for daixtrose, we will need this:
-if( Daixtrose )
-  set( Daixtrose_INCLUDE_DIR ${Daixtrose}/include )
-  set( TPL_INCLUDE_DIRS ${TPL_INCLUDE_DIRS} ${Daixtrose_INCLUDE_DIR} )
-  set( HAVE_DAIXTROSE ON )
 endif()
 #--------------------------------------
 

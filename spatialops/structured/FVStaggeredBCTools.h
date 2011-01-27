@@ -5,7 +5,7 @@
 #include <spatialops/SpatialOperator.h>
 #include <spatialops/OperatorDatabase.h>
 
-#include <spatialops/structured/FVStaggeredTypes.h>
+#include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/structured/FVTools.h>
 
 namespace SpatialOps{
@@ -223,7 +223,16 @@ namespace structured{
     typedef typename OpT::SrcFieldType   SrcFieldT;
     typedef typename OpT::DestFieldType  DestFieldT;
 
+    BoundaryConditionOp& operator=( const BoundaryConditionOp& ); // no assignment
+    BoundaryConditionOp(); // no default constructor
+
   public:
+    
+    /**
+     *  Expose the bcevaluator type.
+     */
+    typedef BCEval BCEvalT;
+    
     /**
      *  @param point The i,j,k location at which we want to specify
      *         the boundary condition (based on scalar cell center
@@ -246,7 +255,10 @@ namespace structured{
                          const BCEval bceval,
                          const OperatorDatabase& soDatabase );
 
-    ~BoundaryConditionOp(){}
+    // copy constructor
+    BoundaryConditionOp( const BoundaryConditionOp& );
+
+    ~BoundaryConditionOp();
 
     /**
      *  Impose the boundary condition on the supplied field.
@@ -411,6 +423,23 @@ namespace structured{
     assert( ghostCoef_ != 0.0 );
 #   endif
   }
+
+  //------------------------------------------------------------------
+
+  template< typename OpT, typename BCEval >
+  BoundaryConditionOp<OpT,BCEval>::
+  BoundaryConditionOp( const BoundaryConditionOp<OpT,BCEval>& other )
+    : bcEval_( other.bcEval_ ),
+      index_( other.index_ ),
+      ghostCoef_( other.ghostCoef_ ),
+      ixVals_( other.ixVals_ )
+  {}
+
+  //------------------------------------------------------------------
+
+  template< typename OpT, typename BCEval >
+  BoundaryConditionOp<OpT,BCEval>::~BoundaryConditionOp()
+  {}
 
   //------------------------------------------------------------------
 

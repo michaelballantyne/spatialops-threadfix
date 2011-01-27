@@ -9,7 +9,6 @@
 #include <vector>
 
 #include <spatialops/SpatialOperator.h>
-#include <spatialops/SpatialField.h>
 
 #include <Epetra_CrsMatrix.h>
 #include <EpetraExt_MatrixMatrix.h>

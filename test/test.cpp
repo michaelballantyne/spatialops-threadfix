@@ -473,61 +473,6 @@ bool test_linsys( const std::vector<int> & dim )
 
 //====================================================================
 
-void test_daixt( const vector<int>& dim )
-{
-  using namespace SpatialOps;
-  using namespace FVStaggeredUniform;
-
-  cout << endl << "SpatialField operators (+, -, /, *, =) involving SpatialField objects (daixtrose)  ... ";
-  bool isOkay = true;
-
-  vector<double> d1, d2;
-  const int n = dim[0]*dim[1]*dim[2];
-  for( int i=0; i<n; ++i){
-    d1.push_back(i);
-    d2.push_back(-i+1.234);
-  }
-
-  CellFieldNoGhost f1( dim, &d1[0], ExternalStorage );
-  CellFieldNoGhost f2( dim, &d2[0], ExternalStorage );
-
-  const SpatFldPtr<CellFieldNoGhost> fp1(f1), fp2(f2);
-  SpatFldPtr<CellFieldNoGhost> fp3;
-
-  SpatFldPtr<CellFieldNoGhost> tmp = f1+f2;
-  fp3 = fp1+fp2;
-  for( int i=0; i<n; ++i ){
-    if( std::abs((*fp3)[i] - 1.234)>1.0e-10  || (*fp3)[i] != (*tmp)[i] ){
-      isOkay = false;
-    }
-  }
-
-  fp3 = fp3-(f1+f2);
-  for( int i=0; i<n; ++i ){
-    if( std::abs((*fp3)[i])>1.0e-10 ){
-      isOkay = false;
-    }
-  }
-
-
-  fp3 = (f1+f2)*fp1;
-  for( int i=0; i<n; ++i ){
-    const double ans = f1[i]*1.234;
-    const double abserr = std::abs((*fp3)[i] - ans);
-    const double relerr = abserr/std::abs(ans);
-    if( abserr>1.0e-10 && relerr>1.0e-8 ){
-      isOkay = false;
-    }
-  }
-
-  fp3 = f1*f2+f1/f2*fp3+f2/f1+f2*f1*f2;
-
-  if( isOkay )  cout << "PASS" << endl;
-  else          cout << "FAIL!" << endl;
-}
-
-//====================================================================
-
 template<typename FieldT>
 bool test_op_rhs_assign( const vector<int>& dim )
 {
@@ -737,8 +682,6 @@ int main()
   try{
 
     build_ops( dim );
-
-    test_daixt( dim );
 
     test( dim );
     test_linsys( dim );

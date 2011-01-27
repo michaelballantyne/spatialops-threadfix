@@ -5,8 +5,7 @@
 #include <spatialops/LagrangePoly.h>
 #include <spatialops/SpatialOperator.h>
 
-#include <spatialops/structured/SpatialField.h>
-#include <spatialops/structured/FVStaggeredTypes.h>
+#include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/structured/FVTools.h>
 
 

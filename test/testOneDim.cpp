@@ -1,4 +1,5 @@
 #include <spatialops/structured/FVOneDimensional.h>
+#include <spatialops/structured/FVStaggeredOperatorTypes.h>
 
 #include "Functions.h"
 

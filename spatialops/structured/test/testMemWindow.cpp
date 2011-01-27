@@ -13,6 +13,21 @@ int main()
 
   {
     TestHelper status(false);
+    IntVec a( 3,4,5 );
+    IntVec b( 1,4,2 );
+    IntVec c = b+a;
+    status( c == IntVec(4,8,7) );
+    c = b-a;
+    status( c == IntVec(-2,0,-3) );
+    c += a;
+    status( c == b );
+    c -= b;
+    status( c == IntVec(0,0,0) );
+    overall( status.ok(), "Simple IntVec operations" );
+  }
+
+  {
+    TestHelper status(false);
     MemoryWindow w( IntVec(2,2,2) );
     status( 0 == w.flat_index( IntVec(0,0,0) ), "(0,0,0)" );
     status( 1 == w.flat_index( IntVec(1,0,0) ), "(1,0,0)" );

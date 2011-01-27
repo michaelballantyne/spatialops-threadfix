@@ -205,16 +205,16 @@ double test_poisson( const OperatorDatabase& opDB,
         for( int j=0; j<dim[1]; ++j ){
           for( int k=0; k<dim[2]; ++k ){
             // determine index for x field.
-            const IndexTriplet ijk = shift_to_ghost_ix<InterpSVolSSurfX,ScratchSVol>( dim, side, IndexTriplet(i,j,k) );
+            const IntVec ijk = shift_to_ghost_ix<InterpSVolSSurfX,ScratchSVol>( dim, side, IntVec(i,j,k) );
             const int iix = get_index_with_ghost<SSurfXField>(dim,bcFlag[0],bcFlag[1],bcFlag[2],ijk);
             const int irhs = i + j*dim[0] + k*dim[0]*dim[1];
             const double bcval = bcValX[iix];
             switch ( bcType ){
             case DIRICHLET:
-              imprint_bc_on_op<InterpSVolSSurfX,ScratchSVol>( Rx, IndexTriplet(i,j,k), dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, side, Lx, rhs[irhs] );
+              imprint_bc_on_op<InterpSVolSSurfX,ScratchSVol>( Rx, IntVec(i,j,k), dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, side, Lx, rhs[irhs] );
               break;
             case NEUMANN:
-              imprint_bc_on_op<GradSVolSSurfX,  ScratchSVol>( Gx, IndexTriplet(i,j,k), dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, side, Lx, rhs[irhs] );
+              imprint_bc_on_op<GradSVolSSurfX,  ScratchSVol>( Gx, IntVec(i,j,k), dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, side, Lx, rhs[irhs] );
               break;
             }
           }
@@ -230,17 +230,17 @@ double test_poisson( const OperatorDatabase& opDB,
         for( int i=0; i<dim[0]; ++i ){
           for( int k=0; k<dim[2]; ++k ){
             // obtain the BC value
-            const IndexTriplet ijk = shift_to_ghost_ix<InterpSVolSSurfY,ScratchSVol>( dim, side, IndexTriplet(i,j,k) );
+            const IntVec ijk = shift_to_ghost_ix<InterpSVolSSurfY,ScratchSVol>( dim, side, IntVec(i,j,k) );
             const int iix = get_index_with_ghost<SSurfYField>(dim,bcFlag[0],bcFlag[1],bcFlag[2],ijk);
             const int irow = i + j*dim[0] + k*dim[0]*dim[1];
             const double bcval = bcValY[iix];
             // set the BC value:
             switch ( bcType ){
             case DIRICHLET:
-              imprint_bc_on_op<InterpSVolSSurfY,ScratchSVol>( Ry, IndexTriplet(i,j,k), dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, side, Ly, rhs[irow] );
+              imprint_bc_on_op<InterpSVolSSurfY,ScratchSVol>( Ry, IntVec(i,j,k), dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, side, Ly, rhs[irow] );
               break;
             case NEUMANN:
-              imprint_bc_on_op<GradSVolSSurfY, ScratchSVol>( Gy, IndexTriplet(i,j,k), dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, side, Ly, rhs[irow] );
+              imprint_bc_on_op<GradSVolSSurfY, ScratchSVol>( Gy, IntVec(i,j,k), dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, side, Ly, rhs[irow] );
               break;
             }
           }
@@ -255,16 +255,16 @@ double test_poisson( const OperatorDatabase& opDB,
         const BCSide side = iz==0 ? Z_MINUS_SIDE : Z_PLUS_SIDE;
         for( int i=0; i<dim[0]; ++i ){
           for( int j=0; j<dim[1]; ++j ){
-            const IndexTriplet ijk = shift_to_ghost_ix<InterpSVolSSurfZ,ScratchSVol>( dim, side, IndexTriplet(i,j,k) );
+            const IntVec ijk = shift_to_ghost_ix<InterpSVolSSurfZ,ScratchSVol>( dim, side, IntVec(i,j,k) );
             const int iix = get_index_with_ghost<SSurfZField>(dim,bcFlag[0],bcFlag[1],bcFlag[2],ijk);
             const int irow = i + j*dim[0] + k*dim[0]*dim[1];
             const double bcval = bcValZ[iix];
             switch ( bcType ){
             case DIRICHLET:
-              imprint_bc_on_op<InterpSVolSSurfZ,ScratchSVol>( Rz, IndexTriplet(i,j,k), dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, side, Lz, rhs[irow] );
+              imprint_bc_on_op<InterpSVolSSurfZ,ScratchSVol>( Rz, IntVec(i,j,k), dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, side, Lz, rhs[irow] );
               break;
             case NEUMANN:
-              imprint_bc_on_op<GradSVolSSurfZ,  ScratchSVol>( Gz, IndexTriplet(i,j,k), dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, side, Lz, rhs[irow] );
+              imprint_bc_on_op<GradSVolSSurfZ,  ScratchSVol>( Gz, IntVec(i,j,k), dim, bcFlag[0], bcFlag[1], bcFlag[2], bcval, side, Lz, rhs[irow] );
               break;
             }
           }
