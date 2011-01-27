@@ -16,7 +16,7 @@
 
 #include <spatialops/structured/SpatialFieldStore.h>
 
-#include <spatialops/FieldOperationDefinitions.h>
+#include <spatialops/FieldExpressionsExtended.h>
 
 namespace SpatialOps{
 namespace structured{

@@ -1,11 +1,16 @@
-#include <spatialops/FieldOperationDefinitions.h>
+#include <spatialops/FieldExpressionsExtended.h>
+#include <spatialops/FieldReductions.h>
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/structured/FVTools.h>
 
+#include <spatialops/particles/ParticleFieldTypes.h>
+
 #include "TestHelper.h"
 
-namespace SS = SpatialOps::structured;
+#include <numeric>
 
+namespace SS = SpatialOps::structured;
+namespace SP = SpatialOps::Particle;
 
 template< typename FieldT >
 bool test( const SS::IntVec dim )
@@ -55,12 +60,20 @@ bool test( const SS::IntVec dim )
 
     f3 <<= f1+(f2*f1)-f2/f1;
 
+    double l2norm = 0;
     constiter i1=f1.begin(), i2=f2.begin(), i3=f3.begin();
     for( iter i4=f4.begin(); i4!=f4.end(); ++i4, ++i3, ++i2, ++i1 ){
       *i4 = *i1 + (*i2 * *i1) - *i2 / *i1;
       tmp( *i4 == *i3 );
+      l2norm += (*i4 * *i4);
     }
+    l2norm = sqrt(l2norm);
     status( tmp.ok(), "a+(a*b)-b/a" );
+
+    status( l2norm == field_norm(f4), "norm" );
+    status( *std::max_element(f4.begin(),f4.end()) == field_max(f4), "max" );
+    status( *std::min_element(f4.begin(),f4.end()) == field_min(f4), "min" );
+    status( std::accumulate(f4.begin(),f4.end(),0) == field_sum(f4), "sum" );
 
     // ensure that this compiles
     const double pi = 3.141592653589793;
@@ -75,6 +88,16 @@ bool test( const SS::IntVec dim )
     }
     status( tmp.ok(), "abs(-1.0) == 1.0" );
   }
+
+  using namespace SpatialOps;  // not sure why we must have this here.
+                               // Particle stuff doesn't compile
+                               // otherwise...
+
+  const SS::MemoryWindow pw( SpatialOps::structured::IntVec(100,1,1) );
+  SP::ParticleField pf1(pw,NULL), pf2(pw,NULL), pf3(pw,NULL);
+  pf1 = 1.0;
+  pf3 = 2.0;
+  pf2 <<= pf1 * pf3;
 
   return true;
 }

@@ -584,6 +584,7 @@ namespace structured{
 } // namespace structured
 
 //#include <spatialops/FieldOperations.h>
+//#include <spatialops/FieldExpressions.h>
 
 } // namespace SpatialOps
 
