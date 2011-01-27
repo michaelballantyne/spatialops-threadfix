@@ -81,8 +81,6 @@ int main()
 
   b = 2.0;
 
-  DEFINE_$_ANONYMOUS_ARGUMENTS(Field);
-  
   // example of what we would like to do:
   // c = b + a + sin(b);
   
@@ -110,11 +108,11 @@ int main()
 //   c <<= (($1 * $2) - $0)(3 * a)(a)(3.0);
   //  c <<= BinOp(+, a, b);
   
-  std::cout << fieldMax(a) << std::endl << std::endl;
-  std::cout << fieldMin(a) << std::endl << std::endl;
-  std::cout << fieldSum(a) << std::endl << std::endl;
-  std::cout << fieldNorm(a) << std::endl << std::endl;
-  std::cout << fieldNorm(b) << std::endl << std::endl;
+  std::cout << field_max(a) << std::endl << std::endl;
+  std::cout << field_min(a) << std::endl << std::endl;
+  std::cout << field_sum(a) << std::endl << std::endl;
+  std::cout << field_norm(a) << std::endl << std::endl;
+  std::cout << field_norm(b) << std::endl << std::endl;
   
 //   vec.push_back(a);
 //   vec.push_back(b);

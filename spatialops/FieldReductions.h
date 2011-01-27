@@ -41,7 +41,7 @@ namespace SpatialOps{
    *  5b) If the iterator is at the end of \c fexpr, the intermediate result is returned as the final one.
    */
   template<typename ResultType, typename ExprType, typename FieldType>
-    inline ResultType fieldFold(ResultType const & (*proc)(ResultType const &,
+    inline ResultType field_fold(ResultType const & (*proc)(ResultType const &,
 							   typename FieldType::value_type const &),
 				ResultType const & initialValue,
 				FieldExpression<ExprType,FieldType> & fexpr) {
@@ -79,15 +79,15 @@ namespace SpatialOps{
    *  This instance of \c fold wraps \c field in a FieldExpression and then calls itself.
    */
   template<typename ResultType, typename FieldType>
-    inline ResultType fieldFold(ResultType const & (*proc)(ResultType const &,
-							   typename FieldType::value_type const &),
-				ResultType const & initialValue,
-				FieldType const & field) {
+    inline ResultType field_fold(ResultType const & (*proc)(ResultType const &,
+                                                            typename FieldType::value_type const &),
+                                 ResultType const & initialValue,
+                                 FieldType const & field) {
     FieldForm<FieldType> typedef ExprType;
     
-    return fieldFold(proc,
-		     initialValue,
-		     FieldExpression<ExprType,FieldType>(ExprType(field)));
+    return field_fold(proc,
+                      initialValue,
+                      FieldExpression<ExprType,FieldType>(ExprType(field)));
   };
   
   /**
@@ -126,7 +126,7 @@ namespace SpatialOps{
    *  \warning Assumes fexpr has at least one element. (Undefined behavior if fexpr has zero elements.)
    */
   template<typename ExprType, typename FieldType>
-    inline typename FieldType::value_type fieldReduce(typename FieldType::value_type const & (*proc)(typename FieldType::value_type const &,
+    inline typename FieldType::value_type field_reduce(typename FieldType::value_type const & (*proc)(typename FieldType::value_type const &,
 												     typename FieldType::value_type const &),
 						      FieldExpression<ExprType,FieldType> & fexpr) {
     typename FieldType::value_type typedef AtomicType;
@@ -149,7 +149,7 @@ namespace SpatialOps{
   };
   
   template<typename ExprType, typename FieldType>
-    inline typename FieldType::value_type fieldReduce(typename FieldType::value_type (*proc)(typename FieldType::value_type const &,
+    inline typename FieldType::value_type field_reduce(typename FieldType::value_type (*proc)(typename FieldType::value_type const &,
 											     typename FieldType::value_type const &),
 						      FieldExpression<ExprType,FieldType> & fexpr) {
     typename FieldType::value_type typedef AtomicType;
@@ -171,62 +171,62 @@ namespace SpatialOps{
     return result;
   };
   
-  /* fieldReduce for FieldType */
+  /* field_reduce for FieldType */
   template<typename FieldType>
-    inline typename FieldType::value_type fieldReduce(typename FieldType::value_type const & (*proc)(typename FieldType::value_type const &,
+    inline typename FieldType::value_type field_reduce(typename FieldType::value_type const & (*proc)(typename FieldType::value_type const &,
 												     typename FieldType::value_type const &),
 						      FieldType const & field) {
     
     FieldForm<FieldType> typedef ExprType;
     
-    return fieldReduce(proc,
+    return field_reduce(proc,
 		       FieldExpression<ExprType,FieldType>(ExprType(field)));
   };
   
-  /* fieldReduce for FieldType */
+  /* field_reduce for FieldType */
   template<typename FieldType>
-    inline typename FieldType::value_type fieldReduce(typename FieldType::value_type (*proc)(typename FieldType::value_type const &,
+    inline typename FieldType::value_type field_reduce(typename FieldType::value_type (*proc)(typename FieldType::value_type const &,
 											     typename FieldType::value_type const &),
 						      FieldType const & field) {
     
     FieldForm<FieldType> typedef ExprType;
     
-    return fieldReduce(proc,
+    return field_reduce(proc,
 		       FieldExpression<ExprType,FieldType>(ExprType(field)));
   };
   
   /* Field version of max */
   template<typename ExprType, typename FieldType>
-    inline typename FieldType::value_type fieldMax(FieldExpression<ExprType,FieldType> fexpr) {
+    inline typename FieldType::value_type field_max(FieldExpression<ExprType,FieldType> fexpr) {
     typename FieldType::value_type typedef AtomicType;
     
     //run max in terms of reduce:
-    return fieldReduce(std::max, fexpr);
+    return field_reduce(std::max, fexpr);
   };
   
   /* Field version of max */
   template<typename FieldType>
-    inline typename FieldType::value_type fieldMax(FieldType field) {
+    inline typename FieldType::value_type field_max(FieldType field) {
     FieldForm<FieldType> typedef ExprType;
     
-    return fieldMax(FieldExpression<ExprType,FieldType>(ExprType(field)));
+    return field_max(FieldExpression<ExprType,FieldType>(ExprType(field)));
   };
   
   /* Field version of min */
   template<typename ExprType, typename FieldType>
-    inline typename FieldType::value_type fieldMin(FieldExpression<ExprType,FieldType> fexpr) {
+    inline typename FieldType::value_type field_min(FieldExpression<ExprType,FieldType> fexpr) {
     typename FieldType::value_type typedef AtomicType;
     
     //run min in terms of reduce:
-    return fieldReduce(std::min, fexpr);
+    return field_reduce(std::min, fexpr);
   };
   
   /* Field version of min */
   template<typename FieldType>
-    inline typename FieldType::value_type fieldMin(FieldType field) {
+    inline typename FieldType::value_type field_min(FieldType field) {
     FieldForm<FieldType> typedef ExprType;
     
-    return fieldMin(FieldExpression<ExprType,FieldType>(ExprType(field)));
+    return field_min(FieldExpression<ExprType,FieldType>(ExprType(field)));
   };
   
   template<typename AtomicType>
@@ -237,36 +237,36 @@ namespace SpatialOps{
   
   /* Field version of sum */
   template<typename ExprType, typename FieldType>
-    inline typename FieldType::value_type fieldSum(FieldExpression<ExprType,FieldType> fexpr) {
+    inline typename FieldType::value_type field_sum(FieldExpression<ExprType,FieldType> fexpr) {
     typename FieldType::value_type typedef AtomicType;
     
     //run sum in terms of reduce:
-    return fieldReduce(sum<AtomicType>, fexpr);
+    return field_reduce(sum<AtomicType>, fexpr);
   };
   
   /* Field version of sum */
   template<typename FieldType>
-    inline typename FieldType::value_type fieldSum(FieldType field) {
+    inline typename FieldType::value_type field_sum(FieldType field) {
     FieldForm<FieldType> typedef ExprType;
     
-    return fieldSum(FieldExpression<ExprType,FieldType>(ExprType(field)));
+    return field_sum(FieldExpression<ExprType,FieldType>(ExprType(field)));
   };
   
   /* Field version of norm */
   template<typename ExprType, typename FieldType>
-    inline typename FieldType::value_type fieldNorm(FieldExpression<ExprType,FieldType> fexpr) {
+    inline typename FieldType::value_type field_norm(FieldExpression<ExprType,FieldType> fexpr) {
     typename FieldType::value_type typedef AtomicType;
     
     //run norm in terms of reduce:
-    return std::sqrt(fieldSum(pow(fexpr,2)));
+    return std::sqrt(field_sum(pow(fexpr,2)));
   };
   
   /* Field version of norm */
   template<typename FieldType>
-    inline typename FieldType::value_type fieldNorm(FieldType field) {
+    inline typename FieldType::value_type field_norm(FieldType field) {
     FieldForm<FieldType> typedef ExprType;
     
-    return fieldNorm(FieldExpression<ExprType,FieldType>(ExprType(field)));
+    return field_norm(FieldExpression<ExprType,FieldType>(ExprType(field)));
   };
   
 } // namespace SpatialOps
