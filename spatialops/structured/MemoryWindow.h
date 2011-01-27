@@ -441,7 +441,8 @@ namespace structured{
           j_ >= window_.extent(1) + window_.offset(1) ||
           k_ >= window_.extent(2) + window_.offset(2) ){
         std::ostringstream msg;
-        msg << __FILE__ << " : " << __LINE__ << "iterator is in an invalid state for dereference";
+        msg << __FILE__ << " : " << __LINE__ << std::endl
+            << "iterator is in an invalid state for dereference";
         throw std::runtime_error( msg.str() );
       }
 #     endif
@@ -455,7 +456,8 @@ namespace structured{
           j_ >= window_.extent(1) + window_.offset(1) ||
           k_ >= window_.extent(2) + window_.offset(2) ){
         std::ostringstream msg;
-        msg << __FILE__ << " : " << __LINE__ << "iterator is in an invalid state for dereference";
+        msg << __FILE__ << " : " << __LINE__ << std::endl
+            << "iterator is in an invalid state for dereference";
         throw std::runtime_error( msg.str() );
       }
 #     endif
@@ -635,7 +637,8 @@ namespace structured{
           j_ >= window_.extent(1) + window_.offset(1) ||
           k_ >= window_.extent(2) + window_.offset(2) ){
         std::ostringstream msg;
-        msg << __FILE__ << " : " << __LINE__ << "iterator is in an invalid state for dereference";
+        msg << __FILE__ << " : " << __LINE__ << std::endl
+            << "iterator is in an invalid state for dereference";
         throw std::runtime_error( msg.str() );
       }
 #     endif
