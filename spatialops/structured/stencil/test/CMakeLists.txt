@@ -1,0 +1,17 @@
+set( libs spatialops-stencil spatialops-structured spatialops ${TPL_LIBRARIES} )
+
+add_executable( test_stencil2 test_stencil2.cpp )
+target_link_libraries( test_stencil2 ${libs} )
+add_test( stencil2_bcxyz   test_stencil2  --bcx --bcy --bcz )
+add_test( stencil2_bcxy    test_stencil2  --bcx --bcy )
+add_test( stencil2_bcxz    test_stencil2  --bcx --bcz )
+add_test( stencil2_bcyz    test_stencil2  --bcz --bcy )
+add_test( stencil2_bcx     test_stencil2  --bcx )
+add_test( stencil2_bcy     test_stencil2  --bcy )
+add_test( stencil2_bcz     test_stencil2  --bcz )
+add_test( stencil2_no_bc   test_stencil2  --bcz )
+add_test( stencil2_no_bc2  test_stencil2  --nx 5 --ny 6 --nz 7 )
+add_test( stencil2_no_bc3  test_stencil2  --nx 6 --ny 7 --nz 5 )
+
+add_executable( test_stencil4 test_stencil4.cpp )
+target_link_libraries( test_stencil4 ${libs} )

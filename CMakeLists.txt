@@ -14,6 +14,13 @@ option( LINALG_TRILINOS "use Trilinos for linear algebra - also requires definit
 option( LINALG_UBLAS    "use UBLAS for linear algebra - cannot solve linear systems"  ON )
 option( ENABLE_BOOST_SERIALIZATION "allow serialization of information via the boost library" OFF )
 option( ENABLE_TESTS "Enable building of regression tests (recommended)" ON )
+option( ENABLE_STENCIL "Enable fast stencil installation rather than matrix-based options" OFF )
+
+if( ENABLE_STENCIL )
+  set( ENABLE_MATRIX OFF )
+else()
+  set( ENABLE_MATRIX ON )
+endif( ENABLE_STENCIL )
 
 # default to release builds
 if( NOT CMAKE_BUILD_TYPE )
@@ -122,6 +129,11 @@ include_directories(
   ${TPL_INCLUDE_DIRS}
   )
 
+if( CMAKE_BUILD_TYPE STREQUAL Release )
+  add_definitions( -O3 -fexpensive-optimizations )
+  message( STATUS "turning on aggressive optimizations" )
+endif( CMAKE_BUILD_TYPE STREQUAL Release )
+
 
 # build the configure file using the information defined here.
 configure_file(
@@ -130,51 +142,17 @@ configure_file(
   )
 include_directories( ${PROJECT_BINARY_DIR}/config )
 
+if( ENABLE_TESTS )
+  enable_testing()
+endif( ENABLE_TESTS )
 
-# setup the build for the spatialops library.  Note that the linker
-# order is important, and future revisions to libraries such as
-# trilinos may require a modification of link order.
-set( SO_Sources
-  spatialops/LagrangePoly.cpp
-  spatialops/structured/FVOneDimensional.cpp
-  spatialops/structured/FVTools.cpp
-  spatialops/structured/MemoryWindow.cpp
-  spatialops/structured/Stencil2.cpp
-  spatialops/structured/Stencil4.cpp
-  spatialops/structured/NullStencil.cpp
-  spatialops/structured/StencilBuilder.cpp
-  spatialops/particles/ParticleFieldTypes.cpp
-  )
-if( LINALG_TRILINOS )
-  set( SO_Sources ${SO_Sources}
-    spatialops/LinAlgTrilinos.cpp
-    spatialops/LinearSystem.cpp
-    )
-endif()
-if( LINALG_UBLAS )
-  set( SO_Sources ${SO_Sources} spatialops/LinAlgUBlas.cpp )
-endif()
-
-
-if( CMAKE_BUILD_TYPE STREQUAL Release )
-  add_definitions( -O3 -fexpensive-optimizations )
-  message( STATUS "turning on aggressive optimizations" )
-endif( CMAKE_BUILD_TYPE STREQUAL Release )
-
-set( SpatialOps_LIBRARY spatialops )
-add_library( ${SpatialOps_LIBRARY}
-  STATIC
-  ${SO_Sources}
-  )
-target_link_libraries( ${SpatialOps_LIBRARY} ${TPL_LIBRARIES} )
+add_subdirectory( spatialops )
 
 
 # this will compile all of the test cases.  Use "make test" to execute
 # them and see a summary.
 if( ENABLE_TESTS )
-  enable_testing()
   add_subdirectory( test )
-  add_subdirectory( spatialops/structured/test )
 endif()
 
 
@@ -184,36 +162,11 @@ endif()
 message( STATUS "Files will be installed to: " ${CMAKE_INSTALL_PREFIX} )
 
 # install spatialops headers
-file( GLOB so_headers "spatialops/*.h" )
-file( GLOB so_structured_headers "spatialops/structured/*.h" )
-file( GLOB so_particle_headers "spatialops/particles/*.h" )
-set( so_headers
-  ${so_headers}
-  ${PROJECT_BINARY_DIR}/config/spatialops/SpatialOpsConfigure.h
-  )
 install( FILES
-  ${so_headers}
+  ${PROJECT_BINARY_DIR}/config/spatialops/SpatialOpsConfigure.h
   DESTINATION include/spatialops
   PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
   )
-install( FILES
-  ${so_structured_headers}
-  DESTINATION include/spatialops/structured
-  PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
-  )
-install( FILES
-  ${so_particle_headers}
-  DESTINATION include/spatialops/particles
-  PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
-  )
-
-# install the spatialops library
-install( TARGETS
-  ${SpatialOps_LIBRARY}
-  ARCHIVE
-  DESTINATION lib/spatialops/
-  )
-
 
 
 # ------------------------------------------------------------------
@@ -223,7 +176,7 @@ install( TARGETS
 # systems that use the SpatialOps library.
 
 # get the location for the installed library
-get_target_property( SOLocation ${SpatialOps_LIBRARY} LOCATION )
+get_target_property( SOLocation spatialops LOCATION )
 
 # get the full name for the installed library
 get_filename_component( SOInstallLib ${SOLocation} NAME )
@@ -237,9 +190,6 @@ configure_file(
   ${PROJECT_BINARY_DIR}/config/SpatialOpsConfig.cmake
   @ONLY
   )
-
-install( TARGETS ${SpatialOps_LIBRARY} EXPORT SpatialOps DESTINATION lib/spatialops )
-install( EXPORT SpatialOps DESTINATION lib/spatialops )
 
 # install all of these files into the spatial ops lib dir
 install( FILES
