@@ -245,7 +245,7 @@ namespace structured{
       : wsrc_( wsrc ), wdest_( wdest ),
         hiBounds_( wdest.extent() ),
         srcInc_ ( 1, 0, wsrc.extent(0) ),
-        destInc_( 1, 0, 0 )
+        destInc_( 1, 0, wdest.extent(0) )
     {
       if( wsrc.extent(0) != wdest.extent(0) ){
         // physical boundary present
@@ -291,7 +291,7 @@ namespace structured{
     unsigned int src_offset_lo() const{ return 0; }
     unsigned int src_offset_hi() const{ return wsrc_.extent(0) * wdest_.extent(1); }
     
-    IntVec src_increment () const{ return IntVec(1,0,wsrc_.extent(0)); }
+    IntVec src_increment () const{ return IntVec(1,0,0); }
     IntVec dest_increment() const{ return destInc_; }
 
     IntVec low () const{ return IntVec(0,0,1); }
@@ -309,13 +309,14 @@ namespace structured{
   struct Stencil2Helper< YVolField, XSurfYField >
   {
     Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest )
-      : hiBounds_( wdest.extent() ),
+      : wsrc_( wsrc ), wdest_( wdest ),
+        hiBounds_( wdest.extent() ),
         srcInc_ ( 1, 1, 0 ),
         destInc_( 1, 1, 0 )
     {
       if( wsrc.extent(1) != wdest.extent(1) ){
         // physical boundary present
-        --hiBounds_[0];
+        --hiBounds_[1];
         destInc_[2] += wdest.extent(0);
       }
     }
@@ -330,6 +331,7 @@ namespace structured{
     IntVec low () const{ return IntVec(1,0,0); }
     IntVec high() const{ return hiBounds_; }
   private:
+    const MemoryWindow &wsrc_, &wdest_;
     IntVec hiBounds_, srcInc_, destInc_;
   };
 

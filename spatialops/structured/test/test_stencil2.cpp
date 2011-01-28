@@ -256,6 +256,57 @@ run_variants( const IntVec npts,
 
 //--------------------------------------------------------------------
 
+template< typename SrcT, typename DestT >
+bool interp_test( const unsigned int dir,
+                  IntVec npts,
+                  const bool* bcPlus )
+{
+  const int nrefine = 5;
+  std::vector<double> interpNorms(nrefine,0.0);
+  std::vector<double> spacings(nrefine,0.0);
+
+  for( unsigned int icount=0; icount<nrefine; ++icount ){
+
+    const MemoryWindow vmw = get_window_with_ghost<SrcT >( npts, bcPlus[0], bcPlus[1], bcPlus[2] );
+    const MemoryWindow fmw = get_window_with_ghost<DestT>( npts, bcPlus[0], bcPlus[1], bcPlus[2] );
+
+    std::vector<double> length(3,10.0);
+    const Grid grid( npts, length );
+
+    SrcT   src( vmw, NULL ), xsrc(vmw,NULL), ysrc(vmw,NULL), zsrc(vmw,NULL);
+    DestT dest( fmw, NULL ), xdest(fmw,NULL), ydest(fmw,NULL), zdest(fmw,NULL);
+
+    grid.set_coord<XDIR>( xsrc );
+    grid.set_coord<YDIR>( ysrc );
+    grid.set_coord<ZDIR>( zsrc );
+
+    grid.set_coord<XDIR>( xdest );
+    grid.set_coord<YDIR>( ydest );
+    grid.set_coord<ZDIR>( zdest );
+
+    // set the function value
+    function( xsrc, ysrc, zsrc, src );
+
+    DestT destExact( fmw, NULL );
+
+    // interpolant
+    const Stencil2< Interpolant, SrcT, DestT > interpOp( 0.5, 0.5 );
+    interpOp.apply_to_field( src, dest );
+    function( xdest, ydest, zdest, destExact );
+
+    interpNorms[icount] = interior_norm( dest, destExact );
+    spacings[icount] = 1.0/npts[dir];
+    npts[dir] *= 2;
+
+    write_matlab( xdest, "x" );
+    write_matlab( destExact, "phix");
+    write_matlab( dest, "phi");
+  }
+  return check_convergence( spacings, interpNorms, 2 );
+}
+
+//--------------------------------------------------------------------
+
 int main( int iarg, char* carg[] )
 {
   int nx, ny, nz;
@@ -312,6 +363,15 @@ int main( int iarg, char* carg[] )
     if( npts[0] > 1 ) status( run_variants< XVolField >( npts, bcplus ), "XVol operators" );
     if( npts[1] > 1 ) status( run_variants< YVolField >( npts, bcplus ), "YVol operators" );
     if( npts[2] > 1 ) status( run_variants< ZVolField >( npts, bcplus ), "ZVol operators" );
+
+    status( interp_test< XVolField, YSurfXField >( 1, npts, bcplus ), "InterpXVolYSurfX" );
+    status( interp_test< XVolField, ZSurfXField >( 2, npts, bcplus ), "InterpXVolZSurfX" );
+
+    status( interp_test< YVolField, XSurfYField >( 0, npts, bcplus ), "InterpYVolXSurfY" );
+    status( interp_test< YVolField, ZSurfYField >( 2, npts, bcplus ), "InterpYVolZSurfY" );
+
+    status( interp_test< ZVolField, XSurfZField >( 0, npts, bcplus ), "InterpZVolXSurfZ" );
+    status( interp_test< ZVolField, YSurfZField >( 1, npts, bcplus ), "InterpZVolYSurfZ" );
   }
   catch( std::runtime_error& e ){
     cout << e.what() << endl;
