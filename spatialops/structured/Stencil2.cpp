@@ -608,9 +608,9 @@ namespace structured{
   template class Stencil2< Interpolant, ZVolField, XSurfZField >;  // advecting velocity
   template class Stencil2< Interpolant, ZVolField, YSurfZField >;  // advecting velocity
 
-  template class Stencil2< Interpolant, SVolField, XVolField >;  // density
-  template class Stencil2< Interpolant, SVolField, YVolField >;  // density
-  template class Stencil2< Interpolant, SVolField, ZVolField >;  // density
+  template class Stencil2< Interpolant, SVolField, XVolField >;  // density, dp/dx
+  template class Stencil2< Interpolant, SVolField, YVolField >;  // density, dp/dy
+  template class Stencil2< Interpolant, SVolField, ZVolField >;  // density, dp/dz
   //
   //==================================================================
 

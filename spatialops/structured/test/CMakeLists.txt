@@ -25,6 +25,9 @@ add_test( stencil2_no_bc   test_stencil2  --bcz )
 add_test( stencil2_no_bc2  test_stencil2  --nx 5 --ny 6 --nz 7 )
 add_test( stencil2_no_bc3  test_stencil2  --nx 6 --ny 7 --nz 5 )
 
+add_executable( test_stencil4 test_stencil4.cpp Grid.cpp )
+target_link_libraries( test_stencil4 ${SpatialOps_LIBRARY} )
+
 
 if( ENABLE_BOOST_SERIALIZATION )
   add_executable( test_serialize testSerialization.cpp )

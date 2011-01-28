@@ -279,8 +279,10 @@ namespace structured{
   // viscosity from scalar cells to staggered surfaces for stress
   template struct Stencil4< Interpolant, SVolField, XSurfYField >; 
   template struct Stencil4< Interpolant, SVolField, XSurfZField >;
+
   template struct Stencil4< Interpolant, SVolField, YSurfXField >;
   template struct Stencil4< Interpolant, SVolField, YSurfZField >;
+
   template struct Stencil4< Interpolant, SVolField, ZSurfXField >;
   template struct Stencil4< Interpolant, SVolField, ZSurfYField >;
   //
