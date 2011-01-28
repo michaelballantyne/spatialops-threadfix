@@ -98,6 +98,7 @@ bool test_iterator( const IntVec npts,
   for( typename FieldT::iterator i=f1.begin(); i!=f1.end(); ++i ){
     *i = 0.0;
   }
+
   return status.ok();
 }
 
@@ -113,8 +114,8 @@ bool test_interior( const IntVec npts,
   f1 = 2.0;
 
   const MemoryWindow& interiorWindow = f1.window_without_ghost();
-  const IntVec& lo = interiorWindow.offset();
-  const IntVec& hi = lo + interiorWindow.extent();
+  const IntVec lo = interiorWindow.offset();
+  const IntVec hi = lo + interiorWindow.extent();
 
   f2 = 0.0;
   // set interior values
