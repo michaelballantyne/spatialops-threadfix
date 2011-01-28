@@ -17,7 +17,7 @@ if( ENABLE_MATRIX )
   install( FILES
     LagrangePoly.h
     FVOneDimensional.h
-    DESTINATION include/spatialops/structured/
+    DESTINATION include/spatialops
     PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
     )
 
