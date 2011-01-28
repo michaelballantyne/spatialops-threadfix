@@ -1,7 +1,7 @@
 #ifndef SpatialOps_FieldOperationDefinitions_h
 #define SpatialOps_FieldOperationDefinitions_h
 
-#include "FieldExpressions.h"
+#include <spatialops/FieldExpressions.h>
 #include <cmath>
 
 namespace SpatialOps{

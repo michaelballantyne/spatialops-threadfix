@@ -1,5 +1,5 @@
 #ifndef SpatialOps_FieldReductions_h
-#define SpatialOps_FieldReductionss_h
+#define SpatialOps_FieldReductions_h
 
 #include <spatialops/FieldExpressions.h>
 #include <spatialops/FieldExpressionsExtended.h>
