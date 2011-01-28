@@ -372,6 +372,10 @@ int main( int iarg, char* carg[] )
 
     status( interp_test< ZVolField, XSurfZField >( 0, npts, bcplus ), "InterpZVolXSurfZ" );
     status( interp_test< ZVolField, YSurfZField >( 1, npts, bcplus ), "InterpZVolYSurfZ" );
+
+    status( interp_test< SVolField, XVolField >( 0, npts, bcplus ), "InterpSVolXVol" );
+    status( interp_test< SVolField, YVolField >( 1, npts, bcplus ), "InterpSVolYVol" );
+    status( interp_test< SVolField, ZVolField >( 2, npts, bcplus ), "InterpSVolZVol" );
   }
   catch( std::runtime_error& e ){
     cout << e.what() << endl;
