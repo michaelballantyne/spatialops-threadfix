@@ -26,7 +26,6 @@ install( FILES
   FVTools.h
   Grid.h
   MemoryWindow.h
-  Serialize.h
   SpatialField.h
   SpatialFieldStore.h
   DESTINATION include/spatialops/structured
