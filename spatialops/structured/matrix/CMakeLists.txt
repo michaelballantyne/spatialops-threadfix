@@ -12,6 +12,7 @@ if( ENABLE_MATRIX )
     FVStaggeredDivergence.h
     FVStaggeredGradient.h
     FVStaggeredInterpolant.h
+    FVStaggeredIndexHelper.h
     FVStaggeredScratch.h
     FVTopHatFilter.h
     DESTINATION include/spatialops/structured/matrix/
@@ -21,7 +22,6 @@ if( ENABLE_MATRIX )
   install( FILES
     FVStaggered.h
     FVStaggeredBCTools.h
-    FVStaggeredIndexHelper.h
     FVStaggeredOperatorTypes.h
     DESTINATION include/spatialops/structured/
     PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
