@@ -73,7 +73,7 @@ bool test( const SS::IntVec dim )
     status( l2norm == field_norm(f4), "norm" );
     status( *std::max_element(f4.begin(),f4.end()) == field_max(f4), "max" );
     status( *std::min_element(f4.begin(),f4.end()) == field_min(f4), "min" );
-    status( std::accumulate(f4.begin(),f4.end(),0) == field_sum(f4), "sum" );
+    status( std::accumulate(f4.begin(),f4.end(),0.0) == field_sum(f4), "sum" );
 
     // ensure that this compiles
     const double pi = 3.141592653589793;

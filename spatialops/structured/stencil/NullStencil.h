@@ -1,5 +1,5 @@
-#ifndef SpatialOps_structured_NullStencil.h
-#define SpatialOps_structured_NullStencil
+#ifndef SpatialOps_structured_NullStencil_h
+#define SpatialOps_structured_NullStencil_h
 
 namespace SpatialOps{
 namespace structured{
@@ -25,4 +25,4 @@ namespace structured{
 } // namespace structured
 } // namespace SpatialOps
 
-#endif // SpatialOps_structured_NullStencil
+#endif // SpatialOps_structured_NullStencil_h
