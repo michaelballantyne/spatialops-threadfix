@@ -58,8 +58,8 @@ namespace structured{
       ijk[0]=x.ijk[0];  ijk[1]=x.ijk[1];  ijk[2]=x.ijk[2];
     }
 
-    inline const int  operator[](const size_t i) const{ return ijk[i]; }
-    inline       int& operator[](const size_t i)      { return ijk[i]; }
+    inline int  operator[](const size_t i) const{ return ijk[i]; }
+    inline int& operator[](const size_t i)      { return ijk[i]; }
 
     IntVec& operator=(const IntVec& x)
     {
@@ -449,7 +449,7 @@ namespace structured{
       return *current_;
     }
 
-    inline const reference operator*() const
+    inline reference operator*() const
     {
 #     ifndef NDEBUG
       if( i_ >= window_.extent(0) + window_.offset(0) ||
@@ -630,7 +630,7 @@ namespace structured{
       return *this;
     }
 
-    inline const reference operator*() const
+    inline reference operator*() const
     {
 #     ifndef NDEBUG
       if( i_ >= window_.extent(0) + window_.offset(0) ||
