@@ -290,10 +290,11 @@ namespace structured{
    *         over the "local" portion of that field as defined by the
    *         MemoryWindow.
    */
-  template<typename T>
+  template< typename FieldT >
   class FieldIterator
   {
-    friend class ConstFieldIterator<T>;
+    typedef typename FieldT::AtomicT  T;
+    friend class ConstFieldIterator<FieldT>;
     T* current_;   ///< The current pointer that this iterator refers to
     T* first_;     ///< The first position in memory for the field this iterator is associated with
     const MemoryWindow& window_;  ///< The MemoryWindow associated with this field and iterator
@@ -301,7 +302,7 @@ namespace structured{
     size_t i_,j_,k_;
 
   public:
-    typedef FieldIterator<T> self;
+    typedef FieldIterator<FieldT> self;
     typedef typename std::iterator_traits<T*>::value_type      value_type;
     typedef typename std::iterator_traits<T*>::reference       reference;
     typedef typename std::iterator_traits<T*>::pointer         pointer;
@@ -486,9 +487,10 @@ namespace structured{
    *
    *  See the documentation for FieldIterator
    */
-  template<typename T>
+  template< typename FieldT >
   class ConstFieldIterator
   {
+    typedef typename FieldT::AtomicT  T;
     const T* current_;
     const T* first_;
     const MemoryWindow& window_;
@@ -496,7 +498,7 @@ namespace structured{
     size_t i_,j_,k_;
 
   public:
-    typedef ConstFieldIterator<T> self;
+    typedef ConstFieldIterator<FieldT> self;
     typedef typename std::iterator_traits<const T*>::value_type      value_type;
     typedef typename std::iterator_traits<const T*>::reference       reference;
     typedef typename std::iterator_traits<const T*>::pointer         pointer;
@@ -529,7 +531,7 @@ namespace structured{
     /**
      *  \brief Copy constructor to promote a FieldIterator to a ConstFieldIterator
      */
-    ConstFieldIterator( const FieldIterator<T> t )
+    ConstFieldIterator( const FieldIterator<FieldT> t )
       : current_( t.current_ ),
         first_  ( t.first_   ),
         window_ ( t.window_  )

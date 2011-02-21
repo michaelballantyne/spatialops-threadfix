@@ -125,18 +125,18 @@ namespace structured{
 
   public:
 
-    typedef GhostTraits   Ghost;
-    typedef FieldLocation Location;
-    typedef T             AtomicT;
-
-    typedef SpatialField<VecOps,FieldLocation,GhostTraits,T> field_type;
-    typedef T value_type;
-
-    typedef FieldIterator<T>       iterator;
-    typedef FieldIterator<T>       interior_iterator;
-
-    typedef ConstFieldIterator<T> const_iterator;
-    typedef ConstFieldIterator<T> const_interior_iterator;
+    typedef SpatialField< VecOps,
+                          FieldLocation,
+                          GhostTraits,
+                          T>                   field_type;
+    typedef GhostTraits                        Ghost;
+    typedef FieldLocation                      Location;
+    typedef T                                  AtomicT;
+    typedef T                                  value_type;
+    typedef FieldIterator     <field_type>     iterator;
+    typedef FieldIterator     <field_type>     interior_iterator;
+    typedef ConstFieldIterator<field_type>     const_iterator;
+    typedef ConstFieldIterator<field_type>     const_interior_iterator;
 
     /**
      *  \brief Construct a SpatialField
