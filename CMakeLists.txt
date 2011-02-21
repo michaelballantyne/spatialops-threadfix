@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.6)
 project( SpatialOps CXX C )
 
 set( MAJOR_VERSION "1" )
-set( MINOR_VERSION "1" )
+set( MINOR_VERSION "2" )
 set( PATCH_VERSION "0" )
 
 #=====================================================================

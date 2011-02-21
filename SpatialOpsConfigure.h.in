@@ -14,8 +14,4 @@
 
 #cmakedefine SOPS_BOOST_SERIALIZATION
 
-#define MAJOR_VERSION ${MAJOR_VERSION}
-#define MINOR_VERSION ${MINOR_VERSION}
-#define PATCH_VERSION ${PATCH_VERSION}
-
 #endif // SpatialOps_Configure_h
