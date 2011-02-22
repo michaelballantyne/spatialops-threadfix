@@ -36,6 +36,23 @@ namespace SpatialOps{
    */
   struct NODIR{ enum{value=-10}; };
 
+  /**
+   *  @struct CompareDirection
+   *  @brief Provides comparison of direction types
+   *
+   *  Usage:
+   *  \code
+   *   if( CompareDirection<Dir1,Dir2>::same() ){
+   *     // do something
+   *   }
+   *  \endcode
+   */
+  template< typename Dir1, typename Dir2 >
+  struct CompareDirection { static bool same(){ return false; } };
+
+  template< typename Dir >
+  struct CompareDirection<Dir,Dir> { static bool same(){ return true; } };
+
   /** @} */  // end of Direction group.
 
 
