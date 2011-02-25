@@ -1,8 +1,13 @@
-#ifndef SpatialOps_FieldOperationDefinitions_h
-#define SpatialOps_FieldOperationDefinitions_h
+#ifndef SpatialOps_FieldExpressionsExtended_h
+#define SpatialOps_FieldExpressionsExtended_h
 
 #include <spatialops/FieldExpressions.h>
 #include <cmath>
+
+//cwearl basic marcros:
+#define I inline
+#define S static
+#define SI S I
 
 namespace SpatialOps{
 
@@ -1083,4 +1088,9 @@ namespace SpatialOps{
   
 } // namespace SpatialOps
 
-#endif // SpatialOps_FieldOperationDefinitions_h
+//cwearl basic marcros:
+#undef I
+#undef S
+#undef SI
+
+#endif // SpatialOps_FieldExpressionsExtended_h

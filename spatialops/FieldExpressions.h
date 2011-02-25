@@ -5,11 +5,67 @@
 //#include<iostream>
 #include<algorithm>
 
+//cwearl basic marcros:
+#define I inline
+#define S static
+#define SI S I
+
 namespace SpatialOps{
   /**
    *  @file FieldExpressions.h
    */
   
+  struct UseWholeIterator {};
+  struct UseInteriorIterator {};
+  
+  template<typename Use, typename FieldType>
+    struct IterFcns;
+  
+  //iterator
+  template<typename FieldType>
+    struct IterFcns<UseWholeIterator,FieldType> {
+    typename FieldType::iterator typedef iterator_type;
+    typename FieldType::const_iterator typedef const_iterator_type;
+    
+    SI iterator_type initialize(FieldType * const fptr) {
+      return fptr->begin();
+    };
+
+    SI const_iterator_type const_initialize(FieldType const * const fptr) {
+      return fptr->begin();
+    };
+
+    SI iterator_type end(FieldType * const fptr) {
+      return fptr->end();
+    };
+    
+    SI const_iterator_type const_end(FieldType const * const fptr) {
+      return fptr->end();
+    };
+  };
+  
+  //interior_iterator
+  template<typename FieldType>
+    struct IterFcns<UseInteriorIterator,FieldType> {
+    typename FieldType::interior_iterator typedef iterator_type;
+    typename FieldType::const_interior_iterator typedef const_iterator_type;
+    
+    SI iterator_type initialize(FieldType * const fptr) {
+      return fptr->interior_begin();
+    };
+    
+    SI const_iterator_type const_initialize(FieldType const * const fptr) {
+      return fptr->interior_begin();
+    };
+    
+    SI iterator_type end(FieldType * const fptr) {
+      return fptr->interior_end();
+    };
+    
+    SI const_iterator_type const_end(FieldType const * const fptr) {
+      return fptr->interior_end();
+    };
+  };
   
   /**
    *  @page expressiontemplates
@@ -143,77 +199,72 @@ namespace SpatialOps{
    */
   template<typename AtomicType>
     struct Scalar {
+    public:
+      
+      template<typename IteratorType>
+      struct FullState;
+      template<typename IteratorType>
+      friend class FullState;
+      
     private:
-      AtomicType val;
+      struct FrozenState {
+	AtomicType const val;
+	
+      FrozenState(AtomicType const & v)
+      : val(v)
+	{};
+	
+      FrozenState(FrozenState const & frS)
+      : val(frS.val)
+	{};
+      };
+      
+      template<typename IteratorType>
+      struct FluidState {
+	FluidState(FrozenState const & frS)
+	{};
+      };
+      
+      FrozenState const frS;
       
     public:
       
-      /**
-       *  @brief Constructor for Scalar.
-       *  
-       *  \param v an AtomicType (template parameter to Scalar).
-       *  \return a new Scalar with internal value set to v.
-       *  
-       *  Constructs a new Scalar with internal value set to the parameter v.
-       */
     Scalar(AtomicType const & v)
-    : val(v)
+    : frS(v)
       {};
       
-      /**
-       *  @brief Initializer.
-       *  
-       *  \return nothing. Called for side-effects (none here).
-       *  
-       *  A no-op. Included for regularity of complex FieldExpression objects.
-       *  Since this function is inlined, it disappears in the executed code.
-       */
-      inline void init() const {};
-      
-      /**
-       *  @brief Incrementer.
-       *  
-       *  \return nothing. Called for side-effects (none here).
-       *  
-       *  A no-op. Included for regularity of complex FieldExpression objects.
-       *  Since this function is inlined, it disappears in the executed code.
-       */
-      inline void next() const {};
-      
-      /**
-       *  @brief Reference to current value.
-       *  
-       *  \return a constant reference to the current element (an AtomicType/FieldType::value_type object).
-       *  
-       *  Returns a constant reference to the current element, which is constant.
-       */
-      inline AtomicType const & eval() const {
-	return val;
+      template<typename IteratorType>
+      I FullState<IteratorType> init() const {
+	return FullState<IteratorType>(frS);
       };
       
-      /**
-       *  @brief Predicate: Current position is the end?
-       *  
-       *  \return false; a Scalar is never at the end.
-       *  
-       *  Returns false.
-       */
-      inline bool at_end() const {
-	return false;
-      };
-      
-      /**
-       *  @brief Predicate: Can reach end position?
-       *  
-       *  \return false; a Scalar cannot reach the end.
-       *  
-       *  Returns false.
-       */
-      inline bool has_length() const {
-	return false;
+      template<typename IteratorType>
+      struct FullState {
+      private:
+	FrozenState const frS;
+	FluidState<IteratorType> flS;
+	
+      public:
+      FullState(FrozenState const & frs)
+	: frS(frs), flS(frs)
+	{};
+	
+	I void next() {};
+	
+	I AtomicType const & eval() const {
+	  return frS.val;
+	};
+	
+	I bool at_end() const {
+	  return false;
+	};
+	
+	I bool has_length() const {
+	  return false;
+	};
       };
     };
-
+  
   /**
    *  @struct FieldForm
    *  @author Christopher Earl
@@ -258,166 +309,160 @@ namespace SpatialOps{
    */
   template<typename FieldType>
     struct FieldForm {
+    public:
+      typename FieldType::value_type typedef AtomicType;
+      
+      template<typename IteratorType>
+      struct FullState;
+      
+      template<typename IteratorType>
+      friend class FullState;
+      
     private:
-      FieldType const *fptr;
-      typename FieldType::const_iterator iter;
+      struct FrozenState {
+	FieldType const * const fptr;
+	
+      FrozenState(FieldType const & field)
+      : fptr(&field)
+	{};
+	
+      FrozenState(FrozenState const & frS)
+      : fptr(frS.fptr)
+	{};
+      };
+      
+      template<typename IteratorType>
+      struct FluidState {
+	typename IterFcns<IteratorType,FieldType>::const_iterator_type iter;
+	typename IterFcns<IteratorType,FieldType>::const_iterator_type const end;
+	
+      FluidState(FrozenState const & frS)
+      : iter(IterFcns<IteratorType,FieldType>::const_initialize(frS.fptr)),
+	  end(IterFcns<IteratorType,FieldType>::const_end(frS.fptr))
+	{};
+      };
+      
+      FrozenState const frS;
       
     public:
       
-      /**
-       *  @brief Constructor for FieldForm.
-       *  
-       *  \param field a FieldType (template parameter to FieldForm).
-       *  \return a new FieldForm containing field.
-       *  
-       *  Constructs a new Fieldform containing field.
-       *
-       *  Current implementation initializes field (may be redundant with init() function).
-       */
     FieldForm(FieldType const & field)
-    : fptr(&field), iter(field.begin())
+    : frS(field)
       {};
       
-      /**
-       *  @brief Initializer.
-       *  
-       *  \return nothing. Called for side-effects.
-       *  
-       *  Initializes internal iterator to beginning the contained field.
-       */
-      inline void init() {
-	iter = fptr->begin();
+      template<typename IteratorType>
+      I FullState<IteratorType> init() const {
+	return FullState<IteratorType>(frS);
       };
       
-      /**
-       *  @brief Incrementer.
-       *  
-       *  \return nothing. Called for side-effects.
-       *  
-       *  Increments internal iterator to next element in the contained field.
-       */
-      inline void next() {
-	++iter;
-      };
-      
-      /**
-       *  @brief Reference to current element.
-       *  
-       *  \return a constant reference to the current element (an AtomicType/FieldType::value_type object) in the field.
-       *  
-       *  Returns a constant reference to the current element in the contained field.
-       */
-      inline typename FieldType::value_type const & eval() const {
-	return *iter;
-      };
-      
-      /**
-       *  @brief Predicate: Current position is the end?
-       *  
-       *  \return Boolean; true, if currently at end; false; if not.
-       *  
-       *  Returns whether or not current position is the end/last position.
-       *  
-       *  \note There is probably a more efficient way to do this.
-       */
-      inline bool at_end() const {
-	return iter == fptr->end();
-      };
-      
-      /**
-       *  @brief Predicate: Can reach end position?
-       *  
-       *  \return true; a FieldForm can reach the end.
-       *  
-       *  Returns true.
-       */
-      inline bool has_length() const {
-	return true;
+      template<typename IteratorType>
+      struct FullState {
+      private:
+	FrozenState const frS;
+	FluidState<IteratorType> flS;
+	
+      public:
+      FullState(FrozenState const & frs)
+      : frS(frs), flS(frs)
+	{};
+	
+	I void next() {
+	  ++(flS.iter);
+	};
+	
+	I AtomicType const & eval() const {
+	  return *(flS.iter);
+	};
+	
+	I bool at_end() const {
+	  return flS.iter == flS.end;
+	};
+	
+	I bool has_length() const {
+	  return true;
+	};
       };
     };
   
   //Mutable Field Form
   template<typename FieldType>
     struct MFieldForm {
+    public:
+      typename FieldType::value_type typedef AtomicType;
+      
+      template<typename IteratorType>
+      struct FullState;
+      
+      template<typename IteratorType>
+      friend class FullState;
+      
     private:
-      FieldType * fptr;
-      typename FieldType::iterator iter;
+      struct FrozenState {
+	FieldType * const fptr;
+	
+      FrozenState(FieldType & field)
+      : fptr(&field)
+	{};
+	
+      FrozenState(FrozenState const & frS)
+      : fptr(frS.fptr)
+	{};
+      };
+      
+      template<typename IteratorType>
+      struct FluidState {
+	typename IterFcns<IteratorType,FieldType>::iterator_type iter;
+	typename IterFcns<IteratorType,FieldType>::iterator_type const end;
+	
+      FluidState(FrozenState const & frS)
+      : iter(IterFcns<IteratorType,FieldType>::initialize(frS.fptr)),
+	  end(IterFcns<IteratorType,FieldType>::end(frS.fptr))
+	{};
+      };
+      
+      FrozenState const frS;
       
     public:
       
-      /**
-       *  @brief Constructor for FieldForm.
-       *  
-       *  \param field a FieldType (template parameter to FieldForm).
-       *  \return a new FieldForm containing field.
-       *  
-       *  Constructs a new Fieldform containing field.
-       *
-       *  Current implementation initializes field (may be redundant with init() function).
-       */
     MFieldForm(FieldType & field)
-    : fptr(&field), iter(field.begin())
+    : frS(field)
       {};
       
-      /**
-       *  @brief Initializer.
-       *  
-       *  \return nothing. Called for side-effects.
-       *  
-       *  Initializes internal iterator to beginning the contained field.
-       */
-      inline void init() {
-	iter = fptr->begin();
+      template<typename IteratorType>
+      I FullState<IteratorType> init() const {
+	return FullState<IteratorType>(frS);
       };
       
-      /**
-       *  @brief Incrementer.
-       *  
-       *  \return nothing. Called for side-effects.
-       *  
-       *  Increments internal iterator to next element in the contained field.
-       */
-      inline void next() {
-	++iter;
-      };
-      
-      /**
-       *  @brief Reference to current element.
-       *  
-       *  \return a constant reference to the current element (an AtomicType/FieldType::value_type object) in the field.
-       *  
-       *  Returns a constant reference to the current element in the contained field.
-       */
-      inline typename FieldType::value_type const & eval() const {
-	return *iter;
-      };
-      
-      inline typename FieldType::value_type & reference() const {
-	return *iter;
-      };
-      
-      /**
-       *  @brief Predicate: Current position is the end?
-       *  
-       *  \return Boolean; true, if currently at end; false; if not.
-       *  
-       *  Returns whether or not current position is the end/last position.
-       *  
-       *  \note There is probably a more efficient way to do this.
-       */
-      inline bool at_end() const {
-	return iter == fptr->end();
-      };
-      
-      /**
-       *  @brief Predicate: Can reach end position?
-       *  
-       *  \return true; a FieldForm can reach the end.
-       *  
-       *  Returns true.
-       */
-      inline bool has_length() const {
-	return true;
+      template<typename IteratorType>
+      struct FullState {
+      private:
+	FrozenState const frS;
+	FluidState<IteratorType> flS;
+	
+      public:
+      FullState(FrozenState const & frs)
+      : frS(frs), flS(frs)
+	{};
+	
+	I void next() {
+	  ++(flS.iter);
+	};
+	
+	I AtomicType const & eval() const {
+	  return *(flS.iter);
+	};
+	
+	I AtomicType & ref() const {
+	  return *(flS.iter);
+	};
+	
+	I bool at_end() const {
+	  return flS.iter == flS.end;
+	};
+	
+	I bool has_length() const {
+	  return true;
+	};
       };
     };
 
@@ -459,129 +504,102 @@ namespace SpatialOps{
    */
   template<typename Operand1, typename Operand2, typename FieldType>
     struct BinOp {
-      
-      /**
-       *  @brief Typedef for AtomicType.
-       *  
-       *  Typedef for AtomicType based on FieldType's value_type.
-       */
+    public:
       typename FieldType::value_type typedef AtomicType;
       
+      template<typename IteratorType>
+      struct FullState;
+      
+      template<typename IteratorType>
+      friend class FullState;
+      
     private:
-      typedef AtomicType (*OperationType)(AtomicType, AtomicType);
-      OperationType op;
-      Operand1 operand1;
-      Operand2 operand2;
+      typedef AtomicType (*OperationType)(AtomicType,AtomicType);
+      
+      struct FrozenState {
+	OperationType const op;
+	Operand1 const operand1;
+	Operand2 const operand2;
+	
+      FrozenState(OperationType operation,
+		  Operand1 const & op1,
+		  Operand2 const & op2)
+      : op(operation), operand1(op1), operand2(op2)
+	{};
+	
+      FrozenState(FrozenState const & frS)
+      : op(frS.op), operand1(frS.operand1), operand2(frS.operand2)
+	{};
+      };
+      
+      template<typename IteratorType>
+      struct FluidState {
+	typename Operand1::template FullState<IteratorType> fuS1;
+	typename Operand2::template FullState<IteratorType> fuS2;
+	
+      FluidState(FrozenState const & frS)
+      : fuS1(frS.operand1.template init<IteratorType>()),
+	  fuS2(frS.operand2.template init<IteratorType>())
+	{};
+      };
+      
+      FrozenState const frS;
       
     public:
       
-      /**
-       *  @brief Constructor for BinOp.
-       *  
-       *  \param operation a function that takes two AtomicType objects and returns an AtomicType object.
-       *  \param op1 an Operand1 object.
-       *  \param op2 an Operand2 object.
-       *  \return a new BinOp containing operation, op1, and op2.
-       *  
-       *  Constructs a new BinOp containing operation, op1, and op2.
-       */
-    BinOp(OperationType operation,//AtomicType (*operation)(AtomicType, AtomicType),
-	  Operand1 op1,
-	  Operand2 op2)
-    : op(operation), operand1(op1), operand2(op2)
+    BinOp(OperationType operation,
+	  Operand1 const & op1,
+	  Operand2 const & op2)
+    : frS(operation, op1, op2)
       {};
       
-      /**
-       *  @brief Operand1's accessor
-       *  
-       *  \return constant reference to op1 (first operand passed to constructor).
-       *  
-       *  Returns constant reference to first operand.
-       */
-      inline Operand1 const & first () const {
-	return operand1;
+      template<typename IteratorType>
+      I FullState<IteratorType> init() const {
+	return FullState<IteratorType>(frS);
       };
       
-      /**
-       *  @brief Operand2's accessor
-       *  
-       *  \return constant reference to op2 (second operand passed to constructor).
-       *  
-       *  Returns constant reference to second operand.
-       */
-      inline Operand2 const & second () const {
-	return operand2;
+      I Operand1 const & first() const {
+	return frS.operand1;
       };
       
-      /**
-       *  @brief Operator's accessor
-       *  
-       *  \return constant reference to internal function (function passed to constructor).
-       *  
-       *  Returns constant reference to function.
-       */
-      inline OperationType const & fcn () const {
-	return op;
+      I Operand2 const & second() const {
+	return frS.operand2;
       };
       
-      /**
-       *  @brief Initializer.
-       *  
-       *  \return nothing. Called for side-effects.
-       *  
-       *  Initializes operands.
-       */
-      inline void init() {
-	operand1.init();
-	operand2.init();
+      I OperationType const & fcn() const {
+	return frS.op;
       };
       
-      /**
-       *  @brief Incrementer.
-       *  
-       *  \return nothing. Called for side-effects.
-       *  
-       *  Increments operands.
-       */
-      inline void next() {
-	operand1.next();
-	operand2.next();
-      };
+      template<typename IteratorType>
+      struct FullState {
+      private:
+	FrozenState const frS;
+	FluidState<IteratorType> flS;
+	
+      public:
+      FullState(FrozenState const & frs)
+      : frS(frs), flS(frs)
+	{};
+	
+	I void next() {
+	  flS.fuS1.next();
+	  flS.fuS2.next();
+	};
+	
+	I AtomicType eval() const {
+	  return frS.op(flS.fuS1.eval(),
+			flS.fuS2.eval());
+	};
+	
+	I bool at_end() const {
+	  return flS.fuS1.at_end()
+	    || flS.fuS2.at_end();
+	};
       
-      /**
-       *  @brief Computes and returns current element.
-       *  
-       *  \return current element based on current operands and operation.
-       *  
-       *  Computes and returns current element base on operands' current elements and the operation function.
-       */
-      inline AtomicType eval() const {
-	return op(operand1.eval(),
-		  operand2.eval());
-      };
-      
-      /**
-       *  @brief Predicate: Current position is the end?
-       *  
-       *  \return Boolean; true, if currently at end; false; if not.
-       *  
-       *  Returns whether or not either operands' current position is the end/last position.
-       */
-      inline bool at_end() const {
-	return operand1.at_end()
-	  || operand2.at_end();
-      };
-      
-      /**
-       *  @brief Predicate: Can reach end position?
-       *  
-       *  \return Boolean; true, if one or both operands can reach the end.
-       *  
-       *  Returns whether or not either operands can reach the end position.
-       */
-      inline bool has_length() const {
-	return operand1.has_length()
-	  || operand2.has_length();
+	I bool has_length() const {
+	  return flS.fuS1.has_length()
+	    || flS.fuS2.has_length();
+	};
       };
     };
   
@@ -589,101 +607,188 @@ namespace SpatialOps{
   template<typename Operand1, typename Operand2, typename FieldType>	\
     struct OBJECT_NAME {						\
 									\
-    typename FieldType::value_type typedef AtomicType;			\
-    									\
-    private:								\
-    Operand1 operand1;							\
-    Operand2 operand2;							\
-    									\
     public:								\
-    									\
-    OBJECT_NAME(Operand1 op1,						\
-		Operand2 op2)						\
+    typename FieldType::value_type typedef AtomicType;			\
+									\
+    template<typename IteratorType>					\
+    struct FullState;							\
+									\
+    template<typename IteratorType>					\
+    friend class FullState;						\
+									\
+    private:								\
+    struct FrozenState {						\
+      Operand1 const operand1;						\
+      Operand2 const operand2;						\
+									\
+    FrozenState(Operand1 const & op1,					\
+		Operand2 const & op2)					\
     : operand1(op1), operand2(op2)					\
       {};								\
 									\
-    inline Operand1 const & first () const {				\
-      return operand1;							\
-    };									\
-    									\
-    inline Operand2 const & second () const {				\
-      return operand2;							\
-    };									\
-    									\
-    inline void init() {						\
-      operand1.init();							\
-      operand2.init();							\
-    };									\
-    									\
-    inline void next() {						\
-      operand1.next();							\
-      operand2.next();							\
-    };									\
-    									\
-    inline AtomicType eval() const {					\
-      return operand1.eval() INTERNAL_NAME				\
-	operand2.eval();						\
+    FrozenState(FrozenState const & frS)				\
+    : operand1(frS.operand1), operand2(frS.operand2)			\
+      {};								\
     };									\
 									\
-    inline bool at_end() const {					\
-      return operand1.at_end()						\
-	|| operand2.at_end();						\
+    template<typename IteratorType>					\
+    struct FluidState {							\
+      typename Operand1::template FullState<IteratorType> fuS1;		\
+      typename Operand2::template FullState<IteratorType> fuS2;		\
+									\
+    FluidState(FrozenState const & frS)					\
+    : fuS1(frS.operand1.template init<IteratorType>()),			\
+	fuS2(frS.operand2.template init<IteratorType>())		\
+      {};								\
     };									\
 									\
-    inline bool has_length() const {					\
-      return operand1.at_end()						\
-	|| operand2.at_end();						\
+    FrozenState const frS;						\
+									\
+    public:								\
+									\
+    OBJECT_NAME(Operand1 const & op1,					\
+		Operand2 const & op2)					\
+    : frS(op1, op2)							\
+      {};								\
+									\
+    template<typename IteratorType>					\
+    I FullState<IteratorType> init() const {				\
+      return FullState<IteratorType>(frS);				\
+    };									\
+									\
+    I Operand1 const & first() const {					\
+      return frS.operand1;						\
+    };									\
+									\
+    I Operand2 const & second() const {					\
+      return frS.operand2;						\
+    };									\
+									\
+    template<typename IteratorType>					\
+    struct FullState {							\
+    private:								\
+    FrozenState const frS;						\
+    FluidState<IteratorType> flS;					\
+									\
+    public:								\
+    FullState(FrozenState const & frs)					\
+    : frS(frs), flS(frs)						\
+      {};								\
+									\
+    I void next() {							\
+      flS.fuS1.next();							\
+      flS.fuS2.next();							\
+    };									\
+									\
+    I AtomicType eval() const {						\
+      return flS.fuS1.eval() INTERNAL_NAME				\
+	flS.fuS2.eval();						\
+    };									\
+    									\
+    I bool at_end() const {						\
+      return flS.fuS1.at_end()						\
+	|| flS.fuS1.at_end();						\
+    };									\
+									\
+    I bool has_length() const {						\
+      return flS.fuS1.has_length()					\
+	|| flS.fuS2.has_length();					\
+    };									\
     };									\
     }
   
 #define BUILD_BINARY_FUNCTION_STRUCT(OBJECT_NAME, INTERNAL_NAME)	\
   template<typename Operand1, typename Operand2, typename FieldType>	\
     struct OBJECT_NAME {						\
-    									\
-    typename FieldType::value_type typedef AtomicType;			\
-    									\
-    private:								\
-    Operand1 operand1;							\
-    Operand2 operand2;							\
-    									\
+									\
     public:								\
-    									\
-    OBJECT_NAME(Operand1 op1,						\
-		Operand2 op2)						\
+    typename FieldType::value_type typedef AtomicType;			\
+									\
+    template<typename IteratorType>					\
+    struct FullState;							\
+									\
+    template<typename IteratorType>					\
+    friend class FullState;						\
+									\
+    private:								\
+    struct FrozenState {						\
+      Operand1 const operand1;						\
+      Operand2 const operand2;						\
+									\
+    FrozenState(Operand1 const & op1,					\
+		Operand2 const & op2)					\
     : operand1(op1), operand2(op2)					\
       {};								\
-    									\
-    inline Operand1 const & first () const {				\
-      return operand1;							\
-    };									\
-    									\
-    inline Operand2 const & second () const {				\
-      return operand2;							\
-    };									\
-    									\
-    inline void init() {						\
-      operand1.init();							\
-      operand2.init();							\
-    };									\
-    									\
-    inline void next() {						\
-      operand1.next();							\
-      operand2.next();							\
-    };									\
-    									\
-    inline AtomicType eval() const {					\
-      return INTERNAL_NAME(operand1.eval(),				\
-			   operand2.eval());				\
+									\
+    FrozenState(FrozenState const & frS)				\
+    : operand1(frS.operand1), operand2(frS.operand2)			\
+      {};								\
     };									\
 									\
-    inline bool at_end() const {					\
-      return operand1.at_end()						\
-	|| operand2.at_end();						\
+    template<typename IteratorType>					\
+    struct FluidState {							\
+      typename Operand1::template FullState<IteratorType> fuS1;		\
+      typename Operand2::template FullState<IteratorType> fuS2;		\
+									\
+    FluidState(FrozenState const & frS)					\
+    : fuS1(frS.operand1.template init<IteratorType>()),			\
+	fuS2(frS.operand2.template init<IteratorType>())		\
+      {};								\
     };									\
 									\
-    inline bool has_length() const {					\
-      return operand1.at_end()						\
-	|| operand2.at_end();						\
+    FrozenState const frS;						\
+									\
+    public:								\
+									\
+    OBJECT_NAME(Operand1 const & op1,					\
+		Operand2 const & op2)					\
+    : frS(op1, op2)							\
+      {};								\
+									\
+    template<typename IteratorType>					\
+    I FullState<IteratorType> init() const {				\
+      return FullState<IteratorType>(frS);				\
+    };									\
+									\
+    I Operand1 const & first() const {					\
+      return frS.operand1;						\
+    };									\
+									\
+    I Operand2 const & second() const {					\
+      return frS.operand2;						\
+    };									\
+									\
+									\
+    template<typename IteratorType>					\
+    struct FullState {							\
+    private:								\
+    FrozenState const frS;						\
+    FluidState<IteratorType> flS;					\
+									\
+    public:								\
+    FullState(FrozenState const & frs)					\
+    : frS(frs), flS(frs)						\
+      {};								\
+									\
+    I void next() {							\
+      flS.fuS1.next();							\
+      flS.fuS2.next();							\
+    };									\
+									\
+    I AtomicType eval() const {						\
+      return INTERNAL_NAME(flS.fuS1.eval(),				\
+			   flS.fuS2.eval());				\
+    };									\
+    									\
+    I bool at_end() const {						\
+      return flS.fuS1.at_end()						\
+	|| flS.fuS1.at_end();						\
+    };									\
+									\
+    I bool has_length() const {						\
+      return flS.fuS1.has_length()					\
+	|| flS.fuS2.has_length();					\
+    };									\
     };									\
     }
   
@@ -719,154 +824,174 @@ namespace SpatialOps{
    *  \endcode
    *  The macro, \c BUILD_UNARY_FUNCTION, defines unary functions.
    *   For each member function in UnFcn, there is an equivalent member function in each SpecificUnFcn (without the function parameter).
-   *  Note that usual C/C++ unary operators can be defined by macros very similar to \c BUILD_UNARY_FUNCTION; however, this macro has not been implemented, because there is no OAimmediate use.
+   *  Note that usual C/C++ unary operators can be defined by macros very similar to \c BUILD_UNARY_FUNCTION; however, this macro has not been implemented, because there is no immediate use.
    */
   template<typename Operand, typename FieldType>
     struct UnFcn {
-      
-      /**
-       *  @brief Typedef for AtomicType.
-       *  
-       *  Typedef for AtomicType based on FieldType's value_type.
-       */
+    public:
       typename FieldType::value_type typedef AtomicType;
       
+      template<typename IteratorType>
+      struct FullState;
+      
+      template<typename IteratorType>
+      friend class FullState;
+      
     private:
-      typedef AtomicType (*OperationType)(AtomicType, AtomicType);
-      OperationType op;
-      Operand operand;
+      typedef AtomicType (*OperationType)(AtomicType);
+      
+      struct FrozenState {
+	OperationType const op;
+	Operand const operand;
+	
+      FrozenState(OperationType operation,
+		  Operand const & oper)
+      : op(operation), operand(oper)
+	{};
+	
+      FrozenState(FrozenState const & frS)
+      : op(frS.op), operand(frS.operand)
+	{};
+      };
+      
+      template<typename IteratorType>
+      struct FluidState {
+	typename Operand::template FullState<IteratorType> fuS;
+	
+      FluidState(FrozenState const & frS)
+      : fuS(frS.operand.template init<IteratorType>())
+	{};
+      };
+      
+      FrozenState const frS;
       
     public:
       
-      /**
-       *  @brief Constructor for UnFcn.
-       *  
-       *  \param operation a function that takes an AtomicType object and returns an AtomicType object.
-       *  \param oper an Operand object.
-       *  \return a new UnFcn containing operation and oper.
-       *  
-       *  Constructs a new UnFcn containing operation and oper.
-       */
-    UnFcn(AtomicType (*operation)(AtomicType, AtomicType),
-	 Operand oper)
-    : op(operation), operand(oper)
+    UnFcn(OperationType operation,
+	  Operand const & op)
+    : frS(operation, op)
       {};
       
-      /**
-       *  @brief Operand's accessor
-       *  
-       *  \return constant reference to oper (operand passed to constructor).
-       *  
-       *  Returns constant reference to operand.
-       */
-      inline Operand const & oper () const {
-	return operand;
+      template<typename IteratorType>
+      I FullState<IteratorType> init() const {
+	return FullState<IteratorType>(frS);
       };
       
-      /**
-       *  @brief Operator's accessor
-       *  
-       *  \return constant reference to internal function (function passed to constructor).
-       *  
-       *  Returns constant reference to function.
-       */
-      inline OperationType const & fcn () const {
-	return op;
+      I Operand const & oper() const {
+	return frS.operand;
       };
       
-      /**
-       *  @brief Initializer.
-       *  
-       *  \return nothing. Called for side-effects.
-       *  
-       *  Initializes operand.
-       */
-      inline void init() {
-	operand.init();
+      I OperationType const & fcn() const {
+	return frS.op;
       };
       
-      /**
-       *  @brief Incrementer.
-       *  
-       *  \return nothing. Called for side-effects.
-       *  
-       *  Increments operand.
-       */
-      inline void next() {
-	operand.next();
-      };
+      template<typename IteratorType>
+      struct FullState {
+      private:
+	FrozenState const frS;
+	FluidState<IteratorType> flS;
+	
+      public:
+      FullState(FrozenState const & frs)
+      : frS(frs), flS(frs)
+	{};
+	
+	I void next() {
+	  flS.fuS.next();
+	};
+	
+	I AtomicType eval() const {
+	  return frS.op(flS.fuS.eval());
+	};
+	
+	I bool at_end() const {
+	  return flS.fuS.at_end();
+	};
       
-      /**
-       *  @brief Computes and returns current element.
-       *  
-       *  \return current element based on current operand and operation.
-       *  
-       *  Computes and returns current element base on the operand's current element and the operation function.
-       */
-      inline AtomicType eval() const {
-	return op(operand.eval());
-      };
-      
-      /**
-       *  @brief Predicate: Current position is the end?
-       *  
-       *  \return Boolean; true, if currently at end; false; if not.
-       *  
-       *  Returns whether or not operand's current position is the end/last position.
-       */
-      inline bool at_end() const {
-	return operand.at_end();
-      };
-      
-      /**
-       *  @brief Predicate: Can reach end position?
-       *  
-       *  \return Boolean; true, if operand can reach the end.
-       *  
-       *  Returns whether or not operand can reach the end position.
-       */
-      inline bool has_length() const {
-	return operand.has_length();
+	I bool has_length() const {
+	  return flS.fuS.has_length();
+	};
       };
     };
-
-#define BUILD_UNARY_STRUCT(OBJECT_NAME, INTERNAL_NAME)		\
-  template<typename Operand, typename FieldType>		\
-    struct OBJECT_NAME {					\
-    								\
-    typename FieldType::value_type typedef AtomicType;		\
-    								\
-    private:							\
-    Operand operand;						\
-								\
-    public:							\
-								\
-    OBJECT_NAME(Operand oper)					\
-    : operand(oper)						\
-      {};							\
-    								\
-    inline Operand const & oper() const {			\
-      return operand;						\
-    };								\
-								\
-    inline void init() {					\
-      operand.init();						\
-    };								\
-								\
-    inline void next() {					\
-      operand.next();						\
-    };								\
-    								\
-    inline AtomicType eval() const {				\
-      return INTERNAL_NAME(operand.eval());			\
-    };								\
-    								\
-    inline bool at_end() const {					\
-      return operand.at_end();						\
+  
+#define BUILD_UNARY_STRUCT(OBJECT_NAME, INTERNAL_NAME)			\
+  template<typename Operand, typename FieldType>			\
+    struct OBJECT_NAME {						\
+    									\
+    public:								\
+    typename FieldType::value_type typedef AtomicType;			\
+    									\
+    template<typename IteratorType>					\
+    struct FullState;							\
+    									\
+    template<typename IteratorType>					\
+    friend class FullState;						\
+    									\
+    private:								\
+    struct FrozenState {						\
+      Operand const operand;						\
+      									\
+    FrozenState(Operand const & op)					\
+    : operand(op)							\
+      {};								\
+									\
+    FrozenState(FrozenState const & frS)				\
+    : operand(frS.operand)						\
+      {};								\
     };									\
     									\
-    inline bool has_length() const {					\
-      return operand.at_end();						\
+    template<typename IteratorType>					\
+    struct FluidState {							\
+      typename Operand::template FullState<IteratorType> fuS;		\
+      									\
+    FluidState(FrozenState const & frS)					\
+    : fuS(frS.operand.template init<IteratorType>())			\
+      {};								\
+    };									\
+    									\
+    FrozenState const frS;						\
+    									\
+    public:								\
+    									\
+    OBJECT_NAME(Operand const & op)					\
+    : frS(op)								\
+      {};								\
+    									\
+    template<typename IteratorType>					\
+    I FullState<IteratorType> init() const {				\
+      return FullState<IteratorType>(frS);				\
+    };									\
+    									\
+    I Operand const & oper() const {					\
+      return frS.operand;						\
+    };									\
+    									\
+    template<typename IteratorType>					\
+    struct FullState {							\
+    private:								\
+    FrozenState const frS;						\
+    FluidState<IteratorType> flS;					\
+    									\
+    public:								\
+    FullState(FrozenState const & frs)					\
+    : frS(frs), flS(frs)						\
+      {};								\
+    									\
+    I void next() {							\
+      flS.fuS.next();							\
+    };									\
+									\
+    I AtomicType eval() const {						\
+      return INTERNAL_NAME(flS.fuS.eval());				\
+    };									\
+    									\
+    I bool at_end() const {						\
+      return flS.fuS.at_end();						\
+    };									\
+    									\
+    I bool has_length() const {						\
+      return flS.fuS.has_length();					\
+    };									\
     };									\
     }
   
@@ -1021,7 +1146,7 @@ namespace SpatialOps{
        *  
        *  Initializes state of the internal expression.
        */
-      inline void init() {
+      I void init() {
 	expr.init();
       };
       
@@ -1032,7 +1157,7 @@ namespace SpatialOps{
        *  
        *  Increments state of the internal expression.
        */
-      inline void next() {
+      I void next() {
 	expr.next();
       };
       
@@ -1043,7 +1168,7 @@ namespace SpatialOps{
        *  
        *  Returns the current element of the internal expression.
        */
-      inline typename FieldType::value_type eval() const {
+      I typename FieldType::value_type eval() const {
 	return expr.eval();
       };
       
@@ -1054,7 +1179,7 @@ namespace SpatialOps{
        *  
        *  Returns whether or not current position of the internal expression is the end/last position.
        */
-      inline bool at_end() const {
+      I bool at_end() const {
 	return expr.at_end();
       };
       
@@ -1065,7 +1190,7 @@ namespace SpatialOps{
        *  
        *  Returns whether or not internal expression can reach the end of its array.
        */
-      inline bool has_length() const {
+      I bool has_length() const {
 	return expr.has_length();
       };
     };
@@ -1137,27 +1262,27 @@ namespace SpatialOps{
       return fexpr2;							\
     };									\
 									\
-    inline void init() {						\
+    I void init() {						\
       fexpr1.init();							\
       fexpr2.init();							\
     };									\
 									\
-    inline void next() {						\
+    I void next() {						\
       fexpr1.next();							\
       fexpr2.next();							\
     };									\
 									\
-    inline bool test() const {						\
+    I bool test() const {						\
       return								\
 	fexpr1.eval() INTERNAL_NAME fexpr2.eval();			\
     };									\
 									\
-    inline bool at_end() const {					\
+    I bool at_end() const {					\
       return								\
 	fexpr1.at_end() || fexpr2.at_end();				\
     };									\
 									\
-    inline bool has_length() const {					\
+    I bool has_length() const {					\
       return								\
 	fexpr1.has_length() || fexpr2.has_length();			\
     };									\
@@ -1608,7 +1733,7 @@ namespace SpatialOps{
      *  
      *  Converts and returns a StandardType object based on given, (here a FieldForm object).
      */
-    static inline StandardType standardType (FieldType const & given) {
+    SI StandardType standardType (FieldType const & given) {
       return StandardType(given);
     };
     
@@ -1620,7 +1745,7 @@ namespace SpatialOps{
      *  
      *  Converts and returns a StandardTerm object based on given, (here a FieldExpression<FieldForm<...>, ...> object).
      */
-    static inline StandardTerm standardTerm (FieldType const & given) {
+    SI StandardTerm standardTerm (FieldType const & given) {
       return StandardTerm(StandardType(given));
     };
   };
@@ -1702,7 +1827,7 @@ namespace SpatialOps{
      *  
      *  Converts and returns a reference to a StandardType object based on given, (here a ExprType object).
      */
-    static inline StandardType const & standardType (FieldExpression<ExprType,FieldType> const & given) {
+    SI StandardType const & standardType (FieldExpression<ExprType,FieldType> const & given) {
       return given.expression();
     };
     
@@ -1714,7 +1839,7 @@ namespace SpatialOps{
      *  
      *  Converts and returns a reference to a StandardTerm object, given, (here a FieldExpression<ExprType, ...> object).
      */
-    static inline StandardTerm const & standardTerm (FieldExpression<ExprType,FieldType> const & given) {
+    SI StandardTerm const & standardTerm (FieldExpression<ExprType,FieldType> const & given) {
       return given;
     };
   };
@@ -1796,7 +1921,7 @@ namespace SpatialOps{
      *  
      *  Converts and returns a reference to a StandardType object, given, (here a ExprType object).
      */
-    static inline StandardType const & standardType (ArgForm<Num,FieldType> const & given) {
+    SI StandardType const & standardType (ArgForm<Num,FieldType> const & given) {
       return given;
     };
     
@@ -1808,7 +1933,7 @@ namespace SpatialOps{
      *  
      *  Converts and returns a StandardTerm object based on given, (here a FcnForm<ArgForm<...>, ...> object).
      */
-    static inline StandardTerm standardTerm (ArgForm<Num,FieldType> const & given) {
+    SI StandardTerm standardTerm (ArgForm<Num,FieldType> const & given) {
       return StandardTerm(given);
     };
   };
@@ -1890,7 +2015,7 @@ namespace SpatialOps{
      *  
      *  Converts and returns a reference to a StandardType object based on given, (here a ExprType object).
      */
-    static inline StandardType const & standardType (FcnForm<ExprType,0,Max,FieldType> const & given) {
+    SI StandardType const & standardType (FcnForm<ExprType,0,Max,FieldType> const & given) {
       return given.expression();
     };
     
@@ -1902,7 +2027,7 @@ namespace SpatialOps{
      *  
      *  Converts and returns a reference to a StandardTerm object, given, (here a FcnForm<ExprType, ...> object).
      */
-    static inline StandardTerm const & standardTerm (FcnForm<ExprType,0,Max,FieldType> const & given) {
+    SI StandardTerm const & standardTerm (FcnForm<ExprType,0,Max,FieldType> const & given) {
       return given;
     };
   };
@@ -1976,7 +2101,7 @@ namespace SpatialOps{
      *  
      *  Converts and returns a reference to a StandardType object, given.
      */
-    static inline StandardType const & standardType (NewType const & given) {
+    SI StandardType const & standardType (NewType const & given) {
       return given;
     };
   
@@ -1988,7 +2113,7 @@ namespace SpatialOps{
      *  
      *  Converts and returns a StandardTerm object based on given, (here a FieldExpression<NewType, ...> object).
      */
-    static inline StandardTerm standardTerm (NewType const & given) {
+    SI StandardTerm standardTerm (NewType const & given) {
       return StandardTerm(given);
     };
   };
@@ -2062,7 +2187,7 @@ namespace SpatialOps{
      *  
      *  Converts and returns a reference to a StandardType object, given.
      */
-    static inline StandardType const & standardType (NewType const & given) {
+    SI StandardType const & standardType (NewType const & given) {
       return given;
     };
   
@@ -2074,7 +2199,7 @@ namespace SpatialOps{
      *  
      *  Converts and returns a StandardTerm object based on given, (here a FcnForm<NewType, ...> object).
      */
-    static inline StandardTerm standardTerm (NewType const & given) {
+    SI StandardTerm standardTerm (NewType const & given) {
       return StandardTerm(given);
     };
   };
@@ -2166,7 +2291,7 @@ namespace SpatialOps{
      *  
      *  Converts and returns a reference to a StandardType object, given.
      */
-    static inline StandardType const & standardType (NewType const & given) {
+    SI StandardType const & standardType (NewType const & given) {
       return given;
     };
     
@@ -2178,7 +2303,7 @@ namespace SpatialOps{
      *  
      *  Converts and returns a StandardTerm object based on given, (here a FieldExpression<NewType, ...> object).
      */
-    static inline StandardTerm standardTerm (NewType const & given) {
+    SI StandardTerm standardTerm (NewType const & given) {
       return StandardTerm(given);
     };
   };
@@ -2270,7 +2395,7 @@ namespace SpatialOps{
      *  
      *  Converts and returns a reference to a StandardType object, given.
      */
-    static inline StandardType const & standardType (NewType const & given) {
+    SI StandardType const & standardType (NewType const & given) {
       return given;
     };
     
@@ -2282,7 +2407,7 @@ namespace SpatialOps{
      *  
      *  Converts and returns a StandardTerm object based on given, (here a FcnForm<NewType, ...> object).
      */
-    static inline StandardTerm standardTerm (NewType const & given) {
+    SI StandardTerm standardTerm (NewType const & given) {
       return StandardTerm(given);
     };
   };
@@ -2374,7 +2499,7 @@ namespace SpatialOps{
      *  
      *  Converts and returns a reference to a StandardType object, given.
      */
-    static inline StandardType const & standardType (NewType const & given) {
+    SI StandardType const & standardType (NewType const & given) {
       return given;
     };
   
@@ -2386,7 +2511,7 @@ namespace SpatialOps{
      *  
      *  Converts and returns a StandardTerm object based on given, (here a FcnForm<NewType, ...> object).
      */
-    static inline StandardTerm standardTerm (NewType const & given) {
+    SI StandardTerm standardTerm (NewType const & given) {
       return StandardTerm(given);
     };
   };
@@ -2481,7 +2606,7 @@ namespace SpatialOps{
      *  
      *  Converts and returns a reference to a StandardType object, given.
      */
-    static inline StandardType const & standardType (NewType const & given) {
+    SI StandardType const & standardType (NewType const & given) {
       return given;
     };
     
@@ -2493,7 +2618,7 @@ namespace SpatialOps{
      *  
      *  Converts and returns a StandardTerm object based on given, (here a FcnForm<NewType, ...> object).
      */
-    static inline StandardTerm standardTerm (NewType const & given) {
+    SI StandardTerm standardTerm (NewType const & given) {
       return StandardTerm(given);
     };
   };
@@ -2567,7 +2692,7 @@ namespace SpatialOps{
      *  
      *  Builds and returns a StandardType object based on given.
      */
-    static inline StandardType standardType (AtomicType const & given) {
+    SI StandardType standardType (AtomicType const & given) {
       return StandardType(given);
     };
     
@@ -2579,7 +2704,7 @@ namespace SpatialOps{
      *  
      *  Converts and returns a StandardTerm object based on given, (here a FieldExpression<Scalar<...>, ...> object).
      */
-    static inline StandardTerm standardTerm (AtomicType const & given) {
+    SI StandardTerm standardTerm (AtomicType const & given) {
       return StandardTerm(StandardType(given));
     };
   };
@@ -2652,7 +2777,7 @@ namespace SpatialOps{
      *  
      *  Builds and returns a StandardType object based on given.
      */
-    static inline StandardType standardType (FieldType const & given) {
+    SI StandardType standardType (FieldType const & given) {
       return StandardType(given);
     };
     
@@ -2664,7 +2789,7 @@ namespace SpatialOps{
      *  
      *  Converts and returns a StandardTerm object based on given, (here a FieldExpression<FieldForm<...>, ...> object).
      */
-    static inline StandardTerm standardTerm (FieldType const & given) {
+    SI StandardTerm standardTerm (FieldType const & given) {
       return StandardTerm(StandardType(given));
     };
   };
@@ -2737,7 +2862,7 @@ namespace SpatialOps{
      *  
      *  Builds and returns a StandardType object based on given.
      */
-    static inline StandardType standardType (FieldExpression<ExprType,FieldType> const & given) {
+    SI StandardType standardType (FieldExpression<ExprType,FieldType> const & given) {
       return given.expression();
     };
     
@@ -2749,7 +2874,7 @@ namespace SpatialOps{
      *  
      *  Converts and returns a StandardTerm object based on given, (here a FieldExpression<ExprType, ...> object).
      */
-    static inline StandardTerm standardTerm (FieldExpression<ExprType,FieldType> const & given) {
+    SI StandardTerm standardTerm (FieldExpression<ExprType,FieldType> const & given) {
       return given;
     };
   };
@@ -2830,7 +2955,7 @@ namespace SpatialOps{
      *  
      *  Returns state.
      */
-    static inline ResultType const & apply(Scalar<AtomicType> const & state,
+    SI ResultType const & apply(Scalar<AtomicType> const & state,
 					   ArgType const & arg) {
       return state;
     };
@@ -2912,7 +3037,7 @@ namespace SpatialOps{
      *  
      *  Returns state.
      */
-    static inline ResultType const & apply(FieldForm<FieldType> const & state,
+    SI ResultType const & apply(FieldForm<FieldType> const & state,
 					   ArgType const & arg) {
       return state;
     };
@@ -2994,7 +3119,7 @@ namespace SpatialOps{
      *  
      *  Returns arg.
      */
-    static inline ResultType const & apply(ArgForm<CurrentArg,FieldType> const & state,
+    SI ResultType const & apply(ArgForm<CurrentArg,FieldType> const & state,
 					   ArgType const & arg) {
       return arg;
     };
@@ -3076,7 +3201,7 @@ namespace SpatialOps{
      *  
      *  Returns state.
      */
-    static inline ResultType const & apply(ArgForm<NotCurrentArg,FieldType> const & state,
+    SI ResultType const & apply(ArgForm<NotCurrentArg,FieldType> const & state,
 					   ArgType const & arg) {
       return state;
     };
@@ -3160,7 +3285,7 @@ namespace SpatialOps{
      *  
      *  Builds and returns a new ResultType object based upon the ResultTypes of the ArgReplace'ed operand types.
      */
-    static inline ResultType apply(BinOp<Operand1,Operand2,FieldType> const & state,
+    SI ResultType apply(BinOp<Operand1,Operand2,FieldType> const & state,
 				   ArgType const & arg) {
       return ResultType(state.fcn(),
 			ArgReplace<Operand1,CurrentArg,ArgType>::apply(state.first(),
@@ -3184,7 +3309,7 @@ namespace SpatialOps{
       FieldType> typedef ResultType;					\
     									\
     /* Returns ResultType build from state's operands. */		\
-    static inline ResultType apply(OBJECT_NAME<Operand1,Operand2,FieldType> const & state, \
+    SI ResultType apply(OBJECT_NAME<Operand1,Operand2,FieldType> const & state, \
 				   ArgType const & arg) {		\
       return ResultType(ArgReplace<Operand1,CurrentArg,ArgType>::apply(state.first(), \
 								     arg), \
@@ -3269,7 +3394,7 @@ namespace SpatialOps{
      *  
      *  Builds and returns a new ResultType object based upon the ResultTypes of the ArgReplace'ed Operand type.
      */
-    static inline ResultType apply(UnFcn<Operand,FieldType> const & state,
+    SI ResultType apply(UnFcn<Operand,FieldType> const & state,
 				   ArgType const & arg) {
       return ResultType(state.op,
 			ArgReplace<Operand,CurrentArg,ArgType>::apply(state.operand,
@@ -3288,7 +3413,7 @@ namespace SpatialOps{
     OBJECT_NAME<typename ArgReplace<Operand,CurrentArg,ArgType>::ResultType,FieldType> typedef ResultType; \
 									\
     /* Returns ResultType build from state's operand. */		\
-    static inline ResultType apply(OBJECT_NAME<Operand,FieldType> const & state, \
+    SI ResultType apply(OBJECT_NAME<Operand,FieldType> const & state, \
 				   ArgType const & arg) {		\
       return ResultType(ArgReplace<Operand,CurrentArg,ArgType>::apply(state.operand, \
 								    arg)); \
@@ -3851,8 +3976,8 @@ namespace SpatialOps{
    *  This instance of operator <<= wraps rhs in a FieldExpression and then calls itself.
    */
   template<typename FieldType>
-    inline FieldType const & operator <<= (FieldType & lhs,
-					   typename FieldType::value_type const & rhs) {
+    I FieldType const & operator <<= (FieldType & lhs,
+				      typename FieldType::value_type const & rhs) {
     Scalar<typename FieldType::value_type> typedef ExprType;
     
     return lhs <<= FieldExpression<ExprType,FieldType>(ExprType(rhs));
@@ -3876,8 +4001,8 @@ namespace SpatialOps{
    *  This instance of operator <<= wraps rhs in a FieldExpression and then calls itself.
    */
   template<typename FieldType>
-    inline FieldType const & operator <<= (FieldType & lhs,
-					   FieldType const & rhs) {
+    I FieldType const & operator <<= (FieldType & lhs,
+				      FieldType const & rhs) {
     FieldForm<FieldType> typedef ExprType;
     
     return lhs <<= FieldExpression<ExprType,FieldType>(ExprType(rhs));
@@ -3909,24 +4034,58 @@ namespace SpatialOps{
    *  (The number of iterations of the loop is based on the size of lhs.)
    */
   template<typename ExprType, typename FieldType>
-    inline FieldType const & operator <<= (FieldType & lhs,
-					   FieldExpression<ExprType,
-					   FieldType> rhs) {
+    I FieldType const & operator <<= (FieldType & lhs,
+				      FieldExpression<ExprType,
+				      FieldType> rhs) {
     //initialize:
-    MFieldForm<FieldType> field(lhs);
-    field.init();
-    rhs.init();
+    typename MFieldForm<FieldType>::template FullState<UseWholeIterator> field = (MFieldForm<FieldType>(lhs)).template init<UseWholeIterator>();
+    typename ExprType::template FullState<UseWholeIterator> expr = rhs.expression().template init<UseWholeIterator>();
     
     while(!field.at_end()) {//is there a better method?
-      field.reference() = rhs.eval();
+      field.ref() = expr.eval();
       //increment:
       field.next();
-      rhs.next();
+      expr.next();
     };
     
     return lhs;
   };
-  
+
+  //interior assignment:
+  template<typename FieldType>
+    I FieldType const & interior_assign (FieldType & lhs,
+					 typename FieldType::value_type const & rhs) {
+    Scalar<typename FieldType::value_type> typedef ExprType;
+    
+    return interior_assign(lhs, FieldExpression<ExprType,FieldType>(ExprType(rhs)));
+  };
+  template<typename FieldType>
+    I FieldType const & interior_assign (FieldType & lhs,
+					 FieldType const & rhs) {
+    FieldForm<FieldType> typedef ExprType;
+    
+    return interior_assign(lhs, FieldExpression<ExprType,FieldType>(ExprType(rhs)));
+  };
+  template<typename ExprType, typename FieldType>
+    I FieldType const & interior_assign (FieldType & lhs,
+					 FieldExpression<ExprType,
+					 FieldType> rhs) {
+    //initialize:
+    typename MFieldForm<FieldType>::template FullState<UseInteriorIterator> field = (MFieldForm<FieldType>(lhs)).template init<UseInteriorIterator>();
+    typename ExprType::template FullState<UseInteriorIterator> expr = rhs.expression().template init<UseInteriorIterator>();
+    
+    while(!field.at_end()) {//is there a better method?
+      field.ref() = expr.eval();
+      //increment:
+      field.next();
+      expr.next();
+    };
+    
+    return lhs;
+  };
+
+
+
 #define BUILD_BINARY_OPERATOR(OBJECT_NAME, INTERNAL_NAME, EXTERNAL_NAME) \
   BUILD_BINARY_TYPE_PROTOTYPE(OBJECT_NAME);				\
   BUILD_BINARY_OPERATOR_STRUCT(OBJECT_NAME, INTERNAL_NAME);		\
@@ -3960,9 +4119,14 @@ namespace SpatialOps{
   DEFINE_ANONYMOUS_ARGUMENT(8, TYPE, PRE##8##POST);	   \
   DEFINE_ANONYMOUS_ARGUMENT(9, TYPE, PRE##9##POST)
   
-#define DEFINE_$_ANONYMOUS_ARGUMENTS(TYPE) \
+#define DEFINE_$_ANONYMOUS_ARGUMENTS(TYPE)	\
   DEFINE_SET_OF_ANONYMOUS_ARGUMENTS($, , TYPE)
   
   } // namespace SpatialOps
+
+//cwearl basic marcros:
+#undef I
+#undef S
+#undef SI
 
 #endif // SpatialOps_FieldExpressions_h

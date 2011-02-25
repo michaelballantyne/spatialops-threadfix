@@ -65,6 +65,7 @@ int main()
   const int nx=10, ny=12, nz=14;
 
   typedef SVolField Field;
+  DEFINE_$_ANONYMOUS_ARGUMENTS(Field);
   
   const MemoryWindow window( get_window_with_ghost<Field>(IntVec(nx,ny,nz),true,true,true) );
 
@@ -85,40 +86,34 @@ int main()
   // c = b + a + sin(b);
   
 //   c <<= -a;
-//   print(c);
-//   c <<= (3 + a) - 2;
-//   print(c);
-//   c <<= 3 + (a + a);
-//   print(c);
-//   c <<= (3 - (3 * $0))(a);
-//   print(c);
-//   c <<= (a + 3) - a;
-//   print(c);
-//   c <<= (a * (a + 1)) / (a - 1);
-//   c <<= (a - (a * $0))(a);
-//   c <<= ((a + a) * ((a + a) - $0))(a);
-//   c <<= (($0 + 3) - 3)(a);
-//   c <<= (($0 + a) - a)(3.0);
-//   c <<= (($0 + (a + a)) - (a + a))(3.0);
-//   c <<= (($0 * $0) - $0)(a + a);
-//   c <<= ($0 - ($0 * $0))(a + a);
-//   c <<= (($1 * $2) - $0)(3 * a, a, 3.0);
-//   c <<= (($1 * $2) - $0)(3 * a, a)(3.0);
-//   c <<= (($1 * $2) - $0)(3 * a)(a, 3.0);
-//   c <<= (($1 * $2) - $0)(3 * a)(a)(3.0);
-  //  c <<= BinOp(+, a, b);
-  
+   c <<= a;
+   c <<= 2;
+   c <<= app(add, a, b);
+   c <<= (3 + a) - 2;
+   c <<= 3 + (a + a);
+   c <<= (3 - (3 * $0))(a);
+   c <<= (a + 3) - a;
+   c <<= (a * (a + 1)) / (a - 1);
+   c <<= (a - (a * $0))(a);
+   c <<= ((a + a) * ((a + a) - $0))(a);
+   c <<= (($0 + 3) - 3)(a);
+   c <<= (($0 + a) - a)(3.0);
+   c <<= (($0 + (a + a)) - (a + a))(3.0);
+   c <<= (($0 * $0) - $0)(a + a);
+   c <<= ($0 - ($0 * $0))(a + a);
+   c <<= (($1 * $2) - $0)(3 * a, a, 3.0);
+   c <<= (($1 * $2) - $0)(3 * a, a)(3.0);
+   c <<= (($1 * $2) - $0)(3 * a)(a, 3.0);
+   c <<= (($1 * $2) - $0)(3 * a)(a)(3.0);
+   c <<= a + sin(b);
+   print(c);
+   
   std::cout << field_max(a) << std::endl << std::endl;
   std::cout << field_min(a) << std::endl << std::endl;
   std::cout << field_sum(a) << std::endl << std::endl;
   std::cout << field_norm(a) << std::endl << std::endl;
   std::cout << field_norm(b) << std::endl << std::endl;
-  
-//   vec.push_back(a);
-//   vec.push_back(b);
-  
-//   print(a);
-  
+   
   // what we currently must do:
   Field::const_iterator ia = a.begin();
   for( Field::iterator ic=c.begin(); ic!=c.end(); ++ic, ++ia ){
