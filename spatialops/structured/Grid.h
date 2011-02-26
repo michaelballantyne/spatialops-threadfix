@@ -31,6 +31,8 @@ namespace structured{
     template< typename CoordT >
     double spacing() const;
 
+    const IntVec& extent() const{ return npts_; }
+
     /**
      *  \brief set the coordinates on the given field.
      *
