@@ -15,3 +15,7 @@ add_test( stencil2_no_bc3  test_stencil2  --nx 6 --ny 7 --nz 5 )
 
 add_executable( test_stencil4 test_stencil4.cpp )
 target_link_libraries( test_stencil4 ${libs} )
+
+add_executable( test_bc_stencil testOpBC.cpp )
+target_link_libraries( test_bc_stencil ${libs} )
+add_test( test_bc_op_stencil test_bc_stencil )

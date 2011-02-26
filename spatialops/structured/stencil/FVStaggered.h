@@ -5,6 +5,8 @@
 #include <spatialops/OperatorDatabase.h>
 
 #include <spatialops/structured/stencil/StencilBuilder.h>
+#include <spatialops/structured/stencil/FVStaggeredBCOp.h>
+
 #include <spatialops/structured/FVStaggeredOperatorTypes.h>
 
 #include <spatialops/structured/SpatialFieldStore.h>

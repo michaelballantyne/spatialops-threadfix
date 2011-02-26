@@ -1,8 +1,8 @@
 #include <vector>
 #include <cmath>
 
-#include <spatialops/structured/matrix/FVStaggeredBCTools.h>
-
+#include <spatialops/structured/FVStaggeredFieldTypes.h>
+#include <spatialops/structured/FVStaggeredBCTools.h>
 
 #include <boost/function.hpp>
 #include <boost/lambda/bind.hpp>  // use if you need to bind function arguments or to bind class member functions...
@@ -72,19 +72,19 @@ bool test1()
 
   // apply bcs to the field using a "time varying" function.  We use one function to get the time 
   for( std::vector<IntVec>::const_iterator ipt=pts.begin(); ipt!=pts.end(); ++ipt ){
-    BoundaryCondition<SVolField,BCFun> bc( *ipt, dim, bcx, bcy, bcz, f );
+    BoundaryCondition<SVolField,BCFun> bc( *ipt, f );
     bc(field);
     // check:
-    const int ix = get_index_with_ghost<SVolField>( dim, bcx, bcy, bcz, *ipt );
+    const int ix = field.window_without_ghost().flat_index( *ipt );
     isFailed = std::abs( field[ix] - f() ) > ATOL;
   }
 
   // apply constant-time BCs
   for( std::vector<IntVec>::const_iterator ipt=pts.begin(); ipt!=pts.end(); ++ipt ){
-    BoundaryCondition<SVolField,BCFun> bc( *ipt, dim, bcx, bcy, bcz, fnotime );
+    BoundaryCondition<SVolField,BCFun> bc( *ipt, fnotime );
     bc(field);
     // check:
-    const int ix = get_index_with_ghost<SVolField>( dim, bcx, bcy, bcz, *ipt );
+    const int ix = field.window_without_ghost().flat_index(*ipt);
     isFailed = std::abs( field[ix] - fnotime() ) > ATOL;
   }
 

@@ -22,11 +22,12 @@ if( ENABLE_STENCIL )
   set( SO_SRC ${SO_SRC} ${src} PARENT_SCOPE )
 
   install( FILES
+    FVStaggeredBCOp.h
+    FVStaggeredOperatorTypes.h
     NullStencil.h
     Stencil2.h
     Stencil4.h
     StencilBuilder.h
-    FVStaggeredOperatorTypes.h
     DESTINATION include/spatialops/structured/stencil/
     PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
     )

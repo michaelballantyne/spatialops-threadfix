@@ -49,8 +49,8 @@ namespace structured{
   public:
 
     typedef OperatorT  OpT;
-    typedef SrcFieldT  SrcT;
-    typedef DestFieldT DestT;
+    typedef SrcFieldT  SrcFieldType;
+    typedef DestFieldT DestFieldType;
 
     /**
      *  \brief construct a stencil with the specified coefficients
@@ -61,7 +61,10 @@ namespace structured{
 
     ~Stencil2();
 
-    void apply_to_field( const SrcT& src, DestT& dest ) const;
+    void apply_to_field( const SrcFieldType& src, DestFieldType& dest ) const;
+
+    double get_minus_coef() const{ return coefLo_; }
+    double get_plus_coef () const{ return coefHi_; }
   };
 
 } // namespace structured

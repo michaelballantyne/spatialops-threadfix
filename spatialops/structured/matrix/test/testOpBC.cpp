@@ -12,7 +12,7 @@ using namespace std;
 #include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/SpatialFieldStore.h>
 
-#include <spatialops/structured/matrix/FVStaggeredBCTools.h>
+#include <spatialops/structured/matrix/FVStaggeredBCOp.h>
 #include <spatialops/structured/matrix/FVStaggeredOperatorTypes.h>
 #include <spatialops/structured/matrix/FVStaggeredInterpolant.h>
 #include <spatialops/structured/matrix/FVStaggeredGradient.h>

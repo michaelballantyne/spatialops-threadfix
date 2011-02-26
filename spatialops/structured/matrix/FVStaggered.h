@@ -7,6 +7,8 @@
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/structured/FVStaggeredOperatorTypes.h>
 
+#include <spatialops/structured/matrix/FVStaggeredBCOp.h>
+
 #include <spatialops/structured/matrix/FVStaggeredInterpolant.h>
 #include <spatialops/structured/matrix/FVStaggeredGradient.h>
 #include <spatialops/structured/matrix/FVStaggeredDivergence.h>

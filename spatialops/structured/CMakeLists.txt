@@ -22,6 +22,7 @@ add_subdirectory( stencil )
 set( SO_SRC ${SO_SRC} ${src} PARENT_SCOPE )
 
 install( FILES
+  FVStaggeredBCTools.h
   FVStaggeredFieldTypes.h
   FVTools.h
   Grid.h
