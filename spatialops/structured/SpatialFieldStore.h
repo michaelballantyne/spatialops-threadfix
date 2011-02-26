@@ -2,8 +2,7 @@
 #define UT_SpatialFieldStore_h
 
 #include <spatialops/SpatialOpsConfigure.h>
-
-#include <spatialops/structured/MemoryWindow.h>
+#include <spatialops/structured/SpatialField.h>
 
 #include <queue>
 #include <map>
@@ -59,21 +58,21 @@ namespace SpatialOps{
      *
      *  @param field The field to wrap.  This constructor should be
      *  used if you want to wrap an existing SpatialField for use as a
-     *  SpatFldPtr.
+     *  SpatFldPtr.  Ownership of this pointer is transfered.
      */
-    SpatFldPtr( FieldT& field );
+    SpatFldPtr( FieldT* const field );
 
     /**
      *  @brief Constructor for use from the SpatialFieldStore class only.
      *
-     *  @param field The field to wrap.
+     *  @param field The field to wrap.  Ownership is transfered.
      *
      *  @param builtFromStore if true, then SpatFldPtr will return the
      *  memory it owns to the SpatialFieldStore class once the last
      *  reference is destroyed.  If false then this will simply alias
      *  a FieldT object.
      */
-    SpatFldPtr( FieldT& field, const bool builtFromStore );
+    SpatFldPtr( FieldT* const field, const bool builtFromStore );
 
     ~SpatFldPtr();
 
@@ -83,13 +82,11 @@ namespace SpatialOps{
     /** @brief Skeletal constructor */
     SpatFldPtr();
 
-    SpatFldPtr( FieldT* const p );
-
     /** @brief Assignment operator */
     SpatFldPtr& operator=( const SpatFldPtr& p );
 
     /** @brief Assignment operator */
-    SpatFldPtr& operator=( FieldT& f );
+    SpatFldPtr& operator=( FieldT* const f );
 
 
     inline       FieldT& operator*()      {return *f_;}
@@ -172,7 +169,6 @@ namespace SpatialOps{
   class SpatialFieldStore
   {
     friend class SpatFldPtr<FieldT>;
-
   public:
     static SpatialFieldStore& self();
 
@@ -211,8 +207,8 @@ namespace SpatialOps{
     SpatialFieldStore(){};
     ~SpatialFieldStore();
 
-
-    typedef std::queue<FieldT*> FieldQueue;
+    typedef typename FieldT::AtomicT AtomicT;
+    typedef std::queue<AtomicT*> FieldQueue;
     typedef std::map<int,FieldQueue> FQMap;
 
     FQMap fqmap_;
@@ -242,23 +238,23 @@ namespace SpatialOps{
 
   //------------------------------------------------------------------
   template<typename FieldT>
-  SpatFldPtr<FieldT>::SpatFldPtr( FieldT& f )
-    : store_( SpatialFieldStore<FieldT>::self() )
+  SpatFldPtr<FieldT>::SpatFldPtr( FieldT* const f )
+    : store_( SpatialFieldStore<FieldT>::self() ),
+      f_( f ),
+      count_( new int ),
+      builtFromStore_( false )
   {
-    f_ = &f;
-    count_ = new int;
     *count_ = 1;
-    builtFromStore_ = false;
   }
   //------------------------------------------------------------------
   template<typename FieldT>
-  SpatFldPtr<FieldT>::SpatFldPtr( FieldT& f, const bool builtFromStore )
-    : store_( SpatialFieldStore<FieldT>::self() )
+  SpatFldPtr<FieldT>::SpatFldPtr( FieldT* const f, const bool builtFromStore )
+    : store_( SpatialFieldStore<FieldT>::self() ),
+      f_( f ),
+      count_( new int ),
+      builtFromStore_( builtFromStore )
   {
-    f_ = &f;
-    count_ = new int;
     *count_ = 1;
-    builtFromStore_ = builtFromStore;
   }
   //------------------------------------------------------------------
   template<typename FieldT>
@@ -281,15 +277,6 @@ namespace SpatialOps{
   }
   //------------------------------------------------------------------
   template<typename FieldT>
-  SpatFldPtr<FieldT>::SpatFldPtr( FieldT* const p )
-    : store_( SpatialFieldStore<FieldT>::self() )
-  {
-    f_ = p;
-    *count_ = 1;
-    builtFromStore_ = false;
-  }
-  //------------------------------------------------------------------
-  template<typename FieldT>
   SpatFldPtr<FieldT>&
   SpatFldPtr<FieldT>::operator=( const SpatFldPtr& p )
   {
@@ -301,6 +288,7 @@ namespace SpatialOps{
       if( *count_ == 0 ){
         if( builtFromStore_ ) store_.restore_field( *f_ );
         delete count_;
+        delete f_;
       }
     }
     // reassign
@@ -315,7 +303,7 @@ namespace SpatialOps{
   //------------------------------------------------------------------
   template<typename FieldT>
   SpatFldPtr<FieldT>&
-  SpatFldPtr<FieldT>::operator=( FieldT& f )
+  SpatFldPtr<FieldT>::operator=( FieldT* const f )
   {
     // was this an active SpatFldPtr?
     if( count_ != NULL ){
@@ -325,10 +313,11 @@ namespace SpatialOps{
       if( *count_ == 0 ){
         if( builtFromStore_ ) store_.restore_field( *f_ );
         delete count_;
+        delete f_;
       }
     }
     // reassign
-    f_ = &f;
+    f_ = f;
     count_ = new int;
     *count_ = 1;
     builtFromStore_ = false;
@@ -344,6 +333,7 @@ namespace SpatialOps{
       if( *count_ == 0 ){
         if( builtFromStore_ ) store_.restore_field( *f_ );
         delete count_;
+        delete f_;
       }
     }
   }
@@ -360,8 +350,8 @@ namespace SpatialOps{
     for( typename FQMap::iterator ii=fqmap_.begin(); ii!=fqmap_.end(); ++ii ){
       FieldQueue& q = ii->second;
       while( !q.empty() ){
-        FieldT* field = q.front();
-        delete field;
+        AtomicT* field = q.front();
+        delete [] field;
         q.pop();
       }
     }
@@ -384,18 +374,18 @@ namespace SpatialOps{
 #endif
     // find the proper map
     const structured::MemoryWindow& w = f.window_with_ghost();
-    const int ntot = w.extent(0) * w.extent(1) * w.extent(2);
+    const int ntot = w.local_npts();
     FieldQueue& q = fqmap_[ ntot ];
 
+    AtomicT* fnew;
     if( q.empty() ){
-      FieldT* fnew = new FieldT( f );
-      q.push( fnew );
+      fnew = new AtomicT[ ntot ];
     }
-
-    FieldT* fnew = q.front();
-    q.pop();
-
-    return SpatFldPtr<FieldT>(*fnew,true);
+    else{
+      fnew = q.front();
+      q.pop();
+    }
+    return SpatFldPtr<FieldT>( new FieldT(w,fnew,structured::ExternalStorage), true );
   }
   //------------------------------------------------------------------
   template<typename FieldT>
@@ -406,18 +396,19 @@ namespace SpatialOps{
     boost::mutex::scoped_lock lock( get_mutex() );
 #endif
     // find the proper map
-    const int ntot = window.extent(0) * window.extent(1) * window.extent(2);
-    FieldQueue& q = fqmap_[ ntot ];
+    const int npts = window.local_npts();
+    FieldQueue& q = fqmap_[ npts ];
 
+    AtomicT* fnew;
     if( q.empty() ){
-      FieldT* fnew = new FieldT( window, NULL );
-      q.push( fnew );
+      fnew = new AtomicT[ npts ];
+    }
+    else{
+      fnew = q.front();
+      q.pop();
     }
 
-    FieldT* fnew = q.front();
-    q.pop();
-
-    return SpatFldPtr<FieldT>(*fnew,true);
+    return SpatFldPtr<FieldT>( new FieldT(window,fnew,structured::ExternalStorage), true );
   }
   //------------------------------------------------------------------
   template<typename FieldT>
@@ -428,9 +419,8 @@ namespace SpatialOps{
     boost::mutex::scoped_lock lock( get_mutex() );
 #endif
     const structured::MemoryWindow& w = field.window_with_ghost();
-    const int ntot = w.extent(0) * w.extent(1) * w.extent(2);
-    FieldQueue& q = fqmap_[ ntot ];
-    q.push( &field );
+    FieldQueue& q = fqmap_[ w.local_npts() ];
+    q.push( &field[0] );
   }
   //------------------------------------------------------------------
 
@@ -439,38 +429,38 @@ namespace SpatialOps{
 
 
 
-  // specialized for doubles masquerading as spatialfields
-  template<>
-  inline void
-  SpatialFieldStore<double>::restore_field( double& d )
-  {
-#ifdef EXPRESSION_THREADS
-    boost::mutex::scoped_lock lock( get_mutex() );
-#endif
-    delete &d;
-  }
+//   // specialized for doubles masquerading as spatialfields
+//   template<>
+//   inline void
+//   SpatialFieldStore<double>::restore_field( double& d )
+//   {
+// #ifdef EXPRESSION_THREADS
+//     boost::mutex::scoped_lock lock( get_mutex() );
+// #endif
+//     delete &d;
+//   }
 
-  template<>
-  SpatFldPtr<double>
-  inline SpatialFieldStore<double>::get( const double& d )
-  {
-#ifdef EXPRESSION_THREADS
-    boost::mutex::scoped_lock lock( get_mutex() );
-#endif
-    double* dnew = new double;
-    return SpatFldPtr<double>( *dnew, true );
-  }
+//   template<>
+//   SpatFldPtr<double>
+//   inline SpatialFieldStore<double>::get( const double& d )
+//   {
+// #ifdef EXPRESSION_THREADS
+//     boost::mutex::scoped_lock lock( get_mutex() );
+// #endif
+//     double* dnew = new double;
+//     return SpatFldPtr<double>( *dnew, true );
+//   }
 
-  template<>
-  inline SpatFldPtr<double>
-  SpatialFieldStore<double>::get( const structured::MemoryWindow& w )
-  {
-#ifdef EXPRESSION_THREADS
-    boost::mutex::scoped_lock lock( get_mutex() );
-#endif
-    double* dnew = new double;
-    return SpatFldPtr<double>( *dnew, true );
-  }
+//   template<>
+//   inline SpatFldPtr<double>
+//   SpatialFieldStore<double>::get( const structured::MemoryWindow& w )
+//   {
+// #ifdef EXPRESSION_THREADS
+//     boost::mutex::scoped_lock lock( get_mutex() );
+// #endif
+//     double* dnew = new double;
+//     return SpatFldPtr<double>( *dnew, true );
+//   }
   
 } // namespace SpatialOps
 
