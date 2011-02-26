@@ -229,10 +229,16 @@ namespace structured{
     }
 
     /**
-     *  \brief obtain the number of points in the field.  Note that
-     *  this is not necessarily contiguous memory
+     *  \brief obtain the global number of points in the field.  Note
+     *  that this is not necessarily contiguous memory
      */
-    inline size_t npts() const{ return extent_[0] * extent_[1] * extent_[2]; }
+    inline size_t glob_npts() const{ return nptsGlob_[0] * nptsGlob_[1] * nptsGlob_[2]; }
+
+    /**
+     *  \brief obtain the local number of points in the field.  Note
+     *  that this is not necessarily contiguous memory
+     */
+    inline size_t local_npts() const{ return extent_[0] * extent_[1] * extent_[2]; }
 
     inline size_t glob_dim( const size_t i ) const{ return size_t(nptsGlob_[i]); }
     inline size_t offset  ( const size_t i ) const{ return size_t(offset_[i]); }

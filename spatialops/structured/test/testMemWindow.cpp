@@ -149,7 +149,7 @@ int main()
     const MemoryWindow w( globDim, extent, offset );
     status( 21 == w.flat_index( IntVec(0,0,0) ), "(0,0,0)" );
     status( 42 == w.flat_index( IntVec(1,1,1) ), "(1,1,1)" );
-    status( 8 == w.npts(), "#points interior" );
+    status( 8 == w.local_npts(), "#points interior" );
     overall( status.ok(), "2x2x2 interior of a 4x4x4 box" );
   }
 

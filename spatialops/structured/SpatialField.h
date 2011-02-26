@@ -234,7 +234,7 @@ namespace structured{
                     ? fieldValues
                     : new T[ window.glob_dim(0) * window.glob_dim(1) * window.glob_dim(2) ] ),
       builtField_( mode==InternalStorage ),
-      vec_( linAlg_.setup_vector( fieldWindow_.npts(), fieldValues_ ) )
+      vec_( linAlg_.setup_vector( fieldWindow_.glob_npts(), fieldValues_ ) )
   {
     IntVec ext = window.extent();
     IntVec ofs = window.offset();
@@ -261,7 +261,7 @@ namespace structured{
                     ? fieldValues
                     : new T[npts[0]*npts[1]*npts[2]] ),
       builtField_( mode==InternalStorage ),
-      vec_( linAlg_.setup_vector( fieldWindow_.npts(), fieldValues_ ) )
+      vec_( linAlg_.setup_vector( fieldWindow_.glob_npts(), fieldValues_ ) )
   {
     IntVec ext = fieldWindow_.extent();
     IntVec ofs = fieldWindow_.offset();
@@ -283,7 +283,7 @@ namespace structured{
       interiorFieldWindow_( other.interiorFieldWindow_ ),
       fieldValues_( new T[ fieldWindow_.glob_dim(0) * fieldWindow_.glob_dim(1) * fieldWindow_.glob_dim(2) ] ),
       builtField_( true ),
-      vec_( linAlg_.setup_vector( fieldWindow_.npts(), fieldValues_ ) )
+      vec_( linAlg_.setup_vector( fieldWindow_.glob_npts(), fieldValues_ ) )
   {
     (*this) = other;
   }
