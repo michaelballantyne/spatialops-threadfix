@@ -8,6 +8,8 @@
 #include <map>
 #include <set>
 
+#include <boost/type_traits.hpp>
+
 #ifdef EXPRESSION_THREADS
 # include <boost/thread/mutex.hpp>
 #endif
@@ -207,7 +209,11 @@ namespace SpatialOps{
     SpatialFieldStore(){};
     ~SpatialFieldStore();
 
-    typedef typename FieldT::AtomicT AtomicT;
+    template< typename FT, typename IsPODT > struct ValTypeSelector;
+    template< typename FT > struct ValTypeSelector<FT,boost::true_type >{ typedef FT type; };
+    template< typename FT > struct ValTypeSelector<FT,boost::false_type>{ typedef typename FT::AtomicT type; };
+
+    typedef typename ValTypeSelector< FieldT, typename boost::is_pod<FieldT>::type >::type AtomicT;
     typedef std::queue<AtomicT*> FieldQueue;
     typedef std::map<int,FieldQueue> FQMap;
 
@@ -429,38 +435,31 @@ namespace SpatialOps{
 
 
 
-//   // specialized for doubles masquerading as spatialfields
-//   template<>
-//   inline void
-//   SpatialFieldStore<double>::restore_field( double& d )
-//   {
-// #ifdef EXPRESSION_THREADS
-//     boost::mutex::scoped_lock lock( get_mutex() );
-// #endif
-//     delete &d;
-//   }
+  // specialized for doubles masquerading as spatialfields
+  template<>
+  inline void
+  SpatialFieldStore<double>::restore_field( double& d )
+  {}
 
-//   template<>
-//   SpatFldPtr<double>
-//   inline SpatialFieldStore<double>::get( const double& d )
-//   {
-// #ifdef EXPRESSION_THREADS
-//     boost::mutex::scoped_lock lock( get_mutex() );
-// #endif
-//     double* dnew = new double;
-//     return SpatFldPtr<double>( *dnew, true );
-//   }
+  template<>
+  SpatFldPtr<double>
+  inline SpatialFieldStore<double>::get( const double& d )
+  {
+#ifdef EXPRESSION_THREADS
+    boost::mutex::scoped_lock lock( get_mutex() );
+#endif
+    return SpatFldPtr<double>( new double, true );
+  }
 
-//   template<>
-//   inline SpatFldPtr<double>
-//   SpatialFieldStore<double>::get( const structured::MemoryWindow& w )
-//   {
-// #ifdef EXPRESSION_THREADS
-//     boost::mutex::scoped_lock lock( get_mutex() );
-// #endif
-//     double* dnew = new double;
-//     return SpatFldPtr<double>( *dnew, true );
-//   }
+  template<>
+  inline SpatFldPtr<double>
+  SpatialFieldStore<double>::get( const structured::MemoryWindow& w )
+  {
+#ifdef EXPRESSION_THREADS
+    boost::mutex::scoped_lock lock( get_mutex() );
+#endif
+    return SpatFldPtr<double>( new double, true );
+  }
   
 } // namespace SpatialOps
 
