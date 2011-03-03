@@ -15,9 +15,13 @@ namespace structured{
    *   - interpolation from the scalar volume to staggered surfaces
    *   - interpolation from staggered volumes to scalar surfaces
    */
-  template< typename OpT, typename SrcFieldT, typename DestFieldT >
+  template< typename OperatorT, typename SrcFieldT, typename DestFieldT >
   struct NullStencil
   {
+    typedef OperatorT  OpT;
+    typedef SrcFieldT  SrcFieldType;
+    typedef DestFieldT DestFieldType;
+
     NullStencil();
     void apply_to_field( const SrcFieldT& src, DestFieldT& dest ) const;
   };
