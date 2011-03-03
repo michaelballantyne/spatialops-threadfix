@@ -35,29 +35,61 @@ namespace structured{
     const double dy = Ly/ny;
     const double dz = Lz/nz;
 
+    //___________________________________________________________________
+    // stencil2:
+    //
     REG_BASIC_OP_TYPES( SVolField )  // basic operator types on a scalar volume
     REG_BASIC_OP_TYPES( XVolField )  // basic operator types on a x volume
     REG_BASIC_OP_TYPES( YVolField )  // basic operator types on a y volume
     REG_BASIC_OP_TYPES( ZVolField )  // basic operator types on a z volume
 
     opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,XVolField,YSurfXField>::type( 0.5, 0.5 ) );
+    opdb.register_new_operator( new OperatorTypeBuilder<Gradient,   XVolField,YSurfXField>::type( -dy, dy  ) );
     opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,XVolField,ZSurfXField>::type( 0.5, 0.5 ) );
+    opdb.register_new_operator( new OperatorTypeBuilder<Gradient,   XVolField,ZSurfXField>::type( -dz, dz  ) );
 
     opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,YVolField,XSurfYField>::type( 0.5, 0.5 ) );
+    opdb.register_new_operator( new OperatorTypeBuilder<Gradient,   YVolField,XSurfYField>::type( -dx, dx  ) );
     opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,YVolField,ZSurfYField>::type( 0.5, 0.5 ) );
+    opdb.register_new_operator( new OperatorTypeBuilder<Gradient,   YVolField,ZSurfYField>::type( -dz, dz  ) );
 
     opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,ZVolField,XSurfZField>::type( 0.5, 0.5 ) );
+    opdb.register_new_operator( new OperatorTypeBuilder<Gradient   ,ZVolField,XSurfZField>::type( -dx, dx  ) );
     opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,ZVolField,YSurfZField>::type( 0.5, 0.5 ) );
+    opdb.register_new_operator( new OperatorTypeBuilder<Gradient   ,ZVolField,YSurfZField>::type( -dy, dy  ) );
+
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,SVolField,XVolField>::type( 0.5, 0.5 ) );
+    opdb.register_new_operator( new OperatorTypeBuilder<Gradient   ,SVolField,XVolField>::type( -dx, dx  ) );
+
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,SVolField,YVolField>::type( 0.5, 0.5 ) );
+    opdb.register_new_operator( new OperatorTypeBuilder<Gradient   ,SVolField,YVolField>::type( -dy, dy  ) );
+
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,SVolField,ZVolField>::type( 0.5, 0.5 ) );
+    opdb.register_new_operator( new OperatorTypeBuilder<Gradient   ,SVolField,ZVolField>::type( -dz, dz  ) );
+
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,XVolField,SVolField>::type( 0.5, 0.5 ) );
+    opdb.register_new_operator( new OperatorTypeBuilder<Gradient   ,XVolField,SVolField>::type( -dx, dx  ) );
+
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,YVolField,SVolField>::type( 0.5, 0.5 ) );
+    opdb.register_new_operator( new OperatorTypeBuilder<Gradient   ,YVolField,SVolField>::type( -dy, dy  ) );
+
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,ZVolField,SVolField>::type( 0.5, 0.5 ) );
+    opdb.register_new_operator( new OperatorTypeBuilder<Gradient   ,ZVolField,SVolField>::type( -dz, dz  ) );
+
+    //___________________________________________________________________
+    // NullStencil:
+    //
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,XVolField,SSurfXField>::type() );
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,YVolField,SSurfYField>::type() );
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,ZVolField,SSurfZField>::type() );
 
     opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,SVolField,XSurfXField>::type() );
     opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,SVolField,YSurfYField>::type() );
     opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,SVolField,ZSurfZField>::type() );
 
-    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,XVolField,SSurfXField>::type() );
-    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,YVolField,SSurfYField>::type() );
-    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,ZVolField,SSurfZField>::type() );
-
-
+    //___________________________________________________________________
+    // stencil4:
+    //
     opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,SVolField,XSurfYField>::type(.25,.25,.25,.25) );
     opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,SVolField,XSurfZField>::type(.25,.25,.25,.25) );
 
@@ -66,7 +98,6 @@ namespace structured{
 
     opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,SVolField,ZSurfXField>::type(.25,.25,.25,.25) );
     opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,SVolField,ZSurfYField>::type(.25,.25,.25,.25) );
-
   }
 
   //------------------------------------------------------------------

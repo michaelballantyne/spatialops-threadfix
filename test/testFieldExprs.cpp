@@ -12,6 +12,8 @@
 namespace SS = SpatialOps::structured;
 namespace SP = SpatialOps::Particle;
 
+using namespace SpatialOps;
+
 template< typename FieldT >
 bool test( const SS::IntVec dim )
 {

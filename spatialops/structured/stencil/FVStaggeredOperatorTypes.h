@@ -3,9 +3,9 @@
 
 #include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include "Stencil2.h"
-#include "NullStencil.h"
-#include "Stencil4.h"
+#include <spatialops/structured/stencil/Stencil2.h>
+#include <spatialops/structured/stencil/NullStencil.h>
+#include <spatialops/structured/stencil/Stencil4.h>
 
 namespace SpatialOps{
 namespace structured{
@@ -34,6 +34,9 @@ namespace structured{
    *  typedef OperatorTypeBuilder<Divergence,XSurfYField,XVolField>::type DivX;
    *  typedef OperatorTypeBuilder<Gradient,VolT,FaceTypes<VolT>::XFace>::type GradX;
    *  \endcode
+   *
+   *  Note that we only provide fully specialized versions of this template
+   *  so that unsupported operator types cannot be inadvertantly formed.
    */
   template<typename OpT, typename SrcT, typename DestT>
   struct OperatorTypeBuilder;
@@ -111,17 +114,37 @@ namespace structured{
 
 
   OP_BUILDER( Stencil2, Interpolant, XVolField, YSurfXField )
+  OP_BUILDER( Stencil2, Gradient,    XVolField, YSurfXField )
   OP_BUILDER( Stencil2, Interpolant, XVolField, ZSurfXField )
+  OP_BUILDER( Stencil2, Gradient,    XVolField, ZSurfXField )
 
   OP_BUILDER( Stencil2, Interpolant, YVolField, XSurfYField )
+  OP_BUILDER( Stencil2, Gradient,    YVolField, XSurfYField )
   OP_BUILDER( Stencil2, Interpolant, YVolField, ZSurfYField )
+  OP_BUILDER( Stencil2, Gradient,    YVolField, ZSurfYField )
 
   OP_BUILDER( Stencil2, Interpolant, ZVolField, XSurfZField )
+  OP_BUILDER( Stencil2, Gradient,    ZVolField, XSurfZField )
   OP_BUILDER( Stencil2, Interpolant, ZVolField, YSurfZField )
+  OP_BUILDER( Stencil2, Gradient,    ZVolField, YSurfZField )
 
   OP_BUILDER( Stencil2, Interpolant, SVolField, XVolField )
+  OP_BUILDER( Stencil2, Gradient,    SVolField, XVolField )
+
   OP_BUILDER( Stencil2, Interpolant, SVolField, YVolField )
+  OP_BUILDER( Stencil2, Gradient,    SVolField, YVolField )
+
   OP_BUILDER( Stencil2, Interpolant, SVolField, ZVolField )
+  OP_BUILDER( Stencil2, Gradient,    SVolField, ZVolField )
+
+  OP_BUILDER( Stencil2, Interpolant, XVolField, SVolField )
+  OP_BUILDER( Stencil2, Gradient,    XVolField, SVolField )
+
+  OP_BUILDER( Stencil2, Interpolant, YVolField, SVolField )
+  OP_BUILDER( Stencil2, Gradient,    YVolField, SVolField )
+
+  OP_BUILDER( Stencil2, Interpolant, ZVolField, SVolField )
+  OP_BUILDER( Stencil2, Gradient,    ZVolField, SVolField )
 
 
   OP_BUILDER( NullStencil, Interpolant, XVolField, SSurfXField )

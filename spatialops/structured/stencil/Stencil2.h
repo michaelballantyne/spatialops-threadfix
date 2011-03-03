@@ -12,7 +12,12 @@ namespace structured{
    *  \author James C. Sutherland
    *
    *  \brief Provides methods to adjust iterator positions when
-   *         applying 2-point stencils to fields.  See also Stencil2
+   *         applying 2-point stencils to fields.  See also Stencil2.
+   *
+   *  Note that the Stencil2Helper declaration below is not
+   *  implemented.  Only template specializations are implemented.
+   *  This just serves as a way to show the required methods that a
+   *  specialization should implement.
    */
   template< typename SrcT, typename DestT >
   struct Stencil2Helper

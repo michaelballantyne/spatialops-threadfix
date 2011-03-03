@@ -528,6 +528,115 @@ namespace structured{
 
   //==================================================================
 
+
+  /**
+   *  \brief Specialization for XVol->SVol (pressure solve)
+   *
+   *  Note that this is the same as the SSurfX->SVol helper which has
+   *  already been defined.
+   */
+  template<>
+  struct Stencil2Helper< XVolField, SVolField >
+  {
+    Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest )
+      : hiBounds_( wdest.extent() - IntVec(1,0,0) ),
+        srcInc_ ( 1, 1, 0 ),
+        destInc_( 1, 1, 0 )
+    {
+      if( wsrc.extent(0) != wdest.extent(0) ){
+        // physical boundary present
+        ++hiBounds_[0];
+        --destInc_[1];
+      }
+    }
+
+    unsigned int dest_offset  () const{ return 0; }
+    unsigned int src_offset_lo() const{ return 0; }
+    unsigned int src_offset_hi() const{ return 1; }
+    
+    IntVec src_increment () const{ return srcInc_; }
+    IntVec dest_increment() const{ return destInc_; }
+
+    IntVec low () const{ return IntVec(0,0,0); }
+    IntVec high() const{ return hiBounds_; }
+  private:
+    IntVec hiBounds_, srcInc_, destInc_;
+  };
+
+  /**
+   *  \brief Specialization for YVol->SVol
+   *
+   *  Note that this is the same as the SSurfY->SVol helper which has
+   *  already been defined.
+   */
+  template<>
+  struct Stencil2Helper< YVolField, SVolField >
+  {
+    Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest )
+      : wsrc_( wsrc ),  wdest_( wdest ),
+        hiBounds_( wdest.extent() - IntVec(0,1,0) ),
+        srcInc_ ( 1, 0, wsrc.extent(0) ),
+        destInc_( 1, 0, wdest.extent(0) )
+    {
+      if( wsrc.extent(1) != wdest.extent(1) ){
+        // physical boundary present
+        ++hiBounds_[1];
+        destInc_[2] -= wdest.extent(0);
+      }
+    }
+
+    unsigned int dest_offset  () const{ return 0; }
+    unsigned int src_offset_lo() const{ return 0; }
+    unsigned int src_offset_hi() const{ return wsrc_.extent(0); }
+    
+    IntVec src_increment () const{ return srcInc_; }
+    IntVec dest_increment() const{ return destInc_; }
+
+    IntVec low () const{ return IntVec(0,0,0); }
+    IntVec high() const{ return hiBounds_; }
+
+  private:
+    const MemoryWindow &wsrc_, &wdest_;
+    IntVec hiBounds_, srcInc_, destInc_;
+  };
+
+
+  /**
+   *  \brief Specialization for ZVol->SVol
+   *
+   *  Note that this is the same as the SSurfZ->SVol helper which has
+   *  already been defined.
+   */
+  template<>
+  struct Stencil2Helper< ZVolField, SVolField >
+  {
+    Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest )
+      : wsrc_( wsrc ), wdest_( wdest ),
+        hiBounds_( wdest.extent() - IntVec(0,0,1) )
+    {
+      if( wsrc.extent(2) != wdest.extent(2) ){
+        // physical boundary present
+        ++hiBounds_[2];
+      }
+    }
+
+    unsigned int dest_offset  () const{ return 0; }
+    unsigned int src_offset_lo() const{ return 0; }
+    unsigned int src_offset_hi() const{ return wsrc_.extent(0)*wsrc_.extent(1); }
+    
+    IntVec src_increment () const{ return IntVec( 1, 0, 0 ); }
+    IntVec dest_increment() const{ return IntVec( 1, 0, 0 ); }
+
+    IntVec low () const{ return IntVec(0,0,0); }
+    IntVec high() const{ return hiBounds_; }
+
+  private:
+    const MemoryWindow &wsrc_, &wdest_;
+    IntVec hiBounds_;
+  };
+
+  //==================================================================
+
   template< typename OperatorT, typename SrcT, typename DestT >
   Stencil2<OperatorT,SrcT,DestT>::
   Stencil2( const double coefLo, const double coefHi )
@@ -600,17 +709,35 @@ namespace structured{
   DECLARE_BASIC_VARIANTS( ZVolField );
 
   template class Stencil2< Interpolant, XVolField, YSurfXField >;  // advecting velocity
+  template class Stencil2< Gradient   , XVolField, YSurfXField >;  // stress
   template class Stencil2< Interpolant, XVolField, ZSurfXField >;  // advecting velocity
+  template class Stencil2< Gradient   , XVolField, ZSurfXField >;  // stress
 
   template class Stencil2< Interpolant, YVolField, XSurfYField >;  // advecting velocity
+  template class Stencil2< Gradient,    YVolField, XSurfYField >;  // stress
   template class Stencil2< Interpolant, YVolField, ZSurfYField >;  // advecting velocity
+  template class Stencil2< Gradient,    YVolField, ZSurfYField >;  // stress
 
   template class Stencil2< Interpolant, ZVolField, XSurfZField >;  // advecting velocity
+  template class Stencil2< Gradient,    ZVolField, XSurfZField >;  // stress
   template class Stencil2< Interpolant, ZVolField, YSurfZField >;  // advecting velocity
+  template class Stencil2< Gradient,    ZVolField, YSurfZField >;  // stress
 
   template class Stencil2< Interpolant, SVolField, XVolField >;  // density, dp/dx
   template class Stencil2< Interpolant, SVolField, YVolField >;  // density, dp/dy
   template class Stencil2< Interpolant, SVolField, ZVolField >;  // density, dp/dz
+
+  template class Stencil2< Interpolant, XVolField, SVolField >;  // pressure projection RHS
+  template class Stencil2< Interpolant, YVolField, SVolField >;  // pressure projection RHS
+  template class Stencil2< Interpolant, ZVolField, SVolField >;  // pressure projection RHS
+
+  template class Stencil2< Gradient, XVolField, SVolField >;  // dilatation
+  template class Stencil2< Gradient, YVolField, SVolField >;  // dilatation
+  template class Stencil2< Gradient, ZVolField, SVolField >;  // dilatation
+
+  template class Stencil2< Gradient, SVolField, XVolField >;  // pressure
+  template class Stencil2< Gradient, SVolField, YVolField >;  // pressure
+  template class Stencil2< Gradient, SVolField, ZVolField >;  // pressure
   //
   //==================================================================
 

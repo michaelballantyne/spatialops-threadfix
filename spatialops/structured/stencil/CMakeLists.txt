@@ -22,8 +22,6 @@ if( ENABLE_STENCIL )
   set( SO_SRC ${SO_SRC} ${src} PARENT_SCOPE )
 
   install( FILES
-    FVStaggeredBCOp.h
-    FVStaggeredOperatorTypes.h
     NullStencil.h
     Stencil2.h
     Stencil4.h
@@ -34,6 +32,8 @@ if( ENABLE_STENCIL )
 
   install( FILES
     FVStaggered.h
+    FVStaggeredBCOp.h
+    FVStaggeredOperatorTypes.h
     DESTINATION include/spatialops/structured/
     PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
     )
