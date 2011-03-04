@@ -2,8 +2,11 @@
 #include <spatialops/FieldReductions.h>
 
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
+#include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/FVTools.h>
+#include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
 #include <spatialops/structured/stencil/Stencil2.h>
+#include <spatialops/structured/stencil/StencilBuilder.h>
 
 #include <spatialops/WriteMatlab.h>
 
@@ -143,6 +146,15 @@ apply_stencil( const IntVec& npts, const bool* bcPlus,
   grid.set_coord<YDIR>( yface );
   grid.set_coord<ZDIR>( zface );
 
+  OperatorDatabase opdb;
+  build_stencils( npts[0], npts[1], npts[2],
+                  length[0], length[1], length[2],
+                  opdb );
+
+  typedef typename OperatorTypeBuilder< Interpolant, VolT, FaceT >::type InterpT;
+  typedef typename OperatorTypeBuilder< Gradient,    VolT, FaceT >::type GradT;
+  typedef typename OperatorTypeBuilder< Divergence,  FaceT, VolT >::type DivT;
+
   // set the function value
   function( xvol, yvol, zvol, vol );
 
@@ -150,22 +162,16 @@ apply_stencil( const IntVec& npts, const bool* bcPlus,
 
   // interpolant
   {
-    const Stencil2< Interpolant, VolT, FaceT > interpOp( 0.5, 0.5 );
+    const InterpT& interpOp = *opdb.retrieve_operator<InterpT>();
     interpOp.apply_to_field( vol, face );
     function( xface, yface, zface, faceExact );
 
     interpNorm = interior_norm( face, faceExact );
-//     write_matlab( xvol, "xvol" );
-//     write_matlab( vol,  "phiVol" );
-//     write_matlab( xface, "xface" );
-//     write_matlab( face, "phiFace" );
-//     write_matlab( faceExact, "phiFaceExact" );
   }
 
   // gradient
   {
-    const double spc = grid.spacing<typename FaceT::Location::FaceDir>();
-    const Stencil2< Gradient, VolT, FaceT > gradOp( -1.0/spc, 1.0/spc );
+    const GradT& gradOp = *opdb.retrieve_operator<GradT>();
     gradOp.apply_to_field( vol, face );
 
     // set the exact gradient value
@@ -179,16 +185,14 @@ apply_stencil( const IntVec& npts, const bool* bcPlus,
     FunctionDer<typename FaceT::Location::FaceDir,FaceT>::value( xface, yface, zface, faceExact );
 
     const double spc = grid.spacing<typename FaceT::Location::FaceDir>();
-    Stencil2< Divergence, FaceT, VolT > divOp( -1.0/spc, 1.0/spc );
+
+    const DivT& divOp = *opdb.retrieve_operator<DivT>();
     divOp.apply_to_field( faceExact, vol );
 
     // set the exact divergence value
     VolT volExact( vmw, NULL );
     Function2Der<typename FaceT::Location::FaceDir,VolT>::value( xvol, yvol, zvol, volExact );
     divNorm = interior_norm( vol, volExact );
-
-//     write_matlab( vol, "div");
-//     write_matlab( volExact, "divx" );
   }
 }
 
@@ -297,12 +301,55 @@ bool interp_test( const unsigned int dir,
     interpNorms[icount] = interior_norm( dest, destExact );
     spacings[icount] = 1.0/npts[dir];
     npts[dir] *= 2;
-
-    write_matlab( xdest, "x" );
-    write_matlab( destExact, "phix");
-    write_matlab( dest, "phi");
   }
   return check_convergence( spacings, interpNorms, 2 );
+}
+
+//--------------------------------------------------------------------
+
+template< typename DirT, typename SrcT, typename DestT >
+bool grad_test( const unsigned int dir,
+                IntVec npts,
+                const bool* bcPlus )
+{
+  const int nrefine = 5;
+  std::vector<double> norms(nrefine,0.0);
+  std::vector<double> spacings(nrefine,0.0);
+
+  for( unsigned int icount=0; icount<nrefine; ++icount ){
+
+    const MemoryWindow vmw = get_window_with_ghost<SrcT >( npts, bcPlus[0], bcPlus[1], bcPlus[2] );
+    const MemoryWindow fmw = get_window_with_ghost<DestT>( npts, bcPlus[0], bcPlus[1], bcPlus[2] );
+
+    std::vector<double> length(3,10.0);
+    const Grid grid( npts, length );
+
+    SrcT   src( vmw, NULL ),  xsrc(vmw,NULL),  ysrc(vmw,NULL),  zsrc(vmw,NULL);
+    DestT dest( fmw, NULL ), xdest(fmw,NULL), ydest(fmw,NULL), zdest(fmw,NULL);
+
+    grid.set_coord<XDIR>( xsrc );
+    grid.set_coord<YDIR>( ysrc );
+    grid.set_coord<ZDIR>( zsrc );
+
+    grid.set_coord<XDIR>( xdest );
+    grid.set_coord<YDIR>( ydest );
+    grid.set_coord<ZDIR>( zdest );
+
+    // set the function value
+    function( xsrc, ysrc, zsrc, src );
+
+    DestT destExact( fmw, NULL );
+
+    // gradient
+    spacings[icount] = 1.0/npts[dir];
+    const Stencil2< Gradient, SrcT, DestT > gradOp( -spacings[icount], spacings[icount] );
+    gradOp.apply_to_field( src, dest );
+    FunctionDer<DirT,DestT>::value( xdest, ydest, zdest, destExact );
+
+    norms[icount] = interior_norm( dest, destExact );
+    npts[dir] *= 2;
+  }
+  return check_convergence( spacings, norms, 2 );
 }
 
 //--------------------------------------------------------------------
@@ -364,22 +411,25 @@ int main( int iarg, char* carg[] )
     if( npts[1] > 1 ) status( run_variants< YVolField >( npts, bcplus ), "YVol operators" );
     if( npts[2] > 1 ) status( run_variants< ZVolField >( npts, bcplus ), "ZVol operators" );
 
-    status( interp_test< XVolField, YSurfXField >( 1, npts, bcplus ), "InterpXVolYSurfX" );
-    status( interp_test< XVolField, ZSurfXField >( 2, npts, bcplus ), "InterpXVolZSurfX" );
+    if( npts[0]>1 & npts[1]>1 ) status( interp_test< XVolField, YSurfXField >( 1, npts, bcplus ), "InterpXVolYSurfX" );
+    if( npts[0]>1 & npts[2]>1 ) status( interp_test< XVolField, ZSurfXField >( 2, npts, bcplus ), "InterpXVolZSurfX" );
 
-    status( interp_test< YVolField, XSurfYField >( 0, npts, bcplus ), "InterpYVolXSurfY" );
-    status( interp_test< YVolField, ZSurfYField >( 2, npts, bcplus ), "InterpYVolZSurfY" );
+//     if( npts[0]>1 & npts[1]>1 ) status( grad_test< YDIR, XVolField, YSurfXField >( 1, npts, bcplus ), "GradXVolYSurfX" );
+//     if( npts[0]>1 & npts[2]>1 ) status( grad_test< ZDIR, XVolField, ZSurfXField >( 2, npts, bcplus ), "GradXVolZSurfX" );
 
-    status( interp_test< ZVolField, XSurfZField >( 0, npts, bcplus ), "InterpZVolXSurfZ" );
-    status( interp_test< ZVolField, YSurfZField >( 1, npts, bcplus ), "InterpZVolYSurfZ" );
+    if( npts[1]>1 & npts[0]>1 ) status( interp_test< YVolField, XSurfYField >( 0, npts, bcplus ), "InterpYVolXSurfY" );
+    if( npts[1]>1 & npts[2]>1 ) status( interp_test< YVolField, ZSurfYField >( 2, npts, bcplus ), "InterpYVolZSurfY" );
 
-    status( interp_test< SVolField, XVolField >( 0, npts, bcplus ), "InterpSVolXVol" );
-    status( interp_test< SVolField, YVolField >( 1, npts, bcplus ), "InterpSVolYVol" );
-    status( interp_test< SVolField, ZVolField >( 2, npts, bcplus ), "InterpSVolZVol" );
+    if( npts[2]>1 & npts[0]>1 ) status( interp_test< ZVolField, XSurfZField >( 0, npts, bcplus ), "InterpZVolXSurfZ" );
+    if( npts[2]>1 & npts[1]>1 ) status( interp_test< ZVolField, YSurfZField >( 1, npts, bcplus ), "InterpZVolYSurfZ" );
 
-    status( interp_test< XVolField, SVolField >( 0, npts, bcplus ), "InterpXVolSVol" );
-    status( interp_test< YVolField, SVolField >( 1, npts, bcplus ), "InterpYVolSVol" );
-    status( interp_test< ZVolField, SVolField >( 2, npts, bcplus ), "InterpZVolSVol" );
+    if( npts[0]>1 ) status( interp_test< SVolField, XVolField >( 0, npts, bcplus ), "InterpSVolXVol" );
+    if( npts[1]>1 ) status( interp_test< SVolField, YVolField >( 1, npts, bcplus ), "InterpSVolYVol" );
+    if( npts[2]>1 ) status( interp_test< SVolField, ZVolField >( 2, npts, bcplus ), "InterpSVolZVol" );
+
+    if( npts[0]>1 ) status( interp_test< XVolField, SVolField >( 0, npts, bcplus ), "InterpXVolSVol" );
+    if( npts[1]>1 ) status( interp_test< YVolField, SVolField >( 1, npts, bcplus ), "InterpYVolSVol" );
+    if( npts[2]>1 ) status( interp_test< ZVolField, SVolField >( 2, npts, bcplus ), "InterpZVolSVol" );
   }
   catch( std::runtime_error& e ){
     cout << e.what() << endl;
