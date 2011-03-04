@@ -20,7 +20,7 @@ namespace structured{
     typename DestT::iterator idest = dest.begin();
     const typename DestT::iterator ideste = dest.end();
     for( ; idest!=ideste; ++isrc, ++idest ){
-      *idest == *isrc;
+      *idest = *isrc;
     }
   }
 
