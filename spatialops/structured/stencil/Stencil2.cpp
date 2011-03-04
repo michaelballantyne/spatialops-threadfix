@@ -692,52 +692,63 @@ namespace structured{
   //==================================================================
   // Explicit template instantiation
   //
+
+#define DECLARE_HELPER( SRC, DEST )             \
+  template class Stencil2Helper<SRC,DEST>;
+
+#define DECLARE_STENCIL( OP, SRC, DEST )        \
+  template class Stencil2< OP, SRC, DEST >;
+
+#define DECLARE_STENCIL_H( OP, SRC, DEST )                        \
+  DECLARE_STENCIL( OP, SRC, DEST )                                \
+  DECLARE_HELPER( SRC, DEST )
+
 # define DECLARE_BASIC_VARIANTS( VOL )					\
-  template class Stencil2< Interpolant, VOL, FaceTypes<VOL>::XFace >;	\
-  template class Stencil2< Interpolant, VOL, FaceTypes<VOL>::YFace >;	\
-  template class Stencil2< Interpolant, VOL, FaceTypes<VOL>::ZFace >;	\
-  template class Stencil2< Gradient,    VOL, FaceTypes<VOL>::XFace >;	\
-  template class Stencil2< Gradient,    VOL, FaceTypes<VOL>::YFace >;	\
-  template class Stencil2< Gradient,    VOL, FaceTypes<VOL>::ZFace >;	\
-  template class Stencil2< Divergence, FaceTypes<VOL>::XFace, VOL >;	\
-  template class Stencil2< Divergence, FaceTypes<VOL>::YFace, VOL >;	\
-  template class Stencil2< Divergence, FaceTypes<VOL>::ZFace, VOL >;
+  DECLARE_STENCIL_H( Interpolant, VOL, FaceTypes<VOL>::XFace )          \
+  DECLARE_STENCIL_H( Interpolant, VOL, FaceTypes<VOL>::YFace )          \
+  DECLARE_STENCIL_H( Interpolant, VOL, FaceTypes<VOL>::ZFace )          \
+  DECLARE_STENCIL  ( Gradient,    VOL, FaceTypes<VOL>::XFace )          \
+  DECLARE_STENCIL  ( Gradient,    VOL, FaceTypes<VOL>::YFace )          \
+  DECLARE_STENCIL  ( Gradient,    VOL, FaceTypes<VOL>::ZFace )          \
+  DECLARE_STENCIL_H( Divergence,  FaceTypes<VOL>::XFace, VOL )          \
+  DECLARE_STENCIL_H( Divergence,  FaceTypes<VOL>::YFace, VOL )          \
+  DECLARE_STENCIL_H( Divergence,  FaceTypes<VOL>::ZFace, VOL )
   
   DECLARE_BASIC_VARIANTS( SVolField );
   DECLARE_BASIC_VARIANTS( XVolField );
   DECLARE_BASIC_VARIANTS( YVolField );
   DECLARE_BASIC_VARIANTS( ZVolField );
 
-  template class Stencil2< Interpolant, XVolField, YSurfXField >;  // advecting velocity
-  template class Stencil2< Gradient   , XVolField, YSurfXField >;  // stress
-  template class Stencil2< Interpolant, XVolField, ZSurfXField >;  // advecting velocity
-  template class Stencil2< Gradient   , XVolField, ZSurfXField >;  // stress
+  DECLARE_STENCIL_H( Interpolant, XVolField, YSurfXField )  // advecting velocity
+  DECLARE_STENCIL  ( Gradient   , XVolField, YSurfXField )  // stress
+  DECLARE_STENCIL_H( Interpolant, XVolField, ZSurfXField )  // advecting velocity
+  DECLARE_STENCIL  ( Gradient   , XVolField, ZSurfXField )  // stress
 
-  template class Stencil2< Interpolant, YVolField, XSurfYField >;  // advecting velocity
-  template class Stencil2< Gradient,    YVolField, XSurfYField >;  // stress
-  template class Stencil2< Interpolant, YVolField, ZSurfYField >;  // advecting velocity
-  template class Stencil2< Gradient,    YVolField, ZSurfYField >;  // stress
+  DECLARE_STENCIL_H( Interpolant, YVolField, XSurfYField )  // advecting velocity
+  DECLARE_STENCIL  ( Gradient,    YVolField, XSurfYField )  // stress
+  DECLARE_STENCIL_H( Interpolant, YVolField, ZSurfYField )  // advecting velocity
+  DECLARE_STENCIL  ( Gradient,    YVolField, ZSurfYField )  // stress
 
-  template class Stencil2< Interpolant, ZVolField, XSurfZField >;  // advecting velocity
-  template class Stencil2< Gradient,    ZVolField, XSurfZField >;  // stress
-  template class Stencil2< Interpolant, ZVolField, YSurfZField >;  // advecting velocity
-  template class Stencil2< Gradient,    ZVolField, YSurfZField >;  // stress
+  DECLARE_STENCIL_H( Interpolant, ZVolField, XSurfZField )  // advecting velocity
+  DECLARE_STENCIL  ( Gradient,    ZVolField, XSurfZField )  // stress
+  DECLARE_STENCIL_H( Interpolant, ZVolField, YSurfZField )  // advecting velocity
+  DECLARE_STENCIL  ( Gradient,    ZVolField, YSurfZField )  // stress
 
-  template class Stencil2< Interpolant, SVolField, XVolField >;  // density, dp/dx
-  template class Stencil2< Interpolant, SVolField, YVolField >;  // density, dp/dy
-  template class Stencil2< Interpolant, SVolField, ZVolField >;  // density, dp/dz
+  DECLARE_STENCIL_H( Interpolant, SVolField, XVolField )  // density, dp/dx
+  DECLARE_STENCIL_H( Interpolant, SVolField, YVolField )  // density, dp/dy
+  DECLARE_STENCIL_H( Interpolant, SVolField, ZVolField )  // density, dp/dz
 
-  template class Stencil2< Interpolant, XVolField, SVolField >;  // pressure projection RHS
-  template class Stencil2< Interpolant, YVolField, SVolField >;  // pressure projection RHS
-  template class Stencil2< Interpolant, ZVolField, SVolField >;  // pressure projection RHS
+  DECLARE_STENCIL_H( Interpolant, XVolField, SVolField )  // pressure projection RHS
+  DECLARE_STENCIL_H( Interpolant, YVolField, SVolField )  // pressure projection RHS
+  DECLARE_STENCIL_H( Interpolant, ZVolField, SVolField )  // pressure projection RHS
 
-  template class Stencil2< Gradient, XVolField, SVolField >;  // dilatation
-  template class Stencil2< Gradient, YVolField, SVolField >;  // dilatation
-  template class Stencil2< Gradient, ZVolField, SVolField >;  // dilatation
+  DECLARE_STENCIL( Gradient, XVolField, SVolField )  // dilatation
+  DECLARE_STENCIL( Gradient, YVolField, SVolField )  // dilatation
+  DECLARE_STENCIL( Gradient, ZVolField, SVolField )  // dilatation
 
-  template class Stencil2< Gradient, SVolField, XVolField >;  // pressure
-  template class Stencil2< Gradient, SVolField, YVolField >;  // pressure
-  template class Stencil2< Gradient, SVolField, ZVolField >;  // pressure
+  DECLARE_STENCIL_H( Gradient, SVolField, XVolField )  // pressure
+  DECLARE_STENCIL_H( Gradient, SVolField, YVolField )  // pressure
+  DECLARE_STENCIL_H( Gradient, SVolField, ZVolField )  // pressure
   //
   //==================================================================
 

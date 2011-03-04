@@ -276,15 +276,19 @@ namespace structured{
   //==================================================================
   // Explicit template instantiation
   //
+#define DECLARE_STENCIL( OP, SRC, DEST )                                \
+  template struct Stencil4< OP, SRC, DEST >;                            \
+  template struct Stencil4Helper< SRC, DEST >;
+
   // viscosity from scalar cells to staggered surfaces for stress
-  template struct Stencil4< Interpolant, SVolField, XSurfYField >; 
-  template struct Stencil4< Interpolant, SVolField, XSurfZField >;
+  DECLARE_STENCIL( Interpolant, SVolField, XSurfYField ) 
+  DECLARE_STENCIL( Interpolant, SVolField, XSurfZField )
 
-  template struct Stencil4< Interpolant, SVolField, YSurfXField >;
-  template struct Stencil4< Interpolant, SVolField, YSurfZField >;
+  DECLARE_STENCIL( Interpolant, SVolField, YSurfXField )
+  DECLARE_STENCIL( Interpolant, SVolField, YSurfZField )
 
-  template struct Stencil4< Interpolant, SVolField, ZSurfXField >;
-  template struct Stencil4< Interpolant, SVolField, ZSurfYField >;
+  DECLARE_STENCIL( Interpolant, SVolField, ZSurfXField )
+  DECLARE_STENCIL( Interpolant, SVolField, ZSurfYField )
   //
   //==================================================================
 
