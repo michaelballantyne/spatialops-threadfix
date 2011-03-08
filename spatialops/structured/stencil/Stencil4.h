@@ -42,7 +42,8 @@ namespace structured{
    *  \brief Provides information to customize the behavior of a Stencil4.
    */
   template< typename SrcFieldT, typename DestFieldT >
-  struct Stencil4Helper
+  struct Stencil4Helper;
+  /*
   {
     Stencil4Helper( const MemoryWindow& wsrc,
                     const MemoryWindow& wdest );
@@ -60,6 +61,7 @@ namespace structured{
     IntVec low()  const; ///< the low index bounds for the x, y, and z loops
     IntVec high() const; ///< the high index bounds for the x, y, and z loops
   };
+  */
 
 } // namespace structured
 } // namespace SpatialOps

@@ -277,8 +277,7 @@ namespace structured{
   // Explicit template instantiation
   //
 #define DECLARE_STENCIL( OP, SRC, DEST )                                \
-  template struct Stencil4< OP, SRC, DEST >;                            \
-  template struct Stencil4Helper< SRC, DEST >;
+  template struct Stencil4< OP, SRC, DEST >;
 
   // viscosity from scalar cells to staggered surfaces for stress
   DECLARE_STENCIL( Interpolant, SVolField, XSurfYField ) 
