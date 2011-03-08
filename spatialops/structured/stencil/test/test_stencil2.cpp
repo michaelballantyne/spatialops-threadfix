@@ -47,7 +47,7 @@ struct FunctionDer<YDIR,FieldT>
 {
   static void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& df )
   {
-    df <<= -1.0*sin(y);
+    df <<= -sin(y);
   }
 };
 template< typename FieldT >
@@ -65,21 +65,21 @@ template< typename FieldT > struct Function2Der<XDIR,FieldT>
 {
   static void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& df )
   {
-    df <<= -1.0*sin(x);
+    df <<= -sin(x);
   }
 };
 template< typename FieldT > struct Function2Der<YDIR,FieldT>
 {
   static void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& df )
   {
-    df <<= -1.0*cos(y);
+    df <<= -cos(y);
   }
 };
 template< typename FieldT > struct Function2Der<ZDIR,FieldT>
 {
   static void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& df )
   {
-    df <<= -1.0*sin(z);
+    df <<= -sin(z);
   }
 };
 
@@ -126,13 +126,13 @@ bool check_convergence( const std::vector<double>& spacings,
 
 template< typename VolT, typename FaceT >
 void
-apply_stencil( const IntVec& npts, const bool* bcPlus,
+apply_stencil( const IntVec& npts, const double len, const bool* bcPlus,
                double& interpNorm, double& gradNorm, double& divNorm )
 {
   const MemoryWindow vmw = get_window_with_ghost<VolT >( npts, bcPlus[0], bcPlus[1], bcPlus[2] );
   const MemoryWindow fmw = get_window_with_ghost<FaceT>( npts, bcPlus[0], bcPlus[1], bcPlus[2] );
 
-  std::vector<double> length(3,10.0);
+  std::vector<double> length(3,len);
   const Grid grid( npts, length );
 
   VolT   vol( vmw, NULL ), xvol(vmw,NULL), yvol(vmw,NULL), zvol(vmw,NULL);
@@ -162,6 +162,9 @@ apply_stencil( const IntVec& npts, const bool* bcPlus,
 
   // interpolant
   {
+    {
+      const Stencil2Helper<VolT,FaceT> helper( vol.window_with_ghost(),face.window_with_ghost() );
+    }
     const InterpT& interpOp = *opdb.retrieve_operator<InterpT>();
     interpOp.apply_to_field( vol, face );
     function( xface, yface, zface, faceExact );
@@ -213,13 +216,15 @@ run_variants( const IntVec npts,
   std::vector<double> interpNorms(nrefine,0.0), gradNorms(nrefine,0.0), divNorms(nrefine,0.0);
   std::vector<double> spacings(nrefine,0.0);
 
+  const double length = 10.0;
+
   // x-convergence
   if( npts[0]>1 ){
     IntVec n(npts);
     const unsigned int ix = 0;
     for( unsigned int icount=0; icount<nrefine; ++icount ){
-      spacings[icount] = 1.0/n[ix];
-      apply_stencil<Vol,XFace>( n, bcPlus, interpNorms[icount], gradNorms[icount], divNorms[icount] );
+      spacings[icount] = length/n[ix];
+      apply_stencil<Vol,XFace>( n, length, bcPlus, interpNorms[icount], gradNorms[icount], divNorms[icount] );
       n[ix] *= 2;
     }
     status( check_convergence( spacings, interpNorms, 2 ), "x-Interpolant" );
@@ -232,8 +237,8 @@ run_variants( const IntVec npts,
     IntVec n(npts);
     const unsigned int ix = 1;
     for( unsigned int icount=0; icount<nrefine; ++icount ){
-      spacings[icount] = 1.0/n[ix];
-      apply_stencil<Vol,YFace>( n, bcPlus, interpNorms[icount], gradNorms[icount], divNorms[icount] );
+      spacings[icount] = length/n[ix];
+      apply_stencil<Vol,YFace>( n, length, bcPlus, interpNorms[icount], gradNorms[icount], divNorms[icount] );
       n[ix] *= 2;
     }
     status( check_convergence( spacings, interpNorms, 2 ), "y-Interpolant" );
@@ -246,8 +251,8 @@ run_variants( const IntVec npts,
     IntVec n(npts);
     const unsigned int ix = 2;
     for( unsigned int icount=0; icount<nrefine; ++icount ){
-      spacings[icount] = 1.0/n[ix];
-      apply_stencil<Vol,ZFace>( n, bcPlus, interpNorms[icount], gradNorms[icount], divNorms[icount] );
+      spacings[icount] = length/n[ix];
+      apply_stencil<Vol,ZFace>( n, length, bcPlus, interpNorms[icount], gradNorms[icount], divNorms[icount] );
       n[ix] *= 2;
     }
     status( check_convergence( spacings, interpNorms, 2 ), "z-Interpolant" );
@@ -299,7 +304,7 @@ bool interp_test( const unsigned int dir,
     function( xdest, ydest, zdest, destExact );
 
     interpNorms[icount] = interior_norm( dest, destExact );
-    spacings[icount] = 1.0/npts[dir];
+    spacings[icount] = length[dir]/npts[dir];
     npts[dir] *= 2;
   }
   return check_convergence( spacings, interpNorms, 2 );
@@ -314,14 +319,14 @@ bool grad_test( const unsigned int dir,
 {
   const int nrefine = 5;
   std::vector<double> norms(nrefine,0.0);
-  std::vector<double> spacings(nrefine,0.0);
+  std::vector<double> spacing(nrefine,0.0);
 
   for( unsigned int icount=0; icount<nrefine; ++icount ){
 
     const MemoryWindow vmw = get_window_with_ghost<SrcT >( npts, bcPlus[0], bcPlus[1], bcPlus[2] );
     const MemoryWindow fmw = get_window_with_ghost<DestT>( npts, bcPlus[0], bcPlus[1], bcPlus[2] );
 
-    std::vector<double> length(3,10.0);
+    std::vector<double> length(3,7.0);
     const Grid grid( npts, length );
 
     SrcT   src( vmw, NULL ),  xsrc(vmw,NULL),  ysrc(vmw,NULL),  zsrc(vmw,NULL);
@@ -341,15 +346,16 @@ bool grad_test( const unsigned int dir,
     DestT destExact( fmw, NULL );
 
     // gradient
-    spacings[icount] = 1.0/npts[dir];
-    const Stencil2< Gradient, SrcT, DestT > gradOp( -spacings[icount], spacings[icount] );
+    spacing[icount] = length[dir]/npts[dir];
+    const Stencil2< Gradient, SrcT, DestT > gradOp( -1.0/spacing[icount], 1.0/spacing[icount] );
     gradOp.apply_to_field( src, dest );
     FunctionDer<DirT,DestT>::value( xdest, ydest, zdest, destExact );
 
     norms[icount] = interior_norm( dest, destExact );
+
     npts[dir] *= 2;
   }
-  return check_convergence( spacings, norms, 2 );
+  return check_convergence( spacing, norms, 2 );
 }
 
 //--------------------------------------------------------------------
@@ -363,9 +369,9 @@ int main( int iarg, char* carg[] )
     po::options_description desc("Supported Options");
     desc.add_options()
       ( "help", "print help message\n" )
-      ( "nx",   po::value<int>(&nx)->default_value(5), "number of points in x-dir for base mesh" )
-      ( "ny",   po::value<int>(&ny)->default_value(5), "number of points in y-dir for base mesh" )
-      ( "nz",   po::value<int>(&nz)->default_value(5), "number of points in z-dir for base mesh" )
+      ( "nx",   po::value<int>(&nx)->default_value(8), "number of points in x-dir for base mesh" )
+      ( "ny",   po::value<int>(&ny)->default_value(8), "number of points in y-dir for base mesh" )
+      ( "nz",   po::value<int>(&nz)->default_value(8), "number of points in z-dir for base mesh" )
       ( "bcx",  "physical boundary on +x side?" )
       ( "bcy",  "physical boundary on +y side?" )
       ( "bcz",  "physical boundary on +z side?" );
@@ -414,14 +420,20 @@ int main( int iarg, char* carg[] )
     if( npts[0]>1 & npts[1]>1 ) status( interp_test< XVolField, YSurfXField >( 1, npts, bcplus ), "InterpXVolYSurfX" );
     if( npts[0]>1 & npts[2]>1 ) status( interp_test< XVolField, ZSurfXField >( 2, npts, bcplus ), "InterpXVolZSurfX" );
 
-//     if( npts[0]>1 & npts[1]>1 ) status( grad_test< YDIR, XVolField, YSurfXField >( 1, npts, bcplus ), "GradXVolYSurfX" );
-//     if( npts[0]>1 & npts[2]>1 ) status( grad_test< ZDIR, XVolField, ZSurfXField >( 2, npts, bcplus ), "GradXVolZSurfX" );
+    if( npts[0]>1 & npts[1]>1 ) status( grad_test< YDIR, XVolField, YSurfXField >( 1, npts, bcplus ), "GradXVolYSurfX" );
+    if( npts[0]>1 & npts[2]>1 ) status( grad_test< ZDIR, XVolField, ZSurfXField >( 2, npts, bcplus ), "GradXVolZSurfX" );
 
     if( npts[1]>1 & npts[0]>1 ) status( interp_test< YVolField, XSurfYField >( 0, npts, bcplus ), "InterpYVolXSurfY" );
     if( npts[1]>1 & npts[2]>1 ) status( interp_test< YVolField, ZSurfYField >( 2, npts, bcplus ), "InterpYVolZSurfY" );
 
+    if( npts[1]>1 & npts[0]>1 ) status( grad_test< XDIR, YVolField, XSurfYField >( 0, npts, bcplus ), "GradYVolXSurfY" );
+    if( npts[1]>1 & npts[2]>1 ) status( grad_test< ZDIR, YVolField, ZSurfYField >( 2, npts, bcplus ), "GradYVolZSurfY" );
+
     if( npts[2]>1 & npts[0]>1 ) status( interp_test< ZVolField, XSurfZField >( 0, npts, bcplus ), "InterpZVolXSurfZ" );
     if( npts[2]>1 & npts[1]>1 ) status( interp_test< ZVolField, YSurfZField >( 1, npts, bcplus ), "InterpZVolYSurfZ" );
+
+    if( npts[2]>1 & npts[0]>1 ) status( grad_test< XDIR, ZVolField, XSurfZField >( 0, npts, bcplus ), "GradZVolXSurfZ" );
+    if( npts[2]>1 & npts[1]>1 ) status( grad_test< YDIR, ZVolField, YSurfZField >( 1, npts, bcplus ), "GradZVolYSurfZ" );
 
     if( npts[0]>1 ) status( interp_test< SVolField, XVolField >( 0, npts, bcplus ), "InterpSVolXVol" );
     if( npts[1]>1 ) status( interp_test< SVolField, YVolField >( 1, npts, bcplus ), "InterpSVolYVol" );
