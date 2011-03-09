@@ -1,4 +1,4 @@
-set( libs spatialops-stencil spatialops-structured spatialops ${TPL_LIBRARIES} )
+set( libs spatialops spatialops-stencil spatialops-structured ${TPL_LIBRARIES} )
 
 add_executable( test_stencil2 test_stencil2.cpp )
 target_link_libraries( test_stencil2 ${libs} )

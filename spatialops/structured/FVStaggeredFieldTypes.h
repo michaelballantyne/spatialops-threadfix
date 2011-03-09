@@ -6,11 +6,16 @@
 #include <spatialops/SpatialOpsDefs.h>
 
 #if defined(LINALG_UBLAS)
-#  include <spatialops/LinAlgUBlas.h>
-   typedef SpatialOps::LinAlgUBlas LinAlg;
+# include <spatialops/LinAlgUBlas.h>
+  typedef SpatialOps::LinAlgUBlas LinAlg;
 #elif defined(LINALG_TRILINOS)
-#  include <spatialops/LinAlgTrilinos.h>
-   typedef SpatialOps::LinAlgTrilinos LinAlg;
+# include <spatialops/LinAlgTrilinos.h>
+  typedef SpatialOps::LinAlgTrilinos LinAlg;
+#elif defined(LINALG_STENCIL)
+  struct LinAlg{
+    typedef int VecType;
+    VecType& setup_vector( const int, double* ){ static VecType vt=0; return vt; }
+  };
 #else
 #  error No LinAlg typedef was made!
 #endif

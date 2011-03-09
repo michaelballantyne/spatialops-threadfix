@@ -18,6 +18,9 @@ option( ENABLE_STENCIL "Enable fast stencil installation rather than matrix-base
 
 if( ENABLE_STENCIL )
   set( ENABLE_MATRIX OFF )
+  set( LINALG_UBLAS OFF )
+  set( LINALG_TRILINOS OFF )
+  set( LINALG_STENCIL ON )
 else()
   set( ENABLE_MATRIX ON )
 endif( ENABLE_STENCIL )
@@ -113,13 +116,10 @@ if( LINALG_TRILINOS )
     ${LAPACK_LIBRARIES}
     ${BLAS_LIBRARIES}
     )
-
-  set( LINALG_TRILINOS ON )
   set( LINALG_UBLAS OFF )
-else( Trilinos_path )
-  message( STATUS "Using UBLAS for linear algebra" )
-  set( LINALG_UBLAS ON )
-  set( LINALG_TRILINOS OFF )
+endif()
+if( LINALG_UBLAS )
+    message( STATUS "Using UBLAS for linear algebra" )
 endif()
 #--------------------------------------
 

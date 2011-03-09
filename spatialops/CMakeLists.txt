@@ -40,9 +40,13 @@ if( ENABLE_MATRIX )
   set( SO_HEADERS ${SO_HEADERS}
     LinearSystem.h
     SpatialOperator.h
-    LinAlgTrilinos.h
-    LinAlgUBlas.h
     )
+  if( LINALG_TRILINOS )
+    set( SO_HEADERS ${SO_HEADERS} LinAlgTrilinos.h )
+  endif()
+  if( LINALG_UBLAS )
+    set( SO_HEADERS ${SO_HEADERS} LinAlgUBlas.h )
+  endif()
 endif( ENABLE_MATRIX )
 
 install( FILES
