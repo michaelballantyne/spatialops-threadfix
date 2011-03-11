@@ -10,6 +10,11 @@ if( ENABLE_TESTS )
   add_subdirectory( test )
 endif( ENABLE_TESTS )
 
+install( FILES
+  FVStaggered1DOperatorTypes.h
+  DESTINATION include/spatialops/structured/
+  PERMISSIONS OWNER_READ GROUP_READ WORLD_READ 
+  )
 
 if( ENABLE_MATRIX )
   set( SO_SRC ${SO_SRC} ${src} PARENT_SCOPE )
