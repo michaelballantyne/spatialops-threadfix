@@ -163,13 +163,41 @@ namespace structured{
 
     virtual ~SpatialField();
 
-    // warning: slow
+    /**
+     *  \brief Given the index for this field 0-based including
+     *  ghosts, obtain a reference to the field value.
+     *  WARNING: slow!
+     */
     T& operator()( const size_t i, const size_t j, const size_t k );
-    T& operator()( const size_t i, const size_t j, const size_t k ) const;
 
-    // warning: slow
-    T& operator[]( const size_t i );
-    T& operator[]( const size_t i ) const;
+    /**
+     *  \brief Given the index for this field 0-based including
+     *  ghosts, obtain a const reference to the field value.
+     *  WARNING: slow!
+     */
+    const T& operator()( const size_t i, const size_t j, const size_t k ) const;
+
+    /**
+     *  \brief Given the index for this field 0-based including
+     *  ghosts, obtain a reference to the field value.
+     *  WARNING: slow!
+     */
+    T& operator()( const IntVec& ijk );
+
+    /**
+     *  \brief Given the index for this field 0-based including
+     *  ghosts, obtain a const reference to the field value.
+     *  WARNING: slow!
+     */
+    const T& operator()( const IntVec& ijk ) const;
+
+    /**
+     *  Index into this field (global index, 0-based in ghost cells).
+     *  Note that if this field is windowed, this is still the global
+     *  (not windowed) flat index.
+     */
+    inline T& operator[]( const size_t i );
+    inline T& operator[]( const size_t i ) const;
 
     inline const_iterator begin() const{ return const_iterator(fieldValues_,fieldWindow_.flat_index(IntVec(0,0,0)),fieldWindow_); }
     inline       iterator begin()      { return       iterator(fieldValues_,fieldWindow_.flat_index(IntVec(0,0,0)),fieldWindow_); }
@@ -371,27 +399,46 @@ namespace structured{
   SpatialField<VecOps,Location,GhostTraits,T>::
   operator()( const size_t i, const size_t j, const size_t k )
   {
+    return (*this)(IntVec(i,j,k));
+  }
+
+  template< typename VecOps, typename Location, typename GhostTraits, typename T >
+  T&
+  SpatialField<VecOps,Location,GhostTraits,T>::
+  operator()( const IntVec& ijk )
+  {
 #   ifndef NDEBUG
-    assert( i < fieldWindow_.extent(0) );
-    assert( j < fieldWindow_.extent(1) );
-    assert( k < fieldWindow_.extent(2) );
+    assert( ijk[0] < fieldWindow_.extent(0) );
+    assert( ijk[1] < fieldWindow_.extent(1) );
+    assert( ijk[2] < fieldWindow_.extent(2) );
+    assert( ijk[0] >= fieldWindow_.offset(0) );
+    assert( ijk[1] >= fieldWindow_.offset(1) );
+    assert( ijk[2] >= fieldWindow_.offset(2) );
 #   endif
-    return fieldValues_[ fieldWindow_.flat_index(IntVec(i,j,k)) ];
+    return fieldValues_[ fieldWindow_.flat_index(ijk) ];
   }
 
   //------------------------------------------------------------------
 
   template< typename VecOps, typename Location, typename GhostTraits, typename T >
-  T&
+  const T&
   SpatialField<VecOps,Location,GhostTraits,T>::
   operator()( const size_t i, const size_t j, const size_t k ) const
   {
+    return (*this)(IntVec(i,j,k));
+  }
+
+  template< typename VecOps, typename Location, typename GhostTraits, typename T >
+  const T&
+  SpatialField<VecOps,Location,GhostTraits,T>::
+  operator()( const IntVec& ijk ) const
+  {
 #   ifndef NDEBUG
-    assert( i < fieldWindow_.extent(0) );
-    assert( j < fieldWindow_.extent(1) );
-    assert( k < fieldWindow_.extent(2) );
+    assert( ijk[0] < fieldWindow_.extent(0) && ijk[0] >= fieldWindow_.offset(0) );
+    assert( ijk[1] < fieldWindow_.extent(1) && ijk[1] >= fieldWindow_.offset(1) );
+    assert( ijk[2] < fieldWindow_.extent(2) && ijk[2] >= fieldWindow_.offset(2) );
 #   endif
-    return fieldValues_[ fieldWindow_.flat_index(IntVec(i,j,k)) ];
+    return fieldValues_[ fieldWindow_.flat_index(ijk) ];
   }
 
   //------------------------------------------------------------------
@@ -401,7 +448,7 @@ namespace structured{
   SpatialField<VecOps,Location,GhostTraits,T>::
   operator[]( const size_t i )
   {
-    return fieldValues_[ fieldWindow_.flat_index( fieldWindow_.ijk_index_from_local(i) ) ];
+    return fieldValues_[i];
   }
 
   //------------------------------------------------------------------
@@ -411,7 +458,7 @@ namespace structured{
   SpatialField<VecOps,Location,GhostTraits,T>::
   operator[]( const size_t i ) const
   {
-    return fieldValues_[ fieldWindow_.flat_index( fieldWindow_.ijk_index_from_local(i) ) ];
+    return fieldValues_[i];
   }
 
   //------------------------------------------------------------------

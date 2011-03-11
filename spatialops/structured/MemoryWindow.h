@@ -192,9 +192,9 @@ namespace structured{
     inline int flat_index( IntVec loc ) const
     {
 #     ifndef NDEBUG
-      if( extent_[0]>1 ) assert( loc[0] < extent_[0] );
-      if( extent_[1]>1 ) assert( loc[1] < extent_[1] );
-      if( extent_[2]>1 ) assert( loc[2] < extent_[2] );
+      if( extent_[0]>1 ) assert( loc[0] < nptsGlob_[0] );
+      if( extent_[1]>1 ) assert( loc[1] < nptsGlob_[1] );
+      if( extent_[2]>1 ) assert( loc[2] < nptsGlob_[2] );
 #     endif
       for( size_t i=0; i<3; ++i ) if( nptsGlob_[i]>1 ) loc[i] += offset_[i];
       return loc[0] + nptsGlob_[0] * (loc[1] + loc[2]*nptsGlob_[1]);

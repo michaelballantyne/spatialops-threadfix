@@ -30,24 +30,20 @@ namespace structured{
     /**
      *  @param point The i,j,k location at which we want to specify
      *         the boundary condition (based on scalar cell center
-     *         index)
+     *         index).  This is indexed 0-based on the interior
+     *         (neglecting ghost cells).
      *
      *  @param side What side of the given point should be BC be applied to (+/-)?
      *
      *  @param eval The evalautor to obtain the bc value at this point.
      *
-     *  @param soDatabase The database for spatial operators. An
-     *         operator of type OpT will be extracted from this
-     *         database.
+     *  @param opdb The database for spatial operators. An operator of
+     *         type OpT will be extracted from this database.
      */
-    BoundaryConditionOp( const IntVec& dim,
-                         const bool bcPlusX,
-                         const bool bcPlusY,
-                         const bool bcPlusZ,
-                         const IntVec point,
+    BoundaryConditionOp( const IntVec point,
                          const BCSide side,
                          const BCEval bceval,
-                         const OperatorDatabase& soDatabase );
+                         const OperatorDatabase& opdb );
 
     ~BoundaryConditionOp(){}
 
@@ -71,11 +67,7 @@ namespace structured{
 
   template< typename OpT, typename BCEval >
   BoundaryConditionOp<OpT,BCEval>::
-  BoundaryConditionOp( const IntVec& dim,
-                       const bool bcPlusX,
-                       const bool bcPlusY,
-                       const bool bcPlusZ,
-                       const IntVec point,
+  BoundaryConditionOp( const IntVec point,
                        const BCSide side,
                        const BCEval bceval,
                        const OperatorDatabase& soDatabase )
@@ -110,20 +102,20 @@ namespace structured{
     case X_PLUS_SIDE:
       cb_ = op->get_minus_coef();
       ca_ = op->get_plus_coef();
-      iashift[0] = 0;
-      ibshift[0] = -1;
+      iashift[0] = 1;
+      ibshift[0] = 0;
       break;
     case Y_PLUS_SIDE:
       cb_ = op->get_minus_coef();
       ca_ = op->get_plus_coef();
-      iashift[1] = 0;
-      ibshift[1] = -1;
+      iashift[1] = 1;
+      ibshift[1] = 0;
       break;
     case Z_PLUS_SIDE:
       cb_ = op->get_minus_coef();
       ca_ = op->get_plus_coef();
-      iashift[2] = 0;
-      ibshift[2] = -1;
+      iashift[2] = 1;
+      ibshift[2] = 0;
       break;
     default:
       throw std::runtime_error("Invalid BC face specification");
@@ -141,7 +133,6 @@ namespace structured{
   {
     const unsigned int ia = f.window_without_ghost().flat_index(apoint_);
     const unsigned int ib = f.window_without_ghost().flat_index(bpoint_);
-    //    std::cout << apoint_ << ", " << bpoint_ << " : " << ia << "," << ib << " : " << f.window_without_ghost() << " : "<< f.window_with_ghost() << endl;
     f[ia] = ( bcEval_() - cb_*f[ib] ) / ca_;
   }
 

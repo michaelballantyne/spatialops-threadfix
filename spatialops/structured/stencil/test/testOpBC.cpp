@@ -29,6 +29,7 @@ bool test_bc_helper( const OperatorDatabase& opDB,
                      const IntVec&dim,
                      const std::vector<bool>& bcFlag,
                      const IntVec ijk,
+                     const IntVec faceShift,
                      const double bcVal,
                      const BCSide side )
 {
@@ -46,14 +47,10 @@ bool test_bc_helper( const OperatorDatabase& opDB,
 
   int icnt=0;
   for( typename SrcFieldT::iterator ifld=f->begin(); ifld!=f->end(); ++ifld,++icnt ) *ifld = icnt;
+  *df = 0.0;
 
   // assign the BC.
-  BoundaryConditionOp<OpT,ConstValEval> bc( dim,
-                                            bcFlag[0], bcFlag[1], bcFlag[2],
-                                            ijk,
-                                            side,
-                                            ConstValEval(bcVal),
-                                            opDB );
+  BoundaryConditionOp<OpT,ConstValEval> bc( ijk, side, ConstValEval(bcVal), opDB );
 
   // evaluate the BC and set it in the field.
   bc(*f);
@@ -62,14 +59,14 @@ bool test_bc_helper( const OperatorDatabase& opDB,
   op.apply_to_field( *f, *df );
 
   // verify that the BC was set properly.
-  const int ix = df->window_without_ghost().flat_index(ijk);
+  const int ix = df->window_without_ghost().flat_index(ijk+faceShift);
 
   const double abserr = abs( (*df)[ix] - bcVal );
   const double relerr = abserr/abs(bcVal);
 
-  bool isOkay = (abserr<1.0e-9 && relerr<1.0e-9);
+  bool isOkay = (abserr<1.0e-12 && relerr<1.0e-12);
 //   if( !isOkay ) cout << "  " << abserr << "  " << relerr << "     "
-//                   << df[ix] << "  " << bcVal << endl;
+//                      << (*df)[ix] << "  " << bcVal << endl;
   return isOkay;
 }
 
@@ -87,41 +84,46 @@ test_bc_loop( const OperatorDatabase& opDB,
 {
   TestHelper status(false);
 
+  IntVec faceShift(0,0,0);
+
   switch(side){
 
-  case X_MINUS_SIDE:
-  case X_PLUS_SIDE: {
+  case X_PLUS_SIDE:
+    faceShift[0] = 1;
+  case X_MINUS_SIDE: {
     TestHelper tmp(false);
     const int i=bcFaceIndex;
     for( int j=0; j<dim[1]; ++j ){
       for( int k=0; k<dim[2]; ++k ){
-        tmp( test_bc_helper<OpT>( opDB, dim, bcFlag, IntVec(i,j,k), bcVal, side ) );
+        tmp( test_bc_helper<OpT>( opDB, dim, bcFlag, IntVec(i,j,k), faceShift, bcVal, side ) );
       }
     }
     status( tmp.ok(), "X BC " + opName );
     break;
   }
 
-  case Y_MINUS_SIDE:
-  case Y_PLUS_SIDE: {
+  case Y_PLUS_SIDE:
+    faceShift[1]=1;
+  case Y_MINUS_SIDE: {
     TestHelper tmp(false);
     const int j=bcFaceIndex;
     for( int i=0; i<dim[0]; ++i ){
       for( int k=0; k<dim[2]; ++k ){
-        tmp( test_bc_helper<OpT>( opDB, dim, bcFlag, IntVec(i,j,k), bcVal, side ) );
+        tmp( test_bc_helper<OpT>( opDB, dim, bcFlag, IntVec(i,j,k), faceShift, bcVal, side ) );
       }
     }
     status( tmp.ok(), "Y BC " + opName );
     break;
   }
 
-  case Z_MINUS_SIDE:
-  case Z_PLUS_SIDE: {
+  case Z_PLUS_SIDE:
+    faceShift[2]=1;
+  case Z_MINUS_SIDE: {
     TestHelper tmp(false);
     const int k=bcFaceIndex;
     for( int i=0; i<dim[0]; ++i ){
       for( int j=0; j<dim[1]; ++j ){
-        tmp( test_bc_helper<OpT>( opDB, dim, bcFlag, IntVec(i,j,k), bcVal, side ) );
+        tmp( test_bc_helper<OpT>( opDB, dim, bcFlag, IntVec(i,j,k), faceShift, bcVal, side ) );
       }
     }
     status( tmp.ok(), "Z BC " + opName );
