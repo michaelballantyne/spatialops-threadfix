@@ -1,5 +1,5 @@
-#ifndef SpatialOps_structured_StencilHelper_h
-#define SpatialOps_structured_StencilHelper_h
+#ifndef SpatialOps_structured_FVStaggeredOpTypes_h
+#define SpatialOps_structured_FVStaggeredOpTypes_h
 
 #include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
@@ -168,4 +168,4 @@ namespace structured{
 } // namespace SpatialOps
 } // namespace structured
 
-#endif // SpatialOps_structured_StencilHelper_h
+#endif // SpatialOps_structured_FVStaggeredOpTypes_h
