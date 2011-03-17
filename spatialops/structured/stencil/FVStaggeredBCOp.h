@@ -141,4 +141,4 @@ namespace structured{
 } // namespace 
 } // namespace SpatialOps
 
-#endif SpatialOps_FVStaggeredStencilBCOp_h
+#endif // SpatialOps_FVStaggeredStencilBCOp_h
