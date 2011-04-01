@@ -18,4 +18,7 @@ set( SpatialOps_INCLUDE_DIR
   @TPL_INCLUDE_DIRS@
   )
 
+set( ENABLE_THREADS @ENABLE_THREADS@ )
+seT( NTHREADS @NTHREADS@ )
+
 include( @CMAKE_INSTALL_PREFIX@/lib/spatialops/SpatialOps.cmake )
