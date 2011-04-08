@@ -196,7 +196,7 @@ namespace structured{
       if( extent_[1]>1 ) assert( loc[1] < nptsGlob_[1] );
       if( extent_[2]>1 ) assert( loc[2] < nptsGlob_[2] );
 #     endif
-      for( size_t i=0; i<3; ++i ) if( nptsGlob_[i]>1 ) loc[i] += offset_[i];
+      for( size_t i=0; i<3; ++i ) if( nptsGlob_[i]>1 ) loc[i] += offset_[i];// else loc[i]=0;
       return loc[0] + nptsGlob_[0] * (loc[1] + loc[2]*nptsGlob_[1]);
     }
 
