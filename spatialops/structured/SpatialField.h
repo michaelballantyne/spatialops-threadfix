@@ -159,6 +159,10 @@ namespace structured{
                   T* const fieldValues,
                   const StorageMode mode = InternalStorage );
 
+    /**
+     *  \brief Shallow copy constructor.  This results in two fields
+     *  that share the same underlying memory.
+     */
     SpatialField( const SpatialField& other );
 
     virtual ~SpatialField();
@@ -309,12 +313,10 @@ namespace structured{
   SpatialField( const SpatialField& other )
     : fieldWindow_( other.fieldWindow_ ),
       interiorFieldWindow_( other.interiorFieldWindow_ ),
-      fieldValues_( new T[ fieldWindow_.glob_dim(0) * fieldWindow_.glob_dim(1) * fieldWindow_.glob_dim(2) ] ),
-      builtField_( true ),
+      fieldValues_( other.fieldValues_ ),
+      builtField_( false ),
       vec_( linAlg_.setup_vector( fieldWindow_.glob_npts(), fieldValues_ ) )
-  {
-    (*this) = other;
-  }
+  {}
 
   //------------------------------------------------------------------
 
