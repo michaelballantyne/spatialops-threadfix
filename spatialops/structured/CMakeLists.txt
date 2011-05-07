@@ -15,9 +15,10 @@ if( ENABLE_TESTS )
   add_subdirectory( test )
 endif( ENABLE_TESTS )
 
+add_subdirectory( onedim )
+
 if( ENABLE_MATRIX )
   add_subdirectory( matrix )
-  add_subdirectory( onedim )
 endif( ENABLE_MATRIX )
 
 if( ENABLE_STENCIL )
