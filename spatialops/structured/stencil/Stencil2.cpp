@@ -108,6 +108,8 @@ namespace structured{
   DECLARE_STENCIL( Gradient, SVolField, XVolField )  // pressure
   DECLARE_STENCIL( Gradient, SVolField, YVolField )  // pressure
   DECLARE_STENCIL( Gradient, SVolField, ZVolField )  // pressure
+
+  DECLARE_STENCIL( Interpolant, SSurfXField, SVolField )  // ODT colocated mesh
   //
   //==================================================================
 

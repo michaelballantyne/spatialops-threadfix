@@ -420,6 +420,8 @@ int main( int iarg, char* carg[] )
     if( npts[0]>1 & npts[1]>1 ) status( interp_test< XVolField, YSurfXField >( 1, npts, bcplus ), "InterpXVolYSurfX" );
     if( npts[0]>1 & npts[2]>1 ) status( interp_test< XVolField, ZSurfXField >( 2, npts, bcplus ), "InterpXVolZSurfX" );
 
+    if( npts[0]>1 ) status( interp_test< SSurfXField, SVolField >( 0, npts, bcplus ), "SSurfXField->SVolField" );
+
     if( npts[0]>1 & npts[1]>1 ) status( grad_test< YDIR, XVolField, YSurfXField >( 1, npts, bcplus ), "GradXVolYSurfX" );
     if( npts[0]>1 & npts[2]>1 ) status( grad_test< ZDIR, XVolField, ZSurfXField >( 2, npts, bcplus ), "GradXVolZSurfX" );
 

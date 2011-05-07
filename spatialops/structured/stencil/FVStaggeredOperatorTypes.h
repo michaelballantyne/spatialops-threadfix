@@ -146,6 +146,8 @@ namespace structured{
   OP_BUILDER( Stencil2, Interpolant, ZVolField, SVolField )
   OP_BUILDER( Stencil2, Gradient,    ZVolField, SVolField )
 
+  OP_BUILDER( Stencil2, Interpolant, SSurfXField, SVolField ) // ODT requires this.
+
 
   OP_BUILDER( NullStencil, Interpolant, XVolField, SSurfXField )
   OP_BUILDER( NullStencil, Interpolant, YVolField, SSurfYField )
