@@ -41,14 +41,6 @@ namespace structured{
   template<typename OpT, typename SrcT, typename DestT>
   struct OperatorTypeBuilder;
 
-
-#define OP_BUILDER( STENCIL, OP, SRC, DEST )    \
-  template<>                                    \
-  struct OperatorTypeBuilder<OP,SRC,DEST>{      \
-    typedef STENCIL<OP,SRC,DEST> type;          \
-  };
-
-
   /**
    *  \struct BasicOpTypes
    *  \author James C. Sutherland
@@ -81,6 +73,17 @@ namespace structured{
    */
   template< typename CellT > struct BasicOpTypes;
 
+
+  //-----------------------------------------------------------------------
+  //---- Below are macros to instantiate the supported operator types. ----
+  //---- Generally, you should not use these macros from user code.    ----
+  //-----------------------------------------------------------------------
+
+#define OP_BUILDER( STENCIL, OP, SRC, DEST )    \
+  template<>                                    \
+  struct OperatorTypeBuilder<OP,SRC,DEST>{      \
+    typedef STENCIL<OP,SRC,DEST> type;          \
+  };
 
 #define BASIC_OPTYPE_BUILDER( VOL )                                     \
   OP_BUILDER( Stencil2, Interpolant, VOL, FaceTypes<VOL>::XFace )       \
