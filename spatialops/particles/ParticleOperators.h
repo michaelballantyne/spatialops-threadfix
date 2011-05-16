@@ -2,6 +2,8 @@
 #define ParticleOperators_h
 
 #include <spatialops/particles/ParticleFieldTypes.h>
+
+#include <stdexcept>
 #include <math.h>
 
 namespace SpatialOps{
@@ -95,13 +97,15 @@ namespace Particle{
      // note that this assumes 1D
      bool isUniform = true;
      typename CellField::const_iterator ix2=meshCoord.begin();
-     typename CellField::const_iterator ix = ++ix2;
+     typename CellField::const_iterator ix = ix2;
+     ++ix2;
      for( ; ix2!=meshCoord.end(); ++ix, ++ix2 ){
        if( fabs( dx_ - (*ix2-*ix) )/dx_ > TOL ){
          isUniform = false;
        }
      }
-     assert( isUniform );
+     if( !isUniform )
+       throw std::runtime_error( "Particle operators require uniform mesh spacing" );
    }
 
    //------------------------------------------------------------------
@@ -150,13 +154,15 @@ namespace Particle{
     // note that this assumes 1D
     bool isUniform = true;
     typename CellField::const_iterator ix2=meshCoord.begin();
-    typename CellField::const_iterator ix = ++ix2;
+    typename CellField::const_iterator ix = ix2;
+    ++ix2;
     for( ; ix2!=meshCoord.end(); ++ix, ++ix2 ){     
       if( fabs( dx_ - (*ix2-*ix) )/dx_ > TOL ){
         isUniform = false;
       }
     }
-    assert( isUniform );
+    if( !isUniform )
+      throw std::runtime_error( "Particle operators require uniform mesh spacing" );
   }
 
   //------------------------------------------------------------------
