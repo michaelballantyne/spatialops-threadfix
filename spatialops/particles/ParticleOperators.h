@@ -20,7 +20,7 @@ namespace Particle{
      /**
       *  @param meshCoord Vector of coordinates for the underlying mesh
       */
-     ParticleToCell( const std::vector<double>& meshCoord );
+     ParticleToCell( const CellField& meshCoord );
 
      /**
     * @param particleCoord Field of coordinates for all particles (ParticleField)
@@ -33,7 +33,7 @@ namespace Particle{
                           DestFieldType& dest ) const;
 
    private:
-     const std::vector<double>& Coordvec_;
+     const CellField& coordVec_;
      const double dx_, xo_;
    };
 
@@ -56,7 +56,7 @@ namespace Particle{
     /**
      *  @param meshCoord Field of coordinates for the underlying mesh
      */   
-    CellToParticle( const std::vector<double>& meshCoord ); 
+    CellToParticle( const CellField& meshCoord ); 
 
     /**
     * @param particleCoord Field of coordinates for all particles (ParticleField)
@@ -69,7 +69,7 @@ namespace Particle{
    
 
   private:
-    const std::vector<double>& Coordvec_;
+    const CellField& coordVec_;
     const double dx_, xo_;
   };
 
@@ -85,8 +85,8 @@ namespace Particle{
 
    template< typename CellField >
    ParticleToCell<CellField>::
-   ParticleToCell( const std::vector<double>& meshCoord )
-     : Coordvec_   ( meshCoord     ),
+   ParticleToCell( const CellField& meshCoord )
+     : coordVec_( meshCoord ),
        dx_( meshCoord[1]-meshCoord[0] ),
        xo_( meshCoord[0] )
    {
@@ -94,8 +94,8 @@ namespace Particle{
 
      // note that this assumes 1D
      bool isUniform = true;
-     std::vector<double>::const_iterator  ix2=meshCoord.begin();
-     std::vector<double>::const_iterator  ix = ix2++;
+     typename CellField::const_iterator ix2=meshCoord.begin();
+     typename CellField::const_iterator ix = ++ix2;
      for( ; ix2!=meshCoord.end(); ++ix, ++ix2 ){
        if( fabs( dx_ - (*ix2-*ix) )/dx_ > TOL ){
          isUniform = false;
@@ -112,7 +112,7 @@ namespace Particle{
    apply_to_field( const ParticleField& particleCoord,
                    const ParticleField& particleSize,
                    const SrcFieldType& src,
-                   DestFieldType& dest) const
+                   DestFieldType& dest ) const
    {
      dest = 0.0;
      ParticleField::const_iterator plociter = particleCoord.begin();
@@ -126,22 +126,22 @@ namespace Particle{
        // determine what cell it is located in.
        const size_t cellIx1 = size_t((*plociter-halfwidth-xo_) / dx_);
        const size_t cellIx2 = cellIx1 +1 ;
-       const double leftloc = Coordvec_[cellIx1] ;
-       const double rightloc = Coordvec_[cellIx2] ;
+       const double leftloc = coordVec_[cellIx1];
+       const double rightloc = coordVec_[cellIx2];
        //std::cout<<" cellIx1 : "<<cellIx1<<"  cellIx1 : "<<cellIx2<<"  leftloc  : "<< leftloc<<"  rightloc : "<<rightloc<<std::endl;
        if( fabs( *plociter - leftloc) <= fabs( *plociter - rightloc ))
-          dest[cellIx1] += *isrc;
+         dest[cellIx1] += *isrc;
        else
-          dest[cellIx2] += *isrc;
+         dest[cellIx2] += *isrc;
      }
    }
 
- 
  //==================================================================
+
   template< typename CellField >
   CellToParticle<CellField>::
-  CellToParticle( const std::vector<double>& meshCoord )
-    : Coordvec_( meshCoord ),
+  CellToParticle( const CellField& meshCoord )
+    : coordVec_( meshCoord ),
       dx_( meshCoord[1]-meshCoord[0] ),
       xo_( meshCoord[0] )
   {
@@ -149,8 +149,8 @@ namespace Particle{
 
     // note that this assumes 1D
     bool isUniform = true;
-    std::vector<double>::const_iterator ix2=meshCoord.begin();
-    std::vector<double>::const_iterator ix = ix2++;
+    typename CellField::const_iterator ix2=meshCoord.begin();
+    typename CellField::const_iterator ix = ++ix2;
     for( ; ix2!=meshCoord.end(); ++ix, ++ix2 ){     
       if( fabs( dx_ - (*ix2-*ix) )/dx_ > TOL ){
         isUniform = false;
@@ -180,9 +180,9 @@ namespace Particle{
       // mesh) onto the particle using linear interpolation
       const double xp = *ipx;
       const size_t i1 = size_t( (xp-halfwidth-xo_) / dx_ );     
-      const double x1 = Coordvec_[i1];     
+      const double x1 = coordVec_[i1];     
       const size_t i2 = ( xp > x1 ) ? i1+1 : i1-1;     
-      const double x2 = Coordvec_[i2];      
+      const double x2 = coordVec_[i2];      
       const double c1 = (xp-x2)/(x1-x2);
       const double c2 = (xp-x1)/(x2-x1);
       *idest = src[i1]*c1 + src[i2]*c2;

@@ -25,7 +25,6 @@ int main()
   const double dx = 1.0;
   std::vector<int> dim(3,1);
   dim[0] = 10;
-  std::vector<double> coordvec;
 
   IntVec totDim(&dim[0]);
   for( size_t i=0; i<3; ++i ) 
@@ -33,7 +32,7 @@ int main()
   //
   // build the fields
   //
-  CellField cellfiled( totDim, NULL );
+  CellField cellField( totDim, NULL );
   CellField   ctmp( totDim, NULL );
 
   SpatialOps::Particle::ParticleField pCoord( IntVec(np,1,1), NULL );
@@ -45,20 +44,14 @@ int main()
   //
   // set the cCoord coordinates.  These go from -0.5 to 10.5
   //
-  CellField::iterator icoord = cellfiled.begin();
-  CellField::iterator icoordEnd = cellfiled.end();
+  CellField::iterator icoord = cellField.begin();
+  CellField::iterator icoordEnd = cellField.end();
   for( size_t i=0; icoord != icoordEnd; ++icoord, ++i ){
-    //cellfiled[i] = i*2;
+    //cellField[i] = i*2;
     *icoord = i*2 ;
-    coordvec.push_back(i*dx - dx/2.0);    
-    std::cout<<"in for"<<std::endl;
   }
-  /*
-  for( size_t i=0; i<cellfiled.get_ntotal(); ++i )
-    std::cout<<" Gas coord : " <<coordvec[i]<< "  cell field value : "<<cellfiled[i]<<std::endl;
-*/
 
- //
+  //
   // set the particle coordinates
   //
   pCoord[0] = 1;
@@ -77,22 +70,22 @@ int main()
   pfield[2] = 40;
   pfield[3] = 70;
 
-   for( size_t i=0; i<np; ++i )
+  for( size_t i=0; i<np; ++i )
     std::cout<<"  particle coord : "<<pCoord[i]<<"  particle field : "<<pfield[i]<<std::endl;
 
 
- //
+  //
   // build the operator
   //
   typedef SpatialOps::Particle::CellToParticle<CellField> C2P;
-  const C2P* const c2p = new C2P( coordvec );
+  const C2P* const c2p = new C2P( cellField );
   typedef SpatialOps::Particle::ParticleToCell<CellField> P2C;
-  const P2C* const p2c = new P2C( coordvec );
+  const P2C* const p2c = new P2C( cellField );
 
- //
+  //
   // interpolate to particles
   //
-  c2p->apply_to_field( pCoord, cellfiled, ptmp );
+  c2p->apply_to_field( pCoord, cellField, ptmp );
   p2c->apply_to_field( pCoord,pSize, pfield, ctmp ); 
  
 
@@ -111,5 +104,5 @@ int main()
   status( ptmp[3] == 16 );
 
 
-  return 0;
+  return status.ok();
 }
