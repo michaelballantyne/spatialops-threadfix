@@ -1,5 +1,6 @@
 add_subdirectory( structured )
-add_subdirectory( particles )
+add_subdirectory( particles  )
+add_subdirectory( pointfield )
 
 
 # setup the build for the spatialops library.  Note that the linker
