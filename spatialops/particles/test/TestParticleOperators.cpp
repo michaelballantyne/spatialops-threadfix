@@ -70,18 +70,18 @@ int main()
     std::cout<<"  particle coord : "<<pCoord[i]<<"  particle field : "<<pfield[i]<<std::endl;
 
   //
-  // build the operator
+  // build the operators
   //
   typedef SpatialOps::Particle::CellToParticle<CellField> C2P;
-  const C2P* const c2p = new C2P( cellField );
+  const C2P c2p( cellField );
   typedef SpatialOps::Particle::ParticleToCell<CellField> P2C;
-  const P2C* const p2c = new P2C( cellField );
+  const P2C p2c( cellField );
 
   //
   // interpolate to particles
   //
-  c2p->apply_to_field( pCoord, cellField, ptmp );
-  p2c->apply_to_field( pCoord, pSize, pfield, ctmp ); 
+  c2p.apply_to_field( pCoord, cellField, ptmp );
+  p2c.apply_to_field( pCoord, pSize, pfield, ctmp ); 
  
   for( size_t i=0; i<np; ++i )
     std::cout<<"  Interpolated particle field : "<<ptmp[i]<<std::endl;
