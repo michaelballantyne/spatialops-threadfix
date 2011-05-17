@@ -119,13 +119,14 @@ namespace Particle{
                    DestFieldType& dest ) const
    {
      dest = 0.0;
-     ParticleField::const_iterator plociter = particleCoord.begin();
-     //ParticleField::const_iterator psizeiter = particleSize.begin();
-     ParticleField::const_iterator isrc = src.begin();
 
      const double halfwidth = 0.5*dx_;
 
-     for( ; plociter!=particleCoord.end(); ++plociter, ++isrc ){
+     ParticleField::const_iterator plociter = particleCoord.begin();
+     const ParticleField::const_iterator plocitere = particleCoord.end();
+     //ParticleField::const_iterator psizeiter = particleSize.begin();
+     ParticleField::const_iterator isrc = src.begin();
+     for( ; plociter!=plocitere; ++plociter, ++isrc ){
        // given the current particle coordinate,
        // determine what cell it is located in.
        const size_t cellIx1 = size_t((*plociter-halfwidth-xo_) / dx_);
@@ -175,20 +176,30 @@ namespace Particle{
                   DestFieldType& dest ) const
   {
     dest = 0.0;
-    ParticleField::const_iterator ipx= particleCoord.begin();
-    ParticleField::iterator idest = dest.begin();
 
     const double halfwidth = 0.5*dx_;
 
-    for( ; ipx!=particleCoord.end(); ++ipx, ++idest ){
+#   ifndef NDEBUG
+    const int nmax = src.window_with_ghost().local_npts();
+#   endif
+
+    ParticleField::const_iterator ipx= particleCoord.begin();
+    const ParticleField::const_iterator ipxe = particleCoord.end();
+    ParticleField::iterator idest = dest.begin();
+    for( ; ipx!=ipxe; ++ipx, ++idest ){
       // given the current particle coordinate, determine what cell it
       // is located in.  Then interpolate the src values (from the
       // mesh) onto the particle using linear interpolation
       const double xp = *ipx;
-      const size_t i1 = size_t( (xp-halfwidth-xo_) / dx_ );     
-      const double x1 = coordVec_[i1];     
-      const size_t i2 = ( xp > x1 ) ? i1+1 : i1-1;     
-      const double x2 = coordVec_[i2];      
+      const size_t i1 = size_t( (xp-halfwidth-xo_) / dx_ );
+#     ifndef NDEBUG
+      if( i1 >= nmax || i1<0 ){
+        throw std::runtime_error( "Particle is outside of the domain!" );
+      }
+#     endif
+      const double x1 = coordVec_[i1];
+      const size_t i2 = ( xp > x1 ) ? i1+1 : i1-1;
+      const double x2 = coordVec_[i2];
       const double c1 = (xp-x2)/(x1-x2);
       const double c2 = (xp-x1)/(x2-x1);
       *idest = src[i1]*c1 + src[i2]*c2;
