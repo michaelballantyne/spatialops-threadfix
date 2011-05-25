@@ -122,6 +122,10 @@ namespace SpatialOps{
     inline SpatFldPtr& operator/=(const double x){*f_ /= x; return *this;}  ///< Divide this field by a constant
     //@}
 
+    const int getCount() { return *count_; }
+    const bool getBFS() { return builtFromStore_; }
+
+    void free();
   private:
     SpatialFieldStore<FieldT>& store_;
     FieldT* f_;
@@ -332,17 +336,28 @@ namespace SpatialOps{
   }
   //------------------------------------------------------------------
   template<typename FieldT>
-  SpatFldPtr<FieldT>::~SpatFldPtr()
+  void
+  SpatFldPtr<FieldT>::free()
   {
+    // was this an active SpatFldPtr?
     if( count_ != NULL ){
+      // this one is dying so decrement the count.
       --(*count_);
       if( *count_ == 0 ){
+         // kill the old one if needed
         if( builtFromStore_ ) store_.restore_field( *f_ );
         delete count_;
         delete f_;
+        count_ = NULL;
+        f_ = NULL;
       }
     }
   }
+  //------------------------------------------------------------------
+  
+  //------------------------------------------------------------------
+  template<typename FieldT>
+  SpatFldPtr<FieldT>::~SpatFldPtr() { free(); }
   //------------------------------------------------------------------
   
 
