@@ -375,23 +375,7 @@ namespace SpatialOps{
   SpatFldPtr<FieldT>
   SpatialFieldStore<FieldT>::get( const FieldT& f )
   {
-#ifdef EXPRESSION_THREADS
-    boost::mutex::scoped_lock lock( get_mutex() );
-#endif
-    // find the proper map
-    const structured::MemoryWindow& w = f.window_with_ghost();
-    const int ntot = w.local_npts();
-    FieldQueue& q = fqmap_[ ntot ];
-
-    AtomicT* fnew;
-    if( q.empty() ){
-      fnew = new AtomicT[ ntot ];
-    }
-    else{
-      fnew = q.front();
-      q.pop();
-    }
-    return SpatFldPtr<FieldT>( new FieldT(w,fnew,structured::ExternalStorage), true );
+    return get( f.window_with_ghost() );
   }
   //------------------------------------------------------------------
   template<typename FieldT>
