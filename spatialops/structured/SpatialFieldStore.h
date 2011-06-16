@@ -294,7 +294,9 @@ namespace SpatialOps{
       if( *count_ == 0 ){
         if( builtFromStore_ ) store_.restore_field( *f_ );
         delete count_;
+			count_=NULL;
         delete f_;
+			f_=NULL;
       }
     }
     // reassign
@@ -319,7 +321,9 @@ namespace SpatialOps{
       if( *count_ == 0 ){
         if( builtFromStore_ ) store_.restore_field( *f_ );
         delete count_;
+			count_=NULL;
         delete f_;
+			f_=NULL;
       }
     }
     // reassign
@@ -339,7 +343,9 @@ namespace SpatialOps{
       if( *count_ == 0 ){
         if( builtFromStore_ ) store_.restore_field( *f_ );
         delete count_;
+			count_=NULL;
         delete f_;
+			f_=NULL;
       }
     }
   }
@@ -358,6 +364,7 @@ namespace SpatialOps{
       while( !q.empty() ){
         AtomicT* field = q.front();
         delete [] field;
+			field=NULL;
         q.pop();
       }
     }
