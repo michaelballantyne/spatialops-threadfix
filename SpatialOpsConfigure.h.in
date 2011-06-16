@@ -13,6 +13,14 @@
 # define BOOST_UBLAS_SHALLOW_ARRAY_ADAPTOR
 #endif
 
+#cmakedefine ENABLE_THREADS
+#cmakedefine FIELD_EXPRESSION_THREADS
+#cmakedefine STENCIL_THREADS
+#cmakedefine TILL_THREADS
+#ifdef ENABLE_THREADS
+#define NTHREADS @NTHREADS@
+#endif
+
 #cmakedefine SOPS_BOOST_SERIALIZATION
 
 #endif // SpatialOps_Configure_h

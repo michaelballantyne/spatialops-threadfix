@@ -20,12 +20,6 @@ endif()
 # add in collected dependencies from subdirs
 set( SO_Sources ${SO_Sources} ${SO_SRC} )
 
-add_library( spatialops
-  STATIC
-  ${SO_Sources}
-  )
-target_link_libraries( spatialops ${TPL_LIBRARIES} )
-
 set( SO_HEADERS
   FieldExpressions.h
   FieldExpressionsExtended.h
@@ -36,6 +30,19 @@ set( SO_HEADERS
   SpatialOpsTools.h
   WriteMatlab.h
   )
+
+if ( ENABLE_THREADS )
+   set( SO_Sources ${SO_Sources} ThreadPool.cpp )
+   set( SO_HEADERS ${SO_HEADERS} ThreadPool.h )
+   add_subdirectory( threadpool )
+endif( ENABLE_THREADS )
+
+add_library( spatialops
+  STATIC
+  ${SO_Sources}
+  )
+
+target_link_libraries( spatialops ${TPL_LIBRARIES} )
 
 if( ENABLE_MATRIX )
   set( SO_HEADERS ${SO_HEADERS}
