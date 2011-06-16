@@ -10,7 +10,7 @@
 
 #include <boost/type_traits.hpp>
 
-#ifdef EXPRESSION_THREADS
+#ifdef ENABLE_THREADS
 # include <boost/thread/mutex.hpp>
 #endif
 
@@ -199,7 +199,7 @@ namespace SpatialOps{
      */
     inline void restore_field( FieldT& f );
 
-#ifdef EXPRESSION_THREADS
+#ifdef ENABLE_THREADS
     /**
      *  Used to lock threads to prevent simultaneous access.
      */
@@ -382,7 +382,7 @@ namespace SpatialOps{
   SpatFldPtr<FieldT>
   SpatialFieldStore<FieldT>::get( const structured::MemoryWindow& window )
   {
-#ifdef EXPRESSION_THREADS
+#ifdef ENABLE_THREADS
     boost::mutex::scoped_lock lock( get_mutex() );
 #endif
     // find the proper map
@@ -405,7 +405,7 @@ namespace SpatialOps{
   void
   SpatialFieldStore<FieldT>::restore_field( FieldT& field )
   {
-#ifdef EXPRESSION_THREADS
+#ifdef ENABLE_THREADS
     boost::mutex::scoped_lock lock( get_mutex() );
 #endif
     const structured::MemoryWindow& w = field.window_with_ghost();
@@ -429,7 +429,7 @@ namespace SpatialOps{
   SpatFldPtr<double>
   inline SpatialFieldStore<double>::get( const double& d )
   {
-#ifdef EXPRESSION_THREADS
+#ifdef ENABLE_THREADS
     boost::mutex::scoped_lock lock( get_mutex() );
 #endif
     return SpatFldPtr<double>( new double, true );
@@ -439,7 +439,7 @@ namespace SpatialOps{
   inline SpatFldPtr<double>
   SpatialFieldStore<double>::get( const structured::MemoryWindow& w )
   {
-#ifdef EXPRESSION_THREADS
+#ifdef ENABLE_THREADS
     boost::mutex::scoped_lock lock( get_mutex() );
 #endif
     return SpatFldPtr<double>( new double, true );
