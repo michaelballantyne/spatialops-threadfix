@@ -76,6 +76,10 @@ int main( int iarg, char* carg[] )
     }
   }
 
+  cout << " [nx,ny,nz] = [" << npts[0] << "," << npts[1] << "," << npts[2] << "]" << endl
+       << " ntime = " << ntime
+       << endl << endl;
+
   // set mesh spacing (uniform, structured mesh)
   for( size_t i=0; i<3; ++i )
     spacing[i] = length[i]/double(npts[i]);
@@ -168,6 +172,8 @@ int main( int iarg, char* carg[] )
   try{
     cout << "beginning 'timestepping'" << endl;
 
+    const clock_t start = std::clock();
+
     // mimic the effects of solving this PDE in time.
     for( size_t itime=0; itime<ntime; ++itime ){
 
@@ -187,7 +193,13 @@ int main( int iarg, char* carg[] )
 
       //    cout << itime+1 << " of " << ntime << endl;
     }
-    cout << "done" << endl;
+
+    const clock_t stop = std::clock();
+
+    cout << "done" << endl
+         << "time taken: " << (double)(stop-start)/double(CLOCKS_PER_SEC)
+         << endl;
+
     return 0;
   }
   catch( std::exception& err ){
