@@ -43,15 +43,16 @@ namespace SpatialOps{
          }
 
          template<class VoidType>
-         static bool insert(VoidType& rID, int threads){
+         static const bool insert(VoidType& rID, int threads){
             ResourceIter rit;
             ExecutionMutex lock;
 
+				if( threads < 1 ) { threads = 1; }
             //printf("Inserting ThreadPool<%s><0x%x>\n", typeid(rID).name(), &rID);
             //Make sure we don't have the threadpool
             rit = resourceMap_.find(&rID);
             if ( rit == resourceMap_.end() ){
-               resourceMap_.insert(std::make_pair(&rID, std::min(maxWorkerThreads_, threads))); 
+               resourceMap_.insert(std::make_pair(&rID, threads)); 
             } else {
                printf("Warning: attempting to insert a ThreadPool that already exists!\n");
                return false;
@@ -60,9 +61,8 @@ namespace SpatialOps{
             return true;
          }
          
-         // Can the boost threadpool's smart pointer ever reach zero when ThreadPool is static?
          template<class VoidType>
-         static bool remove(VoidType& rID, int threads){
+         static const bool remove(VoidType& rID, int threads){
             ResourceIter rit;
             ExecutionMutex lock;
 
@@ -78,7 +78,7 @@ namespace SpatialOps{
          }
 
          template<class VoidType>
-         static int resize(VoidType& rID, int threads){
+         static const int resize(VoidType& rID, int threads){
             VoidType* resource;
             ResourceIter rit;
             ExecutionMutex lock;
@@ -96,19 +96,29 @@ namespace SpatialOps{
             //Connect the right resource interface
             resource = (VoidType*)rit->first;
             
-            //Clamp
-            threads = std::min(maxWorkerThreads_, threads);
+				if( threads < 1 ) { threads = 1; }
             rit->second = threads;
             resource->size_controller().resize(threads);
 
             return threads;
          }
 
-         static const int getMaxThreadingResources(){ return maxWorkerThreads_; }
-         static const int getThreadingResources(){ return availableThreadingResources_; }
+			template<class VoidType>
+			static const int get_worker_count(VoidType& rID) {
+				VoidType* resource;
+				ResourceIter rit;
+				ExecutionMutex lock;
+
+				rit = resourceMap_.find(&rID);
+				if( rit == resourceMap_.end() ) {
+					fprintf(stderr, "Error: Threadpool does not exist!\n");
+					return -1;
+				}
+				
+				return rit->second;
+			}	
+
       private:
-         static const int maxWorkerThreads_ = NTHREADS;
-         static int availableThreadingResources_;
          static std::map<void*, int> resourceMap_;
 
          class ExecutionMutex{
@@ -131,7 +141,7 @@ namespace SpatialOps{
             static ThreadPool tp(1);
             ThreadPoolResourceManager& tprm = ThreadPoolResourceManager::self();
             if( init == false ){ 
-               tprm.insert<boost::threadpool::prio_pool>(tp, 1);
+               tprm.insert<boost::threadpool::prio_pool>(tp, NTHREADS);
                init = true; 
             }
             return tp;
