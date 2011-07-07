@@ -7,6 +7,7 @@ using std::endl;
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
+#include <spatialops/FieldExpressions.h>
 
 #ifdef LINALG_STENCIL
 # include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
@@ -42,6 +43,8 @@ typedef SpatialOps::structured::BasicOpTypes<CellField>::DivZ       DivZ;
 
 //-- boost includes ---//
 #include <boost/program_options.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+
 namespace po = boost::program_options;
 
 
@@ -77,8 +80,9 @@ int main( int iarg, char* carg[] )
   }
 
   cout << " [nx,ny,nz] = [" << npts[0] << "," << npts[1] << "," << npts[2] << "]" << endl
-       << " ntime = " << ntime
-       << endl << endl;
+       << " ntime = " << ntime << endl
+       << " NTHREADS = " << NTHREADS << endl
+       << endl;
 
   // set mesh spacing (uniform, structured mesh)
   for( size_t i=0; i<3; ++i )
@@ -172,16 +176,18 @@ int main( int iarg, char* carg[] )
   try{
     cout << "beginning 'timestepping'" << endl;
 
-    const clock_t start = std::clock();
+    const boost::posix_time::ptime time_start( boost::posix_time::microsec_clock::universal_time() );
 
     // mimic the effects of solving this PDE in time.
     for( size_t itime=0; itime<ntime; ++itime ){
+
+      using namespace SpatialOps;
 
       if( npts[0]>1 ) calculate_flux( *gradx, *interpx, temperature, thermCond, xflux );
       if( npts[1]>1 ) calculate_flux( *grady, *interpy, temperature, thermCond, yflux );
       if( npts[2]>1 ) calculate_flux( *gradz, *interpz, temperature, thermCond, zflux );
 
-      rhs = 0.0;
+      rhs <<= 0.0;
       if( npts[0]>1 ) calculate_rhs( *divx, xflux, rhoCp, rhs );
       if( npts[1]>1 ) calculate_rhs( *divy, yflux, rhoCp, rhs );
       if( npts[2]>1 ) calculate_rhs( *divz, zflux, rhoCp, rhs );
@@ -194,11 +200,14 @@ int main( int iarg, char* carg[] )
       //    cout << itime+1 << " of " << ntime << endl;
     }
 
-    const clock_t stop = std::clock();
+    const boost::posix_time::ptime time_end( boost::posix_time::microsec_clock::universal_time() );
+    const boost::posix_time::time_duration time_dur = time_end - time_start;
 
-    cout << "done" << endl
-         << "time taken: " << (double)(stop-start)/double(CLOCKS_PER_SEC)
-         << endl;
+    cout << "done" << endl << endl
+         << "time taken: "
+         << time_dur.total_microseconds()*1e-6
+         << endl << endl;
+
 
     return 0;
   }
