@@ -131,7 +131,7 @@ namespace SpatialOps{
             static ThreadPool tp(1);
             ThreadPoolResourceManager& tprm = ThreadPoolResourceManager::self();
             if( init == false ){ 
-               tprm.insert<boost::threadpool::prio_pool>(tp, 1);
+               tprm.insert<boost::threadpool::prio_pool>(tp, NTHREADS);
                init = true; 
             }
             return tp;
@@ -148,10 +148,10 @@ namespace SpatialOps{
      public:
 
          static ThreadPoolFIFO& self(){
-            static ThreadPoolFIFO tp(1);
+            static ThreadPoolFIFO tp(NTHREADS);
             ThreadPoolResourceManager& tprm = ThreadPoolResourceManager::self();
             if( init == false ){ 
-               tprm.insert<boost::threadpool::fifo_pool>(tp, 1); 
+               tprm.insert<boost::threadpool::fifo_pool>(tp, NTHREADS); 
                init = true; 
             }
             return tp;
