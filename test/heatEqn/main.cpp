@@ -81,7 +81,9 @@ int main( int iarg, char* carg[] )
 
   cout << " [nx,ny,nz] = [" << npts[0] << "," << npts[1] << "," << npts[2] << "]" << endl
        << " ntime = " << ntime << endl
+#     ifdef ENABLE_THREADS
        << " NTHREADS = " << NTHREADS << endl
+#     endif
        << endl;
 
   // set mesh spacing (uniform, structured mesh)
