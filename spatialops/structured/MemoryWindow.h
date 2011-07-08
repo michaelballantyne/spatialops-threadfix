@@ -5,6 +5,7 @@
 #include <iterator>
 
 #include <spatialops/SpatialOpsConfigure.h>
+#include <spatialops/SpatialOpsDefs.h>
 
 #ifdef SOPS_BOOST_SERIALIZATION
 # include <boost/serialization/serialization.hpp>
@@ -282,6 +283,77 @@ namespace structured{
       + ( mw.glob_dim(0) ) * ( mw.glob_dim(1)-mw.extent(1) );
   }
 
+  /**
+   *  \class IteratorIncrementor
+   *  \brief provides increment/decrement facilities for iterators
+   *
+   *  \tparam DirT - the direction to increment the iterator in.
+   */
+  template< typename DirT > class IteratorIncrementor;
+
+  template<>
+  struct IteratorIncrementor<XDIR>{
+
+    /**
+     *  \brief returns the increment for the pointer
+     */
+    static size_t increment( const MemoryWindow& w,
+                             size_t& i, size_t& j, size_t& k )
+    {
+      size_t inc=0;
+      ++i;
+      if( i < w.extent(0) ){
+        inc += stride<0>(w);
+      }
+      else{
+        i=0;
+        ++j;
+        if( j < w.extent(1) ){
+          inc += stride<1>(w);
+        }
+        else{
+          j=0;
+          ++k;
+          inc += stride<2>(w);
+        }
+      }
+      return inc;
+    }
+
+
+    /**
+     *  \brief returns the decrement for the pointer.  If zero, then reset the pointer.
+     */
+    static size_t decrement( const MemoryWindow& w,
+                             size_t& i, size_t& j, size_t& k )
+    {
+      size_t inc=0;
+      if( i > 0 ){
+        --i;
+        ++inc;
+      }
+      else{
+        i = w.extent(0)-1;
+        if( j > 0 ){
+          --j;
+          inc += stride<1>(w);
+        }
+        else{
+          j = w.extent(1)-1;
+          if( k > 0 ){
+            --k;
+            inc += stride<2>(w);
+          }
+          else{
+            i = j = k = 0;
+          }
+        }
+      }
+      return inc;
+    }
+
+  };
+
 
   template<typename T> class ConstFieldIterator; // forward
 
@@ -304,7 +376,6 @@ namespace structured{
     T* current_;   ///< The current pointer that this iterator refers to
     T* first_;     ///< The first position in memory for the field this iterator is associated with
     const MemoryWindow& window_;  ///< The MemoryWindow associated with this field and iterator
-    IntVec stride_;
     size_t i_,j_,k_;
 
   public:
@@ -323,7 +394,6 @@ namespace structured{
         first_  ( other.first_   ),
         window_ ( other.window_  )
     {
-      stride_ = other.stride_;
       i_=other.i_; j_=other.j_; k_=other.k_;
     }
     
@@ -338,9 +408,6 @@ namespace structured{
         first_  ( t        ),
         window_ ( window   )
     {
-      stride_[0] = stride<0>(window);
-      stride_[1] = stride<1>(window);
-      stride_[2] = stride<2>(window);
       const IntVec ijk = window.ijk_index_from_global( offset );
       i_ = ijk[0] - window.offset(0);
       j_ = ijk[1] - window.offset(1);
@@ -350,54 +417,18 @@ namespace structured{
     /**
      *  \brief increment the iterator
      */
-    inline self& operator++()
-    {
-      ++i_;
-      if( i_<window_.extent(0) ){
-        current_ += stride_[0];
-      }
-      else{
-        i_=0;
-        ++j_;
-        if( j_ < window_.extent(1) ){
-          current_ += stride_[1];
-        }
-        else{
-          j_=0;
-          ++k_;
-          current_ += stride_[2];
-        }
-      }
+    inline self& operator++(){
+      current_ += IteratorIncrementor<XDIR>::increment( window_, i_, j_, k_ );
       return *this;
     }
 
     /**
      *  \brief decrement operator
      */
-    inline self& operator--()
-    {
-      if( i_ > 0 ){
-        --i_;
-        --current_;
-      }
-      else{
-        i_=window_.extent(0)-1;
-        if( j_ > 0 ){
-          --j_;
-          current_ -= stride_[1];
-        }
-        else{
-          j_=window_.extent(1)-1;
-          if( k_ > 0 ){
-            --k_;
-            current_ -= stride_[2];
-          }
-          else{
-            i_ = j_ = k_ = 0;
-            current_ = first_;
-          }
-        }
-      }
+    inline self& operator--(){
+      const size_t dec = IteratorIncrementor<XDIR>::decrement( window_, i_, j_, k_ );
+      if( dec==0 ) current_ = first_;
+      else current_ -= dec;
       return *this;
     }
 
@@ -500,7 +531,6 @@ namespace structured{
     const T* current_;
     const T* first_;
     const MemoryWindow& window_;
-    IntVec stride_;
     size_t i_,j_,k_;
 
   public:
@@ -516,7 +546,6 @@ namespace structured{
         first_  ( other.first_   ),
         window_ ( other.window_  )
     {
-      stride_ = other.stride_;
       i_=other.i_; j_=other.j_; k_=other.k_;
     }
     
@@ -525,9 +554,6 @@ namespace structured{
         first_  ( t        ),
         window_ ( window   )
     {
-      stride_[0] = stride<0>(window);
-      stride_[1] = stride<1>(window);
-      stride_[2] = stride<2>(window);
       const IntVec ijk = window.ijk_index_from_global( offset );
       i_ = ijk[0] - window.offset(0);
       j_ = ijk[1] - window.offset(1);
@@ -542,58 +568,20 @@ namespace structured{
         first_  ( t.first_   ),
         window_ ( t.window_  )
     {
-      stride_ = t.stride_;
       i_ = t.i_;
       j_ = t.j_;
       k_ = t.k_;
     }
 
-    inline self& operator++()
-    {
-      ++i_;
-      if( i_<window_.extent(0) ){
-        current_ += stride_[0];
-      }
-      else{
-        i_=0;
-        ++j_;
-        if( j_ < window_.extent(1) ){
-          current_ += stride_[1];
-        }
-        else{
-          j_=0;
-          ++k_;
-          current_ += stride_[2];
-        }
-      }
+    inline self& operator++(){
+      current_ += IteratorIncrementor<XDIR>::increment( window_, i_, j_, k_ );
       return *this;
     }
 
-
-    inline self& operator--()
-    {
-      if( i_ > 0 ){
-        --i_;
-        --current_;
-      }
-      else{
-        i_=window_.extent(0)-1;
-        if( j_ > 0 ){
-          --j_;
-          current_ -= stride_[1];
-        }
-        else{
-          j_=window_.extent(1)-1;
-          if( k_ > 0 ){
-            --k_;
-            current_ -= stride_[2];
-          }
-          else{
-            i_ = j_ = k_ = 0;
-            current_ = first_;
-          }
-        }
-      }
+    inline self& operator--(){
+      const size_t dec = IteratorIncrementor<XDIR>::decrement( window_, i_, j_, k_ );
+      if( dec==0 ) current_ = first_;
+      else current_ -= dec;
       return *this;
     }
 

@@ -10,7 +10,7 @@
 
 #include <boost/type_traits.hpp>
 
-#ifdef EXPRESSION_THREADS
+#ifdef ENABLE_THREADS
 # include <boost/thread/mutex.hpp>
 #endif
 
@@ -203,7 +203,7 @@ namespace SpatialOps{
      */
     inline void restore_field( FieldT& f );
 
-#ifdef EXPRESSION_THREADS
+#ifdef ENABLE_THREADS
     /**
      *  Used to lock threads to prevent simultaneous access.
      */
@@ -298,7 +298,9 @@ namespace SpatialOps{
       if( *count_ == 0 ){
         if( builtFromStore_ ) store_.restore_field( *f_ );
         delete count_;
+			count_=NULL;
         delete f_;
+			f_=NULL;
       }
     }
     // reassign
@@ -323,7 +325,9 @@ namespace SpatialOps{
       if( *count_ == 0 ){
         if( builtFromStore_ ) store_.restore_field( *f_ );
         delete count_;
+			count_=NULL;
         delete f_;
+			f_=NULL;
       }
     }
     // reassign
@@ -347,9 +351,14 @@ namespace SpatialOps{
          // kill the old one if needed
         if( builtFromStore_ ) store_.restore_field( *f_ );
         delete count_;
+			count_=NULL;
         delete f_;
+<<<<<<< HEAD
         count_ = NULL;
         f_ = NULL;
+=======
+			f_=NULL;
+>>>>>>> cab271d61b8e5083640e536600ca1939b7893922
       }
     }
   }
@@ -373,6 +382,7 @@ namespace SpatialOps{
       while( !q.empty() ){
         AtomicT* field = q.front();
         delete [] field;
+			field=NULL;
         q.pop();
       }
     }
@@ -390,30 +400,14 @@ namespace SpatialOps{
   SpatFldPtr<FieldT>
   SpatialFieldStore<FieldT>::get( const FieldT& f )
   {
-#ifdef EXPRESSION_THREADS
-    boost::mutex::scoped_lock lock( get_mutex() );
-#endif
-    // find the proper map
-    const structured::MemoryWindow& w = f.window_with_ghost();
-    const int ntot = w.local_npts();
-    FieldQueue& q = fqmap_[ ntot ];
-
-    AtomicT* fnew;
-    if( q.empty() ){
-      fnew = new AtomicT[ ntot ];
-    }
-    else{
-      fnew = q.front();
-      q.pop();
-    }
-    return SpatFldPtr<FieldT>( new FieldT(w,fnew,structured::ExternalStorage), true );
+    return get( f.window_with_ghost() );
   }
   //------------------------------------------------------------------
   template<typename FieldT>
   SpatFldPtr<FieldT>
   SpatialFieldStore<FieldT>::get( const structured::MemoryWindow& window )
   {
-#ifdef EXPRESSION_THREADS
+#ifdef ENABLE_THREADS
     boost::mutex::scoped_lock lock( get_mutex() );
 #endif
     // find the proper map
@@ -436,7 +430,7 @@ namespace SpatialOps{
   void
   SpatialFieldStore<FieldT>::restore_field( FieldT& field )
   {
-#ifdef EXPRESSION_THREADS
+#ifdef ENABLE_THREADS
     boost::mutex::scoped_lock lock( get_mutex() );
 #endif
     const structured::MemoryWindow& w = field.window_with_ghost();
@@ -460,7 +454,7 @@ namespace SpatialOps{
   SpatFldPtr<double>
   inline SpatialFieldStore<double>::get( const double& d )
   {
-#ifdef EXPRESSION_THREADS
+#ifdef ENABLE_THREADS
     boost::mutex::scoped_lock lock( get_mutex() );
 #endif
     return SpatFldPtr<double>( new double, true );
@@ -470,7 +464,7 @@ namespace SpatialOps{
   inline SpatFldPtr<double>
   SpatialFieldStore<double>::get( const structured::MemoryWindow& w )
   {
-#ifdef EXPRESSION_THREADS
+#ifdef ENABLE_THREADS
     boost::mutex::scoped_lock lock( get_mutex() );
 #endif
     return SpatFldPtr<double>( new double, true );

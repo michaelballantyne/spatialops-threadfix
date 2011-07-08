@@ -15,12 +15,22 @@ option( LINALG_UBLAS    "use UBLAS for linear algebra - cannot solve linear syst
 option( ENABLE_BOOST_SERIALIZATION "allow serialization of information via the boost library" OFF )
 option( ENABLE_TESTS "Enable building of regression tests (recommended)" ON )
 option( ENABLE_STENCIL "Enable fast stencil installation rather than matrix-based options" OFF )
+option( ENABLE_THREADS "Enable multi-threaded support for stencil operations" OFF )
+
+set( NTHREADS 1 CACHE STRING "Number of threads to use if ENABLE_THREADS is ON" )
 
 if( ENABLE_STENCIL )
   set( ENABLE_MATRIX OFF )
   set( LINALG_UBLAS OFF )
   set( LINALG_TRILINOS OFF )
   set( LINALG_STENCIL ON )
+
+  if( ENABLE_THREADS )
+    set( TILL_THREADS ON )
+    set( FIELD_EXPRESSION_THREADS ON )
+    set( STENCIL_THREADS ON )
+  endif()
+
 else()
   set( ENABLE_MATRIX ON )
 endif( ENABLE_STENCIL )
@@ -68,6 +78,11 @@ endif()
 
 # setup the boost library
 set( boost_comps "program_options" )
+
+if( ENABLE_THREADS )
+   set( boost_comps ${boost_comps} "thread" )
+endif( ENABLE_THREADS )
+
 set(Boost_USE_MULTITHREAD ON)
 if( ENABLE_BOOST_SERIALIZATION )
   set( SOPS_BOOST_SERIALIZATION ON )
