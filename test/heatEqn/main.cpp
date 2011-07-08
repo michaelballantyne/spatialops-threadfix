@@ -8,6 +8,7 @@ using std::endl;
 #include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/FieldExpressions.h>
+#include <spatialops/structured/Grid.h>
 
 #ifdef LINALG_STENCIL
 # include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
@@ -140,6 +141,11 @@ int main( int iarg, char* carg[] )
   CellField zcoord     ( vwindow, NULL );
   CellField rhs        ( vwindow, NULL );
 
+  SpatialOps::structured::Grid grid( npts, length );
+  grid.set_coord<SpatialOps::XDIR>( xcoord );
+  grid.set_coord<SpatialOps::YDIR>( ycoord );
+  grid.set_coord<SpatialOps::ZDIR>( zcoord );
+
   const SpatialOps::structured::MemoryWindow xwindow( SpatialOps::structured::get_window_with_ghost<XSideField>(npts,true,true,true) );
   const SpatialOps::structured::MemoryWindow ywindow( SpatialOps::structured::get_window_with_ghost<YSideField>(npts,true,true,true) );
   const SpatialOps::structured::MemoryWindow zwindow( SpatialOps::structured::get_window_with_ghost<ZSideField>(npts,true,true,true) );
@@ -148,32 +154,12 @@ int main( int iarg, char* carg[] )
   YSideField yflux( ywindow, NULL );
   ZSideField zflux( zwindow, NULL );
 
-  // initialize the temperature, thermal conductivity and rhoCp
-  // this isn't efficient, but that doesn't matter since we do it only once.
-  const size_t kstride = npts[0]*npts[1];
-  const size_t jstride = npts[0];
-  for( size_t k=0; k<npts[2]; ++k ){
-    const size_t koffset = k*kstride;
-    for( size_t j=0; j<npts[1]; ++j ){
-      const size_t joffset = j*jstride;
-      for( size_t i=0; i<npts[0]; ++i ){
-        const size_t index = i + joffset + koffset;
-        xcoord[index] = i*spacing[0];
-        ycoord[index] = j*spacing[1];
-        zcoord[index] = k*spacing[2];
-
-        temperature[index]
-          = std::sin( xcoord[index] )
-          + std::cos( ycoord[index] )
-          + std::sin( zcoord[index] );
-
-        thermCond[index] = xcoord[index] + ycoord[index] + zcoord[index];
-
-        rhoCp[index] = 1.0;
-      }
-    }
+  {
+    using namespace SpatialOps;
+    temperature <<= sin( xcoord ) + cos( ycoord ) + sin( zcoord );
+    thermCond <<= xcoord + ycoord + zcoord;
+    rhoCp <<= 1.0;
   }
-
 
   try{
     cout << "beginning 'timestepping'" << endl;
