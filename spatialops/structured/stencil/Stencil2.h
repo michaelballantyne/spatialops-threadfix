@@ -78,9 +78,9 @@ namespace structured{
   struct Stencil2Helper< VolT, typename FaceTypes<VolT>::XFace >
   {
     Stencil2Helper( const MemoryWindow& wsrc, const MemoryWindow& wdest )
-      : hiBounds_( wdest.extent() ),
-        srcInc_ ( 1, 1, 0 ),
-        destInc_( 1, 1, 0 )
+      : srcInc_ ( 1, 1, 0 ),
+        destInc_( 1, 1, 0 ),
+        hiBounds_( wdest.extent() )
     {
       if( wsrc.extent(0) != wdest.extent(0) ){
         // physical boundary present
