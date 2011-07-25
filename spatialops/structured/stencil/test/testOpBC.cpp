@@ -64,7 +64,7 @@ bool test_bc_helper( const OperatorDatabase& opDB,
   const int ix = df->window_without_ghost().flat_index(ijk+faceShift);
 
   const double abserr = std::abs( (*df)[ix] - bcVal );
-  const double relerr = abserr/abs(bcVal);
+  const double relerr = abserr/std::abs(bcVal);
 
   bool isOkay = (abserr<1.0e-12 && relerr<1.0e-12);
 //   if( !isOkay ) cout << "  " << abserr << "  " << relerr << "     "
