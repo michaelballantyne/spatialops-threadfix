@@ -353,12 +353,8 @@ namespace SpatialOps{
         delete count_;
 			count_=NULL;
         delete f_;
-<<<<<<< HEAD
         count_ = NULL;
         f_ = NULL;
-=======
-			f_=NULL;
->>>>>>> cab271d61b8e5083640e536600ca1939b7893922
       }
     }
   }
