@@ -51,14 +51,14 @@ int main()
 
     FieldT f2( SpatialOps::structured::IntVec(2,1,1), NULL );
     ftp.apply_to_field( f, f2 );
-    status( f2[0] == 3.456, "Point2Field Interp (1)" );
-    status( f2[1] == 1.234, "Point2Field Interp (2)" );
+    status( f2[0] == 3.456, "Field2Point Interp (1)" );
+    status( f2[1] == 1.234, "Field2Point Interp (2)" );
 
     f2[0] = -1.234;
     f2[1] = -3.456;
     ptf.apply_to_field( f2, f );
-    status( f[2] == -3.456, "Field2Point Interp (1)" );
-    status( f[4] == -1.234, "Field2Point Interp (2)" );
+    status( f[2] == -3.456, "Point2Field Interp (1)" );
+    status( f[4] == -1.234, "Point2Field Interp (2)" );
   }
 
 
