@@ -27,6 +27,11 @@ namespace structured{
   //==================================================================
   // Explicit template instantiation
   //
+  template struct NullStencil< Interpolant, SVolField, SVolField >;  // no-op interpolant
+  template struct NullStencil< Interpolant, XVolField, XVolField >;  // no-op interpolant
+  template struct NullStencil< Interpolant, YVolField, YVolField >;  // no-op interpolant
+  template struct NullStencil< Interpolant, ZVolField, ZVolField >;  // no-op interpolant
+
   template struct NullStencil< Interpolant, XVolField, SSurfXField >;  // x-advecting velocity on scalar x-surface
   template struct NullStencil< Interpolant, YVolField, SSurfYField >;  // y-advecting velocity on scalar y-surface
   template struct NullStencil< Interpolant, ZVolField, SSurfZField >;  // z-advecting velocity on scalar z-surface

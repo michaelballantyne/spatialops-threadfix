@@ -41,6 +41,13 @@ namespace structured{
   template<typename OpT, typename SrcT, typename DestT>
   struct OperatorTypeBuilder;
 
+  // no-op. Note that you should avoid this since it is an expensive
+  // way to do a no-op as it forces a full copy.
+  template< typename FieldT >
+  struct OperatorTypeBuilder<Interpolant,FieldT,FieldT>{
+    typedef NullStencil<Interpolant,FieldT,FieldT> type;
+  };
+
   /**
    *  \struct BasicOpTypes
    *  \author James C. Sutherland
