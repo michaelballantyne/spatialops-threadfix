@@ -26,6 +26,7 @@ namespace Particle{
 
      /**
     * @param particleCoord Field of coordinates for all particles (ParticleField)
+    * @param particleSize Field of size for all particles (ParticleField)
     * @param src source field from which values are interpolated to partciles (ParticleField)
     * @param dest destination field to which values are interpolated (CellField)
     */
@@ -62,10 +63,12 @@ namespace Particle{
 
     /**
     * @param particleCoord Field of coordinates for all particles (ParticleField)
+    * @param particleSize Field of size for all particles (ParticleField)
     * @param src source field from which values are interpolated to partciles (VolField)
     * @param dest destination field to which values are interpolated (ParticleField)
     */
     void apply_to_field( const ParticleField& particleCoord,
+                         const ParticleField& particleSize,
                          const SrcFieldType& src,
                          DestFieldType& dest ) const;
    
@@ -122,23 +125,37 @@ namespace Particle{
 
      const double halfwidth = 0.5*dx_;
 
-     ParticleField::const_iterator plociter = particleCoord.begin();
-     const ParticleField::const_iterator plocitere = particleCoord.end();
-     //ParticleField::const_iterator psizeiter = particleSize.begin();
-     ParticleField::const_iterator isrc = src.begin();
-     for( ; plociter!=plocitere; ++plociter, ++isrc ){
-       // given the current particle coordinate,
-       // determine what cell it is located in.
-       const size_t cellIx1 = size_t((*plociter-halfwidth-xo_) / dx_);
-       const size_t cellIx2 = cellIx1 +1 ;
-       const double leftloc = coordVec_[cellIx1];
-       const double rightloc = coordVec_[cellIx2];
-       //std::cout<<" cellIx1 : "<<cellIx1<<"  cellIx1 : "<<cellIx2<<"  leftloc  : "<< leftloc<<"  rightloc : "<<rightloc<<std::endl;
-       if( fabs( *plociter - leftloc) <= fabs( *plociter - rightloc ))
-         dest[cellIx1] += *isrc;
-       else
-         dest[cellIx2] += *isrc;
-     }
+#   ifndef NDEBUG
+    const int nmax = dest.window_with_ghost().local_npts();
+#   endif
+  
+	   ParticleField::const_iterator plociter = particleCoord.begin();
+	   ParticleField::const_iterator psizeiter = particleSize.begin();
+	   ParticleField::const_iterator isrc = src.begin();
+	   for( ; plociter!=particleCoord.end(); ++plociter, ++isrc, ++psizeiter ){		  
+       //particle location is the position where particle center is located
+       //identify the location of the particle left boundary
+		   double leftloc = *plociter-( *psizeiter / 2) ;
+       //identify the location of the particle right boundary
+		   const double rightloc = *plociter+( *psizeiter / 2) ;
+       //identify the cell index where particle left boundary located
+		   size_t leftcellIx1 = size_t((*plociter-( *psizeiter / 2)) / dx_) + 1;
+#     ifndef NDEBUG
+      if( leftcellIx1 >= nmax || leftcellIx1<0 ){
+        throw std::runtime_error( "Particle is outside of the domain!" );
+      }
+#     endif
+		   //std::cout<<"leftloc  :  "<<leftloc<<"  rightloc  :  "<<rightloc<<"   leftcellIx1 : "<<leftcellIx1<<std::endl;
+      //loop through all cells effected by the particle and add the source term
+		   while(leftloc < rightloc){
+			   double rb = coordVec_[leftcellIx1] + dx_/2 ; 
+			   if(rb > rightloc)
+				   rb = rightloc ;
+			   dest[leftcellIx1] += *isrc * (rb-leftloc) / *psizeiter ;
+			   leftcellIx1 += 1 ;
+			   leftloc = rb ;
+		   }		   
+	   }
    }
 
  //==================================================================
@@ -172,39 +189,38 @@ namespace Particle{
   void
   CellToParticle<CellField>::
   apply_to_field( const ParticleField& particleCoord,
+                  const ParticleField& particleSize,
                   const SrcFieldType& src,
                   DestFieldType& dest ) const
   {
     dest = 0.0;
 
     const double halfwidth = 0.5*dx_;
-
 #   ifndef NDEBUG
     const int nmax = src.window_with_ghost().local_npts();
 #   endif
-
-    ParticleField::const_iterator ipx= particleCoord.begin();
-    const ParticleField::const_iterator ipxe = particleCoord.end();
-    ParticleField::iterator idest = dest.begin();
-    for( ; ipx!=ipxe; ++ipx, ++idest ){
-      // given the current particle coordinate, determine what cell it
-      // is located in.  Then interpolate the src values (from the
-      // mesh) onto the particle using linear interpolation
-      const double xp = *ipx;
-      const size_t i1 = size_t( (xp-halfwidth-xo_) / dx_ );
+    ParticleField::const_iterator plociter = particleCoord.begin();
+    ParticleField::const_iterator psizeiter = particleSize.begin();
+    ParticleField::iterator destiter = dest.begin();
+    for( ; plociter!=particleCoord.end(); ++plociter, ++destiter, ++psizeiter ){  
+	   double leftloc = *plociter-( *psizeiter / 2) ;
+	   const double rightloc = *plociter+( *psizeiter / 2) ;
+	   size_t leftcellIx1 = size_t((*plociter-( *psizeiter / 2)) / dx_) + 1;
 #     ifndef NDEBUG
-      if( i1 >= nmax || i1<0 ){
+      if( leftcellIx1 >= nmax || leftcellIx1<0 ){
         throw std::runtime_error( "Particle is outside of the domain!" );
       }
 #     endif
-      const double x1 = coordVec_[i1];
-      const size_t i2 = ( xp > x1 ) ? i1+1 : i1-1;
-      const double x2 = coordVec_[i2];
-      const double c1 = (xp-x2)/(x1-x2);
-      const double c2 = (xp-x1)/(x2-x1);
-      *idest = src[i1]*c1 + src[i2]*c2;
-
-    }
+	   //std::cout<<"leftloc  :  "<<leftloc<<"  rightloc  :  "<<rightloc<<"   leftcellIx1 : "<<leftcellIx1<<std::endl;
+	   while(leftloc < rightloc){
+		   double rb = coordVec_[leftcellIx1] + dx_/2 ; 
+		   if(rb > rightloc)
+			   rb = rightloc ;
+		   *destiter += src[leftcellIx1] * (rb-leftloc) / *psizeiter ;
+		   leftcellIx1 += 1 ;
+		   leftloc = rb ;
+	   }
+   }
   }
 
 } // namespace Particle
