@@ -18,7 +18,7 @@ namespace Particle{
 
   struct ParticleGhostTraits{ enum{ NGHOST=0 }; };
 
-  struct ParticleFieldTraits{};
+  struct ParticleFieldTraits{ typedef NODIR FaceDir;  typedef NODIR StagLoc; };
 
   class ParticleLinAlg
   {
