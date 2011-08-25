@@ -21,7 +21,7 @@ using SpatialOps::write_matlab;
 
 int main()
 {
-  const size_t np=4;
+  const size_t np=1;
   const double dx = 1.0;
 
   IntVec totDim(10,1,1);
@@ -32,6 +32,7 @@ int main()
   // build the fields
   //
   CellField cellField( totDim, NULL );
+  CellField cellFieldvalues( totDim, NULL );
   CellField   ctmp( totDim, NULL );
 
   SpatialOps::Particle::ParticleField pCoord( IntVec(np,1,1), NULL );
@@ -44,27 +45,29 @@ int main()
   //
   
   size_t i=0;
-  for( CellField::iterator icoord=cellField.begin(); icoord!=cellField.end(); ++icoord, ++i ){
-    *icoord = i*2 ;
+  CellField::iterator fielditer=cellFieldvalues.begin();
+  for( CellField::iterator icoord=cellField.begin(); icoord!=cellField.end(); ++icoord, ++i, ++fielditer ){
+    *icoord = i - 0.5 ;
+    *fielditer = i * 10 ;
   }
 
   //
   // set the particle coordinates
   //
-  pCoord[0] = 1;
-  pCoord[1] = 2.25;
+  pCoord[0] = 3;/*
+  pCoord[1] = 7.0;
   pCoord[2] = 1;
-  pCoord[3] = 7.5;
+  pCoord[3] = 7.5;*/
 
-  pSize[0] = 0;
-  pSize[1] = 0;
+  pSize[0] = 5;/*
+  pSize[1] = 2;
   pSize[2] = 0;
-  pSize[3] = 0;
+  pSize[3] = 0;*/
 
-  pfield[0] = 10;
+  pfield[0] = 20;/*
   pfield[1] = 20;
   pfield[2] = 40;
-  pfield[3] = 70;
+  pfield[3] = 70;*/
 
   for( size_t i=0; i<np; ++i )
     std::cout<<"  particle coord : "<<pCoord[i]<<"  particle field : "<<pfield[i]<<std::endl;
@@ -80,7 +83,7 @@ int main()
   //
   // interpolate to particles
   //
-  c2p.apply_to_field( pCoord, cellField, ptmp );
+  c2p.apply_to_field( pCoord, pSize, cellFieldvalues, ptmp );
   p2c.apply_to_field( pCoord, pSize, pfield, ctmp ); 
  
   for( size_t i=0; i<np; ++i )
@@ -92,15 +95,15 @@ int main()
 
   TestHelper status;
   for( size_t i=0; i<np; ++i )
-    status( ptmp[i] == pCoord[i] );
+    status( ptmp[i] == 35 );
 
-  status( ctmp[0] == 50, "gas interp [0]" );
-  status( ctmp[1] == 20, "gas interp [1]" );
-  status( ctmp[2] ==  0, "gas interp [2]" );
-  status( ctmp[3] ==  0, "gas interp [3]" );
-  status( ctmp[4] == 70, "gas interp [4]" );
-  status( ctmp[5] ==  0, "gas interp [5]" );
-  status( ctmp[6] ==  0, "gas interp [6]" );
+  status( ctmp[0] == 0, "gas interp [0]" );
+  status( ctmp[1] == 2, "gas interp [1]" );
+  status( ctmp[2] ==  4, "gas interp [2]" );
+  status( ctmp[3] ==  4, "gas interp [3]" );
+  status( ctmp[4] == 4, "gas interp [4]" );
+  status( ctmp[5] ==  4, "gas interp [5]" );
+  status( ctmp[6] ==  2, "gas interp [6]" );
 
   if( status.ok() ) return 0;
   return -1;
