@@ -3,6 +3,7 @@
 
 #include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/SpatialOpsDefs.h>
+#include <spatialops/SpatialOpsTools.h>
 
 #include <spatialops/structured/MemoryWindow.h>
 
@@ -27,6 +28,79 @@ namespace structured{
   //------------------------------------------------------------------
 
   /**
+   *  \fn int nextra()
+   *
+   *  \brief obtain the number of extra points in this field in the
+   *         given direction, relative to a cell centered field
+   *
+   *  \param hasPlusFace true if the (+) side of this patch is a physical boundary.
+   *
+   *  \tparam FieldT the type of field in question
+   *  \tparam DirT   the direction in question
+   */
+  template< typename FieldT, typename DirT >
+  struct ExtraPoints{
+    /**
+     *  \brief obtain the number of extra points.
+     *  \param hasPlusFace indicates if there is a physical boundary on the (+) side of this patch.
+     */
+    static unsigned int value( const bool hasPlusFace ){
+      return IsSameType<typename FieldT::Location::RootLoc,DirT>::result && hasPlusFace ? 1 : 0;
+    }
+  };
+
+  template< typename FieldT > struct ExtraPoints<FieldT,NODIR>; // invalid usage
+
+  //------------------------------------------------------------------
+
+  namespace detail{
+    template< typename RootT, typename DirT > struct LocDirComp             { enum{ value=0 }; };
+    template<                 typename DirT > struct LocDirComp<DirT ,DirT >{ enum{ value=-1}; };
+    template<                               > struct LocDirComp<NODIR,NODIR>{ enum{ value=0 }; };
+  }
+
+  /**
+   *  \struct IndexStagger
+   *
+   *  \brief Obtain the index value for how far the given field type
+   *         is staggered relative to a scalar cell centered variable.
+   *         Nominally 0 or -1.
+   *
+   *  \tparam FieldT the type of field in consideration.
+   *  \tparam DirT   the direction we are interested in.
+   *
+   *  Usage:
+   *  \code
+   *    const int n = IndexStagger<FieldT,DirT>::value;
+   *  \endcode
+   */
+  template< typename FieldT, typename DirT >
+  struct IndexStagger{
+    enum{ value = detail::LocDirComp<typename FieldT::Location::RootLoc,DirT>::value };
+  };
+
+  template< typename FieldT > struct IndexStagger<FieldT,NODIR>; // invalid usage
+
+  //------------------------------------------------------------------
+
+  /**
+   *  \fn unsigned int stride( const MemoryWindow& mw )
+   *
+   *  \brief Obtain the stride (flat index) in the requested direction
+   *         for the given field
+   *
+   *  \tparam DirT the direction of interest
+   *  \param mw the MemoryWindow associated with the field
+   */
+  template< typename DirT > unsigned int stride( const MemoryWindow& mw );
+  
+  template<> inline unsigned int stride<XDIR>( const MemoryWindow& mw ){ return 1; }
+  template<> inline unsigned int stride<YDIR>( const MemoryWindow& mw ){ return mw.extent(0); }
+  template<> inline unsigned int stride<ZDIR>( const MemoryWindow& mw ){ return mw.extent(0)*mw.extent(1); }
+
+  //------------------------------------------------------------------
+
+  /**
    *  \fn int get_nx_with_ghost( const int, const bool )
    *
    *  \brief obtain the number of points in the x direction
@@ -45,10 +119,7 @@ namespace structured{
   int get_nx_with_ghost( const int nxNoGhost, const bool hasPlusFaceX )
   {
     int nx = nxNoGhost;
-    if( nxNoGhost>1 ){
-      nx += 2*FieldT::Ghost::NGHOST;
-      if( hasPlusFaceX && (0==FieldT::Location::FaceDir::value) ) nx+=1;
-    }
+    if( nxNoGhost>1 ) nx += ExtraPoints<FieldT,XDIR>::value(hasPlusFaceX) + 2*FieldT::Ghost::NGHOST;
     return nx;
   }
 
@@ -71,10 +142,7 @@ namespace structured{
   int get_ny_with_ghost( const int nyNoGhost, const bool hasPlusFaceY )
   {
     int ny = nyNoGhost;
-    if( nyNoGhost>1 ){
-      ny += 2*FieldT::Ghost::NGHOST;
-      if( hasPlusFaceY && (1==FieldT::Location::FaceDir::value) ) ny+=1;
-    }
+    if( nyNoGhost>1 ) ny += ExtraPoints<FieldT,YDIR>::value(hasPlusFaceY) + 2*FieldT::Ghost::NGHOST;
     return ny;
   }
 
@@ -97,10 +165,7 @@ namespace structured{
   int get_nz_with_ghost( const int nzNoGhost, const bool hasPlusFaceZ )
   {
     int nz = nzNoGhost;
-    if( nzNoGhost>1 ){
-      nz += 2*FieldT::Ghost::NGHOST;
-      if( hasPlusFaceZ && (2==FieldT::Location::FaceDir::value) ) nz+=1;
-    }
+    if( nzNoGhost>1 ) nz += ExtraPoints<FieldT,ZDIR>::value(hasPlusFaceZ) + 2*FieldT::Ghost::NGHOST;
     return nz;
   }
 
@@ -300,7 +365,16 @@ namespace structured{
     static IntVec value( const IntVec& dim, const int ix,
                          const bool hasPlusXSideFaces=true,
                          const bool hasPlusYSideFaces=true,
-                         const bool hasPlusZSideFaces=true );
+                         const bool hasPlusZSideFaces=true )
+    {
+      IntVec triplet(0,0,0);
+      const int nxt = get_nx_with_ghost<FieldT>(dim[0],hasPlusXSideFaces);
+      const int nyt = get_ny_with_ghost<FieldT>(dim[1],hasPlusYSideFaces);
+      triplet[0] = ix%nxt;
+      triplet[1] = ix/nxt % nyt;
+      triplet[2] = ix/(nxt*nyt);
+      return triplet;
+    }
   };
 
   //==================================================================
@@ -311,48 +385,22 @@ namespace structured{
   template<typename FieldT>
   struct ijk2flat
   {
-    static int value( const IntVec& dim, const IntVec& ixt,
+    static int value( const IntVec& dim,
+                      const IntVec& triplet,
                       const bool hasPlusXSideFaces=true,
                       const bool hasPlusYSideFaces=true,
-                      const bool hasPlusZSideFaces=true );
+                      const bool hasPlusZSideFaces=true )
+    {
+      const int nxt = get_nx_with_ghost<FieldT>(dim[0],hasPlusXSideFaces);
+      const int nyt = get_ny_with_ghost<FieldT>(dim[1],hasPlusYSideFaces);
+      return
+        triplet[0] +
+        triplet[1] * nxt +
+        triplet[2] * nxt*nyt;
+    }
   };
 
-  //====================================================================
-
-  template<typename FieldT>
-  inline IntVec
-  flat2ijk<FieldT>::value( const IntVec& dim, const int ix,
-                           const bool hasPlusXSideFaces, const bool hasPlusYSideFaces, const bool hasPlusZSideFaces )
-  {
-    IntVec triplet(0,0,0);
-
-    const int nxt = get_nx_with_ghost<FieldT>(dim[0],hasPlusXSideFaces);
-    const int nyt = get_ny_with_ghost<FieldT>(dim[1],hasPlusYSideFaces);
-    triplet[0] = ix%nxt;
-    triplet[1] = ix/nxt % nyt;
-    triplet[2] = ix/(nxt*nyt);
-
-    return triplet;
-  }
-
   //==================================================================
-
-  template<typename FieldT>
-  inline int
-  ijk2flat<FieldT>::value( const IntVec& dim, const IntVec& triplet,
-                           const bool hasPlusXSideFaces, const bool hasPlusYSideFaces, const bool hasPlusZSideFaces )
-  {
-    const int nxt = get_nx_with_ghost<FieldT>(dim[0],hasPlusXSideFaces);
-    const int nyt = get_ny_with_ghost<FieldT>(dim[1],hasPlusYSideFaces);
-      
-    return
-      triplet[0] +
-      triplet[1] * nxt +
-      triplet[2] * nxt*nyt;
-  }
-  
-  //==================================================================
-
 
   /**
    *  @}

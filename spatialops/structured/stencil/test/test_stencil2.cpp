@@ -162,9 +162,6 @@ apply_stencil( const IntVec& npts, const double len, const bool* bcPlus,
 
   // interpolant
   {
-    {
-      const Stencil2Helper<VolT,FaceT> helper( vol.window_with_ghost(),face.window_with_ghost() );
-    }
     const InterpT& interpOp = *opdb.retrieve_operator<InterpT>();
     interpOp.apply_to_field( vol, face );
     function( xface, yface, zface, faceExact );
@@ -206,7 +203,7 @@ bool
 run_variants( const IntVec npts,
               const bool* bcPlus )
 {
-  TestHelper status(false);
+  TestHelper status(true);
 
   typedef typename FaceTypes<Vol>::XFace  XFace;
   typedef typename FaceTypes<Vol>::YFace  YFace;
@@ -449,7 +446,13 @@ int main( int iarg, char* carg[] )
     cout << e.what() << endl;
     return -1;
   }
-  if( status.ok() ) return 0;
+  if( status.ok() ){
+    cout << "ALL TESTS PASSED :)" << endl;
+    return 0;
+  }
+  cout << "******************************" << endl
+       << " At least one test FAILED! :(" << endl
+       << "******************************" << endl;
   return -1;
 }
 

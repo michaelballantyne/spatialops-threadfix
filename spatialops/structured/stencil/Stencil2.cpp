@@ -28,12 +28,12 @@ namespace structured{
     const Stencil2Helper<SrcT,DestT> helper( src.window_with_ghost(),
                                              dest.window_with_ghost() );
 
-    const IntVec sinc = helper.src_increment();
+    const IntVec sinc = helper. src_increment();
     const IntVec dinc = helper.dest_increment();
 
-    typename DestT::iterator idest = dest.begin() + helper.dest_offset();
-    typename SrcT::const_iterator isrcm = src.begin() + helper.src_offset_lo();
-    typename SrcT::const_iterator isrcp = src.begin() + helper.src_offset_hi();
+    typename DestT::iterator      idest = dest.begin() + helper.dest_offset();
+    typename SrcT::const_iterator isrcm =  src.begin() + helper.src_offset_lo();
+    typename SrcT::const_iterator isrcp =  src.begin() + helper.src_offset_hi();
 
     const IntVec lo = helper.low ();
     const IntVec hi = helper.high();
