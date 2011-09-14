@@ -304,6 +304,7 @@ namespace structured{
       }
     }
     interiorFieldWindow_ = MemoryWindow( fieldWindow_.glob_dim(), ofs, ext );
+    if( mode==InternalStorage )  reset_values( fieldValues );
   }
 
   //------------------------------------------------------------------
