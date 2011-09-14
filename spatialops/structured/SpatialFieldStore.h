@@ -413,6 +413,7 @@ namespace SpatialOps{
     AtomicT* fnew;
     if( q.empty() ){
       fnew = new AtomicT[ npts ];
+      for( size_t i=0; i<npts; ++i )  fnew[i] = 0.0;
     }
     else{
       fnew = q.front();
