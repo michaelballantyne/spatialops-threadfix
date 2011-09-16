@@ -10,6 +10,11 @@ add_executable( test_memwindow testMemWindow.cpp )
 target_link_libraries( test_memwindow ${libs} )
 add_test( test_memwindow test_memwindow )
 
+add_executable( test_fvtools testFVTools.cpp )
+target_link_libraries( test_fvtools ${libs} )
+#jcs add this once we get the new SpatialOps stuff done.
+# add_test( test_fvtools test_fvtools )
+
 if( ENABLE_BOOST_SERIALIZATION )
   add_executable( test_serialize testSerialization.cpp )
   target_link_libraries( test_serialize ${libs} )
