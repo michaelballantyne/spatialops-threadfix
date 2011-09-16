@@ -417,6 +417,7 @@ namespace SpatialOps{
     }
     else{
       fnew = q.front();
+      for( size_t i=0; i<npts; ++i )  fnew[i] = 0.0;
       q.pop();
     }
 
