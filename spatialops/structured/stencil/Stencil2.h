@@ -635,20 +635,7 @@ namespace structured{
         destInc_ ( s2detail::DestIncrement  <SrcT,DestT>::value(wdest,bcPlus_ ) ),
         loBounds_( s2detail::SetLowBounds   <SrcT,DestT>::value() ),
         hiBounds_( s2detail::SetHiBounds    <SrcT,DestT>::value(wdest,bcPlus_) )
-    {
-      std::cout << "dest offset: " << doffset_ << std::endl
-                << "src0 offset: " << soffsetL_ << std::endl
-                << "src1 offset: " << soffsetH_ << std::endl
-                << "src  inc   : " << srcInc_ << std::endl
-                << "dest inc   : " << destInc_ << std::endl
-                << "hi bounds  : " << hiBounds_ << std::endl
-                << "wdest extent:" << wdest.extent() << std::endl
-                << "low  ix    : " << low() << std::endl
-                << "high ix    : " << high() << std::endl;
-      if( bcPlus_ ) std::cout << "has + BC" << std::endl;
-        else std::cout << "no + BC" << std::endl;
-      std::cout << std::endl;
-    }
+    {}
 
     ~Stencil2Helper(){}
 
