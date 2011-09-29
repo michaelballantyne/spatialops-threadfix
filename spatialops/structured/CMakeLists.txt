@@ -32,6 +32,7 @@ install( FILES
   FVStaggeredFieldTypes.h
   FVTools.h
   Grid.h
+  IntVec.h
   MemoryWindow.h
   SpatialField.h
   SpatialFieldStore.h

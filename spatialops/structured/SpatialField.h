@@ -19,10 +19,10 @@ namespace SpatialOps{
 namespace structured{
 
   enum StorageMode
-    {
-      InternalStorage,
-      ExternalStorage
-    };
+  {
+    InternalStorage,
+    ExternalStorage
+  };
 
   /**
    *  \class SpatialField
@@ -155,10 +155,6 @@ namespace structured{
                   T* const fieldValues,
                   const StorageMode mode = InternalStorage );
 
-    SpatialField( const IntVec npts,
-                  T* const fieldValues,
-                  const StorageMode mode = InternalStorage );
-
     /**
      *  \brief Shallow copy constructor.  This results in two fields
      *  that share the same underlying memory.
@@ -276,34 +272,7 @@ namespace structured{
         ofs[i] +=   GhostTraits::NGHOST;
       }
     }
-    interiorFieldWindow_ = MemoryWindow( window.glob_dim(), ofs, ext );
-    if( mode==InternalStorage )  reset_values( fieldValues );
-  }
-
-  //------------------------------------------------------------------
-
-  template< typename VecOps, typename Location, typename GhostTraits, typename T >
-  SpatialField<VecOps,Location,GhostTraits,T>::
-  SpatialField( const IntVec npts,
-                T* const fieldValues,
-                const StorageMode mode )
-    : fieldWindow_( npts, IntVec(0,0,0), npts ),
-      interiorFieldWindow_( IntVec(0,0,0) ), // reset with correct info later
-      fieldValues_( (mode==ExternalStorage)
-                    ? fieldValues
-                    : new T[npts[0]*npts[1]*npts[2]] ),
-      builtField_( mode==InternalStorage ),
-      vec_( linAlg_.setup_vector( fieldWindow_.glob_npts(), fieldValues_ ) )
-  {
-    IntVec ext = fieldWindow_.extent();
-    IntVec ofs = fieldWindow_.offset();
-    for( size_t i=0; i<3; ++i ){
-      if( ext[i]>1 ){
-        ext[i] -= 2*GhostTraits::NGHOST;
-        ofs[i] +=   GhostTraits::NGHOST;
-      }
-    }
-    interiorFieldWindow_ = MemoryWindow( fieldWindow_.glob_dim(), ofs, ext );
+    interiorFieldWindow_ = MemoryWindow( window.glob_dim(), ofs, ext, window.has_bc(0), window.has_bc(1), window.has_bc(2) );
     if( mode==InternalStorage )  reset_values( fieldValues );
   }
 
@@ -632,10 +601,6 @@ namespace structured{
   //------------------------------------------------------------------
 
 } // namespace structured
-
-//#include <spatialops/FieldOperations.h>
-//#include <spatialops/FieldExpressions.h>
-
 } // namespace SpatialOps
 
 #endif // SpatialOps_SpatialField_h
