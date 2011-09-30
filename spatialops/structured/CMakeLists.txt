@@ -1,7 +1,6 @@
 get_filename_component( dir ${CMAKE_CURRENT_LIST_FILE} PATH )
 
 set( src
-  ${dir}/FVTools.cpp
   ${dir}/Grid.cpp
   ${dir}/MemoryWindow.cpp
   )
