@@ -12,9 +12,9 @@ typedef SpatialOps::Point::PointField FieldT;
 int main()
 {
   const size_t npts = 10;
-  SpatialOps::structured::IntVec dim( npts, 1, 1 );
+  const SpatialOps::structured::MemoryWindow mw( SpatialOps::structured::IntVec( npts, 1, 1 ) );
 
-  FieldT f( dim, NULL );
+  FieldT f( mw, NULL );
 
   double x=0.1;
   for( FieldT::iterator ifld=f.begin(); ifld!=f.end(); ++ifld, x+=1.0 ){
@@ -49,7 +49,8 @@ int main()
     SpatialOps::Point::FieldToPoint<FieldT> ftp(ix);
     SpatialOps::Point::PointToField<FieldT> ptf(ix);
 
-    FieldT f2( SpatialOps::structured::IntVec(2,1,1), NULL );
+    const SpatialOps::structured::MemoryWindow mw2( SpatialOps::structured::IntVec(2,1,1) );
+    FieldT f2( mw2, NULL );
     ftp.apply_to_field( f, f2 );
     status( f2[0] == 3.456, "Field2Point Interp (1)" );
     status( f2[1] == 1.234, "Field2Point Interp (2)" );

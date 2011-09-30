@@ -563,7 +563,7 @@ int main()
   }
 
   // x-Volume to y-volume x-surface and z-volume x-surface
-  if( dim[0]>1 && dim[1]>1 || dim[2]>1 ){
+  if( (dim[0]>1 && dim[1]>1) || dim[2]>1 ){
     const SinFun<XVolField  >   xvolfun( grid.xcoord_xvol(),   grid.ycoord_xvol(),   grid.zcoord_xvol()   );
     const SinFun<YSurfXField> ysurfxfun( grid.xcoord_yxsurf(), grid.ycoord_yxsurf(), grid.zcoord_yxsurf() );
     const SinFun<ZSurfXField> zsurfxfun( grid.xcoord_zxsurf(), grid.ycoord_zxsurf(), grid.zcoord_zxsurf() );
@@ -584,7 +584,7 @@ int main()
   }
 
   // y-volume to x-volume y-surface z-volume y-surface
-  if( dim[1]>1 && dim[0]>1 || dim[2]>1 ){
+  if( (dim[1]>1 && dim[0]>1) || dim[2]>1 ){
     const SinFun<YVolField  >   yvolfun( grid.xcoord_yvol(),   grid.ycoord_yvol(),   grid.zcoord_yvol()   );
     const SinFun<XSurfYField> xsurfyfun( grid.xcoord_xysurf(), grid.ycoord_xysurf(), grid.zcoord_xysurf() );
     const SinFun<ZSurfYField> zsurfyfun( grid.xcoord_zysurf(), grid.ycoord_zysurf(), grid.zcoord_zysurf() );
@@ -605,7 +605,7 @@ int main()
   }
 
   // z-volume to x-volume z-surface y-volume z-surface
-  if( dim[2]>1 && dim[0]>1 || dim[1]>1 ){
+  if( (dim[2]>1 && dim[0]>1) || dim[1]>1 ){
     const SinFun<ZVolField  >   zvolfun( grid.xcoord_zvol(),   grid.ycoord_zvol(),   grid.zcoord_zvol()   );
     const SinFun<XSurfZField> xsurfzfun( grid.xcoord_xzsurf(), grid.ycoord_xzsurf(), grid.zcoord_xzsurf() );
     const SinFun<YSurfZField> ysurfzfun( grid.xcoord_yzsurf(), grid.ycoord_yzsurf(), grid.zcoord_yzsurf() );

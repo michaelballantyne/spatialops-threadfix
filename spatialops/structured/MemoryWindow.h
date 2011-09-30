@@ -6,7 +6,8 @@
 
 #include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/SpatialOpsDefs.h>
-#include "IntVec.h"
+
+#include <spatialops/structured/IntVec.h>
 
 #ifdef SOPS_BOOST_SERIALIZATION
 # include <boost/serialization/serialization.hpp>
@@ -17,6 +18,13 @@
 # include <sstream>
 # include <stdexcept>
 #endif
+
+/**
+ * \file MemoryWindow.h
+ * \addtogroup structured
+ * @{
+ *
+ */
 
 namespace SpatialOps{
 namespace structured{
@@ -38,7 +46,10 @@ namespace structured{
 
     friend std::ostream& operator<<( std::ostream&, const MemoryWindow& );
 
-    IntVec nptsGlob_, offset_, extent_, bc_;
+    IntVec nptsGlob_;   ///< The global number of points
+    IntVec offset_;     ///< The offset for this window
+    IntVec extent_;     ///< The extent of this window
+    IntVec bc_;         ///< Indicates presence of a physical boundary on the + side of the window
 
 #   ifdef SOPS_BOOST_SERIALIZATION
     friend class boost::serialization::access;
@@ -206,13 +217,27 @@ namespace structured{
     inline IntVec offset  () const{ return offset_; }
     inline IntVec glob_dim() const{ return nptsGlob_; }
 
-    inline IntVec& extent  (){ return extent_; }
-    inline IntVec& offset  (){ return offset_; }
-    inline IntVec& glob_dim(){ return nptsGlob_; }
+//    inline IntVec& extent  (){ return extent_; }
+//    inline IntVec& offset  (){ return offset_; }
+//    inline IntVec& glob_dim(){ return nptsGlob_; }
 
+    /**
+     * \brief Query if there is a physical BC on the + side of this window in the given direction.
+     * @param i The direction: (x,y,z) = (0,1,2)
+     * @return true if a BC is present on the + side of this window, false otherwise.
+     */
     inline bool has_bc( const size_t i ) const{ return bc_[i]; }
+
+    /**
+     * \brief Obtain an IntVec indicating the presence of a physical BC
+     *        (1=present, 0=not present) on each + side of this window.
+     * @return IntVec indicating the presence of a BC on the + side of this window.
+     */
     inline const IntVec& has_bc() const{ return bc_; }
 
+    /**
+     * \brief compare two MemoryWindows for equality
+     */
     inline bool operator==( const MemoryWindow& w ) const{
       return ( (nptsGlob_==w.nptsGlob_) && (extent_==w.extent_) && (offset_==w.offset_) && (bc_==w.bc_) );
     }
@@ -310,7 +335,6 @@ namespace structured{
    *  \author James C. Sutherland
    *  \date September, 2010
    *
-   *  \ingroup structured
    *  \brief Provides a forward iterator for a field that is
    *         associated with a MemoryWindow, allowing one to iterate
    *         over the "local" portion of that field as defined by the
@@ -464,7 +488,6 @@ namespace structured{
    *  \author James C. Sutherland
    *  \date September, 2010
    *
-   *  \ingroup structured
    *  \brief Provides a forward iterator for a field that is
    *         associated with a MemoryWindow, allowing one to iterate
    *         over the "local" portion of that field as defined by the
@@ -593,5 +616,9 @@ namespace structured{
 
 } // namespace structured
 } // namespace SpatialOps
+
+/**
+ * @}
+ */
 
 #endif // SpatialOps_MemoryWindow_h

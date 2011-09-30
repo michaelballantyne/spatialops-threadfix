@@ -31,7 +31,12 @@ namespace structured{
     template< typename CoordT >
     double spacing() const;
 
-    const IntVec& extent() const{ return npts_; }
+    inline const IntVec& extent() const{ return npts_; }
+
+    inline const int extent( const size_t i ) const{ return npts_[i]; }
+
+    inline const std::vector<double>& length() const{ return length_; }
+    inline double length( const size_t i ) const{ return length_[i]; }
 
     /**
      *  \brief set the coordinates on the given field.
