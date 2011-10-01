@@ -217,10 +217,6 @@ namespace structured{
     inline IntVec offset  () const{ return offset_; }
     inline IntVec glob_dim() const{ return nptsGlob_; }
 
-//    inline IntVec& extent  (){ return extent_; }
-//    inline IntVec& offset  (){ return offset_; }
-//    inline IntVec& glob_dim(){ return nptsGlob_; }
-
     /**
      * \brief Query if there is a physical BC on the + side of this window in the given direction.
      * @param i The direction: (x,y,z) = (0,1,2)

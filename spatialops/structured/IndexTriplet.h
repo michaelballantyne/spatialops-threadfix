@@ -8,7 +8,10 @@
  *  @{
  */
 
+#include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/SpatialOpsTools.h>
+
+#include <spatialops/structured/IntVec.h>
 
 #include <iomanip>
 #include <string>
@@ -28,6 +31,15 @@ namespace SpatialOps{
      *  \code assert( Abs<-4>::result == 4 ); \endcode
      */
     template< int I > struct Abs{ enum{ result = (I>=0) ? I : -I }; };
+
+    /**
+     * \struct Max
+     * \brief  Select the maximum of two integer values
+     *
+     * Examples:
+     * \code assert( Max<-1,3>::result == 3 ); \endcode
+     */
+    template< int i1, int i2 > struct Max{ enum{ result = i1>i2 ? i1 : i2 }; };
 
     /**
      *  \struct IndexTriplet
@@ -68,6 +80,22 @@ namespace SpatialOps{
        */
       typedef IndexTriplet< Abs<i1>::result, Abs<i2>::result, Abs<i3>::result >  Abs;
 
+      typedef IndexTriplet< Max<0,i1>::result, Max<0,i2>::result, Max<0,i3>::result >  PositiveOrZero;
+
+      /**
+       * \typedef Negate
+       * \brief Negates this IndexTriplet
+       *  Example:
+       *  \code
+       *    typedef IndexTriplet< 1,-1, 1>               T1;
+       *    typedef IndexTriplet<-1, 1,-1>               T2;
+       *    typedef Negate<T1>::result                   T3;  // same as T2
+       *    typedef Negate<T3>::result                   T4;  // same as T1
+       *    typedef Negate< Negate<T1>::result >::result T5;  // same as T1 and T3
+       *   \endcode
+       */
+      typedef IndexTriplet< -i1, -i2, -i3 > Negate;
+
       /**
        * \brief Writes the IndexTriplet to a string.
        * \return a string value representing the IndexTriplet.
@@ -80,6 +108,11 @@ namespace SpatialOps{
             << std::setw(2) << Z << " )";
         return s.str();
       }
+
+      static inline IntVec int_vec(){
+        return IntVec( i1, i2, i3 );
+      }
+
     };
 
     /**
@@ -215,26 +248,6 @@ namespace SpatialOps{
       typedef IndexTriplet< IX1::X * IX2::X,
                             IX1::Y * IX2::Y,
                             IX1::Z * IX2::Z >  result;
-    };
-
-    /**
-     *  \struct Negate
-     *  \brief Given an IndexTriplet, this flips the sign on each element.
-     *
-     *  Example:
-     *  \code
-     *    typedef IndexTriplet< 1,-1, 1>               T1;
-     *    typedef IndexTriplet<-1, 1,-1>               T2;
-     *    typedef Negate<T1>::result                   T3;  // same as T2
-     *    typedef Negate<T3>::result                   T4;  // same as T1
-     *    typedef Negate< Negate<T1>::result >::result T5;  // same as T1 and T3
-     *   \endcode
-     */
-    template< typename T > struct Negate;
-    template< int i1, int i2, int i3 >
-    struct Negate< IndexTriplet<i1,i2,i3 > >
-    {
-      typedef IndexTriplet< -i1, -i2, -i3 > result;
     };
 
     /**

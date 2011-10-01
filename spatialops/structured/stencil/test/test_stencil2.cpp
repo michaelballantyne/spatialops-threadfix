@@ -1,3 +1,4 @@
+#include <spatialops/SpatialOpsTools.h>
 #include <spatialops/FieldExpressionsExtended.h>
 #include <spatialops/FieldReductions.h>
 
@@ -135,7 +136,7 @@ apply_stencil( const IntVec& npts, const double len, const bool* bcPlus,
   std::vector<double> length(3,len);
   const Grid grid( npts, length );
 
-  VolT   vol( vmw, NULL ), xvol(vmw,NULL), yvol(vmw,NULL), zvol(vmw,NULL);
+  VolT   vol( vmw, NULL ),  xvol(vmw,NULL),  yvol(vmw,NULL),  zvol(vmw,NULL);
   FaceT face( fmw, NULL ), xface(fmw,NULL), yface(fmw,NULL), zface(fmw,NULL);
 
   grid.set_coord<XDIR>( xvol );
@@ -279,8 +280,8 @@ bool interp_test( const unsigned int dir,
     std::vector<double> length(3,10.0);
     const Grid grid( npts, length );
 
-    SrcT   src( vmw, NULL ), xsrc(vmw,NULL), ysrc(vmw,NULL), zsrc(vmw,NULL);
-    DestT dest( fmw, NULL ), xdest(fmw,NULL), ydest(fmw,NULL), zdest(fmw,NULL);
+    SrcT   src(vmw,NULL),  xsrc(vmw,NULL),  ysrc(vmw,NULL),  zsrc(vmw,NULL);
+    DestT dest(fmw,NULL), xdest(fmw,NULL), ydest(fmw,NULL), zdest(fmw,NULL);
 
     grid.set_coord<XDIR>( xsrc );
     grid.set_coord<YDIR>( ysrc );
@@ -391,7 +392,6 @@ int main( int iarg, char* carg[] )
       return -1;
     }
   }
-
 
   TestHelper status( true );
   const IntVec npts(nx,ny,nz);

@@ -35,6 +35,8 @@ int main()
   typedef IndexTriplet< 0,-1,-1> T022;
   typedef IndexTriplet<-1,-1,-1> T222;
 
+  status( IsSameType< IndexTriplet<-1,2,-3>::PositiveOrZero, IndexTriplet<0,2,0> >::result, "PositiveOrZero" );
+
   // jcs note that this is an incomplete set of tests.
 
   status( IsSameType< Add<T000,T100>::result, T100 >::result, "T000+T100" );

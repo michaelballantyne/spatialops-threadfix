@@ -84,7 +84,7 @@ namespace SpatialOps{
 
     std::vector<MemoryWindow>
     MemoryWindow::split( const IntVec splitPattern ) const{
-#     ifdef NDEBUG
+#     ifndef NDEBUG
       for( size_t i=0; i<3; ++i ){
         assert( extent_[i] >= splitPattern[i] );
         assert( splitPattern[i] > 0 );

@@ -4,6 +4,7 @@
 #include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/structured/SpatialField.h>
 #include <spatialops/SpatialOpsDefs.h>
+#include <spatialops/structured/IndexTriplet.h>
 
 #if defined(LINALG_UBLAS)
 # include <spatialops/LinAlgUBlas.h>
@@ -33,8 +34,14 @@
 namespace SpatialOps{
 namespace structured{
 
+
   // FaceDir: The direction relative to its volume field that this field is staggered.
-  // StagLoc: The direction relative to the scalar volume field that this field's volume field is staggered.
+  //
+  // Offset : The offset of this field relative to a scalar volume center.
+  //
+  // BCExtra: If a physical BC is present in the given direction, this
+  //          typedef provides a way to determine the number of extra
+  //          points in this field relative to a scalar volume field.
 
   /**
    *  \struct SVol
@@ -49,10 +56,10 @@ namespace structured{
    *  \struct SSurfZ
    *  \brief Type traits for an z-surface field on a scalar volume
    */
-  struct SVol  { typedef NODIR FaceDir;  typedef NODIR StagLoc;  typedef NODIR RootLoc; };
-  struct SSurfX{ typedef XDIR  FaceDir;  typedef NODIR StagLoc;  typedef XDIR  RootLoc; };
-  struct SSurfY{ typedef YDIR  FaceDir;  typedef NODIR StagLoc;  typedef YDIR  RootLoc; };
-  struct SSurfZ{ typedef ZDIR  FaceDir;  typedef NODIR StagLoc;  typedef ZDIR  RootLoc; };
+  struct SVol  { typedef NODIR FaceDir;  typedef IndexTriplet< 0, 0, 0> Offset;  typedef IndexTriplet<0,0,0>  BCExtra; };
+  struct SSurfX{ typedef XDIR  FaceDir;  typedef IndexTriplet<-1, 0, 0> Offset;  typedef IndexTriplet<1,0,0>  BCExtra; };
+  struct SSurfY{ typedef YDIR  FaceDir;  typedef IndexTriplet< 0,-1, 0> Offset;  typedef IndexTriplet<0,1,0>  BCExtra; };
+  struct SSurfZ{ typedef ZDIR  FaceDir;  typedef IndexTriplet< 0, 0,-1> Offset;  typedef IndexTriplet<0,0,1>  BCExtra; };
 
   /**
    *  \struct XVol
@@ -67,10 +74,10 @@ namespace structured{
    *  \struct XSurfZ
    *  \brief Type traits for an z-surface field on a x-staggered volume
    */
-  struct XVol  { typedef NODIR FaceDir;  typedef XDIR StagLoc;  typedef NODIR RootLoc; }; //   typedef XDIR  RootLoc; };
-  struct XSurfX{ typedef XDIR  FaceDir;  typedef XDIR StagLoc;  typedef XDIR  RootLoc; }; //   typedef NODIR RootLoc; };
-  struct XSurfY{ typedef YDIR  FaceDir;  typedef XDIR StagLoc;  typedef YDIR  RootLoc; }; //   typedef YDIR  RootLoc; };
-  struct XSurfZ{ typedef ZDIR  FaceDir;  typedef XDIR StagLoc;  typedef ZDIR  RootLoc; }; //   typedef ZDIR  RootLoc; };
+  struct XVol  { typedef NODIR FaceDir;  typedef IndexTriplet<-1, 0, 0> Offset;  typedef IndexTriplet<1,0,0> BCExtra; };
+  struct XSurfX{ typedef XDIR  FaceDir;  typedef IndexTriplet< 0, 0, 0> Offset;  typedef IndexTriplet<0,0,0> BCExtra; };
+  struct XSurfY{ typedef YDIR  FaceDir;  typedef IndexTriplet<-1,-1, 0> Offset;  typedef IndexTriplet<0,1,0> BCExtra; };
+  struct XSurfZ{ typedef ZDIR  FaceDir;  typedef IndexTriplet<-1, 0,-1> Offset;  typedef IndexTriplet<0,0,1> BCExtra; };
 
   /**
    *  \struct YVol
@@ -85,10 +92,10 @@ namespace structured{
    *  \struct YSurfZ
    *  \brief Type traits for an z-surface field on a y-staggered volume
    */
-  struct YVol  { typedef NODIR FaceDir;  typedef YDIR  StagLoc;  typedef NODIR RootLoc; }; //  typedef YDIR  RootLoc; };
-  struct YSurfX{ typedef XDIR  FaceDir;  typedef YDIR  StagLoc;  typedef XDIR  RootLoc; }; //  typedef XDIR  RootLoc; };
-  struct YSurfY{ typedef YDIR  FaceDir;  typedef YDIR  StagLoc;  typedef YDIR  RootLoc; }; //  typedef NODIR RootLoc; };
-  struct YSurfZ{ typedef ZDIR  FaceDir;  typedef YDIR  StagLoc;  typedef ZDIR  RootLoc; }; //  typedef ZDIR  RootLoc; };
+  struct YVol  { typedef NODIR FaceDir;  typedef IndexTriplet< 0,-1, 0> Offset;  typedef IndexTriplet<0,1,0> BCExtra; };
+  struct YSurfX{ typedef XDIR  FaceDir;  typedef IndexTriplet<-1,-1, 0> Offset;  typedef IndexTriplet<1,0,0> BCExtra; };
+  struct YSurfY{ typedef YDIR  FaceDir;  typedef IndexTriplet< 0, 0, 0> Offset;  typedef IndexTriplet<0,0,0> BCExtra; };
+  struct YSurfZ{ typedef ZDIR  FaceDir;  typedef IndexTriplet< 0,-1,-1> Offset;  typedef IndexTriplet<0,0,1> BCExtra; };
 
   /**
    *  \struct ZVol
@@ -103,10 +110,10 @@ namespace structured{
    *  \struct ZSurfZ
    *  \brief Type traits for an z-surface field on a z-staggered volume
    */
-  struct ZVol  { typedef NODIR FaceDir;  typedef ZDIR  StagLoc;  typedef NODIR RootLoc; };  //  typedef ZDIR  RootLoc; };
-  struct ZSurfX{ typedef XDIR  FaceDir;  typedef ZDIR  StagLoc;  typedef XDIR  RootLoc; };  //  typedef XDIR  RootLoc; };
-  struct ZSurfY{ typedef YDIR  FaceDir;  typedef ZDIR  StagLoc;  typedef YDIR  RootLoc; };  //  typedef YDIR  RootLoc; };
-  struct ZSurfZ{ typedef ZDIR  FaceDir;  typedef ZDIR  StagLoc;  typedef ZDIR  RootLoc; };  //  typedef NODIR RootLoc; };
+  struct ZVol  { typedef NODIR FaceDir;  typedef IndexTriplet< 0, 0,-1> Offset;  typedef IndexTriplet<0,0,1> BCExtra; };
+  struct ZSurfX{ typedef XDIR  FaceDir;  typedef IndexTriplet<-1, 0,-1> Offset;  typedef IndexTriplet<1,0,0> BCExtra; };
+  struct ZSurfY{ typedef YDIR  FaceDir;  typedef IndexTriplet< 0,-1,-1> Offset;  typedef IndexTriplet<0,1,0> BCExtra; };
+  struct ZSurfZ{ typedef ZDIR  FaceDir;  typedef IndexTriplet< 0, 0, 0> Offset;  typedef IndexTriplet<0,0,0> BCExtra; };
 
   /**
    *  \struct DefaultGhost
@@ -292,13 +299,13 @@ namespace structured{
   template<> struct VolType<ZSurfYField>{ typedef SpatialOps::structured::ZVolField VolField; };
   template<> struct VolType<ZSurfZField>{ typedef SpatialOps::structured::ZVolField VolField; };
 
-  /**
-   *  @}
-   *  @}
-   */
-
 
 }// namespace structured
 }// namespace SpatialOps
+
+/**
+ *  @}
+ *  @}
+ */
 
 #endif
