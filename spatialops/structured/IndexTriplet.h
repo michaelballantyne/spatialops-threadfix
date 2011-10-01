@@ -10,6 +10,7 @@
 
 #include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/SpatialOpsTools.h>
+#include <spatialops/SpatialOpsDefs.h>
 
 #include <spatialops/structured/IntVec.h>
 
@@ -80,6 +81,10 @@ namespace SpatialOps{
        */
       typedef IndexTriplet< Abs<i1>::result, Abs<i2>::result, Abs<i3>::result >  Abs;
 
+      /**
+       * \typedef PositiveOrZero
+       * \brief   Preserves positive elements, zeros others.
+       */
       typedef IndexTriplet< Max<0,i1>::result, Max<0,i2>::result, Max<0,i3>::result >  PositiveOrZero;
 
       /**
@@ -127,10 +132,10 @@ namespace SpatialOps{
      *  \endcode
      */
     template< typename DirT > struct UnitTriplet{
-      typedef IndexTriplet< IsSameType<DirT,XDIR>::result,
-          IsSameType<DirT,YDIR>::result,
-          IsSameType<DirT,ZDIR>::result
-          > type;
+      typedef IndexTriplet< IsSameType<DirT,SpatialOps::XDIR>::result,
+                            IsSameType<DirT,SpatialOps::YDIR>::result,
+                            IsSameType<DirT,SpatialOps::ZDIR>::result
+                          > type;
     };
 
 

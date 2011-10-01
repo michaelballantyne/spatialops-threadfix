@@ -176,11 +176,9 @@ namespace structured{
      */
     inline IntVec ijk_index_from_global( const int loc ) const
     {
-      IntVec ijk( 0,0,0 );
-      ijk[0] = loc % nptsGlob_[0];
-      ijk[1] = loc / nptsGlob_[0] % nptsGlob_[1];
-      ijk[2] = loc / (nptsGlob_[0]*nptsGlob_[1]);
-      return ijk;
+      return IntVec( loc % nptsGlob_[0],
+                     loc / nptsGlob_[0] % nptsGlob_[1],
+                     loc /(nptsGlob_[0] * nptsGlob_[1]) );
     }
 
     /**
@@ -190,11 +188,9 @@ namespace structured{
      */
     inline IntVec ijk_index_from_local( const int loc ) const
     {
-      IntVec ijk( 0,0,0 );
-      ijk[0] = loc % extent_[0]              + offset_[0];
-      ijk[1] = loc / extent_[0] % extent_[1] + offset_[1];
-      ijk[2] = loc / (extent_[0]*extent_[1]) + offset_[2];
-      return ijk;
+      return IntVec( loc % extent_[0]               + offset_[0],
+                     loc / extent_[0] % extent_[1]  + offset_[1],
+                     loc /(extent_[0] * extent_[1]) + offset_[2] );
     }
 
     /**
@@ -210,12 +206,12 @@ namespace structured{
     inline size_t local_npts() const{ return extent_[0] * extent_[1] * extent_[2]; }
 
     inline size_t glob_dim( const size_t i ) const{ return size_t(nptsGlob_[i]); }
-    inline size_t offset  ( const size_t i ) const{ return size_t(offset_[i]); }
-    inline size_t extent  ( const size_t i ) const{ return size_t(extent_[i]); }
+    inline size_t offset  ( const size_t i ) const{ return size_t(offset_[i]  ); }
+    inline size_t extent  ( const size_t i ) const{ return size_t(extent_[i]  ); }
 
-    inline IntVec extent  () const{ return extent_; }
-    inline IntVec offset  () const{ return offset_; }
-    inline IntVec glob_dim() const{ return nptsGlob_; }
+    inline const IntVec& extent  () const{ return extent_;   }
+    inline const IntVec& offset  () const{ return offset_;   }
+    inline const IntVec& glob_dim() const{ return nptsGlob_; }
 
     /**
      * \brief Query if there is a physical BC on the + side of this window in the given direction.
@@ -235,11 +231,17 @@ namespace structured{
      * \brief compare two MemoryWindows for equality
      */
     inline bool operator==( const MemoryWindow& w ) const{
-      return ( (nptsGlob_==w.nptsGlob_) && (extent_==w.extent_) && (offset_==w.offset_) && (bc_==w.bc_) );
+      return (nptsGlob_ == w.nptsGlob_) &&
+             (extent_   == w.extent_  ) &&
+             (offset_   == w.offset_  ) &&
+             (bc_       == w.bc_      );
     }
 
     inline bool operator!=( const MemoryWindow& w ) const{
-      return (nptsGlob_!=w.nptsGlob_) || (extent_!=w.extent_) || (offset_!=w.offset_) || (bc_!=w.bc_);
+      return (nptsGlob_ != w.nptsGlob_) ||
+             (extent_   != w.extent_  ) ||
+             (offset_   != w.offset_  ) ||
+             (bc_       != w.bc_      );
     }
 
   };
@@ -288,7 +290,6 @@ namespace structured{
       }
       return inc;
     }
-
 
     /**
      *  \brief returns the decrement for the pointer.  If zero, then reset the pointer.
@@ -376,7 +377,7 @@ namespace structured{
         first_  ( t        ),
         window_ ( window   )
     {
-      const IntVec ijk = window.ijk_index_from_global( offset );
+      const IntVec& ijk = window.ijk_index_from_global( offset );
       i_ = ijk[0] - window.offset(0);
       j_ = ijk[1] - window.offset(1);
       k_ = ijk[2] - window.offset(2);
@@ -400,28 +401,24 @@ namespace structured{
       return *this;
     }
 
-    inline self operator+( const size_t n ) const
-    {
+    inline self operator+( const size_t n ) const{
       self iter(*this);
       iter+=n;
       return iter;
     }
 
-    inline self operator-( const size_t n ) const
-    {
+    inline self operator-( const size_t n ) const{
       self iter(*this);
       iter -= n;
       return iter;
     }
 
-    inline self& operator+=( const size_t n )
-    {
+    inline self& operator+=( const size_t n ){
       for( size_t i=0; i<n; ++i )  ++(*this);
       return *this;
     }
 
-    inline self& operator-=( const size_t n )
-    {
+    inline self& operator-=( const size_t n ){
       for( size_t i=0; i<n; ++i )  --(*this);
       return *this;
     }
@@ -430,8 +427,7 @@ namespace structured{
 
     inline bool operator!=( const self& other ) const{ return current_!=other.current_; }
 
-    inline self& operator=( const self& other )
-    {
+    inline self& operator=( const self& other ){
       current_ = other.current_;
       first_   = other.first_;
       i_       = other.i_;
@@ -440,8 +436,7 @@ namespace structured{
       return *this;
     }
 
-    inline reference operator*()
-    {
+    inline reference operator*(){
 #     ifndef NDEBUG
       if( i_ >= window_.extent(0) + window_.offset(0) ||
           j_ >= window_.extent(1) + window_.offset(1) ||
@@ -455,8 +450,7 @@ namespace structured{
       return *current_;
     }
 
-    inline reference operator*() const
-    {
+    inline reference operator*() const{
 #     ifndef NDEBUG
       if( i_ >= window_.extent(0) + window_.offset(0) ||
           j_ >= window_.extent(1) + window_.offset(1) ||
@@ -475,9 +469,7 @@ namespace structured{
     inline size_t k(){ return k_; }
   };
 
-
   //==================================================================
-
 
   /**
    *  \class ConstFieldIterator
@@ -498,7 +490,7 @@ namespace structured{
     const T* current_;
     const T* first_;
     const MemoryWindow& window_;
-    size_t i_,j_,k_;
+    size_t i_, j_, k_;
 
   public:
     typedef ConstFieldIterator<FieldT> self;
@@ -552,29 +544,24 @@ namespace structured{
       return *this;
     }
 
-    inline self operator+( const size_t n ) const
-    {
+    inline self operator+( const size_t n ) const{
       self iter(*this);
       iter += n;
       return iter;
     }
 
-    inline self operator-( const size_t n ) const
-    {
+    inline self operator-( const size_t n ) const{
       self iter(*this);
       iter -= n;
       return iter;
     }
 
-    inline self& operator+=( const size_t n )
-    {
+    inline self& operator+=( const size_t n ){
       for( size_t i=0; i<n; ++i )  ++(*this);
       return *this;
     }
 
-
-    inline self& operator-=( const size_t n )
-    {
+    inline self& operator-=( const size_t n ){
       for( size_t i=0; i<n; ++i )  --(*this);
       return *this;
     }
@@ -583,8 +570,7 @@ namespace structured{
 
     inline bool operator!=( const self& other ) const{ return current_!=other.current_; }
 
-    inline self& operator=( const self& other )
-    {
+    inline self& operator=( const self& other ){
       current_ = other.current_;
       first_   = other.first_;
       i_       = other.i_;
@@ -593,8 +579,7 @@ namespace structured{
       return *this;
     }
 
-    inline reference operator*() const
-    {
+    inline reference operator*() const{
 #     ifndef NDEBUG
       if( i_ >= window_.extent(0) + window_.offset(0) ||
           j_ >= window_.extent(1) + window_.offset(1) ||

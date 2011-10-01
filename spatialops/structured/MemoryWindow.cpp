@@ -8,6 +8,17 @@ namespace SpatialOps{
 
     inline bool check_positive( const IntVec& v ){ return (v[0]>=0) & (v[1]>=0) & (v[2]>=0); }
 
+#ifndef NDEBUG
+    bool sanity_check( const IntVec& nglob, const IntVec& offset, const IntVec& extent ){
+      return check_positive( nglob  ) &&
+             check_positive( offset ) &&
+             check_positive( extent ) &&
+             extent[0] <= nglob[0]    &&
+             extent[1] <= nglob[1]    &&
+             extent[2] <= nglob[2];
+    }
+#endif
+
     MemoryWindow::MemoryWindow( const int npts[3],
                                 const int offset[3],
                                 const int extent[3],
@@ -20,9 +31,7 @@ namespace SpatialOps{
       bc_( bcx, bcy, bcz )
     {
 #   ifndef NDEBUG
-      assert( check_positive( nptsGlob_ ) );
-      assert( check_positive( offset_   ) );
-      assert( check_positive( extent_   ) );
+      assert( sanity_check( nptsGlob_, offset_, extent_ ) );
 #   endif
     }
 
@@ -38,9 +47,7 @@ namespace SpatialOps{
       bc_( bcx, bcy, bcz )
     {
 #   ifndef NDEBUG
-      assert( check_positive( nptsGlob_ ) );
-      assert( check_positive( offset_   ) );
-      assert( check_positive( extent_   ) );
+      assert( sanity_check( nptsGlob_, offset_, extent_ ) );
 #   endif
     }
 
@@ -52,9 +59,7 @@ namespace SpatialOps{
       bc_( bcx, bcy, bcz )
     {
 #   ifndef NDEBUG
-      assert( check_positive( nptsGlob_ ) );
-      assert( check_positive( offset_   ) );
-      assert( check_positive( extent_   ) );
+      assert( sanity_check( nptsGlob_, offset_, extent_ ) );
 #   endif
     }
 
@@ -66,9 +71,7 @@ namespace SpatialOps{
       bc_( bcx, bcy, bcz )
     {
 #   ifndef NDEBUG
-      assert( check_positive( nptsGlob_ ) );
-      assert( check_positive( offset_   ) );
-      assert( check_positive( extent_   ) );
+      assert( sanity_check( nptsGlob_, offset_, extent_ ) );
 #   endif
     }
 
@@ -130,12 +133,7 @@ namespace SpatialOps{
     }
 
     ostream& operator<<(ostream& os, const MemoryWindow& w ){
-      os << w.nptsGlob_ << w.offset_ << w.extent_;
-      return os;
-    }
-
-    ostream& operator<<(ostream& os, const IntVec& v ){
-      os << "[ " << v[0] << ","  << v[1] << ","  << v[2] << " ]";
+      os << w.nptsGlob_ << w.offset_ << w.extent_ << w.bc_;
       return os;
     }
 

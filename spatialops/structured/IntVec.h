@@ -8,6 +8,9 @@
 #ifndef SpatialOps_IntVec_h
 #define SpatialOps_IntVec_h
 
+#include <ostream>
+#include <vector>
+
 namespace SpatialOps{
   namespace structured{
 
@@ -99,6 +102,12 @@ namespace SpatialOps{
         return *this;
       }
     };
+
+    inline std::ostream& operator<<( std::ostream& os, const IntVec& v ){
+      os << "[ " << v[0] << ","  << v[1] << ","  << v[2] << " ]";
+      return os;
+    }
+
 
   } // namespace structured
 } // namespace SpatialOps

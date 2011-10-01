@@ -1,8 +1,7 @@
 #ifndef SpatialOps_Structured_Stencil_h
 #define SpatialOps_Structured_Stencil_h
 
-#include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/FVTools.h>
+#include <spatialops/structured/IndexTriplet.h>
 
 namespace SpatialOps {
   namespace structured {
@@ -26,9 +25,9 @@ namespace SpatialOps {
       const double coefLo_, coefHi_;
     public:
 
-      typedef OperatorT OpT;
-      typedef SrcFieldT SrcFieldType;
-      typedef DestFieldT DestFieldType;
+      typedef OperatorT   Type;           ///< The operator type (Interpolant, Gradient, Divergence)
+      typedef SrcFieldT   SrcFieldType;   ///< The source field type
+      typedef DestFieldT  DestFieldType;  ///< The destination field type
 
       /**
        *  \brief construct a stencil with the specified coefficients
@@ -39,10 +38,15 @@ namespace SpatialOps {
 
       ~Stencil2();
 
+      /**
+       * \brief Apply this operator to the supplied source field to produce the supplied destination field
+       * \param src the field that the operator is applied to
+       * \param dest the resulting field.
+       */
       void apply_to_field( const SrcFieldType& src, DestFieldType& dest ) const;
 
-      double get_minus_coef() const{ return coefLo_; }
-      double  get_plus_coef() const{ return coefHi_; }
+      inline double get_minus_coef() const{ return coefLo_; } ///< get the (-) coefficient
+      inline double  get_plus_coef() const{ return coefHi_; } ///< get the (+) coefficient
     };
 
     /*******************************************************************
@@ -53,21 +57,6 @@ namespace SpatialOps {
      *
      ******************************************************************/
     namespace s2detail {
-//
-//      /**
-//       *  \fn unsigned int stride( const MemoryWindow& mw )
-//       *
-//       *  \brief Obtain the stride (flat index) in the requested direction
-//       *         for the given field.  This is a "local" stride, not the global one.
-//       *
-//       *  \tparam DirT the direction of interest
-//       *  \param mw the MemoryWindow associated with the field
-//       */
-//      template< typename DirT > unsigned int stride( const MemoryWindow& mw );
-//
-//      template<> inline unsigned int stride<XDIR>( const MemoryWindow& mw ){ return 1; }
-//      template<> inline unsigned int stride<YDIR>( const MemoryWindow& mw ){ return mw.extent(0); }
-//      template<> inline unsigned int stride<ZDIR>( const MemoryWindow& mw ){ return mw.extent(0)*mw.extent(1); }
 
       /**
        *  \struct ActiveDir
@@ -95,6 +84,7 @@ namespace SpatialOps {
 
       /**
        * \struct ExtentsAndOffsets
+       * \author James C. Sutherland
        * \brief Provides typedefs for dealing with extents and offsets for Stencil2 operators.
        */
       template<typename SrcT, typename DestT>
@@ -105,13 +95,13 @@ namespace SpatialOps {
         typedef typename  SrcT::Location::BCExtra               SFBCExtra;      ///< Extra cell information for Source field
         typedef typename DestT::Location::Offset                DFO;            ///< Offset information for Destination field
         typedef typename DestT::Location::BCExtra               DFBCExtra;      ///< Extra cell information for Destination field
-        typedef typename ActiveDir<SrcT,DestT>::type            Dir;            ///< the direction that this operator acts in
-
-        typedef typename UnitTriplet<Dir>::type                 DirUnitVec;     ///< unit vector for the direction that this operator acts in.
 
       public:
 
-        // jcs these two should be private, after we fix the rtests.
+        typedef typename ActiveDir<SrcT,DestT>::type            Dir;            ///< The direction that this operator acts in
+
+        typedef typename UnitTriplet<Dir>::type                 DirUnitVec;     ///< unit vector for the direction that this operator acts in.
+
         typedef typename DirUnitVec::Negate                     UpperLoopShift; ///< upper bounds on loop
 
         typedef typename Multiply<SFBCExtra,DirUnitVec>::result UpperLoopBCAug; ///< shift for upper bounds when BC is present
@@ -132,21 +122,6 @@ namespace SpatialOps {
         typedef typename Subtract<DFBCExtra,
             SFBCExtra>::result::PositiveOrZero::Negate          DestExtentBC;   ///< amount to augment destination extents by if a BC is present
 
-        //  \todo rip these out and modify corresponding regression test types...
-        typedef IndexTriplet< 1,
-            Kronecker<XDIR::value,Dir::value>::value * Abs<SFBCExtra::X-DFBCExtra::X>::result,
-            Kronecker<YDIR::value,Dir::value>::value * Abs<SFBCExtra::Y-DFBCExtra::Y>::result
-            >                                                   SrcIterInc;     ///< The increment for the source field iterators
-
-        typedef SrcIterInc                                      DestIterInc;    ///< The increment for the destination field iterators
-
-        typedef IndexTriplet< 0,
-                              SFO::X * DFO::X,
-                              SFO::Y * DFO::Y >                 SrcIterBCAug;
-
-        typedef IndexTriplet< 0,
-                              SFO::X - DFO::X,
-                              SFO::Y - DFO::Y >                 DestIterBCAug;
       };
 
     } // namespace s2detail

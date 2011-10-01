@@ -11,6 +11,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <sstream>
+#include <assert>
 
 #include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/SpatialOpsDefs.h>
@@ -436,8 +437,10 @@ namespace SpatialOps{
   {
     BOOST_STATIC_ASSERT( bool( IsSameType<SrcGhost,  typename SrcOp::DestGhost>::result ) );
     BOOST_STATIC_ASSERT( bool( IsSameType<DestGhost, typename SrcOp::SrcGhost >::result ) );
+#   ifndef NDEBUG
     assert( compatibility_check(src, false) );
     assert( compatibility_check(dest,true ) );
+#   endif
     linAlg_.multiply( src.get_linalg_mat(), dest.get_linalg_mat() );
   }
   //------------------------------------------------------------------
