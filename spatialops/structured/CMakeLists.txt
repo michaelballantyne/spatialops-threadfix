@@ -31,6 +31,7 @@ install( FILES
   FVStaggeredFieldTypes.h
   FVTools.h
   Grid.h
+  IndexTriplet.h
   IntVec.h
   MemoryWindow.h
   SpatialField.h

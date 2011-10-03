@@ -8,20 +8,6 @@
 namespace SpatialOps{
 namespace structured{
 
-  /**
-   *  @enum BCSide
-   *  @brief For use with FV schemes.  Specifies the boundary
-   *         condition on a face to the indicated side of the volume.
-   */
-  enum BCSide{
-    X_PLUS_SIDE,
-    X_MINUS_SIDE,
-    Y_PLUS_SIDE,
-    Y_MINUS_SIDE,
-    Z_PLUS_SIDE,
-    Z_MINUS_SIDE,
-    NO_SHIFT
-  };
 
   /**
    *  @brief A convenient way to implement constant valued boundary

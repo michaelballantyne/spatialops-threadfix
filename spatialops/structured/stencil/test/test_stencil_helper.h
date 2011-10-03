@@ -52,28 +52,66 @@ void function_der2_z( const FieldT& x, const FieldT& y, const FieldT& z, FieldT&
   f <<= -sin(z);
 }
 
-template< typename FieldT, typename OpT, typename DirT > struct FuncEvaluator;
+template< typename FieldT, typename OpT, typename DirT, int IsSrcField >
+struct FuncEvaluator;
 
-template< typename FieldT, typename DirT > struct FuncEvaluator<FieldT,SpatialOps::Interpolant,DirT>{
+template< typename FieldT, typename DirT, int IsSrcField >
+struct FuncEvaluator<FieldT,SpatialOps::Interpolant,DirT,IsSrcField>{
   static void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& f ){ function(x,y,z,f); }
 };
-template< typename FieldT > struct FuncEvaluator<FieldT,SpatialOps::Gradient,SpatialOps::XDIR>{
+
+template< typename FieldT >
+struct FuncEvaluator<FieldT,SpatialOps::Gradient,SpatialOps::XDIR,0>{
   static void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& f ){ function_der_x(x,y,z,f); }
 };
-template< typename FieldT > struct FuncEvaluator<FieldT,SpatialOps::Gradient,SpatialOps::YDIR>{
+template< typename FieldT >
+struct FuncEvaluator<FieldT,SpatialOps::Gradient,SpatialOps::XDIR,1>{
+  static void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& f ){ function(x,y,z,f); }
+};
+
+template< typename FieldT >
+struct FuncEvaluator<FieldT,SpatialOps::Gradient,SpatialOps::YDIR,0>{
   static void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& f ){ function_der_y(x,y,z,f); }
 };
-template< typename FieldT > struct FuncEvaluator<FieldT,SpatialOps::Gradient,SpatialOps::ZDIR>{
+template< typename FieldT >
+struct FuncEvaluator<FieldT,SpatialOps::Gradient,SpatialOps::YDIR,1>{
+  static void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& f ){ function(x,y,z,f); }
+};
+
+template< typename FieldT >
+struct FuncEvaluator<FieldT,SpatialOps::Gradient,SpatialOps::ZDIR,0>{
   static void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& f ){ function_der_z(x,y,z,f); }
 };
-template< typename FieldT > struct FuncEvaluator<FieldT,SpatialOps::Divergence,SpatialOps::XDIR>{
+template< typename FieldT >
+struct FuncEvaluator<FieldT,SpatialOps::Gradient,SpatialOps::ZDIR,1>{
+  static void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& f ){ function(x,y,z,f); }
+};
+
+template< typename FieldT >
+struct FuncEvaluator<FieldT,SpatialOps::Divergence,SpatialOps::XDIR,0>{
   static void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& f ){ function_der2_x(x,y,z,f); }
 };
-template< typename FieldT > struct FuncEvaluator<FieldT,SpatialOps::Divergence,SpatialOps::YDIR>{
+template< typename FieldT >
+struct FuncEvaluator<FieldT,SpatialOps::Divergence,SpatialOps::XDIR,1>{
+  static void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& f ){ function_der_x(x,y,z,f); }
+};
+
+template< typename FieldT >
+struct FuncEvaluator<FieldT,SpatialOps::Divergence,SpatialOps::YDIR,0>{
   static void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& f ){ function_der2_y(x,y,z,f); }
 };
-template< typename FieldT > struct FuncEvaluator<FieldT,SpatialOps::Divergence,SpatialOps::ZDIR>{
+template< typename FieldT >
+struct FuncEvaluator<FieldT,SpatialOps::Divergence,SpatialOps::YDIR,1>{
+  static void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& f ){ function_der_y(x,y,z,f); }
+};
+
+template< typename FieldT >
+struct FuncEvaluator<FieldT,SpatialOps::Divergence,SpatialOps::ZDIR,0>{
   static void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& f ){ function_der2_z(x,y,z,f); }
+};
+template< typename FieldT >
+struct FuncEvaluator<FieldT,SpatialOps::Divergence,SpatialOps::ZDIR,1>{
+  static void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& f ){ function_der_z(x,y,z,f); }
 };
 
 //====================================================================
@@ -133,17 +171,16 @@ apply_stencil( const SpatialOps::structured::IntVec& npts,
   const MemoryWindow smw = get_window_with_ghost<SrcT >( npts, bcPlus[0], bcPlus[1], bcPlus[2] );
   const MemoryWindow dmw = get_window_with_ghost<DestT>( npts, bcPlus[0], bcPlus[1], bcPlus[2] );
 
-  SrcT   src( smw, NULL ),  xsrc(smw,NULL),  ysrc(smw,NULL),  zsrc(smw,NULL);
-  DestT dest( dmw, NULL ), xdest(dmw,NULL), ydest(dmw,NULL), zdest(dmw,NULL), destExact(dmw,NULL);
-
+  SrcT   src( smw, NULL ), xs(smw,NULL), ys(smw,NULL), zs(smw,NULL);
+  DestT dest( dmw, NULL ), xd(dmw,NULL), yd(dmw,NULL), zd(dmw,NULL), destExact(dmw,NULL);
 
   const Grid grid( npts, std::vector<double>(3,length) );
 
-  grid.set_coord<XDIR>( xsrc  );  grid.set_coord<YDIR>( ysrc  );  grid.set_coord<ZDIR>( zsrc  );
-  grid.set_coord<XDIR>( xdest );  grid.set_coord<YDIR>( ydest );  grid.set_coord<ZDIR>( zdest );
+  grid.set_coord<XDIR>( xs );  grid.set_coord<YDIR>( ys );  grid.set_coord<ZDIR>( zs );
+  grid.set_coord<XDIR>( xd );  grid.set_coord<YDIR>( yd );  grid.set_coord<ZDIR>( zd );
 
-  FuncEvaluator< SrcT,OpType,DirT>::value(xsrc, ysrc, zsrc, src );
-  FuncEvaluator<DestT,OpType,DirT>::value(xdest,ydest,zdest,dest);
+  FuncEvaluator< SrcT,OpType,DirT,1>::value( xs, ys, zs, src      );
+  FuncEvaluator<DestT,OpType,DirT,0>::value( xd, yd, zd, destExact);
 
   // resolve the operator
   OperatorDatabase opdb;
@@ -159,7 +196,7 @@ apply_stencil( const SpatialOps::structured::IntVec& npts,
 
 template< typename OpT, typename SrcT, typename DestT, typename DirT >
 bool
-run_convergence( const SpatialOps::structured::IntVec npts,
+run_convergence( SpatialOps::structured::IntVec npts,
                  const bool bcPlus[3],
                  const double length,
                  const double expectedOrder )
@@ -174,8 +211,11 @@ run_convergence( const SpatialOps::structured::IntVec npts,
 
   std::vector<double> norms(nrefine,0.0), spacings(nrefine,0.0);
 
+  const int n = npts[ix];
+
   for( size_t icount=0; icount<nrefine; ++icount ){
-    spacings[icount] = length/npts[ix];
+    spacings[icount] = length/( (icount+1)*n );
+    npts[ix] = n * (icount+1);
     norms[icount] = apply_stencil<Op,DirT>( npts, length, bcPlus );
   }
 

@@ -48,21 +48,9 @@ namespace structured{
                            wdest.extent() + Extents::DestExtent::int_vec() + wdest.has_bc()*Extents::DestExtentBC::int_vec(),
                            wdest.has_bc(0), wdest.has_bc(1), wdest.has_bc(2) );
 
-//    std::cout << "apply_to_field2 info: " << std::endl
-//        << wdest << std::endl
-//        << wdest.has_bc() *Extents::DestExtentBC::int_vec() << std::endl
-//        << "s1 : " << ws1 << std::endl
-//        << "s2 : " << ws2 << std::endl
-//        << "d  : " << wd  << std::endl
-//        << "s1o: " << Extents::Src1Offset::print() << std::endl
-//        << "s2o: " << Extents::Src2Offset::print() << std::endl
-//        << "do : " << Extents::DestOffset::print() << std::endl
-//        << "s2e: " << Extents::Src2Extent::print() << std::endl
-//        << "de : " << Extents::DestExtent::print() << std::endl
-//        << "s2bcaug: " << Extents::Src2ExtentBC::print() << std::endl
-//        << "d bcaug: " << Extents::DestExtentBC::print() << std::endl;
-
+#   ifndef NDEBUG
     assert( ws1.extent() == ws2.extent() && ws1.extent() == wd.extent() );
+#   endif
 
     // build fields using these newly created windows to do the stencil operation.
     DestT  d( wd, &dest[0], ExternalStorage );

@@ -28,7 +28,7 @@ bool
 run_variants( const IntVec npts,
               const bool* bcPlus )
 {
-  TestHelper status(true);
+  TestHelper status(false);
 
   typedef typename FaceTypes<Vol>::XFace  XFace;
   typedef typename FaceTypes<Vol>::YFace  YFace;
@@ -43,15 +43,15 @@ run_variants( const IntVec npts,
   }
 
   if( npts[1]>1 ){
-    status( run_convergence<Interpolant,Vol,YFace,XDIR>( npts, bcPlus, length, 2.0 ), "y-Interpolant" );
-    status( run_convergence<Gradient,   Vol,YFace,XDIR>( npts, bcPlus, length, 2.0 ), "y-Gradient"    );
-    status( run_convergence<Divergence, YFace,Vol,XDIR>( npts, bcPlus, length, 2.0 ), "y-Divergence"  );
+    status( run_convergence<Interpolant,Vol,YFace,YDIR>( npts, bcPlus, length, 2.0 ), "y-Interpolant" );
+    status( run_convergence<Gradient,   Vol,YFace,YDIR>( npts, bcPlus, length, 2.0 ), "y-Gradient"    );
+    status( run_convergence<Divergence, YFace,Vol,YDIR>( npts, bcPlus, length, 2.0 ), "y-Divergence"  );
   }
 
   if( npts[2]>1 ){
-    status( run_convergence<Interpolant,Vol,ZFace,XDIR>( npts, bcPlus, length, 2.0 ), "z-Interpolant" );
-    status( run_convergence<Gradient,   Vol,ZFace,XDIR>( npts, bcPlus, length, 2.0 ), "z-Gradient"    );
-    status( run_convergence<Divergence, ZFace,Vol,XDIR>( npts, bcPlus, length, 2.0 ), "z-Divergence"  );
+    status( run_convergence<Interpolant,Vol,ZFace,ZDIR>( npts, bcPlus, length, 2.0 ), "z-Interpolant" );
+    status( run_convergence<Gradient,   Vol,ZFace,ZDIR>( npts, bcPlus, length, 2.0 ), "z-Gradient"    );
+    status( run_convergence<Divergence, ZFace,Vol,ZDIR>( npts, bcPlus, length, 2.0 ), "z-Divergence"  );
   }
   return status.ok();
 }
@@ -97,12 +97,12 @@ bool test_compile_time()
   status( IsSameType< ActiveDir< SVolField, YVolField >::type, YDIR >::result, "SVol->YVol (y)" );
   status( IsSameType< ActiveDir< SVolField, ZVolField >::type, ZDIR >::result, "SVol->ZVol (z)" );
 
-  TEST_EXTENTS( SVolField, SSurfXField, XDIR,  1,0,0,  1,0,0,  -1,0,0,   0,0,0,  "SVol->SSX" )
-  TEST_EXTENTS( SVolField, SSurfYField, YDIR,  0,1,0,  0,1,0,   0,-1,0,  0,0,0,  "SVol->SSY" )
-  TEST_EXTENTS( SVolField, SSurfZField, ZDIR,  0,0,1,  0,0,1,   0,0,-1,  0,0,0,  "SVol->SSZ" )
-  TEST_EXTENTS( SSurfXField, SVolField, XDIR,  1,0,0,  0,0,0,   -1,0,0,  1,0,0,  "SSX->SVol" )
-  TEST_EXTENTS( SSurfYField, SVolField, YDIR,  0,1,0,  0,0,0,   0,-1,0,  0,1,0,  "SSY->SVol" )
-  TEST_EXTENTS( SSurfZField, SVolField, ZDIR,  0,0,1,  0,0,0,   0,0,-1,  0,0,1,  "SSZ->SVol" )
+  TEST_EXTENTS( SVolField, SSurfXField, XDIR,  1,0,0,  1,0,0,  -1, 0, 0,  0,0,0,  "SVol->SSX" )
+  TEST_EXTENTS( SVolField, SSurfYField, YDIR,  0,1,0,  0,1,0,   0,-1, 0,  0,0,0,  "SVol->SSY" )
+  TEST_EXTENTS( SVolField, SSurfZField, ZDIR,  0,0,1,  0,0,1,   0, 0,-1,  0,0,0,  "SVol->SSZ" )
+  TEST_EXTENTS( SSurfXField, SVolField, XDIR,  1,0,0,  0,0,0,  -1, 0, 0,  1,0,0,  "SSX->SVol" )
+  TEST_EXTENTS( SSurfYField, SVolField, YDIR,  0,1,0,  0,0,0,   0,-1, 0,  0,1,0,  "SSY->SVol" )
+  TEST_EXTENTS( SSurfZField, SVolField, ZDIR,  0,0,1,  0,0,0,   0, 0,-1,  0,0,1,  "SSZ->SVol" )
 
   TEST_EXTENTS( XVolField, XSurfXField, XDIR,  1,0,0,  0,0,0,  -1, 0, 0,  1,0,0,  "XVol->XSX" )
   TEST_EXTENTS( XVolField, XSurfYField, YDIR,  0,1,0,  0,1,0,   0,-1, 0,  0,0,0,  "XVol->XSY" )
@@ -112,23 +112,23 @@ bool test_compile_time()
   TEST_EXTENTS( XSurfYField, XVolField, YDIR,  0,1,0,  0,0,0,   0,-1, 0,  0,1,0,  "XSY->XVol" )
   TEST_EXTENTS( XSurfZField, XVolField, ZDIR,  0,0,1,  0,0,0,   0, 0,-1,  0,0,1,  "XSZ->XVol" )
 
-  TEST_EXTENTS( YVolField, YSurfXField, XDIR,  1,0,0,  1,0,0,  -1,0,0,  0,0,0,  "YVol->YSX" )
-  TEST_EXTENTS( YVolField, YSurfYField, YDIR,  0,1,0,  0,0,0,  0,-1,0,  0,1,0,  "YVol->YSY" )
-  TEST_EXTENTS( YVolField, YSurfZField, ZDIR,  0,0,1,  0,0,1,  0,0,-1,  0,0,0,  "YVol->YSZ" )
-  TEST_EXTENTS( YSurfXField, YVolField, XDIR,  1,0,0,  0,0,0,  -1,0,0,  1,0,0,  "YSX->YVol" )
-  TEST_EXTENTS( YSurfYField, YVolField, YDIR,  0,1,0,  0,1,0,  0,-1,0,  0,0,0,  "YSY->YVol" )
-  TEST_EXTENTS( YSurfZField, YVolField, ZDIR,  0,0,1,  0,0,0,  0,0,-1,  0,0,1,  "YSZ->YVol" )
+  TEST_EXTENTS( YVolField, YSurfXField, XDIR,  1,0,0,  1,0,0,  -1, 0, 0,  0,0,0,  "YVol->YSX" )
+  TEST_EXTENTS( YVolField, YSurfYField, YDIR,  0,1,0,  0,0,0,   0,-1, 0,  0,1,0,  "YVol->YSY" )
+  TEST_EXTENTS( YVolField, YSurfZField, ZDIR,  0,0,1,  0,0,1,   0, 0,-1,  0,0,0,  "YVol->YSZ" )
+  TEST_EXTENTS( YSurfXField, YVolField, XDIR,  1,0,0,  0,0,0,  -1, 0, 0,  1,0,0,  "YSX->YVol" )
+  TEST_EXTENTS( YSurfYField, YVolField, YDIR,  0,1,0,  0,1,0,   0,-1, 0,  0,0,0,  "YSY->YVol" )
+  TEST_EXTENTS( YSurfZField, YVolField, ZDIR,  0,0,1,  0,0,0,   0, 0,-1,  0,0,1,  "YSZ->YVol" )
 
-  TEST_EXTENTS( ZVolField, ZSurfXField, XDIR,  1,0,0,  1,0,0,  -1,0,0,  0,0,0,  "ZVol->ZSX" )
-  TEST_EXTENTS( ZVolField, ZSurfYField, YDIR,  0,1,0,  0,1,0,  0,-1,0,  0,0,0,  "ZVol->ZSY" )
-  TEST_EXTENTS( ZVolField, ZSurfZField, ZDIR,  0,0,1,  0,0,0,  0,0,-1,  0,0,1,  "ZVol->ZSZ" )
-  TEST_EXTENTS( ZSurfXField, ZVolField, XDIR,  1,0,0,  0,0,0,  -1,0,0,  1,0,0,  "ZSX->ZVol" )
-  TEST_EXTENTS( ZSurfYField, ZVolField, YDIR,  0,1,0,  0,0,0,  0,-1,0,  0,1,0,  "ZSY->ZVol" )
-  TEST_EXTENTS( ZSurfZField, ZVolField, ZDIR,  0,0,1,  0,0,1,  0,0,-1,  0,0,0,  "ZSZ->ZVol" )
+  TEST_EXTENTS( ZVolField, ZSurfXField, XDIR,  1,0,0,  1,0,0,  -1, 0, 0,  0,0,0,  "ZVol->ZSX" )
+  TEST_EXTENTS( ZVolField, ZSurfYField, YDIR,  0,1,0,  0,1,0,   0,-1, 0,  0,0,0,  "ZVol->ZSY" )
+  TEST_EXTENTS( ZVolField, ZSurfZField, ZDIR,  0,0,1,  0,0,0,   0, 0,-1,  0,0,1,  "ZVol->ZSZ" )
+  TEST_EXTENTS( ZSurfXField, ZVolField, XDIR,  1,0,0,  0,0,0,  -1, 0, 0,  1,0,0,  "ZSX->ZVol" )
+  TEST_EXTENTS( ZSurfYField, ZVolField, YDIR,  0,1,0,  0,0,0,   0,-1, 0,  0,1,0,  "ZSY->ZVol" )
+  TEST_EXTENTS( ZSurfZField, ZVolField, ZDIR,  0,0,1,  0,0,1,   0, 0,-1,  0,0,0,  "ZSZ->ZVol" )
 
-  TEST_EXTENTS( XVolField, SVolField,   XDIR,  1,0,0,  0,0,0,  -1,0,0,  1,0,0, "XVol->SVol" )
-  TEST_EXTENTS( XVolField, YSurfXField, YDIR,  0,1,0,  0,1,0,  0,-1,0,  0,0,0, "XVol->YSX"  )
-  TEST_EXTENTS( XVolField, ZSurfXField, ZDIR,  0,0,1,  0,0,1,  0,0,-1,  0,0,0, "XVol->ZSX"  )
+  TEST_EXTENTS( XVolField, SVolField,   XDIR,  1,0,0,  0,0,0,  -1, 0, 0,  1,0,0, "XVol->SVol" )
+  TEST_EXTENTS( XVolField, YSurfXField, YDIR,  0,1,0,  0,1,0,   0,-1, 0,  0,0,0, "XVol->YSX"  )
+  TEST_EXTENTS( XVolField, ZSurfXField, ZDIR,  0,0,1,  0,0,1,   0, 0,-1,  0,0,0, "XVol->ZSX"  )
 
   return status.ok();
 }
@@ -199,10 +199,8 @@ int main( int iarg, char* carg[] )
     if( npts[0]>1 & npts[1]>1 ) status( run_convergence< Interpolant, XVolField,   YSurfXField, YDIR >( npts, bcplus, length, 2.0 ), "InterpXVolYSurfX" );
     if( npts[0]>1 & npts[2]>1 ) status( run_convergence< Interpolant, XVolField,   ZSurfXField, ZDIR >( npts, bcplus, length, 2.0 ), "InterpXVolZSurfX" );
 
-//    if( npts[0]>1 )             status( run_convergence< Interpolant, SSurfXField, SVolField,   XDIR >( npts, bcplus, length, 2.0 ), "SSurfXField->SVolField" );
-
-    if( npts[0]>1 & npts[1]>1 ) status( run_convergence< Gradient,    XVolField,   YSurfXField, YDIR >( npts, bcplus, length, 2 ), "GradXVolYSurfX" );
-    if( npts[0]>1 & npts[2]>1 ) status( run_convergence< Gradient,    XVolField,   ZSurfXField, ZDIR >( npts, bcplus, length, 2 ), "GradXVolZSurfX" );
+    if( npts[0]>1 & npts[1]>1 ) status( run_convergence< Gradient,    XVolField,   YSurfXField, YDIR >( npts, bcplus, length, 2.0 ), "GradXVolYSurfX" );
+    if( npts[0]>1 & npts[2]>1 ) status( run_convergence< Gradient,    XVolField,   ZSurfXField, ZDIR >( npts, bcplus, length, 2.0 ), "GradXVolZSurfX" );
 
     if( npts[1]>1 & npts[0]>1 ) status( run_convergence< Interpolant, YVolField,   XSurfYField, XDIR >( npts, bcplus, length, 2.0 ), "InterpYVolXSurfY" );
     if( npts[1]>1 & npts[2]>1 ) status( run_convergence< Interpolant, YVolField,   ZSurfYField, ZDIR >( npts, bcplus, length, 2.0 ), "InterpYVolZSurfY" );
@@ -210,8 +208,8 @@ int main( int iarg, char* carg[] )
     if( npts[1]>1 & npts[0]>1 ) status( run_convergence< Gradient,    YVolField,   XSurfYField, XDIR >( npts, bcplus, length, 2.0 ), "GradYVolXSurfY" );
     if( npts[1]>1 & npts[2]>1 ) status( run_convergence< Gradient,    YVolField,   ZSurfYField, ZDIR >( npts, bcplus, length, 2.0 ), "GradYVolZSurfY" );
 
-    if( npts[2]>1 & npts[0]>1 ) status( run_convergence< Interpolant, ZVolField,   XSurfZField, XDIR >( npts, bcplus, length, 2.0  ), "InterpZVolXSurfZ" );
-    if( npts[2]>1 & npts[1]>1 ) status( run_convergence< Interpolant, ZVolField,   YSurfZField, YDIR >( npts, bcplus, length, 2.0  ), "InterpZVolYSurfZ" );
+    if( npts[2]>1 & npts[0]>1 ) status( run_convergence< Interpolant, ZVolField,   XSurfZField, XDIR >( npts, bcplus, length, 2.0 ), "InterpZVolXSurfZ" );
+    if( npts[2]>1 & npts[1]>1 ) status( run_convergence< Interpolant, ZVolField,   YSurfZField, YDIR >( npts, bcplus, length, 2.0 ), "InterpZVolYSurfZ" );
 
     if( npts[2]>1 & npts[0]>1 ) status( run_convergence< Gradient,    ZVolField,   XSurfZField, XDIR >( npts, bcplus, length, 2.0 ), "GradZVolXSurfZ" );
     if( npts[2]>1 & npts[1]>1 ) status( run_convergence< Gradient,    ZVolField,   YSurfZField, YDIR >( npts, bcplus, length, 2.0 ), "GradZVolYSurfZ" );
@@ -223,7 +221,6 @@ int main( int iarg, char* carg[] )
     if( npts[0]>1 )             status( run_convergence< Interpolant, XVolField,   SVolField,   XDIR >( npts, bcplus, length, 2.0 ), "InterpXVolSVol" );
     if( npts[1]>1 )             status( run_convergence< Interpolant, YVolField,   SVolField,   YDIR >( npts, bcplus, length, 2.0 ), "InterpYVolSVol" );
     if( npts[2]>1 )             status( run_convergence< Interpolant, ZVolField,   SVolField,   ZDIR >( npts, bcplus, length, 2.0 ), "InterpZVolSVol" );
-
   }
 
   catch( std::runtime_error& e ){

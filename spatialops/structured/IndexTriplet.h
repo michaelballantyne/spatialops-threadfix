@@ -263,12 +263,14 @@ namespace SpatialOps{
      *         the typedef \c Dir.
      */
     template< typename IT > struct GetNonzeroDir;
-    template<> struct GetNonzeroDir< IndexTriplet< 1, 0, 0> >{ typedef SpatialOps::XDIR DirT; };
-    template<> struct GetNonzeroDir< IndexTriplet<-1, 0, 0> >{ typedef SpatialOps::XDIR DirT; };
-    template<> struct GetNonzeroDir< IndexTriplet< 0, 1, 0> >{ typedef SpatialOps::YDIR DirT; };
-    template<> struct GetNonzeroDir< IndexTriplet< 0,-1, 0> >{ typedef SpatialOps::YDIR DirT; };
-    template<> struct GetNonzeroDir< IndexTriplet< 0, 0, 1> >{ typedef SpatialOps::ZDIR DirT; };
-    template<> struct GetNonzeroDir< IndexTriplet< 0, 0,-1> >{ typedef SpatialOps::ZDIR DirT; };
+    template<> struct GetNonzeroDir< IndexTriplet< 1, 0, 0> >{ typedef SpatialOps::XDIR  DirT; };
+    template<> struct GetNonzeroDir< IndexTriplet<-1, 0, 0> >{ typedef SpatialOps::XDIR  DirT; };
+    template<> struct GetNonzeroDir< IndexTriplet< 0, 1, 0> >{ typedef SpatialOps::YDIR  DirT; };
+    template<> struct GetNonzeroDir< IndexTriplet< 0,-1, 0> >{ typedef SpatialOps::YDIR  DirT; };
+    template<> struct GetNonzeroDir< IndexTriplet< 0, 0, 1> >{ typedef SpatialOps::ZDIR  DirT; };
+    template<> struct GetNonzeroDir< IndexTriplet< 0, 0,-1> >{ typedef SpatialOps::ZDIR  DirT; };
+    template<> struct GetNonzeroDir< IndexTriplet< 0, 0, 0> >{ typedef SpatialOps::NODIR DirT; };
+
 
   } // namespace structured
 } // namespace SpatialOps

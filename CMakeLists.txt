@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.6)
 project( SpatialOps CXX C )
 
 set( MAJOR_VERSION "1" )
-set( MINOR_VERSION "2" )
+set( MINOR_VERSION "3" )
 set( PATCH_VERSION "0" )
 
 #=====================================================================
@@ -11,10 +11,10 @@ set( PATCH_VERSION "0" )
 
 
 option( LINALG_TRILINOS "use Trilinos for linear algebra - also requires definition of {Trilinos_path}"  OFF )
-option( LINALG_UBLAS    "use UBLAS for linear algebra - cannot solve linear systems"  ON )
+option( LINALG_UBLAS    "use UBLAS for linear algebra - cannot solve linear systems"  OFF )
 option( ENABLE_BOOST_SERIALIZATION "allow serialization of information via the boost library" OFF )
 option( ENABLE_TESTS "Enable building of regression tests (recommended)" ON )
-option( ENABLE_STENCIL "Enable fast stencil installation rather than matrix-based options" OFF )
+option( ENABLE_STENCIL "Enable fast stencil installation rather than matrix-based options" ON )
 option( ENABLE_THREADS "Enable multi-threaded support for stencil operations" OFF )
 
 set( NTHREADS 1 CACHE STRING "Number of threads to use if ENABLE_THREADS is ON" )

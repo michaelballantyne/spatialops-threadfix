@@ -15,6 +15,13 @@ add_test( stencil2_no_bc3  test_stencil2  --nx 6 --ny 7 --nz 5 )
 
 add_executable( test_stencil4 test_stencil4.cpp )
 target_link_libraries( test_stencil4 ${libs} )
+add_test( stencil4_bcx test_stencil4 --bcx )
+add_test( stencil4_bcy test_stencil4 --bcy )
+add_test( stencil4_bcz test_stencil4 --bcz )
+add_test( stencil4_bcxy test_stencil4 --bcx --bcy )
+add_test( stencil4_bcxz test_stencil4 --bcx --bcz )
+add_test( stencil4_bcyz test_stencil4 --bcy --bcz )
+add_test( stencil4_3    test_stencil4 --nx=6 --ny=8 --nz=10 --bcx --bcy --bcz )
 
 add_executable( test_bc_stencil testOpBC.cpp )
 target_link_libraries( test_bc_stencil ${libs} )
