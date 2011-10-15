@@ -3,13 +3,22 @@
 
 #include <spatialops/SpatialOpsConfigure.h>
 
+/**
+ *  \file SpatialOpsTools.h
+ */
+
 namespace SpatialOps{
 
-  template<typename T1, typename T2>
-  struct IsSameType{ enum{ result=0 }; };
-
-  template< typename T1 >
-  struct IsSameType<T1,T1>{ enum{ result=1 }; };
+  /**
+   * \struct IsSameType
+   * \brief Compares two types for equality
+   *
+   * Examples:
+   * \code assert( IsSameType<int,double>::result == 0 ); \endcode
+   * \code assert( IsSameType<int,int>::result == 1 ); \endcode
+   */
+  template< typename T1, typename T2> struct IsSameType       { enum{ result=0 }; };
+  template< typename T1             > struct IsSameType<T1,T1>{ enum{ result=1 }; };
 
 
   template<typename FieldT>

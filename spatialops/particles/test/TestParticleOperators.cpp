@@ -7,6 +7,7 @@ using std::endl;
 
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/structured/FVTools.h>
+#include <spatialops/structured/MemoryWindow.h>
 
 #include <spatialops/particles/ParticleFieldTypes.h>
 #include <spatialops/particles/ParticleOperators.h>
@@ -18,6 +19,7 @@ using std::endl;
 typedef SpatialOps::structured::SVolField CellField;
 using SpatialOps::structured::IntVec;
 using SpatialOps::write_matlab;
+using SpatialOps::structured::MemoryWindow;
 
 int main()
 {
@@ -25,20 +27,23 @@ int main()
   const double dx = 1.0;
 
   IntVec totDim(10,1,1);
-  for( size_t i=0; i<3; ++i ) 
+  for( size_t i=0; i<3; ++i )
     if( totDim[i]>1 ) totDim[i] += 2*CellField::Ghost::NGHOST;
+  const MemoryWindow mw( totDim );
 
   //
   // build the fields
   //
-  CellField cellField( totDim, NULL );
-  CellField cellFieldvalues( totDim, NULL );
-  CellField   ctmp( totDim, NULL );
+  CellField cellField( mw, NULL );
+  CellField cellFieldvalues( mw, NULL );
+  CellField   ctmp( mw, NULL );
 
-  SpatialOps::Particle::ParticleField pCoord( IntVec(np,1,1), NULL );
-  SpatialOps::Particle::ParticleField pSize ( IntVec(np,1,1), NULL );
-  SpatialOps::Particle::ParticleField pfield( IntVec(np,1,1), NULL );
-  SpatialOps::Particle::ParticleField ptmp  ( IntVec(np,1,1), NULL );
+  const MemoryWindow pmw( IntVec(np,1,1) );
+
+  SpatialOps::Particle::ParticleField pCoord( pmw, NULL );
+  SpatialOps::Particle::ParticleField pSize ( pmw, NULL );
+  SpatialOps::Particle::ParticleField pfield( pmw, NULL );
+  SpatialOps::Particle::ParticleField ptmp  ( pmw, NULL );
    
   //
   // set the cCoord coordinates.  These go from -0.5 to 10.5

@@ -7,6 +7,8 @@
 #include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/SpatialOpsDefs.h>
 
+#include <spatialops/structured/IntVec.h>
+
 #ifdef SOPS_BOOST_SERIALIZATION
 # include <boost/serialization/serialization.hpp>
 #endif
@@ -17,90 +19,15 @@
 # include <stdexcept>
 #endif
 
+/**
+ * \file MemoryWindow.h
+ * \addtogroup structured
+ * @{
+ *
+ */
+
 namespace SpatialOps{
 namespace structured{
-
-  /**
-   *  \class IntVec
-   *  \ingroup structured
-   *  \brief provides a lightweight class to deal with a 3D vector of integers.
-   */
-  class IntVec
-  {
-    friend std::ostream& operator<<(std::ostream&, const IntVec&);
-
-    int ijk[3];
-
-#   ifdef SOPS_BOOST_SERIALIZATION
-    friend class boost::serialization::access;
-    template<typename Archive>
-    void serialize( Archive& ar, const unsigned int version )
-    {
-      ar & ijk;
-    }
-#   endif
-
-  public:
-    IntVec(){ ijk[0]=0; ijk[1]=0; ijk[2]=0; }
-    inline IntVec( const int i, const int j, const int k )
-    {
-      ijk[0]=i; ijk[1]=j; ijk[2]=k;
-    }
-    inline IntVec( const int vec[3] )
-    {
-      ijk[0]=vec[0];  ijk[1]=vec[1];  ijk[2]=vec[2];
-    }
-    IntVec( const std::vector<int>& vec )
-    {
-      ijk[0]=vec[0]; ijk[1]=vec[1]; ijk[2]=vec[2];
-    }
-    inline IntVec( const IntVec& x )
-    {
-      ijk[0]=x.ijk[0];  ijk[1]=x.ijk[1];  ijk[2]=x.ijk[2];
-    }
-
-    inline int  operator[](const size_t i) const{ return ijk[i]; }
-    inline int& operator[](const size_t i)      { return ijk[i]; }
-
-    IntVec& operator=(const IntVec& x)
-    {
-      for( size_t i=0; i<3; ++i ) ijk[i] = x.ijk[i];
-      return *this;
-    }
-
-    inline bool operator==(const IntVec& v) const
-    {
-      return (ijk[0]==v.ijk[0]) & (ijk[1]==v.ijk[1]) & (ijk[2]==v.ijk[2]);
-    }
-    inline bool operator!=(const IntVec& v) const
-    {
-      return (ijk[0]!=v.ijk[0]) | (ijk[1]!=v.ijk[1]) | (ijk[2]!=v.ijk[2]);
-    }
-
-    inline IntVec operator+( const IntVec& v ) const{
-      return IntVec( ijk[0] + v.ijk[0],
-                     ijk[1] + v.ijk[1],
-                     ijk[2] + v.ijk[2] );
-    }
-    inline IntVec operator-( const IntVec& v ) const{
-      return IntVec( ijk[0] - v.ijk[0],
-                     ijk[1] - v.ijk[1],
-                     ijk[2] - v.ijk[2] );
-    }
-
-    inline IntVec& operator+=( const IntVec& v ){
-      ijk[0] += v.ijk[0];
-      ijk[1] += v.ijk[1];
-      ijk[2] += v.ijk[2];
-      return *this;
-    }
-    inline IntVec& operator-=( const IntVec& v ){
-      ijk[0] -= v.ijk[0];
-      ijk[1] -= v.ijk[1];
-      ijk[2] -= v.ijk[2];
-      return *this;
-    }
-  };
 
   /**
    *  \class MemoryWindow
@@ -119,7 +46,10 @@ namespace structured{
 
     friend std::ostream& operator<<( std::ostream&, const MemoryWindow& );
 
-    IntVec nptsGlob_, offset_, extent_;
+    IntVec nptsGlob_;   ///< The global number of points
+    IntVec offset_;     ///< The offset for this window
+    IntVec extent_;     ///< The extent of this window
+    IntVec bc_;         ///< Indicates presence of a physical boundary on the + side of the window
 
 #   ifdef SOPS_BOOST_SERIALIZATION
     friend class boost::serialization::access;
@@ -130,20 +60,21 @@ namespace structured{
       ar & nptsGlob_;
       ar & offset_;
       ar & extent_;
+      ar & bc_;
     }
 
     template<typename Archive>
     void save_construct_data( Archive& ar, const MemoryWindow* w, const unsigned int version )
     {
-      ar << w->nptsGlob_ << w->offset_ << w->extent_;
+      ar << w->nptsGlob_ << w->offset_ << w->extent_ << w->bc_;
     }
 
     template<typename Archive>
     void load_construct_data( Archive& ar, const MemoryWindow* w, const unsigned int version )
     {
-      IntVec npg, ofs, ext;
-      ar >> npg >> ofs >> ext;
-      ::new(w)MemoryWindow( npg, ofs, ext );
+      IntVec npg, ofs, ext, bc;
+      ar >> npg >> ofs >> ext >> bc;
+      ::new(w)MemoryWindow( npg, ofs, ext, bc[0], bc[1], bc[2] );
     }
 #   endif
 
@@ -154,36 +85,72 @@ namespace structured{
      *  \param npts the total (global) number of points in each direction
      *  \param offset the offset into the memory
      *  \param extent the size of the block that we are considering
+     *  \param bcx true if a physical boundary is present in the (+x) direction
+     *  \param bcy true if a physical boundary is present in the (+y) direction
+     *  \param bcz true if a physical boundary is present in the (+z) direction
      */
     MemoryWindow( const int npts[3],
                   const int offset[3],
-                  const int extent[3] );
+                  const int extent[3],
+                  const bool bcx,
+                  const bool bcy,
+                  const bool bcz );
 		
     /**
      *  \brief construct a MemoryWindow object
+     *
      *  \param npts the total (global) number of points in each direction
      *  \param offset the offset into the memory
      *  \param extent the size of the block that we are considering
+     *  \param bcx true if a physical boundary is present in the (+x) direction
+     *  \param bcy true if a physical boundary is present in the (+y) direction
+     *  \param bcz true if a physical boundary is present in the (+z) direction
      */
     MemoryWindow( const IntVec& npts,
                   const IntVec& offset,
-                  const IntVec& extent );
+                  const IntVec& extent,
+                  const bool bcx,
+                  const bool bcy,
+                  const bool bcz );
 
     /** 
      *  \brief construct a MemoryWindow object where there is no "window"
+     *
      *  \param npts the total (global) number of points in each direction
+     *  \param bcx (optional - default false) true if a physical boundary is present in the (+x) direction
+     *  \param bcy (optional - default false) true if a physical boundary is present in the (+y) direction
+     *  \param bcz (optional - default false) true if a physical boundary is present in the (+z) direction
      */
-    MemoryWindow( const int npts[3] );
+    MemoryWindow( const int npts[3],
+                  const bool bcx=false,
+                  const bool bcy=false,
+                  const bool bcz=false );
 
     /**
      *  \brief construct a MemoryWindow object where there is no "window"
+     *
      *  \param npts the total (global) number of points in each direction
+     *  \param bcx (optional - default false) true if a physical boundary is present in the (+x) direction
+     *  \param bcy (optional - default false) true if a physical boundary is present in the (+y) direction
+     *  \param bcz (optional - default false) true if a physical boundary is present in the (+z) direction
      */
-    MemoryWindow( const IntVec& npts );
+    MemoryWindow( const IntVec& npts,
+                  const bool bcx=false,
+                  const bool bcy=false,
+                  const bool bcz=false );
 
     MemoryWindow( const MemoryWindow& other );
-		
+
     ~MemoryWindow();
+
+    /**
+     *  \brief Splits the MemoryWindow into a series of child windows ordered
+     *         as a vector varying in x then y then z.
+     *
+     *  \param splitPattern the number of partitions to make in each ordinate direction.
+     *  \return vector<MemoryWindow> containing the child windows.
+     */
+    std::vector<MemoryWindow> split( const IntVec splitPattern ) const;
 
     /**
      *  \brief given the local ijk location (0-based on the local
@@ -197,7 +164,8 @@ namespace structured{
       if( extent_[1]>1 ) assert( loc[1] < nptsGlob_[1] );
       if( extent_[2]>1 ) assert( loc[2] < nptsGlob_[2] );
 #     endif
-      for( size_t i=0; i<3; ++i ) if( nptsGlob_[i]>1 ) loc[i] += offset_[i]; else loc[i]=0;
+      for( size_t i=0; i<3; ++i )
+        loc[i] = nptsGlob_[i]>1 ? loc[i]+offset_[i] : 0;
       return loc[0] + nptsGlob_[0] * (loc[1] + loc[2]*nptsGlob_[1]);
     }
 
@@ -208,11 +176,9 @@ namespace structured{
      */
     inline IntVec ijk_index_from_global( const int loc ) const
     {
-      IntVec ijk( 0,0,0 );
-      ijk[0] = loc % nptsGlob_[0];
-      ijk[1] = loc / nptsGlob_[0] % nptsGlob_[1];
-      ijk[2] = loc / (nptsGlob_[0]*nptsGlob_[1]);
-      return ijk;
+      return IntVec( loc % nptsGlob_[0],
+                     loc / nptsGlob_[0] % nptsGlob_[1],
+                     loc /(nptsGlob_[0] * nptsGlob_[1]) );
     }
 
     /**
@@ -222,11 +188,9 @@ namespace structured{
      */
     inline IntVec ijk_index_from_local( const int loc ) const
     {
-      IntVec ijk( 0,0,0 );
-      ijk[0] = loc % extent_[0]              + offset_[0];
-      ijk[1] = loc / extent_[0] % extent_[1] + offset_[1];
-      ijk[2] = loc / (extent_[0]*extent_[1]) + offset_[2];
-      return ijk;
+      return IntVec( loc % extent_[0]               + offset_[0],
+                     loc / extent_[0] % extent_[1]  + offset_[1],
+                     loc /(extent_[0] * extent_[1]) + offset_[2] );
     }
 
     /**
@@ -242,46 +206,45 @@ namespace structured{
     inline size_t local_npts() const{ return extent_[0] * extent_[1] * extent_[2]; }
 
     inline size_t glob_dim( const size_t i ) const{ return size_t(nptsGlob_[i]); }
-    inline size_t offset  ( const size_t i ) const{ return size_t(offset_[i]); }
-    inline size_t extent  ( const size_t i ) const{ return size_t(extent_[i]); }
+    inline size_t offset  ( const size_t i ) const{ return size_t(offset_[i]  ); }
+    inline size_t extent  ( const size_t i ) const{ return size_t(extent_[i]  ); }
 
-    inline IntVec extent  () const{ return extent_; }
-    inline IntVec offset  () const{ return offset_; }
-    inline IntVec glob_dim() const{ return nptsGlob_; }
-
-    inline IntVec& extent  (){ return extent_; }
-    inline IntVec& offset  (){ return offset_; }
-    inline IntVec& glob_dim(){ return nptsGlob_; }
+    inline const IntVec& extent  () const{ return extent_;   }
+    inline const IntVec& offset  () const{ return offset_;   }
+    inline const IntVec& glob_dim() const{ return nptsGlob_; }
 
     /**
-     *  \brief obtain the stride in the requested direction.
+     * \brief Query if there is a physical BC on the + side of this window in the given direction.
+     * @param i The direction: (x,y,z) = (0,1,2)
+     * @return true if a BC is present on the + side of this window, false otherwise.
      */
-    inline int stride( const size_t i ) const{
-      const int n = 1 + nptsGlob_[i] - extent_[i];
-      return n;
+    inline bool has_bc( const size_t i ) const{ return bc_[i]; }
+
+    /**
+     * \brief Obtain an IntVec indicating the presence of a physical BC
+     *        (1=present, 0=not present) on each + side of this window.
+     * @return IntVec indicating the presence of a BC on the + side of this window.
+     */
+    inline const IntVec& has_bc() const{ return bc_; }
+
+    /**
+     * \brief compare two MemoryWindows for equality
+     */
+    inline bool operator==( const MemoryWindow& w ) const{
+      return (nptsGlob_ == w.nptsGlob_) &&
+             (extent_   == w.extent_  ) &&
+             (offset_   == w.offset_  ) &&
+             (bc_       == w.bc_      );
     }
 
-    inline bool operator==( const MemoryWindow& w ) const
-    {
-      return ( (nptsGlob_==w.nptsGlob_) & (extent_==w.extent_) & (offset_==w.offset_) );
-    }
-
-    inline bool operator!=( const MemoryWindow& w ) const
-    {
-      return (nptsGlob_!=w.nptsGlob_) | (extent_!=w.extent_) | (offset_!=w.offset_);
+    inline bool operator!=( const MemoryWindow& w ) const{
+      return (nptsGlob_ != w.nptsGlob_) ||
+             (extent_   != w.extent_  ) ||
+             (offset_   != w.offset_  ) ||
+             (bc_       != w.bc_      );
     }
 
   };
-
-  template<int Dir> size_t stride( const MemoryWindow& );
-
-  template<> inline size_t stride<0>( const MemoryWindow& mw ){ return 1; }
-  template<> inline size_t stride<1>( const MemoryWindow& mw ){ return stride<0>(mw) + mw.glob_dim(0)-mw.extent(0); }
-  template<> inline size_t stride<2>( const MemoryWindow& mw )
-  {
-    return stride<1>(mw)
-      + ( mw.glob_dim(0) ) * ( mw.glob_dim(1)-mw.extent(1) );
-  }
 
   /**
    *  \class IteratorIncrementor
@@ -292,7 +255,15 @@ namespace structured{
   template< typename DirT > class IteratorIncrementor;
 
   template<>
-  struct IteratorIncrementor<XDIR>{
+  struct IteratorIncrementor<XDIR>
+  {
+  private:
+
+    static inline size_t stride_x( const MemoryWindow& mw ){ return 1; }
+    static inline size_t stride_y( const MemoryWindow& mw ){ return stride_x(mw) + mw.glob_dim(0)-mw.extent(0); }
+    static inline size_t stride_z( const MemoryWindow& mw ){ return stride_y(mw) + ( mw.glob_dim(0) ) * ( mw.glob_dim(1)-mw.extent(1) ); }
+
+  public:
 
     /**
      *  \brief returns the increment for the pointer
@@ -303,23 +274,22 @@ namespace structured{
       size_t inc=0;
       ++i;
       if( i < w.extent(0) ){
-        inc += stride<0>(w);
+        inc += stride_x(w);
       }
       else{
         i=0;
         ++j;
         if( j < w.extent(1) ){
-          inc += stride<1>(w);
+          inc += stride_y(w);
         }
         else{
           j=0;
           ++k;
-          inc += stride<2>(w);
+          inc += stride_z(w);
         }
       }
       return inc;
     }
-
 
     /**
      *  \brief returns the decrement for the pointer.  If zero, then reset the pointer.
@@ -336,13 +306,13 @@ namespace structured{
         i = w.extent(0)-1;
         if( j > 0 ){
           --j;
-          inc += stride<1>(w);
+          inc += stride_y(w);
         }
         else{
           j = w.extent(1)-1;
           if( k > 0 ){
             --k;
-            inc += stride<2>(w);
+            inc += stride_z(w);
           }
           else{
             i = j = k = 0;
@@ -362,7 +332,6 @@ namespace structured{
    *  \author James C. Sutherland
    *  \date September, 2010
    *
-   *  \ingroup structured
    *  \brief Provides a forward iterator for a field that is
    *         associated with a MemoryWindow, allowing one to iterate
    *         over the "local" portion of that field as defined by the
@@ -408,7 +377,7 @@ namespace structured{
         first_  ( t        ),
         window_ ( window   )
     {
-      const IntVec ijk = window.ijk_index_from_global( offset );
+      const IntVec& ijk = window.ijk_index_from_global( offset );
       i_ = ijk[0] - window.offset(0);
       j_ = ijk[1] - window.offset(1);
       k_ = ijk[2] - window.offset(2);
@@ -432,28 +401,24 @@ namespace structured{
       return *this;
     }
 
-    inline self operator+( const size_t n ) const
-    {
+    inline self operator+( const size_t n ) const{
       self iter(*this);
       iter+=n;
       return iter;
     }
 
-    inline self operator-( const size_t n ) const
-    {
+    inline self operator-( const size_t n ) const{
       self iter(*this);
       iter -= n;
       return iter;
     }
 
-    inline self& operator+=( const size_t n )
-    {
+    inline self& operator+=( const size_t n ){
       for( size_t i=0; i<n; ++i )  ++(*this);
       return *this;
     }
 
-    inline self& operator-=( const size_t n )
-    {
+    inline self& operator-=( const size_t n ){
       for( size_t i=0; i<n; ++i )  --(*this);
       return *this;
     }
@@ -462,8 +427,7 @@ namespace structured{
 
     inline bool operator!=( const self& other ) const{ return current_!=other.current_; }
 
-    inline self& operator=( const self& other )
-    {
+    inline self& operator=( const self& other ){
       current_ = other.current_;
       first_   = other.first_;
       i_       = other.i_;
@@ -472,8 +436,7 @@ namespace structured{
       return *this;
     }
 
-    inline reference operator*()
-    {
+    inline reference operator*(){
 #     ifndef NDEBUG
       if( i_ >= window_.extent(0) + window_.offset(0) ||
           j_ >= window_.extent(1) + window_.offset(1) ||
@@ -487,8 +450,7 @@ namespace structured{
       return *current_;
     }
 
-    inline reference operator*() const
-    {
+    inline reference operator*() const{
 #     ifndef NDEBUG
       if( i_ >= window_.extent(0) + window_.offset(0) ||
           j_ >= window_.extent(1) + window_.offset(1) ||
@@ -507,16 +469,13 @@ namespace structured{
     inline size_t k(){ return k_; }
   };
 
-
   //==================================================================
-
 
   /**
    *  \class ConstFieldIterator
    *  \author James C. Sutherland
    *  \date September, 2010
    *
-   *  \ingroup structured
    *  \brief Provides a forward iterator for a field that is
    *         associated with a MemoryWindow, allowing one to iterate
    *         over the "local" portion of that field as defined by the
@@ -531,7 +490,7 @@ namespace structured{
     const T* current_;
     const T* first_;
     const MemoryWindow& window_;
-    size_t i_,j_,k_;
+    size_t i_, j_, k_;
 
   public:
     typedef ConstFieldIterator<FieldT> self;
@@ -585,29 +544,24 @@ namespace structured{
       return *this;
     }
 
-    inline self operator+( const size_t n ) const
-    {
+    inline self operator+( const size_t n ) const{
       self iter(*this);
       iter += n;
       return iter;
     }
 
-    inline self operator-( const size_t n ) const
-    {
+    inline self operator-( const size_t n ) const{
       self iter(*this);
       iter -= n;
       return iter;
     }
 
-    inline self& operator+=( const size_t n )
-    {
+    inline self& operator+=( const size_t n ){
       for( size_t i=0; i<n; ++i )  ++(*this);
       return *this;
     }
 
-
-    inline self& operator-=( const size_t n )
-    {
+    inline self& operator-=( const size_t n ){
       for( size_t i=0; i<n; ++i )  --(*this);
       return *this;
     }
@@ -616,8 +570,7 @@ namespace structured{
 
     inline bool operator!=( const self& other ) const{ return current_!=other.current_; }
 
-    inline self& operator=( const self& other )
-    {
+    inline self& operator=( const self& other ){
       current_ = other.current_;
       first_   = other.first_;
       i_       = other.i_;
@@ -626,8 +579,7 @@ namespace structured{
       return *this;
     }
 
-    inline reference operator*() const
-    {
+    inline reference operator*() const{
 #     ifndef NDEBUG
       if( i_ >= window_.extent(0) + window_.offset(0) ||
           j_ >= window_.extent(1) + window_.offset(1) ||
@@ -645,5 +597,9 @@ namespace structured{
 
 } // namespace structured
 } // namespace SpatialOps
+
+/**
+ * @}
+ */
 
 #endif // SpatialOps_MemoryWindow_h

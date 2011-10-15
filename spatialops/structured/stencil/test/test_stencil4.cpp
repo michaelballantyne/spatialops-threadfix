@@ -6,7 +6,9 @@
 #include <spatialops/structured/Grid.h>
 #include <spatialops/structured/stencil/Stencil4.h>
 
+#include "test_stencil_helper.h"
 #include <test/TestHelper.h>
+
 
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
@@ -19,22 +21,21 @@ using std::cout;
 using std::endl;
 
 
-
 int main( int iarg, char* carg[] )
 {
-  int nx, ny, nz;
+  IntVec npts;
   bool bcplus[] = { false, false, false };
 
   {
     po::options_description desc("Supported Options");
     desc.add_options()
       ( "help", "print help message\n" )
-      ( "nx",   po::value<int>(&nx)->default_value(5), "number of points in x-dir for base mesh" )
-      ( "ny",   po::value<int>(&ny)->default_value(5), "number of points in y-dir for base mesh" )
-      ( "nz",   po::value<int>(&nz)->default_value(5), "number of points in z-dir for base mesh" )
-      ( "bcx",  "physical boundary on +x side?" )
-      ( "bcy",  "physical boundary on +y side?" )
-      ( "bcz",  "physical boundary on +z side?" );
+      ( "nx",   po::value<int>(&npts[0])->default_value(5), "number of points in x-dir for base mesh" )
+      ( "ny",   po::value<int>(&npts[1])->default_value(5), "number of points in y-dir for base mesh" )
+      ( "nz",   po::value<int>(&npts[2])->default_value(5), "number of points in z-dir for base mesh" )
+      ( "bcx",  "indicates physical boundary on +x side" )
+      ( "bcy",  "indicates physical boundary on +y side" )
+      ( "bcz",  "indicates physical boundary on +z side" );
 
     po::variables_map args;
     po::store( po::parse_command_line(iarg,carg,desc), args );
@@ -55,10 +56,6 @@ int main( int iarg, char* carg[] )
     }
   }
 
-
-  TestHelper status( true );
-  const IntVec npts(nx,ny,nz);
-
   {
     std::string bcx = bcplus[0] ? "ON" : "OFF";
     std::string bcy = bcplus[1] ? "ON" : "OFF";
@@ -70,5 +67,18 @@ int main( int iarg, char* carg[] )
          << "  domain : " << npts << endl
          << endl;
   }
+
+  TestHelper status( true );
+
+  const double length = 10.0;
+
+  if( npts[0]>1 && npts[1]>1 ) status( run_convergence<Interpolant,SVolField,XSurfYField,YDIR>( npts, bcplus, length, 2.0 ), "SVol->XSurfY" );
+  if( npts[0]>1 && npts[2]>1 ) status( run_convergence<Interpolant,SVolField,XSurfZField,ZDIR>( npts, bcplus, length, 2.0 ), "SVol->XSurfZ" );
+
+  if( npts[1]>1 && npts[0]>1 ) status( run_convergence<Interpolant,SVolField,YSurfXField,XDIR>( npts, bcplus, length, 2.0 ), "SVol->YSurfX" );
+  if( npts[1]>1 && npts[2]>1 ) status( run_convergence<Interpolant,SVolField,YSurfZField,ZDIR>( npts, bcplus, length, 2.0 ), "SVol->YSurfZ" );
+
+  if( npts[2]>1 && npts[0]>1 ) status( run_convergence<Interpolant,SVolField,ZSurfXField,XDIR>( npts, bcplus, length, 2.0 ), "SVol->ZSurfX" );
+  if( npts[2]>1 && npts[1]>1 ) status( run_convergence<Interpolant,SVolField,ZSurfYField,YDIR>( npts, bcplus, length, 2.0 ), "SVol->ZSurfZ" );
 
 }

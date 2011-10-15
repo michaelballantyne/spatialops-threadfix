@@ -4,209 +4,6 @@
 namespace SpatialOps{
 namespace structured{
 
-  /**
-   *  \brief specialization of Stencil4Helper for SVol->XSurfY (viscosity)
-   */
-  template<> struct Stencil4Helper< SVolField, XSurfYField >
-  {
-    Stencil4Helper( const MemoryWindow& wsrc,
-                    const MemoryWindow& wdest )
-      : wsrc_( wsrc ), wdest_( wdest ),
-        hiBounds_( wdest.extent() ),
-        destInc_( 1, 1, 0 )
-    {
-      if( wsrc.extent(1) != wdest.extent(1) ){
-        --hiBounds_[1];
-        destInc_[2] += wdest.extent(0);
-      }
-    }
-
-    unsigned int src_offset_1() const{ return 0; }
-    unsigned int src_offset_2() const{ return 1; }
-    unsigned int src_offset_3() const{ return wsrc_.extent(0); }
-    unsigned int src_offset_4() const{ return wsrc_.extent(0)+1; }
-
-    unsigned int dest_offset() const{ return wdest_.extent(0)+1; }
-
-    IntVec src_increment()  const{ return IntVec( 1, 1, wsrc_.extent(0) ); }
-    IntVec dest_increment() const{ return destInc_; }
-
-    IntVec low()  const{ return IntVec(1,1,0); }
-    IntVec high() const{ return hiBounds_; }
-  private:
-    const MemoryWindow &wsrc_, &wdest_;
-    IntVec hiBounds_, destInc_;
-  };
-
-  /**
-   *  \brief specialization of Stencil4Helper for SVol->XSurfZ (viscosity)
-   */
-  template<> struct Stencil4Helper< SVolField, XSurfZField >
-  {
-    Stencil4Helper( const MemoryWindow& wsrc,
-                    const MemoryWindow& wdest )
-      : wsrc_( wsrc ), wdest_( wdest ),
-        hiBounds_( wdest.extent() ),
-        destInc_( 1, 1, 0 )
-    {
-      if( wsrc.extent(2) != wdest.extent(2) ){
-        --hiBounds_[2];
-      }
-    }
-
-    unsigned int src_offset_1() const{ return 0; }
-    unsigned int src_offset_2() const{ return 1; }
-    unsigned int src_offset_3() const{ return wsrc_.extent(0)*wsrc_.extent(1); }
-    unsigned int src_offset_4() const{ return src_offset_3()+1; }
-
-    unsigned int dest_offset() const{ return wdest_.extent(0)*wdest_.extent(1)+1; }
-
-    IntVec src_increment()  const{ return IntVec( 1, 1, 0 ); }
-    IntVec dest_increment() const{ return IntVec( 1, 1, 0 ); }
-
-    IntVec low()  const{ return IntVec(1,0,1); }
-    IntVec high() const{ return hiBounds_; }
-  private:
-    const MemoryWindow &wsrc_, &wdest_;
-    IntVec hiBounds_, destInc_;
-  };
-
-
-  /**
-   *  \brief specialization of Stencil4Helper for SVol->YSurfX (viscosity)
-   */
-  template<> struct Stencil4Helper< SVolField, YSurfXField >
-  {
-    Stencil4Helper( const MemoryWindow& wsrc,
-                    const MemoryWindow& wdest )
-      : wsrc_( wsrc ), wdest_( wdest ),
-        hiBounds_( wdest.extent() ),
-        destInc_( 1, 1, 0 )
-    {
-      if( wsrc.extent(0) != wdest.extent(0) ){
-        --hiBounds_[0];
-        ++destInc_[1];
-      }
-    }
-
-    unsigned int src_offset_1() const{ return 0; }
-    unsigned int src_offset_2() const{ return 1; }
-    unsigned int src_offset_3() const{ return wsrc_.extent(0); }
-    unsigned int src_offset_4() const{ return src_offset_3()+1; }
-
-    unsigned int dest_offset() const{ return wdest_.extent(0)+1; }
-
-    IntVec src_increment()  const{ return IntVec( 1, 1, wsrc_.extent(0) ); }
-    IntVec dest_increment() const{ return destInc_; }
-
-    IntVec low()  const{ return IntVec(1,1,0); }
-    IntVec high() const{ return hiBounds_; }
-  private:
-    const MemoryWindow &wsrc_, &wdest_;
-    IntVec hiBounds_, destInc_;
-  };
-
-  /**
-   *  \brief specialization of Stencil4Helper for SVol->YSurfZ (viscosity)
-   */
-  template<> struct Stencil4Helper< SVolField, YSurfZField >
-  {
-    Stencil4Helper( const MemoryWindow& wsrc,
-                    const MemoryWindow& wdest )
-      : wsrc_( wsrc ), wdest_( wdest ),
-        hiBounds_( wdest.extent() )
-    {
-      if( wsrc.extent(2) != wdest.extent(2) ){
-        --hiBounds_[0];
-      }
-    }
-
-    unsigned int src_offset_1() const{ return 0; }
-    unsigned int src_offset_2() const{ return wsrc_.extent(0); }
-    unsigned int src_offset_3() const{ return wsrc_.extent(0)*wsrc_.extent(1); }
-    unsigned int src_offset_4() const{ return src_offset_3()+wsrc_.extent(0); }
-
-    unsigned int dest_offset() const{ return wdest_.extent(0)*wdest_.extent(1)+wdest_.extent(0); }
-
-    IntVec src_increment()  const{ return IntVec( 1, 0, wsrc_.extent(0) ); }
-    IntVec dest_increment() const{ return IntVec( 1, 0, wdest_.extent(0) ); }
-
-    IntVec low()  const{ return IntVec(0,1,1); }
-    IntVec high() const{ return hiBounds_; }
-  private:
-    const MemoryWindow &wsrc_, &wdest_;
-    IntVec hiBounds_;
-  };
-
-  /**
-   *  \brief specialization of Stencil4Helper for SVol->ZSurfX (viscosity)
-   */
-  template<> struct Stencil4Helper< SVolField, ZSurfXField >
-  {
-    Stencil4Helper( const MemoryWindow& wsrc,
-                    const MemoryWindow& wdest )
-      : wsrc_( wsrc ), wdest_( wdest ),
-        hiBounds_( wdest.extent() ),
-        destInc_( 1, 1, 0 )
-    {
-      if( wsrc.extent(0) != wdest.extent(0) ){
-        --hiBounds_[0];
-        ++destInc_[1];
-      }
-    }
-
-    unsigned int src_offset_1() const{ return 0; }
-    unsigned int src_offset_2() const{ return 1; }
-    unsigned int src_offset_3() const{ return wsrc_.extent(0)*wsrc_.extent(1); }
-    unsigned int src_offset_4() const{ return src_offset_3()+1; }
-
-    unsigned int dest_offset() const{ return 1 + wdest_.extent(0)*wdest_.extent(1); }
-
-    IntVec src_increment()  const{ return IntVec( 1, 1, 0 ); }
-    IntVec dest_increment() const{ return destInc_; }
-
-    IntVec low()  const{ return IntVec(1,0,1); }
-    IntVec high() const{ return hiBounds_; }
-  private:
-    const MemoryWindow &wsrc_, &wdest_;
-    IntVec hiBounds_, destInc_;
-  };
-
-  /**
-   *  \brief specialization of Stencil4Helper for SVol->ZSurfY (viscosity)
-   */
-  template<> struct Stencil4Helper< SVolField, ZSurfYField >
-  {
-    Stencil4Helper( const MemoryWindow& wsrc,
-                    const MemoryWindow& wdest )
-      : wsrc_( wsrc ), wdest_( wdest ),
-        hiBounds_( wdest.extent() ),
-        destInc_( 1, 0, wdest.extent(0) )
-    {
-      if( wsrc.extent(1) != wdest.extent(1) ){
-        --hiBounds_[1];
-        destInc_[2] += wdest.extent(0);
-      }
-    }
-
-    unsigned int src_offset_1() const{ return 0; }
-    unsigned int src_offset_2() const{ return wsrc_.extent(0); }
-    unsigned int src_offset_3() const{ return wsrc_.extent(0)*wsrc_.extent(1); }
-    unsigned int src_offset_4() const{ return src_offset_3()+wsrc_.extent(0); }
-
-    unsigned int dest_offset() const{ return wdest_.extent(0)*wdest_.extent(1) + wdest_.extent(0); }
-
-    IntVec src_increment()  const{ return IntVec( 1, 0, wsrc_.extent(0) ); }
-    IntVec dest_increment() const{ return destInc_; }
-
-    IntVec low()  const{ return IntVec(0,1,1); }
-    IntVec high() const{ return hiBounds_; }
-  private:
-    const MemoryWindow &wsrc_, &wdest_;
-    IntVec hiBounds_, destInc_;
-  };
-
-
   //==================================================================
 
   template< typename OpT, typename SrcT, typename DestT >
@@ -228,50 +25,57 @@ namespace structured{
   Stencil4<OpT,SrcT,DestT>::
   apply_to_field( const SrcT& src, DestT& dest ) const
   {
-    const Stencil4Helper<SrcT,DestT> helper( src.window_with_ghost(),
-                                             dest.window_with_ghost() );
+    typedef s4detail::ExtentsAndOffsets<SrcT,DestT> Extents;
 
-    const IntVec sinc = helper.src_increment();
-    const IntVec dinc = helper.dest_increment();
+    const MemoryWindow& wsrc  =  src.window_with_ghost();
+    const MemoryWindow& wdest = dest.window_with_ghost();
 
-    typename  DestT::iterator idest = dest.begin() + helper.dest_offset();
+    const MemoryWindow ws1( wsrc.glob_dim(),
+                            wsrc.offset() + Extents::Src1Offset::int_vec(),
+                            wsrc.extent() + Extents::Src1Extent::int_vec() + wsrc.has_bc()*Extents::Src1ExtentBC::int_vec(),
+                            wsrc.has_bc(0), wsrc.has_bc(1), wsrc.has_bc(2) );
 
-    typedef typename SrcT::const_iterator SrcIter;
-    SrcIter isrc1 = src.begin() + helper.src_offset_1();
-    SrcIter isrc2 = src.begin() + helper.src_offset_2();
-    SrcIter isrc3 = src.begin() + helper.src_offset_3();
-    SrcIter isrc4 = src.begin() + helper.src_offset_4();
+    const MemoryWindow ws2( wsrc.glob_dim(),
+                            wsrc.offset() + Extents::Src2Offset::int_vec(),
+                            wsrc.extent() + Extents::Src2Extent::int_vec() + wsrc.has_bc()*Extents::Src2ExtentBC::int_vec(),
+                            wsrc.has_bc(0), wsrc.has_bc(1), wsrc.has_bc(2) );
 
-    const IntVec lo = helper.low ();
-    const IntVec hi = helper.high();
+    const MemoryWindow ws3( wsrc.glob_dim(),
+                            wsrc.offset() + Extents::Src3Offset::int_vec(),
+                            wsrc.extent() + Extents::Src3Extent::int_vec() + wsrc.has_bc()*Extents::Src3ExtentBC::int_vec(),
+                            wsrc.has_bc(0), wsrc.has_bc(1), wsrc.has_bc(2) );
 
-    for( int k=lo[2]; k<hi[2]; ++k ){
-      for( int j=lo[1]; j<hi[1]; ++j ){
-        for( int i=lo[0]; i<hi[0]; ++i ){
-          *idest = coef1_ * *isrc1
-                 + coef2_ * *isrc2
-                 + coef3_ * *isrc3
-                 + coef4_ * *isrc4;
-          idest += dinc[0];
-          isrc1 += sinc[0];
-          isrc2 += sinc[0];
-          isrc3 += sinc[0];
-          isrc4 += sinc[0];
-        }
-        idest += dinc[1];
-        isrc1 += sinc[1];
-        isrc2 += sinc[1];
-        isrc3 += sinc[1];
-        isrc4 += sinc[1];
-      }
-      idest += dinc[2];
-      isrc1 += sinc[2];
-      isrc2 += sinc[2];
-      isrc3 += sinc[2];
-      isrc4 += sinc[2];
+    const MemoryWindow ws4( wsrc.glob_dim(),
+                            wsrc.offset() + Extents::Src4Offset::int_vec(),
+                            wsrc.extent() + Extents::Src4Extent::int_vec() + wsrc.has_bc()*Extents::Src4ExtentBC::int_vec(),
+                            wsrc.has_bc(0), wsrc.has_bc(1), wsrc.has_bc(2) );
+
+    const MemoryWindow  wd( wdest.glob_dim(),
+                            wdest.offset() + Extents::DestOffset::int_vec(),
+                            wdest.extent() + Extents::DestExtent::int_vec() + wsrc.has_bc()*Extents::DestExtentBC::int_vec(),
+                            wdest.has_bc(0), wdest.has_bc(1), wdest.has_bc(2) );
+
+    // ensure that all field extents are equal - a minimum requirement for sanity here.
+    assert( ws1.extent() == ws2.extent() &&
+            ws3.extent() == ws4.extent() &&
+            ws1.extent() == wd.extent()  );
+
+    // build new windowed fields
+    DestT  d( wd, &dest[0], ExternalStorage );
+    SrcT  s1( ws1, &src[0], ExternalStorage );
+    SrcT  s2( ws2, &src[0], ExternalStorage );
+    SrcT  s3( ws3, &src[0], ExternalStorage );
+    SrcT  s4( ws4, &src[0], ExternalStorage );
+
+    // implement the stencil
+    typename DestT::iterator      id =d .begin();
+    typename DestT::iterator      ide=d .end();
+    typename SrcT::const_iterator is1=s1.begin(), is2=s2.begin(), is3=s3.begin(), is4=s4.begin();
+    for( ; id!=ide; ++id, ++is1, ++is2, ++is3, ++is4 ){
+      *id = *is1 *coef1_ + *is2*coef2_ + *is3*coef3_ + *is4*coef4_;
     }
-  }
 
+  }
 
   //==================================================================
   // Explicit template instantiation

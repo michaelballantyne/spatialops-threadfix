@@ -1,7 +1,6 @@
 get_filename_component( dir ${CMAKE_CURRENT_LIST_FILE} PATH )
 
 set( src
-  ${dir}/FVTools.cpp
   ${dir}/Grid.cpp
   ${dir}/MemoryWindow.cpp
   )
@@ -32,6 +31,8 @@ install( FILES
   FVStaggeredFieldTypes.h
   FVTools.h
   Grid.h
+  IndexTriplet.h
+  IntVec.h
   MemoryWindow.h
   SpatialField.h
   SpatialFieldStore.h

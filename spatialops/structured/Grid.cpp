@@ -1,46 +1,17 @@
 #include "Grid.h"
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
+#include <spatialops/structured/FVTools.h>
 
 namespace SpatialOps{
 namespace structured{
 
-  // the amount that the volume coordinate for the mesh is shifted
-  template< typename CoordT, typename StagT >
-  struct StagShift{
-    static double value(){ return 0.0; }
+  template< typename DirT, typename FieldT >
+  double shift(){
+    // obtain the coordinate shift for the given direction.
+    // note that (0,0,0) shifting corresponds to a (dx/2,dy/2,dz/2)
+    // offset whereas (-1,-1,-1) shifting corresponds to (0,0,0).
+    return 0.5*double(1+IndexStagger<FieldT,DirT>::value);
   };
-
-  template< typename DirT >
-  struct StagShift<DirT,DirT>{
-    static double value(){ return -0.5; }
-  };
-
-  template< typename CoordT, typename FaceT >
-  struct FaceShift{
-    static double value(){ return 0.5; }
-  };
-
-  template< typename DirT >
-  struct FaceShift<DirT,DirT>{
-    // e.g. x-coordinate on an x-face.
-    static double value(){ return 0.0; }
-  };
-
-  template< typename CoordT, typename StagT, typename FaceT >
-  struct multiplier
-  {
-    static double value(){ return FaceShift<CoordT,FaceT>::value() + StagShift<CoordT,StagT>::value(); }
-  };
-
-
-  template< typename CoordT, typename FieldT >
-  double get_offset( const double spc )
-  {
-    typedef typename FieldT::Location::StagLoc StagLoc;
-    typedef typename FieldT::Location::FaceDir FaceDir;
-    return spc * multiplier<CoordT,StagLoc,FaceDir>::value();
-  }
-
 
   Grid::Grid( const IntVec npts,
               const std::vector<double>& length )
@@ -72,7 +43,7 @@ namespace structured{
   void Grid::set_coord( FieldT& f ) const
   {
     const unsigned int dir = get_dir<CoordT>();
-    const double offset = get_offset<CoordT,FieldT>( spacing_[dir] );
+    const double offset = shift<CoordT,FieldT>() * spacing_[dir];
 
     typedef typename FieldT::iterator FieldIter;
 
