@@ -14,15 +14,8 @@ if( ENABLE_TESTS )
   add_subdirectory( test )
 endif( ENABLE_TESTS )
 
-add_subdirectory( onedim )
-
-if( ENABLE_MATRIX )
-  add_subdirectory( matrix )
-endif( ENABLE_MATRIX )
-
-if( ENABLE_STENCIL )
-  add_subdirectory( stencil )
-endif( ENABLE_STENCIL )
+#add_subdirectory( onedim )
+add_subdirectory( stencil )
 
 set( SO_SRC ${SO_SRC} ${src} PARENT_SCOPE )
 

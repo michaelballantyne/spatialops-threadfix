@@ -6,20 +6,6 @@
 #include <spatialops/SpatialOpsDefs.h>
 #include <spatialops/structured/IndexTriplet.h>
 
-#if defined(LINALG_UBLAS)
-# include <spatialops/LinAlgUBlas.h>
-  typedef SpatialOps::LinAlgUBlas LinAlg;
-#elif defined(LINALG_TRILINOS)
-# include <spatialops/LinAlgTrilinos.h>
-  typedef SpatialOps::LinAlgTrilinos LinAlg;
-#elif defined(LINALG_STENCIL)
-  struct LinAlg{
-    typedef int VecType;
-    VecType& setup_vector( const int, double* ){ static VecType vt=0; return vt; }
-  };
-#else
-#  error No LinAlg typedef was made!
-#endif
 
 /**
  *  \file FVStaggeredFieldTypes.h
@@ -129,79 +115,79 @@ namespace structured{
   //-- Field Types --//
 
   /**
-   *  \typedef typedef SpatialField< LinAlg, SVol,   DefaultGhost > SVolField;
+   *  \typedef typedef SpatialField< SVol,   DefaultGhost > SVolField;
    *  \brief defines a volume field on the scalar volume.
    *
-   *  \typedef typedef SpatialField< LinAlg, SSurfX, DefaultGhost > SSurfXField;
+   *  \typedef typedef SpatialField< SSurfX, DefaultGhost > SSurfXField;
    *  \brief defines a x-surface field on the scalar volume
    *
-   *  \typedef typedef SpatialField< LinAlg, SSurfY, DefaultGhost > SSurfYField;
+   *  \typedef typedef SpatialField< SSurfY, DefaultGhost > SSurfYField;
    *  \brief defines a y-surface field on the scalar volume
    *
-   *  \typedef typedef SpatialField< LinAlg, SSurfZ, DefaultGhost > SSurfZField;
+   *  \typedef typedef SpatialField< SSurfZ, DefaultGhost > SSurfZField;
    *  \brief defines a z-surface field on the scalar volume
    */
-  typedef SpatialField< LinAlg, SVol,   DefaultGhost > SVolField;
-  typedef SpatialField< LinAlg, SSurfX, DefaultGhost > SSurfXField;
-  typedef SpatialField< LinAlg, SSurfY, DefaultGhost > SSurfYField;
-  typedef SpatialField< LinAlg, SSurfZ, DefaultGhost > SSurfZField;
+  typedef SpatialField< SVol,   DefaultGhost > SVolField;
+  typedef SpatialField< SSurfX, DefaultGhost > SSurfXField;
+  typedef SpatialField< SSurfY, DefaultGhost > SSurfYField;
+  typedef SpatialField< SSurfZ, DefaultGhost > SSurfZField;
 
 
   /**
-   *  \typedef typedef SpatialField< LinAlg, XVol,   DefaultGhost > XVolField;
+   *  \typedef typedef SpatialField< XVol,   DefaultGhost > XVolField;
    *  \brief defines a volume field on the x-staggered volume
    *
-   *  \typedef typedef SpatialField< LinAlg, XSurfX, DefaultGhost > XSurfXField;
+   *  \typedef typedef SpatialField< XSurfX, DefaultGhost > XSurfXField;
    *  \brief defines a x-surface field on the x-staggered volume
    *
-   *  \typedef typedef SpatialField< LinAlg, XSurfY, DefaultGhost > XSurfYField;
+   *  \typedef typedef SpatialField< XSurfY, DefaultGhost > XSurfYField;
    *  \brief defines a y-surface field on the x-staggered volume
    *
-   *  \typedef typedef SpatialField< LinAlg, XSurfZ, DefaultGhost > XSurfZField;
+   *  \typedef typedef SpatialField< XSurfZ, DefaultGhost > XSurfZField;
    *  \brief defines a z-surface field on the x-staggered volume
    */
-  typedef SpatialField< LinAlg, XVol,   DefaultGhost > XVolField;
-  typedef SpatialField< LinAlg, XSurfX, DefaultGhost > XSurfXField;
-  typedef SpatialField< LinAlg, XSurfY, DefaultGhost > XSurfYField;
-  typedef SpatialField< LinAlg, XSurfZ, DefaultGhost > XSurfZField;
+  typedef SpatialField< XVol,   DefaultGhost > XVolField;
+  typedef SpatialField< XSurfX, DefaultGhost > XSurfXField;
+  typedef SpatialField< XSurfY, DefaultGhost > XSurfYField;
+  typedef SpatialField< XSurfZ, DefaultGhost > XSurfZField;
 
 
   /**
-   *  \typedef typedef SpatialField< LinAlg, YVol,   DefaultGhost > YVolField;
+   *  \typedef typedef SpatialField< YVol,   DefaultGhost > YVolField;
    *  \brief defines a volume field on the y-staggered volume
    *
-   *  \typedef typedef SpatialField< LinAlg, YSurfX, DefaultGhost > YSurfXField;
+   *  \typedef typedef SpatialField< YSurfX, DefaultGhost > YSurfXField;
    *  \brief defines a x-surface field on the y-staggered volume
    *
-   *  \typedef typedef SpatialField< LinAlg, YSurfY, DefaultGhost > YSurfYField;
+   *  \typedef typedef SpatialField< YSurfY, DefaultGhost > YSurfYField;
    *  \brief defines a y-surface field on the y-staggered volume
    *
-   *  \typedef typedef SpatialField< LinAlg, YSurfZ, DefaultGhost > YSurfZField;
+   *  \typedef typedef SpatialField< YSurfZ, DefaultGhost > YSurfZField;
    *  \brief defines a z-surface field on the y-staggered volume
    */
-  typedef SpatialField< LinAlg, YVol,   DefaultGhost > YVolField;
-  typedef SpatialField< LinAlg, YSurfX, DefaultGhost > YSurfXField;
-  typedef SpatialField< LinAlg, YSurfY, DefaultGhost > YSurfYField;
-  typedef SpatialField< LinAlg, YSurfZ, DefaultGhost > YSurfZField;
+  typedef SpatialField< YVol,   DefaultGhost > YVolField;
+  typedef SpatialField< YSurfX, DefaultGhost > YSurfXField;
+  typedef SpatialField< YSurfY, DefaultGhost > YSurfYField;
+  typedef SpatialField< YSurfZ, DefaultGhost > YSurfZField;
 
 
   /**
-   *  \typedef typedef SpatialField< LinAlg, ZVol,   DefaultGhost > ZVolField;
+   *  \typedef typedef SpatialField< ZVol,   DefaultGhost > ZVolField;
    *  \brief defines a volume field on the z-staggered volume
    *
-   *  \typedef typedef SpatialField< LinAlg, ZSurfX, DefaultGhost > ZSurfXField;
+   *  \typedef typedef SpatialField< ZSurfX, DefaultGhost > ZSurfXField;
    *  \brief defines a x-surface field on the z-staggered volume
    *
-   *  \typedef typedef SpatialField< LinAlg, ZSurfY, DefaultGhost > ZSurfYField;
+   *  \typedef typedef SpatialField< ZSurfY, DefaultGhost > ZSurfYField;
    *  \brief defines a y-surface field on the z-staggered volume
    *
-   *  \typedef typedef SpatialField< LinAlg, ZSurfZ, DefaultGhost > ZSurfZField;
+   *  \typedef typedef SpatialField< ZSurfZ, DefaultGhost > ZSurfZField;
    *  \brief defines a z-surface field on the z-staggered volume
    */
-  typedef SpatialField< LinAlg, ZVol,   DefaultGhost > ZVolField;
-  typedef SpatialField< LinAlg, ZSurfX, DefaultGhost > ZSurfXField;
-  typedef SpatialField< LinAlg, ZSurfY, DefaultGhost > ZSurfYField;
-  typedef SpatialField< LinAlg, ZSurfZ, DefaultGhost > ZSurfZField;
+  typedef SpatialField< ZVol,   DefaultGhost > ZVolField;
+  typedef SpatialField< ZSurfX, DefaultGhost > ZSurfXField;
+  typedef SpatialField< ZSurfY, DefaultGhost > ZSurfYField;
+  typedef SpatialField< ZSurfZ, DefaultGhost > ZSurfZField;
 
 
   /**

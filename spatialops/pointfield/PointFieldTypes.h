@@ -7,11 +7,6 @@
 
 namespace SpatialOps{
 namespace Point{
-
-  struct LinAlg{
-    typedef int VecType;
-    VecType& setup_vector( const int, double* ){ static VecType vt=0; return vt; }
-  };
  
   struct PointFieldGhostTraits{ enum{ NGHOST=0 }; };
   
@@ -26,8 +21,7 @@ namespace Point{
    *  points from a parent field and return them back to a parent
    *  field.
    */  
-  typedef structured::SpatialField< Point::LinAlg,
-                                    Point::PointFieldTraits,
+  typedef structured::SpatialField< Point::PointFieldTraits,
                                     Point::PointFieldGhostTraits >  PointField;
   
 }  // namespace Point

@@ -5,35 +5,18 @@ set( MAJOR_VERSION "1" )
 set( MINOR_VERSION "3" )
 set( PATCH_VERSION "0" )
 
-#=====================================================================
-#---------------------------------------------------------------------
-# BEGIN USER MODIFIABLE BLOCK
 
-
-option( LINALG_TRILINOS "use Trilinos for linear algebra - also requires definition of {Trilinos_path}"  OFF )
-option( LINALG_UBLAS    "use UBLAS for linear algebra - cannot solve linear systems"  OFF )
 option( ENABLE_BOOST_SERIALIZATION "allow serialization of information via the boost library" OFF )
 option( ENABLE_TESTS "Enable building of regression tests (recommended)" ON )
-option( ENABLE_STENCIL "Enable fast stencil installation rather than matrix-based options" ON )
 option( ENABLE_THREADS "Enable multi-threaded support for stencil operations" OFF )
 
 set( NTHREADS 1 CACHE STRING "Number of threads to use if ENABLE_THREADS is ON" )
 
-if( ENABLE_STENCIL )
-  set( ENABLE_MATRIX OFF )
-  set( LINALG_UBLAS OFF )
-  set( LINALG_TRILINOS OFF )
-  set( LINALG_STENCIL ON )
-
-  if( ENABLE_THREADS )
-    set( TILL_THREADS ON )
-    set( FIELD_EXPRESSION_THREADS ON )
-    set( STENCIL_THREADS ON )
-  endif()
-
-else()
-  set( ENABLE_MATRIX ON )
-endif( ENABLE_STENCIL )
+if( ENABLE_THREADS )
+  set( TILL_THREADS ON )
+  set( FIELD_EXPRESSION_THREADS ON )
+  set( STENCIL_THREADS ON )
+endif()
 
 # default to release builds
 if( NOT CMAKE_BUILD_TYPE )
@@ -57,20 +40,6 @@ set( SpatialOps_CONFIG_INSTALL
   "Location to install configuration files"
   )
 
-# END USER MODIFIABLE BLOCK
-#---------------------------------------------------------------------
-#=====================================================================
-
-
-if( LINALG_TRILINOS )
-  # Set the path for the trilinos installation on your machine.  If
-  # empty, SpatialOps will be built without trilinos (using UBLAS
-  # instead) comment this out to build without trilinos
-  set( Trilinos_path
-    ""
-    CACHE PATH "path to trilinos intallation"
-    )
-endif()
 
 
 #--------------------------------------
@@ -110,32 +79,6 @@ if( boost_comps )
   message( STATUS ${Boost_LIBRARIES} )
 endif( boost_comps )
 
-if( LINALG_TRILINOS )
-  message( STATUS "Using Trilinos for linear algebra" )
-  set( Trilinos_INCLUDE_DIR ${Trilinos_path}/include )
-  set( Trilinos_LIBRARY_DIR ${Trilinos_path}/lib )
-  set( Trilinos_libs
-    ${Trilinos_LIBRARY_DIR}/libaztecoo.a
-    ${Trilinos_LIBRARY_DIR}/libepetraext.a
-    ${Trilinos_LIBRARY_DIR}/libepetra.a
-    ${Trilinos_LIBRARY_DIR}/libteuchos.a
-    )
-  set( TPL_INCLUDE_DIRS ${TPL_INCLUDE_DIRS} ${Trilinos_INCLUDE_DIR} )
-  set( TPL_LIBRARIES ${TPL_LIBRARIES} ${Trilinos_libs} )
-
-  # find BLAS and LAPACK (required for trilinos)
-  enable_language( Fortran )
-  find_package( BLAS REQUIRED )
-  find_package( LAPACK REQUIRED )
-  set( TPL_LIBRARIES ${TPL_LIBRARIES}
-    ${LAPACK_LIBRARIES}
-    ${BLAS_LIBRARIES}
-    )
-  set( LINALG_UBLAS OFF )
-endif()
-if( LINALG_UBLAS )
-    message( STATUS "Using UBLAS for linear algebra" )
-endif()
 #--------------------------------------
 
 
