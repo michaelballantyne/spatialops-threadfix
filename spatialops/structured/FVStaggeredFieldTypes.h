@@ -2,8 +2,8 @@
 #define FVStaggeredTypes_h
 
 #include <spatialops/SpatialOpsConfigure.h>
-#include <spatialops/structured/SpatialField.h>
 #include <spatialops/SpatialOpsDefs.h>
+#include <spatialops/structured/SpatialField.h>
 #include <spatialops/structured/IndexTriplet.h>
 
 #if defined(LINALG_UBLAS)
@@ -258,8 +258,8 @@ namespace structured{
 
 
   /**
-   *  \struct FaceTypes
-   *  \brief Define Volume field types in terms of a face field type.
+   *  \struct VolType
+   *  \brief Define face field types in terms of a volume field type.
    *
    *  Class template specializations exist for the following field types:
    *   - SSurfXField
@@ -277,8 +277,8 @@ namespace structured{
    *
    *  Example usage:
    *  \code
-   *  typedef FaceTypes< FaceT       >::VolField FieldT;
-   *  typedef FaceTypes< SSurfZField >::VolField FieldT;
+   *  typedef VolType< FaceT       >::VolField FieldT;
+   *  typedef VolType< SSurfZField >::VolField FieldT;
    *  \endcode
    */
   template<typename FaceT> struct VolType;

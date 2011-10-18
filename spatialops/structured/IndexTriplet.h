@@ -1,3 +1,6 @@
+#ifndef SpatialOps_IndexTriplet_h
+#define SpatialOps_IndexTriplet_h
+
 /**
  *  \file   IndexTriplet.h
  *
@@ -17,9 +20,6 @@
 #include <iomanip>
 #include <string>
 #include <sstream>
-
-#ifndef SpatialOps_IndexTriplet_h
-#define SpatialOps_IndexTriplet_h
 
 namespace SpatialOps{
   namespace structured{

@@ -13,7 +13,7 @@ namespace SpatialOps {
      *  \brief Support for implementing simple two-point stencils in
      *         one-dimension on structured meshes.
      *
-     *  \tparam OpT - the type of operator
+     *  \tparam OpT - the type of operator (Interpolant, Gradient, Divergence)
      *  \tparam SrcT - the type of field the operator is applied to
      *  \tparam DestT - the type of field the operator produces
      *
