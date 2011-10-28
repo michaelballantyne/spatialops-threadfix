@@ -26,3 +26,7 @@ add_test( stencil4_3    test_stencil4 --nx=6 --ny=8 --nz=10 --bcx --bcy --bcz )
 add_executable( test_bc_stencil testOpBC.cpp )
 target_link_libraries( test_bc_stencil ${libs} )
 add_test( test_bc_op_stencil test_bc_stencil )
+
+add_executable( test_filter test_filter.cpp )
+target_link_libraries( test_filter ${libs} )
+add_test( test_filter test_filter )
