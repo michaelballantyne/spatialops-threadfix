@@ -82,7 +82,7 @@ namespace structured{
   DECLARE_STENCIL( Divergence,  FaceTypes<VOL>::XFace, VOL )   \
   DECLARE_STENCIL( Divergence,  FaceTypes<VOL>::YFace, VOL )   \
   DECLARE_STENCIL( Divergence,  FaceTypes<VOL>::ZFace, VOL )
-  
+
   DECLARE_BASIC_VARIANTS( SVolField );
   DECLARE_BASIC_VARIANTS( XVolField );
   DECLARE_BASIC_VARIANTS( YVolField );
@@ -120,6 +120,10 @@ namespace structured{
   DECLARE_STENCIL( Gradient, SVolField, ZVolField )  // pressure
 
   DECLARE_STENCIL( Interpolant, SSurfXField, SVolField )  // ODT colocated mesh
+
+  DECLARE_STENCIL( Interpolant, XSurfXField, XVolField )  // BC operator for tau_xx
+  DECLARE_STENCIL( Interpolant, YSurfYField, YVolField )  // BC operator for tau_yy
+  DECLARE_STENCIL( Interpolant, ZSurfZField, ZVolField )  // BC operator for tau_zz
   //
   //==================================================================
 

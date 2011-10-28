@@ -221,6 +221,10 @@ int main( int iarg, char* carg[] )
     if( npts[0]>1 )             status( run_convergence< Interpolant, XVolField,   SVolField,   XDIR >( npts, bcplus, length, 2.0 ), "InterpXVolSVol" );
     if( npts[1]>1 )             status( run_convergence< Interpolant, YVolField,   SVolField,   YDIR >( npts, bcplus, length, 2.0 ), "InterpYVolSVol" );
     if( npts[2]>1 )             status( run_convergence< Interpolant, ZVolField,   SVolField,   ZDIR >( npts, bcplus, length, 2.0 ), "InterpZVolSVol" );
+
+    if( npts[0]>1 )             status( run_convergence< Interpolant, XSurfXField, XVolField,   XDIR >( npts, bcplus, length, 2.0 ), "InterpXSXXVol" );
+    if( npts[1]>1 )             status( run_convergence< Interpolant, YSurfYField, YVolField,   YDIR >( npts, bcplus, length, 2.0 ), "InterpYSYYVol" );
+    if( npts[2]>1 )             status( run_convergence< Interpolant, ZSurfZField, ZVolField,   ZDIR >( npts, bcplus, length, 2.0 ), "InterpZSZZVol" );
   }
 
   catch( std::runtime_error& e ){
