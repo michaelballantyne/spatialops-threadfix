@@ -132,12 +132,12 @@ double interior_norm( const FieldT& f1, const FieldT& f2 )
 
 bool check_convergence( const std::vector<double>& spacings,
                         const std::vector<double>& norms,
-                        const unsigned int order )
+                        const double order )
 {
   const size_t n = spacings.size();
   std::vector<double> errRatio(n,0), calcOrder(n-1,0);
   for( size_t i=0; i<n; ++i ){
-    const double ideal = norms[0] * std::pow( spacings[i] / spacings[0], double(order) );
+    const double ideal = norms[0] * std::pow( spacings[i] / spacings[0], order );
     errRatio[i] = norms[i] / norms[0];
   }
   for( size_t i=0; i<n-1; ++i ){
