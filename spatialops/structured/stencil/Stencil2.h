@@ -102,26 +102,28 @@ namespace SpatialOps {
 
         typedef typename UnitTriplet<Dir>::type                 DirUnitVec;     ///< unit vector for the direction that this operator acts in.
 
-        typedef typename DirUnitVec::Negate                     UpperLoopShift; ///< upper bounds on loop
-
-        typedef typename Multiply<SFBCExtra,DirUnitVec>::result UpperLoopBCAug; ///< shift for upper bounds when BC is present
-
         typedef IndexTriplet<0,0,0>                             Src1Offset;     ///< offset for the first source field
-        typedef UpperLoopShift                                  Src1Extent;     ///< extent modification for the first source field
+        typedef typename DirUnitVec::Negate                     Src1Extent;     ///< extent modification for the first source field
         typedef typename Subtract<SFBCExtra,
-            DFBCExtra>::result::PositiveOrZero::Negate          Src1ExtentBC;   ///< amount to augment source extents by if a BC is present
+            DirUnitVec>::result::PositiveOrZero::Negate         Src1ExtentBC;   ///< amount to augment source extents by if a BC is present
 
         typedef typename Add<DirUnitVec,Src1Offset>::result     Src2Offset;     ///< offset for the second source field
         typedef Src1Extent                                      Src2Extent;     ///< extent modification for the second source field
         typedef Src1ExtentBC                                    Src2ExtentBC;   ///< additional extent modification if a BC is present
 
         typedef typename Multiply< DirUnitVec,
-            typename Subtract<SFO,DFO>::result
+            typename Subtract<
+              typename Multiply<DirUnitVec,SFO>::result,
+              typename Multiply<DirUnitVec,DFO>::result
+              >::result
             >::result::PositiveOrZero                           DestOffset;     ///< the offset for the destination field
-        typedef UpperLoopShift                                  DestExtent;     ///< the extent for the destination field
-        typedef typename Subtract<DFBCExtra,
-            SFBCExtra>::result::PositiveOrZero::Negate          DestExtentBC;   ///< amount to augment destination extents by if a BC is present
-
+        typedef Src1Extent                                      DestExtent;     ///< the extent for the destination field
+        typedef typename Subtract<
+            typename Multiply<DFO,DFBCExtra>::result,
+            typename Multiply< DirUnitVec,
+                               typename Multiply<SFO,SFBCExtra>::result
+                               >::result
+            >::result                                           DestExtentBC;   ///< amount to augment destination extents by if a BC is present
       };
 
     } // namespace s2detail

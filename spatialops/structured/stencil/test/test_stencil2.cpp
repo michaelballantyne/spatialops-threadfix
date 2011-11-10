@@ -28,7 +28,7 @@ bool
 run_variants( const IntVec npts,
               const bool* bcPlus )
 {
-  TestHelper status(false);
+  TestHelper status(true);
 
   typedef typename FaceTypes<Vol>::XFace  XFace;
   typedef typename FaceTypes<Vol>::YFace  YFace;
@@ -58,22 +58,21 @@ run_variants( const IntVec npts,
 
 //--------------------------------------------------------------------
 
-#define TEST_EXTENTS( SRC, DEST,               \
-                      DirT,                    \
-                      S2Ox,  S2Oy,  S2Oz,      \
-                      DOx,   DOy,   DOz,       \
-                      ULx,   ULy,   ULz,       \
-                      ULBCx, ULBCy, ULBCz,     \
-                      name )                   \
-    {                                                                                                                                    \
-      using std::string;                                                                                                                 \
-      typedef ExtentsAndOffsets<SRC,DEST> Extents;                                                                                       \
-      status( IsSameType< Extents::Dir,            DirT                              >::result, string(name) + string(" dir"       ) );  \
-      status( IsSameType< Extents::Src2Offset,     IndexTriplet<S2Ox,  S2Oy,  S2Oz > >::result, string(name) + string(" s2 offset" ) );  \
-      status( IsSameType< Extents::DestOffset,     IndexTriplet<DOx,   DOy,   DOz  > >::result, string(name) + string(" d  offset" ) );  \
-      status( IsSameType< Extents::UpperLoopShift, IndexTriplet<ULx,   ULy,   ULz  > >::result, string(name) + string(" UB"        ) );  \
-      status( IsSameType< Extents::UpperLoopBCAug, IndexTriplet<ULBCx, ULBCy, ULBCz> >::result, string(name) + string(" UB Aug."   ) );  \
+#define TEST_EXTENTS( SRC, DEST,                                                                                                 \
+                      DirT,                                                                                                      \
+                      S2Ox,  S2Oy,  S2Oz,                                                                                        \
+                      DOx,   DOy,   DOz,                                                                                         \
+                      ULx,   ULy,   ULz,                                                                                         \
+                      name )                                                                                                     \
+    {                                                                                                                            \
+      using std::string;                                                                                                         \
+      typedef ExtentsAndOffsets<SRC,DEST> Extents;                                                                               \
+      status( IsSameType< Extents::Dir,        DirT                          >::result, string(name) + string(" dir"       ) );  \
+      status( IsSameType< Extents::Src2Offset, IndexTriplet<S2Ox,S2Oy,S2Oz > >::result, string(name) + string(" s2 offset" ) );  \
+      status( IsSameType< Extents::DestOffset, IndexTriplet<DOx, DOy, DOz  > >::result, string(name) + string(" d  offset" ) );  \
+      status( IsSameType< Extents::Src1Extent, IndexTriplet<ULx, ULy, ULz  > >::result, string(name) + string(" UB"        ) );  \
     }
+//status( IsSameType< Extents::UpperLoopBCAug, IndexTriplet<ULBCx, ULBCy, ULBCz> >::result, string(name) + string(" UB Aug."   ) );  \
 
 //-------------------------------------------------------------------
 
@@ -97,38 +96,38 @@ bool test_compile_time()
   status( IsSameType< ActiveDir< SVolField, YVolField >::type, YDIR >::result, "SVol->YVol (y)" );
   status( IsSameType< ActiveDir< SVolField, ZVolField >::type, ZDIR >::result, "SVol->ZVol (z)" );
 
-  TEST_EXTENTS( SVolField, SSurfXField, XDIR,  1,0,0,  1,0,0,  -1, 0, 0,  0,0,0,  "SVol->SSX" )
-  TEST_EXTENTS( SVolField, SSurfYField, YDIR,  0,1,0,  0,1,0,   0,-1, 0,  0,0,0,  "SVol->SSY" )
-  TEST_EXTENTS( SVolField, SSurfZField, ZDIR,  0,0,1,  0,0,1,   0, 0,-1,  0,0,0,  "SVol->SSZ" )
-  TEST_EXTENTS( SSurfXField, SVolField, XDIR,  1,0,0,  0,0,0,  -1, 0, 0,  1,0,0,  "SSX->SVol" )
-  TEST_EXTENTS( SSurfYField, SVolField, YDIR,  0,1,0,  0,0,0,   0,-1, 0,  0,1,0,  "SSY->SVol" )
-  TEST_EXTENTS( SSurfZField, SVolField, ZDIR,  0,0,1,  0,0,0,   0, 0,-1,  0,0,1,  "SSZ->SVol" )
+  TEST_EXTENTS( SVolField, SSurfXField, XDIR,  1,0,0,  1,0,0,  -1, 0, 0,  "SVol->SSX" )
+  TEST_EXTENTS( SVolField, SSurfYField, YDIR,  0,1,0,  0,1,0,   0,-1, 0,  "SVol->SSY" )
+  TEST_EXTENTS( SVolField, SSurfZField, ZDIR,  0,0,1,  0,0,1,   0, 0,-1,  "SVol->SSZ" )
+  TEST_EXTENTS( SSurfXField, SVolField, XDIR,  1,0,0,  0,0,0,  -1, 0, 0,  "SSX->SVol" )
+  TEST_EXTENTS( SSurfYField, SVolField, YDIR,  0,1,0,  0,0,0,   0,-1, 0,  "SSY->SVol" )
+  TEST_EXTENTS( SSurfZField, SVolField, ZDIR,  0,0,1,  0,0,0,   0, 0,-1,  "SSZ->SVol" )
 
-  TEST_EXTENTS( XVolField, XSurfXField, XDIR,  1,0,0,  0,0,0,  -1, 0, 0,  1,0,0,  "XVol->XSX" )
-  TEST_EXTENTS( XVolField, XSurfYField, YDIR,  0,1,0,  0,1,0,   0,-1, 0,  0,0,0,  "XVol->XSY" )
-  TEST_EXTENTS( XVolField, XSurfZField, ZDIR,  0,0,1,  0,0,1,   0, 0,-1,  0,0,0,  "XVol->XSZ" )
+  TEST_EXTENTS( XVolField, XSurfXField, XDIR,  1,0,0,  0,0,0,  -1, 0, 0,  "XVol->XSX" )
+  TEST_EXTENTS( XVolField, XSurfYField, YDIR,  0,1,0,  0,1,0,   0,-1, 0,  "XVol->XSY" )
+  TEST_EXTENTS( XVolField, XSurfZField, ZDIR,  0,0,1,  0,0,1,   0, 0,-1,  "XVol->XSZ" )
 
-  TEST_EXTENTS( XSurfXField, XVolField, XDIR,  1,0,0,  1,0,0,  -1, 0, 0,  0,0,0,  "XSX->XVol" )
-  TEST_EXTENTS( XSurfYField, XVolField, YDIR,  0,1,0,  0,0,0,   0,-1, 0,  0,1,0,  "XSY->XVol" )
-  TEST_EXTENTS( XSurfZField, XVolField, ZDIR,  0,0,1,  0,0,0,   0, 0,-1,  0,0,1,  "XSZ->XVol" )
+  TEST_EXTENTS( XSurfXField, XVolField, XDIR,  1,0,0,  1,0,0,  -1, 0, 0,  "XSX->XVol" )
+  TEST_EXTENTS( XSurfYField, XVolField, YDIR,  0,1,0,  0,0,0,   0,-1, 0,  "XSY->XVol" )
+  TEST_EXTENTS( XSurfZField, XVolField, ZDIR,  0,0,1,  0,0,0,   0, 0,-1,  "XSZ->XVol" )
 
-  TEST_EXTENTS( YVolField, YSurfXField, XDIR,  1,0,0,  1,0,0,  -1, 0, 0,  0,0,0,  "YVol->YSX" )
-  TEST_EXTENTS( YVolField, YSurfYField, YDIR,  0,1,0,  0,0,0,   0,-1, 0,  0,1,0,  "YVol->YSY" )
-  TEST_EXTENTS( YVolField, YSurfZField, ZDIR,  0,0,1,  0,0,1,   0, 0,-1,  0,0,0,  "YVol->YSZ" )
-  TEST_EXTENTS( YSurfXField, YVolField, XDIR,  1,0,0,  0,0,0,  -1, 0, 0,  1,0,0,  "YSX->YVol" )
-  TEST_EXTENTS( YSurfYField, YVolField, YDIR,  0,1,0,  0,1,0,   0,-1, 0,  0,0,0,  "YSY->YVol" )
-  TEST_EXTENTS( YSurfZField, YVolField, ZDIR,  0,0,1,  0,0,0,   0, 0,-1,  0,0,1,  "YSZ->YVol" )
+  TEST_EXTENTS( YVolField, YSurfXField, XDIR,  1,0,0,  1,0,0,  -1, 0, 0,  "YVol->YSX" )
+  TEST_EXTENTS( YVolField, YSurfYField, YDIR,  0,1,0,  0,0,0,   0,-1, 0,  "YVol->YSY" )
+  TEST_EXTENTS( YVolField, YSurfZField, ZDIR,  0,0,1,  0,0,1,   0, 0,-1,  "YVol->YSZ" )
+  TEST_EXTENTS( YSurfXField, YVolField, XDIR,  1,0,0,  0,0,0,  -1, 0, 0,  "YSX->YVol" )
+  TEST_EXTENTS( YSurfYField, YVolField, YDIR,  0,1,0,  0,1,0,   0,-1, 0,  "YSY->YVol" )
+  TEST_EXTENTS( YSurfZField, YVolField, ZDIR,  0,0,1,  0,0,0,   0, 0,-1,  "YSZ->YVol" )
 
-  TEST_EXTENTS( ZVolField, ZSurfXField, XDIR,  1,0,0,  1,0,0,  -1, 0, 0,  0,0,0,  "ZVol->ZSX" )
-  TEST_EXTENTS( ZVolField, ZSurfYField, YDIR,  0,1,0,  0,1,0,   0,-1, 0,  0,0,0,  "ZVol->ZSY" )
-  TEST_EXTENTS( ZVolField, ZSurfZField, ZDIR,  0,0,1,  0,0,0,   0, 0,-1,  0,0,1,  "ZVol->ZSZ" )
-  TEST_EXTENTS( ZSurfXField, ZVolField, XDIR,  1,0,0,  0,0,0,  -1, 0, 0,  1,0,0,  "ZSX->ZVol" )
-  TEST_EXTENTS( ZSurfYField, ZVolField, YDIR,  0,1,0,  0,0,0,   0,-1, 0,  0,1,0,  "ZSY->ZVol" )
-  TEST_EXTENTS( ZSurfZField, ZVolField, ZDIR,  0,0,1,  0,0,1,   0, 0,-1,  0,0,0,  "ZSZ->ZVol" )
+  TEST_EXTENTS( ZVolField, ZSurfXField, XDIR,  1,0,0,  1,0,0,  -1, 0, 0,  "ZVol->ZSX" )
+  TEST_EXTENTS( ZVolField, ZSurfYField, YDIR,  0,1,0,  0,1,0,   0,-1, 0,  "ZVol->ZSY" )
+  TEST_EXTENTS( ZVolField, ZSurfZField, ZDIR,  0,0,1,  0,0,0,   0, 0,-1,  "ZVol->ZSZ" )
+  TEST_EXTENTS( ZSurfXField, ZVolField, XDIR,  1,0,0,  0,0,0,  -1, 0, 0,  "ZSX->ZVol" )
+  TEST_EXTENTS( ZSurfYField, ZVolField, YDIR,  0,1,0,  0,0,0,   0,-1, 0,  "ZSY->ZVol" )
+  TEST_EXTENTS( ZSurfZField, ZVolField, ZDIR,  0,0,1,  0,0,1,   0, 0,-1,  "ZSZ->ZVol" )
 
-  TEST_EXTENTS( XVolField, SVolField,   XDIR,  1,0,0,  0,0,0,  -1, 0, 0,  1,0,0, "XVol->SVol" )
-  TEST_EXTENTS( XVolField, YSurfXField, YDIR,  0,1,0,  0,1,0,   0,-1, 0,  0,0,0, "XVol->YSX"  )
-  TEST_EXTENTS( XVolField, ZSurfXField, ZDIR,  0,0,1,  0,0,1,   0, 0,-1,  0,0,0, "XVol->ZSX"  )
+  TEST_EXTENTS( XVolField, SVolField,   XDIR,  1,0,0,  0,0,0,  -1, 0, 0,  "XVol->SVol" )
+  TEST_EXTENTS( XVolField, YSurfXField, YDIR,  0,1,0,  0,1,0,   0,-1, 0,  "XVol->YSX"  )
+  TEST_EXTENTS( XVolField, ZSurfXField, ZDIR,  0,0,1,  0,0,1,   0, 0,-1,  "XVol->ZSX"  )
 
   return status.ok();
 }
@@ -189,6 +188,15 @@ int main( int iarg, char* carg[] )
   cout << endl;
 
   const double length = 10.0;
+
+//    status( run_convergence<Interpolant,SVolField,SSurfXField,XDIR>(npts,bcplus,length,2.0) );
+//    status( run_convergence<Interpolant,SVolField,SSurfYField,YDIR>(npts,bcplus,length,2.0) );
+//    status( run_convergence<Divergence,SSurfXField,SVolField,XDIR>(npts,bcplus,length,2.0) );
+//  status( run_convergence<Divergence,SSurfYField,SVolField,YDIR>(npts,bcplus,length,2.0) );
+//  status( run_convergence<Divergence,SSurfYField,SVolField,YDIR>(npts,bcplus,length,2.0) );
+//    status( run_convergence<Interpolant,XVolField,XSurfXField,XDIR>(npts,bcplus,length,2.0) );
+//    status( run_convergence<Divergence,XSurfYField,XVolField,YDIR>(npts,bcplus,length,2.0) );
+//return 0;
 
   try{
     status( run_variants< SVolField >( npts, bcplus ), "SVol operators" );

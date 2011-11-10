@@ -128,6 +128,7 @@ test_bc_loop( const OperatorDatabase& opDB,
 
 //--------------------------------------------------------------------
 
+template< typename VolT >
 bool test_bc( const OperatorDatabase& opDB,
               const Grid& g,
               const std::vector<bool>& bcFlag )
@@ -135,7 +136,7 @@ bool test_bc( const OperatorDatabase& opDB,
   using namespace SpatialOps;
   using namespace structured;
 
-  typedef BasicOpTypes<SVolField> Ops;
+  typedef BasicOpTypes<VolT> Ops;
 
   const IntVec& dim = g.extent();
 
@@ -144,51 +145,52 @@ bool test_bc( const OperatorDatabase& opDB,
   if( dim[0]>1 ){
     // X BCs - Left side
     int i=0;
-    status( test_bc_loop<Ops::GradX     >( opDB, "GradSVolSSurfX",   dim, bcFlag, i,   MINUS_SIDE, 1.2345 ), "-X GradSVolSSurfX"   );
-    status( test_bc_loop<Ops::InterpC2FX>( opDB, "InterpSVolSSurfX", dim, bcFlag, i,   MINUS_SIDE, 123.45 ), "-X InterpSVolSSurfX" );
-    status( test_bc_loop<Ops::DivX      >( opDB, "DivSSurfXSVol",    dim, bcFlag, i,   MINUS_SIDE, 123.45 ), "-X DivSSurfXSVol"    );
+    status( test_bc_loop<typename Ops::GradX     >( opDB, "Grad   Vol->SurfX", dim, bcFlag, i,   MINUS_SIDE, 1.2345 ), "-X Grad   Vol->SurfX" );
+    status( test_bc_loop<typename Ops::InterpC2FX>( opDB, "Interp Vol->SurfX", dim, bcFlag, i,   MINUS_SIDE, 123.45 ), "-X Interp Vol->SurfX" );
+    status( test_bc_loop<typename Ops::DivX      >( opDB, "Div    SurfX->Vol", dim, bcFlag, i,   MINUS_SIDE, 123.45 ), "-X Div    SurfX->Vol" );
+
     cout << endl;
 
     // X BCs - Right side
     i=dim[0];
-    status( test_bc_loop<Ops::GradX     >( opDB, "GradSVolSSurfX",   dim, bcFlag, i,   PLUS_SIDE, 1.2345 ), "+X GradSVolSSurfX"   );
-    status( test_bc_loop<Ops::InterpC2FX>( opDB, "InterpSVolSSurfX", dim, bcFlag, i,   PLUS_SIDE, 123.45 ), "+X InterpSVolSSurfX" );
-    status( test_bc_loop<Ops::DivX      >( opDB, "DivSSurfXSVol",    dim, bcFlag, i-1, PLUS_SIDE, 123.45 ), "+X DivSSurfXSVol"    );
+    status( test_bc_loop<typename Ops::GradX     >( opDB, "Grad   Vol->SurfX", dim, bcFlag, i,   PLUS_SIDE, 1.2345 ), "+X Grad   Vol->SurfX" );
+    status( test_bc_loop<typename Ops::InterpC2FX>( opDB, "Interp Vol->SurfX", dim, bcFlag, i,   PLUS_SIDE, 123.45 ), "+X Interp Vol->SurfX" );
+    status( test_bc_loop<typename Ops::DivX      >( opDB, "Div    SurfX->Vol", dim, bcFlag, i-1, PLUS_SIDE, 123.45 ), "+X Div    SurfX->Vol" );
     cout << endl;
   }
 
   if( dim[1]>1 ){
     // Y BCs - Left side
     int j=0;
-    status( test_bc_loop<Ops::GradY     >( opDB, "GradSVolSSurfY",   dim, bcFlag, j,   MINUS_SIDE, 1.23456 ), "-Y GradSVolSSurfY"   );
-    status( test_bc_loop<Ops::InterpC2FY>( opDB, "InterpSVolSSurfY", dim, bcFlag, j,   MINUS_SIDE, 123.456 ), "-Y InterpSVolSSurfY" );
-    status( test_bc_loop<Ops::DivY      >( opDB, "DivSSurfYSVol",    dim, bcFlag, j,   MINUS_SIDE, 123.45  ), "-Y DivSSurfYSVol"    );
+    status( test_bc_loop<typename Ops::GradY     >( opDB, "Grad   Vol->SurfY", dim, bcFlag, j,   MINUS_SIDE, 1.23456 ), "-Y Grad   Vol->SurfY" );
+    status( test_bc_loop<typename Ops::InterpC2FY>( opDB, "Interp Vol->SurfY", dim, bcFlag, j,   MINUS_SIDE, 123.456 ), "-Y Interp Vol->SurfY" );
+    status( test_bc_loop<typename Ops::DivY      >( opDB, "Div    SurfY->Vol", dim, bcFlag, j,   MINUS_SIDE, 123.45  ), "-Y Div    SurfY->Vol" );
     cout << endl;
 
     // Y BCs - Right side
     j=dim[1];
-    status( test_bc_loop<Ops::GradY     >( opDB, "GradSVolSSurfY",   dim, bcFlag, j,   PLUS_SIDE, 6.54321 ), "+Y GradSVolSSurfY"   );
-    status( test_bc_loop<Ops::InterpC2FY>( opDB, "InterpSVolSSurfY", dim, bcFlag, j,   PLUS_SIDE, 123.456 ), "+Y InterpSVolSSurfY" );
-    status( test_bc_loop<Ops::DivY      >( opDB, "DivSSurfYSVol",    dim, bcFlag, j-1, PLUS_SIDE, 123.45  ), "+Y DivSSurfYSVol"    );
+    status( test_bc_loop<typename Ops::GradY     >( opDB, "Grad   Vol->SurfY", dim, bcFlag, j,   PLUS_SIDE, 6.54321 ), "+Y Grad   Vol->SurfY" );
+    status( test_bc_loop<typename Ops::InterpC2FY>( opDB, "Interp Vol->SurfY", dim, bcFlag, j,   PLUS_SIDE, 123.456 ), "+Y Interp Vol->SurfY" );
+    status( test_bc_loop<typename Ops::DivY      >( opDB, "Div    SurfY->Vol", dim, bcFlag, j-1, PLUS_SIDE, 123.45  ), "+Y Div    SurfY->Vol" );
     cout << endl;
   }
 
   if( dim[2]>1 ){
     // Z BCs - Left side
     int k=0;
-    status( test_bc_loop<Ops::GradZ     >( opDB, "GradSVolSSurfZ",   dim, bcFlag, k,   MINUS_SIDE, 1.2345  ), "-Z GradSVolSSurfZ"   );
-    status( test_bc_loop<Ops::InterpC2FZ>( opDB, "InterpSVolSSurfZ", dim, bcFlag, k,   MINUS_SIDE, 123.456 ), "-Z InterpSVolSSurfZ" );
-    status( test_bc_loop<Ops::DivZ      >( opDB, "DivSSurfZSVol",    dim, bcFlag, k,   MINUS_SIDE, 123.45  ), "-Z DivSSurfZSVol"    );
+    status( test_bc_loop<typename Ops::GradZ     >( opDB, "Grad   Vol->SurfZ", dim, bcFlag, k,   MINUS_SIDE, 1.2345  ), "-Z Grad   Vol->SurfZ" );
+    status( test_bc_loop<typename Ops::InterpC2FZ>( opDB, "Interp Vol->SurfZ", dim, bcFlag, k,   MINUS_SIDE, 123.456 ), "-Z Interp Vol->SurfZ" );
+    status( test_bc_loop<typename Ops::DivZ      >( opDB, "Div    SurfZ->Vol", dim, bcFlag, k,   MINUS_SIDE, 123.45  ), "-Z Div    SurfZ->Vol" );
     cout << endl;
 
     // Z BCs - Right side
     k=dim[2];
-    status( test_bc_loop<Ops::GradZ     >( opDB, "GradSVolSSurfZ",   dim, bcFlag, k,   PLUS_SIDE, 1.2345  ), "+Z GradSVolSSurfZ"   );
-    status( test_bc_loop<Ops::InterpC2FZ>( opDB, "InterpSVolSSurfZ", dim, bcFlag, k,   PLUS_SIDE, 123.456 ), "+Z InterpSVolSSurfZ" );
-    status( test_bc_loop<Ops::DivZ      >( opDB, "DivSSurfZSVol",    dim, bcFlag, k-1, PLUS_SIDE, 123.45  ), "+Z DivSSurfZSVol"    );
+    status( test_bc_loop<typename Ops::GradZ     >( opDB, "Grad   Vol->SurfZ", dim, bcFlag, k,   PLUS_SIDE, 1.2345  ), "+Z Grad   Vol->SurfZ" );
+    status( test_bc_loop<typename Ops::InterpC2FZ>( opDB, "Interp Vol->SurfZ", dim, bcFlag, k,   PLUS_SIDE, 123.456 ), "+Z Interp Vol->SurfZ" );
+    status( test_bc_loop<typename Ops::DivZ      >( opDB, "Div    SurfZ->Vol", dim, bcFlag, k-1, PLUS_SIDE, 123.45  ), "+Z Div    SurfZ->Vol" );
     cout << endl;
   }
- 
+
   return status.ok();
 }
 
@@ -203,7 +205,15 @@ bool test_driver( const IntVec& dim )
   build_stencils( dim[0], dim[1], dim[2], length[0], length[1], length[2], opDB );
   const Grid grid( dim, length );
 
-  return test_bc( opDB, grid, bcFlag );
+  TestHelper status(true);
+
+  status( test_bc<SVolField>( opDB, grid, bcFlag ), "SVolField Ops" );
+
+  if( dim[0]>1 ) status( test_bc<XVolField>( opDB, grid, bcFlag ), "XVolField Ops" );
+  if( dim[1]>1 ) status( test_bc<YVolField>( opDB, grid, bcFlag ), "YVolField Ops" );
+  if( dim[2]>1 ) status( test_bc<ZVolField>( opDB, grid, bcFlag ), "ZVolField Ops" );
+
+  return status.ok();
 }
 
 //--------------------------------------------------------------------
