@@ -359,12 +359,12 @@ namespace SpatialOps{
     }
   }
   //------------------------------------------------------------------
-  
+
   //------------------------------------------------------------------
   template<typename FieldT>
   SpatFldPtr<FieldT>::~SpatFldPtr() { free(); }
   //------------------------------------------------------------------
-  
+
 
   //==================================================================
 
@@ -407,7 +407,7 @@ namespace SpatialOps{
     boost::mutex::scoped_lock lock( get_mutex() );
 #endif
     // find the proper map
-    const int npts = window.local_npts();
+    const size_t npts = window.local_npts();
     FieldQueue& q = fqmap_[ npts ];
 
     AtomicT* fnew;
@@ -467,7 +467,7 @@ namespace SpatialOps{
 #endif
     return SpatFldPtr<double>( new double, true );
   }
-  
+
 } // namespace SpatialOps
 
 #endif
