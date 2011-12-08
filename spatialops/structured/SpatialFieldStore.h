@@ -396,6 +396,9 @@ namespace SpatialOps{
   SpatFldPtr<FieldT>
   SpatialFieldStore<FieldT>::get( const FieldT& f )
   {
+    // jcs note that we could create a window from the parent window
+    // that was the minimum size and create the field based on that.
+    // This could save a lot of memory in some cases.
     return get( f.window_with_ghost() );
   }
   //------------------------------------------------------------------
@@ -407,7 +410,7 @@ namespace SpatialOps{
     boost::mutex::scoped_lock lock( get_mutex() );
 #endif
     // find the proper map
-    const size_t npts = window.local_npts();
+    const size_t npts = window.glob_npts();
     FieldQueue& q = fqmap_[ npts ];
 
     AtomicT* fnew;
