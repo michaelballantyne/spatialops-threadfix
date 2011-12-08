@@ -10,16 +10,8 @@ using std::endl;
 #include <spatialops/FieldExpressions.h>
 #include <spatialops/structured/Grid.h>
 
-#ifdef LINALG_STENCIL
-# include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
-# include <spatialops/structured/stencil/StencilBuilder.h>
-#else
-# include <spatialops/structured/matrix/FVStaggeredOperatorTypes.h>
-# include <spatialops/structured/matrix/FVStaggeredInterpolant.h>
-# include <spatialops/structured/matrix/FVStaggeredGradient.h>
-# include <spatialops/structured/matrix/FVStaggeredDivergence.h>
-#endif
-
+#include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
+#include <spatialops/structured/stencil/StencilBuilder.h>
 
 typedef SpatialOps::structured::SVolField   CellField;
 typedef SpatialOps::structured::SSurfXField XSideField;
@@ -99,23 +91,9 @@ int main( int iarg, char* carg[] )
 
   // build the spatial operators
   SpatialOps::OperatorDatabase sodb;
-#ifdef LINALG_STENCIL
   SpatialOps::structured::build_stencils( npts[0],   npts[1],   npts[2],
                                           length[0], length[1], length[2],
                                           sodb );
-#else
-  sodb.register_new_operator<GradX>( GradX::Assembler( spacing[0], npts, true, true, true ) );
-  sodb.register_new_operator<GradY>( GradY::Assembler( spacing[1], npts, true, true, true ) );
-  sodb.register_new_operator<GradZ>( GradZ::Assembler( spacing[2], npts, true, true, true ) );
-
-  sodb.register_new_operator<DivX>( DivX::Assembler( npts, area[0], spacing[0], true, true, true ) );
-  sodb.register_new_operator<DivY>( DivY::Assembler( npts, area[1], spacing[1], true, true, true ) );
-  sodb.register_new_operator<DivZ>( DivZ::Assembler( npts, area[2], spacing[2], true, true, true ) );
-
-  sodb.register_new_operator<InterpX>( InterpX::Assembler( npts, true, true, true ) );
-  sodb.register_new_operator<InterpY>( InterpY::Assembler( npts, true, true, true ) );
-  sodb.register_new_operator<InterpZ>( InterpZ::Assembler( npts, true, true, true ) );
-#endif
 
   // grap pointers to the operators
   const GradX* const gradx = sodb.retrieve_operator<GradX>();

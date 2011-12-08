@@ -5,14 +5,6 @@
  * Configuration options for SpatialOps.
  */
 
-#cmakedefine LINALG_UBLAS
-#cmakedefine LINALG_TRILINOS
-#cmakedefine LINALG_STENCIL
-
-#ifdef LINALG_UBLAS
-# define BOOST_UBLAS_SHALLOW_ARRAY_ADAPTOR
-#endif
-
 #cmakedefine ENABLE_THREADS
 #cmakedefine FIELD_EXPRESSION_THREADS
 #cmakedefine STENCIL_THREADS

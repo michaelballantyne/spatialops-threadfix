@@ -1,14 +1,7 @@
 get_filename_component( dir ${CMAKE_CURRENT_LIST_FILE} PATH )
 
-set( Particle_SRC
-  ${dir}/ParticleFieldTypes.cpp
-  )
 
 if( ENABLE_TESTS )
-  add_library( spatialops-particle
-    STATIC
-    ${Particle_SRC}
-    )
   add_subdirectory( test )
 endif( ENABLE_TESTS )
 

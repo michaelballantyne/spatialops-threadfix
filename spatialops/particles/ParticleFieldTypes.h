@@ -20,24 +20,7 @@ namespace Particle{
 
   struct ParticleFieldTraits{ typedef NODIR FaceDir;  typedef NODIR StagLoc; };
 
-  class ParticleLinAlg
-  {
-  public:
-    typedef double* VecType;  // required for compatibility
-    ParticleLinAlg();
-    VecType& setup_vector(const size_t,double*const);
-    void destroy_vector();
-    void print_vec( std::ostream& s ) const;
-    ~ParticleLinAlg();
-  private:
-    VecType vec;
-    size_t length;
-  };
-
-  typedef structured::SpatialField<
-    ParticleLinAlg,
-    ParticleFieldTraits,
-    ParticleGhostTraits  > ParticleField;
+  typedef structured::SpatialField< ParticleFieldTraits, ParticleGhostTraits  > ParticleField;
 
 
 } // namespace Particle
