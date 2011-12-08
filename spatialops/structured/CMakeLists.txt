@@ -14,7 +14,7 @@ if( ENABLE_TESTS )
   add_subdirectory( test )
 endif( ENABLE_TESTS )
 
-#add_subdirectory( onedim )
+add_subdirectory( onedim )
 add_subdirectory( stencil )
 
 set( SO_SRC ${SO_SRC} ${src} PARENT_SCOPE )
