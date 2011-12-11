@@ -12,6 +12,7 @@
 #ifdef ENABLE_THREADS
 #define NTHREADS @NTHREADS@
 #endif
+#cmakedefine ENABLE_CUDA
 
 #cmakedefine SOPS_BOOST_SERIALIZATION
 

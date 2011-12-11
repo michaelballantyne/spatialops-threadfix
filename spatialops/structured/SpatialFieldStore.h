@@ -3,6 +3,7 @@
 
 #include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/structured/SpatialField.h>
+#include <spatialops/structured/ExternalAllocators.h>
 
 #include <queue>
 #include <map>

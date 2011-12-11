@@ -9,6 +9,7 @@ set( PATCH_VERSION "0" )
 option( ENABLE_BOOST_SERIALIZATION "allow serialization of information via the boost library" OFF )
 option( ENABLE_TESTS "Enable building of regression tests (recommended)" ON )
 option( ENABLE_THREADS "Enable multi-threaded support for stencil operations" OFF )
+option( ENABLE_CUDA   "Build Spatial Ops with CUDA support" OFF )
 
 set( NTHREADS 1 CACHE STRING "Number of threads to use if ENABLE_THREADS is ON" )
 
@@ -78,6 +79,12 @@ if( boost_comps )
   set( TPL_LIBRARIES ${TPL_LIBRARIES} ${Boost_LIBRARIES} )
   message( STATUS ${Boost_LIBRARIES} )
 endif( boost_comps )
+
+#-- CUDA
+if( ENABLE_CUDA )
+  message( STATUS "ExprLib will be compiled with CUDA Support" )
+  FIND_PACKAGE( CUDA REQUIRED )
+endif()
 
 #--------------------------------------
 

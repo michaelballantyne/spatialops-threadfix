@@ -19,6 +19,18 @@ add_subdirectory( stencil )
 
 set( SO_SRC ${SO_SRC} ${src} PARENT_SCOPE )
 
+if( ENABLE_CUDA )
+	if( CUDA_CUDA_LIBRARY )
+		include_directories( ${CUDA_INCLUDE_DIRS} )
+    	cuda_add_library( CUDAMemoryManager STATIC CudaMemoryAllocator.cu )
+  		target_link_libraries( CUDAMemoryManager ${CUDA_LIBRARIES} ${Boost_LIBRARIES} )
+		
+    	install( TARGETS CUDAMemoryManager EXPORT CudaMM DESTINATION lib/spatialops )
+    	install( EXPORT CudaMM DESTINATION lib/spatialops )
+    
+	endif( CUDA_CUDA_LIBRARY )
+endif( ENABLE_CUDA )
+
 install( FILES
   FVStaggeredBCTools.h
   FVStaggeredFieldTypes.h
@@ -26,6 +38,7 @@ install( FILES
   Grid.h
   IndexTriplet.h
   IntVec.h
+  ExternalAllocators.h
   MemoryWindow.h
   SpatialField.h
   SpatialFieldStore.h
