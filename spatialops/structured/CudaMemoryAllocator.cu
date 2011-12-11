@@ -271,14 +271,16 @@ CUDASharedPointer CUDADeviceInterface::get(unsigned long int N, int K) {
 
 /*---------------------------------------------------------------------*/
 
-void CUDADeviceInterface::copy_to(CUDASharedPointer& dest, void* src, size_t sz){
-  CudaMemcpy(dest.ptr_, src, sz, (*dest.deviceID_), cudaMemcpyHostToDevice );
+void CUDADeviceInterface::copy_to(CUDASharedPointer& dest, void* src,
+    size_t sz) {
+  CudaMemcpy(dest.ptr_, src, sz, (*dest.deviceID_), cudaMemcpyHostToDevice);
 }
 
 /*---------------------------------------------------------------------*/
 
-void CUDADeviceInterface::copy_from(void* dest, CUDASharedPointer& src, size_t sz){
-  CudaMemcpy(dest, src.ptr_, sz, (*src.deviceID_), cudaMemcpyDeviceToHost );
+void CUDADeviceInterface::copy_from(void* dest, CUDASharedPointer& src,
+    size_t sz) {
+  CudaMemcpy(dest, src.ptr_, sz, (*src.deviceID_), cudaMemcpyDeviceToHost);
 }
 
 /*---------------------------------------------------------------------*/
@@ -318,7 +320,6 @@ CUDASharedPointer::CUDASharedPointer(void* ptr, int K) :
 
 CUDASharedPointer::CUDASharedPointer(const CUDASharedPointer& x) :
     ptr_(NULL), refCount_(NULL), deviceID_(NULL) {
-  std::cout << "(const CUDASharedPointer& x) called\n";
   (*this) = x;
 }
 

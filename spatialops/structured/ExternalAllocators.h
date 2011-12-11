@@ -119,7 +119,7 @@ class CUDASharedPointer {
     int* deviceID_;  ///< Device ID this pointer is valid on
     int* refCount_;  ///< Number of shared pointers referencing this position
 
-    void* ptr_; ///< GPU memory pointe (valid ONLY on deviceID_)
+    void* ptr_; ///< GPU memory pointer (valid ONLY on deviceID_)
 };
 
 } // End Namespace 'ema::cuda'
