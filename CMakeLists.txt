@@ -92,6 +92,26 @@ if( CMAKE_BUILD_TYPE STREQUAL Release )
   message( STATUS "turning on aggressive optimizations" )
 endif( CMAKE_BUILD_TYPE STREQUAL Release )
 
+# look for git.  This is used to configure version information into the
+# executable and also to build upstream dependencies if necessary
+find_package( Git )
+if( GIT_FOUND )
+  execute_process(
+    COMMAND ${GIT_EXECUTABLE} log -1 "--pretty=format:\"%H\""
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    OUTPUT_VARIABLE SOPS_REPO_HASH 
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+  execute_process(
+    COMMAND ${GIT_EXECUTABLE} log -1 "--pretty=format:\"%cd\""
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    OUTPUT_VARIABLE SOPS_REPO_DATE 
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+else( GIT_FOUND )
+  set( SOPS_REPO_DATE "NOT FOUND" )
+  set( SOPS_REPO_HASH "NOT FOUND" )
+endif( GIT_FOUND )
 
 # build the configure file using the information defined here.
 configure_file(
