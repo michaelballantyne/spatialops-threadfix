@@ -39,6 +39,7 @@ install( FILES
   IndexTriplet.h
   IntVec.h
   ExternalAllocators.h
+  MemoryTypes.h
   MemoryWindow.h
   SpatialField.h
   SpatialFieldStore.h

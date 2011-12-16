@@ -448,5 +448,5 @@ CUDASharedPointer& CUDASharedPointer::detatch() {
   return *this;
 }
 
-} // End namespace - emaCUDA -
+} // End namespace - ema::cuda
 } // End namespace - ema

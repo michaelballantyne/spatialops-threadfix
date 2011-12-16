@@ -6,6 +6,7 @@
 
 #include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/structured/MemoryWindow.h>
+#include <spatialops/structured/MemoryTypes.h>
 
 #ifdef SOPS_BOOST_SERIALIZATION
 # include <boost/serialization/serialization.hpp>
@@ -22,12 +23,6 @@ namespace structured{
   {
     InternalStorage,
     ExternalStorage
-  };
-
-  enum MemoryType
-  {
-    Local,
-    ExternalGPU
   };
 
   /**
@@ -152,7 +147,7 @@ namespace structured{
     SpatialField( const MemoryWindow window,
                   T* const fieldValues,
                   const StorageMode mode = InternalStorage,
-                  const MemoryType mtype = Local,
+                  const MemoryType mtype = LOCAL_RAM,
                   const unsigned short int devIdx = 0 );
 
     /**
@@ -200,12 +195,12 @@ namespace structured{
     inline T& operator[]( const size_t i ) const;
 
     inline const_iterator begin() const{
-      if( memType_ != Local ) { throw; }
+      if( memType_ != LOCAL_RAM ) { throw; }
       return const_iterator(fieldValues_,fieldWindow_.flat_index(IntVec(0,0,0)),fieldWindow_);
     }
 
     inline       iterator begin()      {
-      if( memType_ != Local ) { throw; }
+      if( memType_ != LOCAL_RAM ) { throw; }
       return  iterator(fieldValues_,fieldWindow_.flat_index(IntVec(0,0,0)),fieldWindow_);
     }
 
@@ -213,11 +208,11 @@ namespace structured{
     inline       iterator end();
 
     inline const_interior_iterator interior_begin() const{
-      if( memType_ != Local ) { throw; }
+      if( memType_ != LOCAL_RAM ) { throw; }
       return const_interior_iterator(fieldValues_,interiorFieldWindow_.flat_index(IntVec(0,0,0)),interiorFieldWindow_);
     }
     inline       interior_iterator interior_begin() {
-      if( memType_ != Local ) { throw; }
+      if( memType_ != LOCAL_RAM ) { throw; }
       return       interior_iterator(fieldValues_,interiorFieldWindow_.flat_index(IntVec(0,0,0)),interiorFieldWindow_);
     }
 
@@ -244,11 +239,11 @@ namespace structured{
     bool operator==(const MyType&) const;
 
     const MemoryWindow& window_without_ghost() const{
-      if( memType_ != Local ) { throw; }
+      if( memType_ != LOCAL_RAM ) { throw; }
       return interiorFieldWindow_;
     }
     const MemoryWindow& window_with_ghost() const{
-      if( memType_ != Local ) { throw; }
+      if( memType_ != LOCAL_RAM ) { throw; }
       return fieldWindow_;
     }
 
@@ -271,7 +266,7 @@ namespace structured{
                 const unsigned short int devIdx )
     : fieldWindow_( window ),
       interiorFieldWindow_( window ), // reset with correct info later
-      fieldValues_( (mtype == Local )
+      fieldValues_( (mtype == LOCAL_RAM )
                     ? ( (mode==ExternalStorage)
                         ? fieldValues
                         : new T[ window.glob_dim(0) * window.glob_dim(1) * window.glob_dim(2) ] )
@@ -280,7 +275,7 @@ namespace structured{
       deviceIndex_(devIdx),
       memType_( mtype )
   {
-    if( mtype == Local ){
+    if( mtype == LOCAL_RAM ){
       IntVec ext = window.extent();
       IntVec ofs = window.offset();
       for( size_t i=0; i<3; ++i ){
@@ -317,11 +312,16 @@ namespace structured{
   ~SpatialField()
   {
     if( builtField_ ) {
-      if( memType_ = Local ){
-        delete [] fieldValues_;
-      } else if ( memType_ == ExternalGPU ){
-        //TODO
-        throw;
+      switch( memType_ ){
+        case LOCAL_RAM:
+            delete [] fieldValues_;
+          break;
+        case EXTERNAL_CUDA_GPU:
+            throw;
+          break;
+        default:
+
+          throw;
       }
     }
   }
@@ -333,7 +333,7 @@ namespace structured{
   SpatialField<FieldLocation,GhostTraits,T>::
   reset_values( const T* values )
   {
-    if( memType_ == Local ){
+    if( memType_ == LOCAL_RAM ){
       iterator ifld=begin();
       const iterator iflde=end();
       if( NULL == values ){
@@ -354,7 +354,7 @@ namespace structured{
   typename SpatialField<Location,GhostTraits,T>::const_iterator
   SpatialField<Location,GhostTraits,T>::end() const
   {
-    if( memType_ == Local ){
+    if( memType_ == LOCAL_RAM ){
       IntVec ijk = fieldWindow_.extent();
       for( size_t i=0; i<3; ++i ) ijk[i] -= 1;
       const size_t n = fieldWindow_.flat_index( ijk );
@@ -371,7 +371,7 @@ namespace structured{
   typename SpatialField<Location,GhostTraits,T>::iterator
   SpatialField<Location,GhostTraits,T>::end()
   {
-    if( memType_ == Local ){
+    if( memType_ == LOCAL_RAM ){
       IntVec ijk = fieldWindow_.extent();
       for( size_t i=0; i<3; ++i ) ijk[i] -= 1;
       const size_t n = fieldWindow_.flat_index( ijk );
@@ -388,7 +388,7 @@ namespace structured{
   typename SpatialField<Location,GhostTraits,T>::const_interior_iterator
   SpatialField<Location,GhostTraits,T>::interior_end() const
   {
-    if( memType_ == Local ){
+    if( memType_ == LOCAL_RAM ){
       IntVec ijk = interiorFieldWindow_.extent();
       for( size_t i=0; i<3; ++i ) ijk[i] -= 1;
       const_interior_iterator i( fieldValues_, interiorFieldWindow_.flat_index( ijk ), interiorFieldWindow_ );
@@ -404,7 +404,7 @@ namespace structured{
   typename SpatialField<Location,GhostTraits,T>::interior_iterator
   SpatialField<Location,GhostTraits,T>::interior_end()
   {
-    if( memType_ == Local ) {
+    if( memType_ == LOCAL_RAM ) {
       IntVec ijk = interiorFieldWindow_.extent();
       for( size_t i=0; i<3; ++i ) ijk[i] -= 1;
       interior_iterator i( fieldValues_, interiorFieldWindow_.flat_index( ijk ), interiorFieldWindow_ );
@@ -421,7 +421,7 @@ namespace structured{
   SpatialField<Location,GhostTraits,T>::
   operator()( const size_t i, const size_t j, const size_t k )
   {
-    if( memType_ == Local ){
+    if( memType_ == LOCAL_RAM ){
       return (*this)(IntVec(i,j,k));
     } else {
       throw;
@@ -433,7 +433,7 @@ namespace structured{
   SpatialField<Location,GhostTraits,T>::
   operator()( const IntVec& ijk )
   {
-    if( memType_ == Local ){
+    if( memType_ == LOCAL_RAM ){
   #   ifndef NDEBUG
       assert( ijk[0] < fieldWindow_.extent(0) );
       assert( ijk[1] < fieldWindow_.extent(1) );
@@ -455,7 +455,7 @@ namespace structured{
   SpatialField<Location,GhostTraits,T>::
   operator()( const size_t i, const size_t j, const size_t k ) const
   {
-    if( memType_ == Local ){
+    if( memType_ == LOCAL_RAM ){
       return (*this)(IntVec(i,j,k));
     } else {
       throw;
@@ -467,7 +467,7 @@ namespace structured{
   SpatialField<Location,GhostTraits,T>::
   operator()( const IntVec& ijk ) const
   {
-    if( memType_ == Local ){
+    if( memType_ == LOCAL_RAM ){
   #   ifndef NDEBUG
       assert( ijk[0] < fieldWindow_.extent(0) && ijk[0] >= fieldWindow_.offset(0) );
       assert( ijk[1] < fieldWindow_.extent(1) && ijk[1] >= fieldWindow_.offset(1) );
@@ -486,7 +486,7 @@ namespace structured{
   SpatialField<Location,GhostTraits,T>::
   operator[]( const size_t i )
   {
-    if( memType_ == Local ) {
+    if( memType_ == LOCAL_RAM ) {
       return fieldValues_[i];
     } else {
       throw;
@@ -500,7 +500,7 @@ namespace structured{
   SpatialField<Location,GhostTraits,T>::
   operator[]( const size_t i ) const
   {
-    if( memType_ == Local ){
+    if( memType_ == LOCAL_RAM ){
       return fieldValues_[i];
     } else {
       throw;
@@ -514,7 +514,7 @@ namespace structured{
   SpatialField<Location,GhostTraits,T>::
   operator=(const MyType& other )
   {
-    if( memType_ == Local ){
+    if( memType_ == LOCAL_RAM ){
       const_iterator iother=other.begin();
       const iterator iend=this->end();
       for( iterator ifld=this->begin(); ifld!=iend; ++ifld, ++iother ){
@@ -533,7 +533,7 @@ namespace structured{
   SpatialField<Location,GhostTraits,T>::
   operator+=(const MyType& other )
   {
-    if( memType_ == Local ){
+    if( memType_ == LOCAL_RAM ){
       const_iterator iother=other.begin();
       const iterator iend=this->end();
       for( iterator ifld=this->begin(); ifld!=iend; ++ifld, ++iother ){
@@ -552,7 +552,7 @@ namespace structured{
   SpatialField<Location,GhostTraits,T>::
   operator-=(const MyType& other )
   {
-    if( memType_ == Local ){
+    if( memType_ == LOCAL_RAM ){
       const_iterator iother=other.begin();
       const iterator iend=this->end();
       for( iterator ifld=this->begin(); ifld!=iend; ++ifld, ++iother ){
@@ -571,7 +571,7 @@ namespace structured{
   SpatialField<Location,GhostTraits,T>::
   operator*=(const MyType& other )
   {
-    if( memType_ == Local ) {
+    if( memType_ == LOCAL_RAM ) {
       const_iterator iother=other.begin();
       const iterator iend=this->end();
       for( iterator ifld=this->begin(); ifld!=iend; ++ifld, ++iother ){
@@ -590,7 +590,7 @@ namespace structured{
   SpatialField<Location,GhostTraits,T>::
   operator/=(const MyType& other )
   {
-    if( memType_ == Local ) {
+    if( memType_ == LOCAL_RAM ) {
       const_iterator iother=other.begin();
       const iterator iend=this->end();
       for( iterator ifld=this->begin(); ifld!=iend; ++ifld, ++iother ){
@@ -609,7 +609,7 @@ namespace structured{
   SpatialField<Location,GhostTraits,T>::
   operator!=(const MyType& other) const
   {
-    if( memType_ == Local ) {
+    if( memType_ == LOCAL_RAM ) {
       const_iterator iother=other.begin();
       const_iterator iend=this->end();
       for( const_iterator ifld=this->begin(); ifld!=iend; ++ifld, ++iother ){
@@ -628,7 +628,7 @@ namespace structured{
   SpatialField<Location,GhostTraits,T>::
   operator==(const MyType& other) const
   {
-    if( memType_ == Local ) {
+    if( memType_ == LOCAL_RAM ) {
       const_iterator iother=other.begin();
       const_iterator iend=this->end();
       for( const_iterator ifld=this->begin(); ifld!=iend; ++ifld, ++iother ){
@@ -647,7 +647,7 @@ namespace structured{
   SpatialField<Location,GhostTraits,T>::
   operator=(const T a)
   {
-    if( memType_ == Local ) {
+    if( memType_ == LOCAL_RAM ) {
       const iterator iend=this->end();
       for( iterator ifld=this->begin(); ifld!=iend; ++ifld ) *ifld = a;
       return *this;
@@ -663,7 +663,7 @@ namespace structured{
   SpatialField<Location,GhostTraits,T>::
   operator+=(const T a)
   {
-    if( memType_ == Local ) {
+    if( memType_ == LOCAL_RAM ) {
       const iterator iend=this->end();
       for( iterator ifld=this->begin(); ifld!=iend; ++ifld ) *ifld += a;
       return *this;
@@ -679,7 +679,7 @@ namespace structured{
   SpatialField<Location,GhostTraits,T>::
   operator-=(const T a)
   {
-    if( memType_ == Local ) {
+    if( memType_ == LOCAL_RAM ) {
       const iterator iend=this->end();
       for( iterator ifld=this->begin(); ifld!=iend; ++ifld ) *ifld -= a;
       return *this;
@@ -695,7 +695,7 @@ namespace structured{
   SpatialField<Location,GhostTraits,T>::
   operator*=(const T a)
   {
-    if( memType_ == Local ) {
+    if( memType_ == LOCAL_RAM ) {
       const iterator iend=this->end();
       for( iterator ifld=this->begin(); ifld!=iend; ++ifld ) *ifld *= a;
       return *this;
@@ -711,7 +711,7 @@ namespace structured{
   SpatialField<Location,GhostTraits,T>::
   operator/=(const T a)
   {
-    if( memType_ == Local ) {
+    if( memType_ == LOCAL_RAM ) {
       const iterator iend=this->end();
       for( iterator ifld=this->begin(); ifld!=iend; ++ifld ) *ifld /= a;
       return *this;
