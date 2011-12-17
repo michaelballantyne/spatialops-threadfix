@@ -1,4 +1,7 @@
 set( libs spatialops ${TPL_LIBRARIES} )
+if( ENABLE_CUDA )
+	set(libs ${libs} CUDAMemoryManager)
+endif( ENABLE_CUDA )
 
 add_executable( simple_field SimpleFieldTest.cpp )
 target_link_libraries( simple_field ${libs} )

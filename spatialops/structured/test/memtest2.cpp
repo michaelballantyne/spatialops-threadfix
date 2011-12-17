@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
 
       std::cout << "Testing pointer creation, allocating " << CMS.f
           << " bytes, on device " << device << "...";
-      p = CDI.get((CMS.f / 2), device);
+      p = CDI.get_shared_pointer((CMS.f / 2), device);
 
       if (p.get_refcount() != 1) {
         std::cout << " FAIL\n";

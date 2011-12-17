@@ -40,17 +40,32 @@ class CUDADeviceInterface {
     /** \brief Returns a pointer to the global CU device interface object **/
     static CUDADeviceInterface& self();
 
-    /** \brief attempts to allocate N bytes on device K */
-    CUDASharedPointer get(unsigned long int N, int K = 0);
+    /** \brief attempts to allocate N bytes on device K, returns the explicit memory pointer
+     * Note: This contains no context information.
+     * Note: The caller is responsible for memory cleanup of the returned pointer
+     * */
+    void* get_raw_pointer(unsigned long int N, unsigned int K = 0);
+
+    /** \brief attempts to allocate N bytes on device K, returns a CUDASharedPointer object
+     * that will free the allocated memory after all references have expired.
+     */
+    CUDASharedPointer get_shared_pointer(unsigned long int N, unsigned int K = 0);
 
     /** \brief attempts to free an allocated shared pointer object */
     void release(CUDASharedPointer& x);
+    /** \brief attempts to free the given pointer offset on device K **/
+    void release(void* x, unsigned int K = 0);
 
-    /** \brief copy a data block into a cuda pointer **/
-    void copy_to(CUDASharedPointer& dest, void* src, size_t sz);
+    /** \brief copy a data block to a device**/
+    void memcpy_to(void* dest, void* src, size_t sz, unsigned int deviceID);
+    void memcpy_to(CUDASharedPointer& dest, void* src, size_t sz);
 
-    /** \brief copy a data block from a cuda pointer **/
-    void copy_from(void* dest, CUDASharedPointer& src, size_t sz);
+    /** \brief copy a data block from a device **/
+    void memcpy_from(void* dest, void* src, size_t sz, unsigned int deviceID);
+    void memcpy_from(void* dest, CUDASharedPointer& src, size_t sz);
+
+    /** \brief cuda memset wrapper **/
+    void memset(void* dest, int val, size_t num, unsigned int deviceID);
 
     /** \brief Returns the number of available CUDA capable compute devices */
     int get_device_count() const;
@@ -71,9 +86,9 @@ class CUDADeviceInterface {
 
 };
 
-/** Not sure if were going to use this anymore as it duplicates
+/** dvn: Not sure if were going to use this anymore as it duplicates
  *SpatialFieldPtr functionality, but it may be handy to have for now.
-/* \brief Wrapper structure for a ref-counted GPU memory pointer */
+ * \brief Wrapper structure for a ref-counted GPU memory pointer */
 class CUDASharedPointer {
     friend class CUDADeviceInterface;
 

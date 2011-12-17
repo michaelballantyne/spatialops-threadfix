@@ -23,15 +23,15 @@ int main(int argc, char** argv) {
         std::cout << "Attempting allocation of size " << i << " bytes, on device " << device;
         std::cout << "\n\t Free memory: " << CMS.f << " / " << CMS.t << std::endl;
 
-        p = CDI.get(i, 0);
+        p = CDI.get_shared_pointer(i, 0);
         char* bytesin = (char*)malloc(sizeof(char)*i);
         char* bytesout = (char*)malloc(sizeof(char)*i);
 
         bzero(bytesin, i);
         bzero(bytesout, i);
         std::cout << "Checking zeros read/write... ";
-        CDI.copy_to(p, (void*)bytesin, i);
-        CDI.copy_from((void*)bytesout, p, i);
+        CDI.memcpy_to(p, (void*)bytesin, i);
+        CDI.memcpy_from((void*)bytesout, p, i);
 
         if( memcmp(bytesin, bytesout, i) ){
            std::cout << "failed -> Zero byte pattern does do not match\n";
@@ -43,8 +43,8 @@ int main(int argc, char** argv) {
         memset(bytesin, 1, i);
         bzero(bytesout, i);
         std::cout << "Checking ones read/write... ";
-        CDI.copy_to(p, (void*)bytesin, i);
-        CDI.copy_from((void*)bytesout, p, i);
+        CDI.memcpy_to(p, (void*)bytesin, i);
+        CDI.memcpy_from((void*)bytesout, p, i);
 
         if( memcmp(bytesin, bytesout, i) ){
            std::cout << "failed -> Ones byte pattern does not match\n";
@@ -59,8 +59,8 @@ int main(int argc, char** argv) {
         }
         bzero(bytesout, i);
         std::cout << "Checking random read/write... ";
-        CDI.copy_to(p, (void*)bytesin, i);
-        CDI.copy_from((void*)bytesout, p, i);
+        CDI.memcpy_to(p, (void*)bytesin, i);
+        CDI.memcpy_from((void*)bytesout, p, i);
 
         if( memcmp(bytesin, bytesout, i) ){
            std::cout << "failed -> Random byte pattern does not match\n";

@@ -1,4 +1,7 @@
 set( libs spatialops-structured spatialops ${TPL_LIBRARIES} )
+if( ENABLE_CUDA )
+	set(libs ${libs} CUDAMemoryManager)
+endif( ENABLE_CUDA )
 
 include_directories( ${spatialops_SOURCE_DIR}/include . )
 

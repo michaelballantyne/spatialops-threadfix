@@ -1,7 +1,9 @@
 add_executable( heateqn main.cpp )
-target_link_libraries( heateqn
-  ${TPL_LIBRARIES}
-  spatialops
-  )
+set( libs ${TPL_LIBRARIES} spatialops )
+if( ENABLE_CUDA )
+	set(libs ${libs} CUDAMemoryManager)
+endif( ENABLE_CUDA )
+
+target_link_libraries( heateqn ${libs} )
 
 add_test( heateqn heateqn )

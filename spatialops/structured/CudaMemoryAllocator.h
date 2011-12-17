@@ -47,9 +47,9 @@ namespace cuda {
 
 /**---- CUDA wrappers with error processing */
 void CudaSetDevice(int device);
-void CudaMalloc(void** src, size_t sz, int device);
-void CudaFree(void* src, int device);
-void CudaMemcpy(void* src, void* dest, int device, size_t sz, cudaMemcpyKind cmkk);
+void CudaMalloc(void** src, size_t sz, unsigned int device);
+void CudaFree(void* src, unsigned int device);
+void CudaMemcpy(void* src, void* dest, unsigned int device, size_t sz, cudaMemcpyKind cmkk);
 
 /** \brief Device management structure for all GPU devices */
 class CUDADeviceManager {

@@ -12,7 +12,7 @@
 namespace ema {
 namespace cuda {
 
-void CudaSetDevice(int device) {
+void CudaSetDevice(unsigned int device) {
 #ifdef DEBUG_EXT_ALLOC_CUDA_DEVICE_MNGR
   std::cout << "CudaSetdevice wrapper called, setting thread device as: " << device << std::endl;
 #endif
@@ -27,7 +27,7 @@ void CudaSetDevice(int device) {
   }
 }
 
-void CudaMalloc(void** src, size_t sz, int device) {
+void CudaMalloc(void** src, size_t sz, unsigned int device) {
 #ifdef  DEBUG_EXT_ALLOC_MEM
   std::cout << "CudaMalloc wrapper called (src,size,device)-> (";
   std::cout << src << "," << sz << "," << device << ")" << std::endl;
@@ -50,7 +50,7 @@ void CudaMalloc(void** src, size_t sz, int device) {
 
 /*---------------------------------------------------------------------*/
 
-void CudaFree(void* src, int device) {
+void CudaFree(void* src, unsigned int device) {
 #ifdef  DEBUG_EXT_ALLOC_MEM
   std::cout << "CudaFree wrapper called (void** src, int device) ->";
   std::cout << "(" << src << "," << device << ")\n";
@@ -69,7 +69,7 @@ void CudaFree(void* src, int device) {
 
 /*---------------------------------------------------------------------*/
 
-void CudaMemcpy(void* dest, void* src, size_t sz, int device,
+void CudaMemcpy(void* dest, void* src, size_t sz, unsigned int device,
     cudaMemcpyKind cmkk) {
 #ifdef  DEBUG_EXT_ALLOC_MEM
   std::cout << "CudaMemcpy wrapper called (src,dest,size,device,type)-> (";
@@ -79,6 +79,28 @@ void CudaMemcpy(void* dest, void* src, size_t sz, int device,
 
   CudaSetDevice(device);
   if (cudaSuccess != (err = cudaMemcpy(dest, src, sz, cmkk))) {
+    std::ostringstream msg;
+    msg << "Memcopy failed, at" << __FILE__ << " : " << __LINE__ << std::endl;
+    msg << "\t - " << cudaGetErrorString(err);
+    throw(std::runtime_error(msg.str()));
+  }
+
+#ifdef  DEBUG_EXT_ALLOC_MEM
+  std::cout << "CudaMemcpy wrapper exiting\n";
+#endif
+}
+
+/*---------------------------------------------------------------------*/
+
+void CudaMemset(void* dest, int value, size_t sz, unsigned int device ) {
+#ifdef  DEBUG_EXT_ALLOC_MEM
+  std::cout << "CudaMemset wrapper called (src, value, size, device)-> (";
+  std::cout << src << "," << value << "," << sz << "," << device << "," << std::endl;
+#endif
+  cudaError err;
+
+  CudaSetDevice(device);
+  if (cudaSuccess != (err = cudaMemset(dest, value, sz))) {
     std::ostringstream msg;
     msg << "Memcopy failed, at" << __FILE__ << " : " << __LINE__ << std::endl;
     msg << "\t - " << cudaGetErrorString(err);
@@ -250,13 +272,14 @@ void CUDADeviceInterface::print_device_info() const {
 
 /*---------------------------------------------------------------------*/
 
-CUDASharedPointer CUDADeviceInterface::get(unsigned long int N, int K) {
+CUDASharedPointer CUDADeviceInterface::get_shared_pointer(unsigned long int N,
+    unsigned int K) {
   void* x;
 
 #ifdef  DEBUG_EXT_ALLOC_MEM
-  std::cout << "CUDADeviceInterface::get -> Allocating new shared pointer, " << N << " bytes on device " << K << std::endl;
+  std::cout << "CUDADeviceInterface::get_shared_pointer -> Allocating new shared pointer, " << N << " bytes on device " << K << std::endl;
 #endif
-  if (K < 0 || K > CUDADeviceManager::self().device_count) {
+  if ( K > CUDADeviceManager::self().device_count) {
     std::ostringstream msg;
     msg << "CudaMalloc failed, at " << __FILE__ << " : " << __LINE__
         << std::endl;
@@ -271,22 +294,70 @@ CUDASharedPointer CUDADeviceInterface::get(unsigned long int N, int K) {
 
 /*---------------------------------------------------------------------*/
 
-void CUDADeviceInterface::copy_to(CUDASharedPointer& dest, void* src,
+void* CUDADeviceInterface::get_raw_pointer(unsigned long int N,
+    unsigned int K) {
+  void* x;
+
+#ifdef  DEBUG_EXT_ALLOC_MEM
+  std::cout << "CUDADeviceInterface::get_raw_pointer -> Allocating new raw pointer, " << N << " bytes on device " << K << std::endl;
+#endif
+  if ( K > CUDADeviceManager::self().device_count) {
+    std::ostringstream msg;
+    msg << "CudaMalloc failed, at " << __FILE__ << " : " << __LINE__
+        << std::endl;
+    msg << "\t - Invalid device index '" << K << "'";
+    throw(std::range_error(msg.str()));
+  }
+
+  CudaMalloc(&x, N, K);
+
+  return x;
+}
+
+/*---------------------------------------------------------------------*/
+
+void CUDADeviceInterface::memcpy_to(CUDASharedPointer& dest, void* src,
     size_t sz) {
   CudaMemcpy(dest.ptr_, src, sz, (*dest.deviceID_), cudaMemcpyHostToDevice);
 }
 
 /*---------------------------------------------------------------------*/
 
-void CUDADeviceInterface::copy_from(void* dest, CUDASharedPointer& src,
+void CUDADeviceInterface::memcpy_to(void* dest, void* src, size_t sz,
+    unsigned int deviceID) {
+  CudaMemcpy(dest, src, sz, deviceID, cudaMemcpyHostToDevice);
+}
+
+/*---------------------------------------------------------------------*/
+
+void CUDADeviceInterface::memcpy_from(void* dest, CUDASharedPointer& src,
     size_t sz) {
   CudaMemcpy(dest, src.ptr_, sz, (*src.deviceID_), cudaMemcpyDeviceToHost);
 }
 
 /*---------------------------------------------------------------------*/
 
+void CUDADeviceInterface::memcpy_from(void* dest, void* src, size_t sz,
+    unsigned int deviceID) {
+  CudaMemcpy(dest, src, sz, deviceID, cudaMemcpyDeviceToHost);
+}
+
+/*---------------------------------------------------------------------*/
+
+void CUDADeviceInterface::memset(void* dest, int value, size_t sz, unsigned int deviceID){
+  CudaMemset(dest, value, sz, deviceID);
+}
+
+/*---------------------------------------------------------------------*/
+
 void CUDADeviceInterface::release(CUDASharedPointer& x) {
   x.detatch();
+}
+
+/*---------------------------------------------------------------------*/
+
+void CUDADeviceInterface::release(void* x, unsigned int deviceID) {
+  CudaFree(x, deviceID);
 }
 
 /******************* CUDASharedPointer Implementation *********************/
