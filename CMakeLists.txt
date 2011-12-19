@@ -109,8 +109,8 @@ if( GIT_FOUND )
     OUTPUT_STRIP_TRAILING_WHITESPACE
     )
 else( GIT_FOUND )
-  set( SOPS_REPO_DATE "NOT FOUND" )
-  set( SOPS_REPO_HASH "NOT FOUND" )
+  set( SOPS_REPO_DATE "\"NOT FOUND\"" )
+  set( SOPS_REPO_HASH "\"NOT FOUND\"" )
 endif( GIT_FOUND )
 
 # build the configure file using the information defined here.
