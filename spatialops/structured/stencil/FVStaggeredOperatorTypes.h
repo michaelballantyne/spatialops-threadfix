@@ -6,6 +6,7 @@
 #include <spatialops/structured/stencil/Stencil2.h>
 #include <spatialops/structured/stencil/NullStencil.h>
 #include <spatialops/structured/stencil/Stencil4.h>
+#include <spatialops/structured/stencil/BoxFilter.h>
 
 namespace SpatialOps{
 namespace structured{
@@ -30,9 +31,9 @@ namespace structured{
    *
    *  \par Example Usage
    *  \code
-   *  typedef OperatorTypeBuilder<Interpolant,SVolField,XVolField>::type InterpSVolXVol;
-   *  typedef OperatorTypeBuilder<Divergence,XSurfYField,XVolField>::type DivX;
-   *  typedef OperatorTypeBuilder<Gradient,VolT,FaceTypes<VolT>::XFace>::type GradX;
+   *  typedef OperatorTypeBuilder<Interpolant,SVolField,  XVolField             >::type InterpSVolXVol;
+   *  typedef OperatorTypeBuilder<Divergence, XSurfYField,XVolField             >::type DivX;
+   *  typedef OperatorTypeBuilder<Gradient,   VolT,       FaceTypes<VolT>::XFace>::type GradX;
    *  \endcode
    *
    *  Note that we only provide fully specialized versions of this template
@@ -180,6 +181,13 @@ namespace structured{
 
   OP_BUILDER( Stencil4, Interpolant, SVolField, ZSurfXField )
   OP_BUILDER( Stencil4, Interpolant, SVolField, ZSurfYField )
+
+  // Filter operators
+  template<> struct OperatorTypeBuilder<Filter,SVolField,SVolField>{ typedef BoxFilter<SVolField> type; };
+  template<> struct OperatorTypeBuilder<Filter,XVolField,XVolField>{ typedef BoxFilter<XVolField> type; };
+  template<> struct OperatorTypeBuilder<Filter,YVolField,YVolField>{ typedef BoxFilter<YVolField> type; };
+  template<> struct OperatorTypeBuilder<Filter,ZVolField,ZVolField>{ typedef BoxFilter<ZVolField> type; };
+
 
 } // namespace SpatialOps
 } // namespace structured
