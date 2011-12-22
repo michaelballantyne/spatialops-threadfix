@@ -60,7 +60,7 @@ void CudaFree(void* src, unsigned int device) {
   CudaSetDevice(device);
   if (cudaSuccess != (err = cudaFree(src))) {
     std::ostringstream msg;
-    msg << "CudaMalloc failed, at " << __FILE__ << " : " << __LINE__
+    msg << "CudaFree failed, at " << __FILE__ << " : " << __LINE__
         << std::endl;
     msg << "\t - " << cudaGetErrorString(err);
     throw(std::runtime_error(msg.str()));
@@ -358,7 +358,7 @@ void CUDADeviceInterface::memset(CUDASharedPointer& dest, int value,
 /*---------------------------------------------------------------------*/
 
 void CUDADeviceInterface::release(CUDASharedPointer& x) {
-  x.detatch();
+  x.detach();
 }
 
 /*---------------------------------------------------------------------*/
@@ -372,7 +372,7 @@ CUDASharedPointer::~CUDASharedPointer() {
 #ifdef DEBUG_EXT_CUDA_SHARED_PTR
   std::cout << "CUDASharedPointer::~CUDASharedPointer called\n\n";
 #endif
-  detatch();
+  detach();
 }
 
 /*---------------------------------------------------------------------*/
@@ -520,7 +520,7 @@ int CUDASharedPointer::get_deviceID() const {
 }
 /*---------------------------------------------------------------------*/
 
-CUDASharedPointer& CUDASharedPointer::detatch() {
+CUDASharedPointer& CUDASharedPointer::detach() {
   (*this) = ((void*) NULL);
 
   return *this;

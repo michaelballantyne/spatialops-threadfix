@@ -869,7 +869,8 @@ SpatialField<Location, GhostTraits, T>::operator/=(const MyType& other) {
 //------------------------------------------------------------------
 
 template<typename Location, typename GhostTraits, typename T>
-bool SpatialField<Location, GhostTraits, T>::operator!=(const MyType& other) const {
+bool SpatialField<Location, GhostTraits, T>::operator!=(
+    const MyType& other) const {
   return !(*this == other);
 }
 

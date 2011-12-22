@@ -38,7 +38,6 @@ int main(int argc, char** argv) {
     return -1;
   }
 
-  std::cout << std::endl;
   try {
     std::cout << "Checking proper value initialization: ";
     PointField p(window, T1, InternalStorage, EXTERNAL_CUDA_GPU, 0);
@@ -54,10 +53,9 @@ int main(int argc, char** argv) {
     return -1;
   }
 
-  std::cout << std::endl;
-
   try {
-    std::cout << "Attempting to construct field with invalid memory count: ";
+    std::cout
+        << "Attempting to construct field with invalid memory count ( This shouldn't work ): ";
     // try to allocate more points then we have available memory for.
     CDI.update_memory_statistics();
     CUDAMemStats CMS;
@@ -69,23 +67,21 @@ int main(int argc, char** argv) {
     std::cout << "FAIL\n";
     return -1;
   } catch (std::runtime_error e) {
-    std::cout << "PASS\n" << e.what() << std::endl;
+    std::cout << "PASS\n";
   }
 
-  std::cout << std::endl;
   try {
     std::cout
-        << "Attempting to construct field with invalid field memory type: ";
+        << "Attempting to construct field with invalid field memory type ( this shouldn't work ): ";
     PointField fail(npts, T1, InternalStorage, DEBUG_TEST_OPT, 0);
     std::cout << "FAIL\n";
     return -1;
   } catch (std::runtime_error e) {
-    std::cout << "PASS\n" << e.what() << std::endl;
+    std::cout << "PASS\n";
   }
 
   /** Check assignment and comparison operations **/
 
-  std::cout << std::endl;
   try {
     PointField p(window, T1, InternalStorage, EXTERNAL_CUDA_GPU, 0);
     PointField q(window, T1, InternalStorage, LOCAL_RAM, 0);
@@ -123,9 +119,42 @@ int main(int argc, char** argv) {
     std::cout << "PASS\n";
   } catch (std::runtime_error e) {
     std::cout << "FAIL\n";
+    return -1;
+  }
+
+  try {
+    std::cout << "Checking SpatialFieldPointer creation: ";
+    PointField q(window, T1, InternalStorage, LOCAL_RAM, 0);
+    //SpatFldPtr<PointField> p = SpatialFieldStore<PointField>::self().get(window);
+    //SpatFldPtr<PointField> r = SpatialFieldStore<PointField>::self().get(q);
+    SpatFldPtr<PointField> t = SpatialFieldStore<PointField>::self().get(window, EXTERNAL_CUDA_GPU, 0);
+
+    //p.detach();
+    //r.detach();
+    t.detach();
+    std::cout << "PASS\n";
+  } catch ( std::runtime_error e) {
+    std::cout << "FAIL\n";
     std::cout << e.what() << std::endl;
     return -1;
   }
 
+  try {
+    std::cout << "Checking proper failure conditions ( bad device type ): ";
+    SpatFldPtr<PointField> t = SpatialFieldStore<PointField>::self().get(window, DEBUG_TEST_OPT, 0);
+    std::cout << "FAIL\n";
+    return -1;
+  } catch ( std::runtime_error e){
+    std::cout << "PASS\n";
+  }
+
+  try {
+    std::cout << "Checking proper failure conditions ( bad device index ): ";
+    SpatFldPtr<PointField> t = SpatialFieldStore<PointField>::self().get(window, EXTERNAL_CUDA_GPU, 75);
+    std::cout << "FAIL\n";
+    return -1;
+  } catch ( std::runtime_error e){
+    std::cout << "PASS\n";
+  }
   std::cout << std::endl << "All tests passed: Success\n";
 }

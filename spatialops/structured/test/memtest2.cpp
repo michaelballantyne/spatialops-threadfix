@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
       std::cout << " PASS\n";
 
       std::cout << "Testing pointer detach and reassignment...";
-      q.detatch();
+      q.detach();
 
       if (p.get_refcount() != 1) {
         std::cout << " FAIL\n";

@@ -117,7 +117,7 @@ namespace cuda { //ema::cuda
     /** \brief detaches the pointer from what it references, setting it to NULL, returns
      * the NULL pointer
      * **/
-    CUDASharedPointer& detatch();
+    CUDASharedPointer& detach();
 
     /** \brief dereference operators, return the location pointed to by location_ **/
     void* operator->();
