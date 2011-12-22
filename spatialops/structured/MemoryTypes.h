@@ -19,6 +19,7 @@ namespace SpatialOps{
      EXTERNAL_CUDA_GPU,   ///< Externally allocated memory: NVIDIA device via CUDA.
      EXTERNAL_OPENCL_GPU, ///< Future use, externally allocated memory: Generic GPU device via OpenCL.
      EXTERNAL_INTEL_MIK,  ///< Future use, externally allocated memory: Intel MIK chip
+     DEBUG_TEST_OPT,      ///< used for testing error conditions related to MemoryType
      UNKNOWN              ///< error state
    };
 

@@ -82,7 +82,7 @@ endif( boost_comps )
 
 #-- CUDA
 if( ENABLE_CUDA )
-  message( STATUS "ExprLib will be compiled with CUDA Support" )
+  message( STATUS "SpatialOps will be compiled with CUDA Support" )
   FIND_PACKAGE( CUDA REQUIRED )
 endif()
 

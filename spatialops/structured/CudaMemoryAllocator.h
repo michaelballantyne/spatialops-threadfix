@@ -37,9 +37,10 @@
 #define byte char;
 
 #ifdef DEBUG_CUDA_VERBOSE
-  #define DEBUG_EXT_ALLOC_CUDA_DEVICE_MNGR
-  #define DEBUG_EXT_ALLOC_MEM
-  #define DEBUG_EXT_CUDA_SHARED_PTR
+#define DEBUG_EXT_ALLOC_CUDA_DEVICE_MNGR
+#define DEBUG_EXT_ALLOC_MEM
+#define DEBUG_EXT_CUDA_SHARED_PTR
+#define DEBUG_EXT_SET_MEM
 #endif
 
 namespace ema {
@@ -49,7 +50,8 @@ namespace cuda {
 void CudaSetDevice(int device);
 void CudaMalloc(void** src, size_t sz, unsigned int device);
 void CudaFree(void* src, unsigned int device);
-void CudaMemcpy(void* src, void* dest, unsigned int device, size_t sz, cudaMemcpyKind cmkk);
+void CudaMemcpy(void* src, void* dest, unsigned int device, size_t sz,
+    cudaMemcpyKind cmkk);
 
 /** \brief Device management structure for all GPU devices */
 class CUDADeviceManager {

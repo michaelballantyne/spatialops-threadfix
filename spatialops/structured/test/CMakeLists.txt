@@ -34,11 +34,11 @@ endmacro()
 
 if( CUDA_CUDA_LIBRARY )
   include_directories( ${CUDA_INCLUDE_DIRS} )
-  cuda_add_library( CudaVecLib STATIC CudaVecLib.cu )
-  target_link_libraries( CudaVecLib ${CUDA_LIBRARIES} )
+  cuda_add_library( cudaVecLib STATIC cudaVecLib.cu )
+  target_link_libraries( cudaVecLib ${CUDA_LIBRARIES} )
 
   add_executable( ctest ctest.cpp )
-  set( driver_link_libs CudaVecLib ${CUDA_LIBRARIES} )
+  set( driver_link_libs cudaVecLib ${CUDA_LIBRARIES} )
   target_link_libraries( ctest ${driver_link_libs} )
   
   set( cxxtemp ${CMAKE_CXX_FLAGS} )
@@ -52,11 +52,15 @@ if( CUDA_CUDA_LIBRARY )
   
   add_executable( sharedmemtest memtest2.cpp )
   target_link_libraries( sharedmemtest CUDAMemoryManager )
+  
+  add_executable( extfieldtest testExternalField.cpp )
+  target_link_libraries( extfieldtest ${libs} )
 
   build_test( CompileTest ctest "Success" )
   build_test( MemoryDebugFlags debug_memtest_flags "Success" )
   build_test( MemoryTest simplememtest "Success" )
   build_test( SharedMemoryTest sharedmemtest "Success" )
+  build_test( ExternalFieldTest extfieldtest "Success" )
 else()
   message( STATUS "Must include CUDA libraries to build cuda test base" )
 endif()

@@ -159,6 +159,7 @@ class SpatialField {
      *  \brief Given the index for this field 0-based including
      *  ghosts, obtain a reference to the field value.
      *  WARNING: slow!
+     *  NOTE: USEAGE IS DEPRECIATED!! Not supported for external field types.
      */
     T& operator()(const size_t i, const size_t j, const size_t k);
 
@@ -166,6 +167,7 @@ class SpatialField {
      *  \brief Given the index for this field 0-based including
      *  ghosts, obtain a const reference to the field value.
      *  WARNING: slow!
+     *  NOTE: USAGE IS DEPRECIATED!! Not supported for external field types
      */
     const T& operator()(const size_t i, const size_t j, const size_t k) const;
 
@@ -173,6 +175,7 @@ class SpatialField {
      *  \brief Given the index for this field 0-based including
      *  ghosts, obtain a reference to the field value.
      *  WARNING: slow!
+     *  NOTE: USAGE IS DEPRECIATED!! Not supported for external field types
      */
     T& operator()(const IntVec& ijk);
 
@@ -180,6 +183,7 @@ class SpatialField {
      *  \brief Given the index for this field 0-based including
      *  ghosts, obtain a const reference to the field value.
      *  WARNING: slow!
+     *  NOTE: USAGE IS DEPRECIATED!! Not supported for external field types
      */
     const T& operator()(const IntVec& ijk) const;
 
@@ -187,10 +191,16 @@ class SpatialField {
      *  Index into this field (global index, 0-based in ghost cells).
      *  Note that if this field is windowed, this is still the global
      *  (not windowed) flat index.
+     *  NOTE: USAGE IS DEPRECIATED!! Not supported for external field types
      */
     inline T& operator[](const size_t i);
     inline T& operator[](const size_t i) const;
 
+    /**
+     * \brief Iterator constructs for traversing memory windows.
+     * Note: Iteration is not directly supported for external field types.
+     * @return
+     */
     inline const_iterator begin() const {
       if (memType_ != LOCAL_RAM) {
         throw;
@@ -230,6 +240,13 @@ class SpatialField {
     inline const_interior_iterator interior_end() const;
     inline interior_iterator interior_end();
 
+    /**
+     * \brief Unary field operators
+     * NOTE: USAGE IS DEPRECIATED!! Not supported for external field types
+     * Future usage should utilize '<<=' syntax.
+     * @param
+     * @return
+     */
     inline MyType& operator =(const MyType&);
     inline MyType& operator+=(const MyType&);
     inline MyType& operator-=(const MyType&);
@@ -250,23 +267,22 @@ class SpatialField {
     bool operator==(const MyType&) const;
 
     const MemoryWindow& window_without_ghost() const {
-      if (memType_ != LOCAL_RAM) {
-        throw;
-      }
       return interiorFieldWindow_;
     }
     const MemoryWindow& window_with_ghost() const {
-      if (memType_ != LOCAL_RAM) {
-        throw;
-      }
       return fieldWindow_;
     }
 
     MemoryType memory_device_type() const {
       return memType_;
     }
+
     unsigned short int device_index() const {
       return deviceIndex_;
+    }
+
+    void* get_ext_pointer() const {
+      return fieldValuesExtDevice_;
     }
 };
 
@@ -300,6 +316,9 @@ SpatialField<Location, GhostTraits, T>::SpatialField(const MemoryWindow window,
       ofs[i] += GhostTraits::NGHOST;
     }
   }
+  //Determine raw byte count to allocate on our GPU and allocate.
+  allocatedBytes_ = sizeof(T)
+      * (window.glob_dim(0) * window.glob_dim(1) * window.glob_dim(2));
   interiorFieldWindow_ = MemoryWindow(window.glob_dim(), ofs, ext,
       window.has_bc(0), window.has_bc(1), window.has_bc(2));
 
@@ -310,8 +329,6 @@ SpatialField<Location, GhostTraits, T>::SpatialField(const MemoryWindow window,
       break;
 #ifdef ENABLE_CUDA
       case EXTERNAL_CUDA_GPU: {
-        allocatedBytes_ = sizeof(T)*(window.glob_dim(0) * window.glob_dim(1)
-            * window.glob_dim(2));
         ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
         fieldValues_ = NULL;
         fieldValuesExtDevice_ = CDI.get_raw_pointer( allocatedBytes_, deviceIndex_ );
@@ -320,7 +337,7 @@ SpatialField<Location, GhostTraits, T>::SpatialField(const MemoryWindow window,
 #endif
     default: {
       std::ostringstream msg;
-      msg << "Attempt to create ( "
+      msg << "Unsupported attempt to create ( "
           << DeviceTypeTools::get_memory_type_description(memType_)
           << " ) field type\n";
       msg << "\t " << __FILE__ << " : " << __LINE__;
@@ -363,7 +380,7 @@ SpatialField<Location, GhostTraits, T>::~SpatialField() {
         std::ostringstream msg;
         msg << "Attempt to release ( "
             << DeviceTypeTools::get_memory_type_description(memType_)
-            << " ) field without supporting libraries\n";
+            << " ) field type, without supporting libraries\n";
         msg << "\t " << __FILE__ << " : " << __LINE__;
     }
   }
@@ -402,7 +419,7 @@ void SpatialField<FieldLocation, GhostTraits, T>::reset_values(
 #endif
     default:
       std::ostringstream msg;
-      msg << "reset_values called for unsupported field type ( "
+      msg << "Reset values called for unsupported field type ( "
           << DeviceTypeTools::get_memory_type_description(memType_) << " )";
       msg << "\t " << __FILE__ << " : " << __LINE__;
       throw(std::runtime_error(msg.str()));
@@ -427,7 +444,7 @@ typename SpatialField<Location, GhostTraits, T>::const_iterator SpatialField<
       break;
     default:
       std::ostringstream msg;
-      msg << "Unsupported request for iterator to external field type ( "
+      msg << "Unsupported request for iterator to field type ( "
           << DeviceTypeTools::get_memory_type_description(memType_) << " )";
       msg << "\t " << __FILE__ << " : " << __LINE__;
       throw(std::runtime_error(msg.str()));
@@ -627,18 +644,73 @@ SpatialField<Location, GhostTraits, T>&
 SpatialField<Location, GhostTraits, T>::operator=(const MyType& other) {
   switch (memType_) {
     case LOCAL_RAM: {
-      const_iterator iother = other.begin();
-      const iterator iend = this->end();
-      for (iterator ifld = this->begin(); ifld != iend; ++ifld, ++iother) {
-        *ifld = *iother;
+      switch (other.memory_device_type()) {
+        case LOCAL_RAM: { // LOCAL_RAM = LOCAL_RAM
+          const_iterator iother = other.begin();
+          const iterator iend = this->end();
+          for (iterator ifld = this->begin(); ifld != iend; ++ifld, ++iother) {
+            *ifld = *iother;
+          }
+        }
+          break;
+#ifdef ENABLE_CUDA
+          case EXTERNAL_CUDA_GPU: { //LOCAL_RAM = EXTERNAL_CUDA_GPU
+            if( allocatedBytes_ != other.allocatedBytes_ ) {
+              throw( std::runtime_error( "Attempted assignment between fields of unequal size." ) );
+            }
+            ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
+            CDI.memcpy_from( fieldValues_, other.fieldValuesExtDevice_, allocatedBytes_, other.deviceIndex_ );
+            break;
+          }
+#endif
+        default:
+          std::ostringstream msg;
+          msg << "Attempted unsupported copy operation, at " << __FILE__
+              << " : " << __LINE__ << std::endl;
+          msg << "\t -"
+              << DeviceTypeTools::get_memory_type_description(memType_) << " = "
+              << DeviceTypeTools::get_memory_type_description(
+                  other.memory_device_type());
+          throw(std::runtime_error(msg.str()));
+          break;
       }
       return *this;
     }
       break;
+#ifdef ENABLE_CUDA
+      case EXTERNAL_CUDA_GPU: {
+        switch( other.memory_device_type() ) {
+          case LOCAL_RAM: {
+            if( allocatedBytes_ != other.allocatedBytes_ ) {
+              throw( std::runtime_error( "Attempted assignment between fields of unequal size." ) );
+            }
+            ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
+            CDI.memcpy_to( fieldValuesExtDevice_, other.fieldValues_, allocatedBytes_, deviceIndex_ );
+          }
+          break;
+          default:
+          std::ostringstream msg;
+          msg << "Attempted unsupported copy operation, at " << __FILE__ << " : " << __LINE__ << std::endl;
+          msg << "\t -" << DeviceTypeTools::get_memory_type_description(memType_) << " = "
+          << DeviceTypeTools::get_memory_type_description(other.memory_device_type());
+          throw( std::runtime_error ( msg.str() ));
+          break;
+        } // end internal switch
+
+        break;
+      }
+#endif
     default:
-      throw;
+      std::ostringstream msg;
+      msg << "Attempted unsupported copy operation, at " << __FILE__ << " : "
+          << __LINE__ << std::endl;
+      msg << "\t -" << DeviceTypeTools::get_memory_type_description(memType_)
+          << " = "
+          << DeviceTypeTools::get_memory_type_description(
+              other.memory_device_type());
+      throw(std::runtime_error(msg.str()));
       break;
-  }
+  } // end outer switch
 }
 
 //------------------------------------------------------------------
@@ -724,18 +796,120 @@ bool SpatialField<Location, GhostTraits, T>::operator==(
     const MyType& other) const {
   switch (memType_) {
     case LOCAL_RAM: {
-      const_iterator iother = other.begin();
-      const_iterator iend = this->end();
-      for (const_iterator ifld = this->begin(); ifld != iend;
-          ++ifld, ++iother) {
-        if (*ifld != *iother)
-          return false;
-      }
-      return true;
+      switch (other.memory_device_type()) {
+        case LOCAL_RAM: {
+          const_iterator iother = other.begin();
+          const_iterator iend = this->end();
+          for (const_iterator ifld = this->begin(); ifld != iend;
+              ++ifld, ++iother) {
+            if (*ifld != *iother)
+              return false;
+          }
+          return true;
+        }
+          break;
+#ifdef ENABLE_CUDA
+          case EXTERNAL_CUDA_GPU: {
+            // Comparing LOCAL_RAM == EXTERNAL_CUDA_GPU
+            // Note: we will pay a copy penalty when comparing local and external field objects
+            if( allocatedBytes_ != other.allocatedBytes_ ) {
+              throw( std::runtime_error( "Attempted comparison between fields of unequal size." ) );
+            }
+            void* temp = (void*)malloc(allocatedBytes_);
+            ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
+            CDI.memcpy_from( temp, other.fieldValuesExtDevice_, allocatedBytes_, other.deviceIndex_ );
+
+            if( memcmp(temp, fieldValues_, allocatedBytes_) ) {
+              free(temp);
+              return false;
+            }
+            free(temp);
+            return true;
+          }
+          break;
+#endif
+          std::ostringstream msg;
+          msg << "Attempted unsupported compare operation, at " << __FILE__
+              << " : " << __LINE__ << std::endl;
+          msg << "\t -"
+              << DeviceTypeTools::get_memory_type_description(memType_) << " = "
+              << DeviceTypeTools::get_memory_type_description(
+                  other.memory_device_type());
+          throw(std::runtime_error(msg.str()));
+          break;
+      } // End internal switch
     }
       break;
+#ifdef ENABLE_CUDA
+      case EXTERNAL_CUDA_GPU: {
+        switch( other.memory_device_type() ) {
+          case LOCAL_RAM: {
+            // Comparing EXTERNAL_CUDA_GPU == LOCAL_RAM
+            // Note: we will pay a copy penalty when comparing local and external field objects
+            if( allocatedBytes_ != other.allocatedBytes_ ) {
+              throw( std::runtime_error( "Attempted comparison between fields of unequal size." ) );
+            }
+            void* temp = (void*)malloc(allocatedBytes_);
+            ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
+            CDI.memcpy_from( temp, fieldValuesExtDevice_, allocatedBytes_, deviceIndex_ );
+
+            if( memcmp(temp, other.fieldValues_, allocatedBytes_) ) {
+              free(temp);
+              return false;
+            }
+            free(temp);
+            return true;
+          }
+          break;
+
+          case EXTERNAL_CUDA_GPU: {
+            // Comparing EXTERNAL_CUDA_GPU == EXTERNAL_CUDA_GPU
+            // Note: we will pay a copy penalty when comparing local and external field objects
+            if( allocatedBytes_ != other.allocatedBytes_ ) {
+              throw( std::runtime_error( "Attempted comparison between fields of unequal size." ) );
+            }
+            void* tempLHS = (void*)malloc(allocatedBytes_);
+            void* tempRHS = (void*)malloc(allocatedBytes_);
+
+            ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
+            CDI.memcpy_from( tempLHS, fieldValuesExtDevice_, allocatedBytes_, deviceIndex_ );
+            CDI.memcpy_from( tempRHS, other.fieldValuesExtDevice_, allocatedBytes_, other.deviceIndex_ );
+
+            if( memcmp(tempLHS, tempRHS, allocatedBytes_) ) {
+              free(tempLHS);
+              free(tempRHS);
+
+              return false;
+            }
+            free(tempLHS);
+            free(tempRHS);
+
+            return true;
+          }
+          break;
+          default: {
+            std::ostringstream msg;
+            msg << "Attempted unsupported compare operation, at " << __FILE__
+            << " : " << __LINE__ << std::endl;
+            msg << "\t -"
+            << DeviceTypeTools::get_memory_type_description(memType_) << " = "
+            << DeviceTypeTools::get_memory_type_description( other.memory_device_type() );
+            throw(std::runtime_error(msg.str()));
+          }
+          break;
+        }
+      }
+      break;
+#endif
     default:
-      throw;
+      std::ostringstream msg;
+      msg << "Attempted unsupported compare operation, at " << __FILE__ << " : "
+          << __LINE__ << std::endl;
+      msg << "\t -" << DeviceTypeTools::get_memory_type_description(memType_)
+          << " = "
+          << DeviceTypeTools::get_memory_type_description(
+              other.memory_device_type());
+      throw(std::runtime_error(msg.str()));
       break;
   }
 }
@@ -754,7 +928,11 @@ SpatialField<Location, GhostTraits, T>::operator=(const T a) {
     }
       break;
     default:
-      throw;
+      std::ostringstream msg;
+      msg << "Attempted unsupported assignment operation, at " << __FILE__
+          << " : " << __LINE__ << std::endl;
+      msg << "\t -" << DeviceTypeTools::get_memory_type_description(memType_);
+      throw(std::runtime_error(msg.str()));
       break;
   }
 }

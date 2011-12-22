@@ -92,8 +92,8 @@ void CudaMemcpy(void* dest, void* src, size_t sz, unsigned int device,
 
 /*---------------------------------------------------------------------*/
 
-void CudaMemset(void* dest, int value, size_t sz, unsigned int device ) {
-#ifdef  DEBUG_EXT_ALLOC_MEM
+void CudaMemset(void* dest, int value, size_t sz, unsigned int device) {
+#ifdef  DEBUG_EXT_SET_MEM
   std::cout << "CudaMemset wrapper called (src, value, size, device)-> (";
   std::cout << src << "," << value << "," << sz << "," << device << "," << std::endl;
 #endif
@@ -102,18 +102,17 @@ void CudaMemset(void* dest, int value, size_t sz, unsigned int device ) {
   CudaSetDevice(device);
   if (cudaSuccess != (err = cudaMemset(dest, value, sz))) {
     std::ostringstream msg;
-    msg << "Memcopy failed, at" << __FILE__ << " : " << __LINE__ << std::endl;
+    msg << "Memset failed, at" << __FILE__ << " : " << __LINE__ << std::endl;
     msg << "\t - " << cudaGetErrorString(err);
     throw(std::runtime_error(msg.str()));
   }
 
 #ifdef  DEBUG_EXT_ALLOC_MEM
-  std::cout << "CudaMemcpy wrapper exiting\n";
+  std::cout << "CudaMemset wrapper exiting\n";
 #endif
 }
 
 /******************* CUDADeviceManager Implementation ******************/
-/** PUBLIC METHODS **/
 
 CUDADeviceManager& CUDADeviceManager::self() {
   static CUDADeviceManager CDM;
@@ -186,8 +185,6 @@ void CUDADeviceManager::print_device_info() const {
     device++;
   }
 }
-
-/** PRIVATE METHODS **/
 
 CUDADeviceManager::~CUDADeviceManager() {
 #ifdef DEBUG_EXT_ALLOC_CUDA_DEVICE_MNGR
@@ -279,7 +276,7 @@ CUDASharedPointer CUDADeviceInterface::get_shared_pointer(unsigned long int N,
 #ifdef  DEBUG_EXT_ALLOC_MEM
   std::cout << "CUDADeviceInterface::get_shared_pointer -> Allocating new shared pointer, " << N << " bytes on device " << K << std::endl;
 #endif
-  if ( K > CUDADeviceManager::self().device_count) {
+  if (K > CUDADeviceManager::self().device_count) {
     std::ostringstream msg;
     msg << "CudaMalloc failed, at " << __FILE__ << " : " << __LINE__
         << std::endl;
@@ -301,7 +298,7 @@ void* CUDADeviceInterface::get_raw_pointer(unsigned long int N,
 #ifdef  DEBUG_EXT_ALLOC_MEM
   std::cout << "CUDADeviceInterface::get_raw_pointer -> Allocating new raw pointer, " << N << " bytes on device " << K << std::endl;
 #endif
-  if ( K > CUDADeviceManager::self().device_count) {
+  if (K > CUDADeviceManager::self().device_count) {
     std::ostringstream msg;
     msg << "CudaMalloc failed, at " << __FILE__ << " : " << __LINE__
         << std::endl;
@@ -344,8 +341,16 @@ void CUDADeviceInterface::memcpy_from(void* dest, void* src, size_t sz,
 
 /*---------------------------------------------------------------------*/
 
-void CUDADeviceInterface::memset(void* dest, int value, size_t sz, unsigned int deviceID){
+void CUDADeviceInterface::memset(void* dest, int value, size_t sz,
+    unsigned int deviceID) {
   CudaMemset(dest, value, sz, deviceID);
+}
+
+/*---------------------------------------------------------------------*/
+
+void CUDADeviceInterface::memset(CUDASharedPointer& dest, int value,
+    size_t sz) {
+  CudaMemset(dest.ptr_, value, sz, (*dest.deviceID_));
 }
 
 /*---------------------------------------------------------------------*/

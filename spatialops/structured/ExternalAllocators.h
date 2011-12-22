@@ -13,28 +13,28 @@ namespace ema {
 #ifdef ENABLE_CUDA
 namespace cuda { //ema::cuda
 
-class CUDADeviceInterface;  // Intermediate structure to talk to CUDA capable devices
-class CUDASharedPointer;
+  class CUDADeviceInterface;// Intermediate structure to talk to CUDA capable devices
+  class CUDASharedPointer;
 
-/** \brief Structure for storing memory statistics **/
-struct CUDAMemStats{
+  /** \brief Structure for storing memory statistics **/
+  struct CUDAMemStats {
     size_t f;
     size_t t;
     size_t inuse;
-};
+  };
 
-/** \brief Interface to the CUDADeviceManager
- *  This is used to obtain device information and memory allocation
- *  without forcing a recompile of libraries compiled with nvcc and
- *  prevents recompiling existing code that needs to pass GPU Device
- *  pointers.
- */
+  /** \brief Interface to the CUDADeviceManager
+   *  This is used to obtain device information and memory allocation
+   *  without forcing a recompile of libraries compiled with nvcc and
+   *  prevents recompiling existing code that needs to pass GPU Device
+   *  pointers.
+   */
 
-class CUDADeviceInterface {
+  class CUDADeviceInterface {
     friend class CUDASharedPointer;
 
     CUDADeviceInterface();
-  public:
+    public:
     ~CUDADeviceInterface();
 
     /** \brief Returns a pointer to the global CU device interface object **/
@@ -64,8 +64,10 @@ class CUDADeviceInterface {
     void memcpy_from(void* dest, void* src, size_t sz, unsigned int deviceID);
     void memcpy_from(void* dest, CUDASharedPointer& src, size_t sz);
 
-    /** \brief cuda memset wrapper **/
+    /** \brief set data block to a specific value **/
     void memset(void* dest, int val, size_t num, unsigned int deviceID);
+    void memset(CUDASharedPointer& dest, int val, size_t num);
+
 
     /** \brief Returns the number of available CUDA capable compute devices */
     int get_device_count() const;
@@ -82,19 +84,19 @@ class CUDADeviceInterface {
     /** \brief output a list of all available CUDA hardware and capabilities */
     void print_device_info() const;
 
-  private:
+    private:
 
-};
+  };
 
-/** dvn: Not sure if were going to use this anymore as it duplicates
- *SpatialFieldPtr functionality, but it may be handy to have for now.
- * \brief Wrapper structure for a ref-counted GPU memory pointer */
-class CUDASharedPointer {
+  /** dvn: Not sure if were going to use this anymore as it duplicates
+   *SpatialFieldPtr functionality, but it may be handy to have for now.
+   * \brief Wrapper structure for a ref-counted GPU memory pointer */
+  class CUDASharedPointer {
     friend class CUDADeviceInterface;
 
     CUDASharedPointer(void*, int);
 
-  public:
+    public:
     ~CUDASharedPointer();
     CUDASharedPointer();
     CUDASharedPointer(const CUDASharedPointer& x);
@@ -130,15 +132,15 @@ class CUDASharedPointer {
     /** \brief return remaining references **/
     int get_refcount() const;
 
-  private:
-    int* deviceID_;  ///< Device ID this pointer is valid on
-    int* refCount_;  ///< Number of shared pointers referencing this position
+    private:
+    int* deviceID_; ///< Device ID this pointer is valid on
+    int* refCount_;///< Number of shared pointers referencing this position
 
-    void* ptr_; ///< GPU memory pointer (valid ONLY on deviceID_)
-};
+    void* ptr_;///< GPU memory pointer (valid ONLY on deviceID_)
+  };
 
 } // End Namespace 'ema::cuda'
 #endif // ENABLE_CUDA
-} // End Namespace 'ema'
+}// End Namespace 'ema'
 
 #endif /* EXTERNALMEMORYALLOCATORS_H_ */
