@@ -240,29 +240,52 @@ class SpatialField {
     inline const_interior_iterator interior_end() const;
     inline interior_iterator interior_end();
 
+    inline MyType& operator =(const MyType&);
     /**
-     * \brief Unary field operators
+     * \brief Unary field operators between SpatialFields
      * NOTE: USAGE IS DEPRECIATED!! Not supported for external field types
      * Future usage should utilize '<<=' syntax.
      * @param
      * @return
      */
-    inline MyType& operator =(const MyType&);
     inline MyType& operator+=(const MyType&);
     inline MyType& operator-=(const MyType&);
     inline MyType& operator*=(const MyType&);
     inline MyType& operator/=(const MyType&);
 
+    /**
+     * @brief Single data element assignment
+     */
     inline MyType& operator =(const T);
+
+    /**
+     * \brief Unary field operators between SpatialField and single data element field type
+     * NOTE: USAGE IS DEPRECIATED!! Not supported for external field types
+     * Future usage should utilize '<<=' syntax.
+     * @param
+     * @return
+     */
     inline MyType& operator+=(const T);
     inline MyType& operator-=(const T);
     inline MyType& operator*=(const T);
     inline MyType& operator/=(const T);
 
     inline SpatialField& operator=(const RHS&); ///< Assign a RHS to this field (doesn't affect ghosts)
+
+    /**
+     * \brief Unary field operators between SpatialFields
+     * NOTE: USAGE IS DEPRECIATED!! Not supported for external field types
+     * Future usage should utilize '<<=' syntax.
+     * @param
+     * @return
+     */
     inline SpatialField& operator+=(const RHS&); ///< Add a RHS to this field (doesn't affect ghosts)
     inline SpatialField& operator-=(const RHS&); ///< Subtract a RHS from this field (doesn't affect ghosts)
 
+    /**
+     * @brief Comparison operators
+     * WARNING: Slow in general and comparison with external fields with incur copy penalties.
+     */
     bool operator!=(const MyType&) const;
     bool operator==(const MyType&) const;
 
@@ -319,6 +342,7 @@ SpatialField<Location, GhostTraits, T>::SpatialField(const MemoryWindow window,
   //Determine raw byte count to allocate on our GPU and allocate.
   allocatedBytes_ = sizeof(T)
       * (window.glob_dim(0) * window.glob_dim(1) * window.glob_dim(2));
+
   interiorFieldWindow_ = MemoryWindow(window.glob_dim(), ofs, ext,
       window.has_bc(0), window.has_bc(1), window.has_bc(2));
 
@@ -382,6 +406,7 @@ SpatialField<Location, GhostTraits, T>::~SpatialField() {
             << DeviceTypeTools::get_memory_type_description(memType_)
             << " ) field type, without supporting libraries\n";
         msg << "\t " << __FILE__ << " : " << __LINE__;
+        break;
     }
   }
 }
@@ -539,7 +564,13 @@ SpatialField<Location, GhostTraits, T>::operator()(const size_t i,
     }
       break;
     default:
-      throw;
+      std::ostringstream msg;
+      msg << "Field type ( "
+          << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
+          << " does not support direct indexing.\n"
+          << "Note: this function is depreciated and is not recommended for future use.\n";
+      msg << "\t " << __FILE__ << " : " << __LINE__;
+      throw(std::runtime_error(msg.str()));
       break;
   }
 }
@@ -561,7 +592,13 @@ SpatialField<Location, GhostTraits, T>::operator()(const IntVec& ijk) {
     }
       break;
     default:
-      throw;
+      std::ostringstream msg;
+      msg << "Field type ( "
+          << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
+          << " does not support direct indexing.\n"
+          << "Note: this function is depreciated and is not recommended for future use.\n";
+      msg << "\t " << __FILE__ << " : " << __LINE__;
+      throw(std::runtime_error(msg.str()));
       break;
   }
 }
@@ -578,7 +615,13 @@ SpatialField<Location, GhostTraits, T>::operator()(const size_t i,
     }
       break;
     default:
-      throw;
+      std::ostringstream msg;
+      msg << "Field type ( "
+          << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
+          << " does not support direct indexing.\n"
+          << "Note: this function is depreciated and is not recommended for future use.\n";
+      msg << "\t " << __FILE__ << " : " << __LINE__;
+      throw(std::runtime_error(msg.str()));
       break;
   }
 }
@@ -600,7 +643,13 @@ SpatialField<Location, GhostTraits, T>::operator()(const IntVec& ijk) const {
     }
       break;
     default:
-      throw;
+      std::ostringstream msg;
+      msg << "Field type ( "
+          << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
+          << " does not support direct indexing.\n"
+          << "Note: this function is depreciated and is not recommended for future use.\n";
+      msg << "\t " << __FILE__ << " : " << __LINE__;
+      throw(std::runtime_error(msg.str()));
       break;
   }
 }
@@ -616,7 +665,13 @@ SpatialField<Location, GhostTraits, T>::operator[](const size_t i) {
     }
       break;
     default:
-      throw;
+      std::ostringstream msg;
+      msg << "Field type ( "
+          << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
+          << " does not support direct indexing.\n"
+          << "Note: this function is depreciated and is not recommended for future use.\n";
+      msg << "\t " << __FILE__ << " : " << __LINE__;
+      throw(std::runtime_error(msg.str()));
       break;
   }
 }
@@ -632,7 +687,13 @@ SpatialField<Location, GhostTraits, T>::operator[](const size_t i) const {
     }
       break;
     default:
-      throw;
+      std::ostringstream msg;
+      msg << "Field type ( "
+          << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
+          << " does not support direct indexing.\n"
+          << "Note: this function is depreciated and is not recommended for future use.\n";
+      msg << "\t " << __FILE__ << " : " << __LINE__;
+      throw(std::runtime_error(msg.str()));
       break;
   }
 }
@@ -726,7 +787,13 @@ SpatialField<Location, GhostTraits, T>::operator+=(const MyType& other) {
     }
     return *this;
   } else {
-    throw;
+    std::ostringstream msg;
+    msg << "Field type ( "
+        << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
+        << " does not support this form of unary operator.\n"
+        << "Note: this functionality is depreciated and is not recommended for future use.\n";
+    msg << "\t " << __FILE__ << " : " << __LINE__;
+    throw(std::runtime_error(msg.str()));
   }
 }
 
@@ -743,7 +810,13 @@ SpatialField<Location, GhostTraits, T>::operator-=(const MyType& other) {
     }
     return *this;
   } else {
-    throw;
+    std::ostringstream msg;
+    msg << "Field type ( "
+        << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
+        << " does not support this form of unary operator.\n"
+        << "Note: this functionality is depreciated and is not recommended for future use.\n";
+    msg << "\t " << __FILE__ << " : " << __LINE__;
+    throw(std::runtime_error(msg.str()));
   }
 }
 
@@ -760,7 +833,13 @@ SpatialField<Location, GhostTraits, T>::operator*=(const MyType& other) {
     }
     return *this;
   } else {
-    throw;
+    std::ostringstream msg;
+    msg << "Field type ( "
+        << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
+        << " does not support this form of unary operator.\n"
+        << "Note: this functionality is depreciated and is not recommended for future use.\n";
+    msg << "\t " << __FILE__ << " : " << __LINE__;
+    throw(std::runtime_error(msg.str()));
   }
 }
 
@@ -777,15 +856,20 @@ SpatialField<Location, GhostTraits, T>::operator/=(const MyType& other) {
     }
     return *this;
   } else {
-    throw;
+    std::ostringstream msg;
+    msg << "Field type ( "
+        << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
+        << " does not support this form of unary operator.\n"
+        << "Note: this functionality is depreciated and is not recommended for future use.\n";
+    msg << "\t " << __FILE__ << " : " << __LINE__;
+    throw(std::runtime_error(msg.str()));
   }
 }
 
 //------------------------------------------------------------------
 
 template<typename Location, typename GhostTraits, typename T>
-bool SpatialField<Location, GhostTraits, T>::operator!=(
-    const MyType& other) const {
+bool SpatialField<Location, GhostTraits, T>::operator!=(const MyType& other) const {
   return !(*this == other);
 }
 
@@ -811,7 +895,7 @@ bool SpatialField<Location, GhostTraits, T>::operator==(
 #ifdef ENABLE_CUDA
           case EXTERNAL_CUDA_GPU: {
             // Comparing LOCAL_RAM == EXTERNAL_CUDA_GPU
-            // Note: we will pay a copy penalty when comparing local and external field objects
+            // Note: This will incur a full copy penalty from the GPU and should not be used in a time sensitive context.
             if( allocatedBytes_ != other.allocatedBytes_ ) {
               throw( std::runtime_error( "Attempted comparison between fields of unequal size." ) );
             }
@@ -845,7 +929,7 @@ bool SpatialField<Location, GhostTraits, T>::operator==(
         switch( other.memory_device_type() ) {
           case LOCAL_RAM: {
             // Comparing EXTERNAL_CUDA_GPU == LOCAL_RAM
-            // Note: we will pay a copy penalty when comparing local and external field objects
+            // Note: This will incur a full copy penalty from the GPU and should not be used in a time sensitive context.
             if( allocatedBytes_ != other.allocatedBytes_ ) {
               throw( std::runtime_error( "Attempted comparison between fields of unequal size." ) );
             }
@@ -864,7 +948,7 @@ bool SpatialField<Location, GhostTraits, T>::operator==(
 
           case EXTERNAL_CUDA_GPU: {
             // Comparing EXTERNAL_CUDA_GPU == EXTERNAL_CUDA_GPU
-            // Note: we will pay a copy penalty when comparing local and external field objects
+            // Note: This will incur a full copy penalty from the GPU and should not be used in a time sensitive context.
             if( allocatedBytes_ != other.allocatedBytes_ ) {
               throw( std::runtime_error( "Attempted comparison between fields of unequal size." ) );
             }
@@ -948,7 +1032,13 @@ SpatialField<Location, GhostTraits, T>::operator+=(const T a) {
       *ifld += a;
     return *this;
   } else {
-    throw;
+    std::ostringstream msg;
+    msg << "Field type ( "
+        << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
+        << " does not support this form of unary operator.\n"
+        << "Note: this functionality is depreciated and is not recommended for future use.\n";
+    msg << "\t " << __FILE__ << " : " << __LINE__;
+    throw(std::runtime_error(msg.str()));
   }
 }
 
@@ -963,7 +1053,13 @@ SpatialField<Location, GhostTraits, T>::operator-=(const T a) {
       *ifld -= a;
     return *this;
   } else {
-    throw;
+    std::ostringstream msg;
+    msg << "Field type ( "
+        << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
+        << " does not support this form of unary operator.\n"
+        << "Note: this functionality is depreciated and is not recommended for future use.\n";
+    msg << "\t " << __FILE__ << " : " << __LINE__;
+    throw(std::runtime_error(msg.str()));
   }
 }
 
@@ -978,7 +1074,13 @@ SpatialField<Location, GhostTraits, T>::operator*=(const T a) {
       *ifld *= a;
     return *this;
   } else {
-    throw;
+    std::ostringstream msg;
+    msg << "Field type ( "
+        << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
+        << " does not support this form of unary operator.\n"
+        << "Note: this functionality is depreciated and is not recommended for future use.\n";
+    msg << "\t " << __FILE__ << " : " << __LINE__;
+    throw(std::runtime_error(msg.str()));
   }
 }
 
@@ -993,7 +1095,13 @@ SpatialField<Location, GhostTraits, T>::operator/=(const T a) {
       *ifld /= a;
     return *this;
   } else {
-    throw;
+    std::ostringstream msg;
+    msg << "Field type ( "
+        << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
+        << " does not support this form of unary operator.\n"
+        << "Note: this functionality is depreciated and is not recommended for future use.\n";
+    msg << "\t " << __FILE__ << " : " << __LINE__;
+    throw(std::runtime_error(msg.str()));
   }
 }
 

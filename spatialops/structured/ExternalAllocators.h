@@ -53,6 +53,7 @@ namespace cuda { //ema::cuda
 
     /** \brief attempts to free an allocated shared pointer object */
     void release(CUDASharedPointer& x);
+
     /** \brief attempts to free the given pointer offset on device K **/
     void release(void* x, unsigned int K = 0);
 
@@ -68,12 +69,11 @@ namespace cuda { //ema::cuda
     void memset(void* dest, int val, size_t num, unsigned int deviceID);
     void memset(CUDASharedPointer& dest, int val, size_t num);
 
-
     /** \brief Returns the number of available CUDA capable compute devices */
     int get_device_count() const;
 
     /** \brief Returns the memory structure associted with device K */
-    const CUDAMemStats& get_memory_statistics(int K = 0) const;
+    void get_memory_statistics(CUDAMemStats& cms, int K = 0) const;
 
     /** \brief Updates the 'device_stats' structs with the most current memory usage statistics
      * Please note that it is possible memory can be allocated from other sources, this

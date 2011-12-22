@@ -58,9 +58,10 @@ int main(int argc, char** argv) {
 
   try {
     std::cout << "Attempting to construct field with invalid memory count: ";
-    // try to allocate more points then we have available memory for
+    // try to allocate more points then we have available memory for.
     CDI.update_memory_statistics();
-    const CUDAMemStats& CMS = CDI.get_memory_statistics(0);
+    CUDAMemStats CMS;
+    CDI.get_memory_statistics(CMS, 0);
     const IntVec badpts(1, 1, CMS.f / sizeof(double) + 1);
     const MemoryWindow badwindow(badpts);
 
@@ -89,7 +90,7 @@ int main(int argc, char** argv) {
     PointField p(window, T1, InternalStorage, EXTERNAL_CUDA_GPU, 0);
     PointField q(window, T1, InternalStorage, LOCAL_RAM, 0);
 
-    memset(T2, rand(), bytes*sizeof(double));
+    memset(T2, rand(), bytes * sizeof(double));
     PointField r(window, T2, InternalStorage, EXTERNAL_CUDA_GPU, 0);
 
     std::cout << "P, Q, R assignment and comparison testing: ";
@@ -101,21 +102,21 @@ int main(int argc, char** argv) {
       throw;
     }
 
-    if( p == r ) {
+    if (p == r) {
       throw;
     }
 
-    if( q == r ) {
+    if (q == r) {
       throw;
     }
 
     q = r;
 
-    if( q != r ){
+    if (q != r) {
       throw;
     }
 
-    if( p == q || !(p != q)){
+    if ((p == q) || !(p != q)) {
       throw;
     }
 

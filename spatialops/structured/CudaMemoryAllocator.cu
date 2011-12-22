@@ -128,12 +128,14 @@ int CUDADeviceManager::get_device_count() const {
 
 /*---------------------------------------------------------------------*/
 
-const CUDAMemStats& CUDADeviceManager::get_memory_statistics(int K) const {
+void CUDADeviceManager::get_memory_statistics(CUDAMemStats& cms, int K) const {
   if (K < 0 || K >= device_count) {
     throw std::range_error("Specified device index out of bounds");
   }
 
-  return (*device_stats[K]);
+  cms.f = device_stats[K]->f;
+  cms.t = device_stats[K]->t;
+  cms.inuse = device_stats[K]->inuse;
 }
 
 /*---------------------------------------------------------------------*/
@@ -251,8 +253,8 @@ int CUDADeviceInterface::get_device_count() const {
 
 /*---------------------------------------------------------------------*/
 
-const CUDAMemStats& CUDADeviceInterface::get_memory_statistics(int K) const {
-  return CUDADeviceManager::self().get_memory_statistics(K);
+void CUDADeviceInterface::get_memory_statistics(CUDAMemStats& cms, int K) const {
+  CUDADeviceManager::self().get_memory_statistics(cms, K);
 }
 
 /*---------------------------------------------------------------------*/

@@ -17,7 +17,8 @@ int main(int argc, char** argv) {
   try {
     for (int device = 0; device < CDI.get_device_count(); ++device) {
       CDI.update_memory_statistics();
-      const CUDAMemStats& CMS = CDI.get_memory_statistics(device);
+      CUDAMemStats CMS;
+      CDI.get_memory_statistics(CMS, device);
 
       std::cout << "Testing pointer creation, allocating " << CMS.f
           << " bytes, on device " << device << "...";

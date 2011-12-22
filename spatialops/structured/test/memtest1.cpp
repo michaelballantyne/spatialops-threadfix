@@ -18,7 +18,8 @@ int main(int argc, char** argv) {
     try {
       for (int i = 1;; i *= 2) {
         CDI.update_memory_statistics();
-        const CUDAMemStats& CMS = CDI.get_memory_statistics(device);
+        CUDAMemStats CMS;
+        CDI.get_memory_statistics(CMS, device);
 
         std::cout << "Attempting allocation of size " << i << " bytes, on device " << device;
         std::cout << "\n\t Free memory: " << CMS.f << " / " << CMS.t << std::endl;
