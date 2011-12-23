@@ -141,7 +141,7 @@ namespace SpatialOps{
    *  
    *  Returns whether or not either operands can reach the end position.
    */
-  BUILD_BINARY_OPERATOR(SumOp, +, operator +);
+  //BUILD_BINARY_OPERATOR(SumOp, +, operator +);
   
   /**
    *  @struct DiffOp
@@ -253,7 +253,7 @@ namespace SpatialOps{
    *  
    *  Returns whether or not either operands can reach the end position.
    */
-  BUILD_BINARY_OPERATOR(DiffOp, -, operator -);
+  //BUILD_BINARY_OPERATOR(DiffOp, -, operator -);
 
   /**
    *  @struct ProdOp
@@ -367,7 +367,7 @@ namespace SpatialOps{
    *  
    *  Returns whether or not either operands can reach the end position.
    */
-  BUILD_BINARY_OPERATOR(ProdOp, *, operator *);
+  //BUILD_BINARY_OPERATOR(ProdOp, *, operator *);
 
   /**
    *  @struct DivOp
@@ -481,7 +481,7 @@ namespace SpatialOps{
    *  
    *  Returns whether or not either operands can reach the end position.
    */
-  BUILD_BINARY_OPERATOR(DivOp, /, operator /);
+  //BUILD_BINARY_OPERATOR(DivOp, /, operator /);
   
   /**
    *  @author Christopher Earl
@@ -664,7 +664,7 @@ namespace SpatialOps{
    *  
    *  Returns whether or not either operands can reach the end position.
    */
-  BUILD_BINARY_FUNCTION(SumFcn, add, add);
+  //BUILD_BINARY_FUNCTION(SumFcn, add, add);
 
   /**
    *  @struct DiffFcn
@@ -767,7 +767,7 @@ namespace SpatialOps{
    *  
    *  Returns whether or not either operands can reach the end position.
    */
-  BUILD_BINARY_FUNCTION(DiffFcn, subt, subt);
+  //BUILD_BINARY_FUNCTION(DiffFcn, subt, subt);
 
   /**
    *  @struct MultFcn
@@ -870,7 +870,7 @@ namespace SpatialOps{
    *  
    *  Returns whether or not either operands can reach the end position.
    */
-  BUILD_BINARY_FUNCTION(MultFcn, mult, mult);
+  //BUILD_BINARY_FUNCTION(MultFcn, mult, mult);
 
   /**
    *  @struct DivFcn
@@ -973,7 +973,7 @@ namespace SpatialOps{
    *  
    *  Returns whether or not either operands can reach the end position.
    */
-  BUILD_BINARY_FUNCTION(DivFcn, div, div);
+  //BUILD_BINARY_FUNCTION(DivFcn, div, div);
   
   /**
    *  @struct SinFcn
@@ -1073,18 +1073,18 @@ namespace SpatialOps{
    *  
    *  Returns whether or not operand can reach the end position.
    */
-  BUILD_UNARY_FUNCTION(SinFcn, std::sin, sin);
-  BUILD_UNARY_FUNCTION(CosFcn, std::cos, cos);
-  BUILD_UNARY_FUNCTION(TanFcn, std::tan, tan);
+  //BUILD_UNARY_FUNCTION(SinFcn, std::sin, sin);
+  //BUILD_UNARY_FUNCTION(CosFcn, std::cos, cos);
+  //BUILD_UNARY_FUNCTION(TanFcn, std::tan, tan);
 
-  BUILD_UNARY_FUNCTION(ExpFcn, std::exp, exp);
+  //BUILD_UNARY_FUNCTION(ExpFcn, std::exp, exp);
 
-  BUILD_UNARY_FUNCTION(TanhFcn, std::tanh, tanh);
+  //BUILD_UNARY_FUNCTION(TanhFcn, std::tanh, tanh);
 
-  BUILD_UNARY_FUNCTION(AbsFcn, std::abs, abs);
-  BUILD_UNARY_FUNCTION(NegFcn, -, operator -);
+  //BUILD_UNARY_FUNCTION(AbsFcn, std::abs, abs);
+  //BUILD_UNARY_FUNCTION(NegFcn, -, operator -);
   
-  BUILD_BINARY_FUNCTION(PowFcn, std::pow, pow);
+  //BUILD_BINARY_FUNCTION(PowFcn, std::pow, pow);
   
 } // namespace SpatialOps
 

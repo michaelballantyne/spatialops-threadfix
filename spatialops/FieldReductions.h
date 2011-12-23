@@ -52,7 +52,8 @@ namespace SpatialOps{
 			    FieldExpression<ExprType,FieldType> & fexpr) {
     //initialize:
     ResultType result = initialValue;
-    typename ExprType::template FullState<UseWholeIterator> expr = fexpr.expression().template init<UseWholeIterator>();
+    typename ExprType::template Iterator<UseWholeIterator>::SeqWalkType expr = fexpr.expr().template init<UseWholeIterator>();
+    //typename ExprType::template FullState<UseWholeIterator> expr = fexpr.expression().template init<UseWholeIterator>();
     //fexpr.init();
     
     //run fold:
@@ -72,7 +73,8 @@ namespace SpatialOps{
 				     FieldExpression<ExprType,FieldType> & fexpr) {
     //initialize:
     ResultType result = initialValue;
-    typename ExprType::template FullState<UseInteriorIterator> expr = fexpr.expression().template init<UseInteriorIterator>();
+    typename ExprType::template Iterator<UseInteriorIterator>::SeqWalkType expr = fexpr.expr().template init<UseInteriorIterator>();
+    //typename ExprType::template FullState<UseInteriorIterator> expr = fexpr.expression().template init<UseInteriorIterator>();
     //fexpr.init();
     
     //run fold:
@@ -109,7 +111,7 @@ namespace SpatialOps{
 						       typename FieldType::value_type const &),
 			    ResultType const & initialValue,
 			    FieldType const & field) {
-    FieldForm<FieldType> typedef ExprType;
+    ConstField<Initial, FieldType> typedef ExprType;
     
     return field_fold(proc,
                       initialValue,
@@ -158,7 +160,8 @@ namespace SpatialOps{
     typename FieldType::value_type typedef AtomicType;
     
     //initialize:
-    typename ExprType::template FullState<UseWholeIterator> expr = fexpr.expression().template init<UseWholeIterator>();
+    typename ExprType::template Iterator<UseWholeIterator>::SeqWalkType expr = fexpr.expr().template init<UseWholeIterator>();
+    //typename ExprType::template FullState<UseWholeIterator> expr = fexpr.expression().template init<UseWholeIterator>();
     //fexpr.init();
     
     //set up first value:
@@ -182,7 +185,8 @@ namespace SpatialOps{
     typename FieldType::value_type typedef AtomicType;
     
     //initialize:
-    typename ExprType::template FullState<UseInteriorIterator> expr = fexpr.expression().template init<UseInteriorIterator>();
+    typename ExprType::template Iterator<UseInteriorIterator>::SeqWalkType expr = fexpr.expr().template init<UseInteriorIterator>();
+    //typename ExprType::template FullState<UseInteriorIterator> expr = fexpr.expression().template init<UseInteriorIterator>();
     //fexpr.init();
     
     //set up first value:
@@ -206,7 +210,8 @@ namespace SpatialOps{
     typename FieldType::value_type typedef AtomicType;
     
     //initialize:
-    typename ExprType::template FullState<UseWholeIterator> expr = fexpr.expression().template init<UseWholeIterator>();
+    typename ExprType::template Iterator<UseWholeIterator>::SeqWalkType expr = fexpr.expr().template init<UseWholeIterator>();
+    //typename ExprType::template FullState<UseWholeIterator> expr = fexpr.expression().template init<UseWholeIterator>();
     //fexpr.init();
     
     //set up first value:
@@ -230,7 +235,8 @@ namespace SpatialOps{
     typename FieldType::value_type typedef AtomicType;
     
     //initialize:
-    typename ExprType::template FullState<UseInteriorIterator> expr = fexpr.expression().template init<UseInteriorIterator>();
+    typename ExprType::template Iterator<UseInteriorIterator>::SeqWalkType expr = fexpr.expr().template init<UseInteriorIterator>();
+    //typename ExprType::template FullState<UseInteriorIterator> expr = fexpr.expression().template init<UseInteriorIterator>();
     //fexpr.init();
     
     //set up first value:
@@ -253,7 +259,7 @@ namespace SpatialOps{
 												 typename FieldType::value_type const &),
 						  FieldType const & field) {
     
-    FieldForm<FieldType> typedef ExprType;
+    ConstField<Initial, FieldType> typedef ExprType;
     
     return field_reduce(proc,
 			FieldExpression<ExprType,FieldType>(ExprType(field)));
@@ -265,7 +271,7 @@ namespace SpatialOps{
 													  typename FieldType::value_type const &),
 							   FieldType const & field) {
     
-    FieldForm<FieldType> typedef ExprType;
+    ConstField<Initial, FieldType> typedef ExprType;
     
     return field_reduce_interior(proc,
 				 FieldExpression<ExprType,FieldType>(ExprType(field)));
@@ -277,7 +283,7 @@ namespace SpatialOps{
 											 typename FieldType::value_type const &),
 						  FieldType const & field) {
     
-    FieldForm<FieldType> typedef ExprType;
+    ConstField<Initial, FieldType> typedef ExprType;
     
     return field_reduce(proc,
 			FieldExpression<ExprType,FieldType>(ExprType(field)));
@@ -289,7 +295,7 @@ namespace SpatialOps{
 												  typename FieldType::value_type const &),
 							   FieldType const & field) {
     
-    FieldForm<FieldType> typedef ExprType;
+    ConstField<Initial, FieldType> typedef ExprType;
     
     return field_reduce_interior(proc,
 				 FieldExpression<ExprType,FieldType>(ExprType(field)));
@@ -316,7 +322,7 @@ namespace SpatialOps{
   /* Field version of max */
   template<typename FieldType>
     I typename FieldType::value_type field_max(FieldType field) {
-    FieldForm<FieldType> typedef ExprType;
+    ConstField<Initial, FieldType> typedef ExprType;
     
     return field_max(FieldExpression<ExprType,FieldType>(ExprType(field)));
   };
@@ -324,7 +330,7 @@ namespace SpatialOps{
   /* Field version of max */
   template<typename FieldType>
     I typename FieldType::value_type field_max_interior(FieldType field) {
-    FieldForm<FieldType> typedef ExprType;
+    ConstField<Initial, FieldType> typedef ExprType;
     
     return field_max_interior(FieldExpression<ExprType,FieldType>(ExprType(field)));
   };
@@ -350,7 +356,7 @@ namespace SpatialOps{
   /* Field version of min */
   template<typename FieldType>
     I typename FieldType::value_type field_min(FieldType field) {
-    FieldForm<FieldType> typedef ExprType;
+    ConstField<Initial, FieldType> typedef ExprType;
     
     return field_min(FieldExpression<ExprType,FieldType>(ExprType(field)));
   };
@@ -358,7 +364,7 @@ namespace SpatialOps{
   /* Field version of min */
   template<typename FieldType>
     I typename FieldType::value_type field_min_interior(FieldType field) {
-    FieldForm<FieldType> typedef ExprType;
+    ConstField<Initial, FieldType> typedef ExprType;
     
     return field_min_interior(FieldExpression<ExprType,FieldType>(ExprType(field)));
   };
@@ -390,7 +396,7 @@ namespace SpatialOps{
   /* Field version of sum */
   template<typename FieldType>
     I typename FieldType::value_type field_sum(FieldType field) {
-    FieldForm<FieldType> typedef ExprType;
+    ConstField<Initial, FieldType> typedef ExprType;
     
     return field_sum(FieldExpression<ExprType,FieldType>(ExprType(field)));
   };
@@ -398,7 +404,7 @@ namespace SpatialOps{
   /* Field version of sum */
   template<typename FieldType>
     I typename FieldType::value_type field_sum_interior(FieldType field) {
-    FieldForm<FieldType> typedef ExprType;
+    ConstField<Initial, FieldType> typedef ExprType;
     
     return field_sum_interior(FieldExpression<ExprType,FieldType>(ExprType(field)));
   };
@@ -424,7 +430,7 @@ namespace SpatialOps{
   /* Field version of norm */
   template<typename FieldType>
     I typename FieldType::value_type field_norm(FieldType field) {
-    FieldForm<FieldType> typedef ExprType;
+    ConstField<Initial, FieldType> typedef ExprType;
     
     return field_norm(FieldExpression<ExprType,FieldType>(ExprType(field)));
   };
@@ -432,7 +438,7 @@ namespace SpatialOps{
   /* Field version of norm */
   template<typename FieldType>
     I typename FieldType::value_type field_norm_interior(FieldType field) {
-    FieldForm<FieldType> typedef ExprType;
+    ConstField<Initial, FieldType> typedef ExprType;
     
     return field_norm_interior(FieldExpression<ExprType,FieldType>(ExprType(field)));
   };
