@@ -2796,9 +2796,21 @@
 
              typenameExprType::template Iterator<CalStyle>::ResizePrepType typedef RhsType;
 
-             std::vector<BI::interprocess_semaphore *> vec_semaphore;
+             typenameFieldType::memory_window typedef MemoryWindow;
 
-             std::vector<typenameFieldType::memory_window> vec_window =;
+             MemoryWindow window = IteratorStyle<CallStyle, FieldType>::memory_window(lhs);
+
+             int x = 1;
+             int y = 1;
+             int z = 1;
+
+             if(number_of_partitions <= window.extent(2)){ z = number_of_partitions; }
+             else if(number_of_partitions <= window.extent(1)){ y = number_of_partitions; }
+             else if(number_of_partitions <= window.extent(0)){ x = number_of_partitions; };
+
+             std::vector<typenameFieldType::memory_window> vec_window = window.split(x, y, z);
+
+             std::vector<BI::interprocess_semaphore *> vec_semaphore;
 
              std::vector<typenameFieldType::memory_window>::const_iterator window_iterator =
              vec_window(begin);
