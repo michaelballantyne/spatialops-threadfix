@@ -121,6 +121,7 @@ namespace structured{
     typedef FieldLocation                      Location;
     typedef T                                  AtomicT;
     typedef T                                  value_type;
+    typedef MemoryWindow                       memory_window;
     typedef FieldIterator     <field_type>     iterator;
     typedef FieldIterator     <field_type>     interior_iterator;
     typedef ConstFieldIterator<field_type>     const_iterator;
