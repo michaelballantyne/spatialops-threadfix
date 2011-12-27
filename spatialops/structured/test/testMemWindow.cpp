@@ -174,7 +174,19 @@ int main()
     status( children[7] == MemoryWindow( nbase, IntVec(3,5,4), IntVec(2,4,3), true , true , true  ), "child 111" );
 
     overall( status.ok(), "Memory window splitting" );
-}
+  }
+
+  {
+    const IntVec nxyz(6,6,1);
+    const MemoryWindow parent( nxyz, false, false, false );
+    std::vector<MemoryWindow> children = parent.split( IntVec(1,3,1), IntVec(1,1,1) );
+    TestHelper status(true);
+    status( children.size() == 3, " number of children" );
+    status( children[0] == MemoryWindow( nxyz, IntVec(0,0,0), IntVec(6,3,1), false, false, false ), " child 0" );
+    status( children[1] == MemoryWindow( nxyz, IntVec(0,1,0), IntVec(6,3,1), false, false, false ), " child 1" );
+    status( children[2] == MemoryWindow( nxyz, IntVec(0,3,0), IntVec(6,3,1), false, false, false ), " child 2" );
+    overall( status.ok(), "6x6x1 split into 6x3x1 with ghosts" );
+  }
 
   if( overall.isfailed() ) return -1;
   return 0;

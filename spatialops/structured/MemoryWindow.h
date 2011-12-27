@@ -95,7 +95,7 @@ namespace structured{
                   const bool bcx,
                   const bool bcy,
                   const bool bcz );
-		
+
     /**
      *  \brief construct a MemoryWindow object
      *
@@ -113,7 +113,7 @@ namespace structured{
                   const bool bcy,
                   const bool bcz );
 
-    /** 
+    /**
      *  \brief construct a MemoryWindow object where there is no "window"
      *
      *  \param npts the total (global) number of points in each direction
@@ -148,9 +148,16 @@ namespace structured{
      *         as a vector varying in x then y then z.
      *
      *  \param splitPattern the number of partitions to make in each ordinate direction.
+     *
+     *  \param npad (default [0,0,0]) Specifies the number of cells in
+     *    each direction that we want to pad the children window with.
+     *    Note that you should ensure that the parent window is also
+     *    padded with the same number of cells to avoid problems.
+     *
      *  \return vector<MemoryWindow> containing the child windows.
      */
-    std::vector<MemoryWindow> split( const IntVec splitPattern ) const;
+    std::vector<MemoryWindow> split( const IntVec splitPattern,
+                                     const IntVec npad=IntVec(0,0,0) ) const;
 
     /**
      *  \brief given the local ijk location (0-based on the local
@@ -366,7 +373,7 @@ namespace structured{
     {
       i_=other.i_; j_=other.j_; k_=other.k_;
     }
-    
+
     /**
      *  \brief Construct a FieldIterator
      *  \param t the raw pointer to the begin location of the field
@@ -508,7 +515,7 @@ namespace structured{
     {
       i_=other.i_; j_=other.j_; k_=other.k_;
     }
-    
+
     ConstFieldIterator( const T* t, const size_t offset, const MemoryWindow& window )
       : current_( t+offset ),
         first_  ( t        ),

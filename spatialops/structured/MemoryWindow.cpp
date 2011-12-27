@@ -86,7 +86,9 @@ namespace SpatialOps{
     {}
 
     std::vector<MemoryWindow>
-    MemoryWindow::split( const IntVec splitPattern ) const{
+    MemoryWindow::split( const IntVec splitPattern,
+                         const IntVec npad ) const
+    {
 #     ifndef NDEBUG
       for( size_t i=0; i<3; ++i ){
         assert( extent_[i] >= splitPattern[i] );
@@ -109,7 +111,7 @@ namespace SpatialOps{
         }
       }
 
-      IntVec cumOffset(0,0,0);  // keep track of how far each chunck is offset
+      IntVec cumOffset(0,0,0);  // keep track of how far each chunk is offset
       std::vector<MemoryWindow> children;
       for( int k=0; k<splitPattern[2]; ++k ){
         const bool bcz = (k==splitPattern[2]-1) ? bc_[2] : false;
@@ -119,10 +121,13 @@ namespace SpatialOps{
           cumOffset[0] = 0;
           for( int i=0; i<splitPattern[0]; ++i ){
             const bool bcx = (i==splitPattern[0]-1) ? bc_[0] : false;
-            children.push_back( MemoryWindow( nptsGlob_,
-                                              cumOffset,
-                                              IntVec( nxyz[0][i], nxyz[1][j], nxyz[2][k] ),
-                                              bcx, bcy, bcz ) );
+            const IntVec offset( std::max(0,cumOffset[0]-npad[0]),
+                                 std::max(0,cumOffset[1]-npad[1]),
+                                 std::max(0,cumOffset[2]-npad[2]) );
+            const IntVec extent( std::min(extent_[0],nxyz[0][i]+npad[0]),
+                                 std::min(extent_[1],nxyz[1][j]+npad[1]),
+                                 std::min(extent_[2],nxyz[2][k]+npad[2]) );
+            children.push_back( MemoryWindow( nptsGlob_, offset, extent, bcx, bcy, bcz ) );
             cumOffset[0] += nxyz[0][i];
           }
           cumOffset[1] += nxyz[1][j];

@@ -16,4 +16,7 @@
 
 #cmakedefine SOPS_BOOST_SERIALIZATION
 
+#define SOPS_REPO_DATE @SOPS_REPO_DATE@
+#define SOPS_REPO_HASH @SOPS_REPO_HASH@
+
 #endif // SpatialOps_Configure_h
