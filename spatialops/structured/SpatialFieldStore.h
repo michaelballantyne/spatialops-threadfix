@@ -300,6 +300,7 @@ SpatFldPtr<FieldT>::SpatFldPtr(FieldT* const f) :
         false), memType_(f->memory_device_type()) {
   *count_ = 1;
 }
+
 //------------------------------------------------------------------
 template<typename FieldT>
 SpatFldPtr<FieldT>::SpatFldPtr(FieldT* const f, const bool builtFromStore) :
@@ -543,8 +544,16 @@ void SpatialFieldStore<FieldT>::restore_field(FieldT& field) {
 //------------------------------------------------------------------
 
 //====================================================================
+
 template<>
-SpatFldPtr<double>::SpatFldPtr(double* const f, const bool builtFromStore) :
+inline SpatFldPtr<double>::SpatFldPtr(double* const f) :
+    store_(SpatialFieldStore<double>::self()), f_(f), count_(new int), builtFromStore_(
+        false), memType_(LOCAL_RAM) {
+  *count_ = 1;
+}
+
+template<>
+inline SpatFldPtr<double>::SpatFldPtr(double* const f, const bool builtFromStore) :
     store_(SpatialFieldStore<double>::self()), f_(f), count_(new int), builtFromStore_(
         builtFromStore), memType_(LOCAL_RAM) {
   *count_ = 1;
