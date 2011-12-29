@@ -297,7 +297,7 @@ class SpatialFieldStore {
 template<typename FieldT>
 SpatFldPtr<FieldT>::SpatFldPtr(FieldT* const f) :
     store_(SpatialFieldStore<FieldT>::self()), f_(f), count_(new int), builtFromStore_(
-        false), memType_(f->memory_device_type()) {
+        false), memType_( ( f != NULL ? f->memory_device_type() : LOCAL_RAM ) ) {
   *count_ = 1;
 }
 
@@ -305,7 +305,7 @@ SpatFldPtr<FieldT>::SpatFldPtr(FieldT* const f) :
 template<typename FieldT>
 SpatFldPtr<FieldT>::SpatFldPtr(FieldT* const f, const bool builtFromStore) :
     store_(SpatialFieldStore<FieldT>::self()), f_(f), count_(new int), builtFromStore_(
-        builtFromStore), memType_(f->memory_device_type()) {
+        builtFromStore), memType_( ( f != NULL ? f->memory_device_type() : LOCAL_RAM ) ) {
   *count_ = 1;
 }
 //------------------------------------------------------------------
