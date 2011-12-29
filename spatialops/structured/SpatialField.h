@@ -222,6 +222,8 @@ namespace structured{
     const MemoryWindow& window_without_ghost() const{ return interiorFieldWindow_; }
     const MemoryWindow& window_with_ghost() const{ return fieldWindow_; }
 
+    T       * const       field_values() const { return fieldValues_; }
+
   };
 
   //==================================================================
