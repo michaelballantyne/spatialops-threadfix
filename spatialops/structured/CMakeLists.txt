@@ -21,24 +21,23 @@ set( SO_SRC ${SO_SRC} ${src} PARENT_SCOPE )
 
 if( ENABLE_CUDA )
   if( CUDA_CUDA_LIBRARY )
-    include_directories( ${CUDA_INCLUDE_DIRS} )
-      cuda_add_library( CUDAMemoryManager STATIC CudaMemoryAllocator.cu )
-      target_link_libraries( CUDAMemoryManager ${CUDA_LIBRARIES} ${Boost_LIBRARIES} )
-        
-      install( TARGETS CUDAMemoryManager EXPORT CudaMM DESTINATION lib/spatialops )
-      install( EXPORT CudaMM DESTINATION lib/spatialops )
-          
-      #Configure CMM 
-    configure_file( 
-      ${PROJECT_SOURCE_DIR}/spatialops/structured/CudaMMConfig.cmake.in
-      ${PROJECT_BINARY_DIR}/config/CudaMMConfig.cmake
-    )   
-        
-    # install all of these files into the spatial ops lib dir 
-         install( FILES
-                  ${PROJECT_BINARY_DIR}/config/CudaMMConfig.cmake
-                    DESTINATION ${SpatialOps_CONFIG_INSTALL}
-                )   
+		include_directories( ${CUDA_INCLUDE_DIRS} )
+		cuda_add_library( CUDAMemoryManager STATIC CudaMemoryAllocator.cu )
+		target_link_libraries( CUDAMemoryManager ${CUDA_LIBRARIES} ${Boost_LIBRARIES} )
+		    
+		install( TARGETS CUDAMemoryManager EXPORT CudaMM DESTINATION lib/spatialops )
+		install( EXPORT CudaMM DESTINATION lib/spatialops )
+		      
+		#Configure CMM 
+		configure_file( 
+		  ${PROJECT_SOURCE_DIR}/spatialops/structured/CudaMMConfig.cmake.in
+		  ${PROJECT_BINARY_DIR}/config/CudaMMConfig.cmake
+		)   
+		    
+		install( FILES
+		  ${PROJECT_BINARY_DIR}/config/CudaMMConfig.cmake
+		    DESTINATION ${SpatialOps_CONFIG_INSTALL}
+		)
 	endif( CUDA_CUDA_LIBRARY )
 endif( ENABLE_CUDA )
 

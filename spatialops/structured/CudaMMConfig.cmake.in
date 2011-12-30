@@ -7,9 +7,4 @@
 #    target_link_libraries( ... CUDAMemoryManager )
 #
 
-set( CudaMM_INCLUDE_DIR
-  @SpatialOps_INCLUDE@
-  @TPL_INCLUDE_DIRS@
-  )
-
 include( @CMAKE_INSTALL_PREFIX@/lib/spatialops/CudaMM.cmake )

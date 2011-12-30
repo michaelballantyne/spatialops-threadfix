@@ -17,6 +17,13 @@ set( SpatialOps_INCLUDE_DIR
   @SpatialOps_INCLUDE@
   @TPL_INCLUDE_DIRS@
   )
+  
+# Give path hints 
+if( ENABLE_CUDA )
+	set( CudaMM_DIR
+  		@CMAKE_INSTALL_PREFIX@/share 
+  	)
+endif(ENABLE_CUDA)
 
 set( ENABLE_THREADS @ENABLE_THREADS@ )
 set( NTHREADS @NTHREADS@ )
