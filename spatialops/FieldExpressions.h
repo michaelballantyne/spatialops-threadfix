@@ -12,6 +12,7 @@
 #     include <boost/bind.hpp>
 #     include <boost/ref.hpp>
 #     include <spatialops/ThreadPool.h>
+#     include <spatialops/structured/IntVec.h>
 #     include <boost/interprocess/sync/interprocess_semaphore.hpp>
       namespace BI = boost::interprocess;
 #  endif //FIELD_EXPRESSION_THREADS
@@ -81,7 +82,7 @@
               return typename Iterator<IteratorType>::SeqWalkType(*this);
            };
           template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize (void) const {
+           inline typename Iterator<IteratorType>::ResizePrepType resize_prep (void) const {
               return typename Iterator<IteratorType>::ResizePrepType (*this);
            };
           inline AtomicType const & value (void) const { return value_; };
@@ -172,13 +173,13 @@
               return typename Iterator<IteratorType>::SeqWalkType(*this);
            };
           template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize (void) const {
+           inline typename Iterator<IteratorType>::ResizePrepType resize_prep (void) const {
               return typename Iterator<IteratorType>::ResizePrepType (*this);
            };
           inline FieldType const & field (void) const { return field_; };
 
          private:
-          FieldType const & field_;
+          FieldType const field_;
       };
 
       template<typename IteratorType, typename SourceType, typename FieldType>
@@ -198,7 +199,7 @@
           inline FieldType const & field (void) const { return field_; };
 
          private:
-          FieldType const & field_;
+          FieldType const field_;
       };
 
       template<typename IteratorType, typename SourceType, typename FieldType>
@@ -210,13 +211,13 @@
           typename FieldType::memory_window typedef MemoryWindow;
           ConstField<SeqWalk<IteratorType, MyType>, FieldType> typedef SeqWalkType;
           ConstField(MemoryWindow const & size, SourceType const & source)
-          : field_(FieldType(size, source.field(), structured::ExternalStorage))
+          : field_(size, source.field().field_values(), structured::ExternalStorage)
           {};
           inline SeqWalkType init (void) const { return SeqWalkType(*this); };
           inline FieldType const & field (void) const { return field_; };
 
          private:
-          FieldType const & field_;
+          FieldType const field_;
       };
 
       template<typename IteratorType, typename SourceType, typename FieldType>
@@ -264,7 +265,7 @@
               return typename Iterator<IteratorType>::SeqWalkType(*this);
            };
           template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize (void) {
+           inline typename Iterator<IteratorType>::ResizePrepType resize_prep (void) {
               return typename Iterator<IteratorType>::ResizePrepType (*this);
            };
           inline FieldType & field (void) { return field_; };
@@ -302,13 +303,13 @@
           typename FieldType::memory_window typedef MemoryWindow;
           Field<SeqWalk<IteratorType, MyType>, FieldType> typedef SeqWalkType;
           Field(MemoryWindow const & size, SourceType & source)
-          : field_(FieldType(size, source.field(), structured::ExternalStorage))
+          : field_(size, source.field().field_values(), structured::ExternalStorage)
           {};
           inline SeqWalkType init (void) { return SeqWalkType(*this); };
           inline FieldType & field (void) { return field_; };
 
          private:
-          FieldType & field_;
+          FieldType field_;
       };
 
       template<typename IteratorType, typename SourceType, typename FieldType>
@@ -400,7 +401,7 @@
               return typename Iterator<IteratorType>::SeqWalkType(*this);
            };
           template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize (void) const {
+           inline typename Iterator<IteratorType>::ResizePrepType resize_prep (void) const {
               return typename Iterator<IteratorType>::ResizePrepType (*this);
            };
           inline Operand1 const & operand1 (void) const { return operand1_; };
@@ -455,8 +456,8 @@
                 typename Operand1::SeqWalkType,
                 typename Operand2::SeqWalkType,
                 FieldType> typedef SeqWalkType;
-          SumOp(SourceType const & source)
-          : operand1_(source.operand1()), operand2_(source.operand2())
+          SumOp(MemoryWindow const & size, SourceType const & source)
+          : operand1_(size, source.operand1()), operand2_(size, source.operand2())
           {};
           inline SeqWalkType init (void) const { return SeqWalkType(*this); };
           inline Operand1 const & operand1 (void) const { return operand1_; };
@@ -601,7 +602,7 @@
               return typename Iterator<IteratorType>::SeqWalkType(*this);
            };
           template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize (void) const {
+           inline typename Iterator<IteratorType>::ResizePrepType resize_prep (void) const {
               return typename Iterator<IteratorType>::ResizePrepType (*this);
            };
           inline Operand1 const & operand1 (void) const { return operand1_; };
@@ -656,8 +657,8 @@
                  typename Operand1::SeqWalkType,
                  typename Operand2::SeqWalkType,
                  FieldType> typedef SeqWalkType;
-          DiffOp(SourceType const & source)
-          : operand1_(source.operand1()), operand2_(source.operand2())
+          DiffOp(MemoryWindow const & size, SourceType const & source)
+          : operand1_(size, source.operand1()), operand2_(size, source.operand2())
           {};
           inline SeqWalkType init (void) const { return SeqWalkType(*this); };
           inline Operand1 const & operand1 (void) const { return operand1_; };
@@ -802,7 +803,7 @@
               return typename Iterator<IteratorType>::SeqWalkType(*this);
            };
           template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize (void) const {
+           inline typename Iterator<IteratorType>::ResizePrepType resize_prep (void) const {
               return typename Iterator<IteratorType>::ResizePrepType (*this);
            };
           inline Operand1 const & operand1 (void) const { return operand1_; };
@@ -857,8 +858,8 @@
                  typename Operand1::SeqWalkType,
                  typename Operand2::SeqWalkType,
                  FieldType> typedef SeqWalkType;
-          ProdOp(SourceType const & source)
-          : operand1_(source.operand1()), operand2_(source.operand2())
+          ProdOp(MemoryWindow const & size, SourceType const & source)
+          : operand1_(size, source.operand1()), operand2_(size, source.operand2())
           {};
           inline SeqWalkType init (void) const { return SeqWalkType(*this); };
           inline Operand1 const & operand1 (void) const { return operand1_; };
@@ -1003,7 +1004,7 @@
               return typename Iterator<IteratorType>::SeqWalkType(*this);
            };
           template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize (void) const {
+           inline typename Iterator<IteratorType>::ResizePrepType resize_prep (void) const {
               return typename Iterator<IteratorType>::ResizePrepType (*this);
            };
           inline Operand1 const & operand1 (void) const { return operand1_; };
@@ -1058,8 +1059,8 @@
                 typename Operand1::SeqWalkType,
                 typename Operand2::SeqWalkType,
                 FieldType> typedef SeqWalkType;
-          DivOp(SourceType const & source)
-          : operand1_(source.operand1()), operand2_(source.operand2())
+          DivOp(MemoryWindow const & size, SourceType const & source)
+          : operand1_(size, source.operand1()), operand2_(size, source.operand2())
           {};
           inline SeqWalkType init (void) const { return SeqWalkType(*this); };
           inline Operand1 const & operand1 (void) const { return operand1_; };
@@ -1202,7 +1203,7 @@
               return typename Iterator<IteratorType>::SeqWalkType(*this);
            };
           template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize (void) const {
+           inline typename Iterator<IteratorType>::ResizePrepType resize_prep (void) const {
               return typename Iterator<IteratorType>::ResizePrepType (*this);
            };
           inline Operand const & operand (void) const { return operand_; };
@@ -1241,8 +1242,8 @@
           typename FieldType::memory_window typedef MemoryWindow;
           SinFcn<SeqWalk<IteratorType, MyType>, typename Operand::SeqWalkType, FieldType> typedef
           SeqWalkType;
-          SinFcn(SourceType const & source)
-          : operand_(source.operand())
+          SinFcn(MemoryWindow const & size, SourceType const & source)
+          : operand_(size, source.operand())
           {};
           inline SeqWalkType init (void) const { return SeqWalkType(*this); };
           inline Operand const & operand (void) const { return operand_; };
@@ -1318,7 +1319,7 @@
               return typename Iterator<IteratorType>::SeqWalkType(*this);
            };
           template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize (void) const {
+           inline typename Iterator<IteratorType>::ResizePrepType resize_prep (void) const {
               return typename Iterator<IteratorType>::ResizePrepType (*this);
            };
           inline Operand const & operand (void) const { return operand_; };
@@ -1357,8 +1358,8 @@
           typename FieldType::memory_window typedef MemoryWindow;
           CosFcn<SeqWalk<IteratorType, MyType>, typename Operand::SeqWalkType, FieldType> typedef
           SeqWalkType;
-          CosFcn(SourceType const & source)
-          : operand_(source.operand())
+          CosFcn(MemoryWindow const & size, SourceType const & source)
+          : operand_(size, source.operand())
           {};
           inline SeqWalkType init (void) const { return SeqWalkType(*this); };
           inline Operand const & operand (void) const { return operand_; };
@@ -1434,7 +1435,7 @@
               return typename Iterator<IteratorType>::SeqWalkType(*this);
            };
           template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize (void) const {
+           inline typename Iterator<IteratorType>::ResizePrepType resize_prep (void) const {
               return typename Iterator<IteratorType>::ResizePrepType (*this);
            };
           inline Operand const & operand (void) const { return operand_; };
@@ -1473,8 +1474,8 @@
           typename FieldType::memory_window typedef MemoryWindow;
           TanFcn<SeqWalk<IteratorType, MyType>, typename Operand::SeqWalkType, FieldType> typedef
           SeqWalkType;
-          TanFcn(SourceType const & source)
-          : operand_(source.operand())
+          TanFcn(MemoryWindow const & size, SourceType const & source)
+          : operand_(size, source.operand())
           {};
           inline SeqWalkType init (void) const { return SeqWalkType(*this); };
           inline Operand const & operand (void) const { return operand_; };
@@ -1550,7 +1551,7 @@
               return typename Iterator<IteratorType>::SeqWalkType(*this);
            };
           template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize (void) const {
+           inline typename Iterator<IteratorType>::ResizePrepType resize_prep (void) const {
               return typename Iterator<IteratorType>::ResizePrepType (*this);
            };
           inline Operand const & operand (void) const { return operand_; };
@@ -1589,8 +1590,8 @@
           typename FieldType::memory_window typedef MemoryWindow;
           ExpFcn<SeqWalk<IteratorType, MyType>, typename Operand::SeqWalkType, FieldType> typedef
           SeqWalkType;
-          ExpFcn(SourceType const & source)
-          : operand_(source.operand())
+          ExpFcn(MemoryWindow const & size, SourceType const & source)
+          : operand_(size, source.operand())
           {};
           inline SeqWalkType init (void) const { return SeqWalkType(*this); };
           inline Operand const & operand (void) const { return operand_; };
@@ -1666,7 +1667,7 @@
               return typename Iterator<IteratorType>::SeqWalkType(*this);
            };
           template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize (void) const {
+           inline typename Iterator<IteratorType>::ResizePrepType resize_prep (void) const {
               return typename Iterator<IteratorType>::ResizePrepType (*this);
            };
           inline Operand const & operand (void) const { return operand_; };
@@ -1705,8 +1706,8 @@
           typename FieldType::memory_window typedef MemoryWindow;
           TanhFcn<SeqWalk<IteratorType, MyType>, typename Operand::SeqWalkType, FieldType> typedef
           SeqWalkType;
-          TanhFcn(SourceType const & source)
-          : operand_(source.operand())
+          TanhFcn(MemoryWindow const & size, SourceType const & source)
+          : operand_(size, source.operand())
           {};
           inline SeqWalkType init (void) const { return SeqWalkType(*this); };
           inline Operand const & operand (void) const { return operand_; };
@@ -1782,7 +1783,7 @@
               return typename Iterator<IteratorType>::SeqWalkType(*this);
            };
           template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize (void) const {
+           inline typename Iterator<IteratorType>::ResizePrepType resize_prep (void) const {
               return typename Iterator<IteratorType>::ResizePrepType (*this);
            };
           inline Operand const & operand (void) const { return operand_; };
@@ -1821,8 +1822,8 @@
           typename FieldType::memory_window typedef MemoryWindow;
           AbsFcn<SeqWalk<IteratorType, MyType>, typename Operand::SeqWalkType, FieldType> typedef
           SeqWalkType;
-          AbsFcn(SourceType const & source)
-          : operand_(source.operand())
+          AbsFcn(MemoryWindow const & size, SourceType const & source)
+          : operand_(size, source.operand())
           {};
           inline SeqWalkType init (void) const { return SeqWalkType(*this); };
           inline Operand const & operand (void) const { return operand_; };
@@ -1898,7 +1899,7 @@
               return typename Iterator<IteratorType>::SeqWalkType(*this);
            };
           template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize (void) const {
+           inline typename Iterator<IteratorType>::ResizePrepType resize_prep (void) const {
               return typename Iterator<IteratorType>::ResizePrepType (*this);
            };
           inline Operand const & operand (void) const { return operand_; };
@@ -1937,8 +1938,8 @@
           typename FieldType::memory_window typedef MemoryWindow;
           NegFcn<SeqWalk<IteratorType, MyType>, typename Operand::SeqWalkType, FieldType> typedef
           SeqWalkType;
-          NegFcn(SourceType const & source)
-          : operand_(source.operand())
+          NegFcn(MemoryWindow const & size, SourceType const & source)
+          : operand_(size, source.operand())
           {};
           inline SeqWalkType init (void) const { return SeqWalkType(*this); };
           inline Operand const & operand (void) const { return operand_; };
@@ -2016,7 +2017,7 @@
               return typename Iterator<IteratorType>::SeqWalkType(*this);
            };
           template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize (void) const {
+           inline typename Iterator<IteratorType>::ResizePrepType resize_prep (void) const {
               return typename Iterator<IteratorType>::ResizePrepType (*this);
            };
           inline Operand1 const & operand1 (void) const { return operand1_; };
@@ -2071,8 +2072,8 @@
                  typename Operand1::SeqWalkType,
                  typename Operand2::SeqWalkType,
                  FieldType> typedef SeqWalkType;
-          PowFcn(SourceType const & source)
-          : operand1_(source.operand1()), operand2_(source.operand2())
+          PowFcn(MemoryWindow const & size, SourceType const & source)
+          : operand1_(size, source.operand1()), operand2_(size, source.operand2())
           {};
           inline SeqWalkType init (void) const { return SeqWalkType(*this); };
           inline Operand1 const & operand1 (void) const { return operand1_; };
@@ -2218,7 +2219,7 @@
                  return typename Iterator<IteratorType>::SeqWalkType(*this);                       \
               };                                                                                   \
              template<typename IteratorType>                                                       \
-              inline typename Iterator<IteratorType>::ResizePrepType resize (void) const {         \
+              inline typename Iterator<IteratorType>::ResizePrepType resize_prep (void) const {    \
                  return typename Iterator<IteratorType>::ResizePrepType (*this);                   \
               };                                                                                   \
              inline Operand1 const & operand1 (void) const { return operand1_; };                  \
@@ -2275,8 +2276,8 @@
                          typename Operand1::SeqWalkType,                                           \
                          typename Operand2::SeqWalkType,                                           \
                          FieldType> typedef SeqWalkType;                                           \
-             OBJECT_NAME(SourceType const & source)                                                \
-             : operand1_(source.operand1()), operand2_(source.operand2())                          \
+             OBJECT_NAME(MemoryWindow const & size, SourceType const & source)                     \
+             : operand1_(size, source.operand1()), operand2_(size, source.operand2())              \
              {};                                                                                   \
              inline SeqWalkType init (void) const { return SeqWalkType(*this); };                  \
              inline Operand1 const & operand1 (void) const { return operand1_; };                  \
@@ -2435,7 +2436,7 @@
                  return typename Iterator<IteratorType>::SeqWalkType(*this);                       \
               };                                                                                   \
              template<typename IteratorType>                                                       \
-              inline typename Iterator<IteratorType>::ResizePrepType resize (void) const {         \
+              inline typename Iterator<IteratorType>::ResizePrepType resize_prep (void) const {    \
                  return typename Iterator<IteratorType>::ResizePrepType (*this);                   \
               };                                                                                   \
              inline Operand1 const & operand1 (void) const { return operand1_; };                  \
@@ -2492,8 +2493,8 @@
                          typename Operand1::SeqWalkType,                                           \
                          typename Operand2::SeqWalkType,                                           \
                          FieldType> typedef SeqWalkType;                                           \
-             OBJECT_NAME(SourceType const & source)                                                \
-             : operand1_(source.operand1()), operand2_(source.operand2())                          \
+             OBJECT_NAME(MemoryWindow const & size, SourceType const & source)                     \
+             : operand1_(size, source.operand1()), operand2_(size, source.operand2())              \
              {};                                                                                   \
              inline SeqWalkType init (void) const { return SeqWalkType(*this); };                  \
              inline Operand1 const & operand1 (void) const { return operand1_; };                  \
@@ -2650,7 +2651,7 @@
                  return typename Iterator<IteratorType>::SeqWalkType(*this);                       \
               };                                                                                   \
              template<typename IteratorType>                                                       \
-              inline typename Iterator<IteratorType>::ResizePrepType resize (void) const {         \
+              inline typename Iterator<IteratorType>::ResizePrepType resize_prep (void) const {    \
                  return typename Iterator<IteratorType>::ResizePrepType (*this);                   \
               };                                                                                   \
              inline Operand const & operand (void) const { return operand_; };                     \
@@ -2689,8 +2690,8 @@
              typename FieldType::memory_window typedef MemoryWindow;                               \
              OBJECT_NAME<SeqWalk<IteratorType, MyType>, typename Operand::SeqWalkType, FieldType>  \
              typedef SeqWalkType;                                                                  \
-             OBJECT_NAME(SourceType const & source)                                                \
-             : operand_(source.operand())                                                          \
+             OBJECT_NAME(MemoryWindow const & size, SourceType const & source)                     \
+             : operand_(size, source.operand())                                                    \
              {};                                                                                   \
              inline SeqWalkType init (void) const { return SeqWalkType(*this); };                  \
              inline Operand const & operand (void) const { return operand_; };                     \
@@ -2773,10 +2774,11 @@
                                                                          BI::interprocess_semaphore
                                                                          * semaphore) {
 
-             field_expression_sequential_execute_interal<typenameResizeLhsType::ResizeType::
-                                                         SeqWalkType,
-                                                         typenameResizeRhsType::ResizeType::
-                                                         SeqWalkType>(lhs.resize(window).init(), rhs.resize(window).init());
+             field_expression_sequential_execute_internal<typename ResizeLhsType::ResizeType::
+                                                          SeqWalkType,
+                                                          typename ResizeRhsType::ResizeType::
+                                                          SeqWalkType>(lhs.resize(window).init(),
+                                                                       rhs.resize(window).init());
 
              semaphore->post();
           }
@@ -2791,34 +2793,48 @@
                                                                              int const
                                                                              number_of_partitions) {
 
-             typenameField<Initial, FieldType>::template Iterator<CalStyle>::ResizePrepType typedef
-             LhsType;
+             typename Field<Initial, FieldType>::template Iterator<CallStyle>::ResizePrepType
+             typedef LhsType;
 
-             typenameExprType::template Iterator<CalStyle>::ResizePrepType typedef RhsType;
+             typename ExprType::template Iterator<CallStyle>::ResizePrepType typedef RhsType;
+
+             typename FieldType::memory_window typedef MemoryWindow;
+
+             MemoryWindow window = IteratorStyle<CallStyle, FieldType>::memory_window(initial_lhs);
+
+             int x = 1;
+             int y = 1;
+             int z = 1;
+
+             if(number_of_partitions <= window.extent(2)){ z = number_of_partitions; }
+             else if(number_of_partitions <= window.extent(1)){ y = number_of_partitions; }
+             else if(number_of_partitions <= window.extent(0)){ x = number_of_partitions; };
+
+             std::vector<typename FieldType::memory_window> vec_window = window.split(structured::
+                                                                                      IntVec(x, y, z));
 
              std::vector<BI::interprocess_semaphore *> vec_semaphore;
 
-             std::vector<typenameFieldType::memory_window> vec_window =;
+             typename std::vector<typename FieldType::memory_window>::const_iterator window_iterator
+             = vec_window.begin();
 
-             std::vector<typenameFieldType::memory_window>::const_iterator window_iterator =
-             vec_window(begin);
-
-             std::vector<typenameFieldType::memory_window>::const_iterator window_end = vec_window(end);
+             typename std::vector<typename FieldType::memory_window>::const_iterator window_end =
+             vec_window.end();
 
              for(; window_iterator != window_end; ++window_iterator){
 
                 vec_semaphore.push_back(new BI::interprocess_semaphore(0));
 
-                ThreadPoolFIFO::self.schedule(boost::bind(&
-                                                          field_expression_thread_parallel_execute_internal<CallStyle,
-                                                                                                            LhsType,
-                                                                                                            RhsType,
-                                                                                                            FieldType>,
-                                                          Field<Initial, FieldType>(initial_lhs).template
-                                                                                                 resize_prep<CallStyle>(),
-                                                          initial_rhs.expr().template resize_prep<CallStyle>(),
-                                                          *window_iterator,
-                                                          vec_semaphore.back()));
+                ThreadPoolFIFO::self().schedule(boost::bind(&
+                                                            field_expression_thread_parallel_execute_internal<CallStyle,
+                                                                                                              LhsType,
+                                                                                                              RhsType,
+                                                                                                              FieldType>,
+                                                            Field<Initial, FieldType>(initial_lhs).template
+                                                                                                   resize_prep<CallStyle>(),
+                                                            initial_rhs.expr().template resize_prep<CallStyle>(),
+                                                            *window_iterator,
+                                                            vec_semaphore.back()));
              };
 
              std::vector<BI::interprocess_semaphore *>::iterator isem = vec_semaphore.begin();
