@@ -120,18 +120,16 @@ class SpatialField {
 
   public:
 
-    typedef SpatialField< FieldLocation,
-                          GhostTraits,
-                          T>                   field_type;
-    typedef GhostTraits                        Ghost;
-    typedef FieldLocation                      Location;
-    typedef T                                  AtomicT;
-    typedef T                                  value_type;
-    typedef MemoryWindow                       memory_window;
-    typedef FieldIterator     <field_type>     iterator;
-    typedef FieldIterator     <field_type>     interior_iterator;
-    typedef ConstFieldIterator<field_type>     const_iterator;
-    typedef ConstFieldIterator<field_type>     const_interior_iterator;
+    typedef SpatialField<FieldLocation, GhostTraits, T> field_type;
+    typedef GhostTraits Ghost;
+    typedef FieldLocation Location;
+    typedef T AtomicT;
+    typedef T value_type;
+    typedef MemoryWindow memory_window;
+    typedef FieldIterator<field_type> iterator;
+    typedef FieldIterator<field_type> interior_iterator;
+    typedef ConstFieldIterator<field_type> const_iterator;
+    typedef ConstFieldIterator<field_type> const_interior_iterator;
 
     /**
      *  \brief Construct a SpatialField
@@ -753,12 +751,13 @@ SpatialField<Location, GhostTraits, T>::operator=(const MyType& other) {
             CDI.memcpy_to( fieldValuesExtDevice_, other.fieldValues_, allocatedBytes_, deviceIndex_ );
           }
           break;
-          default:
-          std::ostringstream msg;
-          msg << "Attempted unsupported copy operation, at " << __FILE__ << " : " << __LINE__ << std::endl;
-          msg << "\t -" << DeviceTypeTools::get_memory_type_description(memType_) << " = "
-          << DeviceTypeTools::get_memory_type_description(other.memory_device_type());
-          throw( std::runtime_error ( msg.str() ));
+          default: {
+            std::ostringstream msg;
+            msg << "Attempted unsupported copy operation, at " << __FILE__ << " : " << __LINE__ << std::endl;
+            msg << "\t -" << DeviceTypeTools::get_memory_type_description(memType_) << " = "
+            << DeviceTypeTools::get_memory_type_description(other.memory_device_type());
+            throw( std::runtime_error ( msg.str() ));
+          }
           break;
         } // end internal switch
 
