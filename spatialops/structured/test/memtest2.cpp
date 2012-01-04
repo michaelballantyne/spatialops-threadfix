@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
         std::cout << " FAIL\n";
         std::ostringstream msg;
         msg << "Found invalid reference count, " << q.get_refcount()
-            << ", on pointer Q for device: " << device;
+                << ", on pointer Q for device: " << device;
         throw(std::runtime_error(msg.str()));
       }
 
@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
         std::cout << " FAIL\n";
         std::ostringstream msg;
         msg << "Found invalid reference count, " << p.get_refcount()
-            << ", on pointer P for device: " << device;
+                << ", on pointer P for device: " << device;
         throw(std::runtime_error(msg.str()));
       }
 
@@ -89,7 +89,7 @@ int main(int argc, char** argv) {
         std::cout << " FAIL\n";
         std::ostringstream msg;
         msg << "Found invalid reference count," << p.get_refcount()
-            << ", on pointer P for device: " << device;
+                << ", on pointer P for device: " << device;
         throw(std::runtime_error(msg.str()));
       }
 

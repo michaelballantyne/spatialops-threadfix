@@ -144,9 +144,11 @@ class SpatialField {
      *         protects against memory corruption and inadvertent
      *         deletion of the field's underlying memory.
      */
-    SpatialField(const MemoryWindow window, T* const fieldValues,
-        const StorageMode mode = InternalStorage, const MemoryType mtype =
-            LOCAL_RAM, const unsigned short int devIdx = 0);
+    SpatialField( const MemoryWindow window,
+                  T* const fieldValues,
+                  const StorageMode mode = InternalStorage,
+                  const MemoryType mtype = LOCAL_RAM,
+                  const unsigned short int devIdx = 0 );
 
     /**
      *  \brief Shallow copy constructor.  This results in two fields
@@ -160,7 +162,7 @@ class SpatialField {
      *  \brief Given the index for this field 0-based including
      *  ghosts, obtain a reference to the field value.
      *  WARNING: slow!
-     *  NOTE: USEAGE IS DEPRECIATED!! Not supported for external field types.
+     *  NOTE: USEAGE IS DEPRECATED!! Not supported for external field types.
      */
     T& operator()(const size_t i, const size_t j, const size_t k);
 
@@ -168,7 +170,7 @@ class SpatialField {
      *  \brief Given the index for this field 0-based including
      *  ghosts, obtain a const reference to the field value.
      *  WARNING: slow!
-     *  NOTE: USAGE IS DEPRECIATED!! Not supported for external field types
+     *  NOTE: USAGE IS DEPRECATED!! Not supported for external field types
      */
     const T& operator()(const size_t i, const size_t j, const size_t k) const;
 
@@ -176,7 +178,7 @@ class SpatialField {
      *  \brief Given the index for this field 0-based including
      *  ghosts, obtain a reference to the field value.
      *  WARNING: slow!
-     *  NOTE: USAGE IS DEPRECIATED!! Not supported for external field types
+     *  NOTE: USAGE IS DEPRECATED!! Not supported for external field types
      */
     T& operator()(const IntVec& ijk);
 
@@ -184,7 +186,7 @@ class SpatialField {
      *  \brief Given the index for this field 0-based including
      *  ghosts, obtain a const reference to the field value.
      *  WARNING: slow!
-     *  NOTE: USAGE IS DEPRECIATED!! Not supported for external field types
+     *  NOTE: USAGE IS DEPRECATED!! Not supported for external field types
      */
     const T& operator()(const IntVec& ijk) const;
 
@@ -192,7 +194,7 @@ class SpatialField {
      *  Index into this field (global index, 0-based in ghost cells).
      *  Note that if this field is windowed, this is still the global
      *  (not windowed) flat index.
-     *  NOTE: USAGE IS DEPRECIATED!! Not supported for external field types
+     *  NOTE: USAGE IS DEPRECATED!! Not supported for external field types
      */
     inline T& operator[](const size_t i);
     inline T& operator[](const size_t i) const;
@@ -244,7 +246,7 @@ class SpatialField {
     inline MyType& operator =(const MyType&);
     /**
      * \brief Unary field operators between SpatialFields
-     * NOTE: USAGE IS DEPRECIATED!! Not supported for external field types
+     * NOTE: USAGE IS DEPRECATED!! Not supported for external field types
      * Future usage should utilize '<<=' syntax.
      * @param
      * @return
@@ -261,7 +263,7 @@ class SpatialField {
 
     /**
      * \brief Unary field operators between SpatialField and single data element field type
-     * NOTE: USAGE IS DEPRECIATED!! Not supported for external field types
+     * NOTE: USAGE IS DEPRECATED!! Not supported for external field types
      * Future usage should utilize '<<=' syntax.
      * @param
      * @return
@@ -275,7 +277,7 @@ class SpatialField {
 
     /**
      * \brief Unary field operators between SpatialFields
-     * NOTE: USAGE IS DEPRECIATED!! Not supported for external field types
+     * NOTE: USAGE IS DEPRECATED!! Not supported for external field types
      * Future usage should utilize '<<=' syntax.
      * @param
      * @return
@@ -318,18 +320,22 @@ class SpatialField {
 //==================================================================
 
 template<typename Location, typename GhostTraits, typename T>
-SpatialField<Location, GhostTraits, T>::SpatialField(const MemoryWindow window,
-    T* const fieldValues, const StorageMode mode, const MemoryType mtype,
-    const unsigned short int devIdx) :
-    fieldWindow_(window), interiorFieldWindow_(window), // reset with correct info later
-    fieldValues_(
-        (mtype == LOCAL_RAM) ?
-            ((mode == ExternalStorage) ?
-                fieldValues :
-                new T[window.glob_dim(0) * window.glob_dim(1)
-                    * window.glob_dim(2)]) :
-            (NULL)), builtField_(mode == InternalStorage), deviceIndex_(devIdx), memType_(
-        mtype), allocatedBytes_(0) {
+SpatialField<Location, GhostTraits, T>::
+SpatialField( const MemoryWindow window,
+              T* const fieldValues,
+              const StorageMode mode,
+              const MemoryType mtype,
+              const unsigned short int devIdx )
+    : fieldWindow_(window), interiorFieldWindow_(window), // reset with correct info later
+      fieldValues_( (mtype == LOCAL_RAM) ?
+                    ( (mode == ExternalStorage) ? fieldValues
+                      : new T[window.glob_dim(0) * window.glob_dim(1)  * window.glob_dim(2)] )
+                    : (NULL) ),
+      builtField_( mode == InternalStorage ),
+      deviceIndex_(devIdx),
+      memType_(mtype),
+      allocatedBytes_(0)
+{
   //InteriorStorage => we build a new field
   //Exterior storage => we wrap T*
   IntVec ext = window.extent();
@@ -341,17 +347,14 @@ SpatialField<Location, GhostTraits, T>::SpatialField(const MemoryWindow window,
       ofs[i] += GhostTraits::NGHOST;
     }
   }
-  //Determine raw byte count to allocate on our GPU and allocate.
-  allocatedBytes_ = sizeof(T)
-      * (window.glob_dim(0) * window.glob_dim(1) * window.glob_dim(2));
 
-  interiorFieldWindow_ = MemoryWindow(window.glob_dim(), ofs, ext,
-      window.has_bc(0), window.has_bc(1), window.has_bc(2));
+  //Determine raw byte count to allocate on our GPU and allocate.
+  allocatedBytes_ = sizeof(T) * (window.glob_dim(0) * window.glob_dim(1) * window.glob_dim(2));
+
+  interiorFieldWindow_ = MemoryWindow( window.glob_dim(), ofs, ext, window.has_bc(0), window.has_bc(1), window.has_bc(2) );
 
   switch (mtype) {
-    case LOCAL_RAM: {
-
-    }
+    case LOCAL_RAM:
       break;
 #ifdef ENABLE_CUDA
       case EXTERNAL_CUDA_GPU: {
@@ -379,11 +382,15 @@ SpatialField<Location, GhostTraits, T>::SpatialField(const MemoryWindow window,
 //------------------------------------------------------------------
 
 template<typename Location, typename GhostTraits, typename T>
-SpatialField<Location, GhostTraits, T>::SpatialField(const SpatialField& other) :
-    fieldWindow_(other.fieldWindow_), interiorFieldWindow_(
-        other.interiorFieldWindow_), fieldValues_(other.fieldValues_), builtField_(
-        false), deviceIndex_(other.deviceIndex_), memType_(other.memType_), fieldValuesExtDevice_(
-        other.fieldValuesExtDevice_) {
+SpatialField<Location, GhostTraits, T>::SpatialField(const SpatialField& other)
+: fieldWindow_(other.fieldWindow_),
+  interiorFieldWindow_(other.interiorFieldWindow_),
+  fieldValues_(other.fieldValues_),
+  builtField_(false),
+  deviceIndex_(other.deviceIndex_),
+  memType_(other.memType_),
+  fieldValuesExtDevice_(other.fieldValuesExtDevice_)
+{
 }
 
 //------------------------------------------------------------------
@@ -392,23 +399,23 @@ template<typename Location, typename GhostTraits, typename T>
 SpatialField<Location, GhostTraits, T>::~SpatialField() {
   if (builtField_) {
     switch (memType_) {
-      case LOCAL_RAM: {
-        delete[] fieldValues_;
-      }
-        break;
+    case LOCAL_RAM: {
+      delete[] fieldValues_;
+    }
+    break;
 #ifdef ENABLE_CUDA
-        case EXTERNAL_CUDA_GPU: {
-          ema::cuda::CUDADeviceInterface::self().release( fieldValuesExtDevice_, deviceIndex_);
-        }
-        break;
+    case EXTERNAL_CUDA_GPU: {
+      ema::cuda::CUDADeviceInterface::self().release( fieldValuesExtDevice_, deviceIndex_);
+    }
+    break;
 #endif
-      default:
-        std::ostringstream msg;
-        msg << "Attempt to release ( "
-            << DeviceTypeTools::get_memory_type_description(memType_)
-            << " ) field type, without supporting libraries\n";
-        msg << "\t " << __FILE__ << " : " << __LINE__;
-        break;
+    default:
+      std::ostringstream msg;
+      msg << "Attempt to release ( "
+          << DeviceTypeTools::get_memory_type_description(memType_)
+      << " ) field type, without supporting libraries\n";
+      msg << "\t " << __FILE__ << " : " << __LINE__;
+      break;
     }
   }
 }
@@ -416,41 +423,42 @@ SpatialField<Location, GhostTraits, T>::~SpatialField() {
 //------------------------------------------------------------------
 
 template<typename FieldLocation, typename GhostTraits, typename T>
-void SpatialField<FieldLocation, GhostTraits, T>::reset_values(
-    const T* values) {
+void SpatialField<FieldLocation, GhostTraits, T>::
+reset_values( const T* values )
+{
   switch (memType_) {
-    case LOCAL_RAM: {
-      iterator ifld = begin();
-      const iterator iflde = end();
-      if (NULL == values) {
-        for (; ifld != iflde; ++ifld)
-          *ifld = 0.0;
-      } else {
-        for (; ifld != iflde; ++ifld, ++values)
-          *ifld = *values;
-      }
+  case LOCAL_RAM: {
+    iterator ifld = begin();
+    const iterator iflde = end();
+    if (NULL == values) {
+      for (; ifld != iflde; ++ifld)
+        *ifld = 0.0;
+    } else {
+      for (; ifld != iflde; ++ifld, ++values)
+        *ifld = *values;
     }
-      break;
+  }
+  break;
 #ifdef ENABLE_CUDA
-      case EXTERNAL_CUDA_GPU: {
-        ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
+  case EXTERNAL_CUDA_GPU: {
+    ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
 
-        if( values == NULL ) {
-          CDI.memset( fieldValuesExtDevice_, 0, allocatedBytes_, deviceIndex_ );
-        } else {
-          void* src = (void*)(values);
-          CDI.memcpy_to( fieldValuesExtDevice_, src, allocatedBytes_, deviceIndex_ );
-        }
-      }
-      break;
+    if( values == NULL ) {
+      CDI.memset( fieldValuesExtDevice_, 0, allocatedBytes_, deviceIndex_ );
+    } else {
+      void* src = (void*)(values);
+      CDI.memcpy_to( fieldValuesExtDevice_, src, allocatedBytes_, deviceIndex_ );
+    }
+  }
+  break;
 #endif
-    default:
-      std::ostringstream msg;
-      msg << "Reset values called for unsupported field type ( "
-          << DeviceTypeTools::get_memory_type_description(memType_) << " )";
-      msg << "\t " << __FILE__ << " : " << __LINE__;
-      throw(std::runtime_error(msg.str()));
-      break;
+  default:
+    std::ostringstream msg;
+    msg << "Reset values called for unsupported field type ( "
+        << DeviceTypeTools::get_memory_type_description(memType_) << " )";
+    msg << "\t " << __FILE__ << " : " << __LINE__;
+    throw(std::runtime_error(msg.str()));
+    break;
   }
 }
 
@@ -570,7 +578,7 @@ SpatialField<Location, GhostTraits, T>::operator()(const size_t i,
       msg << "Field type ( "
           << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
           << " does not support direct indexing.\n"
-          << "Note: this function is depreciated and is not recommended for future use.\n";
+          << "Note: this function is DEPRECATED and is not recommended for future use.\n";
       msg << "\t " << __FILE__ << " : " << __LINE__;
       throw(std::runtime_error(msg.str()));
       break;
@@ -598,7 +606,7 @@ SpatialField<Location, GhostTraits, T>::operator()(const IntVec& ijk) {
       msg << "Field type ( "
           << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
           << " does not support direct indexing.\n"
-          << "Note: this function is depreciated and is not recommended for future use.\n";
+          << "Note: this function is DEPRECATED and is not recommended for future use.\n";
       msg << "\t " << __FILE__ << " : " << __LINE__;
       throw(std::runtime_error(msg.str()));
       break;
@@ -621,7 +629,7 @@ SpatialField<Location, GhostTraits, T>::operator()(const size_t i,
       msg << "Field type ( "
           << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
           << " does not support direct indexing.\n"
-          << "Note: this function is depreciated and is not recommended for future use.\n";
+          << "Note: this function is DEPRECATED and is not recommended for future use.\n";
       msg << "\t " << __FILE__ << " : " << __LINE__;
       throw(std::runtime_error(msg.str()));
       break;
@@ -649,7 +657,7 @@ SpatialField<Location, GhostTraits, T>::operator()(const IntVec& ijk) const {
       msg << "Field type ( "
           << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
           << " does not support direct indexing.\n"
-          << "Note: this function is depreciated and is not recommended for future use.\n";
+          << "Note: this function is DEPRECATED and is not recommended for future use.\n";
       msg << "\t " << __FILE__ << " : " << __LINE__;
       throw(std::runtime_error(msg.str()));
       break;
@@ -671,7 +679,7 @@ SpatialField<Location, GhostTraits, T>::operator[](const size_t i) {
       msg << "Field type ( "
           << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
           << " does not support direct indexing.\n"
-          << "Note: this function is depreciated and is not recommended for future use.\n";
+          << "Note: this function is DEPRECATED and is not recommended for future use.\n";
       msg << "\t " << __FILE__ << " : " << __LINE__;
       throw(std::runtime_error(msg.str()));
       break;
@@ -693,7 +701,7 @@ SpatialField<Location, GhostTraits, T>::operator[](const size_t i) const {
       msg << "Field type ( "
           << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
           << " does not support direct indexing.\n"
-          << "Note: this function is depreciated and is not recommended for future use.\n";
+          << "Note: this function is DEPRECATED and is not recommended for future use.\n";
       msg << "\t " << __FILE__ << " : " << __LINE__;
       throw(std::runtime_error(msg.str()));
       break;
@@ -794,7 +802,7 @@ SpatialField<Location, GhostTraits, T>::operator+=(const MyType& other) {
     msg << "Field type ( "
         << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
         << " does not support this form of unary operator.\n"
-        << "Note: this functionality is depreciated and is not recommended for future use.\n";
+        << "Note: this functionality is DEPRECATED and is not recommended for future use.\n";
     msg << "\t " << __FILE__ << " : " << __LINE__;
     throw(std::runtime_error(msg.str()));
   }
@@ -817,7 +825,7 @@ SpatialField<Location, GhostTraits, T>::operator-=(const MyType& other) {
     msg << "Field type ( "
         << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
         << " does not support this form of unary operator.\n"
-        << "Note: this functionality is depreciated and is not recommended for future use.\n";
+        << "Note: this functionality is DEPRECATED and is not recommended for future use.\n";
     msg << "\t " << __FILE__ << " : " << __LINE__;
     throw(std::runtime_error(msg.str()));
   }
@@ -840,7 +848,7 @@ SpatialField<Location, GhostTraits, T>::operator*=(const MyType& other) {
     msg << "Field type ( "
         << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
         << " does not support this form of unary operator.\n"
-        << "Note: this functionality is depreciated and is not recommended for future use.\n";
+        << "Note: this functionality is DEPRECATED and is not recommended for future use.\n";
     msg << "\t " << __FILE__ << " : " << __LINE__;
     throw(std::runtime_error(msg.str()));
   }
@@ -863,7 +871,7 @@ SpatialField<Location, GhostTraits, T>::operator/=(const MyType& other) {
     msg << "Field type ( "
         << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
         << " does not support this form of unary operator.\n"
-        << "Note: this functionality is depreciated and is not recommended for future use.\n";
+        << "Note: this functionality is DEPRECATED and is not recommended for future use.\n";
     msg << "\t " << __FILE__ << " : " << __LINE__;
     throw(std::runtime_error(msg.str()));
   }
@@ -1040,7 +1048,7 @@ SpatialField<Location, GhostTraits, T>::operator+=(const T a) {
     msg << "Field type ( "
         << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
         << " does not support this form of unary operator.\n"
-        << "Note: this functionality is depreciated and is not recommended for future use.\n";
+        << "Note: this functionality is DEPRECATED and is not recommended for future use.\n";
     msg << "\t " << __FILE__ << " : " << __LINE__;
     throw(std::runtime_error(msg.str()));
   }
@@ -1061,7 +1069,7 @@ SpatialField<Location, GhostTraits, T>::operator-=(const T a) {
     msg << "Field type ( "
         << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
         << " does not support this form of unary operator.\n"
-        << "Note: this functionality is depreciated and is not recommended for future use.\n";
+        << "Note: this functionality is DEPRECATED and is not recommended for future use.\n";
     msg << "\t " << __FILE__ << " : " << __LINE__;
     throw(std::runtime_error(msg.str()));
   }
@@ -1082,7 +1090,7 @@ SpatialField<Location, GhostTraits, T>::operator*=(const T a) {
     msg << "Field type ( "
         << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
         << " does not support this form of unary operator.\n"
-        << "Note: this functionality is depreciated and is not recommended for future use.\n";
+        << "Note: this functionality is DEPRECATED and is not recommended for future use.\n";
     msg << "\t " << __FILE__ << " : " << __LINE__;
     throw(std::runtime_error(msg.str()));
   }
@@ -1103,7 +1111,7 @@ SpatialField<Location, GhostTraits, T>::operator/=(const T a) {
     msg << "Field type ( "
         << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
         << " does not support this form of unary operator.\n"
-        << "Note: this functionality is depreciated and is not recommended for future use.\n";
+        << "Note: this functionality is DEPRECATED and is not recommended for future use.\n";
     msg << "\t " << __FILE__ << " : " << __LINE__;
     throw(std::runtime_error(msg.str()));
   }

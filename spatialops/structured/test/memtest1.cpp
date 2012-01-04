@@ -35,8 +35,8 @@ int main(int argc, char** argv) {
         CDI.memcpy_from((void*)bytesout, p, i);
 
         if( memcmp(bytesin, bytesout, i) ){
-           std::cout << "failed -> Zero byte pattern does do not match\n";
-           exit(1);
+          std::cout << "failed -> Zero byte pattern does do not match\n";
+          exit(1);
         }
 
         std::cout << "OK\n";
@@ -48,8 +48,8 @@ int main(int argc, char** argv) {
         CDI.memcpy_from((void*)bytesout, p, i);
 
         if( memcmp(bytesin, bytesout, i) ){
-           std::cout << "failed -> Ones byte pattern does not match\n";
-           exit(1);
+          std::cout << "failed -> Ones byte pattern does not match\n";
+          exit(1);
         }
 
         std::cout << "OK\n";
@@ -64,8 +64,8 @@ int main(int argc, char** argv) {
         CDI.memcpy_from((void*)bytesout, p, i);
 
         if( memcmp(bytesin, bytesout, i) ){
-           std::cout << "failed -> Random byte pattern does not match\n";
-           exit(1);
+          std::cout << "failed -> Random byte pattern does not match\n";
+          exit(1);
         }
 
         std::cout << "OK\n";

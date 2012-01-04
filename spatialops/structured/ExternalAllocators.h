@@ -72,7 +72,7 @@ namespace cuda { //ema::cuda
     /** \brief Returns the number of available CUDA capable compute devices */
     int get_device_count() const;
 
-    /** \brief Returns the memory structure associted with device K */
+    /** \brief Returns the memory structure associated with device K */
     void get_memory_statistics(CUDAMemStats& cms, int K = 0) const;
 
     /** \brief Updates the 'device_stats' structs with the most current memory usage statistics
