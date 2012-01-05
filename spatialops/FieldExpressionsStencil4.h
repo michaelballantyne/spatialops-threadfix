@@ -181,16 +181,22 @@
                 int x = 1;
                 int y = 1;
                 int z = 1;
-                int g = SrcType::Ghost::NGHOST;
-                structured::IntVec gcs = structured::IntVec(g, g, g);
 
                 if(number_of_partitions <= sw.extent(2)){ z = number_of_partitions; }
                 else if(number_of_partitions <= sw.extent(1)){ y = number_of_partitions; }
                 else if(number_of_partitions <= sw.extent(0)){ x = number_of_partitions; };
 
-                std::vector<MemoryWindow> vec_sw = sw.split(structured::IntVec(x, y, z), gcs);
+                int g = SrcType::Ghost::NGHOST;
+                structured::IntVec gcs = structured::IntVec(g, g, g);
 
-                std::vector<MemoryWindow> vec_dw = dw.split(structured::IntVec(x, y, z), gcs);
+                typename SrcType::field_type::Location::BCExtra typedef SrcBCExtra;
+                typename DestType::field_type::Location::BCExtra typedef DestBCExtra;
+                structured::IntVec sBC = sw.has_bc() * SrcBCExtra::int_vec();
+                structured::IntVec dBC = dw.has_bc() * DestBCExtra::int_vec();
+
+                std::vector<MemoryWindow> vec_sw = sw.split(structured::IntVec(x, y, z), gcs, sBC);
+
+                std::vector<MemoryWindow> vec_dw = dw.split(structured::IntVec(x, y, z), gcs, dBC);
 
                 std::vector<BI::interprocess_semaphore *> vec_semaphore;
 
