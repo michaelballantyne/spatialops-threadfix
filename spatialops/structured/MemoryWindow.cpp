@@ -87,23 +87,29 @@ namespace SpatialOps{
 
     std::vector<MemoryWindow>
     MemoryWindow::split( const IntVec splitPattern,
-                         const IntVec npad ) const
+                         const IntVec npad,
+                         const IntVec bcExtents ) const
     {
+      const IntVec extent = extent_ - npad * 2 - bcExtents;
+      const IntVec offset = offset_ + npad;
+
 #     ifndef NDEBUG
       for( size_t i=0; i<3; ++i ){
-        assert( extent_[i] >= splitPattern[i] );
+        assert( extent[i] >= splitPattern[i] );
+        assert( extent[i] + offset[i] <= nptsGlob_[i] );
         assert( splitPattern[i] > 0 );
+        assert( npad[i] >= 0);
       }
 #     endif
 
       // try to make windows close to same size
-      const int nextra[3] = { extent_[0] % splitPattern[0],
-                              extent_[1] % splitPattern[1],
-                              extent_[2] % splitPattern[2] };
+      const int nextra[3] = { extent[0] % splitPattern[0],
+                              extent[1] % splitPattern[1],
+                              extent[2] % splitPattern[2] };
       typedef std::vector<int>  Ints;
-      Ints nxyz[3] = { Ints( splitPattern[0], extent_[0] / splitPattern[0] ),
-                       Ints( splitPattern[1], extent_[1] / splitPattern[1] ),
-                       Ints( splitPattern[2], extent_[2] / splitPattern[2] ) };
+      Ints nxyz[3] = { Ints( splitPattern[0], extent[0] / splitPattern[0] ),
+                       Ints( splitPattern[1], extent[1] / splitPattern[1] ),
+                       Ints( splitPattern[2], extent[2] / splitPattern[2] ) };
 
       for( int idir=0; idir<3; ++idir ){
         for( int isp=0; isp<splitPattern[idir]; ++isp ){
@@ -111,23 +117,24 @@ namespace SpatialOps{
         }
       }
 
-      IntVec cumOffset(0,0,0);  // keep track of how far each chunk is offset
+      IntVec cumOffset = offset;  // keep track of how far each chunk is offset
       std::vector<MemoryWindow> children;
       for( int k=0; k<splitPattern[2]; ++k ){
         const bool bcz = (k==splitPattern[2]-1) ? bc_[2] : false;
-        cumOffset[1] = 0;
+        cumOffset[1] = offset[1];
         for( int j=0; j<splitPattern[1]; ++j ){
           const bool bcy = (j==splitPattern[1]-1) ? bc_[1] : false;
-          cumOffset[0] = 0;
+          cumOffset[0] = offset[0];
           for( int i=0; i<splitPattern[0]; ++i ){
             const bool bcx = (i==splitPattern[0]-1) ? bc_[0] : false;
-            const IntVec offset( std::max(0,cumOffset[0]-npad[0]),
-                                 std::max(0,cumOffset[1]-npad[1]),
-                                 std::max(0,cumOffset[2]-npad[2]) );
-            const IntVec extent( std::min(extent_[0],nxyz[0][i]+npad[0]),
-                                 std::min(extent_[1],nxyz[1][j]+npad[1]),
-                                 std::min(extent_[2],nxyz[2][k]+npad[2]) );
-            children.push_back( MemoryWindow( nptsGlob_, offset, extent, bcx, bcy, bcz ) );
+            children.push_back( MemoryWindow(nptsGlob_,
+                                             cumOffset - npad,
+                                             IntVec(nxyz[0][i] + npad[0] * 2 + (bcx ? bcExtents[0] : 0),
+                                                    nxyz[1][j] + npad[1] * 2 + (bcy ? bcExtents[1] : 0),
+                                                    nxyz[2][k] + npad[2] * 2 + (bcz ? bcExtents[2] : 0)),
+                                             bcx,
+                                             bcy,
+                                             bcz) );
             cumOffset[0] += nxyz[0][i];
           }
           cumOffset[1] += nxyz[1][j];

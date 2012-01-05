@@ -182,8 +182,8 @@ int main()
     std::vector<MemoryWindow> children = parent.split( IntVec(1,3,1), IntVec(1,1,1) );
     TestHelper status(true);
     status( children.size() == 3, " number of children" );
-    status( children[0] == MemoryWindow( nxyz, IntVec(0,0,0), IntVec(6,3,1), false, false, false ), " child 0" );
-    status( children[1] == MemoryWindow( nxyz, IntVec(0,1,0), IntVec(6,3,1), false, false, false ), " child 1" );
+    status( children[0] == MemoryWindow( nxyz, IntVec(0,0,0), IntVec(6,4,1), false, false, false ), " child 0" );
+    status( children[1] == MemoryWindow( nxyz, IntVec(0,2,0), IntVec(6,3,1), false, false, false ), " child 1" );
     status( children[2] == MemoryWindow( nxyz, IntVec(0,3,0), IntVec(6,3,1), false, false, false ), " child 2" );
     overall( status.ok(), "6x6x1 split into 6x3x1 with ghosts" );
   }
