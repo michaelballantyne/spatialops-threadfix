@@ -33,7 +33,7 @@ namespace structured{
 
     inline const IntVec& extent() const{ return npts_; }
 
-    inline const int extent( const size_t i ) const{ return npts_[i]; }
+    inline int extent( const size_t i ) const{ return npts_[i]; }
 
     inline const std::vector<double>& length() const{ return length_; }
     inline double length( const size_t i ) const{ return length_[i]; }
@@ -51,7 +51,7 @@ namespace structured{
      *  grid.set_coord<XDIR>( xxsy );
      *  grid.set_coord<ZDIR>( zxsy );
      *  \endcode
-     */       
+     */
     template< typename CoordT, typename FieldT >
     void set_coord( FieldT& f ) const;
   };
