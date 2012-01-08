@@ -55,12 +55,17 @@ if( CUDA_CUDA_LIBRARY )
   
   add_executable( extfieldtest testExternalField.cpp )
   target_link_libraries( extfieldtest ${libs} )
+  
+  cuda_add_executable( extstenciltest ExternalStencilTest.cu )
+  set( driver_link_libs ${libs} ${CUDA_LIBRARIES} )
+  target_link_libraries( extstenciltest ${driver_link_libs} )
 
   build_test( CompileTest ctest "Success" )
   build_test( MemoryDebugFlags debug_memtest_flags "Success" )
   build_test( MemoryTest simplememtest "Success" )
   build_test( SharedMemoryTest sharedmemtest "Success" )
   build_test( ExternalFieldTest extfieldtest "Success" )
+  build_test( ExternalStencilTest extstenciltest "Success" )
 else( CUDA_CUDA_LIBRARY )
   message( STATUS "Must include CUDA libraries to build cuda test base" )
 endif( CUDA_CUDA_LIBRARY )

@@ -116,7 +116,7 @@ class SpatFldPtr {
     /**
      *  @name unary operators
      *  these simply call through to the corresponding SpatialField unary operators.
-     *  WARNING: (DEPRECIATED) These should not be used going forward.
+     *  WARNING: (DEPRECATED) These should not be used going forward.
      */
     //@{
     inline SpatFldPtr& operator+=(const SpatFldPtr& p) {
@@ -343,6 +343,12 @@ SpatFldPtr<FieldT>::operator=(const SpatFldPtr& p) {
             store_.restore_field(*f_);
           }
             break;
+#ifdef ENABLE_CUDA
+            case EXTERNAL_CUDA_GPU: {
+              delete f_;
+            }
+            break;
+#endif
           default:
             throw(std::runtime_error("Attempt to detach an unknown field type."));
             break;

@@ -34,22 +34,18 @@ namespace SpatialOps{
       switch ( m ){
       case LOCAL_RAM:
         return std::string("Locally allocated, generic system RAM.");
-        break;
       case LOCAL_VECTOR_INST:
         return std::string("Locally allocated, vector device or CPU extension.");
-        break;
       case EXTERNAL_CUDA_GPU:
         return std::string("Externally allocated, CUDA GPU device.");
-        break;
       case EXTERNAL_OPENCL_GPU:
         return std::string("Externally allocated, OpenCL GPU device.");
-        break;
       case EXTERNAL_INTEL_MIK:
         return std::string("Externally allocated, intel MIK device.");
-        break;
+      case DEBUG_TEST_OPT:
+        return std::string("Debugging value -- Are you sure this is what you want to be using?");
       default:
         return std::string("Unknown or Invalid");
-        break;
       }
     }
 

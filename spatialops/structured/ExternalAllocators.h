@@ -41,7 +41,6 @@ namespace cuda { //ema::cuda
     static CUDADeviceInterface& self();
 
     /** \brief attempts to allocate N bytes on device K, returns the explicit memory pointer
-     * Note: This contains no context information.
      * Note: The caller is responsible for memory cleanup of the returned pointer
      * */
     void* get_raw_pointer(unsigned long int N, unsigned int K = 0);
@@ -76,7 +75,7 @@ namespace cuda { //ema::cuda
     void get_memory_statistics(CUDAMemStats& cms, int K = 0) const;
 
     /** \brief Updates the 'device_stats' structs with the most current memory usage statistics
-     * Please note that it is possible memory can be allocated from other sources, this
+     * NOTE: it is possible memory can be allocated from other sources, this
      * is simply to provide a metric for checking relative memory availability.
      * */
     void update_memory_statistics();
@@ -89,7 +88,7 @@ namespace cuda { //ema::cuda
   };
 
   /** dvn: Not sure if were going to use this anymore as it duplicates
-   *SpatialFieldPtr functionality, but it may be handy to have for now.
+   *  SpatialFieldPtr functionality, but it may be handy to have for now.
    * \brief Wrapper structure for a ref-counted GPU memory pointer */
   class CUDASharedPointer {
     friend class CUDADeviceInterface;
@@ -109,7 +108,7 @@ namespace cuda { //ema::cuda
 
     /** \brief assign this pointer to another CUDASharedPointer
      *
-     * IMPORTANT: This will default pointer device to the current thread's device context
+     * IMPORTANT: This will default the returned pointer's device to the current thread's device context
      * If this is not what you want, then you will need to manually assign the pointer deviceID.
      *  **/
     CUDASharedPointer& operator=( void* x );

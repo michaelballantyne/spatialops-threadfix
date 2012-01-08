@@ -162,7 +162,7 @@ void CUDADeviceManager::print_device_info() const {
   for (std::vector<cudaDeviceProp*>::const_iterator cdpit =
       device_props.begin(); cdpit != device_props.end(); ++cdpit) {
 
-    cudaDeviceProp& p = *device_props.back();
+    cudaDeviceProp& p = *(*cdpit);
 
     std::cout << "\n\t[" << device << "] " << p.name << " ("
         << (p.integrated ? "Integrated" : "Discrete") << ")";
@@ -350,8 +350,7 @@ void CUDADeviceInterface::memset(void* dest, int value, size_t sz,
 
 /*---------------------------------------------------------------------*/
 
-void CUDADeviceInterface::memset(CUDASharedPointer& dest, int value,
-    size_t sz) {
+void CUDADeviceInterface::memset(CUDASharedPointer& dest, int value, size_t sz) {
   CudaMemset(dest.ptr_, value, sz, (*dest.deviceID_));
 }
 
@@ -455,9 +454,7 @@ CUDASharedPointer& CUDASharedPointer::operator=(const CUDASharedPointer& x) {
 #endif
 
   /** Check to make sure we're not self assigning. **/
-  if ((*this) == x) {
-    return *this;
-  }
+  if ((*this) == x) { return *this; }
 
   if (refCount_ != NULL) {
 #ifdef DEBUG_EXT_CUDA_SHARED_PTR
