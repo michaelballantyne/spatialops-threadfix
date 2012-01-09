@@ -2247,6 +2247,126 @@
                                        Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
        };
 
+      template<typename CurrentMode, typename Operand, typename FieldType>
+       struct SqrtFcn;
+
+      template<typename Operand, typename FieldType>
+       struct SqrtFcn<Initial, Operand, FieldType> {
+
+         public:
+          typename FieldType::value_type typedef AtomicType;
+          SqrtFcn<Initial, Operand, FieldType> typedef MyType;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          template<typename IteratorType>
+           struct Iterator {
+
+             SqrtFcn<ResizePrep<IteratorType, MyType>,
+                     typename Operand::template Iterator<IteratorType>::ResizePrepType,
+                     FieldType> typedef ResizePrepType;
+
+             SqrtFcn<SeqWalk<IteratorType, MyType>,
+                     typename Operand::template Iterator<IteratorType>::SeqWalkType,
+                     FieldType> typedef SeqWalkType;
+          };
+          SqrtFcn(Operand const & op)
+          : operand_(op)
+          {};
+          template<typename IteratorType>
+           inline typename Iterator<IteratorType>::SeqWalkType init (void) const {
+              return typename Iterator<IteratorType>::SeqWalkType(*this);
+           };
+          template<typename IteratorType>
+           inline typename Iterator<IteratorType>::ResizePrepType resize_prep (void) const {
+              return typename Iterator<IteratorType>::ResizePrepType (*this);
+           };
+          inline Operand const & operand (void) const { return operand_; };
+
+         private:
+          Operand const operand_;
+      };
+
+      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
+       struct SqrtFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> {
+
+         public:
+          typename FieldType::value_type typedef AtomicType;
+          SqrtFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          SqrtFcn<Resize<IteratorType, MyType>, typename Operand::ResizeType, FieldType> typedef
+          ResizeType;
+          SqrtFcn(SourceType const & source)
+          : operand_(source.operand())
+          {};
+          inline ResizeType resize ( MemoryWindow const & newSize) const {
+             return ResizeType(newSize, *this);
+          };
+          inline Operand const & operand (void) const { return operand_; };
+
+         private:
+          Operand const operand_;
+      };
+
+      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
+       struct SqrtFcn<Resize<IteratorType, SourceType>, Operand, FieldType> {
+
+         public:
+          typename FieldType::value_type typedef AtomicType;
+          SqrtFcn<Resize<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          SqrtFcn<SeqWalk<IteratorType, MyType>, typename Operand::SeqWalkType, FieldType> typedef
+          SeqWalkType;
+          SqrtFcn(MemoryWindow const & size, SourceType const & source)
+          : operand_(size, source.operand())
+          {};
+          inline SeqWalkType init (void) const { return SeqWalkType(*this); };
+          inline Operand const & operand (void) const { return operand_; };
+
+         private:
+          Operand const operand_;
+      };
+
+      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
+       struct SqrtFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> {
+
+         public:
+          typename FieldType::value_type typedef AtomicType;
+          SqrtFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          SqrtFcn(SourceType const & source)
+          : operand_(source.operand())
+          {};
+          inline void next (void) { operand_.next(); };
+          inline bool at_end (void) const { return (operand_.at_end()); };
+          inline bool has_length (void) const { return (operand_.has_length()); };
+          inline AtomicType eval (void) const { return std::sqrt(operand_.eval()); };
+
+         private:
+          Operand operand_;
+      };
+
+      /* SubExpr */
+      template<typename SubExpr>
+       inline FieldExpression<SqrtFcn<Initial,
+                                      typename Standardize<SubExpr, typename SubExpr::field_type>::
+                                      StandardType,
+                                      typename SubExpr::field_type>,
+                              typename SubExpr::field_type> sqrt (SubExpr const & arg) {
+
+          typename SubExpr::field_type typedef FieldType;
+
+          typename Standardize<SubExpr, typename SubExpr::field_type>::StandardType typedef Type;
+
+          SqrtFcn<Initial, Type, FieldType> typedef ReturnType;
+
+          FieldExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(Type(Standardize<SubExpr, FieldType>::standardType(arg))));
+       };
+
 #     define BUILD_BINARY_FUNCTION(OBJECT_NAME, INTERNAL_NAME, EXTERNAL_NAME)                      \
          template<typename CurrentMode, typename Operand1, typename Operand2, typename FieldType>  \
           struct OBJECT_NAME;                                                                      \
