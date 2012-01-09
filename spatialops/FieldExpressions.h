@@ -66,6 +66,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           Scalar<Initial, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           template<typename IteratorType>
            struct Iterator {
@@ -97,6 +98,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           Scalar<ResizePrep<IteratorType, SourceType>, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           Scalar<Resize<IteratorType, MyType>, FieldType> typedef ResizeType;
           Scalar(SourceType const & source)
@@ -117,6 +119,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           Scalar<Resize<IteratorType, SourceType>, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           Scalar<SeqWalk<IteratorType, MyType>, FieldType> typedef SeqWalkType;
           Scalar(MemoryWindow const & size, SourceType const & source)
@@ -135,6 +138,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           Scalar<SeqWalk<IteratorType, SourceType>, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           Scalar(SourceType const & source)
           : value_(source.value())
@@ -157,6 +161,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           ConstField<Initial, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           template<typename IteratorType>
            struct Iterator {
@@ -188,6 +193,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           ConstField<ResizePrep<IteratorType, SourceType>, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           ConstField<Resize<IteratorType, MyType>, FieldType> typedef ResizeType;
           ConstField(SourceType const & source)
@@ -208,6 +214,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           ConstField<Resize<IteratorType, SourceType>, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           ConstField<SeqWalk<IteratorType, MyType>, FieldType> typedef SeqWalkType;
           ConstField(MemoryWindow const & size, SourceType const & source)
@@ -226,6 +233,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           ConstField<SeqWalk<IteratorType, SourceType>, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           ConstField(SourceType const & source)
           : iter_(source.field().begin()), end_(source.field().end())
@@ -249,6 +257,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           Field<Initial, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           template<typename IteratorType>
            struct Iterator {
@@ -280,6 +289,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           Field<ResizePrep<IteratorType, SourceType>, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           Field<Resize<IteratorType, MyType>, FieldType> typedef ResizeType;
           Field(SourceType & source)
@@ -300,6 +310,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           Field<Resize<IteratorType, SourceType>, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           Field<SeqWalk<IteratorType, MyType>, FieldType> typedef SeqWalkType;
           Field(MemoryWindow const & size, SourceType & source)
@@ -318,6 +329,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           Field<SeqWalk<IteratorType, SourceType>, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           Field(SourceType & source)
           : iter_(source.field().begin()), end_(source.field().end())
@@ -379,6 +391,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           SumOp<Initial, Operand1, Operand2, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           template<typename IteratorType>
            struct Iterator {
@@ -422,6 +435,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           SumOp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           SumOp<Resize<IteratorType, MyType>,
                 typename Operand1::ResizeType,
@@ -451,6 +465,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           SumOp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           SumOp<SeqWalk<IteratorType, MyType>,
                 typename Operand1::SeqWalkType,
@@ -478,6 +493,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           SumOp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           SumOp(SourceType const & source)
           : operand1_(source.operand1()), operand2_(source.operand2())
@@ -580,6 +596,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           DiffOp<Initial, Operand1, Operand2, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           template<typename IteratorType>
            struct Iterator {
@@ -623,6 +640,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           DiffOp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           DiffOp<Resize<IteratorType, MyType>,
                  typename Operand1::ResizeType,
@@ -652,6 +670,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           DiffOp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           DiffOp<SeqWalk<IteratorType, MyType>,
                  typename Operand1::SeqWalkType,
@@ -679,6 +698,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           DiffOp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           DiffOp(SourceType const & source)
           : operand1_(source.operand1()), operand2_(source.operand2())
@@ -781,6 +801,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           ProdOp<Initial, Operand1, Operand2, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           template<typename IteratorType>
            struct Iterator {
@@ -824,6 +845,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           ProdOp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           ProdOp<Resize<IteratorType, MyType>,
                  typename Operand1::ResizeType,
@@ -853,6 +875,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           ProdOp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           ProdOp<SeqWalk<IteratorType, MyType>,
                  typename Operand1::SeqWalkType,
@@ -880,6 +903,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           ProdOp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           ProdOp(SourceType const & source)
           : operand1_(source.operand1()), operand2_(source.operand2())
@@ -982,6 +1006,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           DivOp<Initial, Operand1, Operand2, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           template<typename IteratorType>
            struct Iterator {
@@ -1025,6 +1050,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           DivOp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           DivOp<Resize<IteratorType, MyType>,
                 typename Operand1::ResizeType,
@@ -1054,6 +1080,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           DivOp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           DivOp<SeqWalk<IteratorType, MyType>,
                 typename Operand1::SeqWalkType,
@@ -1081,6 +1108,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           DivOp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           DivOp(SourceType const & source)
           : operand1_(source.operand1()), operand2_(source.operand2())
@@ -1183,6 +1211,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           SinFcn<Initial, Operand, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           template<typename IteratorType>
            struct Iterator {
@@ -1218,6 +1247,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           SinFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           SinFcn<Resize<IteratorType, MyType>, typename Operand::ResizeType, FieldType> typedef
           ResizeType;
@@ -1239,6 +1269,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           SinFcn<Resize<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           SinFcn<SeqWalk<IteratorType, MyType>, typename Operand::SeqWalkType, FieldType> typedef
           SeqWalkType;
@@ -1258,6 +1289,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           SinFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           SinFcn(SourceType const & source)
           : operand_(source.operand())
@@ -1299,6 +1331,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           CosFcn<Initial, Operand, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           template<typename IteratorType>
            struct Iterator {
@@ -1334,6 +1367,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           CosFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           CosFcn<Resize<IteratorType, MyType>, typename Operand::ResizeType, FieldType> typedef
           ResizeType;
@@ -1355,6 +1389,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           CosFcn<Resize<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           CosFcn<SeqWalk<IteratorType, MyType>, typename Operand::SeqWalkType, FieldType> typedef
           SeqWalkType;
@@ -1374,6 +1409,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           CosFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           CosFcn(SourceType const & source)
           : operand_(source.operand())
@@ -1415,6 +1451,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           TanFcn<Initial, Operand, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           template<typename IteratorType>
            struct Iterator {
@@ -1450,6 +1487,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           TanFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           TanFcn<Resize<IteratorType, MyType>, typename Operand::ResizeType, FieldType> typedef
           ResizeType;
@@ -1471,6 +1509,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           TanFcn<Resize<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           TanFcn<SeqWalk<IteratorType, MyType>, typename Operand::SeqWalkType, FieldType> typedef
           SeqWalkType;
@@ -1490,6 +1529,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           TanFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           TanFcn(SourceType const & source)
           : operand_(source.operand())
@@ -1531,6 +1571,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           ExpFcn<Initial, Operand, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           template<typename IteratorType>
            struct Iterator {
@@ -1566,6 +1607,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           ExpFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           ExpFcn<Resize<IteratorType, MyType>, typename Operand::ResizeType, FieldType> typedef
           ResizeType;
@@ -1587,6 +1629,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           ExpFcn<Resize<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           ExpFcn<SeqWalk<IteratorType, MyType>, typename Operand::SeqWalkType, FieldType> typedef
           SeqWalkType;
@@ -1606,6 +1649,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           ExpFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           ExpFcn(SourceType const & source)
           : operand_(source.operand())
@@ -1647,6 +1691,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           TanhFcn<Initial, Operand, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           template<typename IteratorType>
            struct Iterator {
@@ -1682,6 +1727,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           TanhFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           TanhFcn<Resize<IteratorType, MyType>, typename Operand::ResizeType, FieldType> typedef
           ResizeType;
@@ -1703,6 +1749,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           TanhFcn<Resize<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           TanhFcn<SeqWalk<IteratorType, MyType>, typename Operand::SeqWalkType, FieldType> typedef
           SeqWalkType;
@@ -1722,6 +1769,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           TanhFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           TanhFcn(SourceType const & source)
           : operand_(source.operand())
@@ -1763,6 +1811,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           AbsFcn<Initial, Operand, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           template<typename IteratorType>
            struct Iterator {
@@ -1798,6 +1847,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           AbsFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           AbsFcn<Resize<IteratorType, MyType>, typename Operand::ResizeType, FieldType> typedef
           ResizeType;
@@ -1819,6 +1869,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           AbsFcn<Resize<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           AbsFcn<SeqWalk<IteratorType, MyType>, typename Operand::SeqWalkType, FieldType> typedef
           SeqWalkType;
@@ -1838,6 +1889,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           AbsFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           AbsFcn(SourceType const & source)
           : operand_(source.operand())
@@ -1879,6 +1931,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           NegFcn<Initial, Operand, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           template<typename IteratorType>
            struct Iterator {
@@ -1914,6 +1967,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           NegFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           NegFcn<Resize<IteratorType, MyType>, typename Operand::ResizeType, FieldType> typedef
           ResizeType;
@@ -1935,6 +1989,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           NegFcn<Resize<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           NegFcn<SeqWalk<IteratorType, MyType>, typename Operand::SeqWalkType, FieldType> typedef
           SeqWalkType;
@@ -1954,6 +2009,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           NegFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           NegFcn(SourceType const & source)
           : operand_(source.operand())
@@ -1995,6 +2051,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           PowFcn<Initial, Operand1, Operand2, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           template<typename IteratorType>
            struct Iterator {
@@ -2038,6 +2095,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           PowFcn<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           PowFcn<Resize<IteratorType, MyType>,
                  typename Operand1::ResizeType,
@@ -2067,6 +2125,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           PowFcn<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           PowFcn<SeqWalk<IteratorType, MyType>,
                  typename Operand1::SeqWalkType,
@@ -2094,6 +2153,7 @@
          public:
           typename FieldType::value_type typedef AtomicType;
           PowFcn<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef MyType;
+          FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           PowFcn(SourceType const & source)
           : operand1_(source.operand1()), operand2_(source.operand2())
@@ -2197,6 +2257,7 @@
             public:                                                                                \
              typename FieldType::value_type typedef AtomicType;                                    \
              OBJECT_NAME<Initial, Operand1, Operand2, FieldType> typedef MyType;                   \
+             FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
              template<typename IteratorType>                                                       \
               struct Iterator {                                                                    \
@@ -2241,6 +2302,7 @@
              typename FieldType::value_type typedef AtomicType;                                    \
              OBJECT_NAME<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType>      \
              typedef MyType;                                                                       \
+             FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
              OBJECT_NAME<Resize<IteratorType, MyType>,                                             \
                          typename Operand1::ResizeType,                                            \
@@ -2271,6 +2333,7 @@
              typename FieldType::value_type typedef AtomicType;                                    \
              OBJECT_NAME<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef  \
              MyType;                                                                               \
+             FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
              OBJECT_NAME<SeqWalk<IteratorType, MyType>,                                            \
                          typename Operand1::SeqWalkType,                                           \
@@ -2299,6 +2362,7 @@
              typename FieldType::value_type typedef AtomicType;                                    \
              OBJECT_NAME<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef \
              MyType;                                                                               \
+             FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
              OBJECT_NAME(SourceType const & source)                                                \
              : operand1_(source.operand1()), operand2_(source.operand2())                          \
@@ -2414,6 +2478,7 @@
             public:                                                                                \
              typename FieldType::value_type typedef AtomicType;                                    \
              OBJECT_NAME<Initial, Operand1, Operand2, FieldType> typedef MyType;                   \
+             FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
              template<typename IteratorType>                                                       \
               struct Iterator {                                                                    \
@@ -2458,6 +2523,7 @@
              typename FieldType::value_type typedef AtomicType;                                    \
              OBJECT_NAME<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType>      \
              typedef MyType;                                                                       \
+             FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
              OBJECT_NAME<Resize<IteratorType, MyType>,                                             \
                          typename Operand1::ResizeType,                                            \
@@ -2488,6 +2554,7 @@
              typename FieldType::value_type typedef AtomicType;                                    \
              OBJECT_NAME<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef  \
              MyType;                                                                               \
+             FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
              OBJECT_NAME<SeqWalk<IteratorType, MyType>,                                            \
                          typename Operand1::SeqWalkType,                                           \
@@ -2516,6 +2583,7 @@
              typename FieldType::value_type typedef AtomicType;                                    \
              OBJECT_NAME<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef \
              MyType;                                                                               \
+             FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
              OBJECT_NAME(SourceType const & source)                                                \
              : operand1_(source.operand1()), operand2_(source.operand2())                          \
@@ -2631,6 +2699,7 @@
             public:                                                                                \
              typename FieldType::value_type typedef AtomicType;                                    \
              OBJECT_NAME<Initial, Operand, FieldType> typedef MyType;                              \
+             FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
              template<typename IteratorType>                                                       \
               struct Iterator {                                                                    \
@@ -2666,6 +2735,7 @@
             public:                                                                                \
              typename FieldType::value_type typedef AtomicType;                                    \
              OBJECT_NAME<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef MyType; \
+             FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
              OBJECT_NAME<Resize<IteratorType, MyType>, typename Operand::ResizeType, FieldType>    \
              typedef ResizeType;                                                                   \
@@ -2687,6 +2757,7 @@
             public:                                                                                \
              typename FieldType::value_type typedef AtomicType;                                    \
              OBJECT_NAME<Resize<IteratorType, SourceType>, Operand, FieldType> typedef MyType;     \
+             FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
              OBJECT_NAME<SeqWalk<IteratorType, MyType>, typename Operand::SeqWalkType, FieldType>  \
              typedef SeqWalkType;                                                                  \
@@ -2706,6 +2777,7 @@
             public:                                                                                \
              typename FieldType::value_type typedef AtomicType;                                    \
              OBJECT_NAME<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef MyType;    \
+             FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
              OBJECT_NAME(SourceType const & source)                                                \
              : operand_(source.operand())                                                          \
