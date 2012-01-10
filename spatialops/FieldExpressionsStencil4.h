@@ -77,7 +77,7 @@
 
 #            ifndef NDEBUG
                 assert(ws1.extent() == ws2.extent() && ws1.extent() == ws3.extent() && ws1.extent()
-                       == ws4.extent() && ws1.extent() == wd.extent())
+                       == ws4.extent() && ws1.extent() == wd.extent());
 #            endif //NDEBUG;
 
              DestType d(wd, &dest[0], ExternalStorage);

@@ -58,7 +58,7 @@
                                    wdest.has_bc(2));
 
 #            ifndef NDEBUG
-                assert(ws1.extent() == ws2.extent() && ws1.extent() == wd.extent())
+                assert(ws1.extent() == ws2.extent() && ws1.extent() == wd.extent());
 #            endif //NDEBUG;
 
              DestType d(wd, &dest[0], ExternalStorage);
