@@ -2,7 +2,7 @@
  * ExternalStencilTest.h
  *
  *  Created on: Jan 5, 2012
- *      Author: devin
+ *      Author: Devin Robison
  */
 
 #ifndef EXTERNALSTENCILTEST_H_

@@ -7,4 +7,4 @@
 #    target_link_libraries( ... CUDAMemoryManager )
 #
 
-include( @CMAKE_INSTALL_PREFIX@/lib/spatialops/CudaMM.cmake )
+include( @CMAKE_INSTALL_PREFIX@/lib/spatialops/so_cuda.cmake )

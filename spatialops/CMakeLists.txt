@@ -15,7 +15,7 @@ set( SO_HEADERS
   SpatialOpsTools.h
   WriteMatlab.h
   )
-
+  
 if ( ENABLE_THREADS )
    set( SO_Sources ${SO_Sources} ThreadPool.cpp )
    set( SO_HEADERS ${SO_HEADERS} ThreadPool.h )

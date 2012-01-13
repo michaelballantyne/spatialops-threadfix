@@ -18,8 +18,8 @@ using namespace structured;
 using namespace Point;
 using namespace ema::cuda;
 
-#define SMALL 64
-#define HEIGHT 64
+#define SMALL 130
+#define HEIGHT 130
 #define ITERATIONS 1
 
 void stencil7_cpu( float* data_in, float* data_out, int nx, int ny, int nz ){
@@ -86,15 +86,12 @@ int main(int argc, char** argv){
   CUDADeviceInterface& CDI = CUDADeviceInterface::self();
 
   MemoryWindow swin(sset);
-  MemoryWindow mwin(mset);
-  MemoryWindow lwin(lset);
 
 
   PointFloatField pff(swin, NULL, InternalStorage, LOCAL_RAM, 0);
   PointFloatField spff(swin, svals, InternalStorage, EXTERNAL_CUDA_GPU, 0);
 
-  //CDI.print_device_info();
-
+  CDI.print_device_info();
 
   double avgcpu = 0;
   for( int p = 0; p < ITERATIONS; ++p){
@@ -129,10 +126,15 @@ int main(int argc, char** argv){
   }
   avggpu /= ITERATIONS;
 
-  std::cout << "Average elapsed ( opt2 ): " << (double)avggpu / (double)CLOCKS_PER_SEC << std::endl;
+  std::cout << "Average elapsed: " << (double)avggpu / (double)CLOCKS_PER_SEC << std::endl;
   std::cout << "Speedup: " << avgcpu / avggpu << std::endl;
 
   pff = spff;
 
   delete[] svals;
+  if( !system("diff cudaout.txt cpuout.txt &> /dev/null") ){
+    std::cout << "Success\n";
+  } else {
+    std::cout << "Fail: sample outputs do not match.\n";
+  }
 }

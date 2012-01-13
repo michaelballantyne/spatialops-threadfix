@@ -171,10 +171,11 @@ class SpatFldPtr {
     } ///< Divide this field by a constant
     //@}
 
-    const int getCount() {
+    int getCount() {
       return *count_;
     }
-    const bool getBFS() {
+
+    bool getBFS() {
       return builtFromStore_;
     }
 
@@ -351,7 +352,6 @@ SpatFldPtr<FieldT>::operator=(const SpatFldPtr& p) {
 #endif
           default:
             throw(std::runtime_error("Attempt to detach an unknown field type."));
-            break;
         }
       }
       delete count_;
@@ -394,7 +394,6 @@ SpatFldPtr<FieldT>::operator=(FieldT* const f) {
 #endif
           default:
             throw(std::runtime_error("Attempt to detach an unknown field type."));
-            break;
         }
       }
       delete count_;
@@ -434,7 +433,6 @@ void SpatFldPtr<FieldT>::detach() {
 #endif
           default:
             throw(std::runtime_error("Attempt to detach an unknown field type."));
-            break;
         }
       }
 
@@ -515,7 +513,6 @@ SpatFldPtr<FieldT> SpatialFieldStore<FieldT>::get(
           new FieldT(window, fnew, structured::ExternalStorage, mtype,
               deviceIndex), true);
     }
-      break;
 #ifdef ENABLE_CUDA
       //Dvn: I'm not having the store hold GPU memory right now, as I'm not sure it would be entirely stable...
       case EXTERNAL_CUDA_GPU: {
@@ -523,7 +520,6 @@ SpatFldPtr<FieldT> SpatialFieldStore<FieldT>::get(
             new FieldT(window, NULL, structured::InternalStorage, mtype,
                 deviceIndex ), true );
       }
-      break;
 #endif
     default: {
       std::ostringstream msg;
@@ -533,9 +529,7 @@ SpatFldPtr<FieldT> SpatialFieldStore<FieldT>::get(
       msg << "\t " << __FILE__ << " : " << __LINE__;
       throw(std::runtime_error(msg.str()));
     }
-      break;
   }
-
 }
 //------------------------------------------------------------------
 template<typename FieldT>

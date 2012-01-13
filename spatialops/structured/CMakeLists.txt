@@ -22,26 +22,25 @@ set( SO_SRC ${SO_SRC} ${src} PARENT_SCOPE )
 if( ENABLE_CUDA )
   if( CUDA_CUDA_LIBRARY )
 		include_directories( ${CUDA_INCLUDE_DIRS} )
-		cuda_add_library( CUDAMemoryManager STATIC CudaMemoryAllocator.cu )
-		target_link_libraries( CUDAMemoryManager ${CUDA_LIBRARIES} ${Boost_LIBRARIES} )
+		cuda_add_library( spatialops_cuda STATIC CudaMemoryAllocator.cu CudaStencilLib.cu )
+		#cuda_add_library( CUDAMemoryManager STATIC CudaMemoryAllocator.cu )
+		target_link_libraries( spatialops_cuda ${CUDA_LIBRARIES} ${Boost_LIBRARIES} )
 		    
-		install( TARGETS CUDAMemoryManager EXPORT CudaMM DESTINATION lib/spatialops )
-		install( EXPORT CudaMM DESTINATION lib/spatialops )
+		install( TARGETS spatialops_cuda EXPORT so_cuda DESTINATION lib/spatialops )
+		install( EXPORT so_cuda DESTINATION lib/spatialops )
 		      
 		#Configure CMM 
 		configure_file( 
-		  ${PROJECT_SOURCE_DIR}/spatialops/structured/CudaMMConfig.cmake.in
-		  ${PROJECT_BINARY_DIR}/config/CudaMMConfig.cmake
+		  ${PROJECT_SOURCE_DIR}/spatialops/structured/so_cudaConfig.cmake.in
+		  ${PROJECT_BINARY_DIR}/config/so_cudaConfig.cmake
 		)   
 		    
 		install( FILES
-		  ${PROJECT_BINARY_DIR}/config/CudaMMConfig.cmake
+		  ${PROJECT_BINARY_DIR}/config/so_cudaConfig.cmake
 		    DESTINATION ${SpatialOps_CONFIG_INSTALL}
 		)
 	endif( CUDA_CUDA_LIBRARY )
 endif( ENABLE_CUDA )
-
-
 
 install( FILES
   FVStaggeredBCTools.h
@@ -51,6 +50,8 @@ install( FILES
   IndexTriplet.h
   IntVec.h
   ExternalAllocators.h
+  CudaMemoryAllocator.h
+  CudaStencilLib.cuh
   MemoryTypes.h
   MemoryWindow.h
   SpatialField.h

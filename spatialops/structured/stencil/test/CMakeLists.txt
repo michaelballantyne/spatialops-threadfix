@@ -1,7 +1,7 @@
 set( libs spatialops spatialops-stencil spatialops-structured ${TPL_LIBRARIES} )
 
 if( ENABLE_CUDA )
-	set(libs ${libs} CUDAMemoryManager)
+	set(libs ${libs} spatialops_cuda )
 endif( ENABLE_CUDA )
 
 add_executable( test_stencil2 test_stencil2.cpp )

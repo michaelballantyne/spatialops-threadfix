@@ -24,7 +24,7 @@ set( ENABLE_CUDA @ENABLE_CUDA@ )
 
 # Give path hints 
 if( ENABLE_CUDA )
-	set( CudaMM_DIR
+	set( so_cuda_DIR
   		@CMAKE_INSTALL_PREFIX@/share 
   	)
 endif(ENABLE_CUDA)

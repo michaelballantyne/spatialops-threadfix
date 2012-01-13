@@ -150,8 +150,8 @@ void __global__ _div_float_opt2( float* global_data_in,
   float zhigh   = global_data_in[ Index3D(nx, ny, inner_x + threadIdx.x, inner_y + threadIdx.y, 1) ];
 
   float dxsq = dx*dx;
-  float dysq = dy*dy;
-  float dzsq = dz*dz;
+  //float dysq = dy*dy;
+  //float dzsq = dz*dz;
 
   __shared__ float local_flat[BLOCK_DIM*BLOCK_DIM];
 
@@ -164,6 +164,7 @@ void __global__ _div_float_opt2( float* global_data_in,
       local_flat[ Index3D(BLOCK_DIM, BLOCK_DIM, threadIdx.x, threadIdx.y, 0) ] =
           global_data_in[outer_offset + threadIdx.x + nx * threadIdx.y];
     }
+    __syncthreads();
 
     /*
     if( k == 1 ){
@@ -187,6 +188,7 @@ void __global__ _div_float_opt2( float* global_data_in,
       tijk = 2 * zcenter;
 
       float x;
+
       for( int data_reuse=0; data_reuse < 1; ++data_reuse ){
        x =
         // X direction
@@ -196,7 +198,7 @@ void __global__ _div_float_opt2( float* global_data_in,
             local_flat[ Index3D( BLOCK_DIM, BLOCK_DIM, local_index_x + 1, local_index_y, 0) ]
             -
             tijk
-        ) / dxsq
+        )
         +
         // Y direction
         (
@@ -204,7 +206,7 @@ void __global__ _div_float_opt2( float* global_data_in,
             local_flat[ Index3D( BLOCK_DIM, BLOCK_DIM, local_index_x, local_index_y + 1, 0) ]
             -
             tijk
-        ) / dysq
+        )
         +
         // Z direction
         (
@@ -212,11 +214,98 @@ void __global__ _div_float_opt2( float* global_data_in,
             zhigh
             -
             tijk
-        ) / dzsq
-       );
+        )
+       ) / dxsq;
       }
       global_data_out[ inner_offset + threadIdx.x + nx * threadIdx.y ] = x;
     }
+    __syncthreads();
+  }
+}
+
+void __global__ _div_float_opt3( float* global_data_in,
+                                 float* global_data_out,
+                                 float dx, float dy, float dz,
+                                 int nx, int ny, int nz){
+
+  int ghost = 1; // static, because shared memory allocation has to be fixed.
+
+  //16x16 blocks, each block loads all 4 of its XY plane stencil components -> overlap occurs, but we
+  //get thread work-load-balancing.
+
+  /** Compute inner tile variables **/
+  int inner_dim    = blockDim.x;                        // Dimensions of the inner tile
+  int inner_x      = ( blockIdx.x * inner_dim ) + ghost;// Inner tile absolute 'x' val
+  int inner_y      = ( blockIdx.y * inner_dim ) + ghost;// Inner tile absolute 'y' val
+
+  /** Compute outer tile variables **/
+  //int outer_dim    = blockDim.x + 2 * ghost;// Dimensions of the outer tile
+  //int outer_x      = inner_x - ghost;       // Outer tile absolute 'x' val
+  //int outer_y      = inner_y - ghost;       // Outer tile absolute 'y' val
+
+  float zlow;
+  float zcenter = global_data_in[ Index3D(nx, ny, inner_x + threadIdx.x, inner_y + threadIdx.y, 0) ];
+  float zhigh   = global_data_in[ Index3D(nx, ny, inner_x + threadIdx.x, inner_y + threadIdx.y, 1) ];
+
+  float dxsq = dx*dx;
+
+  __shared__ float local_flat[ (BLOCK_DIM+2)*(BLOCK_DIM+2) ];
+
+  for( int k = 1; k < nz - 1; ++k ) { // Iterate frames along the Z axis
+    int inner_offset = Index3D(nx, ny, inner_x, inner_y, k);
+    //int outer_offset = Index3D(nx, ny, outer_x, outer_y, k);
+    float tijk;
+
+    int local_index_x = threadIdx.x + ghost;
+    int local_index_y = threadIdx.y + ghost;
+
+    zlow = zcenter;
+    zcenter = zhigh;
+    zhigh = global_data_in[ Index3D( nx, ny, inner_x + threadIdx.x, inner_y + threadIdx.y, k + 1 ) ];
+    tijk = 2 * zcenter;
+
+    local_flat[ Index3D( blockDim.x + 2, blockDim.x + 2, local_index_x - 1, local_index_y, 0 ) ] =
+            global_data_in[ Index3D( nx, ny, inner_x - 1, inner_y, k ) ];
+    local_flat[ Index3D( blockDim.x + 2, blockDim.x + 2, local_index_x + 1, local_index_y, 0 ) ] =
+            global_data_in[ Index3D( nx, ny, inner_x + 1, inner_y, k ) ];
+    local_flat[ Index3D( blockDim.x + 2, blockDim.x + 2, local_index_x, local_index_y - 1, 0 ) ] =
+            global_data_in[ Index3D( nx, ny, inner_x, inner_y - 1, k ) ];
+    local_flat[ Index3D( blockDim.x + 2, blockDim.x + 2, local_index_x, local_index_y + 1, 0 ) ] =
+            global_data_in[ Index3D( nx, ny, inner_x, inner_y + 1, k ) ];
+    __syncthreads();
+
+    float x;
+
+    for( int data_reuse=0; data_reuse < 1; ++data_reuse ){
+     x =
+      // X direction
+     (
+      (
+          local_flat[ Index3D( blockDim.x + 2, blockDim.x + 2, local_index_x - 1, local_index_y, 0) ] +
+          local_flat[ Index3D( blockDim.x + 2, blockDim.x + 2, local_index_x + 1, local_index_y, 0) ]
+          -
+          tijk
+      )
+      +
+      // Y direction
+      (
+          local_flat[ Index3D( blockDim.x + 2, blockDim.x + 2, local_index_x, local_index_y - 1, 0) ] +
+          local_flat[ Index3D( blockDim.x + 2, blockDim.x + 2, local_index_x, local_index_y + 1, 0) ]
+          -
+          tijk
+      )
+      +
+      // Z direction
+      (
+          zlow +
+          zhigh
+          -
+          tijk
+      )
+     ) / dxsq;
+    }
+    global_data_out[ inner_offset + threadIdx.x + nx * threadIdx.y ] = x;
+
     __syncthreads();
   }
 }
@@ -241,6 +330,11 @@ void __host__ divergence_float_gpu(FieldT* f, float dx, float dy, float dz){
     unsigned int blocky_op2 = ( ( extent[1] - 2) / (INNER_BLOCK_DIM) +
         ( ( extent[1] - 2 ) % (INNER_BLOCK_DIM) == 0 ? 0 : 1) );
 
+    unsigned int blockx_op3 = ( ( extent[0] - 2) / (BLOCK_DIM) +
+        ( ( extent[0] - 2 ) % (BLOCK_DIM) == 0 ? 0 : 1) );
+    unsigned int blocky_op3 = ( ( extent[1] - 2) / (BLOCK_DIM) +
+        ( ( extent[1] - 2 ) % (BLOCK_DIM) == 0 ? 0 : 1) );
+
     float* h_workspace = (float*)malloc(f->get_data_size());
     float* d_workspace;
 
@@ -254,6 +348,9 @@ void __host__ divergence_float_gpu(FieldT* f, float dx, float dy, float dz){
     dim3 dimBlock_op2( BLOCK_DIM, BLOCK_DIM );
     dim3 dimGrid_op2( blockx_op2, blocky_op2 );
 
+    dim3 dimBlock_op3( BLOCK_DIM, BLOCK_DIM );
+    dim3 dimGrid_op3( blockx_op3, blocky_op3 );
+
     //std::cout << "Executing with " << blockx_op2 << " X " << blocky_op2 << " block grid" << std::endl;
     //std::cout << "               " << BLOCK_DIM << " X " << BLOCK_DIM << " block threads\n";
 
@@ -263,22 +360,17 @@ void __host__ divergence_float_gpu(FieldT* f, float dx, float dy, float dz){
       throw( std::runtime_error( cudaGetErrorString(err) ) );
     }
 
-    _div_float_opt1<<<dimGrid, dimBlock, 0, 0>>>( d_workspace,
+    //_div_float_opt1<<<dimGrid, dimBlock, 0, 0>>>( d_workspace,
+    _div_float_opt2<<<dimGrid_op2, dimBlock_op2, 0, 0>>>( d_workspace,
+    //_div_float_opt3<<<dimGrid_op3, dimBlock_op3, 0, 0>>>( d_workspace,
                                                 f->get_ext_pointer(),
                                                 dx, dy, dz,
                                                 extent[0], extent[1], extent[2] );
 
-    /*
-    _div_float_opt2<<<dimGrid_op2, dimBlock_op2, 0, 0>>>( d_workspace,
-                                                f->get_ext_pointer(),
-                                                dx, dy, dz,
-                                                extent[0], extent[1], extent[2] );
-    */
     cudaThreadSynchronize();
-    //cudaMemcpy(h_workspace, f->get_ext_pointer(), f->get_data_size(), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_workspace, f->get_ext_pointer(), f->get_data_size(), cudaMemcpyDeviceToHost);
     cudaFree(d_workspace);
 
-    /*
     std::ofstream file;
     file.open("cudaout.txt");
     for(int i = 0; i < extent[0]; ++i){
@@ -290,8 +382,6 @@ void __host__ divergence_float_gpu(FieldT* f, float dx, float dy, float dz){
       file << std::endl;
     }
     file.close();
-    */
-
 }
 
 template< class FieldT >
