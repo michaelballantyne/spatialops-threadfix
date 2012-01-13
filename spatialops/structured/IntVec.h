@@ -89,6 +89,12 @@ namespace SpatialOps{
             ijk[2] * v.ijk[2] );
       }
 
+      inline IntVec operator*( const int v ) const{
+        return IntVec(ijk[0] * v,
+                      ijk[1] * v,
+                      ijk[2] * v);
+      }
+
       inline IntVec& operator+=( const IntVec& v ){
         ijk[0] += v.ijk[0];
         ijk[1] += v.ijk[1];
