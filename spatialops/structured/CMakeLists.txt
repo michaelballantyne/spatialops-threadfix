@@ -51,7 +51,8 @@ install( FILES
   IntVec.h
   ExternalAllocators.h
   CudaMemoryAllocator.h
-  CudaStencilLib.cuh
+  CudaStencilDef.h
+  CudaStencilLib.h
   MemoryTypes.h
   MemoryWindow.h
   SpatialField.h

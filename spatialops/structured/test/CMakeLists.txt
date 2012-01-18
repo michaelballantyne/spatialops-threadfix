@@ -66,6 +66,7 @@ if( CUDA_CUDA_LIBRARY )
   build_test( SharedMemoryTest sharedmemtest "Success" )
   build_test( ExternalFieldTest extfieldtest "Success" )
   build_test( ExternalStencilTest extstenciltest "Success" )
+  
 else( CUDA_CUDA_LIBRARY )
   message( STATUS "Must include CUDA libraries to build cuda test base" )
 endif( CUDA_CUDA_LIBRARY )
