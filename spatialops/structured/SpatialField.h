@@ -62,7 +62,7 @@ namespace structured{
   class SpatialField
   {
     typedef SpatialField<FieldLocation,GhostTraits,T> MyType;
-    
+
     const MemoryWindow fieldWindow_;
     MemoryWindow interiorFieldWindow_;
 
@@ -78,7 +78,7 @@ namespace structured{
     void save( Archive& ar, const unsigned int version ) const
     {
       ar << fieldWindow_;
-      ar << interiorFieldWindow_; 
+      ar << interiorFieldWindow_;
       ar << builtField_;
 
       const size_t npts = fieldWindow_.glob_dim(0)
@@ -88,7 +88,7 @@ namespace structured{
       for( size_t i=0; i<npts; ++i ){
         ar << fieldValues_[i];
       }
-      
+
     }
 
     template<typename Archive>
@@ -188,14 +188,14 @@ namespace structured{
     inline T& operator[]( const size_t i );
     inline T& operator[]( const size_t i ) const;
 
-    inline const_iterator begin() const{ return const_iterator(fieldValues_,fieldWindow_.flat_index(IntVec(0,0,0)),fieldWindow_); }
-    inline       iterator begin()      { return       iterator(fieldValues_,fieldWindow_.flat_index(IntVec(0,0,0)),fieldWindow_); }
+    inline const_iterator begin() const{ return const_iterator(fieldValues_,fieldWindow_.flat_index(IntVec(0,0,0)),&fieldWindow_); }
+    inline       iterator begin()      { return       iterator(fieldValues_,fieldWindow_.flat_index(IntVec(0,0,0)),&fieldWindow_); }
 
     inline const_iterator end() const;
     inline       iterator end();
 
-    inline const_interior_iterator interior_begin() const{ return const_interior_iterator(fieldValues_,interiorFieldWindow_.flat_index(IntVec(0,0,0)),interiorFieldWindow_); }
-    inline       interior_iterator interior_begin()      { return       interior_iterator(fieldValues_,interiorFieldWindow_.flat_index(IntVec(0,0,0)),interiorFieldWindow_); }
+    inline const_interior_iterator interior_begin() const{ return const_interior_iterator(fieldValues_,interiorFieldWindow_.flat_index(IntVec(0,0,0)),&interiorFieldWindow_); }
+    inline       interior_iterator interior_begin()      { return       interior_iterator(fieldValues_,interiorFieldWindow_.flat_index(IntVec(0,0,0)),&interiorFieldWindow_); }
 
     inline const_interior_iterator interior_end() const;
     inline       interior_iterator interior_end();
@@ -302,7 +302,7 @@ namespace structured{
     IntVec ijk = fieldWindow_.extent();
     for( size_t i=0; i<3; ++i ) ijk[i] -= 1;
     const size_t n = fieldWindow_.flat_index( ijk );
-    const_iterator i(fieldValues_, n, fieldWindow_);
+    const_iterator i(fieldValues_, n, &fieldWindow_);
     return ++i;
   }
 
@@ -315,7 +315,7 @@ namespace structured{
     IntVec ijk = fieldWindow_.extent();
     for( size_t i=0; i<3; ++i ) ijk[i] -= 1;
     const size_t n = fieldWindow_.flat_index( ijk );
-    iterator i(fieldValues_, n, fieldWindow_);
+    iterator i(fieldValues_, n, &fieldWindow_);
     return ++i;
   }
 
@@ -327,7 +327,7 @@ namespace structured{
   {
     IntVec ijk = interiorFieldWindow_.extent();
     for( size_t i=0; i<3; ++i ) ijk[i] -= 1;
-    const_interior_iterator i( fieldValues_, interiorFieldWindow_.flat_index( ijk ), interiorFieldWindow_ );
+    const_interior_iterator i( fieldValues_, interiorFieldWindow_.flat_index( ijk ), &interiorFieldWindow_ );
     return ++i;
   }
 
@@ -339,7 +339,7 @@ namespace structured{
   {
     IntVec ijk = interiorFieldWindow_.extent();
     for( size_t i=0; i<3; ++i ) ijk[i] -= 1;
-    interior_iterator i( fieldValues_, interiorFieldWindow_.flat_index( ijk ), interiorFieldWindow_ );
+    interior_iterator i( fieldValues_, interiorFieldWindow_.flat_index( ijk ), &interiorFieldWindow_ );
     return ++i;
   }
 

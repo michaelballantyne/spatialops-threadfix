@@ -268,27 +268,27 @@ namespace structured{
   {
   private:
 
-    static inline size_t stride_x( const MemoryWindow& mw ){ return 1; }
-    static inline size_t stride_y( const MemoryWindow& mw ){ return stride_x(mw) + mw.glob_dim(0)-mw.extent(0); }
-    static inline size_t stride_z( const MemoryWindow& mw ){ return stride_y(mw) + ( mw.glob_dim(0) ) * ( mw.glob_dim(1)-mw.extent(1) ); }
+    static inline size_t stride_x( const MemoryWindow* const mw ){ return 1; }
+    static inline size_t stride_y( const MemoryWindow* const mw ){ return stride_x(mw) + mw->glob_dim(0)-mw->extent(0); }
+    static inline size_t stride_z( const MemoryWindow* const mw ){ return stride_y(mw) + ( mw->glob_dim(0) ) * ( mw->glob_dim(1)-mw->extent(1) ); }
 
   public:
 
     /**
      *  \brief returns the increment for the pointer
      */
-    static size_t increment( const MemoryWindow& w,
+    static size_t increment( const MemoryWindow* const w,
                              size_t& i, size_t& j, size_t& k )
     {
       size_t inc=0;
       ++i;
-      if( i < w.extent(0) ){
+      if( i < w->extent(0) ){
         inc += stride_x(w);
       }
       else{
         i=0;
         ++j;
-        if( j < w.extent(1) ){
+        if( j < w->extent(1) ){
           inc += stride_y(w);
         }
         else{
@@ -303,7 +303,7 @@ namespace structured{
     /**
      *  \brief returns the decrement for the pointer.  If zero, then reset the pointer.
      */
-    static size_t decrement( const MemoryWindow& w,
+    static size_t decrement( const MemoryWindow* const w,
                              size_t& i, size_t& j, size_t& k )
     {
       size_t inc=0;
@@ -312,13 +312,13 @@ namespace structured{
         ++inc;
       }
       else{
-        i = w.extent(0)-1;
+        i = w->extent(0)-1;
         if( j > 0 ){
           --j;
           inc += stride_y(w);
         }
         else{
-          j = w.extent(1)-1;
+          j = w->extent(1)-1;
           if( k > 0 ){
             --k;
             inc += stride_z(w);
@@ -353,7 +353,7 @@ namespace structured{
     friend class ConstFieldIterator<FieldT>;
     T* current_;   ///< The current pointer that this iterator refers to
     T* first_;     ///< The first position in memory for the field this iterator is associated with
-    const MemoryWindow& window_;  ///< The MemoryWindow associated with this field and iterator
+    const MemoryWindow* window_;  ///< The MemoryWindow associated with this field and iterator
     size_t i_,j_,k_;
 
   public:
@@ -363,6 +363,12 @@ namespace structured{
     typedef typename std::iterator_traits<T*>::pointer         pointer;
     typedef typename std::iterator_traits<T*>::difference_type difference_type;
     typedef          std::forward_iterator_tag                iterator_category;
+
+    FieldIterator()
+      : current_( NULL ), first_( NULL ), window_( NULL )
+    {
+      i_ = j_ = k_ = 0;
+    }
 
     /**
      *  \brief Copy constructor
@@ -381,15 +387,15 @@ namespace structured{
      *  \param offset the global offset into the field where we want the iterator to be.
      *  \param window the MemoryWindow describing the portion of this field that we have access to.
      */
-    FieldIterator( T* t, const size_t offset, const MemoryWindow& window )
+    FieldIterator( T* t, const size_t offset, const MemoryWindow* const window )
       : current_( t+offset ),
         first_  ( t        ),
         window_ ( window   )
     {
-      const IntVec& ijk = window.ijk_index_from_global( offset );
-      i_ = ijk[0] - window.offset(0);
-      j_ = ijk[1] - window.offset(1);
-      k_ = ijk[2] - window.offset(2);
+      const IntVec& ijk = window->ijk_index_from_global( offset );
+      i_ = ijk[0] - window->offset(0);
+      j_ = ijk[1] - window->offset(1);
+      k_ = ijk[2] - window->offset(2);
     }
 
     /**
@@ -447,9 +453,9 @@ namespace structured{
 
     inline reference operator*(){
 #     ifndef NDEBUG
-      if( i_ >= window_.extent(0) + window_.offset(0) ||
-          j_ >= window_.extent(1) + window_.offset(1) ||
-          k_ >= window_.extent(2) + window_.offset(2) ){
+      if( i_ >= window_->extent(0) + window_->offset(0) ||
+          j_ >= window_->extent(1) + window_->offset(1) ||
+          k_ >= window_->extent(2) + window_->offset(2) ){
         std::ostringstream msg;
         msg << __FILE__ << " : " << __LINE__ << std::endl
             << "iterator is in an invalid state for dereference";
@@ -461,9 +467,9 @@ namespace structured{
 
     inline reference operator*() const{
 #     ifndef NDEBUG
-      if( i_ >= window_.extent(0) + window_.offset(0) ||
-          j_ >= window_.extent(1) + window_.offset(1) ||
-          k_ >= window_.extent(2) + window_.offset(2) ){
+      if( i_ >= window_->extent(0) + window_->offset(0) ||
+          j_ >= window_->extent(1) + window_->offset(1) ||
+          k_ >= window_->extent(2) + window_->offset(2) ){
         std::ostringstream msg;
         msg << __FILE__ << " : " << __LINE__ << std::endl
             << "iterator is in an invalid state for dereference";
@@ -498,7 +504,7 @@ namespace structured{
     typedef typename FieldT::AtomicT  T;
     const T* current_;
     const T* first_;
-    const MemoryWindow& window_;
+    const MemoryWindow* window_;
     size_t i_, j_, k_;
 
   public:
@@ -509,6 +515,12 @@ namespace structured{
     typedef typename std::iterator_traits<const T*>::difference_type difference_type;
     typedef          std::forward_iterator_tag                       iterator_category;
 
+    ConstFieldIterator()
+      : current_( NULL ), first_( NULL ), window_( NULL )
+    {
+      i_ = j_ = k_ = 0;
+    }
+
     ConstFieldIterator( const self& other )
       : current_( other.current_ ),
         first_  ( other.first_   ),
@@ -517,15 +529,15 @@ namespace structured{
       i_=other.i_; j_=other.j_; k_=other.k_;
     }
 
-    ConstFieldIterator( const T* t, const size_t offset, const MemoryWindow& window )
+    ConstFieldIterator( const T* t, const size_t offset, const MemoryWindow* const window )
       : current_( t+offset ),
         first_  ( t        ),
         window_ ( window   )
     {
-      const IntVec ijk = window.ijk_index_from_global( offset );
-      i_ = ijk[0] - window.offset(0);
-      j_ = ijk[1] - window.offset(1);
-      k_ = ijk[2] - window.offset(2);
+      const IntVec ijk = window->ijk_index_from_global( offset );
+      i_ = ijk[0] - window->offset(0);
+      j_ = ijk[1] - window->offset(1);
+      k_ = ijk[2] - window->offset(2);
     }
 
     /**
@@ -590,9 +602,9 @@ namespace structured{
 
     inline reference operator*() const{
 #     ifndef NDEBUG
-      if( i_ >= window_.extent(0) + window_.offset(0) ||
-          j_ >= window_.extent(1) + window_.offset(1) ||
-          k_ >= window_.extent(2) + window_.offset(2) ){
+      if( i_ >= window_->extent(0) + window_->offset(0) ||
+          j_ >= window_->extent(1) + window_->offset(1) ||
+          k_ >= window_->extent(2) + window_->offset(2) ){
         std::ostringstream msg;
         msg << __FILE__ << " : " << __LINE__ << std::endl
             << "iterator is in an invalid state for dereference";
