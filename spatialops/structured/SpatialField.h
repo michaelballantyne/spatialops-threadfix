@@ -20,49 +20,53 @@
 
 class RHS;
 
-namespace SpatialOps {
-namespace structured {
+namespace SpatialOps{
+namespace structured{
 
-enum StorageMode {
-  InternalStorage, ExternalStorage
-};
+  enum StorageMode
+  {
+    InternalStorage,
+    ExternalStorage
+  };
 
-/**
- *  \class SpatialField
- *  \ingroup structured
- *  \ingroup fields
- *  \author James C. Sutherland
- *
- *  \brief Abstracts a field.
- *
- *  \tparam FieldLocation - type traits to describe the location of
- *    this field.  On staggered meshes, this will describe the mesh
- *    this field is associated with.  It also defines whether this
- *    field is on a volume or surface.
- *
- *  \tparam GhostTraits - The ghost type traits.  Must define an
- *    enum value \c NGHOST that gives the number of ghost cells for
- *    this field.
- *
- *  \tparam T - the underlying datatype (defaults to \c double)
- *
- *  \par Related classes:
- *   - \ref MemoryWindow
- *   - \ref SpatialFieldStore
- *   - \ref SpatialOperator
- *
- *  \par Public Typedefs
- *   - \c field_type - this field's type
- *   - \c Ghost - the ghost type traits
- *   - \c Location - the location type traits
- *   - \c value_type  - the type of underlying data being stored in this SpatialField
- *   - \c iterator, \c const_iterator - iterators to the elements in this field
- *   - \c interior_iterator, \c const_interior_iterator - iterators to the interior elements in this field (excludes ghost cells).
- *
- */
-template<typename FieldLocation, typename GhostTraits, typename T = double>
-class SpatialField {
-    typedef SpatialField<FieldLocation, GhostTraits, T> MyType;
+  /**
+   *  \class SpatialField
+   *  \ingroup structured
+   *  \ingroup fields
+   *  \author James C. Sutherland
+   *
+   *  \brief Abstracts a field.
+   *
+   *  \tparam FieldLocation - type traits to describe the location of
+   *    this field.  On staggered meshes, this will describe the mesh
+   *    this field is associated with.  It also defines whether this
+   *    field is on a volume or surface.
+   *
+   *  \tparam GhostTraits - The ghost type traits.  Must define an
+   *    enum value \c NGHOST that gives the number of ghost cells for
+   *    this field.
+   *
+   *  \tparam T - the underlying datatype (defaults to \c double)
+   *
+   *  \par Related classes:
+   *   - \ref MemoryWindow
+   *   - \ref SpatialFieldStore
+   *   - \ref SpatialOperator
+   *
+   *  \par Public Typedefs
+   *   - \c field_type - this field's type
+   *   - \c Ghost - the ghost type traits
+   *   - \c Location - the location type traits
+   *   - \c value_type  - the type of underlying data being stored in this SpatialField
+   *   - \c iterator, \c const_iterator - iterators to the elements in this field
+   *   - \c interior_iterator, \c const_interior_iterator - iterators to the interior elements in this field (excludes ghost cells).
+   */
+  template< typename FieldLocation,
+            typename GhostTraits,
+            typename T=double >
+  class SpatialField
+  {
+    typedef SpatialField<FieldLocation,GhostTraits,T> MyType;
 
     const MemoryWindow fieldWindow_;
     MemoryWindow interiorFieldWindow_;
@@ -444,6 +448,7 @@ SpatialField<Location, GhostTraits, T>::~SpatialField() {
           << DeviceTypeTools::get_memory_type_description(memType_)
       << " ) field type, without supporting libraries\n";
       msg << "\t - " << __FILE__ << " : " << __LINE__;
+      throw( std::runtime_error( msg.str() ) );
     }
   }
 }
