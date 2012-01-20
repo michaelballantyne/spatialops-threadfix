@@ -219,7 +219,7 @@ namespace structured{
         throw(std::runtime_error(msg.str()));
       }
       return const_iterator(fieldValues_,
-          fieldWindow_.flat_index(IntVec(0, 0, 0)), fieldWindow_);
+          fieldWindow_.flat_index(IntVec(0, 0, 0)), &fieldWindow_);
     }
 
     inline iterator begin() {
@@ -232,7 +232,7 @@ namespace structured{
         throw(std::runtime_error(msg.str()));
       }
       return iterator(fieldValues_, fieldWindow_.flat_index(IntVec(0, 0, 0)),
-          fieldWindow_);
+          &fieldWindow_);
     }
 
     inline const_iterator end() const;
@@ -249,7 +249,7 @@ namespace structured{
       }
       return const_interior_iterator(fieldValues_,
           interiorFieldWindow_.flat_index(IntVec(0, 0, 0)),
-          interiorFieldWindow_);
+          &interiorFieldWindow_);
     }
     inline interior_iterator interior_begin() {
       if (memType_ != LOCAL_RAM) {
@@ -262,7 +262,7 @@ namespace structured{
       }
       return interior_iterator(fieldValues_,
           interiorFieldWindow_.flat_index(IntVec(0, 0, 0)),
-          interiorFieldWindow_);
+          &interiorFieldWindow_);
     }
 
     inline const_interior_iterator interior_end() const;
@@ -505,7 +505,7 @@ typename SpatialField<Location, GhostTraits, T>::const_iterator SpatialField<
       for (size_t i = 0; i < 3; ++i)
         ijk[i] -= 1;
       const size_t n = fieldWindow_.flat_index(ijk);
-      const_iterator i(fieldValues_, n, fieldWindow_);
+      const_iterator i(fieldValues_, n, &fieldWindow_);
       return ++i;
     }
     default:
@@ -528,7 +528,7 @@ typename SpatialField<Location, GhostTraits, T>::iterator SpatialField<Location,
       for (size_t i = 0; i < 3; ++i)
         ijk[i] -= 1;
       const size_t n = fieldWindow_.flat_index(ijk);
-      iterator i(fieldValues_, n, fieldWindow_);
+      iterator i(fieldValues_, n, &fieldWindow_);
       return ++i;
     }
     default:
@@ -551,7 +551,7 @@ typename SpatialField<Location, GhostTraits, T>::const_interior_iterator Spatial
       for (size_t i = 0; i < 3; ++i)
         ijk[i] -= 1;
       const_interior_iterator i(fieldValues_,
-          interiorFieldWindow_.flat_index(ijk), interiorFieldWindow_);
+          interiorFieldWindow_.flat_index(ijk), &interiorFieldWindow_);
       return ++i;
     }
     default:
@@ -574,7 +574,7 @@ typename SpatialField<Location, GhostTraits, T>::interior_iterator SpatialField<
       for (size_t i = 0; i < 3; ++i)
         ijk[i] -= 1;
       interior_iterator i(fieldValues_, interiorFieldWindow_.flat_index(ijk),
-          interiorFieldWindow_);
+          &interiorFieldWindow_);
       return ++i;
     }
     default:
