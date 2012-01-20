@@ -337,6 +337,10 @@ namespace structured{
       return fieldValuesExtDevice_;
     }
 
+    T* field_values() const {
+      return fieldValues_;
+    }
+
     unsigned int get_data_size() const {
       return allocatedBytes_;
     }
