@@ -72,15 +72,14 @@ int main( int iarg, char* carg[] )
 
   const double length = 10.0;
 
-  // jcs may need to use something other than run_convergence, since we need to refine in two directions, not just one...
-  if( npts[0]>1 && npts[1]>1 ) status( run_convergence<Interpolant,SVolField,XSurfYField,YDIR>( npts, bcplus, length, 2.0 ), "SVol->XSurfY" );
-  if( npts[0]>1 && npts[2]>1 ) status( run_convergence<Interpolant,SVolField,XSurfZField,ZDIR>( npts, bcplus, length, 2.0 ), "SVol->XSurfZ" );
+  if( npts[0]>1 && npts[1]>1 ) status( run_convergence<Interpolant,SVolField,XSurfYField,XDIR,YDIR>( npts, bcplus, length, 2.0 ), "SVol->XSurfY" );
+  if( npts[0]>1 && npts[2]>1 ) status( run_convergence<Interpolant,SVolField,XSurfZField,XDIR,ZDIR>( npts, bcplus, length, 2.0 ), "SVol->XSurfZ" );
 
-  if( npts[1]>1 && npts[0]>1 ) status( run_convergence<Interpolant,SVolField,YSurfXField,XDIR>( npts, bcplus, length, 2.0 ), "SVol->YSurfX" );
-  if( npts[1]>1 && npts[2]>1 ) status( run_convergence<Interpolant,SVolField,YSurfZField,ZDIR>( npts, bcplus, length, 2.0 ), "SVol->YSurfZ" );
+  if( npts[1]>1 && npts[0]>1 ) status( run_convergence<Interpolant,SVolField,YSurfXField,XDIR,YDIR>( npts, bcplus, length, 2.0 ), "SVol->YSurfX" );
+  if( npts[1]>1 && npts[2]>1 ) status( run_convergence<Interpolant,SVolField,YSurfZField,YDIR,ZDIR>( npts, bcplus, length, 2.0 ), "SVol->YSurfZ" );
 
-  if( npts[2]>1 && npts[0]>1 ) status( run_convergence<Interpolant,SVolField,ZSurfXField,XDIR>( npts, bcplus, length, 2.0 ), "SVol->ZSurfX" );
-  if( npts[2]>1 && npts[1]>1 ) status( run_convergence<Interpolant,SVolField,ZSurfYField,YDIR>( npts, bcplus, length, 2.0 ), "SVol->ZSurfZ" );
+  if( npts[2]>1 && npts[0]>1 ) status( run_convergence<Interpolant,SVolField,ZSurfXField,XDIR,ZDIR>( npts, bcplus, length, 2.0 ), "SVol->ZSurfX" );
+  if( npts[2]>1 && npts[1]>1 ) status( run_convergence<Interpolant,SVolField,ZSurfYField,YDIR,ZDIR>( npts, bcplus, length, 2.0 ), "SVol->ZSurfZ" );
 
   //  if( npts[0]>1 && npts[1]>1 ) status( run_convergence<Interpolant,XSurfYField,SVolField,XDIR>( npts, bcplus, length, 2.0 ), "XSX->SVol" );
 

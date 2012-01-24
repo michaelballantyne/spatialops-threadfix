@@ -222,6 +222,17 @@ run_convergence( SpatialOps::structured::IntVec npts,
   return check_convergence( spacings, norms, expectedOrder );
 }
 
+template< typename OpT, typename SrcT, typename DestT, typename Dir1T, typename Dir2T >
+bool
+run_convergence( SpatialOps::structured::IntVec npts,
+                 const bool bcPlus[3],
+                 const double length,
+                 const double expectedOrder )
+{
+  return run_convergence<OpT,SrcT,DestT,Dir1T>( npts, bcPlus, length, expectedOrder ) &&
+         run_convergence<OpT,SrcT,DestT,Dir2T>( npts, bcPlus, length, expectedOrder );
+}
+
 //===================================================================
 
 #endif // SpatialOps_test_stencil_helper_h
