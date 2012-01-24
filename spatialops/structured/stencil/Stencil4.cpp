@@ -41,7 +41,7 @@ namespace structured{
   template struct Stencil4< OP, SRC, DEST >;
 
   // viscosity from scalar cells to staggered surfaces for stress
-  DECLARE_STENCIL( Interpolant, SVolField, XSurfYField ) 
+  DECLARE_STENCIL( Interpolant, SVolField, XSurfYField )
   DECLARE_STENCIL( Interpolant, SVolField, XSurfZField )
 
   DECLARE_STENCIL( Interpolant, SVolField, YSurfXField )
@@ -49,6 +49,13 @@ namespace structured{
 
   DECLARE_STENCIL( Interpolant, SVolField, ZSurfXField )
   DECLARE_STENCIL( Interpolant, SVolField, ZSurfYField )
+
+  DECLARE_STENCIL( Interpolant, XSurfYField, SVolField )
+  DECLARE_STENCIL( Interpolant, XSurfZField, SVolField )
+  DECLARE_STENCIL( Interpolant, YSurfXField, SVolField )
+  DECLARE_STENCIL( Interpolant, YSurfZField, SVolField )
+  DECLARE_STENCIL( Interpolant, ZSurfXField, SVolField )
+  DECLARE_STENCIL( Interpolant, ZSurfYField, SVolField )
   //
   //==================================================================
 

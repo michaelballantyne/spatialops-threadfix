@@ -107,6 +107,13 @@ namespace structured{
 
     opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,SVolField,ZSurfXField>::type(.25,.25,.25,.25) );
     opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,SVolField,ZSurfYField>::type(.25,.25,.25,.25) );
+
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,XSurfYField,SVolField>::type(.25,.25,.25,.25) );
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,XSurfZField,SVolField>::type(.25,.25,.25,.25) );
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,YSurfXField,SVolField>::type(.25,.25,.25,.25) );
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,YSurfZField,SVolField>::type(.25,.25,.25,.25) );
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,ZSurfXField,SVolField>::type(.25,.25,.25,.25) );
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,ZSurfYField,SVolField>::type(.25,.25,.25,.25) );
   }
 
   //------------------------------------------------------------------
