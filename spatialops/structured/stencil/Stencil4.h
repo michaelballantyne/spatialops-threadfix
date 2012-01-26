@@ -66,16 +66,19 @@ namespace structured{
           typename  SrcT::Location::Offset,
           typename DestT::Location::Offset >::result                    Difference;
     private:
-      typedef typename Multiply< typename UnitTriplet<XDIR>::type, Difference >::result  ActiveX;     // {1,0,0} if active
-      typedef typename Multiply< typename UnitTriplet<YDIR>::type, Difference >::result  ActiveY;     // {0,1,0} if active
-      typedef typename Multiply< typename UnitTriplet<ZDIR>::type, Difference >::result  ActiveZ;     // {0,0,1} if active
+      typedef typename Multiply< typename UnitTriplet<XDIR>::type,
+                                 Difference >::result::Abs              ActiveX;     // {1,0,0} if active
+      typedef typename Multiply< typename UnitTriplet<YDIR>::type,
+                                 Difference >::result::Abs              ActiveY;     // {0,1,0} if active
+      typedef typename Multiply< typename UnitTriplet<ZDIR>::type,
+                                 Difference >::result::Abs              ActiveZ;     // {0,0,1} if active
 
     public:
-      typedef typename SelectNonzeroTriplet<ActiveX,ActiveY,ActiveZ>::type1     Dir1Vec;  ///< the first active direction UnitTriplet
-      typedef typename SelectNonzeroTriplet<ActiveX,ActiveY,ActiveZ>::type2     Dir2Vec;  ///< the second active direction UnitTriplet
+      typedef typename SelectNonzeroTriplet<ActiveX,ActiveY,ActiveZ>::type1  Dir1Vec;  ///< the first active direction UnitTriplet
+      typedef typename SelectNonzeroTriplet<ActiveX,ActiveY,ActiveZ>::type2  Dir2Vec;  ///< the second active direction UnitTriplet
 
-      typedef typename GetNonzeroDir< Dir1Vec >::DirT                           Dir1;     ///< the first active direction
-      typedef typename GetNonzeroDir< Dir2Vec >::DirT                           Dir2;     ///< the second active direction
+      typedef typename GetNonzeroDir< Dir1Vec >::DirT                        Dir1;     ///< the first active direction
+      typedef typename GetNonzeroDir< Dir2Vec >::DirT                        Dir2;     ///< the second active direction
     };
 
     template< typename T > struct ActiveDirs<T,T>;  // invalid - all Stencil4 must do something.
@@ -123,11 +126,21 @@ namespace structured{
       typedef Src1Extent                                    Src4Extent;      ///< extent modification for the fourth source field
       typedef Src3ExtentBC                                  Src4ExtentBC;    ///< amount to augment source4 extent by if a BC is present
 
-      typedef typename Multiply<
-          typename ActiveDirs<SrcT,DestT>::Difference,
-          typename Subtract<SFO,DFO>::result
-          >::result::PositiveOrZero                         DestOffset;      ///< the offset for the destination field
-      typedef UpperLoopShift                                DestExtent;      ///< the extent for the destination field
+      typedef typename Add<
+          typename Multiply< Dir1Vec,
+            typename Subtract<
+              typename Multiply<Dir1Vec,SFO>::result,
+              typename Multiply<Dir1Vec,DFO>::result
+              >::result
+            >::result::PositiveOrZero,
+            typename Multiply< Dir2Vec,
+              typename Subtract<
+                typename Multiply<Dir2Vec,SFO>::result,
+                typename Multiply<Dir2Vec,DFO>::result
+                >::result
+              >::result::PositiveOrZero
+          >::result                                          DestOffset;     ///< the offset for the destination field
+      typedef Src1Extent                                    DestExtent;      ///< the extent for the destination field
       typedef typename Subtract<DFBCExtra,
           SFBCExtra>::result::PositiveOrZero::Negate        DestExtentBC;    ///< amount to augment destination extents by if a BC is present
 
