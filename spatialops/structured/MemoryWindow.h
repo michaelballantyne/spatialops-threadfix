@@ -479,9 +479,9 @@ namespace structured{
       return *current_;
     }
 
-    inline size_t i(){ return i_; }
-    inline size_t j(){ return j_; }
-    inline size_t k(){ return k_; }
+    inline size_t i() const{ return i_; }
+    inline size_t j() const{ return j_; }
+    inline size_t k() const{ return k_; }
   };
 
   //==================================================================
