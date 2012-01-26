@@ -229,8 +229,28 @@ run_convergence( SpatialOps::structured::IntVec npts,
                  const double length,
                  const double expectedOrder )
 {
-  return run_convergence<OpT,SrcT,DestT,Dir1T>( npts, bcPlus, length, expectedOrder ) &&
-         run_convergence<OpT,SrcT,DestT,Dir2T>( npts, bcPlus, length, expectedOrder );
+  using namespace SpatialOps;
+  typedef typename SpatialOps::structured::OperatorTypeBuilder<OpT,SrcT,DestT>::type  Op;
+
+  const int nrefine = 5;
+
+  // directional index for convergence test
+  const int ix1 = (IsSameType<Dir1T,XDIR>::result) ? 0 : (IsSameType<Dir1T,YDIR>::result) ? 1 : 2;
+  const int ix2 = (IsSameType<Dir2T,XDIR>::result) ? 0 : (IsSameType<Dir2T,YDIR>::result) ? 1 : 2;
+
+  std::vector<double> norms(nrefine,0.0), spacings(nrefine,0.0);
+
+  const int n1 = npts[ix1];
+  const int n2 = npts[ix2];
+
+  for( size_t icount=0; icount<nrefine; ++icount ){
+    spacings[icount] = length/( (icount+1)*n1 );
+    npts[ix1] = n1 * (icount+1);
+    npts[ix2] = n2 * (icount+1);
+    norms[icount] = apply_stencil<Op,Dir1T>( npts, length, bcPlus );
+  }
+
+  return check_convergence( spacings, norms, expectedOrder );
 }
 
 //===================================================================

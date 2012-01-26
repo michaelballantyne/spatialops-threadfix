@@ -102,13 +102,11 @@ namespace structured{
       typedef typename ActiveDirs<SrcT,DestT>::Dir1Vec      Dir1Vec;         ///< The first active direction
       typedef typename ActiveDirs<SrcT,DestT>::Dir2Vec      Dir2Vec;         ///< The second active direction
 
-      typedef typename Add<Dir1Vec,Dir2Vec>::result::Negate UpperLoopShift;  ///< shift for uppper bounds
-
       typedef typename Multiply<SFBCExtra,Dir1Vec>::result  UpperLoopBCAug1; ///< shift for dir1 upper bounds when BC is present
       typedef typename Multiply<SFBCExtra,Dir2Vec>::result  UpperLoopBCAug2; ///< shift for dir2 upper bounds when BC is present
 
       typedef IndexTriplet<0,0,0>                           Src1Offset;      ///< offset for the first source field
-      typedef UpperLoopShift                                Src1Extent;      ///< extent modification for the first source field
+      typedef typename Add<Dir1Vec,Dir2Vec>::result::Negate Src1Extent;      ///< extent modification for the first source field
       typedef typename Subtract<SFBCExtra,
           DFBCExtra>::result::PositiveOrZero::Negate        Src1ExtentBC;    ///< amount to augment source1 extent by if a BC is present
 
@@ -117,12 +115,12 @@ namespace structured{
       typedef Src1ExtentBC                                  Src2ExtentBC;    ///< amount to augment source2 extent by if a BC is present
 
       typedef typename Add<Dir2Vec,Src1Offset>::result      Src3Offset;      ///< offset for the third source field
-      typedef UpperLoopShift                                Src3Extent;      ///< extent modification for the third source field
+      typedef Src1Extent                                    Src3Extent;      ///< extent modification for the third source field
       typedef typename Subtract<SFBCExtra,
           DFBCExtra>::result::PositiveOrZero::Negate        Src3ExtentBC;    ///< amount to augment source3 extent by if a BC is present
 
       typedef typename Add<Dir1Vec,Src3Offset>::result      Src4Offset;      ///< offset for the fourth source field
-      typedef Src3Extent                                    Src4Extent;      ///< extent modification for the fourth source field
+      typedef Src1Extent                                    Src4Extent;      ///< extent modification for the fourth source field
       typedef Src3ExtentBC                                  Src4ExtentBC;    ///< amount to augment source4 extent by if a BC is present
 
       typedef typename Multiply<
