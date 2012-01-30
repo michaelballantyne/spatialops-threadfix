@@ -22,8 +22,10 @@ set( SO_SRC ${SO_SRC} ${src} PARENT_SCOPE )
 if( ENABLE_CUDA )
   if( CUDA_CUDA_LIBRARY )
 		include_directories( ${CUDA_INCLUDE_DIRS} )
-		cuda_add_library( spatialops_cuda STATIC CudaMemoryAllocator.cu CudaStencilLib.cu )
-		#cuda_add_library( CUDAMemoryManager STATIC CudaMemoryAllocator.cu )
+		set( cuda_src
+		  ${dir}/CudaMemoryAllocator.cu
+		)
+		cuda_add_library( spatialops_cuda STATIC ${cuda_src} )
 		target_link_libraries( spatialops_cuda ${CUDA_LIBRARIES} ${Boost_LIBRARIES} )
 		    
 		install( TARGETS spatialops_cuda EXPORT so_cuda DESTINATION lib/spatialops )
@@ -51,8 +53,6 @@ install( FILES
   IntVec.h
   ExternalAllocators.h
   CudaMemoryAllocator.h
-  CudaStencilDef.h
-  CudaStencilLib.h
   MemoryTypes.h
   MemoryWindow.h
   SpatialField.h

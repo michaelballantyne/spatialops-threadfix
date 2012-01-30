@@ -1,6 +1,12 @@
+#include <spatialops/SpatialOpsConfigure.h>
+#ifdef ENABLE_CUDA
+#include "CudaStencil2.h"
+#else
 #include "Stencil2.h"
+#endif
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/structured/FVTools.h>
+#include <spatialops/structured/MemoryTypes.h>
 #include <spatialops/FieldExpressionsStencil2.h>
 
 namespace SpatialOps{
@@ -28,10 +34,30 @@ namespace structured{
   Stencil2<OperatorT,SrcT,DestT>::
   apply_to_field( const SrcT& src, DestT& dest ) const
   {
-      stencil_2_apply_to_field_general_execute<OperatorT,SrcT,DestT>(src,
-                                                                     dest,
-                                                                     coefLo_,
-                                                                     coefHi_);
+    switch( dest.memory_device_type() ){
+      case LOCAL_RAM:{
+        stencil_2_apply_to_field_general_execute<OperatorT,SrcT,DestT>(src,
+                                                                       dest,
+                                                                       coefLo_,
+                                                                       coefHi_);
+      }
+      break;
+
+#ifdef ENABLE_CUDA
+      case EXTERNAL_CUDA_GPU:{
+        cuda_stencil_2_apply_to_field_helper<OperatorT, SrcT, DestT>( src, dest, coefLo_, coefHi_ );
+      }
+      break;
+#endif
+      default:{
+        std::ostringstream msg;
+        msg << "Destination field has unsupported device type ( "
+            << DeviceTypeTools::get_memory_type_description( dest.memory_device_type() )
+            << " )\n";
+        msg << "\t - " << __FILE__ << " : " << __LINE__;
+        throw(std::runtime_error(msg.str()));
+      }
+    }
   }
 
   //==================================================================

@@ -251,6 +251,7 @@ namespace structured{
           interiorFieldWindow_.flat_index(IntVec(0, 0, 0)),
           &interiorFieldWindow_);
     }
+
     inline interior_iterator interior_begin() {
       if (memType_ != LOCAL_RAM) {
         std::ostringstream msg;
@@ -368,6 +369,10 @@ SpatialField( const MemoryWindow window,
                     ( (mode == ExternalStorage) ? fieldValues
                       : new T[window.glob_dim(0) * window.glob_dim(1)  * window.glob_dim(2)] )
                     : (NULL) ),
+      fieldValuesExtDevice_( (mtype == EXTERNAL_CUDA_GPU ) ?
+                             ( ( mode == ExternalStorage ) ? fieldValues
+                               : (NULL) ) // reset gpu memory later
+                             : ( NULL ) ),
       builtField_( mode == InternalStorage ),
       deviceIndex_(devIdx),
       memType_(mtype),
@@ -396,9 +401,10 @@ SpatialField( const MemoryWindow window,
       break;
 #ifdef ENABLE_CUDA
       case EXTERNAL_CUDA_GPU: {
-        ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-        fieldValues_ = NULL;
-        fieldValuesExtDevice_ = (T*)CDI.get_raw_pointer( allocatedBytes_, deviceIndex_ );
+        if( mode == InternalStorage ){ // We only allocate space if were storing internally
+          ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
+          fieldValuesExtDevice_ = (T*)CDI.get_raw_pointer( allocatedBytes_, deviceIndex_ );
+        }
         break;
       }
 #endif
@@ -772,6 +778,7 @@ SpatialField<Location, GhostTraits, T>::operator=(const MyType& other) {
             ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
             CDI.memcpy_to( fieldValuesExtDevice_, other.fieldValues_, allocatedBytes_, deviceIndex_ );
           }
+          //TODO GPU->GPU copies ( device checking for possibility of shallow copies )
           break;
           default: {
             std::ostringstream msg;

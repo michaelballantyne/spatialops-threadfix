@@ -138,7 +138,7 @@ namespace SpatialOps{
 
       public:
          static ThreadPool& self(){
-            static ThreadPool tp(1);
+            static ThreadPool tp(NTHREADS);
             ThreadPoolResourceManager& tprm = ThreadPoolResourceManager::self();
             if( init == false ){ 
                tprm.insert<boost::threadpool::prio_pool>(tp, NTHREADS);

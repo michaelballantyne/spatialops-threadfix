@@ -135,6 +135,6 @@ int main(int argc, char** argv){
   if( !system("diff cudaout.txt cpuout.txt &> /dev/null") ){
     std::cout << "Success\n";
   } else {
-    std::cout << "Fail: sample outputs do not match.\n";
+    std::cout << "Fail: output samples do not match.\n";
   }
 }

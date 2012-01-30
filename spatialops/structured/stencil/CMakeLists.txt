@@ -7,12 +7,17 @@ set( src
   ${dir}/Stencil4.cpp
   ${dir}/StencilBuilder.cpp
   )
-
+  
 add_library(
-  spatialops-stencil
-  STATIC
-  ${src}
-  )
+    spatialops-stencil
+    STATIC
+    ${src}
+)
+
+if( ENABLE_CUDA )
+    cuda_add_library( cuda-spatialops-stencil ${dir}/CudaStencil2.cu )
+    set( TPL_LIBRARIES ${TPL_LIBRARIES} cuda-spatialops-stencil PARENT_SCOPE )
+endif( ENABLE_CUDA )
 
 if( ENABLE_TESTS )
   add_subdirectory( test )
@@ -24,6 +29,8 @@ install( FILES
   BoxFilter.h
   FVStaggeredBCOp.h
   NullStencil.h
+  CudaStencil2.h
+  CudaStencil2Bridge.h
   Stencil2.h
   Stencil4.h
   StencilBuilder.h

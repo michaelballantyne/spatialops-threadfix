@@ -95,7 +95,7 @@ int main( int iarg, char* carg[] )
                                           length[0], length[1], length[2],
                                           sodb );
 
-  // grap pointers to the operators
+  // grab pointers to the operators
   const GradX* const gradx = sodb.retrieve_operator<GradX>();
   const GradY* const grady = sodb.retrieve_operator<GradY>();
   const GradZ* const gradz = sodb.retrieve_operator<GradZ>();
