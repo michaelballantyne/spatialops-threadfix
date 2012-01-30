@@ -182,6 +182,13 @@ namespace structured{
   OP_BUILDER( Stencil4, Interpolant, SVolField, ZSurfXField )
   OP_BUILDER( Stencil4, Interpolant, SVolField, ZSurfYField )
 
+  OP_BUILDER( Stencil4, Interpolant, XSurfYField, SVolField )
+  OP_BUILDER( Stencil4, Interpolant, XSurfZField, SVolField )
+  OP_BUILDER( Stencil4, Interpolant, YSurfXField, SVolField )
+  OP_BUILDER( Stencil4, Interpolant, YSurfZField, SVolField )
+  OP_BUILDER( Stencil4, Interpolant, ZSurfXField, SVolField )
+  OP_BUILDER( Stencil4, Interpolant, ZSurfYField, SVolField )
+
   // Filter operators
   template<> struct OperatorTypeBuilder<Filter,SVolField,SVolField>{ typedef BoxFilter<SVolField> type; };
   template<> struct OperatorTypeBuilder<Filter,XVolField,XVolField>{ typedef BoxFilter<XVolField> type; };
