@@ -22,10 +22,18 @@ if ( ENABLE_THREADS )
    add_subdirectory( threadpool )
 endif( ENABLE_THREADS )
 
-add_library( spatialops
+if( ENABLE_CUDA )
+  cuda_add_library( spatialops
   STATIC
   ${SO_Sources}
   )
+else( ENABLE_CUDA )
+  add_library( spatialops
+  STATIC
+  ${SO_Sources}
+  )
+endif( ENABLE_CUDA )
+
 
 target_link_libraries( spatialops ${TPL_LIBRARIES} )
 

@@ -3,20 +3,19 @@ get_filename_component( dir ${CMAKE_CURRENT_LIST_FILE} PATH )
 set( src
   ${dir}/BoxFilter.cpp
   ${dir}/NullStencil.cpp
-  ${dir}/Stencil2.cpp
   ${dir}/Stencil4.cpp
   ${dir}/StencilBuilder.cpp
   )
-  
-add_library(
-    spatialops-stencil
-    STATIC
-    ${src}
-)
-
+ 
 if( ENABLE_CUDA )
-    cuda_add_library( cuda-spatialops-stencil ${dir}/CudaStencil2.cu )
-    set( TPL_LIBRARIES ${TPL_LIBRARIES} cuda-spatialops-stencil PARENT_SCOPE )
+    set( src ${src} ${dir}/Stencil2.cu )
+    cuda_add_library(
+        spatialops-stencil
+        STATIC
+        ${src}
+    )
+else()
+    set( src ${rc} ${dir}/Stencil2.cpp )
 endif( ENABLE_CUDA )
 
 if( ENABLE_TESTS )

@@ -1,9 +1,5 @@
 #include <spatialops/SpatialOpsConfigure.h>
-#ifdef ENABLE_CUDA
-#include "CudaStencil2.h"
-#else
 #include "Stencil2.h"
-#endif
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/MemoryTypes.h>

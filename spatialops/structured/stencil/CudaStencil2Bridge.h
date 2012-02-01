@@ -8,8 +8,8 @@
 #ifndef CUDASTENCIL2BRIDGE_H_
 #define CUDASTENCIL2BRIDGE_H_
 
-template< class DataType, class Dir> void
-  cuda_stencil_2_apply_to_field( DataType* dest, DataType* src,
+template< class DataType, class Dir>
+void cuda_stencil_2_apply_to_field( DataType* dest, DataType* src,
 								 DataType low,   DataType high,
 								 const int nx,      const int ny,      const int nz,
 								 const int dEX_x,   const int dEX_y,   const int dEX_z,
