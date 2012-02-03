@@ -1,9 +1,5 @@
 set( libs spatialops spatialops-stencil spatialops-structured ${TPL_LIBRARIES} )
 
-if( ENABLE_CUDA )
-	set(libs ${libs} spatialops_cuda )
-endif( ENABLE_CUDA )
-
 add_executable( test_stencil2 test_stencil2.cpp )
 target_link_libraries( test_stencil2 ${libs} )
 add_test( stencil2_x_nobc  test_stencil2  --ny=1 --nz=1 ) 

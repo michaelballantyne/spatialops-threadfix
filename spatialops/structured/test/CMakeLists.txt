@@ -1,7 +1,4 @@
 set( libs spatialops-structured spatialops ${TPL_LIBRARIES} )
-if( ENABLE_CUDA )
-	set(libs ${libs} spatialops_cuda )
-endif( ENABLE_CUDA )
 
 include_directories( ${spatialops_SOURCE_DIR}/include . )
 
@@ -44,14 +41,14 @@ if( CUDA_CUDA_LIBRARY )
   set( cxxtemp ${CMAKE_CXX_FLAGS} )
   set( CMAKE_CXX_FLAGS "-DDEBUG_CUDA_VERBOSE ${cxxtemp}" )
   add_executable( debug_memtest_flags memtest1.cpp )
-  target_link_libraries( debug_memtest_flags spatialops_cuda )
+  target_link_libraries( debug_memtest_flags spatialops )
   set( CMAKE_CXX_FLAGS ${cxxtemp} )
   
   add_executable( simplememtest memtest1.cpp )
-  target_link_libraries( simplememtest spatialops_cuda )
+  target_link_libraries( simplememtest spatialops )
   
   add_executable( sharedmemtest memtest2.cpp )
-  target_link_libraries( sharedmemtest spatialops_cuda )
+  target_link_libraries( sharedmemtest spatialops )
   
   add_executable( extfieldtest testExternalField.cpp )
   target_link_libraries( extfieldtest ${libs} )

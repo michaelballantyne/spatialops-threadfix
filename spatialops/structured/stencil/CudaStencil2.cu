@@ -6,21 +6,19 @@
 
 namespace SpatialOps {
 	namespace structured {
-		namespace stencil {
 
 		using namespace SpatialOps;
 		using namespace SpatialOps::structured;
 
 		template< class DataType, class Dir>
-		  __global__ void
-		  __cuda_stencil_2_apply_to_field( DataType* dest, DataType* src,
-										 DataType low,   DataType high,
-										 const int nx,      const int ny,      const int nz,
-										 const int dEX_x,   const int dEX_y,   const int dEX_z,
-										 const int dOFF_x,  const int dOFF_y,  const int dOFF_z,
-										 const int s1OFF_x, const int s1OFF_y, const int s1OFF_z,
-										 const int s2OFF_x, const int s2OFF_y, const int s2OFF_z )
-		  {
+		__global__ void __cuda_stencil_2_apply_to_field( DataType* dest, DataType* src,
+									 DataType low,   DataType high,
+									 const int nx,      const int ny,      const int nz,
+									 const int dEX_x,   const int dEX_y,   const int dEX_z,
+									 const int dOFF_x,  const int dOFF_y,  const int dOFF_z,
+									 const int s1OFF_x, const int s1OFF_y, const int s1OFF_z,
+									 const int s2OFF_x, const int s2OFF_y, const int s2OFF_z )
+		{
 			const int i   = ( blockIdx.x * blockDim.x + threadIdx.x );
 			const int j   = ( blockIdx.y * blockDim.y + threadIdx.y );
 			const int di  = i + dOFF_x;
@@ -75,28 +73,28 @@ namespace SpatialOps {
 			}
 		  }
 
-		template< class DataType, class Dir> void
-			cuda_stencil_2_apply_to_field( DataType* dest, DataType* src,
+		template< class DataType, class Dir>
+		void cuda_stencil_2_apply_to_field( DataType* dest, DataType* src,
 										 DataType low,   DataType high,
 										 const int nx,      const int ny,      const int nz,
 										 const int dEX_x,   const int dEX_y,   const int dEX_z,
 										 const int dOFF_x,  const int dOFF_y,  const int dOFF_z,
 										 const int s1OFF_x, const int s1OFF_y, const int s1OFF_z,
 										 const int s2OFF_x, const int s2OFF_y, const int s2OFF_z ){
-			//Compute blocking dimensions
-			dim3 dimBlock( BLOCK_DIM, BLOCK_DIM );
-			dim3 dimGrid( 1, 1 );
+		//Compute blocking dimensions
+		dim3 dimBlock( BLOCK_DIM, BLOCK_DIM );
+		dim3 dimGrid( 1, 1 );
 
-			//Launch kernel
-			__cuda_stencil_2_apply_to_field<DataType, Dir><<<dimGrid, dimBlock>>>(
-										 dest, src,
-										 low, high,
-										 nx, ny, nz,
-										 dEX_x, dEX_y, dEX_z,
-										 dOFF_x, dOFF_y, dOFF_z,
-										 s1OFF_x, s1OFF_y, s1OFF_z,
-										 s2OFF_x, s2OFF_y, s2OFF_z );
-			}
+		//Launch kernel
+		__cuda_stencil_2_apply_to_field<DataType, Dir><<<dimGrid, dimBlock>>>(
+									 dest, src,
+									 low, high,
+									 nx, ny, nz,
+									 dEX_x, dEX_y, dEX_z,
+									 dOFF_x, dOFF_y, dOFF_z,
+									 s1OFF_x, s1OFF_y, s1OFF_z,
+									 s2OFF_x, s2OFF_y, s2OFF_z );
+		}
 
 #define DECLARE_STENCIL( TYPE, DIR) template void \
 		cuda_stencil_2_apply_to_field< TYPE , DIR >( TYPE* dest, TYPE* src, \
@@ -105,7 +103,16 @@ namespace SpatialOps {
 										 const int dEX_x,   const int dEX_y,   const int dEX_z, \
 										 const int dOFF_x,  const int dOFF_y,  const int dOFF_z, \
 										 const int s1OFF_x, const int s1OFF_y, const int s1OFF_z, \
-										 const int s2OFF_x, const int s2OFF_y, const int s2OFF_z ); \
+										 const int s2OFF_x, const int s2OFF_y, const int s2OFF_z );
+
+#define DECLARE_STENCIL_CUDA( TYPE, DIR) template void \
+		__cuda_stencil_2_apply_to_field< TYPE , DIR >( TYPE* dest, TYPE* src, \
+										 TYPE low,   TYPE high, \
+										 const int nx,      const int ny,      const int nz, \
+										 const int dEX_x,   const int dEX_y,   const int dEX_z, \
+										 const int dOFF_x,  const int dOFF_y,  const int dOFF_z, \
+										 const int s1OFF_x, const int s1OFF_y, const int s1OFF_z, \
+										 const int s2OFF_x, const int s2OFF_y, const int s2OFF_z );
 
 		DECLARE_STENCIL(float, NODIR);
 		DECLARE_STENCIL(float, XDIR);
@@ -117,6 +124,14 @@ namespace SpatialOps {
 		DECLARE_STENCIL(double, YDIR);
 		DECLARE_STENCIL(double, ZDIR);
 
-		}
+		DECLARE_STENCIL_CUDA(float, NODIR);
+		DECLARE_STENCIL_CUDA(float, XDIR);
+		DECLARE_STENCIL_CUDA(float, YDIR);
+		DECLARE_STENCIL_CUDA(float, ZDIR);
+
+		DECLARE_STENCIL_CUDA(double, NODIR);
+		DECLARE_STENCIL_CUDA(double, XDIR);
+		DECLARE_STENCIL_CUDA(double, YDIR);
+		DECLARE_STENCIL_CUDA(double, ZDIR);
 	}
 }

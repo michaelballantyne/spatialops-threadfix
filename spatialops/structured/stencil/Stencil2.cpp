@@ -1,12 +1,15 @@
 #include <spatialops/SpatialOpsConfigure.h>
+#ifdef ENABLE_CUDA
+#include "CudaStencil2.h"
+#else
 #include "Stencil2.h"
+#endif
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/MemoryTypes.h>
 #include <spatialops/FieldExpressionsStencil2.h>
 
-namespace SpatialOps{
-namespace structured{
+namespace SpatialOps{ namespace structured{
 
 
   template< typename OperatorT, typename SrcT, typename DestT >
