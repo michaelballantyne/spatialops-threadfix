@@ -74,9 +74,9 @@ namespace structured{
     T* fieldValues_;
     const bool builtField_;
 
-    MemoryType memType_; ///< Indicates the type of device on which this field is allocated
-    unsigned short deviceIndex_; ///< Indicates which device is this field stored on
-    T* fieldValuesExtDevice_; ///< External field pointer ( This pointer will only be valid on the device it was created )
+    MemoryType memType_; 		///< Indicates the type of device on which this field is allocated
+    unsigned short deviceIndex_;///< Indicates which device is this field stored on
+    T* fieldValuesExtDevice_; 	///< External field pointer ( This pointer will only be valid on the device it was created )
 
     unsigned long int allocatedBytes_;
 
@@ -334,8 +334,8 @@ namespace structured{
       return deviceIndex_;
     }
 
-    T* get_ext_pointer() const {
-      return fieldValuesExtDevice_;
+    T* ext_field_values() const {
+        return fieldValuesExtDevice_;
     }
 
     T* field_values() const {
@@ -365,18 +365,19 @@ SpatialField( const MemoryWindow window,
               const MemoryType mtype,
               const unsigned short int devIdx )
     : fieldWindow_(window), interiorFieldWindow_(window), // reset with correct info later
-      fieldValues_( (mtype == LOCAL_RAM) ?
-                    ( (mode == ExternalStorage) ? fieldValues
+      fieldValues_( ( mtype == LOCAL_RAM ) ?
+                    ( ( mode == ExternalStorage) ? fieldValues
                       : new T[window.glob_dim(0) * window.glob_dim(1)  * window.glob_dim(2)] )
-                    : (NULL) ),
+                    : ( NULL ) ),
       fieldValuesExtDevice_( (mtype == EXTERNAL_CUDA_GPU ) ?
+    		  	  	  	  	 // Note: this assumes fieldValues is on the proper GPU....
                              ( ( mode == ExternalStorage ) ? fieldValues
                                : (NULL) ) // reset gpu memory later
                              : ( NULL ) ),
       builtField_( mode == InternalStorage ),
-      deviceIndex_(devIdx),
-      memType_(mtype),
-      allocatedBytes_(0)
+      deviceIndex_( devIdx ),
+      memType_( mtype ),
+      allocatedBytes_( 0 )
 {
   //InteriorStorage => we build a new field
   //Exterior storage => we wrap T*
@@ -391,17 +392,18 @@ SpatialField( const MemoryWindow window,
   }
 
   //Determine raw byte count -- this is sometimes required for external device allocation.
-  allocatedBytes_ = sizeof(T) * (window.glob_dim(0) * window.glob_dim(1) * window.glob_dim(2));
+  allocatedBytes_ = sizeof(T) * ( window.glob_dim(0) * window.glob_dim(1) * window.glob_dim(2) );
 
   interiorFieldWindow_ = MemoryWindow( window.glob_dim(), ofs, ext, window.has_bc(0), window.has_bc(1), window.has_bc(2) );
 
-  switch (mtype) {
+  switch ( mtype ) {
     case LOCAL_RAM:
       //Default case, no action required.
       break;
 #ifdef ENABLE_CUDA
       case EXTERNAL_CUDA_GPU: {
-        if( mode == InternalStorage ){ // We only allocate space if were storing internally
+        if( mode == InternalStorage ){
+          // We only allocate space if were storing internally
           ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
           fieldValuesExtDevice_ = (T*)CDI.get_raw_pointer( allocatedBytes_, deviceIndex_ );
         }
@@ -418,8 +420,9 @@ SpatialField( const MemoryWindow window,
     }
   }
 
-  if (mode == InternalStorage)
+  if (mode == InternalStorage){
     reset_values(fieldValues);
+  }
 }
 
 //------------------------------------------------------------------
@@ -735,74 +738,88 @@ SpatialField<Location, GhostTraits, T>::operator[](const size_t i) const {
 template<typename Location, typename GhostTraits, typename T>
 SpatialField<Location, GhostTraits, T>&
 SpatialField<Location, GhostTraits, T>::operator=(const MyType& other) {
-  switch (memType_) {
-    case LOCAL_RAM: {
-      switch (other.memory_device_type()) {
-        case LOCAL_RAM: { // LOCAL_RAM = LOCAL_RAM
-          const_iterator iother = other.begin();
-          const iterator iend = this->end();
-          for (iterator ifld = this->begin(); ifld != iend; ++ifld, ++iother) {
-            *ifld = *iother;
-          }
-        }
-          break;
-#ifdef ENABLE_CUDA
-          case EXTERNAL_CUDA_GPU: { //LOCAL_RAM = EXTERNAL_CUDA_GPU
-            if( allocatedBytes_ != other.allocatedBytes_ ) {
-              throw( std::runtime_error( "Attempted assignment between fields of unequal size." ) );
-            }
-            ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-            CDI.memcpy_from( fieldValues_, other.fieldValuesExtDevice_, allocatedBytes_, other.deviceIndex_ );
-            break;
-          }
-#endif
-        default:
-          std::ostringstream msg;
-          msg << "Attempted unsupported copy operation, at " << __FILE__
-              << " : " << __LINE__ << std::endl;
-          msg << "\t - "
-              << DeviceTypeTools::get_memory_type_description(memType_) << " = "
-              << DeviceTypeTools::get_memory_type_description(
-                  other.memory_device_type());
-          throw(std::runtime_error(msg.str()));
-      }
-      return *this;
-    }
-#ifdef ENABLE_CUDA
-      case EXTERNAL_CUDA_GPU: {
-        switch( other.memory_device_type() ) {
-          case LOCAL_RAM: {
-            if( allocatedBytes_ != other.allocatedBytes_ ) {
-              throw( std::runtime_error( "Attempted assignment between fields of unequal size." ) );
-            }
-            ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-            CDI.memcpy_to( fieldValuesExtDevice_, other.fieldValues_, allocatedBytes_, deviceIndex_ );
-          }
-          //TODO GPU->GPU copies ( device checking for possibility of shallow copies )
-          break;
-          default: {
-            std::ostringstream msg;
-            msg << "Attempted unsupported copy operation, at " << __FILE__ << " : " << __LINE__ << std::endl;
-            msg << "\t - " << DeviceTypeTools::get_memory_type_description(memType_) << " = "
-            << DeviceTypeTools::get_memory_type_description(other.memory_device_type());
-            throw( std::runtime_error ( msg.str() ));
-          }
-        } // end internal switch
+	if( allocatedBytes_ != other.allocatedBytes_ ) {
+	  throw( std::runtime_error( "Attempted assignment between fields of unequal size." ) );
+	}
 
-        break;
-      }
-#endif
-    default:
-      std::ostringstream msg;
-      msg << "Attempted unsupported copy operation, at " << __FILE__ << " : "
-          << __LINE__ << std::endl;
-      msg << "\t - " << DeviceTypeTools::get_memory_type_description(memType_)
-          << " = "
-          << DeviceTypeTools::get_memory_type_description(
-              other.memory_device_type());
-      throw(std::runtime_error(msg.str()));
-  } // end outer switch
-  return *this;
+	switch (memType_) {
+	case LOCAL_RAM: {
+	  switch (other.memory_device_type()) {
+		case LOCAL_RAM: { // LOCAL_RAM = LOCAL_RAM
+		  //Check for self assignment
+		  if( fieldValues_ == other.field_values() ){
+			  return *this;
+		  }
+		  const_iterator iother = other.begin();
+		  const iterator iend = this->end();
+		  for (iterator ifld = this->begin(); ifld != iend; ++ifld, ++iother) {
+			*ifld = *iother;
+		  }
+		}
+		  break;
+	#ifdef ENABLE_CUDA
+		  case EXTERNAL_CUDA_GPU: { //LOCAL_RAM = EXTERNAL_CUDA_GPU
+			ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
+			CDI.memcpy_from( fieldValues_, other.fieldValuesExtDevice_, allocatedBytes_, other.deviceIndex_ );
+			break;
+		  }
+	#endif
+		default:
+		  std::ostringstream msg;
+		  msg << "Attempted unsupported copy operation, at " << __FILE__
+			  << " : " << __LINE__ << std::endl;
+		  msg << "\t - "
+			  << DeviceTypeTools::get_memory_type_description(memType_) << " = "
+			  << DeviceTypeTools::get_memory_type_description(
+				  other.memory_device_type());
+		  throw(std::runtime_error(msg.str()));
+	  }
+	  return *this;
+	}
+	#ifdef ENABLE_CUDA
+	  case EXTERNAL_CUDA_GPU: {
+		switch( other.memory_device_type() ) {
+		  case LOCAL_RAM: {
+			ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
+			CDI.memcpy_to( fieldValuesExtDevice_, other.fieldValues_, allocatedBytes_, deviceIndex_ );
+		  }
+		  // TODO update this to do direct GPU->GPU transfer
+		  case EXTERNAL_CUDA_GPU: {
+			//Check for self assignment
+			if( deviceIndex_ == other.deviceIndex_ && fieldValuesExtDevice_ == other.fieldValuesExtDevice_ ){
+				return *this;
+			}
+			ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
+			void* temp;
+			temp = (void*)malloc(allocatedBytes_);
+			CDI.memcpy_from( temp, fieldValuesExtDevice_, allocatedBytes_, deviceIndex_ );
+			CDI.memcpy_to( other.fieldValuesExtDevice_, temp, allocatedBytes_, other.deviceIndex_ );
+			free(temp);
+		  }
+		  break;
+		  default: {
+			std::ostringstream msg;
+			msg << "Attempted unsupported copy operation, at " << __FILE__ << " : " << __LINE__ << std::endl;
+			msg << "\t - " << DeviceTypeTools::get_memory_type_description(memType_) << " = "
+			<< DeviceTypeTools::get_memory_type_description(other.memory_device_type());
+			throw( std::runtime_error ( msg.str() ));
+		  }
+		} // end internal switch
+
+		break;
+	  }
+	#endif
+	default:
+	  std::ostringstream msg;
+	  msg << "Attempted unsupported copy operation, at " << __FILE__ << " : "
+		  << __LINE__ << std::endl;
+	  msg << "\t - " << DeviceTypeTools::get_memory_type_description(memType_)
+		  << " = "
+		  << DeviceTypeTools::get_memory_type_description(
+			  other.memory_device_type());
+	  throw(std::runtime_error(msg.str()));
+	} // end outer switch
+	return *this;
 }
 
 //------------------------------------------------------------------

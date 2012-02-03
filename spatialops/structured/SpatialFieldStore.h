@@ -16,6 +16,7 @@
 # include <boost/thread/mutex.hpp>
 #endif
 
+//TODO: GPU Single element field implementation -- consume only --
 namespace SpatialOps {
 
 // forward declaration
@@ -343,20 +344,18 @@ SpatFldPtr<FieldT>::operator=(const SpatFldPtr& p) {
           case LOCAL_RAM: {
             store_.restore_field(*f_);
           }
-            break;
-#ifdef ENABLE_CUDA
-            case EXTERNAL_CUDA_GPU: {
-              delete f_;
-            }
-            break;
-#endif
+          	  break;
+
+          case EXTERNAL_CUDA_GPU:
+        	  break;
+
           default:
             throw(std::runtime_error("Attempt to detach an unknown field type."));
         }
       }
+      delete f_;
       delete count_;
       count_ = NULL;
-      delete f_;
       f_ = NULL;
     }
   }
@@ -385,20 +384,19 @@ SpatFldPtr<FieldT>::operator=(FieldT* const f) {
           case LOCAL_RAM: {
             store_.restore_field(*f_);
           }
-            break;
-#ifdef ENABLE_CUDA
-            case EXTERNAL_CUDA_GPU: {
-              delete f_;
-            }
-            break;
-#endif
+          	  break;
+
+          case EXTERNAL_CUDA_GPU:
+        	  break;
+
           default:
             throw(std::runtime_error("Attempt to detach an unknown field type."));
         }
       }
+
+      delete f_;
       delete count_;
       count_ = NULL;
-      delete f_;
       f_ = NULL;
     }
   }
@@ -425,12 +423,11 @@ void SpatFldPtr<FieldT>::detach() {
           case LOCAL_RAM: {
             store_.restore_field(*f_);
           }
-            break;
-#ifdef ENABLE_CUDA
-            case EXTERNAL_CUDA_GPU: {
-            }
-            break;
-#endif
+          	  break;
+
+          case EXTERNAL_CUDA_GPU:
+        	  break;
+
           default:
             throw(std::runtime_error("Attempt to detach an unknown field type."));
         }
@@ -545,6 +542,7 @@ void SpatialFieldStore<FieldT>::restore_field(FieldT& field) {
 
 //====================================================================
 
+//The double* points to a single double element?
 template<>
 inline SpatFldPtr<double>::SpatFldPtr(double* const f) :
     store_(SpatialFieldStore<double>::self()), f_(f), count_(new int), builtFromStore_(

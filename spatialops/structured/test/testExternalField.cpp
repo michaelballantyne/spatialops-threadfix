@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
   try {
     std::cout << "Checking proper value initialization: ";
     PointField p(window, T1, InternalStorage, EXTERNAL_CUDA_GPU, 0);
-    CDI.memcpy_from((void*) T2, p.get_ext_pointer(), bytes * sizeof(double),
+    CDI.memcpy_from((void*) T2, p.ext_field_values(), bytes * sizeof(double),
         p.device_index());
     for (unsigned int k = 0; k < bytes; ++k) {
       if (T2[k] != T1[k]) {
