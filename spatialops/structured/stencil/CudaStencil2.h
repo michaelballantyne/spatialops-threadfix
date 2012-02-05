@@ -9,6 +9,7 @@
 #define CUDASTENCIL2_CUH_
 
 #include <spatialops/structured/stencil/CudaStencil2Bridge.h>
+#include <spatialops/structured/MemoryTypes.h>
 #include <spatialops/structured/MemoryWindow.h>
 #include <spatialops/structured/stencil/stencil2.h>
 
@@ -46,13 +47,13 @@ namespace SpatialOps {
         //Call interface function -- hack to avoid nvcc meta-template failures
         cuda_stencil_2_apply_to_field< typename DestType::AtomicT, typename Extents::Dir >(
             dest.ext_field_values(),
-            src.ext_field_values(),
-            low, high,                          //Stencil Coeffcients
-            wEX[0], wEX[1], wEX[2],// Global field dimensions
-            dEX[0], dEX[1], dEX[3],             //Destination extents dEX <= wdest.extent
-            dOFF[0], dOFF[1], dOFF[2],          //Destination point offsets
-            s1OFF[0], s1OFF[1], s1OFF[2],       //Source 1 point offsets
-            s2OFF[0], s2OFF[1], s2OFF[2]        //Source 2 point offsets
+            src.ext_field_values_consumer(EXTERNAL_CUDA_GPU, dest.device_index()),
+            low, high,                  	//Stencil Coeffcients
+            wEX[0], wEX[1], wEX[2],			// Global field dimensions
+            dEX[0], dEX[1], dEX[3],         //Destination extents dEX <= wdest.extent
+            dOFF[0], dOFF[1], dOFF[2],      //Destination point offsets
+            s1OFF[0], s1OFF[1], s1OFF[2],   //Source 1 point offsets
+            s2OFF[0], s2OFF[1], s2OFF[2]    //Source 2 point offsets
         );
       }
   }  // structured

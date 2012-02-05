@@ -92,6 +92,27 @@ void CudaMemcpy(void* dest, void* src, size_t sz, unsigned int device,
 
 /*---------------------------------------------------------------------*/
 
+void CudaMemcpyPeer(void* dest, int dID, void* src, int sID, size_t sz) {
+#ifdef  DEBUG_EXT_ALLOC_MEM
+  std::cout << "CudaMemcpyPeer wrapper called (dest, dID, src, sID, size)-> (";
+  std::cout << dest << "," << dID << "," << src << "," << sID << "," << sz << std::endl;
+#endif
+  cudaError err;
+
+  if (cudaSuccess != (err = cudaMemcpyPeer(dest, dID, src, sID, sz))) {
+    std::ostringstream msg;
+    msg << "Memcopy failed, at" << __FILE__ << " : " << __LINE__ << std::endl;
+    msg << "\t - " << cudaGetErrorString(err);
+    throw(std::runtime_error(msg.str()));
+  }
+
+#ifdef  DEBUG_EXT_ALLOC_MEM
+  std::cout << "CudaMemcpy wrapper exiting\n";
+#endif
+}
+
+/*---------------------------------------------------------------------*/
+
 void CudaMemset(void* dest, int value, size_t sz, unsigned int device) {
 #ifdef  DEBUG_EXT_SET_MEM
   std::cout << "CudaMemset wrapper called (src, value, size, device)-> (";
@@ -339,6 +360,13 @@ void CUDADeviceInterface::memcpy_from(void* dest, CUDASharedPointer& src,
 void CUDADeviceInterface::memcpy_from(void* dest, void* src, size_t sz,
     unsigned int deviceID) {
   CudaMemcpy(dest, src, sz, deviceID, cudaMemcpyDeviceToHost);
+}
+
+/*---------------------------------------------------------------------*/
+
+void CUDADeviceInterface::memcpy_peer(void* dest, int dID, void* src,
+		int sID, size_t sz) {
+  CudaMemcpyPeer(dest, dID, src, sID, sz );
 }
 
 /*---------------------------------------------------------------------*/

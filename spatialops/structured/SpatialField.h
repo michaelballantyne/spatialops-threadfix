@@ -5,6 +5,7 @@
 #include <cassert>
 #include <stdexcept>
 #include <sstream>
+#include <map>
 
 #include <spatialops/SpatialOpsConfigure.h>
 
@@ -67,6 +68,7 @@ namespace structured{
   class SpatialField
   {
     typedef SpatialField<FieldLocation,GhostTraits,T> MyType;
+    typedef std::map<unsigned short int, const T*> ConsumerMap;
 
     const MemoryWindow fieldWindow_;
     MemoryWindow interiorFieldWindow_;
@@ -77,6 +79,7 @@ namespace structured{
     MemoryType memType_; 		///< Indicates the type of device on which this field is allocated
     unsigned short deviceIndex_;///< Indicates which device is this field stored on
     T* fieldValuesExtDevice_; 	///< External field pointer ( This pointer will only be valid on the device it was created )
+    ConsumerMap consumerFieldValues_;///< Provides the ability to store and track copies of this field consumed on other devices.
 
     unsigned long int allocatedBytes_;
 
@@ -318,6 +321,13 @@ namespace structured{
     bool operator!=(const MyType&) const;
     bool operator==(const MyType&) const;
 
+    /**
+     *
+     * @param mtype -- Device type where this field should be made available for consumption
+     * @param deviceIndex -- Index to the proper device
+     */
+    void add_consumer(MemoryType mtype, const unsigned short int deviceIndex);
+
     const MemoryWindow& window_without_ghost() const {
       return interiorFieldWindow_;
     }
@@ -334,9 +344,21 @@ namespace structured{
       return deviceIndex_;
     }
 
+    /**
+     *
+     * @return -- Return the values associated with this field
+     */
     T* ext_field_values() const {
         return fieldValuesExtDevice_;
     }
+
+    /**
+     *
+     * @param mtype -- Return the values for this field on this device type
+     * @param deviceIndex -- Use this device index to select return pointer
+     * @return
+     */
+    const T* ext_field_values_consumer(const MemoryType mtype, const unsigned short int deviceIndex) const;
 
     T* field_values() const {
       return fieldValues_;
@@ -505,6 +527,114 @@ reset_values( const T* values )
     msg << "\t - " << __FILE__ << " : " << __LINE__;
     throw(std::runtime_error(msg.str()));
   }
+}
+
+//------------------------------------------------------------------
+
+template<typename Location, typename GhostTraits, typename T>
+const T* SpatialField<Location, GhostTraits, T>::ext_field_values_consumer(
+		const MemoryType mtype, const unsigned short int deviceIndex) const {
+
+	switch( mtype ){
+#ifdef ENABLE_CUDA
+		case EXTERNAL_CUDA_GPU: {
+			if( deviceIndex == deviceIndex_ ) { // Request to consume on the device where we are allocated
+				return fieldValuesExtDevice_;
+			}
+
+			if( consumerFieldValues_.find( deviceIndex ) != consumerFieldValues_.end() ) {
+				return (consumerFieldValues_.find(deviceIndex))->second;
+			}
+
+			std::ostringstream msg;
+			msg << "Request for consumer field pointer on a device for which it has not been allocated\n";
+			msg << "\t - " << __FILE__ << " : " << __LINE__;
+			throw(std::runtime_error(msg.str()));
+		}
+		break;
+#endif
+		default:{
+			std::ostringstream msg;
+			msg << "Request for consumer field pointer to unknown or unsupported device\n";
+			msg << "\t - " << __FILE__ << " : " << __LINE__;
+			throw(std::runtime_error(msg.str()));
+		}
+	}
+}
+
+//------------------------------------------------------------------
+
+template<typename Location, typename GhostTraits, typename T>
+void SpatialField<Location, GhostTraits, T>::add_consumer(
+		MemoryType mtype, const unsigned short int deviceIndex) {
+
+	std::cout << "Adding consumer " << SpatialOps::DeviceTypeTools::get_memory_type_description(mtype)
+			<< "( " << deviceIndex << " ) to field\n";
+
+	//Field is already on the device
+	if( mtype == memType_ && deviceIndex == deviceIndex_ ) { return; }
+
+	//Take action based on where the field must be available
+	switch( mtype ){
+		case LOCAL_RAM:{
+			switch( memType_ ){
+#ifdef ENABLE_CUDA
+				case LOCAL_RAM:{
+
+				}
+				break;
+
+				case EXTERNAL_CUDA_GPU: { // GPU field that needs to be available on the CPU
+					if( fieldValues_ != NULL ) { break; } // Already allocated on the CPU
+					fieldValues_ = new T[(fieldWindow_.glob_dim(0) * fieldWindow_.glob_dim(1)  * fieldWindow_.glob_dim(2))/sizeof(T)];
+
+			        ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
+					CDI.memcpy_from( fieldValues_, fieldValuesExtDevice_, allocatedBytes_, deviceIndex_ );
+				}
+				break;
+#endif
+				default:
+					throw( "Error, bad source field... should never happen");
+			}
+
+		} // LOCAL_RAM
+		break;
+
+#ifdef ENABLE_CUDA
+		case EXTERNAL_CUDA_GPU: {
+			switch( memType_ ) {
+				case LOCAL_RAM: { //CPU Field needs to be available on a GPU
+			        //Check to see if the field exists
+			        if ( consumerFieldValues_.find( deviceIndex ) != consumerFieldValues_.end() ) { break; }
+
+			        //Field doesn't exist, attempt to allocate it
+			        ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
+			        consumerFieldValues_[deviceIndex] = (T*)CDI.get_raw_pointer( allocatedBytes_, deviceIndex );
+			        CDI.memcpy_to(consumerFieldValues_[deviceIndex], fieldValues_, allocatedBytes_, deviceIndex );
+				}
+				break;
+
+				case EXTERNAL_CUDA_GPU: { //GPU Field needs to be available on another GPU
+					//Check to see if the field exists
+			        if ( consumerFieldValues_.find( deviceIndex ) != consumerFieldValues_.end() ) { break; }
+
+			        ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
+			        consumerFieldValues_[deviceIndex] = (T*)CDI.get_raw_pointer( allocatedBytes_, deviceIndex );
+			        CDI.memcpy_peer( consumerFieldValues_[deviceIndex], deviceIndex, fieldValuesExtDevice_, deviceIndex_, allocatedBytes_ );
+				}
+				break;
+
+				default:
+					throw( "Error, bad source field.... should never happen");
+			}
+		} // EXTERNAL_CUDA_GPU
+		break;
+#endif
+
+		default:
+			throw( "Error, bad or unsupported consumer device type requested" );
+	}
+
 }
 
 //------------------------------------------------------------------

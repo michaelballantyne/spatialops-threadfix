@@ -11,7 +11,7 @@
 namespace SpatialOps {
 	namespace structured {
 		template< class DataType, class Dir>
-		void cuda_stencil_2_apply_to_field( DataType* dest, DataType* src,
+		void cuda_stencil_2_apply_to_field( DataType* dest, const DataType* src,
 									 DataType low,   DataType high,
 									 const int nx,      const int ny,      const int nz,
 									 const int dEX_x,   const int dEX_y,   const int dEX_z,

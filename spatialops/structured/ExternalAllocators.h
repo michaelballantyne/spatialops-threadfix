@@ -64,6 +64,9 @@ namespace cuda { //ema::cuda
     void memcpy_from(void* dest, void* src, size_t sz, unsigned int deviceID);
     void memcpy_from(void* dest, CUDASharedPointer& src, size_t sz);
 
+    /** \brief copy a data block from one device to another **/
+    void memcpy_peer(void* dest, int dID, void* src, int sID, size_t sz);
+
     /** \brief set data block to a specific value **/
     void memset(void* dest, int val, size_t num, unsigned int deviceID);
     void memset(CUDASharedPointer& dest, int val, size_t num);
