@@ -79,6 +79,8 @@ namespace structured{
     MemoryType memType_; 		///< Indicates the type of device on which this field is allocated
     unsigned short deviceIndex_;///< Indicates which device is this field stored on
     T* fieldValuesExtDevice_; 	///< External field pointer ( This pointer will only be valid on the device it was created )
+
+    //Note: Presently this is assumed to be a collection of GPU based < index, pointer pairs >
     ConsumerMap consumerFieldValues_;///< Provides the ability to store and track copies of this field consumed on other devices.
 
     unsigned long int allocatedBytes_;
@@ -336,10 +338,18 @@ namespace structured{
       return fieldWindow_;
     }
 
+    /**
+     *
+     * @return Hardware device where this field is allocated
+     */
     MemoryType memory_device_type() const {
       return memType_;
     }
 
+    /**
+     *
+     * @return Index to the hardware device storing this field.
+     */
     unsigned short int device_index() const {
       return deviceIndex_;
     }
@@ -465,6 +475,11 @@ SpatialField<Location, GhostTraits, T>::SpatialField(const SpatialField& other)
 
 template<typename Location, typename GhostTraits, typename T>
 SpatialField<Location, GhostTraits, T>::~SpatialField() {
+#ifdef ENABLE_CUDA
+	for( typename ConsumerMap::iterator i = consumerFieldValues_.begin(); i != consumerFieldValues_.end(); ++i )
+		ema::cuda::CUDADeviceInterface::self().release( (void*)i->second, i->first);
+#endif
+
   if (builtField_) {
     switch (memType_) {
     case LOCAL_RAM: {
@@ -473,7 +488,12 @@ SpatialField<Location, GhostTraits, T>::~SpatialField() {
     break;
 #ifdef ENABLE_CUDA
     case EXTERNAL_CUDA_GPU: {
-      ema::cuda::CUDADeviceInterface::self().release( (void*)fieldValuesExtDevice_, deviceIndex_);
+    	//Deallocate local_ram consumer copy if it exists
+    	if( fieldValues_ != NULL ) {
+    		delete[] fieldValues_;
+    	}
+
+    	ema::cuda::CUDADeviceInterface::self().release( (void*)fieldValuesExtDevice_, deviceIndex_);
     }
     break;
 #endif
@@ -567,9 +587,10 @@ const T* SpatialField<Location, GhostTraits, T>::ext_field_values_consumer(
 template<typename Location, typename GhostTraits, typename T>
 void SpatialField<Location, GhostTraits, T>::add_consumer(
 		MemoryType mtype, const unsigned short int deviceIndex) {
-
-	std::cout << "Adding consumer " << SpatialOps::DeviceTypeTools::get_memory_type_description(mtype)
-			<< "( " << deviceIndex << " ) to field\n";
+#ifdef NDEBUG
+	std::cout << "Adding consumer for device type <" << SpatialOps::DeviceTypeTools::get_memory_type_description(mtype)
+			<< ">( " << deviceIndex << " ) to field\n";
+#endif
 
 	//Field is already on the device
 	if( mtype == memType_ && deviceIndex == deviceIndex_ ) { return; }
@@ -580,7 +601,10 @@ void SpatialField<Location, GhostTraits, T>::add_consumer(
 			switch( memType_ ){
 #ifdef ENABLE_CUDA
 				case LOCAL_RAM:{
-
+					// The only way we should get here is if for some reason a field was allocated as
+					// LOCAL_RAM with a non-zero device index.
+					// This shouldn't happen given how we define LOCAL_RAM at present, but I don't know if
+					// we should consider it an error.
 				}
 				break;
 
@@ -593,8 +617,13 @@ void SpatialField<Location, GhostTraits, T>::add_consumer(
 				}
 				break;
 #endif
-				default:
-					throw( "Error, bad source field... should never happen");
+				default:{
+					std::ostringstream msg;
+					msg << "Failed call to add_consumer on Spatial Field, unknown source device type\n";
+					msg << "This error indicates a serious problem in how this field was originally created\n";
+					msg << "\t - " << __FILE__ << " : " << __LINE__;
+					throw(std::runtime_error(msg.str()));
+				}
 			}
 
 		} // LOCAL_RAM
@@ -610,7 +639,7 @@ void SpatialField<Location, GhostTraits, T>::add_consumer(
 			        //Field doesn't exist, attempt to allocate it
 			        ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
 			        consumerFieldValues_[deviceIndex] = (T*)CDI.get_raw_pointer( allocatedBytes_, deviceIndex );
-			        CDI.memcpy_to(consumerFieldValues_[deviceIndex], fieldValues_, allocatedBytes_, deviceIndex );
+			        CDI.memcpy_to( (void*)consumerFieldValues_[deviceIndex], fieldValues_, allocatedBytes_, deviceIndex );
 				}
 				break;
 
@@ -620,19 +649,29 @@ void SpatialField<Location, GhostTraits, T>::add_consumer(
 
 			        ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
 			        consumerFieldValues_[deviceIndex] = (T*)CDI.get_raw_pointer( allocatedBytes_, deviceIndex );
-			        CDI.memcpy_peer( consumerFieldValues_[deviceIndex], deviceIndex, fieldValuesExtDevice_, deviceIndex_, allocatedBytes_ );
+			        CDI.memcpy_peer( (void*)consumerFieldValues_[deviceIndex], deviceIndex, fieldValuesExtDevice_, deviceIndex_, allocatedBytes_ );
 				}
 				break;
 
-				default:
-					throw( "Error, bad source field.... should never happen");
+				default:{
+					std::ostringstream msg;
+					msg << "Failed call to add_consumer on Spatial Field, unknown source device type\n";
+					msg << "This error indicates a serious problem in how this field was originally created\n";
+					msg << "\t - " << __FILE__ << " : " << __LINE__;
+					throw(std::runtime_error(msg.str()));
+				}
 			}
 		} // EXTERNAL_CUDA_GPU
 		break;
 #endif
 
-		default:
-			throw( "Error, bad or unsupported consumer device type requested" );
+		default: {
+			std::ostringstream msg;
+			msg << "Failed call to add_consumer on Spatial Field, unknown destination device type\n";
+			msg << "Ensure that you are compiling spatial ops with the proper end device support\n";
+			msg << "\t - " << __FILE__ << " : " << __LINE__;
+			throw(std::runtime_error(msg.str()));
+		}
 	}
 
 }
