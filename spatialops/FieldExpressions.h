@@ -2367,6 +2367,126 @@
           return ReturnTerm(ReturnType(Type(Standardize<SubExpr, FieldType>::standardType(arg))));
        };
 
+      template<typename CurrentMode, typename Operand, typename FieldType>
+       struct LogFcn;
+
+      template<typename Operand, typename FieldType>
+       struct LogFcn<Initial, Operand, FieldType> {
+
+         public:
+          typename FieldType::value_type typedef AtomicType;
+          LogFcn<Initial, Operand, FieldType> typedef MyType;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          template<typename IteratorType>
+           struct Iterator {
+
+             LogFcn<ResizePrep<IteratorType, MyType>,
+                    typename Operand::template Iterator<IteratorType>::ResizePrepType,
+                    FieldType> typedef ResizePrepType;
+
+             LogFcn<SeqWalk<IteratorType, MyType>,
+                    typename Operand::template Iterator<IteratorType>::SeqWalkType,
+                    FieldType> typedef SeqWalkType;
+          };
+          LogFcn(Operand const & op)
+          : operand_(op)
+          {};
+          template<typename IteratorType>
+           inline typename Iterator<IteratorType>::SeqWalkType init (void) const {
+              return typename Iterator<IteratorType>::SeqWalkType(*this);
+           };
+          template<typename IteratorType>
+           inline typename Iterator<IteratorType>::ResizePrepType resize_prep (void) const {
+              return typename Iterator<IteratorType>::ResizePrepType (*this);
+           };
+          inline Operand const & operand (void) const { return operand_; };
+
+         private:
+          Operand const operand_;
+      };
+
+      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
+       struct LogFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> {
+
+         public:
+          typename FieldType::value_type typedef AtomicType;
+          LogFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          LogFcn<Resize<IteratorType, MyType>, typename Operand::ResizeType, FieldType> typedef
+          ResizeType;
+          LogFcn(SourceType const & source)
+          : operand_(source.operand())
+          {};
+          inline ResizeType resize ( MemoryWindow const & newSize) const {
+             return ResizeType(newSize, *this);
+          };
+          inline Operand const & operand (void) const { return operand_; };
+
+         private:
+          Operand const operand_;
+      };
+
+      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
+       struct LogFcn<Resize<IteratorType, SourceType>, Operand, FieldType> {
+
+         public:
+          typename FieldType::value_type typedef AtomicType;
+          LogFcn<Resize<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          LogFcn<SeqWalk<IteratorType, MyType>, typename Operand::SeqWalkType, FieldType> typedef
+          SeqWalkType;
+          LogFcn(MemoryWindow const & size, SourceType const & source)
+          : operand_(size, source.operand())
+          {};
+          inline SeqWalkType init (void) const { return SeqWalkType(*this); };
+          inline Operand const & operand (void) const { return operand_; };
+
+         private:
+          Operand const operand_;
+      };
+
+      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
+       struct LogFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> {
+
+         public:
+          typename FieldType::value_type typedef AtomicType;
+          LogFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          LogFcn(SourceType const & source)
+          : operand_(source.operand())
+          {};
+          inline void next (void) { operand_.next(); };
+          inline bool at_end (void) const { return (operand_.at_end()); };
+          inline bool has_length (void) const { return (operand_.has_length()); };
+          inline AtomicType eval (void) const { return std::log(operand_.eval()); };
+
+         private:
+          Operand operand_;
+      };
+
+      /* SubExpr */
+      template<typename SubExpr>
+       inline FieldExpression<LogFcn<Initial,
+                                     typename Standardize<SubExpr, typename SubExpr::field_type>::
+                                     StandardType,
+                                     typename SubExpr::field_type>,
+                              typename SubExpr::field_type> log (SubExpr const & arg) {
+
+          typename SubExpr::field_type typedef FieldType;
+
+          typename Standardize<SubExpr, typename SubExpr::field_type>::StandardType typedef Type;
+
+          LogFcn<Initial, Type, FieldType> typedef ReturnType;
+
+          FieldExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(Type(Standardize<SubExpr, FieldType>::standardType(arg))));
+       };
+
 #     define BUILD_BINARY_FUNCTION(OBJECT_NAME, INTERNAL_NAME, EXTERNAL_NAME)                      \
          template<typename CurrentMode, typename Operand1, typename Operand2, typename FieldType>  \
           struct OBJECT_NAME;                                                                      \
