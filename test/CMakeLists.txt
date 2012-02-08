@@ -14,4 +14,10 @@ target_link_libraries( assign_test ${libs} )
 add_executable( stencil_test StencilChainTest.cpp )
 target_link_libraries( stencil_test ${libs} )
 
+add_executable( till_10_test StencilChainTill10Test.cpp )
+target_link_libraries( till_10_test ${libs} )
+
+add_executable( till_20_test StencilChainTill20Test.cpp )
+target_link_libraries( till_20_test ${libs} )
+
 add_subdirectory( heatEqn )
