@@ -39,22 +39,15 @@ using namespace structured;
   std::cout << (end - start).total_microseconds()*1e-6;			\
   std::cout << std::endl;
 
-template<typename FieldType>
-inline FieldType & build_stencil_point(FieldType & f,
-				       IntVec const & stencil_offset) {
-
-    MemoryWindow mw = f.window_without_ghost();  //already has ghost cells removed
-
-    return *(new FieldType(MemoryWindow(mw.glob_dim(),
-                                        mw.offset() + stencil_offset,
-                                        mw.extent(),
-                                        mw.has_bc(0),
-                                        mw.has_bc(1),
-                                        mw.has_bc(2)),
-                           f.field_values(),
-                           structured::ExternalStorage));
-};
-
+#define build_stencil_point(f, stencil_offset)                          \
+    (FieldType(MemoryWindow(f.window_without_ghost().glob_dim(),        \
+                            f.window_without_ghost().offset() + stencil_offset, \
+                            f.window_without_ghost().extent(),          \
+                            f.window_without_ghost().has_bc(0),         \
+                            f.window_without_ghost().has_bc(1),         \
+                            f.window_without_ghost().has_bc(2)),        \
+               f.field_values(),                                        \
+               structured::ExternalStorage))
 
 template<typename FieldType>
 inline void evaluate_serial_example(FieldType & result,
