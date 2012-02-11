@@ -70,20 +70,22 @@ namespace structured{
     typedef SpatialField<FieldLocation,GhostTraits,T> MyType;
     typedef std::map<unsigned short int, const T*> ConsumerMap;
 
-    const MemoryWindow fieldWindow_;
-    MemoryWindow interiorFieldWindow_;
+    const MemoryWindow fieldWindow_;	///< Full representation of the window to the field ( includes ghost cells )
+    MemoryWindow interiorFieldWindow_;  ///< Window representation sans ghost cells.
 
-    T* fieldValues_;
-    const bool builtField_;
+    T* fieldValues_;			///< Values associated with this field in the context of LOCAL_RAM
+    const bool builtField_;		///< Indicates whether or not we created this field ( we could just be wrapping memory )
 
     MemoryType memType_; 		///< Indicates the type of device on which this field is allocated
     unsigned short deviceIndex_;///< Indicates which device is this field stored on
     T* fieldValuesExtDevice_; 	///< External field pointer ( This pointer will only be valid on the device it was created )
 
-    //Note: Presently this is assumed to be a collection of GPU based < index, pointer pairs >
+    //Note: Presently this is assumed to be a collection of GPU based < index, pointer pairs >;
+    //		which is not as general is it likely should be, but GPUs are currently the only external
+    //		device we're interested in supporting.
     ConsumerMap consumerFieldValues_;///< Provides the ability to store and track copies of this field consumed on other devices.
 
-    unsigned long int allocatedBytes_;
+    unsigned long int allocatedBytes_; ///< Stores entire field size in bytes: sizeof(T) * glob.x * glob.y * glob.z
 
     inline void reset_values(const T* values);
 
@@ -368,7 +370,7 @@ namespace structured{
      * @param deviceIndex -- Use this device index to select return pointer
      * @return
      */
-    const T* ext_field_values_consumer(const MemoryType mtype, const unsigned short int deviceIndex) const;
+    const T* field_values_consumer(const MemoryType mtype, const unsigned short int deviceIndex) const;
 
     T* field_values() const {
       return fieldValues_;
@@ -444,9 +446,9 @@ SpatialField( const MemoryWindow window,
 #endif
     default: {
       std::ostringstream msg;
-      msg << "Unsupported attempt to create ( "
+      msg << "Unsupported attempt to create fiend of type ( "
           << DeviceTypeTools::get_memory_type_description(memType_)
-          << " ) field type\n";
+          << " )\n";
       msg << "\t - " << __FILE__ << " : " << __LINE__;
       throw(std::runtime_error(msg.str()));
     }
@@ -476,14 +478,18 @@ SpatialField<Location, GhostTraits, T>::SpatialField(const SpatialField& other)
 template<typename Location, typename GhostTraits, typename T>
 SpatialField<Location, GhostTraits, T>::~SpatialField() {
 #ifdef ENABLE_CUDA
+	//Release any fields allocated for consumer use
 	for( typename ConsumerMap::iterator i = consumerFieldValues_.begin(); i != consumerFieldValues_.end(); ++i )
 		ema::cuda::CUDADeviceInterface::self().release( (void*)i->second, i->first);
+
+	consumerFieldValues_.clear();
 #endif
 
-  if (builtField_) {
-    switch (memType_) {
+  if ( builtField_ ) {
+    switch ( memType_ ) {
     case LOCAL_RAM: {
       delete[] fieldValues_;
+      fieldValues_ = NULL;
     }
     break;
 #ifdef ENABLE_CUDA
@@ -491,6 +497,7 @@ SpatialField<Location, GhostTraits, T>::~SpatialField() {
     	//Deallocate local_ram consumer copy if it exists
     	if( fieldValues_ != NULL ) {
     		delete[] fieldValues_;
+    		fieldValues_ = NULL;
     	}
 
     	ema::cuda::CUDADeviceInterface::self().release( (void*)fieldValuesExtDevice_, deviceIndex_);
@@ -552,10 +559,20 @@ reset_values( const T* values )
 //------------------------------------------------------------------
 
 template<typename Location, typename GhostTraits, typename T>
-const T* SpatialField<Location, GhostTraits, T>::ext_field_values_consumer(
+const T* SpatialField<Location, GhostTraits, T>::field_values_consumer(
 		const MemoryType mtype, const unsigned short int deviceIndex) const {
 
 	switch( mtype ){
+		case LOCAL_RAM:{
+			if( fieldValues_ == NULL ){
+				std::ostringstream msg;
+				msg << "Request for consumer field pointer on a device for which it has not been allocated\n";
+				msg << "\t - " << __FILE__ << " : " << __LINE__;
+				throw(std::runtime_error(msg.str()));
+			}
+			return fieldValues_;
+		}
+		break;
 #ifdef ENABLE_CUDA
 		case EXTERNAL_CUDA_GPU: {
 			if( deviceIndex == deviceIndex_ ) { // Request to consume on the device where we are allocated
@@ -571,7 +588,6 @@ const T* SpatialField<Location, GhostTraits, T>::ext_field_values_consumer(
 			msg << "\t - " << __FILE__ << " : " << __LINE__;
 			throw(std::runtime_error(msg.str()));
 		}
-		break;
 #endif
 		default:{
 			std::ostringstream msg;
@@ -587,20 +603,19 @@ const T* SpatialField<Location, GhostTraits, T>::ext_field_values_consumer(
 template<typename Location, typename GhostTraits, typename T>
 void SpatialField<Location, GhostTraits, T>::add_consumer(
 		MemoryType mtype, const unsigned short int deviceIndex) {
-#ifdef NDEBUG
-	std::cout << "Adding consumer for device type <" << SpatialOps::DeviceTypeTools::get_memory_type_description(mtype)
-			<< ">( " << deviceIndex << " ) to field\n";
-#endif
+	std::cout << "Adding consumer to " << SpatialOps::DeviceTypeTools::get_memory_type_description(memType_)
+			  << " for device type <" << SpatialOps::DeviceTypeTools::get_memory_type_description(mtype)
+			  << ">( " << deviceIndex << " ) to field\n";
 
-	//Field is already on the device
+	//Field's primary allocation source was the device, nothing to do
 	if( mtype == memType_ && deviceIndex == deviceIndex_ ) { return; }
 
 	//Take action based on where the field must be available
 	switch( mtype ){
-		case LOCAL_RAM:{
-			switch( memType_ ){
+		case LOCAL_RAM: {
+			switch( memType_ ) {
 #ifdef ENABLE_CUDA
-				case LOCAL_RAM:{
+				case LOCAL_RAM: {
 					// The only way we should get here is if for some reason a field was allocated as
 					// LOCAL_RAM with a non-zero device index.
 					// This shouldn't happen given how we define LOCAL_RAM at present, but I don't know if
@@ -609,10 +624,11 @@ void SpatialField<Location, GhostTraits, T>::add_consumer(
 				break;
 
 				case EXTERNAL_CUDA_GPU: { // GPU field that needs to be available on the CPU
-					if( fieldValues_ != NULL ) { break; } // Already allocated on the CPU
+					if( fieldValues_ != NULL ) { break; } // Already allocated in LOCAL_RAM
 					fieldValues_ = new T[(fieldWindow_.glob_dim(0) * fieldWindow_.glob_dim(1)  * fieldWindow_.glob_dim(2))/sizeof(T)];
 
 			        ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
+			        std::cout << "Calling memcpy_from \n";
 					CDI.memcpy_from( fieldValues_, fieldValuesExtDevice_, allocatedBytes_, deviceIndex_ );
 				}
 				break;

@@ -15,12 +15,6 @@
 
 // Used to avoid obnoxious error parsing in eclipse. __CDT_PARSER__ is an
 // eclipse defined variable used by the syntax parser.
-#ifdef __CDT_PARSER__
-#define __host__
-#define __global__
-#define __device__
-#define __shared__
-#endif
 
 namespace SpatialOps {
   namespace structured {
@@ -47,7 +41,7 @@ namespace SpatialOps {
         //Call interface function -- hack to avoid nvcc meta-template failures
         cuda_stencil_2_apply_to_field< typename DestType::AtomicT, typename Extents::Dir >(
             dest.ext_field_values(),
-            src.ext_field_values_consumer(EXTERNAL_CUDA_GPU, dest.device_index()),
+            src.field_values_consumer(EXTERNAL_CUDA_GPU, dest.device_index()),
             low, high,                  	//Stencil Coeffcients
             wEX[0], wEX[1], wEX[2],			// Global field dimensions
             dEX[0], dEX[1], dEX[3],         //Destination extents dEX <= wdest.extent

@@ -100,7 +100,7 @@ namespace SpatialOps{
 
 #     ifndef NDEBUG
       for( size_t i=0; i<3; ++i ){
-    	std::cout << "(" << i << ") Extent: " << extent[i] << " splitPattern: " << splitPattern[i] << std::endl;
+    	//std::cout << "(" << i << ") Extent: " << extent[i] << " splitPattern: " << splitPattern[i] << std::endl;
         assert( extent[i] >= splitPattern[i] );
         assert( extent[i] + offset[i] <= nptsGlob_[i] );
         assert( splitPattern[i] > 0 );
