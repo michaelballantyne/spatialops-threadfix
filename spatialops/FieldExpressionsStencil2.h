@@ -156,7 +156,7 @@
 
                 std::vector<MemoryWindow> vec_dw = dw.split(structured::IntVec(x, y, z), gcs, dBC);
 
-                std::vector<BI::interprocess_semaphore *> vec_semaphore;
+                BI::interprocess_semaphore semaphore(0);
 
                 typename std::vector<MemoryWindow>::const_iterator ivec_sw = vec_sw.begin();
 
@@ -165,8 +165,6 @@
                 typename std::vector<MemoryWindow>::const_iterator evec_sw = vec_sw.end();
 
                 for(; ivec_sw != evec_sw; ++ivec_sw, ++ivec_dw){
-
-                   vec_semaphore.push_back(new BI::interprocess_semaphore(0));
 
                    ThreadPoolFIFO::self().schedule(boost::bind(&
                                                                stencil_2_apply_to_field_thread_parallel_execute_internal<OperatorType,
@@ -180,16 +178,10 @@
                                                                high,
                                                                *ivec_sw,
                                                                *ivec_dw,
-                                                               vec_semaphore.back()));
+                                                               &semaphore));
                 };
 
-                std::vector<BI::interprocess_semaphore *>::iterator isem = vec_semaphore.begin();
-
-                std::vector<BI::interprocess_semaphore *>::iterator const esem = vec_semaphore.end();
-
-                for(; isem != esem; ++isem){ (*isem)->wait(); };
-
-                for(isem = vec_semaphore.begin(); isem != esem; ++isem){ delete *isem; };
+                for(int ii = 0; ii < vec_sw.size(); ii++){ semaphore.wait(); };
              }
 #        endif //STENCIL_THREADS;
 

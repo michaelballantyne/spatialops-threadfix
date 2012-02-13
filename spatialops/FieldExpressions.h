@@ -3125,7 +3125,7 @@
              std::vector<typename FieldType::memory_window> vec_window = window.split(structured::
                                                                                       IntVec(x, y, z));
 
-             std::vector<BI::interprocess_semaphore *> vec_semaphore;
+             BI::interprocess_semaphore semaphore(0);
 
              typename std::vector<typename FieldType::memory_window>::const_iterator window_iterator
              = vec_window.begin();
@@ -3134,8 +3134,6 @@
              vec_window.end();
 
              for(; window_iterator != window_end; ++window_iterator){
-
-                vec_semaphore.push_back(new BI::interprocess_semaphore(0));
 
                 ThreadPoolFIFO::self().schedule(boost::bind(&
                                                             field_expression_thread_parallel_execute_internal<CallStyle,
@@ -3146,16 +3144,10 @@
                                                                                                    resize_prep<CallStyle>(),
                                                             initial_rhs.expr().template resize_prep<CallStyle>(),
                                                             *window_iterator,
-                                                            vec_semaphore.back()));
+                                                            &semaphore));
              };
 
-             std::vector<BI::interprocess_semaphore *>::iterator isem = vec_semaphore.begin();
-
-             std::vector<BI::interprocess_semaphore *>::iterator const esem = vec_semaphore.end();
-
-             for(; isem != esem; ++isem){ (*isem)->wait(); };
-
-             for(isem = vec_semaphore.begin(); isem != esem; ++isem){ delete *isem; };
+             for(int ii = 0; ii < vec_window.size(); ii++){ semaphore.wait(); };
 
              return initial_lhs;
           }
