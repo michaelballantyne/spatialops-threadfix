@@ -118,7 +118,9 @@ inline void evaluate_serial_example(FieldType & result,
 	     tmpFaceZ <<= tmpFaceZ * tmpFaceZ2;
 	     divZOp_->apply_to_field( tmpFaceZ, tmpZ );
 
-	     result <<= - tmpX - tmpY - tmpZ + till(phi),
+             result <<= - tmpX - tmpY - tmpZ;
+
+             result <<= result + till(phi),
 	     "old");
 
 };
