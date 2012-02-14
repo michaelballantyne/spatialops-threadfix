@@ -3,6 +3,7 @@
 
 #include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/structured/SpatialField.h>
+#include <spatialops/structured/IndexTriplet.h>
 
 #include <queue>
 #include <map>
@@ -188,7 +189,17 @@ namespace SpatialOps{
      *  store a SpatialField reference.  Doing so can cause memory
      *  corruption.
      */
-    inline SpatFldPtr<FieldT> get( const FieldT& f );
+    template< typename ProtoT >
+    inline SpatFldPtr<FieldT> get( const ProtoT& f )
+    {
+      using namespace structured;
+      const MemoryWindow& ws = f.window_with_ghost();
+      const MemoryWindow w( ws.glob_dim() + Subtract< typename FieldT::Location::BCExtra, typename ProtoT::Location::BCExtra >::result::int_vec() * ws.has_bc(),
+                            ws.offset(),
+                            ws.extent()   + Subtract< typename FieldT::Location::BCExtra, typename ProtoT::Location::BCExtra >::result::int_vec() * ws.has_bc(),
+                            ws.has_bc(0), ws.has_bc(1), ws.has_bc(2) );
+      return get(w);
+    }
 
     inline SpatFldPtr<FieldT> get( const structured::MemoryWindow& window );
 
@@ -394,16 +405,6 @@ namespace SpatialOps{
   //------------------------------------------------------------------
   template<typename FieldT>
   SpatFldPtr<FieldT>
-  SpatialFieldStore<FieldT>::get( const FieldT& f )
-  {
-    // jcs note that we could create a window from the parent window
-    // that was the minimum size and create the field based on that.
-    // This could save a lot of memory in some cases.
-    return get( f.window_with_ghost() );
-  }
-  //------------------------------------------------------------------
-  template<typename FieldT>
-  SpatFldPtr<FieldT>
   SpatialFieldStore<FieldT>::get( const structured::MemoryWindow& window )
   {
 #ifdef ENABLE_THREADS
@@ -452,8 +453,9 @@ namespace SpatialOps{
   {}
 
   template<>
+  template<>
   SpatFldPtr<double>
-  inline SpatialFieldStore<double>::get( const double& d )
+  inline SpatialFieldStore<double>::get<double>( const double& d )
   {
 #ifdef ENABLE_THREADS
     boost::mutex::scoped_lock lock( get_mutex() );

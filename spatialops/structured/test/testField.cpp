@@ -173,11 +173,51 @@ bool test_interior( const IntVec npts,
 
 //--------------------------------------------------------------------
 
+template< typename FT1, typename FT2 >
+bool test_store( const IntVec& dim, const IntVec& bc )
+{
+  const MemoryWindow w1 = get_window_with_ghost<FT1>( dim, bc[0]==1, bc[1]==1, bc[2]==1 );
+  const MemoryWindow w2 = get_window_with_ghost<FT2>( dim, bc[0]==1, bc[1]==1, bc[2]==1 );
+
+  SpatialFieldStore<FT1>& sf1 = SpatialFieldStore<FT1>::self();
+  SpatialFieldStore<FT2>& sf2 = SpatialFieldStore<FT2>::self();
+
+  SpatFldPtr<FT1> f1 = sf1.get(  w1 );
+  SpatFldPtr<FT1> f1a= sf1.get( *f1 );
+  SpatFldPtr<FT2> f2 = sf2.get(  w2 );
+  SpatFldPtr<FT2> f2a= sf2.get( *f2 );
+  SpatFldPtr<FT2> f2b= sf2.get( *f1 );
+
+  TestHelper status(false);
+
+  status( f1->window_with_ghost() == f1a->window_with_ghost(), "f1==f1a" );
+  status( f2->window_with_ghost() == f2a->window_with_ghost(), "f2==f2a" );
+  status( f2->window_with_ghost() == f2b->window_with_ghost(), "f2==f2b" );
+  return status.ok();
+}
+
+//--------------------------------------------------------------------
+
 int main()
 {
   TestHelper overall(true);
 
   bool verbose = false;
+
+  overall( test_store<SVolField,SVolField  >( IntVec(3,4,5), IntVec(1,1,1) ), "SVol,SVol store" );
+  overall( test_store<SVolField,SSurfXField>( IntVec(3,4,5), IntVec(1,1,1) ), "SVol,SSY  store" );
+  overall( test_store<SVolField,SSurfXField>( IntVec(3,4,5), IntVec(0,0,0) ), "SVol,SSY  store" );
+  overall( test_store<SSurfXField,SVolField>( IntVec(3,4,5), IntVec(1,1,1) ), "SSX ,SVol store" );
+  overall( test_store<SSurfXField,SVolField>( IntVec(3,4,5), IntVec(0,0,0) ), "SSX ,SVol store" );
+  overall( test_store<SVolField,SSurfYField>( IntVec(3,4,5), IntVec(1,1,1) ), "SVol,SSY  store" );
+  overall( test_store<SVolField,SSurfYField>( IntVec(3,4,5), IntVec(0,0,0) ), "SVol,SSY  store" );
+  overall( test_store<SVolField,SSurfZField>( IntVec(3,4,5), IntVec(1,1,1) ), "SVol,SSZ  store" );
+  overall( test_store<SVolField,SSurfZField>( IntVec(3,4,5), IntVec(0,0,0) ), "SVol,SSZ  store" );
+  overall( test_store<XSurfXField,SVolField>( IntVec(3,4,5), IntVec(0,0,0) ), "XSX ,SVol store" );
+  overall( test_store<XSurfXField,ZVolField>( IntVec(3,4,5), IntVec(0,0,0) ), "XSX ,ZVol store" );
+  overall( test_store<YSurfZField,ZSurfXField>(IntVec(3,4,5), IntVec(0,0,0) ), "XSX ,ZVol store" );
+
+  std::cout << std::endl;
 
   overall( test_iterator<SVolField>( IntVec(3,3,3), verbose ), "test_iterator (3,3,3) SVolField" );
   overall( test_iterator<SVolField>( IntVec(3,4,1), verbose ), "test_iterator (3,4,1) SVolField" );
@@ -340,6 +380,10 @@ int main()
 
     overall( status.ok(), "field operations" );
   }
-  if( overall.isfailed() ) return -1;
+  if( overall.isfailed() ){
+    std::cout << "FAIL!" << std::endl;
+    return -1;
+  }
+  std::cout << "PASS" << std::endl;
   return 0;
 }
