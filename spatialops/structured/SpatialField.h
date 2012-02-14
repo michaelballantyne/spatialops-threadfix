@@ -616,6 +616,7 @@ void SpatialField<Location, GhostTraits, T>::add_consumer(
 			switch( memType_ ) {
 #ifdef ENABLE_CUDA
 				case LOCAL_RAM: {
+            std::cout << "Case hit: LOCAL_RAM -> LOCAL_RAM\n";
 					// The only way we should get here is if for some reason a field was allocated as
 					// LOCAL_RAM with a non-zero device index.
 					// This shouldn't happen given how we define LOCAL_RAM at present, but I don't know if
@@ -625,10 +626,10 @@ void SpatialField<Location, GhostTraits, T>::add_consumer(
 
 				case EXTERNAL_CUDA_GPU: { // GPU field that needs to be available on the CPU
 					if( fieldValues_ != NULL ) { break; } // Already allocated in LOCAL_RAM
+          std::cout << "Case hit: LOCAL_RAM -> EXTERNAL_CUDA_GPU\n";
 					fieldValues_ = new T[(fieldWindow_.glob_dim(0) * fieldWindow_.glob_dim(1)  * fieldWindow_.glob_dim(2))/sizeof(T)];
-
-			        ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-			        std::cout << "Calling memcpy_from \n";
+			    ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
+			    std::cout << "Calling memcpy_from \n";
 					CDI.memcpy_from( fieldValues_, fieldValuesExtDevice_, allocatedBytes_, deviceIndex_ );
 				}
 				break;
@@ -649,22 +650,26 @@ void SpatialField<Location, GhostTraits, T>::add_consumer(
 		case EXTERNAL_CUDA_GPU: {
 			switch( memType_ ) {
 				case LOCAL_RAM: { //CPU Field needs to be available on a GPU
+              std::cout << "Case hit: EXTERNAL_CUDA_GPU -> LOCAL_RAM\n";
 			        //Check to see if the field exists
 			        if ( consumerFieldValues_.find( deviceIndex ) != consumerFieldValues_.end() ) { break; }
 
 			        //Field doesn't exist, attempt to allocate it
 			        ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
 			        consumerFieldValues_[deviceIndex] = (T*)CDI.get_raw_pointer( allocatedBytes_, deviceIndex );
+			        std::cout << "Calling memcpy_to\n";
 			        CDI.memcpy_to( (void*)consumerFieldValues_[deviceIndex], fieldValues_, allocatedBytes_, deviceIndex );
 				}
 				break;
 
 				case EXTERNAL_CUDA_GPU: { //GPU Field needs to be available on another GPU
 					//Check to see if the field exists
+              std::cout << "Case hit: EXTERNAL_CUDA_GPU -> EXTERNAL_CUDA_GPU\n";
 			        if ( consumerFieldValues_.find( deviceIndex ) != consumerFieldValues_.end() ) { break; }
 
 			        ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
 			        consumerFieldValues_[deviceIndex] = (T*)CDI.get_raw_pointer( allocatedBytes_, deviceIndex );
+			        std::cout << "Calling memcpy_peer\n";
 			        CDI.memcpy_peer( (void*)consumerFieldValues_[deviceIndex], deviceIndex, fieldValuesExtDevice_, deviceIndex_, allocatedBytes_ );
 				}
 				break;

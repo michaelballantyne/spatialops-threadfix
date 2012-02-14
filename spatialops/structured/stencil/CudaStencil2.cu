@@ -94,6 +94,8 @@ namespace SpatialOps {
 									 dOFF_x, dOFF_y, dOFF_z,
 									 s1OFF_x, s1OFF_y, s1OFF_z,
 									 s2OFF_x, s2OFF_y, s2OFF_z );
+
+    cudaDeviceSynchronize();
 		}
 
 #define DECLARE_STENCIL( TYPE, DIR) template void \

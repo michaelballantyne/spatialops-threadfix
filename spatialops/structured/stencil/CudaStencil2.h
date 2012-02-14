@@ -11,7 +11,7 @@
 #include <spatialops/structured/stencil/CudaStencil2Bridge.h>
 #include <spatialops/structured/MemoryTypes.h>
 #include <spatialops/structured/MemoryWindow.h>
-#include <spatialops/structured/stencil/stencil2.h>
+#include <spatialops/structured/stencil/Stencil2.h>
 
 // Used to avoid obnoxious error parsing in eclipse. __CDT_PARSER__ is an
 // eclipse defined variable used by the syntax parser.

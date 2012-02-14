@@ -31,7 +31,7 @@ endmacro()
 
 if( CUDA_CUDA_LIBRARY )
   include_directories( ${CUDA_INCLUDE_DIRS} )
-  cuda_add_library( cudaVecLib STATIC cudaVecLib.cu )
+  cuda_add_library( cudaVecLib STATIC CudaVecLib.cu )
   target_link_libraries( cudaVecLib ${CUDA_LIBRARIES} )
 
   add_executable( ctest ctest.cpp )
