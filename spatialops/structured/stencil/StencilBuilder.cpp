@@ -114,6 +114,14 @@ namespace structured{
     opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,YSurfZField,SVolField>::type(.25,.25,.25,.25) );
     opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,ZSurfXField,SVolField>::type(.25,.25,.25,.25) );
     opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,ZSurfYField,SVolField>::type(.25,.25,.25,.25) );
+
+    //___________________________________________________________________
+    // Box filter:
+    //
+    opdb.register_new_operator( new OperatorTypeBuilder<Filter,SVolField,SVolField>::type() );
+    opdb.register_new_operator( new OperatorTypeBuilder<Filter,XVolField,XVolField>::type() );
+    opdb.register_new_operator( new OperatorTypeBuilder<Filter,YVolField,YVolField>::type() );
+    opdb.register_new_operator( new OperatorTypeBuilder<Filter,ZVolField,ZVolField>::type() );
   }
 
   //------------------------------------------------------------------
