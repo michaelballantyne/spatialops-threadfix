@@ -43,39 +43,39 @@ namespace cuda { //ema::cuda
     /** \brief attempts to allocate N bytes on device K, returns the explicit memory pointer
      * Note: The caller is responsible for memory cleanup of the returned pointer
      * */
-    void* get_raw_pointer(unsigned long int N, unsigned int K = 0);
+    void* get_raw_pointer(const unsigned long int N, const unsigned int K = 0);
 
     /** \brief attempts to allocate N bytes on device K, returns a CUDASharedPointer object
      * that will free the allocated memory after all references have expired.
      */
-    CUDASharedPointer get_shared_pointer(unsigned long int N, unsigned int K = 0);
+    CUDASharedPointer get_shared_pointer(const unsigned long int N, const unsigned int K = 0);
 
     /** \brief attempts to free an allocated shared pointer object */
     void release(CUDASharedPointer& x);
 
     /** \brief attempts to free the given pointer offset on device K **/
-    void release(void* x, unsigned int K = 0);
+    void release(void* x, const unsigned int K = 0);
 
     /** \brief copy a data block to a device**/
-    void memcpy_to(void* dest, void* src, size_t sz, unsigned int deviceID);
-    void memcpy_to(CUDASharedPointer& dest, void* src, size_t sz);
+    void memcpy_to(void* dest, const void* src, const size_t sz, const unsigned int deviceID);
+    void memcpy_to(CUDASharedPointer& dest, const void* src, const size_t sz);
 
     /** \brief copy a data block from a device **/
-    void memcpy_from(void* dest, void* src, size_t sz, unsigned int deviceID);
-    void memcpy_from(void* dest, CUDASharedPointer& src, size_t sz);
+    void memcpy_from(void* dest, const void* src, const size_t sz, const unsigned int deviceID);
+    void memcpy_from(void* dest, const CUDASharedPointer& src, const size_t sz);
 
     /** \brief copy a data block from one device to another **/
-    void memcpy_peer(void* dest, int dID, void* src, int sID, size_t sz);
+    void memcpy_peer(void* dest, const int dID, const void* src, const int sID, const size_t sz);
 
     /** \brief set data block to a specific value **/
-    void memset(void* dest, int val, size_t num, unsigned int deviceID);
-    void memset(CUDASharedPointer& dest, int val, size_t num);
+    void memset(void* dest, const int val, const size_t num, const unsigned int deviceID);
+    void memset(CUDASharedPointer& dest, const int val, const size_t num);
 
     /** \brief Returns the number of available CUDA capable compute devices */
     int get_device_count() const;
 
     /** \brief Returns the memory structure associated with device K */
-    void get_memory_statistics(CUDAMemStats& cms, int K = 0) const;
+    void get_memory_statistics(CUDAMemStats& cms, const int K = 0) const;
 
     /** \brief Updates the 'device_stats' structs with the most current memory usage statistics
      * NOTE: it is possible memory can be allocated from other sources, this

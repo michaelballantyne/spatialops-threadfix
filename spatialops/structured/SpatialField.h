@@ -376,6 +376,10 @@ namespace structured{
       return fieldValues_;
     }
 
+    unsigned int allocated_bytes() const {
+    	return allocatedBytes_;
+    }
+
     unsigned int get_data_size() const {
       return allocatedBytes_;
     }
@@ -603,10 +607,11 @@ const T* SpatialField<Location, GhostTraits, T>::field_values_consumer(
 template<typename Location, typename GhostTraits, typename T>
 void SpatialField<Location, GhostTraits, T>::add_consumer(
 		MemoryType mtype, const unsigned short int deviceIndex) {
-	std::cout << "Adding consumer to " << SpatialOps::DeviceTypeTools::get_memory_type_description(memType_)
+
+	/*std::cout << "Adding consumer to " << SpatialOps::DeviceTypeTools::get_memory_type_description(memType_)
 			  << " for device type <" << SpatialOps::DeviceTypeTools::get_memory_type_description(mtype)
 			  << ">( " << deviceIndex << " ) to field\n";
-
+	*/
 	//Field's primary allocation source was the device, nothing to do
 	if( mtype == memType_ && deviceIndex == deviceIndex_ ) { return; }
 
@@ -616,7 +621,7 @@ void SpatialField<Location, GhostTraits, T>::add_consumer(
 			switch( memType_ ) {
 #ifdef ENABLE_CUDA
 				case LOCAL_RAM: {
-            std::cout << "Case hit: LOCAL_RAM -> LOCAL_RAM\n";
+					std::cout << "Case hit: LOCAL_RAM -> LOCAL_RAM\n";
 					// The only way we should get here is if for some reason a field was allocated as
 					// LOCAL_RAM with a non-zero device index.
 					// This shouldn't happen given how we define LOCAL_RAM at present, but I don't know if
@@ -626,10 +631,8 @@ void SpatialField<Location, GhostTraits, T>::add_consumer(
 
 				case EXTERNAL_CUDA_GPU: { // GPU field that needs to be available on the CPU
 					if( fieldValues_ != NULL ) { break; } // Already allocated in LOCAL_RAM
-          std::cout << "Case hit: LOCAL_RAM -> EXTERNAL_CUDA_GPU\n";
-					fieldValues_ = new T[(fieldWindow_.glob_dim(0) * fieldWindow_.glob_dim(1)  * fieldWindow_.glob_dim(2))/sizeof(T)];
-			    ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-			    std::cout << "Calling memcpy_from \n";
+					fieldValues_ = new T[allocatedBytes_];
+					ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
 					CDI.memcpy_from( fieldValues_, fieldValuesExtDevice_, allocatedBytes_, deviceIndex_ );
 				}
 				break;
@@ -657,7 +660,6 @@ void SpatialField<Location, GhostTraits, T>::add_consumer(
 			        //Field doesn't exist, attempt to allocate it
 			        ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
 			        consumerFieldValues_[deviceIndex] = (T*)CDI.get_raw_pointer( allocatedBytes_, deviceIndex );
-			        std::cout << "Calling memcpy_to\n";
 			        CDI.memcpy_to( (void*)consumerFieldValues_[deviceIndex], fieldValues_, allocatedBytes_, deviceIndex );
 				}
 				break;
@@ -669,7 +671,6 @@ void SpatialField<Location, GhostTraits, T>::add_consumer(
 
 			        ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
 			        consumerFieldValues_[deviceIndex] = (T*)CDI.get_raw_pointer( allocatedBytes_, deviceIndex );
-			        std::cout << "Calling memcpy_peer\n";
 			        CDI.memcpy_peer( (void*)consumerFieldValues_[deviceIndex], deviceIndex, fieldValuesExtDevice_, deviceIndex_, allocatedBytes_ );
 				}
 				break;

@@ -47,10 +47,10 @@ namespace ema {
 namespace cuda {
 
 /**---- CUDA wrappers with error processing */
-void CudaSetDevice(int device);
-void CudaMalloc(void** src, size_t sz, unsigned int device);
-void CudaFree(void* src, unsigned int device);
-void CudaMemcpy(void* src, void* dest, unsigned int device, size_t sz,
+void CudaSetDevice(const int device);
+void CudaMalloc(void** src, const size_t sz, const unsigned int device);
+void CudaFree(void* src, const unsigned int device);
+void CudaMemcpy(void* src, const void* dest, const unsigned int device, const size_t sz,
     cudaMemcpyKind cmkk);
 
 /** \brief Device management structure for all GPU devices */
@@ -68,7 +68,7 @@ class CUDADeviceManager {
     int get_device_count() const;
 
     /** \brief Returns the memory structure associated with device K */
-    void get_memory_statistics(CUDAMemStats& cms, int K = 0) const;
+    void get_memory_statistics(CUDAMemStats& cms, const int K = 0) const;
 
     /** \brief Updates the 'device_stats' structs with the most current memory usage statistics
      * Please note that it is possible memory can be allocated from other sources, this

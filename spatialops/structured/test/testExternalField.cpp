@@ -19,6 +19,7 @@ int main(int argc, char** argv) {
   unsigned int bytes = 128 * 128 * 128;
   double* T1 = (double*) malloc(sizeof(double) * (bytes));
   double* T2 = (double*) malloc(sizeof(double) * (bytes));
+  double* T3 = (double*) malloc(sizeof(double) * (bytes));
   const IntVec npts(128, 128, 128);
   const IntVec badpts(1024, 1024, 1024);
 
@@ -39,12 +40,31 @@ int main(int argc, char** argv) {
   }
 
   try {
-    std::cout << "Checking proper value initialization: ";
+    std::cout << "Checking proper value initialization: \n";
     PointField p(window, T1, InternalStorage, EXTERNAL_CUDA_GPU, 0);
-    CDI.memcpy_from((void*) T2, p.ext_field_values(), bytes * sizeof(double),
+    CDI.memcpy_from((void*) T2, p.ext_field_values(), p.allocated_bytes(),
         p.device_index());
     for (unsigned int k = 0; k < bytes; ++k) {
       if (T2[k] != T1[k]) {
+        throw;
+      }
+    }
+    std::cout << "PASS\n";
+  } catch (...) {
+    return -1;
+  }
+
+  try {
+    std::cout << "Checking consumer field initialization: ";
+    PointField p(window, T1, InternalStorage, EXTERNAL_CUDA_GPU, 0);
+
+    p.add_consumer(LOCAL_RAM, 0);
+    std::cout << "Finished adding consumer\n";
+    memcpy(T2, p.field_values_consumer(LOCAL_RAM, 0), p.allocated_bytes());
+    CDI.memcpy_from((void*) T3, p.field_values_consumer( EXTERNAL_CUDA_GPU, p.device_index() ),
+    		p.allocated_bytes(), p.device_index());
+    for (unsigned int k = 0; k < bytes; ++k) {
+      if (T2[k] != T1[k] || T3[k] != T1[k]) {
         throw;
       }
     }
@@ -117,7 +137,7 @@ int main(int argc, char** argv) {
     }
 
     std::cout << "PASS\n";
-  } catch (std::runtime_error e) {
+  } catch ( ... ) {
     std::cout << "FAIL\n";
     return -1;
   }
@@ -156,5 +176,6 @@ int main(int argc, char** argv) {
   } catch ( std::runtime_error e){
     std::cout << "PASS\n";
   }
+
   std::cout << std::endl << "All tests passed: Success\n";
 }

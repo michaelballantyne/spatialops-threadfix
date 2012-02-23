@@ -12,7 +12,7 @@
 namespace ema {
 namespace cuda {
 
-void CudaSetDevice(unsigned int device) {
+void CudaSetDevice(const unsigned int device) {
 #ifdef DEBUG_EXT_ALLOC_CUDA_DEVICE_MNGR
   std::cout << "CudaSetdevice wrapper called, setting thread device as: " << device << std::endl;
 #endif
@@ -27,7 +27,7 @@ void CudaSetDevice(unsigned int device) {
   }
 }
 
-void CudaMalloc(void** src, size_t sz, unsigned int device) {
+void CudaMalloc(void** src, const size_t sz, const unsigned int device) {
 #ifdef  DEBUG_EXT_ALLOC_MEM
   std::cout << "CudaMalloc wrapper called (src,size,device)-> (";
   std::cout << src << "," << sz << "," << device << ")" << std::endl;
@@ -50,7 +50,7 @@ void CudaMalloc(void** src, size_t sz, unsigned int device) {
 
 /*---------------------------------------------------------------------*/
 
-void CudaFree(void* src, unsigned int device) {
+void CudaFree(void* src, const unsigned int device) {
 #ifdef  DEBUG_EXT_ALLOC_MEM
   std::cout << "CudaFree wrapper called (void** src, int device) ->";
   std::cout << "(" << src << "," << device << ")\n";
@@ -69,8 +69,8 @@ void CudaFree(void* src, unsigned int device) {
 
 /*---------------------------------------------------------------------*/
 
-void CudaMemcpy(void* dest, void* src, size_t sz, unsigned int device,
-    cudaMemcpyKind cmkk) {
+void CudaMemcpy(void* dest, const void* src, const size_t sz, const unsigned int device,
+    const cudaMemcpyKind cmkk) {
 #ifdef  DEBUG_EXT_ALLOC_MEM
   std::cout << "CudaMemcpy wrapper called (src,dest,size,device,type)-> (";
   std::cout << src << "," << dest << "," << sz << "," << device << "," << cmkk << std::endl;
@@ -78,9 +78,9 @@ void CudaMemcpy(void* dest, void* src, size_t sz, unsigned int device,
   cudaError err;
 
   CudaSetDevice(device);
-  if (cudaSuccess != (err = cudaMemcpy(dest, src, sz, cmkk))) {
+  if (cudaSuccess != (err = cudaMemcpy(dest, src, sz, cmkk) ) ) {
     std::ostringstream msg;
-    msg << "Memcopy failed, at" << __FILE__ << " : " << __LINE__ << std::endl;
+    msg << "Cuda memcopy failed, at" << __FILE__ << " : " << __LINE__ << std::endl;
     msg << "\t - " << cudaGetErrorString(err);
     throw(std::runtime_error(msg.str()));
   }
@@ -92,7 +92,7 @@ void CudaMemcpy(void* dest, void* src, size_t sz, unsigned int device,
 
 /*---------------------------------------------------------------------*/
 
-void CudaMemcpyPeer(void* dest, int dID, void* src, int sID, size_t sz) {
+void CudaMemcpyPeer(void* dest, const int dID, const void* src, const int sID, const size_t sz) {
 #ifdef  DEBUG_EXT_ALLOC_MEM
   std::cout << "CudaMemcpyPeer wrapper called (dest, dID, src, sID, size)-> (";
   std::cout << dest << "," << dID << "," << src << "," << sID << "," << sz << std::endl;
@@ -113,7 +113,7 @@ void CudaMemcpyPeer(void* dest, int dID, void* src, int sID, size_t sz) {
 
 /*---------------------------------------------------------------------*/
 
-void CudaMemset(void* dest, int value, size_t sz, unsigned int device) {
+void CudaMemset(void* dest, const int value, const size_t sz, const unsigned int device) {
 #ifdef  DEBUG_EXT_SET_MEM
   std::cout << "CudaMemset wrapper called (src, value, size, device)-> (";
   std::cout << src << "," << value << "," << sz << "," << device << "," << std::endl;
@@ -149,7 +149,7 @@ int CUDADeviceManager::get_device_count() const {
 
 /*---------------------------------------------------------------------*/
 
-void CUDADeviceManager::get_memory_statistics(CUDAMemStats& cms, int K) const {
+void CUDADeviceManager::get_memory_statistics(CUDAMemStats& cms, const int K) const {
   if (K < 0 || K >= device_count) {
     throw std::range_error("Specified device index out of bounds");
   }
@@ -336,49 +336,49 @@ void* CUDADeviceInterface::get_raw_pointer(unsigned long int N,
 
 /*---------------------------------------------------------------------*/
 
-void CUDADeviceInterface::memcpy_to(CUDASharedPointer& dest, void* src,
-    size_t sz) {
+void CUDADeviceInterface::memcpy_to(CUDASharedPointer& dest, const void* src,
+    const size_t sz) {
   CudaMemcpy(dest.ptr_, src, sz, (*dest.deviceID_), cudaMemcpyHostToDevice);
 }
 
 /*---------------------------------------------------------------------*/
 
-void CUDADeviceInterface::memcpy_to(void* dest, void* src, size_t sz,
-    unsigned int deviceID) {
+void CUDADeviceInterface::memcpy_to(void* dest, const void* src, const size_t sz,
+   const unsigned int deviceID) {
   CudaMemcpy(dest, src, sz, deviceID, cudaMemcpyHostToDevice);
 }
 
 /*---------------------------------------------------------------------*/
 
-void CUDADeviceInterface::memcpy_from(void* dest, CUDASharedPointer& src,
-    size_t sz) {
+void CUDADeviceInterface::memcpy_from(void* dest, const CUDASharedPointer& src,
+    const size_t sz) {
   CudaMemcpy(dest, src.ptr_, sz, (*src.deviceID_), cudaMemcpyDeviceToHost);
 }
 
 /*---------------------------------------------------------------------*/
 
-void CUDADeviceInterface::memcpy_from(void* dest, void* src, size_t sz,
-    unsigned int deviceID) {
+void CUDADeviceInterface::memcpy_from(void* dest, const void* src, const size_t sz,
+    const unsigned int deviceID) {
   CudaMemcpy(dest, src, sz, deviceID, cudaMemcpyDeviceToHost);
 }
 
 /*---------------------------------------------------------------------*/
 
-void CUDADeviceInterface::memcpy_peer(void* dest, int dID, void* src,
-		int sID, size_t sz) {
+void CUDADeviceInterface::memcpy_peer(void* dest, const int dID, const void* src,
+		const int sID, const size_t sz) {
   CudaMemcpyPeer(dest, dID, src, sID, sz );
 }
 
 /*---------------------------------------------------------------------*/
 
-void CUDADeviceInterface::memset(void* dest, int value, size_t sz,
-    unsigned int deviceID) {
+void CUDADeviceInterface::memset(void* dest, const int value, const size_t sz,
+    const unsigned int deviceID) {
   CudaMemset(dest, value, sz, deviceID);
 }
 
 /*---------------------------------------------------------------------*/
 
-void CUDADeviceInterface::memset(CUDASharedPointer& dest, int value, size_t sz) {
+void CUDADeviceInterface::memset(CUDASharedPointer& dest, const int value, const size_t sz) {
   CudaMemset(dest.ptr_, value, sz, (*dest.deviceID_));
 }
 
@@ -390,7 +390,7 @@ void CUDADeviceInterface::release(CUDASharedPointer& x) {
 
 /*---------------------------------------------------------------------*/
 
-void CUDADeviceInterface::release(void* x, unsigned int deviceID) {
+void CUDADeviceInterface::release(void* x, const unsigned int deviceID) {
   CudaFree(x, deviceID);
 }
 
@@ -414,7 +414,7 @@ CUDASharedPointer::CUDASharedPointer() :
 
 /*---------------------------------------------------------------------*/
 
-CUDASharedPointer::CUDASharedPointer(void* ptr, int K) :
+CUDASharedPointer::CUDASharedPointer(void* ptr, const int K) :
     ptr_(ptr), refCount_(new int(1)), deviceID_(new int(K)) {
   /** Pointer initialized to wrap a normal void pointer **/
 #ifdef DEBUG_EXT_CUDA_SHARED_PTR
