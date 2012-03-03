@@ -1,3 +1,10 @@
+/*
+ * Available debugging flags:
+ *
+ * 	DEBUG_SF_ALL
+ *
+ */
+
 #ifndef SpatialOps_SpatialField_h
 #define SpatialOps_SpatialField_h
 
@@ -217,6 +224,10 @@ namespace structured{
      * @return
      */
     inline const_iterator begin() const {
+#ifdef DEBUG_SF_ALL
+    	std::cout << "Request caught for spatial field iterator\n"
+    			  << "\t -- const_iterator begin()\n";
+#endif
       if (memType_ != LOCAL_RAM) {
         std::ostringstream msg;
         msg << "Field type ( "
@@ -230,6 +241,10 @@ namespace structured{
     }
 
     inline iterator begin() {
+#ifdef DEBUG_SF_ALL
+    	std::cout << "Request caught for spatial field iterator\n"
+    			  << "\t -- iterator begin()\n";
+#endif
       if (memType_ != LOCAL_RAM) {
         std::ostringstream msg;
         msg << "Field type ( "
@@ -246,6 +261,10 @@ namespace structured{
     inline iterator end();
 
     inline const_interior_iterator interior_begin() const {
+#ifdef DEBUG_SF_ALL
+    	std::cout << "Request caught for spatial field iterator\n"
+    			  << "\t -- const_interior_iterator begin()\n";
+#endif
       if (memType_ != LOCAL_RAM) {
         std::ostringstream msg;
         msg << "Field type ( "
@@ -260,6 +279,10 @@ namespace structured{
     }
 
     inline interior_iterator interior_begin() {
+#ifdef DEBUG_SF_ALL
+    	std::cout << "Request caught for spatial field iterator\n"
+    			  << "\t -- interior_iterator begin()\n";
+#endif
       if (memType_ != LOCAL_RAM) {
         std::ostringstream msg;
         msg << "Field type ( "
@@ -417,6 +440,10 @@ SpatialField( const MemoryWindow window,
       memType_( mtype ),
       allocatedBytes_( 0 )
 {
+
+#ifdef DEBUG_SF_ALL
+    	std::cout << "Caught call to spatial field constructor\n";
+#endif
   //InteriorStorage => we build a new field
   //Exterior storage => we wrap T*
   IntVec ext = window.extent();
@@ -436,10 +463,16 @@ SpatialField( const MemoryWindow window,
 
   switch ( mtype ) {
     case LOCAL_RAM:
+		#ifdef DEBUG_SF_ALL
+				std::cout << "\t -- LOCAL_RAM\n";
+		#endif
       //Default case, no action required.
       break;
 #ifdef ENABLE_CUDA
       case EXTERNAL_CUDA_GPU: {
+		#ifdef DEBUG_SF_ALL
+				std::cout << "\t -- EXTERNAL_CUDA_GPU\n";
+		#endif
         if( mode == InternalStorage ){
           // We only allocate space if were storing internally
           ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
@@ -459,6 +492,9 @@ SpatialField( const MemoryWindow window,
   }
 
   if (mode == InternalStorage){
+	#ifdef DEBUG_SF_ALL
+			std::cout << "\t -- Internal Storage\n";
+	#endif
     reset_values(fieldValues);
   }
 }
@@ -481,10 +517,17 @@ SpatialField<Location, GhostTraits, T>::SpatialField(const SpatialField& other)
 
 template<typename Location, typename GhostTraits, typename T>
 SpatialField<Location, GhostTraits, T>::~SpatialField() {
+	#ifdef DEBUG_SF_ALL
+			std::cout << "Caught call to Spatial Field destructor\n";
+	#endif
 #ifdef ENABLE_CUDA
 	//Release any fields allocated for consumer use
-	for( typename ConsumerMap::iterator i = consumerFieldValues_.begin(); i != consumerFieldValues_.end(); ++i )
+	for( typename ConsumerMap::iterator i = consumerFieldValues_.begin(); i != consumerFieldValues_.end(); ++i ){
 		ema::cuda::CUDADeviceInterface::self().release( (void*)i->second, i->first);
+		#ifdef DEBUG_SF_ALL
+				std::cout << "\t -- Consumer field deleted\n";
+		#endif
+	}
 
 	consumerFieldValues_.clear();
 #endif
@@ -492,8 +535,11 @@ SpatialField<Location, GhostTraits, T>::~SpatialField() {
   if ( builtField_ ) {
     switch ( memType_ ) {
     case LOCAL_RAM: {
-      delete[] fieldValues_;
-      fieldValues_ = NULL;
+		#ifdef DEBUG_SF_ALL
+				std::cout << "\t -- Primary CPU field deleted\n";
+		#endif
+		delete[] fieldValues_;
+		fieldValues_ = NULL;
     }
     break;
 #ifdef ENABLE_CUDA
@@ -505,6 +551,9 @@ SpatialField<Location, GhostTraits, T>::~SpatialField() {
     	}
 
     	ema::cuda::CUDADeviceInterface::self().release( (void*)fieldValuesExtDevice_, deviceIndex_);
+#ifdef DEBUG_SF_ALL
+    	std::cout << "\t -- Primary GPU field deleted\n";
+#endif
     }
     break;
 #endif
@@ -527,7 +576,7 @@ reset_values( const T* values )
 {
   switch (memType_) {
   case LOCAL_RAM: {
-    iterator ifld = begin();
+	iterator ifld = begin();
     const iterator iflde = end();
     if (NULL == values) {
       for (; ifld != iflde; ++ifld)
@@ -548,6 +597,7 @@ reset_values( const T* values )
       void* src = (void*)(values);
       CDI.memcpy_to( fieldValuesExtDevice_, src, allocatedBytes_, deviceIndex_ );
     }
+
   }
   break;
 #endif
@@ -565,9 +615,14 @@ reset_values( const T* values )
 template<typename Location, typename GhostTraits, typename T>
 const T* SpatialField<Location, GhostTraits, T>::field_values_consumer(
 		const MemoryType mtype, const unsigned short int deviceIndex) const {
-
+	#ifdef DEBUG_SF_ALL
+			std::cout << "Caught call to field_values_consumer \n";
+	#endif
 	switch( mtype ){
 		case LOCAL_RAM:{
+			#ifdef DEBUG_SF_ALL
+					std::cout << "\t -- Returning LOCAL_RAM consumer field";
+			#endif
 			if( fieldValues_ == NULL ){
 				std::ostringstream msg;
 				msg << "Request for consumer field pointer on a device for which it has not been allocated\n";
@@ -579,6 +634,9 @@ const T* SpatialField<Location, GhostTraits, T>::field_values_consumer(
 		break;
 #ifdef ENABLE_CUDA
 		case EXTERNAL_CUDA_GPU: {
+			#ifdef DEBUG_SF_ALL
+					std::cout << "\t -- Returning EXTERNAL_CUDA_GPU consumer field";
+			#endif
 			if( deviceIndex == deviceIndex_ ) { // Request to consume on the device where we are allocated
 				return fieldValuesExtDevice_;
 			}
@@ -608,20 +666,22 @@ template<typename Location, typename GhostTraits, typename T>
 void SpatialField<Location, GhostTraits, T>::add_consumer(
 		MemoryType mtype, const unsigned short int deviceIndex) {
 
-	/*std::cout << "Adding consumer to " << SpatialOps::DeviceTypeTools::get_memory_type_description(memType_)
-			  << " for device type <" << SpatialOps::DeviceTypeTools::get_memory_type_description(mtype)
-			  << ">( " << deviceIndex << " ) to field\n";
-	*/
+#ifdef DEBUG_SF_ALL
+    	std::cout << "Caught call to Spatial Field add_consumer\n";
+#endif
 	//Field's primary allocation source was the device, nothing to do
 	if( mtype == memType_ && deviceIndex == deviceIndex_ ) { return; }
 
 	//Take action based on where the field must be available
 	switch( mtype ){
 		case LOCAL_RAM: {
+			#ifdef DEBUG_SF_ALL
+					std::cout << "\t -- Adding LOCAL_RAM consumer field FOR ";
+			#endif
+
 			switch( memType_ ) {
 #ifdef ENABLE_CUDA
 				case LOCAL_RAM: {
-					std::cout << "Case hit: LOCAL_RAM -> LOCAL_RAM\n";
 					// The only way we should get here is if for some reason a field was allocated as
 					// LOCAL_RAM with a non-zero device index.
 					// This shouldn't happen given how we define LOCAL_RAM at present, but I don't know if
@@ -630,8 +690,14 @@ void SpatialField<Location, GhostTraits, T>::add_consumer(
 				break;
 
 				case EXTERNAL_CUDA_GPU: { // GPU field that needs to be available on the CPU
-					if( fieldValues_ != NULL ) { break; } // Already allocated in LOCAL_RAM
-					fieldValues_ = new T[allocatedBytes_];
+					#ifdef DEBUG_SF_ALL
+							std::cout << "EXTERNAL_CUDA_GPU field\n";
+					#endif
+
+					if( fieldValues_ == NULL ) {  // Space is already allocated
+						fieldValues_ = new T[allocatedBytes_];
+					}
+
 					ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
 					CDI.memcpy_from( fieldValues_, fieldValuesExtDevice_, allocatedBytes_, deviceIndex_ );
 				}
@@ -651,27 +717,39 @@ void SpatialField<Location, GhostTraits, T>::add_consumer(
 
 #ifdef ENABLE_CUDA
 		case EXTERNAL_CUDA_GPU: {
+			#ifdef DEBUG_SF_ALL
+					std::cout << "\t -- Adding EXTERNAL_CUDA_GPU (" << deviceIndex << ") consumer field FOR ";
+			#endif
 			switch( memType_ ) {
 				case LOCAL_RAM: { //CPU Field needs to be available on a GPU
-              std::cout << "Case hit: EXTERNAL_CUDA_GPU -> LOCAL_RAM\n";
-			        //Check to see if the field exists
-			        if ( consumerFieldValues_.find( deviceIndex ) != consumerFieldValues_.end() ) { break; }
+					#ifdef DEBUG_SF_ALL
+							std::cout << "LOCAL_RAM field\n";
+					#endif
+    				ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
 
-			        //Field doesn't exist, attempt to allocate it
-			        ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-			        consumerFieldValues_[deviceIndex] = (T*)CDI.get_raw_pointer( allocatedBytes_, deviceIndex );
+			        //Check to see if field memory exists
+			        if ( consumerFieldValues_.find( deviceIndex ) == consumerFieldValues_.end() ) {
+			        	//Field doesn't exist, attempt to allocate it
+			        	consumerFieldValues_[deviceIndex] = (T*)CDI.get_raw_pointer( allocatedBytes_, deviceIndex );
+			        }
+
 			        CDI.memcpy_to( (void*)consumerFieldValues_[deviceIndex], fieldValues_, allocatedBytes_, deviceIndex );
 				}
 				break;
 
 				case EXTERNAL_CUDA_GPU: { //GPU Field needs to be available on another GPU
+					#ifdef DEBUG_SF_ALL
+							std::cout << "EXTERNAL_CUDA_GPU field (" << deviceIndex_ << ") \n";
+					#endif
 					//Check to see if the field exists
-              std::cout << "Case hit: EXTERNAL_CUDA_GPU -> EXTERNAL_CUDA_GPU\n";
-			        if ( consumerFieldValues_.find( deviceIndex ) != consumerFieldValues_.end() ) { break; }
 
-			        ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-			        consumerFieldValues_[deviceIndex] = (T*)CDI.get_raw_pointer( allocatedBytes_, deviceIndex );
-			        CDI.memcpy_peer( (void*)consumerFieldValues_[deviceIndex], deviceIndex, fieldValuesExtDevice_, deviceIndex_, allocatedBytes_ );
+					ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
+
+					if ( consumerFieldValues_.find( deviceIndex ) == consumerFieldValues_.end() ) {
+								consumerFieldValues_[deviceIndex] = (T*)CDI.get_raw_pointer( allocatedBytes_, deviceIndex );
+					}
+
+					CDI.memcpy_peer( (void*)consumerFieldValues_[deviceIndex], deviceIndex, fieldValuesExtDevice_, deviceIndex_, allocatedBytes_ );
 				}
 				break;
 
@@ -703,7 +781,12 @@ void SpatialField<Location, GhostTraits, T>::add_consumer(
 template<typename Location, typename GhostTraits, typename T>
 typename SpatialField<Location, GhostTraits, T>::const_iterator SpatialField<
     Location, GhostTraits, T>::end() const {
-  switch (memType_) {
+
+#ifdef DEBUG_SF_ALL
+    	std::cout << "Request caught for spatial field iterator\n"
+    			  << "\t -- const_iterator end()\n";
+#endif
+	switch (memType_) {
     case LOCAL_RAM: {
       IntVec ijk = fieldWindow_.extent();
       for (size_t i = 0; i < 3; ++i)
@@ -726,6 +809,11 @@ typename SpatialField<Location, GhostTraits, T>::const_iterator SpatialField<
 template<typename Location, typename GhostTraits, typename T>
 typename SpatialField<Location, GhostTraits, T>::iterator SpatialField<Location,
     GhostTraits, T>::end() {
+
+#ifdef DEBUG_SF_ALL
+    	std::cout << "Request caught for spatial field iterator\n"
+    			  << "\t -- const_iterator end()\n";
+#endif
   switch (memType_) {
     case LOCAL_RAM: {
       IntVec ijk = fieldWindow_.extent();
@@ -749,6 +837,10 @@ typename SpatialField<Location, GhostTraits, T>::iterator SpatialField<Location,
 template<typename Location, typename GhostTraits, typename T>
 typename SpatialField<Location, GhostTraits, T>::const_interior_iterator SpatialField<
     Location, GhostTraits, T>::interior_end() const {
+#ifdef DEBUG_SF_ALL
+    	std::cout << "Request caught for spatial field iterator\n"
+    			  << "\t -- const_interiror_iterator begin()\n";
+#endif
   switch (memType_) {
     case LOCAL_RAM: {
       IntVec ijk = interiorFieldWindow_.extent();
@@ -772,6 +864,10 @@ typename SpatialField<Location, GhostTraits, T>::const_interior_iterator Spatial
 template<typename Location, typename GhostTraits, typename T>
 typename SpatialField<Location, GhostTraits, T>::interior_iterator SpatialField<
     Location, GhostTraits, T>::interior_end() {
+#ifdef DEBUG_SF_ALL
+    	std::cout << "Request caught for spatial field iterator\n"
+    			  << "\t -- interior_iterator begin()\n";
+#endif
   switch (memType_) {
     case LOCAL_RAM: {
       IntVec ijk = interiorFieldWindow_.extent();
@@ -929,6 +1025,10 @@ SpatialField<Location, GhostTraits, T>::operator[](const size_t i) const {
 template<typename Location, typename GhostTraits, typename T>
 SpatialField<Location, GhostTraits, T>&
 SpatialField<Location, GhostTraits, T>::operator=(const MyType& other) {
+#ifdef DEBUG_SF_ALL
+    	std::cout << "Request caught for overloaded assignment\n"
+    			  << "\t -- Attempting field comparison\n";
+#endif
 	if( allocatedBytes_ != other.allocatedBytes_ ) {
 	  throw( std::runtime_error( "Attempted assignment between fields of unequal size." ) );
 	}
@@ -1118,6 +1218,10 @@ bool SpatialField<Location, GhostTraits, T>::operator!=(
 template<typename Location, typename GhostTraits, typename T>
 bool SpatialField<Location, GhostTraits, T>::operator==(
     const MyType& other) const {
+#ifdef DEBUG_SF_ALL
+    	std::cout << "Request caught for overloaded equality comparison\n"
+    			  << "\t -- Attempting field comparison\n";
+#endif
   switch (memType_) {
     case LOCAL_RAM: {
       switch (other.memory_device_type()) {

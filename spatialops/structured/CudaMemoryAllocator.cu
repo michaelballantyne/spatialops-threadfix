@@ -321,9 +321,9 @@ void* CUDADeviceInterface::get_raw_pointer(unsigned long int N,
 #ifdef  DEBUG_EXT_ALLOC_MEM
   std::cout << "CUDADeviceInterface::get_raw_pointer -> Allocating new raw pointer, " << N << " bytes on device " << K << std::endl;
 #endif
-  if (K > CUDADeviceManager::self().device_count) {
+  if (K >= CUDADeviceManager::self().device_count) {
     std::ostringstream msg;
-    msg << "CudaMalloc failed, at " << __FILE__ << " : " << __LINE__
+    msg << "Failed call to get_raw_pointer, at " << __FILE__ << " : " << __LINE__
         << std::endl;
     msg << "\t - Invalid device index '" << K << "'";
     throw(std::range_error(msg.str()));

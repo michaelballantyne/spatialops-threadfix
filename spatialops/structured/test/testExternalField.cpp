@@ -143,15 +143,23 @@ int main(int argc, char** argv) {
   }
 
   try {
-    std::cout << "Checking SpatialFieldPointer creation: ";
+    std::cout << "Checking SpatialFieldPointer usage: ";
     PointField q(window, T1, InternalStorage, LOCAL_RAM, 0);
-    //SpatFldPtr<PointField> p = SpatialFieldStore<PointField>::self().get(window);
-    //SpatFldPtr<PointField> r = SpatialFieldStore<PointField>::self().get(q);
+    SpatFldPtr<PointField> p = SpatialFieldStore<PointField>::self().get(window);
+    SpatFldPtr<PointField> r = SpatialFieldStore<PointField>::self().get(q);
     SpatFldPtr<PointField> t = SpatialFieldStore<PointField>::self().get(window, EXTERNAL_CUDA_GPU, 0);
 
-    //p.detach();
-    //r.detach();
+    (*p).add_consumer(EXTERNAL_CUDA_GPU, 0);
+    (*t).add_consumer(LOCAL_RAM, 0);
+    (*r).add_consumer(EXTERNAL_CUDA_GPU, 1);
+
+    p.detach();
+    r.detach();
+    r = t;
     t.detach();
+    r.detach();
+
+
     std::cout << "PASS\n";
   } catch ( std::runtime_error e) {
     std::cout << "FAIL\n";
