@@ -49,6 +49,34 @@
          };
       };
 
+      template<typename Operand, typename FieldType>
+       struct NeboExpression {
+
+         public:
+          FieldType typedef field_type;
+          NeboExpression(Operand const & given)
+          : expr_(given)
+          {};
+          inline Operand const & expr(void) const { return expr_; };
+
+         private:
+          Operand expr_;
+      };
+
+      template<typename Operand, typename FieldType>
+       struct NeboBooleanExpression {
+
+         public:
+          FieldType typedef field_type;
+          NeboBooleanExpression(Operand const & given)
+          : expr_(given)
+          {};
+          inline Operand const & expr(void) const { return expr_; };
+
+         private:
+          Operand expr_;
+      };
+
       /* Modes: */
       struct Initial;
       template<typename IteratorType, typename SourceType>
@@ -59,24 +87,24 @@
        struct SeqWalk;
 
       template<typename CurrentMode, typename FieldType>
-       struct Scalar;
+       struct NeboScalar;
 
       template<typename FieldType>
-       struct Scalar<Initial, FieldType> {
+       struct NeboScalar<Initial, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          Scalar<Initial, FieldType> typedef MyType;
+          NeboScalar<Initial, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           template<typename IteratorType>
            struct Iterator {
 
-             Scalar<ResizePrep<IteratorType, MyType>, FieldType> typedef ResizePrepType;
+             NeboScalar<ResizePrep<IteratorType, This>, FieldType> typedef ResizePrepType;
 
-             Scalar<SeqWalk<IteratorType, MyType>, FieldType> typedef SeqWalkType;
+             NeboScalar<SeqWalk<IteratorType, This>, FieldType> typedef SeqWalkType;
           };
-          Scalar(AtomicType const & v)
+          typename FieldType::value_type typedef AtomicType;
+          NeboScalar(AtomicType const v)
           : value_(v)
           {};
           template<typename IteratorType>
@@ -87,91 +115,181 @@
            inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
               return typename Iterator<IteratorType>::ResizePrepType(*this);
            };
-          inline AtomicType const & value(void) const { return value_; };
+          inline AtomicType const value(void) const { return value_; };
 
          private:
-          AtomicType const & value_;
+          AtomicType const value_;
       };
 
       template<typename IteratorType, typename SourceType, typename FieldType>
-       struct Scalar<ResizePrep<IteratorType, SourceType>, FieldType> {
+       struct NeboScalar<ResizePrep<IteratorType, SourceType>, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          Scalar<ResizePrep<IteratorType, SourceType>, FieldType> typedef MyType;
+          NeboScalar<ResizePrep<IteratorType, SourceType>, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          Scalar<Resize<IteratorType, MyType>, FieldType> typedef ResizeType;
-          Scalar(SourceType const & source)
+          NeboScalar<Resize<IteratorType, This>, FieldType> typedef ResizeType;
+          typename FieldType::value_type typedef AtomicType;
+          NeboScalar(SourceType const source)
           : value_(source.value())
           {};
           inline ResizeType resize(MemoryWindow const & newSize) const {
              return ResizeType(newSize, *this);
           };
-          inline AtomicType const & value(void) const { return value_; };
+          inline AtomicType const value(void) const { return value_; };
 
          private:
-          AtomicType const & value_;
+          AtomicType const value_;
       };
 
       template<typename IteratorType, typename SourceType, typename FieldType>
-       struct Scalar<Resize<IteratorType, SourceType>, FieldType> {
+       struct NeboScalar<Resize<IteratorType, SourceType>, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          Scalar<Resize<IteratorType, SourceType>, FieldType> typedef MyType;
+          NeboScalar<Resize<IteratorType, SourceType>, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          Scalar<SeqWalk<IteratorType, MyType>, FieldType> typedef SeqWalkType;
-          Scalar(MemoryWindow const & size, SourceType const & source)
+          NeboScalar<SeqWalk<IteratorType, This>, FieldType> typedef SeqWalkType;
+          typename FieldType::value_type typedef AtomicType;
+          NeboScalar(MemoryWindow const & size, SourceType const source)
           : value_(source.value())
           {};
           inline SeqWalkType init(void) const { return SeqWalkType(*this); };
-          inline AtomicType const & value(void) const { return value_; };
+          inline AtomicType const value(void) const { return value_; };
 
          private:
-          AtomicType const & value_;
+          AtomicType const value_;
       };
 
       template<typename IteratorType, typename SourceType, typename FieldType>
-       struct Scalar<SeqWalk<IteratorType, SourceType>, FieldType> {
+       struct NeboScalar<SeqWalk<IteratorType, SourceType>, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          Scalar<SeqWalk<IteratorType, SourceType>, FieldType> typedef MyType;
+          NeboScalar<SeqWalk<IteratorType, SourceType>, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          Scalar(SourceType const & source)
+          typename FieldType::value_type typedef AtomicType;
+          NeboScalar(SourceType const source)
           : value_(source.value())
           {};
           inline void next(void) {};
           inline bool at_end(void) const { return false; };
           inline bool has_length(void) const { return false; };
-          inline AtomicType const & eval(void) const { return value_; };
+          inline AtomicType const eval(void) const { return value_; };
 
          private:
-          AtomicType const & value_;
+          AtomicType const value_;
       };
 
       template<typename CurrentMode, typename FieldType>
-       struct ConstField;
+       struct NeboBoolean;
 
       template<typename FieldType>
-       struct ConstField<Initial, FieldType> {
+       struct NeboBoolean<Initial, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          ConstField<Initial, FieldType> typedef MyType;
+          NeboBoolean<Initial, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           template<typename IteratorType>
            struct Iterator {
 
-             ConstField<ResizePrep<IteratorType, MyType>, FieldType> typedef ResizePrepType;
+             NeboBoolean<ResizePrep<IteratorType, This>, FieldType> typedef ResizePrepType;
 
-             ConstField<SeqWalk<IteratorType, MyType>, FieldType> typedef SeqWalkType;
+             NeboBoolean<SeqWalk<IteratorType, This>, FieldType> typedef SeqWalkType;
           };
-          ConstField(FieldType const & f)
+          NeboBoolean(bool const v)
+          : value_(v)
+          {};
+          template<typename IteratorType>
+           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
+              return typename Iterator<IteratorType>::SeqWalkType(*this);
+           };
+          template<typename IteratorType>
+           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
+              return typename Iterator<IteratorType>::ResizePrepType(*this);
+           };
+          inline bool const value(void) const { return value_; };
+
+         private:
+          bool const value_;
+      };
+
+      template<typename IteratorType, typename SourceType, typename FieldType>
+       struct NeboBoolean<ResizePrep<IteratorType, SourceType>, FieldType> {
+
+         public:
+          NeboBoolean<ResizePrep<IteratorType, SourceType>, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          NeboBoolean<Resize<IteratorType, This>, FieldType> typedef ResizeType;
+          NeboBoolean(SourceType const source)
+          : value_(source.value())
+          {};
+          inline ResizeType resize(MemoryWindow const & newSize) const {
+             return ResizeType(newSize, *this);
+          };
+          inline bool const value(void) const { return value_; };
+
+         private:
+          bool const value_;
+      };
+
+      template<typename IteratorType, typename SourceType, typename FieldType>
+       struct NeboBoolean<Resize<IteratorType, SourceType>, FieldType> {
+
+         public:
+          NeboBoolean<Resize<IteratorType, SourceType>, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          NeboBoolean<SeqWalk<IteratorType, This>, FieldType> typedef SeqWalkType;
+          NeboBoolean(MemoryWindow const & size, SourceType const source)
+          : value_(source.value())
+          {};
+          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline bool const value(void) const { return value_; };
+
+         private:
+          bool const value_;
+      };
+
+      template<typename IteratorType, typename SourceType, typename FieldType>
+       struct NeboBoolean<SeqWalk<IteratorType, SourceType>, FieldType> {
+
+         public:
+          NeboBoolean<SeqWalk<IteratorType, SourceType>, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          NeboBoolean(SourceType const source)
+          : value_(source.value())
+          {};
+          inline void next(void) {};
+          inline bool at_end(void) const { return false; };
+          inline bool has_length(void) const { return false; };
+          inline bool const eval(void) const { return value_; };
+
+         private:
+          bool const value_;
+      };
+
+      template<typename CurrentMode, typename FieldType>
+       struct NeboConstField;
+
+      template<typename FieldType>
+       struct NeboConstField<Initial, FieldType> {
+
+         public:
+          NeboConstField<Initial, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          template<typename IteratorType>
+           struct Iterator {
+
+             NeboConstField<ResizePrep<IteratorType, This>, FieldType> typedef ResizePrepType;
+
+             NeboConstField<SeqWalk<IteratorType, This>, FieldType> typedef SeqWalkType;
+          };
+          NeboConstField(FieldType const & f)
           : field_(f)
           {};
           template<typename IteratorType>
@@ -189,15 +307,14 @@
       };
 
       template<typename IteratorType, typename SourceType, typename FieldType>
-       struct ConstField<ResizePrep<IteratorType, SourceType>, FieldType> {
+       struct NeboConstField<ResizePrep<IteratorType, SourceType>, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          ConstField<ResizePrep<IteratorType, SourceType>, FieldType> typedef MyType;
+          NeboConstField<ResizePrep<IteratorType, SourceType>, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          ConstField<Resize<IteratorType, MyType>, FieldType> typedef ResizeType;
-          ConstField(SourceType const & source)
+          NeboConstField<Resize<IteratorType, This>, FieldType> typedef ResizeType;
+          NeboConstField(SourceType const & source)
           : field_(source.field())
           {};
           inline ResizeType resize(MemoryWindow const & newSize) const {
@@ -210,15 +327,14 @@
       };
 
       template<typename IteratorType, typename SourceType, typename FieldType>
-       struct ConstField<Resize<IteratorType, SourceType>, FieldType> {
+       struct NeboConstField<Resize<IteratorType, SourceType>, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          ConstField<Resize<IteratorType, SourceType>, FieldType> typedef MyType;
+          NeboConstField<Resize<IteratorType, SourceType>, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          ConstField<SeqWalk<IteratorType, MyType>, FieldType> typedef SeqWalkType;
-          ConstField(MemoryWindow const & size, SourceType const & source)
+          NeboConstField<SeqWalk<IteratorType, This>, FieldType> typedef SeqWalkType;
+          NeboConstField(MemoryWindow const & size, SourceType const & source)
           : field_(size, source.field().field_values(), structured::ExternalStorage)
           {};
           inline SeqWalkType init(void) const { return SeqWalkType(*this); };
@@ -229,14 +345,14 @@
       };
 
       template<typename IteratorType, typename SourceType, typename FieldType>
-       struct ConstField<SeqWalk<IteratorType, SourceType>, FieldType> {
+       struct NeboConstField<SeqWalk<IteratorType, SourceType>, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          ConstField<SeqWalk<IteratorType, SourceType>, FieldType> typedef MyType;
+          NeboConstField<SeqWalk<IteratorType, SourceType>, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          ConstField(SourceType const & source)
+          typename FieldType::value_type typedef AtomicType;
+          NeboConstField(SourceType const & source)
           : iter_(source.field().begin()), end_(source.field().end())
           {};
           inline void next(void) { ++iter_; };
@@ -250,24 +366,23 @@
       };
 
       template<typename CurrentMode, typename FieldType>
-       struct Field;
+       struct NeboField;
 
       template<typename FieldType>
-       struct Field<Initial, FieldType> {
+       struct NeboField<Initial, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          Field<Initial, FieldType> typedef MyType;
+          NeboField<Initial, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           template<typename IteratorType>
            struct Iterator {
 
-             Field<ResizePrep<IteratorType, MyType>, FieldType> typedef ResizePrepType;
+             NeboField<ResizePrep<IteratorType, This>, FieldType> typedef ResizePrepType;
 
-             Field<SeqWalk<IteratorType, MyType>, FieldType> typedef SeqWalkType;
+             NeboField<SeqWalk<IteratorType, This>, FieldType> typedef SeqWalkType;
           };
-          Field(FieldType & f)
+          NeboField(FieldType & f)
           : field_(f)
           {};
           template<typename IteratorType>
@@ -285,15 +400,14 @@
       };
 
       template<typename IteratorType, typename SourceType, typename FieldType>
-       struct Field<ResizePrep<IteratorType, SourceType>, FieldType> {
+       struct NeboField<ResizePrep<IteratorType, SourceType>, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          Field<ResizePrep<IteratorType, SourceType>, FieldType> typedef MyType;
+          NeboField<ResizePrep<IteratorType, SourceType>, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          Field<Resize<IteratorType, MyType>, FieldType> typedef ResizeType;
-          Field(SourceType & source)
+          NeboField<Resize<IteratorType, This>, FieldType> typedef ResizeType;
+          NeboField(SourceType & source)
           : field_(source.field())
           {};
           inline ResizeType resize(MemoryWindow const & newSize) {
@@ -306,15 +420,14 @@
       };
 
       template<typename IteratorType, typename SourceType, typename FieldType>
-       struct Field<Resize<IteratorType, SourceType>, FieldType> {
+       struct NeboField<Resize<IteratorType, SourceType>, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          Field<Resize<IteratorType, SourceType>, FieldType> typedef MyType;
+          NeboField<Resize<IteratorType, SourceType>, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          Field<SeqWalk<IteratorType, MyType>, FieldType> typedef SeqWalkType;
-          Field(MemoryWindow const & size, SourceType & source)
+          NeboField<SeqWalk<IteratorType, This>, FieldType> typedef SeqWalkType;
+          NeboField(MemoryWindow const & size, SourceType & source)
           : field_(size, source.field().field_values(), structured::ExternalStorage)
           {};
           inline SeqWalkType init(void) { return SeqWalkType(*this); };
@@ -325,14 +438,14 @@
       };
 
       template<typename IteratorType, typename SourceType, typename FieldType>
-       struct Field<SeqWalk<IteratorType, SourceType>, FieldType> {
+       struct NeboField<SeqWalk<IteratorType, SourceType>, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          Field<SeqWalk<IteratorType, SourceType>, FieldType> typedef MyType;
+          NeboField<SeqWalk<IteratorType, SourceType>, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          Field(SourceType & source)
+          typename FieldType::value_type typedef AtomicType;
+          NeboField(SourceType & source)
           : iter_(source.field().begin()), end_(source.field().end())
           {};
           inline void next(void) { ++iter_; };
@@ -346,40 +459,38 @@
           typename FieldType::iterator const end_;
       };
 
-      template<typename Operand, typename FieldType>
-       struct FieldExpression {
-
-         public:
-          FieldType typedef field_type;
-          FieldExpression(Operand const & given)
-          : expr_(given)
-          {};
-          inline Operand const & expr(void) const { return expr_; };
-
-         private:
-          Operand expr_;
-      };
-
       template<typename Input, typename FieldType>
        struct Standardize;
 
       template<typename FieldType>
        struct Standardize<FieldType, FieldType> {
 
-         ConstField<Initial, FieldType> typedef StandardType;
+         NeboConstField<Initial, FieldType> typedef StandardType;
+
+         NeboExpression<StandardType, FieldType> typedef StandardTerm;
 
          static inline StandardType standardType(FieldType const & given) {
             return StandardType(given);
          };
+
+         static inline StandardTerm standardTerm(FieldType const & given) {
+            return StandardTerm(StandardType(given));
+         };
       };
 
       template<typename ExprType, typename FieldType>
-       struct Standardize<FieldExpression<ExprType, FieldType>, FieldType> {
+       struct Standardize<NeboExpression<ExprType, FieldType>, FieldType> {
 
          ExprType typedef StandardType;
 
-         static inline StandardType standardType(FieldExpression<ExprType, FieldType> const & given) {
+         NeboExpression<StandardType, FieldType> typedef StandardTerm;
+
+         static inline StandardType standardType(NeboExpression<ExprType, FieldType> const & given) {
             return given.expr();
+         };
+
+         static inline StandardTerm standardTerm(NeboExpression<ExprType, FieldType> const & given) {
+            return given;
          };
       };
 
@@ -390,19 +501,18 @@
        struct SumOp<Initial, Operand1, Operand2, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          SumOp<Initial, Operand1, Operand2, FieldType> typedef MyType;
+          SumOp<Initial, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           template<typename IteratorType>
            struct Iterator {
 
-             SumOp<ResizePrep<IteratorType, MyType>,
+             SumOp<ResizePrep<IteratorType, This>,
                    typename Operand1::template Iterator<IteratorType>::ResizePrepType,
                    typename Operand2::template Iterator<IteratorType>::ResizePrepType,
                    FieldType> typedef ResizePrepType;
 
-             SumOp<SeqWalk<IteratorType, MyType>,
+             SumOp<SeqWalk<IteratorType, This>,
                    typename Operand1::template Iterator<IteratorType>::SeqWalkType,
                    typename Operand2::template Iterator<IteratorType>::SeqWalkType,
                    FieldType> typedef SeqWalkType;
@@ -434,11 +544,10 @@
        struct SumOp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          SumOp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef MyType;
+          SumOp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          SumOp<Resize<IteratorType, MyType>,
+          SumOp<Resize<IteratorType, This>,
                 typename Operand1::ResizeType,
                 typename Operand2::ResizeType,
                 FieldType> typedef ResizeType;
@@ -464,11 +573,10 @@
        struct SumOp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          SumOp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef MyType;
+          SumOp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          SumOp<SeqWalk<IteratorType, MyType>,
+          SumOp<SeqWalk<IteratorType, This>,
                 typename Operand1::SeqWalkType,
                 typename Operand2::SeqWalkType,
                 FieldType> typedef SeqWalkType;
@@ -492,10 +600,10 @@
        struct SumOp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          SumOp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef MyType;
+          SumOp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef EvalReturnType;
           SumOp(SourceType const & source)
           : operand1_(source.operand1()), operand2_(source.operand2())
           {};
@@ -504,7 +612,7 @@
           inline bool has_length(void) const {
              return (operand1_.has_length() || operand2_.has_length());
           };
-          inline AtomicType eval(void) const { return (operand1_.eval() + operand2_.eval()); };
+          inline EvalReturnType eval(void) const { return (operand1_.eval() + operand2_.eval()); };
 
          private:
           Operand1 operand1_;
@@ -513,14 +621,14 @@
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2>
-       inline FieldExpression<SumOp<Initial,
-                                    typename Standardize<SubExpr1, typename SubExpr1::field_type>::
-                                    StandardType,
-                                    typename Standardize<SubExpr2, typename SubExpr1::field_type>::
-                                    StandardType,
-                                    typename SubExpr1::field_type>,
-                              typename SubExpr1::field_type> operator +(SubExpr1 const & arg1,
-                                                                        SubExpr2 const & arg2) {
+       inline NeboExpression<SumOp<Initial,
+                                   typename Standardize<SubExpr1, typename SubExpr1::field_type>::
+                                   StandardType,
+                                   typename Standardize<SubExpr2, typename SubExpr1::field_type>::
+                                   StandardType,
+                                   typename SubExpr1::field_type>,
+                             typename SubExpr1::field_type> operator +(SubExpr1 const & arg1,
+                                                                       SubExpr2 const & arg2) {
 
           typename SubExpr1::field_type typedef FieldType;
 
@@ -530,7 +638,7 @@
 
           SumOp<Initial, Type1, Type2, FieldType> typedef ReturnType;
 
-          FieldExpression<ReturnType, FieldType> typedef ReturnTerm;
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
                                        Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
@@ -538,25 +646,24 @@
 
       /* SubExpr X Scalar */
       template<typename SubExpr1>
-       inline FieldExpression<SumOp<Initial,
-                                    typename Standardize<SubExpr1, typename SubExpr1::field_type>::
-                                    StandardType,
-                                    Scalar<Initial, typename SubExpr1::field_type>,
-                                    typename SubExpr1::field_type>,
-                              typename SubExpr1::field_type> operator +(SubExpr1 const & arg1,
-                                                                        typename SubExpr1::
-                                                                        field_type::value_type const
-                                                                        & arg2) {
+       inline NeboExpression<SumOp<Initial,
+                                   typename Standardize<SubExpr1, typename SubExpr1::field_type>::
+                                   StandardType,
+                                   NeboScalar<Initial, typename SubExpr1::field_type>,
+                                   typename SubExpr1::field_type>,
+                             typename SubExpr1::field_type> operator +(SubExpr1 const & arg1,
+                                                                       typename SubExpr1::field_type::
+                                                                       value_type const & arg2) {
 
           typename SubExpr1::field_type typedef FieldType;
 
           typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
 
-          Scalar<Initial, typename SubExpr1::field_type> typedef Type2;
+          NeboScalar<Initial, typename SubExpr1::field_type> typedef Type2;
 
           SumOp<Initial, Type1, Type2, FieldType> typedef ReturnType;
 
-          FieldExpression<ReturnType, FieldType> typedef ReturnTerm;
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
                                        Type2(Type2(arg2))));
@@ -564,25 +671,24 @@
 
       /* Scalar X SubExpr */
       template<typename SubExpr2>
-       inline FieldExpression<SumOp<Initial,
-                                    Scalar<Initial, typename SubExpr2::field_type>,
-                                    typename Standardize<SubExpr2, typename SubExpr2::field_type>::
-                                    StandardType,
-                                    typename SubExpr2::field_type>,
-                              typename SubExpr2::field_type> operator +(typename SubExpr2::
-                                                                        field_type::value_type const
-                                                                        & arg1,
-                                                                        SubExpr2 const & arg2) {
+       inline NeboExpression<SumOp<Initial,
+                                   NeboScalar<Initial, typename SubExpr2::field_type>,
+                                   typename Standardize<SubExpr2, typename SubExpr2::field_type>::
+                                   StandardType,
+                                   typename SubExpr2::field_type>,
+                             typename SubExpr2::field_type> operator +(typename SubExpr2::field_type::
+                                                                       value_type const & arg1,
+                                                                       SubExpr2 const & arg2) {
 
           typename SubExpr2::field_type typedef FieldType;
 
-          Scalar<Initial, typename SubExpr2::field_type> typedef Type1;
+          NeboScalar<Initial, typename SubExpr2::field_type> typedef Type1;
 
           typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType typedef Type2;
 
           SumOp<Initial, Type1, Type2, FieldType> typedef ReturnType;
 
-          FieldExpression<ReturnType, FieldType> typedef ReturnTerm;
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(Type1(Type1(arg1)),
                                        Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
@@ -595,19 +701,18 @@
        struct DiffOp<Initial, Operand1, Operand2, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          DiffOp<Initial, Operand1, Operand2, FieldType> typedef MyType;
+          DiffOp<Initial, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           template<typename IteratorType>
            struct Iterator {
 
-             DiffOp<ResizePrep<IteratorType, MyType>,
+             DiffOp<ResizePrep<IteratorType, This>,
                     typename Operand1::template Iterator<IteratorType>::ResizePrepType,
                     typename Operand2::template Iterator<IteratorType>::ResizePrepType,
                     FieldType> typedef ResizePrepType;
 
-             DiffOp<SeqWalk<IteratorType, MyType>,
+             DiffOp<SeqWalk<IteratorType, This>,
                     typename Operand1::template Iterator<IteratorType>::SeqWalkType,
                     typename Operand2::template Iterator<IteratorType>::SeqWalkType,
                     FieldType> typedef SeqWalkType;
@@ -639,11 +744,10 @@
        struct DiffOp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          DiffOp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef MyType;
+          DiffOp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          DiffOp<Resize<IteratorType, MyType>,
+          DiffOp<Resize<IteratorType, This>,
                  typename Operand1::ResizeType,
                  typename Operand2::ResizeType,
                  FieldType> typedef ResizeType;
@@ -669,11 +773,10 @@
        struct DiffOp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          DiffOp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef MyType;
+          DiffOp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          DiffOp<SeqWalk<IteratorType, MyType>,
+          DiffOp<SeqWalk<IteratorType, This>,
                  typename Operand1::SeqWalkType,
                  typename Operand2::SeqWalkType,
                  FieldType> typedef SeqWalkType;
@@ -697,10 +800,10 @@
        struct DiffOp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          DiffOp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef MyType;
+          DiffOp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef EvalReturnType;
           DiffOp(SourceType const & source)
           : operand1_(source.operand1()), operand2_(source.operand2())
           {};
@@ -709,7 +812,7 @@
           inline bool has_length(void) const {
              return (operand1_.has_length() || operand2_.has_length());
           };
-          inline AtomicType eval(void) const { return (operand1_.eval() - operand2_.eval()); };
+          inline EvalReturnType eval(void) const { return (operand1_.eval() - operand2_.eval()); };
 
          private:
           Operand1 operand1_;
@@ -718,14 +821,14 @@
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2>
-       inline FieldExpression<DiffOp<Initial,
-                                     typename Standardize<SubExpr1, typename SubExpr1::field_type>::
-                                     StandardType,
-                                     typename Standardize<SubExpr2, typename SubExpr1::field_type>::
-                                     StandardType,
-                                     typename SubExpr1::field_type>,
-                              typename SubExpr1::field_type> operator -(SubExpr1 const & arg1,
-                                                                        SubExpr2 const & arg2) {
+       inline NeboExpression<DiffOp<Initial,
+                                    typename Standardize<SubExpr1, typename SubExpr1::field_type>::
+                                    StandardType,
+                                    typename Standardize<SubExpr2, typename SubExpr1::field_type>::
+                                    StandardType,
+                                    typename SubExpr1::field_type>,
+                             typename SubExpr1::field_type> operator -(SubExpr1 const & arg1,
+                                                                       SubExpr2 const & arg2) {
 
           typename SubExpr1::field_type typedef FieldType;
 
@@ -735,7 +838,7 @@
 
           DiffOp<Initial, Type1, Type2, FieldType> typedef ReturnType;
 
-          FieldExpression<ReturnType, FieldType> typedef ReturnTerm;
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
                                        Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
@@ -743,25 +846,24 @@
 
       /* SubExpr X Scalar */
       template<typename SubExpr1>
-       inline FieldExpression<DiffOp<Initial,
-                                     typename Standardize<SubExpr1, typename SubExpr1::field_type>::
-                                     StandardType,
-                                     Scalar<Initial, typename SubExpr1::field_type>,
-                                     typename SubExpr1::field_type>,
-                              typename SubExpr1::field_type> operator -(SubExpr1 const & arg1,
-                                                                        typename SubExpr1::
-                                                                        field_type::value_type const
-                                                                        & arg2) {
+       inline NeboExpression<DiffOp<Initial,
+                                    typename Standardize<SubExpr1, typename SubExpr1::field_type>::
+                                    StandardType,
+                                    NeboScalar<Initial, typename SubExpr1::field_type>,
+                                    typename SubExpr1::field_type>,
+                             typename SubExpr1::field_type> operator -(SubExpr1 const & arg1,
+                                                                       typename SubExpr1::field_type::
+                                                                       value_type const & arg2) {
 
           typename SubExpr1::field_type typedef FieldType;
 
           typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
 
-          Scalar<Initial, typename SubExpr1::field_type> typedef Type2;
+          NeboScalar<Initial, typename SubExpr1::field_type> typedef Type2;
 
           DiffOp<Initial, Type1, Type2, FieldType> typedef ReturnType;
 
-          FieldExpression<ReturnType, FieldType> typedef ReturnTerm;
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
                                        Type2(Type2(arg2))));
@@ -769,25 +871,24 @@
 
       /* Scalar X SubExpr */
       template<typename SubExpr2>
-       inline FieldExpression<DiffOp<Initial,
-                                     Scalar<Initial, typename SubExpr2::field_type>,
-                                     typename Standardize<SubExpr2, typename SubExpr2::field_type>::
-                                     StandardType,
-                                     typename SubExpr2::field_type>,
-                              typename SubExpr2::field_type> operator -(typename SubExpr2::
-                                                                        field_type::value_type const
-                                                                        & arg1,
-                                                                        SubExpr2 const & arg2) {
+       inline NeboExpression<DiffOp<Initial,
+                                    NeboScalar<Initial, typename SubExpr2::field_type>,
+                                    typename Standardize<SubExpr2, typename SubExpr2::field_type>::
+                                    StandardType,
+                                    typename SubExpr2::field_type>,
+                             typename SubExpr2::field_type> operator -(typename SubExpr2::field_type::
+                                                                       value_type const & arg1,
+                                                                       SubExpr2 const & arg2) {
 
           typename SubExpr2::field_type typedef FieldType;
 
-          Scalar<Initial, typename SubExpr2::field_type> typedef Type1;
+          NeboScalar<Initial, typename SubExpr2::field_type> typedef Type1;
 
           typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType typedef Type2;
 
           DiffOp<Initial, Type1, Type2, FieldType> typedef ReturnType;
 
-          FieldExpression<ReturnType, FieldType> typedef ReturnTerm;
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(Type1(Type1(arg1)),
                                        Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
@@ -800,19 +901,18 @@
        struct ProdOp<Initial, Operand1, Operand2, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          ProdOp<Initial, Operand1, Operand2, FieldType> typedef MyType;
+          ProdOp<Initial, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           template<typename IteratorType>
            struct Iterator {
 
-             ProdOp<ResizePrep<IteratorType, MyType>,
+             ProdOp<ResizePrep<IteratorType, This>,
                     typename Operand1::template Iterator<IteratorType>::ResizePrepType,
                     typename Operand2::template Iterator<IteratorType>::ResizePrepType,
                     FieldType> typedef ResizePrepType;
 
-             ProdOp<SeqWalk<IteratorType, MyType>,
+             ProdOp<SeqWalk<IteratorType, This>,
                     typename Operand1::template Iterator<IteratorType>::SeqWalkType,
                     typename Operand2::template Iterator<IteratorType>::SeqWalkType,
                     FieldType> typedef SeqWalkType;
@@ -844,11 +944,10 @@
        struct ProdOp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          ProdOp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef MyType;
+          ProdOp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          ProdOp<Resize<IteratorType, MyType>,
+          ProdOp<Resize<IteratorType, This>,
                  typename Operand1::ResizeType,
                  typename Operand2::ResizeType,
                  FieldType> typedef ResizeType;
@@ -874,11 +973,10 @@
        struct ProdOp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          ProdOp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef MyType;
+          ProdOp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          ProdOp<SeqWalk<IteratorType, MyType>,
+          ProdOp<SeqWalk<IteratorType, This>,
                  typename Operand1::SeqWalkType,
                  typename Operand2::SeqWalkType,
                  FieldType> typedef SeqWalkType;
@@ -902,10 +1000,10 @@
        struct ProdOp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          ProdOp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef MyType;
+          ProdOp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef EvalReturnType;
           ProdOp(SourceType const & source)
           : operand1_(source.operand1()), operand2_(source.operand2())
           {};
@@ -914,7 +1012,7 @@
           inline bool has_length(void) const {
              return (operand1_.has_length() || operand2_.has_length());
           };
-          inline AtomicType eval(void) const { return (operand1_.eval() * operand2_.eval()); };
+          inline EvalReturnType eval(void) const { return (operand1_.eval() * operand2_.eval()); };
 
          private:
           Operand1 operand1_;
@@ -923,14 +1021,14 @@
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2>
-       inline FieldExpression<ProdOp<Initial,
-                                     typename Standardize<SubExpr1, typename SubExpr1::field_type>::
-                                     StandardType,
-                                     typename Standardize<SubExpr2, typename SubExpr1::field_type>::
-                                     StandardType,
-                                     typename SubExpr1::field_type>,
-                              typename SubExpr1::field_type> operator *(SubExpr1 const & arg1,
-                                                                        SubExpr2 const & arg2) {
+       inline NeboExpression<ProdOp<Initial,
+                                    typename Standardize<SubExpr1, typename SubExpr1::field_type>::
+                                    StandardType,
+                                    typename Standardize<SubExpr2, typename SubExpr1::field_type>::
+                                    StandardType,
+                                    typename SubExpr1::field_type>,
+                             typename SubExpr1::field_type> operator *(SubExpr1 const & arg1,
+                                                                       SubExpr2 const & arg2) {
 
           typename SubExpr1::field_type typedef FieldType;
 
@@ -940,7 +1038,7 @@
 
           ProdOp<Initial, Type1, Type2, FieldType> typedef ReturnType;
 
-          FieldExpression<ReturnType, FieldType> typedef ReturnTerm;
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
                                        Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
@@ -948,25 +1046,24 @@
 
       /* SubExpr X Scalar */
       template<typename SubExpr1>
-       inline FieldExpression<ProdOp<Initial,
-                                     typename Standardize<SubExpr1, typename SubExpr1::field_type>::
-                                     StandardType,
-                                     Scalar<Initial, typename SubExpr1::field_type>,
-                                     typename SubExpr1::field_type>,
-                              typename SubExpr1::field_type> operator *(SubExpr1 const & arg1,
-                                                                        typename SubExpr1::
-                                                                        field_type::value_type const
-                                                                        & arg2) {
+       inline NeboExpression<ProdOp<Initial,
+                                    typename Standardize<SubExpr1, typename SubExpr1::field_type>::
+                                    StandardType,
+                                    NeboScalar<Initial, typename SubExpr1::field_type>,
+                                    typename SubExpr1::field_type>,
+                             typename SubExpr1::field_type> operator *(SubExpr1 const & arg1,
+                                                                       typename SubExpr1::field_type::
+                                                                       value_type const & arg2) {
 
           typename SubExpr1::field_type typedef FieldType;
 
           typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
 
-          Scalar<Initial, typename SubExpr1::field_type> typedef Type2;
+          NeboScalar<Initial, typename SubExpr1::field_type> typedef Type2;
 
           ProdOp<Initial, Type1, Type2, FieldType> typedef ReturnType;
 
-          FieldExpression<ReturnType, FieldType> typedef ReturnTerm;
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
                                        Type2(Type2(arg2))));
@@ -974,25 +1071,24 @@
 
       /* Scalar X SubExpr */
       template<typename SubExpr2>
-       inline FieldExpression<ProdOp<Initial,
-                                     Scalar<Initial, typename SubExpr2::field_type>,
-                                     typename Standardize<SubExpr2, typename SubExpr2::field_type>::
-                                     StandardType,
-                                     typename SubExpr2::field_type>,
-                              typename SubExpr2::field_type> operator *(typename SubExpr2::
-                                                                        field_type::value_type const
-                                                                        & arg1,
-                                                                        SubExpr2 const & arg2) {
+       inline NeboExpression<ProdOp<Initial,
+                                    NeboScalar<Initial, typename SubExpr2::field_type>,
+                                    typename Standardize<SubExpr2, typename SubExpr2::field_type>::
+                                    StandardType,
+                                    typename SubExpr2::field_type>,
+                             typename SubExpr2::field_type> operator *(typename SubExpr2::field_type::
+                                                                       value_type const & arg1,
+                                                                       SubExpr2 const & arg2) {
 
           typename SubExpr2::field_type typedef FieldType;
 
-          Scalar<Initial, typename SubExpr2::field_type> typedef Type1;
+          NeboScalar<Initial, typename SubExpr2::field_type> typedef Type1;
 
           typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType typedef Type2;
 
           ProdOp<Initial, Type1, Type2, FieldType> typedef ReturnType;
 
-          FieldExpression<ReturnType, FieldType> typedef ReturnTerm;
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(Type1(Type1(arg1)),
                                        Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
@@ -1005,19 +1101,18 @@
        struct DivOp<Initial, Operand1, Operand2, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          DivOp<Initial, Operand1, Operand2, FieldType> typedef MyType;
+          DivOp<Initial, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           template<typename IteratorType>
            struct Iterator {
 
-             DivOp<ResizePrep<IteratorType, MyType>,
+             DivOp<ResizePrep<IteratorType, This>,
                    typename Operand1::template Iterator<IteratorType>::ResizePrepType,
                    typename Operand2::template Iterator<IteratorType>::ResizePrepType,
                    FieldType> typedef ResizePrepType;
 
-             DivOp<SeqWalk<IteratorType, MyType>,
+             DivOp<SeqWalk<IteratorType, This>,
                    typename Operand1::template Iterator<IteratorType>::SeqWalkType,
                    typename Operand2::template Iterator<IteratorType>::SeqWalkType,
                    FieldType> typedef SeqWalkType;
@@ -1049,11 +1144,10 @@
        struct DivOp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          DivOp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef MyType;
+          DivOp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          DivOp<Resize<IteratorType, MyType>,
+          DivOp<Resize<IteratorType, This>,
                 typename Operand1::ResizeType,
                 typename Operand2::ResizeType,
                 FieldType> typedef ResizeType;
@@ -1079,11 +1173,10 @@
        struct DivOp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          DivOp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef MyType;
+          DivOp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          DivOp<SeqWalk<IteratorType, MyType>,
+          DivOp<SeqWalk<IteratorType, This>,
                 typename Operand1::SeqWalkType,
                 typename Operand2::SeqWalkType,
                 FieldType> typedef SeqWalkType;
@@ -1107,10 +1200,10 @@
        struct DivOp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          DivOp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef MyType;
+          DivOp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef EvalReturnType;
           DivOp(SourceType const & source)
           : operand1_(source.operand1()), operand2_(source.operand2())
           {};
@@ -1119,7 +1212,7 @@
           inline bool has_length(void) const {
              return (operand1_.has_length() || operand2_.has_length());
           };
-          inline AtomicType eval(void) const { return (operand1_.eval() / operand2_.eval()); };
+          inline EvalReturnType eval(void) const { return (operand1_.eval() / operand2_.eval()); };
 
          private:
           Operand1 operand1_;
@@ -1128,14 +1221,14 @@
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2>
-       inline FieldExpression<DivOp<Initial,
-                                    typename Standardize<SubExpr1, typename SubExpr1::field_type>::
-                                    StandardType,
-                                    typename Standardize<SubExpr2, typename SubExpr1::field_type>::
-                                    StandardType,
-                                    typename SubExpr1::field_type>,
-                              typename SubExpr1::field_type> operator /(SubExpr1 const & arg1,
-                                                                        SubExpr2 const & arg2) {
+       inline NeboExpression<DivOp<Initial,
+                                   typename Standardize<SubExpr1, typename SubExpr1::field_type>::
+                                   StandardType,
+                                   typename Standardize<SubExpr2, typename SubExpr1::field_type>::
+                                   StandardType,
+                                   typename SubExpr1::field_type>,
+                             typename SubExpr1::field_type> operator /(SubExpr1 const & arg1,
+                                                                       SubExpr2 const & arg2) {
 
           typename SubExpr1::field_type typedef FieldType;
 
@@ -1145,7 +1238,7 @@
 
           DivOp<Initial, Type1, Type2, FieldType> typedef ReturnType;
 
-          FieldExpression<ReturnType, FieldType> typedef ReturnTerm;
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
                                        Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
@@ -1153,25 +1246,24 @@
 
       /* SubExpr X Scalar */
       template<typename SubExpr1>
-       inline FieldExpression<DivOp<Initial,
-                                    typename Standardize<SubExpr1, typename SubExpr1::field_type>::
-                                    StandardType,
-                                    Scalar<Initial, typename SubExpr1::field_type>,
-                                    typename SubExpr1::field_type>,
-                              typename SubExpr1::field_type> operator /(SubExpr1 const & arg1,
-                                                                        typename SubExpr1::
-                                                                        field_type::value_type const
-                                                                        & arg2) {
+       inline NeboExpression<DivOp<Initial,
+                                   typename Standardize<SubExpr1, typename SubExpr1::field_type>::
+                                   StandardType,
+                                   NeboScalar<Initial, typename SubExpr1::field_type>,
+                                   typename SubExpr1::field_type>,
+                             typename SubExpr1::field_type> operator /(SubExpr1 const & arg1,
+                                                                       typename SubExpr1::field_type::
+                                                                       value_type const & arg2) {
 
           typename SubExpr1::field_type typedef FieldType;
 
           typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
 
-          Scalar<Initial, typename SubExpr1::field_type> typedef Type2;
+          NeboScalar<Initial, typename SubExpr1::field_type> typedef Type2;
 
           DivOp<Initial, Type1, Type2, FieldType> typedef ReturnType;
 
-          FieldExpression<ReturnType, FieldType> typedef ReturnTerm;
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
                                        Type2(Type2(arg2))));
@@ -1179,25 +1271,24 @@
 
       /* Scalar X SubExpr */
       template<typename SubExpr2>
-       inline FieldExpression<DivOp<Initial,
-                                    Scalar<Initial, typename SubExpr2::field_type>,
-                                    typename Standardize<SubExpr2, typename SubExpr2::field_type>::
-                                    StandardType,
-                                    typename SubExpr2::field_type>,
-                              typename SubExpr2::field_type> operator /(typename SubExpr2::
-                                                                        field_type::value_type const
-                                                                        & arg1,
-                                                                        SubExpr2 const & arg2) {
+       inline NeboExpression<DivOp<Initial,
+                                   NeboScalar<Initial, typename SubExpr2::field_type>,
+                                   typename Standardize<SubExpr2, typename SubExpr2::field_type>::
+                                   StandardType,
+                                   typename SubExpr2::field_type>,
+                             typename SubExpr2::field_type> operator /(typename SubExpr2::field_type::
+                                                                       value_type const & arg1,
+                                                                       SubExpr2 const & arg2) {
 
           typename SubExpr2::field_type typedef FieldType;
 
-          Scalar<Initial, typename SubExpr2::field_type> typedef Type1;
+          NeboScalar<Initial, typename SubExpr2::field_type> typedef Type1;
 
           typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType typedef Type2;
 
           DivOp<Initial, Type1, Type2, FieldType> typedef ReturnType;
 
-          FieldExpression<ReturnType, FieldType> typedef ReturnTerm;
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(Type1(Type1(arg1)),
                                        Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
@@ -1210,18 +1301,17 @@
        struct SinFcn<Initial, Operand, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          SinFcn<Initial, Operand, FieldType> typedef MyType;
+          SinFcn<Initial, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           template<typename IteratorType>
            struct Iterator {
 
-             SinFcn<ResizePrep<IteratorType, MyType>,
+             SinFcn<ResizePrep<IteratorType, This>,
                     typename Operand::template Iterator<IteratorType>::ResizePrepType,
                     FieldType> typedef ResizePrepType;
 
-             SinFcn<SeqWalk<IteratorType, MyType>,
+             SinFcn<SeqWalk<IteratorType, This>,
                     typename Operand::template Iterator<IteratorType>::SeqWalkType,
                     FieldType> typedef SeqWalkType;
           };
@@ -1246,11 +1336,10 @@
        struct SinFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          SinFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          SinFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          SinFcn<Resize<IteratorType, MyType>, typename Operand::ResizeType, FieldType> typedef
+          SinFcn<Resize<IteratorType, This>, typename Operand::ResizeType, FieldType> typedef
           ResizeType;
           SinFcn(SourceType const & source)
           : operand_(source.operand())
@@ -1268,11 +1357,10 @@
        struct SinFcn<Resize<IteratorType, SourceType>, Operand, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          SinFcn<Resize<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          SinFcn<Resize<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          SinFcn<SeqWalk<IteratorType, MyType>, typename Operand::SeqWalkType, FieldType> typedef
+          SinFcn<SeqWalk<IteratorType, This>, typename Operand::SeqWalkType, FieldType> typedef
           SeqWalkType;
           SinFcn(MemoryWindow const & size, SourceType const & source)
           : operand_(size, source.operand())
@@ -1288,17 +1376,17 @@
        struct SinFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          SinFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          SinFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef EvalReturnType;
           SinFcn(SourceType const & source)
           : operand_(source.operand())
           {};
           inline void next(void) { operand_.next(); };
           inline bool at_end(void) const { return (operand_.at_end()); };
           inline bool has_length(void) const { return (operand_.has_length()); };
-          inline AtomicType eval(void) const { return std::sin(operand_.eval()); };
+          inline EvalReturnType eval(void) const { return std::sin(operand_.eval()); };
 
          private:
           Operand operand_;
@@ -1306,11 +1394,11 @@
 
       /* SubExpr */
       template<typename SubExpr>
-       inline FieldExpression<SinFcn<Initial,
-                                     typename Standardize<SubExpr, typename SubExpr::field_type>::
-                                     StandardType,
-                                     typename SubExpr::field_type>,
-                              typename SubExpr::field_type> sin(SubExpr const & arg) {
+       inline NeboExpression<SinFcn<Initial,
+                                    typename Standardize<SubExpr, typename SubExpr::field_type>::
+                                    StandardType,
+                                    typename SubExpr::field_type>,
+                             typename SubExpr::field_type> sin(SubExpr const & arg) {
 
           typename SubExpr::field_type typedef FieldType;
 
@@ -1318,7 +1406,7 @@
 
           SinFcn<Initial, Type, FieldType> typedef ReturnType;
 
-          FieldExpression<ReturnType, FieldType> typedef ReturnTerm;
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(Type(Standardize<SubExpr, FieldType>::standardType(arg))));
        };
@@ -1330,18 +1418,17 @@
        struct CosFcn<Initial, Operand, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          CosFcn<Initial, Operand, FieldType> typedef MyType;
+          CosFcn<Initial, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           template<typename IteratorType>
            struct Iterator {
 
-             CosFcn<ResizePrep<IteratorType, MyType>,
+             CosFcn<ResizePrep<IteratorType, This>,
                     typename Operand::template Iterator<IteratorType>::ResizePrepType,
                     FieldType> typedef ResizePrepType;
 
-             CosFcn<SeqWalk<IteratorType, MyType>,
+             CosFcn<SeqWalk<IteratorType, This>,
                     typename Operand::template Iterator<IteratorType>::SeqWalkType,
                     FieldType> typedef SeqWalkType;
           };
@@ -1366,11 +1453,10 @@
        struct CosFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          CosFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          CosFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          CosFcn<Resize<IteratorType, MyType>, typename Operand::ResizeType, FieldType> typedef
+          CosFcn<Resize<IteratorType, This>, typename Operand::ResizeType, FieldType> typedef
           ResizeType;
           CosFcn(SourceType const & source)
           : operand_(source.operand())
@@ -1388,11 +1474,10 @@
        struct CosFcn<Resize<IteratorType, SourceType>, Operand, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          CosFcn<Resize<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          CosFcn<Resize<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          CosFcn<SeqWalk<IteratorType, MyType>, typename Operand::SeqWalkType, FieldType> typedef
+          CosFcn<SeqWalk<IteratorType, This>, typename Operand::SeqWalkType, FieldType> typedef
           SeqWalkType;
           CosFcn(MemoryWindow const & size, SourceType const & source)
           : operand_(size, source.operand())
@@ -1408,17 +1493,17 @@
        struct CosFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          CosFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          CosFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef EvalReturnType;
           CosFcn(SourceType const & source)
           : operand_(source.operand())
           {};
           inline void next(void) { operand_.next(); };
           inline bool at_end(void) const { return (operand_.at_end()); };
           inline bool has_length(void) const { return (operand_.has_length()); };
-          inline AtomicType eval(void) const { return std::cos(operand_.eval()); };
+          inline EvalReturnType eval(void) const { return std::cos(operand_.eval()); };
 
          private:
           Operand operand_;
@@ -1426,11 +1511,11 @@
 
       /* SubExpr */
       template<typename SubExpr>
-       inline FieldExpression<CosFcn<Initial,
-                                     typename Standardize<SubExpr, typename SubExpr::field_type>::
-                                     StandardType,
-                                     typename SubExpr::field_type>,
-                              typename SubExpr::field_type> cos(SubExpr const & arg) {
+       inline NeboExpression<CosFcn<Initial,
+                                    typename Standardize<SubExpr, typename SubExpr::field_type>::
+                                    StandardType,
+                                    typename SubExpr::field_type>,
+                             typename SubExpr::field_type> cos(SubExpr const & arg) {
 
           typename SubExpr::field_type typedef FieldType;
 
@@ -1438,7 +1523,7 @@
 
           CosFcn<Initial, Type, FieldType> typedef ReturnType;
 
-          FieldExpression<ReturnType, FieldType> typedef ReturnTerm;
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(Type(Standardize<SubExpr, FieldType>::standardType(arg))));
        };
@@ -1450,18 +1535,17 @@
        struct TanFcn<Initial, Operand, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          TanFcn<Initial, Operand, FieldType> typedef MyType;
+          TanFcn<Initial, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           template<typename IteratorType>
            struct Iterator {
 
-             TanFcn<ResizePrep<IteratorType, MyType>,
+             TanFcn<ResizePrep<IteratorType, This>,
                     typename Operand::template Iterator<IteratorType>::ResizePrepType,
                     FieldType> typedef ResizePrepType;
 
-             TanFcn<SeqWalk<IteratorType, MyType>,
+             TanFcn<SeqWalk<IteratorType, This>,
                     typename Operand::template Iterator<IteratorType>::SeqWalkType,
                     FieldType> typedef SeqWalkType;
           };
@@ -1486,11 +1570,10 @@
        struct TanFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          TanFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          TanFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          TanFcn<Resize<IteratorType, MyType>, typename Operand::ResizeType, FieldType> typedef
+          TanFcn<Resize<IteratorType, This>, typename Operand::ResizeType, FieldType> typedef
           ResizeType;
           TanFcn(SourceType const & source)
           : operand_(source.operand())
@@ -1508,11 +1591,10 @@
        struct TanFcn<Resize<IteratorType, SourceType>, Operand, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          TanFcn<Resize<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          TanFcn<Resize<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          TanFcn<SeqWalk<IteratorType, MyType>, typename Operand::SeqWalkType, FieldType> typedef
+          TanFcn<SeqWalk<IteratorType, This>, typename Operand::SeqWalkType, FieldType> typedef
           SeqWalkType;
           TanFcn(MemoryWindow const & size, SourceType const & source)
           : operand_(size, source.operand())
@@ -1528,17 +1610,17 @@
        struct TanFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          TanFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          TanFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef EvalReturnType;
           TanFcn(SourceType const & source)
           : operand_(source.operand())
           {};
           inline void next(void) { operand_.next(); };
           inline bool at_end(void) const { return (operand_.at_end()); };
           inline bool has_length(void) const { return (operand_.has_length()); };
-          inline AtomicType eval(void) const { return std::tan(operand_.eval()); };
+          inline EvalReturnType eval(void) const { return std::tan(operand_.eval()); };
 
          private:
           Operand operand_;
@@ -1546,11 +1628,11 @@
 
       /* SubExpr */
       template<typename SubExpr>
-       inline FieldExpression<TanFcn<Initial,
-                                     typename Standardize<SubExpr, typename SubExpr::field_type>::
-                                     StandardType,
-                                     typename SubExpr::field_type>,
-                              typename SubExpr::field_type> tan(SubExpr const & arg) {
+       inline NeboExpression<TanFcn<Initial,
+                                    typename Standardize<SubExpr, typename SubExpr::field_type>::
+                                    StandardType,
+                                    typename SubExpr::field_type>,
+                             typename SubExpr::field_type> tan(SubExpr const & arg) {
 
           typename SubExpr::field_type typedef FieldType;
 
@@ -1558,7 +1640,7 @@
 
           TanFcn<Initial, Type, FieldType> typedef ReturnType;
 
-          FieldExpression<ReturnType, FieldType> typedef ReturnTerm;
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(Type(Standardize<SubExpr, FieldType>::standardType(arg))));
        };
@@ -1570,18 +1652,17 @@
        struct ExpFcn<Initial, Operand, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          ExpFcn<Initial, Operand, FieldType> typedef MyType;
+          ExpFcn<Initial, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           template<typename IteratorType>
            struct Iterator {
 
-             ExpFcn<ResizePrep<IteratorType, MyType>,
+             ExpFcn<ResizePrep<IteratorType, This>,
                     typename Operand::template Iterator<IteratorType>::ResizePrepType,
                     FieldType> typedef ResizePrepType;
 
-             ExpFcn<SeqWalk<IteratorType, MyType>,
+             ExpFcn<SeqWalk<IteratorType, This>,
                     typename Operand::template Iterator<IteratorType>::SeqWalkType,
                     FieldType> typedef SeqWalkType;
           };
@@ -1606,11 +1687,10 @@
        struct ExpFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          ExpFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          ExpFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          ExpFcn<Resize<IteratorType, MyType>, typename Operand::ResizeType, FieldType> typedef
+          ExpFcn<Resize<IteratorType, This>, typename Operand::ResizeType, FieldType> typedef
           ResizeType;
           ExpFcn(SourceType const & source)
           : operand_(source.operand())
@@ -1628,11 +1708,10 @@
        struct ExpFcn<Resize<IteratorType, SourceType>, Operand, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          ExpFcn<Resize<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          ExpFcn<Resize<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          ExpFcn<SeqWalk<IteratorType, MyType>, typename Operand::SeqWalkType, FieldType> typedef
+          ExpFcn<SeqWalk<IteratorType, This>, typename Operand::SeqWalkType, FieldType> typedef
           SeqWalkType;
           ExpFcn(MemoryWindow const & size, SourceType const & source)
           : operand_(size, source.operand())
@@ -1648,17 +1727,17 @@
        struct ExpFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          ExpFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          ExpFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef EvalReturnType;
           ExpFcn(SourceType const & source)
           : operand_(source.operand())
           {};
           inline void next(void) { operand_.next(); };
           inline bool at_end(void) const { return (operand_.at_end()); };
           inline bool has_length(void) const { return (operand_.has_length()); };
-          inline AtomicType eval(void) const { return std::exp(operand_.eval()); };
+          inline EvalReturnType eval(void) const { return std::exp(operand_.eval()); };
 
          private:
           Operand operand_;
@@ -1666,11 +1745,11 @@
 
       /* SubExpr */
       template<typename SubExpr>
-       inline FieldExpression<ExpFcn<Initial,
-                                     typename Standardize<SubExpr, typename SubExpr::field_type>::
-                                     StandardType,
-                                     typename SubExpr::field_type>,
-                              typename SubExpr::field_type> exp(SubExpr const & arg) {
+       inline NeboExpression<ExpFcn<Initial,
+                                    typename Standardize<SubExpr, typename SubExpr::field_type>::
+                                    StandardType,
+                                    typename SubExpr::field_type>,
+                             typename SubExpr::field_type> exp(SubExpr const & arg) {
 
           typename SubExpr::field_type typedef FieldType;
 
@@ -1678,7 +1757,7 @@
 
           ExpFcn<Initial, Type, FieldType> typedef ReturnType;
 
-          FieldExpression<ReturnType, FieldType> typedef ReturnTerm;
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(Type(Standardize<SubExpr, FieldType>::standardType(arg))));
        };
@@ -1690,18 +1769,17 @@
        struct TanhFcn<Initial, Operand, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          TanhFcn<Initial, Operand, FieldType> typedef MyType;
+          TanhFcn<Initial, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           template<typename IteratorType>
            struct Iterator {
 
-             TanhFcn<ResizePrep<IteratorType, MyType>,
+             TanhFcn<ResizePrep<IteratorType, This>,
                      typename Operand::template Iterator<IteratorType>::ResizePrepType,
                      FieldType> typedef ResizePrepType;
 
-             TanhFcn<SeqWalk<IteratorType, MyType>,
+             TanhFcn<SeqWalk<IteratorType, This>,
                      typename Operand::template Iterator<IteratorType>::SeqWalkType,
                      FieldType> typedef SeqWalkType;
           };
@@ -1726,11 +1804,10 @@
        struct TanhFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          TanhFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          TanhFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          TanhFcn<Resize<IteratorType, MyType>, typename Operand::ResizeType, FieldType> typedef
+          TanhFcn<Resize<IteratorType, This>, typename Operand::ResizeType, FieldType> typedef
           ResizeType;
           TanhFcn(SourceType const & source)
           : operand_(source.operand())
@@ -1748,11 +1825,10 @@
        struct TanhFcn<Resize<IteratorType, SourceType>, Operand, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          TanhFcn<Resize<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          TanhFcn<Resize<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          TanhFcn<SeqWalk<IteratorType, MyType>, typename Operand::SeqWalkType, FieldType> typedef
+          TanhFcn<SeqWalk<IteratorType, This>, typename Operand::SeqWalkType, FieldType> typedef
           SeqWalkType;
           TanhFcn(MemoryWindow const & size, SourceType const & source)
           : operand_(size, source.operand())
@@ -1768,17 +1844,17 @@
        struct TanhFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          TanhFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          TanhFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef EvalReturnType;
           TanhFcn(SourceType const & source)
           : operand_(source.operand())
           {};
           inline void next(void) { operand_.next(); };
           inline bool at_end(void) const { return (operand_.at_end()); };
           inline bool has_length(void) const { return (operand_.has_length()); };
-          inline AtomicType eval(void) const { return std::tanh(operand_.eval()); };
+          inline EvalReturnType eval(void) const { return std::tanh(operand_.eval()); };
 
          private:
           Operand operand_;
@@ -1786,11 +1862,11 @@
 
       /* SubExpr */
       template<typename SubExpr>
-       inline FieldExpression<TanhFcn<Initial,
-                                      typename Standardize<SubExpr, typename SubExpr::field_type>::
-                                      StandardType,
-                                      typename SubExpr::field_type>,
-                              typename SubExpr::field_type> tanh(SubExpr const & arg) {
+       inline NeboExpression<TanhFcn<Initial,
+                                     typename Standardize<SubExpr, typename SubExpr::field_type>::
+                                     StandardType,
+                                     typename SubExpr::field_type>,
+                             typename SubExpr::field_type> tanh(SubExpr const & arg) {
 
           typename SubExpr::field_type typedef FieldType;
 
@@ -1798,7 +1874,7 @@
 
           TanhFcn<Initial, Type, FieldType> typedef ReturnType;
 
-          FieldExpression<ReturnType, FieldType> typedef ReturnTerm;
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(Type(Standardize<SubExpr, FieldType>::standardType(arg))));
        };
@@ -1810,18 +1886,17 @@
        struct AbsFcn<Initial, Operand, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          AbsFcn<Initial, Operand, FieldType> typedef MyType;
+          AbsFcn<Initial, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           template<typename IteratorType>
            struct Iterator {
 
-             AbsFcn<ResizePrep<IteratorType, MyType>,
+             AbsFcn<ResizePrep<IteratorType, This>,
                     typename Operand::template Iterator<IteratorType>::ResizePrepType,
                     FieldType> typedef ResizePrepType;
 
-             AbsFcn<SeqWalk<IteratorType, MyType>,
+             AbsFcn<SeqWalk<IteratorType, This>,
                     typename Operand::template Iterator<IteratorType>::SeqWalkType,
                     FieldType> typedef SeqWalkType;
           };
@@ -1846,11 +1921,10 @@
        struct AbsFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          AbsFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          AbsFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          AbsFcn<Resize<IteratorType, MyType>, typename Operand::ResizeType, FieldType> typedef
+          AbsFcn<Resize<IteratorType, This>, typename Operand::ResizeType, FieldType> typedef
           ResizeType;
           AbsFcn(SourceType const & source)
           : operand_(source.operand())
@@ -1868,11 +1942,10 @@
        struct AbsFcn<Resize<IteratorType, SourceType>, Operand, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          AbsFcn<Resize<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          AbsFcn<Resize<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          AbsFcn<SeqWalk<IteratorType, MyType>, typename Operand::SeqWalkType, FieldType> typedef
+          AbsFcn<SeqWalk<IteratorType, This>, typename Operand::SeqWalkType, FieldType> typedef
           SeqWalkType;
           AbsFcn(MemoryWindow const & size, SourceType const & source)
           : operand_(size, source.operand())
@@ -1888,17 +1961,17 @@
        struct AbsFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          AbsFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          AbsFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef EvalReturnType;
           AbsFcn(SourceType const & source)
           : operand_(source.operand())
           {};
           inline void next(void) { operand_.next(); };
           inline bool at_end(void) const { return (operand_.at_end()); };
           inline bool has_length(void) const { return (operand_.has_length()); };
-          inline AtomicType eval(void) const { return std::abs(operand_.eval()); };
+          inline EvalReturnType eval(void) const { return std::abs(operand_.eval()); };
 
          private:
           Operand operand_;
@@ -1906,11 +1979,11 @@
 
       /* SubExpr */
       template<typename SubExpr>
-       inline FieldExpression<AbsFcn<Initial,
-                                     typename Standardize<SubExpr, typename SubExpr::field_type>::
-                                     StandardType,
-                                     typename SubExpr::field_type>,
-                              typename SubExpr::field_type> abs(SubExpr const & arg) {
+       inline NeboExpression<AbsFcn<Initial,
+                                    typename Standardize<SubExpr, typename SubExpr::field_type>::
+                                    StandardType,
+                                    typename SubExpr::field_type>,
+                             typename SubExpr::field_type> abs(SubExpr const & arg) {
 
           typename SubExpr::field_type typedef FieldType;
 
@@ -1918,7 +1991,7 @@
 
           AbsFcn<Initial, Type, FieldType> typedef ReturnType;
 
-          FieldExpression<ReturnType, FieldType> typedef ReturnTerm;
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(Type(Standardize<SubExpr, FieldType>::standardType(arg))));
        };
@@ -1930,18 +2003,17 @@
        struct NegFcn<Initial, Operand, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          NegFcn<Initial, Operand, FieldType> typedef MyType;
+          NegFcn<Initial, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           template<typename IteratorType>
            struct Iterator {
 
-             NegFcn<ResizePrep<IteratorType, MyType>,
+             NegFcn<ResizePrep<IteratorType, This>,
                     typename Operand::template Iterator<IteratorType>::ResizePrepType,
                     FieldType> typedef ResizePrepType;
 
-             NegFcn<SeqWalk<IteratorType, MyType>,
+             NegFcn<SeqWalk<IteratorType, This>,
                     typename Operand::template Iterator<IteratorType>::SeqWalkType,
                     FieldType> typedef SeqWalkType;
           };
@@ -1966,11 +2038,10 @@
        struct NegFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          NegFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          NegFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          NegFcn<Resize<IteratorType, MyType>, typename Operand::ResizeType, FieldType> typedef
+          NegFcn<Resize<IteratorType, This>, typename Operand::ResizeType, FieldType> typedef
           ResizeType;
           NegFcn(SourceType const & source)
           : operand_(source.operand())
@@ -1988,11 +2059,10 @@
        struct NegFcn<Resize<IteratorType, SourceType>, Operand, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          NegFcn<Resize<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          NegFcn<Resize<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          NegFcn<SeqWalk<IteratorType, MyType>, typename Operand::SeqWalkType, FieldType> typedef
+          NegFcn<SeqWalk<IteratorType, This>, typename Operand::SeqWalkType, FieldType> typedef
           SeqWalkType;
           NegFcn(MemoryWindow const & size, SourceType const & source)
           : operand_(size, source.operand())
@@ -2008,17 +2078,17 @@
        struct NegFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          NegFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          NegFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef EvalReturnType;
           NegFcn(SourceType const & source)
           : operand_(source.operand())
           {};
           inline void next(void) { operand_.next(); };
           inline bool at_end(void) const { return (operand_.at_end()); };
           inline bool has_length(void) const { return (operand_.has_length()); };
-          inline AtomicType eval(void) const { return -(operand_.eval()); };
+          inline EvalReturnType eval(void) const { return -(operand_.eval()); };
 
          private:
           Operand operand_;
@@ -2026,11 +2096,11 @@
 
       /* SubExpr */
       template<typename SubExpr>
-       inline FieldExpression<NegFcn<Initial,
-                                     typename Standardize<SubExpr, typename SubExpr::field_type>::
-                                     StandardType,
-                                     typename SubExpr::field_type>,
-                              typename SubExpr::field_type> operator -(SubExpr const & arg) {
+       inline NeboExpression<NegFcn<Initial,
+                                    typename Standardize<SubExpr, typename SubExpr::field_type>::
+                                    StandardType,
+                                    typename SubExpr::field_type>,
+                             typename SubExpr::field_type> operator -(SubExpr const & arg) {
 
           typename SubExpr::field_type typedef FieldType;
 
@@ -2038,7 +2108,7 @@
 
           NegFcn<Initial, Type, FieldType> typedef ReturnType;
 
-          FieldExpression<ReturnType, FieldType> typedef ReturnTerm;
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(Type(Standardize<SubExpr, FieldType>::standardType(arg))));
        };
@@ -2050,19 +2120,18 @@
        struct PowFcn<Initial, Operand1, Operand2, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          PowFcn<Initial, Operand1, Operand2, FieldType> typedef MyType;
+          PowFcn<Initial, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           template<typename IteratorType>
            struct Iterator {
 
-             PowFcn<ResizePrep<IteratorType, MyType>,
+             PowFcn<ResizePrep<IteratorType, This>,
                     typename Operand1::template Iterator<IteratorType>::ResizePrepType,
                     typename Operand2::template Iterator<IteratorType>::ResizePrepType,
                     FieldType> typedef ResizePrepType;
 
-             PowFcn<SeqWalk<IteratorType, MyType>,
+             PowFcn<SeqWalk<IteratorType, This>,
                     typename Operand1::template Iterator<IteratorType>::SeqWalkType,
                     typename Operand2::template Iterator<IteratorType>::SeqWalkType,
                     FieldType> typedef SeqWalkType;
@@ -2094,11 +2163,10 @@
        struct PowFcn<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          PowFcn<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef MyType;
+          PowFcn<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          PowFcn<Resize<IteratorType, MyType>,
+          PowFcn<Resize<IteratorType, This>,
                  typename Operand1::ResizeType,
                  typename Operand2::ResizeType,
                  FieldType> typedef ResizeType;
@@ -2124,11 +2192,10 @@
        struct PowFcn<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          PowFcn<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef MyType;
+          PowFcn<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          PowFcn<SeqWalk<IteratorType, MyType>,
+          PowFcn<SeqWalk<IteratorType, This>,
                  typename Operand1::SeqWalkType,
                  typename Operand2::SeqWalkType,
                  FieldType> typedef SeqWalkType;
@@ -2152,10 +2219,10 @@
        struct PowFcn<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          PowFcn<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef MyType;
+          PowFcn<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef EvalReturnType;
           PowFcn(SourceType const & source)
           : operand1_(source.operand1()), operand2_(source.operand2())
           {};
@@ -2164,7 +2231,9 @@
           inline bool has_length(void) const {
              return (operand1_.has_length() || operand2_.has_length());
           };
-          inline AtomicType eval(void) const { return std::pow(operand1_.eval(), operand2_.eval()); };
+          inline EvalReturnType eval(void) const {
+             return std::pow(operand1_.eval(), operand2_.eval());
+          };
 
          private:
           Operand1 operand1_;
@@ -2173,14 +2242,14 @@
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2>
-       inline FieldExpression<PowFcn<Initial,
-                                     typename Standardize<SubExpr1, typename SubExpr1::field_type>::
-                                     StandardType,
-                                     typename Standardize<SubExpr2, typename SubExpr1::field_type>::
-                                     StandardType,
-                                     typename SubExpr1::field_type>,
-                              typename SubExpr1::field_type> pow(SubExpr1 const & arg1,
-                                                                 SubExpr2 const & arg2) {
+       inline NeboExpression<PowFcn<Initial,
+                                    typename Standardize<SubExpr1, typename SubExpr1::field_type>::
+                                    StandardType,
+                                    typename Standardize<SubExpr2, typename SubExpr1::field_type>::
+                                    StandardType,
+                                    typename SubExpr1::field_type>,
+                             typename SubExpr1::field_type> pow(SubExpr1 const & arg1,
+                                                                SubExpr2 const & arg2) {
 
           typename SubExpr1::field_type typedef FieldType;
 
@@ -2190,7 +2259,7 @@
 
           PowFcn<Initial, Type1, Type2, FieldType> typedef ReturnType;
 
-          FieldExpression<ReturnType, FieldType> typedef ReturnTerm;
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
                                        Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
@@ -2198,24 +2267,24 @@
 
       /* SubExpr X Scalar */
       template<typename SubExpr1>
-       inline FieldExpression<PowFcn<Initial,
-                                     typename Standardize<SubExpr1, typename SubExpr1::field_type>::
-                                     StandardType,
-                                     Scalar<Initial, typename SubExpr1::field_type>,
-                                     typename SubExpr1::field_type>,
-                              typename SubExpr1::field_type> pow(SubExpr1 const & arg1,
-                                                                 typename SubExpr1::field_type::
-                                                                 value_type const & arg2) {
+       inline NeboExpression<PowFcn<Initial,
+                                    typename Standardize<SubExpr1, typename SubExpr1::field_type>::
+                                    StandardType,
+                                    NeboScalar<Initial, typename SubExpr1::field_type>,
+                                    typename SubExpr1::field_type>,
+                             typename SubExpr1::field_type> pow(SubExpr1 const & arg1,
+                                                                typename SubExpr1::field_type::
+                                                                value_type const & arg2) {
 
           typename SubExpr1::field_type typedef FieldType;
 
           typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
 
-          Scalar<Initial, typename SubExpr1::field_type> typedef Type2;
+          NeboScalar<Initial, typename SubExpr1::field_type> typedef Type2;
 
           PowFcn<Initial, Type1, Type2, FieldType> typedef ReturnType;
 
-          FieldExpression<ReturnType, FieldType> typedef ReturnTerm;
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
                                        Type2(Type2(arg2))));
@@ -2223,24 +2292,24 @@
 
       /* Scalar X SubExpr */
       template<typename SubExpr2>
-       inline FieldExpression<PowFcn<Initial,
-                                     Scalar<Initial, typename SubExpr2::field_type>,
-                                     typename Standardize<SubExpr2, typename SubExpr2::field_type>::
-                                     StandardType,
-                                     typename SubExpr2::field_type>,
-                              typename SubExpr2::field_type> pow(typename SubExpr2::field_type::
-                                                                 value_type const & arg1,
-                                                                 SubExpr2 const & arg2) {
+       inline NeboExpression<PowFcn<Initial,
+                                    NeboScalar<Initial, typename SubExpr2::field_type>,
+                                    typename Standardize<SubExpr2, typename SubExpr2::field_type>::
+                                    StandardType,
+                                    typename SubExpr2::field_type>,
+                             typename SubExpr2::field_type> pow(typename SubExpr2::field_type::
+                                                                value_type const & arg1,
+                                                                SubExpr2 const & arg2) {
 
           typename SubExpr2::field_type typedef FieldType;
 
-          Scalar<Initial, typename SubExpr2::field_type> typedef Type1;
+          NeboScalar<Initial, typename SubExpr2::field_type> typedef Type1;
 
           typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType typedef Type2;
 
           PowFcn<Initial, Type1, Type2, FieldType> typedef ReturnType;
 
-          FieldExpression<ReturnType, FieldType> typedef ReturnTerm;
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(Type1(Type1(arg1)),
                                        Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
@@ -2253,18 +2322,17 @@
        struct SqrtFcn<Initial, Operand, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          SqrtFcn<Initial, Operand, FieldType> typedef MyType;
+          SqrtFcn<Initial, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           template<typename IteratorType>
            struct Iterator {
 
-             SqrtFcn<ResizePrep<IteratorType, MyType>,
+             SqrtFcn<ResizePrep<IteratorType, This>,
                      typename Operand::template Iterator<IteratorType>::ResizePrepType,
                      FieldType> typedef ResizePrepType;
 
-             SqrtFcn<SeqWalk<IteratorType, MyType>,
+             SqrtFcn<SeqWalk<IteratorType, This>,
                      typename Operand::template Iterator<IteratorType>::SeqWalkType,
                      FieldType> typedef SeqWalkType;
           };
@@ -2289,11 +2357,10 @@
        struct SqrtFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          SqrtFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          SqrtFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          SqrtFcn<Resize<IteratorType, MyType>, typename Operand::ResizeType, FieldType> typedef
+          SqrtFcn<Resize<IteratorType, This>, typename Operand::ResizeType, FieldType> typedef
           ResizeType;
           SqrtFcn(SourceType const & source)
           : operand_(source.operand())
@@ -2311,11 +2378,10 @@
        struct SqrtFcn<Resize<IteratorType, SourceType>, Operand, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          SqrtFcn<Resize<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          SqrtFcn<Resize<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          SqrtFcn<SeqWalk<IteratorType, MyType>, typename Operand::SeqWalkType, FieldType> typedef
+          SqrtFcn<SeqWalk<IteratorType, This>, typename Operand::SeqWalkType, FieldType> typedef
           SeqWalkType;
           SqrtFcn(MemoryWindow const & size, SourceType const & source)
           : operand_(size, source.operand())
@@ -2331,17 +2397,17 @@
        struct SqrtFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          SqrtFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          SqrtFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef EvalReturnType;
           SqrtFcn(SourceType const & source)
           : operand_(source.operand())
           {};
           inline void next(void) { operand_.next(); };
           inline bool at_end(void) const { return (operand_.at_end()); };
           inline bool has_length(void) const { return (operand_.has_length()); };
-          inline AtomicType eval(void) const { return std::sqrt(operand_.eval()); };
+          inline EvalReturnType eval(void) const { return std::sqrt(operand_.eval()); };
 
          private:
           Operand operand_;
@@ -2349,11 +2415,11 @@
 
       /* SubExpr */
       template<typename SubExpr>
-       inline FieldExpression<SqrtFcn<Initial,
-                                      typename Standardize<SubExpr, typename SubExpr::field_type>::
-                                      StandardType,
-                                      typename SubExpr::field_type>,
-                              typename SubExpr::field_type> sqrt(SubExpr const & arg) {
+       inline NeboExpression<SqrtFcn<Initial,
+                                     typename Standardize<SubExpr, typename SubExpr::field_type>::
+                                     StandardType,
+                                     typename SubExpr::field_type>,
+                             typename SubExpr::field_type> sqrt(SubExpr const & arg) {
 
           typename SubExpr::field_type typedef FieldType;
 
@@ -2361,7 +2427,7 @@
 
           SqrtFcn<Initial, Type, FieldType> typedef ReturnType;
 
-          FieldExpression<ReturnType, FieldType> typedef ReturnTerm;
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(Type(Standardize<SubExpr, FieldType>::standardType(arg))));
        };
@@ -2373,18 +2439,17 @@
        struct LogFcn<Initial, Operand, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          LogFcn<Initial, Operand, FieldType> typedef MyType;
+          LogFcn<Initial, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           template<typename IteratorType>
            struct Iterator {
 
-             LogFcn<ResizePrep<IteratorType, MyType>,
+             LogFcn<ResizePrep<IteratorType, This>,
                     typename Operand::template Iterator<IteratorType>::ResizePrepType,
                     FieldType> typedef ResizePrepType;
 
-             LogFcn<SeqWalk<IteratorType, MyType>,
+             LogFcn<SeqWalk<IteratorType, This>,
                     typename Operand::template Iterator<IteratorType>::SeqWalkType,
                     FieldType> typedef SeqWalkType;
           };
@@ -2409,11 +2474,10 @@
        struct LogFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          LogFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          LogFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          LogFcn<Resize<IteratorType, MyType>, typename Operand::ResizeType, FieldType> typedef
+          LogFcn<Resize<IteratorType, This>, typename Operand::ResizeType, FieldType> typedef
           ResizeType;
           LogFcn(SourceType const & source)
           : operand_(source.operand())
@@ -2431,11 +2495,10 @@
        struct LogFcn<Resize<IteratorType, SourceType>, Operand, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          LogFcn<Resize<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          LogFcn<Resize<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          LogFcn<SeqWalk<IteratorType, MyType>, typename Operand::SeqWalkType, FieldType> typedef
+          LogFcn<SeqWalk<IteratorType, This>, typename Operand::SeqWalkType, FieldType> typedef
           SeqWalkType;
           LogFcn(MemoryWindow const & size, SourceType const & source)
           : operand_(size, source.operand())
@@ -2451,17 +2514,17 @@
        struct LogFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> {
 
          public:
-          typename FieldType::value_type typedef AtomicType;
-          LogFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef MyType;
+          LogFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef EvalReturnType;
           LogFcn(SourceType const & source)
           : operand_(source.operand())
           {};
           inline void next(void) { operand_.next(); };
           inline bool at_end(void) const { return (operand_.at_end()); };
           inline bool has_length(void) const { return (operand_.has_length()); };
-          inline AtomicType eval(void) const { return std::log(operand_.eval()); };
+          inline EvalReturnType eval(void) const { return std::log(operand_.eval()); };
 
          private:
           Operand operand_;
@@ -2469,11 +2532,11 @@
 
       /* SubExpr */
       template<typename SubExpr>
-       inline FieldExpression<LogFcn<Initial,
-                                     typename Standardize<SubExpr, typename SubExpr::field_type>::
-                                     StandardType,
-                                     typename SubExpr::field_type>,
-                              typename SubExpr::field_type> log(SubExpr const & arg) {
+       inline NeboExpression<LogFcn<Initial,
+                                    typename Standardize<SubExpr, typename SubExpr::field_type>::
+                                    StandardType,
+                                    typename SubExpr::field_type>,
+                             typename SubExpr::field_type> log(SubExpr const & arg) {
 
           typename SubExpr::field_type typedef FieldType;
 
@@ -2481,7 +2544,7 @@
 
           LogFcn<Initial, Type, FieldType> typedef ReturnType;
 
-          FieldExpression<ReturnType, FieldType> typedef ReturnTerm;
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(Type(Standardize<SubExpr, FieldType>::standardType(arg))));
        };
@@ -2494,19 +2557,18 @@
           struct OBJECT_NAME<Initial, Operand1, Operand2, FieldType> {                             \
                                                                                                    \
             public:                                                                                \
-             typename FieldType::value_type typedef AtomicType;                                    \
-             OBJECT_NAME<Initial, Operand1, Operand2, FieldType> typedef MyType;                   \
+             OBJECT_NAME<Initial, Operand1, Operand2, FieldType> typedef This;                     \
              FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
              template<typename IteratorType>                                                       \
               struct Iterator {                                                                    \
                                                                                                    \
-                OBJECT_NAME<ResizePrep<IteratorType, MyType>,                                      \
+                OBJECT_NAME<ResizePrep<IteratorType, This>,                                        \
                             typename Operand1::template Iterator<IteratorType>::ResizePrepType,    \
                             typename Operand2::template Iterator<IteratorType>::ResizePrepType,    \
                             FieldType> typedef ResizePrepType;                                     \
                                                                                                    \
-                OBJECT_NAME<SeqWalk<IteratorType, MyType>,                                         \
+                OBJECT_NAME<SeqWalk<IteratorType, This>,                                           \
                             typename Operand1::template Iterator<IteratorType>::SeqWalkType,       \
                             typename Operand2::template Iterator<IteratorType>::SeqWalkType,       \
                             FieldType> typedef SeqWalkType;                                        \
@@ -2538,12 +2600,11 @@
           struct OBJECT_NAME<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> { \
                                                                                                    \
             public:                                                                                \
-             typename FieldType::value_type typedef AtomicType;                                    \
              OBJECT_NAME<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType>      \
-             typedef MyType;                                                                       \
+             typedef This;                                                                         \
              FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
-             OBJECT_NAME<Resize<IteratorType, MyType>,                                             \
+             OBJECT_NAME<Resize<IteratorType, This>,                                               \
                          typename Operand1::ResizeType,                                            \
                          typename Operand2::ResizeType,                                            \
                          FieldType> typedef ResizeType;                                            \
@@ -2569,12 +2630,11 @@
           struct OBJECT_NAME<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> {    \
                                                                                                    \
             public:                                                                                \
-             typename FieldType::value_type typedef AtomicType;                                    \
              OBJECT_NAME<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef  \
-             MyType;                                                                               \
+             This;                                                                                 \
              FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
-             OBJECT_NAME<SeqWalk<IteratorType, MyType>,                                            \
+             OBJECT_NAME<SeqWalk<IteratorType, This>,                                              \
                          typename Operand1::SeqWalkType,                                           \
                          typename Operand2::SeqWalkType,                                           \
                          FieldType> typedef SeqWalkType;                                           \
@@ -2598,11 +2658,11 @@
           struct OBJECT_NAME<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> {   \
                                                                                                    \
             public:                                                                                \
-             typename FieldType::value_type typedef AtomicType;                                    \
              OBJECT_NAME<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef \
-             MyType;                                                                               \
+             This;                                                                                 \
              FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
+             typename FieldType::value_type typedef EvalReturnType;                                \
              OBJECT_NAME(SourceType const & source)                                                \
              : operand1_(source.operand1()), operand2_(source.operand2())                          \
              {};                                                                                   \
@@ -2611,7 +2671,7 @@
              inline bool has_length(void) const {                                                  \
                 return (operand1_.has_length() || operand2_.has_length());                         \
              };                                                                                    \
-             inline AtomicType eval(void) const {                                                  \
+             inline EvalReturnType eval(void) const {                                              \
                 return INTERNAL_NAME(operand1_.eval(), operand2_.eval());                          \
              };                                                                                    \
                                                                                                    \
@@ -2622,16 +2682,16 @@
                                                                                                    \
          /* SubExpr X SubExpr */                                                                   \
          template<typename SubExpr1, typename SubExpr2>                                            \
-          inline FieldExpression<OBJECT_NAME<Initial,                                              \
-                                             typename Standardize<SubExpr1,                        \
-                                                                  typename SubExpr1::field_type>:: \
-                                             StandardType,                                         \
-                                             typename Standardize<SubExpr2,                        \
-                                                                  typename SubExpr1::field_type>:: \
-                                             StandardType,                                         \
-                                             typename SubExpr1::field_type>,                       \
-                                 typename SubExpr1::field_type> EXTERNAL_NAME(SubExpr1 const & arg1, \
-                                                                              SubExpr2 const & arg2) { \
+          inline NeboExpression<OBJECT_NAME<Initial,                                               \
+                                            typename Standardize<SubExpr1,                         \
+                                                                 typename SubExpr1::field_type>::  \
+                                            StandardType,                                          \
+                                            typename Standardize<SubExpr2,                         \
+                                                                 typename SubExpr1::field_type>::  \
+                                            StandardType,                                          \
+                                            typename SubExpr1::field_type>,                        \
+                                typename SubExpr1::field_type> EXTERNAL_NAME(SubExpr1 const & arg1, \
+                                                                             SubExpr2 const & arg2) { \
                                                                                                    \
              typename SubExpr1::field_type typedef FieldType;                                      \
                                                                                                    \
@@ -2643,7 +2703,7 @@
                                                                                                    \
              OBJECT_NAME<Initial, Type1, Type2, FieldType> typedef ReturnType;                     \
                                                                                                    \
-             FieldExpression<ReturnType, FieldType> typedef ReturnTerm;                            \
+             NeboExpression<ReturnType, FieldType> typedef ReturnTerm;                             \
                                                                                                    \
              return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)), \
                                           Type2(Standardize<SubExpr2, FieldType>::standardType(arg2)))); \
@@ -2651,27 +2711,27 @@
                                                                                                    \
          /* SubExpr X Scalar */                                                                    \
          template<typename SubExpr1>                                                               \
-          inline FieldExpression<OBJECT_NAME<Initial,                                              \
-                                             typename Standardize<SubExpr1,                        \
-                                                                  typename SubExpr1::field_type>:: \
-                                             StandardType,                                         \
-                                             Scalar<Initial, typename SubExpr1::field_type>,       \
-                                             typename SubExpr1::field_type>,                       \
-                                 typename SubExpr1::field_type> EXTERNAL_NAME(SubExpr1 const & arg1, \
-                                                                              typename SubExpr1::  \
-                                                                              field_type::value_type \
-                                                                              const & arg2) {      \
+          inline NeboExpression<OBJECT_NAME<Initial,                                               \
+                                            typename Standardize<SubExpr1,                         \
+                                                                 typename SubExpr1::field_type>::  \
+                                            StandardType,                                          \
+                                            NeboScalar<Initial, typename SubExpr1::field_type>,    \
+                                            typename SubExpr1::field_type>,                        \
+                                typename SubExpr1::field_type> EXTERNAL_NAME(SubExpr1 const & arg1, \
+                                                                             typename SubExpr1::   \
+                                                                             field_type::value_type \
+                                                                             const & arg2) {       \
                                                                                                    \
              typename SubExpr1::field_type typedef FieldType;                                      \
                                                                                                    \
              typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef   \
              Type1;                                                                                \
                                                                                                    \
-             Scalar<Initial, typename SubExpr1::field_type> typedef Type2;                         \
+             NeboScalar<Initial, typename SubExpr1::field_type> typedef Type2;                     \
                                                                                                    \
              OBJECT_NAME<Initial, Type1, Type2, FieldType> typedef ReturnType;                     \
                                                                                                    \
-             FieldExpression<ReturnType, FieldType> typedef ReturnTerm;                            \
+             NeboExpression<ReturnType, FieldType> typedef ReturnTerm;                             \
                                                                                                    \
              return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)), \
                                           Type2(Type2(arg2))));                                    \
@@ -2679,27 +2739,27 @@
                                                                                                    \
          /* Scalar X SubExpr */                                                                    \
          template<typename SubExpr2>                                                               \
-          inline FieldExpression<OBJECT_NAME<Initial,                                              \
-                                             Scalar<Initial, typename SubExpr2::field_type>,       \
-                                             typename Standardize<SubExpr2,                        \
-                                                                  typename SubExpr2::field_type>:: \
-                                             StandardType,                                         \
-                                             typename SubExpr2::field_type>,                       \
-                                 typename SubExpr2::field_type> EXTERNAL_NAME(typename SubExpr2::  \
-                                                                              field_type::value_type \
-                                                                              const & arg1,        \
-                                                                              SubExpr2 const & arg2) { \
+          inline NeboExpression<OBJECT_NAME<Initial,                                               \
+                                            NeboScalar<Initial, typename SubExpr2::field_type>,    \
+                                            typename Standardize<SubExpr2,                         \
+                                                                 typename SubExpr2::field_type>::  \
+                                            StandardType,                                          \
+                                            typename SubExpr2::field_type>,                        \
+                                typename SubExpr2::field_type> EXTERNAL_NAME(typename SubExpr2::   \
+                                                                             field_type::value_type \
+                                                                             const & arg1,         \
+                                                                             SubExpr2 const & arg2) { \
                                                                                                    \
              typename SubExpr2::field_type typedef FieldType;                                      \
                                                                                                    \
-             Scalar<Initial, typename SubExpr2::field_type> typedef Type1;                         \
+             NeboScalar<Initial, typename SubExpr2::field_type> typedef Type1;                     \
                                                                                                    \
              typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType typedef   \
              Type2;                                                                                \
                                                                                                    \
              OBJECT_NAME<Initial, Type1, Type2, FieldType> typedef ReturnType;                     \
                                                                                                    \
-             FieldExpression<ReturnType, FieldType> typedef ReturnTerm;                            \
+             NeboExpression<ReturnType, FieldType> typedef ReturnTerm;                             \
                                                                                                    \
              return ReturnTerm(ReturnType(Type1(Type1(arg1)),                                      \
                                           Type2(Standardize<SubExpr2, FieldType>::standardType(arg2)))); \
@@ -2713,19 +2773,18 @@
           struct OBJECT_NAME<Initial, Operand1, Operand2, FieldType> {                             \
                                                                                                    \
             public:                                                                                \
-             typename FieldType::value_type typedef AtomicType;                                    \
-             OBJECT_NAME<Initial, Operand1, Operand2, FieldType> typedef MyType;                   \
+             OBJECT_NAME<Initial, Operand1, Operand2, FieldType> typedef This;                     \
              FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
              template<typename IteratorType>                                                       \
               struct Iterator {                                                                    \
                                                                                                    \
-                OBJECT_NAME<ResizePrep<IteratorType, MyType>,                                      \
+                OBJECT_NAME<ResizePrep<IteratorType, This>,                                        \
                             typename Operand1::template Iterator<IteratorType>::ResizePrepType,    \
                             typename Operand2::template Iterator<IteratorType>::ResizePrepType,    \
                             FieldType> typedef ResizePrepType;                                     \
                                                                                                    \
-                OBJECT_NAME<SeqWalk<IteratorType, MyType>,                                         \
+                OBJECT_NAME<SeqWalk<IteratorType, This>,                                           \
                             typename Operand1::template Iterator<IteratorType>::SeqWalkType,       \
                             typename Operand2::template Iterator<IteratorType>::SeqWalkType,       \
                             FieldType> typedef SeqWalkType;                                        \
@@ -2757,12 +2816,11 @@
           struct OBJECT_NAME<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> { \
                                                                                                    \
             public:                                                                                \
-             typename FieldType::value_type typedef AtomicType;                                    \
              OBJECT_NAME<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType>      \
-             typedef MyType;                                                                       \
+             typedef This;                                                                         \
              FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
-             OBJECT_NAME<Resize<IteratorType, MyType>,                                             \
+             OBJECT_NAME<Resize<IteratorType, This>,                                               \
                          typename Operand1::ResizeType,                                            \
                          typename Operand2::ResizeType,                                            \
                          FieldType> typedef ResizeType;                                            \
@@ -2788,12 +2846,11 @@
           struct OBJECT_NAME<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> {    \
                                                                                                    \
             public:                                                                                \
-             typename FieldType::value_type typedef AtomicType;                                    \
              OBJECT_NAME<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef  \
-             MyType;                                                                               \
+             This;                                                                                 \
              FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
-             OBJECT_NAME<SeqWalk<IteratorType, MyType>,                                            \
+             OBJECT_NAME<SeqWalk<IteratorType, This>,                                              \
                          typename Operand1::SeqWalkType,                                           \
                          typename Operand2::SeqWalkType,                                           \
                          FieldType> typedef SeqWalkType;                                           \
@@ -2817,11 +2874,11 @@
           struct OBJECT_NAME<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> {   \
                                                                                                    \
             public:                                                                                \
-             typename FieldType::value_type typedef AtomicType;                                    \
              OBJECT_NAME<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef \
-             MyType;                                                                               \
+             This;                                                                                 \
              FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
+             typename FieldType::value_type typedef EvalReturnType;                                \
              OBJECT_NAME(SourceType const & source)                                                \
              : operand1_(source.operand1()), operand2_(source.operand2())                          \
              {};                                                                                   \
@@ -2830,7 +2887,7 @@
              inline bool has_length(void) const {                                                  \
                 return (operand1_.has_length() || operand2_.has_length());                         \
              };                                                                                    \
-             inline AtomicType eval(void) const {                                                  \
+             inline EvalReturnType eval(void) const {                                              \
                 return (operand1_.eval() INTERNAL_NAME operand2_.eval());                          \
              };                                                                                    \
                                                                                                    \
@@ -2841,16 +2898,16 @@
                                                                                                    \
          /* SubExpr X SubExpr */                                                                   \
          template<typename SubExpr1, typename SubExpr2>                                            \
-          inline FieldExpression<OBJECT_NAME<Initial,                                              \
-                                             typename Standardize<SubExpr1,                        \
-                                                                  typename SubExpr1::field_type>:: \
-                                             StandardType,                                         \
-                                             typename Standardize<SubExpr2,                        \
-                                                                  typename SubExpr1::field_type>:: \
-                                             StandardType,                                         \
-                                             typename SubExpr1::field_type>,                       \
-                                 typename SubExpr1::field_type> EXTERNAL_NAME(SubExpr1 const & arg1, \
-                                                                              SubExpr2 const & arg2) { \
+          inline NeboExpression<OBJECT_NAME<Initial,                                               \
+                                            typename Standardize<SubExpr1,                         \
+                                                                 typename SubExpr1::field_type>::  \
+                                            StandardType,                                          \
+                                            typename Standardize<SubExpr2,                         \
+                                                                 typename SubExpr1::field_type>::  \
+                                            StandardType,                                          \
+                                            typename SubExpr1::field_type>,                        \
+                                typename SubExpr1::field_type> EXTERNAL_NAME(SubExpr1 const & arg1, \
+                                                                             SubExpr2 const & arg2) { \
                                                                                                    \
              typename SubExpr1::field_type typedef FieldType;                                      \
                                                                                                    \
@@ -2862,7 +2919,7 @@
                                                                                                    \
              OBJECT_NAME<Initial, Type1, Type2, FieldType> typedef ReturnType;                     \
                                                                                                    \
-             FieldExpression<ReturnType, FieldType> typedef ReturnTerm;                            \
+             NeboExpression<ReturnType, FieldType> typedef ReturnTerm;                             \
                                                                                                    \
              return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)), \
                                           Type2(Standardize<SubExpr2, FieldType>::standardType(arg2)))); \
@@ -2870,27 +2927,27 @@
                                                                                                    \
          /* SubExpr X Scalar */                                                                    \
          template<typename SubExpr1>                                                               \
-          inline FieldExpression<OBJECT_NAME<Initial,                                              \
-                                             typename Standardize<SubExpr1,                        \
-                                                                  typename SubExpr1::field_type>:: \
-                                             StandardType,                                         \
-                                             Scalar<Initial, typename SubExpr1::field_type>,       \
-                                             typename SubExpr1::field_type>,                       \
-                                 typename SubExpr1::field_type> EXTERNAL_NAME(SubExpr1 const & arg1, \
-                                                                              typename SubExpr1::  \
-                                                                              field_type::value_type \
-                                                                              const & arg2) {      \
+          inline NeboExpression<OBJECT_NAME<Initial,                                               \
+                                            typename Standardize<SubExpr1,                         \
+                                                                 typename SubExpr1::field_type>::  \
+                                            StandardType,                                          \
+                                            NeboScalar<Initial, typename SubExpr1::field_type>,    \
+                                            typename SubExpr1::field_type>,                        \
+                                typename SubExpr1::field_type> EXTERNAL_NAME(SubExpr1 const & arg1, \
+                                                                             typename SubExpr1::   \
+                                                                             field_type::value_type \
+                                                                             const & arg2) {       \
                                                                                                    \
              typename SubExpr1::field_type typedef FieldType;                                      \
                                                                                                    \
              typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef   \
              Type1;                                                                                \
                                                                                                    \
-             Scalar<Initial, typename SubExpr1::field_type> typedef Type2;                         \
+             NeboScalar<Initial, typename SubExpr1::field_type> typedef Type2;                     \
                                                                                                    \
              OBJECT_NAME<Initial, Type1, Type2, FieldType> typedef ReturnType;                     \
                                                                                                    \
-             FieldExpression<ReturnType, FieldType> typedef ReturnTerm;                            \
+             NeboExpression<ReturnType, FieldType> typedef ReturnTerm;                             \
                                                                                                    \
              return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)), \
                                           Type2(Type2(arg2))));                                    \
@@ -2898,27 +2955,27 @@
                                                                                                    \
          /* Scalar X SubExpr */                                                                    \
          template<typename SubExpr2>                                                               \
-          inline FieldExpression<OBJECT_NAME<Initial,                                              \
-                                             Scalar<Initial, typename SubExpr2::field_type>,       \
-                                             typename Standardize<SubExpr2,                        \
-                                                                  typename SubExpr2::field_type>:: \
-                                             StandardType,                                         \
-                                             typename SubExpr2::field_type>,                       \
-                                 typename SubExpr2::field_type> EXTERNAL_NAME(typename SubExpr2::  \
-                                                                              field_type::value_type \
-                                                                              const & arg1,        \
-                                                                              SubExpr2 const & arg2) { \
+          inline NeboExpression<OBJECT_NAME<Initial,                                               \
+                                            NeboScalar<Initial, typename SubExpr2::field_type>,    \
+                                            typename Standardize<SubExpr2,                         \
+                                                                 typename SubExpr2::field_type>::  \
+                                            StandardType,                                          \
+                                            typename SubExpr2::field_type>,                        \
+                                typename SubExpr2::field_type> EXTERNAL_NAME(typename SubExpr2::   \
+                                                                             field_type::value_type \
+                                                                             const & arg1,         \
+                                                                             SubExpr2 const & arg2) { \
                                                                                                    \
              typename SubExpr2::field_type typedef FieldType;                                      \
                                                                                                    \
-             Scalar<Initial, typename SubExpr2::field_type> typedef Type1;                         \
+             NeboScalar<Initial, typename SubExpr2::field_type> typedef Type1;                     \
                                                                                                    \
              typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType typedef   \
              Type2;                                                                                \
                                                                                                    \
              OBJECT_NAME<Initial, Type1, Type2, FieldType> typedef ReturnType;                     \
                                                                                                    \
-             FieldExpression<ReturnType, FieldType> typedef ReturnTerm;                            \
+             NeboExpression<ReturnType, FieldType> typedef ReturnTerm;                             \
                                                                                                    \
              return ReturnTerm(ReturnType(Type1(Type1(arg1)),                                      \
                                           Type2(Standardize<SubExpr2, FieldType>::standardType(arg2)))); \
@@ -2932,18 +2989,17 @@
           struct OBJECT_NAME<Initial, Operand, FieldType> {                                        \
                                                                                                    \
             public:                                                                                \
-             typename FieldType::value_type typedef AtomicType;                                    \
-             OBJECT_NAME<Initial, Operand, FieldType> typedef MyType;                              \
+             OBJECT_NAME<Initial, Operand, FieldType> typedef This;                                \
              FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
              template<typename IteratorType>                                                       \
               struct Iterator {                                                                    \
                                                                                                    \
-                OBJECT_NAME<ResizePrep<IteratorType, MyType>,                                      \
+                OBJECT_NAME<ResizePrep<IteratorType, This>,                                        \
                             typename Operand::template Iterator<IteratorType>::ResizePrepType,     \
                             FieldType> typedef ResizePrepType;                                     \
                                                                                                    \
-                OBJECT_NAME<SeqWalk<IteratorType, MyType>,                                         \
+                OBJECT_NAME<SeqWalk<IteratorType, This>,                                           \
                             typename Operand::template Iterator<IteratorType>::SeqWalkType,        \
                             FieldType> typedef SeqWalkType;                                        \
              };                                                                                    \
@@ -2968,11 +3024,10 @@
           struct OBJECT_NAME<ResizePrep<IteratorType, SourceType>, Operand, FieldType> {           \
                                                                                                    \
             public:                                                                                \
-             typename FieldType::value_type typedef AtomicType;                                    \
-             OBJECT_NAME<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef MyType; \
+             OBJECT_NAME<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef This;   \
              FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
-             OBJECT_NAME<Resize<IteratorType, MyType>, typename Operand::ResizeType, FieldType>    \
+             OBJECT_NAME<Resize<IteratorType, This>, typename Operand::ResizeType, FieldType>      \
              typedef ResizeType;                                                                   \
              OBJECT_NAME(SourceType const & source)                                                \
              : operand_(source.operand())                                                          \
@@ -2990,11 +3045,10 @@
           struct OBJECT_NAME<Resize<IteratorType, SourceType>, Operand, FieldType> {               \
                                                                                                    \
             public:                                                                                \
-             typename FieldType::value_type typedef AtomicType;                                    \
-             OBJECT_NAME<Resize<IteratorType, SourceType>, Operand, FieldType> typedef MyType;     \
+             OBJECT_NAME<Resize<IteratorType, SourceType>, Operand, FieldType> typedef This;       \
              FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
-             OBJECT_NAME<SeqWalk<IteratorType, MyType>, typename Operand::SeqWalkType, FieldType>  \
+             OBJECT_NAME<SeqWalk<IteratorType, This>, typename Operand::SeqWalkType, FieldType>    \
              typedef SeqWalkType;                                                                  \
              OBJECT_NAME(MemoryWindow const & size, SourceType const & source)                     \
              : operand_(size, source.operand())                                                    \
@@ -3010,17 +3064,17 @@
           struct OBJECT_NAME<SeqWalk<IteratorType, SourceType>, Operand, FieldType> {              \
                                                                                                    \
             public:                                                                                \
-             typename FieldType::value_type typedef AtomicType;                                    \
-             OBJECT_NAME<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef MyType;    \
+             OBJECT_NAME<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef This;      \
              FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
+             typename FieldType::value_type typedef EvalReturnType;                                \
              OBJECT_NAME(SourceType const & source)                                                \
              : operand_(source.operand())                                                          \
              {};                                                                                   \
              inline void next(void) { operand_.next(); };                                          \
              inline bool at_end(void) const { return (operand_.at_end()); };                       \
              inline bool has_length(void) const { return (operand_.has_length()); };               \
-             inline AtomicType eval(void) const { return INTERNAL_NAME(operand_.eval()); };        \
+             inline EvalReturnType eval(void) const { return INTERNAL_NAME(operand_.eval()); };    \
                                                                                                    \
             private:                                                                               \
              Operand operand_;                                                                     \
@@ -3028,12 +3082,12 @@
                                                                                                    \
          /* SubExpr */                                                                             \
          template<typename SubExpr>                                                                \
-          inline FieldExpression<OBJECT_NAME<Initial,                                              \
-                                             typename Standardize<SubExpr,                         \
-                                                                  typename SubExpr::field_type>::  \
-                                             StandardType,                                         \
-                                             typename SubExpr::field_type>,                        \
-                                 typename SubExpr::field_type> EXTERNAL_NAME(SubExpr const & arg) { \
+          inline NeboExpression<OBJECT_NAME<Initial,                                               \
+                                            typename Standardize<SubExpr,                          \
+                                                                 typename SubExpr::field_type>::   \
+                                            StandardType,                                          \
+                                            typename SubExpr::field_type>,                         \
+                                typename SubExpr::field_type> EXTERNAL_NAME(SubExpr const & arg) { \
                                                                                                    \
              typename SubExpr::field_type typedef FieldType;                                       \
                                                                                                    \
@@ -3041,7 +3095,7 @@
                                                                                                    \
              OBJECT_NAME<Initial, Type, FieldType> typedef ReturnType;                             \
                                                                                                    \
-             FieldExpression<ReturnType, FieldType> typedef ReturnTerm;                            \
+             NeboExpression<ReturnType, FieldType> typedef ReturnTerm;                             \
                                                                                                    \
              return ReturnTerm(ReturnType(Type(Standardize<SubExpr, FieldType>::standardType(arg)))); \
           };
@@ -3053,15 +3107,15 @@
 
       template<typename CallStyle, typename ExprType, typename FieldType>
        inline FieldType const & field_expression_sequential_execute(FieldType & initial_lhs,
-                                                                    FieldExpression<ExprType,
-                                                                                    FieldType> const
+                                                                    NeboExpression<ExprType,
+                                                                                   FieldType> const
                                                                     & initial_rhs) {
 
-          field_expression_sequential_execute_internal<typename Field<Initial, FieldType>::template
-                                                       Iterator<CallStyle>::SeqWalkType,
+          field_expression_sequential_execute_internal<typename NeboField<Initial, FieldType>::
+                                                       template Iterator<CallStyle>::SeqWalkType,
                                                        typename ExprType::template Iterator<CallStyle>::
-                                                       SeqWalkType>(Field<Initial, FieldType>(initial_lhs).template
-                                                                                                           init<CallStyle>(),
+                                                       SeqWalkType>(NeboField<Initial, FieldType>(initial_lhs).template
+                                                                                                               init<CallStyle>(),
                                                                     initial_rhs.expr().template init<CallStyle>());
 
           return initial_lhs;
@@ -3092,13 +3146,13 @@
 #     ifdef FIELD_EXPRESSION_THREADS
          template<typename CallStyle, typename ExprType, typename FieldType>
           inline FieldType const & field_expression_thread_parallel_execute(FieldType & initial_lhs,
-                                                                            FieldExpression<ExprType,
-                                                                                            FieldType>
+                                                                            NeboExpression<ExprType,
+                                                                                           FieldType>
                                                                             const & initial_rhs,
                                                                             int const
                                                                             number_of_partitions) {
 
-             typename Field<Initial, FieldType>::template Iterator<CallStyle>::ResizePrepType
+             typename NeboField<Initial, FieldType>::template Iterator<CallStyle>::ResizePrepType
              typedef LhsType;
 
              typename ExprType::template Iterator<CallStyle>::ResizePrepType typedef RhsType;
@@ -3133,8 +3187,8 @@
                                                                                                               LhsType,
                                                                                                               RhsType,
                                                                                                               FieldType>,
-                                                            Field<Initial, FieldType>(initial_lhs).template
-                                                                                                   resize_prep<CallStyle>(),
+                                                            NeboField<Initial, FieldType>(initial_lhs).template
+                                                                                                       resize_prep<CallStyle>(),
                                                             initial_rhs.expr().template resize_prep<CallStyle>(),
                                                             *window_iterator,
                                                             &semaphore));
@@ -3148,7 +3202,7 @@
 
       template<typename CallStyle, typename ExprType, typename FieldType>
        inline FieldType const & field_expression_general_execute(FieldType & initial_lhs,
-                                                                 FieldExpression<ExprType, FieldType>
+                                                                 NeboExpression<ExprType, FieldType>
                                                                  const & initial_rhs) {
 
           return
@@ -3167,22 +3221,22 @@
        inline FieldType const & operator <<=(FieldType & lhs,
                                              typename FieldType::value_type const & rhs) {
 
-          Scalar<Initial, FieldType> typedef ExprType;
+          NeboScalar<Initial, FieldType> typedef ExprType;
 
-          return (lhs <<= FieldExpression<ExprType, FieldType>(ExprType(rhs)));
+          return (lhs <<= NeboExpression<ExprType, FieldType>(ExprType(rhs)));
        };
 
       template<typename FieldType>
        inline FieldType const & operator <<=(FieldType & lhs, FieldType const & rhs) {
 
-          ConstField<Initial, FieldType> typedef ExprType;
+          NeboConstField<Initial, FieldType> typedef ExprType;
 
-          return (lhs <<= FieldExpression<ExprType, FieldType>(ExprType(rhs)));
+          return (lhs <<= NeboExpression<ExprType, FieldType>(ExprType(rhs)));
        };
 
       template<typename ExprType, typename FieldType>
        inline FieldType const & operator <<=(FieldType & lhs,
-                                             FieldExpression<ExprType, FieldType> const & rhs) {
+                                             NeboExpression<ExprType, FieldType> const & rhs) {
           return field_expression_general_execute<UseWholeIterator, ExprType, FieldType>(lhs, rhs);
        };
 
@@ -3190,22 +3244,22 @@
        inline FieldType const & interior_assign(FieldType & lhs,
                                                 typename FieldType::value_type const & rhs) {
 
-          Scalar<Initial, FieldType> typedef ExprType;
+          NeboScalar<Initial, FieldType> typedef ExprType;
 
-          return interior_assign(lhs, FieldExpression<ExprType, FieldType>(ExprType(rhs)));
+          return interior_assign(lhs, NeboExpression<ExprType, FieldType>(ExprType(rhs)));
        };
 
       template<typename FieldType>
        inline FieldType const & interior_assign(FieldType & lhs, FieldType const & rhs) {
 
-          ConstField<Initial, FieldType> typedef ExprType;
+          NeboConstField<Initial, FieldType> typedef ExprType;
 
-          return interior_assign(lhs, FieldExpression<ExprType, FieldType>(ExprType(rhs)));
+          return interior_assign(lhs, NeboExpression<ExprType, FieldType>(ExprType(rhs)));
        };
 
       template<typename ExprType, typename FieldType>
        inline FieldType const & interior_assign(FieldType & lhs,
-                                                FieldExpression<ExprType, FieldType> const & rhs) {
+                                                NeboExpression<ExprType, FieldType> const & rhs) {
           return field_expression_general_execute<UseInteriorIterator, ExprType, FieldType>(lhs, rhs);
        };
    } /* SpatialOps */;

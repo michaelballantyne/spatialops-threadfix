@@ -15,17 +15,17 @@ namespace SpatialOps{
    *  @author Christopher Earl
    *  @date January, 2011
    *  
-   *  @brief Definition of fold for FieldExpression. (FieldExpression case.)
+   *  @brief Definition of fold for NeboExpression. (NeboExpression case.)
    *  
-   *  @relates FieldExpression
+   *  @relates NeboExpression
    *  
    *  \tparam ResultType Type returned from \c proc.
-   *  \tparam ExprType A FieldExpression-style Standard Type.
+   *  \tparam ExprType A NeboExpression-style Standard Type.
    *  \tparam FieldType Field type.
    *  
    *  \param proc A function pointer with type \code ResultType (*)(ResultType const &, AtomicType const &) \endcode where \c AtomicType is \c typename \c FieldType::value_type.
    *  \param initialValue A ResultType to start the fold.
-   *  \param fexpr A FieldExpression object to run fold over.
+   *  \param fexpr A NeboExpression object to run fold over.
    *
    *  \return result of folding \c proc over \c fexpr using \c initialValue.
    *  
@@ -49,7 +49,7 @@ namespace SpatialOps{
     I ResultType field_fold(ResultType const & (*proc)(ResultType const &,
 						       typename FieldType::value_type const &),
 			    ResultType const & initialValue,
-			    FieldExpression<ExprType,FieldType> & fexpr) {
+			    NeboExpression<ExprType,FieldType> & fexpr) {
     //initialize:
     ResultType result = initialValue;
     typename ExprType::template Iterator<UseWholeIterator>::SeqWalkType expr = fexpr.expr().template init<UseWholeIterator>();
@@ -70,7 +70,7 @@ namespace SpatialOps{
     I ResultType field_fold_interior(ResultType const & (*proc)(ResultType const &,
 								typename FieldType::value_type const &),
 				     ResultType const & initialValue,
-				     FieldExpression<ExprType,FieldType> & fexpr) {
+				     NeboExpression<ExprType,FieldType> & fexpr) {
     //initialize:
     ResultType result = initialValue;
     typename ExprType::template Iterator<UseInteriorIterator>::SeqWalkType expr = fexpr.expr().template init<UseInteriorIterator>();
@@ -91,46 +91,46 @@ namespace SpatialOps{
    *  @author Christopher Earl
    *  @date January, 2011
    *  
-   *  @brief Definition of fold for FieldExpression. (Field case.)
+   *  @brief Definition of fold for NeboExpression. (NeboField case.)
    *  
-   *  @relates FieldExpression
+   *  @relates NeboExpression
    *  
    *  \tparam ResultType Type returned from \c proc.
    *  \tparam FieldType Field type.
    *  
    *  \param proc A function pointer with type \code ResultType (*)(ResultType const &, AtomicType const &) \endcode where \c AtomicType is \c typename \c FieldType::value_type.
    *  \param initialValue A ResultType to start the fold.
-   *  \param field A Field object.
+   *  \param field A NeboField object.
    *
    *  \return result of folding \c proc over \c field using \c initialValue.
    *  
-   *  This instance of \c fold wraps \c field in a FieldExpression and then calls itself.
+   *  This instance of \c fold wraps \c field in a NeboExpression and then calls itself.
    */
   template<typename ResultType, typename FieldType>
     I ResultType field_fold(ResultType const & (*proc)(ResultType const &,
 						       typename FieldType::value_type const &),
 			    ResultType const & initialValue,
 			    FieldType const & field) {
-    ConstField<Initial, FieldType> typedef ExprType;
+    NeboConstField<Initial, FieldType> typedef ExprType;
     
     return field_fold(proc,
                       initialValue,
-                      FieldExpression<ExprType,FieldType>(ExprType(field)));
+                      NeboExpression<ExprType,FieldType>(ExprType(field)));
   };
   
   /**
    *  @author Christopher Earl
    *  @date January, 2011
    *  
-   *  @brief Definition of reduce for FieldExpression. (FieldExpression case.)
+   *  @brief Definition of reduce for NeboExpression. (NeboExpression case.)
    *  
-   *  @relates FieldExpression
+   *  @relates NeboExpression
    *  
-   *  \tparam ExprType A FieldExpression-style Standard Type.
+   *  \tparam ExprType A NeboExpression-style Standard Type.
    *  \tparam FieldType Field type.
    *  
    *  \param proc A function pointer with type \code AtomicType (*)(AtomicType const &, AtomicType const &) \endcode where \c AtomicType is \c typename \c FieldType::value_type.
-   *  \param fexpr A FieldExpression object to run reduce over.
+   *  \param fexpr A NeboExpression object to run reduce over.
    *
    *  \return result of folding \c proc over \c fexpr.
    *  
@@ -156,7 +156,7 @@ namespace SpatialOps{
   template<typename ExprType, typename FieldType>
     I typename FieldType::value_type field_reduce(typename FieldType::value_type const & (*proc)(typename FieldType::value_type const &,
 												 typename FieldType::value_type const &),
-						  FieldExpression<ExprType,FieldType> & fexpr) {
+						  NeboExpression<ExprType,FieldType> & fexpr) {
     typename FieldType::value_type typedef AtomicType;
     
     //initialize:
@@ -181,7 +181,7 @@ namespace SpatialOps{
   template<typename ExprType, typename FieldType>
     I typename FieldType::value_type field_reduce_iterior(typename FieldType::value_type const & (*proc)(typename FieldType::value_type const &,
 													 typename FieldType::value_type const &),
-							  FieldExpression<ExprType,FieldType> & fexpr) {
+							  NeboExpression<ExprType,FieldType> & fexpr) {
     typename FieldType::value_type typedef AtomicType;
     
     //initialize:
@@ -206,7 +206,7 @@ namespace SpatialOps{
   template<typename ExprType, typename FieldType>
     I typename FieldType::value_type field_reduce(typename FieldType::value_type (*proc)(typename FieldType::value_type const &,
 											 typename FieldType::value_type const &),
-						  FieldExpression<ExprType,FieldType> & fexpr) {
+						  NeboExpression<ExprType,FieldType> & fexpr) {
     typename FieldType::value_type typedef AtomicType;
     
     //initialize:
@@ -231,7 +231,7 @@ namespace SpatialOps{
   template<typename ExprType, typename FieldType>
     I typename FieldType::value_type field_reduce_interior(typename FieldType::value_type (*proc)(typename FieldType::value_type const &,
 												  typename FieldType::value_type const &),
-							   FieldExpression<ExprType,FieldType> & fexpr) {
+							   NeboExpression<ExprType,FieldType> & fexpr) {
     typename FieldType::value_type typedef AtomicType;
     
     //initialize:
@@ -259,10 +259,10 @@ namespace SpatialOps{
 												 typename FieldType::value_type const &),
 						  FieldType const & field) {
     
-    ConstField<Initial, FieldType> typedef ExprType;
+    NeboConstField<Initial, FieldType> typedef ExprType;
     
     return field_reduce(proc,
-			FieldExpression<ExprType,FieldType>(ExprType(field)));
+			NeboExpression<ExprType,FieldType>(ExprType(field)));
   };
   
   /* field_reduce for FieldType */
@@ -271,10 +271,10 @@ namespace SpatialOps{
 													  typename FieldType::value_type const &),
 							   FieldType const & field) {
     
-    ConstField<Initial, FieldType> typedef ExprType;
+    NeboConstField<Initial, FieldType> typedef ExprType;
     
     return field_reduce_interior(proc,
-				 FieldExpression<ExprType,FieldType>(ExprType(field)));
+				 NeboExpression<ExprType,FieldType>(ExprType(field)));
   };
   
   /* field_reduce for FieldType */
@@ -283,10 +283,10 @@ namespace SpatialOps{
 											 typename FieldType::value_type const &),
 						  FieldType const & field) {
     
-    ConstField<Initial, FieldType> typedef ExprType;
+    NeboConstField<Initial, FieldType> typedef ExprType;
     
     return field_reduce(proc,
-			FieldExpression<ExprType,FieldType>(ExprType(field)));
+			NeboExpression<ExprType,FieldType>(ExprType(field)));
   };
   
   /* field_reduce for FieldType */
@@ -295,15 +295,15 @@ namespace SpatialOps{
 												  typename FieldType::value_type const &),
 							   FieldType const & field) {
     
-    ConstField<Initial, FieldType> typedef ExprType;
+    NeboConstField<Initial, FieldType> typedef ExprType;
     
     return field_reduce_interior(proc,
-				 FieldExpression<ExprType,FieldType>(ExprType(field)));
+				 NeboExpression<ExprType,FieldType>(ExprType(field)));
   };
   
   /* Field version of max */
   template<typename ExprType, typename FieldType>
-    I typename FieldType::value_type field_max(FieldExpression<ExprType,FieldType> fexpr) {
+    I typename FieldType::value_type field_max(NeboExpression<ExprType,FieldType> fexpr) {
     typename FieldType::value_type typedef AtomicType;
     
     //run max in terms of reduce:
@@ -312,7 +312,7 @@ namespace SpatialOps{
   
   /* Field version of max */
   template<typename ExprType, typename FieldType>
-    I typename FieldType::value_type field_max_interior(FieldExpression<ExprType,FieldType> fexpr) {
+    I typename FieldType::value_type field_max_interior(NeboExpression<ExprType,FieldType> fexpr) {
     typename FieldType::value_type typedef AtomicType;
     
     //run max in terms of reduce:
@@ -322,22 +322,22 @@ namespace SpatialOps{
   /* Field version of max */
   template<typename FieldType>
     I typename FieldType::value_type field_max(FieldType field) {
-    ConstField<Initial, FieldType> typedef ExprType;
+    NeboConstField<Initial, FieldType> typedef ExprType;
     
-    return field_max(FieldExpression<ExprType,FieldType>(ExprType(field)));
+    return field_max(NeboExpression<ExprType,FieldType>(ExprType(field)));
   };
   
   /* Field version of max */
   template<typename FieldType>
     I typename FieldType::value_type field_max_interior(FieldType field) {
-    ConstField<Initial, FieldType> typedef ExprType;
+    NeboConstField<Initial, FieldType> typedef ExprType;
     
-    return field_max_interior(FieldExpression<ExprType,FieldType>(ExprType(field)));
+    return field_max_interior(NeboExpression<ExprType,FieldType>(ExprType(field)));
   };
   
   /* Field version of min */
   template<typename ExprType, typename FieldType>
-    I typename FieldType::value_type field_min(FieldExpression<ExprType,FieldType> fexpr) {
+    I typename FieldType::value_type field_min(NeboExpression<ExprType,FieldType> fexpr) {
     typename FieldType::value_type typedef AtomicType;
     
     //run min in terms of reduce:
@@ -346,7 +346,7 @@ namespace SpatialOps{
   
   /* Field version of min */
   template<typename ExprType, typename FieldType>
-    I typename FieldType::value_type field_min_interior(FieldExpression<ExprType,FieldType> fexpr) {
+    I typename FieldType::value_type field_min_interior(NeboExpression<ExprType,FieldType> fexpr) {
     typename FieldType::value_type typedef AtomicType;
     
     //run min in terms of reduce:
@@ -356,17 +356,17 @@ namespace SpatialOps{
   /* Field version of min */
   template<typename FieldType>
     I typename FieldType::value_type field_min(FieldType field) {
-    ConstField<Initial, FieldType> typedef ExprType;
+    NeboConstField<Initial, FieldType> typedef ExprType;
     
-    return field_min(FieldExpression<ExprType,FieldType>(ExprType(field)));
+    return field_min(NeboExpression<ExprType,FieldType>(ExprType(field)));
   };
   
   /* Field version of min */
   template<typename FieldType>
     I typename FieldType::value_type field_min_interior(FieldType field) {
-    ConstField<Initial, FieldType> typedef ExprType;
+    NeboConstField<Initial, FieldType> typedef ExprType;
     
-    return field_min_interior(FieldExpression<ExprType,FieldType>(ExprType(field)));
+    return field_min_interior(NeboExpression<ExprType,FieldType>(ExprType(field)));
   };
   
   template<typename AtomicType>
@@ -377,7 +377,7 @@ namespace SpatialOps{
   
   /* Field version of sum */
   template<typename ExprType, typename FieldType>
-    I typename FieldType::value_type field_sum(FieldExpression<ExprType,FieldType> fexpr) {
+    I typename FieldType::value_type field_sum(NeboExpression<ExprType,FieldType> fexpr) {
     typename FieldType::value_type typedef AtomicType;
     
     //run sum in terms of reduce:
@@ -386,7 +386,7 @@ namespace SpatialOps{
   
   /* Field version of sum */
   template<typename ExprType, typename FieldType>
-    I typename FieldType::value_type field_sum_interior(FieldExpression<ExprType,FieldType> fexpr) {
+    I typename FieldType::value_type field_sum_interior(NeboExpression<ExprType,FieldType> fexpr) {
     typename FieldType::value_type typedef AtomicType;
     
     //run sum in terms of reduce:
@@ -396,22 +396,22 @@ namespace SpatialOps{
   /* Field version of sum */
   template<typename FieldType>
     I typename FieldType::value_type field_sum(FieldType field) {
-    ConstField<Initial, FieldType> typedef ExprType;
+    NeboConstField<Initial, FieldType> typedef ExprType;
     
-    return field_sum(FieldExpression<ExprType,FieldType>(ExprType(field)));
+    return field_sum(NeboExpression<ExprType,FieldType>(ExprType(field)));
   };
   
   /* Field version of sum */
   template<typename FieldType>
     I typename FieldType::value_type field_sum_interior(FieldType field) {
-    ConstField<Initial, FieldType> typedef ExprType;
+    NeboConstField<Initial, FieldType> typedef ExprType;
     
-    return field_sum_interior(FieldExpression<ExprType,FieldType>(ExprType(field)));
+    return field_sum_interior(NeboExpression<ExprType,FieldType>(ExprType(field)));
   };
   
   /* Field version of norm */
   template<typename ExprType, typename FieldType>
-    I typename FieldType::value_type field_norm(FieldExpression<ExprType,FieldType> fexpr) {
+    I typename FieldType::value_type field_norm(NeboExpression<ExprType,FieldType> fexpr) {
     typename FieldType::value_type typedef AtomicType;
     
     //run norm in terms of reduce:
@@ -420,7 +420,7 @@ namespace SpatialOps{
   
   /* Field version of norm */
   template<typename ExprType, typename FieldType>
-    I typename FieldType::value_type field_norm_interior(FieldExpression<ExprType,FieldType> fexpr) {
+    I typename FieldType::value_type field_norm_interior(NeboExpression<ExprType,FieldType> fexpr) {
     typename FieldType::value_type typedef AtomicType;
     
     //run norm in terms of reduce:
@@ -430,17 +430,17 @@ namespace SpatialOps{
   /* Field version of norm */
   template<typename FieldType>
     I typename FieldType::value_type field_norm(FieldType field) {
-    ConstField<Initial, FieldType> typedef ExprType;
+    NeboConstField<Initial, FieldType> typedef ExprType;
     
-    return field_norm(FieldExpression<ExprType,FieldType>(ExprType(field)));
+    return field_norm(NeboExpression<ExprType,FieldType>(ExprType(field)));
   };
   
   /* Field version of norm */
   template<typename FieldType>
     I typename FieldType::value_type field_norm_interior(FieldType field) {
-    ConstField<Initial, FieldType> typedef ExprType;
+    NeboConstField<Initial, FieldType> typedef ExprType;
     
-    return field_norm_interior(FieldExpression<ExprType,FieldType>(ExprType(field)));
+    return field_norm_interior(NeboExpression<ExprType,FieldType>(ExprType(field)));
   };
   
 } // namespace SpatialOps

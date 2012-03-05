@@ -20,32 +20,75 @@
        [constize constize-chunk]
        [s-fcn-dcl static-function-declare-chunk]
        [tpl-def template-define-chunk]
+       [srt-dcl struct-declare-chunk]
+       [srt-def struct-define-chunk]
        [tpl-srt-dcl template-struct-declare-chunk]
        [tpl-srt-def template-struct-define-chunk]
        [tpl-use template-use-chunk]
+       [tpl-pmtr (lambda (pmtr) (c typename-chunk s pmtr))]
        [sec-def section-define-chunk]
+       [cons-asgn constructor-assignment-chunk]
        [scope scope-resolution-operator-chunk]
+       [This-chunk 'This]
+       [NE-chunk 'NeboExpression]
+       [NBE-chunk 'NeboBooleanExpression]
+       [FT-chunk 'FieldType]
+       [NS-chunk 'NeboScalar]
+       [NB-chunk 'NeboBoolean]
+       [NCF-chunk 'NeboConstField]
+       [NF-chunk 'NeboField]
+       [Cons-chunk 'NeboPair]
+       [Nil-chunk 'NeboNil]
+       [SClause-chunk 'NeboSimpleClause]
+       [SFClause-chunk 'NeboSimpleFinalClause]
+       [SCond-chunk 'NeboSimpleCond]
+       [Clause-chunk 'NeboClause]
+       [Cond-chunk 'NeboCond]
        [IteratorStyle
         (lambda (iterator call)
           (d iterator
              (template-struct-define-chunk 'IteratorStyle
-                                           (c 'typename s 'FieldType)
+                                           (c 'typename s FT-chunk)
                                            (list iterator
-                                                 'FieldType)
-                                           (typedef "typename FieldType::memory_window"
-                                                    'MemoryWindow)
+                                                 FT-chunk)
+                                           (typedef (b s
+                                                       typename-chunk (scope FT-chunk
+                                                                             'memory_window))
+                                                       'MemoryWindow)
                                            (r-fcn-def (s-fcn-dcl 'memory_window
-                                                                 (c 'MemoryWindow s "const &")
-                                                                 "FieldType const & field")
+                                                                 (b s
+                                                                    'MemoryWindow const-chunk "&")
+                                                                 (b s
+                                                                    FT-chunk const-chunk "&" 'field))
                                                       null
-                                                      (mfc "field"
+                                                      (mfc 'field
                                                            call)))))]
+       [build-expression-type
+        (lambda (name)
+          (tpl-srt-def name
+                       (list (tpl-pmtr 'Operand)
+                             (tpl-pmtr FT-chunk))
+                       null
+                       (sec-def public-chunk
+                                (typedef FT-chunk
+                                         'field_type)
+                                (constructor-chunk name
+                                                   (b s
+                                                      'Operand const-chunk "&" 'given)
+                                                   (cons-asgn 'expr_
+                                                              'given))
+                                (r-fcn-def (constize (fcn-dcl 'expr
+                                                              (b s
+                                                                 'Operand const-chunk "&")))
+                                           null
+                                           'expr_))
+                       (sec-def private-chunk
+                                (c 'Operand s 'expr_))))]
        [build-mode-def (lambda (name templated?)
                          (if templated?
                              (tpl-srt-dcl name
                                           (list (c 'typename s 'IteratorType)
-                                                (c 'typename s 'SourceType))
-                                          null)
+                                                (c 'typename s 'SourceType)))
                              (struct-declare-chunk name)))]
        [bm-constructor
         (lambda (params
@@ -54,9 +97,6 @@
           (list params
                 assigns
                 body))]
-       [constructor-params first]
-       [constructor-assigns second]
-       [constructor-body third]
        [build-mode
         (lambda (name
                  mode
@@ -66,34 +106,37 @@
                  constructor
                  publics
                  privates)
-          (tpl-srt-def name
-                       (flatten* tpl-pars
-                                 (c 'typename s 'FieldType))
-                       (flatten* mode
-                                 tpl-args
-                                 'FieldType)
-                       (sec-def public-chunk
-                                (typedef (scope (c typename-chunk s'FieldType)
-                                                'value_type)
-                                         'AtomicType)
-                                (typedef (tpl-use name
-                                                  mode
-                                                  tpl-args
-                                                  'FieldType)
-                                         'MyType)
-                                (typedef 'FieldType
-                                         'field_type)
-                                (typedef (scope (c typename-chunk s 'FieldType)
-                                                'memory_window)
-                                         'MemoryWindow)
-                                typedefs
-                                (constructor-chunk name
-                                                   (constructor-params constructor)
-                                                   (constructor-assigns constructor)
-                                                   (constructor-body constructor))
-                                publics)
-                       (sec-def private-chunk
-                                privates)))]
+          (let ([constructor-params first]
+                [constructor-assigns second]
+                [constructor-body third])
+            (tpl-srt-def name
+                         (flatten* tpl-pars
+                                   (c 'typename s FT-chunk))
+                         (flatten* mode
+                                   tpl-args
+                                   FT-chunk)
+                         (sec-def public-chunk
+                                  ;(typedef (scope (tpl-pmtr FT-chunk)
+                                  ;                'value_type)
+                                  ;         'AtomicType)
+                                  (typedef (tpl-use name
+                                                    mode
+                                                    tpl-args
+                                                    FT-chunk)
+                                           This-chunk)
+                                  (typedef FT-chunk
+                                           'field_type)
+                                  (typedef (scope (tpl-pmtr FT-chunk)
+                                                  'memory_window)
+                                           'MemoryWindow)
+                                  typedefs
+                                  (constructor-chunk name
+                                                     (constructor-params constructor)
+                                                     (constructor-assigns constructor)
+                                                     (constructor-body constructor))
+                                  publics)
+                         (sec-def private-chunk
+                                  privates))))]
        [bs-Initial
         (lambda (tpl-args-RP
                  tpl-args-SW
@@ -107,12 +150,6 @@
                 constructor
                 publics
                 privates))]
-       [IN-tpl-args-RP first]
-       [IN-tpl-args-SW second]
-       [IN-typedefs third]
-       [IN-constructor fourth]
-       [IN-publics fifth]
-       [IN-privates sixth]
        [bs-ResizePrep
         (lambda (tpl-args-RS
                  typedefs
@@ -124,11 +161,6 @@
                 constructor
                 publics
                 privates))]
-       [RP-tpl-args-RS first]
-       [RP-typedefs second]
-       [RP-constructor third]
-       [RP-publics fourth]
-       [RP-privates fifth]
        [bs-Resize
         (lambda (tpl-args-SW
                  typedefs
@@ -140,11 +172,6 @@
                 constructor
                 publics
                 privates))]
-       [RS-tpl-args-SW first]
-       [RS-typedefs second]
-       [RS-constructor third]
-       [RS-publics fourth]
-       [RS-privates fifth]
        [bs-SeqWalk
         (lambda (typedefs
                  constructor
@@ -160,13 +187,6 @@
                 has-length
                 publics
                 privates))]
-       [SW-typedefs first]
-       [SW-constructor second]
-       [SW-next third]
-       [SW-at-end fourth]
-       [SW-has-length fifth]
-       [SW-publics sixth]
-       [SW-privates seventh]
        [build-struct
         (lambda (name
                  const?
@@ -178,11 +198,34 @@
                  SeqWalk)
           (let ([add-const (if const?
                                constize-chunk
-                               id)])
+                               id)]
+                [IN-tpl-args-RP first]
+                [IN-tpl-args-SW second]
+                [IN-typedefs third]
+                [IN-constructor fourth]
+                [IN-publics fifth]
+                [IN-privates sixth]
+                [RP-tpl-args-RS first]
+                [RP-typedefs second]
+                [RP-constructor third]
+                [RP-publics fourth]
+                [RP-privates fifth]
+                [RS-tpl-args-SW first]
+                [RS-typedefs second]
+                [RS-constructor third]
+                [RS-publics fourth]
+                [RS-privates fifth]
+                [SW-typedefs first]
+                [SW-constructor second]
+                [SW-next third]
+                [SW-at-end fourth]
+                [SW-has-length fifth]
+                [SW-publics sixth]
+                [SW-privates seventh])
             (i (tpl-srt-dcl name
                             (list (c 'typename s 'CurrentMode)
                                   tpl-pars
-                                  (c 'typename s 'FieldType))
+                                  (c 'typename s FT-chunk))
                             null)
                (build-mode name
                            'Initial
@@ -194,16 +237,16 @@
                                               (typedef (tpl-use name
                                                                 (tpl-use 'ResizePrep
                                                                          'IteratorType
-                                                                         'MyType)
+                                                                         This-chunk)
                                                                 (IN-tpl-args-RP Initial)
-                                                                'FieldType)
+                                                                FT-chunk)
                                                        'ResizePrepType)
                                               (typedef (tpl-use name
                                                                 (tpl-use 'SeqWalk
                                                                          'IteratorType
-                                                                         'MyType)
+                                                                         This-chunk)
                                                                 (IN-tpl-args-SW Initial)
-                                                                'FieldType)
+                                                                FT-chunk)
                                                        'SeqWalkType))
                                  (IN-typedefs Initial))
                            (IN-constructor Initial)
@@ -241,16 +284,16 @@
                            (tpl-use 'ResizePrep
                                     'IteratorType
                                     'SourceType)
-                           (list (c typename-chunk s 'IteratorType)
-                                 (c typename-chunk s 'SourceType)
+                           (list (tpl-pmtr 'IteratorType)
+                                 (tpl-pmtr 'SourceType)
                                  tpl-pars)
                            tpl-args
                            (list (typedef (tpl-use name
                                                    (tpl-use 'Resize
                                                             'IteratorType
-                                                            'MyType)
+                                                            This-chunk)
                                                    (RP-tpl-args-RS ResizePrep)
-                                                   'FieldType)
+                                                   FT-chunk)
                                           'ResizeType)
                                  (RP-typedefs ResizePrep))
                            (RP-constructor ResizePrep)
@@ -267,16 +310,16 @@
                            (tpl-use 'Resize
                                     'IteratorType
                                     'SourceType)
-                           (list (c typename-chunk s 'IteratorType)
-                                 (c typename-chunk s 'SourceType)
+                           (list (tpl-pmtr 'IteratorType)
+                                 (tpl-pmtr 'SourceType)
                                  tpl-pars)
                            tpl-args
                            (list (typedef (tpl-use name
                                                    (tpl-use 'SeqWalk
                                                             'IteratorType
-                                                            'MyType)
+                                                            This-chunk)
                                                    (RS-tpl-args-SW Resize)
-                                                   'FieldType)
+                                                   FT-chunk)
                                           'SeqWalkType)
                                  (RS-typedefs Resize))
                            (RS-constructor Resize)
@@ -291,8 +334,8 @@
                            (tpl-use 'SeqWalk
                                     'IteratorType
                                     'SourceType)
-                           (list (c typename-chunk s 'IteratorType)
-                                 (c typename-chunk s 'SourceType)
+                           (list (tpl-pmtr 'IteratorType)
+                                 (tpl-pmtr 'SourceType)
                                  tpl-pars)
                            tpl-args
                            (SW-typedefs SeqWalk)
@@ -311,128 +354,126 @@
                                  (SW-publics SeqWalk))
                            (SW-privates SeqWalk)))))]
        [build-Nary-struct
-        (lambda (name number internal-use)
+        (lambda (name number eval-return-type internal-use)
           (let* ([num-lst (if (>= 1 number)
                                '("")
                                (map number->string
                                     (sequence->list (in-range 1 (+ 1
                                                                    number)))))]
                  [IN-op-lst (map (lambda (str) (string-append "op" str)) num-lst)]
-                 [IN-oc-lst (map (lambda (str) str) IN-op-lst)]
                  [op-lst (map (lambda (str) (string-append "operand" str)) num-lst)]
                  [Op-lst (map (lambda (str) (string-append "Operand" str)) num-lst)]
-                 [oc-lst op-lst]
-                 [o_c-lst (map (lambda (oc) (c oc "_")) oc-lst)]
-                 [Oc-lst Op-lst]
+                 [op_-lst (map (lambda (op) (c op "_")) op-lst)]
                  [mapper (lambda (proc . lsts)
                            (apply map proc lsts))]
                  [IN-typedef (lambda (type)
-                               (lambda (Oc)
+                               (lambda (Op)
                                  (b s
                                     typename-chunk
-                                    (scope Oc
+                                    (scope Op
                                            template-chunk)
                                     (scope (tpl-use 'Iterator
                                                     'IteratorType)
                                            type))))]
-                 [gen-ext-fcns (mapper (lambda (oc Oc o_c)
-                                         (r-fcn-def (constize (fcn-dcl oc
+                 [gen-ext-fcns (mapper (lambda (op Op op_)
+                                         (r-fcn-def (constize (fcn-dcl op
                                                                        (b s
-                                                                          Oc
+                                                                          Op
                                                                           const-chunk
                                                                           "&")))
                                                     null
-                                                    o_c))
-                                       oc-lst
-                                       Oc-lst
-                                       o_c-lst)]
-                 [gen-data-mems (mapper (lambda (Oc o_c)
+                                                    op_))
+                                       op-lst
+                                       Op-lst
+                                       op_-lst)]
+                 [gen-data-mems (mapper (lambda (Op op_)
                                           (b s
-                                             Oc const-chunk o_c))
-                                        Oc-lst
-                                        o_c-lst)]
+                                             Op const-chunk op_))
+                                        Op-lst
+                                        op_-lst)]
                  [gen-typedef (lambda (type)
-                                (lambda (Oc)
+                                (lambda (Op)
                                   (c typename-chunk
                                      s
-                                     (scope Oc
+                                     (scope Op
                                             type))))]
                  [gen-constructor (bm-constructor "SourceType const & source"
-                                                  (mapper (lambda (o_c oc)
-                                                            (constructor-assignment-chunk o_c
-                                                                                          (mfc 'source
-                                                                                               oc)))
-                                                          o_c-lst
-                                                          oc-lst)
+                                                  (mapper (lambda (op_ op)
+                                                            (cons-asgn op_
+                                                                       (mfc 'source
+                                                                            op)))
+                                                          op_-lst
+                                                          op-lst)
                                                   null)]
                  [RS-constructor (bm-constructor (list "MemoryWindow const & size"
                                                        "SourceType const & source")
-                                                 (mapper (lambda (o_c oc)
-                                                           (fc o_c
+                                                 (mapper (lambda (op_ op)
+                                                           (fc op_
                                                                'size
                                                                (mfc 'source
-                                                                    oc)))
-                                                         o_c-lst
-                                                         oc-lst)
+                                                                    op)))
+                                                         op_-lst
+                                                         op-lst)
                                                  null)]
                  [SW-fcn (lambda (att btwn fcn)
                            (b/a att btwn
-                                (mapper (lambda (o_c)
-                                          (mfc o_c
+                                (mapper (lambda (op_)
+                                          (mfc op_
                                                fcn))
-                                        o_c-lst)))]
+                                        op_-lst)))]
                  [SW-check (lambda (fcn)
                              (c open-paren-chunk
                                 (SW-fcn empty-chunk
                                         (c s "||" s)
                                         fcn)
                                 close-paren-chunk))]
-                 [SW-data-mems (mapper (lambda (Oc o_c)
-                                         (c Oc s o_c))
-                                       Oc-lst
-                                       o_c-lst)])
+                 [SW-data-mems (mapper (lambda (Op op_)
+                                         (c Op s op_))
+                                       Op-lst
+                                       op_-lst)])
             (build-struct name
                           #true
-                          (mapper (lambda (Oc) (c typename-chunk s Oc))
-                                  Oc-lst)
-                          Oc-lst
+                          (mapper (lambda (Op) (tpl-pmtr Op))
+                                  Op-lst)
+                          Op-lst
                           (bs-Initial (mapper (IN-typedef 'ResizePrepType)
-                                              Oc-lst)
+                                              Op-lst)
                                       (mapper (IN-typedef 'SeqWalkType)
-                                              Oc-lst)
+                                              Op-lst)
                                       null
-                                      (bm-constructor (mapper (lambda (Oc IN-oc)
+                                      (bm-constructor (mapper (lambda (Op IN-op)
                                                                 (b s
-                                                                   Oc const-chunk "&" IN-oc))
-                                                              Oc-lst
-                                                              IN-oc-lst)
-                                                      (mapper (lambda (oc IN-oc)
-                                                                (constructor-assignment-chunk (c oc "_")
-                                                                                              IN-oc))
-                                                              oc-lst
-                                                              IN-oc-lst)
+                                                                   Op const-chunk "&" IN-op))
+                                                              Op-lst
+                                                              IN-op-lst)
+                                                      (mapper (lambda (op IN-op)
+                                                                (cons-asgn (c op "_")
+                                                                           IN-op))
+                                                              op-lst
+                                                              IN-op-lst)
                                                       null)
                                       gen-ext-fcns
                                       gen-data-mems)
                           (bs-ResizePrep (mapper (gen-typedef 'ResizeType)
-                                                 Oc-lst)
+                                                 Op-lst)
                                          null
                                          gen-constructor
                                          gen-ext-fcns
                                          gen-data-mems)
                           (bs-Resize (mapper (gen-typedef 'SeqWalkType)
-                                             Oc-lst)
+                                             Op-lst)
                                      null
                                      RS-constructor
                                      gen-ext-fcns
                                      gen-data-mems)
-                          (bs-SeqWalk null
+                          (bs-SeqWalk (typedef eval-return-type
+                                               'EvalReturnType)
                                       gen-constructor
                                       (SW-fcn semi-colon-chunk s 'next)
                                       (SW-check 'at_end)
                                       (SW-check 'has_length)
                                       (r-fcn-def (constize (fcn-dcl 'eval
-                                                                    'AtomicType))
+                                                                    'EvalReturnType))
                                                  null
                                                  internal-use)
                                       SW-data-mems))))]
@@ -440,6 +481,8 @@
         (lambda (name internal-name)
           (build-Nary-struct name
                              2
+                             (scope (tpl-pmtr FT-chunk)
+                                    'value_type)
                              (fc internal-name
                                  (mfc 'operand1_
                                       'eval)
@@ -449,6 +492,8 @@
         (lambda (name internal-name)
           (build-Nary-struct name
                              2
+                             (scope (tpl-pmtr FT-chunk)
+                                    'value_type)
                              (c open-paren-chunk
                                 (mfc 'operand1_
                                      'eval)
@@ -462,13 +507,15 @@
         (lambda (name internal-name)
           (build-Nary-struct name
                              1
+                             (scope (tpl-pmtr FT-chunk)
+                                    'value_type)
                              (fc internal-name
                                  (mfc 'operand_
                                       'eval))))]
        [abs-SubExpr (lambda (str)
                       (let* ([SE (string-append "SubExpr" str)]
                              [arg (string-append "arg" str)]
-                             [FT (scope (c typename-chunk s SE)
+                             [FT (scope (tpl-pmtr SE)
                                         'field_type)])
                         (list FT
                               SE
@@ -487,7 +534,7 @@
                                    arg))
                               (fc (scope (tpl-use 'Standardize
                                                   SE
-                                                  'FieldType)
+                                                  FT-chunk)
                                             'standardType)
                                   arg))))]
        [abs-Scalar (lambda (str)
@@ -495,7 +542,7 @@
                        (list #false
                              #false
                              (lambda (FT)
-                               (tpl-use 'Scalar
+                               (tpl-use NS-chunk
                                         'Initial
                                         FT))
                              (lambda (FT)
@@ -507,14 +554,14 @@
                                   arg))
                              (fc (c 'Type str)
                                  arg))))]
-       [FT-clause first]
-       [tpl-arg second]
-       [StdType third]
-       [parameter fourth]
-       [argument fifth]
        [build-interface-case
-        (lambda (description-chunk abs-type-lst name external-name)
-          (let* ([number (length abs-type-lst)]
+        (lambda (description-chunk abs-type-lst name external-name expression-term)
+          (let* ([FT-clause first]
+                 [tpl-arg second]
+                 [StdType third]
+                 [parameter fourth]
+                 [argument fifth]
+                 [number (length abs-type-lst)]
                  [num-lst (if (>= 1 number)
                               '("")
                               (map number->string (sequence->list (in-range 1 (+ 1
@@ -526,7 +573,7 @@
                                 num-lst)]
                  [mapper (lambda (proc)
                            (map proc type-lst))]
-                 [tpl-arg-lst (map (lambda (type) (c typename-chunk s type))
+                 [tpl-arg-lst (map (lambda (type) (tpl-pmtr type))
                                    (reverse (foldl (lambda (next crt) (if next
                                                                           (cons next crt)
                                                                           crt))
@@ -553,7 +600,7 @@
                    (tpl-def tpl-arg-lst
                             (r-fcn-def
                              (fcn-dcl external-name
-                                      (tpl-use 'FieldExpression
+                                      (tpl-use expression-term
                                                (tpl-use name
                                                         'Initial
                                                         StdType-lst
@@ -561,76 +608,83 @@
                                                FT)
                                       parameter-lst)
                              (list (typedef FT
-                                            'FieldType)
+                                            FT-chunk)
                                    StdType-typedef-lst
                                    (typedef (tpl-use name
                                                      'Initial
                                                      Type-lst
-                                                     'FieldType)
+                                                     FT-chunk)
                                             'ReturnType)
-                                   (typedef (tpl-use 'FieldExpression
+                                   (typedef (tpl-use expression-term
                                                      'ReturnType
-                                                     'FieldType)
+                                                     FT-chunk)
                                             'ReturnTerm))
                              (fc 'ReturnTerm
                                  (fc 'ReturnType
                                      arg-use-lst))))))))]
        [build-binary-interface
-        (lambda (name external-name)
+        (lambda (name external-name expression-term)
           (smt-list-chunk blank-line-chunk
                           (build-interface-case "SubExpr X SubExpr"
                                                 (list abs-SubExpr
                                                       abs-SubExpr)
                                                 name
-                                                external-name)
+                                                external-name
+                                                expression-term)
                          (build-interface-case "SubExpr X Scalar"
                                                (list abs-SubExpr
                                                      abs-Scalar)
                                                 name
-                                                external-name)
+                                                external-name
+                                                expression-term)
                          (build-interface-case "Scalar X SubExpr"
                                                (list abs-Scalar
                                                      abs-SubExpr)
                                                 name
-                                                external-name)))]
+                                                external-name
+                                                expression-term)))]
        [build-unary-interface
-        (lambda (name external-name)
+        (lambda (name external-name expression-term)
          (build-interface-case "SubExpr"
                                (list abs-SubExpr)
                                name
-                               external-name))]
+                               external-name
+                               expression-term))]
        [build-binary-function
         (lambda (name internal-name external-name)
           (smt-list-chunk blank-line-chunk
                           (build-binary-function-struct name
                                                         internal-name)
                           (build-binary-interface name
-                                                  external-name)))]
+                                                  external-name
+                                                  NE-chunk)))]
        [build-binary-operator
         (lambda (name internal-name external-name)
           (smt-list-chunk blank-line-chunk
                           (build-binary-operator-struct name
                                                         internal-name)
                           (build-binary-interface name
-                                                  external-name)))]
+                                                  external-name
+                                                  NE-chunk)))]
        [build-unary-function
         (lambda (name internal-name external-name)
           (smt-list-chunk blank-line-chunk
                           (build-unary-function-struct name
                                                        internal-name)
                           (build-unary-interface name
-                                                 external-name)))]
+                                                 external-name
+                                                  NE-chunk)))]
        [build-assignment
-        (lambda (name tpl-pmtr rhs-type body return-expr)
-          (tpl-def (list tpl-pmtr
-                         (c typename-chunk s 'FieldType))
+        (lambda (name tpl-pmtrs rhs-type body return-expr)
+          (tpl-def (list tpl-pmtrs
+                         (tpl-pmtr FT-chunk))
                    (r-fcn-def (fcn-dcl name
                                        (b s
-                                          'FieldType
+                                          FT-chunk
                                           const-chunk
                                           "&")
                                        (b s
-                                          'FieldType
+                                          FT-chunk
                                           "&"
                                           'lhs)
                                        (b s
@@ -647,31 +701,31 @@
           (smt-list-chunk blank-line-chunk
                           (build-assignment name
                                             null
-                                            (scope (c typename-chunk s 'FieldType)
+                                            (scope (tpl-pmtr FT-chunk)
                                                    'value_type)
-                                            (typedef (tpl-use 'Scalar
+                                            (typedef (tpl-use NS-chunk
                                                               'Initial
-                                                              'FieldType)
+                                                              FT-chunk)
                                                      'ExprType)
                                             rec-call)
                           (build-assignment name
                                             null
-                                            'FieldType
-                                            (typedef (tpl-use 'ConstField
+                                            FT-chunk
+                                            (typedef (tpl-use NCF-chunk
                                                               'Initial
-                                                              'FieldType)
+                                                              FT-chunk)
                                                      'ExprType)
                                            rec-call)
                           (build-assignment name
-                                            (c typename-chunk s 'ExprType)
-                                           (tpl-use 'FieldExpression
+                                            (tpl-pmtr 'ExprType)
+                                           (tpl-use NE-chunk
                                                     'ExprType
-                                                    'FieldType)
+                                                    FT-chunk)
                                            null
                                            (fc (tpl-use 'field_expression_general_execute
                                                         iterator
                                                         'ExprType
-                                                        'FieldType)
+                                                        FT-chunk)
                                                'lhs
                                                'rhs))))]
        )
@@ -699,85 +753,163 @@
          (struct-declare-chunk 'UseInteriorIterator))
       (tpl-srt-dcl 'IteratorStyle
                    (list (c 'typename s 'Use)
-                         (c 'typename s 'FieldType))
+                         (c 'typename s FT-chunk))
                    null)
       (IteratorStyle 'UseWholeIterator
                      'window_with_ghost)
       (IteratorStyle 'UseInteriorIterator
                      'window_without_ghost)
+      (build-expression-type NE-chunk)
+      (build-expression-type NBE-chunk)
       (d 'Modes:
          (build-mode-def 'Initial #false)
          (build-mode-def 'ResizePrep #true)
          (build-mode-def 'Resize #true)
          (build-mode-def 'SeqWalk #true))
-      (build-struct 'Scalar
+      (build-struct NS-chunk
+                    #true
+                    null
+                    null
+                    (bs-Initial null
+                                null
+                                (typedef (scope (tpl-pmtr FT-chunk)
+                                                'value_type)
+                                         'AtomicType)
+                                (bm-constructor (b s
+                                                   'AtomicType const-chunk 'v)
+                                                (cons-asgn 'value_
+                                                           'v)
+                                                null)
+                                (r-fcn-def (constize (fcn-dcl 'value
+                                                              (b s
+                                                                 'AtomicType const-chunk)))
+                                           null
+                                           'value_)
+                                (b s
+                                   'AtomicType const-chunk 'value_))
+                    (bs-ResizePrep null
+                                   (typedef (scope (tpl-pmtr FT-chunk)
+                                                   'value_type)
+                                            'AtomicType)
+                                   (bm-constructor (b s
+                                                      'SourceType const-chunk 'source)
+                                                   (cons-asgn 'value_
+                                                              (mfc 'source
+                                                                   'value))
+                                                   null)
+                                   (r-fcn-def (constize (fcn-dcl 'value
+                                                                 (b s
+                                                                    'AtomicType const-chunk)))
+                                              null
+                                              'value_)
+                                (b s
+                                   'AtomicType const-chunk 'value_))
+                    (bs-Resize null
+                               (typedef (scope (tpl-pmtr FT-chunk)
+                                               'value_type)
+                                        'AtomicType)
+                               (bm-constructor (list (b s
+                                                        'MemoryWindow const-chunk "&" 'size)
+                                                     (b s
+                                                        'SourceType const-chunk 'source))
+                                               (cons-asgn 'value_
+                                                          (mfc 'source
+                                                               'value))
+                                               null)
+                               (r-fcn-def (constize (fcn-dcl 'value
+                                                             (b s
+                                                                'AtomicType const-chunk)))
+                                          null
+                                          'value_)
+                                (b s
+                                   'AtomicType const-chunk 'value_))
+                    (bs-SeqWalk (typedef (scope (tpl-pmtr FT-chunk)
+                                                'value_type)
+                                         'AtomicType)
+                                (bm-constructor (b s
+                                                   'SourceType const-chunk 'source)
+                                                (cons-asgn 'value_
+                                                           (mfc 'source
+                                                                'value))
+                                                null)
+                                null
+                                'false
+                                'false
+                                (r-fcn-def (constize (fcn-dcl 'eval
+                                                              (b s 'AtomicType const-chunk)))
+                                          null
+                                          'value_)
+                                (b s
+                                   'AtomicType const-chunk 'value_)))
+      (build-struct NB-chunk
                     #true
                     null
                     null
                     (bs-Initial null
                                 null
                                 null
-                                (bm-constructor "AtomicType const & v"
-                                                (constructor-assignment-chunk 'value_
-                                                                              'v)
+                                (bm-constructor (b s
+                                                   'bool const-chunk 'v)
+                                                (cons-asgn 'value_
+                                                           'v)
                                                 null)
                                 (r-fcn-def (constize (fcn-dcl 'value
                                                               (b s
-                                                                 'AtomicType
-                                                                 const-chunk
-                                                                 "&")))
+                                                                 'bool const-chunk)))
                                            null
                                            'value_)
-                                "AtomicType const & value_")
+                                (b s
+                                   'bool const-chunk 'value_))
                     (bs-ResizePrep null
                                    null
-                                   (bm-constructor "SourceType const & source"
-                                                   (constructor-assignment-chunk 'value_
-                                                                                 (mfc 'source
-                                                                                      'value))
+                                   (bm-constructor (b s
+                                                      'SourceType const-chunk 'source)
+                                                   (cons-asgn 'value_
+                                                              (mfc 'source
+                                                                   'value))
                                                    null)
                                    (r-fcn-def (constize (fcn-dcl 'value
                                                                  (b s
-                                                                    'AtomicType
-                                                                    const-chunk
-                                                                    "&")))
+                                                                    'bool const-chunk)))
                                               null
                                               'value_)
-                                   "AtomicType const & value_")
+                                (b s
+                                   'bool const-chunk 'value_))
                     (bs-Resize null
                                null
-                               (bm-constructor (list "MemoryWindow const & size"
-                                                     "SourceType const & source")
-                                               (constructor-assignment-chunk 'value_
-                                                                             (mfc 'source
-                                                                                  'value))
+                               (bm-constructor (list (b s
+                                                        'MemoryWindow const-chunk "&" 'size)
+                                                     (b s
+                                                        'SourceType const-chunk 'source))
+                                               (cons-asgn 'value_
+                                                          (mfc 'source
+                                                               'value))
                                                null)
                                (r-fcn-def (constize (fcn-dcl 'value
                                                              (b s
-                                                                'AtomicType
-                                                                const-chunk
-                                                                "&")))
+                                                                'bool const-chunk)))
                                           null
                                           'value_)
-                               "AtomicType const & value_")
+                                (b s
+                                   'bool const-chunk 'value_))
                     (bs-SeqWalk null
-                                (bm-constructor "SourceType const & source"
-                                                (constructor-assignment-chunk 'value_
-                                                                              (mfc 'source
-                                                                                   'value))
+                                (bm-constructor (b s
+                                                   'SourceType const-chunk 'source)
+                                                (cons-asgn 'value_
+                                                           (mfc 'source
+                                                                'value))
                                                 null)
                                 null
                                 'false
                                 'false
                                 (r-fcn-def (constize (fcn-dcl 'eval
                                                               (b s
-                                                                 'AtomicType
-                                                                 const-chunk
-                                                                 "&")))
+                                                                 'bool const-chunk)))
                                           null
                                           'value_)
-                                "AtomicType const & value_"))
-      (build-struct 'ConstField
+                                (b s
+                                   'bool const-chunk 'value_)))
+      (build-struct NCF-chunk
                     #true
                     null
                     null
@@ -785,12 +917,12 @@
                                 null
                                 null
                                 (bm-constructor "FieldType const & f"
-                                                (constructor-assignment-chunk 'field_
-                                                                              'f)
+                                                (cons-asgn 'field_
+                                                           'f)
                                                 null)
                                 (r-fcn-def (constize (fcn-dcl 'field
                                                               (b s
-                                                                 'FieldType
+                                                                 FT-chunk
                                                                  const-chunk
                                                                  "&")))
                                            null
@@ -799,13 +931,13 @@
                     (bs-ResizePrep null
                                    null
                                    (bm-constructor "SourceType const & source"
-                                                   (constructor-assignment-chunk 'field_
-                                                                                 (mfc 'source
-                                                                                      'field))
+                                                   (cons-asgn 'field_
+                                                              (mfc 'source
+                                                                   'field))
                                                    null)
                                    (r-fcn-def (constize (fcn-dcl 'field
                                                                  (b s
-                                                                    'FieldType
+                                                                    FT-chunk
                                                                     const-chunk
                                                                     "&")))
                                               null
@@ -824,22 +956,24 @@
                                                null)
                                (r-fcn-def (constize (fcn-dcl 'field
                                                              (b s
-                                                                'FieldType
+                                                                FT-chunk
                                                                 const-chunk
                                                                 "&")))
                                           null
                                           'field_)
                                "FieldType const field_")
-                    (bs-SeqWalk null
+                    (bs-SeqWalk (typedef (scope (tpl-pmtr FT-chunk)
+                                                'value_type)
+                                         'AtomicType)
                                 (bm-constructor "SourceType const & source"
-                                                (list (constructor-assignment-chunk 'iter_
-                                                                                    (mfc (mfc 'source
-                                                                                              'field)
-                                                                                         'begin))
-                                                      (constructor-assignment-chunk 'end_
-                                                                                    (mfc (mfc 'source
-                                                                                              'field)
-                                                                                         'end)))
+                                                (list (cons-asgn 'iter_
+                                                                 (mfc (mfc 'source
+                                                                           'field)
+                                                                      'begin))
+                                                      (cons-asgn 'end_
+                                                                 (mfc (mfc 'source
+                                                                           'field)
+                                                                      'end)))
                                                 null)
                                 "++iter_"
                                 "(iter_ == end_)"
@@ -853,7 +987,7 @@
                                           "*iter_")
                                 (list "typename FieldType::const_iterator iter_"
                                       "typename FieldType::const_iterator const end_")))
-      (build-struct 'Field
+      (build-struct NF-chunk
                     #false
                     null
                     null
@@ -861,23 +995,23 @@
                                 null
                                 null
                                 (bm-constructor "FieldType & f"
-                                                (constructor-assignment-chunk 'field_
-                                                                              'f)
+                                                (cons-asgn 'field_
+                                                           'f)
                                                 null)
                                 (r-fcn-def (fcn-dcl 'field
-                                                    (c 'FieldType s "&"))
+                                                    (c FT-chunk s "&"))
                                            null
                                            'field_)
                                 "FieldType field_")
                     (bs-ResizePrep null
                                    null
                                    (bm-constructor "SourceType & source"
-                                                   (constructor-assignment-chunk 'field_
-                                                                                 (mfc 'source
-                                                                                      'field))
+                                                   (cons-asgn 'field_
+                                                              (mfc 'source
+                                                                   'field))
                                                    null)
                                    (r-fcn-def (fcn-dcl 'field
-                                                       (c 'FieldType s "&"))
+                                                       (c FT-chunk s "&"))
                                               null
                                               'field_)
                                    "FieldType field_")
@@ -893,20 +1027,22 @@
                                                    "structured::ExternalStorage")
                                                null)
                                (r-fcn-def (fcn-dcl 'field
-                                                   (c 'FieldType s "&"))
+                                                   (c FT-chunk s "&"))
                                           null
                                           'field_)
                                "FieldType field_")
-                    (bs-SeqWalk null
+                    (bs-SeqWalk (typedef (scope (tpl-pmtr FT-chunk)
+                                                'value_type)
+                                         'AtomicType)
                                 (bm-constructor "SourceType & source"
-                                                (list (constructor-assignment-chunk 'iter_
-                                                                                    (mfc (mfc 'source
-                                                                                              'field)
-                                                                                         'begin))
-                                                      (constructor-assignment-chunk 'end_
-                                                                                    (mfc (mfc 'source
-                                                                                              'field)
-                                                                                         'end)))
+                                                (list (cons-asgn 'iter_
+                                                                 (mfc (mfc 'source
+                                                                           'field)
+                                                                      'begin))
+                                                      (cons-asgn 'end_
+                                                                 (mfc (mfc 'source
+                                                                           'field)
+                                                                      'end)))
                                                 null)
                                 "++iter_"
                                 "(iter_ == end_)"
@@ -921,71 +1057,79 @@
                                                  "&(*iter_)"))
                                 (list "typename FieldType::iterator iter_"
                                       "typename FieldType::iterator const end_")))
-      (tpl-srt-def 'FieldExpression
-                   (list (c typename-chunk s 'Operand)
-                         (c typename-chunk s 'FieldType))
-                   null
-                   (sec-def public-chunk
-                            (typedef 'FieldType
-                                     'field_type)
-                            (constructor-chunk 'FieldExpression
-                                               (b s
-                                                  'Operand
-                                                  const-chunk
-                                                  "&"
-                                                  'given)
-                                               (constructor-assignment-chunk 'expr_
-                                                                             'given))
-                            (r-fcn-def (constize (fcn-dcl 'expr
-                                                          (b s
-                                                             'Operand const-chunk "&")))
-                                       null
-                                       'expr_))
-                   (sec-def private-chunk
-                            (c 'Operand s 'expr_)))
       (tpl-srt-dcl 'Standardize
-                   (list (c typename-chunk s 'Input)
-                         (c typename-chunk s 'FieldType))
+                   (list (tpl-pmtr 'Input)
+                         (tpl-pmtr FT-chunk))
                    null)
       (tpl-srt-def 'Standardize
-                   (c typename-chunk s 'FieldType)
-                   (list 'FieldType
-                         'FieldType)
-                   (typedef (tpl-use 'ConstField
+                   (tpl-pmtr FT-chunk)
+                   (list FT-chunk
+                         FT-chunk)
+                   (typedef (tpl-use NCF-chunk
                                      'Initial
-                                     'FieldType)
+                                     FT-chunk)
                             'StandardType)
+                   (typedef (tpl-use NE-chunk
+                                     'StandardType
+                                     FT-chunk)
+                            'StandardTerm)
                    (r-fcn-def (s-fcn-dcl 'standardType
                                          'StandardType
                                          (b s
-                                            'FieldType
+                                            FT-chunk
                                             const-chunk
                                             "&"
                                             'given))
                               null
                               (fc 'StandardType
-                                  'given)))
+                                  'given))
+                   (r-fcn-def (s-fcn-dcl 'standardTerm
+                                         'StandardTerm
+                                         (b s
+                                            FT-chunk
+                                            const-chunk
+                                            "&"
+                                            'given))
+                              null
+                              (fc 'StandardTerm
+                                  (fc 'StandardType
+                                      'given))))
       (tpl-srt-def 'Standardize
-                   (list (c typename-chunk s 'ExprType)
-                         (c typename-chunk s 'FieldType))
-                   (list (tpl-use 'FieldExpression
+                   (list (tpl-pmtr 'ExprType)
+                         (tpl-pmtr FT-chunk))
+                   (list (tpl-use NE-chunk
                                   'ExprType
-                                  'FieldType)
-                         'FieldType)
+                                  FT-chunk)
+                         FT-chunk)
                    (typedef 'ExprType
                             'StandardType)
+                   (typedef (tpl-use NE-chunk
+                                     'StandardType
+                                     FT-chunk)
+                            'StandardTerm)
                    (r-fcn-def (s-fcn-dcl 'standardType
                                          'StandardType
                                          (b s
-                                            (tpl-use 'FieldExpression
+                                            (tpl-use NE-chunk
                                                      'ExprType
-                                                     'FieldType)
+                                                     FT-chunk)
                                             const-chunk
                                             "&"
                                             'given))
                               null
                               (mfc 'given
-                                   'expr)))
+                                   'expr))
+                   (r-fcn-def (s-fcn-dcl 'standardTerm
+                                         'StandardTerm
+                                         (b s
+                                            (tpl-use NE-chunk
+                                                     'ExprType
+                                                     FT-chunk)
+                                            const-chunk
+                                            "&"
+                                            'given))
+                              null
+                              'given))
       (build-binary-operator 'SumOp
                              "+"
                              (c 'operator s "+"))
@@ -1078,27 +1222,27 @@
                                               'next)
                                          (mfc 'rhs
                                               'next)))))
-      (tpl-def (list (c typename-chunk s 'CallStyle)
-                     (c typename-chunk s 'ExprType)
-                     (c typename-chunk s 'FieldType))
+      (tpl-def (list (tpl-pmtr 'CallStyle)
+                     (tpl-pmtr 'ExprType)
+                     (tpl-pmtr FT-chunk))
                (r-fcn-def (fcn-dcl 'field_expression_sequential_execute
                                    (b s
-                                      'FieldType const-chunk "&")
+                                      FT-chunk const-chunk "&")
                                    (list (b s
-                                            'FieldType "&" 'initial_lhs)
+                                            FT-chunk "&" 'initial_lhs)
                                          (b s
-                                            (tpl-use 'FieldExpression
+                                            (tpl-use NE-chunk
                                                      'ExprType
-                                                     'FieldType)
+                                                     FT-chunk)
                                             const-chunk
                                             "&"
                                             'initial_rhs)))
                           (fc (tpl-use 'field_expression_sequential_execute_internal
                                        (c typename-chunk
                                           s
-                                          (scope (tpl-use 'Field
+                                          (scope (tpl-use NF-chunk
                                                           'Initial
-                                                          'FieldType)
+                                                          FT-chunk)
                                                  template-chunk)
                                           s
                                           (scope (tpl-use 'Iterator
@@ -1112,9 +1256,9 @@
                                           (scope (tpl-use 'Iterator
                                                           'CallStyle)
                                                  'SeqWalkType)))
-                              (mfc (fc (tpl-use 'Field
+                              (mfc (fc (tpl-use NF-chunk
                                                 'Initial
-                                                'FieldType)
+                                                FT-chunk)
                                        'initial_lhs)
                                    (c template-chunk s (tpl-use 'init
                                                                 'CallStyle)))
@@ -1125,10 +1269,10 @@
                           'initial_lhs))
       (pp-conditional-ifdef-chunk
        'FIELD_EXPRESSION_THREADS
-       (tpl-def (list (c typename-chunk s 'CallStyle)
-                      (c typename-chunk s 'ResizeLhsType)
-                      (c typename-chunk s 'ResizeRhsType)
-                      (c typename-chunk s 'FieldType))
+       (tpl-def (list (tpl-pmtr 'CallStyle)
+                      (tpl-pmtr 'ResizeLhsType)
+                      (tpl-pmtr 'ResizeRhsType)
+                      (tpl-pmtr FT-chunk))
                 (v-fcn-def 'field_expression_thread_parallel_execute_internal
                            (list (b s
                                     'ResizeLhsType "&" 'lhs)
@@ -1136,7 +1280,7 @@
                                     'ResizeRhsType const-chunk "&" 'rhs)
                                  (b s
                                     typename-chunk
-                                    (scope 'FieldType
+                                    (scope FT-chunk
                                            'memory_window)
                                     const-chunk
                                     "&"
@@ -1170,18 +1314,18 @@
                                         'post))))))
       (pp-conditional-ifdef-chunk
        'FIELD_EXPRESSION_THREADS
-       (tpl-def (list (c typename-chunk s 'CallStyle)
-                      (c typename-chunk s 'ExprType)
-                      (c typename-chunk s 'FieldType))
+       (tpl-def (list (tpl-pmtr 'CallStyle)
+                      (tpl-pmtr 'ExprType)
+                      (tpl-pmtr FT-chunk))
                 (r-fcn-def (fcn-dcl 'field_expression_thread_parallel_execute
                                     (b s
-                                       'FieldType const-chunk "&")
+                                       FT-chunk const-chunk "&")
                                     (list (b s
-                                             'FieldType "&" 'initial_lhs)
+                                             FT-chunk "&" 'initial_lhs)
                                           (b s
-                                             (tpl-use 'FieldExpression
+                                             (tpl-use NE-chunk
                                                       'ExprType
-                                                      'FieldType)
+                                                      FT-chunk)
                                              const-chunk
                                              "&"
                                              'initial_rhs)
@@ -1189,9 +1333,9 @@
                                              'int const-chunk 'number_of_partitions)))
                            (list (typedef (c typename-chunk
                                              s
-                                             (scope (tpl-use 'Field
+                                             (scope (tpl-use NF-chunk
                                                              'Initial
-                                                             'FieldType)
+                                                             FT-chunk)
                                                     template-chunk)
                                              s
                                              (scope (tpl-use 'Iterator
@@ -1209,7 +1353,7 @@
                                           'RhsType)
                                  (typedef (c typename-chunk
                                              s
-                                             (scope 'FieldType
+                                             (scope FT-chunk
                                                     'memory_window))
                                           'MemoryWindow)
                                  (b s
@@ -1218,7 +1362,7 @@
                                     "="
                                     (fc (scope (tpl-use 'IteratorStyle
                                                         'CallStyle
-                                                        'FieldType)
+                                                        FT-chunk)
                                                'memory_window)
                                         'initial_lhs))
                                  (smt-list-chunk new-line-chunk
@@ -1268,7 +1412,7 @@
                                            (tpl-use 'vector
                                                     (c typename-chunk
                                                        s
-                                                       (scope 'FieldType
+                                                       (scope FT-chunk
                                                               'memory_window))))
                                     s
                                     'vec_window
@@ -1293,7 +1437,7 @@
                                                   (tpl-use 'vector
                                                            (c typename-chunk
                                                               s
-                                                              (scope 'FieldType
+                                                              (scope FT-chunk
                                                                      'memory_window))))
                                            'const_iterator)
                                     s
@@ -1309,7 +1453,7 @@
                                                   (tpl-use 'vector
                                                            (c typename-chunk
                                                               s
-                                                              (scope 'FieldType
+                                                              (scope FT-chunk
                                                                      'memory_window))))
                                            'const_iterator)
                                     s
@@ -1343,10 +1487,10 @@
                                                                      'CallStyle
                                                                      'LhsType
                                                                      'RhsType
-                                                                     'FieldType))
-                                                         (mfc (fc (tpl-use 'Field
+                                                                     FT-chunk))
+                                                         (mfc (fc (tpl-use NF-chunk
                                                                            'Initial
-                                                                           'FieldType)
+                                                                           FT-chunk)
                                                                   'initial_lhs)
                                                               (c template-chunk
                                                                  s
@@ -1387,18 +1531,18 @@
                                     (body-chunk (mfc 'semaphore
                                                      'wait))))
                            'initial_lhs)))
-      (tpl-def (list (c typename-chunk s 'CallStyle)
-                     (c typename-chunk s 'ExprType)
-                     (c typename-chunk s 'FieldType))
+      (tpl-def (list (tpl-pmtr 'CallStyle)
+                     (tpl-pmtr 'ExprType)
+                     (tpl-pmtr FT-chunk))
                (r-fcn-def (fcn-dcl 'field_expression_general_execute
                                    (b s
-                                      'FieldType const-chunk "&")
+                                      FT-chunk const-chunk "&")
                                    (list (b s
-                                            'FieldType "&" 'initial_lhs)
+                                            FT-chunk "&" 'initial_lhs)
                                          (b s
-                                            (tpl-use 'FieldExpression
+                                            (tpl-use NE-chunk
                                                      'ExprType
-                                                     'FieldType)
+                                                     FT-chunk)
                                             const-chunk
                                             "&"
                                             'initial_rhs)))
@@ -1409,14 +1553,14 @@
                               (fc (tpl-use 'field_expression_thread_parallel_execute
                                            'CallStyle
                                            'ExprType
-                                           'FieldType)
+                                           FT-chunk)
                                   'initial_lhs
                                   'initial_rhs
                                   'NTHREADS)
                               (fc (tpl-use 'field_expression_sequential_execute
                                            'CallStyle
                                            'ExprType
-                                           'FieldType)
+                                           FT-chunk)
                                   'initial_lhs
                                   'initial_rhs))
                              new-line-chunk
@@ -1426,18 +1570,18 @@
                                     s
                                     "<<="
                                     s
-                                    (fc (tpl-use 'FieldExpression
+                                    (fc (tpl-use NE-chunk
                                                  'ExprType
-                                                 'FieldType)
+                                                 FT-chunk)
                                         (fc 'ExprType
                                             'rhs))))
                               'UseWholeIterator)
       (build-assignment-style 'interior_assign
                               (fc 'interior_assign
                                   'lhs
-                                  (fc (tpl-use 'FieldExpression
+                                  (fc (tpl-use NE-chunk
                                                'ExprType
-                                               'FieldType)
+                                               FT-chunk)
                                       (fc 'ExprType
                                           'rhs)))
                               'UseInteriorIterator)
