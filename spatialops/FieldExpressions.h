@@ -2549,6 +2549,1272 @@
           return ReturnTerm(ReturnType(Type(Standardize<SubExpr, FieldType>::standardType(arg))));
        };
 
+      template<typename CurrentMode, typename Operand1, typename Operand2, typename FieldType>
+       struct EqualCmp;
+
+      template<typename Operand1, typename Operand2, typename FieldType>
+       struct EqualCmp<Initial, Operand1, Operand2, FieldType> {
+
+         public:
+          EqualCmp<Initial, Operand1, Operand2, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          template<typename IteratorType>
+           struct Iterator {
+
+             EqualCmp<ResizePrep<IteratorType, This>,
+                      typename Operand1::template Iterator<IteratorType>::ResizePrepType,
+                      typename Operand2::template Iterator<IteratorType>::ResizePrepType,
+                      FieldType> typedef ResizePrepType;
+
+             EqualCmp<SeqWalk<IteratorType, This>,
+                      typename Operand1::template Iterator<IteratorType>::SeqWalkType,
+                      typename Operand2::template Iterator<IteratorType>::SeqWalkType,
+                      FieldType> typedef SeqWalkType;
+          };
+          EqualCmp(Operand1 const & op1, Operand2 const & op2)
+          : operand1_(op1), operand2_(op2)
+          {};
+          template<typename IteratorType>
+           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
+              return typename Iterator<IteratorType>::SeqWalkType(*this);
+           };
+          template<typename IteratorType>
+           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
+              return typename Iterator<IteratorType>::ResizePrepType(*this);
+           };
+          inline Operand1 const & operand1(void) const { return operand1_; };
+          inline Operand2 const & operand2(void) const { return operand2_; };
+
+         private:
+          Operand1 const operand1_;
+          Operand2 const operand2_;
+      };
+
+      template<typename IteratorType,
+               typename SourceType,
+               typename Operand1,
+               typename Operand2,
+               typename FieldType>
+       struct EqualCmp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+
+         public:
+          EqualCmp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          EqualCmp<Resize<IteratorType, This>,
+                   typename Operand1::ResizeType,
+                   typename Operand2::ResizeType,
+                   FieldType> typedef ResizeType;
+          EqualCmp(SourceType const & source)
+          : operand1_(source.operand1()), operand2_(source.operand2())
+          {};
+          inline ResizeType resize(MemoryWindow const & newSize) const {
+             return ResizeType(newSize, *this);
+          };
+          inline Operand1 const & operand1(void) const { return operand1_; };
+          inline Operand2 const & operand2(void) const { return operand2_; };
+
+         private:
+          Operand1 const operand1_;
+          Operand2 const operand2_;
+      };
+
+      template<typename IteratorType,
+               typename SourceType,
+               typename Operand1,
+               typename Operand2,
+               typename FieldType>
+       struct EqualCmp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+
+         public:
+          EqualCmp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          EqualCmp<SeqWalk<IteratorType, This>,
+                   typename Operand1::SeqWalkType,
+                   typename Operand2::SeqWalkType,
+                   FieldType> typedef SeqWalkType;
+          EqualCmp(MemoryWindow const & size, SourceType const & source)
+          : operand1_(size, source.operand1()), operand2_(size, source.operand2())
+          {};
+          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline Operand1 const & operand1(void) const { return operand1_; };
+          inline Operand2 const & operand2(void) const { return operand2_; };
+
+         private:
+          Operand1 const operand1_;
+          Operand2 const operand2_;
+      };
+
+      template<typename IteratorType,
+               typename SourceType,
+               typename Operand1,
+               typename Operand2,
+               typename FieldType>
+       struct EqualCmp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+
+         public:
+          EqualCmp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          bool typedef EvalReturnType;
+          EqualCmp(SourceType const & source)
+          : operand1_(source.operand1()), operand2_(source.operand2())
+          {};
+          inline void next(void) { operand1_.next(); operand2_.next(); };
+          inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
+          inline bool has_length(void) const {
+             return (operand1_.has_length() || operand2_.has_length());
+          };
+          inline EvalReturnType eval(void) const { return (operand1_.eval() == operand2_.eval()); };
+
+         private:
+          Operand1 operand1_;
+          Operand2 operand2_;
+      };
+
+      /* SubExpr X SubExpr */
+      template<typename SubExpr1, typename SubExpr2>
+       inline NeboBooleanExpression<EqualCmp<Initial,
+                                             typename Standardize<SubExpr1,
+                                                                  typename SubExpr1::field_type>::
+                                             StandardType,
+                                             typename Standardize<SubExpr2,
+                                                                  typename SubExpr1::field_type>::
+                                             StandardType,
+                                             typename SubExpr1::field_type>,
+                                    typename SubExpr1::field_type> operator ==(SubExpr1 const & arg1,
+                                                                               SubExpr2 const & arg2) {
+
+          typename SubExpr1::field_type typedef FieldType;
+
+          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+
+          typename Standardize<SubExpr2, typename SubExpr1::field_type>::StandardType typedef Type2;
+
+          EqualCmp<Initial, Type1, Type2, FieldType> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
+                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+       };
+
+      /* SubExpr X Scalar */
+      template<typename SubExpr1>
+       inline NeboBooleanExpression<EqualCmp<Initial,
+                                             typename Standardize<SubExpr1,
+                                                                  typename SubExpr1::field_type>::
+                                             StandardType,
+                                             NeboScalar<Initial, typename SubExpr1::field_type>,
+                                             typename SubExpr1::field_type>,
+                                    typename SubExpr1::field_type> operator ==(SubExpr1 const & arg1,
+                                                                               typename SubExpr1::
+                                                                               field_type::
+                                                                               value_type const &
+                                                                               arg2) {
+
+          typename SubExpr1::field_type typedef FieldType;
+
+          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+
+          NeboScalar<Initial, typename SubExpr1::field_type> typedef Type2;
+
+          EqualCmp<Initial, Type1, Type2, FieldType> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
+                                       Type2(Type2(arg2))));
+       };
+
+      /* Scalar X SubExpr */
+      template<typename SubExpr2>
+       inline NeboBooleanExpression<EqualCmp<Initial,
+                                             NeboScalar<Initial, typename SubExpr2::field_type>,
+                                             typename Standardize<SubExpr2,
+                                                                  typename SubExpr2::field_type>::
+                                             StandardType,
+                                             typename SubExpr2::field_type>,
+                                    typename SubExpr2::field_type> operator ==(typename SubExpr2::
+                                                                               field_type::
+                                                                               value_type const &
+                                                                               arg1,
+                                                                               SubExpr2 const & arg2) {
+
+          typename SubExpr2::field_type typedef FieldType;
+
+          NeboScalar<Initial, typename SubExpr2::field_type> typedef Type1;
+
+          typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType typedef Type2;
+
+          EqualCmp<Initial, Type1, Type2, FieldType> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(Type1(Type1(arg1)),
+                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+       };
+
+      template<typename CurrentMode, typename Operand1, typename Operand2, typename FieldType>
+       struct InequalCmp;
+
+      template<typename Operand1, typename Operand2, typename FieldType>
+       struct InequalCmp<Initial, Operand1, Operand2, FieldType> {
+
+         public:
+          InequalCmp<Initial, Operand1, Operand2, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          template<typename IteratorType>
+           struct Iterator {
+
+             InequalCmp<ResizePrep<IteratorType, This>,
+                        typename Operand1::template Iterator<IteratorType>::ResizePrepType,
+                        typename Operand2::template Iterator<IteratorType>::ResizePrepType,
+                        FieldType> typedef ResizePrepType;
+
+             InequalCmp<SeqWalk<IteratorType, This>,
+                        typename Operand1::template Iterator<IteratorType>::SeqWalkType,
+                        typename Operand2::template Iterator<IteratorType>::SeqWalkType,
+                        FieldType> typedef SeqWalkType;
+          };
+          InequalCmp(Operand1 const & op1, Operand2 const & op2)
+          : operand1_(op1), operand2_(op2)
+          {};
+          template<typename IteratorType>
+           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
+              return typename Iterator<IteratorType>::SeqWalkType(*this);
+           };
+          template<typename IteratorType>
+           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
+              return typename Iterator<IteratorType>::ResizePrepType(*this);
+           };
+          inline Operand1 const & operand1(void) const { return operand1_; };
+          inline Operand2 const & operand2(void) const { return operand2_; };
+
+         private:
+          Operand1 const operand1_;
+          Operand2 const operand2_;
+      };
+
+      template<typename IteratorType,
+               typename SourceType,
+               typename Operand1,
+               typename Operand2,
+               typename FieldType>
+       struct InequalCmp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+
+         public:
+          InequalCmp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef
+          This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          InequalCmp<Resize<IteratorType, This>,
+                     typename Operand1::ResizeType,
+                     typename Operand2::ResizeType,
+                     FieldType> typedef ResizeType;
+          InequalCmp(SourceType const & source)
+          : operand1_(source.operand1()), operand2_(source.operand2())
+          {};
+          inline ResizeType resize(MemoryWindow const & newSize) const {
+             return ResizeType(newSize, *this);
+          };
+          inline Operand1 const & operand1(void) const { return operand1_; };
+          inline Operand2 const & operand2(void) const { return operand2_; };
+
+         private:
+          Operand1 const operand1_;
+          Operand2 const operand2_;
+      };
+
+      template<typename IteratorType,
+               typename SourceType,
+               typename Operand1,
+               typename Operand2,
+               typename FieldType>
+       struct InequalCmp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+
+         public:
+          InequalCmp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          InequalCmp<SeqWalk<IteratorType, This>,
+                     typename Operand1::SeqWalkType,
+                     typename Operand2::SeqWalkType,
+                     FieldType> typedef SeqWalkType;
+          InequalCmp(MemoryWindow const & size, SourceType const & source)
+          : operand1_(size, source.operand1()), operand2_(size, source.operand2())
+          {};
+          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline Operand1 const & operand1(void) const { return operand1_; };
+          inline Operand2 const & operand2(void) const { return operand2_; };
+
+         private:
+          Operand1 const operand1_;
+          Operand2 const operand2_;
+      };
+
+      template<typename IteratorType,
+               typename SourceType,
+               typename Operand1,
+               typename Operand2,
+               typename FieldType>
+       struct InequalCmp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+
+         public:
+          InequalCmp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          bool typedef EvalReturnType;
+          InequalCmp(SourceType const & source)
+          : operand1_(source.operand1()), operand2_(source.operand2())
+          {};
+          inline void next(void) { operand1_.next(); operand2_.next(); };
+          inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
+          inline bool has_length(void) const {
+             return (operand1_.has_length() || operand2_.has_length());
+          };
+          inline EvalReturnType eval(void) const { return (operand1_.eval() != operand2_.eval()); };
+
+         private:
+          Operand1 operand1_;
+          Operand2 operand2_;
+      };
+
+      /* SubExpr X SubExpr */
+      template<typename SubExpr1, typename SubExpr2>
+       inline NeboBooleanExpression<InequalCmp<Initial,
+                                               typename Standardize<SubExpr1,
+                                                                    typename SubExpr1::field_type>::
+                                               StandardType,
+                                               typename Standardize<SubExpr2,
+                                                                    typename SubExpr1::field_type>::
+                                               StandardType,
+                                               typename SubExpr1::field_type>,
+                                    typename SubExpr1::field_type> operator !=(SubExpr1 const & arg1,
+                                                                               SubExpr2 const & arg2) {
+
+          typename SubExpr1::field_type typedef FieldType;
+
+          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+
+          typename Standardize<SubExpr2, typename SubExpr1::field_type>::StandardType typedef Type2;
+
+          InequalCmp<Initial, Type1, Type2, FieldType> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
+                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+       };
+
+      /* SubExpr X Scalar */
+      template<typename SubExpr1>
+       inline NeboBooleanExpression<InequalCmp<Initial,
+                                               typename Standardize<SubExpr1,
+                                                                    typename SubExpr1::field_type>::
+                                               StandardType,
+                                               NeboScalar<Initial, typename SubExpr1::field_type>,
+                                               typename SubExpr1::field_type>,
+                                    typename SubExpr1::field_type> operator !=(SubExpr1 const & arg1,
+                                                                               typename SubExpr1::
+                                                                               field_type::
+                                                                               value_type const &
+                                                                               arg2) {
+
+          typename SubExpr1::field_type typedef FieldType;
+
+          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+
+          NeboScalar<Initial, typename SubExpr1::field_type> typedef Type2;
+
+          InequalCmp<Initial, Type1, Type2, FieldType> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
+                                       Type2(Type2(arg2))));
+       };
+
+      /* Scalar X SubExpr */
+      template<typename SubExpr2>
+       inline NeboBooleanExpression<InequalCmp<Initial,
+                                               NeboScalar<Initial, typename SubExpr2::field_type>,
+                                               typename Standardize<SubExpr2,
+                                                                    typename SubExpr2::field_type>::
+                                               StandardType,
+                                               typename SubExpr2::field_type>,
+                                    typename SubExpr2::field_type> operator !=(typename SubExpr2::
+                                                                               field_type::
+                                                                               value_type const &
+                                                                               arg1,
+                                                                               SubExpr2 const & arg2) {
+
+          typename SubExpr2::field_type typedef FieldType;
+
+          NeboScalar<Initial, typename SubExpr2::field_type> typedef Type1;
+
+          typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType typedef Type2;
+
+          InequalCmp<Initial, Type1, Type2, FieldType> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(Type1(Type1(arg1)),
+                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+       };
+
+      template<typename CurrentMode, typename Operand1, typename Operand2, typename FieldType>
+       struct LessThanCmp;
+
+      template<typename Operand1, typename Operand2, typename FieldType>
+       struct LessThanCmp<Initial, Operand1, Operand2, FieldType> {
+
+         public:
+          LessThanCmp<Initial, Operand1, Operand2, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          template<typename IteratorType>
+           struct Iterator {
+
+             LessThanCmp<ResizePrep<IteratorType, This>,
+                         typename Operand1::template Iterator<IteratorType>::ResizePrepType,
+                         typename Operand2::template Iterator<IteratorType>::ResizePrepType,
+                         FieldType> typedef ResizePrepType;
+
+             LessThanCmp<SeqWalk<IteratorType, This>,
+                         typename Operand1::template Iterator<IteratorType>::SeqWalkType,
+                         typename Operand2::template Iterator<IteratorType>::SeqWalkType,
+                         FieldType> typedef SeqWalkType;
+          };
+          LessThanCmp(Operand1 const & op1, Operand2 const & op2)
+          : operand1_(op1), operand2_(op2)
+          {};
+          template<typename IteratorType>
+           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
+              return typename Iterator<IteratorType>::SeqWalkType(*this);
+           };
+          template<typename IteratorType>
+           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
+              return typename Iterator<IteratorType>::ResizePrepType(*this);
+           };
+          inline Operand1 const & operand1(void) const { return operand1_; };
+          inline Operand2 const & operand2(void) const { return operand2_; };
+
+         private:
+          Operand1 const operand1_;
+          Operand2 const operand2_;
+      };
+
+      template<typename IteratorType,
+               typename SourceType,
+               typename Operand1,
+               typename Operand2,
+               typename FieldType>
+       struct LessThanCmp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+
+         public:
+          LessThanCmp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef
+          This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          LessThanCmp<Resize<IteratorType, This>,
+                      typename Operand1::ResizeType,
+                      typename Operand2::ResizeType,
+                      FieldType> typedef ResizeType;
+          LessThanCmp(SourceType const & source)
+          : operand1_(source.operand1()), operand2_(source.operand2())
+          {};
+          inline ResizeType resize(MemoryWindow const & newSize) const {
+             return ResizeType(newSize, *this);
+          };
+          inline Operand1 const & operand1(void) const { return operand1_; };
+          inline Operand2 const & operand2(void) const { return operand2_; };
+
+         private:
+          Operand1 const operand1_;
+          Operand2 const operand2_;
+      };
+
+      template<typename IteratorType,
+               typename SourceType,
+               typename Operand1,
+               typename Operand2,
+               typename FieldType>
+       struct LessThanCmp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+
+         public:
+          LessThanCmp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          LessThanCmp<SeqWalk<IteratorType, This>,
+                      typename Operand1::SeqWalkType,
+                      typename Operand2::SeqWalkType,
+                      FieldType> typedef SeqWalkType;
+          LessThanCmp(MemoryWindow const & size, SourceType const & source)
+          : operand1_(size, source.operand1()), operand2_(size, source.operand2())
+          {};
+          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline Operand1 const & operand1(void) const { return operand1_; };
+          inline Operand2 const & operand2(void) const { return operand2_; };
+
+         private:
+          Operand1 const operand1_;
+          Operand2 const operand2_;
+      };
+
+      template<typename IteratorType,
+               typename SourceType,
+               typename Operand1,
+               typename Operand2,
+               typename FieldType>
+       struct LessThanCmp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+
+         public:
+          LessThanCmp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          bool typedef EvalReturnType;
+          LessThanCmp(SourceType const & source)
+          : operand1_(source.operand1()), operand2_(source.operand2())
+          {};
+          inline void next(void) { operand1_.next(); operand2_.next(); };
+          inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
+          inline bool has_length(void) const {
+             return (operand1_.has_length() || operand2_.has_length());
+          };
+          inline EvalReturnType eval(void) const { return (operand1_.eval() < operand2_.eval()); };
+
+         private:
+          Operand1 operand1_;
+          Operand2 operand2_;
+      };
+
+      /* SubExpr X SubExpr */
+      template<typename SubExpr1, typename SubExpr2>
+       inline NeboBooleanExpression<LessThanCmp<Initial,
+                                                typename Standardize<SubExpr1,
+                                                                     typename SubExpr1::field_type>::
+                                                StandardType,
+                                                typename Standardize<SubExpr2,
+                                                                     typename SubExpr1::field_type>::
+                                                StandardType,
+                                                typename SubExpr1::field_type>,
+                                    typename SubExpr1::field_type> operator <(SubExpr1 const & arg1,
+                                                                              SubExpr2 const & arg2) {
+
+          typename SubExpr1::field_type typedef FieldType;
+
+          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+
+          typename Standardize<SubExpr2, typename SubExpr1::field_type>::StandardType typedef Type2;
+
+          LessThanCmp<Initial, Type1, Type2, FieldType> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
+                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+       };
+
+      /* SubExpr X Scalar */
+      template<typename SubExpr1>
+       inline NeboBooleanExpression<LessThanCmp<Initial,
+                                                typename Standardize<SubExpr1,
+                                                                     typename SubExpr1::field_type>::
+                                                StandardType,
+                                                NeboScalar<Initial, typename SubExpr1::field_type>,
+                                                typename SubExpr1::field_type>,
+                                    typename SubExpr1::field_type> operator <(SubExpr1 const & arg1,
+                                                                              typename SubExpr1::
+                                                                              field_type::value_type
+                                                                              const & arg2) {
+
+          typename SubExpr1::field_type typedef FieldType;
+
+          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+
+          NeboScalar<Initial, typename SubExpr1::field_type> typedef Type2;
+
+          LessThanCmp<Initial, Type1, Type2, FieldType> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
+                                       Type2(Type2(arg2))));
+       };
+
+      /* Scalar X SubExpr */
+      template<typename SubExpr2>
+       inline NeboBooleanExpression<LessThanCmp<Initial,
+                                                NeboScalar<Initial, typename SubExpr2::field_type>,
+                                                typename Standardize<SubExpr2,
+                                                                     typename SubExpr2::field_type>::
+                                                StandardType,
+                                                typename SubExpr2::field_type>,
+                                    typename SubExpr2::field_type> operator <(typename SubExpr2::
+                                                                              field_type::value_type
+                                                                              const & arg1,
+                                                                              SubExpr2 const & arg2) {
+
+          typename SubExpr2::field_type typedef FieldType;
+
+          NeboScalar<Initial, typename SubExpr2::field_type> typedef Type1;
+
+          typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType typedef Type2;
+
+          LessThanCmp<Initial, Type1, Type2, FieldType> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(Type1(Type1(arg1)),
+                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+       };
+
+      template<typename CurrentMode, typename Operand1, typename Operand2, typename FieldType>
+       struct LessThanEqualCmp;
+
+      template<typename Operand1, typename Operand2, typename FieldType>
+       struct LessThanEqualCmp<Initial, Operand1, Operand2, FieldType> {
+
+         public:
+          LessThanEqualCmp<Initial, Operand1, Operand2, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          template<typename IteratorType>
+           struct Iterator {
+
+             LessThanEqualCmp<ResizePrep<IteratorType, This>,
+                              typename Operand1::template Iterator<IteratorType>::ResizePrepType,
+                              typename Operand2::template Iterator<IteratorType>::ResizePrepType,
+                              FieldType> typedef ResizePrepType;
+
+             LessThanEqualCmp<SeqWalk<IteratorType, This>,
+                              typename Operand1::template Iterator<IteratorType>::SeqWalkType,
+                              typename Operand2::template Iterator<IteratorType>::SeqWalkType,
+                              FieldType> typedef SeqWalkType;
+          };
+          LessThanEqualCmp(Operand1 const & op1, Operand2 const & op2)
+          : operand1_(op1), operand2_(op2)
+          {};
+          template<typename IteratorType>
+           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
+              return typename Iterator<IteratorType>::SeqWalkType(*this);
+           };
+          template<typename IteratorType>
+           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
+              return typename Iterator<IteratorType>::ResizePrepType(*this);
+           };
+          inline Operand1 const & operand1(void) const { return operand1_; };
+          inline Operand2 const & operand2(void) const { return operand2_; };
+
+         private:
+          Operand1 const operand1_;
+          Operand2 const operand2_;
+      };
+
+      template<typename IteratorType,
+               typename SourceType,
+               typename Operand1,
+               typename Operand2,
+               typename FieldType>
+       struct LessThanEqualCmp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+
+         public:
+          LessThanEqualCmp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType>
+          typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          LessThanEqualCmp<Resize<IteratorType, This>,
+                           typename Operand1::ResizeType,
+                           typename Operand2::ResizeType,
+                           FieldType> typedef ResizeType;
+          LessThanEqualCmp(SourceType const & source)
+          : operand1_(source.operand1()), operand2_(source.operand2())
+          {};
+          inline ResizeType resize(MemoryWindow const & newSize) const {
+             return ResizeType(newSize, *this);
+          };
+          inline Operand1 const & operand1(void) const { return operand1_; };
+          inline Operand2 const & operand2(void) const { return operand2_; };
+
+         private:
+          Operand1 const operand1_;
+          Operand2 const operand2_;
+      };
+
+      template<typename IteratorType,
+               typename SourceType,
+               typename Operand1,
+               typename Operand2,
+               typename FieldType>
+       struct LessThanEqualCmp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+
+         public:
+          LessThanEqualCmp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef
+          This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          LessThanEqualCmp<SeqWalk<IteratorType, This>,
+                           typename Operand1::SeqWalkType,
+                           typename Operand2::SeqWalkType,
+                           FieldType> typedef SeqWalkType;
+          LessThanEqualCmp(MemoryWindow const & size, SourceType const & source)
+          : operand1_(size, source.operand1()), operand2_(size, source.operand2())
+          {};
+          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline Operand1 const & operand1(void) const { return operand1_; };
+          inline Operand2 const & operand2(void) const { return operand2_; };
+
+         private:
+          Operand1 const operand1_;
+          Operand2 const operand2_;
+      };
+
+      template<typename IteratorType,
+               typename SourceType,
+               typename Operand1,
+               typename Operand2,
+               typename FieldType>
+       struct LessThanEqualCmp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+
+         public:
+          LessThanEqualCmp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef
+          This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          bool typedef EvalReturnType;
+          LessThanEqualCmp(SourceType const & source)
+          : operand1_(source.operand1()), operand2_(source.operand2())
+          {};
+          inline void next(void) { operand1_.next(); operand2_.next(); };
+          inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
+          inline bool has_length(void) const {
+             return (operand1_.has_length() || operand2_.has_length());
+          };
+          inline EvalReturnType eval(void) const { return (operand1_.eval() <= operand2_.eval()); };
+
+         private:
+          Operand1 operand1_;
+          Operand2 operand2_;
+      };
+
+      /* SubExpr X SubExpr */
+      template<typename SubExpr1, typename SubExpr2>
+       inline NeboBooleanExpression<LessThanEqualCmp<Initial,
+                                                     typename Standardize<SubExpr1,
+                                                                          typename SubExpr1::
+                                                                          field_type>::StandardType,
+                                                     typename Standardize<SubExpr2,
+                                                                          typename SubExpr1::
+                                                                          field_type>::StandardType,
+                                                     typename SubExpr1::field_type>,
+                                    typename SubExpr1::field_type> operator <=(SubExpr1 const & arg1,
+                                                                               SubExpr2 const & arg2) {
+
+          typename SubExpr1::field_type typedef FieldType;
+
+          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+
+          typename Standardize<SubExpr2, typename SubExpr1::field_type>::StandardType typedef Type2;
+
+          LessThanEqualCmp<Initial, Type1, Type2, FieldType> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
+                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+       };
+
+      /* SubExpr X Scalar */
+      template<typename SubExpr1>
+       inline NeboBooleanExpression<LessThanEqualCmp<Initial,
+                                                     typename Standardize<SubExpr1,
+                                                                          typename SubExpr1::
+                                                                          field_type>::StandardType,
+                                                     NeboScalar<Initial,
+                                                                typename SubExpr1::field_type>,
+                                                     typename SubExpr1::field_type>,
+                                    typename SubExpr1::field_type> operator <=(SubExpr1 const & arg1,
+                                                                               typename SubExpr1::
+                                                                               field_type::
+                                                                               value_type const &
+                                                                               arg2) {
+
+          typename SubExpr1::field_type typedef FieldType;
+
+          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+
+          NeboScalar<Initial, typename SubExpr1::field_type> typedef Type2;
+
+          LessThanEqualCmp<Initial, Type1, Type2, FieldType> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
+                                       Type2(Type2(arg2))));
+       };
+
+      /* Scalar X SubExpr */
+      template<typename SubExpr2>
+       inline NeboBooleanExpression<LessThanEqualCmp<Initial,
+                                                     NeboScalar<Initial,
+                                                                typename SubExpr2::field_type>,
+                                                     typename Standardize<SubExpr2,
+                                                                          typename SubExpr2::
+                                                                          field_type>::StandardType,
+                                                     typename SubExpr2::field_type>,
+                                    typename SubExpr2::field_type> operator <=(typename SubExpr2::
+                                                                               field_type::
+                                                                               value_type const &
+                                                                               arg1,
+                                                                               SubExpr2 const & arg2) {
+
+          typename SubExpr2::field_type typedef FieldType;
+
+          NeboScalar<Initial, typename SubExpr2::field_type> typedef Type1;
+
+          typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType typedef Type2;
+
+          LessThanEqualCmp<Initial, Type1, Type2, FieldType> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(Type1(Type1(arg1)),
+                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+       };
+
+      template<typename CurrentMode, typename Operand1, typename Operand2, typename FieldType>
+       struct GreaterThanCmp;
+
+      template<typename Operand1, typename Operand2, typename FieldType>
+       struct GreaterThanCmp<Initial, Operand1, Operand2, FieldType> {
+
+         public:
+          GreaterThanCmp<Initial, Operand1, Operand2, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          template<typename IteratorType>
+           struct Iterator {
+
+             GreaterThanCmp<ResizePrep<IteratorType, This>,
+                            typename Operand1::template Iterator<IteratorType>::ResizePrepType,
+                            typename Operand2::template Iterator<IteratorType>::ResizePrepType,
+                            FieldType> typedef ResizePrepType;
+
+             GreaterThanCmp<SeqWalk<IteratorType, This>,
+                            typename Operand1::template Iterator<IteratorType>::SeqWalkType,
+                            typename Operand2::template Iterator<IteratorType>::SeqWalkType,
+                            FieldType> typedef SeqWalkType;
+          };
+          GreaterThanCmp(Operand1 const & op1, Operand2 const & op2)
+          : operand1_(op1), operand2_(op2)
+          {};
+          template<typename IteratorType>
+           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
+              return typename Iterator<IteratorType>::SeqWalkType(*this);
+           };
+          template<typename IteratorType>
+           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
+              return typename Iterator<IteratorType>::ResizePrepType(*this);
+           };
+          inline Operand1 const & operand1(void) const { return operand1_; };
+          inline Operand2 const & operand2(void) const { return operand2_; };
+
+         private:
+          Operand1 const operand1_;
+          Operand2 const operand2_;
+      };
+
+      template<typename IteratorType,
+               typename SourceType,
+               typename Operand1,
+               typename Operand2,
+               typename FieldType>
+       struct GreaterThanCmp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+
+         public:
+          GreaterThanCmp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType>
+          typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          GreaterThanCmp<Resize<IteratorType, This>,
+                         typename Operand1::ResizeType,
+                         typename Operand2::ResizeType,
+                         FieldType> typedef ResizeType;
+          GreaterThanCmp(SourceType const & source)
+          : operand1_(source.operand1()), operand2_(source.operand2())
+          {};
+          inline ResizeType resize(MemoryWindow const & newSize) const {
+             return ResizeType(newSize, *this);
+          };
+          inline Operand1 const & operand1(void) const { return operand1_; };
+          inline Operand2 const & operand2(void) const { return operand2_; };
+
+         private:
+          Operand1 const operand1_;
+          Operand2 const operand2_;
+      };
+
+      template<typename IteratorType,
+               typename SourceType,
+               typename Operand1,
+               typename Operand2,
+               typename FieldType>
+       struct GreaterThanCmp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+
+         public:
+          GreaterThanCmp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef
+          This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          GreaterThanCmp<SeqWalk<IteratorType, This>,
+                         typename Operand1::SeqWalkType,
+                         typename Operand2::SeqWalkType,
+                         FieldType> typedef SeqWalkType;
+          GreaterThanCmp(MemoryWindow const & size, SourceType const & source)
+          : operand1_(size, source.operand1()), operand2_(size, source.operand2())
+          {};
+          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline Operand1 const & operand1(void) const { return operand1_; };
+          inline Operand2 const & operand2(void) const { return operand2_; };
+
+         private:
+          Operand1 const operand1_;
+          Operand2 const operand2_;
+      };
+
+      template<typename IteratorType,
+               typename SourceType,
+               typename Operand1,
+               typename Operand2,
+               typename FieldType>
+       struct GreaterThanCmp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+
+         public:
+          GreaterThanCmp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef
+          This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          bool typedef EvalReturnType;
+          GreaterThanCmp(SourceType const & source)
+          : operand1_(source.operand1()), operand2_(source.operand2())
+          {};
+          inline void next(void) { operand1_.next(); operand2_.next(); };
+          inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
+          inline bool has_length(void) const {
+             return (operand1_.has_length() || operand2_.has_length());
+          };
+          inline EvalReturnType eval(void) const { return (operand1_.eval() > operand2_.eval()); };
+
+         private:
+          Operand1 operand1_;
+          Operand2 operand2_;
+      };
+
+      /* SubExpr X SubExpr */
+      template<typename SubExpr1, typename SubExpr2>
+       inline NeboBooleanExpression<GreaterThanCmp<Initial,
+                                                   typename Standardize<SubExpr1,
+                                                                        typename SubExpr1::
+                                                                        field_type>::StandardType,
+                                                   typename Standardize<SubExpr2,
+                                                                        typename SubExpr1::
+                                                                        field_type>::StandardType,
+                                                   typename SubExpr1::field_type>,
+                                    typename SubExpr1::field_type> operator >(SubExpr1 const & arg1,
+                                                                              SubExpr2 const & arg2) {
+
+          typename SubExpr1::field_type typedef FieldType;
+
+          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+
+          typename Standardize<SubExpr2, typename SubExpr1::field_type>::StandardType typedef Type2;
+
+          GreaterThanCmp<Initial, Type1, Type2, FieldType> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
+                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+       };
+
+      /* SubExpr X Scalar */
+      template<typename SubExpr1>
+       inline NeboBooleanExpression<GreaterThanCmp<Initial,
+                                                   typename Standardize<SubExpr1,
+                                                                        typename SubExpr1::
+                                                                        field_type>::StandardType,
+                                                   NeboScalar<Initial, typename SubExpr1::field_type>,
+                                                   typename SubExpr1::field_type>,
+                                    typename SubExpr1::field_type> operator >(SubExpr1 const & arg1,
+                                                                              typename SubExpr1::
+                                                                              field_type::value_type
+                                                                              const & arg2) {
+
+          typename SubExpr1::field_type typedef FieldType;
+
+          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+
+          NeboScalar<Initial, typename SubExpr1::field_type> typedef Type2;
+
+          GreaterThanCmp<Initial, Type1, Type2, FieldType> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
+                                       Type2(Type2(arg2))));
+       };
+
+      /* Scalar X SubExpr */
+      template<typename SubExpr2>
+       inline NeboBooleanExpression<GreaterThanCmp<Initial,
+                                                   NeboScalar<Initial, typename SubExpr2::field_type>,
+                                                   typename Standardize<SubExpr2,
+                                                                        typename SubExpr2::
+                                                                        field_type>::StandardType,
+                                                   typename SubExpr2::field_type>,
+                                    typename SubExpr2::field_type> operator >(typename SubExpr2::
+                                                                              field_type::value_type
+                                                                              const & arg1,
+                                                                              SubExpr2 const & arg2) {
+
+          typename SubExpr2::field_type typedef FieldType;
+
+          NeboScalar<Initial, typename SubExpr2::field_type> typedef Type1;
+
+          typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType typedef Type2;
+
+          GreaterThanCmp<Initial, Type1, Type2, FieldType> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(Type1(Type1(arg1)),
+                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+       };
+
+      template<typename CurrentMode, typename Operand1, typename Operand2, typename FieldType>
+       struct GreaterThanEqualCmp;
+
+      template<typename Operand1, typename Operand2, typename FieldType>
+       struct GreaterThanEqualCmp<Initial, Operand1, Operand2, FieldType> {
+
+         public:
+          GreaterThanEqualCmp<Initial, Operand1, Operand2, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          template<typename IteratorType>
+           struct Iterator {
+
+             GreaterThanEqualCmp<ResizePrep<IteratorType, This>,
+                                 typename Operand1::template Iterator<IteratorType>::ResizePrepType,
+                                 typename Operand2::template Iterator<IteratorType>::ResizePrepType,
+                                 FieldType> typedef ResizePrepType;
+
+             GreaterThanEqualCmp<SeqWalk<IteratorType, This>,
+                                 typename Operand1::template Iterator<IteratorType>::SeqWalkType,
+                                 typename Operand2::template Iterator<IteratorType>::SeqWalkType,
+                                 FieldType> typedef SeqWalkType;
+          };
+          GreaterThanEqualCmp(Operand1 const & op1, Operand2 const & op2)
+          : operand1_(op1), operand2_(op2)
+          {};
+          template<typename IteratorType>
+           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
+              return typename Iterator<IteratorType>::SeqWalkType(*this);
+           };
+          template<typename IteratorType>
+           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
+              return typename Iterator<IteratorType>::ResizePrepType(*this);
+           };
+          inline Operand1 const & operand1(void) const { return operand1_; };
+          inline Operand2 const & operand2(void) const { return operand2_; };
+
+         private:
+          Operand1 const operand1_;
+          Operand2 const operand2_;
+      };
+
+      template<typename IteratorType,
+               typename SourceType,
+               typename Operand1,
+               typename Operand2,
+               typename FieldType>
+       struct GreaterThanEqualCmp<ResizePrep<IteratorType, SourceType>,
+                                  Operand1,
+                                  Operand2,
+                                  FieldType> {
+
+         public:
+          GreaterThanEqualCmp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType>
+          typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          GreaterThanEqualCmp<Resize<IteratorType, This>,
+                              typename Operand1::ResizeType,
+                              typename Operand2::ResizeType,
+                              FieldType> typedef ResizeType;
+          GreaterThanEqualCmp(SourceType const & source)
+          : operand1_(source.operand1()), operand2_(source.operand2())
+          {};
+          inline ResizeType resize(MemoryWindow const & newSize) const {
+             return ResizeType(newSize, *this);
+          };
+          inline Operand1 const & operand1(void) const { return operand1_; };
+          inline Operand2 const & operand2(void) const { return operand2_; };
+
+         private:
+          Operand1 const operand1_;
+          Operand2 const operand2_;
+      };
+
+      template<typename IteratorType,
+               typename SourceType,
+               typename Operand1,
+               typename Operand2,
+               typename FieldType>
+       struct GreaterThanEqualCmp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+
+         public:
+          GreaterThanEqualCmp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType>
+          typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          GreaterThanEqualCmp<SeqWalk<IteratorType, This>,
+                              typename Operand1::SeqWalkType,
+                              typename Operand2::SeqWalkType,
+                              FieldType> typedef SeqWalkType;
+          GreaterThanEqualCmp(MemoryWindow const & size, SourceType const & source)
+          : operand1_(size, source.operand1()), operand2_(size, source.operand2())
+          {};
+          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline Operand1 const & operand1(void) const { return operand1_; };
+          inline Operand2 const & operand2(void) const { return operand2_; };
+
+         private:
+          Operand1 const operand1_;
+          Operand2 const operand2_;
+      };
+
+      template<typename IteratorType,
+               typename SourceType,
+               typename Operand1,
+               typename Operand2,
+               typename FieldType>
+       struct GreaterThanEqualCmp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+
+         public:
+          GreaterThanEqualCmp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType>
+          typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          bool typedef EvalReturnType;
+          GreaterThanEqualCmp(SourceType const & source)
+          : operand1_(source.operand1()), operand2_(source.operand2())
+          {};
+          inline void next(void) { operand1_.next(); operand2_.next(); };
+          inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
+          inline bool has_length(void) const {
+             return (operand1_.has_length() || operand2_.has_length());
+          };
+          inline EvalReturnType eval(void) const { return (operand1_.eval() >= operand2_.eval()); };
+
+         private:
+          Operand1 operand1_;
+          Operand2 operand2_;
+      };
+
+      /* SubExpr X SubExpr */
+      template<typename SubExpr1, typename SubExpr2>
+       inline NeboBooleanExpression<GreaterThanEqualCmp<Initial,
+                                                        typename Standardize<SubExpr1,
+                                                                             typename SubExpr1::
+                                                                             field_type>::
+                                                        StandardType,
+                                                        typename Standardize<SubExpr2,
+                                                                             typename SubExpr1::
+                                                                             field_type>::
+                                                        StandardType,
+                                                        typename SubExpr1::field_type>,
+                                    typename SubExpr1::field_type> operator >=(SubExpr1 const & arg1,
+                                                                               SubExpr2 const & arg2) {
+
+          typename SubExpr1::field_type typedef FieldType;
+
+          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+
+          typename Standardize<SubExpr2, typename SubExpr1::field_type>::StandardType typedef Type2;
+
+          GreaterThanEqualCmp<Initial, Type1, Type2, FieldType> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
+                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+       };
+
+      /* SubExpr X Scalar */
+      template<typename SubExpr1>
+       inline NeboBooleanExpression<GreaterThanEqualCmp<Initial,
+                                                        typename Standardize<SubExpr1,
+                                                                             typename SubExpr1::
+                                                                             field_type>::
+                                                        StandardType,
+                                                        NeboScalar<Initial,
+                                                                   typename SubExpr1::field_type>,
+                                                        typename SubExpr1::field_type>,
+                                    typename SubExpr1::field_type> operator >=(SubExpr1 const & arg1,
+                                                                               typename SubExpr1::
+                                                                               field_type::
+                                                                               value_type const &
+                                                                               arg2) {
+
+          typename SubExpr1::field_type typedef FieldType;
+
+          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+
+          NeboScalar<Initial, typename SubExpr1::field_type> typedef Type2;
+
+          GreaterThanEqualCmp<Initial, Type1, Type2, FieldType> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
+                                       Type2(Type2(arg2))));
+       };
+
+      /* Scalar X SubExpr */
+      template<typename SubExpr2>
+       inline NeboBooleanExpression<GreaterThanEqualCmp<Initial,
+                                                        NeboScalar<Initial,
+                                                                   typename SubExpr2::field_type>,
+                                                        typename Standardize<SubExpr2,
+                                                                             typename SubExpr2::
+                                                                             field_type>::
+                                                        StandardType,
+                                                        typename SubExpr2::field_type>,
+                                    typename SubExpr2::field_type> operator >=(typename SubExpr2::
+                                                                               field_type::
+                                                                               value_type const &
+                                                                               arg1,
+                                                                               SubExpr2 const & arg2) {
+
+          typename SubExpr2::field_type typedef FieldType;
+
+          NeboScalar<Initial, typename SubExpr2::field_type> typedef Type1;
+
+          typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType typedef Type2;
+
+          GreaterThanEqualCmp<Initial, Type1, Type2, FieldType> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(Type1(Type1(arg1)),
+                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+       };
+
 #     define BUILD_BINARY_FUNCTION(OBJECT_NAME, INTERNAL_NAME, EXTERNAL_NAME)                      \
          template<typename CurrentMode, typename Operand1, typename Operand2, typename FieldType>  \
           struct OBJECT_NAME;                                                                      \
@@ -3099,6 +4365,849 @@
                                                                                                    \
              return ReturnTerm(ReturnType(Type(Standardize<SubExpr, FieldType>::standardType(arg)))); \
           };
+
+      struct NeboNil { NeboNil() {}; };
+
+      template<typename CurrentMode, typename Test, typename Expr, typename FieldType>
+       struct NeboClause;
+
+      template<typename Test, typename Expr, typename FieldType>
+       struct NeboClause<Initial, Test, Expr, FieldType> {
+
+         public:
+          NeboClause<Initial, Test, Expr, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          template<typename IteratorType>
+           struct Iterator {
+
+             NeboClause<ResizePrep<IteratorType, This>,
+                        typename Test::template Iterator<IteratorType>::ResizePrepType,
+                        typename Expr::template Iterator<IteratorType>::ResizePrepType,
+                        FieldType> typedef ResizePrepType;
+
+             NeboClause<SeqWalk<IteratorType, This>,
+                        typename Test::template Iterator<IteratorType>::SeqWalkType,
+                        typename Expr::template Iterator<IteratorType>::SeqWalkType,
+                        FieldType> typedef SeqWalkType;
+          };
+          NeboClause(Test const & t, Expr const & e)
+          : test_(t), expr_(e)
+          {};
+          template<typename IteratorType>
+           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
+              return typename Iterator<IteratorType>::SeqWalkType(*this);
+           };
+          template<typename IteratorType>
+           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
+              return typename Iterator<IteratorType>::ResizePrepType(*this);
+           };
+          inline Test const & test(void) const { return test_; };
+          inline Expr const & expr(void) const { return expr_; };
+
+         private:
+          Test const test_;
+          Expr const expr_;
+      };
+
+      template<typename IteratorType,
+               typename SourceType,
+               typename Test,
+               typename Expr,
+               typename FieldType>
+       struct NeboClause<ResizePrep<IteratorType, SourceType>, Test, Expr, FieldType> {
+
+         public:
+          NeboClause<ResizePrep<IteratorType, SourceType>, Test, Expr, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          NeboClause<Resize<IteratorType, This>,
+                     typename Test::ResizeType,
+                     typename Expr::ResizeType,
+                     FieldType> typedef ResizeType;
+          NeboClause(SourceType const & source)
+          : test_(source.test()), expr_(source.expr())
+          {};
+          inline ResizeType resize(MemoryWindow const & newSize) const {
+             return ResizeType(newSize, *this);
+          };
+          inline Test const & test(void) const { return test_; };
+          inline Expr const & expr(void) const { return expr_; };
+
+         private:
+          Test const test_;
+          Expr const expr_;
+      };
+
+      template<typename IteratorType,
+               typename SourceType,
+               typename Test,
+               typename Expr,
+               typename FieldType>
+       struct NeboClause<Resize<IteratorType, SourceType>, Test, Expr, FieldType> {
+
+         public:
+          NeboClause<Resize<IteratorType, SourceType>, Test, Expr, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          NeboClause<SeqWalk<IteratorType, This>,
+                     typename Test::SeqWalkType,
+                     typename Expr::SeqWalkType,
+                     FieldType> typedef SeqWalkType;
+          NeboClause(MemoryWindow const & size, SourceType const & source)
+          : test_(source.test()), expr_(source.expr())
+          {};
+          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline Test const & test(void) const { return test_; };
+          inline Expr const & expr(void) const { return expr_; };
+
+         private:
+          Test const test_;
+          Expr const expr_;
+      };
+
+      template<typename IteratorType,
+               typename SourceType,
+               typename Test,
+               typename Expr,
+               typename FieldType>
+       struct NeboClause<SeqWalk<IteratorType, SourceType>, Test, Expr, FieldType> {
+
+         public:
+          NeboClause<SeqWalk<IteratorType, SourceType>, Test, Expr, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef AtomicType;
+          NeboClause(SourceType const & source)
+          : test_(source.test()), expr_(source.expr())
+          {};
+          inline void next(void) { test_.next(); expr_.next(); };
+          inline bool at_end(void) const { return (test_.at_end() || expr_.at_end()); };
+          inline bool has_length(void) const { return (test_.has_length() || expr_.has_length()); };
+          inline bool const check(void) const { return test_.eval(); };
+          inline AtomicType const eval(void) const { return expr_.eval(); };
+
+         private:
+          Test test_;
+          Expr expr_;
+      };
+
+      template<typename CurrentMode, typename Clause, typename Otherwise, typename FieldType>
+       struct NeboCond;
+
+      template<typename Clause, typename Otherwise, typename FieldType>
+       struct NeboCond<Initial, Clause, Otherwise, FieldType> {
+
+         public:
+          NeboCond<Initial, Clause, Otherwise, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          template<typename IteratorType>
+           struct Iterator {
+
+             NeboCond<ResizePrep<IteratorType, This>,
+                      typename Clause::template Iterator<IteratorType>::ResizePrepType,
+                      typename Otherwise::template Iterator<IteratorType>::ResizePrepType,
+                      FieldType> typedef ResizePrepType;
+
+             NeboCond<SeqWalk<IteratorType, This>,
+                      typename Clause::template Iterator<IteratorType>::SeqWalkType,
+                      typename Otherwise::template Iterator<IteratorType>::SeqWalkType,
+                      FieldType> typedef SeqWalkType;
+          };
+          NeboCond(Clause const & c, Otherwise const & e)
+          : clause_(c), otherwise_(e)
+          {};
+          template<typename IteratorType>
+           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
+              return typename Iterator<IteratorType>::SeqWalkType(*this);
+           };
+          template<typename IteratorType>
+           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
+              return typename Iterator<IteratorType>::ResizePrepType(*this);
+           };
+          inline Clause const & clause(void) const { return clause_; };
+          inline Otherwise const & otherwise(void) const { return otherwise_; };
+
+         private:
+          Clause const clause_;
+          Otherwise const otherwise_;
+      };
+
+      template<typename IteratorType,
+               typename SourceType,
+               typename Clause,
+               typename Otherwise,
+               typename FieldType>
+       struct NeboCond<ResizePrep<IteratorType, SourceType>, Clause, Otherwise, FieldType> {
+
+         public:
+          NeboCond<ResizePrep<IteratorType, SourceType>, Clause, Otherwise, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          NeboCond<Resize<IteratorType, This>,
+                   typename Clause::ResizeType,
+                   typename Otherwise::ResizeType,
+                   FieldType> typedef ResizeType;
+          NeboCond(SourceType const & source)
+          : clause_(source.clause()), otherwise_(source.otherwise())
+          {};
+          inline ResizeType resize(MemoryWindow const & newSize) const {
+             return ResizeType(newSize, *this);
+          };
+          inline Clause const & clause(void) const { return clause_; };
+          inline Otherwise const & otherwise(void) const { return otherwise_; };
+
+         private:
+          Clause const clause_;
+          Otherwise const otherwise_;
+      };
+
+      template<typename IteratorType,
+               typename SourceType,
+               typename Clause,
+               typename Otherwise,
+               typename FieldType>
+       struct NeboCond<Resize<IteratorType, SourceType>, Clause, Otherwise, FieldType> {
+
+         public:
+          NeboCond<Resize<IteratorType, SourceType>, Clause, Otherwise, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          NeboCond<SeqWalk<IteratorType, This>,
+                   typename Clause::SeqWalkType,
+                   typename Otherwise::SeqWalkType,
+                   FieldType> typedef SeqWalkType;
+          NeboCond(MemoryWindow const & size, SourceType const & source)
+          : clause_(source.clause()), otherwise_(source.otherwise())
+          {};
+          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline Clause const & clause(void) const { return clause_; };
+          inline Otherwise const & otherwise(void) const { return otherwise_; };
+
+         private:
+          Clause const clause_;
+          Otherwise const otherwise_;
+      };
+
+      template<typename IteratorType,
+               typename SourceType,
+               typename Clause,
+               typename Otherwise,
+               typename FieldType>
+       struct NeboCond<SeqWalk<IteratorType, SourceType>, Clause, Otherwise, FieldType> {
+
+         public:
+          NeboCond<SeqWalk<IteratorType, SourceType>, Clause, Otherwise, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef AtomicType;
+          NeboCond(SourceType const & source)
+          : clause_(source.clause()), otherwise_(source.otherwise())
+          {};
+          inline void next(void) { clause_.next(); otherwise_.next(); };
+          inline bool at_end(void) const { return (clause_.at_end() || otherwise_.at_end()); };
+          inline bool has_length(void) const {
+             return (clause_.has_length() || otherwise_.has_length());
+          };
+          inline AtomicType const eval(void) const {
+             return clause_.check() ? clause_.eval() : otherwise_.eval();
+          };
+
+         private:
+          Clause clause_;
+          Otherwise otherwise_;
+      };
+
+      struct NeboSimpleClause {
+
+         public:
+          NeboSimpleClause(bool b, double d)
+          : b_(b), d_(d)
+          {};
+          inline bool check(void) const { return b_; };
+          inline double eval(void) const { return d_; };
+          template<typename FieldType>
+           struct Convert {
+
+             NeboBoolean<Initial, FieldType> typedef Boolean;
+
+             NeboScalar<Initial, FieldType> typedef Scalar;
+
+             NeboClause<Initial, Boolean, Scalar, FieldType> typedef Converted;
+
+             static inline Converted convert(bool b, double d) {
+                return Converted(Boolean(b), Scalar(d));
+             };
+          };
+
+         private:
+          bool const b_;
+          double const d_;
+      };
+
+      struct NeboSimpleFinalClause {
+
+         public:
+          NeboSimpleFinalClause(double d)
+          : d_(d)
+          {};
+          inline double eval(void) const { return d_; };
+
+         private:
+          double const d_;
+      };
+
+      template<typename Otherwise>
+       struct NeboSimpleCond {
+
+         public:
+          NeboSimpleCond(NeboSimpleClause c, Otherwise otherwise)
+          : c_(c), otherwise_(otherwise)
+          {};
+          inline double eval(void) const { return c_.check() ? c_.eval() : otherwise_.eval(); };
+          template<typename FieldType>
+           struct Convert {
+
+             NeboSimpleClause::template Convert<FieldType> typedef ConvertingClause;
+
+             typename ConvertingClause::Converted typedef ConvertedClause;
+
+             typename Otherwise::template Convert<FieldType> typedef ConvertingList;
+
+             typename ConvertingList::Converted typedef ConvertedList;
+
+             NeboCond<Initial, ConvertedClause, ConvertedList, FieldType> typedef Converted;
+
+             static inline Converted convert(NeboSimpleClause c, Otherwise o) {
+                return Converted(ConvertingClause::convert(c.check(), c.eval()), o.template convert<FieldType>());
+             };
+          };
+          template<typename FieldType>
+           inline typename Convert<FieldType>::Converted convert(void) const {
+
+              Convert<FieldType> typedef Convert;
+
+              return Convert::convert(clause(), otherwise());
+           };
+          inline NeboSimpleClause const & clause(void) const { return c_; };
+          inline Otherwise const & otherwise(void) const { return otherwise_; };
+
+         private:
+          NeboSimpleClause const c_;
+          Otherwise const otherwise_;
+      };
+
+      template<>
+       struct NeboSimpleCond<NeboNil> {
+
+         public:
+          NeboSimpleCond(NeboSimpleClause c, NeboNil nil)
+          : c_(c)
+          {};
+          template<typename FieldType>
+           struct Convert {
+
+             NeboSimpleClause::template Convert<FieldType> typedef ConvertingClause;
+
+             typename ConvertingClause::Converted typedef ConvertedClause;
+
+             NeboNil typedef ConvertedList;
+
+             NeboCond<Initial, ConvertedClause, ConvertedList, FieldType> typedef Converted;
+
+             static inline Converted convert(NeboSimpleClause c) {
+                return Converted(ConvertingClause::convert(c.check(), c.eval()), NeboNil());
+             };
+          };
+          template<typename FieldType>
+           inline typename Convert<FieldType>::Converted convert(void) const {
+
+              Convert<FieldType> typedef Convert;
+
+              return Convert::convert(clause());
+           };
+          inline NeboSimpleClause const & clause(void) const { return c_; };
+          inline NeboNil otherwise(void) const { return NeboNil(); };
+
+         private:
+          NeboSimpleClause const c_;
+      };
+
+      template<typename List>
+       struct CondBuilder;
+
+      template<typename Clause, typename Otherwise, typename FieldType>
+       struct CondBuilder<NeboCond<Initial, Clause, Otherwise, FieldType> > {
+
+         public:
+          CondBuilder(NeboCond<Initial, Clause, Otherwise, FieldType> l)
+          : list_(l)
+          {};
+          NeboCond<Initial, Clause, Otherwise, FieldType> typedef List;
+
+         private:
+          template<typename Remaining, typename PreceedingResult>
+           struct ReverseListRecursive;
+          template<typename PreceedingResult>
+           struct ReverseListRecursive<NeboNil, PreceedingResult> {
+
+             PreceedingResult typedef Result;
+
+             static inline Result reverse(NeboNil nil, PreceedingResult r) { return r; };
+          };
+          template<typename Next, typename Field, typename Following, typename PreceedingResult>
+           struct ReverseListRecursive<NeboCond<Initial, Next, Following, Field>, PreceedingResult> {
+
+             NeboCond<Initial, Next, Following, Field> typedef Remaining;
+
+             NeboCond<Initial, Next, PreceedingResult, Field> typedef NewResult;
+
+             ReverseListRecursive<Following, NewResult> typedef InternalCall;
+
+             typename InternalCall::Result typedef Result;
+
+             static inline Result reverse(Remaining l, PreceedingResult r) {
+                return InternalCall::reverse(l.otherwise(), NewResult(l.clause(), r));
+             };
+          };
+
+         public:
+          template<typename Final>
+           struct ReverseList;
+          template<typename Final>
+           struct ReverseList {
+
+             ReverseListRecursive<List, Final> typedef InternalCall;
+
+             typename InternalCall::Result typedef Result;
+
+             static inline Result reverse(List l, Final f) { return InternalCall::reverse(l, f); };
+          };
+          template<typename Final>
+           inline typename ReverseList<Final>::Result reverse(Final f) {
+
+              ReverseList<Final> typedef InternalCall;
+
+              return InternalCall::reverse(list_, f);
+           };
+
+         public:
+          inline NeboExpression<typename ReverseList<NeboScalar<Initial, FieldType> >::Result,
+                                FieldType> operator ()(double d) {
+
+             NeboScalar<Initial, FieldType> typedef Scalar;
+
+             ReverseList<Scalar> typedef Reverser;
+
+             typename Reverser::Result typedef Reversed;
+
+             NeboExpression<Reversed, FieldType> typedef Result;
+
+             return Result(reverse(Scalar(d)));
+          };
+          template<typename Expr>
+           inline NeboExpression<typename ReverseList<typename Standardize<Expr, FieldType>::
+                                                      StandardType>::Result,
+                                 FieldType> operator ()(Expr e) {
+
+              Standardize<Expr, FieldType> typedef Standardize;
+
+              typename Standardize::StandardType typedef FinalType;
+
+              ReverseList<FinalType> typedef Reverser;
+
+              typename Reverser::Result typedef Reversed;
+
+              NeboExpression<Reversed, FieldType> typedef Result;
+
+              return Result(reverse(Standardize::standardType(e)));
+           };
+          inline CondBuilder<NeboCond<Initial,
+                                      NeboClause<Initial,
+                                                 NeboBoolean<Initial, FieldType>,
+                                                 NeboScalar<Initial, FieldType>,
+                                                 FieldType>,
+                                      List,
+                                      FieldType> > operator ()(bool b, double d) {
+
+             NeboBoolean<Initial, FieldType> typedef Boolean;
+
+             NeboScalar<Initial, FieldType> typedef Scalar;
+
+             NeboClause<Initial, Boolean, Scalar, FieldType> typedef NewClause;
+
+             NeboCond<Initial, NewClause, List, FieldType> typedef Cond;
+
+             CondBuilder<Cond> typedef ReturnType;
+
+             return ReturnType(Cond(NewClause(Boolean(b), Scalar(d)), list_));
+          };
+          template<typename Expr>
+           inline CondBuilder<NeboCond<Initial,
+                                       NeboClause<Initial,
+                                                  NeboBoolean<Initial, FieldType>,
+                                                  typename Standardize<Expr, FieldType>::
+                                                  StandardType,
+                                                  FieldType>,
+                                       List,
+                                       FieldType> > operator ()(bool b, Expr e) {
+
+              NeboBoolean<Initial, FieldType> typedef Boolean;
+
+              Standardize<Expr, FieldType> typedef Standardize;
+
+              typename Standardize::StandardType typedef StandardType;
+
+              NeboClause<Initial, Boolean, StandardType, FieldType> typedef Clause;
+
+              NeboCond<Initial, Clause, List, FieldType> typedef Cond;
+
+              CondBuilder<Cond> typedef ReturnType;
+
+              return ReturnType(Cond(Clause(Boolean(b), Standardize::standardType(e)), list_));
+           };
+          template<typename BoolExpr>
+           inline CondBuilder<NeboCond<Initial,
+                                       NeboClause<Initial,
+                                                  BoolExpr,
+                                                  NeboScalar<Initial, FieldType>,
+                                                  FieldType>,
+                                       List,
+                                       FieldType> > operator ()(NeboBooleanExpression<BoolExpr,
+                                                                                      FieldType> nb,
+                                                                double d) {
+
+              NeboScalar<Initial, FieldType> typedef Scalar;
+
+              NeboClause<Initial, BoolExpr, Scalar, FieldType> typedef NewClause;
+
+              NeboCond<Initial, NewClause, List, FieldType> typedef Cond;
+
+              CondBuilder<Cond> typedef ReturnType;
+
+              return ReturnType(Cond(NewClause(nb.expr(), Scalar(d)), list_));
+           };
+          template<typename BoolExpr, typename Expr>
+           inline CondBuilder<NeboCond<Initial,
+                                       NeboClause<Initial,
+                                                  BoolExpr,
+                                                  typename Standardize<Expr, FieldType>::
+                                                  StandardType,
+                                                  FieldType>,
+                                       List,
+                                       FieldType> > operator ()(NeboBooleanExpression<BoolExpr,
+                                                                                      typename Expr::
+                                                                                      field_type> nb,
+                                                                Expr e) {
+
+              Standardize<Expr, FieldType> typedef Standardize;
+
+              typename Standardize::StandardType typedef StandardType;
+
+              NeboClause<Initial, BoolExpr, StandardType, FieldType> typedef Clause;
+
+              NeboCond<Initial, Clause, List, FieldType> typedef Cond;
+
+              CondBuilder<Cond> typedef ReturnType;
+
+              return ReturnType(Cond(Clause(nb.expr(), Standardize::standardType(e)), list_));
+           };
+
+         private:
+          List list_;
+      };
+
+      template<typename Otherwise>
+       struct CondBuilder<NeboSimpleCond<Otherwise> > {
+
+         public:
+          CondBuilder(NeboSimpleCond<Otherwise> l)
+          : list_(l)
+          {};
+          NeboSimpleCond<Otherwise> typedef List;
+
+         private:
+          template<typename Remaining, typename PreceedingResult>
+           struct ReverseListRecursive;
+          template<typename PreceedingResult>
+           struct ReverseListRecursive<NeboNil, PreceedingResult> {
+
+             PreceedingResult typedef Result;
+
+             static inline Result reverse(NeboNil nil, PreceedingResult r) { return r; };
+          };
+          template<typename Following, typename PreceedingResult>
+           struct ReverseListRecursive<NeboSimpleCond<Following>, PreceedingResult> {
+
+             NeboSimpleCond<Following> typedef Remaining;
+
+             NeboSimpleCond<PreceedingResult> typedef NewResult;
+
+             ReverseListRecursive<Following, NewResult> typedef InternalCall;
+
+             typename InternalCall::Result typedef Result;
+
+             static inline Result reverse(Remaining l, PreceedingResult r) {
+                return InternalCall::reverse(l.otherwise(), NewResult(l.clause(), r));
+             };
+          };
+
+         public:
+          template<typename Final>
+           struct ReverseList;
+          template<typename Final>
+           struct ReverseList {
+
+             ReverseListRecursive<List, Final> typedef InternalCall;
+
+             typename InternalCall::Result typedef Result;
+
+             static inline Result reverse(List l, Final f) { return InternalCall::reverse(l, f); };
+          };
+          template<typename Final>
+           inline typename ReverseList<Final>::Result reverse(Final f) {
+
+              ReverseList<Final> typedef InternalCall;
+
+              return InternalCall::reverse(list_, f);
+           };
+
+         public:
+          inline double operator ()(double d) { return reverse(NeboSimpleFinalClause(d)).eval(); };
+          template<typename Expr>
+           inline NeboExpression<typename CondBuilder<typename List::template Convert<typename Expr::
+                                                                                      field_type>::
+                                                      Converted>::template ReverseList<typename
+                                                                                       Standardize<Expr,
+                                                                                                   typename
+                                                                                                   Expr::
+                                                                                                   field_type>::
+                                                                                       StandardType>::
+                                 Result,
+                                 typename Expr::field_type> operator ()(Expr e) {
+
+              typename Expr::field_type typedef FieldType;
+
+              typename List::template Convert<typename Expr::field_type>::Converted typedef
+              Converted;
+
+              CondBuilder<Converted> typedef NewCondBuilder;
+
+              return NewCondBuilder(list_.template convert<FieldType>())(e);
+           };
+          inline CondBuilder<NeboSimpleCond<List> > operator ()(bool b, double d) {
+
+             NeboSimpleCond<List> typedef Cond;
+
+             CondBuilder<Cond> typedef ReturnType;
+
+             return ReturnType(Cond(NeboSimpleClause(b, d), list_));
+          };
+          template<typename Expr>
+           inline CondBuilder<NeboCond<Initial,
+                                       NeboClause<Initial,
+                                                  NeboBoolean<Initial, typename Expr::field_type>,
+                                                  typename Standardize<Expr,
+                                                                       typename Expr::field_type>::
+                                                  StandardType,
+                                                  typename Expr::field_type>,
+                                       typename List::template Convert<typename Expr::field_type>::
+                                       Converted,
+                                       typename Expr::field_type> > operator ()(bool b, Expr e) {
+
+              typename Expr::field_type typedef FieldType;
+
+              NeboBoolean<Initial, FieldType> typedef Boolean;
+
+              Standardize<Expr, FieldType> typedef Standardize;
+
+              typename Standardize::StandardType typedef StandardType;
+
+              NeboClause<Initial, Boolean, StandardType, FieldType> typedef Clause;
+
+              typename List::template Convert<typename Expr::field_type>::Converted typedef Previous;
+
+              NeboCond<Initial, Clause, Previous, FieldType> typedef Cond;
+
+              CondBuilder<Cond> typedef ReturnType;
+
+              return ReturnType(Cond(Clause(Boolean(b), Standardize::standardType(e)),
+                                     list_.template convert<FieldType>()));
+           };
+          template<typename BoolExpr, typename FieldType>
+           inline CondBuilder<NeboCond<Initial,
+                                       NeboClause<Initial,
+                                                  BoolExpr,
+                                                  NeboScalar<Initial, FieldType>,
+                                                  FieldType>,
+                                       typename List::template Convert<FieldType>::Converted,
+                                       FieldType> > operator ()(NeboBooleanExpression<BoolExpr,
+                                                                                      FieldType> nb,
+                                                                double d) {
+
+              NeboScalar<Initial, FieldType> typedef Scalar;
+
+              NeboClause<Initial, BoolExpr, Scalar, FieldType> typedef Clause;
+
+              typename List::template Convert<FieldType>::Converted typedef Previous;
+
+              NeboCond<Initial, Clause, Previous, FieldType> typedef Cond;
+
+              CondBuilder<Cond> typedef ReturnType;
+
+              return ReturnType(Cond(Clause(nb.expr(), Scalar(d)), list_.template convert<FieldType>()));
+           };
+          template<typename BoolExpr, typename Expr>
+           inline CondBuilder<NeboCond<Initial,
+                                       NeboClause<Initial,
+                                                  BoolExpr,
+                                                  typename Standardize<Expr,
+                                                                       typename Expr::field_type>::
+                                                  StandardType,
+                                                  typename Expr::field_type>,
+                                       typename List::template Convert<typename Expr::field_type>::
+                                       Converted,
+                                       typename Expr::field_type> > operator ()(NeboBooleanExpression<BoolExpr,
+                                                                                                      typename
+                                                                                                      Expr::
+                                                                                                      field_type>
+                                                                                nb,
+                                                                                Expr e) {
+
+              typename Expr::field_type typedef FieldType;
+
+              Standardize<Expr, FieldType> typedef Standardize;
+
+              typename Standardize::StandardType typedef StandardType;
+
+              NeboClause<Initial, BoolExpr, StandardType, FieldType> typedef Clause;
+
+              typename List::template Convert<typename Expr::field_type>::Converted typedef Previous;
+
+              NeboCond<Initial, Clause, Previous, FieldType> typedef Cond;
+
+              CondBuilder<Cond> typedef ReturnType;
+
+              return ReturnType(Cond(Clause(nb.expr(), Standardize::standardType(e)),
+                                     list_.template convert<FieldType>()));
+           };
+
+         private:
+          List list_;
+      };
+
+      template<>
+       struct CondBuilder<NeboNil> {
+
+         public:
+          CondBuilder() {};
+          static inline CondBuilder<NeboNil> CondInit(void) { return CondBuilder<NeboNil>(); };
+
+         public:
+          inline double operator ()(double d) { return d; };
+          template<typename Expr>
+           inline typename Standardize<Expr, typename Expr::field_type>::StandardTerm operator ()(Expr
+                                                                                                  e) {
+
+              typename Expr::field_type typedef FieldType;
+
+              Standardize<Expr, FieldType> typedef Standardize;
+
+              return Standardize::standardTerm(e);
+           };
+          inline CondBuilder<NeboSimpleCond<NeboNil> > operator ()(bool b, double d) {
+
+             NeboSimpleCond<NeboNil> typedef Cond;
+
+             CondBuilder<Cond> typedef ReturnType;
+
+             return ReturnType(Cond(NeboSimpleClause(b, d), NeboNil()));
+          };
+          template<typename Expr>
+           inline CondBuilder<NeboCond<Initial,
+                                       NeboClause<Initial,
+                                                  NeboBoolean<Initial, typename Expr::field_type>,
+                                                  typename Standardize<Expr,
+                                                                       typename Expr::field_type>::
+                                                  StandardType,
+                                                  typename Expr::field_type>,
+                                       NeboNil,
+                                       typename Expr::field_type> > operator ()(bool b, Expr e) {
+
+              typename Expr::field_type typedef FieldType;
+
+              NeboBoolean<Initial, FieldType> typedef Boolean;
+
+              Standardize<Expr, FieldType> typedef Standardize;
+
+              typename Standardize::StandardType typedef StandardType;
+
+              NeboClause<Initial, Boolean, StandardType, FieldType> typedef Clause;
+
+              NeboCond<Initial, Clause, NeboNil, FieldType> typedef Cond;
+
+              CondBuilder<Cond> typedef ReturnType;
+
+              return ReturnType(Cond(Clause(Boolean(b), Standardize::standardType(e)), NeboNil()));
+           };
+          template<typename BoolExpr, typename FieldType>
+           inline CondBuilder<NeboCond<Initial,
+                                       NeboClause<Initial,
+                                                  BoolExpr,
+                                                  NeboScalar<Initial, FieldType>,
+                                                  FieldType>,
+                                       NeboNil,
+                                       FieldType> > operator ()(NeboBooleanExpression<BoolExpr,
+                                                                                      FieldType> nb,
+                                                                double d) {
+
+              NeboScalar<Initial, FieldType> typedef Scalar;
+
+              NeboClause<Initial, BoolExpr, Scalar, FieldType> typedef Clause;
+
+              NeboCond<Initial, Clause, NeboNil, FieldType> typedef Cond;
+
+              CondBuilder<Cond> typedef ReturnType;
+
+              return ReturnType(Cond(Clause(nb.expr(), Scalar(d)), NeboNil()));
+           };
+          template<typename BoolExpr, typename Expr>
+           inline CondBuilder<NeboCond<Initial,
+                                       NeboClause<Initial,
+                                                  BoolExpr,
+                                                  typename Standardize<Expr,
+                                                                       typename Expr::field_type>::
+                                                  StandardType,
+                                                  typename Expr::field_type>,
+                                       NeboNil,
+                                       typename Expr::field_type> > operator ()(NeboBooleanExpression<BoolExpr,
+                                                                                                      typename
+                                                                                                      Expr::
+                                                                                                      field_type>
+                                                                                nb,
+                                                                                Expr e) {
+
+              typename Expr::field_type typedef FieldType;
+
+              Standardize<Expr, FieldType> typedef Standardize;
+
+              typename Standardize::StandardType typedef StandardType;
+
+              NeboClause<Initial, BoolExpr, StandardType, FieldType> typedef Clause;
+
+              NeboCond<Initial, Clause, NeboNil, FieldType> typedef Cond;
+
+              CondBuilder<Cond> typedef ReturnType;
+
+              return ReturnType(Cond(Clause(nb.expr(), Standardize::standardType(e)), NeboNil()));
+           };
+
+         private:
+         ;
+      };
+
+#     define cond CondBuilder<NeboNil>::CondInit()//;
 
       template<typename LhsType, typename RhsType>
        inline void field_expression_sequential_execute_internal(LhsType lhs, RhsType rhs) {
