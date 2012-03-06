@@ -2361,7 +2361,7 @@
                                                         (fc Nil-chunk))))
                                  null
                                  null)))
-      (m 'cond
+      (m 'nebo_cond
          null
          (c (scope (tpl-use 'CondBuilder Nil-chunk)
                       (fc 'CondInit)) "//"))

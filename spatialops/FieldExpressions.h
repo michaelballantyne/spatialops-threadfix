@@ -5207,7 +5207,7 @@
          ;
       };
 
-#     define cond CondBuilder<NeboNil>::CondInit()//;
+#     define nebo_cond CondBuilder<NeboNil>::CondInit()//;
 
       template<typename LhsType, typename RhsType>
        inline void field_expression_sequential_execute_internal(LhsType lhs, RhsType rhs) {
