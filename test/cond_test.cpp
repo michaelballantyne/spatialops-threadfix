@@ -64,133 +64,133 @@ int main()
   }
 
   //Cond<Nil> Final cases:
-  c <<= cond(1.1);
-  c <<= cond(a);
-  c <<= cond(a + b);
+  c <<= nebo_cond(1.1);
+  c <<= nebo_cond(a);
+  c <<= nebo_cond(a + b);
 
   //Cond<Simple> Final cases:
-  c <<= cond(false, 0.0)
-            (1.1);
-  c <<= cond(true, 0.0)
-            (1.1);
-  c <<= cond(false, 0.0)
-            (a);
-  c <<= cond(true, 0.0)
-            (a);
-  c <<= cond(false, 0.0)
-            (a + b);
-  c <<= cond(true, 0.0)
-            (a + b);
+  c <<= nebo_cond(false, 0.0)
+                 (1.1);
+  c <<= nebo_cond(true, 0.0)
+                 (1.1);
+  c <<= nebo_cond(false, 0.0)
+                 (a);
+  c <<= nebo_cond(true, 0.0)
+                 (a);
+  c <<= nebo_cond(false, 0.0)
+                 (a + b);
+  c <<= nebo_cond(true, 0.0)
+                 (a + b);
 
   //Cond<Nebo> Final cases:
-  c <<= cond(true, a)
-            (1.1);
-  c <<= cond(false, a)
-            (1.1);
-  c <<= cond(false, a)
-            (a);
-  c <<= cond(true, a)
-            (a);
-  c <<= cond(false, a)
-            (a + b);
-  c <<= cond(true, a)
-            (a + b);
+  c <<= nebo_cond(true, a)
+                 (1.1);
+  c <<= nebo_cond(false, a)
+                 (1.1);
+  c <<= nebo_cond(false, a)
+                 (a);
+  c <<= nebo_cond(true, a)
+                 (a);
+  c <<= nebo_cond(false, a)
+                 (a + b);
+  c <<= nebo_cond(true, a)
+                 (a + b);
 
   //Cond<Simple> Simple only cases:
-  c <<= cond(true, 0.0)
-            (1.1);
-  c <<= cond(false, 0.0)
-            (1.1);
-  c <<= cond(false, 0.0)
-            (true, 2.0)
-            (1.1);
-  c <<= cond(false, 0.0)
-            (false, 2.0)
-            (1.1);
+  c <<= nebo_cond(true, 0.0)
+                 (1.1);
+  c <<= nebo_cond(false, 0.0)
+                 (1.1);
+  c <<= nebo_cond(false, 0.0)
+                 (true, 2.0)
+                 (1.1);
+  c <<= nebo_cond(false, 0.0)
+                 (false, 2.0)
+                 (1.1);
 
   //Cond<Nil> bool Test cases:
-  c <<= cond(true, 0.0)
-            (1.1);
-  c <<= cond(false, 0.0)
-            (1.1);
-  c <<= cond(true, a)
-            (1.1);
-  c <<= cond(false, a)
-            (1.1);
-  c <<= cond(true, a + 1)
-            (1.1);
-  c <<= cond(false, a + 1)
-            (1.1);
+  c <<= nebo_cond(true, 0.0)
+                 (1.1);
+  c <<= nebo_cond(false, 0.0)
+                 (1.1);
+  c <<= nebo_cond(true, a)
+                 (1.1);
+  c <<= nebo_cond(false, a)
+                 (1.1);
+  c <<= nebo_cond(true, a + 1)
+                 (1.1);
+  c <<= nebo_cond(false, a + 1)
+                 (1.1);
 
   //Cond<Nil> NBE Test cases:
-  c <<= cond(d > 0, 0.0)
-            (1.1);
-  c <<= cond(d > 0, a)
-            (1.1);
-  c <<= cond(d > 0, a + 1)
-            (1.1);
+  c <<= nebo_cond(d > 0, 0.0)
+                 (1.1);
+  c <<= nebo_cond(d > 0, a)
+                 (1.1);
+  c <<= nebo_cond(d > 0, a + 1)
+                 (1.1);
 
   //Cond<Simple> bool Test cases:
-  c <<= cond(false, 0.01)
-            (true, 0.0)
-            (1.1);
-  c <<= cond(false, 0.01)
-            (false, 0.0)
-            (1.1);
-  c <<= cond(false, 0.01)
-            (true, a)
-            (1.1);
-  c <<= cond(false, 0.01)
-            (false, a)
-            (1.1);
-  c <<= cond(false, 0.01)
-            (true, a + 1)
-            (1.1);
-  c <<= cond(false, 0.01)
-            (false, a + 1)
-            (1.1);
+  c <<= nebo_cond(false, 0.01)
+                 (true, 0.0)
+                 (1.1);
+  c <<= nebo_cond(false, 0.01)
+                 (false, 0.0)
+                 (1.1);
+  c <<= nebo_cond(false, 0.01)
+                 (true, a)
+                 (1.1);
+  c <<= nebo_cond(false, 0.01)
+                 (false, a)
+                 (1.1);
+  c <<= nebo_cond(false, 0.01)
+                 (true, a + 1)
+                 (1.1);
+  c <<= nebo_cond(false, 0.01)
+                 (false, a + 1)
+                 (1.1);
 
   //Cond<Simple> NBE Test cases:
-  c <<= cond(false, 0.01)
-            (d > 0, 0.0)
-            (1.1);
-  c <<= cond(false, 0.01)
-            (d > 0, a)
-            (1.1);
-  c <<= cond(false, 0.01)
-            (d > 0, a + 1)
-            (1.1);
+  c <<= nebo_cond(false, 0.01)
+                 (d > 0, 0.0)
+                 (1.1);
+  c <<= nebo_cond(false, 0.01)
+                 (d > 0, a)
+                 (1.1);
+  c <<= nebo_cond(false, 0.01)
+                 (d > 0, a + 1)
+                 (1.1);
 
-  //Cond<Cond> bool Test cases:
-  c <<= cond(false, b + 0.01)
-            (true, 0.0)
-            (1.1);
-  c <<= cond(false, b + 0.01)
-            (false, 0.0)
-            (1.1);
-  c <<= cond(false, b + 0.01)
-            (true, a)
-            (1.1);
-  c <<= cond(false, b + 0.01)
-            (false, a)
-            (1.1);
-  c <<= cond(false, b + 0.01)
-            (true, a + 1)
-            (1.1);
-  c <<= cond(false, b + 0.01)
-            (false, a + 1)
-            (1.1);
+  //Cond<Nebo> bool Test cases:
+  c <<= nebo_cond(false, b + 0.01)
+                 (true, 0.0)
+                 (1.1);
+  c <<= nebo_cond(false, b + 0.01)
+                 (false, 0.0)
+                 (1.1);
+  c <<= nebo_cond(false, b + 0.01)
+                 (true, a)
+                 (1.1);
+  c <<= nebo_cond(false, b + 0.01)
+                 (false, a)
+                 (1.1);
+  c <<= nebo_cond(false, b + 0.01)
+                 (true, a + 1)
+                 (1.1);
+  c <<= nebo_cond(false, b + 0.01)
+                 (false, a + 1)
+                 (1.1);
 
-  //Cond<Cond> NBE Test cases:
-  c <<= cond(false, b + 0.01)
-            (d > 0, 0.0)
-            (1.1);
-  c <<= cond(false, b + 0.01)
-            (d > 0, a)
-            (1.1);
-  c <<= cond(false, b + 0.01)
-            (d > 0, a + 1)
-            (1.1);
+  //Cond<Nebo> NBE Test cases:
+  c <<= nebo_cond(false, b + 0.01)
+                 (d > 0, 0.0)
+                 (1.1);
+  c <<= nebo_cond(false, b + 0.01)
+                 (d > 0, a)
+                 (1.1);
+  c <<= nebo_cond(false, b + 0.01)
+                 (d > 0, a + 1)
+                 (1.1);
 
   print(c);
   
