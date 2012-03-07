@@ -144,21 +144,38 @@ int main(int argc, char** argv) {
 
   try {
     std::cout << "Checking SpatialFieldPointer usage: ";
+
+    memset(T1, 1, bytes*sizeof(double)); 
     PointField q(window, T1, InternalStorage, LOCAL_RAM, 0);
+
+    //Construct using just a window with default values for mtype (LOCAL_RAM) and deviceIndex = 0
     SpatFldPtr<PointField> p = SpatialFieldStore<PointField>::self().get(window);
+    //Construct using full field
     SpatFldPtr<PointField> r = SpatialFieldStore<PointField>::self().get(q);
     SpatFldPtr<PointField> t = SpatialFieldStore<PointField>::self().get(window, EXTERNAL_CUDA_GPU, 0);
 
-    (*p).add_consumer(EXTERNAL_CUDA_GPU, 0);
-    (*t).add_consumer(LOCAL_RAM, 0);
-    (*r).add_consumer(EXTERNAL_CUDA_GPU, 1);
+    p->add_consumer(EXTERNAL_CUDA_GPU, 0);
+    t->add_consumer(LOCAL_RAM, 0);
+
+    memcpy(r->field_values(), T1, bytes * sizeof(double));
+    r->add_consumer(EXTERNAL_CUDA_GPU, 0);
+
+    memcpy(T2, r->field_values_consumer(LOCAL_RAM, 0), r->allocated_bytes());
+    CDI.memcpy_from(T3, r->field_values_consumer( EXTERNAL_CUDA_GPU, r->device_index() ),
+    		r->allocated_bytes(), r->device_index() );
+
+    for (unsigned int k = 0; k < bytes; ++k) {
+      if (T2[k] != T1[k] || T3[k] != T1[k]) {
+        std::cout << T2[k] << " : " << T1[k] << std::endl;
+        std::cout << T3[k] << " : " << T1[k] << std::endl;
+
+        throw std::runtime_error("Returned values do not match!\n");
+      }
+    }
 
     p.detach();
     r.detach();
-    r = t;
     t.detach();
-    r.detach();
-
 
     std::cout << "PASS\n";
   } catch ( std::runtime_error e) {

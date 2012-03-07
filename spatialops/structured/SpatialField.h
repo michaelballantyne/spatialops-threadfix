@@ -637,7 +637,7 @@ const T* SpatialField<Location, GhostTraits, T>::field_values_consumer(
 			#ifdef DEBUG_SF_ALL
 					std::cout << "\t -- Returning EXTERNAL_CUDA_GPU consumer field";
 			#endif
-			if( deviceIndex == deviceIndex_ ) { // Request to consume on the device where we are allocated
+			if( ( mtype == memType_ ) && ( deviceIndex == deviceIndex_ ) ) { // Request to consume on the device where we are allocated
 				return fieldValuesExtDevice_;
 			}
 
