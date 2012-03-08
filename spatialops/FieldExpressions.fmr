@@ -1332,12 +1332,14 @@
                                                         'MemoryWindow const-chunk "&" 'size)
                                                      (b s
                                                         'SourceType const-chunk "&" 'source))
-                                               (list (cons-asgn 'test_
-                                                                (mfc 'source
-                                                                     'test))
-                                                     (cons-asgn 'expr_
-                                                                (mfc 'source
-                                                                     'expr)))
+                                               (list (fc 'test_
+                                                         'size
+                                                         (mfc 'source
+                                                              'test))
+                                                     (fc 'expr_
+                                                         'size
+                                                         (mfc 'source
+                                                              'expr)))
                                                null)
                                (list (r-fcn-def (constize (fcn-dcl 'test
                                                                    (b s
@@ -1474,12 +1476,14 @@
                                                         'MemoryWindow const-chunk "&" 'size)
                                                      (b s
                                                         'SourceType const-chunk "&" 'source))
-                                               (list (cons-asgn 'clause_
-                                                                (mfc 'source
-                                                                     'clause))
-                                                     (cons-asgn 'otherwise_
-                                                                (mfc 'source
-                                                                     'otherwise)))
+                                               (list (fc 'clause_
+                                                         'size
+                                                         (mfc 'source
+                                                              'clause))
+                                                     (fc 'otherwise_
+                                                         'size
+                                                         (mfc 'source
+                                                              'otherwise)))
                                                null)
                                (list (r-fcn-def (constize (fcn-dcl 'clause
                                                                    (b s

@@ -4455,7 +4455,7 @@
                      typename Expr::SeqWalkType,
                      FieldType> typedef SeqWalkType;
           NeboClause(MemoryWindow const & size, SourceType const & source)
-          : test_(source.test()), expr_(source.expr())
+          : test_(size, source.test()), expr_(size, source.expr())
           {};
           inline SeqWalkType init(void) const { return SeqWalkType(*this); };
           inline Test const & test(void) const { return test_; };
@@ -4579,7 +4579,7 @@
                    typename Otherwise::SeqWalkType,
                    FieldType> typedef SeqWalkType;
           NeboCond(MemoryWindow const & size, SourceType const & source)
-          : clause_(source.clause()), otherwise_(source.otherwise())
+          : clause_(size, source.clause()), otherwise_(size, source.otherwise())
           {};
           inline SeqWalkType init(void) const { return SeqWalkType(*this); };
           inline Clause const & clause(void) const { return clause_; };
