@@ -126,10 +126,10 @@
                                                                           int const
                                                                           number_of_partitions) {
 
-                typename ConstField<Initial, SrcType>::template Iterator<UseWholeIterator>::
+                typename NeboConstField<Initial, SrcType>::template Iterator<UseWholeIterator>::
                 ResizePrepType typedef SrcPmtrType;
 
-                typename Field<Initial, DestType>::template Iterator<UseWholeIterator>::
+                typename NeboField<Initial, DestType>::template Iterator<UseWholeIterator>::
                 ResizePrepType typedef DestPmtrType;
 
                 MemoryWindow sw = src.window_with_ghost();
@@ -170,10 +170,10 @@
                                                                stencil_2_apply_to_field_thread_parallel_execute_internal<OperatorType,
                                                                                                                          SrcPmtrType,
                                                                                                                          DestPmtrType>,
-                                                               ConstField<Initial, SrcType>(src).template
-                                                                                                 resize_prep<UseWholeIterator>(),
-                                                               Field<Initial, DestType>(dest).template
-                                                                                              resize_prep<UseWholeIterator>(),
+                                                               NeboConstField<Initial, SrcType>(src).template
+                                                                                                     resize_prep<UseWholeIterator>(),
+                                                               NeboField<Initial, DestType>(dest).template
+                                                                                                  resize_prep<UseWholeIterator>(),
                                                                low,
                                                                high,
                                                                *ivec_sw,

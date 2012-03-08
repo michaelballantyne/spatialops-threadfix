@@ -26,6 +26,8 @@
        [tpl-use template-use-chunk]
        [sec-def section-define-chunk]
        [scope scope-resolution-operator-chunk]
+       [NCF-chunk 'NeboConstField]
+       [NF-chunk 'NeboField]
        )
   ; beginnning of file
   (pp-header-file-chunk
@@ -532,7 +534,7 @@
                                        'int const-chunk 'number_of_partitions))
                               (typedef (c typename-chunk
                                           s
-                                          (scope (tpl-use 'ConstField
+                                          (scope (tpl-use NCF-chunk
                                                           'Initial
                                                           'SrcType)
                                                  template-chunk)
@@ -543,7 +545,7 @@
                                        'SrcPmtrType)
                               (typedef (c typename-chunk
                                           s
-                                          (scope (tpl-use 'Field
+                                          (scope (tpl-use NF-chunk
                                                           'Initial
                                                           'DestType)
                                                  template-chunk)
@@ -765,7 +767,7 @@
                                                                   'OperatorType
                                                                   'SrcPmtrType
                                                                   'DestPmtrType))
-                                                      (mfc (fc (tpl-use 'ConstField
+                                                      (mfc (fc (tpl-use NCF-chunk
                                                                         'Initial
                                                                         'SrcType)
                                                                'src)
@@ -773,7 +775,7 @@
                                                               s
                                                               (tpl-use 'resize_prep
                                                                        'UseWholeIterator)))
-                                                      (mfc (fc (tpl-use 'Field
+                                                      (mfc (fc (tpl-use NF-chunk
                                                                         'Initial
                                                                         'DestType)
                                                                'dest)
