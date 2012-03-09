@@ -335,12 +335,12 @@ void __host__ divergence_float_gpu(FieldT* f, float dx, float dy, float dz){
     unsigned int blocky_op3 = ( ( extent[1] - 2) / (BLOCK_DIM) +
         ( ( extent[1] - 2 ) % (BLOCK_DIM) == 0 ? 0 : 1) );
 
-    float* h_workspace = (float*)malloc(f->get_data_size());
+    float* h_workspace = (float*)malloc(f->allocated_bytes());
     float* d_workspace;
 
-    cudaMalloc((void**)&d_workspace, f->get_data_size() );
-    cudaMemset(d_workspace, 0, f->get_data_size());
-    cudaMemcpy((void*)d_workspace, (void*)f->ext_field_values(), f->get_data_size(), cudaMemcpyDeviceToDevice );
+    cudaMalloc((void**)&d_workspace, f->allocated_bytes() );
+    cudaMemset(d_workspace, 0, f->allocated_bytes());
+    cudaMemcpy((void*)d_workspace, (void*)f->ext_field_values(), f->allocated_bytes(), cudaMemcpyDeviceToDevice );
 
     dim3 dimBlock( BLOCK_DIM, BLOCK_DIM );
     dim3 dimGrid( blockx, blocky );
@@ -368,7 +368,7 @@ void __host__ divergence_float_gpu(FieldT* f, float dx, float dy, float dz){
                                                 extent[0], extent[1], extent[2] );
 
     cudaThreadSynchronize();
-    cudaMemcpy(h_workspace, f->ext_field_values(), f->get_data_size(), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_workspace, f->ext_field_values(), f->allocated_bytes(), cudaMemcpyDeviceToHost);
     cudaFree(d_workspace);
 
     std::ofstream file;

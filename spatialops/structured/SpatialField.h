@@ -224,10 +224,6 @@ namespace structured{
      * @return
      */
     inline const_iterator begin() const {
-#ifdef DEBUG_SF_ALL
-    	std::cout << "Request caught for spatial field iterator\n"
-    			  << "\t -- const_iterator begin()\n";
-#endif
       if (memType_ != LOCAL_RAM) {
         std::ostringstream msg;
         msg << "Field type ( "
@@ -241,10 +237,6 @@ namespace structured{
     }
 
     inline iterator begin() {
-#ifdef DEBUG_SF_ALL
-    	std::cout << "Request caught for spatial field iterator\n"
-    			  << "\t -- iterator begin()\n";
-#endif
       if (memType_ != LOCAL_RAM) {
         std::ostringstream msg;
         msg << "Field type ( "
@@ -261,10 +253,6 @@ namespace structured{
     inline iterator end();
 
     inline const_interior_iterator interior_begin() const {
-#ifdef DEBUG_SF_ALL
-    	std::cout << "Request caught for spatial field iterator\n"
-    			  << "\t -- const_interior_iterator begin()\n";
-#endif
       if (memType_ != LOCAL_RAM) {
         std::ostringstream msg;
         msg << "Field type ( "
@@ -279,10 +267,6 @@ namespace structured{
     }
 
     inline interior_iterator interior_begin() {
-#ifdef DEBUG_SF_ALL
-    	std::cout << "Request caught for spatial field iterator\n"
-    			  << "\t -- interior_iterator begin()\n";
-#endif
       if (memType_ != LOCAL_RAM) {
         std::ostringstream msg;
         msg << "Field type ( "
@@ -396,15 +380,15 @@ namespace structured{
     const T* field_values_consumer(const MemoryType mtype, const unsigned short int deviceIndex) const;
 
     T* field_values() const {
-      return fieldValues_;
+    	if( memType_ == LOCAL_RAM ){
+    		return fieldValues_;
+    	} else {
+    		return fieldValuesExtDevice_;
+    	}
     }
 
     unsigned int allocated_bytes() const {
     	return allocatedBytes_;
-    }
-
-    unsigned int get_data_size() const {
-      return allocatedBytes_;
     }
 
     unsigned int get_ghost_size() const {
@@ -617,6 +601,8 @@ const T* SpatialField<Location, GhostTraits, T>::field_values_consumer(
 		const MemoryType mtype, const unsigned short int deviceIndex) const {
 	#ifdef DEBUG_SF_ALL
 			std::cout << "Caught call to field_values_consumer \n";
+			std::cout << "\t -- mtype " << DeviceTypeTools::get_memory_type_description(mtype) << " device index " << deviceIndex;
+
 	#endif
 	switch( mtype ){
 		case LOCAL_RAM:{
@@ -631,12 +617,13 @@ const T* SpatialField<Location, GhostTraits, T>::field_values_consumer(
 			}
 			return fieldValues_;
 		}
-		break;
-#ifdef ENABLE_CUDA
+
+	#ifdef ENABLE_CUDA
 		case EXTERNAL_CUDA_GPU: {
 			#ifdef DEBUG_SF_ALL
 					std::cout << "\t -- Returning EXTERNAL_CUDA_GPU consumer field";
 			#endif
+
 			if( ( mtype == memType_ ) && ( deviceIndex == deviceIndex_ ) ) { // Request to consume on the device where we are allocated
 				return fieldValuesExtDevice_;
 			}
@@ -670,7 +657,12 @@ void SpatialField<Location, GhostTraits, T>::add_consumer(
     	std::cout << "Caught call to Spatial Field add_consumer\n";
 #endif
 	//Field's primary allocation source was the device, nothing to do
-	if( mtype == memType_ && deviceIndex == deviceIndex_ ) { return; }
+	if( mtype == memType_ && deviceIndex == deviceIndex_ ) {
+#ifdef DEBUG_SF_ALL
+    	std::cout << "ABORTING CONSUMER ADD: Primarily allocated device\n";
+#endif
+		return;
+	}
 
 	//Take action based on where the field must be available
 	switch( mtype ){
@@ -682,6 +674,9 @@ void SpatialField<Location, GhostTraits, T>::add_consumer(
 			switch( memType_ ) {
 #ifdef ENABLE_CUDA
 				case LOCAL_RAM: {
+#ifdef DEBUG_SF_ALL
+    	std::cout << "LOCAL_RAM  --- > !!!!!!!!!WE SHOULD NOT BE HERE!!!!!!!!!!!!!\n";
+#endif
 					// The only way we should get here is if for some reason a field was allocated as
 					// LOCAL_RAM with a non-zero device index.
 					// This shouldn't happen given how we define LOCAL_RAM at present, but I don't know if
@@ -730,6 +725,7 @@ void SpatialField<Location, GhostTraits, T>::add_consumer(
 			        //Check to see if field memory exists
 			        if ( consumerFieldValues_.find( deviceIndex ) == consumerFieldValues_.end() ) {
 			        	//Field doesn't exist, attempt to allocate it
+			        	std::cout << "Consumer field does not exist, allocating...\n ";
 			        	consumerFieldValues_[deviceIndex] = (T*)CDI.get_raw_pointer( allocatedBytes_, deviceIndex );
 			        }
 
@@ -782,10 +778,6 @@ template<typename Location, typename GhostTraits, typename T>
 typename SpatialField<Location, GhostTraits, T>::const_iterator SpatialField<
     Location, GhostTraits, T>::end() const {
 
-#ifdef DEBUG_SF_ALL
-    	std::cout << "Request caught for spatial field iterator\n"
-    			  << "\t -- const_iterator end()\n";
-#endif
 	switch (memType_) {
     case LOCAL_RAM: {
       IntVec ijk = fieldWindow_.extent();
@@ -810,10 +802,6 @@ template<typename Location, typename GhostTraits, typename T>
 typename SpatialField<Location, GhostTraits, T>::iterator SpatialField<Location,
     GhostTraits, T>::end() {
 
-#ifdef DEBUG_SF_ALL
-    	std::cout << "Request caught for spatial field iterator\n"
-    			  << "\t -- const_iterator end()\n";
-#endif
   switch (memType_) {
     case LOCAL_RAM: {
       IntVec ijk = fieldWindow_.extent();
@@ -837,10 +825,7 @@ typename SpatialField<Location, GhostTraits, T>::iterator SpatialField<Location,
 template<typename Location, typename GhostTraits, typename T>
 typename SpatialField<Location, GhostTraits, T>::const_interior_iterator SpatialField<
     Location, GhostTraits, T>::interior_end() const {
-#ifdef DEBUG_SF_ALL
-    	std::cout << "Request caught for spatial field iterator\n"
-    			  << "\t -- const_interiror_iterator begin()\n";
-#endif
+
   switch (memType_) {
     case LOCAL_RAM: {
       IntVec ijk = interiorFieldWindow_.extent();
@@ -864,10 +849,7 @@ typename SpatialField<Location, GhostTraits, T>::const_interior_iterator Spatial
 template<typename Location, typename GhostTraits, typename T>
 typename SpatialField<Location, GhostTraits, T>::interior_iterator SpatialField<
     Location, GhostTraits, T>::interior_end() {
-#ifdef DEBUG_SF_ALL
-    	std::cout << "Request caught for spatial field iterator\n"
-    			  << "\t -- interior_iterator begin()\n";
-#endif
+
   switch (memType_) {
     case LOCAL_RAM: {
       IntVec ijk = interiorFieldWindow_.extent();
