@@ -331,6 +331,8 @@ void* CUDADeviceInterface::get_raw_pointer(unsigned long int N,
 
   CudaMalloc(&x, N, K);
 
+  std::cout << "Returning raw pointer from grp with address: " << x << std::endl;
+
   return x;
 }
 

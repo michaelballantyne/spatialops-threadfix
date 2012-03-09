@@ -75,7 +75,7 @@ namespace structured{
   class SpatialField
   {
     typedef SpatialField<FieldLocation,GhostTraits,T> MyType;
-    typedef std::map<unsigned short int, const T*> ConsumerMap;
+    typedef std::map<unsigned short int, T*> ConsumerMap;
 
     const MemoryWindow fieldWindow_;	///< Full representation of the window to the field ( includes ghost cells )
     MemoryWindow interiorFieldWindow_;  ///< Window representation sans ghost cells.
@@ -502,14 +502,14 @@ SpatialField<Location, GhostTraits, T>::SpatialField(const SpatialField& other)
 template<typename Location, typename GhostTraits, typename T>
 SpatialField<Location, GhostTraits, T>::~SpatialField() {
 	#ifdef DEBUG_SF_ALL
-			std::cout << "Caught call to Spatial Field destructor\n";
+			std::cout << "Caught call to Spatial Field destructor for field : " << this->field_values() << "\n";
 	#endif
 #ifdef ENABLE_CUDA
 	//Release any fields allocated for consumer use
 	for( typename ConsumerMap::iterator i = consumerFieldValues_.begin(); i != consumerFieldValues_.end(); ++i ){
 		ema::cuda::CUDADeviceInterface::self().release( (void*)i->second, i->first);
 		#ifdef DEBUG_SF_ALL
-				std::cout << "\t -- Consumer field deleted\n";
+				std::cout << "\t -- Consumer field deleted : " << i->first << " " << i->second << std::endl;
 		#endif
 	}
 
@@ -597,22 +597,24 @@ reset_values( const T* values )
 //------------------------------------------------------------------
 
 template<typename Location, typename GhostTraits, typename T>
-const T* SpatialField<Location, GhostTraits, T>::field_values_consumer(
+const T* SpatialField<Location, GhostTraits, T>::field_values_consumer (
 		const MemoryType mtype, const unsigned short int deviceIndex) const {
 	#ifdef DEBUG_SF_ALL
-			std::cout << "Caught call to field_values_consumer \n";
-			std::cout << "\t -- mtype " << DeviceTypeTools::get_memory_type_description(mtype) << " device index " << deviceIndex;
-
+			std::cout << "Caught call to field_values_consumer for field : " << this->field_values() << "\n";
+			std::cout << "\t -- mtype:        " << DeviceTypeTools::get_memory_type_description(mtype) << std::endl
+					  << "\t -- Device index: " << deviceIndex << std::endl
+					  << "\t -- Value:        " << consumerFieldValues_.find(deviceIndex)->first
+					  	  << " " <<consumerFieldValues_.find(deviceIndex)->second << std::endl;
 	#endif
 	switch( mtype ){
 		case LOCAL_RAM:{
 			#ifdef DEBUG_SF_ALL
-					std::cout << "\t -- Returning LOCAL_RAM consumer field";
+					std::cout << "\t -- Returning LOCAL_RAM consumer field\n";
 			#endif
 			if( fieldValues_ == NULL ){
 				std::ostringstream msg;
 				msg << "Request for consumer field pointer on a device for which it has not been allocated\n";
-				msg << "\t - " << __FILE__ << " : " << __LINE__;
+				msg << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
 				throw(std::runtime_error(msg.str()));
 			}
 			return fieldValues_;
@@ -620,22 +622,25 @@ const T* SpatialField<Location, GhostTraits, T>::field_values_consumer(
 
 	#ifdef ENABLE_CUDA
 		case EXTERNAL_CUDA_GPU: {
-			#ifdef DEBUG_SF_ALL
-					std::cout << "\t -- Returning EXTERNAL_CUDA_GPU consumer field";
-			#endif
 
 			if( ( mtype == memType_ ) && ( deviceIndex == deviceIndex_ ) ) { // Request to consume on the device where we are allocated
+#ifdef DEBUG_SF_ALL
+		std::cout << "\t -- Returning EXTERNAL_CUDA_GPU consumer field\n";
+#endif
 				return fieldValuesExtDevice_;
 			}
 
 			if( consumerFieldValues_.find( deviceIndex ) != consumerFieldValues_.end() ) {
-				return (consumerFieldValues_.find(deviceIndex))->second;
+#ifdef DEBUG_SF_ALL
+		std::cout << "\t -- Returning EXTERNAL_CUDA_GPU consumer field\n";
+#endif
+				return ( consumerFieldValues_.find(deviceIndex)->second );
 			}
 
 			std::ostringstream msg;
 			msg << "Request for consumer field pointer on a device for which it has not been allocated\n";
 			msg << "\t - " << __FILE__ << " : " << __LINE__;
-			throw(std::runtime_error(msg.str()));
+			throw( std::runtime_error(msg.str()) );
 		}
 #endif
 		default:{
@@ -654,7 +659,7 @@ void SpatialField<Location, GhostTraits, T>::add_consumer(
 		MemoryType mtype, const unsigned short int deviceIndex) {
 
 #ifdef DEBUG_SF_ALL
-    	std::cout << "Caught call to Spatial Field add_consumer\n";
+    	std::cout << "Caught call to Spatial Field add_consumer for field : " << this->field_values() << "\n";
 #endif
 	//Field's primary allocation source was the device, nothing to do
 	if( mtype == memType_ && deviceIndex == deviceIndex_ ) {
@@ -725,8 +730,9 @@ void SpatialField<Location, GhostTraits, T>::add_consumer(
 			        //Check to see if field memory exists
 			        if ( consumerFieldValues_.find( deviceIndex ) == consumerFieldValues_.end() ) {
 			        	//Field doesn't exist, attempt to allocate it
-			        	std::cout << "Consumer field does not exist, allocating...\n ";
+			        	std::cout << "Consumer field does not exist, allocating...\n\n";
 			        	consumerFieldValues_[deviceIndex] = (T*)CDI.get_raw_pointer( allocatedBytes_, deviceIndex );
+			        	std::cout << "consumerFieldValues_["<< deviceIndex << "] == " << consumerFieldValues_[deviceIndex] << std::endl;
 			        }
 
 			        CDI.memcpy_to( (void*)consumerFieldValues_[deviceIndex], fieldValues_, allocatedBytes_, deviceIndex );

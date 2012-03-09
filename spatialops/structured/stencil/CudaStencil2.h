@@ -20,8 +20,8 @@ namespace SpatialOps {
   namespace structured {
     template< class OperatorType, class SrcType, class DestType >
       inline void
-      cuda_stencil_2_apply_to_field_helper( SrcType src,
-                                            DestType dest,
+      cuda_stencil_2_apply_to_field_helper( const SrcType& src,
+                                            DestType& dest,
                                             double const low,
                                             double const high )
       {
