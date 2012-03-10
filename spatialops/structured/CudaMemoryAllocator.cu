@@ -331,8 +331,6 @@ void* CUDADeviceInterface::get_raw_pointer(unsigned long int N,
 
   CudaMalloc(&x, N, K);
 
-  std::cout << "Returning raw pointer from grp with address: " << x << std::endl;
-
   return x;
 }
 
@@ -361,7 +359,10 @@ void CUDADeviceInterface::memcpy_from(void* dest, const CUDASharedPointer& src,
 
 void CUDADeviceInterface::memcpy_from(void* dest, const void* src, const size_t sz,
     const unsigned int deviceID) {
-  CudaMemcpy(dest, src, sz, deviceID, cudaMemcpyDeviceToHost);
+
+	std::cout << "Allocating: " << sz << " on device " << deviceID << std::endl;
+
+	CudaMemcpy(dest, src, sz, deviceID, cudaMemcpyDeviceToHost);
 }
 
 /*---------------------------------------------------------------------*/

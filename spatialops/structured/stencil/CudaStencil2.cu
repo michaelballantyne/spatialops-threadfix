@@ -81,21 +81,23 @@ namespace SpatialOps {
 										 const int dOFF_x,  const int dOFF_y,  const int dOFF_z,
 										 const int s1OFF_x, const int s1OFF_y, const int s1OFF_z,
 										 const int s2OFF_x, const int s2OFF_y, const int s2OFF_z ){
-		//Compute blocking dimensions
-		dim3 dimBlock( BLOCK_DIM, BLOCK_DIM );
-		dim3 dimGrid( 1, 1 );
+			//Compute blocking dimensions
+			unsigned int gDimx = (dEX_x / BLOCK_DIM ) + ( dEX_x % BLOCK_DIM > 0 ? 1 : 0 );
+			unsigned int gDimy = (dEX_y / BLOCK_DIM ) + ( dEX_y % BLOCK_DIM > 0 ? 1 : 0 );
+			dim3 dimBlock( BLOCK_DIM, BLOCK_DIM );
+			dim3 dimGrid( gDimx, gDimy );
 
-		//Launch kernel
-		__cuda_stencil_2_apply_to_field<DataType, Dir><<<dimGrid, dimBlock>>>(
-									 dest, src,
-									 low, high,
-									 nx, ny, nz,
-									 dEX_x, dEX_y, dEX_z,
-									 dOFF_x, dOFF_y, dOFF_z,
-									 s1OFF_x, s1OFF_y, s1OFF_z,
-									 s2OFF_x, s2OFF_y, s2OFF_z );
+			//Launch kernel
+			__cuda_stencil_2_apply_to_field<DataType, Dir><<<dimGrid, dimBlock>>>(
+										 dest, src,
+										 low, high,
+										 nx, ny, nz,
+										 dEX_x, dEX_y, dEX_z,
+										 dOFF_x, dOFF_y, dOFF_z,
+										 s1OFF_x, s1OFF_y, s1OFF_z,
+										 s2OFF_x, s2OFF_y, s2OFF_z );
 
-    cudaDeviceSynchronize();
+			cudaDeviceSynchronize();
 		}
 
 #define DECLARE_STENCIL( TYPE, DIR) template void \
