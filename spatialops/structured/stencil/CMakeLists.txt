@@ -23,6 +23,7 @@ set( SO_SRC ${SO_SRC} ${src} PARENT_SCOPE )
 
 install( FILES
   BoxFilter.h
+  FDStencil2.h
   FVStaggeredBCOp.h
   NullStencil.h
   Stencil2.h
