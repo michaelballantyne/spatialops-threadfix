@@ -2,6 +2,7 @@ get_filename_component( dir ${CMAKE_CURRENT_LIST_FILE} PATH )
 
 set( src
   ${dir}/BoxFilter.cpp
+  ${dir}/FDStencil2.cpp
   ${dir}/NullStencil.cpp
   ${dir}/Stencil2.cpp
   ${dir}/Stencil4.cpp

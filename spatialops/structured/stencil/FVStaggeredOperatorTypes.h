@@ -4,6 +4,7 @@
 #include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/structured/stencil/Stencil2.h>
+#include <spatialops/structured/stencil/FDStencil2.h>
 #include <spatialops/structured/stencil/NullStencil.h>
 #include <spatialops/structured/stencil/Stencil4.h>
 #include <spatialops/structured/stencil/BoxFilter.h>
@@ -195,6 +196,21 @@ namespace structured{
   template<> struct OperatorTypeBuilder<Filter,YVolField,YVolField>{ typedef BoxFilter<YVolField> type; };
   template<> struct OperatorTypeBuilder<Filter,ZVolField,ZVolField>{ typedef BoxFilter<ZVolField> type; };
 
+  // finite difference:
+#define FD_OP_BUILDER( OP, FIELDT )        \
+    template<> struct OperatorTypeBuilder<OP,FIELDT,FIELDT>{ typedef FDStencil2<OP,FIELDT,OP::DirT> type; };
+#define FD_ALL_VOL_FIELDS( OP ) \
+    FD_OP_BUILDER(OP,SVolField) \
+    FD_OP_BUILDER(OP,XVolField) \
+    FD_OP_BUILDER(OP,YVolField) \
+    FD_OP_BUILDER(OP,ZVolField)
+
+  FD_ALL_VOL_FIELDS( InterpolantX )
+  FD_ALL_VOL_FIELDS( InterpolantY )
+  FD_ALL_VOL_FIELDS( InterpolantZ )
+  FD_ALL_VOL_FIELDS( GradientX )
+  FD_ALL_VOL_FIELDS( GradientY )
+  FD_ALL_VOL_FIELDS( GradientZ )
 
 } // namespace SpatialOps
 } // namespace structured
