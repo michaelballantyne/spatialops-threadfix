@@ -327,12 +327,18 @@ namespace structured{
 
     /**
      * @brief Comparison operators
-     * WARNING: Slow in general and comparison with external fields with incur copy penalties.
+     * WARNING: Slow in general and comparison with external fields will incur copy penalties.
      */
     bool operator!=(const MyType&) const;
     bool operator==(const MyType&) const;
 
     /**
+     * @brief Make this field available on another device type, index pair. Adding consumer fields
+     * 		  increases the memory held by the the spatial field by 'allocated_bytes' for each
+     *		  unique device added.
+     *
+     *		  Note: consumer fields are read-only and no functionality should ever depend on the
+     *		  field being writable.
      *
      * @param mtype -- Device type where this field should be made available for consumption
      * @param deviceIndex -- Index to the proper device
