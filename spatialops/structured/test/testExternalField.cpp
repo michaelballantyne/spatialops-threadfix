@@ -136,6 +136,19 @@ int main(int argc, char** argv) {
       throw;
     }
 
+    std::cout << "Testing block field memset\n";
+    q = 3.14159;
+    std::cout << "- Local field - OK\n";
+
+    r = 3.14159;
+    std::cout << "- GPU field - OK\n";
+
+    if(( r != q )){
+    	throw;
+    }
+
+    std::cout << "- Compairison - OK\n";
+
     std::cout << "PASS\n";
   } catch ( ... ) {
     std::cout << "FAIL\n";
