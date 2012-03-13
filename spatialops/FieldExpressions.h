@@ -54,6 +54,7 @@
 
          public:
           FieldType typedef field_type;
+          Operand typedef Expression;
           NeboExpression(Operand const & given)
           : expr_(given)
           {};
@@ -68,6 +69,7 @@
 
          public:
           FieldType typedef field_type;
+          Operand typedef Expression;
           NeboBooleanExpression(Operand const & given)
           : expr_(given)
           {};
@@ -3813,6 +3815,513 @@
 
           return ReturnTerm(ReturnType(Type1(Type1(arg1)),
                                        Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+       };
+
+      template<typename CurrentMode, typename Operand1, typename Operand2, typename FieldType>
+       struct AndOp;
+
+      template<typename Operand1, typename Operand2, typename FieldType>
+       struct AndOp<Initial, Operand1, Operand2, FieldType> {
+
+         public:
+          AndOp<Initial, Operand1, Operand2, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          template<typename IteratorType>
+           struct Iterator {
+
+             AndOp<ResizePrep<IteratorType, This>,
+                   typename Operand1::template Iterator<IteratorType>::ResizePrepType,
+                   typename Operand2::template Iterator<IteratorType>::ResizePrepType,
+                   FieldType> typedef ResizePrepType;
+
+             AndOp<SeqWalk<IteratorType, This>,
+                   typename Operand1::template Iterator<IteratorType>::SeqWalkType,
+                   typename Operand2::template Iterator<IteratorType>::SeqWalkType,
+                   FieldType> typedef SeqWalkType;
+          };
+          AndOp(Operand1 const & op1, Operand2 const & op2)
+          : operand1_(op1), operand2_(op2)
+          {};
+          template<typename IteratorType>
+           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
+              return typename Iterator<IteratorType>::SeqWalkType(*this);
+           };
+          template<typename IteratorType>
+           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
+              return typename Iterator<IteratorType>::ResizePrepType(*this);
+           };
+          inline Operand1 const & operand1(void) const { return operand1_; };
+          inline Operand2 const & operand2(void) const { return operand2_; };
+
+         private:
+          Operand1 const operand1_;
+          Operand2 const operand2_;
+      };
+
+      template<typename IteratorType,
+               typename SourceType,
+               typename Operand1,
+               typename Operand2,
+               typename FieldType>
+       struct AndOp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+
+         public:
+          AndOp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          AndOp<Resize<IteratorType, This>,
+                typename Operand1::ResizeType,
+                typename Operand2::ResizeType,
+                FieldType> typedef ResizeType;
+          AndOp(SourceType const & source)
+          : operand1_(source.operand1()), operand2_(source.operand2())
+          {};
+          inline ResizeType resize(MemoryWindow const & newSize) const {
+             return ResizeType(newSize, *this);
+          };
+          inline Operand1 const & operand1(void) const { return operand1_; };
+          inline Operand2 const & operand2(void) const { return operand2_; };
+
+         private:
+          Operand1 const operand1_;
+          Operand2 const operand2_;
+      };
+
+      template<typename IteratorType,
+               typename SourceType,
+               typename Operand1,
+               typename Operand2,
+               typename FieldType>
+       struct AndOp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+
+         public:
+          AndOp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          AndOp<SeqWalk<IteratorType, This>,
+                typename Operand1::SeqWalkType,
+                typename Operand2::SeqWalkType,
+                FieldType> typedef SeqWalkType;
+          AndOp(MemoryWindow const & size, SourceType const & source)
+          : operand1_(size, source.operand1()), operand2_(size, source.operand2())
+          {};
+          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline Operand1 const & operand1(void) const { return operand1_; };
+          inline Operand2 const & operand2(void) const { return operand2_; };
+
+         private:
+          Operand1 const operand1_;
+          Operand2 const operand2_;
+      };
+
+      template<typename IteratorType,
+               typename SourceType,
+               typename Operand1,
+               typename Operand2,
+               typename FieldType>
+       struct AndOp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+
+         public:
+          AndOp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef EvalReturnType;
+          AndOp(SourceType const & source)
+          : operand1_(source.operand1()), operand2_(source.operand2())
+          {};
+          inline void next(void) { operand1_.next(); operand2_.next(); };
+          inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
+          inline bool has_length(void) const {
+             return (operand1_.has_length() || operand2_.has_length());
+          };
+          inline EvalReturnType eval(void) const { return (operand1_.eval() && operand2_.eval()); };
+
+         private:
+          Operand1 operand1_;
+          Operand2 operand2_;
+      };
+
+      /* SubBoolExpr X SubBoolExpr */
+      template<typename SubBoolExpr1, typename SubBoolExpr2>
+       inline NeboBooleanExpression<AndOp<Initial,
+                                          typename SubBoolExpr1::Expression,
+                                          typename SubBoolExpr2::Expression,
+                                          typename SubBoolExpr1::field_type>,
+                                    typename SubBoolExpr1::field_type> operator &&(SubBoolExpr1
+                                                                                   const & arg1,
+                                                                                   SubBoolExpr2
+                                                                                   const & arg2) {
+
+          typename SubBoolExpr1::field_type typedef FieldType;
+
+          typename SubBoolExpr1::Expression typedef Type1;
+
+          typename SubBoolExpr2::Expression typedef Type2;
+
+          AndOp<Initial, Type1, Type2, FieldType> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(Type1(arg1.expr()), Type2(arg2.expr())));
+       };
+
+      /* SubBoolExpr X Boolean */
+      template<typename SubBoolExpr1>
+       inline NeboBooleanExpression<AndOp<Initial,
+                                          typename SubBoolExpr1::Expression,
+                                          NeboBoolean<Initial, typename SubBoolExpr1::field_type>,
+                                          typename SubBoolExpr1::field_type>,
+                                    typename SubBoolExpr1::field_type> operator &&(SubBoolExpr1
+                                                                                   const & arg1,
+                                                                                   bool const & arg2) {
+
+          typename SubBoolExpr1::field_type typedef FieldType;
+
+          typename SubBoolExpr1::Expression typedef Type1;
+
+          NeboBoolean<Initial, typename SubBoolExpr1::field_type> typedef Type2;
+
+          AndOp<Initial, Type1, Type2, FieldType> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(Type1(arg1.expr()), Type2(Type2(arg2))));
+       };
+
+      /* Boolean X SubBoolExpr */
+      template<typename SubBoolExpr2>
+       inline NeboBooleanExpression<AndOp<Initial,
+                                          NeboBoolean<Initial, typename SubBoolExpr2::field_type>,
+                                          typename SubBoolExpr2::Expression,
+                                          typename SubBoolExpr2::field_type>,
+                                    typename SubBoolExpr2::field_type> operator &&(bool const & arg1,
+                                                                                   SubBoolExpr2
+                                                                                   const & arg2) {
+
+          typename SubBoolExpr2::field_type typedef FieldType;
+
+          NeboBoolean<Initial, typename SubBoolExpr2::field_type> typedef Type1;
+
+          typename SubBoolExpr2::Expression typedef Type2;
+
+          AndOp<Initial, Type1, Type2, FieldType> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(Type1(Type1(arg1)), Type2(arg2.expr())));
+       };
+
+      template<typename CurrentMode, typename Operand1, typename Operand2, typename FieldType>
+       struct OrOp;
+
+      template<typename Operand1, typename Operand2, typename FieldType>
+       struct OrOp<Initial, Operand1, Operand2, FieldType> {
+
+         public:
+          OrOp<Initial, Operand1, Operand2, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          template<typename IteratorType>
+           struct Iterator {
+
+             OrOp<ResizePrep<IteratorType, This>,
+                  typename Operand1::template Iterator<IteratorType>::ResizePrepType,
+                  typename Operand2::template Iterator<IteratorType>::ResizePrepType,
+                  FieldType> typedef ResizePrepType;
+
+             OrOp<SeqWalk<IteratorType, This>,
+                  typename Operand1::template Iterator<IteratorType>::SeqWalkType,
+                  typename Operand2::template Iterator<IteratorType>::SeqWalkType,
+                  FieldType> typedef SeqWalkType;
+          };
+          OrOp(Operand1 const & op1, Operand2 const & op2)
+          : operand1_(op1), operand2_(op2)
+          {};
+          template<typename IteratorType>
+           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
+              return typename Iterator<IteratorType>::SeqWalkType(*this);
+           };
+          template<typename IteratorType>
+           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
+              return typename Iterator<IteratorType>::ResizePrepType(*this);
+           };
+          inline Operand1 const & operand1(void) const { return operand1_; };
+          inline Operand2 const & operand2(void) const { return operand2_; };
+
+         private:
+          Operand1 const operand1_;
+          Operand2 const operand2_;
+      };
+
+      template<typename IteratorType,
+               typename SourceType,
+               typename Operand1,
+               typename Operand2,
+               typename FieldType>
+       struct OrOp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+
+         public:
+          OrOp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          OrOp<Resize<IteratorType, This>,
+               typename Operand1::ResizeType,
+               typename Operand2::ResizeType,
+               FieldType> typedef ResizeType;
+          OrOp(SourceType const & source)
+          : operand1_(source.operand1()), operand2_(source.operand2())
+          {};
+          inline ResizeType resize(MemoryWindow const & newSize) const {
+             return ResizeType(newSize, *this);
+          };
+          inline Operand1 const & operand1(void) const { return operand1_; };
+          inline Operand2 const & operand2(void) const { return operand2_; };
+
+         private:
+          Operand1 const operand1_;
+          Operand2 const operand2_;
+      };
+
+      template<typename IteratorType,
+               typename SourceType,
+               typename Operand1,
+               typename Operand2,
+               typename FieldType>
+       struct OrOp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+
+         public:
+          OrOp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          OrOp<SeqWalk<IteratorType, This>,
+               typename Operand1::SeqWalkType,
+               typename Operand2::SeqWalkType,
+               FieldType> typedef SeqWalkType;
+          OrOp(MemoryWindow const & size, SourceType const & source)
+          : operand1_(size, source.operand1()), operand2_(size, source.operand2())
+          {};
+          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline Operand1 const & operand1(void) const { return operand1_; };
+          inline Operand2 const & operand2(void) const { return operand2_; };
+
+         private:
+          Operand1 const operand1_;
+          Operand2 const operand2_;
+      };
+
+      template<typename IteratorType,
+               typename SourceType,
+               typename Operand1,
+               typename Operand2,
+               typename FieldType>
+       struct OrOp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+
+         public:
+          OrOp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef EvalReturnType;
+          OrOp(SourceType const & source)
+          : operand1_(source.operand1()), operand2_(source.operand2())
+          {};
+          inline void next(void) { operand1_.next(); operand2_.next(); };
+          inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
+          inline bool has_length(void) const {
+             return (operand1_.has_length() || operand2_.has_length());
+          };
+          inline EvalReturnType eval(void) const { return (operand1_.eval() || operand2_.eval()); };
+
+         private:
+          Operand1 operand1_;
+          Operand2 operand2_;
+      };
+
+      /* SubBoolExpr X SubBoolExpr */
+      template<typename SubBoolExpr1, typename SubBoolExpr2>
+       inline NeboBooleanExpression<OrOp<Initial,
+                                         typename SubBoolExpr1::Expression,
+                                         typename SubBoolExpr2::Expression,
+                                         typename SubBoolExpr1::field_type>,
+                                    typename SubBoolExpr1::field_type> operator ||(SubBoolExpr1
+                                                                                   const & arg1,
+                                                                                   SubBoolExpr2
+                                                                                   const & arg2) {
+
+          typename SubBoolExpr1::field_type typedef FieldType;
+
+          typename SubBoolExpr1::Expression typedef Type1;
+
+          typename SubBoolExpr2::Expression typedef Type2;
+
+          OrOp<Initial, Type1, Type2, FieldType> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(Type1(arg1.expr()), Type2(arg2.expr())));
+       };
+
+      /* SubBoolExpr X Boolean */
+      template<typename SubBoolExpr1>
+       inline NeboBooleanExpression<OrOp<Initial,
+                                         typename SubBoolExpr1::Expression,
+                                         NeboBoolean<Initial, typename SubBoolExpr1::field_type>,
+                                         typename SubBoolExpr1::field_type>,
+                                    typename SubBoolExpr1::field_type> operator ||(SubBoolExpr1
+                                                                                   const & arg1,
+                                                                                   bool const & arg2) {
+
+          typename SubBoolExpr1::field_type typedef FieldType;
+
+          typename SubBoolExpr1::Expression typedef Type1;
+
+          NeboBoolean<Initial, typename SubBoolExpr1::field_type> typedef Type2;
+
+          OrOp<Initial, Type1, Type2, FieldType> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(Type1(arg1.expr()), Type2(Type2(arg2))));
+       };
+
+      /* Boolean X SubBoolExpr */
+      template<typename SubBoolExpr2>
+       inline NeboBooleanExpression<OrOp<Initial,
+                                         NeboBoolean<Initial, typename SubBoolExpr2::field_type>,
+                                         typename SubBoolExpr2::Expression,
+                                         typename SubBoolExpr2::field_type>,
+                                    typename SubBoolExpr2::field_type> operator ||(bool const & arg1,
+                                                                                   SubBoolExpr2
+                                                                                   const & arg2) {
+
+          typename SubBoolExpr2::field_type typedef FieldType;
+
+          NeboBoolean<Initial, typename SubBoolExpr2::field_type> typedef Type1;
+
+          typename SubBoolExpr2::Expression typedef Type2;
+
+          OrOp<Initial, Type1, Type2, FieldType> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(Type1(Type1(arg1)), Type2(arg2.expr())));
+       };
+
+      template<typename CurrentMode, typename Operand, typename FieldType>
+       struct NotOp;
+
+      template<typename Operand, typename FieldType>
+       struct NotOp<Initial, Operand, FieldType> {
+
+         public:
+          NotOp<Initial, Operand, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          template<typename IteratorType>
+           struct Iterator {
+
+             NotOp<ResizePrep<IteratorType, This>,
+                   typename Operand::template Iterator<IteratorType>::ResizePrepType,
+                   FieldType> typedef ResizePrepType;
+
+             NotOp<SeqWalk<IteratorType, This>,
+                   typename Operand::template Iterator<IteratorType>::SeqWalkType,
+                   FieldType> typedef SeqWalkType;
+          };
+          NotOp(Operand const & op)
+          : operand_(op)
+          {};
+          template<typename IteratorType>
+           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
+              return typename Iterator<IteratorType>::SeqWalkType(*this);
+           };
+          template<typename IteratorType>
+           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
+              return typename Iterator<IteratorType>::ResizePrepType(*this);
+           };
+          inline Operand const & operand(void) const { return operand_; };
+
+         private:
+          Operand const operand_;
+      };
+
+      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
+       struct NotOp<ResizePrep<IteratorType, SourceType>, Operand, FieldType> {
+
+         public:
+          NotOp<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          NotOp<Resize<IteratorType, This>, typename Operand::ResizeType, FieldType> typedef
+          ResizeType;
+          NotOp(SourceType const & source)
+          : operand_(source.operand())
+          {};
+          inline ResizeType resize(MemoryWindow const & newSize) const {
+             return ResizeType(newSize, *this);
+          };
+          inline Operand const & operand(void) const { return operand_; };
+
+         private:
+          Operand const operand_;
+      };
+
+      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
+       struct NotOp<Resize<IteratorType, SourceType>, Operand, FieldType> {
+
+         public:
+          NotOp<Resize<IteratorType, SourceType>, Operand, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          NotOp<SeqWalk<IteratorType, This>, typename Operand::SeqWalkType, FieldType> typedef
+          SeqWalkType;
+          NotOp(MemoryWindow const & size, SourceType const & source)
+          : operand_(size, source.operand())
+          {};
+          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline Operand const & operand(void) const { return operand_; };
+
+         private:
+          Operand const operand_;
+      };
+
+      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
+       struct NotOp<SeqWalk<IteratorType, SourceType>, Operand, FieldType> {
+
+         public:
+          NotOp<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef EvalReturnType;
+          NotOp(SourceType const & source)
+          : operand_(source.operand())
+          {};
+          inline void next(void) { operand_.next(); };
+          inline bool at_end(void) const { return (operand_.at_end()); };
+          inline bool has_length(void) const { return (operand_.has_length()); };
+          inline EvalReturnType eval(void) const { return !(operand_.eval()); };
+
+         private:
+          Operand operand_;
+      };
+
+      /* SubBoolExpr */
+      template<typename SubBoolExpr>
+       inline NeboBooleanExpression<NotOp<Initial,
+                                          typename SubBoolExpr::Expression,
+                                          typename SubBoolExpr::field_type>,
+                                    typename SubBoolExpr::field_type> operator !(SubBoolExpr const &
+                                                                                 arg) {
+
+          typename SubBoolExpr::field_type typedef FieldType;
+
+          typename SubBoolExpr::Expression typedef Type;
+
+          NotOp<Initial, Type, FieldType> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(Type(arg.expr())));
        };
 
 #     define BUILD_BINARY_FUNCTION(OBJECT_NAME, INTERNAL_NAME, EXTERNAL_NAME)                      \
