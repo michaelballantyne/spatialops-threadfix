@@ -72,6 +72,8 @@
                        (sec-def public-chunk
                                 (typedef FT-chunk
                                          'field_type)
+                                (typedef 'Operand
+                                         'Expression)
                                 (constructor-chunk name
                                                    (b s
                                                       'Operand const-chunk "&" 'given)
@@ -526,6 +528,28 @@
                                 (mfc 'operand2_
                                      'eval)
                                 close-paren-chunk)))]
+       [build-unary-logical-function-struct
+        (lambda (name internal-name)
+          (build-Nary-struct name
+                             1
+                             'bool
+                             (fc internal-name
+                                 (mfc 'operand_
+                                      'eval))))]
+       [build-logical-operator-struct
+        (lambda (name internal-name)
+          (build-Nary-struct name
+                             2
+                             'bool
+                             (c open-paren-chunk
+                                (mfc 'operand1_
+                                     'eval)
+                                s
+                                internal-name
+                                s
+                                (mfc 'operand2_
+                                     'eval)
+                                close-paren-chunk)))]
        [abs-SubExpr (lambda (str)
                       (let* ([SE (string-append "SubExpr" str)]
                              [arg (string-append "arg" str)]
@@ -568,6 +592,42 @@
                                   arg))
                              (fc (c 'Type str)
                                  arg))))]
+       [abs-SubBoolExpr (lambda (str)
+                          (let* ([SE (string-append "SubBoolExpr" str)]
+                                 [arg (string-append "arg" str)]
+                                 [FT (scope (tpl-pmtr SE)
+                                            'field_type)])
+                            (list FT
+                                  SE
+                                  (lambda (FT)
+                                    (c typename-chunk
+                                       s
+                                       (scope SE
+                                              'Expression)))
+                                  (lambda (FT)
+                                    (b s
+                                       SE
+                                       const-chunk
+                                       "&"
+                                       arg))
+                                  (mfc arg
+                                       'expr))))]
+       [abs-Boolean (lambda (str)
+                      (let ([arg (string-append "arg" str)])
+                        (list #false
+                              #false
+                              (lambda (FT)
+                                (tpl-use NB-chunk
+                                         'Initial
+                                         FT))
+                              (lambda (FT)
+                                (b s
+                                   'bool
+                                   const-chunk
+                                   "&"
+                                   arg))
+                              (fc (c 'Type str)
+                                  arg))))]
        [build-interface-case
         (lambda (description-chunk abs-type-lst name external-name expression-term)
           (let* ([FT-clause first]
@@ -637,30 +697,40 @@
                                  (fc 'ReturnType
                                      arg-use-lst))))))))]
        [build-binary-interface
-        (lambda (name external-name expression-term)
+        (lambda (name
+                 external-name
+                 expression-term
+                 Expr-abs
+                 Expr-str
+                 Val-abs
+                 Val-str)
           (smt-list-chunk blank-line-chunk
-                          (build-interface-case "SubExpr X SubExpr"
-                                                (list abs-SubExpr
-                                                      abs-SubExpr)
+                          (build-interface-case (c Expr-str s "X" s Expr-str)
+                                                (list Expr-abs
+                                                      Expr-abs)
                                                 name
                                                 external-name
                                                 expression-term)
-                         (build-interface-case "SubExpr X Scalar"
-                                               (list abs-SubExpr
-                                                     abs-Scalar)
+                          (build-interface-case (c Expr-str s "X" s Val-str)
+                                                (list Expr-abs
+                                                      Val-abs)
                                                 name
                                                 external-name
                                                 expression-term)
-                         (build-interface-case "Scalar X SubExpr"
-                                               (list abs-Scalar
-                                                     abs-SubExpr)
+                          (build-interface-case (c Val-str s "X" s Expr-str)
+                                                (list Val-abs
+                                                      Expr-abs)
                                                 name
                                                 external-name
                                                 expression-term)))]
        [build-unary-interface
-        (lambda (name external-name expression-term)
-         (build-interface-case "SubExpr"
-                               (list abs-SubExpr)
+        (lambda (name
+                 external-name
+                 expression-term
+                 Expr-abs
+                 Expr-str)
+         (build-interface-case Expr-str
+                               (list Expr-abs)
                                name
                                external-name
                                expression-term))]
@@ -671,7 +741,11 @@
                                                         internal-name)
                           (build-binary-interface name
                                                   external-name
-                                                  NE-chunk)))]
+                                                  NE-chunk
+                                                  abs-SubExpr
+                                                  "SubExpr"
+                                                  abs-Scalar
+                                                  "Scalar")))]
        [build-binary-operator
         (lambda (name internal-name external-name)
           (smt-list-chunk blank-line-chunk
@@ -679,7 +753,11 @@
                                                         internal-name)
                           (build-binary-interface name
                                                   external-name
-                                                  NE-chunk)))]
+                                                  NE-chunk
+                                                  abs-SubExpr
+                                                  "SubExpr"
+                                                  abs-Scalar
+                                                  "Scalar")))]
        [build-unary-function
         (lambda (name internal-name external-name)
           (smt-list-chunk blank-line-chunk
@@ -687,7 +765,9 @@
                                                        internal-name)
                           (build-unary-interface name
                                                  external-name
-                                                  NE-chunk)))]
+                                                  NE-chunk
+                                                  abs-SubExpr
+                                                  "SubExpr")))]
        [build-comparison-operator
         (lambda (name internal-name external-name)
           (smt-list-chunk blank-line-chunk
@@ -695,7 +775,33 @@
                                                    internal-name)
                           (build-binary-interface name
                                                   external-name
-                                                  NBE-chunk)))]
+                                                  NBE-chunk
+                                                  abs-SubExpr
+                                                  "SubExpr"
+                                                  abs-Scalar
+                                                  "Scalar")))]
+       [build-binary-logical-operator
+        (lambda (name internal-name external-name)
+          (smt-list-chunk blank-line-chunk
+                          (build-binary-operator-struct name
+                                                        internal-name)
+                          (build-binary-interface name
+                                                  external-name
+                                                  NBE-chunk
+                                                  abs-SubBoolExpr
+                                                  "SubBoolExpr"
+                                                  abs-Boolean
+                                                  "Boolean")))]
+       [build-unary-logical-function
+        (lambda (name internal-name external-name)
+          (smt-list-chunk blank-line-chunk
+                          (build-unary-function-struct name
+                                                       internal-name)
+                          (build-unary-interface name
+                                                 external-name
+                                                  NBE-chunk
+                                                  abs-SubBoolExpr
+                                                  "SubBoolExpr")))]
        [build-assignment
         (lambda (name tpl-pmtrs rhs-type body return-expr)
           (tpl-def (list tpl-pmtrs
@@ -1221,6 +1327,15 @@
       (build-comparison-operator 'GreaterThanEqualCmp
                                  ">="
                                  (c 'operator s ">="))
+      (build-binary-logical-operator 'AndOp
+                                     "&&"
+                                     (c 'operator s "&&"))
+      (build-binary-logical-operator 'OrOp
+                                     "||"
+                                     (c 'operator s "||"))
+      (build-unary-logical-function 'NotOp
+                                    "!"
+                                    (c 'operator s "!"))
       (m 'BUILD_BINARY_FUNCTION
          (list 'OBJECT_NAME
                'INTERNAL_NAME
