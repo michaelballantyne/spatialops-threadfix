@@ -114,7 +114,46 @@ namespace structured{
     opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,YSurfZField,SVolField>::type(.25,.25,.25,.25) );
     opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,ZSurfXField,SVolField>::type(.25,.25,.25,.25) );
     opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,ZSurfYField,SVolField>::type(.25,.25,.25,.25) );
-  }
+
+    //___________________________________________________________________
+    // Box filter:
+    //
+    opdb.register_new_operator( new OperatorTypeBuilder<Filter,SVolField,SVolField>::type() );
+    opdb.register_new_operator( new OperatorTypeBuilder<Filter,XVolField,XVolField>::type() );
+    opdb.register_new_operator( new OperatorTypeBuilder<Filter,YVolField,YVolField>::type() );
+    opdb.register_new_operator( new OperatorTypeBuilder<Filter,ZVolField,ZVolField>::type() );
+
+    //___________________________________________________________________
+    // Finite Difference stencils:
+    //
+    opdb.register_new_operator( new OperatorTypeBuilder<InterpolantX,SVolField,SVolField>::type(0.5,0.5) );
+    opdb.register_new_operator( new OperatorTypeBuilder<InterpolantY,SVolField,SVolField>::type(0.5,0.5) );
+    opdb.register_new_operator( new OperatorTypeBuilder<InterpolantZ,SVolField,SVolField>::type(0.5,0.5) );
+    opdb.register_new_operator( new OperatorTypeBuilder<GradientX,   SVolField,SVolField>::type( -0.5/dx, 0.5/dx ) );
+    opdb.register_new_operator( new OperatorTypeBuilder<GradientY,   SVolField,SVolField>::type( -0.5/dy, 0.5/dy ) );
+    opdb.register_new_operator( new OperatorTypeBuilder<GradientZ,   SVolField,SVolField>::type( -0.5/dz, 0.5/dz ) );
+
+    opdb.register_new_operator( new OperatorTypeBuilder<InterpolantX,XVolField,XVolField>::type(0.5,0.5) );
+    opdb.register_new_operator( new OperatorTypeBuilder<InterpolantY,XVolField,XVolField>::type(0.5,0.5) );
+    opdb.register_new_operator( new OperatorTypeBuilder<InterpolantZ,XVolField,XVolField>::type(0.5,0.5) );
+    opdb.register_new_operator( new OperatorTypeBuilder<GradientX,   XVolField,XVolField>::type( -0.5/dx, 0.5/dx ) );
+    opdb.register_new_operator( new OperatorTypeBuilder<GradientY,   XVolField,XVolField>::type( -0.5/dy, 0.5/dy ) );
+    opdb.register_new_operator( new OperatorTypeBuilder<GradientZ,   XVolField,XVolField>::type( -0.5/dz, 0.5/dz ) );
+
+    opdb.register_new_operator( new OperatorTypeBuilder<InterpolantX,YVolField,YVolField>::type(0.5,0.5) );
+    opdb.register_new_operator( new OperatorTypeBuilder<InterpolantY,YVolField,YVolField>::type(0.5,0.5) );
+    opdb.register_new_operator( new OperatorTypeBuilder<InterpolantZ,YVolField,YVolField>::type(0.5,0.5) );
+    opdb.register_new_operator( new OperatorTypeBuilder<GradientX,   YVolField,YVolField>::type( -0.5/dx, 0.5/dx ) );
+    opdb.register_new_operator( new OperatorTypeBuilder<GradientY,   YVolField,YVolField>::type( -0.5/dy, 0.5/dy ) );
+    opdb.register_new_operator( new OperatorTypeBuilder<GradientZ,   YVolField,YVolField>::type( -0.5/dz, 0.5/dz ) );
+
+    opdb.register_new_operator( new OperatorTypeBuilder<InterpolantX,ZVolField,ZVolField>::type(0.5,0.5) );
+    opdb.register_new_operator( new OperatorTypeBuilder<InterpolantY,ZVolField,ZVolField>::type(0.5,0.5) );
+    opdb.register_new_operator( new OperatorTypeBuilder<InterpolantZ,ZVolField,ZVolField>::type(0.5,0.5) );
+    opdb.register_new_operator( new OperatorTypeBuilder<GradientX,   ZVolField,ZVolField>::type( -0.5/dx, 0.5/dx ) );
+    opdb.register_new_operator( new OperatorTypeBuilder<GradientY,   ZVolField,ZVolField>::type( -0.5/dy, 0.5/dy ) );
+    opdb.register_new_operator( new OperatorTypeBuilder<GradientZ,   ZVolField,ZVolField>::type( -0.5/dz, 0.5/dz ) );
+}
 
   //------------------------------------------------------------------
 

@@ -1,7 +1,10 @@
 #ifndef ParticleFieldTypes_h
 #define ParticleFieldTypes_h
 
+#include <spatialops/SpatialOpsConfigure.h>
+#include <spatialops/SpatialOpsDefs.h>
 #include <spatialops/structured/SpatialField.h>
+#include <spatialops/structured/IndexTriplet.h>
 
 namespace SpatialOps{
 namespace Particle{
@@ -18,7 +21,11 @@ namespace Particle{
 
   struct ParticleGhostTraits{ enum{ NGHOST=0 }; };
 
-  struct ParticleFieldTraits{ typedef NODIR FaceDir;  typedef NODIR StagLoc; };
+  struct ParticleFieldTraits{
+    typedef NODIR FaceDir;
+    typedef structured::IndexTriplet< 0, 0, 0> Offset;
+    typedef structured::IndexTriplet<0,0,0>  BCExtra;
+  };
 
   typedef structured::SpatialField< ParticleFieldTraits, ParticleGhostTraits  > ParticleField;
 

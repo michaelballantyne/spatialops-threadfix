@@ -59,6 +59,18 @@ template< typename FieldT, typename DirT, int IsSrcField >
 struct FuncEvaluator<FieldT,SpatialOps::Interpolant,DirT,IsSrcField>{
   static void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& f ){ function(x,y,z,f); }
 };
+template< typename FieldT, typename DirT, int IsSrcField >
+struct FuncEvaluator<FieldT,SpatialOps::InterpolantX,DirT,IsSrcField>{
+  static void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& f ){ function(x,y,z,f); }
+};
+template< typename FieldT, typename DirT, int IsSrcField >
+struct FuncEvaluator<FieldT,SpatialOps::InterpolantY,DirT,IsSrcField>{
+  static void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& f ){ function(x,y,z,f); }
+};
+template< typename FieldT, typename DirT, int IsSrcField >
+struct FuncEvaluator<FieldT,SpatialOps::InterpolantZ,DirT,IsSrcField>{
+  static void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& f ){ function(x,y,z,f); }
+};
 
 template< typename FieldT >
 struct FuncEvaluator<FieldT,SpatialOps::Gradient,SpatialOps::XDIR,0>{
@@ -66,6 +78,14 @@ struct FuncEvaluator<FieldT,SpatialOps::Gradient,SpatialOps::XDIR,0>{
 };
 template< typename FieldT >
 struct FuncEvaluator<FieldT,SpatialOps::Gradient,SpatialOps::XDIR,1>{
+  static void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& f ){ function(x,y,z,f); }
+};
+template< typename FieldT >
+struct FuncEvaluator<FieldT,SpatialOps::GradientX,SpatialOps::XDIR,0>{
+  static void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& f ){ function_der_x(x,y,z,f); }
+};
+template< typename FieldT >
+struct FuncEvaluator<FieldT,SpatialOps::GradientX,SpatialOps::XDIR,1>{
   static void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& f ){ function(x,y,z,f); }
 };
 
@@ -77,6 +97,14 @@ template< typename FieldT >
 struct FuncEvaluator<FieldT,SpatialOps::Gradient,SpatialOps::YDIR,1>{
   static void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& f ){ function(x,y,z,f); }
 };
+template< typename FieldT >
+struct FuncEvaluator<FieldT,SpatialOps::GradientY,SpatialOps::YDIR,0>{
+  static void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& f ){ function_der_y(x,y,z,f); }
+};
+template< typename FieldT >
+struct FuncEvaluator<FieldT,SpatialOps::GradientY,SpatialOps::YDIR,1>{
+  static void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& f ){ function(x,y,z,f); }
+};
 
 template< typename FieldT >
 struct FuncEvaluator<FieldT,SpatialOps::Gradient,SpatialOps::ZDIR,0>{
@@ -84,6 +112,14 @@ struct FuncEvaluator<FieldT,SpatialOps::Gradient,SpatialOps::ZDIR,0>{
 };
 template< typename FieldT >
 struct FuncEvaluator<FieldT,SpatialOps::Gradient,SpatialOps::ZDIR,1>{
+  static void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& f ){ function(x,y,z,f); }
+};
+template< typename FieldT >
+struct FuncEvaluator<FieldT,SpatialOps::GradientZ,SpatialOps::ZDIR,0>{
+  static void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& f ){ function_der_z(x,y,z,f); }
+};
+template< typename FieldT >
+struct FuncEvaluator<FieldT,SpatialOps::GradientZ,SpatialOps::ZDIR,1>{
   static void value( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& f ){ function(x,y,z,f); }
 };
 

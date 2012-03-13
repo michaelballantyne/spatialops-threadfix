@@ -5,6 +5,7 @@
 #include <spatialops/structured/MemoryTypes.h>
 #include <spatialops/structured/SpatialField.h>
 #include <spatialops/structured/ExternalAllocators.h>
+#include <spatialops/structured/IndexTriplet.h>
 
 #include <queue>
 #include <map>
@@ -265,11 +266,24 @@ class SpatialFieldStore {
      *  store a SpatialField reference.  Doing so can cause memory
      *  corruption.
      */
-    inline SpatFldPtr<FieldT> get(const FieldT& f,
-    		const MemoryType mtype = LOCAL_RAM, const unsigned short int deviceIndex = 0);
+    inline SpatFldPtr<FieldT> get( const FieldT& f,
+    		const MemoryType mtype = LOCAL_RAM, const unsigned short int deviceIndex = 0 );
 
     inline SpatFldPtr<FieldT> get(const structured::MemoryWindow& window,
-        const MemoryType mtype = LOCAL_RAM, const unsigned short int deviceIndex = 0);
+         const MemoryType mtype = LOCAL_RAM, const unsigned short int deviceIndex = 0 );
+
+    template< typename ProtoT >
+    inline SpatFldPtr<FieldT> get( const ProtoT& f )
+    {
+      using namespace structured;
+      const MemoryWindow& ws = f.window_with_ghost();
+      const MemoryWindow w( ws.glob_dim() + Subtract< typename FieldT::Location::BCExtra, typename ProtoT::Location::BCExtra >::result::int_vec() * ws.has_bc(),
+                            ws.offset(),
+                            ws.extent()   + Subtract< typename FieldT::Location::BCExtra, typename ProtoT::Location::BCExtra >::result::int_vec() * ws.has_bc(),
+                            ws.has_bc(0), ws.has_bc(1), ws.has_bc(2) );
+      return get(w);
+    }
+
 
   private:
 
@@ -291,9 +305,7 @@ class SpatialFieldStore {
     inline boost::mutex& get_mutex() {static boost::mutex m; return m;}
 #endif
 
-    SpatialFieldStore() {
-    }
-    ;
+    SpatialFieldStore() {};
     ~SpatialFieldStore();
 
     template<typename FT, typename IsPODT> struct ValTypeSelector;
@@ -385,7 +397,7 @@ SpatFldPtr<FieldT>::operator=(const SpatFldPtr& p) {
           case LOCAL_RAM: {
             store_.restore_field(*f_);
           }
-          	  break;
+           break;
 
           case EXTERNAL_CUDA_GPU:
         	  break;
@@ -527,13 +539,16 @@ SpatialFieldStore<FieldT>::~SpatialFieldStore() {
     }
   }
 }
+
 //------------------------------------------------------------------
 template<typename FieldT>
 SpatialFieldStore<FieldT>&
-SpatialFieldStore<FieldT>::self() {
-  static SpatialFieldStore<FieldT> s;
-  return s;
+SpatialFieldStore<FieldT>::self()
+{
+   static SpatialFieldStore<FieldT> s;
+   return s;
 }
+
 //------------------------------------------------------------------
 template<typename FieldT>
 SpatFldPtr<FieldT> SpatialFieldStore<FieldT>::get(const FieldT& f,
@@ -543,6 +558,7 @@ SpatFldPtr<FieldT> SpatialFieldStore<FieldT>::get(const FieldT& f,
   // This could save a lot of memory in some cases.
   return get(f.window_with_ghost(), f.memory_device_type(), f.device_index());
 }
+
 //------------------------------------------------------------------
 template<typename FieldT>
 SpatFldPtr<FieldT> SpatialFieldStore<FieldT>::get(
@@ -582,17 +598,19 @@ SpatFldPtr<FieldT> SpatialFieldStore<FieldT>::get(
                 deviceIndex ), true );
       }
 #endif
-    default: {
-      std::ostringstream msg;
-      msg << "Attempt to create Spatial Field Pointer wrapping ( "
-          << DeviceTypeTools::get_memory_type_description(mtype)
-          << " ) field type, without supporting libraries included\n";
-      msg << "\t " << __FILE__ << " : " << __LINE__;
-      throw(std::runtime_error(msg.str()));
-    }
+      default: {
+               std::ostringstream msg;
+               msg << "Attempt to create Spatial Field Pointer wrapping ( "
+                << DeviceTypeTools::get_memory_type_description(mtype)
+                << " ) field type, without supporting libraries included\n";
+               msg << "\t " << __FILE__ << " : " << __LINE__;
+               throw(std::runtime_error(msg.str()));
+      }
   }
 }
-//------------------------------------------------------------------
+
+  //------------------------------------------------------------------
+
 template<typename FieldT>
 void SpatialFieldStore<FieldT>::restore_field(FieldT& field) {
 #ifdef ENABLE_THREADS
@@ -604,6 +622,30 @@ void SpatialFieldStore<FieldT>::restore_field(FieldT& field) {
 }
 //------------------------------------------------------------------
 
+
+
+  //====================================================================
+
+
+  // specialized for doubles masquerading as spatialfields
+  template<>
+  inline void
+  SpatialFieldStore<double>::restore_field( double& d )
+  {}
+
+  template<>
+  template<>
+  SpatFldPtr<double>
+  inline SpatialFieldStore<double>::get<double>( const double& d )
+  {
+#ifdef ENABLE_THREADS
+    boost::mutex::scoped_lock lock( get_mutex() );
+#endif
+
+    return SpatFldPtr<double>( new double, true );
+  }
+
+//------------------------------------------------------------------
 //====================================================================
 
 //Wrap a double
@@ -656,11 +698,6 @@ inline double* SpatFldPtr<double>::field_values() const {
 template<>
 inline unsigned short SpatFldPtr<double>::device_index() const {
 	return deviceIndex_;
-}
-
-template<>
-inline void SpatialFieldStore<double>::restore_field(double& d) {
-
 }
 
 template<>

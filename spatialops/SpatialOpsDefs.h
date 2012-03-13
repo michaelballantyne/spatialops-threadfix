@@ -82,7 +82,43 @@ namespace SpatialOps{
    */
   struct Restriction{};
 
-  /** @} */  // end of Operator Types group
+
+  /**
+   * @struct InterpolantX
+   * @brief X-interpolant for use with FD operations whose src and dest fields are the same type
+   */
+  struct InterpolantX{ typedef XDIR DirT; };
+  /**
+   * @struct InterpolantY
+   * @brief Y-interpolant for use with FD operations whose src and dest fields are the same type
+   */
+  struct InterpolantY{ typedef YDIR DirT; };
+
+  /**
+   * @struct InterpolantZ
+   * @brief Z-interpolant for use with FD operations whose src and dest fields are the same type
+   */
+  struct InterpolantZ{ typedef ZDIR DirT; };
+
+  /**
+   * @struct GradientX
+   * @brief X-interpolant for use with FD operations whose src and dest fields are the same type
+   */
+  struct GradientX{ typedef XDIR DirT; };
+  /**
+   * @struct GradientY
+   * @brief Y-interpolant for use with FD operations whose src and dest fields are the same type
+   */
+  struct GradientY{ typedef YDIR DirT; };
+
+  /**
+   * @struct GradientZ
+   * @brief Z-interpolant for use with FD operations whose src and dest fields are the same type
+   */
+  struct GradientZ{ typedef ZDIR DirT; };
+
+
+/** @} */  // end of Operator Types group
 
   //==================================================================
 
