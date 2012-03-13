@@ -346,6 +346,16 @@ SpatFldPtr<FieldT>::SpatFldPtr(FieldT* const f) :
 		*count_ = 1;
 }
 
+template<>
+inline SpatFldPtr<double>::SpatFldPtr(double* const f, const bool builtFromStore) :
+    store_(
+    	SpatialFieldStore<double>::self()), f_(f),
+    	count_(new int), builtFromStore_(builtFromStore),
+    	memType_(LOCAL_RAM), deviceIndex_(0) {
+
+		*count_ = 1;
+}
+
 //------------------------------------------------------------------
 template<typename FieldT>
 SpatFldPtr<FieldT>::SpatFldPtr(FieldT* const f, const bool builtFromStore) :
@@ -660,21 +670,10 @@ inline SpatFldPtr<double>::SpatFldPtr(double* const f) :
 }
 //SpatFldPtr(FieldT* const field, const bool builtFromStore, const MemoryType mtype, const unsigned short int deviceIndex);
 
-
-template<>
-inline SpatFldPtr<double>::SpatFldPtr(double* const f, const bool builtFromStore) :
-    store_(
-    	SpatialFieldStore<double>::self()), f_(f),
-    	count_(new int), builtFromStore_(builtFromStore),
-    	memType_(LOCAL_RAM), deviceIndex_(0) {
-
-		*count_ = 1;
-}
 template<>
 inline SpatFldPtr<double>::SpatFldPtr(double* const field, const bool builtFromStore,
 		const MemoryType mtype, const unsigned short int deviceIndex) :
-    store_(
-    	SpatialFieldStore<double>::self()), f_(field),
+		store_(SpatialFieldStore<double>::self()), f_(field),
     	count_(new int), builtFromStore_(builtFromStore),
     	memType_(mtype), deviceIndex_(deviceIndex) {
 
