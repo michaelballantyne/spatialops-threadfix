@@ -21,6 +21,9 @@ namespace SpatialOps{
       ~FDStencil2();
 
       void apply_to_field( const SrcFieldType& src, DestFieldType& dest ) const;
+
+      inline double get_minus_coef() const{ return coefLo_; } ///< get the (-) coefficient
+      inline double  get_plus_coef() const{ return coefHi_; } ///< get the (+) coefficient
     };
 
   }
