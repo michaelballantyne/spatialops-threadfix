@@ -1,3 +1,25 @@
+/*
+ * Copyright (c) 2011 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
 #ifndef FieldFunctions_h
 #define FieldFunctions_h
 
@@ -37,7 +59,7 @@ namespace SpatialOps{
  *  SpatialField objects.
  *
  *  @par Template Parameters
- *  
+ *
  *   <ul>
  *
  *   <li> \b FieldT The type of field that this function applies to.
@@ -315,7 +337,7 @@ class GaussianFunction : public FieldFunction1D<FieldT,PatchT>
 //====================================================================
 
 /**
- *  @class Hyperbolic tangent Function 
+ *  @class Hyperbolic tangent Function
  *  @author Naveen Punati
  *  @date January, 2009
  *
@@ -341,9 +363,9 @@ class HyperTanFunction : public FieldFunction1D<FieldT,PatchT>
                     const double L1,
                     const double L2 );
   ~HyperTanFunction(){}
- void evaluate( FieldT& f ) const;  
+ void evaluate( FieldT& f ) const;
  private:
-  const double amplitude_, width_, L1_, L2_;  
+  const double amplitude_, width_, L1_, L2_;
 };
 
 //====================================================================
@@ -650,7 +672,7 @@ HyperTanFunction( const FieldT& x,
                   const double L2 )
   : FieldFunction1D<FieldT,PatchT>(x),
     amplitude_( amplitude ),
-    width_( width ),  
+    width_( width ),
     L1_( L1 ),
     L2_( L2 )
 {
@@ -662,7 +684,7 @@ HyperTanFunction<FieldT,PatchT>::
 evaluate( FieldT& f ) const
 {
   this->set_fields();
-  const FieldT& x = this->get_x(); 
+  const FieldT& x = this->get_x();
   f <<= (amplitude_/2) * ( 1.0 + tanh((x-L1_)/width_)) * (1.0-0.5*(1.0+tanh((x-L2_)/width_)));
 }
 //------------------------------------------------------------------

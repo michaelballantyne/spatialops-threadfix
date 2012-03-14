@@ -1,3 +1,24 @@
+/*
+ * Copyright (c) 2011 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
 #ifndef ParticleOperators_h
 #define ParticleOperators_h
 
@@ -10,7 +31,9 @@ namespace SpatialOps{
 namespace Particle{
 
    /**
-    *  Interpolates a particle field onto an underlying mesh field.      
+    *  @class  ParticleToCell
+    *  @author James C. Sutherland
+    *  @brief Interpolates a particle field onto an underlying mesh field.
     */
    template< typename CellField >
    class ParticleToCell
@@ -24,11 +47,11 @@ namespace Particle{
       */
      ParticleToCell( const CellField& meshCoord );
 
-     /**
-    * @param particleCoord Field of coordinates for all particles (ParticleField)
-    * @param particleSize Field of size for all particles (ParticleField)
-    * @param src source field from which values are interpolated to partciles (ParticleField)
-    * @param dest destination field to which values are interpolated (CellField)
+   /**
+    *  @param particleCoord Field of coordinates for all particles (ParticleField)
+    *  @param particleSize Field of size for all particles (ParticleField)
+    *  @param src source field from which values are interpolated to partciles (ParticleField)
+    *  @param dest destination field to which values are interpolated (CellField)
     */
      void apply_to_field( const ParticleField& particleCoord,
                           const ParticleField& particleSize,
@@ -58,8 +81,8 @@ namespace Particle{
 
     /**
      *  @param meshCoord Field of coordinates for the underlying mesh
-     */   
-    CellToParticle( const CellField& meshCoord ); 
+     */
+    CellToParticle( const CellField& meshCoord );
 
     /**
     * @param particleCoord Field of coordinates for all particles (ParticleField)
@@ -71,7 +94,7 @@ namespace Particle{
                          const ParticleField& particleSize,
                          const SrcFieldType& src,
                          DestFieldType& dest ) const;
-   
+
 
   private:
     const CellField& coordVec_;
@@ -128,11 +151,11 @@ namespace Particle{
 #   ifndef NDEBUG
     const int nmax = dest.window_with_ghost().local_npts();
 #   endif
-  
+
 	   ParticleField::const_iterator plociter = particleCoord.begin();
 	   ParticleField::const_iterator psizeiter = particleSize.begin();
 	   ParticleField::const_iterator isrc = src.begin();
-	   for( ; plociter!=particleCoord.end(); ++plociter, ++isrc, ++psizeiter ){		  
+	   for( ; plociter!=particleCoord.end(); ++plociter, ++isrc, ++psizeiter ){
        //particle location is the position where particle center is located
        //identify the location of the particle left boundary
 		   double leftloc = *plociter-( *psizeiter / 2) ;
@@ -148,13 +171,13 @@ namespace Particle{
 		   //std::cout<<"leftloc  :  "<<leftloc<<"  rightloc  :  "<<rightloc<<"   leftcellIx1 : "<<leftcellIx1<<std::endl;
       //loop through all cells effected by the particle and add the source term
 		   while(leftloc < rightloc){
-			   double rb = coordVec_[leftcellIx1] + dx_/2 ; 
+			   double rb = coordVec_[leftcellIx1] + dx_/2 ;
 			   if(rb > rightloc)
 				   rb = rightloc ;
 			   dest[leftcellIx1] += *isrc * (rb-leftloc) / *psizeiter ;
 			   leftcellIx1 += 1 ;
 			   leftloc = rb ;
-		   }		   
+		   }
 	   }
    }
 
@@ -174,7 +197,7 @@ namespace Particle{
     typename CellField::const_iterator ix2=meshCoord.begin();
     typename CellField::const_iterator ix = ix2;
     ++ix2;
-    for( ; ix2!=meshCoord.end(); ++ix, ++ix2 ){     
+    for( ; ix2!=meshCoord.end(); ++ix, ++ix2 ){
       if( fabs( dx_ - (*ix2-*ix) )/dx_ > TOL ){
         isUniform = false;
       }
@@ -202,7 +225,7 @@ namespace Particle{
     ParticleField::const_iterator plociter = particleCoord.begin();
     ParticleField::const_iterator psizeiter = particleSize.begin();
     ParticleField::iterator destiter = dest.begin();
-    for( ; plociter!=particleCoord.end(); ++plociter, ++destiter, ++psizeiter ){  
+    for( ; plociter!=particleCoord.end(); ++plociter, ++destiter, ++psizeiter ){
 	   double leftloc = *plociter-( *psizeiter / 2) ;
 	   const double rightloc = *plociter+( *psizeiter / 2) ;
 	   size_t leftcellIx1 = size_t((*plociter-( *psizeiter / 2)) / dx_) + 1;
@@ -213,7 +236,7 @@ namespace Particle{
 #     endif
 	   //std::cout<<"leftloc  :  "<<leftloc<<"  rightloc  :  "<<rightloc<<"   leftcellIx1 : "<<leftcellIx1<<std::endl;
 	   while(leftloc < rightloc){
-		   double rb = coordVec_[leftcellIx1] + dx_/2 ; 
+		   double rb = coordVec_[leftcellIx1] + dx_/2 ;
 		   if(rb > rightloc)
 			   rb = rightloc ;
 		   *destiter += src[leftcellIx1] * (rb-leftloc) / *psizeiter ;
