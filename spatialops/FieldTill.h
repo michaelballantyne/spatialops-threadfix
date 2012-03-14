@@ -1,3 +1,25 @@
+/*
+ * Copyright (c) 2011 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
 #ifndef SpatialOps_FieldTill_h
 #define SpatialOps_FieldTill_h
 
@@ -15,16 +37,16 @@ namespace SpatialOps{
   /**
    *  @file FieldExpressions.h
    */
-  
+
   struct CallByVal;
   struct CallByRef;
   struct CallByPtr;
-  
+
   //currently, TillMutableField is FieldForm (provides both ptr() and ref() interfaces)
-  
+
   template<typename Mode, typename FieldType>
     struct TillVec_ConstField;
-  
+
   BUILD_IMMUT_FIELD_EXPR_NO_SUBEXPR(/*Structure's Name*/
 				    TillVec_ConstField
 				    ,/*Template Parameters WITH COMMA*/
@@ -161,10 +183,10 @@ namespace SpatialOps{
 				    ,/*SeqWalk's has_length Function Expression*/
 				    !(ends.empty())
 				    );
-  
+
   template<typename Mode, typename FieldType>
     struct TillVec_Field;
-  
+
   BUILD_MUT_FIELD_EXPR(/*Structure's Name*/
 		       TillVec_Field
 		       ,/*Template Parameters WITH COMMA*/
@@ -252,7 +274,7 @@ namespace SpatialOps{
 			   ++(*i);
 		       };
 		       ,/*SeqWalk's Constructor Assignments*/
-		       iters () QC 
+		       iters () QC
 		       ends  () QC
 		       values()
 		       ,/*SeqWalk's Constructor Computation*/
@@ -283,7 +305,7 @@ namespace SpatialOps{
 		       ,/*SeqWalk's has_length Function Expression*/
 		       !(ends.empty())
 		       );
-  
+
   /*sequential loop*/
   BUILD_VOID_FUNCTION(/*Function's Name*/
 		      till_2_sequential_execute_internal
@@ -302,7 +324,7 @@ namespace SpatialOps{
 			second.next();		          /*increment*/
 		      }
 		      );
-  
+
   /*sequential external call*/
   BUILD_VOID_FIELD_FUNCTION(/*Function's Name*/
 			    till_2_sequential_execute
@@ -323,7 +345,7 @@ namespace SpatialOps{
 			      FieldForm         <Initial QC FieldType>(initial_first) .template init<CallStyle>()  QC
 			      TillVec_ConstField<Initial QC FieldType>(initial_second).template init<CallStyle>()   )
 			    );
-  
+
 #ifdef TILL_THREADS
   /*set-up for sequential loop in a single thread*/
   BUILD_VOID_FIELD_FUNCTION(/*Function's Name*/
@@ -349,7 +371,7 @@ namespace SpatialOps{
 			      second.resize(partition).init()  )
 			    );
 #endif
-  
+
 #ifdef TILL_THREADS
   /*set-up for all threads*/
   BUILD_VOID_FIELD_FUNCTION(/*Function's Name*/
@@ -379,7 +401,7 @@ namespace SpatialOps{
 			    ThreadPoolFIFO::self().wait()
 			    );
 #endif
-  
+
   BUILD_VOID_FIELD_FUNCTION(/*Function's Name*/
 			    till_2_general_execute
 			    ,/*Template Parameters WITH COMMA*/
@@ -401,15 +423,15 @@ namespace SpatialOps{
 										   initial_second  )
 #endif
 			    );
-  
-  
-  
+
+
+
   template<typename FieldType>
     I void till(void (*proc)(typename FieldType::value_type &,
 			     std::vector<typename FieldType::value_type> const &),
 		FieldType                            & arg1                      ,
 		std::vector<FieldType const *> const & arg2                      ) {
-    
+
     till_2_general_execute<UseWholeIterator>(proc, arg1, arg2);
   };
 
@@ -417,7 +439,7 @@ namespace SpatialOps{
   /* I void till(void (*proc)(typename FieldType::value_type &), */
   /* 	    FieldType & arg1) { */
   /*   typename TillMutableField<FieldType>::template FullState<UseWholeIterator,CallByRef> field = (TillMutableField<FieldType>(arg1)).template init<UseWholeIterator,CallByRef>(); */
-  
+
   /*   while(!field.at_end()) { */
   /*     proc(field.ref()); */
   /*     field.next(); */
@@ -428,7 +450,7 @@ namespace SpatialOps{
   /* I void till(void (*proc)(typename FieldType::value_type * const), */
   /* 	    FieldType & arg1) { */
   /*   typename TillMutableField<FieldType>::template FullState<UseWholeIterator,CallByPtr> field = (TillMutableField<FieldType>(arg1)).template init<UseWholeIterator,CallByPtr>(); */
-  
+
   /*   while(!field.at_end()) { */
   /*     proc(field.ptr()); */
   /*     field.next(); */
@@ -439,7 +461,7 @@ namespace SpatialOps{
   /* I void till(void (*proc)(typename FieldType::value_type &), */
   /* 	    FieldType * const arg1) { */
   /*   typename TillMutableField<FieldType>::template FullState<UseWholeIterator,CallByRef> field = (TillMutableField<FieldType>(arg1)).template init<UseWholeIterator,CallByRef>(); */
-  
+
   /*   while(!field.at_end()) { */
   /*     proc(field.ref()); */
   /*     field.next(); */
@@ -450,7 +472,7 @@ namespace SpatialOps{
   /* I void till(void (*proc)(typename FieldType::value_type * const), */
   /* 	    FieldType * const arg1) { */
   /*   typename TillMutableField<FieldType>::template FullState<UseWholeIterator,CallByPtr> field = (TillMutableField<FieldType>(arg1)).template init<UseWholeIterator,CallByPtr>(); */
-  
+
   /*   while(!field.at_end()) { */
   /*     proc(field.ptr()); */
   /*     field.next(); */
