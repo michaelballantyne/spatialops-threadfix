@@ -144,9 +144,9 @@ int main( int iarg, char* carg[] )
     po::options_description desc("Supported Options");
     desc.add_options()
       ( "help", "print help message\n" )
-      ( "nx",   po::value<int>(&nx)->default_value(8), "number of points in x-dir for base mesh" )
-      ( "ny",   po::value<int>(&ny)->default_value(8), "number of points in y-dir for base mesh" )
-      ( "nz",   po::value<int>(&nz)->default_value(8), "number of points in z-dir for base mesh" )
+      ( "nx",   po::value<int>(&nx)->default_value(11), "number of points in x-dir for base mesh" )
+      ( "ny",   po::value<int>(&ny)->default_value(11), "number of points in y-dir for base mesh" )
+      ( "nz",   po::value<int>(&nz)->default_value(11), "number of points in z-dir for base mesh" )
       ( "bcx",  "physical boundary on +x side?" )
       ( "bcy",  "physical boundary on +y side?" )
       ( "bcz",  "physical boundary on +z side?" );
