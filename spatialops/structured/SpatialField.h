@@ -68,7 +68,6 @@ namespace structured{
    *  \par Related classes:
    *   - \ref MemoryWindow
    *   - \ref SpatialFieldStore
-   *   - \ref SpatialOperator
    *
    *  \par Public Typedefs
    *   - \c field_type - this field's type
@@ -270,8 +269,8 @@ namespace structured{
     IntVec ofs = window.offset();
     for( size_t i=0; i<3; ++i ){
       if( ext[i]>1 ){
-        ext[i] -= 2*GhostTraits::NGHOST;
-        ofs[i] +=   GhostTraits::NGHOST;
+        ext[i] -= GhostTraits::NGhostMinus::int_vec()[i] + GhostTraits::NGhostPlus::int_vec()[i];
+        ofs[i] +=   GhostTraits::NGhostMinus::int_vec()[i];
       }
     }
     interiorFieldWindow_ = MemoryWindow( window.glob_dim(), ofs, ext, window.has_bc(0), window.has_bc(1), window.has_bc(2) );

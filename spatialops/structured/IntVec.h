@@ -32,6 +32,10 @@
 #include <ostream>
 #include <vector>
 
+#ifdef SOPS_BOOST_SERIALIZATION
+#include <boost/serialization/serialization.hpp>
+#endif // SOPS_BOOST_SERIALIZATION
+
 namespace SpatialOps{
   namespace structured{
 

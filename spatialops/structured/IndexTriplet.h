@@ -91,7 +91,7 @@ namespace SpatialOps{
     template< int i1, int i2, int i3 >
     struct IndexTriplet
     {
-      enum{
+      enum Component{
         X=i1,  ///< The "x" component of the IndexTriplet
         Y=i2,  ///< The "y" component of the IndexTriplet
         Z=i3   ///< The "z" component of the IndexTriplet
@@ -136,11 +136,16 @@ namespace SpatialOps{
         return s.str();
       }
 
+      static inline int x_value(){ return int(X); }
+      static inline int y_value(){ return int(Y); }
+      static inline int z_value(){ return int(Z); }
+
       static inline IntVec int_vec(){
         return IntVec( i1, i2, i3 );
       }
 
     };
+
 
     /**
      *  \struct UnitTriplet

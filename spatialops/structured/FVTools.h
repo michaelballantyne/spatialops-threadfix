@@ -69,7 +69,7 @@ namespace structured{
   int get_nx_with_ghost( const int nxNoGhost, const bool hasPlusFaceX )
   {
     return ( nxNoGhost>1
-             ? ( nxNoGhost + 2*FieldT::Ghost::NGHOST
+             ? ( nxNoGhost + FieldT::Ghost::NGhostMinus::x_value() + FieldT::Ghost::NGhostPlus::x_value()
                  + (hasPlusFaceX ? FieldT::Location::BCExtra::X : 0) )
              : 1 );
   }
@@ -93,7 +93,7 @@ namespace structured{
   int get_ny_with_ghost( const int nyNoGhost, const bool hasPlusFaceY )
   {
     return ( nyNoGhost>1
-             ? ( nyNoGhost + 2*FieldT::Ghost::NGHOST
+             ? ( nyNoGhost + FieldT::Ghost::NGhostMinus::y_value() + FieldT::Ghost::NGhostPlus::y_value()
                  + ( hasPlusFaceY ? FieldT::Location::BCExtra::Y : 0 ) )
              : 1 );
   }
@@ -117,8 +117,8 @@ namespace structured{
   int get_nz_with_ghost( const int nzNoGhost, const bool hasPlusFaceZ )
   {
     return ( nzNoGhost>1
-             ? ( nzNoGhost + 2*FieldT::Ghost::NGHOST +
-                 ( hasPlusFaceZ ? FieldT::Location::BCExtra::Z : 0 ) )
+             ? ( nzNoGhost + FieldT::Ghost::NGhostMinus::z_value() + FieldT::Ghost::NGhostPlus::z_value()
+                 + ( hasPlusFaceZ ? FieldT::Location::BCExtra::Z : 0 ) )
              : 1 );
   }
 

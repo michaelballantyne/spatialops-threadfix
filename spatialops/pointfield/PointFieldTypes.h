@@ -25,11 +25,15 @@
 #include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/SpatialOpsDefs.h>
 #include <spatialops/structured/SpatialField.h>
+#include <spatialops/structured/IndexTriplet.h>
 
 namespace SpatialOps{
 namespace Point{
 
-  struct PointFieldGhostTraits{ enum{ NGHOST=0 }; };
+  struct PointFieldGhostTraits{
+    typedef structured::IndexTriplet<0,0,0> NGhostMinus;
+    typedef structured::IndexTriplet<0,0,0> NGhostPlus;
+  };
 
   struct PointFieldTraits{ typedef NODIR FaceDir; typedef NODIR StagLoc; };
 

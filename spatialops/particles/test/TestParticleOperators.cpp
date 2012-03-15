@@ -28,7 +28,9 @@ int main()
 
   IntVec totDim(10,1,1);
   for( size_t i=0; i<3; ++i )
-    if( totDim[i]>1 ) totDim[i] += 2*CellField::Ghost::NGHOST;
+    if( totDim[i]>1 )
+      totDim[i] += CellField::Ghost::NGhostMinus::int_vec()[i] +
+                   CellField::Ghost::NGhostPlus::int_vec()[i];
   const MemoryWindow mw( totDim );
 
   //
@@ -44,11 +46,11 @@ int main()
   SpatialOps::Particle::ParticleField pSize ( pmw, NULL );
   SpatialOps::Particle::ParticleField pfield( pmw, NULL );
   SpatialOps::Particle::ParticleField ptmp  ( pmw, NULL );
-   
+
   //
   // set the cCoord coordinates.  These go from -0.5 to 10.5
   //
-  
+
   size_t i=0;
   CellField::iterator fielditer=cellFieldvalues.begin();
   for( CellField::iterator icoord=cellField.begin(); icoord!=cellField.end(); ++icoord, ++i, ++fielditer ){
@@ -89,8 +91,8 @@ int main()
   // interpolate to particles
   //
   c2p.apply_to_field( pCoord, pSize, cellFieldvalues, ptmp );
-  p2c.apply_to_field( pCoord, pSize, pfield, ctmp ); 
- 
+  p2c.apply_to_field( pCoord, pSize, pfield, ctmp );
+
   for( size_t i=0; i<np; ++i )
     std::cout<<"  Interpolated particle field : "<<ptmp[i]<<std::endl;
 

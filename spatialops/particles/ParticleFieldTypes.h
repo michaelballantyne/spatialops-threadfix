@@ -41,11 +41,14 @@ namespace Particle{
    *  mesh fields.
    */
 
-  struct ParticleGhostTraits{ enum{ NGHOST=0 }; };
+  struct ParticleGhostTraits{
+    typedef structured::IndexTriplet<0,0,0> NGhostMinus;
+    typedef structured::IndexTriplet<0,0,0> NGhostPlus;
+  };
 
   struct ParticleFieldTraits{
     typedef NODIR FaceDir;
-    typedef structured::IndexTriplet< 0, 0, 0> Offset;
+    typedef structured::IndexTriplet<0,0,0>  Offset;
     typedef structured::IndexTriplet<0,0,0>  BCExtra;
   };
 
