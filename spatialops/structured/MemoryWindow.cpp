@@ -161,7 +161,7 @@ namespace SpatialOps{
                                                     (extent_[2] == 1) ? 0 : cumOffset[2] - nGhostMinus[2]),
                                              IntVec((extent_[0] == 1) ? 1 : nxyz[0][i] + nGhostMinus[0] + nGhostPlus[0] + (bcx ? bcExtents[0] : 0),
                                                     (extent_[1] == 1) ? 1 : nxyz[1][j] + nGhostMinus[1] + nGhostPlus[1] + (bcy ? bcExtents[1] : 0),
-                                                    (extent_[2] == 1) ? 1 : nxyz[2][k] + nGhostMinus[2] * nGhostPlus[2] + (bcz ? bcExtents[2] : 0)),
+                                                    (extent_[2] == 1) ? 1 : nxyz[2][k] + nGhostMinus[2] + nGhostPlus[2] + (bcz ? bcExtents[2] : 0)),
                                              bcx,
                                              bcy,
                                              bcz) );
