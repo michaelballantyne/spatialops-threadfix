@@ -179,7 +179,7 @@ int main()
   {
     const IntVec nxyz(6,6,1);
     const MemoryWindow parent( nxyz, false, false, false );
-    std::vector<MemoryWindow> children = parent.split( IntVec(1,3,1), IntVec(1,1,0) );
+    std::vector<MemoryWindow> children = parent.split( IntVec(1,3,1), IntVec(1,1,0), IntVec(1,1,0) );
     TestHelper status(true);
     status( children.size() == 3, " number of children" );
     status( children[0] == MemoryWindow( nxyz, IntVec(0,0,0), IntVec(6,4,1), false, false, false ), " child 0" );

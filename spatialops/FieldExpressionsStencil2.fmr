@@ -458,21 +458,6 @@
                                  (body-chunk (b s
                                                 'x "=" 'number_of_partitions)))
                               (smt-list-chunk new-line-chunk
-                                              (b s
-                                                 'int 'g "=" (scope 'SrcType
-                                                                    (scope 'Ghost
-                                                                           'NGHOST)))
-                                              (b s
-                                                 (scope 'structured
-                                                        'IntVec)
-                                                 'gcs
-                                                 "="
-                                                 (fc (scope 'structured
-                                                            'IntVec)
-                                                     'g
-                                                     'g
-                                                     'g)))
-                              (smt-list-chunk new-line-chunk
                                               (typedef (c typename-chunk
                                                           s
                                                           (scope (scope (scope 'SrcType
@@ -524,7 +509,14 @@
                                           'x
                                           'y
                                           'z)
-                                      'gcs
+                                      (fc (scope (scope (scope 'SrcType
+                                                               'Ghost)
+                                                        'NGhostMinus)
+                                                 'int_vec))
+                                      (fc (scope (scope (scope 'SrcType
+                                                               'Ghost)
+                                                        'NGhostPlus)
+                                                 'int_vec))
                                       'sBC))
                               (c (scope 'std
                                         (tpl-use 'vector
@@ -541,7 +533,14 @@
                                           'x
                                           'y
                                           'z)
-                                      'gcs
+                                      (fc (scope (scope (scope 'SrcType
+                                                               'Ghost)
+                                                        'NGhostMinus)
+                                                 'int_vec))
+                                      (fc (scope (scope (scope 'SrcType
+                                                               'Ghost)
+                                                        'NGhostPlus)
+                                                 'int_vec))
                                       'dBC))
                               (c (scope 'BI
                                         'interprocess_semaphore)

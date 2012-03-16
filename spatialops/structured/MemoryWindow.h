@@ -179,7 +179,8 @@ namespace structured{
      *  \return vector<MemoryWindow> containing the child windows.
      */
     std::vector<MemoryWindow> split( const IntVec splitPattern,
-                                     const IntVec npad=IntVec(0,0,0),
+                                     const IntVec nGhostMinus=IntVec(0,0,0),
+                                     const IntVec nGhostPlus=IntVec(0,0,0),
                                      const IntVec bcExtents=IntVec(0,0,0) ) const;
 
     /**

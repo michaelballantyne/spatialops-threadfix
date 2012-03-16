@@ -109,22 +109,24 @@ namespace SpatialOps{
 
     std::vector<MemoryWindow>
     MemoryWindow::split( const IntVec splitPattern,
-                         const IntVec npad,
+                         const IntVec nGhostMinus,
+                         const IntVec nGhostPlus,
                          const IntVec bcExtents ) const
     {
-      const IntVec extent = IntVec((extent_[0] == 1) ? 1 : extent_[0] - npad[0] * 2 - (bc_[0] ? bcExtents[0] : 0),
-                                   (extent_[1] == 1) ? 1 : extent_[1] - npad[1] * 2 - (bc_[1] ? bcExtents[1] : 0),
-                                   (extent_[2] == 1) ? 1 : extent_[2] - npad[2] * 2 - (bc_[2] ? bcExtents[2] : 0));
-      const IntVec offset = IntVec((extent_[0] == 1) ? 0 : offset_[0] + npad[0],
-                                   (extent_[1] == 1) ? 0 : offset_[1] + npad[1],
-                                   (extent_[2] == 1) ? 0 : offset_[2] + npad[2]);
+      const IntVec extent = IntVec((extent_[0] == 1) ? 1 : extent_[0] - nGhostMinus[0] - nGhostPlus[0] - (bc_[0] ? bcExtents[0] : 0),
+                                   (extent_[1] == 1) ? 1 : extent_[1] - nGhostMinus[1] - nGhostPlus[1] - (bc_[1] ? bcExtents[1] : 0),
+                                   (extent_[2] == 1) ? 1 : extent_[2] - nGhostMinus[2] - nGhostPlus[2] - (bc_[2] ? bcExtents[2] : 0));
+      const IntVec offset = IntVec((extent_[0] == 1) ? 0 : offset_[0] + nGhostMinus[0],
+                                   (extent_[1] == 1) ? 0 : offset_[1] + nGhostMinus[1],
+                                   (extent_[2] == 1) ? 0 : offset_[2] + nGhostMinus[2]);
 
 #     ifndef NDEBUG
       for( size_t i=0; i<3; ++i ){
         assert( extent[i] >= splitPattern[i] );
         assert( extent[i] + offset[i] <= nptsGlob_[i] );
         assert( splitPattern[i] > 0 );
-        assert( npad[i] >= 0);
+        assert( nGhostMinus[i] >= 0);
+        assert( nGhostPlus[i] >= 0);
       }
 #     endif
 
@@ -154,12 +156,12 @@ namespace SpatialOps{
           for( int i=0; i<splitPattern[0]; ++i ){
             const bool bcx = (i==splitPattern[0]-1) ? bc_[0] : false;
             children.push_back( MemoryWindow(nptsGlob_,
-                                             IntVec((extent_[0] == 1) ? 0 : cumOffset[0] - npad[0],
-                                                    (extent_[1] == 1) ? 0 : cumOffset[1] - npad[1],
-                                                    (extent_[2] == 1) ? 0 : cumOffset[2] - npad[2]),
-                                             IntVec((extent_[0] == 1) ? 1 : nxyz[0][i] + npad[0] * 2 + (bcx ? bcExtents[0] : 0),
-                                                    (extent_[1] == 1) ? 1 : nxyz[1][j] + npad[1] * 2 + (bcy ? bcExtents[1] : 0),
-                                                    (extent_[2] == 1) ? 1 : nxyz[2][k] + npad[2] * 2 + (bcz ? bcExtents[2] : 0)),
+                                             IntVec((extent_[0] == 1) ? 0 : cumOffset[0] - nGhostMinus[0],
+                                                    (extent_[1] == 1) ? 0 : cumOffset[1] - nGhostMinus[1],
+                                                    (extent_[2] == 1) ? 0 : cumOffset[2] - nGhostMinus[2]),
+                                             IntVec((extent_[0] == 1) ? 1 : nxyz[0][i] + nGhostMinus[0] + nGhostPlus[0] + (bcx ? bcExtents[0] : 0),
+                                                    (extent_[1] == 1) ? 1 : nxyz[1][j] + nGhostMinus[1] + nGhostPlus[1] + (bcy ? bcExtents[1] : 0),
+                                                    (extent_[2] == 1) ? 1 : nxyz[2][k] + nGhostMinus[2] * nGhostPlus[2] + (bcz ? bcExtents[2] : 0)),
                                              bcx,
                                              bcy,
                                              bcz) );
