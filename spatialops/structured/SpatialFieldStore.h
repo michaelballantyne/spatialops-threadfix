@@ -188,17 +188,28 @@ class SpatFldPtr {
     } ///< Divide this field by a constant
     //@}
 
-    int getCount() {
-      return *count_;
+    int count() const {
+    	return *count_;
     }
 
+    bool built_from_store() const {
+    	return builtFromStore_;
+    }
+
+    //deprecated
+    int getCount() {
+      return count();
+    }
+
+    //deprecated
     bool getBFS() {
-      return builtFromStore_;
+      return built_from_store();
     }
 
     // Devin: this gets around having to make a variety of structures to mimic
     //		  partial specializations in downstream classes... It may not be
     //		  ideal, but it works for now and is easily replaced
+
     // Wrap some spatial field calls to get around
     // problems when trying to call methods of de-referenced pointers to
     inline unsigned int allocated_bytes() 	const;
@@ -270,7 +281,7 @@ class SpatialFieldStore {
     		const MemoryType mtype = LOCAL_RAM, const unsigned short int deviceIndex = 0 );
 
     inline SpatFldPtr<FieldT> get(const structured::MemoryWindow& window,
-         const MemoryType mtype = LOCAL_RAM, const unsigned short int deviceIndex = 0 );
+    		const MemoryType mtype = LOCAL_RAM, const unsigned short int deviceIndex = 0 );
 
     template< typename ProtoT >
     inline SpatFldPtr<FieldT> get( const ProtoT& f )
@@ -286,7 +297,6 @@ class SpatialFieldStore {
 
 
   private:
-
     /**
      *  @brief Restores a field to the store for future use.
      *
@@ -602,6 +612,7 @@ SpatFldPtr<FieldT> SpatialFieldStore<FieldT>::get(
 #ifdef ENABLE_CUDA
       //Dvn: I'm not having the store hold GPU memory right now, as I'm not sure it would be entirely stable
       // for single GPU systems ( we could end up holding all the memory and break the display functionality )
+      // So they're all allocated as internal storage, but wrapped in a SpatFldPtr
       case EXTERNAL_CUDA_GPU: {
         return SpatFldPtr<FieldT>(
             new FieldT(window, NULL, structured::InternalStorage, mtype,
@@ -648,9 +659,9 @@ void SpatialFieldStore<FieldT>::restore_field(FieldT& field) {
   SpatFldPtr<double>
   inline SpatialFieldStore<double>::get<double>( const double& d )
   {
-#ifdef ENABLE_THREADS
-    boost::mutex::scoped_lock lock( get_mutex() );
-#endif
+	#ifdef ENABLE_THREADS
+		boost::mutex::scoped_lock lock( get_mutex() );
+	#endif
 
     return SpatFldPtr<double>( new double, true );
   }
@@ -670,6 +681,10 @@ inline SpatFldPtr<double>::SpatFldPtr(double* const f) :
 }
 //SpatFldPtr(FieldT* const field, const bool builtFromStore, const MemoryType mtype, const unsigned short int deviceIndex);
 
+
+//TODO: This is a problem.... We really need to specialize the SpatialField class to handle singleton values efficiently
+//		As it is now, there are a number of semantic problems with how we have to treat doubles and we're not providing
+//		the proper meta information to effectively work around them
 template<>
 inline SpatFldPtr<double>::SpatFldPtr(double* const field, const bool builtFromStore,
 		const MemoryType mtype, const unsigned short int deviceIndex) :
@@ -678,7 +693,7 @@ inline SpatFldPtr<double>::SpatFldPtr(double* const field, const bool builtFromS
     	memType_(mtype), deviceIndex_(deviceIndex) {
 
 		if( mtype != LOCAL_RAM ){
-			std::cout << "WE TRIED TO BUILD AN EXTRNAL DOUBLE -- NOT SUPPORTED YET\n";
+			std::cout << "TRIED TO BUILD AN EXTRNAL DOUBLE -- NOT SUPPORTED YET\n";
 		}
 		*count_ = 1;
 }
