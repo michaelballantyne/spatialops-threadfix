@@ -1,3 +1,25 @@
+/*
+ * Copyright (c) 2011 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
 #ifndef Field_Expr_ThreadPool_h
 #define Field_Expr_ThreadPool_h
 
@@ -19,7 +41,7 @@
 
 #ifdef  STENCIL_THREADS
 #define USE_THREADS_FLAG
-#endif 
+#endif
 
 #ifndef USE_THREADS_FLAG
 #  error Must define FIELD_EXPRESSION_THREADS, TILL_THREADS, or STENCIL_THREADS flag.
@@ -30,7 +52,7 @@
 #endif
 
 namespace SpatialOps{
-   
+
    class ThreadPoolResourceManager {
       typedef std::map<void*,int>::iterator ResourceIter;
          ThreadPoolResourceManager(){};
@@ -52,7 +74,7 @@ namespace SpatialOps{
             //Make sure we don't have the threadpool
             rit = resourceMap_.find(&rID);
             if ( rit == resourceMap_.end() ){
-               resourceMap_.insert(std::make_pair(&rID, threads)); 
+               resourceMap_.insert(std::make_pair(&rID, threads));
             } else {
                printf("Warning: attempting to insert a ThreadPool that already exists!\n");
                return false;
@@ -60,7 +82,7 @@ namespace SpatialOps{
 
             return true;
          }
-         
+
          template<class VoidType>
          static const bool remove(VoidType& rID, int threads){
             ResourceIter rit;
@@ -85,17 +107,17 @@ namespace SpatialOps{
 
             //Make sure we have the threadpool
             rit = resourceMap_.find(&rID);
-            if( rit == resourceMap_.end() ) { 
-               fprintf(stderr, "Error: ThreadPool does not exist!\n"); 
+            if( rit == resourceMap_.end() ) {
+               fprintf(stderr, "Error: ThreadPool does not exist!\n");
                return -1;
             }
 
-            //Fast exit 
+            //Fast exit
             if( rit->second == threads ) { return threads; }
-            
+
             //Connect the right resource interface
             resource = (VoidType*)rit->first;
-            
+
 				if( threads < 1 ) { threads = 1; }
             rit->second = threads;
             resource->size_controller().resize(threads);
@@ -114,16 +136,16 @@ namespace SpatialOps{
 					fprintf(stderr, "Error: Threadpool does not exist!\n");
 					return -1;
 				}
-				
+
 				return rit->second;
-			}	
+			}
 
       private:
          static std::map<void*, int> resourceMap_;
 
          class ExecutionMutex{
             const boost::mutex::scoped_lock lock;
-            
+
             inline boost::mutex& get_mutex() const { static boost::mutex m; return m; }
 
             public:
@@ -140,9 +162,9 @@ namespace SpatialOps{
          static ThreadPool& self(){
             static ThreadPool tp(NTHREADS);
             ThreadPoolResourceManager& tprm = ThreadPoolResourceManager::self();
-            if( init == false ){ 
+            if( init == false ){
                tprm.insert<boost::threadpool::prio_pool>(tp, NTHREADS);
-               init = true; 
+               init = true;
             }
             return tp;
          }
@@ -154,15 +176,15 @@ namespace SpatialOps{
   class ThreadPoolFIFO : public boost::threadpool::fifo_pool{
       ThreadPoolFIFO( const int nthreads ) : boost::threadpool::fifo_pool( nthreads ){}
       ~ThreadPoolFIFO(){}
-      
+
      public:
 
          static ThreadPoolFIFO& self(){
             static ThreadPoolFIFO tp(NTHREADS);
             ThreadPoolResourceManager& tprm = ThreadPoolResourceManager::self();
-            if( init == false ){ 
-               tprm.insert<boost::threadpool::fifo_pool>(tp, NTHREADS); 
-               init = true; 
+            if( init == false ){
+               tprm.insert<boost::threadpool::fifo_pool>(tp, NTHREADS);
+               init = true;
             }
             return tp;
          }

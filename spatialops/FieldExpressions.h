@@ -5250,10 +5250,7 @@
        struct CondBuilder<NeboCond<Initial, Clause, Otherwise, FieldType> > {
 
          public:
-          CondBuilder(NeboCond<Initial, Clause, Otherwise, FieldType> l)
-          : list_(l)
-          {};
-          NeboCond<Initial, Clause, Otherwise, FieldType> typedef List;
+          NeboCond<Initial, Clause, Otherwise, FieldType>  typedef List;
 
          private:
           template<typename Remaining, typename PreceedingResult>
@@ -5280,8 +5277,12 @@
                 return InternalCall::reverse(l.otherwise(), NewResult(l.clause(), r));
              };
           };
+          List list_;
 
          public:
+          CondBuilder(NeboCond<Initial, Clause, Otherwise, FieldType> l)
+          : list_(l)
+          {};
           template<typename Final>
            struct ReverseList;
           template<typename Final>
@@ -5300,8 +5301,6 @@
 
               return InternalCall::reverse(list_, f);
            };
-
-         public:
           inline NeboExpression<typename ReverseList<NeboScalar<Initial, FieldType> >::Result,
                                 FieldType> operator ()(double d) {
 
@@ -5422,19 +5421,13 @@
 
               return ReturnType(Cond(Clause(nb.expr(), Standardize::standardType(e)), list_));
            };
-
-         private:
-          List list_;
       };
 
       template<typename Otherwise>
        struct CondBuilder<NeboSimpleCond<Otherwise> > {
 
          public:
-          CondBuilder(NeboSimpleCond<Otherwise> l)
-          : list_(l)
-          {};
-          NeboSimpleCond<Otherwise> typedef List;
+          NeboSimpleCond<Otherwise>  typedef List;
 
          private:
           template<typename Remaining, typename PreceedingResult>
@@ -5461,8 +5454,12 @@
                 return InternalCall::reverse(l.otherwise(), NewResult(l.clause(), r));
              };
           };
+          List list_;
 
          public:
+          CondBuilder(NeboSimpleCond<Otherwise> l)
+          : list_(l)
+          {};
           template<typename Final>
            struct ReverseList;
           template<typename Final>
@@ -5481,8 +5478,6 @@
 
               return InternalCall::reverse(list_, f);
            };
-
-         public:
           inline double operator ()(double d) { return reverse(NeboSimpleFinalClause(d)).eval(); };
           template<typename Expr>
            inline NeboExpression<typename CondBuilder<typename List::template Convert<typename Expr::
@@ -5601,9 +5596,6 @@
               return ReturnType(Cond(Clause(nb.expr(), Standardize::standardType(e)),
                                      list_.template convert<FieldType>()));
            };
-
-         private:
-          List list_;
       };
 
       template<>
@@ -5611,112 +5603,108 @@
 
          public:
           CondBuilder() {};
-          static inline CondBuilder<NeboNil> CondInit(void) { return CondBuilder<NeboNil>(); };
-
-         public:
-          inline double operator ()(double d) { return d; };
-          template<typename Expr>
-           inline typename Standardize<Expr, typename Expr::field_type>::StandardTerm operator ()(Expr
-                                                                                                  e) {
-
-              typename Expr::field_type typedef FieldType;
-
-              Standardize<Expr, FieldType> typedef Standardize;
-
-              return Standardize::standardTerm(e);
-           };
-          inline CondBuilder<NeboSimpleCond<NeboNil> > operator ()(bool b, double d) {
-
-             NeboSimpleCond<NeboNil> typedef Cond;
-
-             CondBuilder<Cond> typedef ReturnType;
-
-             return ReturnType(Cond(NeboSimpleClause(b, d), NeboNil()));
-          };
-          template<typename Expr>
-           inline CondBuilder<NeboCond<Initial,
-                                       NeboClause<Initial,
-                                                  NeboBoolean<Initial, typename Expr::field_type>,
-                                                  typename Standardize<Expr,
-                                                                       typename Expr::field_type>::
-                                                  StandardType,
-                                                  typename Expr::field_type>,
-                                       NeboNil,
-                                       typename Expr::field_type> > operator ()(bool b, Expr e) {
-
-              typename Expr::field_type typedef FieldType;
-
-              NeboBoolean<Initial, FieldType> typedef Boolean;
-
-              Standardize<Expr, FieldType> typedef Standardize;
-
-              typename Standardize::StandardType typedef StandardType;
-
-              NeboClause<Initial, Boolean, StandardType, FieldType> typedef Clause;
-
-              NeboCond<Initial, Clause, NeboNil, FieldType> typedef Cond;
-
-              CondBuilder<Cond> typedef ReturnType;
-
-              return ReturnType(Cond(Clause(Boolean(b), Standardize::standardType(e)), NeboNil()));
-           };
-          template<typename BoolExpr, typename FieldType>
-           inline CondBuilder<NeboCond<Initial,
-                                       NeboClause<Initial,
-                                                  BoolExpr,
-                                                  NeboScalar<Initial, FieldType>,
-                                                  FieldType>,
-                                       NeboNil,
-                                       FieldType> > operator ()(NeboBooleanExpression<BoolExpr,
-                                                                                      FieldType> nb,
-                                                                double d) {
-
-              NeboScalar<Initial, FieldType> typedef Scalar;
-
-              NeboClause<Initial, BoolExpr, Scalar, FieldType> typedef Clause;
-
-              NeboCond<Initial, Clause, NeboNil, FieldType> typedef Cond;
-
-              CondBuilder<Cond> typedef ReturnType;
-
-              return ReturnType(Cond(Clause(nb.expr(), Scalar(d)), NeboNil()));
-           };
-          template<typename BoolExpr, typename Expr>
-           inline CondBuilder<NeboCond<Initial,
-                                       NeboClause<Initial,
-                                                  BoolExpr,
-                                                  typename Standardize<Expr,
-                                                                       typename Expr::field_type>::
-                                                  StandardType,
-                                                  typename Expr::field_type>,
-                                       NeboNil,
-                                       typename Expr::field_type> > operator ()(NeboBooleanExpression<BoolExpr,
-                                                                                                      typename
-                                                                                                      Expr::
-                                                                                                      field_type>
-                                                                                nb,
-                                                                                Expr e) {
-
-              typename Expr::field_type typedef FieldType;
-
-              Standardize<Expr, FieldType> typedef Standardize;
-
-              typename Standardize::StandardType typedef StandardType;
-
-              NeboClause<Initial, BoolExpr, StandardType, FieldType> typedef Clause;
-
-              NeboCond<Initial, Clause, NeboNil, FieldType> typedef Cond;
-
-              CondBuilder<Cond> typedef ReturnType;
-
-              return ReturnType(Cond(Clause(nb.expr(), Standardize::standardType(e)), NeboNil()));
-           };
-
-         private:
-         ;
       };
 
-#     define nebo_cond CondBuilder<NeboNil>::CondInit()//;
+      inline double cond(double d) { return d; };
+
+      template<typename Expr>
+       inline typename Standardize<Expr, typename Expr::field_type>::StandardTerm cond(Expr e) {
+
+          typename Expr::field_type typedef FieldType;
+
+          Standardize<Expr, FieldType> typedef Standardize;
+
+          return Standardize::standardTerm(e);
+       };
+
+      inline CondBuilder<NeboSimpleCond<NeboNil> > cond(bool b, double d) {
+
+         NeboSimpleCond<NeboNil> typedef Cond;
+
+         CondBuilder<Cond> typedef ReturnType;
+
+         return ReturnType(Cond(NeboSimpleClause(b, d), NeboNil()));
+      };
+
+      template<typename Expr>
+       inline CondBuilder<NeboCond<Initial,
+                                   NeboClause<Initial,
+                                              NeboBoolean<Initial, typename Expr::field_type>,
+                                              typename Standardize<Expr, typename Expr::field_type>::
+                                              StandardType,
+                                              typename Expr::field_type>,
+                                   NeboNil,
+                                   typename Expr::field_type> > cond(bool b, Expr e) {
+
+          typename Expr::field_type typedef FieldType;
+
+          NeboBoolean<Initial, FieldType> typedef Boolean;
+
+          Standardize<Expr, FieldType> typedef Standardize;
+
+          typename Standardize::StandardType typedef StandardType;
+
+          NeboClause<Initial, Boolean, StandardType, FieldType> typedef Clause;
+
+          NeboCond<Initial, Clause, NeboNil, FieldType> typedef Cond;
+
+          CondBuilder<Cond> typedef ReturnType;
+
+          return ReturnType(Cond(Clause(Boolean(b), Standardize::standardType(e)), NeboNil()));
+       };
+
+      template<typename BoolExpr, typename FieldType>
+       inline CondBuilder<NeboCond<Initial,
+                                   NeboClause<Initial,
+                                              BoolExpr,
+                                              NeboScalar<Initial, FieldType>,
+                                              FieldType>,
+                                   NeboNil,
+                                   FieldType> > cond(NeboBooleanExpression<BoolExpr, FieldType> nb,
+                                                     double d) {
+
+          NeboScalar<Initial, FieldType> typedef Scalar;
+
+          NeboClause<Initial, BoolExpr, Scalar, FieldType> typedef Clause;
+
+          NeboCond<Initial, Clause, NeboNil, FieldType> typedef Cond;
+
+          CondBuilder<Cond> typedef ReturnType;
+
+          return ReturnType(Cond(Clause(nb.expr(), Scalar(d)), NeboNil()));
+       };
+
+      template<typename BoolExpr, typename Expr>
+       inline CondBuilder<NeboCond<Initial,
+                                   NeboClause<Initial,
+                                              BoolExpr,
+                                              typename Standardize<Expr, typename Expr::field_type>::
+                                              StandardType,
+                                              typename Expr::field_type>,
+                                   NeboNil,
+                                   typename Expr::field_type> > cond(NeboBooleanExpression<BoolExpr,
+                                                                                           typename
+                                                                                           Expr::
+                                                                                           field_type>
+                                                                     nb,
+                                                                     Expr e) {
+
+          typename Expr::field_type typedef FieldType;
+
+          Standardize<Expr, FieldType> typedef Standardize;
+
+          typename Standardize::StandardType typedef StandardType;
+
+          NeboClause<Initial, BoolExpr, StandardType, FieldType> typedef Clause;
+
+          NeboCond<Initial, Clause, NeboNil, FieldType> typedef Cond;
+
+          CondBuilder<Cond> typedef ReturnType;
+
+          return ReturnType(Cond(Clause(nb.expr(), Standardize::standardType(e)), NeboNil()));
+       };
+
+#     define nebo_cond cond//;
 
       template<typename LhsType, typename RhsType>
        inline void field_expression_sequential_execute_internal(LhsType lhs, RhsType rhs) {

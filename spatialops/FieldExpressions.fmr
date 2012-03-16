@@ -1822,668 +1822,646 @@
                    (sec-def private-chunk
                             (b s SClause-chunk const-chunk 'c_)))
       ;CondBuilder
-      (let* ([build-reverse
+      (let* ([build-CondBuilder-private
               (lambda (extra-tpl-pmtrs
                        remaining-type
-                       new-result-type)
-                (list (sec-def private-chunk
-                               (tpl-srt-dcl 'ReverseListRecursive
-                                            (list (tpl-pmtr 'Remaining)
-                                                  (tpl-pmtr 'PreceedingResult)))
-                               (tpl-srt-def 'ReverseListRecursive
-                                            (tpl-pmtr 'PreceedingResult)
-                                            (list Nil-chunk 'PreceedingResult)
-                                            (typedef 'PreceedingResult
-                                                     'Result)
-                                            (r-fcn-def (s-fcn-dcl 'reverse
-                                                                  'Result
-                                                                  (c Nil-chunk s 'nil)
-                                                                  (c 'PreceedingResult s 'r))
-                                                       null
-                                                       'r))
-                               (tpl-srt-def 'ReverseListRecursive
-                                            (list extra-tpl-pmtrs
-                                                  (tpl-pmtr 'Following)
-                                                  (tpl-pmtr 'PreceedingResult))
-                                            (list remaining-type
-                                                  'PreceedingResult)
-                                            (typedef remaining-type
-                                                     'Remaining)
-                                            (typedef new-result-type
-                                                     'NewResult)
-                                            (typedef (tpl-use 'ReverseListRecursive 'Following 'NewResult)
-                                                     'InternalCall)
-                                            (typedef (tpl-pmtr (scope 'InternalCall 'Result))
-                                                     'Result)
-                                            (r-fcn-def (s-fcn-dcl 'reverse
-                                                                  'Result
-                                                                  (c 'Remaining s 'l)
-                                                                  (c 'PreceedingResult s 'r))
-                                                       null
-                                                       (fc (scope 'InternalCall 'reverse)
-                                                           (mfc 'l 'otherwise)
-                                                           (fc 'NewResult
-                                                               (mfc 'l 'clause)
-                                                               'r)))))
-                      (sec-def public-chunk
-                               (tpl-srt-dcl 'ReverseList
-                                            (tpl-pmtr 'Final))
-                               (tpl-srt-def 'ReverseList
-                                            (tpl-pmtr 'Final)
-                                            null
-                                            (typedef  (tpl-use 'ReverseListRecursive 'List 'Final)
-                                                      'InternalCall)
-                                            (typedef  (tpl-pmtr (scope 'InternalCall
-                                                                       'Result))
-                                                      'Result)
-                                            (r-fcn-def (s-fcn-dcl 'reverse
-                                                                  'Result
-                                                                  (c 'List s 'l)
-                                                                  (c 'Final s 'f))
-                                                       null
-                                                       (fc (scope 'InternalCall 'reverse)
-                                                           'l
-                                                           'f)))
-                               (tpl-def (tpl-pmtr 'Final)
-                                        (r-fcn-def (fcn-dcl 'reverse
-                                                            (tpl-pmtr (scope (tpl-use 'ReverseList 'Final)
-                                                                             'Result))
-                                                            (c 'Final s 'f))
-                                                   (typedef (tpl-use 'ReverseList 'Final)
-                                                            'InternalCall)
-                                                   (fc (scope 'InternalCall 'reverse)
-                                                       'list_
-                                                       'f))))))]
-             [end-val ; end case - given scalar value
-              (lambda (return-type
-                       internals
-                       return-expr)
-                (list return-type
-                      internals
-                      return-expr))]
-             [end-val-return-type first]
-             [end-val-internals second]
-             [end-val-return-expr third]
-             [end-expr ; end case - given expression
-              (lambda (return-type
-                       internals
-                       return-expr)
-                (list return-type
-                      internals
-                      return-expr))]
-             [end-expr-return-type first]
-             [end-expr-internals second]
-             [end-expr-return-expr third]
-             [cond-bool-val ; conditional case - given a boolean value and a scalar value
-              (lambda (return-type
-                       internals
-                       return-expr)
-                (list return-type
-                      internals
-                      return-expr))]
-             [cond-bool-val-return-type first]
-             [cond-bool-val-internals second]
-             [cond-bool-val-return-expr third]
-             [cond-bool-expr ; conditional case - given a boolean value and an expression
-              (lambda (return-type
-                       internals
-                       return-expr)
-                (list return-type
-                      internals
-                      return-expr))]
-             [cond-bool-expr-return-type first]
-             [cond-bool-expr-internals second]
-             [cond-bool-expr-return-expr third]
-             [cond-NBE-val ; conditional case - given a boolean expression and a scalar value
-              (lambda (FT-defined?
-                       return-type
-                       internals
-                       return-expr)
-                (list FT-defined?
-                      return-type
-                      internals
-                      return-expr))]
-             [cond-NBE-val-FT-defined? first]
-             [cond-NBE-val-return-type second]
-             [cond-NBE-val-internals third]
-             [cond-NBE-val-return-expr fourth]
-             [cond-NBE-expr ; conditional case - given a boolean expression and an expression
-              (lambda (return-type
-                       internals
-                       return-expr)
-                (list return-type
-                      internals
-                      return-expr))]
-             [cond-NBE-expr-return-type first]
-             [cond-NBE-expr-internals second]
-             [cond-NBE-expr-return-expr third]
-             [build-CondBuilder
+                       new-result-type
+                       private)
+                (sec-def private-chunk
+                         (tpl-srt-dcl 'ReverseListRecursive
+                                      (list (tpl-pmtr 'Remaining)
+                                            (tpl-pmtr 'PreceedingResult)))
+                         (tpl-srt-def 'ReverseListRecursive
+                                      (tpl-pmtr 'PreceedingResult)
+                                      (list Nil-chunk 'PreceedingResult)
+                                      (typedef 'PreceedingResult
+                                               'Result)
+                                      (r-fcn-def (s-fcn-dcl 'reverse
+                                                            'Result
+                                                            (c Nil-chunk s 'nil)
+                                                            (c 'PreceedingResult s 'r))
+                                                 null
+                                                 'r))
+                         (tpl-srt-def 'ReverseListRecursive
+                                      (list extra-tpl-pmtrs
+                                            (tpl-pmtr 'Following)
+                                            (tpl-pmtr 'PreceedingResult))
+                                      (list remaining-type
+                                            'PreceedingResult)
+                                      (typedef remaining-type
+                                               'Remaining)
+                                      (typedef new-result-type
+                                               'NewResult)
+                                      (typedef (tpl-use 'ReverseListRecursive 'Following 'NewResult)
+                                               'InternalCall)
+                                      (typedef (tpl-pmtr (scope 'InternalCall 'Result))
+                                               'Result)
+                                      (r-fcn-def (s-fcn-dcl 'reverse
+                                                            'Result
+                                                            (c 'Remaining s 'l)
+                                                            (c 'PreceedingResult s 'r))
+                                                 null
+                                                 (fc (scope 'InternalCall 'reverse)
+                                                     (mfc 'l 'otherwise)
+                                                     (fc 'NewResult
+                                                         (mfc 'l 'clause)
+                                                         'r))))
+                         private))]
+             [build-CondBuilder-public
               (lambda (tpl-pmtrs
                        tpl-args
                        construct-args
                        construct-asgns
-                       public
-                       end-val
-                       end-expr
-                       cond-bool-val
-                       cond-bool-expr
-                       cond-NBE-val
-                       cond-NBE-expr
+                       public)
+                (sec-def public-chunk
+                         (constructor-chunk 'CondBuilder
+                                            construct-args
+                                            construct-asgns)
+                         (tpl-srt-dcl 'ReverseList
+                                      (tpl-pmtr 'Final))
+                         (tpl-srt-def 'ReverseList
+                                      (tpl-pmtr 'Final)
+                                      null
+                                      (typedef  (tpl-use 'ReverseListRecursive 'List 'Final)
+                                                'InternalCall)
+                                      (typedef  (tpl-pmtr (scope 'InternalCall
+                                                                 'Result))
+                                                'Result)
+                                      (r-fcn-def (s-fcn-dcl 'reverse
+                                                            'Result
+                                                            (c 'List s 'l)
+                                                            (c 'Final s 'f))
+                                                 null
+                                                 (fc (scope 'InternalCall 'reverse)
+                                                     'l
+                                                     'f)))
+                         (tpl-def (tpl-pmtr 'Final)
+                                  (r-fcn-def (fcn-dcl 'reverse
+                                                      (tpl-pmtr (scope (tpl-use 'ReverseList 'Final)
+                                                                       'Result))
+                                                      (c 'Final s 'f))
+                                             (typedef (tpl-use 'ReverseList 'Final)
+                                                      'InternalCall)
+                                             (fc (scope 'InternalCall 'reverse)
+                                                 'list_
+                                                 'f)))
+                         public))]
+             [build-CondBuilder
+              (lambda (extra-tpl-pmtrs
+                       remaining-type
+                       new-result-type
+                       tpl-pmtrs
+                       tpl-args
                        private
-                       recursive)
+                       construct-args
+                       construct-asgns
+                       public)
                 (tpl-srt-def 'CondBuilder
                              (let ([tpl-pmtrs (flatten* tpl-pmtrs)])
                                (cond [(null? tpl-pmtrs) null]
                                      [(pair? tpl-pmtrs) (map tpl-pmtr tpl-pmtrs)]
                                      [else (tpl-pmtr tpl-pmtrs)]))
                              tpl-args
-                             (sec-def public-chunk
-                                      (constructor-chunk 'CondBuilder
-                                                         construct-args
-                                                         construct-asgns)
-                                      public)
-                             recursive
-                             (sec-def public-chunk
-                                        ; end-val
-                                      (r-fcn-def (fcn-dcl (c 'operator s (p))
-                                                          (end-val-return-type end-val)
-                                                          (c 'double s 'd))
-                                                 (end-val-internals end-val)
-                                                 (end-val-return-expr end-val))
-                                        ; end-expr
-                                      (tpl-def (tpl-pmtr 'Expr)
-                                               (r-fcn-def (fcn-dcl (c 'operator s (p))
-                                                                   (end-expr-return-type end-expr)
-                                                                   (c 'Expr s 'e))
-                                                          (end-expr-internals end-expr)
-                                                          (end-expr-return-expr end-expr)))
-                                        ; cond-bool-val
-                                      (r-fcn-def (fcn-dcl (c 'operator s (p))
-                                                          (cond-bool-val-return-type cond-bool-val)
-                                                          (list (c 'bool s 'b)
-                                                                (c 'double s 'd)))
-                                                 (cond-bool-val-internals cond-bool-val)
-                                                 (cond-bool-val-return-expr cond-bool-val))
-                                        ; cond-bool-expr
-                                      (tpl-def (tpl-pmtr 'Expr)
-                                               (r-fcn-def (fcn-dcl (c 'operator s (p))
-                                                                   (cond-bool-expr-return-type cond-bool-expr)
-                                                                   (list (c 'bool s 'b)
-                                                                         (c 'Expr s 'e)))
-                                                          (cond-bool-expr-internals cond-bool-expr)
-                                                          (cond-bool-expr-return-expr cond-bool-expr)))
-                                        ; cond-NBE-val
-                                      (tpl-def (if (cond-NBE-val-FT-defined? cond-NBE-val)
-                                                   (tpl-pmtr 'BoolExpr)
-                                                   (list (tpl-pmtr 'BoolExpr)
-                                                         (tpl-pmtr FT-chunk)))
-                                               (r-fcn-def (fcn-dcl (c 'operator s (p))
-                                                                   (cond-NBE-val-return-type cond-NBE-val)
-                                                                   (list (c (tpl-use NBE-chunk 'BoolExpr FT-chunk) s 'nb)
-                                                                         (c 'double s 'd)))
-                                                          (cond-NBE-val-internals cond-NBE-val)
-                                                          (cond-NBE-val-return-expr cond-NBE-val)))
-                                        ; cond-NBE-expr
-                                      (tpl-def (list (tpl-pmtr 'BoolExpr)
-                                                     (tpl-pmtr 'Expr))
-                                               (r-fcn-def (fcn-dcl (c 'operator s (p))
-                                                                   (cond-NBE-expr-return-type cond-NBE-expr)
-                                                                   (list (c (tpl-use NBE-chunk
-                                                                                     'BoolExpr
-                                                                                     (tpl-pmtr (scope 'Expr 'field_type))) s 'nb)
-                                                                         (c 'Expr s 'e)))
-                                                          (cond-NBE-expr-internals cond-NBE-expr)
-                                                          (cond-NBE-expr-return-expr cond-NBE-expr))))
-                             (sec-def private-chunk
-                                      private)))])
+                             (sec-def 'public
+                                      (typedef tpl-args
+                                               'List))
+                             (build-CondBuilder-private extra-tpl-pmtrs
+                                                        remaining-type
+                                                        new-result-type
+                                                        private)
+                             (build-CondBuilder-public tpl-pmtrs
+                                                       tpl-args
+                                                       construct-args
+                                                       construct-asgns
+                                                       public)))]
+             [end-val ; end case - given scalar value
+              (lambda (name
+                       return-type
+                       internals
+                       return-expr)
+                (r-fcn-def (fcn-dcl name
+                                    return-type
+                                    (c 'double s 'd))
+                           internals
+                           return-expr))]
+             [end-expr ; end case - given expression
+              (lambda (name
+                       return-type
+                       internals
+                       return-expr)
+                (tpl-def (tpl-pmtr 'Expr)
+                         (r-fcn-def (fcn-dcl name
+                                             return-type
+                                             (c 'Expr s 'e))
+                                    internals
+                                    return-expr)))]
+             [cond-bool-val ; conditional case - given a boolean value and a scalar value
+              (lambda (name
+                       return-type
+                       internals
+                       return-expr)
+                (r-fcn-def (fcn-dcl name
+                                    return-type
+                                    (list (c 'bool s 'b)
+                                          (c 'double s 'd)))
+                           internals
+                           return-expr))]
+             [cond-bool-expr ; conditional case - given a boolean value and an expression
+              (lambda (name
+                       return-type
+                       internals
+                       return-expr)
+                (tpl-def (tpl-pmtr 'Expr)
+                         (r-fcn-def (fcn-dcl name
+                                             return-type
+                                             (list (c 'bool s 'b)
+                                                   (c 'Expr s 'e)))
+                                    internals
+                                    return-expr)))]
+             [cond-NBE-val ; conditional case - given a boolean expression and a scalar value
+              (lambda (name
+                       FT-defined?
+                       return-type
+                       internals
+                       return-expr)
+                (tpl-def (if FT-defined?
+                             (tpl-pmtr 'BoolExpr)
+                             (list (tpl-pmtr 'BoolExpr)
+                                   (tpl-pmtr FT-chunk)))
+                         (r-fcn-def (fcn-dcl name
+                                             return-type
+                                             (list (c (tpl-use NBE-chunk 'BoolExpr FT-chunk) s 'nb)
+                                                   (c 'double s 'd)))
+                                    internals
+                                    return-expr)))]
+             [cond-NBE-expr ; conditional case - given a boolean expression and an expression
+              (lambda (name
+                       return-type
+                       internals
+                       return-expr)
+                (tpl-def (list (tpl-pmtr 'BoolExpr)
+                               (tpl-pmtr 'Expr))
+                         (r-fcn-def (fcn-dcl name
+                                             return-type
+                                             (list (c (tpl-use NBE-chunk
+                                                               'BoolExpr
+                                                               (tpl-pmtr (scope 'Expr 'field_type))) s 'nb)
+                                                   (c 'Expr s 'e)))
+                                    internals
+                                    return-expr)))])
         (list (tpl-srt-dcl 'CondBuilder
                            (tpl-pmtr 'List))
-              (build-CondBuilder (list 'Clause ; FT
-                                       'Otherwise
-                                       FT-chunk)
+                                        ; FT
+              (build-CondBuilder (list (tpl-pmtr 'Next) (tpl-pmtr 'Field))
+                                 (tpl-use Cond-chunk 'Initial 'Next 'Following 'Field)
+                                 (tpl-use Cond-chunk 'Initial 'Next 'PreceedingResult 'Field)
+                                 (list 'Clause 'Otherwise FT-chunk)
                                  (c (tpl-use Cond-chunk 'Initial 'Clause 'Otherwise FT-chunk) s)
+                                 (c 'List s 'list_)
                                  (c (tpl-use Cond-chunk 'Initial 'Clause 'Otherwise FT-chunk) s 'l)
                                  (cons-asgn 'list_ 'l)
-                                 (typedef (tpl-use Cond-chunk 'Initial 'Clause 'Otherwise FT-chunk)
-                                          'List)
-                                 (end-val (tpl-use NE-chunk
-                                                   (tpl-pmtr (scope (tpl-use 'ReverseList
-                                                                             (c (tpl-use NS-chunk 'Initial FT-chunk) s))
-                                                                    'Result))
-                                                   FT-chunk)
-                                          (list (typedef (tpl-use NS-chunk 'Initial FT-chunk)
-                                                         'Scalar)
-                                                (typedef (tpl-use 'ReverseList 'Scalar)
-                                                         'Reverser)
-                                                (typedef (tpl-pmtr (scope 'Reverser 'Result))
-                                                         'Reversed)
-                                                (typedef (tpl-use NE-chunk 'Reversed FT-chunk)
-                                                         'Result))
-                                          (fc 'Result (fc 'reverse (fc 'Scalar 'd))))
-                                 (end-expr (tpl-use NE-chunk
-                                                    (tpl-pmtr (scope (tpl-use 'ReverseList
-                                                                              (tpl-pmtr (scope (tpl-use 'Standardize
-                                                                                                        'Expr
-                                                                                                        FT-chunk)
-                                                                                               'StandardType)))
-                                                                     'Result))
-                                                    FT-chunk)
-                                           (list (typedef (tpl-use 'Standardize 'Expr FT-chunk)
-                                                          'Standardize)
-                                                 (typedef (tpl-pmtr (scope 'Standardize
-                                                                           'StandardType))
-                                                          'FinalType)
-                                                 (typedef (tpl-use 'ReverseList 'FinalType)
-                                                          'Reverser)
-                                                 (typedef (tpl-pmtr (scope 'Reverser 'Result))
-                                                          'Reversed)
-                                                 (typedef (tpl-use NE-chunk 'Reversed FT-chunk)
-                                                          'Result))
-                                           (fc 'Result (fc 'reverse (fc (scope 'Standardize 'standardType) 'e))))
-                                 (cond-bool-val (tpl-use 'CondBuilder (c (tpl-use Cond-chunk
-                                                                                  'Initial
-                                                                                   (tpl-use Clause-chunk
-                                                                                            'Initial
-                                                                                            (tpl-use NB-chunk 'Initial FT-chunk)
-                                                                                            (tpl-use NS-chunk 'Initial FT-chunk)
-                                                                                            FT-chunk)
-                                                                                   'List
-                                                                                   FT-chunk) s))
-                                                 (list (typedef (tpl-use NB-chunk 'Initial FT-chunk)
-                                                                'Boolean)
-                                                       (typedef (tpl-use NS-chunk 'Initial FT-chunk)
-                                                                'Scalar)
-                                                       (typedef (tpl-use Clause-chunk 'Initial 'Boolean 'Scalar FT-chunk)
-                                                                'NewClause)
-                                                       (typedef (tpl-use Cond-chunk 'Initial 'NewClause 'List FT-chunk)
-                                                                'Cond)
-                                                       (typedef (tpl-use 'CondBuilder 'Cond)
-                                                                'ReturnType))
-                                                 (fc 'ReturnType
-                                                     (fc 'Cond
-                                                         (fc 'NewClause
-                                                             (fc 'Boolean 'b)
-                                                             (fc 'Scalar 'd))
-                                                         'list_)))
-                                 (cond-bool-expr (tpl-use 'CondBuilder (c (tpl-use Cond-chunk
-                                                                                   'Initial
-                                                                                   (tpl-use Clause-chunk
-                                                                                            'Initial
-                                                                                            (tpl-use NB-chunk 'Initial FT-chunk)
-                                                                                            (tpl-pmtr (scope (tpl-use 'Standardize
-                                                                                                                      'Expr
-                                                                                                                      FT-chunk)
-                                                                                                             'StandardType))
-                                                                                            FT-chunk)
-                                                                                   'List
-                                                                                   FT-chunk) s))
-                                                 (list (typedef (tpl-use NB-chunk 'Initial FT-chunk)
-                                                                'Boolean)
-                                                       (typedef (tpl-use 'Standardize 'Expr FT-chunk)
-                                                                'Standardize)
-                                                       (typedef (tpl-pmtr (scope 'Standardize 'StandardType))
-                                                                'StandardType)
-                                                       (typedef (tpl-use Clause-chunk 'Initial 'Boolean 'StandardType FT-chunk)
-                                                                'Clause)
-                                                       (typedef (tpl-use Cond-chunk 'Initial 'Clause 'List FT-chunk)
-                                                                'Cond)
-                                                       (typedef (tpl-use 'CondBuilder 'Cond)
-                                                                'ReturnType))
-                                                 (fc 'ReturnType
-                                                     (fc 'Cond
-                                                         (fc 'Clause
-                                                             (fc 'Boolean 'b)
-                                                             (fc (scope 'Standardize 'standardType) 'e))
-                                                         'list_)))
-                                 (cond-NBE-val #true
-                                               (tpl-use 'CondBuilder (c (tpl-use Cond-chunk
-                                                                                 'Initial
-                                                                                 (tpl-use Clause-chunk
-                                                                                          'Initial
-                                                                                          'BoolExpr
-                                                                                          (tpl-use NS-chunk 'Initial FT-chunk)
-                                                                                          FT-chunk)
-                                                                                 'List
-                                                                                 FT-chunk) s))
-                                               (list (typedef (tpl-use NS-chunk 'Initial FT-chunk)
-                                                              'Scalar)
-                                                     (typedef (tpl-use Clause-chunk 'Initial 'BoolExpr 'Scalar FT-chunk)
-                                                              'NewClause)
-                                                     (typedef (tpl-use Cond-chunk 'Initial 'NewClause 'List FT-chunk)
-                                                              'Cond)
-                                                     (typedef (tpl-use 'CondBuilder 'Cond)
-                                                              'ReturnType))
-                                               (fc 'ReturnType
-                                                   (fc 'Cond
-                                                       (fc 'NewClause
-                                                           (mfc 'nb 'expr)
-                                                           (fc 'Scalar 'd))
-                                                       'list_)))
-                                 (cond-NBE-expr (tpl-use 'CondBuilder (c (tpl-use Cond-chunk
-                                                                                  'Initial
-                                                                                  (tpl-use Clause-chunk
-                                                                                           'Initial
-                                                                                           'BoolExpr
-                                                                                           (tpl-pmtr (scope (tpl-use 'Standardize
-                                                                                                                     'Expr
-                                                                                                                     FT-chunk)
-                                                                                                            'StandardType))
-                                                                                           FT-chunk)
-                                                                                  'List
-                                                                                  FT-chunk) s))
-                                                (list (typedef (tpl-use 'Standardize 'Expr FT-chunk)
-                                                               'Standardize)
-                                                      (typedef (tpl-pmtr (scope 'Standardize 'StandardType))
-                                                               'StandardType)
-                                                      (typedef (tpl-use Clause-chunk 'Initial 'BoolExpr 'StandardType FT-chunk)
-                                                               'Clause)
-                                                      (typedef (tpl-use Cond-chunk 'Initial 'Clause 'List FT-chunk)
-                                                               'Cond)
-                                                      (typedef (tpl-use 'CondBuilder 'Cond)
-                                                               'ReturnType))
-                                                (fc 'ReturnType
-                                                    (fc 'Cond
-                                                        (fc 'Clause
-                                                            (mfc 'nb 'expr)
-                                                            (fc (scope 'Standardize 'standardType) 'e))
-                                                        'list_)))
-                                 (c 'List s 'list_)
-                                 (build-reverse (list (tpl-pmtr 'Next)
-                                                      (tpl-pmtr 'Field))
-                                                (tpl-use Cond-chunk 'Initial 'Next 'Following 'Field)
-                                                (tpl-use Cond-chunk 'Initial 'Next 'PreceedingResult 'Field)))
-              (build-CondBuilder 'Otherwise ; no FT
-                                 (c (tpl-use SCond-chunk 'Otherwise) s)
-                                 (c (tpl-use SCond-chunk 'Otherwise)
-                                    s 'l)
-                                 (cons-asgn 'list_ 'l)
-                                 (typedef (tpl-use SCond-chunk 'Otherwise)
-                                          'List)
-                                 (end-val 'double
-                                          null
-                                          (mfc (fc 'reverse
-                                                   (fc SFClause-chunk 'd))
-                                               'eval))
-                                 (end-expr (tpl-use NE-chunk
-                                                    (tpl-pmtr (scope (scope (tpl-use 'CondBuilder
-                                                                                     (tpl-pmtr (scope (scope 'List
-                                                                                                             (c template-chunk s (tpl-use 'Convert
-                                                                                                                                          (tpl-pmtr (scope 'Expr
-                                                                                                                                                           'field_type)))))
-                                                                                                      'Converted)))
-                                                                            (c template-chunk s (tpl-use 'ReverseList
-                                                                                                         (tpl-pmtr (scope (tpl-use 'Standardize
-                                                                                                                                   'Expr
-                                                                                                                                   (tpl-pmtr (scope 'Expr 'field_type)))
-                                                                                                                          'StandardType)))))
-                                                                     'Result))
-                                                    (tpl-pmtr (scope 'Expr 'field_type)))
-                                           (list (typedef (tpl-pmtr (scope 'Expr 'field_type))
-                                                          FT-chunk)
-                                                 (typedef (tpl-pmtr (scope (scope 'List
-                                                                                  (c template-chunk s (tpl-use 'Convert (tpl-pmtr (scope 'Expr 'field_type)))))
-                                                                           'Converted))
-                                                          'Converted)
-                                                 (typedef (tpl-use 'CondBuilder 'Converted)
-                                                          'NewCondBuilder))
-                                           (fc (fc 'NewCondBuilder
-                                                   (mfc 'list_
-                                                        (c template-chunk s (tpl-use 'convert FT-chunk))))
-                                               'e))
-                                 (cond-bool-val (tpl-use 'CondBuilder (c (tpl-use SCond-chunk 'List) s))
-                                                (list (typedef (tpl-use SCond-chunk 'List)
-                                                               'Cond)
-                                                      (typedef (tpl-use 'CondBuilder 'Cond)
-                                                               'ReturnType))
-                                                (fc 'ReturnType
-                                                    (fc 'Cond
-                                                         (fc SClause-chunk 'b 'd)
-                                                         'list_)))
-                                 (cond-bool-expr (tpl-use 'CondBuilder (c (tpl-use Cond-chunk
-                                                                                   'Initial
-                                                                                   (tpl-use Clause-chunk
-                                                                                            'Initial
-                                                                                            (tpl-use NB-chunk
-                                                                                                     'Initial
-                                                                                                     (tpl-pmtr (scope 'Expr 'field_type)))
-                                                                                            (tpl-pmtr (scope (tpl-use 'Standardize
-                                                                                                                      'Expr
-                                                                                                                      (tpl-pmtr (scope 'Expr 'field_type)))
-                                                                                                             'StandardType))
-                                                                                            (tpl-pmtr (scope 'Expr 'field_type)))
-                                                                                   (tpl-pmtr (scope (scope 'List
-                                                                                                           (c template-chunk s (tpl-use 'Convert
-                                                                                                                                        (tpl-pmtr (scope 'Expr
-                                                                                                                                                         'field_type)))))
-                                                                                                    'Converted))
-                                                                                   (tpl-pmtr (scope 'Expr 'field_type))) s))
-                                                 (list (typedef (tpl-pmtr (scope 'Expr 'field_type))
-                                                                FT-chunk)
-                                                       (typedef (tpl-use NB-chunk 'Initial FT-chunk)
-                                                                'Boolean)
-                                                       (typedef (tpl-use 'Standardize 'Expr FT-chunk)
-                                                                'Standardize)
-                                                       (typedef (tpl-pmtr (scope 'Standardize 'StandardType))
-                                                                'StandardType)
-                                                       (typedef (tpl-use Clause-chunk 'Initial 'Boolean 'StandardType FT-chunk)
-                                                                'Clause)
-                                                       (typedef (tpl-pmtr (scope (scope 'List
-                                                                                        (c template-chunk s (tpl-use 'Convert
-                                                                                                                     (tpl-pmtr (scope 'Expr
-                                                                                                                                      'field_type)))))
-                                                                                 'Converted))
-                                                                'Previous)
-                                                       (typedef (tpl-use Cond-chunk 'Initial 'Clause 'Previous FT-chunk)
-                                                                'Cond)
-                                                       (typedef (tpl-use 'CondBuilder 'Cond)
-                                                                'ReturnType))
-                                                 (fc 'ReturnType
-                                                     (fc 'Cond
-                                                         (fc 'Clause
-                                                             (fc 'Boolean 'b)
-                                                             (fc (scope 'Standardize 'standardType) 'e))
-                                                         (mfc 'list_
-                                                              (c template-chunk s (tpl-use 'convert FT-chunk))))))
-                                 (cond-NBE-val #false
-                                                (tpl-use 'CondBuilder (c (tpl-use Cond-chunk
-                                                                                  'Initial
-                                                                                  (tpl-use Clause-chunk
-                                                                                           'Initial
-                                                                                           'BoolExpr
-                                                                                           (tpl-use NS-chunk 'Initial FT-chunk)
-                                                                                           FT-chunk)
-                                                                                  (tpl-pmtr (scope (scope 'List
-                                                                                                          (c template-chunk s (tpl-use 'Convert FT-chunk)))
-                                                                                                   'Converted))
-                                                                                  FT-chunk) s))
+                                 (list (end-val (c 'operator s (p))
+                                                (tpl-use NE-chunk
+                                                         (tpl-pmtr (scope (tpl-use 'ReverseList
+                                                                                   (c (tpl-use NS-chunk 'Initial FT-chunk) s))
+                                                                          'Result))
+                                                         FT-chunk)
                                                 (list (typedef (tpl-use NS-chunk 'Initial FT-chunk)
                                                                'Scalar)
-                                                      (typedef (tpl-use Clause-chunk 'Initial 'BoolExpr 'Scalar FT-chunk)
-                                                               'Clause)
-                                                      (typedef (tpl-pmtr (scope (scope 'List
-                                                                                       (c template-chunk s (tpl-use 'Convert FT-chunk)))
-                                                                                'Converted))
-                                                               'Previous)
-                                                      (typedef (tpl-use Cond-chunk 'Initial 'Clause 'Previous FT-chunk)
-                                                               'Cond)
-                                                      (typedef (tpl-use 'CondBuilder 'Cond)
-                                                               'ReturnType))
-                                                (fc 'ReturnType
-                                                    (fc 'Cond
-                                                        (fc 'Clause
-                                                            (mfc 'nb 'expr)
-                                                            (fc 'Scalar 'd))
-                                                        (mfc 'list_
-                                                             (c template-chunk s (tpl-use 'convert FT-chunk))))))
-                                 (cond-NBE-expr (tpl-use 'CondBuilder (c (tpl-use Cond-chunk
-                                                                                  'Initial
-                                                                                  (tpl-use Clause-chunk
-                                                                                           'Initial
-                                                                                           'BoolExpr
-                                                                                           (tpl-pmtr (scope (tpl-use 'Standardize
-                                                                                                                     'Expr
-                                                                                                                     (tpl-pmtr (scope 'Expr 'field_type)))
-                                                                                                            'StandardType))
-                                                                                           (tpl-pmtr (scope 'Expr 'field_type)))
-                                                                                  (tpl-pmtr (scope (scope 'List
-                                                                                                          (c template-chunk s (tpl-use 'Convert
-                                                                                                                                       (tpl-pmtr (scope 'Expr
-                                                                                                                                                        'field_type)))))
-                                                                                                   'Converted))
-                                                                                  (tpl-pmtr (scope 'Expr 'field_type))) s))
-                                                (list (typedef (tpl-pmtr (scope 'Expr 'field_type))
-                                                               FT-chunk)
-                                                      (typedef (tpl-use 'Standardize 'Expr FT-chunk)
-                                                               'Standardize)
-                                                      (typedef (tpl-pmtr (scope 'Standardize 'StandardType))
-                                                               'StandardType)
-                                                      (typedef (tpl-use Clause-chunk 'Initial 'BoolExpr 'StandardType FT-chunk)
-                                                               'Clause)
-                                                      (typedef (tpl-pmtr (scope (scope 'List
-                                                                                       (c template-chunk s (tpl-use 'Convert
-                                                                                                                    (tpl-pmtr (scope 'Expr
-                                                                                                                                     'field_type)))))
-                                                                                'Converted))
-                                                               'Previous)
-                                                      (typedef (tpl-use Cond-chunk 'Initial 'Clause 'Previous FT-chunk)
-                                                               'Cond)
-                                                      (typedef (tpl-use 'CondBuilder 'Cond)
-                                                               'ReturnType))
-                                                (fc 'ReturnType
-                                                    (fc 'Cond
-                                                        (fc 'Clause
-                                                            (mfc 'nb 'expr)
-                                                            (fc (scope 'Standardize 'standardType) 'e))
-                                                        (mfc 'list_
-                                                             (c template-chunk s (tpl-use 'convert FT-chunk))))))
-                                 (c 'List s 'list_)
-                                 (build-reverse null
-                                                (tpl-use SCond-chunk 'Following)
-                                                (tpl-use SCond-chunk 'PreceedingResult)))
-              (build-CondBuilder null ;Nil-chunk
-                                 Nil-chunk
-                                 null
-                                 null
-                                 (r-fcn-def (s-fcn-dcl 'CondInit
-                                                       (tpl-use 'CondBuilder Nil-chunk))
-                                            null
-                                            (fc (tpl-use 'CondBuilder Nil-chunk)))
-                                 (end-val 'double
-                                          null
-                                          'd)
-                                 (end-expr (tpl-pmtr (scope (tpl-use 'Standardize
-                                                                     'Expr
-                                                                     (tpl-pmtr (scope 'Expr 'field_type)))
-                                                            'StandardTerm))
-                                           (list (typedef (tpl-pmtr (scope 'Expr 'field_type))
+                                                      (typedef (tpl-use 'ReverseList 'Scalar)
+                                                               'Reverser)
+                                                      (typedef (tpl-pmtr (scope 'Reverser 'Result))
+                                                               'Reversed)
+                                                      (typedef (tpl-use NE-chunk 'Reversed FT-chunk)
+                                                               'Result))
+                                                (fc 'Result (fc 'reverse (fc 'Scalar 'd))))
+                                       (end-expr (c 'operator s (p))
+                                                 (tpl-use NE-chunk
+                                                          (tpl-pmtr (scope (tpl-use 'ReverseList
+                                                                                    (tpl-pmtr (scope (tpl-use 'Standardize
+                                                                                                              'Expr
+                                                                                                              FT-chunk)
+                                                                                                     'StandardType)))
+                                                                           'Result))
                                                           FT-chunk)
-                                                 (typedef (tpl-use 'Standardize 'Expr FT-chunk)
-                                                          'Standardize))
-                                           (fc (scope 'Standardize 'standardTerm)
-                                               'e))
-                                 (cond-bool-val (tpl-use 'CondBuilder (c (tpl-use SCond-chunk Nil-chunk) s))
-                                                (list (typedef (tpl-use SCond-chunk Nil-chunk)
-                                                               'Cond)
-                                                      (typedef (tpl-use 'CondBuilder 'Cond)
-                                                               'ReturnType))
-                                                 (fc 'ReturnType
-                                                     (fc 'Cond
-                                                         (fc SClause-chunk 'b 'd)
-                                                         (fc Nil-chunk))))
-                                 (cond-bool-expr (tpl-use 'CondBuilder (c (tpl-use Cond-chunk
-                                                                                   'Initial
-                                                                                   (tpl-use Clause-chunk
-                                                                                            'Initial
-                                                                                            (tpl-use NB-chunk
-                                                                                                     'Initial
-                                                                                                     (tpl-pmtr (scope 'Expr 'field_type)))
-                                                                                            (tpl-pmtr (scope (tpl-use 'Standardize
-                                                                                                                      'Expr
-                                                                                                                      (tpl-pmtr (scope 'Expr 'field_type)))
-                                                                                                             'StandardType))
-                                                                                            (tpl-pmtr (scope 'Expr 'field_type)))
-                                                                                   Nil-chunk
-                                                                                   (tpl-pmtr (scope 'Expr 'field_type))) s))
+                                                 (list (typedef (tpl-use 'Standardize 'Expr FT-chunk)
+                                                                'Standardize)
+                                                       (typedef (tpl-pmtr (scope 'Standardize
+                                                                                 'StandardType))
+                                                                'FinalType)
+                                                       (typedef (tpl-use 'ReverseList 'FinalType)
+                                                                'Reverser)
+                                                       (typedef (tpl-pmtr (scope 'Reverser 'Result))
+                                                                'Reversed)
+                                                       (typedef (tpl-use NE-chunk 'Reversed FT-chunk)
+                                                                'Result))
+                                                 (fc 'Result (fc 'reverse (fc (scope 'Standardize 'standardType) 'e))))
+                                       (cond-bool-val (c 'operator s (p))
+                                                      (tpl-use 'CondBuilder (c (tpl-use Cond-chunk
+                                                                                        'Initial
+                                                                                        (tpl-use Clause-chunk
+                                                                                                 'Initial
+                                                                                                 (tpl-use NB-chunk 'Initial FT-chunk)
+                                                                                                 (tpl-use NS-chunk 'Initial FT-chunk)
+                                                                                                 FT-chunk)
+                                                                                        'List
+                                                                                        FT-chunk) s))
+                                                      (list (typedef (tpl-use NB-chunk 'Initial FT-chunk)
+                                                                     'Boolean)
+                                                            (typedef (tpl-use NS-chunk 'Initial FT-chunk)
+                                                                     'Scalar)
+                                                            (typedef (tpl-use Clause-chunk 'Initial 'Boolean 'Scalar FT-chunk)
+                                                                     'NewClause)
+                                                            (typedef (tpl-use Cond-chunk 'Initial 'NewClause 'List FT-chunk)
+                                                                     'Cond)
+                                                            (typedef (tpl-use 'CondBuilder 'Cond)
+                                                                     'ReturnType))
+                                                      (fc 'ReturnType
+                                                          (fc 'Cond
+                                                              (fc 'NewClause
+                                                                  (fc 'Boolean 'b)
+                                                                  (fc 'Scalar 'd))
+                                                              'list_)))
+                                       (cond-bool-expr (c 'operator s (p))
+                                                       (tpl-use 'CondBuilder (c (tpl-use Cond-chunk
+                                                                                         'Initial
+                                                                                         (tpl-use Clause-chunk
+                                                                                                  'Initial
+                                                                                                  (tpl-use NB-chunk 'Initial FT-chunk)
+                                                                                                  (tpl-pmtr (scope (tpl-use 'Standardize
+                                                                                                                            'Expr
+                                                                                                                      FT-chunk)
+                                                                                                                   'StandardType))
+                                                                                                  FT-chunk)
+                                                                                         'List
+                                                                                         FT-chunk) s))
+                                                       (list (typedef (tpl-use NB-chunk 'Initial FT-chunk)
+                                                                      'Boolean)
+                                                             (typedef (tpl-use 'Standardize 'Expr FT-chunk)
+                                                                      'Standardize)
+                                                             (typedef (tpl-pmtr (scope 'Standardize 'StandardType))
+                                                                      'StandardType)
+                                                             (typedef (tpl-use Clause-chunk 'Initial 'Boolean 'StandardType FT-chunk)
+                                                                      'Clause)
+                                                             (typedef (tpl-use Cond-chunk 'Initial 'Clause 'List FT-chunk)
+                                                                      'Cond)
+                                                             (typedef (tpl-use 'CondBuilder 'Cond)
+                                                                      'ReturnType))
+                                                       (fc 'ReturnType
+                                                           (fc 'Cond
+                                                               (fc 'Clause
+                                                                   (fc 'Boolean 'b)
+                                                                   (fc (scope 'Standardize 'standardType) 'e))
+                                                               'list_)))
+                                       (cond-NBE-val (c 'operator s (p))
+                                                     #true
+                                                     (tpl-use 'CondBuilder (c (tpl-use Cond-chunk
+                                                                                       'Initial
+                                                                                       (tpl-use Clause-chunk
+                                                                                                'Initial
+                                                                                                'BoolExpr
+                                                                                                (tpl-use NS-chunk 'Initial FT-chunk)
+                                                                                                FT-chunk)
+                                                                                       'List
+                                                                                       FT-chunk) s))
+                                                     (list (typedef (tpl-use NS-chunk 'Initial FT-chunk)
+                                                                    'Scalar)
+                                                           (typedef (tpl-use Clause-chunk 'Initial 'BoolExpr 'Scalar FT-chunk)
+                                                                    'NewClause)
+                                                           (typedef (tpl-use Cond-chunk 'Initial 'NewClause 'List FT-chunk)
+                                                                    'Cond)
+                                                           (typedef (tpl-use 'CondBuilder 'Cond)
+                                                                    'ReturnType))
+                                                     (fc 'ReturnType
+                                                         (fc 'Cond
+                                                             (fc 'NewClause
+                                                                 (mfc 'nb 'expr)
+                                                                 (fc 'Scalar 'd))
+                                                             'list_)))
+                                       (cond-NBE-expr (c 'operator s (p))
+                                                      (tpl-use 'CondBuilder (c (tpl-use Cond-chunk
+                                                                                        'Initial
+                                                                                        (tpl-use Clause-chunk
+                                                                                                 'Initial
+                                                                                                 'BoolExpr
+                                                                                                 (tpl-pmtr (scope (tpl-use 'Standardize
+                                                                                                                           'Expr
+                                                                                                                           FT-chunk)
+                                                                                                                  'StandardType))
+                                                                                                 FT-chunk)
+                                                                                        'List
+                                                                                        FT-chunk) s))
+                                                      (list (typedef (tpl-use 'Standardize 'Expr FT-chunk)
+                                                                     'Standardize)
+                                                            (typedef (tpl-pmtr (scope 'Standardize 'StandardType))
+                                                                     'StandardType)
+                                                            (typedef (tpl-use Clause-chunk 'Initial 'BoolExpr 'StandardType FT-chunk)
+                                                                     'Clause)
+                                                            (typedef (tpl-use Cond-chunk 'Initial 'Clause 'List FT-chunk)
+                                                                     'Cond)
+                                                            (typedef (tpl-use 'CondBuilder 'Cond)
+                                                                     'ReturnType))
+                                                      (fc 'ReturnType
+                                                          (fc 'Cond
+                                                              (fc 'Clause
+                                                                  (mfc 'nb 'expr)
+                                                                  (fc (scope 'Standardize 'standardType) 'e))
+                                                              'list_)))))
+                                        ; no FT
+              (build-CondBuilder null
+                                 (tpl-use SCond-chunk 'Following)
+                                 (tpl-use SCond-chunk 'PreceedingResult)
+                                 'Otherwise
+                                 (c (tpl-use SCond-chunk 'Otherwise) s)
+                                 (c 'List s 'list_)
+                                 (c (tpl-use SCond-chunk 'Otherwise) s 'l)
+                                 (cons-asgn 'list_ 'l)
+                                 (list (end-val (c 'operator s (p))
+                                                'double
+                                                null
+                                                (mfc (fc 'reverse
+                                                         (fc SFClause-chunk 'd))
+                                                     'eval))
+                                       (end-expr (c 'operator s (p))
+                                                 (tpl-use NE-chunk
+                                                          (tpl-pmtr (scope (scope (tpl-use 'CondBuilder
+                                                                                           (tpl-pmtr (scope (scope 'List
+                                                                                                                   (c template-chunk s (tpl-use 'Convert
+                                                                                                                                                (tpl-pmtr (scope 'Expr
+                                                                                                                                                                 'field_type)))))
+                                                                                                            'Converted)))
+                                                                                  (c template-chunk s (tpl-use 'ReverseList
+                                                                                                               (tpl-pmtr (scope (tpl-use 'Standardize
+                                                                                                                                         'Expr
+                                                                                                                                         (tpl-pmtr (scope 'Expr 'field_type)))
+                                                                                                                                'StandardType)))))
+                                                                           'Result))
+                                                          (tpl-pmtr (scope 'Expr 'field_type)))
                                                  (list (typedef (tpl-pmtr (scope 'Expr 'field_type))
                                                                 FT-chunk)
-                                                       (typedef (tpl-use NB-chunk 'Initial FT-chunk)
-                                                                'Boolean)
-                                                       (typedef (tpl-use 'Standardize 'Expr FT-chunk)
-                                                                'Standardize)
-                                                       (typedef (tpl-pmtr (scope 'Standardize 'StandardType))
-                                                                'StandardType)
-                                                       (typedef (tpl-use Clause-chunk 'Initial 'Boolean 'StandardType FT-chunk)
-                                                                'Clause)
-                                                       (typedef (tpl-use Cond-chunk 'Initial 'Clause Nil-chunk FT-chunk)
-                                                                'Cond)
-                                                       (typedef (tpl-use 'CondBuilder 'Cond)
-                                                                'ReturnType))
-                                                 (fc 'ReturnType
-                                                     (fc 'Cond
-                                                         (fc 'Clause
-                                                             (fc 'Boolean 'b)
-                                                             (fc (scope 'Standardize 'standardType) 'e))
-                                                         (fc Nil-chunk))))
-                                 (cond-NBE-val #false
-                                               (tpl-use 'CondBuilder (c (tpl-use Cond-chunk
-                                                                                 'Initial
-                                                                                 (tpl-use Clause-chunk
-                                                                                          'Initial
-                                                                                          'BoolExpr
-                                                                                          (tpl-use NS-chunk 'Initial FT-chunk)
-                                                                                          FT-chunk)
-                                                                                 Nil-chunk
-                                                                                 FT-chunk) s))
-                                               (list (typedef (tpl-use NS-chunk 'Initial FT-chunk)
-                                                              'Scalar)
-                                                     (typedef (tpl-use Clause-chunk 'Initial 'BoolExpr 'Scalar FT-chunk)
-                                                              'Clause)
-                                                     (typedef (tpl-use Cond-chunk 'Initial 'Clause Nil-chunk FT-chunk)
-                                                              'Cond)
-                                                     (typedef (tpl-use 'CondBuilder 'Cond)
-                                                              'ReturnType))
-                                               (fc 'ReturnType
-                                                   (fc 'Cond
-                                                       (fc 'Clause
-                                                           (mfc 'nb 'expr)
-                                                           (fc 'Scalar 'd))
-                                                       (fc Nil-chunk))))
-                                 (cond-NBE-expr (tpl-use 'CondBuilder (c (tpl-use Cond-chunk
+                                                       (typedef (tpl-pmtr (scope (scope 'List
+                                                                                        (c template-chunk s (tpl-use 'Convert (tpl-pmtr (scope 'Expr 'field_type)))))
+                                                                                 'Converted))
+                                                                'Converted)
+                                                       (typedef (tpl-use 'CondBuilder 'Converted)
+                                                                'NewCondBuilder))
+                                                 (fc (fc 'NewCondBuilder
+                                                         (mfc 'list_
+                                                              (c template-chunk s (tpl-use 'convert FT-chunk))))
+                                                     'e))
+                                       (cond-bool-val (c 'operator s (p))
+                                                      (tpl-use 'CondBuilder (c (tpl-use SCond-chunk 'List) s))
+                                                      (list (typedef (tpl-use SCond-chunk 'List)
+                                                                     'Cond)
+                                                            (typedef (tpl-use 'CondBuilder 'Cond)
+                                                                     'ReturnType))
+                                                      (fc 'ReturnType
+                                                          (fc 'Cond
+                                                              (fc SClause-chunk 'b 'd)
+                                                              'list_)))
+                                       (cond-bool-expr (c 'operator s (p))
+                                                       (tpl-use 'CondBuilder (c (tpl-use Cond-chunk
+                                                                                         'Initial
+                                                                                         (tpl-use Clause-chunk
+                                                                                                  'Initial
+                                                                                                  (tpl-use NB-chunk
+                                                                                                           'Initial
+                                                                                                           (tpl-pmtr (scope 'Expr 'field_type)))
+                                                                                                  (tpl-pmtr (scope (tpl-use 'Standardize
+                                                                                                                            'Expr
+                                                                                                                            (tpl-pmtr (scope 'Expr 'field_type)))
+                                                                                                                   'StandardType))
+                                                                                                  (tpl-pmtr (scope 'Expr 'field_type)))
+                                                                                         (tpl-pmtr (scope (scope 'List
+                                                                                                                 (c template-chunk s (tpl-use 'Convert
+                                                                                                                                              (tpl-pmtr (scope 'Expr
+                                                                                                                                                               'field_type)))))
+                                                                                                          'Converted))
+                                                                                         (tpl-pmtr (scope 'Expr 'field_type))) s))
+                                                       (list (typedef (tpl-pmtr (scope 'Expr 'field_type))
+                                                                      FT-chunk)
+                                                             (typedef (tpl-use NB-chunk 'Initial FT-chunk)
+                                                                      'Boolean)
+                                                             (typedef (tpl-use 'Standardize 'Expr FT-chunk)
+                                                                      'Standardize)
+                                                             (typedef (tpl-pmtr (scope 'Standardize 'StandardType))
+                                                                      'StandardType)
+                                                             (typedef (tpl-use Clause-chunk 'Initial 'Boolean 'StandardType FT-chunk)
+                                                                      'Clause)
+                                                             (typedef (tpl-pmtr (scope (scope 'List
+                                                                                              (c template-chunk s (tpl-use 'Convert
+                                                                                                                           (tpl-pmtr (scope 'Expr
+                                                                                                                                            'field_type)))))
+                                                                                       'Converted))
+                                                                      'Previous)
+                                                             (typedef (tpl-use Cond-chunk 'Initial 'Clause 'Previous FT-chunk)
+                                                                      'Cond)
+                                                             (typedef (tpl-use 'CondBuilder 'Cond)
+                                                                      'ReturnType))
+                                                       (fc 'ReturnType
+                                                           (fc 'Cond
+                                                               (fc 'Clause
+                                                                   (fc 'Boolean 'b)
+                                                                   (fc (scope 'Standardize 'standardType) 'e))
+                                                               (mfc 'list_
+                                                                    (c template-chunk s (tpl-use 'convert FT-chunk))))))
+                                       (cond-NBE-val (c 'operator s (p))
+                                                     #false
+                                                     (tpl-use 'CondBuilder (c (tpl-use Cond-chunk
+                                                                                       'Initial
+                                                                                       (tpl-use Clause-chunk
+                                                                                                'Initial
+                                                                                                'BoolExpr
+                                                                                                (tpl-use NS-chunk 'Initial FT-chunk)
+                                                                                                FT-chunk)
+                                                                                       (tpl-pmtr (scope (scope 'List
+                                                                                                               (c template-chunk s (tpl-use 'Convert FT-chunk)))
+                                                                                                        'Converted))
+                                                                                       FT-chunk) s))
+                                                     (list (typedef (tpl-use NS-chunk 'Initial FT-chunk)
+                                                                    'Scalar)
+                                                           (typedef (tpl-use Clause-chunk 'Initial 'BoolExpr 'Scalar FT-chunk)
+                                                                    'Clause)
+                                                           (typedef (tpl-pmtr (scope (scope 'List
+                                                                                            (c template-chunk s (tpl-use 'Convert FT-chunk)))
+                                                                                     'Converted))
+                                                                    'Previous)
+                                                           (typedef (tpl-use Cond-chunk 'Initial 'Clause 'Previous FT-chunk)
+                                                                    'Cond)
+                                                           (typedef (tpl-use 'CondBuilder 'Cond)
+                                                                    'ReturnType))
+                                                     (fc 'ReturnType
+                                                         (fc 'Cond
+                                                             (fc 'Clause
+                                                                 (mfc 'nb 'expr)
+                                                                 (fc 'Scalar 'd))
+                                                             (mfc 'list_
+                                                                  (c template-chunk s (tpl-use 'convert FT-chunk))))))
+                                       (cond-NBE-expr (c 'operator s (p))
+                                                      (tpl-use 'CondBuilder (c (tpl-use Cond-chunk
+                                                                                        'Initial
+                                                                                        (tpl-use Clause-chunk
+                                                                                                 'Initial
+                                                                                                 'BoolExpr
+                                                                                                 (tpl-pmtr (scope (tpl-use 'Standardize
+                                                                                                                           'Expr
+                                                                                                                           (tpl-pmtr (scope 'Expr 'field_type)))
+                                                                                                                  'StandardType))
+                                                                                                 (tpl-pmtr (scope 'Expr 'field_type)))
+                                                                                        (tpl-pmtr (scope (scope 'List
+                                                                                                                (c template-chunk s (tpl-use 'Convert
+                                                                                                                                             (tpl-pmtr (scope 'Expr
+                                                                                                                                                              'field_type)))))
+                                                                                                         'Converted))
+                                                                                        (tpl-pmtr (scope 'Expr 'field_type))) s))
+                                                      (list (typedef (tpl-pmtr (scope 'Expr 'field_type))
+                                                                     FT-chunk)
+                                                            (typedef (tpl-use 'Standardize 'Expr FT-chunk)
+                                                                     'Standardize)
+                                                            (typedef (tpl-pmtr (scope 'Standardize 'StandardType))
+                                                                     'StandardType)
+                                                            (typedef (tpl-use Clause-chunk 'Initial 'BoolExpr 'StandardType FT-chunk)
+                                                                     'Clause)
+                                                            (typedef (tpl-pmtr (scope (scope 'List
+                                                                                             (c template-chunk s (tpl-use 'Convert
+                                                                                                                          (tpl-pmtr (scope 'Expr
+                                                                                                                                           'field_type)))))
+                                                                                      'Converted))
+                                                                     'Previous)
+                                                            (typedef (tpl-use Cond-chunk 'Initial 'Clause 'Previous FT-chunk)
+                                                                     'Cond)
+                                                            (typedef (tpl-use 'CondBuilder 'Cond)
+                                                                     'ReturnType))
+                                                      (fc 'ReturnType
+                                                          (fc 'Cond
+                                                              (fc 'Clause
+                                                                  (mfc 'nb 'expr)
+                                                                  (fc (scope 'Standardize 'standardType) 'e))
+                                                              (mfc 'list_
+                                                                   (c template-chunk s (tpl-use 'convert FT-chunk))))))))
+                                        ; Nil
+              (tpl-srt-def 'CondBuilder
+                           null
+                           Nil-chunk
+                           (sec-def 'public
+                                    (constructor-chunk 'CondBuilder null null)))
+              (end-val 'cond
+                       'double
+                       null
+                       'd)
+              (end-expr 'cond
+                        (tpl-pmtr (scope (tpl-use 'Standardize
+                                                  'Expr
+                                                  (tpl-pmtr (scope 'Expr 'field_type)))
+                                         'StandardTerm))
+                        (list (typedef (tpl-pmtr (scope 'Expr 'field_type))
+                                       FT-chunk)
+                              (typedef (tpl-use 'Standardize 'Expr FT-chunk)
+                                       'Standardize))
+                        (fc (scope 'Standardize 'standardTerm)
+                            'e))
+              (cond-bool-val 'cond
+                             (tpl-use 'CondBuilder (c (tpl-use SCond-chunk Nil-chunk) s))
+                             (list (typedef (tpl-use SCond-chunk Nil-chunk)
+                                            'Cond)
+                                   (typedef (tpl-use 'CondBuilder 'Cond)
+                                            'ReturnType))
+                             (fc 'ReturnType
+                                 (fc 'Cond
+                                     (fc SClause-chunk 'b 'd)
+                                     (fc Nil-chunk))))
+              (cond-bool-expr 'cond
+                              (tpl-use 'CondBuilder (c (tpl-use Cond-chunk
+                                                                'Initial
+                                                                (tpl-use Clause-chunk
+                                                                         'Initial
+                                                                         (tpl-use NB-chunk
                                                                                   'Initial
-                                                                                  (tpl-use Clause-chunk
-                                                                                           'Initial
-                                                                                           'BoolExpr
-                                                                                           (tpl-pmtr (scope (tpl-use 'Standardize
-                                                                                                                     'Expr
-                                                                                                                     (tpl-pmtr (scope 'Expr 'field_type)))
-                                                                                                            'StandardType))
-                                                                                           (tpl-pmtr (scope 'Expr 'field_type)))
-                                                                                  Nil-chunk
-                                                                                  (tpl-pmtr (scope 'Expr 'field_type))) s))
-                                                (list (typedef (tpl-pmtr (scope 'Expr 'field_type))
-                                                               FT-chunk)
-                                                      (typedef (tpl-use 'Standardize 'Expr FT-chunk)
-                                                               'Standardize)
-                                                      (typedef (tpl-pmtr (scope 'Standardize 'StandardType))
-                                                               'StandardType)
-                                                      (typedef (tpl-use Clause-chunk 'Initial 'BoolExpr 'StandardType FT-chunk)
-                                                               'Clause)
-                                                      (typedef (tpl-use Cond-chunk 'Initial 'Clause Nil-chunk FT-chunk)
-                                                               'Cond)
-                                                      (typedef (tpl-use 'CondBuilder 'Cond)
-                                                               'ReturnType))
-                                                (fc 'ReturnType
-                                                    (fc 'Cond
-                                                        (fc 'Clause
-                                                            (mfc 'nb 'expr)
-                                                            (fc (scope 'Standardize 'standardType) 'e))
-                                                        (fc Nil-chunk))))
-                                 null
-                                 null)))
-      (m 'nebo_cond
-         null
-         (c (scope (tpl-use 'CondBuilder Nil-chunk)
-                      (fc 'CondInit)) "//"))
+                                                                                  (tpl-pmtr (scope 'Expr 'field_type)))
+                                                                         (tpl-pmtr (scope (tpl-use 'Standardize
+                                                                                                   'Expr
+                                                                                                   (tpl-pmtr (scope 'Expr 'field_type)))
+                                                                                          'StandardType))
+                                                                         (tpl-pmtr (scope 'Expr 'field_type)))
+                                                                Nil-chunk
+                                                                (tpl-pmtr (scope 'Expr 'field_type))) s))
+                              (list (typedef (tpl-pmtr (scope 'Expr 'field_type))
+                                             FT-chunk)
+                                    (typedef (tpl-use NB-chunk 'Initial FT-chunk)
+                                             'Boolean)
+                                    (typedef (tpl-use 'Standardize 'Expr FT-chunk)
+                                             'Standardize)
+                                    (typedef (tpl-pmtr (scope 'Standardize 'StandardType))
+                                             'StandardType)
+                                    (typedef (tpl-use Clause-chunk 'Initial 'Boolean 'StandardType FT-chunk)
+                                             'Clause)
+                                    (typedef (tpl-use Cond-chunk 'Initial 'Clause Nil-chunk FT-chunk)
+                                             'Cond)
+                                    (typedef (tpl-use 'CondBuilder 'Cond)
+                                             'ReturnType))
+                              (fc 'ReturnType
+                                  (fc 'Cond
+                                      (fc 'Clause
+                                          (fc 'Boolean 'b)
+                                          (fc (scope 'Standardize 'standardType) 'e))
+                                      (fc Nil-chunk))))
+              (cond-NBE-val 'cond
+                            #false
+                            (tpl-use 'CondBuilder (c (tpl-use Cond-chunk
+                                                              'Initial
+                                                              (tpl-use Clause-chunk
+                                                                       'Initial
+                                                                       'BoolExpr
+                                                                       (tpl-use NS-chunk 'Initial FT-chunk)
+                                                                       FT-chunk)
+                                                              Nil-chunk
+                                                              FT-chunk) s))
+                            (list (typedef (tpl-use NS-chunk 'Initial FT-chunk)
+                                           'Scalar)
+                                  (typedef (tpl-use Clause-chunk 'Initial 'BoolExpr 'Scalar FT-chunk)
+                                           'Clause)
+                                  (typedef (tpl-use Cond-chunk 'Initial 'Clause Nil-chunk FT-chunk)
+                                           'Cond)
+                                  (typedef (tpl-use 'CondBuilder 'Cond)
+                                           'ReturnType))
+                            (fc 'ReturnType
+                                (fc 'Cond
+                                    (fc 'Clause
+                                        (mfc 'nb 'expr)
+                                        (fc 'Scalar 'd))
+                                    (fc Nil-chunk))))
+              (cond-NBE-expr 'cond
+                             (tpl-use 'CondBuilder (c (tpl-use Cond-chunk
+                                                               'Initial
+                                                               (tpl-use Clause-chunk
+                                                                        'Initial
+                                                                        'BoolExpr
+                                                                        (tpl-pmtr (scope (tpl-use 'Standardize
+                                                                                                  'Expr
+                                                                                                  (tpl-pmtr (scope 'Expr 'field_type)))
+                                                                                         'StandardType))
+                                                                        (tpl-pmtr (scope 'Expr 'field_type)))
+                                                               Nil-chunk
+                                                               (tpl-pmtr (scope 'Expr 'field_type))) s))
+                             (list (typedef (tpl-pmtr (scope 'Expr 'field_type))
+                                            FT-chunk)
+                                   (typedef (tpl-use 'Standardize 'Expr FT-chunk)
+                                            'Standardize)
+                                   (typedef (tpl-pmtr (scope 'Standardize 'StandardType))
+                                            'StandardType)
+                                   (typedef (tpl-use Clause-chunk 'Initial 'BoolExpr 'StandardType FT-chunk)
+                                            'Clause)
+                                   (typedef (tpl-use Cond-chunk 'Initial 'Clause Nil-chunk FT-chunk)
+                                            'Cond)
+                                   (typedef (tpl-use 'CondBuilder 'Cond)
+                                            'ReturnType))
+                             (fc 'ReturnType
+                                 (fc 'Cond
+                                     (fc 'Clause
+                                         (mfc 'nb 'expr)
+                                         (fc (scope 'Standardize 'standardType) 'e))
+                                     (fc Nil-chunk))))))
+      (m 'nebo_cond null (c 'cond "//"))
       (tpl-def (list (tpl-pmtr 'LhsType)
                      (tpl-pmtr 'RhsType))
                (v-fcn-def 'field_expression_sequential_execute_internal

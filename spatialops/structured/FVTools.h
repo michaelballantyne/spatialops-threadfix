@@ -1,3 +1,25 @@
+/*
+ * Copyright (c) 2011 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
 #ifndef FVToolsTemplates_h
 #define FVToolsTemplates_h
 
@@ -47,7 +69,7 @@ namespace structured{
   int get_nx_with_ghost( const int nxNoGhost, const bool hasPlusFaceX )
   {
     return ( nxNoGhost>1
-             ? ( nxNoGhost + 2*FieldT::Ghost::NGHOST
+             ? ( nxNoGhost + FieldT::Ghost::NGhostMinus::x_value() + FieldT::Ghost::NGhostPlus::x_value()
                  + (hasPlusFaceX ? FieldT::Location::BCExtra::X : 0) )
              : 1 );
   }
@@ -71,7 +93,7 @@ namespace structured{
   int get_ny_with_ghost( const int nyNoGhost, const bool hasPlusFaceY )
   {
     return ( nyNoGhost>1
-             ? ( nyNoGhost + 2*FieldT::Ghost::NGHOST
+             ? ( nyNoGhost + FieldT::Ghost::NGhostMinus::y_value() + FieldT::Ghost::NGhostPlus::y_value()
                  + ( hasPlusFaceY ? FieldT::Location::BCExtra::Y : 0 ) )
              : 1 );
   }
@@ -95,8 +117,8 @@ namespace structured{
   int get_nz_with_ghost( const int nzNoGhost, const bool hasPlusFaceZ )
   {
     return ( nzNoGhost>1
-             ? ( nzNoGhost + 2*FieldT::Ghost::NGHOST +
-                 ( hasPlusFaceZ ? FieldT::Location::BCExtra::Z : 0 ) )
+             ? ( nzNoGhost + FieldT::Ghost::NGhostMinus::z_value() + FieldT::Ghost::NGhostPlus::z_value()
+                 + ( hasPlusFaceZ ? FieldT::Location::BCExtra::Z : 0 ) )
              : 1 );
   }
 
