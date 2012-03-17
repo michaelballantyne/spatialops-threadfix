@@ -16,6 +16,8 @@ if( ENABLE_THREADS )
   set( TILL_THREADS ON )
   set( FIELD_EXPRESSION_THREADS ON )
   set( STENCIL_THREADS ON )
+else()
+  set( NTHREADS 1 )  
 endif()
 
 # default to release builds
