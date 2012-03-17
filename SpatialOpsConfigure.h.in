@@ -33,6 +33,8 @@
 #cmakedefine TILL_THREADS
 #ifdef ENABLE_THREADS
 #define NTHREADS @NTHREADS@
+#else
+#define NTHREADS 1
 #endif
 #cmakedefine ENABLE_CUDA
 
