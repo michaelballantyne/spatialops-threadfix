@@ -21,7 +21,7 @@
  * ----------------------------------------------------------------------------
  * Available debugging flags:
  *
- * 	DEBUG_SF_ALL
+ * 	DEBUG_SF_ALL -- Enable all Spatial Field debugging flags.
  *
  */
 
@@ -454,8 +454,8 @@ SpatialField( const MemoryWindow window,
 
   for (size_t i = 0; i < 3; ++i) {
     if (ext[i] > 1) {
-      ext[i] -= GhostTraits::NGhostMinus::int_vec()[i] + GhostTraits::NGhostPlus::int_vec()[i];
-      ofs[i] += GhostTraits::NGhostMinus::int_vec()[i];
+      ext[i] -= Ghost::NGhostMinus::int_vec()[i] + Ghost::NGhostPlus::int_vec()[i];
+      ofs[i] += Ghost::NGhostMinus::int_vec()[i];
     }
   }
 

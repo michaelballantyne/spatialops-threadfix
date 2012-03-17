@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
   double* T2 = (double*) malloc(sizeof(double) * (bytes));
   double* T3 = (double*) malloc(sizeof(double) * (bytes));
   const IntVec npts(128, 128, 128);
-  const IntVec badpts(1024, 1024, 1024);
+  const IntVec badpts(2048, 2048, 2048);
 
   CUDADeviceInterface& CDI = CUDADeviceInterface::self();
 

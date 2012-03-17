@@ -13,15 +13,11 @@ namespace SpatialOps {
 namespace Point {
 
 struct PointFieldGhostTraits {
-    enum {
-      NGHOST = 0
-    };
+    typedef SpatialOps::structured::IndexTriplet<0,0,0> NGhostMinus;
+    typedef SpatialOps::structured::IndexTriplet<0,0,0> NGhostPlus;
 };
 
-struct PointFieldTraits {
-    typedef NODIR FaceDir;
-    typedef NODIR StagLoc;
-};
+struct PointFieldTraits { typedef NODIR FaceDir; typedef NODIR StagLoc; };
 
 /**
  *  \brief The PointField type is intended for use in extracting and
