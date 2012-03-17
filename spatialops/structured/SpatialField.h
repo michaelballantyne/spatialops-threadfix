@@ -46,6 +46,11 @@
 # include <boost/serialization/binary_object.hpp>
 #endif
 
+#ifdef ENABLE_THREADS
+#include <boost/thread/mutex.hpp>
+#include <boost/interprocess/sync/scoped_lock.hpp>
+#endif
+
 class RHS;
 
 namespace SpatialOps{
@@ -154,6 +159,29 @@ namespace structured{
     }
 
     BOOST_SERIALIZATION_SPLIT_MEMBER()
+#endif
+
+#ifdef ENABLE_THREADS
+    /**
+     *  \class ExecMutex
+     *  \brief Scoped lock.
+     */
+    class ExecMutex {
+#   ifdef ENABLE_THREADS
+        const boost::mutex::scoped_lock lock;
+        inline boost::mutex& get_mutex() const {static boost::mutex m; return m;}
+
+        public:
+        ExecMutex() : lock( get_mutex() ) {}
+        ~ExecMutex() {}
+#   else
+      public:
+        ExecMutex() {
+        }
+        ~ExecMutex() {
+        }
+#   endif
+    };
 #endif
 
   public:
@@ -353,6 +381,8 @@ namespace structured{
      * @brief Make this field available on another device type, index pair. Adding consumer fields
      * 		  increases the memory held by the the spatial field by 'allocated_bytes' for each
      *		  unique device added.
+     *
+     *		  Note: This operation is guaranteed to be atomic
      *
      *		  Note: consumer fields are read-only and no functionality should ever depend on the
      *		  field being writable.
@@ -656,6 +686,10 @@ void SpatialField<Location, GhostTraits, T>::add_consumer(
 	if( mtype == memType_ && deviceIndex == deviceIndex_ ) {
 		return;
 	}
+#   ifdef ENABLE_THREADS
+	//Make sure adding consumers is per-field atomic
+	typename SpatialField<Location, GhostTraits, T>::ExecMutex lock;
+#   endif
 
 	//Take action based on where the field must be available and where it currently is
 	switch( mtype ){
@@ -963,7 +997,7 @@ T& SpatialField<Location, GhostTraits, T>::operator[](const size_t i) {
 
 //------------------------------------------------------------------
 
-//TODO: This function is not semantically consistent, what we want is
+//TODO: This function is not semantically consistent. What we want is
 //		another [] overload which returns a constant reference and
 //		functions in a consistent manner when a local consumer field
 //		is allocated.
@@ -1175,8 +1209,7 @@ SpatialField<Location, GhostTraits, T>::operator/=(const MyType& other) {
 //------------------------------------------------------------------
 
 template<typename Location, typename GhostTraits, typename T>
-bool SpatialField<Location, GhostTraits, T>::operator!=(
-    const MyType& other) const {
+bool SpatialField<Location, GhostTraits, T>::operator!=(const MyType& other) const {
   return !(*this == other);
 }
 
@@ -1304,8 +1337,6 @@ bool SpatialField<Location, GhostTraits, T>::operator==(
 
 //------------------------------------------------------------------
 
-//TODO: Funtion is non-intuitive -- this is essentially a wide memset for a field
-//		there is no real point-wise assignment happening.
 template<typename Location, typename GhostTraits, typename T>
 SpatialField<Location, GhostTraits, T>&
 SpatialField<Location, GhostTraits, T>::operator=(const T a) {
@@ -1335,26 +1366,25 @@ SpatialField<Location, GhostTraits, T>::operator=(const T a) {
 		return *this;
     }
 
-    //TODO: This would probably be faster if we allocated the entire memory chunk locally, set it then pushed to GPU
-    //		but I'm going to prioritize memory usage for the time being.
+    //Note: after the initial size(T) push to the GPU, all other calls are local peer copies... which
+    //		should be very fast.
     case EXTERNAL_CUDA_GPU: {
-		// Fast o(logn), wide memcpy
+		// Fastish o(logn), wide memcpy
         ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
 
 		size_t num = allocatedBytes_ / sizeof(T);
 		if (num < 1){
 			return *this;
 		}
+
 		//Copy our value into the first T position.
 		CDI.memcpy_to(fieldValuesExtDevice_, &a, sizeof(T), deviceIndex_);
-		std::cout << "First copy OK\n";
 
 		size_t start = 1, step = 1;
 		for ( ; start + step <= num; start += step, step *= 2){
 			//Copy the previous half into the next chunk
 			CDI.memcpy_peer((fieldValuesExtDevice_ + start), deviceIndex_,
 					fieldValuesExtDevice_, deviceIndex_, sizeof(T) * step);
-			std::cout << "Step copy: " << step << " OK\n";
 		}
 
 		//Fill remaining ( n < 2^step ) elements
