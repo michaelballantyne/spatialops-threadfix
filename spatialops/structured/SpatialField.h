@@ -222,20 +222,7 @@ namespace structured{
     inline       interior_iterator interior_end();
 
     inline MyType& operator =(const MyType&);
-    inline MyType& operator+=(const MyType&);
-    inline MyType& operator-=(const MyType&);
-    inline MyType& operator*=(const MyType&);
-    inline MyType& operator/=(const MyType&);
-
     inline MyType& operator =(const T);
-    inline MyType& operator+=(const T);
-    inline MyType& operator-=(const T);
-    inline MyType& operator*=(const T);
-    inline MyType& operator/=(const T);
-
-    inline SpatialField& operator= (const RHS&);  ///< Assign a RHS to this field (doesn't affect ghosts)
-    inline SpatialField& operator+=(const RHS&);  ///< Add a RHS to this field (doesn't affect ghosts)
-    inline SpatialField& operator-=(const RHS&);  ///< Subtract a RHS from this field (doesn't affect ghosts)
 
     bool operator!=(const MyType&) const;
     bool operator==(const MyType&) const;
@@ -451,66 +438,6 @@ namespace structured{
   //------------------------------------------------------------------
 
   template< typename Location, typename GhostTraits, typename T >
-  SpatialField<Location,GhostTraits,T>&
-  SpatialField<Location,GhostTraits,T>::
-  operator+=(const MyType& other )
-  {
-    const_iterator iother=other.begin();
-    const iterator iend=this->end();
-    for( iterator ifld=this->begin(); ifld!=iend; ++ifld, ++iother ){
-      *ifld += *iother;
-    }
-    return *this;
-  }
-
-  //------------------------------------------------------------------
-
-  template< typename Location, typename GhostTraits, typename T >
-  SpatialField<Location,GhostTraits,T>&
-  SpatialField<Location,GhostTraits,T>::
-  operator-=(const MyType& other )
-  {
-    const_iterator iother=other.begin();
-    const iterator iend=this->end();
-    for( iterator ifld=this->begin(); ifld!=iend; ++ifld, ++iother ){
-      *ifld -= *iother;
-    }
-    return *this;
-  }
-
-  //------------------------------------------------------------------
-
-  template< typename Location, typename GhostTraits, typename T >
-  SpatialField<Location,GhostTraits,T>&
-  SpatialField<Location,GhostTraits,T>::
-  operator*=(const MyType& other )
-  {
-    const_iterator iother=other.begin();
-    const iterator iend=this->end();
-    for( iterator ifld=this->begin(); ifld!=iend; ++ifld, ++iother ){
-      *ifld *= *iother;
-    }
-    return *this;
-  }
-
-  //------------------------------------------------------------------
-
-  template< typename Location, typename GhostTraits, typename T >
-  SpatialField<Location,GhostTraits,T>&
-  SpatialField<Location,GhostTraits,T>::
-  operator/=(const MyType& other )
-  {
-    const_iterator iother=other.begin();
-    const iterator iend=this->end();
-    for( iterator ifld=this->begin(); ifld!=iend; ++ifld, ++iother ){
-      *ifld /= *iother;
-    }
-    return *this;
-  }
-
-  //------------------------------------------------------------------
-
-  template< typename Location, typename GhostTraits, typename T >
   bool
   SpatialField<Location,GhostTraits,T>::
   operator!=(const MyType& other) const
@@ -547,54 +474,6 @@ namespace structured{
   {
     const iterator iend=this->end();
     for( iterator ifld=this->begin(); ifld!=iend; ++ifld ) *ifld = a;
-    return *this;
-  }
-
-  //------------------------------------------------------------------
-
-  template< typename Location, typename GhostTraits, typename T >
-  SpatialField<Location,GhostTraits,T>&
-  SpatialField<Location,GhostTraits,T>::
-  operator+=(const T a)
-  {
-    const iterator iend=this->end();
-    for( iterator ifld=this->begin(); ifld!=iend; ++ifld ) *ifld += a;
-    return *this;
-  }
-
-  //------------------------------------------------------------------
-
-  template< typename Location, typename GhostTraits, typename T >
-  SpatialField<Location,GhostTraits,T>&
-  SpatialField<Location,GhostTraits,T>::
-  operator-=(const T a)
-  {
-    const iterator iend=this->end();
-    for( iterator ifld=this->begin(); ifld!=iend; ++ifld ) *ifld -= a;
-    return *this;
-  }
-
-  //------------------------------------------------------------------
-
-  template< typename Location, typename GhostTraits, typename T >
-  SpatialField<Location,GhostTraits,T>&
-  SpatialField<Location,GhostTraits,T>::
-  operator*=(const T a)
-  {
-    const iterator iend=this->end();
-    for( iterator ifld=this->begin(); ifld!=iend; ++ifld ) *ifld *= a;
-    return *this;
-  }
-
-  //------------------------------------------------------------------
-
-  template< typename Location, typename GhostTraits, typename T >
-  SpatialField<Location,GhostTraits,T>&
-  SpatialField<Location,GhostTraits,T>::
-  operator/=(const T a)
-  {
-    const iterator iend=this->end();
-    for( iterator ifld=this->begin(); ifld!=iend; ++ifld ) *ifld /= a;
     return *this;
   }
 

@@ -1,6 +1,7 @@
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/SpatialFieldStore.h>
+#include <spatialops/FieldExpressions.h>
 #include <test/TestHelper.h>
 
 #include <sstream>
@@ -21,8 +22,8 @@ bool test_iterator( const IntVec npts,
   const MemoryWindow window( get_window_with_ghost<FieldT>(npts,true,true,true) );
   FieldT f1( window, NULL );
   FieldT f2( window, NULL );
-  f1 = 2.0;
-  f2 = 1.0;
+  f1 <<= 2.0;
+  f2 <<= 1.0;
 
   typename FieldT::iterator if2=f2.begin();
   const typename FieldT::iterator if2e=f2.end();
@@ -70,9 +71,9 @@ bool test_iterator( const IntVec npts,
   status( if1 == f1.end(), "iterator end (1)" );
   status( if2 == f2.end(), "iterator end (2)" );
 
-  f1 = 2.0;
-  f2 = 1.0;
-  f2 += f1;
+  f1 <<= 2.0;
+  f2 <<= 1.0;
+  f2 <<= f2+f1;
   for( int k=0; k<hi[2]; ++k ){
     for( int j=0; j<hi[1]; ++j ){
       for( int i=0; i<hi[0]; ++i ){
@@ -111,13 +112,13 @@ bool test_interior( const IntVec npts,
   const MemoryWindow window( get_window_with_ghost<FieldT>(npts,true,true,true) );
   FieldT f1( window, NULL );
   FieldT f2( window, NULL );
-  f1 = 2.0;
+  f1 <<= 2.0;
 
   const MemoryWindow& interiorWindow = f1.window_without_ghost();
   const IntVec lo = interiorWindow.offset();
   const IntVec hi = lo + interiorWindow.extent();
 
-  f2 = 0.0;
+  f2 <<= 0.0;
   // set interior values
   for( int k=lo[2]; k<hi[2]; ++k ){
     for( int j=lo[1]; j<hi[1]; ++j ){
@@ -356,11 +357,8 @@ int main()
       }
     }
 
-    svol2 = 2.0;
-    svol1 += svol2;
-    svol1 *= svol2;
-    svol1 /= svol2;
-    svol1 -= svol2;
+    svol2 <<= 2.0;
+    svol1 <<= (svol1 + svol2) * svol2 / svol2 - svol2;
 
     for( int k=0; k<npts[2]; ++k ){
       for( int j=0; j<npts[1]; ++j ){
