@@ -23,6 +23,7 @@
 #include "FDStencil2.h"
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/WriteMatlab.h>
+#include <spatialops/FieldExpressionsFDStencil2.h>
 
 namespace SpatialOps{
 namespace structured{
@@ -41,33 +42,7 @@ template< typename OpT, typename FieldT, typename DirT >
 void
 FDStencil2<OpT,FieldT,DirT>::apply_to_field( const FieldT& src, FieldT& dest ) const
 {
-  const MemoryWindow& w = src.window_with_ghost();
-
-  const IntVec shift = DirVec::int_vec() + DirVec::int_vec();
-
-  const MemoryWindow ws1( w.glob_dim(),
-                          w.offset(),
-                          w.extent() - shift,
-                          w.has_bc(0), w.has_bc(1), w.has_bc(2) );
-  const MemoryWindow ws2( w.glob_dim(),
-                          w.offset() + shift,
-                          w.extent() - shift,
-                          w.has_bc(0), w.has_bc(1), w.has_bc(2) );
-  const MemoryWindow wd(  w.glob_dim(),
-                          w.offset() + DirVec::int_vec(),
-                          w.extent() - shift,
-                          w.has_bc(0), w.has_bc(1), w.has_bc(2) );
-
-  FieldT  d( wd, dest.field_values(), ExternalStorage );
-  FieldT s1( ws1, src.field_values(), ExternalStorage );
-  FieldT s2( ws2, src.field_values(), ExternalStorage );
-
-  typename FieldT::const_iterator is1=s1.begin(), is2=s2.begin();
-  typename FieldT::iterator id=d.begin();
-  const typename FieldT::iterator ide=d.end();
-  for( ; id!=ide; ++id, ++is1, ++is2 ){
-    *id = *is1*coefLo_ + *is2*coefHi_;
-  }
+    fd_stencil_2_apply_to_field_general_execute<OpT,FieldT,DirVec>(src, dest, coefLo_, coefHi_);
 }
 
 // Explicit template instantiation

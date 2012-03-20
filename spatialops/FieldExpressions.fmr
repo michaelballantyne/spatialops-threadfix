@@ -1,3 +1,23 @@
+ ; Copyright (c) 2011 The University of Utah
+ ;
+ ; Permission is hereby granted, free of charge, to any person obtaining a copy
+ ; of this software and associated documentation files (the "Software"), to
+ ; deal in the Software without restriction, including without limitation the
+ ; rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ ; sell copies of the Software, and to permit persons to whom the Software is
+ ; furnished to do so, subject to the following conditions:
+ ;
+ ; The above copyright notice and this permission notice shall be included in
+ ; all copies or substantial portions of the Software.
+ ;
+ ; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ ; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ ; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ ; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ ; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ ; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ ; IN THE SOFTWARE.
+
 (let* ([id (lambda (x) x)]
        [c concat-chunk]
        [b between-chunk]
@@ -44,6 +64,32 @@
        [SCond-chunk 'NeboSimpleCond]
        [Clause-chunk 'NeboClause]
        [Cond-chunk 'NeboCond]
+       [pp-header-file-chunk-with-license
+        (lambda (file-name file-setup . chunks)
+          (c (b new-line-chunk
+                "/*"
+                " * Copyright (c) 2011 The University of Utah"
+                " *"
+                " * Permission is hereby granted, free of charge, to any person obtaining a copy"
+                " * of this software and associated documentation files (the \"Software\"), to"
+                " * deal in the Software without restriction, including without limitation the"
+                " * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or"
+                " * sell copies of the Software, and to permit persons to whom the Software is"
+                " * furnished to do so, subject to the following conditions:"
+                " *"
+                " * The above copyright notice and this permission notice shall be included in"
+                " * all copies or substantial portions of the Software."
+                " *"
+                " * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR"
+                " * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,"
+                " * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE"
+                " * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER"
+                " * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING"
+                " * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS"
+                " * IN THE SOFTWARE."
+                " */")
+             blank-line-chunk
+             (pp-header-file-chunk file-name file-setup chunks)))]
        [IteratorStyle
         (lambda (iterator call)
           (d iterator
@@ -858,7 +904,7 @@
                                                'rhs))))]
        )
   ; beginnning of file
-  (pp-header-file-chunk
+  (pp-header-file-chunk-with-license
    'SpatialOps_FieldExpressions_h
    (between-chunk blank-line-chunk
                   (pp-includes-chunk 'spatialops/SpatialOpsConfigure.h
