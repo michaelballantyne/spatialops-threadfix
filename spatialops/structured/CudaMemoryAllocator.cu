@@ -84,8 +84,8 @@ void CudaFree(void* src, const unsigned int device) {
 void CudaMemcpy(void* dest, const void* src, const size_t sz, const unsigned int device,
     const cudaMemcpyKind cmkk) {
 #ifdef  DEBUG_EXT_ALLOC_MEM
-  std::cout << "CudaMemcpy wrapper called (src,dest,size,device,type)-> (";
-  std::cout << src << "," << dest << "," << sz << "," << device << "," << cmkk << std::endl;
+  std::cout << "CudaMemcpy wrapper called (src,dest,size,device,type)-> ( ";
+  std::cout << src << "," << dest << "," << sz << "," << device << "," << cmkk << " )" <<  std::endl;
 #endif
   cudaError err;
 
@@ -106,8 +106,8 @@ void CudaMemcpy(void* dest, const void* src, const size_t sz, const unsigned int
 
 void CudaMemcpyPeer(void* dest, const int dID, const void* src, const int sID, const size_t sz) {
 #ifdef  DEBUG_EXT_ALLOC_MEM
-  std::cout << "CudaMemcpyPeer wrapper called (dest, dID, src, sID, size)-> (";
-  std::cout << dest << "," << dID << "," << src << "," << sID << "," << sz << std::endl;
+  std::cout << "CudaMemcpyPeer wrapper called (dest, dID, src, sID, size)-> ( ";
+  std::cout << dest << "," << dID << "," << src << "," << sID << "," << sz << " )" << std::endl;
 #endif
   cudaError err;
 
@@ -127,8 +127,8 @@ void CudaMemcpyPeer(void* dest, const int dID, const void* src, const int sID, c
 
 void CudaMemset(void* dest, const int value, const size_t sz, const unsigned int device) {
 #ifdef  DEBUG_EXT_SET_MEM
-  std::cout << "CudaMemset wrapper called (src, value, size, device)-> (";
-  std::cout << src << "," << value << "," << sz << "," << device << "," << std::endl;
+  std::cout << "CudaMemset wrapper called (src, value, size, device)-> ( ";
+  std::cout << src << "," << value << "," << sz << "," << device << "," << " )" << std::endl;
 #endif
   cudaError err;
 
@@ -174,13 +174,10 @@ void CUDADeviceManager::get_memory_statistics(CUDAMemStats& cms, const int K) co
 /*---------------------------------------------------------------------*/
 
 void CUDADeviceManager::update_memory_statistics() {
-  int device;
-
 #ifdef  DEBUG_EXT_ALLOC_CUDA_DEVICE_MNGR
   std::cout << "CUDADeviceManager::update_memory_statistics -> called\n";
 #endif
-
-  for (device = 0; device < device_count; ++device) {
+  for (int device = 0; device < device_count; ++device) {
     CUDAMemStats& cms = *device_stats[device];
     cudaMemGetInfo(&cms.f, &cms.t);
     cms.inuse = cms.t - cms.f;

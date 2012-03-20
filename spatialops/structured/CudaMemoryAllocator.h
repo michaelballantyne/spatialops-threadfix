@@ -35,8 +35,10 @@
 #ifdef DEBUG_CUDA_VERBOSE
 #define DEBUG_EXT_ALLOC_CUDA_DEVICE_MNGR
 #define DEBUG_EXT_ALLOC_MEM
-#define DEBUG_EXT_ALLOC_CUDA_SHARED_PTR
+#define DEBUG_EXT_CUDA_SHARED_PTR
+#define DEBUG_EXT_SET_MEM
 #endif
+
 //Standard includes
 #include <iostream>
 #include <string>
@@ -44,7 +46,7 @@
 #include <stdexcept>
 #include <vector>
 
-//Spatial Ops includes
+//Spatial Operator includes
 #include <spatialops/structured/ExternalAllocators.h>
 
 //Boost includes
@@ -56,17 +58,10 @@
 
 #define byte char;
 
-#ifdef DEBUG_CUDA_VERBOSE
-#define DEBUG_EXT_ALLOC_CUDA_DEVICE_MNGR
-#define DEBUG_EXT_ALLOC_MEM
-#define DEBUG_EXT_CUDA_SHARED_PTR
-#define DEBUG_EXT_SET_MEM
-#endif
-
 namespace ema {
 namespace cuda {
 
-/**---- CUDA wrappers with error processing */
+/**---- CUDA wrappers with error checking/processing */
 void CudaSetDevice(const int device);
 void CudaMalloc(void** src, const size_t sz, const unsigned int device);
 void CudaFree(void* src, const unsigned int device);
@@ -90,7 +85,7 @@ class CUDADeviceManager {
     /** \brief Returns the memory structure associated with device K */
     void get_memory_statistics(CUDAMemStats& cms, const int K = 0) const;
 
-    /** \brief Updates the 'device_stats' structs with the most current memory usage statistics
+    /** \brief Updates the 'device_stats' structures with the most current memory usage statistics
      * Please note that it is possible memory can be allocated from other sources, this
      * is simply to provide a metric for checking relative memory availability.
      * */
