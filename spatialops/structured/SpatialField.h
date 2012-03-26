@@ -954,7 +954,6 @@ T& SpatialField<Location, GhostTraits, T>::operator[](const size_t i) {
       msg << "\t - " << __FILE__ << " : " << __LINE__;
       throw(std::runtime_error(msg.str()));
   }
-<<<<<<< HEAD
 }
 
 //------------------------------------------------------------------
@@ -1086,8 +1085,7 @@ bool SpatialField<Location, GhostTraits, T>::operator!=(const MyType& other) con
 //------------------------------------------------------------------
 
 template<typename Location, typename GhostTraits, typename T>
-bool SpatialField<Location, GhostTraits, T>::operator==(
-    const MyType& other) const {
+bool SpatialField<Location, GhostTraits, T>::operator==(const MyType& other) const {
   switch (memType_) {
     case LOCAL_RAM: {
       switch (other.memory_device_type()) {
@@ -1101,6 +1099,38 @@ bool SpatialField<Location, GhostTraits, T>::operator==(
           }
           return true;
         }
+#ifdef ENABLE_CUDA
+          case EXTERNAL_CUDA_GPU: {
+            // Comparing LOCAL_RAM == EXTERNAL_CUDA_GPU
+            // Note: This will incur a full copy penalty from the GPU and should not be used in a time sensitive context.
+            if( allocatedBytes_ != other.allocatedBytes_ ) {
+              throw( std::runtime_error( "Attempted comparison between fields of unequal size." ) );
+            }
+
+            void* temp = (void*)malloc(allocatedBytes_);
+            ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
+            CDI.memcpy_from( temp, other.fieldValuesExtDevice_, allocatedBytes_, other.deviceIndex_ );
+
+            if( memcmp(temp, fieldValues_, allocatedBytes_) ) {
+              free(temp);
+              return false;
+            }
+            free(temp);
+            return true;
+          }
+#endif
+          default:{
+            std::ostringstream msg;
+            msg << "Attempted unsupported compare operation, at " << __FILE__
+                << " : " << __LINE__ << std::endl;
+            msg << "\t - "
+                << DeviceTypeTools::get_memory_type_description(memType_) << " = "
+                << DeviceTypeTools::get_memory_type_description(
+                    other.memory_device_type());
+            throw(std::runtime_error(msg.str()));
+          }
+      } // End internal switch
+    }
 #ifdef ENABLE_CUDA
       case EXTERNAL_CUDA_GPU: {
         switch( other.memory_device_type() ) {
@@ -1207,7 +1237,7 @@ SpatialField<Location, GhostTraits, T>::operator=(const T a) {
     //Note: after the initial size(T) push to the GPU, all other calls are local peer copies... which
     //		should be very fast.
     case EXTERNAL_CUDA_GPU: {
-		// Fastish o(logn), wide memcpy
+		// Fast(ish), O(Log n), wide-memcpy
         ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
 
 		size_t num = allocatedBytes_ / sizeof(T);
