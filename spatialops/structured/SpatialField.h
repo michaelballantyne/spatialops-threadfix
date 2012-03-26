@@ -329,46 +329,7 @@ namespace structured{
     inline interior_iterator interior_end();
 
     inline MyType& operator =(const MyType&);
-    /**
-     * \brief Unary field operators between SpatialFields
-     * NOTE: USAGE IS DEPRECATED!! Not supported for external field types
-     * Future usage should utilize '<<=' syntax.
-     * @param
-     * @return
-     */
-    inline MyType& operator+=(const MyType&);
-    inline MyType& operator-=(const MyType&);
-    inline MyType& operator*=(const MyType&);
-    inline MyType& operator/=(const MyType&);
-
-    /**
-     * @brief Single data element assignment
-     */
     inline MyType& operator =(const T);
-
-    /**
-     * \brief Unary field operators between SpatialField and single data element field type
-     * NOTE: USAGE IS DEPRECATED!! Not supported for external field types
-     * Future usage should utilize '<<=' syntax.
-     * @param
-     * @return
-     */
-    inline MyType& operator+=(const T);
-    inline MyType& operator-=(const T);
-    inline MyType& operator*=(const T);
-    inline MyType& operator/=(const T);
-
-    inline SpatialField& operator=(const RHS&); ///< Assign a RHS to this field (doesn't affect ghosts)
-
-    /**
-     * \brief Unary field operators between SpatialFields
-     * NOTE: USAGE IS DEPRECATED!! Not supported for external field types
-     * Future usage should utilize '<<=' syntax.
-     * @param
-     * @return
-     */
-    inline SpatialField& operator+=(const RHS&); ///< Add a RHS to this field (doesn't affect ghosts)
-    inline SpatialField& operator-=(const RHS&); ///< Subtract a RHS from this field (doesn't affect ghosts)
 
     /**
      * @brief Comparison operators
@@ -993,6 +954,7 @@ T& SpatialField<Location, GhostTraits, T>::operator[](const size_t i) {
       msg << "\t - " << __FILE__ << " : " << __LINE__;
       throw(std::runtime_error(msg.str()));
   }
+<<<<<<< HEAD
 }
 
 //------------------------------------------------------------------
@@ -1117,98 +1079,6 @@ SpatialField<Location, GhostTraits, T>::operator=(const MyType& other) {
 //------------------------------------------------------------------
 
 template<typename Location, typename GhostTraits, typename T>
-SpatialField<Location, GhostTraits, T>&
-SpatialField<Location, GhostTraits, T>::operator+=(const MyType& other) {
-  if (memType_ == LOCAL_RAM) {
-    const_iterator iother = other.begin();
-    const iterator iend = this->end();
-    for (iterator ifld = this->begin(); ifld != iend; ++ifld, ++iother) {
-      *ifld += *iother;
-    }
-    return *this;
-  } else {
-    std::ostringstream msg;
-    msg << "Field type ( "
-        << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
-        << " does not support this form of unary operator.\n"
-        << "Note: this functionality is DEPRECATED and is not recommended for future use.\n";
-    msg << "\t - " << __FILE__ << " : " << __LINE__;
-    throw(std::runtime_error(msg.str()));
-  }
-}
-
-//------------------------------------------------------------------
-
-template<typename Location, typename GhostTraits, typename T>
-SpatialField<Location, GhostTraits, T>&
-SpatialField<Location, GhostTraits, T>::operator-=(const MyType& other) {
-  if (memType_ == LOCAL_RAM) {
-    const_iterator iother = other.begin();
-    const iterator iend = this->end();
-    for (iterator ifld = this->begin(); ifld != iend; ++ifld, ++iother) {
-      *ifld -= *iother;
-    }
-    return *this;
-  } else {
-    std::ostringstream msg;
-    msg << "Field type ( "
-        << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
-        << " does not support this form of unary operator.\n"
-        << "Note: this functionality is DEPRECATED and is not recommended for future use.\n";
-    msg << "\t - " << __FILE__ << " : " << __LINE__;
-    throw(std::runtime_error(msg.str()));
-  }
-}
-
-//------------------------------------------------------------------
-
-template<typename Location, typename GhostTraits, typename T>
-SpatialField<Location, GhostTraits, T>&
-SpatialField<Location, GhostTraits, T>::operator*=(const MyType& other) {
-  if (memType_ == LOCAL_RAM) {
-    const_iterator iother = other.begin();
-    const iterator iend = this->end();
-    for (iterator ifld = this->begin(); ifld != iend; ++ifld, ++iother) {
-      *ifld *= *iother;
-    }
-    return *this;
-  } else {
-    std::ostringstream msg;
-    msg << "Field type ( "
-        << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
-        << " does not support this form of unary operator.\n"
-        << "Note: this functionality is DEPRECATED and is not recommended for future use.\n";
-    msg << "\t - " << __FILE__ << " : " << __LINE__;
-    throw(std::runtime_error(msg.str()));
-  }
-}
-
-//------------------------------------------------------------------
-
-template<typename Location, typename GhostTraits, typename T>
-SpatialField<Location, GhostTraits, T>&
-SpatialField<Location, GhostTraits, T>::operator/=(const MyType& other) {
-  if (memType_ == LOCAL_RAM) {
-    const_iterator iother = other.begin();
-    const iterator iend = this->end();
-    for (iterator ifld = this->begin(); ifld != iend; ++ifld, ++iother) {
-      *ifld /= *iother;
-    }
-    return *this;
-  } else {
-    std::ostringstream msg;
-    msg << "Field type ( "
-        << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
-        << " does not support this form of unary operator.\n"
-        << "Note: this functionality is DEPRECATED and is not recommended for future use.\n";
-    msg << "\t - " << __FILE__ << " : " << __LINE__;
-    throw(std::runtime_error(msg.str()));
-  }
-}
-
-//------------------------------------------------------------------
-
-template<typename Location, typename GhostTraits, typename T>
 bool SpatialField<Location, GhostTraits, T>::operator!=(const MyType& other) const {
   return !(*this == other);
 }
@@ -1231,38 +1101,6 @@ bool SpatialField<Location, GhostTraits, T>::operator==(
           }
           return true;
         }
-#ifdef ENABLE_CUDA
-          case EXTERNAL_CUDA_GPU: {
-            // Comparing LOCAL_RAM == EXTERNAL_CUDA_GPU
-            // Note: This will incur a full copy penalty from the GPU and should not be used in a time sensitive context.
-            if( allocatedBytes_ != other.allocatedBytes_ ) {
-              throw( std::runtime_error( "Attempted comparison between fields of unequal size." ) );
-            }
-
-            void* temp = (void*)malloc(allocatedBytes_);
-            ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-            CDI.memcpy_from( temp, other.fieldValuesExtDevice_, allocatedBytes_, other.deviceIndex_ );
-
-            if( memcmp(temp, fieldValues_, allocatedBytes_) ) {
-              free(temp);
-              return false;
-            }
-            free(temp);
-            return true;
-          }
-#endif
-          default:{
-            std::ostringstream msg;
-            msg << "Attempted unsupported compare operation, at " << __FILE__
-                << " : " << __LINE__ << std::endl;
-            msg << "\t - "
-                << DeviceTypeTools::get_memory_type_description(memType_) << " = "
-                << DeviceTypeTools::get_memory_type_description(
-                    other.memory_device_type());
-            throw(std::runtime_error(msg.str()));
-          }
-      } // End internal switch
-    }
 #ifdef ENABLE_CUDA
       case EXTERNAL_CUDA_GPU: {
         switch( other.memory_device_type() ) {
@@ -1406,91 +1244,7 @@ SpatialField<Location, GhostTraits, T>::operator=(const T a) {
 
 //------------------------------------------------------------------
 
-template<typename Location, typename GhostTraits, typename T>
-SpatialField<Location, GhostTraits, T>&
-SpatialField<Location, GhostTraits, T>::operator+=(const T a) {
-  if (memType_ == LOCAL_RAM) {
-    const iterator iend = this->end();
-    for (iterator ifld = this->begin(); ifld != iend; ++ifld)
-      *ifld += a;
-    return *this;
-  } else {
-    std::ostringstream msg;
-    msg << "Field type ( "
-        << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
-        << " does not support this form of unary operator.\n"
-        << "Note: this functionality is DEPRECATED and is not recommended for future use.\n";
-    msg << "\t - " << __FILE__ << " : " << __LINE__;
-    throw(std::runtime_error(msg.str()));
-  }
-}
-
-//------------------------------------------------------------------
-
-template<typename Location, typename GhostTraits, typename T>
-SpatialField<Location, GhostTraits, T>&
-SpatialField<Location, GhostTraits, T>::operator-=(const T a) {
-  if (memType_ == LOCAL_RAM) {
-    const iterator iend = this->end();
-    for (iterator ifld = this->begin(); ifld != iend; ++ifld)
-      *ifld -= a;
-    return *this;
-  } else {
-    std::ostringstream msg;
-    msg << "Field type ( "
-        << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
-        << " does not support this form of unary operator.\n"
-        << "Note: this functionality is DEPRECATED and is not recommended for future use.\n";
-    msg << "\t - " << __FILE__ << " : " << __LINE__;
-    throw(std::runtime_error(msg.str()));
-  }
-}
-
-//------------------------------------------------------------------
-
-template<typename Location, typename GhostTraits, typename T>
-SpatialField<Location, GhostTraits, T>&
-SpatialField<Location, GhostTraits, T>::operator*=(const T a) {
-  if (memType_ == LOCAL_RAM) {
-    const iterator iend = this->end();
-    for (iterator ifld = this->begin(); ifld != iend; ++ifld)
-      *ifld *= a;
-    return *this;
-  } else {
-    std::ostringstream msg;
-    msg << "Field type ( "
-        << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
-        << " does not support this form of unary operator.\n"
-        << "Note: this functionality is DEPRECATED and is not recommended for future use.\n";
-    msg << "\t - " << __FILE__ << " : " << __LINE__;
-    throw(std::runtime_error(msg.str()));
-  }
-}
-
-//------------------------------------------------------------------
-
-template<typename Location, typename GhostTraits, typename T>
-SpatialField<Location, GhostTraits, T>&
-SpatialField<Location, GhostTraits, T>::operator/=(const T a) {
-  if (memType_ == LOCAL_RAM) {
-    const iterator iend = this->end();
-    for (iterator ifld = this->begin(); ifld != iend; ++ifld)
-      *ifld /= a;
-    return *this;
-  } else {
-    std::ostringstream msg;
-    msg << "Field type ( "
-        << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
-        << " does not support this form of unary operator.\n"
-        << "Note: this functionality is DEPRECATED and is not recommended for future use.\n";
-    msg << "\t - " << __FILE__ << " : " << __LINE__;
-    throw(std::runtime_error(msg.str()));
-  }
-}
-
-//------------------------------------------------------------------
-
-}// namespace structured
+} // namespace structured
 } // namespace SpatialOps
 
 #endif // SpatialOps_SpatialField_h
