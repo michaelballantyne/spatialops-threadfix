@@ -671,13 +671,19 @@ void SpatialField<Location, GhostTraits, T>::add_consumer(
 					#endif
 
 					if( fieldValues_ == NULL ) {  // Space is already allocated
+#ifdef DEBUG_SF_ALL
 			        	std::cout << "Consumer field does not exist, allocating...\n\n";
+#endif
 						fieldValues_ = new T[allocatedBytes_];
+#ifdef DEBUG_SF_ALL
 			        	std::cout << "fieldValues_ == " << fieldValues_ << std::endl;
+#endif
 					}
 
+#ifdef DEBUG_SF_ALL
 					std::cout << "Calling memcpy with " << fieldValues_ << " " << fieldValuesExtDevice_
 								<< " " << allocatedBytes_ << " " << deviceIndex_ << std::endl;
+#endif
 					ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
 					CDI.memcpy_from( fieldValues_, fieldValuesExtDevice_, allocatedBytes_, deviceIndex_ );
 				}
@@ -1236,6 +1242,7 @@ SpatialField<Location, GhostTraits, T>::operator=(const T a) {
 
     //Note: after the initial size(T) push to the GPU, all other calls are local peer copies... which
     //		should be very fast.
+#ifdef ENABLE_CUDA
     case EXTERNAL_CUDA_GPU: {
 		// Fast(ish), O(Log n), wide-memcpy
         ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
@@ -1263,6 +1270,7 @@ SpatialField<Location, GhostTraits, T>::operator=(const T a) {
 
 		return *this;
     }
+#endif
     default:
       std::ostringstream msg;
       msg << "Attempted unsupported memset operation, at \n"
