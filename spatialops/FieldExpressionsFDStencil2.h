@@ -38,7 +38,8 @@
 #     include <spatialops/structured/IntVec.h>
 #     include <boost/interprocess/sync/interprocess_semaphore.hpp>
       namespace BI = boost::interprocess;
-#  endif /* STENCIL_THREADS */
+#  endif
+   /* STENCIL_THREADS */
 
    namespace SpatialOps {
 
@@ -132,7 +133,8 @@
 
                 sem->post();
              }
-#        endif /* STENCIL_THREADS */;
+#        endif
+         /* STENCIL_THREADS */;
 
 #        ifdef STENCIL_THREADS
             template<typename OperatorType, typename FieldType, typename DirVec>
@@ -204,7 +206,8 @@
 
                 for(int ii = 0; ii < vec_sw.size(); ii++){ semaphore.wait(); };
              }
-#        endif /* STENCIL_THREADS */;
+#        endif
+         /* STENCIL_THREADS */;
 
          template<typename OperatorType, typename FieldType, typename DirVec>
           inline void fd_stencil_2_apply_to_field_general_execute(FieldType const & src,
@@ -223,10 +226,12 @@
                                                                                                 dest,
                                                                                                 low,
                                                                                                 high)
-#            endif /* STENCIL_THREADS */
+#            endif
+             /* STENCIL_THREADS */
              ;
           };
       } /* structured */;
    } /* SpatialOps */;
 
-#endif /* SpatialOps_FieldExpressionsFDStencil_2_h */
+#endif
+/* SpatialOps_FieldExpressionsFDStencil_2_h */
