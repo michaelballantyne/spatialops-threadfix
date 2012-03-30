@@ -222,7 +222,9 @@ int main()
 {
   TestHelper status(true);
 
-  status( test_driver( IntVec(3,1 ,1 ) ), "Mesh: (10,1,1)\n" );
+  assert( NTHREADS <= 10 );
+
+  status( test_driver( IntVec(10,1 ,1 ) ), "Mesh: (10,1,1)\n" );
   status( test_driver( IntVec(1 ,10,1 ) ), "Mesh: (1,10,1)\n" );
   status( test_driver( IntVec(1 ,1 ,10) ), "Mesh: (1,1,10)\n" );
 
