@@ -46,7 +46,7 @@ namespace structured{
   template< typename OpT, typename SrcFieldT, typename DestFieldT >
   struct Stencil4
   {
-    typedef OpT         Type;           ///< The operator type (Interpolant, Gradient, Divergence)
+    typedef OpT         type;           ///< The operator type (Interpolant, Gradient, Divergence)
     typedef SrcFieldT   SrcFieldType;   ///< The source field type
     typedef DestFieldT  DestFieldType;  ///< The destination field type
 

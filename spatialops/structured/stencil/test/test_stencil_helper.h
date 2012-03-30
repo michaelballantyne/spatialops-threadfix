@@ -200,7 +200,7 @@ apply_stencil( const SpatialOps::structured::IntVec& npts,
 {
   using namespace SpatialOps;
   using namespace structured;
-  typedef typename OpT::Type           OpType;
+  typedef typename OpT::type           OpType;
   typedef typename OpT::SrcFieldType   SrcT;
   typedef typename OpT::DestFieldType  DestT;
 
