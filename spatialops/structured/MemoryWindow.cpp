@@ -109,7 +109,7 @@ namespace SpatialOps{
     {}
 
     std::vector<MemoryWindow>
-    MemoryWindow::split( const IntVec splitPattern,
+    MemoryWindow::split(       IntVec splitPattern,
                          const IntVec nGhostMinus,
                          const IntVec nGhostPlus,
                          const IntVec bcExtents ) const
@@ -120,6 +120,11 @@ namespace SpatialOps{
       const IntVec offset = IntVec((extent_[0] == 1) ? 0 : offset_[0] + nGhostMinus[0],
                                    (extent_[1] == 1) ? 0 : offset_[1] + nGhostMinus[1],
                                    (extent_[2] == 1) ? 0 : offset_[2] + nGhostMinus[2]);
+
+      //if splitPattern is greater than extent, set splitPattern to extent
+      for( size_t i=0; i<3; ++i )
+          if(extent[i] < splitPattern[i])
+              splitPattern[i] = extent[i];
 
 #     ifndef NDEBUG
       for( size_t i=0; i<3; ++i ){
