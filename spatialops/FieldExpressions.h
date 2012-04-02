@@ -38,7 +38,8 @@
 #     include <spatialops/structured/IntVec.h>
 #     include <boost/interprocess/sync/interprocess_semaphore.hpp>
       namespace BI = boost::interprocess;
-#  endif /* FIELD_EXPRESSION_THREADS */
+#  endif
+   /* FIELD_EXPRESSION_THREADS */
 
    namespace SpatialOps {
 
@@ -5769,7 +5770,8 @@
 
              semaphore->post();
           }
-#     endif /* FIELD_EXPRESSION_THREADS */;
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
 
 #     ifdef FIELD_EXPRESSION_THREADS
          template<typename CallStyle, typename ExprType, typename FieldType>
@@ -5826,7 +5828,8 @@
 
              return initial_lhs;
           }
-#     endif /* FIELD_EXPRESSION_THREADS */;
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
 
       template<typename CallStyle, typename ExprType, typename FieldType>
        inline FieldType const & field_expression_general_execute(FieldType & initial_lhs,
@@ -5841,7 +5844,8 @@
 #                else
                     field_expression_sequential_execute<CallStyle, ExprType, FieldType>(initial_lhs,
                                                                                         initial_rhs)
-#                endif /* FIELD_EXPRESSION_THREADS */
+#                endif
+                 /* FIELD_EXPRESSION_THREADS */
                  ;;
        };
 
@@ -5892,4 +5896,5 @@
        };
    } /* SpatialOps */;
 
-#endif /* SpatialOps_FieldExpressions_h */
+#endif
+/* SpatialOps_FieldExpressions_h */

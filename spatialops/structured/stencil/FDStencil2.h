@@ -28,6 +28,12 @@
 namespace SpatialOps{
   namespace structured{
 
+    /**
+     *  \author James C. Sutherland
+     *  \class FDStencil2
+     *  \brief provides finite different stencil for interpolants and
+     *         derivatives at second order on a uniform mesh.
+     */
     template< typename OpT, typename FieldT, typename DirT >
     class FDStencil2{
       const double coefLo_, coefHi_;
@@ -35,7 +41,7 @@ namespace SpatialOps{
       typedef typename UnitTriplet<DirT>::type  DirVec;
 
     public:
-      typedef OpT       Type;
+      typedef OpT       type;
       typedef FieldT    SrcFieldType;
       typedef FieldT    DestFieldType;
 
