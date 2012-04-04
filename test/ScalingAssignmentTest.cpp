@@ -197,7 +197,7 @@ int main( int iarg, char* carg[] )
       ++ii, ++if01, ++if02, ++if03, ++if04, ++if05, ++if06, ++if07, ++if08, ++if09,
 	++if10, ++if11, ++if12, ++if13, ++if14, ++if15, ++if16, ++if17, ++if18, ++if19,
 	++if20, ++if21, ++if22, ++if23, ++if24, ++if25, ++if26, ++if27, ++if28, ++if29,
-	++if30, ++if31, ++if33, ++if33, ++if34, ++if35, ++if36 ) {
+          ++if30, ++if31, ++if32, ++if33, ++if34, ++if35, ++if36 ) {
     *if01 = ii + size * 1;
     *if02 = ii + size * 2;
     *if03 = ii + size * 3;
