@@ -274,7 +274,7 @@
                                                                                                   coef2,
                                                                                                   coef3,
                                                                                                   coef4,
-                                                                                                  NTHREADS)
+                                                                                                  get_nebo_thread_count())
 #            else
                 stencil_4_apply_to_field_sequential_execute<OperatorType, SrcType, DestType>(src,
                                                                                              dest,

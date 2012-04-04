@@ -43,6 +43,14 @@
 
    namespace SpatialOps {
 
+#     ifdef FIELD_EXPRESSION_THREADS
+         /* used within nebo to get current thread count */
+         int get_nebo_thread_count(void);
+         /* used by tests to change current thread count at runtime */
+         int set_nebo_thread_count(int thread_count);
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
+
       /* Meta-programming compiler flags */
       struct UseWholeIterator;
       struct UseInteriorIterator;
@@ -5840,7 +5848,7 @@
 #                ifdef FIELD_EXPRESSION_THREADS
                     field_expression_thread_parallel_execute<CallStyle, ExprType, FieldType>(initial_lhs,
                                                                                              initial_rhs,
-                                                                                             NTHREADS)
+                                                                                             get_nebo_thread_count())
 #                else
                     field_expression_sequential_execute<CallStyle, ExprType, FieldType>(initial_lhs,
                                                                                         initial_rhs)

@@ -890,7 +890,7 @@
                                      'coef2
                                      'coef3
                                      'coef4
-                                     'NTHREADS)
+                                     (fc 'get_nebo_thread_count))
                                  (fc (tpl-use 'stencil_4_apply_to_field_sequential_execute
                                               'OperatorType
                                               'SrcType

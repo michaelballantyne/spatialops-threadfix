@@ -906,22 +906,37 @@
   ; beginnning of file
   (pp-header-file-chunk-with-license
    'SpatialOps_FieldExpressions_h
-   (between-chunk blank-line-chunk
-                  (pp-includes-chunk 'spatialops/SpatialOpsConfigure.h
-                                     'spatialops/structured/SpatialField.h
-                                     'cmath)
-                  (comment-env-chunk (pp-include-chunk 'iostream))
-                  (pp-conditional-ifdef-chunk
-                   'FIELD_EXPRESSION_THREADS
-                   (between-chunk new-line-chunk
-                                  (pp-includes-chunk 'vector
-                                                     'boost/bind.hpp
-                                                     'boost/ref.hpp
-                                                     'spatialops/ThreadPool.h
-                                                     'spatialops/structured/IntVec.h
-                                                     'boost/interprocess/sync/interprocess_semaphore.hpp)
-                                  "namespace BI = boost::interprocess;")))
+   (b blank-line-chunk
+      (pp-includes-chunk 'spatialops/SpatialOpsConfigure.h
+                         'spatialops/structured/SpatialField.h
+                         'cmath)
+      (comment-env-chunk (pp-include-chunk 'iostream))
+      (pp-conditional-ifdef-chunk
+       'FIELD_EXPRESSION_THREADS
+       (b new-line-chunk
+          (pp-includes-chunk 'vector
+                             'boost/bind.hpp
+                             'boost/ref.hpp
+                             'spatialops/ThreadPool.h
+                             'spatialops/structured/IntVec.h
+                             'boost/interprocess/sync/interprocess_semaphore.hpp)
+          "namespace BI = boost::interprocess;")))
    (n 'SpatialOps
+      (pp-conditional-ifdef-chunk
+       'FIELD_EXPRESSION_THREADS
+       (b new-line-chunk
+          (comment-env-chunk "used within nebo to get current thread count")
+          (c 'int
+             s
+             (fc 'get_nebo_thread_count
+                 'void)
+             semi-colon-chunk)
+          (comment-env-chunk "used by tests to change current thread count at runtime")
+          (c 'int
+             s
+             (fc 'set_nebo_thread_count
+                 (c 'int s 'thread_count))
+             semi-colon-chunk)))
       (d "Meta-programming compiler flags"
          (struct-declare-chunk 'UseWholeIterator)
          (struct-declare-chunk 'UseInteriorIterator))
@@ -2862,7 +2877,7 @@
                                            FT-chunk)
                                   'initial_lhs
                                   'initial_rhs
-                                  'NTHREADS)
+                                  (fc 'get_nebo_thread_count))
                               (fc (tpl-use 'field_expression_sequential_execute
                                            'CallStyle
                                            'ExprType

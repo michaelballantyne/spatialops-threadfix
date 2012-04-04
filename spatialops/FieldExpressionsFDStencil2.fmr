@@ -624,7 +624,7 @@
                                      'dest
                                      'low
                                      'high
-                                     'NTHREADS)
+                                     (fc 'get_nebo_thread_count))
                                  (fc (tpl-use 'fd_stencil_2_apply_to_field_sequential_execute
                                               'OperatorType
                                               'FieldType

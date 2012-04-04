@@ -220,7 +220,7 @@
                                                                                                      dest,
                                                                                                      low,
                                                                                                      high,
-                                                                                                     NTHREADS)
+                                                                                                     get_nebo_thread_count())
 #            else
                 fd_stencil_2_apply_to_field_sequential_execute<OperatorType, FieldType, DirVec>(src,
                                                                                                 dest,

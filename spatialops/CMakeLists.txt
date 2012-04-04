@@ -20,6 +20,7 @@ if ( ENABLE_THREADS )
    set( SO_Sources ${SO_Sources} ThreadPool.cpp )
    set( SO_HEADERS ${SO_HEADERS} ThreadPool.h )
    add_subdirectory( threadpool )
+   set( SO_Sources ${SO_Sources} FieldExpressions.cpp )
 endif( ENABLE_THREADS )
 
 add_library( spatialops
