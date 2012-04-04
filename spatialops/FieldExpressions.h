@@ -44,6 +44,8 @@
    namespace SpatialOps {
 
 #     ifdef FIELD_EXPRESSION_THREADS
+         /* used within nebo to determine if thread parallelism should be used */
+         bool is_nebo_thread_parallel(void);
          /* used within nebo to get current thread count */
          int get_nebo_thread_count(void);
          /* used by tests to change current thread count at runtime */
@@ -5846,9 +5848,13 @@
 
           return
 #                ifdef FIELD_EXPRESSION_THREADS
-                    field_expression_thread_parallel_execute<CallStyle, ExprType, FieldType>(initial_lhs,
-                                                                                             initial_rhs,
-                                                                                             get_nebo_thread_count())
+                    (is_nebo_thread_parallel() ? field_expression_thread_parallel_execute<CallStyle,
+                                                                                          ExprType,
+                                                                                          FieldType>(initial_lhs,
+                                                                                                     initial_rhs,
+                                                                                                     get_nebo_thread_count())
+                     : field_expression_sequential_execute<CallStyle, ExprType, FieldType>(initial_lhs,
+                                                                                           initial_rhs))
 #                else
                     field_expression_sequential_execute<CallStyle, ExprType, FieldType>(initial_lhs,
                                                                                         initial_rhs)

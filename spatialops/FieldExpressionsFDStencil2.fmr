@@ -616,15 +616,26 @@
                                       'double const-chunk 'high))
                              (c (pp-conditional-ifdef-chunk
                                  'STENCIL_THREADS
-                                 (fc (tpl-use 'fd_stencil_2_apply_to_field_thread_parallel_execute
-                                              'OperatorType
-                                              'FieldType
-                                              'DirVec)
-                                     'src
-                                     'dest
-                                     'low
-                                     'high
-                                     (fc 'get_nebo_thread_count))
+                                 (p (c (fc 'is_nebo_thread_parallel)
+                                       s "?" s
+                                       (fc (tpl-use 'fd_stencil_2_apply_to_field_thread_parallel_execute
+                                                    'OperatorType
+                                                    'FieldType
+                                                    'DirVec)
+                                           'src
+                                           'dest
+                                           'low
+                                           'high
+                                           (fc 'get_nebo_thread_count))
+                                       s ":" s
+                                       (fc (tpl-use 'fd_stencil_2_apply_to_field_sequential_execute
+                                                    'OperatorType
+                                                    'FieldType
+                                                    'DirVec)
+                                           'src
+                                           'dest
+                                           'low
+                                           'high)))
                                  (fc (tpl-use 'fd_stencil_2_apply_to_field_sequential_execute
                                               'OperatorType
                                               'FieldType

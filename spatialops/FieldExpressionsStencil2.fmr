@@ -722,15 +722,26 @@
                                       'double const-chunk 'high))
                              (c (pp-conditional-ifdef-chunk
                                  'STENCIL_THREADS
-                                 (fc (tpl-use 'stencil_2_apply_to_field_thread_parallel_execute
-                                              'OperatorType
-                                              'SrcType
-                                              'DestType)
-                                     'src
-                                     'dest
-                                     'low
-                                     'high
-                                     (fc 'get_nebo_thread_count))
+                                 (p (c (fc 'is_nebo_thread_parallel)
+                                       s "?" s
+                                       (fc (tpl-use 'stencil_2_apply_to_field_thread_parallel_execute
+                                                    'OperatorType
+                                                    'SrcType
+                                                    'DestType)
+                                           'src
+                                           'dest
+                                           'low
+                                           'high
+                                           (fc 'get_nebo_thread_count))
+                                       s ":" s
+                                       (fc (tpl-use 'stencil_2_apply_to_field_sequential_execute
+                                                    'OperatorType
+                                                    'SrcType
+                                                    'DestType)
+                                           'src
+                                           'dest
+                                           'low
+                                           'high)))
                                  (fc (tpl-use 'stencil_2_apply_to_field_sequential_execute
                                               'OperatorType
                                               'SrcType
