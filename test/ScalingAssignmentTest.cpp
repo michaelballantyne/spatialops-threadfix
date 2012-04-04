@@ -22,6 +22,9 @@ int main( int iarg, char* carg[] )
 
   std::vector<int> npts(3,1);
   int number_of_runs;
+#ifdef FIELD_EXPRESSION_THREADS
+  int thread_count;
+#endif
 
   // parse the command line options input describing the problem
   {
@@ -31,6 +34,9 @@ int main( int iarg, char* carg[] )
       ( "nx", po::value<int>(&npts[0])->default_value(10), "Grid in x" )
       ( "ny", po::value<int>(&npts[1])->default_value(10), "Grid in y" )
       ( "nz", po::value<int>(&npts[2])->default_value(10), "Grid in z" )
+#ifdef FIELD_EXPRESSION_THREADS
+      ( "tc", po::value<int>(&thread_count)->default_value(NTHREADS), "Number of threads for Nebo")
+#endif
       ( "runs", po::value<int>(&number_of_runs)->default_value(1), "Number of iterations of each test");
 
     po::variables_map args;
@@ -41,6 +47,10 @@ int main( int iarg, char* carg[] )
       std::cout << desc << "\n";
       return 1;
     }
+
+#ifdef FIELD_EXPRESSION_THREADS
+    set_nebo_thread_count(thread_count);
+#endif
   }
 
   const SpatialOps::structured::MemoryWindow window( SpatialOps::structured::get_window_with_ghost<Field>(npts,true,true,true) );

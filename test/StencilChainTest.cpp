@@ -213,6 +213,9 @@ int main(int iarg, char* carg[]) {
     int nx, ny, nz;
     int number_of_runs;
     double Lx, Ly, Lz;
+#ifdef FIELD_EXPRESSION_THREADS
+  int thread_count;
+#endif
 
     // parse the command line options input describing the problem
     {
@@ -225,6 +228,9 @@ int main(int iarg, char* carg[]) {
 	  ( "Lx", po::value<double>(&Lx)->default_value(1.0),"Length in x")
 	  ( "Ly", po::value<double>(&Ly)->default_value(1.0),"Length in y")
 	  ( "Lz", po::value<double>(&Lz)->default_value(1.0),"Length in z")
+#ifdef FIELD_EXPRESSION_THREADS
+      ( "tc", po::value<int>(&thread_count)->default_value(NTHREADS), "Number of threads for Nebo")
+#endif
 	  ( "runs", po::value<int>(&number_of_runs)->default_value(1), "Number of iterations of each test");
 
 	po::variables_map args;
@@ -235,6 +241,10 @@ int main(int iarg, char* carg[]) {
 	    std::cout << desc << "\n";
 	    return 1;
 	}
+
+#ifdef FIELD_EXPRESSION_THREADS
+    set_nebo_thread_count(thread_count);
+#endif
     }
 
     const MemoryWindow window( get_window_with_ghost<Field>(IntVec(nx,ny,nz),false,false,false) );
