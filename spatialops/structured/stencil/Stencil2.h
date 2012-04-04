@@ -47,7 +47,7 @@ namespace SpatialOps {
       const double coefLo_, coefHi_;
     public:
 
-      typedef OperatorT   Type;           ///< The operator type (Interpolant, Gradient, Divergence)
+      typedef OperatorT   type;           ///< The operator type (Interpolant, Gradient, Divergence)
       typedef SrcFieldT   SrcFieldType;   ///< The source field type
       typedef DestFieldT  DestFieldType;  ///< The destination field type
 
