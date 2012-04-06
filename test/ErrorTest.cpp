@@ -156,12 +156,12 @@ int main( int iarg, char* carg[] )
   Field f33_( window, NULL );
   Field f34( window, NULL );
   Field f34_( window, NULL );
-  Field f34__( window, NULL );
-  Field f34_3( window, NULL );
+//   Field f34__( window, NULL );
+//   Field f34_3( window, NULL );
   Field f35( window, NULL );
-  Field f35_( window, NULL );
+//   Field f35_( window, NULL );
   Field f36( window, NULL );
-  Field f36_( window, NULL );
+//   Field f36_( window, NULL );
   Field result( window, NULL );
   
   Field::iterator if01 = f01.begin();
@@ -276,27 +276,27 @@ int main( int iarg, char* carg[] )
 
 
   //1 Loop
-  RUN_TESTS(result <<= ((((sin(f01) - sin(f02) - sin(f03)) + (sin(f04) - sin(f05) - sin(f06)) + (sin(f07) - sin(f08) - sin(f09))) *
-			 ((sin(f10) - sin(f11) - sin(f12)) + (sin(f13) - sin(f14) - sin(f15)) + (sin(f16) - sin(f17) - sin(f18)))) /
-			(((sin(f19) - sin(f20) - sin(f21)) + (sin(f22) - sin(f23) - sin(f24)) + (sin(f25) - sin(f26) - sin(f27))) *
-			 ((sin(f28) - sin(f29) - sin(f30)) + (sin(f31) - sin(f32) - sin(f33)) + (sin(f34) - sin(f35) - sin(f36))))),
-	    "1-loop");
+//   RUN_TESTS(result <<= ((((sin(f01) - sin(f02) - sin(f03)) + (sin(f04) - sin(f05) - sin(f06)) + (sin(f07) - sin(f08) - sin(f09))) *
+// 			 ((sin(f10) - sin(f11) - sin(f12)) + (sin(f13) - sin(f14) - sin(f15)) + (sin(f16) - sin(f17) - sin(f18)))) /
+// 			(((sin(f19) - sin(f20) - sin(f21)) + (sin(f22) - sin(f23) - sin(f24)) + (sin(f25) - sin(f26) - sin(f27))) *
+// 			 ((sin(f28) - sin(f29) - sin(f30)) + (sin(f31) - sin(f32) - sin(f33)) + (sin(f34) - sin(f35) - sin(f36))))),
+// 	    "1-loop");
 
   //3 Loop
-  RUN_TESTS(f01_ <<= (((sin(f01) - sin(f02) - sin(f03)) + (sin(f04) - sin(f05) - sin(f06)) + (sin(f07) - sin(f08) - sin(f09))) *
-		      ((sin(f10) - sin(f11) - sin(f12)) + (sin(f13) - sin(f14) - sin(f15)) + (sin(f16) - sin(f17) - sin(f18))));
-	    f19_ <<= (((sin(f19) - sin(f20) - sin(f21)) + (sin(f22) - sin(f23) - sin(f24)) + (sin(f25) - sin(f26) - sin(f27))) *
-		      ((sin(f28) - sin(f29) - sin(f30)) + (sin(f31) - sin(f32) - sin(f33)) + (sin(f34) - sin(f35) - sin(f36))));
-	    result <<= f01_ / f19_,
-	    "3-loop");
+//   RUN_TESTS(f01_ <<= (((sin(f01) - sin(f02) - sin(f03)) + (sin(f04) - sin(f05) - sin(f06)) + (sin(f07) - sin(f08) - sin(f09))) *
+// 		      ((sin(f10) - sin(f11) - sin(f12)) + (sin(f13) - sin(f14) - sin(f15)) + (sin(f16) - sin(f17) - sin(f18))));
+// 	    f19_ <<= (((sin(f19) - sin(f20) - sin(f21)) + (sin(f22) - sin(f23) - sin(f24)) + (sin(f25) - sin(f26) - sin(f27))) *
+// 		      ((sin(f28) - sin(f29) - sin(f30)) + (sin(f31) - sin(f32) - sin(f33)) + (sin(f34) - sin(f35) - sin(f36))));
+// 	    result <<= f01_ / f19_,
+// 	    "3-loop");
 
-  //5 Loop
-  RUN_TESTS(f01_ <<= ((sin(f01) - sin(f02) - sin(f03)) + (sin(f04) - sin(f05) - sin(f06)) + (sin(f07) - sin(f08) - sin(f09)));
-	    f10_ <<= ((sin(f10) - sin(f11) - sin(f12)) + (sin(f13) - sin(f14) - sin(f15)) + (sin(f16) - sin(f17) - sin(f18)));
-	    f19_ <<= ((sin(f19) - sin(f20) - sin(f21)) + (sin(f22) - sin(f23) - sin(f24)) + (sin(f25) - sin(f26) - sin(f27)));
-	    f28_ <<= ((sin(f28) - sin(f29) - sin(f30)) + (sin(f31) - sin(f32) - sin(f33)) + (sin(f34) - sin(f35) - sin(f36)));
-	    result <<= (f01_ * f10_) / (f19_ * f28_),
-	    "5-loop");
+//   //5 Loop
+//   RUN_TESTS(f01_ <<= ((sin(f01) - sin(f02) - sin(f03)) + (sin(f04) - sin(f05) - sin(f06)) + (sin(f07) - sin(f08) - sin(f09)));
+// 	    f10_ <<= ((sin(f10) - sin(f11) - sin(f12)) + (sin(f13) - sin(f14) - sin(f15)) + (sin(f16) - sin(f17) - sin(f18)));
+// 	    f19_ <<= ((sin(f19) - sin(f20) - sin(f21)) + (sin(f22) - sin(f23) - sin(f24)) + (sin(f25) - sin(f26) - sin(f27)));
+// 	    f28_ <<= ((sin(f28) - sin(f29) - sin(f30)) + (sin(f31) - sin(f32) - sin(f33)) + (sin(f34) - sin(f35) - sin(f36)));
+// 	    result <<= (f01_ * f10_) / (f19_ * f28_),
+// 	    "5-loop");
 
   //13 Loop
   RUN_TESTS(f01_ <<= (sin(f01) - sin(f02) - sin(f03));
@@ -314,117 +314,117 @@ int main( int iarg, char* carg[] )
 	    result <<= ((f01_ + f04_ + f07_) * (f10_ + f13_ + f16_)) / ((f19_ + f22_ + f25_) * (f28_ + f31_ + f34_)),
 	    "13-loop");
 
-  //35 Loop
-  RUN_TESTS(f01_ <<= (sin(f01) - sin(f02));
-	    f01__ <<= (f01_ - sin(f03));
-	    f04_ <<= (sin(f04) - sin(f05));
-	    f04__ <<= (f04_ - sin(f06));
-	    f07_ <<= (sin(f07) - sin(f08));
-	    f07__ <<= (f07_ - sin(f09));
-	    f10_ <<= (sin(f10) - sin(f11));
-	    f10__ <<= (f10_ - sin(f12));
-	    f13_ <<= (sin(f13) - sin(f14));
-	    f13__ <<= (f13_ - sin(f15));
-	    f16_ <<= (sin(f16) - sin(f17));
-	    f16__ <<= (f16_ - sin(f18));
-	    f19_ <<= (sin(f19) - sin(f20));
-	    f19__ <<= (f19_ - sin(f21));
-	    f22_ <<= (sin(f22) - sin(f23));
-	    f22__ <<= (f22_ - sin(f24));
-	    f25_ <<= (sin(f25) - sin(f26));
-	    f25__ <<= (f25_ - sin(f27));
-	    f28_ <<= (sin(f28) - sin(f29));
-	    f28__ <<= (f28_ - sin(f30));
-	    f31_ <<= (sin(f31) - sin(f32));
-	    f31__ <<= (f31_ - sin(f33));
-	    f34_ <<= (sin(f34) - sin(f35));
-	    f34__ <<= (f34_ - sin(f36));
-	    f04_3 <<= (f04__ + f07__);
-	    f01_3 <<= (f01__ + f04_3);
-	    f13_3 <<= (f13__ + f16__);
-	    f10_3 <<= (f10__ + f13_3);
-	    f22_3 <<= (f22__ + f25__);
-	    f19_3 <<= (f19__ + f22_3);
-	    f31_3 <<= (f31__ + f34__);
-	    f28_3 <<= (f28__ + f31_3);
-	    f01_4 <<= (f01_3 * f10_3);
-	    f19_4 <<= (f19_3 * f28_3);
-	    result <<= (f01_4 / f19_4),
-	    "35-loop");
+//   //35 Loop
+//   RUN_TESTS(f01_ <<= (sin(f01) - sin(f02));
+// 	    f01__ <<= (f01_ - sin(f03));
+// 	    f04_ <<= (sin(f04) - sin(f05));
+// 	    f04__ <<= (f04_ - sin(f06));
+// 	    f07_ <<= (sin(f07) - sin(f08));
+// 	    f07__ <<= (f07_ - sin(f09));
+// 	    f10_ <<= (sin(f10) - sin(f11));
+// 	    f10__ <<= (f10_ - sin(f12));
+// 	    f13_ <<= (sin(f13) - sin(f14));
+// 	    f13__ <<= (f13_ - sin(f15));
+// 	    f16_ <<= (sin(f16) - sin(f17));
+// 	    f16__ <<= (f16_ - sin(f18));
+// 	    f19_ <<= (sin(f19) - sin(f20));
+// 	    f19__ <<= (f19_ - sin(f21));
+// 	    f22_ <<= (sin(f22) - sin(f23));
+// 	    f22__ <<= (f22_ - sin(f24));
+// 	    f25_ <<= (sin(f25) - sin(f26));
+// 	    f25__ <<= (f25_ - sin(f27));
+// 	    f28_ <<= (sin(f28) - sin(f29));
+// 	    f28__ <<= (f28_ - sin(f30));
+// 	    f31_ <<= (sin(f31) - sin(f32));
+// 	    f31__ <<= (f31_ - sin(f33));
+// 	    f34_ <<= (sin(f34) - sin(f35));
+// 	    f34__ <<= (f34_ - sin(f36));
+// 	    f04_3 <<= (f04__ + f07__);
+// 	    f01_3 <<= (f01__ + f04_3);
+// 	    f13_3 <<= (f13__ + f16__);
+// 	    f10_3 <<= (f10__ + f13_3);
+// 	    f22_3 <<= (f22__ + f25__);
+// 	    f19_3 <<= (f19__ + f22_3);
+// 	    f31_3 <<= (f31__ + f34__);
+// 	    f28_3 <<= (f28__ + f31_3);
+// 	    f01_4 <<= (f01_3 * f10_3);
+// 	    f19_4 <<= (f19_3 * f28_3);
+// 	    result <<= (f01_4 / f19_4),
+// 	    "35-loop");
 
-  //71 Loop
-  RUN_TESTS(f01_ <<= sin(f01);
-	    f02_ <<= sin(f02);
-	    f01__ <<= (f01_ - f02_);
-	    f03_ <<= sin(f03);
-	    f01_3 <<= (f01__ - f03_);
-	    f04_ <<= sin(f04);
-	    f05_ <<= sin(f05);
-	    f04__ <<= (f04_ - f05_);
-	    f06_ <<= sin(f06);
-	    f04_3 <<= (f04__ - f06_);
-	    f01_4 <<= (f01_3 + f04_3);
-	    f07_ <<= sin(f07);
-	    f08_ <<= sin(f08);
-	    f07__ <<= (f07_ - f08_);
-	    f09_ <<= sin(f09);
-	    f07_3 <<= (f07__ - f09_);
-	    f01_5 <<= (f01_4 + f07_3);
-	    f10_ <<= sin(f10);
-	    f11_ <<= sin(f11);
-	    f10__ <<= (f10_ - f11_);
-	    f12_ <<= sin(f12);
-	    f10_3 <<= (f10__ - f12_);
-	    f13_ <<= sin(f13);
-	    f14_ <<= sin(f14);
-	    f13__ <<= (f13_ - f14_);
-	    f15_ <<= sin(f15);
-	    f13_3 <<= (f13__ - f15_);
-	    f10_4 <<= (f10_3 + f13_3);
-	    f16_ <<= sin(f16);
-	    f17_ <<= sin(f17);
-	    f16__ <<= (f16_ - f17_);
-	    f18_ <<= sin(f18);
-	    f16_3 <<= (f16__ - f18_);
-	    f10_5 <<= (f10_4 + f16_3);
-	    f01_6 <<= (f01_5 * f10_5);
-	    f19_ <<= sin(f19);
-	    f20_ <<= sin(f20);
-	    f19__ <<= (f19_ - f20_);
-	    f21_ <<= sin(f21);
-	    f19_3 <<= (f19__ - f21_);
-	    f22_ <<= sin(f22);
-	    f23_ <<= sin(f23);
-	    f22__ <<= (f22_ - f23_);
-	    f24_ <<= sin(f24);
-	    f22_3 <<= (f22__ - f24_);
-	    f19_4 <<= (f19_3 + f22_3);
-	    f25_ <<= sin(f25);
-	    f26_ <<= sin(f26);
-	    f25__ <<= (f25_ - f26_);
-	    f27_ <<= sin(f27);
-	    f25_3 <<= (f25__ - f27_);
-	    f19_5 <<= (f19_4 + f25_3);
-	    f28_ <<= sin(f28);
-	    f29_ <<= sin(f29);
-	    f28__ <<= (f28_ - f29_);
-	    f30_ <<= sin(f30);
-	    f28_3 <<= (f28__ - f30_);
-	    f31_ <<= sin(f31);
-	    f32_ <<= sin(f32);
-	    f31__ <<= (f31_ - f32_);
-	    f33_ <<= sin(f33);
-	    f31_3 <<= (f31__ - f33_);
-	    f28_4 <<= (f28_3 + f31_3);
-	    f34_ <<= sin(f34);
-	    f35_ <<= sin(f35);
-	    f34__ <<= (f34_ - f35_);
-	    f36_ <<= sin(f36);
-	    f34_3 <<= (f34__ - f36_);
-	    f28_5 <<= (f28_4 + f34_3);
-	    f19_6 <<= (f19_5 * f28_5);
-	    result <<= (f01_6 / f19_6),
-	    "71-loop");
+//   //71 Loop
+//   RUN_TESTS(f01_ <<= sin(f01);
+// 	    f02_ <<= sin(f02);
+// 	    f01__ <<= (f01_ - f02_);
+// 	    f03_ <<= sin(f03);
+// 	    f01_3 <<= (f01__ - f03_);
+// 	    f04_ <<= sin(f04);
+// 	    f05_ <<= sin(f05);
+// 	    f04__ <<= (f04_ - f05_);
+// 	    f06_ <<= sin(f06);
+// 	    f04_3 <<= (f04__ - f06_);
+// 	    f01_4 <<= (f01_3 + f04_3);
+// 	    f07_ <<= sin(f07);
+// 	    f08_ <<= sin(f08);
+// 	    f07__ <<= (f07_ - f08_);
+// 	    f09_ <<= sin(f09);
+// 	    f07_3 <<= (f07__ - f09_);
+// 	    f01_5 <<= (f01_4 + f07_3);
+// 	    f10_ <<= sin(f10);
+// 	    f11_ <<= sin(f11);
+// 	    f10__ <<= (f10_ - f11_);
+// 	    f12_ <<= sin(f12);
+// 	    f10_3 <<= (f10__ - f12_);
+// 	    f13_ <<= sin(f13);
+// 	    f14_ <<= sin(f14);
+// 	    f13__ <<= (f13_ - f14_);
+// 	    f15_ <<= sin(f15);
+// 	    f13_3 <<= (f13__ - f15_);
+// 	    f10_4 <<= (f10_3 + f13_3);
+// 	    f16_ <<= sin(f16);
+// 	    f17_ <<= sin(f17);
+// 	    f16__ <<= (f16_ - f17_);
+// 	    f18_ <<= sin(f18);
+// 	    f16_3 <<= (f16__ - f18_);
+// 	    f10_5 <<= (f10_4 + f16_3);
+// 	    f01_6 <<= (f01_5 * f10_5);
+// 	    f19_ <<= sin(f19);
+// 	    f20_ <<= sin(f20);
+// 	    f19__ <<= (f19_ - f20_);
+// 	    f21_ <<= sin(f21);
+// 	    f19_3 <<= (f19__ - f21_);
+// 	    f22_ <<= sin(f22);
+// 	    f23_ <<= sin(f23);
+// 	    f22__ <<= (f22_ - f23_);
+// 	    f24_ <<= sin(f24);
+// 	    f22_3 <<= (f22__ - f24_);
+// 	    f19_4 <<= (f19_3 + f22_3);
+// 	    f25_ <<= sin(f25);
+// 	    f26_ <<= sin(f26);
+// 	    f25__ <<= (f25_ - f26_);
+// 	    f27_ <<= sin(f27);
+// 	    f25_3 <<= (f25__ - f27_);
+// 	    f19_5 <<= (f19_4 + f25_3);
+// 	    f28_ <<= sin(f28);
+// 	    f29_ <<= sin(f29);
+// 	    f28__ <<= (f28_ - f29_);
+// 	    f30_ <<= sin(f30);
+// 	    f28_3 <<= (f28__ - f30_);
+// 	    f31_ <<= sin(f31);
+// 	    f32_ <<= sin(f32);
+// 	    f31__ <<= (f31_ - f32_);
+// 	    f33_ <<= sin(f33);
+// 	    f31_3 <<= (f31__ - f33_);
+// 	    f28_4 <<= (f28_3 + f31_3);
+// 	    f34_ <<= sin(f34);
+// 	    f35_ <<= sin(f35);
+// 	    f34__ <<= (f34_ - f35_);
+// 	    f36_ <<= sin(f36);
+// 	    f34_3 <<= (f34__ - f36_);
+// 	    f28_5 <<= (f28_4 + f34_3);
+// 	    f19_6 <<= (f19_5 * f28_5);
+// 	    result <<= (f01_6 / f19_6),
+// 	    "71-loop");
 
   return 0;
 }

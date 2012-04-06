@@ -268,13 +268,21 @@
                                                                double const coef4) {
 
 #            ifdef STENCIL_THREADS
-                stencil_4_apply_to_field_thread_parallel_execute<OperatorType, SrcType, DestType>(src,
-                                                                                                  dest,
-                                                                                                  coef1,
-                                                                                                  coef2,
-                                                                                                  coef3,
-                                                                                                  coef4,
-                                                                                                  NTHREADS)
+                (is_nebo_thread_parallel() ? stencil_4_apply_to_field_thread_parallel_execute<OperatorType,
+                                                                                              SrcType,
+                                                                                              DestType>(src,
+                                                                                                        dest,
+                                                                                                        coef1,
+                                                                                                        coef2,
+                                                                                                        coef3,
+                                                                                                        coef4,
+                                                                                                        get_nebo_thread_count())
+                 : stencil_4_apply_to_field_sequential_execute<OperatorType, SrcType, DestType>(src,
+                                                                                                dest,
+                                                                                                coef1,
+                                                                                                coef2,
+                                                                                                coef3,
+                                                                                                coef4))
 #            else
                 stencil_4_apply_to_field_sequential_execute<OperatorType, SrcType, DestType>(src,
                                                                                              dest,

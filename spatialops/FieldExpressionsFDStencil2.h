@@ -216,11 +216,17 @@
                                                                   double const high) {
 
 #            ifdef STENCIL_THREADS
-                fd_stencil_2_apply_to_field_thread_parallel_execute<OperatorType, FieldType, DirVec>(src,
-                                                                                                     dest,
-                                                                                                     low,
-                                                                                                     high,
-                                                                                                     NTHREADS)
+                (is_nebo_thread_parallel() ? fd_stencil_2_apply_to_field_thread_parallel_execute<OperatorType,
+                                                                                                 FieldType,
+                                                                                                 DirVec>(src,
+                                                                                                         dest,
+                                                                                                         low,
+                                                                                                         high,
+                                                                                                         get_nebo_thread_count())
+                 : fd_stencil_2_apply_to_field_sequential_execute<OperatorType, FieldType, DirVec>(src,
+                                                                                                   dest,
+                                                                                                   low,
+                                                                                                   high))
 #            else
                 fd_stencil_2_apply_to_field_sequential_execute<OperatorType, FieldType, DirVec>(src,
                                                                                                 dest,
