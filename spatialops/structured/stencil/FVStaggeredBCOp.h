@@ -29,6 +29,7 @@
 namespace SpatialOps{
 namespace structured{
 
+  namespace bmpl = boost::mpl;
 
   /**
    * \enum BCSide
@@ -39,6 +40,20 @@ namespace structured{
     MINUS_SIDE,  ///< Minus side
     PLUS_SIDE    ///< Plus side
   };
+
+  namespace detail{
+    template<typename OpT, typename T2 > struct OpDirHelper{
+      typedef typename T2::DirT type;
+      typedef IndexTriplet<0,0,0> S1Extra;
+      typedef IndexTriplet<0,0,0> S2Extra;
+    };
+    template<typename T2> struct OpDirHelper< GradientX,    T2 >{ typedef typename GradientX   ::DirT type;  typedef IndexTriplet<-1,0,0> S1Extra; typedef IndexTriplet<1,0,0> S2Extra; };
+    template<typename T2> struct OpDirHelper< GradientY,    T2 >{ typedef typename GradientY   ::DirT type;  typedef IndexTriplet<0,-1,0> S1Extra; typedef IndexTriplet<0,1,0> S2Extra; };
+    template<typename T2> struct OpDirHelper< GradientZ,    T2 >{ typedef typename GradientZ   ::DirT type;  typedef IndexTriplet<0,0,-1> S1Extra; typedef IndexTriplet<0,0,1> S2Extra; };
+    template<typename T2> struct OpDirHelper< InterpolantX, T2 >{ typedef typename InterpolantX::DirT type;  typedef IndexTriplet<-1,0,0> S1Extra; typedef IndexTriplet<1,0,0> S2Extra; };
+    template<typename T2> struct OpDirHelper< InterpolantY, T2 >{ typedef typename InterpolantY::DirT type;  typedef IndexTriplet<0,-1,0> S1Extra; typedef IndexTriplet<0,1,0> S2Extra; };
+    template<typename T2> struct OpDirHelper< InterpolantZ, T2 >{ typedef typename InterpolantZ::DirT type;  typedef IndexTriplet<0,0,-1> S1Extra; typedef IndexTriplet<0,0,1> S2Extra; };
+  }
 
   /**
    * \class BoundaryConditionOp
@@ -60,11 +75,22 @@ namespace structured{
     typedef typename DestFieldT::Location::Offset  DO;
 
     typedef typename Subtract<SO,DO>::result SOMinusDO;
+    typedef typename Subtract<DO,SO>::result DOMinusSO;
 
-    typedef typename UnitTriplet< typename GetNonzeroDir<SOMinusDO>::DirT >::type UnitVec;
+    typedef typename detail::OpDirHelper< typename OpT::type, GetNonzeroDir<SOMinusDO> > DirHelper;
+    typedef typename UnitTriplet< typename DirHelper::type >::type  UnitVec;
 
-    typedef typename Multiply< DO, UnitVec >::result  S1Shift;
-    typedef typename Add< S1Shift, UnitVec >::result  S2Shift;
+    typedef typename Add<
+        typename DirHelper::S1Extra,
+        typename Multiply< UnitVec,
+                           typename Multiply< DO, typename DOMinusSO::Abs >::result
+                           >::result
+        >::result  S1Shift;
+
+    typedef typename Add<
+        typename DirHelper::S2Extra,
+        typename Add< S1Shift, UnitVec >::result
+        >::result  S2Shift;
 
     const BCEval bcEval_;  ///< functor to set the value of the BC
     const IntVec apoint_;  ///< the index for the value in the source field we will set

@@ -189,8 +189,16 @@ namespace SpatialOps{
             return tp;
          }
 
+         static bool is_nebo_thread_parallel() { return nebo_parallelism; };
+
+         static bool set_nebo_thread_parallel(bool newBool) {
+            nebo_parallelism = newBool;
+            return nebo_parallelism;
+         };
+
       private:
          static bool init;
+         static bool nebo_parallelism;
   };
 } // namespace SpatialOps
 

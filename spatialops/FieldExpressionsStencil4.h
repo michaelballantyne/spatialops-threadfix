@@ -38,7 +38,8 @@
 #     include <spatialops/structured/IntVec.h>
 #     include <boost/interprocess/sync/interprocess_semaphore.hpp>
       namespace BI = boost::interprocess;
-#  endif /* STENCIL_THREADS */
+#  endif
+   /* STENCIL_THREADS */
 
    namespace SpatialOps {
 
@@ -101,7 +102,8 @@
 #            ifndef NDEBUG
                 assert(ws1.extent() == ws2.extent() && ws1.extent() == ws3.extent() && ws1.extent()
                        == ws4.extent() && ws1.extent() == wd.extent());
-#            endif /* NDEBUG */;
+#            endif
+             /* NDEBUG */;
 
              DestType d(wd, &dest[0], ExternalStorage);
 
@@ -178,7 +180,8 @@
 
                 sem->post();
              }
-#        endif /* STENCIL_THREADS */;
+#        endif
+         /* STENCIL_THREADS */;
 
 #        ifdef STENCIL_THREADS
             template<typename OperatorType, typename SrcType, typename DestType>
@@ -253,7 +256,8 @@
 
                 for(int ii = 0; ii < vec_sw.size(); ii++){ semaphore.wait(); };
              }
-#        endif /* STENCIL_THREADS */;
+#        endif
+         /* STENCIL_THREADS */;
 
          template<typename OperatorType, typename SrcType, typename DestType>
           inline void stencil_4_apply_to_field_general_execute(SrcType const & src,
@@ -264,13 +268,21 @@
                                                                double const coef4) {
 
 #            ifdef STENCIL_THREADS
-                stencil_4_apply_to_field_thread_parallel_execute<OperatorType, SrcType, DestType>(src,
-                                                                                                  dest,
-                                                                                                  coef1,
-                                                                                                  coef2,
-                                                                                                  coef3,
-                                                                                                  coef4,
-                                                                                                  NTHREADS)
+                (is_nebo_thread_parallel() ? stencil_4_apply_to_field_thread_parallel_execute<OperatorType,
+                                                                                              SrcType,
+                                                                                              DestType>(src,
+                                                                                                        dest,
+                                                                                                        coef1,
+                                                                                                        coef2,
+                                                                                                        coef3,
+                                                                                                        coef4,
+                                                                                                        get_nebo_thread_count())
+                 : stencil_4_apply_to_field_sequential_execute<OperatorType, SrcType, DestType>(src,
+                                                                                                dest,
+                                                                                                coef1,
+                                                                                                coef2,
+                                                                                                coef3,
+                                                                                                coef4))
 #            else
                 stencil_4_apply_to_field_sequential_execute<OperatorType, SrcType, DestType>(src,
                                                                                              dest,
@@ -278,10 +290,12 @@
                                                                                              coef2,
                                                                                              coef3,
                                                                                              coef4)
-#            endif /* STENCIL_THREADS */
+#            endif
+             /* STENCIL_THREADS */
              ;
           };
       } /* structured */;
    } /* SpatialOps */;
 
-#endif /* SpatialOps_FieldExpressionsStencil_4_h */
+#endif
+/* SpatialOps_FieldExpressionsStencil_4_h */

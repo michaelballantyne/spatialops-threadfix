@@ -38,9 +38,20 @@
 #     include <spatialops/structured/IntVec.h>
 #     include <boost/interprocess/sync/interprocess_semaphore.hpp>
       namespace BI = boost::interprocess;
-#  endif /* FIELD_EXPRESSION_THREADS */
+#  endif
+   /* FIELD_EXPRESSION_THREADS */
 
    namespace SpatialOps {
+
+#     ifdef FIELD_EXPRESSION_THREADS
+         /* used within nebo to determine if thread parallelism should be used */
+         bool is_nebo_thread_parallel(void);
+         /* used within nebo to get current thread count */
+         int get_nebo_thread_count(void);
+         /* used by tests to change current thread count at runtime */
+         int set_nebo_thread_count(int thread_count);
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
 
       /* Meta-programming compiler flags */
       struct UseWholeIterator;
@@ -5769,7 +5780,8 @@
 
              semaphore->post();
           }
-#     endif /* FIELD_EXPRESSION_THREADS */;
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
 
 #     ifdef FIELD_EXPRESSION_THREADS
          template<typename CallStyle, typename ExprType, typename FieldType>
@@ -5826,7 +5838,8 @@
 
              return initial_lhs;
           }
-#     endif /* FIELD_EXPRESSION_THREADS */;
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
 
       template<typename CallStyle, typename ExprType, typename FieldType>
        inline FieldType const & field_expression_general_execute(FieldType & initial_lhs,
@@ -5835,13 +5848,18 @@
 
           return
 #                ifdef FIELD_EXPRESSION_THREADS
-                    field_expression_thread_parallel_execute<CallStyle, ExprType, FieldType>(initial_lhs,
-                                                                                             initial_rhs,
-                                                                                             NTHREADS)
+                    (is_nebo_thread_parallel() ? field_expression_thread_parallel_execute<CallStyle,
+                                                                                          ExprType,
+                                                                                          FieldType>(initial_lhs,
+                                                                                                     initial_rhs,
+                                                                                                     get_nebo_thread_count())
+                     : field_expression_sequential_execute<CallStyle, ExprType, FieldType>(initial_lhs,
+                                                                                           initial_rhs))
 #                else
                     field_expression_sequential_execute<CallStyle, ExprType, FieldType>(initial_lhs,
                                                                                         initial_rhs)
-#                endif /* FIELD_EXPRESSION_THREADS */
+#                endif
+                 /* FIELD_EXPRESSION_THREADS */
                  ;;
        };
 
@@ -5892,4 +5910,5 @@
        };
    } /* SpatialOps */;
 
-#endif /* SpatialOps_FieldExpressions_h */
+#endif
+/* SpatialOps_FieldExpressions_h */

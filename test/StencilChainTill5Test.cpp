@@ -20,6 +20,8 @@ namespace po = boost::program_options;
 using namespace SpatialOps;
 using namespace structured;
 
+#define TILL_MAX_COUNT 32
+
 #define RUN_TEST(TEST,							\
 		 TYPE)							\
   boost::posix_time::ptime start( boost::posix_time::microsec_clock::universal_time() ); \
@@ -37,7 +39,7 @@ using namespace structured;
   std::cout << number_of_runs;						\
   std::cout << " result: ";						\
   std::cout << (end - start).total_microseconds()*1e-6;			\
-  std::cout << std::endl;
+  std::cout << std::endl
 
 #define build_stencil_point(f, stencil_offset)                          \
     (FieldType(MemoryWindow(f.window_without_ghost().glob_dim(),        \
@@ -48,6 +50,15 @@ using namespace structured;
                             f.window_without_ghost().has_bc(2)),        \
                f.field_values(),                                        \
                structured::ExternalStorage))
+
+inline double till(double given) {
+    for(int ii = 0; ii < TILL_MAX_COUNT; ii++)
+        given = sin(given);
+
+    return given;
+};
+
+BUILD_UNARY_FUNCTION(TillOperation, till, till);
 
 template<typename FieldType>
 inline void evaluate_serial_example(FieldType & result,
@@ -107,7 +118,9 @@ inline void evaluate_serial_example(FieldType & result,
 	     tmpFaceZ <<= tmpFaceZ * tmpFaceZ2;
 	     divZOp_->apply_to_field( tmpFaceZ, tmpZ );
 
-	     result <<= - tmpX - tmpY - tmpZ,
+             result <<= - tmpX - tmpY - tmpZ;
+
+             result <<= result + till(phi),
 	     "old");
 
 };
@@ -152,6 +165,7 @@ inline void evaluate_chaining_example(FieldType & result,
 
     RUN_TEST(FieldType r = build_stencil_point(result, neutral);
 
+	     FieldType const phi_neutral = build_stencil_point(phi, neutral);
 	     FieldType const phi_xlxl = build_stencil_point(phi, neg_X);
 	     FieldType const phi_xlxh = build_stencil_point(phi, neutral);
 	     FieldType const phi_xhxl = build_stencil_point(phi, neutral);
@@ -202,7 +216,8 @@ inline void evaluate_chaining_example(FieldType & result,
 		    - (dYcl * ((gYcl * phi_ylyl + gYch * phi_yhyl) * (iYcl * dCoef_ylyl + iYch * dCoef_yhyl)) +
 		       dYch * ((gYcl * phi_ylyh + gYch * phi_yhyh) * (iYcl * dCoef_ylyh + iYch * dCoef_yhyh)))
 		    - (dZcl * ((gZcl * phi_zlzl + gZch * phi_zhzl) * (iZcl * dCoef_zlzl + iZch * dCoef_zhzl)) +
-		       dZch * ((gZcl * phi_zlzh + gZch * phi_zhzh) * (iZcl * dCoef_zlzh + iZch * dCoef_zhzh)))),
+		       dZch * ((gZcl * phi_zlzh + gZch * phi_zhzh) * (iZcl * dCoef_zlzh + iZch * dCoef_zhzh)))
+                    + till(phi_neutral)),
 	     "new");
 
 };

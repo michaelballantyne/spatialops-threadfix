@@ -149,6 +149,8 @@ bool test_bc( const OperatorDatabase& opDB,
     status( test_bc_loop<typename Ops::InterpC2FX>( opDB, "Interp Vol->SurfX", dim, bcFlag, i,   MINUS_SIDE, 123.45 ), "-X Interp Vol->SurfX" );
     status( test_bc_loop<typename Ops::DivX      >( opDB, "Div    SurfX->Vol", dim, bcFlag, i,   MINUS_SIDE, 123.45 ), "-X Div    SurfX->Vol" );
 
+    status( test_bc_loop<typename OperatorTypeBuilder<GradientX,   VolT,VolT>::type >(opDB,"Grad   Vol->Vol", dim, bcFlag, i, MINUS_SIDE, 1.2345 ), "-X Grad   Vol->Vol" );
+    status( test_bc_loop<typename OperatorTypeBuilder<InterpolantX,VolT,VolT>::type >(opDB,"Interp Vol->Vol", dim, bcFlag, i, MINUS_SIDE, 1.2345 ), "-X Interp Vol->Vol" );
     cout << endl;
 
     // X BCs - Right side
@@ -156,6 +158,9 @@ bool test_bc( const OperatorDatabase& opDB,
     status( test_bc_loop<typename Ops::GradX     >( opDB, "Grad   Vol->SurfX", dim, bcFlag, i,   PLUS_SIDE, 1.2345 ), "+X Grad   Vol->SurfX" );
     status( test_bc_loop<typename Ops::InterpC2FX>( opDB, "Interp Vol->SurfX", dim, bcFlag, i,   PLUS_SIDE, 123.45 ), "+X Interp Vol->SurfX" );
     status( test_bc_loop<typename Ops::DivX      >( opDB, "Div    SurfX->Vol", dim, bcFlag, i-1, PLUS_SIDE, 123.45 ), "+X Div    SurfX->Vol" );
+
+    status( test_bc_loop<typename OperatorTypeBuilder<GradientX,   VolT,VolT>::type >(opDB,"Grad   Vol->Vol", dim, bcFlag, i, PLUS_SIDE, 1.2345 ), "-X Grad   Vol->Vol" );
+    status( test_bc_loop<typename OperatorTypeBuilder<InterpolantX,VolT,VolT>::type >(opDB,"Interp Vol->Vol", dim, bcFlag, i, PLUS_SIDE, 1.2345 ), "-X Interp Vol->Vol" );
     cout << endl;
   }
 
@@ -165,6 +170,9 @@ bool test_bc( const OperatorDatabase& opDB,
     status( test_bc_loop<typename Ops::GradY     >( opDB, "Grad   Vol->SurfY", dim, bcFlag, j,   MINUS_SIDE, 1.23456 ), "-Y Grad   Vol->SurfY" );
     status( test_bc_loop<typename Ops::InterpC2FY>( opDB, "Interp Vol->SurfY", dim, bcFlag, j,   MINUS_SIDE, 123.456 ), "-Y Interp Vol->SurfY" );
     status( test_bc_loop<typename Ops::DivY      >( opDB, "Div    SurfY->Vol", dim, bcFlag, j,   MINUS_SIDE, 123.45  ), "-Y Div    SurfY->Vol" );
+
+    status( test_bc_loop<typename OperatorTypeBuilder<GradientY,   VolT,VolT>::type >(opDB,"Grad   Vol->Vol", dim, bcFlag, j, MINUS_SIDE, 1.2345 ), "-Y Grad   Vol->Vol" );
+    status( test_bc_loop<typename OperatorTypeBuilder<InterpolantY,VolT,VolT>::type >(opDB,"Interp Vol->Vol", dim, bcFlag, j, MINUS_SIDE, 1.2345 ), "-Y Interp Vol->Vol" );
     cout << endl;
 
     // Y BCs - Right side
@@ -172,6 +180,9 @@ bool test_bc( const OperatorDatabase& opDB,
     status( test_bc_loop<typename Ops::GradY     >( opDB, "Grad   Vol->SurfY", dim, bcFlag, j,   PLUS_SIDE, 6.54321 ), "+Y Grad   Vol->SurfY" );
     status( test_bc_loop<typename Ops::InterpC2FY>( opDB, "Interp Vol->SurfY", dim, bcFlag, j,   PLUS_SIDE, 123.456 ), "+Y Interp Vol->SurfY" );
     status( test_bc_loop<typename Ops::DivY      >( opDB, "Div    SurfY->Vol", dim, bcFlag, j-1, PLUS_SIDE, 123.45  ), "+Y Div    SurfY->Vol" );
+
+    status( test_bc_loop<typename OperatorTypeBuilder<GradientY,   VolT,VolT>::type >(opDB,"Grad   Vol->Vol", dim, bcFlag, j, PLUS_SIDE, 1.2345 ), "+Y Grad   Vol->Vol" );
+    status( test_bc_loop<typename OperatorTypeBuilder<InterpolantY,VolT,VolT>::type >(opDB,"Interp Vol->Vol", dim, bcFlag, j, PLUS_SIDE, 1.2345 ), "+Y Interp Vol->Vol" );
     cout << endl;
   }
 
@@ -181,6 +192,9 @@ bool test_bc( const OperatorDatabase& opDB,
     status( test_bc_loop<typename Ops::GradZ     >( opDB, "Grad   Vol->SurfZ", dim, bcFlag, k,   MINUS_SIDE, 1.2345  ), "-Z Grad   Vol->SurfZ" );
     status( test_bc_loop<typename Ops::InterpC2FZ>( opDB, "Interp Vol->SurfZ", dim, bcFlag, k,   MINUS_SIDE, 123.456 ), "-Z Interp Vol->SurfZ" );
     status( test_bc_loop<typename Ops::DivZ      >( opDB, "Div    SurfZ->Vol", dim, bcFlag, k,   MINUS_SIDE, 123.45  ), "-Z Div    SurfZ->Vol" );
+
+    status( test_bc_loop<typename OperatorTypeBuilder<GradientZ,   VolT,VolT>::type >(opDB,"Grad   Vol->Vol", dim, bcFlag, k, MINUS_SIDE, 1.2345 ), "-Z Grad   Vol->Vol" );
+    status( test_bc_loop<typename OperatorTypeBuilder<InterpolantZ,VolT,VolT>::type >(opDB,"Interp Vol->Vol", dim, bcFlag, k, MINUS_SIDE, 1.2345 ), "-Z Interp Vol->Vol" );
     cout << endl;
 
     // Z BCs - Right side
@@ -188,6 +202,9 @@ bool test_bc( const OperatorDatabase& opDB,
     status( test_bc_loop<typename Ops::GradZ     >( opDB, "Grad   Vol->SurfZ", dim, bcFlag, k,   PLUS_SIDE, 1.2345  ), "+Z Grad   Vol->SurfZ" );
     status( test_bc_loop<typename Ops::InterpC2FZ>( opDB, "Interp Vol->SurfZ", dim, bcFlag, k,   PLUS_SIDE, 123.456 ), "+Z Interp Vol->SurfZ" );
     status( test_bc_loop<typename Ops::DivZ      >( opDB, "Div    SurfZ->Vol", dim, bcFlag, k-1, PLUS_SIDE, 123.45  ), "+Z Div    SurfZ->Vol" );
+
+    status( test_bc_loop<typename OperatorTypeBuilder<GradientZ,   VolT,VolT>::type >(opDB,"Grad   Vol->Vol", dim, bcFlag, k-1, PLUS_SIDE, 1.2345 ), "+Z Grad   Vol->Vol" );
+    status( test_bc_loop<typename OperatorTypeBuilder<InterpolantZ,VolT,VolT>::type >(opDB,"Interp Vol->Vol", dim, bcFlag, k-1, PLUS_SIDE, 12.345 ), "+Z Interp Vol->Vol" );
     cout << endl;
   }
 
@@ -221,8 +238,6 @@ bool test_driver( const IntVec& dim )
 int main()
 {
   TestHelper status(true);
-
-  assert( NTHREADS <= 10 );
 
   status( test_driver( IntVec(10,1 ,1 ) ), "Mesh: (10,1,1)\n" );
   status( test_driver( IntVec(1 ,10,1 ) ), "Mesh: (1,10,1)\n" );
