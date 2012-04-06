@@ -391,7 +391,7 @@ namespace structured{
      * @param deviceIndex -- Use this device index to select return pointer
      * @return
      */
-    const T* field_values_consumer(const MemoryType mtype, const unsigned short int deviceIndex) const;
+    T* field_values_consumer(const MemoryType mtype = LOCAL_RAM, const unsigned short int deviceIndex = 0) const;
 
     T* field_values() const {
     	if( memType_ == LOCAL_RAM ){
@@ -587,7 +587,7 @@ reset_values( const T* values )
 //------------------------------------------------------------------
 
 template<typename Location, typename GhostTraits, typename T>
-const T* SpatialField<Location, GhostTraits, T>::field_values_consumer (
+T* SpatialField<Location, GhostTraits, T>::field_values_consumer (
 		const MemoryType mtype, const unsigned short int deviceIndex) const {
 	#ifdef DEBUG_SF_ALL
 			std::cout << "Caught call to field_values_consumer for field : " << this->field_values() << "\n";
@@ -649,7 +649,7 @@ void SpatialField<Location, GhostTraits, T>::add_consumer(
 	}
 #   ifdef ENABLE_THREADS
 	//Make sure adding consumers is per-field atomic
-	typename SpatialField<Location, GhostTraits, T>::ExecMutex lock;
+	ExecMutex lock;
 #   endif
 
 	//Take action based on where the field must be available and where it currently is

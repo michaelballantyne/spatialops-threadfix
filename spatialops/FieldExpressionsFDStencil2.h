@@ -78,9 +78,9 @@
 
              FieldType d(wd, dest.field_values(), ExternalStorage);
 
-             FieldType s1(ws1, src.field_values(), ExternalStorage);
+             FieldType s1(ws1, src.field_values_consumer(), ExternalStorage);
 
-             FieldType s2(ws2, src.field_values(), ExternalStorage);
+             FieldType s2(ws2, src.field_values_consumer(), ExternalStorage);
 
              typename FieldType::iterator id = d.begin();
 
