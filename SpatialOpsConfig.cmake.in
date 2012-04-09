@@ -17,8 +17,10 @@ set( SpatialOps_INCLUDE_DIR
   @SpatialOps_INCLUDE@
   @TPL_INCLUDE_DIRS@
   )
+set( Boost_INCLUDE @Boost_INCLUDE_DIR@ )
+set( Boost_LIB @Boost_LIBRARIES@ )
 
 set( ENABLE_THREADS @ENABLE_THREADS@ )
-seT( NTHREADS @NTHREADS@ )
+set( NTHREADS @NTHREADS@ )
 
 include( @CMAKE_INSTALL_PREFIX@/lib/spatialops/SpatialOps.cmake )
