@@ -916,7 +916,6 @@
        (b new-line-chunk
           (pp-includes-chunk 'vector
                              'boost/bind.hpp
-                             'boost/ref.hpp
                              'spatialops/ThreadPool.h
                              'spatialops/structured/IntVec.h
                              'boost/interprocess/sync/interprocess_semaphore.hpp)
