@@ -36,9 +36,6 @@ namespace boost { namespace threadpool
   */ 
   typedef function0<void> task_func;
 
-
-
-
   /*! \brief Prioritized task function object. 
   *
   * This function object wraps a task_func object and binds a priority to it.
@@ -88,13 +85,6 @@ namespace boost { namespace threadpool
     }
 
   };  // prio_task_func
-
-
-
- 
-
-
-
 
   /*! \brief Looped task function object. 
   *
