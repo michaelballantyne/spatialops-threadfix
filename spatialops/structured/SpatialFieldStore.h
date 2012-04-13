@@ -609,27 +609,28 @@ SpatFldPtr<FieldT> SpatialFieldStore<FieldT>::get(
 #ifdef ENABLE_THREADS
   boost::mutex::scoped_lock lock( get_mutex() );
 #endif
+<<<<<<< HEAD
   // find the proper map
 
   switch (mtype) {
     case LOCAL_RAM: { // Allocate from a store
-      const size_t npts = window.glob_npts();
-      FieldQueue& q = fqmap_[npts];
+       const size_t npts = window.glob_npts();
+       FieldQueue& q = fqmap_[ npts ];
 
-      AtomicT* fnew;
-      if (q.empty()) {
-        fnew = new AtomicT[npts];
-        for (size_t i = 0; i < npts; ++i)
-          fnew[i] = 0.0;
-      } else {
-        fnew = q.front();
-        for (size_t i = 0; i < npts; ++i)
-          fnew[i] = 0.0;
-        q.pop();
-      }
-      return SpatFldPtr<FieldT>(
-          new FieldT(window, fnew, structured::ExternalStorage, mtype,
-              deviceIndex), true);
+       AtomicT* fnew;
+       if( q.empty() ){
+         fnew = new AtomicT[ npts ];
+       }
+       else{
+         fnew = q.front();
+         q.pop();
+       }
+
+#   ifndef NDEBUG  // only zero the field for debug runs.
+       for( size_t i=0; i<npts; ++i )  fnew[i] = 0.0;
+#   endif
+       
+       return SpatFldPtr<FieldT>( new FieldT(window,fnew,structured::ExternalStorage), true );
     }
 #ifdef ENABLE_CUDA
       //Dvn: I'm not having the store hold GPU memory right now, as I'm not sure it would be entirely stable

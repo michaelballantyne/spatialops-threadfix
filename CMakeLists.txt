@@ -104,11 +104,6 @@ include_directories(
   ${TPL_INCLUDE_DIRS}
   )
 
-if( CMAKE_BUILD_TYPE STREQUAL Release )
-  add_definitions( -O3 -fexpensive-optimizations )
-  message( STATUS "turning on aggressive optimizations" )
-endif( CMAKE_BUILD_TYPE STREQUAL Release )
-
 # look for git.  This is used to configure version information into the
 # executable and also to build upstream dependencies if necessary
 find_package( Git )
