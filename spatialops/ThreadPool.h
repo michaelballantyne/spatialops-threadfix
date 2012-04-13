@@ -99,46 +99,68 @@ namespace SpatialOps{
             return true;
          }
 
-         template<class VoidType>
-         static const int resize(VoidType& rID, int threads){
-            VoidType* resource;
-            ResourceIter rit;
-            ExecutionMutex lock;
+		 template<class VoidType>
+		 static const int resize(VoidType& rID, int threads){
+			VoidType* resource;
+			ResourceIter rit;
+			ExecutionMutex lock;
 
-            //Make sure we have the threadpool
-            rit = resourceMap_.find(&rID);
-            if( rit == resourceMap_.end() ) {
-               fprintf(stderr, "Error: ThreadPool does not exist!\n");
-               return -1;
-            }
+			//Make sure we have the threadpool
+			rit = resourceMap_.find(&rID);
+			if( rit == resourceMap_.end() ) {
+			   fprintf(stderr, "Error: ThreadPool does not exist!\n");
+			   return -1;
+			}
 
-            //Fast exit
-            if( rit->second == threads ) { return threads; }
+			//Fast exit
+			if( rit->second == threads ) { return threads; }
 
-            //Connect the right resource interface
-            resource = (VoidType*)rit->first;
+			//Connect the right resource interface
+			resource = (VoidType*)rit->first;
 
 				if( threads < 1 ) { threads = 1; }
-            rit->second = threads;
-            resource->size_controller().resize(threads);
+			rit->second = threads;
+			resource->size_controller().resize(threads);
 
-            return threads;
-         }
+			return threads;
+		 }
 
-			template<class VoidType>
-			static const int get_worker_count(VoidType& rID) {
-				VoidType* resource;
-				ResourceIter rit;
-				ExecutionMutex lock;
+		 template<class VoidType>
+		 static const int resize_active(VoidType& rID, int threads){
+			VoidType* resource;
+			ResourceIter rit;
+			ExecutionMutex lock;
 
-				rit = resourceMap_.find(&rID);
-				if( rit == resourceMap_.end() ) {
-					fprintf(stderr, "Error: Threadpool does not exist!\n");
-					return -1;
-				}
-
-				return rit->second;
+			//Make sure we have the threadpool
+			rit = resourceMap_.find(&rID);
+			if( rit == resourceMap_.end() ) {
+			   fprintf(stderr, "Error: ThreadPool does not exist!\n");
+			   return -1;
 			}
+
+			//Connect the right resource interface
+			resource = (VoidType*)rit->first;
+
+			resource->size_controller().set_active_workers(threads);
+
+			return threads;
+		 }
+
+
+		template<class VoidType>
+		static const int get_worker_count(VoidType& rID) {
+			VoidType* resource;
+			ResourceIter rit;
+			ExecutionMutex lock;
+
+			rit = resourceMap_.find(&rID);
+			if( rit == resourceMap_.end() ) {
+				fprintf(stderr, "Error: Threadpool does not exist!\n");
+				return -1;
+			}
+
+			return rit->second;
+		}
 
       private:
          static std::map<void*, int> resourceMap_;
@@ -159,8 +181,8 @@ namespace SpatialOps{
       ~ThreadPool(){}
 
       public:
-         static ThreadPool& self(){
-            static ThreadPool tp(NTHREADS);
+         static ThreadPool& self() {
+            static ThreadPool tp(1);
             ThreadPoolResourceManager& tprm = ThreadPoolResourceManager::self();
             if( init == false ){
                tprm.insert<boost::threadpool::prio_pool>(tp, NTHREADS);

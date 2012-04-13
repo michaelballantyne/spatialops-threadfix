@@ -609,9 +609,7 @@ SpatFldPtr<FieldT> SpatialFieldStore<FieldT>::get(
 #ifdef ENABLE_THREADS
   boost::mutex::scoped_lock lock( get_mutex() );
 #endif
-<<<<<<< HEAD
   // find the proper map
-
   switch (mtype) {
     case LOCAL_RAM: { // Allocate from a store
        const size_t npts = window.glob_npts();
