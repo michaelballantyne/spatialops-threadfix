@@ -17,10 +17,7 @@
 #ifndef THREADPOOL_DETAIL_SCOPE_GUARD_HPP_INCLUDED
 #define THREADPOOL_DETAIL_SCOPE_GUARD_HPP_INCLUDED
 
-
-
 #include <boost/function.hpp>
-
 
 namespace boost { namespace threadpool { namespace detail 
 {
@@ -52,11 +49,6 @@ public:
 		m_is_active = false;
 	}
 };
-
-
-
-
-
 
 } } } // namespace boost::threadpool::detail
 

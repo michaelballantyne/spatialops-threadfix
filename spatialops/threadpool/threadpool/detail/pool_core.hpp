@@ -18,12 +18,8 @@
 *
 */
 
-
 #ifndef THREADPOOL_POOL_CORE_HPP_INCLUDED
 #define THREADPOOL_POOL_CORE_HPP_INCLUDED
-
-
-
 
 #include "locking_ptr.hpp"
 #include "worker_thread.hpp"
@@ -40,7 +36,6 @@
 #include <boost/type_traits.hpp>
 
 #include <vector>
-
 
 /// The namespace threadpool contains a thread pool and related utility classes.
 namespace boost { namespace threadpool { namespace detail 
@@ -66,15 +61,13 @@ namespace boost { namespace threadpool { namespace detail
   */ 
   template <
     typename Task, 
-
     template <typename> class SchedulingPolicy,
     template <typename> class SizePolicy,
     template <typename> class SizePolicyController,
-    template <typename> class ShutdownPolicy
-  > 
+    template <typename> class ShutdownPolicy >
   class pool_core
-  : public enable_shared_from_this< pool_core<Task, SchedulingPolicy, SizePolicy, SizePolicyController, ShutdownPolicy > > 
-  , private noncopyable
+  	  : public enable_shared_from_this< pool_core<Task, SchedulingPolicy, SizePolicy, SizePolicyController, ShutdownPolicy > >
+  	  , private noncopyable
   {
 
   public: // Type definitions
@@ -101,7 +94,6 @@ namespace boost { namespace threadpool { namespace detail
     // The task function's result type is required to be void.
     BOOST_STATIC_ASSERT(is_void<typename result_of<task_type()>::type >::value);
 
-
   private:  // Friends 
     friend class worker_thread<pool_type>;
 
@@ -117,8 +109,7 @@ namespace boost { namespace threadpool { namespace detail
     volatile size_t m_worker_count;	
     volatile size_t m_target_worker_count;	
     volatile size_t m_active_worker_count;
-      
-
+    volatile size_t m_target_active_worker_count;
 
   private: // The following members are accessed only by _one_ thread at the same time:
     scheduler_type  m_scheduler;
@@ -130,7 +121,7 @@ namespace boost { namespace threadpool { namespace detail
   private: // The following members are implemented thread-safe:
     mutable recursive_mutex  m_monitor;
     mutable condition m_worker_idle_or_terminated_event;	// A worker is idle or was terminated.
-    mutable condition m_task_or_terminate_workers_event;  // Task is available OR total worker count should be reduced.
+    mutable condition m_task_or_terminate_workers_event;  	// Task is available OR total worker count should be reduced.
 
   public:
     /// Constructor.
@@ -138,6 +129,7 @@ namespace boost { namespace threadpool { namespace detail
       : m_worker_count(0) 
       , m_target_worker_count(0)
       , m_active_worker_count(0)
+      , m_target_active_worker_count(0)
       , m_terminate_all_workers(false)
     {
       pool_type volatile & self_ref = *this;
@@ -145,7 +137,6 @@ namespace boost { namespace threadpool { namespace detail
 
       m_scheduler.clear();
     }
-
 
     /// Destructor.
     ~pool_core()
@@ -156,22 +147,21 @@ namespace boost { namespace threadpool { namespace detail
     * \return The size controller.
     * \see SizePolicy
     */
-    size_controller_type size_controller()
-    {
+    size_controller_type size_controller() {
       return size_controller_type(*m_size_policy, this->shared_from_this());
     }
 
     /*! Gets the number of threads in the pool.
     * \return The number of threads.
     */
-    size_t size()	const volatile
-    {
+    size_t size() const volatile {
       return m_worker_count;
     }
 
-// TODO is only called once
-    void shutdown()
-    {
+    /**
+     * @brief Call shutdown policy controller to kill this thread pool
+     */
+    void shutdown() {
       ShutdownPolicy<pool_type>::shutdown(*this);
     }
 
@@ -179,8 +169,7 @@ namespace boost { namespace threadpool { namespace detail
     * \param task The task function object. It should not throw execeptions.
     * \return true, if the task could be scheduled and false otherwise. 
     */  
-    bool schedule(task_type const & task) volatile
-    {	
+    bool schedule(task_type const & task) volatile {
       locking_ptr<pool_type, recursive_mutex> lockedThis(*this, m_monitor); 
       
       if(lockedThis->m_scheduler.push(task))
@@ -194,45 +183,36 @@ namespace boost { namespace threadpool { namespace detail
       }
     }	
 
-
     /*! Returns the number of tasks which are currently executed.
     * \return The number of active tasks. 
     */  
-    size_t active() const volatile
-    {
+    size_t active() const volatile {
       return m_active_worker_count;
     }
-
 
     /*! Returns the number of tasks which are ready for execution.    
     * \return The number of pending tasks. 
     */  
-    size_t pending() const volatile
-    {
+    size_t pending() const volatile {
       locking_ptr<const pool_type, recursive_mutex> lockedThis(*this, m_monitor);
       return lockedThis->m_scheduler.size();
     }
 
-
     /*! Removes all pending tasks from the pool's scheduler.
     */  
-    void clear() volatile
-    { 
+    void clear() volatile {
       locking_ptr<pool_type, recursive_mutex> lockedThis(*this, m_monitor);
       lockedThis->m_scheduler.clear();
     }    
-
 
     /*! Indicates that there are no tasks pending. 
     * \return true if there are no tasks ready for execution.	
     * \remarks This function is more efficient that the check 'pending() == 0'.
     */   
-    bool empty() const volatile
-    {
+    bool empty() const volatile {
       locking_ptr<const pool_type, recursive_mutex> lockedThis(*this, m_monitor);
       return lockedThis->m_scheduler.empty();
     }	
-
 
     /*! The current thread of execution is blocked until the sum of all active
     *  and pending tasks is equal or less than a given threshold. 
@@ -289,12 +269,9 @@ namespace boost { namespace threadpool { namespace detail
       return true;
     }
 
-
   private:	
 
-
-    void terminate_all_workers(bool const wait) volatile
-    {
+    void terminate_all_workers(bool const wait) volatile {
       pool_type* self = const_cast<pool_type*>(this);
       recursive_mutex::scoped_lock lock(self->m_monitor);
 
@@ -320,50 +297,51 @@ namespace boost { namespace threadpool { namespace detail
       }
     }
 
-
     /*! Changes the number of worker threads in the pool. The resizing 
     *  is handled by the SizePolicy.
     * \param threads The new number of worker threads.
     * \return true, if pool will be resized and false if not. 
     */
-    bool resize(size_t const worker_count) volatile
-    {
+    bool resize(size_t const worker_count) volatile {
       locking_ptr<pool_type, recursive_mutex> lockedThis(*this, m_monitor); 
 
-      if(!m_terminate_all_workers)
-      {
+      if(!m_terminate_all_workers) {
         m_target_worker_count = worker_count;
       }
-      else
-      { 
+      else {
         return false;
       }
 
+      if(m_worker_count <= m_target_worker_count){
 
-      if(m_worker_count <= m_target_worker_count)
-      { // increase worker count
+    	// increase worker count
         while(m_worker_count < m_target_worker_count)
         {
-          try
-          {
+          try {
             worker_thread<pool_type>::create_and_attach(lockedThis->shared_from_this());
             m_worker_count++;
             m_active_worker_count++;	
           }
-          catch(thread_resource_error)
-          {
+          catch(thread_resource_error) {
             return false;
           }
         }
-      }
-      else
-      { // decrease worker count
+      } else { // decrease worker count
         lockedThis->m_task_or_terminate_workers_event.notify_all();   // TODO: Optimize number of notified workers
       }
 
       return true;
-    }
+   }
 
+    /**
+     * @brief Resize the number of worker threads which can be simultaneously active.
+     * @param worker_count
+     * @return
+     */
+    bool resize_active(size_t const worker_count) volatile {
+    	m_target_active_worker_count = worker_count;
+    	return true;
+    }
 
     // worker died with unhandled exception
     void worker_died_unexpectedly(shared_ptr<worker_type> worker) volatile
@@ -397,7 +375,6 @@ namespace boost { namespace threadpool { namespace detail
       }
     }
 
-
     bool execute_task() volatile
     {
       function0<void> task;
@@ -412,9 +389,9 @@ namespace boost { namespace threadpool { namespace detail
           return false;	// terminate worker
         }
 
-
         // wait for tasks
-        while(lockedThis->m_scheduler.empty())
+
+        while(lockedThis->m_scheduler.empty() || (m_active_worker_count > m_target_active_worker_count) )
         {	
           // decrease number of workers if necessary
           if(m_worker_count > m_target_worker_count)

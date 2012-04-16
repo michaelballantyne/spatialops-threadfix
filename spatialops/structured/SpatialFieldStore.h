@@ -439,14 +439,14 @@ namespace SpatialOps{
     AtomicT* fnew;
     if( q.empty() ){
       fnew = new AtomicT[ npts ];
-      for( size_t i=0; i<npts; ++i )  fnew[i] = 0.0;
     }
     else{
       fnew = q.front();
-      for( size_t i=0; i<npts; ++i )  fnew[i] = 0.0;
       q.pop();
     }
-
+#   ifndef NDEBUG  // only zero the field for debug runs.
+    for( size_t i=0; i<npts; ++i )  fnew[i] = 0.0;
+#   endif
     return SpatFldPtr<FieldT>( new FieldT(window,fnew,structured::ExternalStorage), true );
   }
   //------------------------------------------------------------------
