@@ -64,6 +64,7 @@
        [SCond-chunk 'NeboSimpleCond]
        [Clause-chunk 'NeboClause]
        [Cond-chunk 'NeboCond]
+       [CT-chunk 'ClauseType]
        [pp-header-file-chunk-with-license
         (lambda (file-name file-setup . chunks)
           (c (b new-line-chunk
@@ -1573,12 +1574,12 @@
                                       (c 'Expr s 'expr_))))
       (build-struct Cond-chunk
                     #true
-                    (list (tpl-pmtr 'Clause)
+                    (list (tpl-pmtr CT-chunk)
                           (tpl-pmtr 'Otherwise))
-                    (list 'Clause 'Otherwise)
+                    (list CT-chunk 'Otherwise)
                     (bs-Initial (list (b s
                                          typename-chunk
-                                         (scope 'Clause
+                                         (scope CT-chunk
                                                 template-chunk)
                                          (scope (tpl-use 'Iterator 'IteratorType)
                                                 'ResizePrepType))
@@ -1590,7 +1591,7 @@
                                                 'ResizePrepType)))
                                 (list (b s
                                          typename-chunk
-                                         (scope 'Clause
+                                         (scope CT-chunk
                                                 template-chunk)
                                          (scope (tpl-use 'Iterator 'IteratorType)
                                                 'SeqWalkType))
@@ -1602,7 +1603,7 @@
                                                 'SeqWalkType)))
                                 null
                                 (bm-constructor (list (b s
-                                                         'Clause const-chunk "&" 'c)
+                                                         CT-chunk const-chunk "&" 'c)
                                                       (b s
                                                          'Otherwise const-chunk "&" 'e))
                                                 (list (cons-asgn 'clause_
@@ -1612,7 +1613,7 @@
                                                 null)
                                 (list (r-fcn-def (constize (fcn-dcl 'clause
                                                                     (b s
-                                                                       'Clause const-chunk "&")))
+                                                                       CT-chunk const-chunk "&")))
                                                  null
                                                  'clause_)
                                       (r-fcn-def (constize (fcn-dcl 'otherwise
@@ -1621,10 +1622,10 @@
                                                  null
                                                  'otherwise_))
                                 (list (b s
-                                         'Clause const-chunk 'clause_)
+                                         CT-chunk const-chunk 'clause_)
                                       (b s
                                          'Otherwise const-chunk 'otherwise_)))
-                    (bs-ResizePrep (list (tpl-pmtr (scope 'Clause 'ResizeType))
+                    (bs-ResizePrep (list (tpl-pmtr (scope CT-chunk 'ResizeType))
                                          (tpl-pmtr (scope 'Otherwise 'ResizeType)))
                                    null
                                    (bm-constructor (b s
@@ -1638,7 +1639,7 @@
                                                    null)
                                    (list (r-fcn-def (constize (fcn-dcl 'clause
                                                                        (b s
-                                                                          'Clause const-chunk "&")))
+                                                                          CT-chunk const-chunk "&")))
                                                     null
                                                     'clause_)
                                          (r-fcn-def (constize (fcn-dcl 'otherwise
@@ -1647,10 +1648,10 @@
                                                     null
                                                     'otherwise_))
                                    (list (b s
-                                            'Clause const-chunk 'clause_)
+                                            CT-chunk const-chunk 'clause_)
                                          (b s
                                             'Otherwise const-chunk 'otherwise_)))
-                    (bs-Resize (list (tpl-pmtr (scope 'Clause 'SeqWalkType))
+                    (bs-Resize (list (tpl-pmtr (scope CT-chunk 'SeqWalkType))
                                      (tpl-pmtr (scope 'Otherwise 'SeqWalkType)))
                                null
                                (bm-constructor (list (b s
@@ -1668,7 +1669,7 @@
                                                null)
                                (list (r-fcn-def (constize (fcn-dcl 'clause
                                                                    (b s
-                                                                      'Clause const-chunk "&")))
+                                                                      CT-chunk const-chunk "&")))
                                           null
                                           'clause_)
                                      (r-fcn-def (constize (fcn-dcl 'otherwise
@@ -1677,7 +1678,7 @@
                                           null
                                           'otherwise_))
                                (list (b s
-                                        'Clause const-chunk 'clause_)
+                                        CT-chunk const-chunk 'clause_)
                                      (b s
                                         'Otherwise const-chunk 'otherwise_)))
                     (bs-SeqWalk (typedef (scope (tpl-pmtr FT-chunk)
@@ -1714,7 +1715,7 @@
                                               (mfc 'clause_ 'eval)
                                               colon-chunk
                                               (mfc 'otherwise_ 'eval)))
-                                (list (c 'Clause s 'clause_)
+                                (list (c CT-chunk s 'clause_)
                                       (c 'Otherwise s 'otherwise_))))
       (srt-def (srt-dcl SClause-chunk)
                (sec-def public-chunk
@@ -2081,10 +2082,10 @@
               (build-CondBuilder (list (tpl-pmtr 'Next) (tpl-pmtr 'Field))
                                  (tpl-use Cond-chunk 'Initial 'Next 'Following 'Field)
                                  (tpl-use Cond-chunk 'Initial 'Next 'PreceedingResult 'Field)
-                                 (list 'Clause 'Otherwise FT-chunk)
-                                 (c (tpl-use Cond-chunk 'Initial 'Clause 'Otherwise FT-chunk) s)
+                                 (list CT-chunk 'Otherwise FT-chunk)
+                                 (c (tpl-use Cond-chunk 'Initial CT-chunk 'Otherwise FT-chunk) s)
                                  (c 'List s 'list_)
-                                 (c (tpl-use Cond-chunk 'Initial 'Clause 'Otherwise FT-chunk) s 'l)
+                                 (c (tpl-use Cond-chunk 'Initial CT-chunk 'Otherwise FT-chunk) s 'l)
                                  (cons-asgn 'list_ 'l)
                                  (list (end-val (c 'operator s (p))
                                                 (tpl-use NE-chunk
