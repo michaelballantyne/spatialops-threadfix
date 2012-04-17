@@ -346,7 +346,7 @@ namespace boost { namespace threadpool { namespace detail
      * @return
      */
     bool resize_active(size_t const worker_count) volatile {
-    	m_target_active_worker_count = worker_count;
+    	m_target_active_worker_count = ( worker_count < m_worker_count ) ? worker_count : m_worker_count;
     	return true;
     }
 
