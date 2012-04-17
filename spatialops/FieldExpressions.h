@@ -33,7 +33,6 @@
 #  ifdef FIELD_EXPRESSION_THREADS
 #     include <vector>
 #     include <boost/bind.hpp>
-#     include <boost/ref.hpp>
 #     include <spatialops/ThreadPool.h>
 #     include <spatialops/structured/IntVec.h>
 #     include <boost/interprocess/sync/interprocess_semaphore.hpp>
@@ -5034,30 +5033,30 @@
           Expr expr_;
       };
 
-      template<typename CurrentMode, typename Clause, typename Otherwise, typename FieldType>
+      template<typename CurrentMode, typename ClauseType, typename Otherwise, typename FieldType>
        struct NeboCond;
 
-      template<typename Clause, typename Otherwise, typename FieldType>
-       struct NeboCond<Initial, Clause, Otherwise, FieldType> {
+      template<typename ClauseType, typename Otherwise, typename FieldType>
+       struct NeboCond<Initial, ClauseType, Otherwise, FieldType> {
 
          public:
-          NeboCond<Initial, Clause, Otherwise, FieldType> typedef This;
+          NeboCond<Initial, ClauseType, Otherwise, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           template<typename IteratorType>
            struct Iterator {
 
              NeboCond<ResizePrep<IteratorType, This>,
-                      typename Clause::template Iterator<IteratorType>::ResizePrepType,
+                      typename ClauseType::template Iterator<IteratorType>::ResizePrepType,
                       typename Otherwise::template Iterator<IteratorType>::ResizePrepType,
                       FieldType> typedef ResizePrepType;
 
              NeboCond<SeqWalk<IteratorType, This>,
-                      typename Clause::template Iterator<IteratorType>::SeqWalkType,
+                      typename ClauseType::template Iterator<IteratorType>::SeqWalkType,
                       typename Otherwise::template Iterator<IteratorType>::SeqWalkType,
                       FieldType> typedef SeqWalkType;
           };
-          NeboCond(Clause const & c, Otherwise const & e)
+          NeboCond(ClauseType const & c, Otherwise const & e)
           : clause_(c), otherwise_(e)
           {};
           template<typename IteratorType>
@@ -5068,27 +5067,28 @@
            inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
               return typename Iterator<IteratorType>::ResizePrepType(*this);
            };
-          inline Clause const & clause(void) const { return clause_; };
+          inline ClauseType const & clause(void) const { return clause_; };
           inline Otherwise const & otherwise(void) const { return otherwise_; };
 
          private:
-          Clause const clause_;
+          ClauseType const clause_;
           Otherwise const otherwise_;
       };
 
       template<typename IteratorType,
                typename SourceType,
-               typename Clause,
+               typename ClauseType,
                typename Otherwise,
                typename FieldType>
-       struct NeboCond<ResizePrep<IteratorType, SourceType>, Clause, Otherwise, FieldType> {
+       struct NeboCond<ResizePrep<IteratorType, SourceType>, ClauseType, Otherwise, FieldType> {
 
          public:
-          NeboCond<ResizePrep<IteratorType, SourceType>, Clause, Otherwise, FieldType> typedef This;
+          NeboCond<ResizePrep<IteratorType, SourceType>, ClauseType, Otherwise, FieldType> typedef
+          This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           NeboCond<Resize<IteratorType, This>,
-                   typename Clause::ResizeType,
+                   typename ClauseType::ResizeType,
                    typename Otherwise::ResizeType,
                    FieldType> typedef ResizeType;
           NeboCond(SourceType const & source)
@@ -5097,50 +5097,50 @@
           inline ResizeType resize(MemoryWindow const & newSize) const {
              return ResizeType(newSize, *this);
           };
-          inline Clause const & clause(void) const { return clause_; };
+          inline ClauseType const & clause(void) const { return clause_; };
           inline Otherwise const & otherwise(void) const { return otherwise_; };
 
          private:
-          Clause const clause_;
+          ClauseType const clause_;
           Otherwise const otherwise_;
       };
 
       template<typename IteratorType,
                typename SourceType,
-               typename Clause,
+               typename ClauseType,
                typename Otherwise,
                typename FieldType>
-       struct NeboCond<Resize<IteratorType, SourceType>, Clause, Otherwise, FieldType> {
+       struct NeboCond<Resize<IteratorType, SourceType>, ClauseType, Otherwise, FieldType> {
 
          public:
-          NeboCond<Resize<IteratorType, SourceType>, Clause, Otherwise, FieldType> typedef This;
+          NeboCond<Resize<IteratorType, SourceType>, ClauseType, Otherwise, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           NeboCond<SeqWalk<IteratorType, This>,
-                   typename Clause::SeqWalkType,
+                   typename ClauseType::SeqWalkType,
                    typename Otherwise::SeqWalkType,
                    FieldType> typedef SeqWalkType;
           NeboCond(MemoryWindow const & size, SourceType const & source)
           : clause_(size, source.clause()), otherwise_(size, source.otherwise())
           {};
           inline SeqWalkType init(void) const { return SeqWalkType(*this); };
-          inline Clause const & clause(void) const { return clause_; };
+          inline ClauseType const & clause(void) const { return clause_; };
           inline Otherwise const & otherwise(void) const { return otherwise_; };
 
          private:
-          Clause const clause_;
+          ClauseType const clause_;
           Otherwise const otherwise_;
       };
 
       template<typename IteratorType,
                typename SourceType,
-               typename Clause,
+               typename ClauseType,
                typename Otherwise,
                typename FieldType>
-       struct NeboCond<SeqWalk<IteratorType, SourceType>, Clause, Otherwise, FieldType> {
+       struct NeboCond<SeqWalk<IteratorType, SourceType>, ClauseType, Otherwise, FieldType> {
 
          public:
-          NeboCond<SeqWalk<IteratorType, SourceType>, Clause, Otherwise, FieldType> typedef This;
+          NeboCond<SeqWalk<IteratorType, SourceType>, ClauseType, Otherwise, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef AtomicType;
@@ -5157,7 +5157,7 @@
           };
 
          private:
-          Clause clause_;
+          ClauseType clause_;
           Otherwise otherwise_;
       };
 
@@ -5279,11 +5279,11 @@
       template<typename List>
        struct CondBuilder;
 
-      template<typename Clause, typename Otherwise, typename FieldType>
-       struct CondBuilder<NeboCond<Initial, Clause, Otherwise, FieldType> > {
+      template<typename ClauseType, typename Otherwise, typename FieldType>
+       struct CondBuilder<NeboCond<Initial, ClauseType, Otherwise, FieldType> > {
 
          public:
-          NeboCond<Initial, Clause, Otherwise, FieldType>  typedef List;
+          NeboCond<Initial, ClauseType, Otherwise, FieldType>  typedef List;
 
          private:
           template<typename Remaining, typename PreceedingResult>
@@ -5313,7 +5313,7 @@
           List list_;
 
          public:
-          CondBuilder(NeboCond<Initial, Clause, Otherwise, FieldType> l)
+          CondBuilder(NeboCond<Initial, ClauseType, Otherwise, FieldType> l)
           : list_(l)
           {};
           template<typename Final>
