@@ -155,7 +155,14 @@ namespace boost { namespace threadpool { namespace detail
     * \return The number of threads.
     */
     size_t size() const volatile {
-      return m_worker_count;
+    	return m_worker_count;
+    }
+
+    /*! Gets the number of threads in the pool.
+    * \return The number of threads.
+    */
+    size_t max_active() const volatile {
+    	return m_target_active_worker_count;
     }
 
     /**

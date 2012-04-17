@@ -141,11 +141,10 @@ namespace SpatialOps{
 			//Connect the right resource interface
 			resource = (VoidType*)rit->first;
 
-			resource->size_controller().set_active_workers(threads);
+			resource->size_controller().resize_active(threads);
 
 			return threads;
 		 }
-
 
 		template<class VoidType>
 		static const int get_worker_count(VoidType& rID) {
@@ -159,7 +158,28 @@ namespace SpatialOps{
 				return -1;
 			}
 
-			return rit->second;
+			resource = (VoidType*)rit->first;
+
+			return resource->size();
+		}
+
+		template<class VoidType>
+		static const int get_max_active_worker_count(VoidType& rID) {
+			VoidType* resource;
+			ResourceIter rit;
+			ExecutionMutex lock;
+
+			//Make sure we have the threadpool
+			rit = resourceMap_.find(&rID);
+			if( rit == resourceMap_.end() ) {
+			   fprintf(stderr, "Error: ThreadPool does not exist!\n");
+			   return -1;
+			}
+
+			//Connect the right resource interface
+			resource = (VoidType*)rit->first;
+
+			return resource->max_active();
 		}
 
       private:

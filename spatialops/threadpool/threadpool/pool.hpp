@@ -115,6 +115,15 @@ namespace boost { namespace threadpool
       return m_core->size();
     }
 
+
+    /**
+     * @brief Gets maximum number of active workers for the pool.
+     * @return The number of max active threads threads.
+     */
+    size_t max_active() const {
+    	return m_core->max_active();
+    }
+
 	/**
 	 * @brief Schedules a task for asynchronous execution. The task will be executed once only.
 	 * @param task The task function object. It should not throw execeptions.
