@@ -33,7 +33,6 @@
 #  ifdef STENCIL_THREADS
 #     include <vector>
 #     include <boost/bind.hpp>
-#     include <boost/ref.hpp>
 #     include <spatialops/ThreadPool.h>
 #     include <spatialops/structured/IntVec.h>
 #     include <boost/interprocess/sync/interprocess_semaphore.hpp>

@@ -141,11 +141,10 @@ namespace SpatialOps{
 			//Connect the right resource interface
 			resource = (VoidType*)rit->first;
 
-			resource->size_controller().set_active_workers(threads);
+			resource->size_controller().resize_active(threads);
 
 			return threads;
 		 }
-
 
 		template<class VoidType>
 		static const int get_worker_count(VoidType& rID) {
