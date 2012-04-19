@@ -39,7 +39,6 @@
 # include <boost/thread/mutex.hpp>
 #endif
 
-//TODO: GPU Single element field implementation -- consume only --
 namespace SpatialOps {
 
 // forward declaration
@@ -442,6 +441,7 @@ SpatFldPtr<FieldT>::operator=(const SpatFldPtr& p) {
            break;
 
           case EXTERNAL_CUDA_GPU:
+        	  //Do nothing, we don't store cuda memory here
         	  break;
 
           default:
