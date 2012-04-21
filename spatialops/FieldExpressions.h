@@ -45,10 +45,14 @@
 #     ifdef FIELD_EXPRESSION_THREADS
          /* used within nebo to determine if thread parallelism should be used */
          bool is_nebo_thread_parallel(void);
-         /* used within nebo to get current thread count */
-         int get_nebo_thread_count(void);
-         /* used by tests to change current thread count at runtime */
-         int set_nebo_thread_count(int thread_count);
+         /* used within nebo to get current soft (active) thread count */
+         int get_nebo_soft_thread_count(void);
+         /* used by tests to change current soft (active) thread count at runtime */
+         int set_nebo_soft_thread_count(int thread_count);
+         /* used within nebo to get current hard (max/total) thread count */
+         int get_nebo_hard_thread_count(void);
+         /* used by tests to change current hard (max/total) thread count at runtime */
+         int set_nebo_hard_thread_count(int thread_count);
 #     endif
       /* FIELD_EXPRESSION_THREADS */;
 
@@ -5852,7 +5856,7 @@
                                                                                           ExprType,
                                                                                           FieldType>(initial_lhs,
                                                                                                      initial_rhs,
-                                                                                                     get_nebo_thread_count())
+                                                                                                     get_nebo_soft_thread_count())
                      : field_expression_sequential_execute<CallStyle, ExprType, FieldType>(initial_lhs,
                                                                                            initial_rhs))
 #                else

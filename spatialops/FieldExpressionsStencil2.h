@@ -226,7 +226,7 @@
                                                                                                         dest,
                                                                                                         low,
                                                                                                         high,
-                                                                                                        get_nebo_thread_count())
+                                                                                                        get_nebo_soft_thread_count())
                  : stencil_2_apply_to_field_sequential_execute<OperatorType, SrcType, DestType>(src,
                                                                                                 dest,
                                                                                                 low,
