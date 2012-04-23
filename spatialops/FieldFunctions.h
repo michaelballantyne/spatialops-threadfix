@@ -520,7 +520,7 @@ void
 LinearFunction1D<FieldT,PatchT>::
 dx( FieldT& f ) const
 {
-  f = m_;
+  f <<= m_;
 }
 //------------------------------------------------------------------
 template<typename FieldT, typename PatchT>
@@ -528,7 +528,7 @@ void
 LinearFunction1D<FieldT,PatchT>::
 d2x( FieldT& f ) const
 {
-  f = 0.0;
+  f <<= 0.0;
 }
 //--------------------------------------------------------------------
 
