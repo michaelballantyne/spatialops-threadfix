@@ -222,7 +222,6 @@ namespace structured{
     inline       interior_iterator interior_end();
 
     inline MyType& operator =(const MyType&);
-    inline MyType& operator =(const T);
 
     bool operator!=(const MyType&) const;
     bool operator==(const MyType&) const;
@@ -463,18 +462,6 @@ namespace structured{
       if( *ifld != *iother ) return false;
     }
     return true;
-  }
-
-  //------------------------------------------------------------------
-
-  template< typename Location, typename GhostTraits, typename T >
-  SpatialField<Location,GhostTraits,T>&
-  SpatialField<Location,GhostTraits,T>::
-  operator=(const T a)
-  {
-    const iterator iend=this->end();
-    for( iterator ifld=this->begin(); ifld!=iend; ++ifld ) *ifld = a;
-    return *this;
   }
 
   //------------------------------------------------------------------
