@@ -55,8 +55,8 @@ namespace SpatialOps {
 
         //Call interface function -- hack to avoid nvcc meta-template failures
         cuda_stencil_2_apply_to_field< typename DestType::AtomicT, typename Extents::Dir >(
-            dest.ext_field_values(),
-            src.field_values_consumer(EXTERNAL_CUDA_GPU, dest.device_index()),
+            dest.field_values(EXTERNAL_CUDA_GPU, dest.device_index()),
+            src.field_values(EXTERNAL_CUDA_GPU, dest.device_index()),
             low, high,                  	//Stencil Coeffcients
             wEX[0], wEX[1], wEX[2],			// Global field dimensions
             dEX[0], dEX[1], dEX[3],         //Destination extents dEX <= wdest.extent

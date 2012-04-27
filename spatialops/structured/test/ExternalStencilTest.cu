@@ -38,8 +38,7 @@ using namespace ema::cuda;
 #define ITERATIONS 1
 
 void stencil7_cpu( float* data_in, float* data_out, int nx, int ny, int nz ){
-  float dx = 1, dy = 1, dz = 1;
-
+  float dx = 1;//, dy = 1, dz = 1;
   float dxsq = dx*dx;
   //float dysq = dy*dy;
   //float dzsq = dz*dz;

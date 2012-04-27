@@ -373,7 +373,7 @@
           typename FieldType::memory_window typedef MemoryWindow;
           NeboConstField<SeqWalk<IteratorType, This>, FieldType> typedef SeqWalkType;
           NeboConstField(MemoryWindow const & size, SourceType const & source)
-          : field_(size, source.field().field_values_consumer(), structured::ExternalStorage)
+          : field_(size, source.field().field_values(), structured::ExternalStorage)
           {};
           inline SeqWalkType init(void) const { return SeqWalkType(*this); };
           inline FieldType const & field(void) const { return field_; };
@@ -466,7 +466,7 @@
           typename FieldType::memory_window typedef MemoryWindow;
           NeboField<SeqWalk<IteratorType, This>, FieldType> typedef SeqWalkType;
           NeboField(MemoryWindow const & size, SourceType & source)
-          : field_(size, source.field().field_values_consumer(), structured::ExternalStorage)
+          : field_(size, source.field().field_values(), structured::ExternalStorage)
           {};
           inline SeqWalkType init(void) { return SeqWalkType(*this); };
           inline FieldType & field(void) { return field_; };

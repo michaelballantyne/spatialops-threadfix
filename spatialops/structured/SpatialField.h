@@ -379,28 +379,17 @@ namespace structured{
     }
 
     /**
+     * Field values will return a pointer to the field type, which is valid on the device and context supplied to
+     * the function ( LOCAL_RAM, 0 ) by default.
      *
-     * @return -- Return the values associated with this field
-     */
-    T* ext_field_values() const {
-        return fieldValuesExtDevice_;
-    }
-
-    /**
+     * Note: If the desired field is intended to be a consumer field, then it must have been added previously via
+     * a call to add_consumer(mtype, index)
      *
-     * @param mtype -- Return the values for this field on this device type
-     * @param deviceIndex -- Use this device index to select return pointer
+     * @param mtype -- Select the type of device we want a pointer to
+     * @param deviceIndex -- Index of the device
      * @return
      */
-    T* field_values_consumer(const MemoryType consumerMemoryType = LOCAL_RAM, const unsigned short int consumerDeviceIndex = 0) const;
-
-    T* field_values() const {
-    	if( memType_ == LOCAL_RAM ){
-    		return fieldValues_;
-    	} else {
-    		return fieldValuesExtDevice_;
-    	}
-    }
+    T* field_values(const MemoryType consumerMemoryType = LOCAL_RAM, const unsigned short int consumerDeviceIndex = 0) const;
 
     unsigned int allocated_bytes() const {
     	return allocatedBytes_;
@@ -590,10 +579,10 @@ reset_values( const T* values )
 //------------------------------------------------------------------
 
 template<typename Location, typename GhostTraits, typename T>
-T* SpatialField<Location, GhostTraits, T>::field_values_consumer (
+T* SpatialField<Location, GhostTraits, T>::field_values (
 		const MemoryType consumerMemoryType, const unsigned short int consumerDeviceIndex) const {
 	#ifdef DEBUG_SF_ALL
-			std::cout << "Caught call to field_values_consumer for field : " << this->field_values() << "\n";
+			std::cout << "Caught call to field_values for field : " << this->field_values() << "\n";
 			std::cout << "\t -- mtype:        " << DeviceTypeTools::get_memory_type_description(mtype) << std::endl
 					  << "\t -- Device index: " << consumerDeviceIndex << std::endl
 					  << "\t -- Value:        " << consumerFieldValues_.find(consumerDeviceIndex)->first
@@ -611,9 +600,8 @@ T* SpatialField<Location, GhostTraits, T>::field_values_consumer (
 			return fieldValues_;
 		}
 
-	#ifdef ENABLE_CUDA
+#ifdef ENABLE_CUDA
 		case EXTERNAL_CUDA_GPU: {
-
 			//Check local allocations first
 			if( ( consumerMemoryType == memType_ ) && ( consumerDeviceIndex == deviceIndex_ ) ) {
 				return fieldValuesExtDevice_;

@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
   try {
     std::cout << "Checking proper value initialization: \n";
     PointField p(window, T1, InternalStorage, EXTERNAL_CUDA_GPU, 0);
-    CDI.memcpy_from((void*) T2, p.ext_field_values(), p.allocated_bytes(),
+    CDI.memcpy_from((void*) T2, p.field_values(EXTERNAL_CUDA_GPU, 0), p.allocated_bytes(),
         p.device_index());
     for (unsigned int k = 0; k < bytes; ++k) {
       if (T2[k] != T1[k]) {
@@ -75,8 +75,8 @@ int main(int argc, char** argv) {
 
     p.add_consumer(LOCAL_RAM, 0);
     std::cout << "Finished adding consumer\n";
-    memcpy(T2, p.field_values_consumer(LOCAL_RAM, 0), p.allocated_bytes());
-    CDI.memcpy_from((void*) T3, p.field_values_consumer( EXTERNAL_CUDA_GPU, p.device_index() ),
+    memcpy(T2, p.field_values(LOCAL_RAM, 0), p.allocated_bytes());
+    CDI.memcpy_from((void*) T3, p.field_values( EXTERNAL_CUDA_GPU, p.device_index() ),
     		p.allocated_bytes(), p.device_index());
     for (unsigned int k = 0; k < bytes; ++k) {
       if (T2[k] != T1[k] || T3[k] != T1[k]) {
@@ -188,8 +188,8 @@ int main(int argc, char** argv) {
     memcpy(r->field_values(), T1, bytes * sizeof(double));
     r->add_consumer(EXTERNAL_CUDA_GPU, 0);
 
-    memcpy(T2, r->field_values_consumer(LOCAL_RAM, 0), r->allocated_bytes());
-    CDI.memcpy_from(T3, r->field_values_consumer( EXTERNAL_CUDA_GPU, r->device_index() ),
+    memcpy(T2, r->field_values(LOCAL_RAM, 0), r->allocated_bytes());
+    CDI.memcpy_from(T3, r->field_values( EXTERNAL_CUDA_GPU, r->device_index() ),
     		r->allocated_bytes(), r->device_index() );
 
     for (unsigned int k = 0; k < bytes; ++k) {
