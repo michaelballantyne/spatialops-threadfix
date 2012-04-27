@@ -83,8 +83,7 @@ bool test( const SS::IntVec dim )
     f3 <<= f3 * cos(f3);
     f3 <<= f3 + f1*f2;
 
-    f1 = -1.0;
-    f1 <<= abs(f1);
+    f1 <<= abs(-1.0);
     for( constiter i1=f1.begin(); i1!=f1.end(); ++i1 ){
       tmp( *i1 == 1.0 );
     }
@@ -97,8 +96,8 @@ bool test( const SS::IntVec dim )
 
   const SS::MemoryWindow pw( SpatialOps::structured::IntVec(100,1,1) );
   SP::ParticleField pf1(pw,NULL), pf2(pw,NULL), pf3(pw,NULL);
-  pf1 = 1.0;
-  pf3 = 2.0;
+  pf1 <<= 1.0;
+  pf3 <<= 2.0;
   pf2 <<= pf1 * pf3;
 
   return true;

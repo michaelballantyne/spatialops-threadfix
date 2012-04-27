@@ -330,7 +330,6 @@ namespace structured{
     inline interior_iterator interior_end();
 
     inline MyType& operator =(const MyType&);
-    inline MyType& operator =(const T);
 
     /**
      * @brief Comparison operators
@@ -1205,6 +1204,7 @@ bool SpatialField<Location, GhostTraits, T>::operator==(const MyType& other) con
 
 //------------------------------------------------------------------
 
+/*
 template<typename Location, typename GhostTraits, typename T>
 SpatialField<Location, GhostTraits, T>&
 SpatialField<Location, GhostTraits, T>::operator=(const T a) {
@@ -1265,16 +1265,17 @@ SpatialField<Location, GhostTraits, T>::operator=(const T a) {
 		return *this;
     }
 #endif
-    default:
+
+    default: {
       std::ostringstream msg;
       msg << "Attempted unsupported memset operation, at \n"
     	  << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
       msg << "\t - " << DeviceTypeTools::get_memory_type_description(memType_);
       throw(std::runtime_error(msg.str()));
+    }
   }
 }
-
-//------------------------------------------------------------------
+*/
 
 } // namespace structured
 } // namespace SpatialOps

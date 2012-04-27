@@ -10,10 +10,10 @@ using std::endl;
 
 #include <spatialops/OperatorDatabase.h>
 
+#include <spatialops/FieldExpressions.h>
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/SpatialFieldStore.h>
-
 #include <spatialops/structured/stencil/FVStaggeredBCOp.h>
 #include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
 #include <spatialops/structured/FVStaggeredBCTools.h>
@@ -48,7 +48,7 @@ bool test_bc_helper( const OperatorDatabase& opDB,
 
   int icnt=0;
   for( typename SrcFieldT::iterator ifld=f->begin(); ifld!=f->end(); ++ifld,++icnt ) *ifld = icnt;
-  *df = 0.0;
+  *df <<= 0.0;
 
   // assign the BC.
   BoundaryConditionOp<OpT,ConstValEval> bc( ijk, side, ConstValEval(bcVal), opDB );

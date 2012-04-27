@@ -80,7 +80,7 @@ int main()
     *ia1 = i;
   }
 
-  b = 2.0;
+  b <<= 2.0;
 
   // example of what we would like to do:
   // c = b + a + sin(b);

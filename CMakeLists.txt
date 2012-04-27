@@ -106,24 +106,31 @@ include_directories(
 
 # look for git.  This is used to configure version information into the
 # executable and also to build upstream dependencies if necessary
+set( SOPS_REPO_DATE "\"DATE NOT FOUND\"" )
+set( SOPS_REPO_HASH "\"HASH NOT FOUND\"" )
 find_package( Git )
 if( GIT_FOUND )
   execute_process(
     COMMAND ${GIT_EXECUTABLE} log -1 "--pretty=format:\"%H\""
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    RESULT_VARIABLE RESULT
     OUTPUT_VARIABLE SOPS_REPO_HASH 
     OUTPUT_STRIP_TRAILING_WHITESPACE
     )
+  if( NOT ${RESULT} EQUAL 0 )
+    set( SOPS_REPO_HASH "\"HASH NOT FOUND\"" )
+  endif()
   execute_process(
     COMMAND ${GIT_EXECUTABLE} log -1 "--pretty=format:\"%cd\""
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     OUTPUT_VARIABLE SOPS_REPO_DATE 
     OUTPUT_STRIP_TRAILING_WHITESPACE
     )
-else( GIT_FOUND )
-  set( SOPS_REPO_DATE "\"NOT FOUND\"" )
-  set( SOPS_REPO_HASH "\"NOT FOUND\"" )
+   if( NOT ${RESULT} EQUAL 0 )
+     set( SOPS_REPO_DATE "\"DATE NOT FOUND\"" )
+   endif()
 endif( GIT_FOUND )
+
 
 # build the configure file using the information defined here.
 configure_file(
