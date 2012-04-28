@@ -32,8 +32,9 @@
 #include <cassert>
 #include <stdexcept>
 #include <sstream>
-#include <stdlib.h>
 #include <map>
+
+#include <string.h>
 
 #include <spatialops/SpatialOpsConfigure.h>
 
