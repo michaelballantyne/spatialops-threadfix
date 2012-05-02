@@ -1131,75 +1131,77 @@ bool SpatialField<Location, GhostTraits, T>::operator==(const MyType& other) con
             throw(std::runtime_error(msg.str()));
           }
       } // End internal switch
+      break;
     }
 #ifdef ENABLE_CUDA
+    case EXTERNAL_CUDA_GPU: {
+      switch( other.memory_device_type() ) {
+      case LOCAL_RAM: {
+        // Comparing EXTERNAL_CUDA_GPU == LOCAL_RAM
+        // WARNING: This will incur a full copy penalty from the GPU and should not be used in a time sensitive context.
+        if( allocatedBytes_ != other.allocatedBytes_ ) {
+          throw( std::runtime_error( "Attempted comparison between fields of unequal size." ) );
+        }
+
+        void* temp = (void*)malloc(allocatedBytes_);
+        ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
+        CDI.memcpy_from( temp, fieldValuesExtDevice_, allocatedBytes_, deviceIndex_ );
+
+        if( memcmp(temp, other.fieldValues_, allocatedBytes_) ) {
+          free(temp);
+          return false;
+        }
+
+        free(temp);
+        return true;
+      }
+
       case EXTERNAL_CUDA_GPU: {
-        switch( other.memory_device_type() ) {
-          case LOCAL_RAM: {
-            // Comparing EXTERNAL_CUDA_GPU == LOCAL_RAM
-            // WARNING: This will incur a full copy penalty from the GPU and should not be used in a time sensitive context.
-            if( allocatedBytes_ != other.allocatedBytes_ ) {
-              throw( std::runtime_error( "Attempted comparison between fields of unequal size." ) );
-            }
+        // Comparing EXTERNAL_CUDA_GPU == EXTERNAL_CUDA_GPU
+        // WARNING: This will incur a full copy penalty from the GPU and should not be used in a time sensitive context.
+        if( allocatedBytes_ != other.allocatedBytes_ ) {
+          throw( std::runtime_error( "Attempted comparison between fields of unequal size." ) );
+        }
+        void* tempLHS = (void*)malloc(allocatedBytes_);
+        void* tempRHS = (void*)malloc(allocatedBytes_);
 
-            void* temp = (void*)malloc(allocatedBytes_);
-            ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-            CDI.memcpy_from( temp, fieldValuesExtDevice_, allocatedBytes_, deviceIndex_ );
+        ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
+        CDI.memcpy_from( tempLHS, fieldValuesExtDevice_, allocatedBytes_, deviceIndex_ );
+        CDI.memcpy_from( tempRHS, other.fieldValuesExtDevice_, allocatedBytes_, other.deviceIndex_ );
 
-            if( memcmp(temp, other.fieldValues_, allocatedBytes_) ) {
-              free(temp);
-              return false;
-            }
+        if( memcmp(tempLHS, tempRHS, allocatedBytes_) ) {
+          free(tempLHS);
+          free(tempRHS);
 
-            free(temp);
-            return true;
-          }
+          return false;
+        }
+        free(tempLHS);
+        free(tempRHS);
 
-          case EXTERNAL_CUDA_GPU: {
-            // Comparing EXTERNAL_CUDA_GPU == EXTERNAL_CUDA_GPU
-            // WARNING: This will incur a full copy penalty from the GPU and should not be used in a time sensitive context.
-            if( allocatedBytes_ != other.allocatedBytes_ ) {
-              throw( std::runtime_error( "Attempted comparison between fields of unequal size." ) );
-            }
-            void* tempLHS = (void*)malloc(allocatedBytes_);
-            void* tempRHS = (void*)malloc(allocatedBytes_);
+        return true;
+      }
 
-            ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-            CDI.memcpy_from( tempLHS, fieldValuesExtDevice_, allocatedBytes_, deviceIndex_ );
-            CDI.memcpy_from( tempRHS, other.fieldValuesExtDevice_, allocatedBytes_, other.deviceIndex_ );
-
-            if( memcmp(tempLHS, tempRHS, allocatedBytes_) ) {
-              free(tempLHS);
-              free(tempRHS);
-
-              return false;
-            }
-            free(tempLHS);
-            free(tempRHS);
-
-            return true;
-          }
-
-          default: {
-            std::ostringstream msg;
-            msg << "Attempted unsupported compare operation, at " << __FILE__
+      default: {
+        std::ostringstream msg;
+        msg << "Attempted unsupported compare operation, at " << __FILE__
             << " : " << __LINE__ << std::endl;
-            msg << "\t - "
+        msg << "\t - "
             << DeviceTypeTools::get_memory_type_description(memType_) << " = "
             << DeviceTypeTools::get_memory_type_description( other.memory_device_type() );
-            throw(std::runtime_error(msg.str()));
-          }
-        }
+        throw(std::runtime_error(msg.str()));
       }
+      }
+      break;
+    }
 #endif
     default:
       std::ostringstream msg;
       msg << "Attempted unsupported compare operation, at " << __FILE__ << " : "
           << __LINE__ << std::endl;
       msg << "\t - " << DeviceTypeTools::get_memory_type_description(memType_)
-          << " = "
-          << DeviceTypeTools::get_memory_type_description(
-              other.memory_device_type());
+      << " = "
+      << DeviceTypeTools::get_memory_type_description(
+          other.memory_device_type());
       throw(std::runtime_error(msg.str()));
   }
 }
