@@ -78,6 +78,13 @@ namespace structured{
   DECLARE_STENCIL( Interpolant, YSurfZField, SVolField )
   DECLARE_STENCIL( Interpolant, ZSurfXField, SVolField )
   DECLARE_STENCIL( Interpolant, ZSurfYField, SVolField )
+
+  DECLARE_STENCIL( Interpolant, XVolField, YVolField )
+  DECLARE_STENCIL( Interpolant, XVolField, ZVolField )
+  DECLARE_STENCIL( Interpolant, YVolField, XVolField )
+  DECLARE_STENCIL( Interpolant, YVolField, ZVolField )
+  DECLARE_STENCIL( Interpolant, ZVolField, XVolField )
+  DECLARE_STENCIL( Interpolant, ZVolField, YVolField )
   //
   //==================================================================
 
