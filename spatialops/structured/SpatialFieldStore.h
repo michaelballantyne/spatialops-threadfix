@@ -158,9 +158,9 @@ public:
 
   // Wrap some spatial field calls to get around
   // problems when trying to call methods of de-referenced pointers to
-  inline unsigned int allocated_bytes() 	const;
-  inline double* field_values() 			const;
-  inline unsigned short device_index() 	const;
+  inline unsigned int   allocated_bytes() const;
+  inline double*        field_values()    const;
+  inline unsigned short device_index()    const;
 
   void detach();
 
@@ -232,9 +232,9 @@ public:
    */
   template<typename FieldT>
   inline static SpatFldPtr<FieldT>
-  get( const structured::MemoryWindow& window,
-      const MemoryType mtype = LOCAL_RAM,
-      const unsigned short int deviceIndex = 0 );
+  get_from_window( const structured::MemoryWindow& window,
+                   const MemoryType mtype = LOCAL_RAM,
+                   const unsigned short int deviceIndex = 0 );
 
   /**
    *  @brief Obtain a temporary field.
@@ -257,7 +257,7 @@ public:
                           ws.offset(),
                           ws.extent()   + Subtract< typename FieldT::Location::BCExtra, typename ProtoT::Location::BCExtra >::result::int_vec() * ws.has_bc(),
                           ws.has_bc(0), ws.has_bc(1), ws.has_bc(2) );
-    return get<FieldT>(w,mtype,deviceIndex);
+    return get_from_window<FieldT>(w,mtype,deviceIndex);
   }
 
 
@@ -294,7 +294,46 @@ private:
 
 //=================================================================
 
-//------------------------------------------------------------------
+
+//TODO: This is a problem.... We really need to specialize the SpatialField class to handle singleton values efficiently
+//              As it is now, there are a number of semantic problems with how we have to treat doubles and we're not providing
+//              the proper meta information to effectively work around them
+template<>
+inline SpatFldPtr<double>::
+SpatFldPtr( double* const field,
+            const bool builtFromStore,
+            const MemoryType mtype,
+            const unsigned short int deviceIndex )
+  : f_(field),
+    count_(new int),
+    builtFromStore_(builtFromStore),
+    memType_(mtype),
+    deviceIndex_(deviceIndex)
+{
+  if( mtype != LOCAL_RAM ){
+    std::cout << "TRIED TO BUILD AN EXTRNAL DOUBLE -- NOT SUPPORTED YET\n";
+  }
+  *count_ = 1;
+}
+// specialized for doubles masquerading as spatial fields
+
+template<>
+inline unsigned int SpatFldPtr<double>::allocated_bytes() const{
+  return sizeof(double);
+}
+
+template<>
+inline double* SpatFldPtr<double>::field_values() const {
+  return f_;
+}
+
+template<>
+inline unsigned short SpatFldPtr<double>::device_index() const {
+  return deviceIndex_;
+}
+
+//====================================================================
+
 template<typename FieldT>
 SpatFldPtr<FieldT>::SpatFldPtr( FieldT* const f )
   : f_(f),
@@ -507,63 +546,10 @@ inline SpatFldPtr<double>::SpatFldPtr(double* const f)
   *count_ = 1;
 }
 
-//====================================================================
-
-//TODO: This is a problem.... We really need to specialize the SpatialField class to handle singleton values efficiently
-//              As it is now, there are a number of semantic problems with how we have to treat doubles and we're not providing
-//              the proper meta information to effectively work around them
-template<>
-inline SpatFldPtr<double>::
-SpatFldPtr( double* const field,
-            const bool builtFromStore,
-            const MemoryType mtype,
-            const unsigned short int deviceIndex )
-  : f_(field),
-    count_(new int),
-    builtFromStore_(builtFromStore),
-    memType_(mtype),
-    deviceIndex_(deviceIndex)
-{
-  if( mtype != LOCAL_RAM ){
-    std::cout << "TRIED TO BUILD AN EXTRNAL DOUBLE -- NOT SUPPORTED YET\n";
-  }
-  *count_ = 1;
-}
-// specialized for doubles masquerading as spatial fields
-
-template<>
-inline unsigned int SpatFldPtr<double>::allocated_bytes() const{
-  return sizeof(double);
-}
-
-template<>
-inline double* SpatFldPtr<double>::field_values() const {
-  return f_;
-}
-
-template<>
-inline unsigned short SpatFldPtr<double>::device_index() const {
-  return deviceIndex_;
-}
-
-//------------------------------------------------------------------
-
 //==================================================================
 
 
 // specialized for doubles masquerading as SpatialFields
-template<>
-inline
-SpatFldPtr<double>
-SpatialFieldStore::get<double>( const structured::MemoryWindow& w,
-                                const MemoryType mtype,
-                                const unsigned short int deviceIndex )
-{
-#ifdef ENABLE_THREADS
-  boost::mutex::scoped_lock lock( get_mutex() );
-#endif
-  return SpatFldPtr<double>(new double, true, mtype, deviceIndex);
-}
 
 template<>
 inline
@@ -593,9 +579,9 @@ template<typename FieldT>
 inline
 SpatFldPtr<FieldT>
 SpatialFieldStore::
-get( const structured::MemoryWindow& window,
-     const MemoryType mtype,
-     const unsigned short int deviceIndex )
+get_from_window( const structured::MemoryWindow& window,
+                 const MemoryType mtype,
+                 const unsigned short int deviceIndex )
 {
   typedef typename ValTypeSelector<FieldT,typename boost::is_pod<FieldT>::type>::type AtomicT;
   typedef boost::singleton_pool<SpatialFieldPoolTag,sizeof(AtomicT)> pool;

@@ -43,8 +43,8 @@ bool test_bc_helper( const OperatorDatabase& opDB,
 
   const OpT& op = *opDB.retrieve_operator<OpT>();
 
-  SpatFldPtr<SrcFieldT > f  = SpatialFieldStore::get<SrcFieldT >( get_window_with_ghost<SrcFieldT >(dim,bcFlag[0],bcFlag[1],bcFlag[2]) );
-  SpatFldPtr<DestFieldT> df = SpatialFieldStore::get<DestFieldT>( get_window_with_ghost<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]) );
+  SpatFldPtr<SrcFieldT > f  = SpatialFieldStore::get_from_window<SrcFieldT >( get_window_with_ghost<SrcFieldT >(dim,bcFlag[0],bcFlag[1],bcFlag[2]) );
+  SpatFldPtr<DestFieldT> df = SpatialFieldStore::get_from_window<DestFieldT>( get_window_with_ghost<DestFieldT>(dim,bcFlag[0],bcFlag[1],bcFlag[2]) );
 
   int icnt=0;
   for( typename SrcFieldT::iterator ifld=f->begin(); ifld!=f->end(); ++ifld,++icnt ) *ifld = icnt;

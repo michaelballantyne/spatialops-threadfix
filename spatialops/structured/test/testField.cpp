@@ -182,9 +182,9 @@ bool test_store( const IntVec& dim, const IntVec& bc )
   const MemoryWindow w1 = get_window_with_ghost<FT1>( dim, bc[0]==1, bc[1]==1, bc[2]==1 );
   const MemoryWindow w2 = get_window_with_ghost<FT2>( dim, bc[0]==1, bc[1]==1, bc[2]==1 );
 
-  SpatFldPtr<FT1> f1 = SpatialFieldStore::get<FT1>(  w1 );
+  SpatFldPtr<FT1> f1 = SpatialFieldStore::get_from_window<FT1>(  w1 );
   SpatFldPtr<FT1> f1a= SpatialFieldStore::get<FT1>( *f1 );
-  SpatFldPtr<FT2> f2 = SpatialFieldStore::get<FT2>(  w2 );
+  SpatFldPtr<FT2> f2 = SpatialFieldStore::get_from_window<FT2>(  w2 );
   SpatFldPtr<FT2> f2a= SpatialFieldStore::get<FT2>( *f2 );
   SpatFldPtr<FT2> f2b= SpatialFieldStore::get<FT2>( *f1 );
 
