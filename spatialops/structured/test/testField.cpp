@@ -205,18 +205,18 @@ int main()
 
   bool verbose = false;
 
-  overall( test_store<SVolField,SVolField  >( IntVec(3,4,5), IntVec(1,1,1) ), "SVol,SVol store" );
-  overall( test_store<SVolField,SSurfXField>( IntVec(3,4,5), IntVec(1,1,1) ), "SVol,SSY  store" );
-  overall( test_store<SVolField,SSurfXField>( IntVec(3,4,5), IntVec(0,0,0) ), "SVol,SSY  store" );
-  overall( test_store<SSurfXField,SVolField>( IntVec(3,4,5), IntVec(1,1,1) ), "SSX ,SVol store" );
-  overall( test_store<SSurfXField,SVolField>( IntVec(3,4,5), IntVec(0,0,0) ), "SSX ,SVol store" );
-  overall( test_store<SVolField,SSurfYField>( IntVec(3,4,5), IntVec(1,1,1) ), "SVol,SSY  store" );
-  overall( test_store<SVolField,SSurfYField>( IntVec(3,4,5), IntVec(0,0,0) ), "SVol,SSY  store" );
-  overall( test_store<SVolField,SSurfZField>( IntVec(3,4,5), IntVec(1,1,1) ), "SVol,SSZ  store" );
-  overall( test_store<SVolField,SSurfZField>( IntVec(3,4,5), IntVec(0,0,0) ), "SVol,SSZ  store" );
-  overall( test_store<XSurfXField,SVolField>( IntVec(3,4,5), IntVec(0,0,0) ), "XSX ,SVol store" );
-  overall( test_store<XSurfXField,ZVolField>( IntVec(3,4,5), IntVec(0,0,0) ), "XSX ,ZVol store" );
-  overall( test_store<YSurfZField,ZSurfXField>(IntVec(3,4,5), IntVec(0,0,0) ), "XSX ,ZVol store" );
+  overall( test_store<SVolField,  SVolField  >( IntVec(3,4,5), IntVec(1,1,1) ), "SVol,SVol store" );
+  overall( test_store<SVolField,  SSurfXField>( IntVec(3,4,5), IntVec(1,1,1) ), "SVol,SSY  store" );
+  overall( test_store<SVolField,  SSurfXField>( IntVec(3,4,5), IntVec(0,0,0) ), "SVol,SSY  store" );
+  overall( test_store<SSurfXField,SVolField  >( IntVec(3,4,5), IntVec(1,1,1) ), "SSX ,SVol store" );
+  overall( test_store<SSurfXField,SVolField  >( IntVec(3,4,5), IntVec(0,0,0) ), "SSX ,SVol store" );
+  overall( test_store<SVolField,  SSurfYField>( IntVec(3,4,5), IntVec(1,1,1) ), "SVol,SSY  store" );
+  overall( test_store<SVolField,  SSurfYField>( IntVec(3,4,5), IntVec(0,0,0) ), "SVol,SSY  store" );
+  overall( test_store<SVolField,  SSurfZField>( IntVec(3,4,5), IntVec(1,1,1) ), "SVol,SSZ  store" );
+  overall( test_store<SVolField,  SSurfZField>( IntVec(3,4,5), IntVec(0,0,0) ), "SVol,SSZ  store" );
+  overall( test_store<XSurfXField,SVolField  >( IntVec(3,4,5), IntVec(0,0,0) ), "XSX ,SVol store" );
+  overall( test_store<XSurfXField,ZVolField  >( IntVec(3,4,5), IntVec(0,0,0) ), "XSX ,ZVol store" );
+  overall( test_store<YSurfZField,ZSurfXField>( IntVec(3,4,5), IntVec(0,0,0) ), "XSX ,ZVol store" );
 
   std::cout << std::endl;
 
