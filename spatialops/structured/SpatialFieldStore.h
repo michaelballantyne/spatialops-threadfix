@@ -74,175 +74,102 @@ class SpatialFieldStore;
  */
 template<typename FieldT>
 class SpatFldPtr {
-  public:
+public:
 
-    /**
-     *  @brief Construct a SpatFldPtr.
-     *
-     *  @param field The field to wrap.  This constructor should be
-     *  used if you want to wrap an existing SpatialField for use as a
-     *  SpatFldPtr.  Ownership of this pointer is transfered.
-     */
-    SpatFldPtr(FieldT* const field);
+  /**
+   *  @brief Construct a SpatFldPtr.
+   *
+   *  @param field The field to wrap.  This constructor should be
+   *  used if you want to wrap an existing SpatialField for use as a
+   *  SpatFldPtr.  Ownership of this pointer is transfered.
+   */
+  SpatFldPtr(FieldT* const field);
 
-    /**
-     *  @brief Constructor for use from the SpatialFieldStore class only.
-     *
-     *  @param field The field to wrap.  Ownership is transfered.
-     *
-     *  @param builtFromStore if true, then SpatFldPtr will return the
-     *  memory it owns to the SpatialFieldStore class once the last
-     *  reference is destroyed.  If false then this will simply alias
-     *  a FieldT object.
-     */
-    SpatFldPtr(FieldT* const field, const bool builtFromStore);
+  /**
+   *  @brief Constructor for use from the SpatialFieldStore class only.
+   *
+   *  @param field The field to wrap.  Ownership is transfered.
+   *
+   *  @param builtFromStore if true, then SpatFldPtr will return the
+   *  memory it owns to the SpatialFieldStore class once the last
+   *  reference is destroyed.  If false then this will simply alias
+   *  a FieldT object.
+   */
+  SpatFldPtr(FieldT* const field, const bool builtFromStore);
 
-    /**
-     *  @brief Constructor for use from SpatialFieldStore only and ONLY for
-     *  		masquerade fields. This is specifically so that we can wrap
-     *  		or allocate a double on an external device while pretending
-     *  		it is a full spatial field.
-     *
-     *  @param pointer to wrap
-     *  @param do we build it
-     *  @param where the memory is allocated
-     *  @param device index for memory lookup
-     */
-    SpatFldPtr(FieldT* const field, const bool builtFromStore, const MemoryType mtype, const unsigned short int deviceIndex);
+  /**
+   *  @brief Constructor for use from SpatialFieldStore only and ONLY for
+   *  		masquerade fields. This is specifically so that we can wrap
+   *  		or allocate a double on an external device while pretending
+   *  		it is a full spatial field.
+   *
+   *  @param pointer to wrap
+   *  @param do we build it
+   *  @param where the memory is allocated
+   *  @param device index for memory lookup
+   */
+  SpatFldPtr(FieldT* const field, const bool builtFromStore, const MemoryType mtype, const unsigned short int deviceIndex);
 
-    ~SpatFldPtr();
+  ~SpatFldPtr();
 
-    /** @brief Copy constructor */
-    SpatFldPtr(const SpatFldPtr<FieldT>& p);
+  /** @brief Copy constructor */
+  SpatFldPtr(const SpatFldPtr<FieldT>& p);
 
-    /** @brief Skeletal constructor */
-    SpatFldPtr();
+  /** @brief Skeletal constructor */
+  SpatFldPtr();
 
-    /** @brief Assignment operator */
-    SpatFldPtr& operator=(const SpatFldPtr& p);
+  /** @brief Assignment operator */
+  SpatFldPtr& operator=(const SpatFldPtr& p);
 
-    /** @brief Assignment operator */
-    SpatFldPtr& operator=(FieldT* const f);
+  /** @brief Assignment operator */
+  SpatFldPtr& operator=(FieldT* const f);
 
-    inline FieldT& operator*() {
-      return *f_;
-    }
+  inline FieldT& operator*() {
+    return *f_;
+  }
 
-    inline const FieldT& operator*() const {
-      return *f_;
-    }
+  inline const FieldT& operator*() const {
+    return *f_;
+  }
 
-    inline FieldT* operator->() {
-      return f_;
-    }
+  inline FieldT* operator->() {
+    return f_;
+  }
 
-    inline const FieldT* operator->() const {
-      return f_;
-    }
+  inline const FieldT* operator->() const {
+    return f_;
+  }
 
-    inline bool isnull() const {
-      return f_ == NULL;
-    }
+  inline bool isnull() const {
+    return f_ == NULL;
+  }
 
-    inline SpatFldPtr& operator =(const double x) {
-      *f_ = x;
-      return *this;
-    } ///< Assign this field to a constant
+  int count() const {
+    return *count_;
+  }
 
-    /**
-     *  @name unary operators
-     *  these simply call through to the corresponding SpatialField unary operators.
-     *  WARNING: (DEPRECATED) These should not be used going forward.
-     */
-    //@{
-    inline SpatFldPtr& operator+=(const SpatFldPtr& p) {
-      *f_ += *p;
-      return *this;
-    } ///< Add a SpatFldPtr to this.
-    inline SpatFldPtr& operator-=(const SpatFldPtr& p) {
-      *f_ -= *p;
-      return *this;
-    } ///< Subtract a SpatFldPtr from this.
-    inline SpatFldPtr& operator*=(const SpatFldPtr& p) {
-      *f_ *= *p;
-      return *this;
-    } ///< Multiply this by a SpatFldPtr
-    inline SpatFldPtr& operator/=(const SpatFldPtr& p) {
-      *f_ /= *p;
-      return *this;
-    } ///< Divide this by a SpatFldPtr
+  bool built_from_store() const {
+    return builtFromStore_;
+  }
 
-    inline SpatFldPtr& operator+=(const FieldT& p) {
-      *f_ += p;
-      return *this;
-    } ///< Add a FieldT to this.
-    inline SpatFldPtr& operator-=(const FieldT& p) {
-      *f_ -= p;
-      return *this;
-    } ///< Subtract a FieldT from this.
-    inline SpatFldPtr& operator*=(const FieldT& p) {
-      *f_ *= p;
-      return *this;
-    } ///< Multiply this by a FieldT
-    inline SpatFldPtr& operator/=(const FieldT& p) {
-      *f_ /= p;
-      return *this;
-    } ///< Divide this by a FieldT
+  // Devin: this gets around having to make a variety of structures to mimic
+  //		  partial specializations in downstream classes... It may not be
+  //		  ideal, but it works for now and is easily replaced
 
-    inline SpatFldPtr& operator+=(const double x) {
-      *f_ += x;
-      return *this;
-    } ///< Add a constant to this field
-    inline SpatFldPtr& operator-=(const double x) {
-      *f_ -= x;
-      return *this;
-    } ///< Subtract a constant from this field
-    inline SpatFldPtr& operator*=(const double x) {
-      *f_ *= x;
-      return *this;
-    } ///< Multiply this field by a constant
-    inline SpatFldPtr& operator/=(const double x) {
-      *f_ /= x;
-      return *this;
-    } ///< Divide this field by a constant
-    //@}
+  // Wrap some spatial field calls to get around
+  // problems when trying to call methods of de-referenced pointers to
+  inline unsigned int allocated_bytes() 	const;
+  inline double* field_values() 			const;
+  inline unsigned short device_index() 	const;
 
-    int count() const {
-    	return *count_;
-    }
+  void detach();
 
-    bool built_from_store() const {
-    	return builtFromStore_;
-    }
-
-    //deprecated
-    int getCount() {
-      return count();
-    }
-
-    //deprecated
-    bool getBFS() {
-      return built_from_store();
-    }
-
-    // Devin: this gets around having to make a variety of structures to mimic
-    //		  partial specializations in downstream classes... It may not be
-    //		  ideal, but it works for now and is easily replaced
-
-    // Wrap some spatial field calls to get around
-    // problems when trying to call methods of de-referenced pointers to
-    inline unsigned int allocated_bytes() 	const;
-    inline double* field_values() 			const;
-    inline unsigned short device_index() 	const;
-
-    void detach();
-
-  private:
-    MemoryType memType_;
-    unsigned short deviceIndex_;
-    FieldT* f_;
-    int* count_;
-    bool builtFromStore_;
+private:
+  MemoryType memType_;
+  unsigned short deviceIndex_;
+  FieldT* f_;
+  int* count_;
+  bool builtFromStore_;
 };
 
 /**
@@ -259,7 +186,7 @@ class SpatFldPtr {
  *  method:
  *
  *  \code
- *    SpatFldPtr<FieldT> field = SpatialFieldStore::self().get( const FieldT& f )
+ *    SpatFldPtr<FieldT> field = SpatialFieldStore::get<FieldT>( const FieldT& f )
  *  \endcode
  *
  *  to return a field with the same dimensions as the provided
