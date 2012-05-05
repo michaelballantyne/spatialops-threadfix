@@ -177,19 +177,20 @@ bool test_interior( const IntVec npts,
 template< typename FT1, typename FT2 >
 bool test_store( const IntVec& dim, const IntVec& bc )
 {
+  TestHelper status(false);
+
   const MemoryWindow w1 = get_window_with_ghost<FT1>( dim, bc[0]==1, bc[1]==1, bc[2]==1 );
   const MemoryWindow w2 = get_window_with_ghost<FT2>( dim, bc[0]==1, bc[1]==1, bc[2]==1 );
 
-  SpatialFieldStore<FT1>& sf1 = SpatialFieldStore<FT1>::self();
-  SpatialFieldStore<FT2>& sf2 = SpatialFieldStore<FT2>::self();
+  SpatFldPtr<FT1> f1 = SpatialFieldStore::get<FT1>(  w1 );
+  SpatFldPtr<FT1> f1a= SpatialFieldStore::get<FT1>( *f1 );
+  SpatFldPtr<FT2> f2 = SpatialFieldStore::get<FT2>(  w2 );
+  SpatFldPtr<FT2> f2a= SpatialFieldStore::get<FT2>( *f2 );
+  SpatFldPtr<FT2> f2b= SpatialFieldStore::get<FT2>( *f1 );
 
-  SpatFldPtr<FT1> f1 = sf1.get(  w1 );
-  SpatFldPtr<FT1> f1a= sf1.get( *f1 );
-  SpatFldPtr<FT2> f2 = sf2.get(  w2 );
-  SpatFldPtr<FT2> f2a= sf2.get( *f2 );
-  SpatFldPtr<FT2> f2b= sf2.get( *f1 );
-
-  TestHelper status(false);
+//  FT1 f3( f1->window_without_ghost(), f1->field_values(), ExternalStorage );
+//  SpatFldPtr<FT1> f3a = SpatialFieldStore::get<FT1>(f3);
+//  status( f3a->window_with_ghost() == f1a->window_without_ghost() );
 
   status( f1->window_with_ghost() == f1a->window_with_ghost(), "f1==f1a" );
   status( f2->window_with_ghost() == f2a->window_with_ghost(), "f2==f2a" );
@@ -371,7 +372,7 @@ int main()
     }
 
     {
-      SpatFldPtr<SVolField> sv3 = SpatialFieldStore<SVolField>::self().get( svol1 );
+      SpatFldPtr<SVolField> sv3 = SpatialFieldStore::get<SVolField>( svol1 );
       *sv3 = svol1;
       status( *sv3 == svol1, "spatial field pointer from store" );
     }

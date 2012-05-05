@@ -21,7 +21,7 @@ calculate_flux( const GradOp& grad,
 
   // grab a work array from the store
   typedef typename GradOp::DestFieldType FluxT;
-  SpatialOps::SpatFldPtr<FluxT> tmp = SpatialOps::SpatialFieldStore<FluxT>::self().get(flux);
+  SpatialOps::SpatFldPtr<FluxT> tmp = SpatialOps::SpatialFieldStore::get<FluxT>(flux);
 
   // interpolate the thermal conductivity to the face
   interp.apply_to_field( thermCond, *tmp );
@@ -46,7 +46,7 @@ calculate_rhs( const DivOp& div,
 
   // grab a work array from the store
   typedef typename DivOp::DestFieldType ScalarT;
-  SpatialOps::SpatFldPtr<ScalarT> tmp = SpatialOps::SpatialFieldStore<ScalarT>::self().get(rhs);
+  SpatialOps::SpatFldPtr<ScalarT> tmp = SpatialOps::SpatialFieldStore::get<ScalarT>(rhs);
 
   div.apply_to_field( flux, *tmp );
   rhs <<= rhs - *tmp / rhoCp;

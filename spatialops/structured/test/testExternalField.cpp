@@ -166,10 +166,10 @@ int main(int argc, char** argv) {
     PointField q(window, T1, InternalStorage, LOCAL_RAM, 0);
 
     //Construct using just a window with default values for mtype (LOCAL_RAM) and deviceIndex = 0
-    SpatFldPtr<PointField> p = SpatialFieldStore<PointField>::self().get(window);
+    SpatFldPtr<PointField> p = SpatialFieldStore::get<PointField>(window);
     //Construct using full field
-    SpatFldPtr<PointField> r = SpatialFieldStore<PointField>::self().get(q);
-    SpatFldPtr<PointField> t = SpatialFieldStore<PointField>::self().get(window, EXTERNAL_CUDA_GPU, 0);
+    SpatFldPtr<PointField> r = SpatialFieldStore::get<PointField>(q);
+    SpatFldPtr<PointField> t = SpatialFieldStore::get<PointField>(window, EXTERNAL_CUDA_GPU, 0);
 
     p->add_consumer(EXTERNAL_CUDA_GPU, 0);
     t->add_consumer(LOCAL_RAM, 0);
@@ -203,7 +203,7 @@ int main(int argc, char** argv) {
 
   try {
     std::cout << "Checking proper failure conditions ( bad device type ): ";
-    SpatFldPtr<PointField> t = SpatialFieldStore<PointField>::self().get(window, DEBUG_TEST_OPT, 0);
+    SpatFldPtr<PointField> t = SpatialFieldStore::get<PointField>(window, DEBUG_TEST_OPT, 0);
     std::cout << "FAIL\n";
     return -1;
   } catch ( std::runtime_error& e){
@@ -212,7 +212,7 @@ int main(int argc, char** argv) {
 
   try {
     std::cout << "Checking proper failure conditions ( bad device index ): ";
-    SpatFldPtr<PointField> t = SpatialFieldStore<PointField>::self().get(window, EXTERNAL_CUDA_GPU, 75);
+    SpatFldPtr<PointField> t = SpatialFieldStore::get<PointField>(window, EXTERNAL_CUDA_GPU, 75);
     std::cout << "FAIL\n";
     return -1;
   } catch ( std::runtime_error& e){
