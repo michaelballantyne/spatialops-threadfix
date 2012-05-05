@@ -101,7 +101,7 @@ int main(int argc, char** argv) {
     PointField fail(badwindow, NULL, InternalStorage, EXTERNAL_CUDA_GPU, 0);
     std::cout << "FAIL\n";
     return -1;
-  } catch (std::runtime_error e) {
+  } catch (std::runtime_error& e) {
     std::cout << "PASS\n";
   }
 
@@ -111,7 +111,7 @@ int main(int argc, char** argv) {
     PointField fail(npts, T1, InternalStorage, DEBUG_TEST_OPT, 0);
     std::cout << "FAIL\n";
     return -1;
-  } catch (std::runtime_error e) {
+  } catch (std::runtime_error& e) {
     std::cout << "PASS\n";
   }
 
@@ -162,7 +162,7 @@ int main(int argc, char** argv) {
   try {
     std::cout << "Checking SpatialFieldPointer usage: ";
 
-    memset(T1, 1, bytes*sizeof(double)); 
+    memset(T1, 1, bytes*sizeof(double));
     PointField q(window, T1, InternalStorage, LOCAL_RAM, 0);
 
     //Construct using just a window with default values for mtype (LOCAL_RAM) and deviceIndex = 0
@@ -195,7 +195,7 @@ int main(int argc, char** argv) {
     t.detach();
 
     std::cout << "PASS\n";
-  } catch ( std::runtime_error e) {
+  } catch ( std::runtime_error& e) {
     std::cout << "FAIL\n";
     std::cout << e.what() << std::endl;
     return -1;
@@ -206,7 +206,7 @@ int main(int argc, char** argv) {
     SpatFldPtr<PointField> t = SpatialFieldStore<PointField>::self().get(window, DEBUG_TEST_OPT, 0);
     std::cout << "FAIL\n";
     return -1;
-  } catch ( std::runtime_error e){
+  } catch ( std::runtime_error& e){
     std::cout << "PASS\n";
   }
 
@@ -215,7 +215,7 @@ int main(int argc, char** argv) {
     SpatFldPtr<PointField> t = SpatialFieldStore<PointField>::self().get(window, EXTERNAL_CUDA_GPU, 75);
     std::cout << "FAIL\n";
     return -1;
-  } catch ( std::runtime_error e){
+  } catch ( std::runtime_error& e){
     std::cout << "PASS\n";
   }
 

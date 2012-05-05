@@ -124,7 +124,7 @@ int main(int argc, char** argv) {
       std::cout << " PASS\n";
     }
   }
-  catch( std::runtime_error e) {
+  catch( std::runtime_error& e) {
     std::cout << e.what() << std::endl;
     exit(1);
   }

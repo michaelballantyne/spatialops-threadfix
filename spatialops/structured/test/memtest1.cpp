@@ -93,7 +93,7 @@ int main(int argc, char** argv) {
         std::cout << "OK\n";
       }
     }
-    catch ( std::runtime_error e ) {
+    catch ( std::runtime_error& e ) {
       //Note: malloc will fail at some point, this is expected
       std::cout << e.what() << std::endl;
     }
