@@ -592,7 +592,7 @@ get_from_window( const structured::MemoryWindow& window,
   switch (mtype) {
   case LOCAL_RAM: { // Allocate from a store
     const size_t npts = window.local_npts();
-    AtomicT* fnew = static_cast<AtomicT*>( pool::ordered_malloc(npts*sizeof(AtomicT)) );
+    AtomicT* fnew = static_cast<AtomicT*>( pool::ordered_malloc(npts) );
 #   ifndef NDEBUG  // only zero the field for debug runs.
     for( size_t i=0; i<npts; ++i )  fnew[i] = 0.0;
 #   endif
@@ -630,9 +630,8 @@ void SpatialFieldStore::restore_field(FieldT& field)
 # ifdef ENABLE_THREADS
   boost::mutex::scoped_lock lock( get_mutex() );
 # endif
-  const structured::MemoryWindow& w = field.window_with_ghost();
-  const size_t npts = w.glob_npts();
-  pool::ordered_free( field.field_values(), npts*sizeof(AtomicT) );
+  const size_t npts = field.window_with_ghost().glob_npts();
+  pool::ordered_free( field.field_values(), npts );
 }
 
 //------------------------------------------------------------------
