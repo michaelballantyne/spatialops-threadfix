@@ -591,12 +591,16 @@ get_from_window( const structured::MemoryWindow& window,
 #endif
   switch (mtype) {
   case LOCAL_RAM: { // Allocate from a store
-    const size_t npts = window.local_npts();
+    const structured::MemoryWindow mw( window.extent(),
+                                       structured::IntVec(0,0,0),
+                                       window.extent(),
+                                       window.has_bc(0), window.has_bc(1), window.has_bc(2) );
+    const size_t npts = mw.glob_npts();
     AtomicT* fnew = static_cast<AtomicT*>( pool::ordered_malloc(npts) );
 #   ifndef NDEBUG  // only zero the field for debug runs.
     for( size_t i=0; i<npts; ++i )  fnew[i] = 0.0;
 #   endif
-    return SpatFldPtr<FieldT>( new FieldT(window,fnew,structured::ExternalStorage), true );
+    return SpatFldPtr<FieldT>( new FieldT(mw,fnew,structured::ExternalStorage), true );
   }
 #ifdef ENABLE_CUDA
   //Dvn: I'm not having the store hold GPU memory right now, as I'm not sure it would be entirely stable
