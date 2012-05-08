@@ -30,7 +30,6 @@
 #include <spatialops/structured/IndexTriplet.h>
 
 #include <boost/type_traits.hpp>
-#include <boost/pool/pool.hpp>
 #include <boost/pool/singleton_pool.hpp>
 
 #ifdef ENABLE_THREADS
