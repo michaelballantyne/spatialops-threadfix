@@ -53,194 +53,175 @@
 
 namespace SpatialOps{
 
-   class ThreadPoolResourceManager {
-      typedef std::map<void*,int>::iterator ResourceIter;
-         ThreadPoolResourceManager(){};
-         ~ThreadPoolResourceManager(){};
+  class ThreadPoolResourceManager {
+    typedef std::map<void*,int>::iterator ResourceIter;
+    ThreadPoolResourceManager(){};
+    ~ThreadPoolResourceManager(){};
 
-      public:
-         static ThreadPoolResourceManager& self(){
-            static ThreadPoolResourceManager tprm;
-            return tprm;
-         }
+  public:
+    static ThreadPoolResourceManager& self(){
+      static ThreadPoolResourceManager tprm;
+      return tprm;
+    }
 
-         template<class VoidType>
-         static const bool insert(VoidType& rID, int threads){
-            ResourceIter rit;
-            ExecutionMutex lock;
+    template<class VoidType>
+    static const bool insert(VoidType& rID, int threads){
+      ExecutionMutex lock;
+      if( threads < 1 ) { threads = 1; }
+      //Make sure we don't have the threadpool
+      ResourceIter rit = resourceMap_.find(&rID);
+      if ( rit == resourceMap_.end() ){
+        resourceMap_.insert(std::make_pair(&rID, threads));
+      } else {
+        printf("Warning: attempting to insert a ThreadPool that already exists!\n");
+        return false;
+      }
 
-				if( threads < 1 ) { threads = 1; }
-            //printf("Inserting ThreadPool<%s><0x%x>\n", typeid(rID).name(), &rID);
-            //Make sure we don't have the threadpool
-            rit = resourceMap_.find(&rID);
-            if ( rit == resourceMap_.end() ){
-               resourceMap_.insert(std::make_pair(&rID, threads));
-            } else {
-               printf("Warning: attempting to insert a ThreadPool that already exists!\n");
-               return false;
-            }
+      return true;
+    }
 
-            return true;
-         }
+    template<class VoidType>
+    static const bool remove(VoidType& rID, int threads){
+      ExecutionMutex lock;
+      ResourceIter rit = resourceMap_.find(&rID);
+      if ( rit != resourceMap_.end() ){
+        resourceMap_.erase(rit);
+      } else {
+        printf("Warning: attempting to remove ThreadPool that does not exist!\n");
+        return false;
+      }
+      return true;
+    }
 
-         template<class VoidType>
-         static const bool remove(VoidType& rID, int threads){
-            ResourceIter rit;
-            ExecutionMutex lock;
+    template<class VoidType>
+    static const int resize(VoidType& rID, int threads){
+      ExecutionMutex lock;
+      //Make sure we have the threadpool
+      ResourceIter rit = resourceMap_.find(&rID);
+      if( rit == resourceMap_.end() ) {
+        fprintf(stderr, "Error: ThreadPool does not exist!\n");
+        return -1;
+      }
 
-            rit = resourceMap_.find(&rID);
-            if ( rit != resourceMap_.end() ){
-               resourceMap_.erase(rit);
-            } else {
-               printf("Warning: attempting to remove ThreadPool that does not exist!\n");
-               return false;
-            }
+      //Fast exit
+      if( rit->second == threads ) { return threads; }
 
-            return true;
-         }
+      //Connect the right resource interface
+      VoidType* resource = (VoidType*)rit->first;
 
-		 template<class VoidType>
-		 static const int resize(VoidType& rID, int threads){
-			VoidType* resource;
-			ResourceIter rit;
-			ExecutionMutex lock;
+      if( threads < 1 ) { threads = 1; }
+      rit->second = threads;
+      resource->size_controller().resize(threads);
+      return threads;
+    }
 
-			//Make sure we have the threadpool
-			rit = resourceMap_.find(&rID);
-			if( rit == resourceMap_.end() ) {
-			   fprintf(stderr, "Error: ThreadPool does not exist!\n");
-			   return -1;
-			}
+    template<class VoidType>
+    static const int resize_active(VoidType& rID, int threads){
+      ExecutionMutex lock;
+      //Make sure we have the threadpool
+      ResourceIter rit = resourceMap_.find(&rID);
+      if( rit == resourceMap_.end() ) {
+        fprintf(stderr, "Error: ThreadPool does not exist!\n");
+        return -1;
+      }
+      //Connect the right resource interface
+      VoidType* resource = (VoidType*)rit->first;
+      resource->size_controller().resize_active(std::max(1,threads));
+      return threads;
+    }
 
-			//Fast exit
-			if( rit->second == threads ) { return threads; }
+    template<class VoidType>
+    static const int get_worker_count(VoidType& rID) {
+      ExecutionMutex lock;
+      ResourceIter rit = resourceMap_.find(&rID);
+      if( rit == resourceMap_.end() ) {
+        fprintf(stderr, "Error: Threadpool does not exist!\n");
+        return -1;
+      }
+      VoidType* resource = (VoidType*)rit->first;
+      return resource->size();
+    }
 
-			//Connect the right resource interface
-			resource = (VoidType*)rit->first;
+    template<class VoidType>
+    static const int get_max_active_worker_count(VoidType& rID) {
+      ExecutionMutex lock;
+      //Make sure we have the threadpool
+      ResourceIter rit = resourceMap_.find(&rID);
+      if( rit == resourceMap_.end() ) {
+        fprintf(stderr, "Error: ThreadPool does not exist!\n");
+        return -1;
+      }
 
-				if( threads < 1 ) { threads = 1; }
-			rit->second = threads;
-			resource->size_controller().resize(threads);
+      //Connect the right resource interface
+      VoidType* resource = (VoidType*)rit->first;
+      return resource->max_active();
+    }
 
-			return threads;
-		 }
+  private:
+    static std::map<void*, int> resourceMap_;
 
-		 template<class VoidType>
-		 static const int resize_active(VoidType& rID, int threads){
-			VoidType* resource;
-			ResourceIter rit;
-			ExecutionMutex lock;
+    class ExecutionMutex{
+      const boost::mutex::scoped_lock lock;
 
-			//Make sure we have the threadpool
-			rit = resourceMap_.find(&rID);
-			if( rit == resourceMap_.end() ) {
-			   fprintf(stderr, "Error: ThreadPool does not exist!\n");
-			   return -1;
-			}
+      inline boost::mutex& get_mutex() const { static boost::mutex m; return m; }
 
-			//Connect the right resource interface
-			resource = (VoidType*)rit->first;
-
-			resource->size_controller().resize_active(threads);
-
-			return threads;
-		 }
-
-		template<class VoidType>
-		static const int get_worker_count(VoidType& rID) {
-			VoidType* resource;
-			ResourceIter rit;
-			ExecutionMutex lock;
-
-			rit = resourceMap_.find(&rID);
-			if( rit == resourceMap_.end() ) {
-				fprintf(stderr, "Error: Threadpool does not exist!\n");
-				return -1;
-			}
-
-			resource = (VoidType*)rit->first;
-
-			return resource->size();
-		}
-
-		template<class VoidType>
-		static const int get_max_active_worker_count(VoidType& rID) {
-			VoidType* resource;
-			ResourceIter rit;
-			ExecutionMutex lock;
-
-			//Make sure we have the threadpool
-			rit = resourceMap_.find(&rID);
-			if( rit == resourceMap_.end() ) {
-			   fprintf(stderr, "Error: ThreadPool does not exist!\n");
-			   return -1;
-			}
-
-			//Connect the right resource interface
-			resource = (VoidType*)rit->first;
-
-			return resource->max_active();
-		}
-
-      private:
-         static std::map<void*, int> resourceMap_;
-
-         class ExecutionMutex{
-            const boost::mutex::scoped_lock lock;
-
-            inline boost::mutex& get_mutex() const { static boost::mutex m; return m; }
-
-            public:
-               ExecutionMutex() : lock( get_mutex() ){}
-               ~ExecutionMutex(){}
-         };
-   };
-
-  class ThreadPool : public boost::threadpool::prio_pool{
-      ThreadPool( const int nthreads ) : boost::threadpool::prio_pool( nthreads ){}
-      ~ThreadPool(){}
-
-      public:
-         static ThreadPool& self() {
-            static ThreadPool tp(1);
-            ThreadPoolResourceManager& tprm = ThreadPoolResourceManager::self();
-            if( init == false ){
-               tprm.insert<boost::threadpool::prio_pool>(tp, NTHREADS);
-               init = true;
-            }
-            return tp;
-         }
-
-      private:
-         static bool init;
+    public:
+      ExecutionMutex() : lock( get_mutex() ){}
+      ~ExecutionMutex(){}
+    };
   };
 
+  /**
+   * \brief Wrapper for a priority thread pool
+   */
+  class ThreadPool : public boost::threadpool::prio_pool{
+    ThreadPool( const int nthreads ) : boost::threadpool::prio_pool( nthreads ){}
+    ~ThreadPool(){}
+
+  public:
+    static ThreadPool& self() {
+      static ThreadPool tp(NTHREADS);
+      ThreadPoolResourceManager& tprm = ThreadPoolResourceManager::self();
+      if( init == false ){
+        tprm.insert<boost::threadpool::prio_pool>(tp, NTHREADS);
+        init = true;
+      }
+      return tp;
+    }
+
+  private:
+    static bool init;
+  };
+
+  /**
+   * \brief Wrapper for a FIFO thread pool
+   */
   class ThreadPoolFIFO : public boost::threadpool::fifo_pool{
-      ThreadPoolFIFO( const int nthreads ) : boost::threadpool::fifo_pool( nthreads ){}
-      ~ThreadPoolFIFO(){}
+    ThreadPoolFIFO( const int nthreads ) : boost::threadpool::fifo_pool( nthreads ){}
+    ~ThreadPoolFIFO(){}
 
-     public:
+  public:
 
-         static ThreadPoolFIFO& self(){
-            static ThreadPoolFIFO tp(NTHREADS);
-            ThreadPoolResourceManager& tprm = ThreadPoolResourceManager::self();
-            if( init == false ){
-               tprm.insert<boost::threadpool::fifo_pool>(tp, NTHREADS);
-               init = true;
-            }
-            return tp;
-         }
+    static ThreadPoolFIFO& self(){
+      static ThreadPoolFIFO tp(NTHREADS);
+      ThreadPoolResourceManager& tprm = ThreadPoolResourceManager::self();
+      if( init == false ){
+        tprm.insert<boost::threadpool::fifo_pool>(tp, NTHREADS);
+        init = true;
+      }
+      return tp;
+    }
 
-         static bool is_nebo_thread_parallel() { return nebo_parallelism; };
+    static bool is_nebo_thread_parallel() { return nebo_parallelism; };
 
-         static bool set_nebo_thread_parallel(bool newBool) {
-            nebo_parallelism = newBool;
-            return nebo_parallelism;
-         };
+    static bool set_nebo_thread_parallel(bool newBool) {
+      nebo_parallelism = newBool;
+      return nebo_parallelism;
+    };
 
-      private:
-         static bool init;
-         static bool nebo_parallelism;
+  private:
+    static bool init;
+    static bool nebo_parallelism;
   };
 } // namespace SpatialOps
 

@@ -25,19 +25,27 @@
 namespace SpatialOps {
 
 #ifdef FIELD_EXPRESSION_THREADS
-    bool is_nebo_thread_parallel() { return ThreadPoolFIFO::self().is_nebo_thread_parallel(); };
+    bool is_nebo_thread_parallel() {
+      return ThreadPoolFIFO::self().is_nebo_thread_parallel();
+    }
 
-    int get_nebo_soft_thread_count() { return ThreadPoolResourceManager::self().get_max_active_worker_count(ThreadPoolFIFO::self()); };
+    int get_nebo_soft_thread_count() {
+      return ThreadPoolResourceManager::self().get_max_active_worker_count(ThreadPoolFIFO::self());
+    }
+
     int set_nebo_soft_thread_count(int thread_count) {
         ThreadPoolFIFO::self().set_nebo_thread_parallel(thread_count > 0);  //if thread_count is zero or less, use sequential nebo
         return ThreadPoolResourceManager::self().resize_active(ThreadPoolFIFO::self(), thread_count);
-    };
+    }
 
-    int get_nebo_hard_thread_count() { return ThreadPoolResourceManager::self().get_worker_count(ThreadPoolFIFO::self()); };
+    int get_nebo_hard_thread_count() {
+      return ThreadPoolResourceManager::self().get_worker_count(ThreadPoolFIFO::self());
+    }
+
     int set_nebo_hard_thread_count(int thread_count) {
         ThreadPoolFIFO::self().set_nebo_thread_parallel(thread_count > 0);  //if thread_count is zero or less, use sequential nebo
         return ThreadPoolResourceManager::self().resize(ThreadPoolFIFO::self(), thread_count);
-    };
+    }
 #endif
 } /* SpatialOps */
 
