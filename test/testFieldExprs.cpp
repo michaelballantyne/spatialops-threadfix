@@ -83,7 +83,8 @@ bool test( const SS::IntVec dim )
     f3 <<= f3 * cos(f3);
     f3 <<= f3 + f1*f2;
 
-    f1 <<= abs(-1.0);
+    f1 <<= -1.0;
+    f1 <<= abs(f1);
     for( constiter i1=f1.begin(); i1!=f1.end(); ++i1 ){
       tmp( *i1 == 1.0 );
     }
