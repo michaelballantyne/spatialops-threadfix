@@ -29,8 +29,10 @@
 #include <spatialops/structured/ExternalAllocators.h>
 #include <spatialops/structured/IndexTriplet.h>
 
+#include <queue>
+#include <map>
+
 #include <boost/type_traits.hpp>
-#include <boost/pool/singleton_pool.hpp>
 
 #ifdef ENABLE_THREADS
 # include <boost/thread/mutex.hpp>
@@ -209,6 +211,23 @@ private:
 class SpatialFieldStore {
 
   struct SpatialFieldPoolTag{};
+
+  template<typename T>
+  class Pool{
+    typedef std::queue<T*> FieldQueue;
+    typedef std::map<size_t,FieldQueue> FQSizeMap;
+
+    FQSizeMap fqm_;
+    size_t pad_;
+
+    Pool();
+    ~Pool();
+
+  public:
+    static Pool& self();
+    T* get( const size_t n );
+    void put(T*, size_t);
+  };
 
   template<typename FT, typename IsPODT> struct ValTypeSelector;
   template<typename FT> struct ValTypeSelector<FT, boost::true_type> {
@@ -583,7 +602,8 @@ get_from_window( const structured::MemoryWindow& window,
                  const unsigned short int deviceIndex )
 {
   typedef typename ValTypeSelector<FieldT,typename boost::is_pod<FieldT>::type>::type AtomicT;
-  typedef boost::singleton_pool<SpatialFieldPoolTag,sizeof(AtomicT)> pool;
+
+  Pool<AtomicT>& pool = Pool<AtomicT>::self();
 
 #ifdef ENABLE_THREADS
   boost::mutex::scoped_lock lock( get_mutex() );
@@ -595,7 +615,7 @@ get_from_window( const structured::MemoryWindow& window,
                                        window.extent(),
                                        window.has_bc(0), window.has_bc(1), window.has_bc(2) );
     const size_t npts = mw.glob_npts();
-    AtomicT* fnew = static_cast<AtomicT*>( pool::ordered_malloc(npts) );
+    AtomicT* fnew = pool.get(npts);
 #   ifndef NDEBUG  // only zero the field for debug runs.
     for( size_t i=0; i<npts; ++i )  fnew[i] = 0.0;
 #   endif
@@ -628,16 +648,71 @@ template<typename FieldT>
 inline
 void SpatialFieldStore::restore_field(FieldT& field)
 {
-  typedef typename ValTypeSelector<FieldT,typename boost::is_pod<FieldT>::type>::type AtomicT;
-  typedef boost::singleton_pool<SpatialFieldPoolTag,sizeof(AtomicT)> pool;
 # ifdef ENABLE_THREADS
   boost::mutex::scoped_lock lock( get_mutex() );
 # endif
-  const size_t npts = field.window_with_ghost().glob_npts();
-  pool::ordered_free( field.field_values(), npts );
+  typedef typename ValTypeSelector<FieldT,typename boost::is_pod<FieldT>::type>::type AtomicT;
+  Pool<AtomicT>::self().put( field.field_values(),
+                             field.window_with_ghost().glob_npts() );
 }
 
 //------------------------------------------------------------------
+
+template< typename T >
+SpatialFieldStore::Pool<T>::Pool()
+{
+  pad_ = 0;
+}
+
+template< typename T >
+SpatialFieldStore::Pool<T>::~Pool()
+{
+  for( typename FQSizeMap::iterator i=fqm_.begin(); i!=fqm_.end(); ++i ){
+    FieldQueue& fq = i->second;
+    while( !fq.empty() ){
+      delete [] fq.front();
+      fq.pop();
+    }
+  }
+}
+
+template< typename T >
+SpatialFieldStore::Pool<T>&
+SpatialFieldStore::Pool<T>::self()
+{
+  static Pool p;
+  return p;
+}
+
+template< typename T >
+T*
+SpatialFieldStore::Pool<T>::get( const size_t n )
+{
+  if( pad_==0 ) pad_ = n+n/10;
+  typename FQSizeMap::iterator ifq = fqm_.lower_bound( n );
+  if( ifq == fqm_.end() ){
+    ifq = fqm_.insert( ifq, make_pair(n+pad_,FieldQueue()) );
+  }
+  T* field = NULL;
+  FieldQueue& fq = ifq->second;
+  if( fq.empty() ){
+    field = new T[n+pad_];
+  }
+  else{
+    field = fq.front(); fq.pop();
+  }
+  return field;
+}
+
+template< typename T >
+void
+SpatialFieldStore::Pool<T>::put( T* t, size_t n )
+{
+  const typename FQSizeMap::iterator ifq = fqm_.lower_bound( n );
+  assert( ifq != fqm_.end() );
+  FieldQueue& fq = ifq->second;
+  fq.push( t );
+}
 
 } // namespace SpatialOps
 
