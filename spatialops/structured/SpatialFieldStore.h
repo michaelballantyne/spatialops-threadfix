@@ -166,11 +166,11 @@ public:
   void detach();
 
 private:
-  MemoryType memType_;
-  unsigned short deviceIndex_;
   FieldT* f_;
   int* count_;
   bool builtFromStore_;
+  unsigned short deviceIndex_;
+  MemoryType memType_;
 };
 
 /**
@@ -394,8 +394,8 @@ SpatFldPtr<FieldT>::SpatFldPtr(const SpatFldPtr<FieldT>& p)
   : f_(p.f_),
     count_(p.count_),
     builtFromStore_( p.builtFromStore_ ),
-    memType_( p.memType_ ),
-    deviceIndex_( p.deviceIndex_)
+    deviceIndex_( p.deviceIndex_),
+    memType_( p.memType_ )
 {
     ++(*count_);
 }
@@ -406,8 +406,8 @@ template<typename FieldT>
 SpatFldPtr<FieldT>::SpatFldPtr()
   : f_( NULL ),
     count_( NULL ),
-    deviceIndex_( 0 ),
     builtFromStore_( false ),
+    deviceIndex_( 0 ),
     memType_( LOCAL_RAM )
 {}
 //------------------------------------------------------------------
