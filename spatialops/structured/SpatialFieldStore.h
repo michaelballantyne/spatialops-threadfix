@@ -373,8 +373,8 @@ SpatFldPtr( double* const f, const bool builtFromStore )
   : f_(f),
     count_(new int),
     builtFromStore_(builtFromStore),
-    memType_(LOCAL_RAM),
-    deviceIndex_(0)
+    deviceIndex_(0),
+    memType_(LOCAL_RAM)
 {
   *count_ = 1;
 }
@@ -564,8 +564,8 @@ inline SpatFldPtr<double>::SpatFldPtr(double* const f)
   : f_(f),
     count_(new int),
     builtFromStore_(false),
-    memType_(LOCAL_RAM),
-    deviceIndex_(0)
+    deviceIndex_(0),
+    memType_(LOCAL_RAM)
 {
   *count_ = 1;
 }
