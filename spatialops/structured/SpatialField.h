@@ -481,11 +481,12 @@ SpatialField<Location, GhostTraits, T>::SpatialField(const SpatialField& other)
 : fieldWindow_(other.fieldWindow_),
   interiorFieldWindow_(other.interiorFieldWindow_),
   fieldValues_(other.fieldValues_),
+  fieldValuesExtDevice_(other.fieldValuesExtDevice_),
   builtField_(false),
   memType_(other.memType_),
   deviceIndex_(other.deviceIndex_),
-  fieldValuesExtDevice_(other.fieldValuesExtDevice_),
-  consumerFieldValues_(other.consumerFieldValues_)
+  consumerFieldValues_(other.consumerFieldValues_),
+  allocatedBytes_( other.allocatedBytes_ )
 {}
 
 //------------------------------------------------------------------
@@ -504,8 +505,8 @@ SpatialField<Location, GhostTraits, T>::~SpatialField() {
   if ( builtField_ ) {
     switch ( memType_ ) {
     case LOCAL_RAM: {
-		delete[] fieldValues_;
-		fieldValues_ = NULL;
+      delete[] fieldValues_;
+      fieldValues_ = NULL;
     }
     break;
 #ifdef ENABLE_CUDA
@@ -540,7 +541,7 @@ reset_values( const T* values )
 {
   switch (memType_) {
   case LOCAL_RAM: {
-	iterator ifld = begin();
+    iterator ifld = begin();
     const iterator iflde = end();
     if (NULL == values) {
       for (; ifld != iflde; ++ifld)
@@ -578,381 +579,390 @@ reset_values( const T* values )
 //------------------------------------------------------------------
 
 template<typename Location, typename GhostTraits, typename T>
-T* SpatialField<Location, GhostTraits, T>::field_values (
-		const MemoryType consumerMemoryType, const unsigned short int consumerDeviceIndex) const {
-	#ifdef DEBUG_SF_ALL
-			std::cout << "Caught call to field_values for field : " << this->field_values() << "\n";
-			std::cout << "\t -- mtype:        " << DeviceTypeTools::get_memory_type_description(mtype) << std::endl
-					  << "\t -- Device index: " << consumerDeviceIndex << std::endl
-					  << "\t -- Value:        " << consumerFieldValues_.find(consumerDeviceIndex)->first
-					  	  << " " <<consumerFieldValues_.find(consumerDeviceIndex)->second << std::endl;
-	#endif
+T* SpatialField<Location, GhostTraits, T>::
+field_values( const MemoryType consumerMemoryType,
+              const unsigned short int consumerDeviceIndex ) const
+{
+#ifdef DEBUG_SF_ALL
+  std::cout << "Caught call to field_values for field : " << this->field_values() << "\n";
+  std::cout << "\t -- mtype:        " << DeviceTypeTools::get_memory_type_description(mtype) << std::endl
+      << "\t -- Device index: " << consumerDeviceIndex << std::endl
+      << "\t -- Value:        " << consumerFieldValues_.find(consumerDeviceIndex)->first
+      << " " <<consumerFieldValues_.find(consumerDeviceIndex)->second << std::endl;
+#endif
 
-	switch( consumerMemoryType ){
-		case LOCAL_RAM:{
-			if( fieldValues_ == NULL ){
-				std::ostringstream msg;
-				msg << "Request for consumer field pointer on a device for which it has not been allocated\n";
-				msg << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
-				throw(std::runtime_error(msg.str()));
-			}
-			return fieldValues_;
-		}
+  switch( consumerMemoryType ){
+  case LOCAL_RAM:{
+    if( fieldValues_ == NULL ){
+      std::ostringstream msg;
+      msg << "Request for consumer field pointer on a device for which it has not been allocated\n";
+      msg << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
+      throw(std::runtime_error(msg.str()));
+    }
+    return fieldValues_;
+  }
 
 #ifdef ENABLE_CUDA
-		case EXTERNAL_CUDA_GPU: {
-			//Check local allocations first
-			if( ( consumerMemoryType == memType_ ) && ( consumerDeviceIndex == deviceIndex_ ) ) {
-				return fieldValuesExtDevice_;
-			}
+  case EXTERNAL_CUDA_GPU: {
+    //Check local allocations first
+    if( ( consumerMemoryType == memType_ ) && ( consumerDeviceIndex == deviceIndex_ ) ) {
+      return fieldValuesExtDevice_;
+    }
 
-			typename ConsumerMap::const_iterator citer = consumerFieldValues_.find( consumerDeviceIndex );
-			if( citer != consumerFieldValues_.end() ) {
-				return ( citer->second );
-			}
+    typename ConsumerMap::const_iterator citer = consumerFieldValues_.find( consumerDeviceIndex );
+    if( citer != consumerFieldValues_.end() ) {
+      return ( citer->second );
+    }
 
-			std::ostringstream msg;
-			msg << "Request for consumer field pointer on a device for which it has not been allocated\n";
-			msg << "\t - " << __FILE__ << " : " << __LINE__;
-			throw( std::runtime_error(msg.str()) );
+    std::ostringstream msg;
+    msg << "Request for consumer field pointer on a device for which it has not been allocated\n";
+    msg << "\t - " << __FILE__ << " : " << __LINE__;
+    throw( std::runtime_error(msg.str()) );
 
-		}
+  }
 #endif
-		default:{
-			std::ostringstream msg;
-			msg << "Request for consumer field pointer to unknown or unsupported device\n";
-			msg << "\t - " << __FILE__ << " : " << __LINE__;
-			throw(std::runtime_error(msg.str()));
-		}
-	}
+  default:{
+    std::ostringstream msg;
+    msg << "Request for consumer field pointer to unknown or unsupported device\n";
+    msg << "\t - " << __FILE__ << " : " << __LINE__;
+    throw(std::runtime_error(msg.str()));
+  }
+  }
 }
 
 //------------------------------------------------------------------
 
 template<typename Location, typename GhostTraits, typename T>
-void SpatialField<Location, GhostTraits, T>::add_consumer(
-		MemoryType consumerMemoryType, const unsigned short int consumerDeviceIndex) {
-
+void SpatialField<Location, GhostTraits, T>::
+add_consumer( MemoryType consumerMemoryType,
+              const unsigned short int consumerDeviceIndex )
+{
 #ifdef DEBUG_SF_ALL
-    	std::cout << "Caught call to Spatial Field add_consumer for field : " << this->field_values() << "\n";
+  std::cout << "Caught call to Spatial Field add_consumer for field : " << this->field_values() << "\n";
 #endif
-	//Check for local allocation
-	if( consumerMemoryType == memType_ && consumerDeviceIndex == deviceIndex_ ) {
-		return;
-	}
+  //Check for local allocation
+  if( consumerMemoryType == memType_ && consumerDeviceIndex == deviceIndex_ ) {
+    return;
+  }
 #   ifdef ENABLE_THREADS
-	//Make sure adding consumers is per-field atomic
-	ExecMutex lock;
+  //Make sure adding consumers is per-field atomic
+  ExecMutex lock;
 #   endif
 
-	//Take action based on where the field must be available and where it currently is
-	switch( consumerMemoryType ){
-		case LOCAL_RAM: {
-			switch( memType_ ) {
+  //Take action based on where the field must be available and where it currently is
+  switch( consumerMemoryType ){
+  case LOCAL_RAM: {
+    switch( memType_ ) {
 #ifdef ENABLE_CUDA
-				case LOCAL_RAM: {
-					// The only way we should get here is if for some reason a field was allocated as
-					// LOCAL_RAM with a non-zero device index.
-					// This shouldn't happen given how we define LOCAL_RAM at present, but I don't know if
-					// we should consider it an error.
-				}
-				break;
-
-				case EXTERNAL_CUDA_GPU: { // GPU field that needs to be available on the CPU
-					#ifdef DEBUG_SF_ALL
-							std::cout << "EXTERNAL_CUDA_GPU field\n";
-					#endif
-
-					if( fieldValues_ == NULL ) {  // Space is already allocated
-#ifdef DEBUG_SF_ALL
-			        	std::cout << "Consumer field does not exist, allocating...\n\n";
-#endif
-						fieldValues_ = new T[allocatedBytes_/sizeof(T)];
-#ifdef DEBUG_SF_ALL
-			        	std::cout << "fieldValues_ == " << fieldValues_ << std::endl;
-#endif
-					}
-
-#ifdef DEBUG_SF_ALL
-					std::cout << "Calling memcpy with " << fieldValues_ << " " << fieldValuesExtDevice_
-								<< " " << allocatedBytes_ << " " << deviceIndex_ << std::endl;
-#endif
-					ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-					CDI.memcpy_from( fieldValues_, fieldValuesExtDevice_, allocatedBytes_, deviceIndex_ );
-				}
-				break;
-#endif
-				default:{
-					std::ostringstream msg;
-					msg << "Failed call to add_consumer on Spatial Field, unknown source device type\n";
-					msg << "This error indicates a serious problem in how this field was originally created\n";
-					msg << "\t - " << __FILE__ << " : " << __LINE__;
-					throw(std::runtime_error(msg.str()));
-				}
-			}
-
-		} // LOCAL_RAM
-		break;
-
-#ifdef ENABLE_CUDA
-		case EXTERNAL_CUDA_GPU: {
-			switch( memType_ ) {
-				case LOCAL_RAM: { //CPU Field needs to be available on a GPU
-    				ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-
-			        //Check to see if field memory exists
-			        if ( consumerFieldValues_.find( consumerDeviceIndex ) == consumerFieldValues_.end() ) {
-			        	//Field doesn't exist, attempt to allocate it
-			        	consumerFieldValues_[consumerDeviceIndex] = (T*)CDI.get_raw_pointer( allocatedBytes_, consumerDeviceIndex );
-			        }
-
-			        CDI.memcpy_to( (void*)consumerFieldValues_[consumerDeviceIndex], fieldValues_, allocatedBytes_, consumerDeviceIndex );
-				}
-				break;
-
-				case EXTERNAL_CUDA_GPU: {
-					//GPU Field needs to be available on another GPU
-					//Check to see if the field exists
-					ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-
-					if ( consumerFieldValues_.find( consumerDeviceIndex ) == consumerFieldValues_.end() ) {
-								consumerFieldValues_[consumerDeviceIndex] = (T*)CDI.get_raw_pointer( allocatedBytes_, consumerDeviceIndex );
-					}
-
-					CDI.memcpy_peer( (void*)consumerFieldValues_[consumerDeviceIndex],
-							consumerDeviceIndex, fieldValuesExtDevice_, deviceIndex_, allocatedBytes_ );
-				}
-				break;
-
-				default:{
-					std::ostringstream msg;
-					msg << "Failed call to add_consumer on Spatial Field, unknown source device type\n";
-					msg << "This error indicates a serious problem in how this field was originally created\n";
-					msg << "\t - " << __FILE__ << " : " << __LINE__;
-					throw(std::runtime_error(msg.str()));
-				}
-			}
-		} // EXTERNAL_CUDA_GPU
-		break;
-#endif
-
-		default: {
-			std::ostringstream msg;
-			msg << "Failed call to add_consumer on Spatial Field, unknown destination device type\n";
-			msg << "Ensure that you are compiling spatial ops with the proper end device support\n";
-			msg << "\t - " << __FILE__ << " : " << __LINE__;
-			throw(std::runtime_error(msg.str()));
-		}
-	}
-
-}
-
-//------------------------------------------------------------------
-
-template<typename Location, typename GhostTraits, typename T>
-typename SpatialField<Location, GhostTraits, T>::const_iterator SpatialField<
-    Location, GhostTraits, T>::end() const {
-
-	// We can allow constant interation of the field even if its not local,
-	// so long as it has a local consumer field allocated
-	if( memType_ == LOCAL_RAM || fieldValues_ != NULL ){
-      IntVec ijk = fieldWindow_.extent();
-      for (size_t i = 0; i < 3; ++i)
-        ijk[i] -= 1;
-      const size_t n = fieldWindow_.flat_index(ijk);
-      const_iterator i(fieldValues_, n, &fieldWindow_);
-      return ++i;
-	} else {
-      std::ostringstream msg;
-      msg << "Unsupported request for const_iterator to field type ( "
-          << DeviceTypeTools::get_memory_type_description(memType_) << " )"
-      	  << "\t - No consumer allocated." << std::endl
-      	  << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
-      throw(std::runtime_error(msg.str()));
-	}
-}
-
-//------------------------------------------------------------------
-
-template<typename Location, typename GhostTraits, typename T>
-typename SpatialField<Location, GhostTraits, T>::iterator SpatialField<Location,
-    GhostTraits, T>::end() {
-
-  switch (memType_) {
     case LOCAL_RAM: {
-      IntVec ijk = fieldWindow_.extent();
-      for (size_t i = 0; i < 3; ++i)
-        ijk[i] -= 1;
-      const size_t n = fieldWindow_.flat_index(ijk);
-      iterator i(fieldValues_, n, &fieldWindow_);
-      return ++i;
+      // The only way we should get here is if for some reason a field was allocated as
+      // LOCAL_RAM with a non-zero device index.
+      // This shouldn't happen given how we define LOCAL_RAM at present, but I don't know if
+      // we should consider it an error.
     }
-    default:
+    break;
+
+    case EXTERNAL_CUDA_GPU: { // GPU field that needs to be available on the CPU
+#ifdef DEBUG_SF_ALL
+      std::cout << "EXTERNAL_CUDA_GPU field\n";
+#endif
+
+      if( fieldValues_ == NULL ) {  // Space is already allocated
+#ifdef DEBUG_SF_ALL
+        std::cout << "Consumer field does not exist, allocating...\n\n";
+#endif
+        fieldValues_ = new T[allocatedBytes_/sizeof(T)];
+#ifdef DEBUG_SF_ALL
+        std::cout << "fieldValues_ == " << fieldValues_ << std::endl;
+#endif
+      }
+
+#ifdef DEBUG_SF_ALL
+      std::cout << "Calling memcpy with " << fieldValues_ << " " << fieldValuesExtDevice_
+          << " " << allocatedBytes_ << " " << deviceIndex_ << std::endl;
+#endif
+      ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
+      CDI.memcpy_from( fieldValues_, fieldValuesExtDevice_, allocatedBytes_, deviceIndex_ );
+    }
+    break;
+#endif
+    default:{
       std::ostringstream msg;
-      msg << "Unsupported request for iterator to external field type ( "
-          << DeviceTypeTools::get_memory_type_description(memType_) << " )";
+      msg << "Failed call to add_consumer on Spatial Field, unknown source device type\n";
+      msg << "This error indicates a serious problem in how this field was originally created\n";
       msg << "\t - " << __FILE__ << " : " << __LINE__;
       throw(std::runtime_error(msg.str()));
+    }
+    }
+
+  } // LOCAL_RAM
+  break;
+
+#ifdef ENABLE_CUDA
+  case EXTERNAL_CUDA_GPU: {
+    switch( memType_ ) {
+    case LOCAL_RAM: { //CPU Field needs to be available on a GPU
+      ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
+
+      //Check to see if field memory exists
+      if ( consumerFieldValues_.find( consumerDeviceIndex ) == consumerFieldValues_.end() ) {
+        //Field doesn't exist, attempt to allocate it
+        consumerFieldValues_[consumerDeviceIndex] = (T*)CDI.get_raw_pointer( allocatedBytes_, consumerDeviceIndex );
+      }
+
+      CDI.memcpy_to( (void*)consumerFieldValues_[consumerDeviceIndex], fieldValues_, allocatedBytes_, consumerDeviceIndex );
+    }
+    break;
+
+    case EXTERNAL_CUDA_GPU: {
+      //GPU Field needs to be available on another GPU
+      //Check to see if the field exists
+      ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
+
+      if ( consumerFieldValues_.find( consumerDeviceIndex ) == consumerFieldValues_.end() ) {
+        consumerFieldValues_[consumerDeviceIndex] = (T*)CDI.get_raw_pointer( allocatedBytes_, consumerDeviceIndex );
+      }
+
+      CDI.memcpy_peer( (void*)consumerFieldValues_[consumerDeviceIndex],
+          consumerDeviceIndex, fieldValuesExtDevice_, deviceIndex_, allocatedBytes_ );
+    }
+    break;
+
+    default:{
+      std::ostringstream msg;
+      msg << "Failed call to add_consumer on Spatial Field, unknown source device type\n";
+      msg << "This error indicates a serious problem in how this field was originally created\n";
+      msg << "\t - " << __FILE__ << " : " << __LINE__;
+      throw(std::runtime_error(msg.str()));
+    }
+    }
+  } // EXTERNAL_CUDA_GPU
+  break;
+#endif
+
+  default: {
+    std::ostringstream msg;
+    msg << "Failed call to add_consumer on Spatial Field, unknown destination device type\n";
+    msg << "Ensure that you are compiling spatial ops with the proper end device support\n";
+    msg << "\t - " << __FILE__ << " : " << __LINE__;
+    throw(std::runtime_error(msg.str()));
+  }
   }
 }
 
 //------------------------------------------------------------------
 
 template<typename Location, typename GhostTraits, typename T>
-typename SpatialField<Location, GhostTraits, T>::const_interior_iterator SpatialField<
-    Location, GhostTraits, T>::interior_end() const {
-
-  if( memType_ == LOCAL_RAM || fieldValues_ != NULL ) {
-      IntVec ijk = interiorFieldWindow_.extent();
-      for (size_t i = 0; i < 3; ++i)
-        ijk[i] -= 1;
-      const_interior_iterator i(fieldValues_,
-          interiorFieldWindow_.flat_index(ijk), &interiorFieldWindow_);
-      return ++i;
+typename SpatialField<Location, GhostTraits, T>::const_iterator
+SpatialField<Location,GhostTraits, T>::end() const
+{
+  // We can allow constant interation of the field even if its not local,
+  // so long as it has a local consumer field allocated
+  if( memType_ == LOCAL_RAM || fieldValues_ != NULL ){
+    IntVec ijk = fieldWindow_.extent();
+    for (size_t i = 0; i < 3; ++i)
+      ijk[i] -= 1;
+    const size_t n = fieldWindow_.flat_index(ijk);
+    const_iterator i(fieldValues_, n, &fieldWindow_);
+    return ++i;
   } else {
-      std::ostringstream msg;
-      msg << "Unsupported request for iterator to external field type ( "
-          << DeviceTypeTools::get_memory_type_description(memType_) << " )";
-      msg << "\t - " << __FILE__ << " : " << __LINE__;
-      throw(std::runtime_error(msg.str()));
+    std::ostringstream msg;
+    msg << "Unsupported request for const_iterator to field type ( "
+        << DeviceTypeTools::get_memory_type_description(memType_) << " )"
+        << "\t - No consumer allocated." << std::endl
+        << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
+    throw(std::runtime_error(msg.str()));
   }
 }
 
 //------------------------------------------------------------------
 
 template<typename Location, typename GhostTraits, typename T>
-typename SpatialField<Location, GhostTraits, T>::interior_iterator SpatialField<
-    Location, GhostTraits, T>::interior_end() {
-
+typename SpatialField<Location, GhostTraits, T>::iterator
+SpatialField<Location,GhostTraits, T>::end()
+{
   switch (memType_) {
-    case LOCAL_RAM: {
-      IntVec ijk = interiorFieldWindow_.extent();
-      for (size_t i = 0; i < 3; ++i)
-        ijk[i] -= 1;
-      interior_iterator i(fieldValues_, interiorFieldWindow_.flat_index(ijk),
-          &interiorFieldWindow_);
-      return ++i;
-    }
-    default:
-      std::ostringstream msg;
-      msg << "Unsupported request for iterator to external field type ( "
-          << DeviceTypeTools::get_memory_type_description(memType_) << " )";
-      msg << "\t - " << __FILE__ << " : " << __LINE__;
-      throw(std::runtime_error(msg.str()));
+  case LOCAL_RAM: {
+    IntVec ijk = fieldWindow_.extent();
+    for (size_t i = 0; i < 3; ++i)
+      ijk[i] -= 1;
+    const size_t n = fieldWindow_.flat_index(ijk);
+    iterator i(fieldValues_, n, &fieldWindow_);
+    return ++i;
+  }
+  default:
+    std::ostringstream msg;
+    msg << "Unsupported request for iterator to external field type ( "
+        << DeviceTypeTools::get_memory_type_description(memType_) << " )";
+    msg << "\t - " << __FILE__ << " : " << __LINE__;
+    throw(std::runtime_error(msg.str()));
   }
 }
 
 //------------------------------------------------------------------
 
 template<typename Location, typename GhostTraits, typename T>
-T& SpatialField<Location, GhostTraits, T>::operator()( const size_t i,
-    const size_t j, const size_t k) {
+typename SpatialField<Location, GhostTraits, T>::const_interior_iterator
+SpatialField<Location,GhostTraits,T>::interior_end() const
+{
+  if( memType_ == LOCAL_RAM || fieldValues_ != NULL ) {
+    IntVec ijk = interiorFieldWindow_.extent();
+    for( size_t i = 0; i < 3; ++i )  ijk[i] -= 1;
+    const_interior_iterator i( fieldValues_,
+                               interiorFieldWindow_.flat_index(ijk),
+                               &interiorFieldWindow_);
+    return ++i;
+  } else {
+    std::ostringstream msg;
+    msg << "Unsupported request for iterator to external field type ( "
+        << DeviceTypeTools::get_memory_type_description(memType_) << " )";
+    msg << "\t - " << __FILE__ << " : " << __LINE__;
+    throw(std::runtime_error(msg.str()));
+  }
+}
+
+//------------------------------------------------------------------
+
+template<typename Location, typename GhostTraits, typename T>
+typename SpatialField<Location, GhostTraits, T>::interior_iterator
+SpatialField<Location,GhostTraits,T>::interior_end()
+{
   switch (memType_) {
-    case LOCAL_RAM: {
-      return (*this)(IntVec(i, j, k));
-    }
-    default:
-      std::ostringstream msg;
-      msg << "Field type ( "
-          << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
-          << " does not support direct indexing.\n"
-          << "Note: this function is DEPRECATED and is not recommended for future use.\n";
-      msg << "\t - " << __FILE__ << " : " << __LINE__;
-      throw(std::runtime_error(msg.str()));
+  case LOCAL_RAM: {
+    IntVec ijk = interiorFieldWindow_.extent();
+    for (size_t i = 0; i < 3; ++i)
+      ijk[i] -= 1;
+    interior_iterator i(fieldValues_, interiorFieldWindow_.flat_index(ijk),
+                        &interiorFieldWindow_);
+    return ++i;
+  }
+  default:
+    std::ostringstream msg;
+    msg << "Unsupported request for iterator to external field type ( "
+        << DeviceTypeTools::get_memory_type_description(memType_) << " )";
+    msg << "\t - " << __FILE__ << " : " << __LINE__;
+    throw(std::runtime_error(msg.str()));
+  }
+}
+
+//------------------------------------------------------------------
+
+template<typename Location, typename GhostTraits, typename T>
+T&
+SpatialField<Location, GhostTraits, T>::
+operator()( const size_t i, const size_t j, const size_t k )
+{
+  switch (memType_) {
+  case LOCAL_RAM: {
+    return (*this)(IntVec(i, j, k));
+  }
+  default:
+    std::ostringstream msg;
+    msg << "Field type ( "
+        << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
+        << " does not support direct indexing.\n"
+        << "Note: this function is DEPRECATED and is not recommended for future use.\n";
+    msg << "\t - " << __FILE__ << " : " << __LINE__;
+    throw(std::runtime_error(msg.str()));
   }
 }
 
 template<typename Location, typename GhostTraits, typename T>
-T& SpatialField<Location, GhostTraits, T>::operator()(const IntVec& ijk) {
+T&
+SpatialField<Location, GhostTraits, T>::operator()(const IntVec& ijk)
+{
   switch (memType_) {
-    case LOCAL_RAM: {
+  case LOCAL_RAM: {
 #   ifndef NDEBUG
-      assert(ijk[0] < fieldWindow_.extent(0));
-      assert(ijk[1] < fieldWindow_.extent(1));
-      assert(ijk[2] < fieldWindow_.extent(2));
-      assert(ijk[0] >= fieldWindow_.offset(0));
-      assert(ijk[1] >= fieldWindow_.offset(1));
-      assert(ijk[2] >= fieldWindow_.offset(2));
+    assert(ijk[0] < fieldWindow_.extent(0));
+    assert(ijk[1] < fieldWindow_.extent(1));
+    assert(ijk[2] < fieldWindow_.extent(2));
+    assert(ijk[0] >= fieldWindow_.offset(0));
+    assert(ijk[1] >= fieldWindow_.offset(1));
+    assert(ijk[2] >= fieldWindow_.offset(2));
 #   endif
-      return fieldValues_[fieldWindow_.flat_index(ijk)];
-    }
-    default:
-      std::ostringstream msg;
-      msg << "Field type ( "
-          << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
-          << " does not support direct indexing.\n"
-          << "Note: this function is DEPRECATED and is not recommended for future use.\n";
-      msg << "\t - " << __FILE__ << " : " << __LINE__;
-      throw(std::runtime_error(msg.str()));
+    return fieldValues_[fieldWindow_.flat_index(ijk)];
+  }
+  default:
+    std::ostringstream msg;
+    msg << "Field type ( "
+        << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
+        << " does not support direct indexing.\n"
+        << "Note: this function is DEPRECATED and is not recommended for future use.\n";
+    msg << "\t - " << __FILE__ << " : " << __LINE__;
+    throw(std::runtime_error(msg.str()));
   }
 }
 
 //------------------------------------------------------------------
 
 template<typename Location, typename GhostTraits, typename T>
-const T& SpatialField<Location, GhostTraits, T>::operator()( const size_t i,
-    const size_t j, const size_t k) const {
+const T& SpatialField<Location, GhostTraits, T>::
+operator()( const size_t i, const size_t j, const size_t k ) const
+{
   if ( memType_ == LOCAL_RAM || fieldValues_ != NULL ) {
 #   ifndef NDEBUG
-      assert(i < fieldWindow_.extent(0));
-      assert(j < fieldWindow_.extent(1));
-      assert(k < fieldWindow_.extent(2));
-      assert(i >= fieldWindow_.offset(0));
-      assert(j >= fieldWindow_.offset(1));
-      assert(k >= fieldWindow_.offset(2));
+    assert(i < fieldWindow_.extent(0));
+    assert(j < fieldWindow_.extent(1));
+    assert(k < fieldWindow_.extent(2));
+    assert(i >= fieldWindow_.offset(0));
+    assert(j >= fieldWindow_.offset(1));
+    assert(k >= fieldWindow_.offset(2));
 #   endif
-      IntVec ijk(i,j,k);
-      return fieldValues_[fieldWindow_.flat_index(ijk)];
-    } else {
-      std::ostringstream msg;
-      msg << "Field type ( "
-          << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
-          << " does not support direct indexing, and has no consumer field allocated.\n"
-          << "Note: this function is DEPRECATED and is not recommended for future use.\n";
-      msg << "\t - " << __FILE__ << " : " << __LINE__;
-      throw(std::runtime_error(msg.str()));
+    IntVec ijk(i,j,k);
+    return fieldValues_[fieldWindow_.flat_index(ijk)];
+  } else {
+    std::ostringstream msg;
+    msg << "Field type ( "
+        << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
+        << " does not support direct indexing, and has no consumer field allocated.\n"
+        << "Note: this function is DEPRECATED and is not recommended for future use.\n";
+    msg << "\t - " << __FILE__ << " : " << __LINE__;
+    throw(std::runtime_error(msg.str()));
   }
 }
 
 template<typename Location, typename GhostTraits, typename T>
-const T& SpatialField<Location, GhostTraits, T>::operator()( const IntVec& ijk ) const {
+const T&
+SpatialField<Location, GhostTraits, T>::
+operator()( const IntVec& ijk ) const
+{
   if( memType_ == LOCAL_RAM || fieldValues_ != NULL ){
 #   ifndef NDEBUG
-      assert(
-          ijk[0] < fieldWindow_.extent(0) && ijk[0] >= fieldWindow_.offset(0));
-      assert(
-          ijk[1] < fieldWindow_.extent(1) && ijk[1] >= fieldWindow_.offset(1));
-      assert(
-          ijk[2] < fieldWindow_.extent(2) && ijk[2] >= fieldWindow_.offset(2));
+    assert( ijk[0] < fieldWindow_.extent(0) && ijk[0] >= fieldWindow_.offset(0) );
+    assert( ijk[1] < fieldWindow_.extent(1) && ijk[1] >= fieldWindow_.offset(1) );
+    assert( ijk[2] < fieldWindow_.extent(2) && ijk[2] >= fieldWindow_.offset(2) );
 #   endif
-      return fieldValues_[fieldWindow_.flat_index(ijk)];
-    } else {
-      std::ostringstream msg;
-      msg << "Field type ( "
-          << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
-          << " does not support direct indexing, and has no consumer field allocated.\n"
-          << "Note: this function is DEPRECATED and is not recommended for future use.\n";
-      msg << "\t - " << __FILE__ << " : " << __LINE__;
-      throw(std::runtime_error(msg.str()));
+    return fieldValues_[fieldWindow_.flat_index(ijk)];
+  } else {
+    std::ostringstream msg;
+    msg << "Field type ( "
+        << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
+        << " does not support direct indexing, and has no consumer field allocated.\n"
+        << "Note: this function is DEPRECATED and is not recommended for future use.\n";
+    msg << "\t - " << __FILE__ << " : " << __LINE__;
+    throw(std::runtime_error(msg.str()));
   }
 }
 
 //------------------------------------------------------------------
 
 template<typename Location, typename GhostTraits, typename T>
-T& SpatialField<Location, GhostTraits, T>::operator[](const size_t i) {
+T&
+SpatialField<Location, GhostTraits, T>::operator[](const size_t i)
+{
   switch (memType_) {
-    case LOCAL_RAM: {
-      return fieldValues_[i];
-    }
-    default:
-      std::ostringstream msg;
-      msg << "Field type ( "
-          << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
-          << " does not support direct indexing.\n"
-          << "Note: this function is DEPRECATED and is not recommended for future use.\n";
-      msg << "\t - " << __FILE__ << " : " << __LINE__;
-      throw(std::runtime_error(msg.str()));
+  case LOCAL_RAM: {
+    return fieldValues_[i];
+  }
+  default:
+    std::ostringstream msg;
+    msg << "Field type ( "
+        << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
+        << " does not support direct indexing.\n"
+        << "Note: this function is DEPRECATED and is not recommended for future use.\n";
+    msg << "\t - " << __FILE__ << " : " << __LINE__;
+    throw(std::runtime_error(msg.str()));
   }
 }
 
@@ -965,17 +975,19 @@ T& SpatialField<Location, GhostTraits, T>::operator[](const size_t i) {
 //		However, given the deprecated nature of the function, this may
 //		not be an immediate issue.
 template<typename Location, typename GhostTraits, typename T>
-T& SpatialField<Location, GhostTraits, T>::operator[](const size_t i) const {
-	if ( memType_ == LOCAL_RAM || fieldValues_ != NULL ){
-      return fieldValues_[i];
-    } else {
-      std::ostringstream msg;
-      msg << "Field type ( "
-          << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
-          << " does not support direct indexing and has not allocated a consumer field.\n"
-          << "Note: this function is DEPRECATED and is not recommended for future use.\n";
-      msg << "\t - " << __FILE__ << " : " << __LINE__;
-      throw(std::runtime_error(msg.str()));
+T&
+SpatialField<Location, GhostTraits, T>::operator[](const size_t i) const
+{
+  if ( memType_ == LOCAL_RAM || fieldValues_ != NULL ){
+    return fieldValues_[i];
+  } else {
+    std::ostringstream msg;
+    msg << "Field type ( "
+        << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
+        << " does not support direct indexing and has not allocated a consumer field.\n"
+        << "Note: this function is DEPRECATED and is not recommended for future use.\n";
+    msg << "\t - " << __FILE__ << " : " << __LINE__;
+    throw(std::runtime_error(msg.str()));
   }
 }
 
@@ -983,7 +995,8 @@ T& SpatialField<Location, GhostTraits, T>::operator[](const size_t i) const {
 
 template<typename Location, typename GhostTraits, typename T>
 SpatialField<Location, GhostTraits, T>&
-SpatialField<Location, GhostTraits, T>::operator=(const MyType& other) {
+SpatialField<Location, GhostTraits, T>::operator=(const MyType& other)
+{
   if( allocatedBytes_ != other.allocatedBytes_ ) {
     std::ostringstream msg;
     msg << "Attempted assignment between fields of unequal size!\n"
@@ -1081,17 +1094,16 @@ bool SpatialField<Location, GhostTraits, T>::operator!=(const MyType& other) con
 //------------------------------------------------------------------
 
 template<typename Location, typename GhostTraits, typename T>
-bool SpatialField<Location, GhostTraits, T>::operator==(const MyType& other) const {
+bool SpatialField<Location, GhostTraits, T>::operator==(const MyType& other) const
+{
   switch (memType_) {
   case LOCAL_RAM: {
     switch (other.memory_device_type()) {
     case LOCAL_RAM: {
       const_iterator iother = other.begin();
       const_iterator iend = this->end();
-      for (const_iterator ifld = this->begin(); ifld != iend;
-          ++ifld, ++iother) {
-        if (*ifld != *iother)
-          return false;
+      for (const_iterator ifld = this->begin(); ifld != iend; ++ifld, ++iother) {
+        if (*ifld != *iother) return false;
       }
       return true;
     }
@@ -1202,79 +1214,6 @@ bool SpatialField<Location, GhostTraits, T>::operator==(const MyType& other) con
 }
 
 //------------------------------------------------------------------
-
-/*
-template<typename Location, typename GhostTraits, typename T>
-SpatialField<Location, GhostTraits, T>&
-SpatialField<Location, GhostTraits, T>::operator=(const T a) {
-  switch (memType_) {
-    case LOCAL_RAM: {
-		// Fast o(logn), wide memcpy
-		T* ptr = fieldValues_;
-
-		size_t num = allocatedBytes_ / sizeof(T);
-		if (num < 1){
-			return *this;
-		}
-		//Copy our value into the first T position.
-		memcpy(ptr, &a, sizeof(T));
-
-		size_t start = 1, step = 1;
-		for ( ; start + step <= num; start += step, step *= 2){
-		 //Copy the previous half into the next chunk
-		 memcpy((ptr + start), ptr, sizeof(T) * step);
-		}
-
-		//Fill remaining ( n < 2^step ) elements
-		if (start < num){
-			memcpy((ptr + start), ptr, sizeof(T) * (num - start));
-		}
-
-		return *this;
-    }
-
-    //Note: after the initial size(T) push to the GPU, all other calls are local peer copies... which
-    //		should be very fast.
-#ifdef ENABLE_CUDA
-    case EXTERNAL_CUDA_GPU: {
-		// Fast(ish), O(Log n), wide-memcpy
-        ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-
-		size_t num = allocatedBytes_ / sizeof(T);
-		if (num < 1){
-			return *this;
-		}
-
-		//Copy our value into the first T position.
-		CDI.memcpy_to(fieldValuesExtDevice_, &a, sizeof(T), deviceIndex_);
-
-		size_t start = 1, step = 1;
-		for ( ; start + step <= num; start += step, step *= 2){
-			//Copy the previous half into the next chunk
-			CDI.memcpy_peer((fieldValuesExtDevice_ + start), deviceIndex_,
-					fieldValuesExtDevice_, deviceIndex_, sizeof(T) * step);
-		}
-
-		//Fill remaining ( n < 2^step ) elements
-		if (start < num){
-			CDI.memcpy_peer((fieldValuesExtDevice_ + start), deviceIndex_,
-					fieldValuesExtDevice_, deviceIndex_, sizeof(T) * ( num - start) );
-		}
-
-		return *this;
-    }
-#endif
-
-    default: {
-      std::ostringstream msg;
-      msg << "Attempted unsupported memset operation, at \n"
-    	  << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
-      msg << "\t - " << DeviceTypeTools::get_memory_type_description(memType_);
-      throw(std::runtime_error(msg.str()));
-    }
-  }
-}
-*/
 
 } // namespace structured
 } // namespace SpatialOps

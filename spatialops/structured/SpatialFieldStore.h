@@ -385,8 +385,8 @@ SpatFldPtr<FieldT>::SpatFldPtr(FieldT* const f, const bool builtFromStore)
   : f_(f),
     count_(new int),
     builtFromStore_(builtFromStore),
-    memType_( ( f != NULL ? f->memory_device_type() : LOCAL_RAM ) ),
-    deviceIndex_( ( f != NULL ? f->device_index() : 0 ) )
+    deviceIndex_( ( f != NULL ? f->device_index() : 0 ) ),
+    memType_( ( f != NULL ? f->memory_device_type() : LOCAL_RAM ) )
 {
   *count_ = 1;
 }
