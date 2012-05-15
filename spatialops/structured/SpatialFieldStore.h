@@ -29,7 +29,7 @@
 #include <spatialops/structured/ExternalAllocators.h>
 #include <spatialops/structured/IndexTriplet.h>
 
-#include <queue>
+#include <stack>
 #include <map>
 
 #include <boost/type_traits.hpp>
@@ -210,23 +210,24 @@ private:
  */
 class SpatialFieldStore {
 
-  struct SpatialFieldPoolTag{};
-
   template<typename T>
   class Pool{
-    typedef std::queue<T*> FieldQueue;
+    typedef std::stack<T*> FieldQueue;
     typedef std::map<size_t,FieldQueue> FQSizeMap;
 
     FQSizeMap fqm_;
     size_t pad_;
+    size_t highWater_;
 
     Pool();
     ~Pool();
 
   public:
     static Pool& self();
-    T* get( const size_t n );
-    void put(T*, size_t);
+    inline T* get( const size_t n );
+    inline void put(T*, size_t);
+    inline size_t active() const;
+    inline size_t total() const{ return highWater_; }
   };
 
   template<typename FT, typename IsPODT> struct ValTypeSelector;
@@ -290,6 +291,9 @@ public:
    */
   template<typename FieldT>
   inline static void restore_field(FieldT& f);
+
+//  inline static size_t active(){ return Pool<double>::self().active(); }
+//  inline static size_t total() { return Pool<double>::self().total(); }
 
 private:
 
@@ -495,7 +499,9 @@ SpatFldPtr<FieldT>::operator=(FieldT* const f) {
 
   return *this;
 }
+
 //------------------------------------------------------------------
+
 template<typename FieldT>
 void SpatFldPtr<FieldT>::detach() {
   // was this an active SpatFldPtr?
@@ -603,8 +609,6 @@ get_from_window( const structured::MemoryWindow& window,
 {
   typedef typename ValTypeSelector<FieldT,typename boost::is_pod<FieldT>::type>::type AtomicT;
 
-  Pool<AtomicT>& pool = Pool<AtomicT>::self();
-
 #ifdef ENABLE_THREADS
   boost::mutex::scoped_lock lock( get_mutex() );
 #endif
@@ -615,7 +619,7 @@ get_from_window( const structured::MemoryWindow& window,
                                        window.extent(),
                                        window.has_bc(0), window.has_bc(1), window.has_bc(2) );
     const size_t npts = mw.glob_npts();
-    AtomicT* fnew = pool.get(npts);
+    AtomicT* fnew = Pool<AtomicT>::self().get(npts);
 #   ifndef NDEBUG  // only zero the field for debug runs.
     for( size_t i=0; i<npts; ++i )  fnew[i] = 0.0;
 #   endif
@@ -662,6 +666,7 @@ template< typename T >
 SpatialFieldStore::Pool<T>::Pool()
 {
   pad_ = 0;
+  highWater_ = 0;
 }
 
 template< typename T >
@@ -670,7 +675,7 @@ SpatialFieldStore::Pool<T>::~Pool()
   for( typename FQSizeMap::iterator i=fqm_.begin(); i!=fqm_.end(); ++i ){
     FieldQueue& fq = i->second;
     while( !fq.empty() ){
-      delete [] fq.front();
+      delete [] fq.top();
       fq.pop();
     }
   }
@@ -696,10 +701,11 @@ SpatialFieldStore::Pool<T>::get( const size_t n )
   T* field = NULL;
   FieldQueue& fq = ifq->second;
   if( fq.empty() ){
+    ++highWater_;
     field = new T[n+pad_];
   }
   else{
-    field = fq.front(); fq.pop();
+    field = fq.top(); fq.pop();
   }
   return field;
 }
@@ -712,6 +718,16 @@ SpatialFieldStore::Pool<T>::put( T* t, size_t n )
   assert( ifq != fqm_.end() );
   FieldQueue& fq = ifq->second;
   fq.push( t );
+}
+
+template<typename T>
+size_t
+SpatialFieldStore::Pool<T>::active() const{
+  size_t n=0;
+  for( typename FQSizeMap::const_iterator ifq=fqm_.begin(); ifq!=fqm_.end(); ++ifq ){
+    n += ifq->second.size();
+  }
+  return highWater_-n;
 }
 
 } // namespace SpatialOps

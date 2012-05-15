@@ -4,6 +4,13 @@
 #include <spatialops/FieldExpressions.h>
 #include <test/TestHelper.h>
 
+#ifdef ENABLE_THREADS
+#include <spatialops/ThreadPool.h>
+#include <boost/thread/barrier.hpp>
+#endif
+
+#include <boost/date_time/posix_time/posix_time.hpp>
+
 #include <sstream>
 #include <fstream>
 
@@ -12,6 +19,11 @@ using namespace structured;
 using std::cout;
 using std::endl;
 
+void jcs_pause()
+{
+  std::cout << "Press <ENTER> to continue...";
+  std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+}
 
 template<typename FieldT>
 bool test_iterator( const IntVec npts,
@@ -174,16 +186,55 @@ bool test_interior( const IntVec npts,
 
 //--------------------------------------------------------------------
 
+#ifdef ENABLE_THREADS
+template<typename T>
+struct ThreadWork{
+  void doit(){
+    const MemoryWindow ww = get_window_with_ghost<T>( IntVec(24,1,1), true,true,true );
+    for( size_t i=0; i<1000; ++i ){
+      SpatFldPtr<T> f1 = SpatialFieldStore::get_from_window<T>( ww );
+      SpatFldPtr<T> f2 = SpatialFieldStore::get_from_window<T>( ww );
+      *f1 <<= 0.0;
+    }
+  }
+};
+#endif
+
+//--------------------------------------------------------------------
+
 template< typename FT1, typename FT2 >
 bool test_store( const IntVec& dim, const IntVec& bc )
 {
+//  jcs_pause();
   TestHelper status(false);
 
   const MemoryWindow w1 = get_window_with_ghost<FT1>( dim, bc[0]==1, bc[1]==1, bc[2]==1 );
   const MemoryWindow w2 = get_window_with_ghost<FT2>( dim, bc[0]==1, bc[1]==1, bc[2]==1 );
 
-  SpatFldPtr<FT1> f1 = SpatialFieldStore::get_from_window<FT1>(  w1 );
-  SpatFldPtr<FT2> f2 = SpatialFieldStore::get_from_window<FT2>(  w2 );
+# ifdef ENABLE_THREADS
+//# define USE_FIFO
+  ThreadPoolResourceManager::self().resize_active( ThreadPool::self(), NTHREADS );
+  ThreadWork<FT1> tw;
+  for( int i=0; i<20; ++i ){
+#   ifdef USE_FIFO
+    ThreadPoolFIFO::self().schedule( boost::bind(&ThreadWork<FT1>::doit,tw) );
+#   else
+    ThreadPool::self().schedule( boost::threadpool::prio_task_func(1,boost::bind(&ThreadWork<FT1>::doit,tw)) );
+#   endif
+  }
+  while( !ThreadPool::self().empty()
+      || ThreadPool::self().active()>0
+#     ifdef USE_FIFO
+      || !ThreadPoolFIFO::self().empty()
+      || ThreadPoolFIFO::self().active()>0
+#     endif
+      ){
+    // force master thread to wait until queue is empty.
+  }
+# endif
+
+  SpatFldPtr<FT1> f1 = SpatialFieldStore::get_from_window<FT1>( w1 );
+  SpatFldPtr<FT2> f2 = SpatialFieldStore::get_from_window<FT2>( w2 );
   SpatFldPtr<FT1> f1a= SpatialFieldStore::get<FT1>( *f1 );
   SpatFldPtr<FT2> f2a= SpatialFieldStore::get<FT2>( *f2 );
   SpatFldPtr<FT2> f2b= SpatialFieldStore::get<FT2>( *f1 );
@@ -216,21 +267,30 @@ int main()
 
   bool verbose = false;
 
-  overall( test_store<SVolField,  SVolField  >( IntVec(30,40,50), IntVec(0,0,0) ), "SVol,SVol(bc) store" );
-  overall( test_store<SVolField,  SVolField  >( IntVec(30,40,50), IntVec(1,1,1) ), "SVol,SVol     store" );
-  overall( test_store<SVolField,  SSurfXField>( IntVec(30,40,50), IntVec(0,0,0) ), "SVol,SSX      store" );
-  overall( test_store<SSurfXField,SVolField  >( IntVec(30,40,50), IntVec(0,0,0) ), "SSX ,SVol     store" );
-  overall( test_store<SVolField,  SSurfYField>( IntVec(30,40,50), IntVec(1,1,1) ), "SVol,SSY      store" );
-  overall( test_store<SVolField,  SSurfYField>( IntVec(30,40,50), IntVec(0,0,0) ), "SVol,SSY      store" );
-  overall( test_store<SVolField,  SSurfXField>( IntVec(30,40,50), IntVec(1,1,1) ), "SVol,SSX (bc) store" );
-  overall( test_store<SSurfXField,SVolField  >( IntVec(30,40,50), IntVec(1,1,1) ), "SSX ,SVol(bc) store" );
-  overall( test_store<SVolField,  SSurfZField>( IntVec(30,40,50), IntVec(1,1,1) ), "SVol,SSZ (bc) store" );
-  overall( test_store<SVolField,  SSurfZField>( IntVec(30,40,50), IntVec(0,0,0) ), "SVol,SSZ      store" );
-  overall( test_store<XSurfXField,SVolField  >( IntVec(30,40,50), IntVec(0,0,0) ), "XSX ,SVol     store" );
-  overall( test_store<XSurfXField,ZVolField  >( IntVec(30,40,50), IntVec(0,0,0) ), "XSX ,ZVol     store" );
-  overall( test_store<YSurfZField,ZSurfXField>( IntVec(30,40,50), IntVec(0,0,0) ), "XSX ,ZVol     store" );
-
-  std::cout << std::endl;
+  boost::posix_time::ptime start, stop;
+  start = boost::posix_time::microsec_clock::universal_time();
+  try{
+    overall( test_store<SVolField,  SVolField  >( IntVec(30,40,50), IntVec(0,0,0) ), "SVol,SVol(bc) store" );
+    overall( test_store<SVolField,  SVolField  >( IntVec(30,40,50), IntVec(1,1,1) ), "SVol,SVol     store" );
+    overall( test_store<SVolField,  SSurfXField>( IntVec(30,40,50), IntVec(0,0,0) ), "SVol,SSX      store" );
+    overall( test_store<SSurfXField,SVolField  >( IntVec(30,40,50), IntVec(0,0,0) ), "SSX ,SVol     store" );
+    overall( test_store<SVolField,  SSurfYField>( IntVec(30,40,50), IntVec(1,1,1) ), "SVol,SSY      store" );
+    overall( test_store<SVolField,  SSurfYField>( IntVec(30,40,50), IntVec(0,0,0) ), "SVol,SSY      store" );
+    overall( test_store<SVolField,  SSurfXField>( IntVec(30,40,50), IntVec(1,1,1) ), "SVol,SSX (bc) store" );
+    overall( test_store<SSurfXField,SVolField  >( IntVec(30,40,50), IntVec(1,1,1) ), "SSX ,SVol(bc) store" );
+    overall( test_store<SVolField,  SSurfZField>( IntVec(30,40,50), IntVec(1,1,1) ), "SVol,SSZ (bc) store" );
+    overall( test_store<SVolField,  SSurfZField>( IntVec(30,40,50), IntVec(0,0,0) ), "SVol,SSZ      store" );
+    overall( test_store<XSurfXField,SVolField  >( IntVec(30,40,50), IntVec(0,0,0) ), "XSX ,SVol     store" );
+    overall( test_store<XSurfXField,ZVolField  >( IntVec(30,40,50), IntVec(0,0,0) ), "XSX ,ZVol     store" );
+    overall( test_store<YSurfZField,ZSurfXField>( IntVec(30,40,50), IntVec(0,0,0) ), "XSX ,ZVol     store" );
+  }
+  catch(...){
+    overall(false);
+    std::cout << "exception thrown while running test_store" << std::endl;
+    return -1;
+  }
+  stop = boost::posix_time::microsec_clock::universal_time();
+  std::cout << "elapsed time (s): " << (stop-start).total_microseconds()*1e-6 << std::endl;
 
   overall( test_iterator<SVolField>( IntVec(3,3,3), verbose ), "test_iterator (3,3,3) SVolField" );
   overall( test_iterator<SVolField>( IntVec(3,4,1), verbose ), "test_iterator (3,4,1) SVolField" );
@@ -390,10 +450,12 @@ int main()
 
     overall( status.ok(), "field operations" );
   }
+
   if( overall.isfailed() ){
     std::cout << "FAIL!" << std::endl;
     return -1;
   }
   std::cout << "PASS" << std::endl;
+
   return 0;
 }
