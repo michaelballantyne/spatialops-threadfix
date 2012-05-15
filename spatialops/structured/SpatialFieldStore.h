@@ -329,8 +329,8 @@ SpatFldPtr( double* const field,
   : f_(field),
     count_(new int),
     builtFromStore_(builtFromStore),
-    memType_(mtype),
-    deviceIndex_(deviceIndex)
+    deviceIndex_(deviceIndex),
+    memType_(mtype)
 {
   if( mtype != LOCAL_RAM ){
     std::cout << "TRIED TO BUILD AN EXTRNAL DOUBLE -- NOT SUPPORTED YET\n";

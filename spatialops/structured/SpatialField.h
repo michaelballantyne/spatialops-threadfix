@@ -482,12 +482,11 @@ SpatialField<Location, GhostTraits, T>::SpatialField(const SpatialField& other)
   interiorFieldWindow_(other.interiorFieldWindow_),
   fieldValues_(other.fieldValues_),
   builtField_(false),
-  deviceIndex_(other.deviceIndex_),
   memType_(other.memType_),
+  deviceIndex_(other.deviceIndex_),
   fieldValuesExtDevice_(other.fieldValuesExtDevice_),
   consumerFieldValues_(other.consumerFieldValues_)
-{
-}
+{}
 
 //------------------------------------------------------------------
 
