@@ -235,13 +235,10 @@ namespace structured{
                          const bool hasPlusYSideFaces=true,
                          const bool hasPlusZSideFaces=true )
     {
-      IntVec triplet(0,0,0);
-      const int nxt = get_nx_with_ghost<FieldT>(dim[0],hasPlusXSideFaces);
-      const int nyt = get_ny_with_ghost<FieldT>(dim[1],hasPlusYSideFaces);
-      triplet[0] = ix%nxt;
-      triplet[1] = ix/nxt % nyt;
-      triplet[2] = ix/(nxt*nyt);
-      return triplet;
+      return flat_to_ijk( IntVec( get_nx_with_ghost<FieldT>(dim[0],hasPlusXSideFaces),
+                                  get_ny_with_ghost<FieldT>(dim[1],hasPlusYSideFaces),
+                                  0 ),
+                          ix );
     }
   };
 
@@ -260,12 +257,10 @@ namespace structured{
                       const bool hasPlusYSideFaces=true,
                       const bool hasPlusZSideFaces=true )
     {
-      const int nxt = get_nx_with_ghost<FieldT>(dim[0],hasPlusXSideFaces);
-      const int nyt = get_ny_with_ghost<FieldT>(dim[1],hasPlusYSideFaces);
-      return
-        triplet[0] +
-        triplet[1] * nxt +
-        triplet[2] * nxt*nyt;
+      return ijk_to_flat( IntVec( get_nx_with_ghost<FieldT>(dim[0],hasPlusXSideFaces),
+                                  get_ny_with_ghost<FieldT>(dim[1],hasPlusYSideFaces),
+                                  0 ),
+                          triplet );
     }
   };
 

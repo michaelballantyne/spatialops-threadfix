@@ -139,6 +139,23 @@ namespace SpatialOps{
       return os;
     }
 
+    /**
+     * @param dim the 3D layout of points
+     * @param loc the 3D index
+     * @return the 1D (flat) index
+     */
+    inline int ijk_to_flat( const IntVec& dim, const IntVec& loc ){
+      return loc[0] + loc[1]*dim[0] + loc[2]*dim[0]*dim[1];
+    }
+
+    /**
+     * @param dim the 3D layout of points
+     * @param pt the 1d (flat) index
+     * @return the 3D index
+     */
+    inline IntVec flat_to_ijk( const IntVec& dim, const int pt ){
+      return IntVec( pt % dim[0], (pt / dim[0]) % dim[1], pt / (dim[0]*dim[1]) );
+    }
 
   } // namespace structured
 } // namespace SpatialOps
