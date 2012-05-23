@@ -191,7 +191,7 @@ template<typename T>
 struct ThreadWork{
   void doit(){
     const MemoryWindow ww = get_window_with_ghost<T>( IntVec(24,1,1), true,true,true );
-    for( size_t i=0; i<1000; ++i ){
+    for( size_t i=0; i<100; ++i ){
       SpatFldPtr<T> f1 = SpatialFieldStore::get_from_window<T>( ww );
       SpatFldPtr<T> f2 = SpatialFieldStore::get_from_window<T>( ww );
       *f1 <<= 0.0;
