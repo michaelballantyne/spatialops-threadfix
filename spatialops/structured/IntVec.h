@@ -31,6 +31,7 @@
 
 #include <ostream>
 #include <vector>
+#include <cassert>
 
 #ifdef SOPS_BOOST_SERIALIZATION
 #include <boost/serialization/serialization.hpp>
@@ -80,8 +81,8 @@ namespace SpatialOps{
         ijk[0]=x.ijk[0];  ijk[1]=x.ijk[1];  ijk[2]=x.ijk[2];
       }
 
-      inline int  operator[](const size_t i) const{ return ijk[i]; }
-      inline int& operator[](const size_t i)      { return ijk[i]; }
+      inline int  operator[](const size_t i) const{ assert(i<3); return ijk[i]; }
+      inline int& operator[](const size_t i)      { assert(i<3); return ijk[i]; }
 
       IntVec& operator=(const IntVec& x)
       {
