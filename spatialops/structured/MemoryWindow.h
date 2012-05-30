@@ -188,8 +188,7 @@ namespace structured{
      *         window), obtain the flat index in the global memory
      *         space.
      */
-    inline int flat_index( IntVec loc ) const
-    {
+    inline int flat_index( IntVec loc ) const{
 #     ifndef NDEBUG
       if( extent_[0]>1 ) assert( loc[0] < nptsGlob_[0] );
       if( extent_[1]>1 ) assert( loc[1] < nptsGlob_[1] );
@@ -198,7 +197,7 @@ namespace structured{
       loc[0] = nptsGlob_[0] > 1 ? loc[0]+offset_[0] : 0;
       loc[1] = nptsGlob_[1] > 1 ? loc[1]+offset_[1] : 0;
       loc[2] = nptsGlob_[2] > 1 ? loc[2]+offset_[2] : 0;
-      return loc[0] + nptsGlob_[0] * (loc[1] + loc[2]*nptsGlob_[1]);
+      return ijk_to_flat(nptsGlob_,loc);
     }
 
     /**
@@ -206,11 +205,8 @@ namespace structured{
      *         field), obtain the ijk index in the global memory
      *         space.
      */
-    inline IntVec ijk_index_from_global( const int loc ) const
-    {
-      return IntVec( loc % nptsGlob_[0],
-                     loc / nptsGlob_[0] % nptsGlob_[1],
-                     loc /(nptsGlob_[0] * nptsGlob_[1]) );
+    inline IntVec ijk_index_from_global( const int loc ) const{
+      return flat_to_ijk(nptsGlob_,loc);
     }
 
     /**
@@ -220,9 +216,7 @@ namespace structured{
      */
     inline IntVec ijk_index_from_local( const int loc ) const
     {
-      return IntVec( loc % extent_[0]               + offset_[0],
-                     loc / extent_[0] % extent_[1]  + offset_[1],
-                     loc /(extent_[0] * extent_[1]) + offset_[2] );
+      return flat_to_ijk(extent_,loc);
     }
 
     /**
