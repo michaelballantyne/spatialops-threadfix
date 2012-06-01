@@ -462,6 +462,7 @@ namespace structured{
     inline self& operator=( const self& other ){
       current_ = other.current_;
       first_   = other.first_;
+      window_  = other.window_;
       i_       = other.i_;
       j_       = other.j_;
       k_       = other.k_;
@@ -611,6 +612,7 @@ namespace structured{
     inline self& operator=( const self& other ){
       current_ = other.current_;
       first_   = other.first_;
+      window_  = other.window_;
       i_       = other.i_;
       j_       = other.j_;
       k_       = other.k_;

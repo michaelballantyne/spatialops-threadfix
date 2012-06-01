@@ -44,6 +44,19 @@ bool test_iterator( const IntVec npts,
     *if2 += *if1;
   }
 
+  {
+    typename FieldT::iterator i1, i2;
+    i1 = f1.begin();
+    i2 = f1.begin();
+    status( *i1 == *i2 );
+  }
+  {
+    typename FieldT::const_iterator i1, i2;
+    i1 = f1.begin();
+    i2 = f1.begin();
+    status( *i1 == *i2 );
+  }
+
   if2 = f2.begin() + 2;
   status( f2[2] == *if2, "iterator + operator" );
   status( &f2[2] == &(*if2), "iterator + operator address" );
