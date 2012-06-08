@@ -84,35 +84,37 @@ namespace SpatialOps{
       inline int  operator[](const size_t i) const{ assert(i<3); return ijk[i]; }
       inline int& operator[](const size_t i)      { assert(i<3); return ijk[i]; }
 
-      IntVec& operator=(const IntVec& x)
-      {
+      IntVec& operator=(const IntVec& x){
         for( size_t i=0; i<3; ++i ) ijk[i] = x.ijk[i];
         return *this;
       }
 
-      inline bool operator==(const IntVec& v) const
-        {
+      inline bool operator==(const IntVec& v) const{
         return (ijk[0]==v.ijk[0]) & (ijk[1]==v.ijk[1]) & (ijk[2]==v.ijk[2]);
-        }
-      inline bool operator!=(const IntVec& v) const
-        {
+      }
+      inline bool operator!=(const IntVec& v) const{
         return (ijk[0]!=v.ijk[0]) | (ijk[1]!=v.ijk[1]) | (ijk[2]!=v.ijk[2]);
-        }
+      }
 
       inline IntVec operator+( const IntVec& v ) const{
         return IntVec( ijk[0] + v.ijk[0],
-            ijk[1] + v.ijk[1],
-            ijk[2] + v.ijk[2] );
+                       ijk[1] + v.ijk[1],
+                       ijk[2] + v.ijk[2] );
       }
       inline IntVec operator-( const IntVec& v ) const{
         return IntVec( ijk[0] - v.ijk[0],
-            ijk[1] - v.ijk[1],
-            ijk[2] - v.ijk[2] );
+                       ijk[1] - v.ijk[1],
+                       ijk[2] - v.ijk[2] );
       }
       inline IntVec operator*( const IntVec& v ) const{
         return IntVec( ijk[0] * v.ijk[0],
-            ijk[1] * v.ijk[1],
-            ijk[2] * v.ijk[2] );
+                       ijk[1] * v.ijk[1],
+                       ijk[2] * v.ijk[2] );
+      }
+      inline IntVec operator/( const IntVec& v ) const{
+        return IntVec( ijk[0] / v.ijk[0],
+                       ijk[1] / v.ijk[1],
+                       ijk[2] / v.ijk[2] );
       }
 
       inline IntVec operator*( const int v ) const{
