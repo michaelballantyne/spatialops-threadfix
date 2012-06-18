@@ -104,26 +104,19 @@
 #            endif
              /* NDEBUG */;
 
-             DestType d(wd, &dest[0], ExternalStorage);
-
-             SrcType s1(ws1, &src[0], ExternalStorage);
-
-             SrcType s2(ws2, &src[0], ExternalStorage);
-
-             SrcType s3(ws3, &src[0], ExternalStorage);
-
-             SrcType s4(ws4, &src[0], ExternalStorage);
+             DestType d(wd, dest.field_values(), ExternalStorage);
+             SrcType s1(ws1, src.field_values(), ExternalStorage);
+             SrcType s2(ws2, src.field_values(), ExternalStorage);
+             SrcType s3(ws3, src.field_values(), ExternalStorage);
+             SrcType s4(ws4, src.field_values(), ExternalStorage);
 
              typename DestType::iterator id = d.begin();
-
              typename DestType::iterator ide = d.end();
 
              typename SrcType::const_iterator is1 = s1.begin();
-
              typename SrcType::const_iterator is2 = s2.begin();
 
              typename SrcType::const_iterator is3 = s3.begin();
-
              typename SrcType::const_iterator is4 = s4.begin();
 
              for(; id != ide; ++id, ++is1, ++is2, ++is3, ++is4){

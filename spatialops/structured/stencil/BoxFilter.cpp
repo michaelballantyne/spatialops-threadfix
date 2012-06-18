@@ -49,7 +49,7 @@ namespace structured{
                                                   ws.offset()+IntVec(i,j,k),
                                                   ws.extent()-of,
                                                   ws.has_bc(0), ws.has_bc(1), ws.has_bc(2) ),
-                                    &src[0],
+                                    src.field_values(),
                                     ExternalStorage ) );
         }
       }
@@ -82,7 +82,7 @@ namespace structured{
                             w_dest.offset()+of,
                             w_dest.extent()+ex,
                             w_dest.has_bc(0), w_dest.has_bc(1), w_dest.has_bc(2) ),
-              &dest[0],
+              dest.field_values(),
               ExternalStorage );
 
     const double fac = 1.0 / double(srcFields_.size());

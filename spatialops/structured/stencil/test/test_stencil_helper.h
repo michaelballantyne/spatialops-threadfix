@@ -156,8 +156,8 @@ template< typename FieldT >
 double interior_norm( const FieldT& f1, const FieldT& f2 )
 {
   using namespace SpatialOps;
-  const FieldT f1interior( f1.window_without_ghost(), &f1[0], SpatialOps::structured::ExternalStorage );
-  const FieldT f2interior( f2.window_without_ghost(), &f2[0], SpatialOps::structured::ExternalStorage );
+  const FieldT f1interior( f1.window_without_ghost(), f1.field_values(), SpatialOps::structured::ExternalStorage );
+  const FieldT f2interior( f2.window_without_ghost(), f2.field_values(), SpatialOps::structured::ExternalStorage );
   const double l2 = field_norm( f1interior-f2interior ) / field_norm(f2interior);
 //   const double linf = field_max( abs(f1interior-f2interior) );
 //   const double l1 = field_sum( abs(f1interior-f2interior) ) / f1.window_without_ghost().npts();
