@@ -221,49 +221,6 @@ namespace structured{
     return MemoryWindow( dimGlob, offset, dimLoc, hasPlusFaceX, hasPlusFaceY, hasPlusFaceZ );
   }
 
-  //====================================================================
-
-  /**
-   *  \brief Use this to transform a flat index to i,j,k indices.
-   *  \todo remove this.  It is currently used in the matrix stuff and in the LinearSystem stuff...
-   */
-  template<typename FieldT>
-  struct flat2ijk
-  {
-    static IntVec value( const IntVec& dim, const int ix,
-                         const bool hasPlusXSideFaces=true,
-                         const bool hasPlusYSideFaces=true,
-                         const bool hasPlusZSideFaces=true )
-    {
-      return flat_to_ijk( IntVec( get_nx_with_ghost<FieldT>(dim[0],hasPlusXSideFaces),
-                                  get_ny_with_ghost<FieldT>(dim[1],hasPlusYSideFaces),
-                                  0 ),
-                          ix );
-    }
-  };
-
-  //==================================================================
-
-  /**
-   *  \brief Use this to transform i,j,k indices to a flat index.
-   *  \todo remove this.  It is currently only used in the "matrix" stuff.
-   */
-  template<typename FieldT>
-  struct ijk2flat
-  {
-    static int value( const IntVec& dim,
-                      const IntVec& triplet,
-                      const bool hasPlusXSideFaces=true,
-                      const bool hasPlusYSideFaces=true,
-                      const bool hasPlusZSideFaces=true )
-    {
-      return ijk_to_flat( IntVec( get_nx_with_ghost<FieldT>(dim[0],hasPlusXSideFaces),
-                                  get_ny_with_ghost<FieldT>(dim[1],hasPlusYSideFaces),
-                                  0 ),
-                          triplet );
-    }
-  };
-
   //==================================================================
 
   /**
