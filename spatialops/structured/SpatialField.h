@@ -441,7 +441,7 @@ SpatialField( const MemoryWindow window,
   }
 
   //Determine raw byte count -- this is sometimes required for external device allocation.
-  allocatedBytes_ = sizeof(T) * ( window.glob_dim(0) * window.glob_dim(1) * window.glob_dim(2) );
+  allocatedBytes_ = sizeof(T) * ( window.glob_npts() );
 
   interiorFieldWindow_ = MemoryWindow( window.glob_dim(), ofs, ext, window.has_bc(0), window.has_bc(1), window.has_bc(2) );
 
@@ -1012,7 +1012,7 @@ SpatialField<Location, GhostTraits, T>::operator=(const MyType& other)
       if( fieldValues_ == other.field_values() ){
         return *this;
       }
-      std::copy(fieldValues_, fieldValues_+allocatedBytes_/sizeof(AtomicT), other.fieldValues_);
+      std::copy( other.fieldValues_, other.fieldValues_+other.fieldWindow_.glob_npts(), fieldValues_ );
     }
     break;
 
