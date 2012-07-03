@@ -7,6 +7,7 @@ set( SO_Sources ${SO_Sources} ${SO_SRC} )
 
 set( SO_HEADERS
   FieldExpressions.h
+  FieldExpressionsStencil2.h
   FieldExpressionsExtended.h
   FieldReductions.h
   FieldFunctions.h

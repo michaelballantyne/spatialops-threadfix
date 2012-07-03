@@ -20,83 +20,11 @@
  * IN THE SOFTWARE.
  */
 
-#include <spatialops/SpatialOpsConfigure.h>
-#ifdef ENABLE_CUDA
-#include "CudaStencil2.h"
-#else
-#include "Stencil2.h"
-#endif
-#include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/FVTools.h>
-#include <spatialops/structured/MemoryTypes.h>
-#include <spatialops/FieldExpressionsStencil2.h>
-
-namespace SpatialOps{ namespace structured{
+#include "Stencil2_def.h"
 
 
-  template< typename OperatorT, typename SrcT, typename DestT >
-  Stencil2<OperatorT,SrcT,DestT>::
-  Stencil2( const double coefLo, const double coefHi )
-    : coefLo_( coefLo ),
-      coefHi_( coefHi )
-  {}
-
-  //------------------------------------------------------------------
-
-  template< typename OperatorT, typename SrcT, typename DestT >
-  Stencil2<OperatorT,SrcT,DestT>::
-  ~Stencil2()
-  {}
-
-  //------------------------------------------------------------------
-
-  template< typename OperatorT, typename SrcT, typename DestT >
-  void
-  Stencil2<OperatorT,SrcT,DestT>::
-  apply_to_field( const SrcT& src, DestT& dest ) const
-  {
-    switch( dest.memory_device_type() ){
-      case LOCAL_RAM:{
-        stencil_2_apply_to_field_general_execute<OperatorT,SrcT,DestT>(src,
-                                                                       dest,
-                                                                       coefLo_,
-                                                                       coefHi_);
-      }
-      break;
-
-#ifdef ENABLE_CUDA
-      case EXTERNAL_CUDA_GPU:{
-        cuda_stencil_2_apply_to_field_helper<OperatorT, SrcT, DestT>( src, dest, coefLo_, coefHi_ );
-      }
-      break;
-#endif
-      default:{
-        std::ostringstream msg;
-        msg << "Destination field has unsupported device type ( "
-            << DeviceTypeTools::get_memory_type_description( dest.memory_device_type() )
-            << " )\n";
-        msg << "\t - " << __FILE__ << " : " << __LINE__;
-        throw(std::runtime_error(msg.str()));
-      }
-    }
-  }
-
-  //==================================================================
-  // Explicit template instantiation
-  //
-#define DECLARE_STENCIL( OP, SRC, DEST )        \
-  template class Stencil2< OP, SRC, DEST >;
-
-#define DECLARE_BASIC_VARIANTS( VOL )                          \
-  DECLARE_STENCIL( Interpolant, VOL, FaceTypes<VOL>::XFace )   \
-  DECLARE_STENCIL( Interpolant, VOL, FaceTypes<VOL>::YFace )   \
-  DECLARE_STENCIL( Interpolant, VOL, FaceTypes<VOL>::ZFace )   \
-  DECLARE_STENCIL( Gradient,    VOL, FaceTypes<VOL>::XFace )   \
-  DECLARE_STENCIL( Gradient,    VOL, FaceTypes<VOL>::YFace )   \
-  DECLARE_STENCIL( Gradient,    VOL, FaceTypes<VOL>::ZFace )   \
-  DECLARE_STENCIL( Divergence,  FaceTypes<VOL>::XFace, VOL )   \
-  DECLARE_STENCIL( Divergence,  FaceTypes<VOL>::YFace, VOL )   \
-  DECLARE_STENCIL( Divergence,  FaceTypes<VOL>::ZFace, VOL )
+namespace SpatialOps{
+namespace structured{
 
   DECLARE_BASIC_VARIANTS( SVolField );
   DECLARE_BASIC_VARIANTS( XVolField );

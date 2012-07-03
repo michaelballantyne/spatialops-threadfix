@@ -39,6 +39,7 @@ install( FILES
   CudaStencil2.h
   CudaStencil2Bridge.h
   Stencil2.h
+  Stencil2_def.h
   Stencil4.h
   StencilBuilder.h
   DESTINATION include/spatialops/structured/stencil/
