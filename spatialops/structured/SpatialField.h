@@ -34,6 +34,7 @@
 #include <sstream>
 #include <map>
 #include <algorithm>
+#include <string.h>
 
 #include <spatialops/SpatialOpsConfigure.h>
 

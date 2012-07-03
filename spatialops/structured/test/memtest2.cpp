@@ -24,6 +24,7 @@
 #include <sstream>
 #include <string>
 #include <stdexcept>
+#include <stdio.h>
 
 #define DEBUG_CUDA_VERBOSE
 #include <spatialops/structured/ExternalAllocators.h>
@@ -126,7 +127,7 @@ int main(int argc, char** argv) {
   }
   catch( std::runtime_error& e) {
     std::cout << e.what() << std::endl;
-    exit(1);
+    return -1;
   }
 
   printf("Success\n");

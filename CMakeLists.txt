@@ -89,7 +89,7 @@ if( ENABLE_CUDA )
   SET( CUDA_ARCHITECTURE "1.0" CACHE STRING "1.0" )
   STRING( REGEX REPLACE "([1-9])\\.([0-9])" "\\1\\2" CUDA_ARCH_STR ${CUDA_ARCHITECTURE} )   
   SET( CUDA_NVCC_FLAGS "-arch=sm_${CUDA_ARCH_STR}" CACHE STRING "Compiler flags passed to NVCC" FORCE )
-  SET( CUDA_NVCC_FLAGS_RELEASE "--optimize= -03" CACHE STRING "Release build compiler flags" FORCE )
+  SET( CUDA_NVCC_FLAGS_RELEASE "--optimize=03" CACHE STRING "Release build compiler flags" FORCE )
 else( ENABLE_CUDA )
 #avoids confusion if someone tries to build with cuda support enabled and then reverts without clearing
 #the build directory

@@ -25,6 +25,7 @@
 #include <stdexcept>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #define DEBUG_CUDA_VERBOSE
 #include <spatialops/structured/ExternalAllocators.h>
