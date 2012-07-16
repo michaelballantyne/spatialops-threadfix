@@ -87,12 +87,6 @@ namespace SpatialOps{
   struct Divergence{};
 
   /**
-   *  @struct Scratch
-   *  @brief  Defines a type for Scratch operators.
-   */
-  struct Scratch{};
-
-  /**
    *  @struct Filter
    *  @brief  Defines a type for Filter operators.
    */
