@@ -63,6 +63,11 @@ else()
   set( SOPS_BOOST_SERIALIZATION OFF )
 endif()
 
+if( Boost_DIR ) # give location hints
+  set( BOOST_ROOT ${Boost_DIR} )
+  set( ENV{BOOST_INCLUDEDIR} ${Boost_DIR}/include )
+  set( ENV{BOOST_LIBRARYDIR} ${Boost_DIR}/lib )
+endif( Boost_DIR )
 set(BOOST_MIN_VERSION "1.44.0" )
 set(Boost_USE_STATIC_LIBS ON)
 find_package( Boost ${BOOST_MIN_VERSION} REQUIRED COMPONENTS ${boost_comps} )
