@@ -25,6 +25,7 @@
 
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/IndexTriplet.h>
+#include <spatialops/structured/MemoryWindow.h>
 
 namespace SpatialOps{
 namespace structured{
@@ -96,6 +97,9 @@ namespace structured{
     const IntVec apoint_;  ///< the index for the value in the source field we will set
     const IntVec bpoint_;  ///< the index for the value in the source field we use to obtain the value we want to set.
     double ca_, cb_;       ///< high and low coefficients for the operator
+    const bool singlePointBC_;
+    std::vector<int> flatGhostPoints_;
+    std::vector<int> flatInteriorPoints_;
 
     BoundaryConditionOp& operator=( const BoundaryConditionOp& ); // no assignment
     BoundaryConditionOp();                                        // no default constructor
@@ -122,6 +126,12 @@ namespace structured{
                          const BCSide side,
                          const BCEval bceval,
                          const OperatorDatabase& opdb );
+    
+    BoundaryConditionOp( const MemoryWindow& window,
+                         const std::vector<IntVec>& destIndices,
+                         const BCSide side,
+                         const BCEval bceval,
+                         const OperatorDatabase& opdb );    
 
     ~BoundaryConditionOp(){}
 
@@ -152,7 +162,8 @@ namespace structured{
                        const OperatorDatabase& soDatabase )
       : bcEval_( bceval ),
         apoint_( destPoint + ( (side==MINUS_SIDE) ? S1Shift::int_vec() : S2Shift::int_vec() ) ),
-        bpoint_( destPoint + ( (side==MINUS_SIDE) ? S2Shift::int_vec() : S1Shift::int_vec() ) )
+        bpoint_( destPoint + ( (side==MINUS_SIDE) ? S2Shift::int_vec() : S1Shift::int_vec() ) ),
+        singlePointBC_(true)
   {
     // let phi_a be the ghost value, phi_b be the internal value, and phi_bc be the boundary condition,
     //   phi_bc = a*phi_a + b*phi_b
@@ -165,6 +176,34 @@ namespace structured{
   }
 
   //------------------------------------------------------------------
+  
+  template< typename OpT, typename BCEval >
+  BoundaryConditionOp<OpT,BCEval>::
+  BoundaryConditionOp( const SpatialOps::structured::MemoryWindow& window,
+                       const std::vector<IntVec>& destIJKPoints,
+                       const BCSide side,
+                       const BCEval bceval,
+                       const OperatorDatabase& soDatabase )
+  : bcEval_( bceval ),
+    singlePointBC_(false)
+  {
+    // let phi_a be the ghost value, phi_b be the internal value, and phi_bc be the boundary condition,
+    //   phi_bc = a*phi_a + b*phi_b
+    // then
+    //   phi_a = (phi_bc - b*phi_b) / a
+    //
+    const OpT* const op = soDatabase.retrieve_operator<OpT>();
+    ca_ = (side==MINUS_SIDE ? op->get_minus_coef() : op->get_plus_coef()  );
+    cb_ = (side==MINUS_SIDE ? op->get_plus_coef()  : op->get_minus_coef() );
+    //
+    std::vector<IntVec>::const_iterator destPointsIter = destIJKPoints.begin();
+    for( ; destPointsIter != destIJKPoints.end(); ++destPointsIter ) {
+      flatGhostPoints_.push_back(window.flat_index(*destPointsIter + ( (side==MINUS_SIDE) ? S1Shift::int_vec() : S2Shift::int_vec() )));    // a_point
+      flatInteriorPoints_.push_back(window.flat_index(*destPointsIter + ( (side==MINUS_SIDE) ? S2Shift::int_vec() : S1Shift::int_vec() ))); // b_point
+    }    
+  }
+  
+  //------------------------------------------------------------------  
 
   template< typename OpT, typename BCEval >
   void
@@ -173,9 +212,19 @@ namespace structured{
   {
     // jcs: this is not very efficient (indexing slowness) but I
     //      am not sure that we can do any better at this point.
-    const unsigned int ia = f.window_without_ghost().flat_index(apoint_);
-    const unsigned int ib = f.window_without_ghost().flat_index(bpoint_);
-    f[ia] = ( bcEval_() - cb_*f[ib] ) / ca_;
+    if (singlePointBC_) {
+      const unsigned int ia = f.window_without_ghost().flat_index(apoint_);
+      const unsigned int ib = f.window_without_ghost().flat_index(bpoint_);
+      f[ia] = ( bcEval_() - cb_*f[ib] ) / ca_;      
+    }
+    else {
+      std::vector<int>::const_iterator ia = flatGhostPoints_.begin(); // ia is the ghost flat index
+      std::vector<int>::const_iterator ib = flatInteriorPoints_.begin(); // ib is the interior flat index
+      for( ; ia != flatGhostPoints_.end(); ++ia, ++ib ){
+        f[*ia] = ( bcEval_() - cb_*f[*ib] ) / ca_;
+      }
+    }
+
   }
 
   //------------------------------------------------------------------

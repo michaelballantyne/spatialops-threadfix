@@ -86,6 +86,8 @@ namespace structured{
   {
     const IntVec point_;
     const BCEval bcEval_;
+    const bool singlePointBC_;
+    std::vector<int> flatPoints_; // flat index points    
 
   public:
 
@@ -111,6 +113,10 @@ namespace structured{
      */
     BoundaryCondition( const IntVec point,
                        const BCEval bcEval );
+    
+    BoundaryCondition( const MemoryWindow& window,
+                       const std::vector<IntVec>& ijkpoints,
+                       const BCEval bcEval );    
 
     ~BoundaryCondition(){}
 
@@ -139,8 +145,27 @@ namespace structured{
   BoundaryCondition( const IntVec point,
                      const BCEval bcEval )
     : point_( point ),
-      bcEval_( bcEval )
+      bcEval_( bcEval ),
+      singlePointBC_(true)
   {}
+  
+  //------------------------------------------------------------------
+  
+  template< typename FieldT, typename BCEval >
+  BoundaryCondition<FieldT,BCEval>::
+  BoundaryCondition( const MemoryWindow& window,
+                    const std::vector<IntVec>& ijkpoints,
+                    const BCEval bcEval )
+  : bcEval_( bcEval ),    
+    singlePointBC_(false)
+  {
+
+    for( std::vector<IntVec>::const_iterator ijkIter = ijkpoints.begin();
+        ijkIter != ijkpoints.end(); ++ijkIter )
+    {
+      flatPoints_.push_back(window.flat_index(*ijkIter));           
+    }                        
+  }  
 
   //------------------------------------------------------------------
 
@@ -149,8 +174,17 @@ namespace structured{
   BoundaryCondition<FieldT,BCEval>::
   operator()( FieldT& f ) const
   {
-    const unsigned int ix = f.window_without_ghost().flat_index( point_ );
-    f[ix] = bcEval_();
+    if (singlePointBC_) {
+      const unsigned int ix = f.window_without_ghost().flat_index( point_ );
+      f[ix] = bcEval_();
+    }
+    else {
+      for( std::vector<int>::const_iterator flatIterator = flatPoints_.begin();
+          flatIterator != flatPoints_.end(); ++flatIterator )
+      {
+        f[*flatIterator] = bcEval_();
+      }          
+    }
   }
 
 } // namespace structured
