@@ -127,6 +127,26 @@ namespace structured{
                          const BCEval bceval,
                          const OperatorDatabase& opdb );
     
+    /**
+     *  @param window The memory window of the field on which the BC is
+     *         is being applied.
+     *
+     *  @param destIndices A vector of IJK indices designating the list of
+     *         points on which the BC is to be applied.
+     *
+     *  \param side The side of the cell (MINUS_SIDE or PLUS_SIDE) that
+     *         this BC is to be applied on.
+     *
+     *  \param eval The evaluator to obtain the bc value at this point.
+     *
+     *  \param opdb The database for spatial operators. An operator of
+     *         type OpT will be extracted from this database.
+     *
+     *  @par Design Considerations
+     *  \li We may need to change the way BCEval works since in the current
+     *      model, the SAME bceval is applied at all points. This will not work
+     *      with spatially varying bcs.
+     */            
     BoundaryConditionOp( const MemoryWindow& window,
                          const std::vector<IntVec>& destIndices,
                          const BCSide side,

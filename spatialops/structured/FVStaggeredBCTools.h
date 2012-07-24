@@ -95,25 +95,28 @@ namespace structured{
      *  @param point The IntVec specifying the location to apply
      *         this BC.  0-based on patch interior.
      *
-     *  @param dim <code>vector<int></code> of extents in each
-     *         direction (excluding ghost cells)
-     *
-     *  @param bcPlusX Flag indicating whether this patch resides on a
-     *         physical domain boundary in the (+x) direction.
-     *
-     *  @param bcPlusY Flag indicating whether this patch resides on a
-     *         physical domain boundary in the (+y) direction.
-     *
-     *  @param bcPlusZ Flag indicating whether this patch resides on a
-     *         physical domain boundary in the (+z) direction.
-     *
      *  @param bcEval A functor providing a method to evaluate the bc.
      *         It should have the following signature:
      *         <code>double()</code>.
      */
     BoundaryCondition( const IntVec point,
                        const BCEval bcEval );
-    
+    /**
+     *  @param window The memory window of the field on which the BC is
+     *         is being applied.
+     *
+     *  @param ijkpoints A vector of IJK indices designating the list of
+     *         points on which the BC is to be applied.
+     *
+     *  @param bcEval A functor providing a method to evaluate the bc.
+     *         It should have the following signature:
+     *         <code>double()</code>.
+     *
+     *  @par Design Considerations
+     *  \li We may need to change the way BCEval works since in the current
+     *      model, the SAME bceval is applied at all points. This will not work
+     *      with spatially varying bcs.
+     */        
     BoundaryCondition( const MemoryWindow& window,
                        const std::vector<IntVec>& ijkpoints,
                        const BCEval bcEval );    
