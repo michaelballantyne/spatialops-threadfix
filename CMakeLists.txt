@@ -68,9 +68,7 @@ if( DEFINED Boost_DIR )
   message( STATUS "Setting boost installation location as: " ${Boost_DIR} )
   set( Boost_NO_SYSTEM_PATHS ON )  # only look in the user-specified location - nowhere else!
   set( ENV{BOOST_ROOT} ${Boost_DIR} )
-  set( ENV{Boost_DIR} ${Boost_DIR} )
-#  set( ENV{BOOST_INCLUDEDIR} ${Boost_DIR}/include )
-#  set( ENV{BOOST_LIBRARYDIR} ${Boost_DIR}/lib )
+  set( ENV{Boost_DIR}  ${Boost_DIR} )
 endif( DEFINED Boost_DIR )
 
 set(BOOST_MIN_VERSION "1.44.0" )
