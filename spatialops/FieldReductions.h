@@ -201,9 +201,9 @@ namespace SpatialOps{
   };
 
   template<typename ExprType, typename FieldType>
-    I typename FieldType::value_type field_reduce_iterior(typename FieldType::value_type const & (*proc)(typename FieldType::value_type const &,
-													 typename FieldType::value_type const &),
-							  NeboExpression<ExprType,FieldType> & fexpr) {
+    I typename FieldType::value_type field_reduce_interior(typename FieldType::value_type const & (*proc)(typename FieldType::value_type const &,
+                                                                                                          typename FieldType::value_type const &),
+                                                           NeboExpression<ExprType,FieldType> & fexpr) {
     typename FieldType::value_type typedef AtomicType;
 
     //initialize:
