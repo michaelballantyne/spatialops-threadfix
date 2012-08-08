@@ -92,7 +92,7 @@
              blank-line-chunk
              (pp-header-file-chunk file-name file-setup chunks)))]
        [IteratorStyle
-        (lambda (iterator call)
+        (lambda (iterator mem_call iter_prefix)
           (d iterator
              (template-struct-define-chunk 'IteratorStyle
                                            (c 'typename s FT-chunk)
@@ -101,7 +101,16 @@
                                            (typedef (b s
                                                        typename-chunk (scope FT-chunk
                                                                              'memory_window))
-                                                       'MemoryWindow)
+                                                    'MemoryWindow)
+                                           (typedef (b s
+                                                       typename-chunk (scope FT-chunk (c iter_prefix
+                                                                                         'iterator)))
+                                                    'Iterator)
+                                           (typedef (b s
+                                                       typename-chunk (scope FT-chunk (c 'const_
+                                                                                         iter_prefix
+                                                                                         'iterator)))
+                                                    'ConstIterator)
                                            (r-fcn-def (s-fcn-dcl 'memory_window
                                                                  (b s
                                                                     'MemoryWindow const-chunk "&")
@@ -109,7 +118,31 @@
                                                                     FT-chunk const-chunk "&" 'field))
                                                       null
                                                       (mfc 'field
-                                                           call)))))]
+                                                           mem_call))
+                                           (r-fcn-def (s-fcn-dcl 'begin
+                                                                 'Iterator
+                                                                 (b s FT-chunk "&" 'field))
+                                                      null
+                                                      (mfc 'field
+                                                           (c iter_prefix 'begin)))
+                                           (r-fcn-def (s-fcn-dcl 'begin
+                                                                 'ConstIterator
+                                                                 (b s FT-chunk const-chunk "&" 'field))
+                                                      null
+                                                      (mfc 'field
+                                                           (c iter_prefix 'begin)))
+                                           (r-fcn-def (s-fcn-dcl 'end
+                                                                 'Iterator
+                                                                 (b s FT-chunk "&" 'field))
+                                                      null
+                                                      (mfc 'field
+                                                           (c iter_prefix 'end)))
+                                           (r-fcn-def (s-fcn-dcl 'end
+                                                                 'ConstIterator
+                                                                 (b s FT-chunk const-chunk "&" 'field))
+                                                      null
+                                                      (mfc 'field
+                                                           (c iter_prefix 'end))))))]
        [build-expression-type
         (lambda (name)
           (tpl-srt-def name
@@ -963,9 +996,11 @@
                          (c 'typename s FT-chunk))
                    null)
       (IteratorStyle 'UseWholeIterator
-                     'window_with_ghost)
+                     'window_with_ghost
+                     "")
       (IteratorStyle 'UseInteriorIterator
-                     'window_without_ghost)
+                     'window_without_ghost
+                     'interior_)
       (build-expression-type NE-chunk)
       (build-expression-type NBE-chunk)
       (d 'Modes:
@@ -1174,13 +1209,19 @@
                                          'AtomicType)
                                 (bm-constructor "SourceType const & source"
                                                 (list (cons-asgn 'iter_
-                                                                 (mfc (mfc 'source
-                                                                           'field)
-                                                                      'begin))
+                                                                 (fc (scope (tpl-use 'IteratorStyle
+                                                                                     'IteratorType
+                                                                                     FT-chunk)
+                                                                            'begin)
+                                                                     (mfc 'source
+                                                                          'field)))
                                                       (cons-asgn 'end_
-                                                                 (mfc (mfc 'source
-                                                                           'field)
-                                                                      'end)))
+                                                                 (fc (scope (tpl-use 'IteratorStyle
+                                                                                     'IteratorType
+                                                                                     FT-chunk)
+                                                                            'end)
+                                                                     (mfc 'source
+                                                                          'field))))
                                                 null)
                                 "++iter_"
                                 "(iter_ == end_)"
@@ -1243,13 +1284,19 @@
                                          'AtomicType)
                                 (bm-constructor "SourceType & source"
                                                 (list (cons-asgn 'iter_
-                                                                 (mfc (mfc 'source
-                                                                           'field)
-                                                                      'begin))
+                                                                 (fc (scope (tpl-use 'IteratorStyle
+                                                                                     'IteratorType
+                                                                                     FT-chunk)
+                                                                            'begin)
+                                                                     (mfc 'source
+                                                                          'field)))
                                                       (cons-asgn 'end_
-                                                                 (mfc (mfc 'source
-                                                                           'field)
-                                                                      'end)))
+                                                                 (fc (scope (tpl-use 'IteratorStyle
+                                                                                     'IteratorType
+                                                                                     FT-chunk)
+                                                                            'end)
+                                                                     (mfc 'source
+                                                                          'field))))
                                                 null)
                                 "++iter_"
                                 "(iter_ == end_)"

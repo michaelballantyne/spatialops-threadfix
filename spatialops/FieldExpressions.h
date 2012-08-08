@@ -69,9 +69,21 @@
 
          typename FieldType::memory_window typedef MemoryWindow;
 
+         typename FieldType::iterator typedef Iterator;
+
+         typename FieldType::const_iterator typedef ConstIterator;
+
          static inline MemoryWindow const & memory_window(FieldType const & field) {
             return field.window_with_ghost();
          };
+
+         static inline Iterator begin(FieldType & field) { return field.begin(); };
+
+         static inline ConstIterator begin(FieldType const & field) { return field.begin(); };
+
+         static inline Iterator end(FieldType & field) { return field.end(); };
+
+         static inline ConstIterator end(FieldType const & field) { return field.end(); };
       };
 
       /* UseInteriorIterator */
@@ -80,9 +92,23 @@
 
          typename FieldType::memory_window typedef MemoryWindow;
 
+         typename FieldType::interior_iterator typedef Iterator;
+
+         typename FieldType::const_interior_iterator typedef ConstIterator;
+
          static inline MemoryWindow const & memory_window(FieldType const & field) {
             return field.window_without_ghost();
          };
+
+         static inline Iterator begin(FieldType & field) { return field.interior_begin(); };
+
+         static inline ConstIterator begin(FieldType const & field) {
+            return field.interior_begin();
+         };
+
+         static inline Iterator end(FieldType & field) { return field.interior_end(); };
+
+         static inline ConstIterator end(FieldType const & field) { return field.interior_end(); };
       };
 
       template<typename Operand, typename FieldType>
@@ -391,7 +417,8 @@
           typename FieldType::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef AtomicType;
           NeboConstField(SourceType const & source)
-          : iter_(source.field().begin()), end_(source.field().end())
+          : iter_(IteratorStyle<IteratorType, FieldType>::begin(source.field())),
+            end_(IteratorStyle<IteratorType, FieldType>::end(source.field()))
           {};
           inline void next(void) { ++iter_; };
           inline bool at_end(void) const { return (iter_ == end_); };
@@ -484,7 +511,8 @@
           typename FieldType::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef AtomicType;
           NeboField(SourceType & source)
-          : iter_(source.field().begin()), end_(source.field().end())
+          : iter_(IteratorStyle<IteratorType, FieldType>::begin(source.field())),
+            end_(IteratorStyle<IteratorType, FieldType>::end(source.field()))
           {};
           inline void next(void) { ++iter_; };
           inline bool at_end(void) const { return (iter_ == end_); };
