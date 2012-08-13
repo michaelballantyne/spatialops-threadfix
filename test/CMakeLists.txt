@@ -11,8 +11,11 @@ add_test( field_exprs field_exprs )
 add_executable( assign_test ScalingAssignmentTest.cpp )
 target_link_libraries( assign_test ${libs} )
 
-add_executable( stencil_test StencilChainTest.cpp )
+add_executable( stencil_test StencilTest.cpp )
 target_link_libraries( stencil_test ${libs} )
+
+add_executable( stencil_chain_test StencilChainTest.cpp )
+target_link_libraries( stencil_chain_test ${libs} )
 
 add_executable( till_10_test StencilChainTill10Test.cpp )
 target_link_libraries( till_10_test ${libs} )

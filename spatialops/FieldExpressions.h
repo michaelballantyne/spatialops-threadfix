@@ -25,6 +25,8 @@
 #  define SpatialOps_FieldExpressions_h
 
 #  include <spatialops/SpatialOpsConfigure.h>
+#  include <spatialops/structured/IndexTriplet.h>
+#  include <spatialops/structured/IndexHexlet.h>
 #  include <spatialops/structured/SpatialField.h>
 #  include <cmath>
 
@@ -5939,6 +5941,196 @@
        inline FieldType const & interior_assign(FieldType & lhs,
                                                 NeboExpression<ExprType, FieldType> const & rhs) {
           return field_expression_general_execute<UseInteriorIterator, ExprType, FieldType>(lhs, rhs);
+       };
+
+      template<typename CurrentMode, typename StencilType, typename FieldType>
+       struct NeboStencil;
+
+      template<typename StencilType, typename FieldType>
+       struct NeboStencil<Initial, StencilType, FieldType> {
+
+         public:
+          NeboStencil<Initial, StencilType, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          template<typename IteratorType>
+           struct Iterator {
+
+             NeboStencil<ResizePrep<IteratorType, This>, StencilType, FieldType> typedef
+             ResizePrepType;
+
+             NeboStencil<SeqWalk<IteratorType, This>, StencilType, FieldType> typedef SeqWalkType;
+          };
+          typename StencilType::SrcFieldType typedef SFT;
+          typename StencilType::DestFieldType typedef DFT;
+          typename SFT::Location::Offset typedef SFTO;
+          typename DFT::Location::Offset typedef DFTO;
+          typename structured::GreaterThan<SFTO, DFTO>::result::Negate typedef SP1;
+          typename structured::LessThan<SFTO, DFTO>::result typedef SP2;
+          typename structured::Invalidate<typename structured::Invalidate<typename structured::
+                                                                          FromGhost<typename SFT::
+                                                                                    Ghost>::result,
+                                                                          SP1>::result,
+                                          SP2>::result typedef VG;
+          NeboStencil(SFT const & f, double const lo, double const hi)
+          : lo_(lo), hi_(hi), field_(f)
+          {};
+          template<typename IteratorType>
+           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
+              return typename Iterator<IteratorType>::SeqWalkType(*this);
+           };
+          template<typename IteratorType>
+           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
+              return typename Iterator<IteratorType>::ResizePrepType(*this);
+           };
+          inline SFT const & field(void) const { return field_; };
+          inline double lo(void) const { return lo_; };
+          inline double hi(void) const { return hi_; };
+
+         private:
+          const double lo_;
+          const double hi_;
+          const SFT field_;
+      };
+
+      template<typename IteratorType, typename SourceType, typename StencilType, typename FieldType>
+       struct NeboStencil<ResizePrep<IteratorType, SourceType>, StencilType, FieldType> {
+
+         public:
+          NeboStencil<ResizePrep<IteratorType, SourceType>, StencilType, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          NeboStencil<Resize<IteratorType, This>, StencilType, FieldType> typedef ResizeType;
+          typename StencilType::SrcFieldType typedef SFT;
+          NeboStencil(SourceType const & source)
+          : lo_(source.lo()), hi_(source.hi()), field_(source.field())
+          {};
+          inline ResizeType resize(MemoryWindow const & newSize) const {
+             return ResizeType(newSize, *this);
+          };
+          inline SFT const & field(void) const { return field_; };
+          inline double lo(void) const { return lo_; };
+          inline double hi(void) const { return hi_; };
+
+         private:
+          const double lo_;
+          const double hi_;
+          const SFT field_;
+      };
+
+      template<typename IteratorType, typename SourceType, typename StencilType, typename FieldType>
+       struct NeboStencil<Resize<IteratorType, SourceType>, StencilType, FieldType> {
+
+         public:
+          NeboStencil<Resize<IteratorType, SourceType>, StencilType, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          NeboStencil<SeqWalk<IteratorType, This>, StencilType, FieldType> typedef SeqWalkType;
+          typename StencilType::SrcFieldType typedef SFT;
+          NeboStencil(MemoryWindow const & size, SourceType const & source)
+          : lo_(source.lo()),
+            hi_(source.hi()),
+            field_(size, source.field().field_values(), structured::ExternalStorage)
+          {};
+          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline SFT const & field(void) const { return field_; };
+          inline double lo(void) const { return lo_; };
+          inline double hi(void) const { return hi_; };
+
+         private:
+          const double lo_;
+          const double hi_;
+          const SFT field_;
+      };
+
+      template<typename IteratorType, typename SourceType, typename StencilType, typename FieldType>
+       struct NeboStencil<SeqWalk<IteratorType, SourceType>, StencilType, FieldType> {
+
+         public:
+          NeboStencil<SeqWalk<IteratorType, SourceType>, StencilType, FieldType> typedef This;
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          typename StencilType::SrcFieldType typedef SFT;
+          typename StencilType::DestFieldType typedef DFT;
+          typename SFT::Location::Offset typedef SFTO;
+          typename DFT::Location::Offset typedef DFTO;
+          typename structured::GreaterThan<SFTO, DFTO>::result::Negate typedef SP1;
+          typename structured::LessThan<SFTO, DFTO>::result typedef SP2;
+          typename structured::Invalidate<typename structured::Invalidate<typename structured::
+                                                                          FromGhost<typename SFT::
+                                                                                    Ghost>::result,
+                                                                          SP1>::result,
+                                          SP2>::result typedef VG;
+          typename SFT::const_iterator typedef Iterator;
+          typename FieldType::value_type typedef AtomicType;
+          NeboStencil(SourceType const & source)
+          : lo_(source.lo()),
+            hi_(source.hi()),
+            field1_(source.field().template resize_ghost_and_shift<VG, SP1>()),
+            field2_(source.field().template resize_ghost_and_shift<VG, SP2>()),
+            iter1_(IteratorStyle<IteratorType, SFT>::begin(field1_)),
+            iter2_(IteratorStyle<IteratorType, SFT>::begin(field2_))
+          {};
+          inline void next(void) { ++iter1_; ++iter2_; };
+          inline bool at_end(void) const { return false; };
+          inline bool has_length(void) const { return false; };
+          inline AtomicType eval(void) const { return *iter1_ * lo_ + *iter2_ * hi_; };
+
+         private:
+          const double lo_;
+          const double hi_;
+          const SFT field1_;
+          const SFT field2_;
+          Iterator iter1_;
+          Iterator iter2_;
+      };
+
+      template<typename StencilType>
+       struct NeboStencilConstructor {
+
+         private:
+          const double lo_;
+          const double hi_;
+
+         public:
+          NeboStencilConstructor(StencilType * const stencil)
+          : lo_(stencil->get_minus_coef()), hi_(stencil->get_plus_coef())
+          {};
+          inline NeboStencil<Initial, StencilType, typename StencilType::DestFieldType> operator ()(typename
+                                                                                                    StencilType::
+                                                                                                    SrcFieldType
+                                                                                                    const
+                                                                                                    &
+                                                                                                    f) {
+
+             return NeboStencil<Initial, StencilType, typename StencilType::DestFieldType>(f,
+                                                                                           lo_,
+                                                                                           hi_);
+          };
+      };
+
+      template<typename StencilType, typename FieldType>
+       inline FieldType const & operator <<=(FieldType & lhs,
+                                             NeboStencil<Initial, StencilType, FieldType> const &
+                                             rhs) {
+
+          typename NeboStencil<Initial, StencilType, FieldType>::template Iterator<UseWholeIterator>::
+          SeqWalkType local_rhs = rhs.template init<UseWholeIterator>();
+
+          FieldType local_lhs = lhs.template resize_ghost_and_shift<typename NeboStencil<Initial,
+                                                                                         StencilType,
+                                                                                         FieldType>::
+                                                                    VG,
+                                                                    structured::IndexTriplet<0, 0, 0>
+                                    >();
+
+          typename FieldType::iterator iter = local_lhs.begin();
+
+          typename FieldType::iterator const end = local_lhs.end();
+
+          while(iter != end){ *iter = local_rhs.eval(); ++iter; local_rhs.next(); };
+
+          return lhs;
        };
    } /* SpatialOps */;
 

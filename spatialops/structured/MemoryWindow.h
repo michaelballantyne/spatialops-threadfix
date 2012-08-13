@@ -25,11 +25,14 @@
 
 #include <vector>
 #include <iterator>
+# include <sstream>
 
 #include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/SpatialOpsDefs.h>
 
 #include <spatialops/structured/IntVec.h>
+#include <spatialops/structured/IndexTriplet.h>
+#include <spatialops/structured/IndexHexlet.h>
 
 #ifdef SOPS_BOOST_SERIALIZATION
 # include <boost/serialization/serialization.hpp>
@@ -37,7 +40,6 @@
 
 #ifndef NDEBUG
 # include <cassert>
-# include <sstream>
 # include <stdexcept>
 #endif
 
@@ -184,6 +186,42 @@ namespace structured{
                                      const IntVec bcExtents=IntVec(0,0,0) ) const;
 
     /**
+     *  \brief Resizes/reduces the MemoryWindow to given number of ghost cells.
+     *
+     *  \param oldSize is an IndexHexlet that specifies how many ghost cells are currently on each face.
+     *  \param newSize is an IndexHexlet that specifies how many ghost cells are to be on each face.
+     *
+     *  \return new MemoryWindow reduced from having oldSize ghostcells to having newSize ghost cells on each face.
+     */
+    template<typename OldSize, typename NewSize>
+    inline MemoryWindow resizeGhost() const {
+        return MemoryWindow(nptsGlob_,
+                            offset_ + OldSize::neg_int_vec() - NewSize::neg_int_vec(),
+                            extent_ - OldSize::neg_int_vec() - OldSize::pos_int_vec()
+                                    + NewSize::neg_int_vec() + NewSize::pos_int_vec(),
+                            bc_[0],
+                            bc_[1],
+                            bc_[2]);
+    };
+
+    /**
+     *  \brief shifts/moves the MemoryWindow by given amounts.
+     *
+     *  \param size is an IndexTriplet that specifies how much to shift/move the memory window.
+     *
+     *  \return new MemoryWindow moved by size.
+     */
+    template<typename IndexTriplet>
+    inline MemoryWindow shift() const {
+        return MemoryWindow(nptsGlob_,
+                            offset_ + IndexTriplet::int_vec(),
+                            extent_,
+                            bc_[0],
+                            bc_[1],
+                            bc_[2]);
+    };
+
+    /**
      *  \brief given the local ijk location (0-based on the local
      *         window), obtain the flat index in the global memory
      *         space.
@@ -268,6 +306,18 @@ namespace structured{
              (extent_   != w.extent_  ) ||
              (offset_   != w.offset_  ) ||
              (bc_       != w.bc_      );
+    }
+
+    /**
+     * \brief Writes the internals of MemoryWindow to a string
+     * \return a string value representing the internals of MemoryWindow.
+     */
+    inline std::string print() const {
+      std::stringstream s;
+      s << "Offset: " << offset_ << std::endl
+        << "Extent: " << extent_ << std::endl
+        << "BC :    " << bc_     << std::endl;
+      return s.str();
     }
 
   };

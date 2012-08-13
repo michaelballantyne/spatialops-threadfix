@@ -65,6 +65,38 @@ namespace SpatialOps{
     template< int i1, int i2 > struct Max{ enum{ result = i1>i2 ? i1 : i2 }; };
 
     /**
+     * \struct Min
+     * \brief  Select the minimum of two integer values
+     *
+     * Examples:
+     * \code assert( Min<1,3>::result == 1 );
+     * \endcode
+     */
+    template< int i1, int i2 > struct Min{ enum{ result = i1<i2 ? i1 : i2 }; };
+
+    /**
+     *  \struct LThan
+     *  \brief Obtain the result of comparing two integers at compile time
+     *
+     *  Examples:
+     *  \code assert( LThan<0, 1>::result == 1 ); \endcode
+     *  \code assert( LThan<1, 0>::result == 0 ); \endcode
+     *  \code assert( LThan<1, 1>::result == 0 ); \endcode
+     */
+    template< int i1, int i2 > struct LThan{ enum{ result = (i1 < i2) ? 1 : 0 }; };
+
+    /**
+     *  \struct GThan
+     *  \brief Obtain the result of comparing two integers at compile time
+     *
+     *  Examples:
+     *  \code assert( GThan<0, 1>::result == 0 ); \endcode
+     *  \code assert( GThan<1, 0>::result == 1 ); \endcode
+     *  \code assert( GThan<1, 1>::result == 0 ); \endcode
+     */
+    template< int i1, int i2 > struct GThan{ enum{ result = (i1 > i2) ? 1 : 0 }; };
+
+    /**
      *  \struct IndexTriplet
      *  \brief Used for specifying field type traits.
      *
@@ -280,6 +312,48 @@ namespace SpatialOps{
       typedef IndexTriplet< IX1::X * IX2::X,
                             IX1::Y * IX2::Y,
                             IX1::Z * IX2::Z >  result;
+    };
+
+    /**
+     *  \struct LessThan
+     *  \brief Perform compile-time compare of two IndexTriplet types
+     *
+     *  Example usage:
+     *   \code
+     *    // In the following, MyResult and T3 are the same type:
+     *    typedef IndexTriplet<-1, 1,-1> T1;
+     *    typedef IndexTriplet< 1,-1, 1> T2;
+     *    typedef IndexTriplet< 1, 0, 1> T3;
+     *    typedef LessThan< T1, T2 >::result  MyResult;
+     *   \endcode
+     */
+    template< typename IX1, typename IX2 >
+    struct LessThan
+    {
+      typedef IndexTriplet< LThan<IX1::X, IX2::X>::result,
+                            LThan<IX1::Y, IX2::Y>::result,
+                            LThan<IX1::Z, IX2::Z>::result > result;
+    };
+
+    /**
+     *  \struct GreaterThan
+     *  \brief Perform compile-time compare of two IndexTriplet types
+     *
+     *  Example usage:
+     *   \code
+     *    // In the following, MyResult and T3 are the same type:
+     *    typedef IndexTriplet<-1, 1,-1> T1;
+     *    typedef IndexTriplet< 1,-1, 1> T2;
+     *    typedef IndexTriplet< 0, 1, 0> T3;
+     *    typedef GreaterThan< T1, T2 >::result  MyResult;
+     *   \endcode
+     */
+    template< typename IX1, typename IX2 >
+    struct GreaterThan
+    {
+      typedef IndexTriplet< GThan<IX1::X, IX2::X>::result,
+                            GThan<IX1::Y, IX2::Y>::result,
+                            GThan<IX1::Z, IX2::Z>::result > result;
     };
 
     /**

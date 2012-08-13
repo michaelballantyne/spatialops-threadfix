@@ -20,6 +20,7 @@
  * IN THE SOFTWARE.
  */
 
+#include <spatialops/structured/IndexHexlet.h>
 #include <spatialops/structured/MemoryWindow.h>
 #include <test/TestHelper.h>
 
@@ -208,6 +209,29 @@ int main()
     status( children[1] == MemoryWindow( nxyz, IntVec(0,2,0), IntVec(6,3,1), false, false, false ), " child 1" );
     status( children[2] == MemoryWindow( nxyz, IntVec(0,3,0), IntVec(6,3,1), false, false, false ), " child 2" );
     overall( status.ok(), "6x6x1 split into 6x3x1 with ghosts" );
+  }
+
+  // test memory window resizing ghost
+  {
+      const IntVec size(6,6,6);
+      const MemoryWindow base(size, false, false, false);
+      TestHelper status(true);
+      status( base.resizeGhost<IndexHexlet<0,0,0,0,0,0>, IndexHexlet<0,0,0,0,0,0> >() == base, " no resize with no ghost" );
+      status( base.resizeGhost<IndexHexlet<1,1,1,1,1,1>, IndexHexlet<1,1,1,1,1,1> >() == base, " no resize with ghost" );
+      status( base.resizeGhost<IndexHexlet<2,2,2,2,2,2>, IndexHexlet<2,1,2,0,1,1> >() == MemoryWindow(size, IntVec(0,0,1), IntVec(5,4,4), false, false, false), " complex resize" );
+      overall( status.ok(), "Basic resizing ghost test" );
+  }
+
+  // test memory window shifting
+  {
+      const IntVec size(6,6,6);
+      const MemoryWindow base(size, false, false, false);
+      const MemoryWindow shaved = base.resizeGhost<IndexHexlet<2,2,2,2,2,2>, IndexHexlet<1,2,2,0,1,1> >();
+      TestHelper status(true);
+      status( shaved.shift<IndexTriplet<0,0,0> >() == shaved, " no shift test 1");
+      status( shaved.shift<IndexTriplet<0,0,0> >() == MemoryWindow(size, IntVec(1,0,1), IntVec(5,4,4), false, false, false), " no shift test 2");
+      status( shaved.shift<IndexTriplet<-1,2,0> >() == MemoryWindow(size, IntVec(0,2,1), IntVec(5,4,4), false, false, false), " up and down shift");
+      overall( status.ok(), "Basic shifting test" );
   }
 
   if( overall.isfailed() ) return -1;

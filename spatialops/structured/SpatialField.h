@@ -399,6 +399,31 @@ namespace structured{
     unsigned int get_ghost_size() const {
       return GhostTraits::NGHOST;
     }
+
+    template<typename NewGhost, typename Shift>
+    inline field_type resize_ghost_and_shift() const {
+        //check for valid ghost resize
+        BOOST_STATIC_ASSERT(int(NewGhost::nX) <= int(Ghost::NGhostMinus::X));
+        BOOST_STATIC_ASSERT(int(NewGhost::pX) <= int(Ghost::NGhostPlus::X));
+        BOOST_STATIC_ASSERT(int(NewGhost::nY) <= int(Ghost::NGhostMinus::Y));
+        BOOST_STATIC_ASSERT(int(NewGhost::pY) <= int(Ghost::NGhostPlus::Y));
+        BOOST_STATIC_ASSERT(int(NewGhost::nZ) <= int(Ghost::NGhostMinus::Z));
+        BOOST_STATIC_ASSERT(int(NewGhost::pZ) <= int(Ghost::NGhostPlus::Z));
+
+        //check for valid shift with respect to new ghosts
+        BOOST_STATIC_ASSERT(Shift::X < 0 ? (Abs<Shift::X>::result <= Ghost::NGhostMinus::X - NewGhost::nX) : true);
+        BOOST_STATIC_ASSERT(Shift::X > 0 ? (Shift::X <= Ghost::NGhostPlus::X - NewGhost::pX) : true);
+        BOOST_STATIC_ASSERT(Shift::Y < 0 ? (Abs<Shift::Y>::result <= Ghost::NGhostMinus::Y - NewGhost::nY) : true);
+        BOOST_STATIC_ASSERT(Shift::Y > 0 ? (Shift::Y <= Ghost::NGhostPlus::Y - NewGhost::pY) : true);
+        BOOST_STATIC_ASSERT(Shift::Z < 0 ? (Abs<Shift::Z>::result <= Ghost::NGhostMinus::Z - NewGhost::nZ) : true);
+        BOOST_STATIC_ASSERT(Shift::Z > 0 ? (Shift::Z <= Ghost::NGhostPlus::Z - NewGhost::pZ) : true);
+
+        return SpatialField(window_with_ghost().template resizeGhost<typename FromGhost<Ghost>::result,
+                                                                     NewGhost>()
+                                               .template shift<Shift>(),
+                            field_values(),
+                            ExternalStorage);
+    }
 };
 
 //==================================================================

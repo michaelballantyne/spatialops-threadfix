@@ -46,6 +46,8 @@
        [tpl-srt-def template-struct-define-chunk]
        [tpl-use template-use-chunk]
        [tpl-pmtr (lambda (pmtr) (c typename-chunk s pmtr))]
+       [sub-tpl-use (lambda (pmtr) (c template-chunk s pmtr))]
+       [tpl-fcn-use (lambda pmtrs (sub-tpl-use (apply tpl-use pmtrs)))]
        [sec-def section-define-chunk]
        [cons-asgn constructor-assignment-chunk]
        [scope scope-resolution-operator-chunk]
@@ -95,21 +97,18 @@
         (lambda (iterator mem_call iter_prefix)
           (d iterator
              (template-struct-define-chunk 'IteratorStyle
-                                           (c 'typename s FT-chunk)
+                                           (tpl-pmtr FT-chunk)
                                            (list iterator
                                                  FT-chunk)
-                                           (typedef (b s
-                                                       typename-chunk (scope FT-chunk
-                                                                             'memory_window))
+                                           (typedef (tpl-pmtr (scope FT-chunk 'memory_window))
                                                     'MemoryWindow)
-                                           (typedef (b s
-                                                       typename-chunk (scope FT-chunk (c iter_prefix
-                                                                                         'iterator)))
+                                           (typedef (tpl-pmtr (scope FT-chunk
+                                                                     (c iter_prefix 'iterator)))
                                                     'Iterator)
-                                           (typedef (b s
-                                                       typename-chunk (scope FT-chunk (c 'const_
-                                                                                         iter_prefix
-                                                                                         'iterator)))
+                                           (typedef (tpl-pmtr (scope FT-chunk
+                                                                     (c 'const_
+                                                                        iter_prefix
+                                                                        'iterator)))
                                                     'ConstIterator)
                                            (r-fcn-def (s-fcn-dcl 'memory_window
                                                                  (b s
@@ -169,8 +168,8 @@
        [build-mode-def (lambda (name templated?)
                          (if templated?
                              (tpl-srt-dcl name
-                                          (list (c 'typename s 'IteratorType)
-                                                (c 'typename s 'SourceType)))
+                                          (list (tpl-pmtr 'IteratorType)
+                                                (tpl-pmtr 'SourceType)))
                              (struct-declare-chunk name)))]
        [bm-constructor
         (lambda (params
@@ -193,7 +192,7 @@
                 [constructor-body third])
             (tpl-srt-def name
                          (flatten* tpl-pars
-                                   (c 'typename s FT-chunk))
+                                   (tpl-pmtr FT-chunk))
                          (flatten* mode
                                    tpl-args
                                    FT-chunk)
@@ -305,16 +304,16 @@
                 [SW-publics sixth]
                 [SW-privates seventh])
             (i (tpl-srt-dcl name
-                            (list (c 'typename s 'CurrentMode)
+                            (list (tpl-pmtr 'CurrentMode)
                                   tpl-pars
-                                  (c 'typename s FT-chunk))
+                                  (tpl-pmtr FT-chunk))
                             null)
                (build-mode name
                            'Initial
                            tpl-pars
                            tpl-args
                            (list (tpl-srt-def 'Iterator
-                                              (c 'typename s 'IteratorType)
+                                              (tpl-pmtr 'IteratorType)
                                               null
                                               (typedef (tpl-use name
                                                                 (tpl-use 'ResizePrep
@@ -332,34 +331,26 @@
                                                        'SeqWalkType))
                                  (IN-typedefs Initial))
                            (IN-constructor Initial)
-                           (list (tpl-def (c 'typename s 'IteratorType)
+                           (list (tpl-def (tpl-pmtr 'IteratorType)
                                           (r-fcn-def (add-const (fcn-dcl 'init
-                                                                         (c 'typename
-                                                                            s
-                                                                            (scope (tpl-use 'Iterator
-                                                                                            'IteratorType)
-                                                                                   'SeqWalkType))))
+                                                                         (tpl-pmtr (scope (tpl-use 'Iterator
+                                                                                                   'IteratorType)
+                                                                                          'SeqWalkType))))
                                                      null
-                                                     (fc (c 'typename
-                                                            s
-                                                            (scope (tpl-use 'Iterator
-                                                                            'IteratorType)
-                                                                   'SeqWalkType))
+                                                     (fc (tpl-pmtr (scope (tpl-use 'Iterator
+                                                                                   'IteratorType)
+                                                                          'SeqWalkType))
                                                          "*this")))
-                                 (tpl-def (c 'typename s 'IteratorType)
+                                 (tpl-def (tpl-pmtr 'IteratorType)
                                           (r-fcn-def (add-const (fcn-dcl 'resize_prep
-                                                                         (c 'typename
-                                                                            s
-                                                                            (scope (tpl-use 'Iterator
-                                                                                            'IteratorType)
-                                                                                   'ResizePrepType))))
+                                                                         (tpl-pmtr (scope (tpl-use 'Iterator
+                                                                                                   'IteratorType)
+                                                                                          'ResizePrepType))))
                                                      null
-                                                     (c typename-chunk
-                                                        s
-                                                        (fc (scope (tpl-use 'Iterator
-                                                                            'IteratorType)
-                                                                   'ResizePrepType)
-                                                            "*this"))))
+                                                     (tpl-pmtr (fc (scope (tpl-use 'Iterator
+                                                                                   'IteratorType)
+                                                                          'ResizePrepType)
+                                                                   "*this"))))
                                  (IN-publics Initial))
                            (IN-privates Initial))
                (build-mode name
@@ -450,13 +441,9 @@
                            (apply map proc lsts))]
                  [IN-typedef (lambda (type)
                                (lambda (Op)
-                                 (b s
-                                    typename-chunk
-                                    (scope Op
-                                           template-chunk)
-                                    (scope (tpl-use 'Iterator
-                                                    'IteratorType)
-                                           type))))]
+                                 (tpl-pmtr (scope (scope Op
+                                                         (tpl-fcn-use 'Iterator 'IteratorType))
+                                                  type))))]
                  [gen-ext-fcns (mapper (lambda (op Op op_)
                                          (r-fcn-def (constize (fcn-dcl op
                                                                        (b s
@@ -475,10 +462,7 @@
                                         op_-lst)]
                  [gen-typedef (lambda (type)
                                 (lambda (Op)
-                                  (c typename-chunk
-                                     s
-                                     (scope Op
-                                            type))))]
+                                  (tpl-pmtr (scope Op type))))]
                  [gen-constructor (bm-constructor "SourceType const & source"
                                                   (mapper (lambda (op_ op)
                                                             (cons-asgn op_
@@ -638,12 +622,10 @@
                         (list FT
                               SE
                               (lambda (FT)
-                                (c typename-chunk
-                                   s
-                                   (scope (tpl-use 'Standardize
-                                                   SE
-                                                   FT)
-                                          'StandardType)))
+                                (tpl-pmtr (scope (tpl-use 'Standardize
+                                                          SE
+                                                          FT)
+                                                 'StandardType)))
                               (lambda (FT)
                                 (b s
                                    SE
@@ -653,7 +635,7 @@
                               (fc (scope (tpl-use 'Standardize
                                                   SE
                                                   FT-chunk)
-                                            'standardType)
+                                         'standardType)
                                   arg))))]
        [abs-Scalar (lambda (str)
                      (let ([arg (string-append "arg" str)])
@@ -665,8 +647,7 @@
                                         FT))
                              (lambda (FT)
                                (b s
-                                  (scope FT
-                                         'value_type)
+                                  (scope FT 'value_type)
                                   const-chunk
                                   "&"
                                   arg))
@@ -680,10 +661,7 @@
                             (list FT
                                   SE
                                   (lambda (FT)
-                                    (c typename-chunk
-                                       s
-                                       (scope SE
-                                              'Expression)))
+                                    (tpl-pmtr (scope SE 'Expression)))
                                   (lambda (FT)
                                     (b s
                                        SE
@@ -942,6 +920,8 @@
    'SpatialOps_FieldExpressions_h
    (b blank-line-chunk
       (pp-includes-chunk 'spatialops/SpatialOpsConfigure.h
+                         'spatialops/structured/IndexTriplet.h
+                         'spatialops/structured/IndexHexlet.h
                          'spatialops/structured/SpatialField.h
                          'cmath)
       (comment-env-chunk (pp-include-chunk 'iostream))
@@ -992,8 +972,8 @@
          (struct-declare-chunk 'UseWholeIterator)
          (struct-declare-chunk 'UseInteriorIterator))
       (tpl-srt-dcl 'IteratorStyle
-                   (list (c 'typename s 'Use)
-                         (c 'typename s FT-chunk))
+                   (list (tpl-pmtr 'Use)
+                         (tpl-pmtr FT-chunk))
                    null)
       (IteratorStyle 'UseWholeIterator
                      'window_with_ghost
@@ -1397,43 +1377,34 @@
                              "/"
                              (c 'operator s "/"))
       (build-unary-function 'SinFcn
-                            (scope 'std
-                                   'sin)
+                            (scope 'std 'sin)
                             'sin)
       (build-unary-function 'CosFcn
-                            (scope 'std
-                                   'cos)
+                            (scope 'std 'cos)
                             'cos)
       (build-unary-function 'TanFcn
-                            (scope 'std
-                                   'tan)
+                            (scope 'std 'tan)
                             'tan)
       (build-unary-function 'ExpFcn
-                            (scope 'std
-                                   'exp)
+                            (scope 'std 'exp)
                             'exp)
       (build-unary-function 'TanhFcn
-                            (scope 'std
-                                   'tanh)
+                            (scope 'std 'tanh)
                             'tanh)
       (build-unary-function 'AbsFcn
-                            (scope 'std
-                                   'abs)
+                            (scope 'std 'abs)
                             'abs)
       (build-unary-function 'NegFcn
                             "-"
                             (c 'operator s "-"))
       (build-binary-function 'PowFcn
-                             (scope 'std
-                                    'pow)
+                             (scope 'std 'pow)
                              'pow)
       (build-unary-function 'SqrtFcn
-                            (scope 'std
-                                   'sqrt)
+                            (scope 'std 'sqrt)
                             'sqrt)
       (build-unary-function 'LogFcn
-                            (scope 'std
-                                   'log)
+                            (scope 'std 'log)
                             'log)
       (build-comparison-operator 'EqualCmp
                                  "=="
@@ -1492,30 +1463,18 @@
                     (list (tpl-pmtr 'Test)
                           (tpl-pmtr 'Expr))
                     (list 'Test 'Expr)
-                    (bs-Initial (list (b s
-                                         typename-chunk
-                                         (scope 'Test
-                                                template-chunk)
-                                         (scope (tpl-use 'Iterator 'IteratorType)
-                                                'ResizePrepType))
-                                      (b s
-                                         typename-chunk
-                                         (scope 'Expr
-                                                template-chunk)
-                                         (scope (tpl-use 'Iterator 'IteratorType)
-                                                'ResizePrepType)))
-                                 (list (b s
-                                         typename-chunk
-                                         (scope 'Test
-                                                template-chunk)
-                                         (scope (tpl-use 'Iterator 'IteratorType)
-                                                'SeqWalkType))
-                                      (b s
-                                         typename-chunk
-                                         (scope 'Expr
-                                                template-chunk)
-                                         (scope (tpl-use 'Iterator 'IteratorType)
-                                                'SeqWalkType)))
+                    (bs-Initial (list (tpl-pmtr (scope (scope 'Test
+                                                              (tpl-fcn-use 'Iterator 'IteratorType))
+                                                       'ResizePrepType))
+                                      (tpl-pmtr (scope (scope 'Expr
+                                                              (tpl-fcn-use 'Iterator 'IteratorType))
+                                                       'ResizePrepType)))
+                                (list (tpl-pmtr (scope (scope 'Test
+                                                              (tpl-fcn-use 'Iterator 'IteratorType))
+                                                       'SeqWalkType))
+                                      (tpl-pmtr (scope (scope 'Expr
+                                                              (tpl-fcn-use 'Iterator 'IteratorType))
+                                                       'SeqWalkType)))
                                 null
                                 (bm-constructor (list (b s
                                                          'Test const-chunk "&" 't)
@@ -1636,30 +1595,18 @@
                     (list (tpl-pmtr CT-chunk)
                           (tpl-pmtr 'Otherwise))
                     (list CT-chunk 'Otherwise)
-                    (bs-Initial (list (b s
-                                         typename-chunk
-                                         (scope CT-chunk
-                                                template-chunk)
-                                         (scope (tpl-use 'Iterator 'IteratorType)
-                                                'ResizePrepType))
-                                      (b s
-                                         typename-chunk
-                                         (scope 'Otherwise
-                                                template-chunk)
-                                         (scope (tpl-use 'Iterator 'IteratorType)
-                                                'ResizePrepType)))
-                                (list (b s
-                                         typename-chunk
-                                         (scope CT-chunk
-                                                template-chunk)
-                                         (scope (tpl-use 'Iterator 'IteratorType)
-                                                'SeqWalkType))
-                                      (b s
-                                         typename-chunk
-                                         (scope 'Otherwise
-                                                template-chunk)
-                                         (scope (tpl-use 'Iterator 'IteratorType)
-                                                'SeqWalkType)))
+                    (bs-Initial (list (tpl-pmtr (scope (scope CT-chunk
+                                                              (tpl-fcn-use 'Iterator 'IteratorType))
+                                                       'ResizePrepType))
+                                      (tpl-pmtr (scope (scope 'Otherwise
+                                                              (tpl-fcn-use 'Iterator 'IteratorType))
+                                                       'ResizePrepType)))
+                                (list (tpl-pmtr (scope (scope CT-chunk
+                                                              (tpl-fcn-use 'Iterator 'IteratorType))
+                                                       'SeqWalkType))
+                                      (tpl-pmtr (scope (scope 'Otherwise
+                                                              (tpl-fcn-use 'Iterator 'IteratorType))
+                                                       'SeqWalkType)))
                                 null
                                 (bm-constructor (list (b s
                                                          CT-chunk const-chunk "&" 'c)
@@ -1845,16 +1792,15 @@
                                          (tpl-pmtr FT-chunk)
                                          null
                                          (typedef (scope SClause-chunk
-                                                         (c template-chunk s (tpl-use 'Convert FT-chunk)))
+                                                         (tpl-fcn-use 'Convert FT-chunk))
                                                   'ConvertingClause)
                                          (typedef (tpl-pmtr (scope 'ConvertingClause
                                                                    'Converted))
                                                   'ConvertedClause)
                                          (typedef (tpl-pmtr (scope 'Otherwise
-                                                                   (c template-chunk s (tpl-use 'Convert FT-chunk))))
+                                                                   (tpl-fcn-use 'Convert FT-chunk)))
                                                   'ConvertingList)
-                                         (typedef (tpl-pmtr (scope 'ConvertingList
-                                                                   'Converted))
+                                         (typedef (tpl-pmtr (scope 'ConvertingList 'Converted))
                                                   'ConvertedList)
                                          (typedef (tpl-use Cond-chunk
                                                            'Initial
@@ -1871,7 +1817,7 @@
                                                         (fc (scope 'ConvertingClause 'convert)
                                                             (mfc 'c 'check)
                                                             (mfc 'c 'eval))
-                                                        (mfc 'o (c template-chunk s (tpl-use 'convert FT-chunk))))))
+                                                        (mfc 'o (tpl-fcn-use 'convert FT-chunk)))))
                             (tpl-def (tpl-pmtr FT-chunk)
                                      (r-fcn-def (constize (fcn-dcl 'convert
                                                                    (tpl-pmtr (scope (tpl-use 'Convert FT-chunk)
@@ -1906,10 +1852,9 @@
                                          (tpl-pmtr FT-chunk)
                                          null
                                          (typedef (scope SClause-chunk
-                                                         (c template-chunk s (tpl-use 'Convert FT-chunk)))
+                                                         (tpl-fcn-use 'Convert FT-chunk))
                                                   'ConvertingClause)
-                                         (typedef (tpl-pmtr (scope 'ConvertingClause
-                                                                   'Converted))
+                                         (typedef (tpl-pmtr (scope 'ConvertingClause 'Converted))
                                                   'ConvertedClause)
                                          (typedef Nil-chunk
                                                   'ConvertedList)
@@ -2010,8 +1955,7 @@
                                       null
                                       (typedef  (tpl-use 'ReverseListRecursive 'List 'Final)
                                                 'InternalCall)
-                                      (typedef  (tpl-pmtr (scope 'InternalCall
-                                                                 'Result))
+                                      (typedef  (tpl-pmtr (scope 'InternalCall 'Result))
                                                 'Result)
                                       (r-fcn-def (s-fcn-dcl 'reverse
                                                             'Result
@@ -2129,9 +2073,11 @@
                                (tpl-pmtr 'Expr))
                          (r-fcn-def (fcn-dcl name
                                              return-type
-                                             (list (c (tpl-use NBE-chunk
+                                             (list (b s
+                                                      (tpl-use NBE-chunk
                                                                'BoolExpr
-                                                               (tpl-pmtr (scope 'Expr 'field_type))) s 'nb)
+                                                               (tpl-pmtr (scope 'Expr 'field_type)))
+                                                      'nb)
                                                    (c 'Expr s 'e)))
                                     internals
                                     return-expr)))])
@@ -2172,8 +2118,7 @@
                                                           FT-chunk)
                                                  (list (typedef (tpl-use 'Standardize 'Expr FT-chunk)
                                                                 'Standardize)
-                                                       (typedef (tpl-pmtr (scope 'Standardize
-                                                                                 'StandardType))
+                                                       (typedef (tpl-pmtr (scope 'Standardize 'StandardType))
                                                                 'FinalType)
                                                        (typedef (tpl-use 'ReverseList 'FinalType)
                                                                 'Reverser)
@@ -2181,7 +2126,10 @@
                                                                 'Reversed)
                                                        (typedef (tpl-use NE-chunk 'Reversed FT-chunk)
                                                                 'Result))
-                                                 (fc 'Result (fc 'reverse (fc (scope 'Standardize 'standardType) 'e))))
+                                                 (fc 'Result
+                                                     (fc 'reverse
+                                                         (fc (scope 'Standardize 'standardType)
+                                                             'e))))
                                        (cond-bool-val (c 'operator s (p))
                                                       (tpl-use 'CondBuilder (c (tpl-use Cond-chunk
                                                                                         'Initial
@@ -2237,7 +2185,8 @@
                                                            (fc 'Cond
                                                                (fc 'Clause
                                                                    (fc 'Boolean 'b)
-                                                                   (fc (scope 'Standardize 'standardType) 'e))
+                                                                   (fc (scope 'Standardize 'standardType)
+                                                                       'e))
                                                                'list_)))
                                        (cond-NBE-val (c 'operator s (p))
                                                      #true
@@ -2291,7 +2240,8 @@
                                                           (fc 'Cond
                                                               (fc 'Clause
                                                                   (mfc 'nb 'expr)
-                                                                  (fc (scope 'Standardize 'standardType) 'e))
+                                                                  (fc (scope 'Standardize 'standardType)
+                                                                      'e))
                                                               'list_)))))
                                         ; no FT
               (build-CondBuilder null
@@ -2312,28 +2262,27 @@
                                                  (tpl-use NE-chunk
                                                           (tpl-pmtr (scope (scope (tpl-use 'CondBuilder
                                                                                            (tpl-pmtr (scope (scope 'List
-                                                                                                                   (c template-chunk s (tpl-use 'Convert
-                                                                                                                                                (tpl-pmtr (scope 'Expr
-                                                                                                                                                                 'field_type)))))
+                                                                                                                   (tpl-fcn-use 'Convert
+                                                                                                                                (tpl-pmtr (scope 'Expr 'field_type))))
                                                                                                             'Converted)))
-                                                                                  (c template-chunk s (tpl-use 'ReverseList
-                                                                                                               (tpl-pmtr (scope (tpl-use 'Standardize
-                                                                                                                                         'Expr
-                                                                                                                                         (tpl-pmtr (scope 'Expr 'field_type)))
-                                                                                                                                'StandardType)))))
+                                                                                  (tpl-fcn-use 'ReverseList
+                                                                                               (tpl-pmtr (scope (tpl-use 'Standardize
+                                                                                                                         'Expr
+                                                                                                                         (tpl-pmtr (scope 'Expr 'field_type)))
+                                                                                                                'StandardType))))
                                                                            'Result))
                                                           (tpl-pmtr (scope 'Expr 'field_type)))
                                                  (list (typedef (tpl-pmtr (scope 'Expr 'field_type))
                                                                 FT-chunk)
                                                        (typedef (tpl-pmtr (scope (scope 'List
-                                                                                        (c template-chunk s (tpl-use 'Convert (tpl-pmtr (scope 'Expr 'field_type)))))
+                                                                                        (tpl-fcn-use 'Convert (tpl-pmtr (scope 'Expr 'field_type))))
                                                                                  'Converted))
                                                                 'Converted)
                                                        (typedef (tpl-use 'CondBuilder 'Converted)
                                                                 'NewCondBuilder))
                                                  (fc (fc 'NewCondBuilder
                                                          (mfc 'list_
-                                                              (c template-chunk s (tpl-use 'convert FT-chunk))))
+                                                              (tpl-fcn-use 'convert FT-chunk)))
                                                      'e))
                                        (cond-bool-val (c 'operator s (p))
                                                       (tpl-use 'CondBuilder (c (tpl-use SCond-chunk 'List) s))
@@ -2359,11 +2308,11 @@
                                                                                                                    'StandardType))
                                                                                                   (tpl-pmtr (scope 'Expr 'field_type)))
                                                                                          (tpl-pmtr (scope (scope 'List
-                                                                                                                 (c template-chunk s (tpl-use 'Convert
-                                                                                                                                              (tpl-pmtr (scope 'Expr
-                                                                                                                                                               'field_type)))))
+                                                                                                                 (tpl-fcn-use 'Convert
+                                                                                                                              (tpl-pmtr (scope 'Expr 'field_type))))
                                                                                                           'Converted))
-                                                                                         (tpl-pmtr (scope 'Expr 'field_type))) s))
+                                                                                         (tpl-pmtr (scope 'Expr 'field_type)))
+                                                                                s))
                                                        (list (typedef (tpl-pmtr (scope 'Expr 'field_type))
                                                                       FT-chunk)
                                                              (typedef (tpl-use NB-chunk 'Initial FT-chunk)
@@ -2375,9 +2324,8 @@
                                                              (typedef (tpl-use Clause-chunk 'Initial 'Boolean 'StandardType FT-chunk)
                                                                       'Clause)
                                                              (typedef (tpl-pmtr (scope (scope 'List
-                                                                                              (c template-chunk s (tpl-use 'Convert
-                                                                                                                           (tpl-pmtr (scope 'Expr
-                                                                                                                                            'field_type)))))
+                                                                                              (tpl-fcn-use 'Convert
+                                                                                                           (tpl-pmtr (scope 'Expr 'field_type))))
                                                                                        'Converted))
                                                                       'Previous)
                                                              (typedef (tpl-use Cond-chunk 'Initial 'Clause 'Previous FT-chunk)
@@ -2388,9 +2336,10 @@
                                                            (fc 'Cond
                                                                (fc 'Clause
                                                                    (fc 'Boolean 'b)
-                                                                   (fc (scope 'Standardize 'standardType) 'e))
+                                                                   (fc (scope 'Standardize 'standardType)
+                                                                       'e))
                                                                (mfc 'list_
-                                                                    (c template-chunk s (tpl-use 'convert FT-chunk))))))
+                                                                    (tpl-fcn-use 'convert FT-chunk)))))
                                        (cond-NBE-val (c 'operator s (p))
                                                      #false
                                                      (tpl-use 'CondBuilder (c (tpl-use Cond-chunk
@@ -2401,7 +2350,7 @@
                                                                                                 (tpl-use NS-chunk 'Initial FT-chunk)
                                                                                                 FT-chunk)
                                                                                        (tpl-pmtr (scope (scope 'List
-                                                                                                               (c template-chunk s (tpl-use 'Convert FT-chunk)))
+                                                                                                               (tpl-fcn-use 'Convert FT-chunk))
                                                                                                         'Converted))
                                                                                        FT-chunk) s))
                                                      (list (typedef (tpl-use NS-chunk 'Initial FT-chunk)
@@ -2409,7 +2358,7 @@
                                                            (typedef (tpl-use Clause-chunk 'Initial 'BoolExpr 'Scalar FT-chunk)
                                                                     'Clause)
                                                            (typedef (tpl-pmtr (scope (scope 'List
-                                                                                            (c template-chunk s (tpl-use 'Convert FT-chunk)))
+                                                                                            (tpl-fcn-use 'Convert FT-chunk))
                                                                                      'Converted))
                                                                     'Previous)
                                                            (typedef (tpl-use Cond-chunk 'Initial 'Clause 'Previous FT-chunk)
@@ -2422,7 +2371,7 @@
                                                                  (mfc 'nb 'expr)
                                                                  (fc 'Scalar 'd))
                                                              (mfc 'list_
-                                                                  (c template-chunk s (tpl-use 'convert FT-chunk))))))
+                                                                  (tpl-fcn-use 'convert FT-chunk)))))
                                        (cond-NBE-expr (c 'operator s (p))
                                                       (tpl-use 'CondBuilder (c (tpl-use Cond-chunk
                                                                                         'Initial
@@ -2435,11 +2384,11 @@
                                                                                                                   'StandardType))
                                                                                                  (tpl-pmtr (scope 'Expr 'field_type)))
                                                                                         (tpl-pmtr (scope (scope 'List
-                                                                                                                (c template-chunk s (tpl-use 'Convert
-                                                                                                                                             (tpl-pmtr (scope 'Expr
-                                                                                                                                                              'field_type)))))
+                                                                                                                (tpl-fcn-use 'Convert
+                                                                                                                             (tpl-pmtr (scope 'Expr 'field_type))))
                                                                                                          'Converted))
-                                                                                        (tpl-pmtr (scope 'Expr 'field_type))) s))
+                                                                                        (tpl-pmtr (scope 'Expr 'field_type)))
+                                                                               s))
                                                       (list (typedef (tpl-pmtr (scope 'Expr 'field_type))
                                                                      FT-chunk)
                                                             (typedef (tpl-use 'Standardize 'Expr FT-chunk)
@@ -2449,9 +2398,8 @@
                                                             (typedef (tpl-use Clause-chunk 'Initial 'BoolExpr 'StandardType FT-chunk)
                                                                      'Clause)
                                                             (typedef (tpl-pmtr (scope (scope 'List
-                                                                                             (c template-chunk s (tpl-use 'Convert
-                                                                                                                          (tpl-pmtr (scope 'Expr
-                                                                                                                                           'field_type)))))
+                                                                                             (tpl-fcn-use 'Convert
+                                                                                                          (tpl-pmtr (scope 'Expr 'field_type))))
                                                                                       'Converted))
                                                                      'Previous)
                                                             (typedef (tpl-use Cond-chunk 'Initial 'Clause 'Previous FT-chunk)
@@ -2462,9 +2410,10 @@
                                                           (fc 'Cond
                                                               (fc 'Clause
                                                                   (mfc 'nb 'expr)
-                                                                  (fc (scope 'Standardize 'standardType) 'e))
+                                                                  (fc (scope 'Standardize 'standardType)
+                                                                      'e))
                                                               (mfc 'list_
-                                                                   (c template-chunk s (tpl-use 'convert FT-chunk))))))))
+                                                                   (tpl-fcn-use 'convert FT-chunk)))))))
                                         ; Nil
               (tpl-srt-def 'CondBuilder
                            null
@@ -2510,7 +2459,8 @@
                                                                                           'StandardType))
                                                                          (tpl-pmtr (scope 'Expr 'field_type)))
                                                                 Nil-chunk
-                                                                (tpl-pmtr (scope 'Expr 'field_type))) s))
+                                                                (tpl-pmtr (scope 'Expr 'field_type)))
+                                                       s))
                               (list (typedef (tpl-pmtr (scope 'Expr 'field_type))
                                              FT-chunk)
                                     (typedef (tpl-use NB-chunk 'Initial FT-chunk)
@@ -2529,7 +2479,8 @@
                                   (fc 'Cond
                                       (fc 'Clause
                                           (fc 'Boolean 'b)
-                                          (fc (scope 'Standardize 'standardType) 'e))
+                                          (fc (scope 'Standardize 'standardType)
+                                              'e))
                                       (fc Nil-chunk))))
               (cond-NBE-val 'cond
                             #false
@@ -2568,7 +2519,8 @@
                                                                                          'StandardType))
                                                                         (tpl-pmtr (scope 'Expr 'field_type)))
                                                                Nil-chunk
-                                                               (tpl-pmtr (scope 'Expr 'field_type))) s))
+                                                               (tpl-pmtr (scope 'Expr 'field_type)))
+                                                      s))
                              (list (typedef (tpl-pmtr (scope 'Expr 'field_type))
                                             FT-chunk)
                                    (typedef (tpl-use 'Standardize 'Expr FT-chunk)
@@ -2585,7 +2537,8 @@
                                  (fc 'Cond
                                      (fc 'Clause
                                          (mfc 'nb 'expr)
-                                         (fc (scope 'Standardize 'standardType) 'e))
+                                         (fc (scope 'Standardize 'standardType)
+                                             'e))
                                      (fc Nil-chunk))))))
       (m 'nebo_cond null (c 'cond "//"))
       (tpl-def (list (tpl-pmtr 'LhsType)
@@ -2624,34 +2577,22 @@
                                             "&"
                                             'initial_rhs)))
                           (fc (tpl-use 'field_expression_sequential_execute_internal
-                                       (c typename-chunk
-                                          s
-                                          (scope (tpl-use NF-chunk
-                                                          'Initial
-                                                          FT-chunk)
-                                                 template-chunk)
-                                          s
-                                          (scope (tpl-use 'Iterator
-                                                          'CallStyle)
-                                                 'SeqWalkType))
-                                       (c typename-chunk
-                                          s
-                                          (scope 'ExprType
-                                                 template-chunk)
-                                          s
-                                          (scope (tpl-use 'Iterator
-                                                          'CallStyle)
-                                                 'SeqWalkType)))
+                                       (tpl-pmtr (scope (scope (tpl-use NF-chunk
+                                                                        'Initial
+                                                                        FT-chunk)
+                                                               (tpl-fcn-use 'Iterator 'CallStyle))
+                                                        'SeqWalkType))
+                                       (tpl-pmtr (scope (scope 'ExprType
+                                                               (tpl-fcn-use 'Iterator 'CallStyle))
+                                                        'SeqWalkType)))
                               (mfc (fc (tpl-use NF-chunk
                                                 'Initial
                                                 FT-chunk)
                                        'initial_lhs)
-                                   (c template-chunk s (tpl-use 'init
-                                                                'CallStyle)))
+                                   (tpl-fcn-use 'init 'CallStyle))
                               (mfc (mfc 'initial_rhs
                                         'expr)
-                                   (c template-chunk s (tpl-use 'init
-                                                                'CallStyle))))
+                                   (tpl-fcn-use 'init 'CallStyle)))
                           'initial_lhs))
       (pp-conditional-ifdef-chunk
        'FIELD_EXPRESSION_THREADS
@@ -2665,28 +2606,19 @@
                                  (b s
                                     'ResizeRhsType const-chunk "&" 'rhs)
                                  (b s
-                                    typename-chunk
-                                    (scope FT-chunk
-                                           'memory_window)
+                                    (tpl-pmtr (scope FT-chunk 'memory_window))
                                     const-chunk
                                     "&"
                                     'window)
                                  (b s
-                                    (scope 'BI
-                                           'interprocess_semaphore)
+                                    (scope 'BI 'interprocess_semaphore)
                                     "*"
                                     'semaphore))
                            (list (fc (tpl-use 'field_expression_sequential_execute_internal
-                                              (c typename-chunk
-                                                 s
-                                                 (scope 'ResizeLhsType
-                                                        (scope 'ResizeType
+                                              (tpl-pmtr (scope (scope 'ResizeLhsType 'ResizeType)
+                                                               'SeqWalkType))
+                                              (tpl-pmtr (scope (scope 'ResizeRhsType 'ResizeType)
                                                                'SeqWalkType)))
-                                              (c typename-chunk
-                                                 s
-                                                 (scope 'ResizeRhsType
-                                                        (scope 'ResizeType
-                                                               'SeqWalkType))))
                                      (mfc (mfc 'lhs
                                                'resize
                                                'window)
@@ -2717,30 +2649,17 @@
                                              'initial_rhs)
                                           (b s
                                              'int const-chunk 'number_of_partitions)))
-                           (list (typedef (c typename-chunk
-                                             s
-                                             (scope (tpl-use NF-chunk
-                                                             'Initial
-                                                             FT-chunk)
-                                                    template-chunk)
-                                             s
-                                             (scope (tpl-use 'Iterator
-                                                             'CallStyle)
-                                                    'ResizePrepType))
+                           (list (typedef (tpl-pmtr (scope (scope (tpl-use NF-chunk
+                                                                           'Initial
+                                                                           FT-chunk)
+                                                                  (tpl-fcn-use 'Iterator 'CallStyle))
+                                                           'ResizePrepType))
                                           'LhsType)
-                                 (typedef (c typename-chunk
-                                             s
-                                             (scope 'ExprType
-                                                    template-chunk)
-                                             s
-                                             (scope (tpl-use 'Iterator
-                                                             'CallStyle)
-                                                    'ResizePrepType))
+                                 (typedef (tpl-pmtr (scope (scope 'ExprType
+                                                                  (tpl-fcn-use 'Iterator 'CallStyle))
+                                                           'ResizePrepType))
                                           'RhsType)
-                                 (typedef (c typename-chunk
-                                             s
-                                             (scope FT-chunk
-                                                    'memory_window))
+                                 (typedef (tpl-pmtr (scope FT-chunk 'memory_window))
                                           'MemoryWindow)
                                  (b s
                                     'MemoryWindow
@@ -2796,10 +2715,7 @@
                                                    'x "=" 'number_of_partitions)))
                                  (c (scope 'std
                                            (tpl-use 'vector
-                                                    (c typename-chunk
-                                                       s
-                                                       (scope FT-chunk
-                                                              'memory_window))))
+                                                    (tpl-pmtr (scope FT-chunk 'memory_window))))
                                     s
                                     'vec_window
                                     s
@@ -2807,25 +2723,18 @@
                                     s
                                     (mfc 'window
                                          'split
-                                         (fc (scope 'structured
-                                                    'IntVec)
+                                         (fc (scope 'structured 'IntVec)
                                              'x
                                              'y
                                              'z)))
-                                 (c (scope 'BI
-                                           'interprocess_semaphore)
+                                 (c (scope 'BI 'interprocess_semaphore)
                                     s
                                     (fc 'semaphore
                                         "0"))
-                                 (c typename-chunk
-                                    s
-                                    (scope (scope 'std
-                                                  (tpl-use 'vector
-                                                           (c typename-chunk
-                                                              s
-                                                              (scope FT-chunk
-                                                                     'memory_window))))
-                                           'const_iterator)
+                                 (c (tpl-pmtr (scope (scope 'std
+                                                            (tpl-use 'vector
+                                                                     (tpl-pmtr (scope FT-chunk 'memory_window))))
+                                                     'const_iterator))
                                     s
                                     'window_iterator
                                     s
@@ -2833,15 +2742,10 @@
                                     s
                                     (mfc 'vec_window
                                          'begin))
-                                 (c typename-chunk
-                                    s
-                                    (scope (scope 'std
-                                                  (tpl-use 'vector
-                                                           (c typename-chunk
-                                                              s
-                                                              (scope FT-chunk
-                                                                     'memory_window))))
-                                           'const_iterator)
+                                 (c (tpl-pmtr (scope (scope 'std
+                                                            (tpl-use 'vector
+                                                                     (tpl-pmtr (scope FT-chunk 'memory_window))))
+                                                     'const_iterator))
                                     s
                                     'window_end
                                     s
@@ -2863,11 +2767,9 @@
                                     "++"
                                     'window_iterator
                                     close-paren-chunk
-                                    (body-chunk (mfc (fc (scope 'ThreadPoolFIFO
-                                                                'self))
+                                    (body-chunk (mfc (fc (scope 'ThreadPoolFIFO 'self))
                                                      'schedule
-                                                     (fc (scope 'boost
-                                                                'bind)
+                                                     (fc (scope 'boost 'bind)
                                                          (c "&"
                                                             (tpl-use 'field_expression_thread_parallel_execute_internal
                                                                      'CallStyle
@@ -2878,16 +2780,10 @@
                                                                            'Initial
                                                                            FT-chunk)
                                                                   'initial_lhs)
-                                                              (c template-chunk
-                                                                 s
-                                                                 (tpl-use 'resize_prep
-                                                                          'CallStyle)))
+                                                              (tpl-fcn-use 'resize_prep 'CallStyle))
                                                          (mfc (mfc 'initial_rhs
                                                                    'expr)
-                                                              (c template-chunk
-                                                                 s
-                                                                 (tpl-use 'resize_prep
-                                                                          'CallStyle)))
+                                                              (tpl-fcn-use 'resize_prep 'CallStyle))
                                                          (c  "*"
                                                              'window_iterator)
                                                          (c "&"
@@ -2980,4 +2876,288 @@
                                       (fc 'ExprType
                                           'rhs)))
                               'UseInteriorIterator)
+      (build-struct 'NeboStencil
+                    #true
+                    (tpl-pmtr 'StencilType)
+                    'StencilType
+                    (bs-Initial 'StencilType
+                                'StencilType
+                                (list (typedef (tpl-pmtr (scope 'StencilType 'SrcFieldType))
+                                               'SFT)
+                                      (typedef (tpl-pmtr (scope 'StencilType 'DestFieldType))
+                                               'DFT)
+                                      (typedef (tpl-pmtr (scope (scope 'SFT 'Location)
+                                                                'Offset))
+                                               'SFTO)
+                                      (typedef (tpl-pmtr (scope (scope 'DFT 'Location)
+                                                                'Offset))
+                                               'DFTO)
+                                      (typedef (tpl-pmtr (scope (scope (scope 'structured
+                                                                              (tpl-use 'GreaterThan
+                                                                                       'SFTO
+                                                                                       'DFTO))
+                                                                       'result)
+                                                                'Negate))
+                                               'SP1)
+                                      (typedef (tpl-pmtr (scope (scope 'structured
+                                                                       (tpl-use 'LessThan
+                                                                                'SFTO
+                                                                                'DFTO))
+                                                                'result))
+                                               'SP2)
+                                      (typedef (tpl-pmtr (scope (scope 'structured
+                                                                       (tpl-use 'Invalidate
+                                                                                (tpl-pmtr (scope (scope 'structured
+                                                                                                        (tpl-use 'Invalidate
+                                                                                                                 (tpl-pmtr (scope (scope 'structured
+                                                                                                                                         (tpl-use 'FromGhost
+                                                                                                                                                  (tpl-pmtr (scope 'SFT 'Ghost))))
+                                                                                                                                  'result))
+                                                                                                                 'SP1))
+                                                                                                 'result))
+                                                                                'SP2))
+                                                                'result))
+                                               'VG))
+                                (bm-constructor (list (b s 'SFT const-chunk "&" 'f)
+                                                      (b s 'double const-chunk 'lo)
+                                                      (b s 'double const-chunk 'hi))
+                                                (list (cons-asgn 'lo_ 'lo)
+                                                      (cons-asgn 'hi_ 'hi)
+                                                      (cons-asgn 'field_ 'f))
+                                                null)
+                                (list (r-fcn-def (constize (fcn-dcl 'field
+                                                                    (b s
+                                                                       'SFT
+                                                                       const-chunk
+                                                                       "&")))
+                                                 null
+                                                 'field_)
+                                      (r-fcn-def (constize (fcn-dcl 'lo
+                                                                    'double))
+                                                 null
+                                                 'lo_)
+                                      (r-fcn-def (constize (fcn-dcl 'hi
+                                                                    'double))
+                                                 null
+                                                 'hi_))
+                                (list (b s const-chunk 'double 'lo_)
+                                      (b s const-chunk 'double 'hi_)
+                                      (b s const-chunk 'SFT 'field_)))
+                    (bs-ResizePrep 'StencilType
+                                   (typedef (tpl-pmtr (scope 'StencilType 'SrcFieldType))
+                                               'SFT)
+                                   (bm-constructor "SourceType const & source"
+                                                   (list (cons-asgn 'lo_
+                                                                    (mfc 'source
+                                                                         'lo))
+                                                         (cons-asgn 'hi_
+                                                                    (mfc 'source
+                                                                         'hi))
+                                                         (cons-asgn 'field_
+                                                                    (mfc 'source
+                                                                         'field)))
+                                                  null)
+                                   (list (r-fcn-def (constize (fcn-dcl 'field
+                                                                       (b s
+                                                                          'SFT
+                                                                          const-chunk
+                                                                          "&")))
+                                                    null
+                                                    'field_)
+                                      (r-fcn-def (constize (fcn-dcl 'lo
+                                                                    'double))
+                                                 null
+                                                 'lo_)
+                                      (r-fcn-def (constize (fcn-dcl 'hi
+                                                                    'double))
+                                                 null
+                                                 'hi_))
+                                (list (b s const-chunk 'double 'lo_)
+                                      (b s const-chunk 'double 'hi_)
+                                      (b s const-chunk 'SFT 'field_)))
+                    (bs-Resize 'StencilType
+                               (typedef (tpl-pmtr (scope 'StencilType 'SrcFieldType))
+                                        'SFT)
+                               (bm-constructor (list "MemoryWindow const & size"
+                                                     "SourceType const & source")
+                                               (list (cons-asgn 'lo_
+                                                                (mfc 'source
+                                                                     'lo))
+                                                     (cons-asgn 'hi_
+                                                                (mfc 'source
+                                                                     'hi))
+                                                     (fc 'field_
+                                                         'size
+                                                         (mfc (mfc 'source
+                                                                   'field)
+                                                              'field_values)
+                                                         "structured::ExternalStorage"))
+                                               null)
+                               (list (r-fcn-def (constize (fcn-dcl 'field
+                                                                   (b s
+                                                                      'SFT
+                                                                      const-chunk
+                                                                      "&")))
+                                                null
+                                                'field_)
+                                     (r-fcn-def (constize (fcn-dcl 'lo
+                                                                   'double))
+                                                null
+                                                'lo_)
+                                     (r-fcn-def (constize (fcn-dcl 'hi
+                                                                   'double))
+                                                null
+                                                'hi_))
+                               (list (b s const-chunk 'double 'lo_)
+                                     (b s const-chunk 'double 'hi_)
+                                     (b s const-chunk 'SFT 'field_)))
+                    (bs-SeqWalk (list (typedef (tpl-pmtr (scope 'StencilType 'SrcFieldType))
+                                               'SFT)
+                                      (typedef (tpl-pmtr (scope 'StencilType 'DestFieldType))
+                                               'DFT)
+                                      (typedef (tpl-pmtr (scope (scope 'SFT 'Location)
+                                                                'Offset))
+                                               'SFTO)
+                                      (typedef (tpl-pmtr (scope (scope 'DFT 'Location)
+                                                                'Offset))
+                                               'DFTO)
+                                      (typedef (tpl-pmtr (scope (scope (scope 'structured
+                                                                              (tpl-use 'GreaterThan
+                                                                                       'SFTO
+                                                                                       'DFTO))
+                                                                       'result)
+                                                                'Negate))
+                                               'SP1)
+                                      (typedef (tpl-pmtr (scope (scope 'structured
+                                                                       (tpl-use 'LessThan
+                                                                                'SFTO
+                                                                                'DFTO))
+                                                                'result))
+                                               'SP2)
+                                      (typedef (tpl-pmtr (scope (scope 'structured
+                                                                       (tpl-use 'Invalidate
+                                                                                (tpl-pmtr (scope (scope 'structured
+                                                                                                        (tpl-use 'Invalidate
+                                                                                                                 (tpl-pmtr (scope (scope 'structured
+                                                                                                                                         (tpl-use 'FromGhost
+                                                                                                                                                  (tpl-pmtr (scope 'SFT 'Ghost))))
+                                                                                                                                  'result))
+                                                                                                                 'SP1))
+                                                                                                 'result))
+                                                                                'SP2))
+                                                                'result))
+                                               'VG)
+                                      (typedef (tpl-pmtr (scope 'SFT 'const_iterator))
+                                               'Iterator)
+                                      (typedef (tpl-pmtr (scope FT-chunk 'value_type))
+                                               'AtomicType))
+                                (bm-constructor "SourceType const & source"
+                                                (list (cons-asgn 'lo_
+                                                                 (mfc 'source
+                                                                      'lo))
+                                                      (cons-asgn 'hi_
+                                                                 (mfc 'source
+                                                                      'hi))
+                                                      (cons-asgn 'field1_
+                                                                 (mfc (mfc 'source
+                                                                           'field)
+                                                                      (tpl-fcn-use 'resize_ghost_and_shift 'VG 'SP1)))
+                                                      (cons-asgn 'field2_
+                                                                 (mfc (mfc 'source
+                                                                           'field)
+                                                                      (tpl-fcn-use 'resize_ghost_and_shift 'VG 'SP2)))
+                                                      (cons-asgn 'iter1_
+                                                                 (fc (scope (tpl-use 'IteratorStyle
+                                                                                     'IteratorType
+                                                                                     'SFT)
+                                                                            'begin)
+                                                                     'field1_))
+                                                      (cons-asgn 'iter2_
+                                                                 (fc (scope (tpl-use 'IteratorStyle
+                                                                                     'IteratorType
+                                                                                     'SFT)
+                                                                            'begin)
+                                                                     'field2_)))
+                                                null)
+                                "++iter1_; ++iter2_"
+                                'false
+                                'false
+                                (r-fcn-def (constize (fcn-dcl 'eval
+                                                              'AtomicType))
+                                          null
+                                          (b s "*iter1_" "*" 'lo_ "+" "*iter2_" "*" 'hi_))
+                                (list (b s const-chunk 'double 'lo_)
+                                     (b s const-chunk 'double 'hi_)
+                                     (b s const-chunk 'SFT 'field1_)
+                                     (b s const-chunk 'SFT 'field2_)
+                                     (c 'Iterator s 'iter1_)
+                                     (c 'Iterator s 'iter2_))))
+      (tpl-srt-def 'NeboStencilConstructor
+                   (tpl-pmtr 'StencilType)
+                   null
+                   (sec-def private-chunk
+                            (b s const-chunk 'double 'lo_)
+                            (b s const-chunk 'double 'hi_))
+                   (sec-def public-chunk
+                            (constructor-chunk 'NeboStencilConstructor
+                                               (b s 'StencilType "*" const-chunk 'stencil)
+                                               (list (cons-asgn 'lo_ (c 'stencil "->" (fc 'get_minus_coef)))
+                                                     (cons-asgn 'hi_ (c 'stencil "->" (fc 'get_plus_coef))))
+                                               null)
+                            (r-fcn-def (fcn-dcl "operator ()"
+                                                (tpl-use 'NeboStencil
+                                                         'Initial
+                                                         'StencilType
+                                                         (tpl-pmtr (scope 'StencilType 'DestFieldType)))
+                                                (b s (tpl-pmtr (scope 'StencilType 'SrcFieldType)) const-chunk "&" 'f))
+                                       null
+                                       (fc (tpl-use 'NeboStencil
+                                                    'Initial
+                                                    'StencilType
+                                                    (tpl-pmtr (scope 'StencilType 'DestFieldType)))
+                                           'f
+                                           'lo_
+                                           'hi_))))
+      (tpl-def (list (tpl-pmtr 'StencilType)
+                     (tpl-pmtr FT-chunk))
+               (r-fcn-def (fcn-dcl (c 'operator s "<<=")
+                                   (b s FT-chunk const-chunk "&")
+                                   (b s FT-chunk "&" 'lhs)
+                                   (b s
+                                      (tpl-use 'NeboStencil 'Initial 'StencilType FT-chunk)
+                                      const-chunk "&" 'rhs))
+                          (list (b s (tpl-pmtr (scope (scope (tpl-use 'NeboStencil 'Initial 'StencilType FT-chunk)
+                                                             (sub-tpl-use (tpl-use 'Iterator 'UseWholeIterator)))
+                                                      'SeqWalkType))
+                                   'local_rhs
+                                   "="
+                                   (mfc 'rhs
+                                        (tpl-fcn-use 'init 'UseWholeIterator)))
+                                (b s FT-chunk 'local_lhs "=" (mfc 'lhs
+                                                                  (tpl-fcn-use 'resize_ghost_and_shift
+                                                                               (tpl-pmtr (scope (tpl-use 'NeboStencil
+                                                                                                         'Initial
+                                                                                                         'StencilType
+                                                                                                         'FieldType)
+                                                                                                'VG))
+                                                                               (c (scope 'structured
+                                                                                         (tpl-use 'IndexTriplet "0" "0" "0")) s))))
+                                (b s
+                                   (tpl-pmtr (scope FT-chunk 'iterator))
+                                   'iter
+                                   "="
+                                   (mfc 'local_lhs 'begin))
+                                (b s
+                                   (tpl-pmtr (scope FT-chunk 'iterator))
+                                   const-chunk
+                                   'end
+                                   "="
+                                   (mfc 'local_lhs 'end))
+                                (c 'while
+                                   (p (b s 'iter "!=" 'end))
+                                   (body-chunk (b s (c "*" 'iter) "=" (mfc 'local_rhs 'eval))
+                                               "++iter"
+                                               (mfc 'local_rhs
+                                                    'next))))
+                          'lhs))
       )))
