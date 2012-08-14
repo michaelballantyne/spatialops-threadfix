@@ -6,7 +6,6 @@ set( MINOR_VERSION "3" )
 set( PATCH_VERSION "0" )
 
 
-option( ENABLE_BOOST_SERIALIZATION "allow serialization of information via the boost library" OFF )
 option( ENABLE_TESTS "Enable building of regression tests (recommended)" ON )
 option( ENABLE_THREADS "Enable multi-threaded support for stencil operations" OFF )
 option( ENABLE_CUDA   "Build Spatial Ops with CUDA support" OFF )
@@ -52,16 +51,10 @@ set( SpatialOps_CONFIG_INSTALL
 set( boost_comps "program_options" )
 
 if( ENABLE_THREADS )
-   set( boost_comps ${boost_comps} "thread" )
+   set( boost_comps ${boost_comps} "thread;system" )
 endif( ENABLE_THREADS )
 
 set(Boost_USE_MULTITHREAD ON)
-if( ENABLE_BOOST_SERIALIZATION )
-  set( SOPS_BOOST_SERIALIZATION ON )
-  set( boost_comps ${boost_comps} "serialization" )
-else()
-  set( SOPS_BOOST_SERIALIZATION OFF )
-endif()
 
 if( DEFINED Boost_DIR )
   # give location hints.

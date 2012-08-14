@@ -15,6 +15,7 @@ target_link_libraries( test_grid ${libs} )
 add_test( test_grid test_grid )
 
 add_executable( test_tools testTools.cpp )
+target_link_libraries( test_tools ${TPL_LIBRARIES} )
 add_test( test_tools test_tools )
 
 if( ENABLE_BOOST_SERIALIZATION )

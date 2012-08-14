@@ -125,7 +125,11 @@ namespace boost { namespace threadpool
         if(m_break_s > 0 || m_break_ns > 0)
         { // Sleep some time before first execution
           xtime xt;
+#         if BOOST_VERSION / 100 % 1000 > 49
+          xtime_get(&xt, TIME_UTC_);
+#         else
           xtime_get(&xt, TIME_UTC);
+#         endif
           xt.nsec += m_break_ns;
           xt.sec += m_break_s;
           thread::sleep(xt); 
@@ -136,7 +140,11 @@ namespace boost { namespace threadpool
           if(m_break_s > 0 || m_break_ns > 0)
           {
             xtime xt;
+#           if BOOST_VERSION / 100 % 1000 > 49
+            xtime_get(&xt, TIME_UTC_);
+#           else
             xtime_get(&xt, TIME_UTC);
+#           endif
             xt.nsec += m_break_ns;
             xt.sec += m_break_s;
             thread::sleep(xt); 

@@ -496,10 +496,6 @@ namespace structured{
 #     endif
       return *current_;
     }
-
-    inline size_t i() const{ return i_; }
-    inline size_t j() const{ return j_; }
-    inline size_t k() const{ return k_; }
   };
 
   //==================================================================
@@ -632,11 +628,6 @@ namespace structured{
 #     endif
       return *current_;
     }
-
-    inline size_t i() const{ return i_; }
-    inline size_t j() const{ return j_; }
-    inline size_t k() const{ return k_; }
-
   };
 
 } // namespace structured
