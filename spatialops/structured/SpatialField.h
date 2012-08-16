@@ -282,8 +282,7 @@ namespace structured{
         msg << "\t - " << __FILE__ << " : " << __LINE__;
         throw(std::runtime_error(msg.str()));
       }
-      return const_iterator(fieldValues_,
-          fieldWindow_.flat_index(IntVec(0, 0, 0)), &fieldWindow_);
+      return const_iterator(fieldValues_, fieldWindow_);
     }
 
     inline iterator begin() {
@@ -295,8 +294,7 @@ namespace structured{
         msg << "\t - " << __FILE__ << " : " << __LINE__;
         throw(std::runtime_error(msg.str()));
       }
-      return iterator(fieldValues_, fieldWindow_.flat_index(IntVec(0, 0, 0)),
-          &fieldWindow_);
+      return iterator(fieldValues_, fieldWindow_);
     }
 
     inline const_iterator end() const;
@@ -324,8 +322,7 @@ namespace structured{
         msg << "\t - " << __FILE__ << " : " << __LINE__;
         throw(std::runtime_error(msg.str()));
       }
-      return interior_iterator(fieldValues_,
-          interiorFieldWindow_.flat_index(IntVec(0, 0, 0)), &interiorFieldWindow_);
+      return interior_iterator(fieldValues_, interiorFieldWindow_);
     }
 
     inline const_interior_iterator interior_end() const;
@@ -785,12 +782,9 @@ SpatialField<Location,GhostTraits, T>::end() const
   // We can allow constant interation of the field even if its not local,
   // so long as it has a local consumer field allocated
   if( memType_ == LOCAL_RAM || fieldValues_ != NULL ){
-    IntVec ijk = fieldWindow_.extent();
-    for (size_t i = 0; i < 3; ++i)
-      ijk[i] -= 1;
-    const size_t n = fieldWindow_.flat_index(ijk);
-    const_iterator i(fieldValues_, n, &fieldWindow_);
-    return ++i;
+    int extent = fieldWindow_.extent(0) * fieldWindow_.extent(1) * fieldWindow_.extent(2);
+    const_iterator i(fieldValues_, fieldWindow_);
+    return i + extent;
   } else {
     std::ostringstream msg;
     msg << "Unsupported request for const_iterator to field type ( "
@@ -809,12 +803,9 @@ SpatialField<Location,GhostTraits, T>::end()
 {
   switch (memType_) {
   case LOCAL_RAM: {
-    IntVec ijk = fieldWindow_.extent();
-    for (size_t i = 0; i < 3; ++i)
-      ijk[i] -= 1;
-    const size_t n = fieldWindow_.flat_index(ijk);
-    iterator i(fieldValues_, n, &fieldWindow_);
-    return ++i;
+    int extent = fieldWindow_.extent(0) * fieldWindow_.extent(1) * fieldWindow_.extent(2);
+    iterator i(fieldValues_, fieldWindow_);
+    return i + extent;
   }
   default:
     std::ostringstream msg;
@@ -832,12 +823,9 @@ typename SpatialField<Location, GhostTraits, T>::const_interior_iterator
 SpatialField<Location,GhostTraits,T>::interior_end() const
 {
   if( memType_ == LOCAL_RAM || fieldValues_ != NULL ) {
-    IntVec ijk = interiorFieldWindow_.extent();
-    for( size_t i = 0; i < 3; ++i )  ijk[i] -= 1;
-    const_interior_iterator i( fieldValues_,
-                               interiorFieldWindow_.flat_index(ijk),
-                               &interiorFieldWindow_);
-    return ++i;
+    int extent = interiorFieldWindow_.extent(0) * interiorFieldWindow_.extent(1) * interiorFieldWindow_.extent(2);
+    const_interior_iterator i(fieldValues_, interiorFieldWindow_);
+    return i + extent;
   } else {
     std::ostringstream msg;
     msg << "Unsupported request for iterator to external field type ( "
@@ -855,12 +843,9 @@ SpatialField<Location,GhostTraits,T>::interior_end()
 {
   switch (memType_) {
   case LOCAL_RAM: {
-    IntVec ijk = interiorFieldWindow_.extent();
-    for (size_t i = 0; i < 3; ++i)
-      ijk[i] -= 1;
-    interior_iterator i(fieldValues_, interiorFieldWindow_.flat_index(ijk),
-                        &interiorFieldWindow_);
-    return ++i;
+    int extent = interiorFieldWindow_.extent(0) * interiorFieldWindow_.extent(1) * interiorFieldWindow_.extent(2);
+    interior_iterator i(fieldValues_, interiorFieldWindow_);
+    return i + extent;
   }
   default:
     std::ostringstream msg;

@@ -322,362 +322,308 @@ namespace structured{
 
   };
 
-  /**
-   *  \class IteratorIncrementor
-   *  \brief provides increment/decrement facilities for iterators
-   *
-   *  \tparam DirT - the direction to increment the iterator in.
-   */
-  template< typename DirT > class IteratorIncrementor;
+  class MWStep {
+      //MWStep should never be instantiated
+      MWStep();
 
-  template<>
-  struct IteratorIncrementor<XDIR>
-  {
+      //returns 1 or 0
+      // return 1 when crossing edge to new line or new plane
+      // return 0 otherwise
+      static inline int const step(int const count, int const repeat) { return !(count % repeat); };
+
+      //returns a nonnegative integer
+      // return 0 when not crossing edge to new line or new plane
+      // return n where n is the number of edges crossed (either new lines or new planes)
+      static inline int const multi_step(int const old_count,
+                                         int const new_count,
+                                         int const repeat) {
+          //WARNING: this calculation uses only the quotent (and drops the remainder) intentionally
+          //BE CAREFUL changing/fixing this code!
+          int new_num_boundaries = (new_count - 1) / repeat;
+          int old_num_boundaries = (old_count - 1) / repeat;
+          return new_num_boundaries - old_num_boundaries;
+      };
+
+  public:
+      //returns distance to next cell in MemoryWindow
+      static inline int const dist(int const count,
+                                   int const yStep,
+                                   int const zStep,
+                                   int const xExtent,
+                                   int const xyExtent) {
+          return (1 + //xStep
+                  yStep * step(count, xExtent) +
+                  zStep * step(count, xyExtent));
+      };
+
+      //returns distance to previous cell in MemoryWindow
+      static inline int const dist_back(int const count,
+                                        int const yStep,
+                                        int const zStep,
+                                        int const xExtent,
+                                        int const xyExtent) {
+          return (1 + //xStep
+                  yStep * step(count - 1, xExtent) +
+                  zStep * step(count - 1, xyExtent));
+      };
+
+      //returns distance to cell abs(dist) away from current cell
+      //  in MemoryWindow
+      //  if dist < 0, returns cell abs(dist) before current cell
+      //  if dist > 0, returns cell dist after current cell
+      static inline int const multi_dist(int const count,
+                                         int const dist,
+                                         int const yStep,
+                                         int const zStep,
+                                         int const xExtent,
+                                         int const xyExtent) {
+          return (dist + //xStep
+                  yStep * multi_step(count,
+                                     count + dist,
+                                     xExtent) +
+                  zStep * multi_step(count,
+                                     count + dist,
+                                     xyExtent));
+      };
+  };
+
+  template<typename FieldType>
+  class ConstFieldIterator;  // forward
+
+  template<typename FieldType>
+    class FieldIterator : public std::iterator<std::random_access_iterator_tag, typename FieldType::value_type> {
+      friend class ConstFieldIterator<FieldType>;
+      typedef FieldIterator<FieldType> Self;
+      typedef typename FieldType::value_type AtomicType;
+
+  public:
+      FieldIterator()
+        : current_(NULL),
+          count_(0),
+          yStep_(0), zStep_(0),
+          xExtent_(0), xyExtent_(0)
+#         ifndef NDEBUG
+          , xyzExtent_(0)
+#         endif
+      {};
+
+      FieldIterator(AtomicType * field_values,
+                    const MemoryWindow & w)
+      : current_(field_values +
+                 w.offset(0) * 1 +
+                 w.offset(1) * w.glob_dim(0) +
+                 w.offset(2) * w.glob_dim(0) * w.glob_dim(1)),
+          count_(1),
+          yStep_(w.glob_dim(0) - w.extent(0)),
+          zStep_((w.glob_dim(1) - w.extent(1)) * w.glob_dim(0)),
+          xExtent_(w.extent(0)),
+          xyExtent_(w.extent(0) * w.extent(1))
+#         ifndef NDEBUG
+          , xyzExtent_(w.extent(0) * w.extent(1) * w.extent(2))
+#         endif
+      {};
+
+      //mutable dereference
+      inline AtomicType & operator*() {
+#         ifndef NDEBUG
+          if(count_ > xyzExtent_) {
+              std::ostringstream msg;
+              msg << __FILE__ << " : " << __LINE__ << std::endl
+                  << "iterator is in an invalid state for dereference";
+              throw std::runtime_error(msg.str());
+          };
+#         endif
+          return *current_;
+      };
+
+      //immutable dereference
+      inline AtomicType const & operator*() const {
+#         ifndef NDEBUG
+          if(count_ > xyzExtent_) {
+              std::ostringstream msg;
+              msg << __FILE__ << " : " << __LINE__ << std::endl
+                  << "iterator is in an invalid state for dereference";
+              throw std::runtime_error(msg.str());
+          };
+#         endif
+          return *current_;
+      };
+
+      //increment
+      inline Self & operator++() {
+          current_ += MWStep::dist(count_, yStep_, zStep_, xExtent_, xyExtent_);
+          count_++;
+          return *this;
+      };
+      inline Self operator++(int) { Self result = *this; ++(*this); return result; };
+
+      //decrement
+      inline Self & operator--() {
+          current_ -= MWStep::dist_back(count_, yStep_, zStep_, xExtent_, xyExtent_);
+          count_--;
+          return *this;
+      };
+      inline Self   operator--(int)  { Self result = *this; --(*this); return result; };
+
+      //compound assignment
+      inline Self & operator+=(int change) {
+          current_ += MWStep::multi_dist(count_, change, yStep_, zStep_, xExtent_, xyExtent_);
+          count_ += change;
+          return *this;
+      };
+      inline Self & operator-=(int change) { return *this += -change; };
+
+      //addition/subtraction
+      inline Self operator+ (int change) const { Self result = *this; result += change; return result; };
+      inline Self operator- (int change) const { return *this + (-change); };
+
+      //pointer subtraction
+      inline ptrdiff_t operator- (Self const & other) const { return count_ - other.count_; };
+
+      //offset dereference
+      inline AtomicType & operator[](int change) { Self result = *this; result += change; return *result; };
+
+      //comparisons
+      inline bool operator==(Self const & other) const { return current_ == other.current_; };
+      inline bool operator!=(Self const & other) const { return current_ != other.current_; };
+      inline bool operator< (Self const & other) const { return current_ <  other.current_; };
+      inline bool operator> (Self const & other) const { return current_ >  other.current_; };
+      inline bool operator<=(Self const & other) const { return current_ <= other.current_; };
+      inline bool operator>=(Self const & other) const { return current_ >= other.current_; };
+
   private:
-
-    static inline size_t stride_x( const MemoryWindow* const mw ){ return 1; }
-    static inline size_t stride_y( const MemoryWindow* const mw ){ return stride_x(mw) + mw->glob_dim(0)-mw->extent(0); }
-    static inline size_t stride_z( const MemoryWindow* const mw ){ return stride_y(mw) + ( mw->glob_dim(0) ) * ( mw->glob_dim(1)-mw->extent(1) ); }
-
-  public:
-
-    /**
-     *  \brief returns the increment for the pointer
-     */
-    static size_t increment( const MemoryWindow* const w,
-                             size_t& i, size_t& j, size_t& k )
-    {
-      size_t inc=0;
-      ++i;
-      if( i < w->extent(0) ){
-        inc += stride_x(w);
-      }
-      else{
-        i=0;
-        ++j;
-        if( j < w->extent(1) ){
-          inc += stride_y(w);
-        }
-        else{
-          j=0;
-          ++k;
-          inc += stride_z(w);
-        }
-      }
-      return inc;
-    }
-
-    /**
-     *  \brief returns the decrement for the pointer.  If zero, then reset the pointer.
-     */
-    static size_t decrement( const MemoryWindow* const w,
-                             size_t& i, size_t& j, size_t& k )
-    {
-      size_t inc=0;
-      if( i > 0 ){
-        --i;
-        ++inc;
-      }
-      else{
-        i = w->extent(0)-1;
-        if( j > 0 ){
-          --j;
-          inc += stride_y(w);
-        }
-        else{
-          j = w->extent(1)-1;
-          if( k > 0 ){
-            --k;
-            inc += stride_z(w);
-          }
-          else{
-            i = j = k = 0;
-          }
-        }
-      }
-      return inc;
-    }
-
+      AtomicType * current_;
+      int count_;
+      int yStep_;
+      int zStep_;
+      int xExtent_;
+      int xyExtent_;
+#     ifndef NDEBUG
+      int xyzExtent_;
+#     endif
   };
 
-
-  template<typename T> class ConstFieldIterator; // forward
-
-  /**
-   *  \class FieldIterator
-   *  \author James C. Sutherland
-   *  \date September, 2010
-   *
-   *  \brief Provides a forward iterator for a field that is
-   *         associated with a MemoryWindow, allowing one to iterate
-   *         over the "local" portion of that field as defined by the
-   *         MemoryWindow.
-   */
-  template< typename FieldT >
-  class FieldIterator
-  {
-    typedef typename FieldT::AtomicT  T;
-    friend class ConstFieldIterator<FieldT>;
-    T* current_;   ///< The current pointer that this iterator refers to
-    T* first_;     ///< The first position in memory for the field this iterator is associated with
-    const MemoryWindow* window_;  ///< The MemoryWindow associated with this field and iterator
-    size_t i_,j_,k_;
-
-  public:
-    typedef FieldIterator<FieldT> self;
-    typedef typename std::iterator_traits<T*>::value_type      value_type;
-    typedef typename std::iterator_traits<T*>::reference       reference;
-    typedef typename std::iterator_traits<T*>::pointer         pointer;
-    typedef typename std::iterator_traits<T*>::difference_type difference_type;
-    typedef          std::forward_iterator_tag                iterator_category;
-
-    FieldIterator()
-      : current_( NULL ), first_( NULL ), window_( NULL )
-    {
-      i_ = j_ = k_ = 0;
-    }
-
-    /**
-     *  \brief Copy constructor
-     */
-    FieldIterator( const self& other )
-      : current_( other.current_ ),
-        first_  ( other.first_   ),
-        window_ ( other.window_  )
-    {
-      i_=other.i_; j_=other.j_; k_=other.k_;
-    }
-
-    /**
-     *  \brief Construct a FieldIterator
-     *  \param t the raw pointer to the begin location of the field
-     *  \param offset the global offset into the field where we want the iterator to be.
-     *  \param window the MemoryWindow describing the portion of this field that we have access to.
-     */
-    FieldIterator( T* t, const size_t offset, const MemoryWindow* const window )
-      : current_( t+offset ),
-        first_  ( t        ),
-        window_ ( window   )
-    {
-      const IntVec& ijk = window->ijk_index_from_global( offset );
-      i_ = ijk[0] - window->offset(0);
-      j_ = ijk[1] - window->offset(1);
-      k_ = ijk[2] - window->offset(2);
-    }
-
-    /**
-     *  \brief increment the iterator
-     */
-    inline self& operator++(){
-      current_ += IteratorIncrementor<XDIR>::increment( window_, i_, j_, k_ );
-      return *this;
-    }
-
-    /**
-     *  \brief decrement operator
-     */
-    inline self& operator--(){
-      const size_t dec = IteratorIncrementor<XDIR>::decrement( window_, i_, j_, k_ );
-      if( dec==0 ) current_ = first_;
-      else current_ -= dec;
-      return *this;
-    }
-
-    inline self operator+( const size_t n ) const{
-      self iter(*this);
-      iter+=n;
-      return iter;
-    }
-
-    inline self operator-( const size_t n ) const{
-      self iter(*this);
-      iter -= n;
-      return iter;
-    }
-
-    inline self& operator+=( const size_t n ){
-      for( size_t i=0; i<n; ++i )  ++(*this);
-      return *this;
-    }
-
-    inline self& operator-=( const size_t n ){
-      for( size_t i=0; i<n; ++i )  --(*this);
-      return *this;
-    }
-
-    inline bool operator==( const self& other ) const{ return current_==other.current_; }
-
-    inline bool operator!=( const self& other ) const{ return current_!=other.current_; }
-
-    inline self& operator=( const self& other ){
-      current_ = other.current_;
-      first_   = other.first_;
-      window_  = other.window_;
-      i_       = other.i_;
-      j_       = other.j_;
-      k_       = other.k_;
-      return *this;
-    }
-
-    inline reference operator*(){
-#     ifndef NDEBUG
-      if( i_ >= window_->extent(0) + window_->offset(0) ||
-          j_ >= window_->extent(1) + window_->offset(1) ||
-          k_ >= window_->extent(2) + window_->offset(2) ){
-        std::ostringstream msg;
-        msg << __FILE__ << " : " << __LINE__ << std::endl
-            << "iterator is in an invalid state for dereference";
-        throw std::runtime_error( msg.str() );
-      }
-#     endif
-      return *current_;
-    }
-
-    inline reference operator*() const{
-#     ifndef NDEBUG
-      if( i_ >= window_->extent(0) + window_->offset(0) ||
-          j_ >= window_->extent(1) + window_->offset(1) ||
-          k_ >= window_->extent(2) + window_->offset(2) ){
-        std::ostringstream msg;
-        msg << __FILE__ << " : " << __LINE__ << std::endl
-            << "iterator is in an invalid state for dereference";
-        throw std::runtime_error( msg.str() );
-      }
-#     endif
-      return *current_;
-    }
+  template<typename FieldType>
+  inline FieldIterator<FieldType> operator+(int change,
+                                            FieldIterator<FieldType> const & iterator) {
+      return iterator + change;
   };
 
-  //==================================================================
-
-  /**
-   *  \class ConstFieldIterator
-   *  \author James C. Sutherland
-   *  \date September, 2010
-   *
-   *  \brief Provides a forward iterator for a field that is
-   *         associated with a MemoryWindow, allowing one to iterate
-   *         over the "local" portion of that field as defined by the
-   *         MemoryWindow.
-   *
-   *  See the documentation for FieldIterator
-   */
-  template< typename FieldT >
-  class ConstFieldIterator
-  {
-    typedef typename FieldT::AtomicT  T;
-    const T* current_;
-    const T* first_;
-    const MemoryWindow* window_;
-    size_t i_, j_, k_;
+  template<typename FieldType>
+    class ConstFieldIterator : public std::iterator<std::random_access_iterator_tag, typename FieldType::value_type> {
+      typedef ConstFieldIterator<FieldType> Self;
+      typedef typename FieldType::value_type AtomicType;
 
   public:
-    typedef ConstFieldIterator<FieldT> self;
-    typedef typename std::iterator_traits<const T*>::value_type      value_type;
-    typedef typename std::iterator_traits<const T*>::reference       reference;
-    typedef typename std::iterator_traits<const T*>::pointer         pointer;
-    typedef typename std::iterator_traits<const T*>::difference_type difference_type;
-    typedef          std::forward_iterator_tag                       iterator_category;
+      ConstFieldIterator()
+        : current_(NULL),
+          count_(0),
+          yStep_(0), zStep_(0),
+          xExtent_(0), xyExtent_(0)
+#         ifndef NDEBUG
+          , xyzExtent_(0)
+#         endif
+      {};
 
-    ConstFieldIterator()
-      : current_( NULL ), first_( NULL ), window_( NULL )
-    {
-      i_ = j_ = k_ = 0;
-    }
+      ConstFieldIterator(AtomicType * field_values,
+                         const MemoryWindow & w)
+      : current_(field_values +
+                 w.offset(0) * 1 +
+                 w.offset(1) * w.glob_dim(0) +
+                 w.offset(2) * w.glob_dim(0) * w.glob_dim(1)),
+          count_(1),
+          yStep_(w.glob_dim(0) - w.extent(0)),
+          zStep_((w.glob_dim(1) - w.extent(1)) * w.glob_dim(0)),
+          xExtent_(w.extent(0)),
+          xyExtent_(w.extent(0) * w.extent(1))
+#         ifndef NDEBUG
+          , xyzExtent_(w.extent(0) * w.extent(1) * w.extent(2))
+#         endif
+      {};
 
-    ConstFieldIterator( const self& other )
-      : current_( other.current_ ),
-        first_  ( other.first_   ),
-        window_ ( other.window_  )
-    {
-      i_=other.i_; j_=other.j_; k_=other.k_;
-    }
+      ConstFieldIterator(const FieldIterator<FieldType> it)
+        : current_(it.current_),
+          count_(it.count_),
+          yStep_(it.yStep_),
+          zStep_(it.zStep_),
+          xExtent_(it.xExtent_),
+          xyExtent_(it.xyExtent_)
+#         ifndef NDEBUG
+          , xyzExtent_(it.xyzExtent_)
+#         endif
+      {};
 
-    ConstFieldIterator( const T* t, const size_t offset, const MemoryWindow* const window )
-      : current_( t+offset ),
-        first_  ( t        ),
-        window_ ( window   )
-    {
-      const IntVec ijk = window->ijk_index_from_global( offset );
-      i_ = ijk[0] - window->offset(0);
-      j_ = ijk[1] - window->offset(1);
-      k_ = ijk[2] - window->offset(2);
-    }
+      //immutable dereference
+      inline AtomicType const & operator*() const {
+#         ifndef NDEBUG
+          if(count_ > xyzExtent_) {
+              std::ostringstream msg;
+              msg << __FILE__ << " : " << __LINE__ << std::endl
+                  << "iterator is in an invalid state for dereference";
+              throw std::runtime_error(msg.str());
+          };
+#         endif
+          return *current_;
+      };
 
-    /**
-     *  \brief Copy constructor to promote a FieldIterator to a ConstFieldIterator
-     */
-    ConstFieldIterator( const FieldIterator<FieldT> t )
-      : current_( t.current_ ),
-        first_  ( t.first_   ),
-        window_ ( t.window_  )
-    {
-      i_ = t.i_;
-      j_ = t.j_;
-      k_ = t.k_;
-    }
+      //increment
+      inline Self & operator++() {
+          current_ += MWStep::dist(count_, yStep_, zStep_, xExtent_, xyExtent_);
+          count_++;
+          return *this;
+      };
+      inline Self operator++(int) { Self result = *this; ++(*this); return result; };
 
-    inline self& operator++(){
-      current_ += IteratorIncrementor<XDIR>::increment( window_, i_, j_, k_ );
-      return *this;
-    }
+      //decrement
+      inline Self & operator--() {
+          current_ -= MWStep::dist_back(count_, yStep_, zStep_, xExtent_, xyExtent_);
+          count_--;
+          return *this;
+      };
+      inline Self   operator--(int)  { Self result = *this; --(*this); return result; };
 
-    inline self& operator--(){
-      const size_t dec = IteratorIncrementor<XDIR>::decrement( window_, i_, j_, k_ );
-      if( dec==0 ) current_ = first_;
-      else current_ -= dec;
-      return *this;
-    }
+      //compound assignment
+      inline Self & operator+=(int change) {
+          current_ += MWStep::multi_dist(count_, change, yStep_, zStep_, xExtent_, xyExtent_);
+          count_ += change;
+          return *this;
+      };
+      inline Self & operator-=(int change) { return *this += -change; };
 
-    inline self operator+( const size_t n ) const{
-      self iter(*this);
-      iter += n;
-      return iter;
-    }
+      //addition/subtraction
+      inline Self operator+ (int change) const { Self result = *this; result += change; return result; };
+      inline Self operator- (int change) const { return *this + (-change); };
 
-    inline self operator-( const size_t n ) const{
-      self iter(*this);
-      iter -= n;
-      return iter;
-    }
+      //iterator subtraction
+      inline ptrdiff_t operator- (Self const & other) const { return count_ - other.count_; };
 
-    inline self& operator+=( const size_t n ){
-      for( size_t i=0; i<n; ++i )  ++(*this);
-      return *this;
-    }
+      //offset dereference
+      inline AtomicType & operator[](int change) { Self result = *this; result += change; return *result; };
 
-    inline self& operator-=( const size_t n ){
-      for( size_t i=0; i<n; ++i )  --(*this);
-      return *this;
-    }
+      //comparisons
+      inline bool operator==(Self const & other) const { return current_ == other.current_; };
+      inline bool operator!=(Self const & other) const { return current_ != other.current_; };
+      inline bool operator< (Self const & other) const { return current_ <  other.current_; };
+      inline bool operator> (Self const & other) const { return current_ >  other.current_; };
+      inline bool operator<=(Self const & other) const { return current_ <= other.current_; };
+      inline bool operator>=(Self const & other) const { return current_ >= other.current_; };
 
-    inline bool operator==( const self& other ) const{ return current_==other.current_; }
-
-    inline bool operator!=( const self& other ) const{ return current_!=other.current_; }
-
-    inline self& operator=( const self& other ){
-      current_ = other.current_;
-      first_   = other.first_;
-      window_  = other.window_;
-      i_       = other.i_;
-      j_       = other.j_;
-      k_       = other.k_;
-      return *this;
-    }
-
-    inline reference operator*() const{
+  private:
+      AtomicType * current_;
+      int count_;
+      int yStep_;
+      int zStep_;
+      int xExtent_;
+      int xyExtent_;
 #     ifndef NDEBUG
-      if( i_ >= window_->extent(0) + window_->offset(0) ||
-          j_ >= window_->extent(1) + window_->offset(1) ||
-          k_ >= window_->extent(2) + window_->offset(2) ){
-        std::ostringstream msg;
-        msg << __FILE__ << " : " << __LINE__ << std::endl
-            << "iterator is in an invalid state for dereference";
-        throw std::runtime_error( msg.str() );
-      }
+      int xyzExtent_;
 #     endif
-      return *current_;
-    }
+  };
+
+  template<typename FieldType>
+  inline ConstFieldIterator<FieldType> operator+(int change,
+                                                 ConstFieldIterator<FieldType> const & iterator) {
+      return iterator + change;
   };
 
 } // namespace structured
