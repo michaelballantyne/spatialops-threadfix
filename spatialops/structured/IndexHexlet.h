@@ -108,6 +108,8 @@ namespace SpatialOps{
 
     };
 
+    struct InfiniteIndexHexlet;
+
     //------------------------------------------------------------------
 
     template<typename T1, typename T2>
@@ -123,7 +125,7 @@ namespace SpatialOps{
      *    typedef IndexHexlet< 1, 0, 1, 2, 3, 6 > T1;
      *    typedef IndexHexlet< 1, 2, 3, 4, 5, 6 > T2;
      *    typedef IndexHexlet< 0, 2, 2, 2, 2, 0 > T3;
-     *    typedef Add< T2, T3 >::result  MyResult;
+     *    typedef Invalidate< T2, T3 >::result  MyResult;
      *   \endcode
      */
     template<int nx1, int px1, int nx2, int px2,
@@ -152,7 +154,7 @@ namespace SpatialOps{
      *    typedef IndexHexlet< 0, 1, 1, 1, 1, 1 > T1;
      *    typedef IndexHexlet< 1, 1, 1, 2, 1, 3 > T2;
      *    typedef IndexTriplet< -1, 1, 2 > T3;
-     *    typedef Add< T2, T3 >::result  MyResult;
+     *    typedef Invalidate< T2, T3 >::result  MyResult;
      *   \endcode
      */
     template<int x, int nx, int px,
@@ -166,6 +168,26 @@ namespace SpatialOps{
                     (py - (y > 0 ? y : 0)),
                     (nz - (z < 0 ? Abs<z>::result : 0)),
                     (pz - (z > 0 ? z : 0))> typedef result;
+    };
+
+    /**
+     *  \struct Invalidate
+     *  \brief Perform compile-time reduction/invalidation of ghost cells in an InfiniteIndexHexlet type from any type
+     *
+     *  Example usage:
+     *   \code
+     *    // In the following, MyResult1, MyResult2, and T1 are all the same type:
+     *    typedef InfiniteIndexHexlet T1;
+     *    typedef IndexHexlet< 1, 1, 1, 2, 1, 3 > T2;
+     *    typedef IndexTriplet< -1, 1, 2 > T3;
+     *    typedef Invalidate< T1, T2 >::result  MyResult1;
+     *    typedef Invalidate< T1, T3 >::result  MyResult2;
+     *   \endcode
+     */
+    template<typename Other>
+        struct Invalidate<InfiniteIndexHexlet,
+                          Other> {
+        InfiniteIndexHexlet typedef result;
     };
 
     /**
@@ -209,6 +231,65 @@ namespace SpatialOps{
                     Min<py1,py2>::result,
                     Min<nz1,nz2>::result,
                     Min<pz1,pz2>::result> typedef result;
+    };
+
+    /**
+     *  \struct Minimum
+     *  \brief Perform compile-time minimum of two IndexHexlet types
+     *
+     *  Example usage:
+     *   \code
+     *    // In the following, MyResult and T1 are the same type:
+     *    typedef IndexHexlet< 1, 2, 1, 2, 1, 2> T1;
+     *    typedef IndexHexlet< 1, 2, 1, 2, 1, 2> T2;
+     *    typedef InfiniteIndexHexlet T3;
+     *    typedef Minimum< T2, T3 >::result  MyResult;
+     *   \endcode
+     */
+    template<int nx, int px,
+             int ny, int py,
+             int nz, int pz>
+    struct Minimum<IndexHexlet<nx,px,ny,py,nz,pz>,
+                   InfiniteIndexHexlet> {
+        IndexHexlet<nx,px,ny,py,nz,pz> typedef result;
+    };
+
+    /**
+     *  \struct Minimum
+     *  \brief Perform compile-time minimum of two IndexHexlet types
+     *
+     *  Example usage:
+     *   \code
+     *    // In the following, MyResult and T1 are the same type:
+     *    typedef IndexHexlet< 1, 2, 1, 2, 1, 2> T1;
+     *    typedef InfiniteIndexHexlet T2;
+     *    typedef IndexHexlet< 1, 2, 1, 2, 1, 2> T3;
+     *    typedef Minimum< T2, T3 >::result  MyResult;
+     *   \endcode
+     */
+    template<int nx, int px,
+             int ny, int py,
+             int nz, int pz>
+    struct Minimum<InfiniteIndexHexlet,
+                   IndexHexlet<nx,px,ny,py,nz,pz> > {
+        IndexHexlet<nx,px,ny,py,nz,pz> typedef result;
+    };
+
+    /**
+     *  \struct Minimum
+     *  \brief Perform compile-time minimum of two IndexHexlet types
+     *
+     *  Example usage:
+     *   \code
+     *    // In the following, MyResult and T1 are the same type:
+     *    typedef InfiniteIndexHexlet T1;
+     *    typedef Minimum< T1, T1 >::result  MyResult;
+     *   \endcode
+     */
+    template<>
+    struct Minimum<InfiniteIndexHexlet,
+                   InfiniteIndexHexlet> {
+        InfiniteIndexHexlet typedef result;
     };
   } // namespace structured
 } // namespace SpatialOps

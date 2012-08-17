@@ -170,6 +170,7 @@
              NeboScalar<SeqWalk<IteratorType, This>, FieldType> typedef SeqWalkType;
           };
           typename FieldType::value_type typedef AtomicType;
+          structured::InfiniteIndexHexlet typedef VG;
           NeboScalar(AtomicType const v)
           : value_(v)
           {};
@@ -264,6 +265,7 @@
 
              NeboBoolean<SeqWalk<IteratorType, This>, FieldType> typedef SeqWalkType;
           };
+          structured::InfiniteIndexHexlet typedef VG;
           NeboBoolean(bool const v)
           : value_(v)
           {};
@@ -355,6 +357,7 @@
 
              NeboConstField<SeqWalk<IteratorType, This>, FieldType> typedef SeqWalkType;
           };
+          typename structured::FromGhost<typename FieldType::Ghost>::result typedef VG;
           NeboConstField(FieldType const & f)
           : field_(f)
           {};
@@ -449,6 +452,7 @@
 
              NeboField<SeqWalk<IteratorType, This>, FieldType> typedef SeqWalkType;
           };
+          typename structured::FromGhost<typename FieldType::Ghost>::result typedef VG;
           NeboField(FieldType & f)
           : field_(f)
           {};
@@ -585,6 +589,8 @@
                    typename Operand2::template Iterator<IteratorType>::SeqWalkType,
                    FieldType> typedef SeqWalkType;
           };
+          typename structured::Minimum<typename Operand1::VG, typename Operand2::VG>::result typedef
+          VG;
           SumOp(Operand1 const & op1, Operand2 const & op2)
           : operand1_(op1), operand2_(op2)
           {};
@@ -785,6 +791,8 @@
                     typename Operand2::template Iterator<IteratorType>::SeqWalkType,
                     FieldType> typedef SeqWalkType;
           };
+          typename structured::Minimum<typename Operand1::VG, typename Operand2::VG>::result typedef
+          VG;
           DiffOp(Operand1 const & op1, Operand2 const & op2)
           : operand1_(op1), operand2_(op2)
           {};
@@ -985,6 +993,8 @@
                     typename Operand2::template Iterator<IteratorType>::SeqWalkType,
                     FieldType> typedef SeqWalkType;
           };
+          typename structured::Minimum<typename Operand1::VG, typename Operand2::VG>::result typedef
+          VG;
           ProdOp(Operand1 const & op1, Operand2 const & op2)
           : operand1_(op1), operand2_(op2)
           {};
@@ -1185,6 +1195,8 @@
                    typename Operand2::template Iterator<IteratorType>::SeqWalkType,
                    FieldType> typedef SeqWalkType;
           };
+          typename structured::Minimum<typename Operand1::VG, typename Operand2::VG>::result typedef
+          VG;
           DivOp(Operand1 const & op1, Operand2 const & op2)
           : operand1_(op1), operand2_(op2)
           {};
@@ -1383,6 +1395,7 @@
                     typename Operand::template Iterator<IteratorType>::SeqWalkType,
                     FieldType> typedef SeqWalkType;
           };
+          typename Operand::VG typedef VG;
           SinFcn(Operand const & op)
           : operand_(op)
           {};
@@ -1500,6 +1513,7 @@
                     typename Operand::template Iterator<IteratorType>::SeqWalkType,
                     FieldType> typedef SeqWalkType;
           };
+          typename Operand::VG typedef VG;
           CosFcn(Operand const & op)
           : operand_(op)
           {};
@@ -1617,6 +1631,7 @@
                     typename Operand::template Iterator<IteratorType>::SeqWalkType,
                     FieldType> typedef SeqWalkType;
           };
+          typename Operand::VG typedef VG;
           TanFcn(Operand const & op)
           : operand_(op)
           {};
@@ -1734,6 +1749,7 @@
                     typename Operand::template Iterator<IteratorType>::SeqWalkType,
                     FieldType> typedef SeqWalkType;
           };
+          typename Operand::VG typedef VG;
           ExpFcn(Operand const & op)
           : operand_(op)
           {};
@@ -1851,6 +1867,7 @@
                      typename Operand::template Iterator<IteratorType>::SeqWalkType,
                      FieldType> typedef SeqWalkType;
           };
+          typename Operand::VG typedef VG;
           TanhFcn(Operand const & op)
           : operand_(op)
           {};
@@ -1968,6 +1985,7 @@
                     typename Operand::template Iterator<IteratorType>::SeqWalkType,
                     FieldType> typedef SeqWalkType;
           };
+          typename Operand::VG typedef VG;
           AbsFcn(Operand const & op)
           : operand_(op)
           {};
@@ -2085,6 +2103,7 @@
                     typename Operand::template Iterator<IteratorType>::SeqWalkType,
                     FieldType> typedef SeqWalkType;
           };
+          typename Operand::VG typedef VG;
           NegFcn(Operand const & op)
           : operand_(op)
           {};
@@ -2204,6 +2223,8 @@
                     typename Operand2::template Iterator<IteratorType>::SeqWalkType,
                     FieldType> typedef SeqWalkType;
           };
+          typename structured::Minimum<typename Operand1::VG, typename Operand2::VG>::result typedef
+          VG;
           PowFcn(Operand1 const & op1, Operand2 const & op2)
           : operand1_(op1), operand2_(op2)
           {};
@@ -2404,6 +2425,7 @@
                      typename Operand::template Iterator<IteratorType>::SeqWalkType,
                      FieldType> typedef SeqWalkType;
           };
+          typename Operand::VG typedef VG;
           SqrtFcn(Operand const & op)
           : operand_(op)
           {};
@@ -2521,6 +2543,7 @@
                     typename Operand::template Iterator<IteratorType>::SeqWalkType,
                     FieldType> typedef SeqWalkType;
           };
+          typename Operand::VG typedef VG;
           LogFcn(Operand const & op)
           : operand_(op)
           {};
@@ -2640,6 +2663,8 @@
                       typename Operand2::template Iterator<IteratorType>::SeqWalkType,
                       FieldType> typedef SeqWalkType;
           };
+          typename structured::Minimum<typename Operand1::VG, typename Operand2::VG>::result typedef
+          VG;
           EqualCmp(Operand1 const & op1, Operand2 const & op2)
           : operand1_(op1), operand2_(op2)
           {};
@@ -2848,6 +2873,8 @@
                         typename Operand2::template Iterator<IteratorType>::SeqWalkType,
                         FieldType> typedef SeqWalkType;
           };
+          typename structured::Minimum<typename Operand1::VG, typename Operand2::VG>::result typedef
+          VG;
           InequalCmp(Operand1 const & op1, Operand2 const & op2)
           : operand1_(op1), operand2_(op2)
           {};
@@ -3057,6 +3084,8 @@
                          typename Operand2::template Iterator<IteratorType>::SeqWalkType,
                          FieldType> typedef SeqWalkType;
           };
+          typename structured::Minimum<typename Operand1::VG, typename Operand2::VG>::result typedef
+          VG;
           LessThanCmp(Operand1 const & op1, Operand2 const & op2)
           : operand1_(op1), operand2_(op2)
           {};
@@ -3264,6 +3293,8 @@
                               typename Operand2::template Iterator<IteratorType>::SeqWalkType,
                               FieldType> typedef SeqWalkType;
           };
+          typename structured::Minimum<typename Operand1::VG, typename Operand2::VG>::result typedef
+          VG;
           LessThanEqualCmp(Operand1 const & op1, Operand2 const & op2)
           : operand1_(op1), operand2_(op2)
           {};
@@ -3477,6 +3508,8 @@
                             typename Operand2::template Iterator<IteratorType>::SeqWalkType,
                             FieldType> typedef SeqWalkType;
           };
+          typename structured::Minimum<typename Operand1::VG, typename Operand2::VG>::result typedef
+          VG;
           GreaterThanCmp(Operand1 const & op1, Operand2 const & op2)
           : operand1_(op1), operand2_(op2)
           {};
@@ -3686,6 +3719,8 @@
                                  typename Operand2::template Iterator<IteratorType>::SeqWalkType,
                                  FieldType> typedef SeqWalkType;
           };
+          typename structured::Minimum<typename Operand1::VG, typename Operand2::VG>::result typedef
+          VG;
           GreaterThanEqualCmp(Operand1 const & op1, Operand2 const & op2)
           : operand1_(op1), operand2_(op2)
           {};
@@ -3906,6 +3941,8 @@
                    typename Operand2::template Iterator<IteratorType>::SeqWalkType,
                    FieldType> typedef SeqWalkType;
           };
+          typename structured::Minimum<typename Operand1::VG, typename Operand2::VG>::result typedef
+          VG;
           AndOp(Operand1 const & op1, Operand2 const & op2)
           : operand1_(op1), operand2_(op2)
           {};
@@ -4101,6 +4138,8 @@
                   typename Operand2::template Iterator<IteratorType>::SeqWalkType,
                   FieldType> typedef SeqWalkType;
           };
+          typename structured::Minimum<typename Operand1::VG, typename Operand2::VG>::result typedef
+          VG;
           OrOp(Operand1 const & op1, Operand2 const & op2)
           : operand1_(op1), operand2_(op2)
           {};
@@ -4294,6 +4333,7 @@
                    typename Operand::template Iterator<IteratorType>::SeqWalkType,
                    FieldType> typedef SeqWalkType;
           };
+          typename Operand::VG typedef VG;
           NotOp(Operand const & op)
           : operand_(op)
           {};
@@ -4414,6 +4454,8 @@
                             typename Operand2::template Iterator<IteratorType>::SeqWalkType,       \
                             FieldType> typedef SeqWalkType;                                        \
              };                                                                                    \
+             typename structured::Minimum<typename Operand1::VG, typename Operand2::VG>::result    \
+             typedef VG;                                                                           \
              OBJECT_NAME(Operand1 const & op1, Operand2 const & op2)                               \
              : operand1_(op1), operand2_(op2)                                                      \
              {};                                                                                   \
@@ -4630,6 +4672,8 @@
                             typename Operand2::template Iterator<IteratorType>::SeqWalkType,       \
                             FieldType> typedef SeqWalkType;                                        \
              };                                                                                    \
+             typename structured::Minimum<typename Operand1::VG, typename Operand2::VG>::result    \
+             typedef VG;                                                                           \
              OBJECT_NAME(Operand1 const & op1, Operand2 const & op2)                               \
              : operand1_(op1), operand2_(op2)                                                      \
              {};                                                                                   \
@@ -4844,6 +4888,7 @@
                             typename Operand::template Iterator<IteratorType>::SeqWalkType,        \
                             FieldType> typedef SeqWalkType;                                        \
              };                                                                                    \
+             typename Operand::VG typedef VG;                                                      \
              OBJECT_NAME(Operand const & op)                                                       \
              : operand_(op)                                                                        \
              {};                                                                                   \
@@ -4941,7 +4986,7 @@
              return ReturnTerm(ReturnType(Type(Standardize<SubExpr, FieldType>::standardType(arg)))); \
           };
 
-      struct NeboNil { NeboNil() {}; };
+      struct NeboNil { structured::InfiniteIndexHexlet typedef VG; NeboNil() {}; };
 
       template<typename CurrentMode, typename Test, typename Expr, typename FieldType>
        struct NeboClause;
@@ -4966,6 +5011,7 @@
                         typename Expr::template Iterator<IteratorType>::SeqWalkType,
                         FieldType> typedef SeqWalkType;
           };
+          typename structured::Minimum<typename Test::VG, typename Expr::VG>::result typedef VG;
           NeboClause(Test const & t, Expr const & e)
           : test_(t), expr_(e)
           {};
@@ -5090,6 +5136,8 @@
                       typename Otherwise::template Iterator<IteratorType>::SeqWalkType,
                       FieldType> typedef SeqWalkType;
           };
+          typename structured::Minimum<typename ClauseType::VG, typename Otherwise::VG>::result
+          typedef VG;
           NeboCond(ClauseType const & c, Otherwise const & e)
           : clause_(c), otherwise_(e)
           {};

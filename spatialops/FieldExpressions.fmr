@@ -222,12 +222,14 @@
         (lambda (tpl-args-RP
                  tpl-args-SW
                  typedefs
+                 VG-type
                  constructor
                  publics
                  privates)
           (list tpl-args-RP
                 tpl-args-SW
                 typedefs
+                VG-type
                 constructor
                 publics
                 privates))]
@@ -283,9 +285,10 @@
                 [IN-tpl-args-RP first]
                 [IN-tpl-args-SW second]
                 [IN-typedefs third]
-                [IN-constructor fourth]
-                [IN-publics fifth]
-                [IN-privates sixth]
+                [IN-VG-type fourth]
+                [IN-constructor fifth]
+                [IN-publics sixth]
+                [IN-privates seventh]
                 [RP-tpl-args-RS first]
                 [RP-typedefs second]
                 [RP-constructor third]
@@ -329,7 +332,8 @@
                                                                 (IN-tpl-args-SW Initial)
                                                                 FT-chunk)
                                                        'SeqWalkType))
-                                 (IN-typedefs Initial))
+                                 (IN-typedefs Initial)
+                                 (typedef (IN-VG-type Initial) 'VG))
                            (IN-constructor Initial)
                            (list (tpl-def (tpl-pmtr 'IteratorType)
                                           (r-fcn-def (add-const (fcn-dcl 'init
@@ -437,6 +441,7 @@
                  [op-lst (map (lambda (str) (string-append "operand" str)) num-lst)]
                  [Op-lst (map (lambda (str) (string-append "Operand" str)) num-lst)]
                  [op_-lst (map (lambda (op) (c op "_")) op-lst)]
+                 [Op-VG-lst (map (lambda (Op) (tpl-pmtr (scope Op 'VG))) Op-lst)]
                  [mapper (lambda (proc . lsts)
                            (apply map proc lsts))]
                  [IN-typedef (lambda (type)
@@ -444,6 +449,18 @@
                                  (tpl-pmtr (scope (scope Op
                                                          (tpl-fcn-use 'Iterator 'IteratorType))
                                                   type))))]
+                 [IN-VG (lambda (Op-VG-lst)
+                          (cond [(equal? 1 (length Op-VG-lst)) (first Op-VG-lst)]
+                                [(equal? 2 (length Op-VG-lst)) (tpl-pmtr (scope (scope 'structured
+                                                                                       (tpl-use 'Minimum
+                                                                                                (first Op-VG-lst)
+                                                                                                (second Op-VG-lst)))
+                                                                                'result))]
+                                [else (tpl-pmtr (scope (scope 'structured
+                                                              (tpl-use 'Minimum
+                                                                       (first Op-VG-lst)
+                                                                       (IN-VG (rest Op-VG-lst))))
+                                                       'result))]))]
                  [gen-ext-fcns (mapper (lambda (op Op op_)
                                          (r-fcn-def (constize (fcn-dcl op
                                                                        (b s
@@ -507,6 +524,7 @@
                                       (mapper (IN-typedef 'SeqWalkType)
                                               Op-lst)
                                       null
+                                      (IN-VG Op-VG-lst)
                                       (bm-constructor (mapper (lambda (Op IN-op)
                                                                 (b s
                                                                    Op const-chunk "&" IN-op))
@@ -997,6 +1015,7 @@
                                 (typedef (scope (tpl-pmtr FT-chunk)
                                                 'value_type)
                                          'AtomicType)
+                                (scope 'structured 'InfiniteIndexHexlet)
                                 (bm-constructor (b s
                                                    'AtomicType const-chunk 'v)
                                                 (cons-asgn 'value_
@@ -1070,6 +1089,7 @@
                     (bs-Initial null
                                 null
                                 null
+                                (scope 'structured 'InfiniteIndexHexlet)
                                 (bm-constructor (b s
                                                    'bool const-chunk 'v)
                                                 (cons-asgn 'value_
@@ -1138,6 +1158,10 @@
                     (bs-Initial null
                                 null
                                 null
+                                (tpl-pmtr (scope (scope 'structured
+                                                        (tpl-use 'FromGhost
+                                                                 (tpl-pmtr (scope FT-chunk 'Ghost))))
+                                                 'result))
                                 (bm-constructor "FieldType const & f"
                                                 (cons-asgn 'field_
                                                            'f)
@@ -1222,6 +1246,10 @@
                     (bs-Initial null
                                 null
                                 null
+                                (tpl-pmtr (scope (scope 'structured
+                                                        (tpl-use 'FromGhost
+                                                                 (tpl-pmtr (scope FT-chunk 'Ghost))))
+                                                 'result))
                                 (bm-constructor "FieldType & f"
                                                 (cons-asgn 'field_
                                                            'f)
@@ -1455,6 +1483,7 @@
                                'INTERNAL_NAME
                                'EXTERNAL_NAME))
       (srt-def (srt-dcl Nil-chunk)
+               (typedef (scope 'structured 'InfiniteIndexHexlet) 'VG)
                (constructor-chunk Nil-chunk
                                   null
                                   null))
@@ -1476,6 +1505,11 @@
                                                               (tpl-fcn-use 'Iterator 'IteratorType))
                                                        'SeqWalkType)))
                                 null
+                                (tpl-pmtr (scope (scope 'structured
+                                                        (tpl-use 'Minimum
+                                                                 (tpl-pmtr (scope 'Test 'VG))
+                                                                 (tpl-pmtr (scope 'Expr 'VG))))
+                                                 'result))
                                 (bm-constructor (list (b s
                                                          'Test const-chunk "&" 't)
                                                       (b s
@@ -1608,6 +1642,11 @@
                                                               (tpl-fcn-use 'Iterator 'IteratorType))
                                                        'SeqWalkType)))
                                 null
+                                (tpl-pmtr (scope (scope 'structured
+                                                        (tpl-use 'Minimum
+                                                                 (tpl-pmtr (scope CT-chunk 'VG))
+                                                                 (tpl-pmtr (scope 'Otherwise 'VG))))
+                                                 'result))
                                 (bm-constructor (list (b s
                                                          CT-chunk const-chunk "&" 'c)
                                                       (b s
@@ -2904,20 +2943,19 @@
                                                                                 'SFTO
                                                                                 'DFTO))
                                                                 'result))
-                                               'SP2)
-                                      (typedef (tpl-pmtr (scope (scope 'structured
-                                                                       (tpl-use 'Invalidate
-                                                                                (tpl-pmtr (scope (scope 'structured
-                                                                                                        (tpl-use 'Invalidate
-                                                                                                                 (tpl-pmtr (scope (scope 'structured
-                                                                                                                                         (tpl-use 'FromGhost
-                                                                                                                                                  (tpl-pmtr (scope 'SFT 'Ghost))))
-                                                                                                                                  'result))
-                                                                                                                 'SP1))
-                                                                                                 'result))
-                                                                                'SP2))
-                                                                'result))
-                                               'VG))
+                                               'SP2))
+                                (tpl-pmtr (scope (scope 'structured
+                                                        (tpl-use 'Invalidate
+                                                                 (tpl-pmtr (scope (scope 'structured
+                                                                                         (tpl-use 'Invalidate
+                                                                                                  (tpl-pmtr (scope (scope 'structured
+                                                                                                                          (tpl-use 'FromGhost
+                                                                                                                                   (tpl-pmtr (scope 'SFT 'Ghost))))
+                                                                                                                   'result))
+                                                                                                  'SP1))
+                                                                                  'result))
+                                                                 'SP2))
+                                                 'result))
                                 (bm-constructor (list (b s 'SFT const-chunk "&" 'f)
                                                       (b s 'double const-chunk 'lo)
                                                       (b s 'double const-chunk 'hi))
