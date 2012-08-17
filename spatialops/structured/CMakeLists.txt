@@ -32,6 +32,7 @@ install( FILES
   FVStaggeredFieldTypes.h
   FVTools.h
   Grid.h
+  IndexHexlet.h
   IndexTriplet.h
   IntVec.h
   ExternalAllocators.h
