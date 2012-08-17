@@ -309,8 +309,7 @@ namespace structured{
         msg << "\t - " << __FILE__ << " : " << __LINE__;
         throw(std::runtime_error(msg.str()));
       }
-      return const_interior_iterator(fieldValues_,
-          interiorFieldWindow_.flat_index(IntVec(0, 0, 0)), &interiorFieldWindow_);
+      return const_interior_iterator( fieldValues_, interiorFieldWindow_ );
     }
 
     inline interior_iterator interior_begin() {
