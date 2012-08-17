@@ -138,6 +138,7 @@ bool test_interior( const IntVec npts,
   FieldT f1( window, NULL );
   FieldT f2( window, NULL );
   f1 <<= 2.0;
+  const FieldT f3(f1);
 
   const MemoryWindow& interiorWindow = f1.window_without_ghost();
   const IntVec lo = interiorWindow.offset();
@@ -159,6 +160,8 @@ bool test_interior( const IntVec npts,
   const typename FieldT::interior_iterator if2e=f2.interior_end();
   typename FieldT::const_interior_iterator if1=f1.interior_begin();
   const typename FieldT::interior_iterator if1e=f1.interior_end();
+  typename FieldT::const_interior_iterator if3=f3.interior_begin();
+  const typename FieldT::const_interior_iterator if3e=f3.interior_end();
   for( int k=lo[2]; k<hi[2]; ++k ){
     for( int j=lo[1]; j<hi[1]; ++j ){
       for( int i=lo[0]; i<hi[0]; ++i ){
@@ -174,7 +177,13 @@ bool test_interior( const IntVec npts,
           std::ostringstream msg;  msg << "f1 mem loc at " << i<<","<<j<<","<<k;
           status( &f1pt == f1pti, msg.str() );
         }
-        ++if2; ++if1;
+        {
+          const double& f3pt = f3(i,j,k);
+          const double* f3pti = &*if3;
+          std::ostringstream msg;  msg << "f3 mem loc at " << i<<","<<j<<","<<k;
+          status( &f3pt == f3pti, msg.str() );
+        }
+        ++if2; ++if1; ++if3;
       }
     }
   }
