@@ -322,71 +322,6 @@ namespace structured{
 
   };
 
-  class MWStep {
-      //MWStep should never be instantiated
-      MWStep();
-
-      //returns 1 or 0
-      // return 1 when crossing edge to new line or new plane
-      // return 0 otherwise
-      static inline int const step(int const count, int const repeat) { return !(count % repeat); };
-
-      //returns a nonnegative integer
-      // return 0 when not crossing edge to new line or new plane
-      // return n where n is the number of edges crossed (either new lines or new planes)
-      static inline int const multi_step(int const old_count,
-                                         int const new_count,
-                                         int const repeat) {
-          //WARNING: this calculation uses only the quotent (and drops the remainder) intentionally
-          //BE CAREFUL changing/fixing this code!
-          int new_num_boundaries = (new_count - 1) / repeat;
-          int old_num_boundaries = (old_count - 1) / repeat;
-          return new_num_boundaries - old_num_boundaries;
-      };
-
-  public:
-      //returns distance to next cell in MemoryWindow
-      static inline int const dist(int const count,
-                                   int const yStep,
-                                   int const zStep,
-                                   int const xExtent,
-                                   int const xyExtent) {
-          return (1 + //xStep
-                  yStep * step(count, xExtent) +
-                  zStep * step(count, xyExtent));
-      };
-
-      //returns distance to previous cell in MemoryWindow
-      static inline int const dist_back(int const count,
-                                        int const yStep,
-                                        int const zStep,
-                                        int const xExtent,
-                                        int const xyExtent) {
-          return (1 + //xStep
-                  yStep * step(count - 1, xExtent) +
-                  zStep * step(count - 1, xyExtent));
-      };
-
-      //returns distance to cell abs(dist) away from current cell
-      //  in MemoryWindow
-      //  if dist < 0, returns cell abs(dist) before current cell
-      //  if dist > 0, returns cell dist after current cell
-      static inline int const multi_dist(int const count,
-                                         int const dist,
-                                         int const yStep,
-                                         int const zStep,
-                                         int const xExtent,
-                                         int const xyExtent) {
-          return (dist + //xStep
-                  yStep * multi_step(count,
-                                     count + dist,
-                                     xExtent) +
-                  zStep * multi_step(count,
-                                     count + dist,
-                                     xyExtent));
-      };
-  };
-
   template<typename FieldType>
   class ConstFieldIterator;  // forward
 
@@ -400,33 +335,53 @@ namespace structured{
       FieldIterator()
         : current_(NULL),
           count_(0),
+          xIndex_(0), yIndex_(0),
           yStep_(0), zStep_(0),
-          xExtent_(0), xyExtent_(0)
+          xExtent_(0), yExtent_(0), xyExtent_(0)
 #         ifndef NDEBUG
-          , xyzExtent_(0)
+          ,
+          zIndex_(0),
+          zExtent_(0)
 #         endif
       {};
 
       FieldIterator(AtomicType * field_values,
                     const MemoryWindow & w)
       : current_(field_values +
-                 w.offset(0) * 1 +
+                 w.offset(0) +
                  w.offset(1) * w.glob_dim(0) +
                  w.offset(2) * w.glob_dim(0) * w.glob_dim(1)),
-          count_(1),
+          count_(0),
+          xIndex_(0), yIndex_(0),
           yStep_(w.glob_dim(0) - w.extent(0)),
           zStep_((w.glob_dim(1) - w.extent(1)) * w.glob_dim(0)),
           xExtent_(w.extent(0)),
+          yExtent_(w.extent(1)),
           xyExtent_(w.extent(0) * w.extent(1))
 #         ifndef NDEBUG
-          , xyzExtent_(w.extent(0) * w.extent(1) * w.extent(2))
+          ,
+          zIndex_(0),
+          zExtent_(w.extent(2))
 #         endif
       {};
 
       //mutable dereference
       inline AtomicType & operator*() {
 #         ifndef NDEBUG
-          if(count_ > xyzExtent_) {
+          if(count_ != (xIndex_ +
+                        yIndex_ * xExtent_ +
+                        zIndex_ * xyExtent_)) {
+              std::ostringstream msg;
+              msg << __FILE__ << " : " << __LINE__ << std::endl
+                  << "iterator's internal count is off";
+              throw std::runtime_error(msg.str());
+          };
+          if(xIndex_ >= xExtent_ ||
+             yIndex_ >= yExtent_ ||
+             zIndex_ >= zExtent_ ||
+             xIndex_ < 0 ||
+             yIndex_ < 0 ||
+             zIndex_ < 0) {
               std::ostringstream msg;
               msg << __FILE__ << " : " << __LINE__ << std::endl
                   << "iterator is in an invalid state for dereference";
@@ -439,7 +394,20 @@ namespace structured{
       //immutable dereference
       inline AtomicType const & operator*() const {
 #         ifndef NDEBUG
-          if(count_ > xyzExtent_) {
+          if(count_ != (xIndex_ +
+                        yIndex_ * xExtent_ +
+                        zIndex_ * xyExtent_)) {
+              std::ostringstream msg;
+              msg << __FILE__ << " : " << __LINE__ << std::endl
+                  << "iterator's internal count is off";
+              throw std::runtime_error(msg.str());
+          };
+          if(xIndex_ >= xExtent_ ||
+             yIndex_ >= yExtent_ ||
+             zIndex_ >= zExtent_ ||
+             xIndex_ < 0 ||
+             yIndex_ < 0 ||
+             zIndex_ < 0) {
               std::ostringstream msg;
               msg << __FILE__ << " : " << __LINE__ << std::endl
                   << "iterator is in an invalid state for dereference";
@@ -451,24 +419,124 @@ namespace structured{
 
       //increment
       inline Self & operator++() {
-          current_ += MWStep::dist(count_, yStep_, zStep_, xExtent_, xyExtent_);
+          current_++; //xStep
           count_++;
+          xIndex_++;
+#         ifndef NDEBUG
+          if(xIndex_ > xExtent_) {
+              std::ostringstream msg;
+              msg << __FILE__ << " : " << __LINE__ << std::endl
+                  << "iterator is in an invalid state for increment (X-axis)";
+              throw std::runtime_error(msg.str());
+          };
+#         endif
+          if(xIndex_ == xExtent_) {
+              current_ += yStep_; //yStep
+              xIndex_ = 0;
+              yIndex_++;
+#             ifndef NDEBUG
+              if(yIndex_ > yExtent_) {
+                  std::ostringstream msg;
+                  msg << __FILE__ << " : " << __LINE__ << std::endl
+                      << "iterator is in an invalid state for increment (Y-axis)";
+                  throw std::runtime_error(msg.str());
+              };
+#             endif
+              if(yIndex_ == yExtent_) {
+                  current_ += zStep_; //zStep
+                  yIndex_ = 0;
+#                 ifndef NDEBUG
+                  zIndex_++;
+                  if(zIndex_ > zExtent_) {
+                      std::ostringstream msg;
+                      msg << __FILE__ << " : " << __LINE__ << std::endl
+                          << "iterator is in an invalid state for increment (Z-axis)";
+                      throw std::runtime_error(msg.str());
+                  };
+#                 endif
+              };
+          };
           return *this;
       };
       inline Self operator++(int) { Self result = *this; ++(*this); return result; };
 
       //decrement
       inline Self & operator--() {
-          current_ -= MWStep::dist_back(count_, yStep_, zStep_, xExtent_, xyExtent_);
+          current_--; //xStep
           count_--;
+          xIndex_--;
+#         ifndef NDEBUG
+          if(xIndex_ < -1) {
+              std::ostringstream msg;
+              msg << __FILE__ << " : " << __LINE__ << std::endl
+                  << "iterator is in an invalid state for decrement (X-axis)";
+              throw std::runtime_error(msg.str());
+          };
+#         endif
+          if(xIndex_ == -1) {
+              current_ -= yStep_; //yStep
+              xIndex_ = xExtent_ - 1;
+              yIndex_--;
+#             ifndef NDEBUG
+              if(yIndex_ < -1) {
+                  std::ostringstream msg;
+                  msg << __FILE__ << " : " << __LINE__ << std::endl
+                      << "iterator is in an invalid state for decrement (Y-axis)";
+                  throw std::runtime_error(msg.str());
+              };
+#             endif
+              if(yIndex_ == -1) {
+                  current_ -= zStep_; //zStep
+                  yIndex_ = yExtent_ - 1;
+#                 ifndef NDEBUG
+                  zIndex_--;
+                  if(zIndex_ < -1) {
+                      std::ostringstream msg;
+                      msg << __FILE__ << " : " << __LINE__ << std::endl
+                          << "iterator is in an invalid state for decrement (Z-axis)";
+                      throw std::runtime_error(msg.str());
+                  };
+#                 endif
+              };
+          };
           return *this;
       };
-      inline Self   operator--(int)  { Self result = *this; --(*this); return result; };
+      inline Self operator--(int) { Self result = *this; --(*this); return result; };
 
       //compound assignment
       inline Self & operator+=(int change) {
-          current_ += MWStep::multi_dist(count_, change, yStep_, zStep_, xExtent_, xyExtent_);
-          count_ += change;
+#         ifndef NDEBUG
+          if((change > 0 &&
+              change > (xExtent_ * yExtent_ * zExtent_ - count_)) ||
+             (change < 0 &&
+              - change >= count_)) {
+              std::ostringstream msg;
+              msg << __FILE__ << " : " << __LINE__ << std::endl
+                  << "random access on iterator is out of range";
+              throw std::runtime_error(msg.str());
+          };
+#         endif
+          //small change (only changes xIndex_)
+          if((change > 0 && //positive change
+              change < xExtent_ - xIndex_) ||
+             (change < 0 && //negative change
+              - change < xIndex_)) {
+              current_ += change;
+              xIndex_ += change;
+              count_ += change;
+          }
+          //bigger change (changes yIndex_ and/or zIndex_)
+          else {
+              current_ += (change + //xStep
+                           yStep_ * (((count_ + change) / xExtent_) - (count_ / xExtent_)) +
+                           zStep_ * (((count_ + change) / xyExtent_) - (count_ /xyExtent_)));
+              count_ += change;
+              xIndex_ = count_ % xExtent_;
+              yIndex_ = (count_ % xyExtent_) / xExtent_;
+#             ifndef NDEBUG
+              zIndex_ = count_ / xyExtent_;
+#             endif
+          };
           return *this;
       };
       inline Self & operator-=(int change) { return *this += -change; };
@@ -494,12 +562,16 @@ namespace structured{
   private:
       AtomicType * current_;
       int count_;
+      int xIndex_;
+      int yIndex_;
       int yStep_;
       int zStep_;
       int xExtent_;
+      int yExtent_;
       int xyExtent_;
 #     ifndef NDEBUG
-      int xyzExtent_;
+      int zIndex_;
+      int zExtent_;
 #     endif
   };
 
@@ -518,10 +590,13 @@ namespace structured{
       ConstFieldIterator()
         : current_(NULL),
           count_(0),
+          xIndex_(0), yIndex_(0),
           yStep_(0), zStep_(0),
-          xExtent_(0), xyExtent_(0)
+          xExtent_(0), yExtent_(0), xyExtent_(0)
 #         ifndef NDEBUG
-          , xyzExtent_(0)
+          ,
+          zIndex_(0),
+          zExtent_(0)
 #         endif
       {};
 
@@ -531,32 +606,54 @@ namespace structured{
                  w.offset(0) * 1 +
                  w.offset(1) * w.glob_dim(0) +
                  w.offset(2) * w.glob_dim(0) * w.glob_dim(1)),
-          count_(1),
+          count_(0),
+          xIndex_(0), yIndex_(0),
           yStep_(w.glob_dim(0) - w.extent(0)),
           zStep_((w.glob_dim(1) - w.extent(1)) * w.glob_dim(0)),
           xExtent_(w.extent(0)),
+          yExtent_(w.extent(1)),
           xyExtent_(w.extent(0) * w.extent(1))
 #         ifndef NDEBUG
-          , xyzExtent_(w.extent(0) * w.extent(1) * w.extent(2))
+          ,
+          zIndex_(0),
+          zExtent_(w.extent(2))
 #         endif
       {};
 
       ConstFieldIterator(const FieldIterator<FieldType> it)
         : current_(it.current_),
           count_(it.count_),
+          xIndex_(it.xIndex_),
+          yIndex_(it.yIndex_),
           yStep_(it.yStep_),
           zStep_(it.zStep_),
           xExtent_(it.xExtent_),
+          yExtent_(it.yExtent_),
           xyExtent_(it.xyExtent_)
 #         ifndef NDEBUG
-          , xyzExtent_(it.xyzExtent_)
+          ,
+          zIndex_(it.zIndex_),
+          zExtent_(it.zExtent_)
 #         endif
       {};
 
       //immutable dereference
       inline AtomicType const & operator*() const {
 #         ifndef NDEBUG
-          if(count_ > xyzExtent_) {
+          if(count_ != (xIndex_ +
+                        yIndex_ * xExtent_ +
+                        zIndex_ * xyExtent_)) {
+              std::ostringstream msg;
+              msg << __FILE__ << " : " << __LINE__ << std::endl
+                  << "iterator's internal count is off";
+              throw std::runtime_error(msg.str());
+          };
+          if(xIndex_ >= xExtent_ ||
+             yIndex_ >= yExtent_ ||
+             zIndex_ >= zExtent_ ||
+             xIndex_ < 0 ||
+             yIndex_ < 0 ||
+             zIndex_ < 0) {
               std::ostringstream msg;
               msg << __FILE__ << " : " << __LINE__ << std::endl
                   << "iterator is in an invalid state for dereference";
@@ -568,24 +665,126 @@ namespace structured{
 
       //increment
       inline Self & operator++() {
-          current_ += MWStep::dist(count_, yStep_, zStep_, xExtent_, xyExtent_);
+          current_++; //xStep
           count_++;
+          xIndex_++;
+#         ifndef NDEBUG
+          if(xIndex_ > xExtent_) {
+              std::ostringstream msg;
+              msg << __FILE__ << " : " << __LINE__ << std::endl
+                  << "iterator is in an invalid state for increment (X-axis)";
+              throw std::runtime_error(msg.str());
+          };
+#         endif
+          if(xIndex_ == xExtent_) {
+              current_ += yStep_; //yStep
+              xIndex_ = 0;
+              yIndex_++;
+#             ifndef NDEBUG
+              if(yIndex_ > yExtent_) {
+                  std::ostringstream msg;
+                  msg << __FILE__ << " : " << __LINE__ << std::endl
+                      << "iterator is in an invalid state for increment (Y-axis)";
+                  throw std::runtime_error(msg.str());
+              };
+#             endif
+              if(yIndex_ == yExtent_) {
+                  current_ += zStep_; //zStep
+                  yIndex_ = 0;
+#                 ifndef NDEBUG
+                  zIndex_++;
+                  if(zIndex_ > zExtent_) {
+                      std::ostringstream msg;
+                      msg << __FILE__ << " : " << __LINE__ << std::endl
+                          << "iterator is in an invalid state for increment (Z-axis)";
+                      throw std::runtime_error(msg.str());
+                  };
+#                 endif
+              };
+          };
           return *this;
       };
       inline Self operator++(int) { Self result = *this; ++(*this); return result; };
 
       //decrement
       inline Self & operator--() {
-          current_ -= MWStep::dist_back(count_, yStep_, zStep_, xExtent_, xyExtent_);
+          current_--; //xStep
           count_--;
+          xIndex_--;
+#         ifndef NDEBUG
+          if(xIndex_ < -1) {
+              std::ostringstream msg;
+              msg << __FILE__ << " : " << __LINE__ << std::endl
+                  << "iterator is in an invalid state for decrement (X-axis)";
+              throw std::runtime_error(msg.str());
+          };
+#         endif
+          if(xIndex_ == -1) {
+              current_ -= yStep_; //yStep
+              xIndex_ = xExtent_ - 1;
+              yIndex_--;
+#             ifndef NDEBUG
+              if(yIndex_ < -1) {
+                  std::ostringstream msg;
+                  msg << __FILE__ << " : " << __LINE__ << std::endl
+                      << "iterator is in an invalid state for decrement (Y-axis)";
+                  throw std::runtime_error(msg.str());
+              };
+#             endif
+              if(yIndex_ == -1) {
+                  current_ -= zStep_; //zStep
+                  yIndex_ = yExtent_ - 1;
+#                 ifndef NDEBUG
+                  zIndex_--;
+                  if(zIndex_ < -1) {
+                      std::ostringstream msg;
+                      msg << __FILE__ << " : " << __LINE__ << std::endl
+                          << "iterator is in an invalid state for decrement (Z-axis)";
+                      throw std::runtime_error(msg.str());
+                  };
+#                 endif
+              };
+          };
           return *this;
       };
-      inline Self   operator--(int)  { Self result = *this; --(*this); return result; };
+      inline Self operator--(int) { Self result = *this; --(*this); return result; };
 
       //compound assignment
       inline Self & operator+=(int change) {
-          current_ += MWStep::multi_dist(count_, change, yStep_, zStep_, xExtent_, xyExtent_);
-          count_ += change;
+#         ifndef NDEBUG
+          if((change > 0 &&
+              change > (xExtent_ * yExtent_ * zExtent_ - count_)) ||
+             (change < 0 &&
+              - change >= count_)) {
+              std::ostringstream msg;
+              msg << __FILE__ << " : " << __LINE__ << std::endl
+                  << "random access on iterator is out of range";
+              throw std::runtime_error(msg.str());
+          };
+#         endif
+          //small change (only changes xIndex_)
+          if((change > 0 && //positive change
+              change < xExtent_ - xIndex_) ||
+             (change < 0 && //negative change
+              - change < xIndex_)) {
+              current_ += change;
+              xIndex_ += change;
+              count_ += change;
+          }
+          //bigger change (changes yIndex_ and/or zIndex_)
+          else {
+              int new_count = count_ + change;
+              int old_count = count_;
+              current_ += (change + //xStep
+                           yStep_ * ((new_count / xExtent_) - (old_count / xExtent_)) +
+                           zStep_ * ((new_count / xyExtent_) - (old_count /xyExtent_)));
+              count_ += change;
+              xIndex_ = count_ % xExtent_;
+              yIndex_ = (count_ % xyExtent_) / xExtent_;
+#             ifndef NDEBUG
+              zIndex_ = count_ / xyExtent_;
+#             endif
+          };
           return *this;
       };
       inline Self & operator-=(int change) { return *this += -change; };
@@ -611,12 +810,16 @@ namespace structured{
   private:
       AtomicType * current_;
       int count_;
+      int xIndex_;
+      int yIndex_;
       int yStep_;
       int zStep_;
       int xExtent_;
+      int yExtent_;
       int xyExtent_;
 #     ifndef NDEBUG
-      int xyzExtent_;
+      int zIndex_;
+      int zExtent_;
 #     endif
   };
 
