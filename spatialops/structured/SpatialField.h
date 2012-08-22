@@ -1149,7 +1149,6 @@ bool SpatialField<Location, GhostTraits, T>::operator==(const MyType& other) con
     }
     } // switch( other.memory_device_type() )
   } // case LOCAL_RAM
-  break;
 #ifdef ENABLE_CUDA
   case EXTERNAL_CUDA_GPU: {
     switch( other.memory_device_type() ) {
