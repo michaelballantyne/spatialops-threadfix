@@ -335,14 +335,10 @@ namespace structured{
       FieldIterator()
         : current_(NULL),
           count_(0),
-          xIndex_(0), yIndex_(0),
+          xIndex_(0), yIndex_(0), zIndex_(0),
           yStep_(0), zStep_(0),
-          xExtent_(0), yExtent_(0), xyExtent_(0)
-#         ifndef NDEBUG
-          ,
-          zIndex_(0),
-          zExtent_(0)
-#         endif
+          xExtent_(0), yExtent_(0), zExtent_(0),
+          xyExtent_(0)
       {};
 
       FieldIterator(AtomicType * field_values,
@@ -352,17 +348,13 @@ namespace structured{
                  w.offset(1) * w.glob_dim(0) +
                  w.offset(2) * w.glob_dim(0) * w.glob_dim(1)),
           count_(0),
-          xIndex_(0), yIndex_(0),
+          xIndex_(0), yIndex_(0), zIndex_(0),
           yStep_(w.glob_dim(0) - w.extent(0)),
           zStep_((w.glob_dim(1) - w.extent(1)) * w.glob_dim(0)),
           xExtent_(w.extent(0)),
           yExtent_(w.extent(1)),
+          zExtent_(w.extent(2)),
           xyExtent_(w.extent(0) * w.extent(1))
-#         ifndef NDEBUG
-          ,
-          zIndex_(0),
-          zExtent_(w.extent(2))
-#         endif
       {};
 
       //mutable dereference
@@ -422,38 +414,14 @@ namespace structured{
           current_++; //xStep
           count_++;
           xIndex_++;
-#         ifndef NDEBUG
-          if(xIndex_ > xExtent_) {
-              std::ostringstream msg;
-              msg << __FILE__ << " : " << __LINE__ << std::endl
-                  << "iterator is in an invalid state for increment (X-axis)";
-              throw std::runtime_error(msg.str());
-          };
-#         endif
           if(xIndex_ == xExtent_) {
               current_ += yStep_; //yStep
               xIndex_ = 0;
               yIndex_++;
-#             ifndef NDEBUG
-              if(yIndex_ > yExtent_) {
-                  std::ostringstream msg;
-                  msg << __FILE__ << " : " << __LINE__ << std::endl
-                      << "iterator is in an invalid state for increment (Y-axis)";
-                  throw std::runtime_error(msg.str());
-              };
-#             endif
               if(yIndex_ == yExtent_) {
                   current_ += zStep_; //zStep
                   yIndex_ = 0;
-#                 ifndef NDEBUG
                   zIndex_++;
-                  if(zIndex_ > zExtent_) {
-                      std::ostringstream msg;
-                      msg << __FILE__ << " : " << __LINE__ << std::endl
-                          << "iterator is in an invalid state for increment (Z-axis)";
-                      throw std::runtime_error(msg.str());
-                  };
-#                 endif
               };
           };
           return *this;
@@ -465,38 +433,14 @@ namespace structured{
           current_--; //xStep
           count_--;
           xIndex_--;
-#         ifndef NDEBUG
-          if(xIndex_ < -1) {
-              std::ostringstream msg;
-              msg << __FILE__ << " : " << __LINE__ << std::endl
-                  << "iterator is in an invalid state for decrement (X-axis)";
-              throw std::runtime_error(msg.str());
-          };
-#         endif
           if(xIndex_ == -1) {
               current_ -= yStep_; //yStep
               xIndex_ = xExtent_ - 1;
               yIndex_--;
-#             ifndef NDEBUG
-              if(yIndex_ < -1) {
-                  std::ostringstream msg;
-                  msg << __FILE__ << " : " << __LINE__ << std::endl
-                      << "iterator is in an invalid state for decrement (Y-axis)";
-                  throw std::runtime_error(msg.str());
-              };
-#             endif
               if(yIndex_ == -1) {
                   current_ -= zStep_; //zStep
                   yIndex_ = yExtent_ - 1;
-#                 ifndef NDEBUG
                   zIndex_--;
-                  if(zIndex_ < -1) {
-                      std::ostringstream msg;
-                      msg << __FILE__ << " : " << __LINE__ << std::endl
-                          << "iterator is in an invalid state for decrement (Z-axis)";
-                      throw std::runtime_error(msg.str());
-                  };
-#                 endif
               };
           };
           return *this;
@@ -505,17 +449,6 @@ namespace structured{
 
       //compound assignment
       inline Self & operator+=(int change) {
-#         ifndef NDEBUG
-          if((change > 0 &&
-              change > (xExtent_ * yExtent_ * zExtent_ - count_)) ||
-             (change < 0 &&
-              - change >= count_)) {
-              std::ostringstream msg;
-              msg << __FILE__ << " : " << __LINE__ << std::endl
-                  << "random access on iterator is out of range";
-              throw std::runtime_error(msg.str());
-          };
-#         endif
           //small change (only changes xIndex_)
           if((change > 0 && //positive change
               change < xExtent_ - xIndex_) ||
@@ -533,9 +466,7 @@ namespace structured{
               count_ += change;
               xIndex_ = count_ % xExtent_;
               yIndex_ = (count_ % xyExtent_) / xExtent_;
-#             ifndef NDEBUG
               zIndex_ = count_ / xyExtent_;
-#             endif
           };
           return *this;
       };
@@ -564,15 +495,13 @@ namespace structured{
       int count_;
       int xIndex_;
       int yIndex_;
+      int zIndex_;
       int yStep_;
       int zStep_;
       int xExtent_;
       int yExtent_;
-      int xyExtent_;
-#     ifndef NDEBUG
-      int zIndex_;
       int zExtent_;
-#     endif
+      int xyExtent_;
   };
 
   template<typename FieldType>
@@ -590,14 +519,10 @@ namespace structured{
       ConstFieldIterator()
         : current_(NULL),
           count_(0),
-          xIndex_(0), yIndex_(0),
+          xIndex_(0), yIndex_(0), zIndex_(0),
           yStep_(0), zStep_(0),
-          xExtent_(0), yExtent_(0), xyExtent_(0)
-#         ifndef NDEBUG
-          ,
-          zIndex_(0),
-          zExtent_(0)
-#         endif
+          xExtent_(0), yExtent_(0), zExtent_(0),
+          xyExtent_(0)
       {};
 
       ConstFieldIterator(AtomicType * field_values,
@@ -607,17 +532,13 @@ namespace structured{
                  w.offset(1) * w.glob_dim(0) +
                  w.offset(2) * w.glob_dim(0) * w.glob_dim(1)),
           count_(0),
-          xIndex_(0), yIndex_(0),
+          xIndex_(0), yIndex_(0), zIndex_(0),
           yStep_(w.glob_dim(0) - w.extent(0)),
           zStep_((w.glob_dim(1) - w.extent(1)) * w.glob_dim(0)),
           xExtent_(w.extent(0)),
           yExtent_(w.extent(1)),
+          zExtent_(w.extent(2)),
           xyExtent_(w.extent(0) * w.extent(1))
-#         ifndef NDEBUG
-          ,
-          zIndex_(0),
-          zExtent_(w.extent(2))
-#         endif
       {};
 
       ConstFieldIterator(const FieldIterator<FieldType> it)
@@ -625,16 +546,13 @@ namespace structured{
           count_(it.count_),
           xIndex_(it.xIndex_),
           yIndex_(it.yIndex_),
+          zIndex_(it.zIndex_),
           yStep_(it.yStep_),
           zStep_(it.zStep_),
           xExtent_(it.xExtent_),
           yExtent_(it.yExtent_),
+          zExtent_(it.zExtent_),
           xyExtent_(it.xyExtent_)
-#         ifndef NDEBUG
-          ,
-          zIndex_(it.zIndex_),
-          zExtent_(it.zExtent_)
-#         endif
       {};
 
       //immutable dereference
@@ -668,38 +586,14 @@ namespace structured{
           current_++; //xStep
           count_++;
           xIndex_++;
-#         ifndef NDEBUG
-          if(xIndex_ > xExtent_) {
-              std::ostringstream msg;
-              msg << __FILE__ << " : " << __LINE__ << std::endl
-                  << "iterator is in an invalid state for increment (X-axis)";
-              throw std::runtime_error(msg.str());
-          };
-#         endif
           if(xIndex_ == xExtent_) {
               current_ += yStep_; //yStep
               xIndex_ = 0;
               yIndex_++;
-#             ifndef NDEBUG
-              if(yIndex_ > yExtent_) {
-                  std::ostringstream msg;
-                  msg << __FILE__ << " : " << __LINE__ << std::endl
-                      << "iterator is in an invalid state for increment (Y-axis)";
-                  throw std::runtime_error(msg.str());
-              };
-#             endif
               if(yIndex_ == yExtent_) {
                   current_ += zStep_; //zStep
                   yIndex_ = 0;
-#                 ifndef NDEBUG
                   zIndex_++;
-                  if(zIndex_ > zExtent_) {
-                      std::ostringstream msg;
-                      msg << __FILE__ << " : " << __LINE__ << std::endl
-                          << "iterator is in an invalid state for increment (Z-axis)";
-                      throw std::runtime_error(msg.str());
-                  };
-#                 endif
               };
           };
           return *this;
@@ -711,38 +605,14 @@ namespace structured{
           current_--; //xStep
           count_--;
           xIndex_--;
-#         ifndef NDEBUG
-          if(xIndex_ < -1) {
-              std::ostringstream msg;
-              msg << __FILE__ << " : " << __LINE__ << std::endl
-                  << "iterator is in an invalid state for decrement (X-axis)";
-              throw std::runtime_error(msg.str());
-          };
-#         endif
           if(xIndex_ == -1) {
               current_ -= yStep_; //yStep
               xIndex_ = xExtent_ - 1;
               yIndex_--;
-#             ifndef NDEBUG
-              if(yIndex_ < -1) {
-                  std::ostringstream msg;
-                  msg << __FILE__ << " : " << __LINE__ << std::endl
-                      << "iterator is in an invalid state for decrement (Y-axis)";
-                  throw std::runtime_error(msg.str());
-              };
-#             endif
               if(yIndex_ == -1) {
                   current_ -= zStep_; //zStep
                   yIndex_ = yExtent_ - 1;
-#                 ifndef NDEBUG
                   zIndex_--;
-                  if(zIndex_ < -1) {
-                      std::ostringstream msg;
-                      msg << __FILE__ << " : " << __LINE__ << std::endl
-                          << "iterator is in an invalid state for decrement (Z-axis)";
-                      throw std::runtime_error(msg.str());
-                  };
-#                 endif
               };
           };
           return *this;
@@ -751,17 +621,6 @@ namespace structured{
 
       //compound assignment
       inline Self & operator+=(int change) {
-#         ifndef NDEBUG
-          if((change > 0 &&
-              change > (xExtent_ * yExtent_ * zExtent_ - count_)) ||
-             (change < 0 &&
-              - change >= count_)) {
-              std::ostringstream msg;
-              msg << __FILE__ << " : " << __LINE__ << std::endl
-                  << "random access on iterator is out of range";
-              throw std::runtime_error(msg.str());
-          };
-#         endif
           //small change (only changes xIndex_)
           if((change > 0 && //positive change
               change < xExtent_ - xIndex_) ||
@@ -781,9 +640,7 @@ namespace structured{
               count_ += change;
               xIndex_ = count_ % xExtent_;
               yIndex_ = (count_ % xyExtent_) / xExtent_;
-#             ifndef NDEBUG
               zIndex_ = count_ / xyExtent_;
-#             endif
           };
           return *this;
       };
@@ -812,15 +669,13 @@ namespace structured{
       int count_;
       int xIndex_;
       int yIndex_;
+      int zIndex_;
       int yStep_;
       int zStep_;
       int xExtent_;
       int yExtent_;
-      int xyExtent_;
-#     ifndef NDEBUG
-      int zIndex_;
       int zExtent_;
-#     endif
+      int xyExtent_;
   };
 
   template<typename FieldType>
