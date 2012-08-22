@@ -202,7 +202,7 @@ namespace structured{
                             bc_[0],
                             bc_[1],
                             bc_[2]);
-    };
+    }
 
     /**
      *  \brief shifts/moves the MemoryWindow by given amounts.
@@ -219,7 +219,7 @@ namespace structured{
                             bc_[0],
                             bc_[1],
                             bc_[2]);
-    };
+    }
 
     /**
      *  \brief given the local ijk location (0-based on the local
