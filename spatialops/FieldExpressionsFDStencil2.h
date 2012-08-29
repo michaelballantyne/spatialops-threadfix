@@ -144,10 +144,15 @@
                                                                              int const
                                                                              number_of_partitions) {
 
-                typename NeboConstField<Initial, FieldType>::template Iterator<UseWholeIterator>::
+                typename structured::FromGhost<typename FieldType::Ghost>::result typedef ValidGhost;
+
+                structured::IndexTriplet<0, 0, 0> typedef InitialShift;
+
+                typename NeboConstField<Initial, FieldType>::template Iterator<ValidGhost,
+                                                                               InitialShift>::
                 ResizePrepType typedef SrcPmtrType;
 
-                typename NeboField<Initial, FieldType>::template Iterator<UseWholeIterator>::
+                typename NeboField<Initial, FieldType>::template Iterator<ValidGhost, InitialShift>::
                 ResizePrepType typedef DestPmtrType;
 
                 MemoryWindow sw = src.window_with_ghost();
@@ -193,9 +198,11 @@
                                                                                                                             DestPmtrType,
                                                                                                                             DirVec>,
                                                                NeboConstField<Initial, FieldType>(src).template
-                                                                                                       resize_prep<UseWholeIterator>(),
+                                                                                                       resize_prep<ValidGhost,
+                                                                                                                   InitialShift>(),
                                                                NeboField<Initial, FieldType>(dest).template
-                                                                                                   resize_prep<UseWholeIterator>(),
+                                                                                                   resize_prep<ValidGhost,
+                                                                                                               InitialShift>(),
                                                                low,
                                                                high,
                                                                *ivec_sw,

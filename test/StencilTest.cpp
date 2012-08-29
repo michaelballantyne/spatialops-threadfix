@@ -180,99 +180,20 @@ inline void evaluate_chaining_example(FieldType & result,
 					   Lz,
                                            opDB);
 
-    typename BasicOpTypes<FieldType>::GradX* const gradXOp_ = opDB.retrieve_operator<typename BasicOpTypes<FieldType>::GradX>();
-    NeboStencilConstructor<typename BasicOpTypes<FieldType>::GradX> neboGradX(gradXOp_);
-    typename BasicOpTypes<FieldType>::GradY* const gradYOp_ = opDB.retrieve_operator<typename BasicOpTypes<FieldType>::GradY>();
-    NeboStencilConstructor<typename BasicOpTypes<FieldType>::GradY> neboGradY(gradYOp_);
-    typename BasicOpTypes<FieldType>::GradZ* const gradZOp_ = opDB.retrieve_operator<typename BasicOpTypes<FieldType>::GradZ>();
-    NeboStencilConstructor<typename BasicOpTypes<FieldType>::GradZ> neboGradZ(gradZOp_);
-    typename BasicOpTypes<FieldType>::InterpC2FX* const interpXOp_ = opDB.retrieve_operator<typename BasicOpTypes<FieldType>::InterpC2FX>();
-    NeboStencilConstructor<typename BasicOpTypes<FieldType>::InterpC2FX> neboInterpX(interpXOp_);
-    typename BasicOpTypes<FieldType>::InterpC2FY* const interpYOp_ = opDB.retrieve_operator<typename BasicOpTypes<FieldType>::InterpC2FY>();
-    NeboStencilConstructor<typename BasicOpTypes<FieldType>::InterpC2FY> neboInterpY(interpYOp_);
-    typename BasicOpTypes<FieldType>::InterpC2FZ* const interpZOp_ = opDB.retrieve_operator<typename BasicOpTypes<FieldType>::InterpC2FZ>();
-    NeboStencilConstructor<typename BasicOpTypes<FieldType>::InterpC2FZ> neboInterpZ(interpZOp_);
-    typename BasicOpTypes<FieldType>::DivX* const divXOp_ = opDB.retrieve_operator<typename BasicOpTypes<FieldType>::DivX>();
-    NeboStencilConstructor<typename BasicOpTypes<FieldType>::DivX> neboDivX(divXOp_);
-    typename BasicOpTypes<FieldType>::DivY* const divYOp_ = opDB.retrieve_operator<typename BasicOpTypes<FieldType>::DivY>();
-    NeboStencilConstructor<typename BasicOpTypes<FieldType>::DivY> neboDivY(divYOp_);
-    typename BasicOpTypes<FieldType>::DivZ* const divZOp_ = opDB.retrieve_operator<typename BasicOpTypes<FieldType>::DivZ>();
-    NeboStencilConstructor<typename BasicOpTypes<FieldType>::DivZ> neboDivZ(divZOp_);
+    NeboStencilConstructor<typename BasicOpTypes<FieldType>::GradX> neboGradX(opDB.retrieve_operator<typename BasicOpTypes<FieldType>::GradX>());
+    NeboStencilConstructor<typename BasicOpTypes<FieldType>::GradY> neboGradY(opDB.retrieve_operator<typename BasicOpTypes<FieldType>::GradY>());
+    NeboStencilConstructor<typename BasicOpTypes<FieldType>::GradZ> neboGradZ(opDB.retrieve_operator<typename BasicOpTypes<FieldType>::GradZ>());
+    NeboStencilConstructor<typename BasicOpTypes<FieldType>::InterpC2FX> neboInterpX(opDB.retrieve_operator<typename BasicOpTypes<FieldType>::InterpC2FX>());
+    NeboStencilConstructor<typename BasicOpTypes<FieldType>::InterpC2FY> neboInterpY(opDB.retrieve_operator<typename BasicOpTypes<FieldType>::InterpC2FY>());
+    NeboStencilConstructor<typename BasicOpTypes<FieldType>::InterpC2FZ> neboInterpZ(opDB.retrieve_operator<typename BasicOpTypes<FieldType>::InterpC2FZ>());
+    NeboStencilConstructor<typename BasicOpTypes<FieldType>::DivX> neboDivX(opDB.retrieve_operator<typename BasicOpTypes<FieldType>::DivX>());
+    NeboStencilConstructor<typename BasicOpTypes<FieldType>::DivY> neboDivY(opDB.retrieve_operator<typename BasicOpTypes<FieldType>::DivY>());
+    NeboStencilConstructor<typename BasicOpTypes<FieldType>::DivZ> neboDivZ(opDB.retrieve_operator<typename BasicOpTypes<FieldType>::DivZ>());
 
-    MemoryWindow const w = phi.window_with_ghost();
-    typename FaceTypes<FieldType>::XFace tmpFaceX( w, NULL );
-    typename FaceTypes<FieldType>::XFace tmpFaceX2( w, NULL );
-    FieldType tmpX( w, NULL );
-    typename FaceTypes<FieldType>::YFace tmpFaceY( w, NULL );
-    typename FaceTypes<FieldType>::YFace tmpFaceY2( w, NULL );
-    FieldType tmpY( w, NULL );
-    typename FaceTypes<FieldType>::ZFace tmpFaceZ( w, NULL );
-    typename FaceTypes<FieldType>::ZFace tmpFaceZ2( w, NULL );
-    FieldType tmpZ( w, NULL );
-
-    typename FaceTypes<FieldType>::XFace tmpFaceX0( w, NULL );
-    typename FaceTypes<FieldType>::XFace tmpFaceX20( w, NULL );
-    FieldType tmpX0( w, NULL );
-    typename FaceTypes<FieldType>::YFace tmpFaceY0( w, NULL );
-    typename FaceTypes<FieldType>::YFace tmpFaceY20( w, NULL );
-    FieldType tmpY0( w, NULL );
-    typename FaceTypes<FieldType>::ZFace tmpFaceZ0( w, NULL );
-    typename FaceTypes<FieldType>::ZFace tmpFaceZ20( w, NULL );
-    FieldType tmpZ0( w, NULL );
-
-    RUN_TEST(// X - direction
-             tmpFaceX <<= neboGradX(phi);
-// 	     gradXOp_  ->apply_to_field( phi,    tmpFaceX0  );
-//              INT_EQU(typename FaceTypes<FieldType>::XFace, tmpFaceX, tmpFaceX0, false);
-
-             tmpFaceX2 <<= neboInterpX(dCoef);
-// 	     interpXOp_->apply_to_field( dCoef, tmpFaceX20 );
-//              INT_EQU(typename FaceTypes<FieldType>::XFace, tmpFaceX2, tmpFaceX20, false);
-
-	     tmpFaceX <<= tmpFaceX * tmpFaceX2;
-	     tmpX <<= neboDivX(tmpFaceX);
-// 	     tmpFaceX0 <<= tmpFaceX0 * tmpFaceX20;
-//              divXOp_->apply_to_field( tmpFaceX0, tmpX0 );
-//              INT_EQU(typename FieldType, tmpX, tmpX0, false);
-
-	     // Y - direction
-             tmpFaceY <<= neboGradY(phi);
-// 	     gradYOp_  ->apply_to_field( phi,    tmpFaceY0  );
-//              INT_EQU(typename FaceTypes<FieldType>::YFace, tmpFaceY, tmpFaceY0, false);
-
-	     tmpFaceY2 <<= neboInterpY(dCoef);
-//              interpYOp_->apply_to_field( dCoef, tmpFaceY20 );
-//              INT_EQU(typename FaceTypes<FieldType>::YFace, tmpFaceY2, tmpFaceY20, false);
-
-	     tmpFaceY <<= tmpFaceY * tmpFaceY2;
-	     tmpY <<= neboDivY(tmpFaceY);
-// 	     tmpFaceY0 <<= tmpFaceY0 * tmpFaceY20;
-//              divYOp_->apply_to_field( tmpFaceY0, tmpY0 );
-//              INT_EQU(typename FieldType, tmpY, tmpY0, false);
-
-	     // Z - direction
-	     tmpFaceZ <<= neboGradZ(phi);
-//              gradZOp_  ->apply_to_field( phi,    tmpFaceZ0  );
-//              INT_EQU(typename FaceTypes<FieldType>::ZFace, tmpFaceZ, tmpFaceZ0, false);
-
-	     tmpFaceZ2 <<= neboInterpZ(dCoef);
-//              interpZOp_->apply_to_field( dCoef, tmpFaceZ20 );
-//              INT_EQU(typename FaceTypes<FieldType>::ZFace, tmpFaceZ2, tmpFaceZ20, false);
-
-	     tmpFaceZ <<= tmpFaceZ * tmpFaceZ2;
-	     tmpZ <<= neboDivZ(tmpFaceZ);
-// 	     tmpFaceZ0 <<= tmpFaceZ0 * tmpFaceZ20;
-//              divZOp_->apply_to_field( tmpFaceZ0, tmpZ0 );
-//              INT_EQU(typename FieldType, tmpZ, tmpZ0, false);
-
-	     result <<= - tmpX - tmpY - tmpZ,
-             // r <<= (- (dXcl * ((gXcl * phi_xlxl + gXch * phi_xhxl) * (iXcl * dCoef_xlxl + iXch * dCoef_xhxl)) +
-// 		       dXch * ((gXcl * phi_xlxh + gXch * phi_xhxh) * (iXcl * dCoef_xlxh + iXch * dCoef_xhxh)))
-// 		    - (dYcl * ((gYcl * phi_ylyl + gYch * phi_yhyl) * (iYcl * dCoef_ylyl + iYch * dCoef_yhyl)) +
-// 		       dYch * ((gYcl * phi_ylyh + gYch * phi_yhyh) * (iYcl * dCoef_ylyh + iYch * dCoef_yhyh)))
-// 		    - (dZcl * ((gZcl * phi_zlzl + gZch * phi_zhzl) * (iZcl * dCoef_zlzl + iZch * dCoef_zhzl)) +
-// 		       dZch * ((gZcl * phi_zlzh + gZch * phi_zhzh) * (iZcl * dCoef_zlzh + iZch * dCoef_zhzh)))),
-	     "new");
+    RUN_TEST(result <<= (- neboDivX(neboGradX(phi) * neboInterpX(dCoef))
+                         - neboDivY(neboGradY(phi) * neboInterpY(dCoef))
+                         - neboDivZ(neboGradZ(phi) * neboInterpZ(dCoef))),
+             "new");
 
 };
 

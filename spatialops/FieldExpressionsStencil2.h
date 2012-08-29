@@ -86,13 +86,17 @@
              /* NDEBUG */;
 
              DestType d(wd, dest.field_values(), ExternalStorage);
+
              SrcType s1(ws1, src.field_values(), ExternalStorage);
+
              SrcType s2(ws2, src.field_values(), ExternalStorage);
 
              typename DestType::iterator id = d.begin();
+
              typename DestType::iterator ide = d.end();
 
              typename SrcType::const_iterator is1 = s1.begin();
+
              typename SrcType::const_iterator is2 = s2.begin();
 
              for(; id != ide; ++id, ++is1, ++is2){ *id = *is1 * low + *is2 * high; };
@@ -146,10 +150,15 @@
                                                                           int const
                                                                           number_of_partitions) {
 
-                typename NeboConstField<Initial, SrcType>::template Iterator<UseWholeIterator>::
+                typename structured::FromGhost<typename SrcType::Ghost>::result typedef ValidGhost;
+
+                structured::IndexTriplet<0, 0, 0> typedef InitialShift;
+
+                typename NeboConstField<Initial, SrcType>::template Iterator<ValidGhost,
+                                                                             InitialShift>::
                 ResizePrepType typedef SrcPmtrType;
 
-                typename NeboField<Initial, DestType>::template Iterator<UseWholeIterator>::
+                typename NeboField<Initial, DestType>::template Iterator<ValidGhost, InitialShift>::
                 ResizePrepType typedef DestPmtrType;
 
                 MemoryWindow sw = src.window_with_ghost();
@@ -194,9 +203,11 @@
                                                                                                                          SrcPmtrType,
                                                                                                                          DestPmtrType>,
                                                                NeboConstField<Initial, SrcType>(src).template
-                                                                                                     resize_prep<UseWholeIterator>(),
+                                                                                                     resize_prep<ValidGhost,
+                                                                                                                 InitialShift>(),
                                                                NeboField<Initial, DestType>(dest).template
-                                                                                                  resize_prep<UseWholeIterator>(),
+                                                                                                  resize_prep<ValidGhost,
+                                                                                                              InitialShift>(),
                                                                low,
                                                                high,
                                                                *ivec_sw,

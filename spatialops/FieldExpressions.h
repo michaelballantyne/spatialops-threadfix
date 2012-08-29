@@ -62,55 +62,17 @@
       struct UseWholeIterator;
       struct UseInteriorIterator;
 
-      template<typename Use, typename FieldType>
+      template<typename IteratorType, typename FirstType, typename SecondType>
        struct IteratorStyle;
 
       /* UseWholeIterator */
-      template<typename FieldType>
-       struct IteratorStyle<UseWholeIterator, FieldType> {
-
-         typename FieldType::memory_window typedef MemoryWindow;
-
-         typename FieldType::iterator typedef Iterator;
-
-         typename FieldType::const_iterator typedef ConstIterator;
-
-         static inline MemoryWindow const & memory_window(FieldType const & field) {
-            return field.window_with_ghost();
-         };
-
-         static inline Iterator begin(FieldType & field) { return field.begin(); };
-
-         static inline ConstIterator begin(FieldType const & field) { return field.begin(); };
-
-         static inline Iterator end(FieldType & field) { return field.end(); };
-
-         static inline ConstIterator end(FieldType const & field) { return field.end(); };
-      };
+      template<typename FirstType, typename SecondType>
+       struct IteratorStyle<UseWholeIterator, FirstType, SecondType> { FirstType typedef result; };
 
       /* UseInteriorIterator */
-      template<typename FieldType>
-       struct IteratorStyle<UseInteriorIterator, FieldType> {
-
-         typename FieldType::memory_window typedef MemoryWindow;
-
-         typename FieldType::interior_iterator typedef Iterator;
-
-         typename FieldType::const_interior_iterator typedef ConstIterator;
-
-         static inline MemoryWindow const & memory_window(FieldType const & field) {
-            return field.window_without_ghost();
-         };
-
-         static inline Iterator begin(FieldType & field) { return field.interior_begin(); };
-
-         static inline ConstIterator begin(FieldType const & field) {
-            return field.interior_begin();
-         };
-
-         static inline Iterator end(FieldType & field) { return field.interior_end(); };
-
-         static inline ConstIterator end(FieldType const & field) { return field.interior_end(); };
+      template<typename FirstType, typename SecondType>
+       struct IteratorStyle<UseInteriorIterator, FirstType, SecondType> {
+         SecondType typedef result;
       };
 
       template<typename Operand, typename FieldType>
@@ -145,11 +107,11 @@
 
       /* Modes: */
       struct Initial;
-      template<typename IteratorType, typename SourceType>
+      template<typename ValidGhost, typename Shift>
        struct ResizePrep;
-      template<typename IteratorType, typename SourceType>
+      template<typename ValidGhost, typename Shift>
        struct Resize;
-      template<typename IteratorType, typename SourceType>
+      template<typename ValidGhost, typename Shift>
        struct SeqWalk;
 
       template<typename CurrentMode, typename FieldType>
@@ -159,28 +121,27 @@
        struct NeboScalar<Initial, FieldType> {
 
          public:
-          NeboScalar<Initial, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          template<typename IteratorType>
+          typename FieldType::value_type typedef AtomicType;
+          template<typename ValidGhost, typename Shift>
            struct Iterator {
 
-             NeboScalar<ResizePrep<IteratorType, This>, FieldType> typedef ResizePrepType;
+             NeboScalar<ResizePrep<ValidGhost, Shift>, FieldType> typedef ResizePrepType;
 
-             NeboScalar<SeqWalk<IteratorType, This>, FieldType> typedef SeqWalkType;
+             NeboScalar<SeqWalk<ValidGhost, Shift>, FieldType> typedef SeqWalkType;
           };
-          typename FieldType::value_type typedef AtomicType;
-          structured::InfiniteIndexHexlet typedef VG;
+          structured::InfiniteIndexHexlet typedef PossibleValidGhost;
           NeboScalar(AtomicType const v)
           : value_(v)
           {};
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
-              return typename Iterator<IteratorType>::SeqWalkType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) const {
+              return typename Iterator<ValidGhost, Shift>::SeqWalkType(value());
            };
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
-              return typename Iterator<IteratorType>::ResizePrepType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) const {
+              return typename Iterator<ValidGhost, Shift>::ResizePrepType(value());
            };
           inline AtomicType const value(void) const { return value_; };
 
@@ -188,56 +149,51 @@
           AtomicType const value_;
       };
 
-      template<typename IteratorType, typename SourceType, typename FieldType>
-       struct NeboScalar<ResizePrep<IteratorType, SourceType>, FieldType> {
+      template<typename ValidGhost, typename Shift, typename FieldType>
+       struct NeboScalar<ResizePrep<ValidGhost, Shift>, FieldType> {
 
          public:
-          NeboScalar<ResizePrep<IteratorType, SourceType>, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          NeboScalar<Resize<IteratorType, This>, FieldType> typedef ResizeType;
+          NeboScalar<Resize<ValidGhost, Shift>, FieldType> typedef ResizeType;
           typename FieldType::value_type typedef AtomicType;
-          NeboScalar(SourceType const source)
-          : value_(source.value())
+          NeboScalar(AtomicType const value)
+          : value_(value)
           {};
-          inline ResizeType resize(MemoryWindow const & newSize) const {
-             return ResizeType(newSize, *this);
-          };
+          inline ResizeType resize(MemoryWindow const & size) const { return ResizeType(value()); };
           inline AtomicType const value(void) const { return value_; };
 
          private:
           AtomicType const value_;
       };
 
-      template<typename IteratorType, typename SourceType, typename FieldType>
-       struct NeboScalar<Resize<IteratorType, SourceType>, FieldType> {
+      template<typename ValidGhost, typename Shift, typename FieldType>
+       struct NeboScalar<Resize<ValidGhost, Shift>, FieldType> {
 
          public:
-          NeboScalar<Resize<IteratorType, SourceType>, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          NeboScalar<SeqWalk<IteratorType, This>, FieldType> typedef SeqWalkType;
+          NeboScalar<SeqWalk<ValidGhost, Shift>, FieldType> typedef SeqWalkType;
           typename FieldType::value_type typedef AtomicType;
-          NeboScalar(MemoryWindow const & size, SourceType const source)
-          : value_(source.value())
+          NeboScalar(AtomicType const value)
+          : value_(value)
           {};
-          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline SeqWalkType init(void) const { return SeqWalkType(value()); };
           inline AtomicType const value(void) const { return value_; };
 
          private:
           AtomicType const value_;
       };
 
-      template<typename IteratorType, typename SourceType, typename FieldType>
-       struct NeboScalar<SeqWalk<IteratorType, SourceType>, FieldType> {
+      template<typename ValidGhost, typename Shift, typename FieldType>
+       struct NeboScalar<SeqWalk<ValidGhost, Shift>, FieldType> {
 
          public:
-          NeboScalar<SeqWalk<IteratorType, SourceType>, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef AtomicType;
-          NeboScalar(SourceType const source)
-          : value_(source.value())
+          NeboScalar(AtomicType const value)
+          : value_(value)
           {};
           inline void next(void) {};
           inline bool at_end(void) const { return false; };
@@ -255,27 +211,26 @@
        struct NeboBoolean<Initial, FieldType> {
 
          public:
-          NeboBoolean<Initial, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          template<typename IteratorType>
+          template<typename ValidGhost, typename Shift>
            struct Iterator {
 
-             NeboBoolean<ResizePrep<IteratorType, This>, FieldType> typedef ResizePrepType;
+             NeboBoolean<ResizePrep<ValidGhost, Shift>, FieldType> typedef ResizePrepType;
 
-             NeboBoolean<SeqWalk<IteratorType, This>, FieldType> typedef SeqWalkType;
+             NeboBoolean<SeqWalk<ValidGhost, Shift>, FieldType> typedef SeqWalkType;
           };
-          structured::InfiniteIndexHexlet typedef VG;
+          structured::InfiniteIndexHexlet typedef PossibleValidGhost;
           NeboBoolean(bool const v)
           : value_(v)
           {};
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
-              return typename Iterator<IteratorType>::SeqWalkType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) const {
+              return typename Iterator<ValidGhost, Shift>::SeqWalkType(value());
            };
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
-              return typename Iterator<IteratorType>::ResizePrepType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) const {
+              return typename Iterator<ValidGhost, Shift>::ResizePrepType(value());
            };
           inline bool const value(void) const { return value_; };
 
@@ -283,53 +238,48 @@
           bool const value_;
       };
 
-      template<typename IteratorType, typename SourceType, typename FieldType>
-       struct NeboBoolean<ResizePrep<IteratorType, SourceType>, FieldType> {
+      template<typename ValidGhost, typename Shift, typename FieldType>
+       struct NeboBoolean<ResizePrep<ValidGhost, Shift>, FieldType> {
 
          public:
-          NeboBoolean<ResizePrep<IteratorType, SourceType>, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          NeboBoolean<Resize<IteratorType, This>, FieldType> typedef ResizeType;
-          NeboBoolean(SourceType const source)
-          : value_(source.value())
+          NeboBoolean<Resize<ValidGhost, Shift>, FieldType> typedef ResizeType;
+          NeboBoolean(bool const value)
+          : value_(value)
           {};
-          inline ResizeType resize(MemoryWindow const & newSize) const {
-             return ResizeType(newSize, *this);
-          };
+          inline ResizeType resize(MemoryWindow const & size) const { return ResizeType(value()); };
           inline bool const value(void) const { return value_; };
 
          private:
           bool const value_;
       };
 
-      template<typename IteratorType, typename SourceType, typename FieldType>
-       struct NeboBoolean<Resize<IteratorType, SourceType>, FieldType> {
+      template<typename ValidGhost, typename Shift, typename FieldType>
+       struct NeboBoolean<Resize<ValidGhost, Shift>, FieldType> {
 
          public:
-          NeboBoolean<Resize<IteratorType, SourceType>, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          NeboBoolean<SeqWalk<IteratorType, This>, FieldType> typedef SeqWalkType;
-          NeboBoolean(MemoryWindow const & size, SourceType const source)
-          : value_(source.value())
+          NeboBoolean<SeqWalk<ValidGhost, Shift>, FieldType> typedef SeqWalkType;
+          NeboBoolean(bool const value)
+          : value_(value)
           {};
-          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline SeqWalkType init(void) const { return SeqWalkType(value()); };
           inline bool const value(void) const { return value_; };
 
          private:
           bool const value_;
       };
 
-      template<typename IteratorType, typename SourceType, typename FieldType>
-       struct NeboBoolean<SeqWalk<IteratorType, SourceType>, FieldType> {
+      template<typename ValidGhost, typename Shift, typename FieldType>
+       struct NeboBoolean<SeqWalk<ValidGhost, Shift>, FieldType> {
 
          public:
-          NeboBoolean<SeqWalk<IteratorType, SourceType>, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          NeboBoolean(SourceType const source)
-          : value_(source.value())
+          NeboBoolean(bool const value)
+          : value_(value)
           {};
           inline void next(void) {};
           inline bool at_end(void) const { return false; };
@@ -347,27 +297,33 @@
        struct NeboConstField<Initial, FieldType> {
 
          public:
-          NeboConstField<Initial, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          template<typename IteratorType>
+          template<typename ValidGhost, typename Shift>
            struct Iterator {
 
-             NeboConstField<ResizePrep<IteratorType, This>, FieldType> typedef ResizePrepType;
+             NeboConstField<ResizePrep<ValidGhost, Shift>, FieldType> typedef ResizePrepType;
 
-             NeboConstField<SeqWalk<IteratorType, This>, FieldType> typedef SeqWalkType;
+             NeboConstField<SeqWalk<ValidGhost, Shift>, FieldType> typedef SeqWalkType;
           };
-          typename structured::FromGhost<typename FieldType::Ghost>::result typedef VG;
+          typename structured::FromGhost<typename FieldType::Ghost>::result typedef
+          PossibleValidGhost;
           NeboConstField(FieldType const & f)
           : field_(f)
           {};
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
-              return typename Iterator<IteratorType>::SeqWalkType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::SeqWalkType(field().template
+                                                                               resize_ghost_and_shift<ValidGhost,
+                                                                                                      Shift>());
            };
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
-              return typename Iterator<IteratorType>::ResizePrepType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::ResizePrepType(field().template
+                                                                                  resize_ghost_and_shift<ValidGhost,
+                                                                                                         Shift>());
            };
           inline FieldType const & field(void) const { return field_; };
 
@@ -375,19 +331,21 @@
           FieldType const field_;
       };
 
-      template<typename IteratorType, typename SourceType, typename FieldType>
-       struct NeboConstField<ResizePrep<IteratorType, SourceType>, FieldType> {
+      template<typename ValidGhost, typename Shift, typename FieldType>
+       struct NeboConstField<ResizePrep<ValidGhost, Shift>, FieldType> {
 
          public:
-          NeboConstField<ResizePrep<IteratorType, SourceType>, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          NeboConstField<Resize<IteratorType, This>, FieldType> typedef ResizeType;
-          NeboConstField(SourceType const & source)
-          : field_(source.field())
+          NeboConstField<Resize<ValidGhost, Shift>, FieldType> typedef ResizeType;
+          NeboConstField(FieldType const & f)
+          : field_(f)
           {};
-          inline ResizeType resize(MemoryWindow const & newSize) const {
-             return ResizeType(newSize, *this);
+          inline ResizeType resize(MemoryWindow const & size) const {
+
+             return ResizeType(FieldType(size.template shift<Shift>(),
+                                         field().field_values(),
+                                         structured::ExternalStorage));
           };
           inline FieldType const & field(void) const { return field_; };
 
@@ -395,35 +353,32 @@
           FieldType const field_;
       };
 
-      template<typename IteratorType, typename SourceType, typename FieldType>
-       struct NeboConstField<Resize<IteratorType, SourceType>, FieldType> {
+      template<typename ValidGhost, typename Shift, typename FieldType>
+       struct NeboConstField<Resize<ValidGhost, Shift>, FieldType> {
 
          public:
-          NeboConstField<Resize<IteratorType, SourceType>, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          NeboConstField<SeqWalk<IteratorType, This>, FieldType> typedef SeqWalkType;
-          NeboConstField(MemoryWindow const & size, SourceType const & source)
-          : field_(size, source.field().field_values(), structured::ExternalStorage)
+          NeboConstField<SeqWalk<ValidGhost, Shift>, FieldType> typedef SeqWalkType;
+          NeboConstField(FieldType const & f)
+          : field_(f)
           {};
-          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline SeqWalkType init(void) const { return SeqWalkType(field()); };
           inline FieldType const & field(void) const { return field_; };
 
          private:
           FieldType const field_;
       };
 
-      template<typename IteratorType, typename SourceType, typename FieldType>
-       struct NeboConstField<SeqWalk<IteratorType, SourceType>, FieldType> {
+      template<typename ValidGhost, typename Shift, typename FieldType>
+       struct NeboConstField<SeqWalk<ValidGhost, Shift>, FieldType> {
 
          public:
-          NeboConstField<SeqWalk<IteratorType, SourceType>, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef AtomicType;
-          NeboConstField(SourceType const & source)
-          : iter_(IteratorStyle<IteratorType, FieldType>::begin(source.field())),
-            end_(IteratorStyle<IteratorType, FieldType>::end(source.field()))
+          NeboConstField(FieldType const & f)
+          : iter_(f.begin()), end_(f.end())
           {};
           inline void next(void) { ++iter_; };
           inline bool at_end(void) const { return (iter_ == end_); };
@@ -442,27 +397,33 @@
        struct NeboField<Initial, FieldType> {
 
          public:
-          NeboField<Initial, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          template<typename IteratorType>
+          template<typename ValidGhost, typename Shift>
            struct Iterator {
 
-             NeboField<ResizePrep<IteratorType, This>, FieldType> typedef ResizePrepType;
+             NeboField<ResizePrep<ValidGhost, Shift>, FieldType> typedef ResizePrepType;
 
-             NeboField<SeqWalk<IteratorType, This>, FieldType> typedef SeqWalkType;
+             NeboField<SeqWalk<ValidGhost, Shift>, FieldType> typedef SeqWalkType;
           };
-          typename structured::FromGhost<typename FieldType::Ghost>::result typedef VG;
-          NeboField(FieldType & f)
+          typename structured::FromGhost<typename FieldType::Ghost>::result typedef
+          PossibleValidGhost;
+          NeboField(FieldType f)
           : field_(f)
           {};
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::SeqWalkType init(void) {
-              return typename Iterator<IteratorType>::SeqWalkType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) {
+
+              return typename Iterator<ValidGhost, Shift>::SeqWalkType(field().template
+                                                                               resize_ghost_and_shift<ValidGhost,
+                                                                                                      Shift>());
            };
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) {
-              return typename Iterator<IteratorType>::ResizePrepType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) {
+
+              return typename Iterator<ValidGhost, Shift>::ResizePrepType(field().template
+                                                                                  resize_ghost_and_shift<ValidGhost,
+                                                                                                         Shift>());
            };
           inline FieldType & field(void) { return field_; };
 
@@ -470,19 +431,21 @@
           FieldType field_;
       };
 
-      template<typename IteratorType, typename SourceType, typename FieldType>
-       struct NeboField<ResizePrep<IteratorType, SourceType>, FieldType> {
+      template<typename ValidGhost, typename Shift, typename FieldType>
+       struct NeboField<ResizePrep<ValidGhost, Shift>, FieldType> {
 
          public:
-          NeboField<ResizePrep<IteratorType, SourceType>, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          NeboField<Resize<IteratorType, This>, FieldType> typedef ResizeType;
-          NeboField(SourceType & source)
-          : field_(source.field())
+          NeboField<Resize<ValidGhost, Shift>, FieldType> typedef ResizeType;
+          NeboField(FieldType f)
+          : field_(f)
           {};
-          inline ResizeType resize(MemoryWindow const & newSize) {
-             return ResizeType(newSize, *this);
+          inline ResizeType resize(MemoryWindow const & size) {
+
+             return ResizeType(FieldType(size.template shift<Shift>(),
+                                         field().field_values(),
+                                         structured::ExternalStorage));
           };
           inline FieldType & field(void) { return field_; };
 
@@ -490,35 +453,32 @@
           FieldType field_;
       };
 
-      template<typename IteratorType, typename SourceType, typename FieldType>
-       struct NeboField<Resize<IteratorType, SourceType>, FieldType> {
+      template<typename ValidGhost, typename Shift, typename FieldType>
+       struct NeboField<Resize<ValidGhost, Shift>, FieldType> {
 
          public:
-          NeboField<Resize<IteratorType, SourceType>, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          NeboField<SeqWalk<IteratorType, This>, FieldType> typedef SeqWalkType;
-          NeboField(MemoryWindow const & size, SourceType & source)
-          : field_(size, source.field().field_values(), structured::ExternalStorage)
+          NeboField<SeqWalk<ValidGhost, Shift>, FieldType> typedef SeqWalkType;
+          NeboField(FieldType f)
+          : field_(f)
           {};
-          inline SeqWalkType init(void) { return SeqWalkType(*this); };
+          inline SeqWalkType init(void) { return SeqWalkType(field()); };
           inline FieldType & field(void) { return field_; };
 
          private:
           FieldType field_;
       };
 
-      template<typename IteratorType, typename SourceType, typename FieldType>
-       struct NeboField<SeqWalk<IteratorType, SourceType>, FieldType> {
+      template<typename ValidGhost, typename Shift, typename FieldType>
+       struct NeboField<SeqWalk<ValidGhost, Shift>, FieldType> {
 
          public:
-          NeboField<SeqWalk<IteratorType, SourceType>, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef AtomicType;
-          NeboField(SourceType & source)
-          : iter_(IteratorStyle<IteratorType, FieldType>::begin(source.field())),
-            end_(IteratorStyle<IteratorType, FieldType>::end(source.field()))
+          NeboField(FieldType f)
+          : iter_(f.begin()), end_(f.end())
           {};
           inline void next(void) { ++iter_; };
           inline bool at_end(void) const { return (iter_ == end_); };
@@ -573,34 +533,44 @@
        struct SumOp<Initial, Operand1, Operand2, FieldType> {
 
          public:
-          SumOp<Initial, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          template<typename IteratorType>
+          template<typename ValidGhost, typename Shift>
            struct Iterator {
 
-             SumOp<ResizePrep<IteratorType, This>,
-                   typename Operand1::template Iterator<IteratorType>::ResizePrepType,
-                   typename Operand2::template Iterator<IteratorType>::ResizePrepType,
+             SumOp<ResizePrep<ValidGhost, Shift>,
+                   typename Operand1::template Iterator<ValidGhost, Shift>::ResizePrepType,
+                   typename Operand2::template Iterator<ValidGhost, Shift>::ResizePrepType,
                    FieldType> typedef ResizePrepType;
 
-             SumOp<SeqWalk<IteratorType, This>,
-                   typename Operand1::template Iterator<IteratorType>::SeqWalkType,
-                   typename Operand2::template Iterator<IteratorType>::SeqWalkType,
+             SumOp<SeqWalk<ValidGhost, Shift>,
+                   typename Operand1::template Iterator<ValidGhost, Shift>::SeqWalkType,
+                   typename Operand2::template Iterator<ValidGhost, Shift>::SeqWalkType,
                    FieldType> typedef SeqWalkType;
           };
-          typename structured::Minimum<typename Operand1::VG, typename Operand2::VG>::result typedef
-          VG;
-          SumOp(Operand1 const & op1, Operand2 const & op2)
-          : operand1_(op1), operand2_(op2)
+          typename structured::Minimum<typename Operand1::PossibleValidGhost,
+                                       typename Operand2::PossibleValidGhost>::result typedef
+          PossibleValidGhost;
+          SumOp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
-              return typename Iterator<IteratorType>::SeqWalkType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::SeqWalkType(operand1().template init<ValidGhost,
+                                                                                                Shift>(),
+                                                                       operand2().template init<ValidGhost,
+                                                                                                Shift>());
            };
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
-              return typename Iterator<IteratorType>::ResizePrepType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::ResizePrepType(operand1().template
+                                                                                     resize_prep<ValidGhost,
+                                                                                                 Shift>(),
+                                                                          operand2().template
+                                                                                     resize_prep<ValidGhost,
+                                                                                                 Shift>());
            };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -610,26 +580,25 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct SumOp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct SumOp<ResizePrep<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          SumOp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          SumOp<Resize<IteratorType, This>,
+          SumOp<Resize<ValidGhost, Shift>,
                 typename Operand1::ResizeType,
                 typename Operand2::ResizeType,
                 FieldType> typedef ResizeType;
-          SumOp(SourceType const & source)
-          : operand1_(source.operand1()), operand2_(source.operand2())
+          SumOp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & newSize) const {
-             return ResizeType(newSize, *this);
+          inline ResizeType resize(MemoryWindow const & size) const {
+             return ResizeType(operand1().resize(size), operand2().resize(size));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -639,25 +608,26 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct SumOp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct SumOp<Resize<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          SumOp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          SumOp<SeqWalk<IteratorType, This>,
+          SumOp<SeqWalk<ValidGhost, Shift>,
                 typename Operand1::SeqWalkType,
                 typename Operand2::SeqWalkType,
                 FieldType> typedef SeqWalkType;
-          SumOp(MemoryWindow const & size, SourceType const & source)
-          : operand1_(size, source.operand1()), operand2_(size, source.operand2())
+          SumOp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline SeqWalkType init(void) const {
+             return SeqWalkType(operand1().init(), operand2().init());
+          };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
 
@@ -666,20 +636,19 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct SumOp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct SumOp<SeqWalk<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          SumOp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef EvalReturnType;
-          SumOp(SourceType const & source)
-          : operand1_(source.operand1()), operand2_(source.operand2())
+          SumOp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
           inline void next(void) { operand1_.next(); operand2_.next(); };
           inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
@@ -775,34 +744,44 @@
        struct DiffOp<Initial, Operand1, Operand2, FieldType> {
 
          public:
-          DiffOp<Initial, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          template<typename IteratorType>
+          template<typename ValidGhost, typename Shift>
            struct Iterator {
 
-             DiffOp<ResizePrep<IteratorType, This>,
-                    typename Operand1::template Iterator<IteratorType>::ResizePrepType,
-                    typename Operand2::template Iterator<IteratorType>::ResizePrepType,
+             DiffOp<ResizePrep<ValidGhost, Shift>,
+                    typename Operand1::template Iterator<ValidGhost, Shift>::ResizePrepType,
+                    typename Operand2::template Iterator<ValidGhost, Shift>::ResizePrepType,
                     FieldType> typedef ResizePrepType;
 
-             DiffOp<SeqWalk<IteratorType, This>,
-                    typename Operand1::template Iterator<IteratorType>::SeqWalkType,
-                    typename Operand2::template Iterator<IteratorType>::SeqWalkType,
+             DiffOp<SeqWalk<ValidGhost, Shift>,
+                    typename Operand1::template Iterator<ValidGhost, Shift>::SeqWalkType,
+                    typename Operand2::template Iterator<ValidGhost, Shift>::SeqWalkType,
                     FieldType> typedef SeqWalkType;
           };
-          typename structured::Minimum<typename Operand1::VG, typename Operand2::VG>::result typedef
-          VG;
-          DiffOp(Operand1 const & op1, Operand2 const & op2)
-          : operand1_(op1), operand2_(op2)
+          typename structured::Minimum<typename Operand1::PossibleValidGhost,
+                                       typename Operand2::PossibleValidGhost>::result typedef
+          PossibleValidGhost;
+          DiffOp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
-              return typename Iterator<IteratorType>::SeqWalkType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::SeqWalkType(operand1().template init<ValidGhost,
+                                                                                                Shift>(),
+                                                                       operand2().template init<ValidGhost,
+                                                                                                Shift>());
            };
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
-              return typename Iterator<IteratorType>::ResizePrepType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::ResizePrepType(operand1().template
+                                                                                     resize_prep<ValidGhost,
+                                                                                                 Shift>(),
+                                                                          operand2().template
+                                                                                     resize_prep<ValidGhost,
+                                                                                                 Shift>());
            };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -812,26 +791,25 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct DiffOp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct DiffOp<ResizePrep<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          DiffOp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          DiffOp<Resize<IteratorType, This>,
+          DiffOp<Resize<ValidGhost, Shift>,
                  typename Operand1::ResizeType,
                  typename Operand2::ResizeType,
                  FieldType> typedef ResizeType;
-          DiffOp(SourceType const & source)
-          : operand1_(source.operand1()), operand2_(source.operand2())
+          DiffOp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & newSize) const {
-             return ResizeType(newSize, *this);
+          inline ResizeType resize(MemoryWindow const & size) const {
+             return ResizeType(operand1().resize(size), operand2().resize(size));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -841,25 +819,26 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct DiffOp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct DiffOp<Resize<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          DiffOp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          DiffOp<SeqWalk<IteratorType, This>,
+          DiffOp<SeqWalk<ValidGhost, Shift>,
                  typename Operand1::SeqWalkType,
                  typename Operand2::SeqWalkType,
                  FieldType> typedef SeqWalkType;
-          DiffOp(MemoryWindow const & size, SourceType const & source)
-          : operand1_(size, source.operand1()), operand2_(size, source.operand2())
+          DiffOp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline SeqWalkType init(void) const {
+             return SeqWalkType(operand1().init(), operand2().init());
+          };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
 
@@ -868,20 +847,19 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct DiffOp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct DiffOp<SeqWalk<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          DiffOp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef EvalReturnType;
-          DiffOp(SourceType const & source)
-          : operand1_(source.operand1()), operand2_(source.operand2())
+          DiffOp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
           inline void next(void) { operand1_.next(); operand2_.next(); };
           inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
@@ -977,34 +955,44 @@
        struct ProdOp<Initial, Operand1, Operand2, FieldType> {
 
          public:
-          ProdOp<Initial, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          template<typename IteratorType>
+          template<typename ValidGhost, typename Shift>
            struct Iterator {
 
-             ProdOp<ResizePrep<IteratorType, This>,
-                    typename Operand1::template Iterator<IteratorType>::ResizePrepType,
-                    typename Operand2::template Iterator<IteratorType>::ResizePrepType,
+             ProdOp<ResizePrep<ValidGhost, Shift>,
+                    typename Operand1::template Iterator<ValidGhost, Shift>::ResizePrepType,
+                    typename Operand2::template Iterator<ValidGhost, Shift>::ResizePrepType,
                     FieldType> typedef ResizePrepType;
 
-             ProdOp<SeqWalk<IteratorType, This>,
-                    typename Operand1::template Iterator<IteratorType>::SeqWalkType,
-                    typename Operand2::template Iterator<IteratorType>::SeqWalkType,
+             ProdOp<SeqWalk<ValidGhost, Shift>,
+                    typename Operand1::template Iterator<ValidGhost, Shift>::SeqWalkType,
+                    typename Operand2::template Iterator<ValidGhost, Shift>::SeqWalkType,
                     FieldType> typedef SeqWalkType;
           };
-          typename structured::Minimum<typename Operand1::VG, typename Operand2::VG>::result typedef
-          VG;
-          ProdOp(Operand1 const & op1, Operand2 const & op2)
-          : operand1_(op1), operand2_(op2)
+          typename structured::Minimum<typename Operand1::PossibleValidGhost,
+                                       typename Operand2::PossibleValidGhost>::result typedef
+          PossibleValidGhost;
+          ProdOp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
-              return typename Iterator<IteratorType>::SeqWalkType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::SeqWalkType(operand1().template init<ValidGhost,
+                                                                                                Shift>(),
+                                                                       operand2().template init<ValidGhost,
+                                                                                                Shift>());
            };
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
-              return typename Iterator<IteratorType>::ResizePrepType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::ResizePrepType(operand1().template
+                                                                                     resize_prep<ValidGhost,
+                                                                                                 Shift>(),
+                                                                          operand2().template
+                                                                                     resize_prep<ValidGhost,
+                                                                                                 Shift>());
            };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -1014,26 +1002,25 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct ProdOp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct ProdOp<ResizePrep<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          ProdOp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          ProdOp<Resize<IteratorType, This>,
+          ProdOp<Resize<ValidGhost, Shift>,
                  typename Operand1::ResizeType,
                  typename Operand2::ResizeType,
                  FieldType> typedef ResizeType;
-          ProdOp(SourceType const & source)
-          : operand1_(source.operand1()), operand2_(source.operand2())
+          ProdOp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & newSize) const {
-             return ResizeType(newSize, *this);
+          inline ResizeType resize(MemoryWindow const & size) const {
+             return ResizeType(operand1().resize(size), operand2().resize(size));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -1043,25 +1030,26 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct ProdOp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct ProdOp<Resize<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          ProdOp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          ProdOp<SeqWalk<IteratorType, This>,
+          ProdOp<SeqWalk<ValidGhost, Shift>,
                  typename Operand1::SeqWalkType,
                  typename Operand2::SeqWalkType,
                  FieldType> typedef SeqWalkType;
-          ProdOp(MemoryWindow const & size, SourceType const & source)
-          : operand1_(size, source.operand1()), operand2_(size, source.operand2())
+          ProdOp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline SeqWalkType init(void) const {
+             return SeqWalkType(operand1().init(), operand2().init());
+          };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
 
@@ -1070,20 +1058,19 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct ProdOp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct ProdOp<SeqWalk<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          ProdOp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef EvalReturnType;
-          ProdOp(SourceType const & source)
-          : operand1_(source.operand1()), operand2_(source.operand2())
+          ProdOp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
           inline void next(void) { operand1_.next(); operand2_.next(); };
           inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
@@ -1179,34 +1166,44 @@
        struct DivOp<Initial, Operand1, Operand2, FieldType> {
 
          public:
-          DivOp<Initial, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          template<typename IteratorType>
+          template<typename ValidGhost, typename Shift>
            struct Iterator {
 
-             DivOp<ResizePrep<IteratorType, This>,
-                   typename Operand1::template Iterator<IteratorType>::ResizePrepType,
-                   typename Operand2::template Iterator<IteratorType>::ResizePrepType,
+             DivOp<ResizePrep<ValidGhost, Shift>,
+                   typename Operand1::template Iterator<ValidGhost, Shift>::ResizePrepType,
+                   typename Operand2::template Iterator<ValidGhost, Shift>::ResizePrepType,
                    FieldType> typedef ResizePrepType;
 
-             DivOp<SeqWalk<IteratorType, This>,
-                   typename Operand1::template Iterator<IteratorType>::SeqWalkType,
-                   typename Operand2::template Iterator<IteratorType>::SeqWalkType,
+             DivOp<SeqWalk<ValidGhost, Shift>,
+                   typename Operand1::template Iterator<ValidGhost, Shift>::SeqWalkType,
+                   typename Operand2::template Iterator<ValidGhost, Shift>::SeqWalkType,
                    FieldType> typedef SeqWalkType;
           };
-          typename structured::Minimum<typename Operand1::VG, typename Operand2::VG>::result typedef
-          VG;
-          DivOp(Operand1 const & op1, Operand2 const & op2)
-          : operand1_(op1), operand2_(op2)
+          typename structured::Minimum<typename Operand1::PossibleValidGhost,
+                                       typename Operand2::PossibleValidGhost>::result typedef
+          PossibleValidGhost;
+          DivOp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
-              return typename Iterator<IteratorType>::SeqWalkType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::SeqWalkType(operand1().template init<ValidGhost,
+                                                                                                Shift>(),
+                                                                       operand2().template init<ValidGhost,
+                                                                                                Shift>());
            };
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
-              return typename Iterator<IteratorType>::ResizePrepType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::ResizePrepType(operand1().template
+                                                                                     resize_prep<ValidGhost,
+                                                                                                 Shift>(),
+                                                                          operand2().template
+                                                                                     resize_prep<ValidGhost,
+                                                                                                 Shift>());
            };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -1216,26 +1213,25 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct DivOp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct DivOp<ResizePrep<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          DivOp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          DivOp<Resize<IteratorType, This>,
+          DivOp<Resize<ValidGhost, Shift>,
                 typename Operand1::ResizeType,
                 typename Operand2::ResizeType,
                 FieldType> typedef ResizeType;
-          DivOp(SourceType const & source)
-          : operand1_(source.operand1()), operand2_(source.operand2())
+          DivOp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & newSize) const {
-             return ResizeType(newSize, *this);
+          inline ResizeType resize(MemoryWindow const & size) const {
+             return ResizeType(operand1().resize(size), operand2().resize(size));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -1245,25 +1241,26 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct DivOp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct DivOp<Resize<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          DivOp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          DivOp<SeqWalk<IteratorType, This>,
+          DivOp<SeqWalk<ValidGhost, Shift>,
                 typename Operand1::SeqWalkType,
                 typename Operand2::SeqWalkType,
                 FieldType> typedef SeqWalkType;
-          DivOp(MemoryWindow const & size, SourceType const & source)
-          : operand1_(size, source.operand1()), operand2_(size, source.operand2())
+          DivOp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline SeqWalkType init(void) const {
+             return SeqWalkType(operand1().init(), operand2().init());
+          };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
 
@@ -1272,20 +1269,19 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct DivOp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct DivOp<SeqWalk<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          DivOp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef EvalReturnType;
-          DivOp(SourceType const & source)
-          : operand1_(source.operand1()), operand2_(source.operand2())
+          DivOp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
           inline void next(void) { operand1_.next(); operand2_.next(); };
           inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
@@ -1381,31 +1377,35 @@
        struct SinFcn<Initial, Operand, FieldType> {
 
          public:
-          SinFcn<Initial, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          template<typename IteratorType>
+          template<typename ValidGhost, typename Shift>
            struct Iterator {
 
-             SinFcn<ResizePrep<IteratorType, This>,
-                    typename Operand::template Iterator<IteratorType>::ResizePrepType,
+             SinFcn<ResizePrep<ValidGhost, Shift>,
+                    typename Operand::template Iterator<ValidGhost, Shift>::ResizePrepType,
                     FieldType> typedef ResizePrepType;
 
-             SinFcn<SeqWalk<IteratorType, This>,
-                    typename Operand::template Iterator<IteratorType>::SeqWalkType,
+             SinFcn<SeqWalk<ValidGhost, Shift>,
+                    typename Operand::template Iterator<ValidGhost, Shift>::SeqWalkType,
                     FieldType> typedef SeqWalkType;
           };
-          typename Operand::VG typedef VG;
-          SinFcn(Operand const & op)
-          : operand_(op)
+          typename Operand::PossibleValidGhost typedef PossibleValidGhost;
+          SinFcn(Operand const & operand)
+          : operand_(operand)
           {};
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
-              return typename Iterator<IteratorType>::SeqWalkType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::SeqWalkType(operand().template init<ValidGhost,
+                                                                                               Shift>());
            };
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
-              return typename Iterator<IteratorType>::ResizePrepType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::ResizePrepType(operand().template
+                                                                                    resize_prep<ValidGhost,
+                                                                                                Shift>());
            };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -1413,20 +1413,19 @@
           Operand const operand_;
       };
 
-      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
-       struct SinFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> {
+      template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>
+       struct SinFcn<ResizePrep<ValidGhost, Shift>, Operand, FieldType> {
 
          public:
-          SinFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          SinFcn<Resize<IteratorType, This>, typename Operand::ResizeType, FieldType> typedef
+          SinFcn<Resize<ValidGhost, Shift>, typename Operand::ResizeType, FieldType> typedef
           ResizeType;
-          SinFcn(SourceType const & source)
-          : operand_(source.operand())
+          SinFcn(Operand const & operand)
+          : operand_(operand)
           {};
-          inline ResizeType resize(MemoryWindow const & newSize) const {
-             return ResizeType(newSize, *this);
+          inline ResizeType resize(MemoryWindow const & size) const {
+             return ResizeType(operand().resize(size));
           };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -1434,35 +1433,33 @@
           Operand const operand_;
       };
 
-      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
-       struct SinFcn<Resize<IteratorType, SourceType>, Operand, FieldType> {
+      template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>
+       struct SinFcn<Resize<ValidGhost, Shift>, Operand, FieldType> {
 
          public:
-          SinFcn<Resize<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          SinFcn<SeqWalk<IteratorType, This>, typename Operand::SeqWalkType, FieldType> typedef
+          SinFcn<SeqWalk<ValidGhost, Shift>, typename Operand::SeqWalkType, FieldType> typedef
           SeqWalkType;
-          SinFcn(MemoryWindow const & size, SourceType const & source)
-          : operand_(size, source.operand())
+          SinFcn(Operand const & operand)
+          : operand_(operand)
           {};
-          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline SeqWalkType init(void) const { return SeqWalkType(operand().init()); };
           inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
       };
 
-      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
-       struct SinFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> {
+      template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>
+       struct SinFcn<SeqWalk<ValidGhost, Shift>, Operand, FieldType> {
 
          public:
-          SinFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef EvalReturnType;
-          SinFcn(SourceType const & source)
-          : operand_(source.operand())
+          SinFcn(Operand const & operand)
+          : operand_(operand)
           {};
           inline void next(void) { operand_.next(); };
           inline bool at_end(void) const { return (operand_.at_end()); };
@@ -1499,31 +1496,35 @@
        struct CosFcn<Initial, Operand, FieldType> {
 
          public:
-          CosFcn<Initial, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          template<typename IteratorType>
+          template<typename ValidGhost, typename Shift>
            struct Iterator {
 
-             CosFcn<ResizePrep<IteratorType, This>,
-                    typename Operand::template Iterator<IteratorType>::ResizePrepType,
+             CosFcn<ResizePrep<ValidGhost, Shift>,
+                    typename Operand::template Iterator<ValidGhost, Shift>::ResizePrepType,
                     FieldType> typedef ResizePrepType;
 
-             CosFcn<SeqWalk<IteratorType, This>,
-                    typename Operand::template Iterator<IteratorType>::SeqWalkType,
+             CosFcn<SeqWalk<ValidGhost, Shift>,
+                    typename Operand::template Iterator<ValidGhost, Shift>::SeqWalkType,
                     FieldType> typedef SeqWalkType;
           };
-          typename Operand::VG typedef VG;
-          CosFcn(Operand const & op)
-          : operand_(op)
+          typename Operand::PossibleValidGhost typedef PossibleValidGhost;
+          CosFcn(Operand const & operand)
+          : operand_(operand)
           {};
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
-              return typename Iterator<IteratorType>::SeqWalkType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::SeqWalkType(operand().template init<ValidGhost,
+                                                                                               Shift>());
            };
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
-              return typename Iterator<IteratorType>::ResizePrepType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::ResizePrepType(operand().template
+                                                                                    resize_prep<ValidGhost,
+                                                                                                Shift>());
            };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -1531,20 +1532,19 @@
           Operand const operand_;
       };
 
-      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
-       struct CosFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> {
+      template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>
+       struct CosFcn<ResizePrep<ValidGhost, Shift>, Operand, FieldType> {
 
          public:
-          CosFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          CosFcn<Resize<IteratorType, This>, typename Operand::ResizeType, FieldType> typedef
+          CosFcn<Resize<ValidGhost, Shift>, typename Operand::ResizeType, FieldType> typedef
           ResizeType;
-          CosFcn(SourceType const & source)
-          : operand_(source.operand())
+          CosFcn(Operand const & operand)
+          : operand_(operand)
           {};
-          inline ResizeType resize(MemoryWindow const & newSize) const {
-             return ResizeType(newSize, *this);
+          inline ResizeType resize(MemoryWindow const & size) const {
+             return ResizeType(operand().resize(size));
           };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -1552,35 +1552,33 @@
           Operand const operand_;
       };
 
-      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
-       struct CosFcn<Resize<IteratorType, SourceType>, Operand, FieldType> {
+      template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>
+       struct CosFcn<Resize<ValidGhost, Shift>, Operand, FieldType> {
 
          public:
-          CosFcn<Resize<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          CosFcn<SeqWalk<IteratorType, This>, typename Operand::SeqWalkType, FieldType> typedef
+          CosFcn<SeqWalk<ValidGhost, Shift>, typename Operand::SeqWalkType, FieldType> typedef
           SeqWalkType;
-          CosFcn(MemoryWindow const & size, SourceType const & source)
-          : operand_(size, source.operand())
+          CosFcn(Operand const & operand)
+          : operand_(operand)
           {};
-          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline SeqWalkType init(void) const { return SeqWalkType(operand().init()); };
           inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
       };
 
-      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
-       struct CosFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> {
+      template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>
+       struct CosFcn<SeqWalk<ValidGhost, Shift>, Operand, FieldType> {
 
          public:
-          CosFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef EvalReturnType;
-          CosFcn(SourceType const & source)
-          : operand_(source.operand())
+          CosFcn(Operand const & operand)
+          : operand_(operand)
           {};
           inline void next(void) { operand_.next(); };
           inline bool at_end(void) const { return (operand_.at_end()); };
@@ -1617,31 +1615,35 @@
        struct TanFcn<Initial, Operand, FieldType> {
 
          public:
-          TanFcn<Initial, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          template<typename IteratorType>
+          template<typename ValidGhost, typename Shift>
            struct Iterator {
 
-             TanFcn<ResizePrep<IteratorType, This>,
-                    typename Operand::template Iterator<IteratorType>::ResizePrepType,
+             TanFcn<ResizePrep<ValidGhost, Shift>,
+                    typename Operand::template Iterator<ValidGhost, Shift>::ResizePrepType,
                     FieldType> typedef ResizePrepType;
 
-             TanFcn<SeqWalk<IteratorType, This>,
-                    typename Operand::template Iterator<IteratorType>::SeqWalkType,
+             TanFcn<SeqWalk<ValidGhost, Shift>,
+                    typename Operand::template Iterator<ValidGhost, Shift>::SeqWalkType,
                     FieldType> typedef SeqWalkType;
           };
-          typename Operand::VG typedef VG;
-          TanFcn(Operand const & op)
-          : operand_(op)
+          typename Operand::PossibleValidGhost typedef PossibleValidGhost;
+          TanFcn(Operand const & operand)
+          : operand_(operand)
           {};
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
-              return typename Iterator<IteratorType>::SeqWalkType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::SeqWalkType(operand().template init<ValidGhost,
+                                                                                               Shift>());
            };
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
-              return typename Iterator<IteratorType>::ResizePrepType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::ResizePrepType(operand().template
+                                                                                    resize_prep<ValidGhost,
+                                                                                                Shift>());
            };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -1649,20 +1651,19 @@
           Operand const operand_;
       };
 
-      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
-       struct TanFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> {
+      template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>
+       struct TanFcn<ResizePrep<ValidGhost, Shift>, Operand, FieldType> {
 
          public:
-          TanFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          TanFcn<Resize<IteratorType, This>, typename Operand::ResizeType, FieldType> typedef
+          TanFcn<Resize<ValidGhost, Shift>, typename Operand::ResizeType, FieldType> typedef
           ResizeType;
-          TanFcn(SourceType const & source)
-          : operand_(source.operand())
+          TanFcn(Operand const & operand)
+          : operand_(operand)
           {};
-          inline ResizeType resize(MemoryWindow const & newSize) const {
-             return ResizeType(newSize, *this);
+          inline ResizeType resize(MemoryWindow const & size) const {
+             return ResizeType(operand().resize(size));
           };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -1670,35 +1671,33 @@
           Operand const operand_;
       };
 
-      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
-       struct TanFcn<Resize<IteratorType, SourceType>, Operand, FieldType> {
+      template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>
+       struct TanFcn<Resize<ValidGhost, Shift>, Operand, FieldType> {
 
          public:
-          TanFcn<Resize<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          TanFcn<SeqWalk<IteratorType, This>, typename Operand::SeqWalkType, FieldType> typedef
+          TanFcn<SeqWalk<ValidGhost, Shift>, typename Operand::SeqWalkType, FieldType> typedef
           SeqWalkType;
-          TanFcn(MemoryWindow const & size, SourceType const & source)
-          : operand_(size, source.operand())
+          TanFcn(Operand const & operand)
+          : operand_(operand)
           {};
-          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline SeqWalkType init(void) const { return SeqWalkType(operand().init()); };
           inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
       };
 
-      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
-       struct TanFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> {
+      template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>
+       struct TanFcn<SeqWalk<ValidGhost, Shift>, Operand, FieldType> {
 
          public:
-          TanFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef EvalReturnType;
-          TanFcn(SourceType const & source)
-          : operand_(source.operand())
+          TanFcn(Operand const & operand)
+          : operand_(operand)
           {};
           inline void next(void) { operand_.next(); };
           inline bool at_end(void) const { return (operand_.at_end()); };
@@ -1735,31 +1734,35 @@
        struct ExpFcn<Initial, Operand, FieldType> {
 
          public:
-          ExpFcn<Initial, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          template<typename IteratorType>
+          template<typename ValidGhost, typename Shift>
            struct Iterator {
 
-             ExpFcn<ResizePrep<IteratorType, This>,
-                    typename Operand::template Iterator<IteratorType>::ResizePrepType,
+             ExpFcn<ResizePrep<ValidGhost, Shift>,
+                    typename Operand::template Iterator<ValidGhost, Shift>::ResizePrepType,
                     FieldType> typedef ResizePrepType;
 
-             ExpFcn<SeqWalk<IteratorType, This>,
-                    typename Operand::template Iterator<IteratorType>::SeqWalkType,
+             ExpFcn<SeqWalk<ValidGhost, Shift>,
+                    typename Operand::template Iterator<ValidGhost, Shift>::SeqWalkType,
                     FieldType> typedef SeqWalkType;
           };
-          typename Operand::VG typedef VG;
-          ExpFcn(Operand const & op)
-          : operand_(op)
+          typename Operand::PossibleValidGhost typedef PossibleValidGhost;
+          ExpFcn(Operand const & operand)
+          : operand_(operand)
           {};
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
-              return typename Iterator<IteratorType>::SeqWalkType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::SeqWalkType(operand().template init<ValidGhost,
+                                                                                               Shift>());
            };
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
-              return typename Iterator<IteratorType>::ResizePrepType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::ResizePrepType(operand().template
+                                                                                    resize_prep<ValidGhost,
+                                                                                                Shift>());
            };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -1767,20 +1770,19 @@
           Operand const operand_;
       };
 
-      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
-       struct ExpFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> {
+      template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>
+       struct ExpFcn<ResizePrep<ValidGhost, Shift>, Operand, FieldType> {
 
          public:
-          ExpFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          ExpFcn<Resize<IteratorType, This>, typename Operand::ResizeType, FieldType> typedef
+          ExpFcn<Resize<ValidGhost, Shift>, typename Operand::ResizeType, FieldType> typedef
           ResizeType;
-          ExpFcn(SourceType const & source)
-          : operand_(source.operand())
+          ExpFcn(Operand const & operand)
+          : operand_(operand)
           {};
-          inline ResizeType resize(MemoryWindow const & newSize) const {
-             return ResizeType(newSize, *this);
+          inline ResizeType resize(MemoryWindow const & size) const {
+             return ResizeType(operand().resize(size));
           };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -1788,35 +1790,33 @@
           Operand const operand_;
       };
 
-      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
-       struct ExpFcn<Resize<IteratorType, SourceType>, Operand, FieldType> {
+      template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>
+       struct ExpFcn<Resize<ValidGhost, Shift>, Operand, FieldType> {
 
          public:
-          ExpFcn<Resize<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          ExpFcn<SeqWalk<IteratorType, This>, typename Operand::SeqWalkType, FieldType> typedef
+          ExpFcn<SeqWalk<ValidGhost, Shift>, typename Operand::SeqWalkType, FieldType> typedef
           SeqWalkType;
-          ExpFcn(MemoryWindow const & size, SourceType const & source)
-          : operand_(size, source.operand())
+          ExpFcn(Operand const & operand)
+          : operand_(operand)
           {};
-          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline SeqWalkType init(void) const { return SeqWalkType(operand().init()); };
           inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
       };
 
-      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
-       struct ExpFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> {
+      template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>
+       struct ExpFcn<SeqWalk<ValidGhost, Shift>, Operand, FieldType> {
 
          public:
-          ExpFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef EvalReturnType;
-          ExpFcn(SourceType const & source)
-          : operand_(source.operand())
+          ExpFcn(Operand const & operand)
+          : operand_(operand)
           {};
           inline void next(void) { operand_.next(); };
           inline bool at_end(void) const { return (operand_.at_end()); };
@@ -1853,31 +1853,35 @@
        struct TanhFcn<Initial, Operand, FieldType> {
 
          public:
-          TanhFcn<Initial, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          template<typename IteratorType>
+          template<typename ValidGhost, typename Shift>
            struct Iterator {
 
-             TanhFcn<ResizePrep<IteratorType, This>,
-                     typename Operand::template Iterator<IteratorType>::ResizePrepType,
+             TanhFcn<ResizePrep<ValidGhost, Shift>,
+                     typename Operand::template Iterator<ValidGhost, Shift>::ResizePrepType,
                      FieldType> typedef ResizePrepType;
 
-             TanhFcn<SeqWalk<IteratorType, This>,
-                     typename Operand::template Iterator<IteratorType>::SeqWalkType,
+             TanhFcn<SeqWalk<ValidGhost, Shift>,
+                     typename Operand::template Iterator<ValidGhost, Shift>::SeqWalkType,
                      FieldType> typedef SeqWalkType;
           };
-          typename Operand::VG typedef VG;
-          TanhFcn(Operand const & op)
-          : operand_(op)
+          typename Operand::PossibleValidGhost typedef PossibleValidGhost;
+          TanhFcn(Operand const & operand)
+          : operand_(operand)
           {};
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
-              return typename Iterator<IteratorType>::SeqWalkType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::SeqWalkType(operand().template init<ValidGhost,
+                                                                                               Shift>());
            };
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
-              return typename Iterator<IteratorType>::ResizePrepType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::ResizePrepType(operand().template
+                                                                                    resize_prep<ValidGhost,
+                                                                                                Shift>());
            };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -1885,20 +1889,19 @@
           Operand const operand_;
       };
 
-      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
-       struct TanhFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> {
+      template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>
+       struct TanhFcn<ResizePrep<ValidGhost, Shift>, Operand, FieldType> {
 
          public:
-          TanhFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          TanhFcn<Resize<IteratorType, This>, typename Operand::ResizeType, FieldType> typedef
+          TanhFcn<Resize<ValidGhost, Shift>, typename Operand::ResizeType, FieldType> typedef
           ResizeType;
-          TanhFcn(SourceType const & source)
-          : operand_(source.operand())
+          TanhFcn(Operand const & operand)
+          : operand_(operand)
           {};
-          inline ResizeType resize(MemoryWindow const & newSize) const {
-             return ResizeType(newSize, *this);
+          inline ResizeType resize(MemoryWindow const & size) const {
+             return ResizeType(operand().resize(size));
           };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -1906,35 +1909,33 @@
           Operand const operand_;
       };
 
-      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
-       struct TanhFcn<Resize<IteratorType, SourceType>, Operand, FieldType> {
+      template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>
+       struct TanhFcn<Resize<ValidGhost, Shift>, Operand, FieldType> {
 
          public:
-          TanhFcn<Resize<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          TanhFcn<SeqWalk<IteratorType, This>, typename Operand::SeqWalkType, FieldType> typedef
+          TanhFcn<SeqWalk<ValidGhost, Shift>, typename Operand::SeqWalkType, FieldType> typedef
           SeqWalkType;
-          TanhFcn(MemoryWindow const & size, SourceType const & source)
-          : operand_(size, source.operand())
+          TanhFcn(Operand const & operand)
+          : operand_(operand)
           {};
-          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline SeqWalkType init(void) const { return SeqWalkType(operand().init()); };
           inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
       };
 
-      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
-       struct TanhFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> {
+      template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>
+       struct TanhFcn<SeqWalk<ValidGhost, Shift>, Operand, FieldType> {
 
          public:
-          TanhFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef EvalReturnType;
-          TanhFcn(SourceType const & source)
-          : operand_(source.operand())
+          TanhFcn(Operand const & operand)
+          : operand_(operand)
           {};
           inline void next(void) { operand_.next(); };
           inline bool at_end(void) const { return (operand_.at_end()); };
@@ -1971,31 +1972,35 @@
        struct AbsFcn<Initial, Operand, FieldType> {
 
          public:
-          AbsFcn<Initial, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          template<typename IteratorType>
+          template<typename ValidGhost, typename Shift>
            struct Iterator {
 
-             AbsFcn<ResizePrep<IteratorType, This>,
-                    typename Operand::template Iterator<IteratorType>::ResizePrepType,
+             AbsFcn<ResizePrep<ValidGhost, Shift>,
+                    typename Operand::template Iterator<ValidGhost, Shift>::ResizePrepType,
                     FieldType> typedef ResizePrepType;
 
-             AbsFcn<SeqWalk<IteratorType, This>,
-                    typename Operand::template Iterator<IteratorType>::SeqWalkType,
+             AbsFcn<SeqWalk<ValidGhost, Shift>,
+                    typename Operand::template Iterator<ValidGhost, Shift>::SeqWalkType,
                     FieldType> typedef SeqWalkType;
           };
-          typename Operand::VG typedef VG;
-          AbsFcn(Operand const & op)
-          : operand_(op)
+          typename Operand::PossibleValidGhost typedef PossibleValidGhost;
+          AbsFcn(Operand const & operand)
+          : operand_(operand)
           {};
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
-              return typename Iterator<IteratorType>::SeqWalkType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::SeqWalkType(operand().template init<ValidGhost,
+                                                                                               Shift>());
            };
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
-              return typename Iterator<IteratorType>::ResizePrepType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::ResizePrepType(operand().template
+                                                                                    resize_prep<ValidGhost,
+                                                                                                Shift>());
            };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -2003,20 +2008,19 @@
           Operand const operand_;
       };
 
-      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
-       struct AbsFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> {
+      template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>
+       struct AbsFcn<ResizePrep<ValidGhost, Shift>, Operand, FieldType> {
 
          public:
-          AbsFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          AbsFcn<Resize<IteratorType, This>, typename Operand::ResizeType, FieldType> typedef
+          AbsFcn<Resize<ValidGhost, Shift>, typename Operand::ResizeType, FieldType> typedef
           ResizeType;
-          AbsFcn(SourceType const & source)
-          : operand_(source.operand())
+          AbsFcn(Operand const & operand)
+          : operand_(operand)
           {};
-          inline ResizeType resize(MemoryWindow const & newSize) const {
-             return ResizeType(newSize, *this);
+          inline ResizeType resize(MemoryWindow const & size) const {
+             return ResizeType(operand().resize(size));
           };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -2024,35 +2028,33 @@
           Operand const operand_;
       };
 
-      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
-       struct AbsFcn<Resize<IteratorType, SourceType>, Operand, FieldType> {
+      template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>
+       struct AbsFcn<Resize<ValidGhost, Shift>, Operand, FieldType> {
 
          public:
-          AbsFcn<Resize<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          AbsFcn<SeqWalk<IteratorType, This>, typename Operand::SeqWalkType, FieldType> typedef
+          AbsFcn<SeqWalk<ValidGhost, Shift>, typename Operand::SeqWalkType, FieldType> typedef
           SeqWalkType;
-          AbsFcn(MemoryWindow const & size, SourceType const & source)
-          : operand_(size, source.operand())
+          AbsFcn(Operand const & operand)
+          : operand_(operand)
           {};
-          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline SeqWalkType init(void) const { return SeqWalkType(operand().init()); };
           inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
       };
 
-      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
-       struct AbsFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> {
+      template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>
+       struct AbsFcn<SeqWalk<ValidGhost, Shift>, Operand, FieldType> {
 
          public:
-          AbsFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef EvalReturnType;
-          AbsFcn(SourceType const & source)
-          : operand_(source.operand())
+          AbsFcn(Operand const & operand)
+          : operand_(operand)
           {};
           inline void next(void) { operand_.next(); };
           inline bool at_end(void) const { return (operand_.at_end()); };
@@ -2089,31 +2091,35 @@
        struct NegFcn<Initial, Operand, FieldType> {
 
          public:
-          NegFcn<Initial, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          template<typename IteratorType>
+          template<typename ValidGhost, typename Shift>
            struct Iterator {
 
-             NegFcn<ResizePrep<IteratorType, This>,
-                    typename Operand::template Iterator<IteratorType>::ResizePrepType,
+             NegFcn<ResizePrep<ValidGhost, Shift>,
+                    typename Operand::template Iterator<ValidGhost, Shift>::ResizePrepType,
                     FieldType> typedef ResizePrepType;
 
-             NegFcn<SeqWalk<IteratorType, This>,
-                    typename Operand::template Iterator<IteratorType>::SeqWalkType,
+             NegFcn<SeqWalk<ValidGhost, Shift>,
+                    typename Operand::template Iterator<ValidGhost, Shift>::SeqWalkType,
                     FieldType> typedef SeqWalkType;
           };
-          typename Operand::VG typedef VG;
-          NegFcn(Operand const & op)
-          : operand_(op)
+          typename Operand::PossibleValidGhost typedef PossibleValidGhost;
+          NegFcn(Operand const & operand)
+          : operand_(operand)
           {};
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
-              return typename Iterator<IteratorType>::SeqWalkType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::SeqWalkType(operand().template init<ValidGhost,
+                                                                                               Shift>());
            };
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
-              return typename Iterator<IteratorType>::ResizePrepType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::ResizePrepType(operand().template
+                                                                                    resize_prep<ValidGhost,
+                                                                                                Shift>());
            };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -2121,20 +2127,19 @@
           Operand const operand_;
       };
 
-      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
-       struct NegFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> {
+      template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>
+       struct NegFcn<ResizePrep<ValidGhost, Shift>, Operand, FieldType> {
 
          public:
-          NegFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          NegFcn<Resize<IteratorType, This>, typename Operand::ResizeType, FieldType> typedef
+          NegFcn<Resize<ValidGhost, Shift>, typename Operand::ResizeType, FieldType> typedef
           ResizeType;
-          NegFcn(SourceType const & source)
-          : operand_(source.operand())
+          NegFcn(Operand const & operand)
+          : operand_(operand)
           {};
-          inline ResizeType resize(MemoryWindow const & newSize) const {
-             return ResizeType(newSize, *this);
+          inline ResizeType resize(MemoryWindow const & size) const {
+             return ResizeType(operand().resize(size));
           };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -2142,35 +2147,33 @@
           Operand const operand_;
       };
 
-      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
-       struct NegFcn<Resize<IteratorType, SourceType>, Operand, FieldType> {
+      template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>
+       struct NegFcn<Resize<ValidGhost, Shift>, Operand, FieldType> {
 
          public:
-          NegFcn<Resize<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          NegFcn<SeqWalk<IteratorType, This>, typename Operand::SeqWalkType, FieldType> typedef
+          NegFcn<SeqWalk<ValidGhost, Shift>, typename Operand::SeqWalkType, FieldType> typedef
           SeqWalkType;
-          NegFcn(MemoryWindow const & size, SourceType const & source)
-          : operand_(size, source.operand())
+          NegFcn(Operand const & operand)
+          : operand_(operand)
           {};
-          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline SeqWalkType init(void) const { return SeqWalkType(operand().init()); };
           inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
       };
 
-      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
-       struct NegFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> {
+      template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>
+       struct NegFcn<SeqWalk<ValidGhost, Shift>, Operand, FieldType> {
 
          public:
-          NegFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef EvalReturnType;
-          NegFcn(SourceType const & source)
-          : operand_(source.operand())
+          NegFcn(Operand const & operand)
+          : operand_(operand)
           {};
           inline void next(void) { operand_.next(); };
           inline bool at_end(void) const { return (operand_.at_end()); };
@@ -2207,34 +2210,44 @@
        struct PowFcn<Initial, Operand1, Operand2, FieldType> {
 
          public:
-          PowFcn<Initial, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          template<typename IteratorType>
+          template<typename ValidGhost, typename Shift>
            struct Iterator {
 
-             PowFcn<ResizePrep<IteratorType, This>,
-                    typename Operand1::template Iterator<IteratorType>::ResizePrepType,
-                    typename Operand2::template Iterator<IteratorType>::ResizePrepType,
+             PowFcn<ResizePrep<ValidGhost, Shift>,
+                    typename Operand1::template Iterator<ValidGhost, Shift>::ResizePrepType,
+                    typename Operand2::template Iterator<ValidGhost, Shift>::ResizePrepType,
                     FieldType> typedef ResizePrepType;
 
-             PowFcn<SeqWalk<IteratorType, This>,
-                    typename Operand1::template Iterator<IteratorType>::SeqWalkType,
-                    typename Operand2::template Iterator<IteratorType>::SeqWalkType,
+             PowFcn<SeqWalk<ValidGhost, Shift>,
+                    typename Operand1::template Iterator<ValidGhost, Shift>::SeqWalkType,
+                    typename Operand2::template Iterator<ValidGhost, Shift>::SeqWalkType,
                     FieldType> typedef SeqWalkType;
           };
-          typename structured::Minimum<typename Operand1::VG, typename Operand2::VG>::result typedef
-          VG;
-          PowFcn(Operand1 const & op1, Operand2 const & op2)
-          : operand1_(op1), operand2_(op2)
+          typename structured::Minimum<typename Operand1::PossibleValidGhost,
+                                       typename Operand2::PossibleValidGhost>::result typedef
+          PossibleValidGhost;
+          PowFcn(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
-              return typename Iterator<IteratorType>::SeqWalkType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::SeqWalkType(operand1().template init<ValidGhost,
+                                                                                                Shift>(),
+                                                                       operand2().template init<ValidGhost,
+                                                                                                Shift>());
            };
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
-              return typename Iterator<IteratorType>::ResizePrepType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::ResizePrepType(operand1().template
+                                                                                     resize_prep<ValidGhost,
+                                                                                                 Shift>(),
+                                                                          operand2().template
+                                                                                     resize_prep<ValidGhost,
+                                                                                                 Shift>());
            };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -2244,26 +2257,25 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct PowFcn<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct PowFcn<ResizePrep<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          PowFcn<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          PowFcn<Resize<IteratorType, This>,
+          PowFcn<Resize<ValidGhost, Shift>,
                  typename Operand1::ResizeType,
                  typename Operand2::ResizeType,
                  FieldType> typedef ResizeType;
-          PowFcn(SourceType const & source)
-          : operand1_(source.operand1()), operand2_(source.operand2())
+          PowFcn(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & newSize) const {
-             return ResizeType(newSize, *this);
+          inline ResizeType resize(MemoryWindow const & size) const {
+             return ResizeType(operand1().resize(size), operand2().resize(size));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -2273,25 +2285,26 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct PowFcn<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct PowFcn<Resize<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          PowFcn<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          PowFcn<SeqWalk<IteratorType, This>,
+          PowFcn<SeqWalk<ValidGhost, Shift>,
                  typename Operand1::SeqWalkType,
                  typename Operand2::SeqWalkType,
                  FieldType> typedef SeqWalkType;
-          PowFcn(MemoryWindow const & size, SourceType const & source)
-          : operand1_(size, source.operand1()), operand2_(size, source.operand2())
+          PowFcn(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline SeqWalkType init(void) const {
+             return SeqWalkType(operand1().init(), operand2().init());
+          };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
 
@@ -2300,20 +2313,19 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct PowFcn<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct PowFcn<SeqWalk<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          PowFcn<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef EvalReturnType;
-          PowFcn(SourceType const & source)
-          : operand1_(source.operand1()), operand2_(source.operand2())
+          PowFcn(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
           inline void next(void) { operand1_.next(); operand2_.next(); };
           inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
@@ -2411,31 +2423,35 @@
        struct SqrtFcn<Initial, Operand, FieldType> {
 
          public:
-          SqrtFcn<Initial, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          template<typename IteratorType>
+          template<typename ValidGhost, typename Shift>
            struct Iterator {
 
-             SqrtFcn<ResizePrep<IteratorType, This>,
-                     typename Operand::template Iterator<IteratorType>::ResizePrepType,
+             SqrtFcn<ResizePrep<ValidGhost, Shift>,
+                     typename Operand::template Iterator<ValidGhost, Shift>::ResizePrepType,
                      FieldType> typedef ResizePrepType;
 
-             SqrtFcn<SeqWalk<IteratorType, This>,
-                     typename Operand::template Iterator<IteratorType>::SeqWalkType,
+             SqrtFcn<SeqWalk<ValidGhost, Shift>,
+                     typename Operand::template Iterator<ValidGhost, Shift>::SeqWalkType,
                      FieldType> typedef SeqWalkType;
           };
-          typename Operand::VG typedef VG;
-          SqrtFcn(Operand const & op)
-          : operand_(op)
+          typename Operand::PossibleValidGhost typedef PossibleValidGhost;
+          SqrtFcn(Operand const & operand)
+          : operand_(operand)
           {};
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
-              return typename Iterator<IteratorType>::SeqWalkType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::SeqWalkType(operand().template init<ValidGhost,
+                                                                                               Shift>());
            };
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
-              return typename Iterator<IteratorType>::ResizePrepType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::ResizePrepType(operand().template
+                                                                                    resize_prep<ValidGhost,
+                                                                                                Shift>());
            };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -2443,20 +2459,19 @@
           Operand const operand_;
       };
 
-      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
-       struct SqrtFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> {
+      template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>
+       struct SqrtFcn<ResizePrep<ValidGhost, Shift>, Operand, FieldType> {
 
          public:
-          SqrtFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          SqrtFcn<Resize<IteratorType, This>, typename Operand::ResizeType, FieldType> typedef
+          SqrtFcn<Resize<ValidGhost, Shift>, typename Operand::ResizeType, FieldType> typedef
           ResizeType;
-          SqrtFcn(SourceType const & source)
-          : operand_(source.operand())
+          SqrtFcn(Operand const & operand)
+          : operand_(operand)
           {};
-          inline ResizeType resize(MemoryWindow const & newSize) const {
-             return ResizeType(newSize, *this);
+          inline ResizeType resize(MemoryWindow const & size) const {
+             return ResizeType(operand().resize(size));
           };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -2464,35 +2479,33 @@
           Operand const operand_;
       };
 
-      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
-       struct SqrtFcn<Resize<IteratorType, SourceType>, Operand, FieldType> {
+      template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>
+       struct SqrtFcn<Resize<ValidGhost, Shift>, Operand, FieldType> {
 
          public:
-          SqrtFcn<Resize<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          SqrtFcn<SeqWalk<IteratorType, This>, typename Operand::SeqWalkType, FieldType> typedef
+          SqrtFcn<SeqWalk<ValidGhost, Shift>, typename Operand::SeqWalkType, FieldType> typedef
           SeqWalkType;
-          SqrtFcn(MemoryWindow const & size, SourceType const & source)
-          : operand_(size, source.operand())
+          SqrtFcn(Operand const & operand)
+          : operand_(operand)
           {};
-          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline SeqWalkType init(void) const { return SeqWalkType(operand().init()); };
           inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
       };
 
-      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
-       struct SqrtFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> {
+      template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>
+       struct SqrtFcn<SeqWalk<ValidGhost, Shift>, Operand, FieldType> {
 
          public:
-          SqrtFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef EvalReturnType;
-          SqrtFcn(SourceType const & source)
-          : operand_(source.operand())
+          SqrtFcn(Operand const & operand)
+          : operand_(operand)
           {};
           inline void next(void) { operand_.next(); };
           inline bool at_end(void) const { return (operand_.at_end()); };
@@ -2529,31 +2542,35 @@
        struct LogFcn<Initial, Operand, FieldType> {
 
          public:
-          LogFcn<Initial, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          template<typename IteratorType>
+          template<typename ValidGhost, typename Shift>
            struct Iterator {
 
-             LogFcn<ResizePrep<IteratorType, This>,
-                    typename Operand::template Iterator<IteratorType>::ResizePrepType,
+             LogFcn<ResizePrep<ValidGhost, Shift>,
+                    typename Operand::template Iterator<ValidGhost, Shift>::ResizePrepType,
                     FieldType> typedef ResizePrepType;
 
-             LogFcn<SeqWalk<IteratorType, This>,
-                    typename Operand::template Iterator<IteratorType>::SeqWalkType,
+             LogFcn<SeqWalk<ValidGhost, Shift>,
+                    typename Operand::template Iterator<ValidGhost, Shift>::SeqWalkType,
                     FieldType> typedef SeqWalkType;
           };
-          typename Operand::VG typedef VG;
-          LogFcn(Operand const & op)
-          : operand_(op)
+          typename Operand::PossibleValidGhost typedef PossibleValidGhost;
+          LogFcn(Operand const & operand)
+          : operand_(operand)
           {};
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
-              return typename Iterator<IteratorType>::SeqWalkType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::SeqWalkType(operand().template init<ValidGhost,
+                                                                                               Shift>());
            };
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
-              return typename Iterator<IteratorType>::ResizePrepType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::ResizePrepType(operand().template
+                                                                                    resize_prep<ValidGhost,
+                                                                                                Shift>());
            };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -2561,20 +2578,19 @@
           Operand const operand_;
       };
 
-      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
-       struct LogFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> {
+      template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>
+       struct LogFcn<ResizePrep<ValidGhost, Shift>, Operand, FieldType> {
 
          public:
-          LogFcn<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          LogFcn<Resize<IteratorType, This>, typename Operand::ResizeType, FieldType> typedef
+          LogFcn<Resize<ValidGhost, Shift>, typename Operand::ResizeType, FieldType> typedef
           ResizeType;
-          LogFcn(SourceType const & source)
-          : operand_(source.operand())
+          LogFcn(Operand const & operand)
+          : operand_(operand)
           {};
-          inline ResizeType resize(MemoryWindow const & newSize) const {
-             return ResizeType(newSize, *this);
+          inline ResizeType resize(MemoryWindow const & size) const {
+             return ResizeType(operand().resize(size));
           };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -2582,35 +2598,33 @@
           Operand const operand_;
       };
 
-      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
-       struct LogFcn<Resize<IteratorType, SourceType>, Operand, FieldType> {
+      template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>
+       struct LogFcn<Resize<ValidGhost, Shift>, Operand, FieldType> {
 
          public:
-          LogFcn<Resize<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          LogFcn<SeqWalk<IteratorType, This>, typename Operand::SeqWalkType, FieldType> typedef
+          LogFcn<SeqWalk<ValidGhost, Shift>, typename Operand::SeqWalkType, FieldType> typedef
           SeqWalkType;
-          LogFcn(MemoryWindow const & size, SourceType const & source)
-          : operand_(size, source.operand())
+          LogFcn(Operand const & operand)
+          : operand_(operand)
           {};
-          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline SeqWalkType init(void) const { return SeqWalkType(operand().init()); };
           inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
       };
 
-      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
-       struct LogFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> {
+      template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>
+       struct LogFcn<SeqWalk<ValidGhost, Shift>, Operand, FieldType> {
 
          public:
-          LogFcn<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef EvalReturnType;
-          LogFcn(SourceType const & source)
-          : operand_(source.operand())
+          LogFcn(Operand const & operand)
+          : operand_(operand)
           {};
           inline void next(void) { operand_.next(); };
           inline bool at_end(void) const { return (operand_.at_end()); };
@@ -2647,34 +2661,44 @@
        struct EqualCmp<Initial, Operand1, Operand2, FieldType> {
 
          public:
-          EqualCmp<Initial, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          template<typename IteratorType>
+          template<typename ValidGhost, typename Shift>
            struct Iterator {
 
-             EqualCmp<ResizePrep<IteratorType, This>,
-                      typename Operand1::template Iterator<IteratorType>::ResizePrepType,
-                      typename Operand2::template Iterator<IteratorType>::ResizePrepType,
+             EqualCmp<ResizePrep<ValidGhost, Shift>,
+                      typename Operand1::template Iterator<ValidGhost, Shift>::ResizePrepType,
+                      typename Operand2::template Iterator<ValidGhost, Shift>::ResizePrepType,
                       FieldType> typedef ResizePrepType;
 
-             EqualCmp<SeqWalk<IteratorType, This>,
-                      typename Operand1::template Iterator<IteratorType>::SeqWalkType,
-                      typename Operand2::template Iterator<IteratorType>::SeqWalkType,
+             EqualCmp<SeqWalk<ValidGhost, Shift>,
+                      typename Operand1::template Iterator<ValidGhost, Shift>::SeqWalkType,
+                      typename Operand2::template Iterator<ValidGhost, Shift>::SeqWalkType,
                       FieldType> typedef SeqWalkType;
           };
-          typename structured::Minimum<typename Operand1::VG, typename Operand2::VG>::result typedef
-          VG;
-          EqualCmp(Operand1 const & op1, Operand2 const & op2)
-          : operand1_(op1), operand2_(op2)
+          typename structured::Minimum<typename Operand1::PossibleValidGhost,
+                                       typename Operand2::PossibleValidGhost>::result typedef
+          PossibleValidGhost;
+          EqualCmp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
-              return typename Iterator<IteratorType>::SeqWalkType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::SeqWalkType(operand1().template init<ValidGhost,
+                                                                                                Shift>(),
+                                                                       operand2().template init<ValidGhost,
+                                                                                                Shift>());
            };
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
-              return typename Iterator<IteratorType>::ResizePrepType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::ResizePrepType(operand1().template
+                                                                                     resize_prep<ValidGhost,
+                                                                                                 Shift>(),
+                                                                          operand2().template
+                                                                                     resize_prep<ValidGhost,
+                                                                                                 Shift>());
            };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -2684,26 +2708,25 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct EqualCmp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct EqualCmp<ResizePrep<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          EqualCmp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          EqualCmp<Resize<IteratorType, This>,
+          EqualCmp<Resize<ValidGhost, Shift>,
                    typename Operand1::ResizeType,
                    typename Operand2::ResizeType,
                    FieldType> typedef ResizeType;
-          EqualCmp(SourceType const & source)
-          : operand1_(source.operand1()), operand2_(source.operand2())
+          EqualCmp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & newSize) const {
-             return ResizeType(newSize, *this);
+          inline ResizeType resize(MemoryWindow const & size) const {
+             return ResizeType(operand1().resize(size), operand2().resize(size));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -2713,25 +2736,26 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct EqualCmp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct EqualCmp<Resize<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          EqualCmp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          EqualCmp<SeqWalk<IteratorType, This>,
+          EqualCmp<SeqWalk<ValidGhost, Shift>,
                    typename Operand1::SeqWalkType,
                    typename Operand2::SeqWalkType,
                    FieldType> typedef SeqWalkType;
-          EqualCmp(MemoryWindow const & size, SourceType const & source)
-          : operand1_(size, source.operand1()), operand2_(size, source.operand2())
+          EqualCmp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline SeqWalkType init(void) const {
+             return SeqWalkType(operand1().init(), operand2().init());
+          };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
 
@@ -2740,20 +2764,19 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct EqualCmp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct EqualCmp<SeqWalk<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          EqualCmp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           bool typedef EvalReturnType;
-          EqualCmp(SourceType const & source)
-          : operand1_(source.operand1()), operand2_(source.operand2())
+          EqualCmp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
           inline void next(void) { operand1_.next(); operand2_.next(); };
           inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
@@ -2857,34 +2880,44 @@
        struct InequalCmp<Initial, Operand1, Operand2, FieldType> {
 
          public:
-          InequalCmp<Initial, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          template<typename IteratorType>
+          template<typename ValidGhost, typename Shift>
            struct Iterator {
 
-             InequalCmp<ResizePrep<IteratorType, This>,
-                        typename Operand1::template Iterator<IteratorType>::ResizePrepType,
-                        typename Operand2::template Iterator<IteratorType>::ResizePrepType,
+             InequalCmp<ResizePrep<ValidGhost, Shift>,
+                        typename Operand1::template Iterator<ValidGhost, Shift>::ResizePrepType,
+                        typename Operand2::template Iterator<ValidGhost, Shift>::ResizePrepType,
                         FieldType> typedef ResizePrepType;
 
-             InequalCmp<SeqWalk<IteratorType, This>,
-                        typename Operand1::template Iterator<IteratorType>::SeqWalkType,
-                        typename Operand2::template Iterator<IteratorType>::SeqWalkType,
+             InequalCmp<SeqWalk<ValidGhost, Shift>,
+                        typename Operand1::template Iterator<ValidGhost, Shift>::SeqWalkType,
+                        typename Operand2::template Iterator<ValidGhost, Shift>::SeqWalkType,
                         FieldType> typedef SeqWalkType;
           };
-          typename structured::Minimum<typename Operand1::VG, typename Operand2::VG>::result typedef
-          VG;
-          InequalCmp(Operand1 const & op1, Operand2 const & op2)
-          : operand1_(op1), operand2_(op2)
+          typename structured::Minimum<typename Operand1::PossibleValidGhost,
+                                       typename Operand2::PossibleValidGhost>::result typedef
+          PossibleValidGhost;
+          InequalCmp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
-              return typename Iterator<IteratorType>::SeqWalkType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::SeqWalkType(operand1().template init<ValidGhost,
+                                                                                                Shift>(),
+                                                                       operand2().template init<ValidGhost,
+                                                                                                Shift>());
            };
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
-              return typename Iterator<IteratorType>::ResizePrepType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::ResizePrepType(operand1().template
+                                                                                     resize_prep<ValidGhost,
+                                                                                                 Shift>(),
+                                                                          operand2().template
+                                                                                     resize_prep<ValidGhost,
+                                                                                                 Shift>());
            };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -2894,27 +2927,25 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct InequalCmp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct InequalCmp<ResizePrep<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          InequalCmp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef
-          This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          InequalCmp<Resize<IteratorType, This>,
+          InequalCmp<Resize<ValidGhost, Shift>,
                      typename Operand1::ResizeType,
                      typename Operand2::ResizeType,
                      FieldType> typedef ResizeType;
-          InequalCmp(SourceType const & source)
-          : operand1_(source.operand1()), operand2_(source.operand2())
+          InequalCmp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & newSize) const {
-             return ResizeType(newSize, *this);
+          inline ResizeType resize(MemoryWindow const & size) const {
+             return ResizeType(operand1().resize(size), operand2().resize(size));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -2924,25 +2955,26 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct InequalCmp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct InequalCmp<Resize<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          InequalCmp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          InequalCmp<SeqWalk<IteratorType, This>,
+          InequalCmp<SeqWalk<ValidGhost, Shift>,
                      typename Operand1::SeqWalkType,
                      typename Operand2::SeqWalkType,
                      FieldType> typedef SeqWalkType;
-          InequalCmp(MemoryWindow const & size, SourceType const & source)
-          : operand1_(size, source.operand1()), operand2_(size, source.operand2())
+          InequalCmp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline SeqWalkType init(void) const {
+             return SeqWalkType(operand1().init(), operand2().init());
+          };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
 
@@ -2951,20 +2983,19 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct InequalCmp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct InequalCmp<SeqWalk<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          InequalCmp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           bool typedef EvalReturnType;
-          InequalCmp(SourceType const & source)
-          : operand1_(source.operand1()), operand2_(source.operand2())
+          InequalCmp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
           inline void next(void) { operand1_.next(); operand2_.next(); };
           inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
@@ -3068,34 +3099,44 @@
        struct LessThanCmp<Initial, Operand1, Operand2, FieldType> {
 
          public:
-          LessThanCmp<Initial, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          template<typename IteratorType>
+          template<typename ValidGhost, typename Shift>
            struct Iterator {
 
-             LessThanCmp<ResizePrep<IteratorType, This>,
-                         typename Operand1::template Iterator<IteratorType>::ResizePrepType,
-                         typename Operand2::template Iterator<IteratorType>::ResizePrepType,
+             LessThanCmp<ResizePrep<ValidGhost, Shift>,
+                         typename Operand1::template Iterator<ValidGhost, Shift>::ResizePrepType,
+                         typename Operand2::template Iterator<ValidGhost, Shift>::ResizePrepType,
                          FieldType> typedef ResizePrepType;
 
-             LessThanCmp<SeqWalk<IteratorType, This>,
-                         typename Operand1::template Iterator<IteratorType>::SeqWalkType,
-                         typename Operand2::template Iterator<IteratorType>::SeqWalkType,
+             LessThanCmp<SeqWalk<ValidGhost, Shift>,
+                         typename Operand1::template Iterator<ValidGhost, Shift>::SeqWalkType,
+                         typename Operand2::template Iterator<ValidGhost, Shift>::SeqWalkType,
                          FieldType> typedef SeqWalkType;
           };
-          typename structured::Minimum<typename Operand1::VG, typename Operand2::VG>::result typedef
-          VG;
-          LessThanCmp(Operand1 const & op1, Operand2 const & op2)
-          : operand1_(op1), operand2_(op2)
+          typename structured::Minimum<typename Operand1::PossibleValidGhost,
+                                       typename Operand2::PossibleValidGhost>::result typedef
+          PossibleValidGhost;
+          LessThanCmp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
-              return typename Iterator<IteratorType>::SeqWalkType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::SeqWalkType(operand1().template init<ValidGhost,
+                                                                                                Shift>(),
+                                                                       operand2().template init<ValidGhost,
+                                                                                                Shift>());
            };
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
-              return typename Iterator<IteratorType>::ResizePrepType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::ResizePrepType(operand1().template
+                                                                                     resize_prep<ValidGhost,
+                                                                                                 Shift>(),
+                                                                          operand2().template
+                                                                                     resize_prep<ValidGhost,
+                                                                                                 Shift>());
            };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -3105,27 +3146,25 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct LessThanCmp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct LessThanCmp<ResizePrep<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          LessThanCmp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef
-          This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          LessThanCmp<Resize<IteratorType, This>,
+          LessThanCmp<Resize<ValidGhost, Shift>,
                       typename Operand1::ResizeType,
                       typename Operand2::ResizeType,
                       FieldType> typedef ResizeType;
-          LessThanCmp(SourceType const & source)
-          : operand1_(source.operand1()), operand2_(source.operand2())
+          LessThanCmp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & newSize) const {
-             return ResizeType(newSize, *this);
+          inline ResizeType resize(MemoryWindow const & size) const {
+             return ResizeType(operand1().resize(size), operand2().resize(size));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -3135,25 +3174,26 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct LessThanCmp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct LessThanCmp<Resize<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          LessThanCmp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          LessThanCmp<SeqWalk<IteratorType, This>,
+          LessThanCmp<SeqWalk<ValidGhost, Shift>,
                       typename Operand1::SeqWalkType,
                       typename Operand2::SeqWalkType,
                       FieldType> typedef SeqWalkType;
-          LessThanCmp(MemoryWindow const & size, SourceType const & source)
-          : operand1_(size, source.operand1()), operand2_(size, source.operand2())
+          LessThanCmp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline SeqWalkType init(void) const {
+             return SeqWalkType(operand1().init(), operand2().init());
+          };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
 
@@ -3162,20 +3202,19 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct LessThanCmp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct LessThanCmp<SeqWalk<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          LessThanCmp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           bool typedef EvalReturnType;
-          LessThanCmp(SourceType const & source)
-          : operand1_(source.operand1()), operand2_(source.operand2())
+          LessThanCmp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
           inline void next(void) { operand1_.next(); operand2_.next(); };
           inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
@@ -3277,34 +3316,46 @@
        struct LessThanEqualCmp<Initial, Operand1, Operand2, FieldType> {
 
          public:
-          LessThanEqualCmp<Initial, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          template<typename IteratorType>
+          template<typename ValidGhost, typename Shift>
            struct Iterator {
 
-             LessThanEqualCmp<ResizePrep<IteratorType, This>,
-                              typename Operand1::template Iterator<IteratorType>::ResizePrepType,
-                              typename Operand2::template Iterator<IteratorType>::ResizePrepType,
+             LessThanEqualCmp<ResizePrep<ValidGhost, Shift>,
+                              typename Operand1::template Iterator<ValidGhost, Shift>::
+                              ResizePrepType,
+                              typename Operand2::template Iterator<ValidGhost, Shift>::
+                              ResizePrepType,
                               FieldType> typedef ResizePrepType;
 
-             LessThanEqualCmp<SeqWalk<IteratorType, This>,
-                              typename Operand1::template Iterator<IteratorType>::SeqWalkType,
-                              typename Operand2::template Iterator<IteratorType>::SeqWalkType,
+             LessThanEqualCmp<SeqWalk<ValidGhost, Shift>,
+                              typename Operand1::template Iterator<ValidGhost, Shift>::SeqWalkType,
+                              typename Operand2::template Iterator<ValidGhost, Shift>::SeqWalkType,
                               FieldType> typedef SeqWalkType;
           };
-          typename structured::Minimum<typename Operand1::VG, typename Operand2::VG>::result typedef
-          VG;
-          LessThanEqualCmp(Operand1 const & op1, Operand2 const & op2)
-          : operand1_(op1), operand2_(op2)
+          typename structured::Minimum<typename Operand1::PossibleValidGhost,
+                                       typename Operand2::PossibleValidGhost>::result typedef
+          PossibleValidGhost;
+          LessThanEqualCmp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
-              return typename Iterator<IteratorType>::SeqWalkType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::SeqWalkType(operand1().template init<ValidGhost,
+                                                                                                Shift>(),
+                                                                       operand2().template init<ValidGhost,
+                                                                                                Shift>());
            };
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
-              return typename Iterator<IteratorType>::ResizePrepType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::ResizePrepType(operand1().template
+                                                                                     resize_prep<ValidGhost,
+                                                                                                 Shift>(),
+                                                                          operand2().template
+                                                                                     resize_prep<ValidGhost,
+                                                                                                 Shift>());
            };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -3314,27 +3365,25 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct LessThanEqualCmp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct LessThanEqualCmp<ResizePrep<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          LessThanEqualCmp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType>
-          typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          LessThanEqualCmp<Resize<IteratorType, This>,
+          LessThanEqualCmp<Resize<ValidGhost, Shift>,
                            typename Operand1::ResizeType,
                            typename Operand2::ResizeType,
                            FieldType> typedef ResizeType;
-          LessThanEqualCmp(SourceType const & source)
-          : operand1_(source.operand1()), operand2_(source.operand2())
+          LessThanEqualCmp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & newSize) const {
-             return ResizeType(newSize, *this);
+          inline ResizeType resize(MemoryWindow const & size) const {
+             return ResizeType(operand1().resize(size), operand2().resize(size));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -3344,26 +3393,26 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct LessThanEqualCmp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct LessThanEqualCmp<Resize<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          LessThanEqualCmp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef
-          This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          LessThanEqualCmp<SeqWalk<IteratorType, This>,
+          LessThanEqualCmp<SeqWalk<ValidGhost, Shift>,
                            typename Operand1::SeqWalkType,
                            typename Operand2::SeqWalkType,
                            FieldType> typedef SeqWalkType;
-          LessThanEqualCmp(MemoryWindow const & size, SourceType const & source)
-          : operand1_(size, source.operand1()), operand2_(size, source.operand2())
+          LessThanEqualCmp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline SeqWalkType init(void) const {
+             return SeqWalkType(operand1().init(), operand2().init());
+          };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
 
@@ -3372,21 +3421,19 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct LessThanEqualCmp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct LessThanEqualCmp<SeqWalk<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          LessThanEqualCmp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef
-          This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           bool typedef EvalReturnType;
-          LessThanEqualCmp(SourceType const & source)
-          : operand1_(source.operand1()), operand2_(source.operand2())
+          LessThanEqualCmp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
           inline void next(void) { operand1_.next(); operand2_.next(); };
           inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
@@ -3492,34 +3539,44 @@
        struct GreaterThanCmp<Initial, Operand1, Operand2, FieldType> {
 
          public:
-          GreaterThanCmp<Initial, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          template<typename IteratorType>
+          template<typename ValidGhost, typename Shift>
            struct Iterator {
 
-             GreaterThanCmp<ResizePrep<IteratorType, This>,
-                            typename Operand1::template Iterator<IteratorType>::ResizePrepType,
-                            typename Operand2::template Iterator<IteratorType>::ResizePrepType,
+             GreaterThanCmp<ResizePrep<ValidGhost, Shift>,
+                            typename Operand1::template Iterator<ValidGhost, Shift>::ResizePrepType,
+                            typename Operand2::template Iterator<ValidGhost, Shift>::ResizePrepType,
                             FieldType> typedef ResizePrepType;
 
-             GreaterThanCmp<SeqWalk<IteratorType, This>,
-                            typename Operand1::template Iterator<IteratorType>::SeqWalkType,
-                            typename Operand2::template Iterator<IteratorType>::SeqWalkType,
+             GreaterThanCmp<SeqWalk<ValidGhost, Shift>,
+                            typename Operand1::template Iterator<ValidGhost, Shift>::SeqWalkType,
+                            typename Operand2::template Iterator<ValidGhost, Shift>::SeqWalkType,
                             FieldType> typedef SeqWalkType;
           };
-          typename structured::Minimum<typename Operand1::VG, typename Operand2::VG>::result typedef
-          VG;
-          GreaterThanCmp(Operand1 const & op1, Operand2 const & op2)
-          : operand1_(op1), operand2_(op2)
+          typename structured::Minimum<typename Operand1::PossibleValidGhost,
+                                       typename Operand2::PossibleValidGhost>::result typedef
+          PossibleValidGhost;
+          GreaterThanCmp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
-              return typename Iterator<IteratorType>::SeqWalkType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::SeqWalkType(operand1().template init<ValidGhost,
+                                                                                                Shift>(),
+                                                                       operand2().template init<ValidGhost,
+                                                                                                Shift>());
            };
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
-              return typename Iterator<IteratorType>::ResizePrepType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::ResizePrepType(operand1().template
+                                                                                     resize_prep<ValidGhost,
+                                                                                                 Shift>(),
+                                                                          operand2().template
+                                                                                     resize_prep<ValidGhost,
+                                                                                                 Shift>());
            };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -3529,27 +3586,25 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct GreaterThanCmp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct GreaterThanCmp<ResizePrep<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          GreaterThanCmp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType>
-          typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          GreaterThanCmp<Resize<IteratorType, This>,
+          GreaterThanCmp<Resize<ValidGhost, Shift>,
                          typename Operand1::ResizeType,
                          typename Operand2::ResizeType,
                          FieldType> typedef ResizeType;
-          GreaterThanCmp(SourceType const & source)
-          : operand1_(source.operand1()), operand2_(source.operand2())
+          GreaterThanCmp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & newSize) const {
-             return ResizeType(newSize, *this);
+          inline ResizeType resize(MemoryWindow const & size) const {
+             return ResizeType(operand1().resize(size), operand2().resize(size));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -3559,26 +3614,26 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct GreaterThanCmp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct GreaterThanCmp<Resize<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          GreaterThanCmp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef
-          This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          GreaterThanCmp<SeqWalk<IteratorType, This>,
+          GreaterThanCmp<SeqWalk<ValidGhost, Shift>,
                          typename Operand1::SeqWalkType,
                          typename Operand2::SeqWalkType,
                          FieldType> typedef SeqWalkType;
-          GreaterThanCmp(MemoryWindow const & size, SourceType const & source)
-          : operand1_(size, source.operand1()), operand2_(size, source.operand2())
+          GreaterThanCmp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline SeqWalkType init(void) const {
+             return SeqWalkType(operand1().init(), operand2().init());
+          };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
 
@@ -3587,21 +3642,19 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct GreaterThanCmp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct GreaterThanCmp<SeqWalk<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          GreaterThanCmp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef
-          This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           bool typedef EvalReturnType;
-          GreaterThanCmp(SourceType const & source)
-          : operand1_(source.operand1()), operand2_(source.operand2())
+          GreaterThanCmp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
           inline void next(void) { operand1_.next(); operand2_.next(); };
           inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
@@ -3703,34 +3756,48 @@
        struct GreaterThanEqualCmp<Initial, Operand1, Operand2, FieldType> {
 
          public:
-          GreaterThanEqualCmp<Initial, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          template<typename IteratorType>
+          template<typename ValidGhost, typename Shift>
            struct Iterator {
 
-             GreaterThanEqualCmp<ResizePrep<IteratorType, This>,
-                                 typename Operand1::template Iterator<IteratorType>::ResizePrepType,
-                                 typename Operand2::template Iterator<IteratorType>::ResizePrepType,
+             GreaterThanEqualCmp<ResizePrep<ValidGhost, Shift>,
+                                 typename Operand1::template Iterator<ValidGhost, Shift>::
+                                 ResizePrepType,
+                                 typename Operand2::template Iterator<ValidGhost, Shift>::
+                                 ResizePrepType,
                                  FieldType> typedef ResizePrepType;
 
-             GreaterThanEqualCmp<SeqWalk<IteratorType, This>,
-                                 typename Operand1::template Iterator<IteratorType>::SeqWalkType,
-                                 typename Operand2::template Iterator<IteratorType>::SeqWalkType,
+             GreaterThanEqualCmp<SeqWalk<ValidGhost, Shift>,
+                                 typename Operand1::template Iterator<ValidGhost, Shift>::
+                                 SeqWalkType,
+                                 typename Operand2::template Iterator<ValidGhost, Shift>::
+                                 SeqWalkType,
                                  FieldType> typedef SeqWalkType;
           };
-          typename structured::Minimum<typename Operand1::VG, typename Operand2::VG>::result typedef
-          VG;
-          GreaterThanEqualCmp(Operand1 const & op1, Operand2 const & op2)
-          : operand1_(op1), operand2_(op2)
+          typename structured::Minimum<typename Operand1::PossibleValidGhost,
+                                       typename Operand2::PossibleValidGhost>::result typedef
+          PossibleValidGhost;
+          GreaterThanEqualCmp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
-              return typename Iterator<IteratorType>::SeqWalkType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::SeqWalkType(operand1().template init<ValidGhost,
+                                                                                                Shift>(),
+                                                                       operand2().template init<ValidGhost,
+                                                                                                Shift>());
            };
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
-              return typename Iterator<IteratorType>::ResizePrepType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::ResizePrepType(operand1().template
+                                                                                     resize_prep<ValidGhost,
+                                                                                                 Shift>(),
+                                                                          operand2().template
+                                                                                     resize_prep<ValidGhost,
+                                                                                                 Shift>());
            };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -3740,30 +3807,25 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct GreaterThanEqualCmp<ResizePrep<IteratorType, SourceType>,
-                                  Operand1,
-                                  Operand2,
-                                  FieldType> {
+       struct GreaterThanEqualCmp<ResizePrep<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          GreaterThanEqualCmp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType>
-          typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          GreaterThanEqualCmp<Resize<IteratorType, This>,
+          GreaterThanEqualCmp<Resize<ValidGhost, Shift>,
                               typename Operand1::ResizeType,
                               typename Operand2::ResizeType,
                               FieldType> typedef ResizeType;
-          GreaterThanEqualCmp(SourceType const & source)
-          : operand1_(source.operand1()), operand2_(source.operand2())
+          GreaterThanEqualCmp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & newSize) const {
-             return ResizeType(newSize, *this);
+          inline ResizeType resize(MemoryWindow const & size) const {
+             return ResizeType(operand1().resize(size), operand2().resize(size));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -3773,26 +3835,26 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct GreaterThanEqualCmp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct GreaterThanEqualCmp<Resize<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          GreaterThanEqualCmp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType>
-          typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          GreaterThanEqualCmp<SeqWalk<IteratorType, This>,
+          GreaterThanEqualCmp<SeqWalk<ValidGhost, Shift>,
                               typename Operand1::SeqWalkType,
                               typename Operand2::SeqWalkType,
                               FieldType> typedef SeqWalkType;
-          GreaterThanEqualCmp(MemoryWindow const & size, SourceType const & source)
-          : operand1_(size, source.operand1()), operand2_(size, source.operand2())
+          GreaterThanEqualCmp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline SeqWalkType init(void) const {
+             return SeqWalkType(operand1().init(), operand2().init());
+          };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
 
@@ -3801,21 +3863,19 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct GreaterThanEqualCmp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct GreaterThanEqualCmp<SeqWalk<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          GreaterThanEqualCmp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType>
-          typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           bool typedef EvalReturnType;
-          GreaterThanEqualCmp(SourceType const & source)
-          : operand1_(source.operand1()), operand2_(source.operand2())
+          GreaterThanEqualCmp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
           inline void next(void) { operand1_.next(); operand2_.next(); };
           inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
@@ -3925,34 +3985,44 @@
        struct AndOp<Initial, Operand1, Operand2, FieldType> {
 
          public:
-          AndOp<Initial, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          template<typename IteratorType>
+          template<typename ValidGhost, typename Shift>
            struct Iterator {
 
-             AndOp<ResizePrep<IteratorType, This>,
-                   typename Operand1::template Iterator<IteratorType>::ResizePrepType,
-                   typename Operand2::template Iterator<IteratorType>::ResizePrepType,
+             AndOp<ResizePrep<ValidGhost, Shift>,
+                   typename Operand1::template Iterator<ValidGhost, Shift>::ResizePrepType,
+                   typename Operand2::template Iterator<ValidGhost, Shift>::ResizePrepType,
                    FieldType> typedef ResizePrepType;
 
-             AndOp<SeqWalk<IteratorType, This>,
-                   typename Operand1::template Iterator<IteratorType>::SeqWalkType,
-                   typename Operand2::template Iterator<IteratorType>::SeqWalkType,
+             AndOp<SeqWalk<ValidGhost, Shift>,
+                   typename Operand1::template Iterator<ValidGhost, Shift>::SeqWalkType,
+                   typename Operand2::template Iterator<ValidGhost, Shift>::SeqWalkType,
                    FieldType> typedef SeqWalkType;
           };
-          typename structured::Minimum<typename Operand1::VG, typename Operand2::VG>::result typedef
-          VG;
-          AndOp(Operand1 const & op1, Operand2 const & op2)
-          : operand1_(op1), operand2_(op2)
+          typename structured::Minimum<typename Operand1::PossibleValidGhost,
+                                       typename Operand2::PossibleValidGhost>::result typedef
+          PossibleValidGhost;
+          AndOp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
-              return typename Iterator<IteratorType>::SeqWalkType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::SeqWalkType(operand1().template init<ValidGhost,
+                                                                                                Shift>(),
+                                                                       operand2().template init<ValidGhost,
+                                                                                                Shift>());
            };
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
-              return typename Iterator<IteratorType>::ResizePrepType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::ResizePrepType(operand1().template
+                                                                                     resize_prep<ValidGhost,
+                                                                                                 Shift>(),
+                                                                          operand2().template
+                                                                                     resize_prep<ValidGhost,
+                                                                                                 Shift>());
            };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -3962,26 +4032,25 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct AndOp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct AndOp<ResizePrep<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          AndOp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          AndOp<Resize<IteratorType, This>,
+          AndOp<Resize<ValidGhost, Shift>,
                 typename Operand1::ResizeType,
                 typename Operand2::ResizeType,
                 FieldType> typedef ResizeType;
-          AndOp(SourceType const & source)
-          : operand1_(source.operand1()), operand2_(source.operand2())
+          AndOp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & newSize) const {
-             return ResizeType(newSize, *this);
+          inline ResizeType resize(MemoryWindow const & size) const {
+             return ResizeType(operand1().resize(size), operand2().resize(size));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -3991,25 +4060,26 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct AndOp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct AndOp<Resize<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          AndOp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          AndOp<SeqWalk<IteratorType, This>,
+          AndOp<SeqWalk<ValidGhost, Shift>,
                 typename Operand1::SeqWalkType,
                 typename Operand2::SeqWalkType,
                 FieldType> typedef SeqWalkType;
-          AndOp(MemoryWindow const & size, SourceType const & source)
-          : operand1_(size, source.operand1()), operand2_(size, source.operand2())
+          AndOp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline SeqWalkType init(void) const {
+             return SeqWalkType(operand1().init(), operand2().init());
+          };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
 
@@ -4018,20 +4088,19 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct AndOp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct AndOp<SeqWalk<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          AndOp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef EvalReturnType;
-          AndOp(SourceType const & source)
-          : operand1_(source.operand1()), operand2_(source.operand2())
+          AndOp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
           inline void next(void) { operand1_.next(); operand2_.next(); };
           inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
@@ -4122,34 +4191,44 @@
        struct OrOp<Initial, Operand1, Operand2, FieldType> {
 
          public:
-          OrOp<Initial, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          template<typename IteratorType>
+          template<typename ValidGhost, typename Shift>
            struct Iterator {
 
-             OrOp<ResizePrep<IteratorType, This>,
-                  typename Operand1::template Iterator<IteratorType>::ResizePrepType,
-                  typename Operand2::template Iterator<IteratorType>::ResizePrepType,
+             OrOp<ResizePrep<ValidGhost, Shift>,
+                  typename Operand1::template Iterator<ValidGhost, Shift>::ResizePrepType,
+                  typename Operand2::template Iterator<ValidGhost, Shift>::ResizePrepType,
                   FieldType> typedef ResizePrepType;
 
-             OrOp<SeqWalk<IteratorType, This>,
-                  typename Operand1::template Iterator<IteratorType>::SeqWalkType,
-                  typename Operand2::template Iterator<IteratorType>::SeqWalkType,
+             OrOp<SeqWalk<ValidGhost, Shift>,
+                  typename Operand1::template Iterator<ValidGhost, Shift>::SeqWalkType,
+                  typename Operand2::template Iterator<ValidGhost, Shift>::SeqWalkType,
                   FieldType> typedef SeqWalkType;
           };
-          typename structured::Minimum<typename Operand1::VG, typename Operand2::VG>::result typedef
-          VG;
-          OrOp(Operand1 const & op1, Operand2 const & op2)
-          : operand1_(op1), operand2_(op2)
+          typename structured::Minimum<typename Operand1::PossibleValidGhost,
+                                       typename Operand2::PossibleValidGhost>::result typedef
+          PossibleValidGhost;
+          OrOp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
-              return typename Iterator<IteratorType>::SeqWalkType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::SeqWalkType(operand1().template init<ValidGhost,
+                                                                                                Shift>(),
+                                                                       operand2().template init<ValidGhost,
+                                                                                                Shift>());
            };
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
-              return typename Iterator<IteratorType>::ResizePrepType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::ResizePrepType(operand1().template
+                                                                                     resize_prep<ValidGhost,
+                                                                                                 Shift>(),
+                                                                          operand2().template
+                                                                                     resize_prep<ValidGhost,
+                                                                                                 Shift>());
            };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -4159,26 +4238,25 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct OrOp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct OrOp<ResizePrep<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          OrOp<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          OrOp<Resize<IteratorType, This>,
+          OrOp<Resize<ValidGhost, Shift>,
                typename Operand1::ResizeType,
                typename Operand2::ResizeType,
                FieldType> typedef ResizeType;
-          OrOp(SourceType const & source)
-          : operand1_(source.operand1()), operand2_(source.operand2())
+          OrOp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & newSize) const {
-             return ResizeType(newSize, *this);
+          inline ResizeType resize(MemoryWindow const & size) const {
+             return ResizeType(operand1().resize(size), operand2().resize(size));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -4188,25 +4266,26 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct OrOp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct OrOp<Resize<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          OrOp<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          OrOp<SeqWalk<IteratorType, This>,
+          OrOp<SeqWalk<ValidGhost, Shift>,
                typename Operand1::SeqWalkType,
                typename Operand2::SeqWalkType,
                FieldType> typedef SeqWalkType;
-          OrOp(MemoryWindow const & size, SourceType const & source)
-          : operand1_(size, source.operand1()), operand2_(size, source.operand2())
+          OrOp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
-          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline SeqWalkType init(void) const {
+             return SeqWalkType(operand1().init(), operand2().init());
+          };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
 
@@ -4215,20 +4294,19 @@
           Operand2 const operand2_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename Operand1,
                typename Operand2,
                typename FieldType>
-       struct OrOp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> {
+       struct OrOp<SeqWalk<ValidGhost, Shift>, Operand1, Operand2, FieldType> {
 
          public:
-          OrOp<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef EvalReturnType;
-          OrOp(SourceType const & source)
-          : operand1_(source.operand1()), operand2_(source.operand2())
+          OrOp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
           {};
           inline void next(void) { operand1_.next(); operand2_.next(); };
           inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
@@ -4319,31 +4397,35 @@
        struct NotOp<Initial, Operand, FieldType> {
 
          public:
-          NotOp<Initial, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          template<typename IteratorType>
+          template<typename ValidGhost, typename Shift>
            struct Iterator {
 
-             NotOp<ResizePrep<IteratorType, This>,
-                   typename Operand::template Iterator<IteratorType>::ResizePrepType,
+             NotOp<ResizePrep<ValidGhost, Shift>,
+                   typename Operand::template Iterator<ValidGhost, Shift>::ResizePrepType,
                    FieldType> typedef ResizePrepType;
 
-             NotOp<SeqWalk<IteratorType, This>,
-                   typename Operand::template Iterator<IteratorType>::SeqWalkType,
+             NotOp<SeqWalk<ValidGhost, Shift>,
+                   typename Operand::template Iterator<ValidGhost, Shift>::SeqWalkType,
                    FieldType> typedef SeqWalkType;
           };
-          typename Operand::VG typedef VG;
-          NotOp(Operand const & op)
-          : operand_(op)
+          typename Operand::PossibleValidGhost typedef PossibleValidGhost;
+          NotOp(Operand const & operand)
+          : operand_(operand)
           {};
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
-              return typename Iterator<IteratorType>::SeqWalkType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::SeqWalkType(operand().template init<ValidGhost,
+                                                                                               Shift>());
            };
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
-              return typename Iterator<IteratorType>::ResizePrepType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::ResizePrepType(operand().template
+                                                                                    resize_prep<ValidGhost,
+                                                                                                Shift>());
            };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -4351,20 +4433,19 @@
           Operand const operand_;
       };
 
-      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
-       struct NotOp<ResizePrep<IteratorType, SourceType>, Operand, FieldType> {
+      template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>
+       struct NotOp<ResizePrep<ValidGhost, Shift>, Operand, FieldType> {
 
          public:
-          NotOp<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          NotOp<Resize<IteratorType, This>, typename Operand::ResizeType, FieldType> typedef
+          NotOp<Resize<ValidGhost, Shift>, typename Operand::ResizeType, FieldType> typedef
           ResizeType;
-          NotOp(SourceType const & source)
-          : operand_(source.operand())
+          NotOp(Operand const & operand)
+          : operand_(operand)
           {};
-          inline ResizeType resize(MemoryWindow const & newSize) const {
-             return ResizeType(newSize, *this);
+          inline ResizeType resize(MemoryWindow const & size) const {
+             return ResizeType(operand().resize(size));
           };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -4372,35 +4453,33 @@
           Operand const operand_;
       };
 
-      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
-       struct NotOp<Resize<IteratorType, SourceType>, Operand, FieldType> {
+      template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>
+       struct NotOp<Resize<ValidGhost, Shift>, Operand, FieldType> {
 
          public:
-          NotOp<Resize<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          NotOp<SeqWalk<IteratorType, This>, typename Operand::SeqWalkType, FieldType> typedef
+          NotOp<SeqWalk<ValidGhost, Shift>, typename Operand::SeqWalkType, FieldType> typedef
           SeqWalkType;
-          NotOp(MemoryWindow const & size, SourceType const & source)
-          : operand_(size, source.operand())
+          NotOp(Operand const & operand)
+          : operand_(operand)
           {};
-          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline SeqWalkType init(void) const { return SeqWalkType(operand().init()); };
           inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
       };
 
-      template<typename IteratorType, typename SourceType, typename Operand, typename FieldType>
-       struct NotOp<SeqWalk<IteratorType, SourceType>, Operand, FieldType> {
+      template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>
+       struct NotOp<SeqWalk<ValidGhost, Shift>, Operand, FieldType> {
 
          public:
-          NotOp<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef EvalReturnType;
-          NotOp(SourceType const & source)
-          : operand_(source.operand())
+          NotOp(Operand const & operand)
+          : operand_(operand)
           {};
           inline void next(void) { operand_.next(); };
           inline bool at_end(void) const { return (operand_.at_end()); };
@@ -4438,34 +4517,44 @@
           struct OBJECT_NAME<Initial, Operand1, Operand2, FieldType> {                             \
                                                                                                    \
             public:                                                                                \
-             OBJECT_NAME<Initial, Operand1, Operand2, FieldType> typedef This;                     \
              FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
-             template<typename IteratorType>                                                       \
+             template<typename ValidGhost, typename Shift>                                         \
               struct Iterator {                                                                    \
                                                                                                    \
-                OBJECT_NAME<ResizePrep<IteratorType, This>,                                        \
-                            typename Operand1::template Iterator<IteratorType>::ResizePrepType,    \
-                            typename Operand2::template Iterator<IteratorType>::ResizePrepType,    \
+                OBJECT_NAME<ResizePrep<ValidGhost, Shift>,                                         \
+                            typename Operand1::template Iterator<ValidGhost, Shift>::ResizePrepType, \
+                            typename Operand2::template Iterator<ValidGhost, Shift>::ResizePrepType, \
                             FieldType> typedef ResizePrepType;                                     \
                                                                                                    \
-                OBJECT_NAME<SeqWalk<IteratorType, This>,                                           \
-                            typename Operand1::template Iterator<IteratorType>::SeqWalkType,       \
-                            typename Operand2::template Iterator<IteratorType>::SeqWalkType,       \
+                OBJECT_NAME<SeqWalk<ValidGhost, Shift>,                                            \
+                            typename Operand1::template Iterator<ValidGhost, Shift>::SeqWalkType,  \
+                            typename Operand2::template Iterator<ValidGhost, Shift>::SeqWalkType,  \
                             FieldType> typedef SeqWalkType;                                        \
              };                                                                                    \
-             typename structured::Minimum<typename Operand1::VG, typename Operand2::VG>::result    \
-             typedef VG;                                                                           \
-             OBJECT_NAME(Operand1 const & op1, Operand2 const & op2)                               \
-             : operand1_(op1), operand2_(op2)                                                      \
+             typename structured::Minimum<typename Operand1::PossibleValidGhost,                   \
+                                          typename Operand2::PossibleValidGhost>::result typedef   \
+             PossibleValidGhost;                                                                   \
+             OBJECT_NAME(Operand1 const & operand1, Operand2 const & operand2)                     \
+             : operand1_(operand1), operand2_(operand2)                                            \
              {};                                                                                   \
-             template<typename IteratorType>                                                       \
-              inline typename Iterator<IteratorType>::SeqWalkType init(void) const {               \
-                 return typename Iterator<IteratorType>::SeqWalkType(*this);                       \
+             template<typename ValidGhost, typename Shift>                                         \
+              inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) const {          \
+                                                                                                   \
+                 return typename Iterator<ValidGhost, Shift>::SeqWalkType(operand1().template init<ValidGhost, \
+                                                                                                   Shift>(), \
+                                                                          operand2().template init<ValidGhost, \
+                                                                                                   Shift>()); \
               };                                                                                   \
-             template<typename IteratorType>                                                       \
-              inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {     \
-                 return typename Iterator<IteratorType>::ResizePrepType(*this);                    \
+             template<typename ValidGhost, typename Shift>                                         \
+              inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) const { \
+                                                                                                   \
+                 return typename Iterator<ValidGhost, Shift>::ResizePrepType(operand1().template   \
+                                                                                        resize_prep<ValidGhost, \
+                                                                                                    Shift>(), \
+                                                                             operand2().template   \
+                                                                                        resize_prep<ValidGhost, \
+                                                                                                    Shift>()); \
               };                                                                                   \
              inline Operand1 const & operand1(void) const { return operand1_; };                   \
              inline Operand2 const & operand2(void) const { return operand2_; };                   \
@@ -4475,27 +4564,25 @@
              Operand2 const operand2_;                                                             \
          };                                                                                        \
                                                                                                    \
-         template<typename IteratorType,                                                           \
-                  typename SourceType,                                                             \
+         template<typename ValidGhost,                                                             \
+                  typename Shift,                                                                  \
                   typename Operand1,                                                               \
                   typename Operand2,                                                               \
                   typename FieldType>                                                              \
-          struct OBJECT_NAME<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> { \
+          struct OBJECT_NAME<ResizePrep<ValidGhost, Shift>, Operand1, Operand2, FieldType> {       \
                                                                                                    \
             public:                                                                                \
-             OBJECT_NAME<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType>      \
-             typedef This;                                                                         \
              FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
-             OBJECT_NAME<Resize<IteratorType, This>,                                               \
+             OBJECT_NAME<Resize<ValidGhost, Shift>,                                                \
                          typename Operand1::ResizeType,                                            \
                          typename Operand2::ResizeType,                                            \
                          FieldType> typedef ResizeType;                                            \
-             OBJECT_NAME(SourceType const & source)                                                \
-             : operand1_(source.operand1()), operand2_(source.operand2())                          \
+             OBJECT_NAME(Operand1 const & operand1, Operand2 const & operand2)                     \
+             : operand1_(operand1), operand2_(operand2)                                            \
              {};                                                                                   \
-             inline ResizeType resize(MemoryWindow const & newSize) const {                        \
-                return ResizeType(newSize, *this);                                                 \
+             inline ResizeType resize(MemoryWindow const & size) const {                           \
+                return ResizeType(operand1().resize(size), operand2().resize(size));               \
              };                                                                                    \
              inline Operand1 const & operand1(void) const { return operand1_; };                   \
              inline Operand2 const & operand2(void) const { return operand2_; };                   \
@@ -4505,26 +4592,26 @@
              Operand2 const operand2_;                                                             \
          };                                                                                        \
                                                                                                    \
-         template<typename IteratorType,                                                           \
-                  typename SourceType,                                                             \
+         template<typename ValidGhost,                                                             \
+                  typename Shift,                                                                  \
                   typename Operand1,                                                               \
                   typename Operand2,                                                               \
                   typename FieldType>                                                              \
-          struct OBJECT_NAME<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> {    \
+          struct OBJECT_NAME<Resize<ValidGhost, Shift>, Operand1, Operand2, FieldType> {           \
                                                                                                    \
             public:                                                                                \
-             OBJECT_NAME<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef  \
-             This;                                                                                 \
              FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
-             OBJECT_NAME<SeqWalk<IteratorType, This>,                                              \
+             OBJECT_NAME<SeqWalk<ValidGhost, Shift>,                                               \
                          typename Operand1::SeqWalkType,                                           \
                          typename Operand2::SeqWalkType,                                           \
                          FieldType> typedef SeqWalkType;                                           \
-             OBJECT_NAME(MemoryWindow const & size, SourceType const & source)                     \
-             : operand1_(size, source.operand1()), operand2_(size, source.operand2())              \
+             OBJECT_NAME(Operand1 const & operand1, Operand2 const & operand2)                     \
+             : operand1_(operand1), operand2_(operand2)                                            \
              {};                                                                                   \
-             inline SeqWalkType init(void) const { return SeqWalkType(*this); };                   \
+             inline SeqWalkType init(void) const {                                                 \
+                return SeqWalkType(operand1().init(), operand2().init());                          \
+             };                                                                                    \
              inline Operand1 const & operand1(void) const { return operand1_; };                   \
              inline Operand2 const & operand2(void) const { return operand2_; };                   \
                                                                                                    \
@@ -4533,21 +4620,19 @@
              Operand2 const operand2_;                                                             \
          };                                                                                        \
                                                                                                    \
-         template<typename IteratorType,                                                           \
-                  typename SourceType,                                                             \
+         template<typename ValidGhost,                                                             \
+                  typename Shift,                                                                  \
                   typename Operand1,                                                               \
                   typename Operand2,                                                               \
                   typename FieldType>                                                              \
-          struct OBJECT_NAME<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> {   \
+          struct OBJECT_NAME<SeqWalk<ValidGhost, Shift>, Operand1, Operand2, FieldType> {          \
                                                                                                    \
             public:                                                                                \
-             OBJECT_NAME<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef \
-             This;                                                                                 \
              FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
              typename FieldType::value_type typedef EvalReturnType;                                \
-             OBJECT_NAME(SourceType const & source)                                                \
-             : operand1_(source.operand1()), operand2_(source.operand2())                          \
+             OBJECT_NAME(Operand1 const & operand1, Operand2 const & operand2)                     \
+             : operand1_(operand1), operand2_(operand2)                                            \
              {};                                                                                   \
              inline void next(void) { operand1_.next(); operand2_.next(); };                       \
              inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); }; \
@@ -4656,34 +4741,44 @@
           struct OBJECT_NAME<Initial, Operand1, Operand2, FieldType> {                             \
                                                                                                    \
             public:                                                                                \
-             OBJECT_NAME<Initial, Operand1, Operand2, FieldType> typedef This;                     \
              FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
-             template<typename IteratorType>                                                       \
+             template<typename ValidGhost, typename Shift>                                         \
               struct Iterator {                                                                    \
                                                                                                    \
-                OBJECT_NAME<ResizePrep<IteratorType, This>,                                        \
-                            typename Operand1::template Iterator<IteratorType>::ResizePrepType,    \
-                            typename Operand2::template Iterator<IteratorType>::ResizePrepType,    \
+                OBJECT_NAME<ResizePrep<ValidGhost, Shift>,                                         \
+                            typename Operand1::template Iterator<ValidGhost, Shift>::ResizePrepType, \
+                            typename Operand2::template Iterator<ValidGhost, Shift>::ResizePrepType, \
                             FieldType> typedef ResizePrepType;                                     \
                                                                                                    \
-                OBJECT_NAME<SeqWalk<IteratorType, This>,                                           \
-                            typename Operand1::template Iterator<IteratorType>::SeqWalkType,       \
-                            typename Operand2::template Iterator<IteratorType>::SeqWalkType,       \
+                OBJECT_NAME<SeqWalk<ValidGhost, Shift>,                                            \
+                            typename Operand1::template Iterator<ValidGhost, Shift>::SeqWalkType,  \
+                            typename Operand2::template Iterator<ValidGhost, Shift>::SeqWalkType,  \
                             FieldType> typedef SeqWalkType;                                        \
              };                                                                                    \
-             typename structured::Minimum<typename Operand1::VG, typename Operand2::VG>::result    \
-             typedef VG;                                                                           \
-             OBJECT_NAME(Operand1 const & op1, Operand2 const & op2)                               \
-             : operand1_(op1), operand2_(op2)                                                      \
+             typename structured::Minimum<typename Operand1::PossibleValidGhost,                   \
+                                          typename Operand2::PossibleValidGhost>::result typedef   \
+             PossibleValidGhost;                                                                   \
+             OBJECT_NAME(Operand1 const & operand1, Operand2 const & operand2)                     \
+             : operand1_(operand1), operand2_(operand2)                                            \
              {};                                                                                   \
-             template<typename IteratorType>                                                       \
-              inline typename Iterator<IteratorType>::SeqWalkType init(void) const {               \
-                 return typename Iterator<IteratorType>::SeqWalkType(*this);                       \
+             template<typename ValidGhost, typename Shift>                                         \
+              inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) const {          \
+                                                                                                   \
+                 return typename Iterator<ValidGhost, Shift>::SeqWalkType(operand1().template init<ValidGhost, \
+                                                                                                   Shift>(), \
+                                                                          operand2().template init<ValidGhost, \
+                                                                                                   Shift>()); \
               };                                                                                   \
-             template<typename IteratorType>                                                       \
-              inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {     \
-                 return typename Iterator<IteratorType>::ResizePrepType(*this);                    \
+             template<typename ValidGhost, typename Shift>                                         \
+              inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) const { \
+                                                                                                   \
+                 return typename Iterator<ValidGhost, Shift>::ResizePrepType(operand1().template   \
+                                                                                        resize_prep<ValidGhost, \
+                                                                                                    Shift>(), \
+                                                                             operand2().template   \
+                                                                                        resize_prep<ValidGhost, \
+                                                                                                    Shift>()); \
               };                                                                                   \
              inline Operand1 const & operand1(void) const { return operand1_; };                   \
              inline Operand2 const & operand2(void) const { return operand2_; };                   \
@@ -4693,27 +4788,25 @@
              Operand2 const operand2_;                                                             \
          };                                                                                        \
                                                                                                    \
-         template<typename IteratorType,                                                           \
-                  typename SourceType,                                                             \
+         template<typename ValidGhost,                                                             \
+                  typename Shift,                                                                  \
                   typename Operand1,                                                               \
                   typename Operand2,                                                               \
                   typename FieldType>                                                              \
-          struct OBJECT_NAME<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType> { \
+          struct OBJECT_NAME<ResizePrep<ValidGhost, Shift>, Operand1, Operand2, FieldType> {       \
                                                                                                    \
             public:                                                                                \
-             OBJECT_NAME<ResizePrep<IteratorType, SourceType>, Operand1, Operand2, FieldType>      \
-             typedef This;                                                                         \
              FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
-             OBJECT_NAME<Resize<IteratorType, This>,                                               \
+             OBJECT_NAME<Resize<ValidGhost, Shift>,                                                \
                          typename Operand1::ResizeType,                                            \
                          typename Operand2::ResizeType,                                            \
                          FieldType> typedef ResizeType;                                            \
-             OBJECT_NAME(SourceType const & source)                                                \
-             : operand1_(source.operand1()), operand2_(source.operand2())                          \
+             OBJECT_NAME(Operand1 const & operand1, Operand2 const & operand2)                     \
+             : operand1_(operand1), operand2_(operand2)                                            \
              {};                                                                                   \
-             inline ResizeType resize(MemoryWindow const & newSize) const {                        \
-                return ResizeType(newSize, *this);                                                 \
+             inline ResizeType resize(MemoryWindow const & size) const {                           \
+                return ResizeType(operand1().resize(size), operand2().resize(size));               \
              };                                                                                    \
              inline Operand1 const & operand1(void) const { return operand1_; };                   \
              inline Operand2 const & operand2(void) const { return operand2_; };                   \
@@ -4723,26 +4816,26 @@
              Operand2 const operand2_;                                                             \
          };                                                                                        \
                                                                                                    \
-         template<typename IteratorType,                                                           \
-                  typename SourceType,                                                             \
+         template<typename ValidGhost,                                                             \
+                  typename Shift,                                                                  \
                   typename Operand1,                                                               \
                   typename Operand2,                                                               \
                   typename FieldType>                                                              \
-          struct OBJECT_NAME<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> {    \
+          struct OBJECT_NAME<Resize<ValidGhost, Shift>, Operand1, Operand2, FieldType> {           \
                                                                                                    \
             public:                                                                                \
-             OBJECT_NAME<Resize<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef  \
-             This;                                                                                 \
              FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
-             OBJECT_NAME<SeqWalk<IteratorType, This>,                                              \
+             OBJECT_NAME<SeqWalk<ValidGhost, Shift>,                                               \
                          typename Operand1::SeqWalkType,                                           \
                          typename Operand2::SeqWalkType,                                           \
                          FieldType> typedef SeqWalkType;                                           \
-             OBJECT_NAME(MemoryWindow const & size, SourceType const & source)                     \
-             : operand1_(size, source.operand1()), operand2_(size, source.operand2())              \
+             OBJECT_NAME(Operand1 const & operand1, Operand2 const & operand2)                     \
+             : operand1_(operand1), operand2_(operand2)                                            \
              {};                                                                                   \
-             inline SeqWalkType init(void) const { return SeqWalkType(*this); };                   \
+             inline SeqWalkType init(void) const {                                                 \
+                return SeqWalkType(operand1().init(), operand2().init());                          \
+             };                                                                                    \
              inline Operand1 const & operand1(void) const { return operand1_; };                   \
              inline Operand2 const & operand2(void) const { return operand2_; };                   \
                                                                                                    \
@@ -4751,21 +4844,19 @@
              Operand2 const operand2_;                                                             \
          };                                                                                        \
                                                                                                    \
-         template<typename IteratorType,                                                           \
-                  typename SourceType,                                                             \
+         template<typename ValidGhost,                                                             \
+                  typename Shift,                                                                  \
                   typename Operand1,                                                               \
                   typename Operand2,                                                               \
                   typename FieldType>                                                              \
-          struct OBJECT_NAME<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> {   \
+          struct OBJECT_NAME<SeqWalk<ValidGhost, Shift>, Operand1, Operand2, FieldType> {          \
                                                                                                    \
             public:                                                                                \
-             OBJECT_NAME<SeqWalk<IteratorType, SourceType>, Operand1, Operand2, FieldType> typedef \
-             This;                                                                                 \
              FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
              typename FieldType::value_type typedef EvalReturnType;                                \
-             OBJECT_NAME(SourceType const & source)                                                \
-             : operand1_(source.operand1()), operand2_(source.operand2())                          \
+             OBJECT_NAME(Operand1 const & operand1, Operand2 const & operand2)                     \
+             : operand1_(operand1), operand2_(operand2)                                            \
              {};                                                                                   \
              inline void next(void) { operand1_.next(); operand2_.next(); };                       \
              inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); }; \
@@ -4874,31 +4965,35 @@
           struct OBJECT_NAME<Initial, Operand, FieldType> {                                        \
                                                                                                    \
             public:                                                                                \
-             OBJECT_NAME<Initial, Operand, FieldType> typedef This;                                \
              FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
-             template<typename IteratorType>                                                       \
+             template<typename ValidGhost, typename Shift>                                         \
               struct Iterator {                                                                    \
                                                                                                    \
-                OBJECT_NAME<ResizePrep<IteratorType, This>,                                        \
-                            typename Operand::template Iterator<IteratorType>::ResizePrepType,     \
+                OBJECT_NAME<ResizePrep<ValidGhost, Shift>,                                         \
+                            typename Operand::template Iterator<ValidGhost, Shift>::ResizePrepType, \
                             FieldType> typedef ResizePrepType;                                     \
                                                                                                    \
-                OBJECT_NAME<SeqWalk<IteratorType, This>,                                           \
-                            typename Operand::template Iterator<IteratorType>::SeqWalkType,        \
+                OBJECT_NAME<SeqWalk<ValidGhost, Shift>,                                            \
+                            typename Operand::template Iterator<ValidGhost, Shift>::SeqWalkType,   \
                             FieldType> typedef SeqWalkType;                                        \
              };                                                                                    \
-             typename Operand::VG typedef VG;                                                      \
-             OBJECT_NAME(Operand const & op)                                                       \
-             : operand_(op)                                                                        \
+             typename Operand::PossibleValidGhost typedef PossibleValidGhost;                      \
+             OBJECT_NAME(Operand const & operand)                                                  \
+             : operand_(operand)                                                                   \
              {};                                                                                   \
-             template<typename IteratorType>                                                       \
-              inline typename Iterator<IteratorType>::SeqWalkType init(void) const {               \
-                 return typename Iterator<IteratorType>::SeqWalkType(*this);                       \
+             template<typename ValidGhost, typename Shift>                                         \
+              inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) const {          \
+                                                                                                   \
+                 return typename Iterator<ValidGhost, Shift>::SeqWalkType(operand().template init<ValidGhost, \
+                                                                                                  Shift>()); \
               };                                                                                   \
-             template<typename IteratorType>                                                       \
-              inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {     \
-                 return typename Iterator<IteratorType>::ResizePrepType(*this);                    \
+             template<typename ValidGhost, typename Shift>                                         \
+              inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) const { \
+                                                                                                   \
+                 return typename Iterator<ValidGhost, Shift>::ResizePrepType(operand().template    \
+                                                                                       resize_prep<ValidGhost, \
+                                                                                                   Shift>()); \
               };                                                                                   \
              inline Operand const & operand(void) const { return operand_; };                      \
                                                                                                    \
@@ -4906,20 +5001,19 @@
              Operand const operand_;                                                               \
          };                                                                                        \
                                                                                                    \
-         template<typename IteratorType, typename SourceType, typename Operand, typename FieldType> \
-          struct OBJECT_NAME<ResizePrep<IteratorType, SourceType>, Operand, FieldType> {           \
+         template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>       \
+          struct OBJECT_NAME<ResizePrep<ValidGhost, Shift>, Operand, FieldType> {                  \
                                                                                                    \
             public:                                                                                \
-             OBJECT_NAME<ResizePrep<IteratorType, SourceType>, Operand, FieldType> typedef This;   \
              FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
-             OBJECT_NAME<Resize<IteratorType, This>, typename Operand::ResizeType, FieldType>      \
-             typedef ResizeType;                                                                   \
-             OBJECT_NAME(SourceType const & source)                                                \
-             : operand_(source.operand())                                                          \
+             OBJECT_NAME<Resize<ValidGhost, Shift>, typename Operand::ResizeType, FieldType> typedef \
+             ResizeType;                                                                           \
+             OBJECT_NAME(Operand const & operand)                                                  \
+             : operand_(operand)                                                                   \
              {};                                                                                   \
-             inline ResizeType resize(MemoryWindow const & newSize) const {                        \
-                return ResizeType(newSize, *this);                                                 \
+             inline ResizeType resize(MemoryWindow const & size) const {                           \
+                return ResizeType(operand().resize(size));                                         \
              };                                                                                    \
              inline Operand const & operand(void) const { return operand_; };                      \
                                                                                                    \
@@ -4927,35 +5021,33 @@
              Operand const operand_;                                                               \
          };                                                                                        \
                                                                                                    \
-         template<typename IteratorType, typename SourceType, typename Operand, typename FieldType> \
-          struct OBJECT_NAME<Resize<IteratorType, SourceType>, Operand, FieldType> {               \
+         template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>       \
+          struct OBJECT_NAME<Resize<ValidGhost, Shift>, Operand, FieldType> {                      \
                                                                                                    \
             public:                                                                                \
-             OBJECT_NAME<Resize<IteratorType, SourceType>, Operand, FieldType> typedef This;       \
              FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
-             OBJECT_NAME<SeqWalk<IteratorType, This>, typename Operand::SeqWalkType, FieldType>    \
+             OBJECT_NAME<SeqWalk<ValidGhost, Shift>, typename Operand::SeqWalkType, FieldType>     \
              typedef SeqWalkType;                                                                  \
-             OBJECT_NAME(MemoryWindow const & size, SourceType const & source)                     \
-             : operand_(size, source.operand())                                                    \
+             OBJECT_NAME(Operand const & operand)                                                  \
+             : operand_(operand)                                                                   \
              {};                                                                                   \
-             inline SeqWalkType init(void) const { return SeqWalkType(*this); };                   \
+             inline SeqWalkType init(void) const { return SeqWalkType(operand().init()); };        \
              inline Operand const & operand(void) const { return operand_; };                      \
                                                                                                    \
             private:                                                                               \
              Operand const operand_;                                                               \
          };                                                                                        \
                                                                                                    \
-         template<typename IteratorType, typename SourceType, typename Operand, typename FieldType> \
-          struct OBJECT_NAME<SeqWalk<IteratorType, SourceType>, Operand, FieldType> {              \
+         template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>       \
+          struct OBJECT_NAME<SeqWalk<ValidGhost, Shift>, Operand, FieldType> {                     \
                                                                                                    \
             public:                                                                                \
-             OBJECT_NAME<SeqWalk<IteratorType, SourceType>, Operand, FieldType> typedef This;      \
              FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
              typename FieldType::value_type typedef EvalReturnType;                                \
-             OBJECT_NAME(SourceType const & source)                                                \
-             : operand_(source.operand())                                                          \
+             OBJECT_NAME(Operand const & operand)                                                  \
+             : operand_(operand)                                                                   \
              {};                                                                                   \
              inline void next(void) { operand_.next(); };                                          \
              inline bool at_end(void) const { return (operand_.at_end()); };                       \
@@ -4986,7 +5078,7 @@
              return ReturnTerm(ReturnType(Type(Standardize<SubExpr, FieldType>::standardType(arg)))); \
           };
 
-      struct NeboNil { structured::InfiniteIndexHexlet typedef VG; NeboNil() {}; };
+      struct NeboNil { structured::InfiniteIndexHexlet typedef PossibleValidGhost; NeboNil() {}; };
 
       template<typename CurrentMode, typename Test, typename Expr, typename FieldType>
        struct NeboClause;
@@ -4995,33 +5087,44 @@
        struct NeboClause<Initial, Test, Expr, FieldType> {
 
          public:
-          NeboClause<Initial, Test, Expr, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          template<typename IteratorType>
+          template<typename ValidGhost, typename Shift>
            struct Iterator {
 
-             NeboClause<ResizePrep<IteratorType, This>,
-                        typename Test::template Iterator<IteratorType>::ResizePrepType,
-                        typename Expr::template Iterator<IteratorType>::ResizePrepType,
+             NeboClause<ResizePrep<ValidGhost, Shift>,
+                        typename Test::template Iterator<ValidGhost, Shift>::ResizePrepType,
+                        typename Expr::template Iterator<ValidGhost, Shift>::ResizePrepType,
                         FieldType> typedef ResizePrepType;
 
-             NeboClause<SeqWalk<IteratorType, This>,
-                        typename Test::template Iterator<IteratorType>::SeqWalkType,
-                        typename Expr::template Iterator<IteratorType>::SeqWalkType,
+             NeboClause<SeqWalk<ValidGhost, Shift>,
+                        typename Test::template Iterator<ValidGhost, Shift>::SeqWalkType,
+                        typename Expr::template Iterator<ValidGhost, Shift>::SeqWalkType,
                         FieldType> typedef SeqWalkType;
           };
-          typename structured::Minimum<typename Test::VG, typename Expr::VG>::result typedef VG;
+          typename structured::Minimum<typename Test::PossibleValidGhost,
+                                       typename Expr::PossibleValidGhost>::result typedef
+          PossibleValidGhost;
           NeboClause(Test const & t, Expr const & e)
           : test_(t), expr_(e)
           {};
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
-              return typename Iterator<IteratorType>::SeqWalkType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::SeqWalkType(test().template init<ValidGhost,
+                                                                                            Shift>(),
+                                                                       expr().template init<ValidGhost,
+                                                                                            Shift>());
            };
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
-              return typename Iterator<IteratorType>::ResizePrepType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::ResizePrepType(test().template
+                                                                                 resize_prep<ValidGhost,
+                                                                                             Shift>(),
+                                                                          expr().template
+                                                                                 resize_prep<ValidGhost,
+                                                                                             Shift>());
            };
           inline Test const & test(void) const { return test_; };
           inline Expr const & expr(void) const { return expr_; };
@@ -5031,26 +5134,21 @@
           Expr const expr_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
-               typename Test,
-               typename Expr,
-               typename FieldType>
-       struct NeboClause<ResizePrep<IteratorType, SourceType>, Test, Expr, FieldType> {
+      template<typename ValidGhost, typename Shift, typename Test, typename Expr, typename FieldType>
+       struct NeboClause<ResizePrep<ValidGhost, Shift>, Test, Expr, FieldType> {
 
          public:
-          NeboClause<ResizePrep<IteratorType, SourceType>, Test, Expr, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          NeboClause<Resize<IteratorType, This>,
+          NeboClause<Resize<ValidGhost, Shift>,
                      typename Test::ResizeType,
                      typename Expr::ResizeType,
                      FieldType> typedef ResizeType;
-          NeboClause(SourceType const & source)
-          : test_(source.test()), expr_(source.expr())
+          NeboClause(Test const & test, Expr const & expr)
+          : test_(test), expr_(expr)
           {};
-          inline ResizeType resize(MemoryWindow const & newSize) const {
-             return ResizeType(newSize, *this);
+          inline ResizeType resize(MemoryWindow const & size) const {
+             return ResizeType(test().resize(size), expr().resize(size));
           };
           inline Test const & test(void) const { return test_; };
           inline Expr const & expr(void) const { return expr_; };
@@ -5060,25 +5158,20 @@
           Expr const expr_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
-               typename Test,
-               typename Expr,
-               typename FieldType>
-       struct NeboClause<Resize<IteratorType, SourceType>, Test, Expr, FieldType> {
+      template<typename ValidGhost, typename Shift, typename Test, typename Expr, typename FieldType>
+       struct NeboClause<Resize<ValidGhost, Shift>, Test, Expr, FieldType> {
 
          public:
-          NeboClause<Resize<IteratorType, SourceType>, Test, Expr, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          NeboClause<SeqWalk<IteratorType, This>,
+          NeboClause<SeqWalk<ValidGhost, Shift>,
                      typename Test::SeqWalkType,
                      typename Expr::SeqWalkType,
                      FieldType> typedef SeqWalkType;
-          NeboClause(MemoryWindow const & size, SourceType const & source)
-          : test_(size, source.test()), expr_(size, source.expr())
+          NeboClause(Test const & test, Expr const & expr)
+          : test_(test), expr_(expr)
           {};
-          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline SeqWalkType init(void) const { return SeqWalkType(test().init(), expr().init()); };
           inline Test const & test(void) const { return test_; };
           inline Expr const & expr(void) const { return expr_; };
 
@@ -5087,20 +5180,15 @@
           Expr const expr_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
-               typename Test,
-               typename Expr,
-               typename FieldType>
-       struct NeboClause<SeqWalk<IteratorType, SourceType>, Test, Expr, FieldType> {
+      template<typename ValidGhost, typename Shift, typename Test, typename Expr, typename FieldType>
+       struct NeboClause<SeqWalk<ValidGhost, Shift>, Test, Expr, FieldType> {
 
          public:
-          NeboClause<SeqWalk<IteratorType, SourceType>, Test, Expr, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef AtomicType;
-          NeboClause(SourceType const & source)
-          : test_(source.test()), expr_(source.expr())
+          NeboClause(Test const & test, Expr const & expr)
+          : test_(test), expr_(expr)
           {};
           inline void next(void) { test_.next(); expr_.next(); };
           inline bool at_end(void) const { return (test_.at_end() || expr_.at_end()); };
@@ -5120,34 +5208,44 @@
        struct NeboCond<Initial, ClauseType, Otherwise, FieldType> {
 
          public:
-          NeboCond<Initial, ClauseType, Otherwise, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          template<typename IteratorType>
+          template<typename ValidGhost, typename Shift>
            struct Iterator {
 
-             NeboCond<ResizePrep<IteratorType, This>,
-                      typename ClauseType::template Iterator<IteratorType>::ResizePrepType,
-                      typename Otherwise::template Iterator<IteratorType>::ResizePrepType,
+             NeboCond<ResizePrep<ValidGhost, Shift>,
+                      typename ClauseType::template Iterator<ValidGhost, Shift>::ResizePrepType,
+                      typename Otherwise::template Iterator<ValidGhost, Shift>::ResizePrepType,
                       FieldType> typedef ResizePrepType;
 
-             NeboCond<SeqWalk<IteratorType, This>,
-                      typename ClauseType::template Iterator<IteratorType>::SeqWalkType,
-                      typename Otherwise::template Iterator<IteratorType>::SeqWalkType,
+             NeboCond<SeqWalk<ValidGhost, Shift>,
+                      typename ClauseType::template Iterator<ValidGhost, Shift>::SeqWalkType,
+                      typename Otherwise::template Iterator<ValidGhost, Shift>::SeqWalkType,
                       FieldType> typedef SeqWalkType;
           };
-          typename structured::Minimum<typename ClauseType::VG, typename Otherwise::VG>::result
-          typedef VG;
+          typename structured::Minimum<typename ClauseType::PossibleValidGhost,
+                                       typename Otherwise::PossibleValidGhost>::result typedef
+          PossibleValidGhost;
           NeboCond(ClauseType const & c, Otherwise const & e)
           : clause_(c), otherwise_(e)
           {};
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
-              return typename Iterator<IteratorType>::SeqWalkType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::SeqWalkType(clause().template init<ValidGhost,
+                                                                                              Shift>(),
+                                                                       otherwise().template init<ValidGhost,
+                                                                                                 Shift>());
            };
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
-              return typename Iterator<IteratorType>::ResizePrepType(*this);
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::ResizePrepType(clause().template
+                                                                                   resize_prep<ValidGhost,
+                                                                                               Shift>(),
+                                                                          otherwise().template
+                                                                                      resize_prep<ValidGhost,
+                                                                                                  Shift>());
            };
           inline ClauseType const & clause(void) const { return clause_; };
           inline Otherwise const & otherwise(void) const { return otherwise_; };
@@ -5157,27 +5255,25 @@
           Otherwise const otherwise_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename ClauseType,
                typename Otherwise,
                typename FieldType>
-       struct NeboCond<ResizePrep<IteratorType, SourceType>, ClauseType, Otherwise, FieldType> {
+       struct NeboCond<ResizePrep<ValidGhost, Shift>, ClauseType, Otherwise, FieldType> {
 
          public:
-          NeboCond<ResizePrep<IteratorType, SourceType>, ClauseType, Otherwise, FieldType> typedef
-          This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          NeboCond<Resize<IteratorType, This>,
+          NeboCond<Resize<ValidGhost, Shift>,
                    typename ClauseType::ResizeType,
                    typename Otherwise::ResizeType,
                    FieldType> typedef ResizeType;
-          NeboCond(SourceType const & source)
-          : clause_(source.clause()), otherwise_(source.otherwise())
+          NeboCond(ClauseType const & clause, Otherwise const & otherwise)
+          : clause_(clause), otherwise_(otherwise)
           {};
-          inline ResizeType resize(MemoryWindow const & newSize) const {
-             return ResizeType(newSize, *this);
+          inline ResizeType resize(MemoryWindow const & size) const {
+             return ResizeType(clause().resize(size), otherwise().resize(size));
           };
           inline ClauseType const & clause(void) const { return clause_; };
           inline Otherwise const & otherwise(void) const { return otherwise_; };
@@ -5187,25 +5283,26 @@
           Otherwise const otherwise_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename ClauseType,
                typename Otherwise,
                typename FieldType>
-       struct NeboCond<Resize<IteratorType, SourceType>, ClauseType, Otherwise, FieldType> {
+       struct NeboCond<Resize<ValidGhost, Shift>, ClauseType, Otherwise, FieldType> {
 
          public:
-          NeboCond<Resize<IteratorType, SourceType>, ClauseType, Otherwise, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          NeboCond<SeqWalk<IteratorType, This>,
+          NeboCond<SeqWalk<ValidGhost, Shift>,
                    typename ClauseType::SeqWalkType,
                    typename Otherwise::SeqWalkType,
                    FieldType> typedef SeqWalkType;
-          NeboCond(MemoryWindow const & size, SourceType const & source)
-          : clause_(size, source.clause()), otherwise_(size, source.otherwise())
+          NeboCond(ClauseType const & clause, Otherwise const & otherwise)
+          : clause_(clause), otherwise_(otherwise)
           {};
-          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
+          inline SeqWalkType init(void) const {
+             return SeqWalkType(clause().init(), otherwise().init());
+          };
           inline ClauseType const & clause(void) const { return clause_; };
           inline Otherwise const & otherwise(void) const { return otherwise_; };
 
@@ -5214,20 +5311,19 @@
           Otherwise const otherwise_;
       };
 
-      template<typename IteratorType,
-               typename SourceType,
+      template<typename ValidGhost,
+               typename Shift,
                typename ClauseType,
                typename Otherwise,
                typename FieldType>
-       struct NeboCond<SeqWalk<IteratorType, SourceType>, ClauseType, Otherwise, FieldType> {
+       struct NeboCond<SeqWalk<ValidGhost, Shift>, ClauseType, Otherwise, FieldType> {
 
          public:
-          NeboCond<SeqWalk<IteratorType, SourceType>, ClauseType, Otherwise, FieldType> typedef This;
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef AtomicType;
-          NeboCond(SourceType const & source)
-          : clause_(source.clause()), otherwise_(source.otherwise())
+          NeboCond(ClauseType const & clause, Otherwise const & otherwise)
+          : clause_(clause), otherwise_(otherwise)
           {};
           inline void next(void) { clause_.next(); otherwise_.next(); };
           inline bool at_end(void) const { return (clause_.at_end() || otherwise_.at_end()); };
@@ -5821,44 +5917,276 @@
 
 #     define nebo_cond cond//;
 
+      template<typename First, typename Second>
+       struct NeboPair { First typedef FirstType; Second typedef SecondType; };
+
+      template<typename CurrentMode, typename StencilType, typename Operand, typename FieldType>
+       struct NeboStencil;
+
+      template<typename StencilType, typename Operand, typename FieldType>
+       struct NeboStencil<Initial, StencilType, Operand, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          typename StencilType::SrcFieldType typedef SFT;
+          typename StencilType::DestFieldType typedef DFT;
+          typename SFT::Location::Offset typedef SFTO;
+          typename DFT::Location::Offset typedef DFTO;
+          typename structured::GreaterThan<SFTO, DFTO>::result::Negate typedef SP1;
+          typename structured::LessThan<SFTO, DFTO>::result typedef SP2;
+          template<typename ValidGhost, typename Shift>
+           struct Iterator {
+
+             NeboStencil<ResizePrep<ValidGhost, Shift>,
+                         StencilType,
+                         NeboPair<typename Operand::template Iterator<ValidGhost,
+                                                                      typename structured::Add<Shift,
+                                                                                               SP1>::
+                                                                      result>::ResizePrepType,
+                                  typename Operand::template Iterator<ValidGhost,
+                                                                      typename structured::Add<Shift,
+                                                                                               SP2>::
+                                                                      result>::ResizePrepType>,
+                         FieldType> typedef ResizePrepType;
+
+             NeboStencil<SeqWalk<ValidGhost, Shift>,
+                         StencilType,
+                         NeboPair<typename Operand::template Iterator<ValidGhost,
+                                                                      typename structured::Add<Shift,
+                                                                                               SP1>::
+                                                                      result>::SeqWalkType,
+                                  typename Operand::template Iterator<ValidGhost,
+                                                                      typename structured::Add<Shift,
+                                                                                               SP2>::
+                                                                      result>::SeqWalkType>,
+                         FieldType> typedef SeqWalkType;
+          };
+          typename structured::Invalidate<typename structured::Invalidate<typename Operand::
+                                                                          PossibleValidGhost,
+                                                                          SP1>::result,
+                                          SP2>::result typedef PossibleValidGhost;
+          NeboStencil(Operand const & op, double const lo, double const hi)
+          : operand_(op), lo_(lo), hi_(hi)
+          {};
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::SeqWalkType(operand().template init<ValidGhost,
+                                                                                               typename
+                                                                                               structured::
+                                                                                               Add<Shift,
+                                                                                                   SP1>::
+                                                                                               result>(),
+                                                                       operand().template init<ValidGhost,
+                                                                                               typename
+                                                                                               structured::
+                                                                                               Add<Shift,
+                                                                                                   SP2>::
+                                                                                               result>(),
+                                                                       lo(),
+                                                                       hi());
+           };
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::ResizePrepType(operand().template
+                                                                                    resize_prep<ValidGhost,
+                                                                                                typename
+                                                                                                structured::
+                                                                                                Add<Shift,
+                                                                                                    SP1>::
+                                                                                                result>(),
+                                                                          operand().template
+                                                                                    resize_prep<ValidGhost,
+                                                                                                typename
+                                                                                                structured::
+                                                                                                Add<Shift,
+                                                                                                    SP2>::
+                                                                                                result>(),
+                                                                          lo(),
+                                                                          hi());
+           };
+          inline Operand const & operand(void) const { return operand_; };
+          inline double lo(void) const { return lo_; };
+          inline double hi(void) const { return hi_; };
+
+         private:
+          const Operand operand_;
+          const double lo_;
+          const double hi_;
+      };
+
+      template<typename ValidGhost,
+               typename Shift,
+               typename StencilType,
+               typename Operand,
+               typename FieldType>
+       struct NeboStencil<ResizePrep<ValidGhost, Shift>, StencilType, Operand, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          NeboStencil<Resize<ValidGhost, Shift>,
+                      StencilType,
+                      NeboPair<typename Operand::FirstType::ResizeType,
+                               typename Operand::SecondType::ResizeType>,
+                      FieldType> typedef ResizeType;
+          typename Operand::FirstType typedef Operand1;
+          typename Operand::SecondType typedef Operand2;
+          NeboStencil(Operand1 const & op1, Operand2 const & op2, double const lo, double const hi)
+          : operand1_(op1), operand2_(op2), hi_(lo), lo_(hi)
+          {};
+          inline ResizeType resize(MemoryWindow const & size) const {
+             return ResizeType(operand1().resize(size), operand2().resize(size), lo(), hi());
+          };
+          inline Operand1 const & operand1(void) const { return operand1_; };
+          inline Operand2 const & operand2(void) const { return operand2_; };
+          inline double lo(void) const { return lo_; };
+          inline double hi(void) const { return hi_; };
+
+         private:
+          const Operand1 operand1_;
+          const Operand2 operand2_;
+          const double lo_;
+          const double hi_;
+      };
+
+      template<typename ValidGhost,
+               typename Shift,
+               typename StencilType,
+               typename Operand,
+               typename FieldType>
+       struct NeboStencil<Resize<ValidGhost, Shift>, StencilType, Operand, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          NeboStencil<SeqWalk<ValidGhost, Shift>,
+                      StencilType,
+                      NeboPair<typename Operand::FirstType::SeqWalkType,
+                               typename Operand::SecondType::SeqWalkType>,
+                      FieldType> typedef SeqWalkType;
+          typename Operand::FirstType typedef Operand1;
+          typename Operand::SecondType typedef Operand2;
+          NeboStencil(Operand1 const & op1, Operand2 const & op2, double const hi, double const lo)
+          : operand1_(op1), operand2_(op2), lo_(lo), hi_(hi)
+          {};
+          inline SeqWalkType init(void) const {
+             return SeqWalkType(operand1().init(), operand2().init(), lo(), hi());
+          };
+          inline Operand1 const & operand1(void) const { return operand1_; };
+          inline Operand2 const & operand2(void) const { return operand2_; };
+          inline double lo(void) const { return lo_; };
+          inline double hi(void) const { return hi_; };
+
+         private:
+          const Operand1 operand1_;
+          const Operand2 operand2_;
+          const double lo_;
+          const double hi_;
+      };
+
+      template<typename ValidGhost,
+               typename Shift,
+               typename StencilType,
+               typename Operand,
+               typename FieldType>
+       struct NeboStencil<SeqWalk<ValidGhost, Shift>, StencilType, Operand, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          typename Operand::FirstType typedef Operand1;
+          typename Operand::SecondType typedef Operand2;
+          NeboStencil(Operand1 const & op1, Operand2 const & op2, double const lo, double const hi)
+          : operand1_(op1), operand2_(op2), lo_(lo), hi_(hi)
+          {};
+          inline void next(void) { operand1_.next(); operand2_.next(); };
+          inline bool at_end(void) const { return operand1_.at_end() || operand2_.at_end(); };
+          inline bool has_length(void) const {
+             return operand1_.has_length() || operand2_.has_length();
+          };
+          inline typename FieldType::value_type eval(void) const {
+             return operand1_.eval() * lo_ + operand2_.eval() * hi_;
+          };
+
+         private:
+          Operand1 operand1_;
+          Operand2 operand2_;
+          const double lo_;
+          const double hi_;
+      };
+
+      template<typename StencilType>
+       struct NeboStencilConstructor {
+
+         private:
+          const double lo_;
+          const double hi_;
+
+         public:
+          NeboStencilConstructor(StencilType * const stencil)
+          : lo_(stencil->get_minus_coef()), hi_(stencil->get_plus_coef())
+          {};
+          typename StencilType::DestFieldType typedef FieldType;
+          typename StencilType::SrcFieldType typedef OpFieldType;
+          NeboConstField<Initial, OpFieldType> typedef OpType;
+          NeboStencil<Initial, StencilType, OpType, FieldType> typedef StandardType;
+          NeboExpression<StandardType, FieldType> typedef StandardTerm;
+          template<typename OperandType>
+           struct OperandInfo {
+
+             NeboStencil<Initial, StencilType, OperandType, FieldType> typedef StandardType;
+
+             NeboExpression<StandardType, FieldType> typedef StandardTerm;
+          };
+          inline StandardTerm operator()(typename StencilType::SrcFieldType const & f) {
+             return StandardTerm(StandardType(OpType(f), lo_, hi_));
+          };
+          template<typename Operand>
+           inline typename OperandInfo<Operand>::StandardTerm operator()(NeboExpression<Operand,
+                                                                                        OpFieldType>
+                                                                         const & fexpr) {
+
+              typename OperandInfo<Operand>::StandardType typedef StandardType;
+
+              typename OperandInfo<Operand>::StandardTerm typedef StandardTerm;
+
+              return StandardTerm(StandardType(fexpr.expr(), lo_, hi_));
+           };
+      };
+
       template<typename LhsType, typename RhsType>
-       inline void field_expression_sequential_execute_internal(LhsType lhs, RhsType rhs) {
+       inline void nebo_assignment_sequential_execute_internal(LhsType lhs, RhsType rhs) {
           while(!lhs.at_end()){ lhs.ref() = rhs.eval(); lhs.next(); rhs.next(); };
        };
 
-      template<typename CallStyle, typename ExprType, typename FieldType>
-       inline FieldType const & field_expression_sequential_execute(FieldType & initial_lhs,
-                                                                    NeboExpression<ExprType,
-                                                                                   FieldType> const
-                                                                    & initial_rhs) {
+      template<typename ValidGhost, typename InitialShift, typename ExprType, typename FieldType>
+       inline FieldType const & nebo_assignment_sequential_execute(FieldType & initial_lhs,
+                                                                   NeboExpression<ExprType,
+                                                                                  FieldType> const &
+                                                                   initial_rhs) {
 
-          field_expression_sequential_execute_internal<typename NeboField<Initial, FieldType>::
-                                                       template Iterator<CallStyle>::SeqWalkType,
-                                                       typename ExprType::template Iterator<CallStyle>::
-                                                       SeqWalkType>(NeboField<Initial, FieldType>(initial_lhs).template
-                                                                                                               init<CallStyle>(),
-                                                                    initial_rhs.expr().template init<CallStyle>());
+          nebo_assignment_sequential_execute_internal(NeboField<Initial, FieldType>(initial_lhs).template
+                                                                                                 init<ValidGhost,
+                                                                                                      InitialShift>(),
+                                                      initial_rhs.expr().template init<ValidGhost,
+                                                                                       InitialShift>());
 
           return initial_lhs;
        };
 
 #     ifdef FIELD_EXPRESSION_THREADS
-         template<typename CallStyle,
-                  typename ResizeLhsType,
-                  typename ResizeRhsType,
-                  typename FieldType>
-          inline void field_expression_thread_parallel_execute_internal(ResizeLhsType & lhs,
-                                                                        ResizeRhsType const & rhs,
-                                                                        typename FieldType::
-                                                                        memory_window const & window,
-                                                                        BI::interprocess_semaphore *
-                                                                        semaphore) {
+         template<typename ResizeLhsType, typename ResizeRhsType, typename FieldType>
+          inline void nebo_assignment_thread_parallel_execute_internal(ResizeLhsType & lhs,
+                                                                       ResizeRhsType const & rhs,
+                                                                       typename FieldType::
+                                                                       memory_window const & window,
+                                                                       BI::interprocess_semaphore *
+                                                                       semaphore) {
 
-             field_expression_sequential_execute_internal<typename ResizeLhsType::ResizeType::
-                                                          SeqWalkType,
-                                                          typename ResizeRhsType::ResizeType::
-                                                          SeqWalkType>(lhs.resize(window).init(),
-                                                                       rhs.resize(window).init());
+             nebo_assignment_sequential_execute_internal(lhs.resize(window).init(), rhs.resize(window).init());
 
              semaphore->post();
           }
@@ -5866,22 +6194,29 @@
       /* FIELD_EXPRESSION_THREADS */;
 
 #     ifdef FIELD_EXPRESSION_THREADS
-         template<typename CallStyle, typename ExprType, typename FieldType>
-          inline FieldType const & field_expression_thread_parallel_execute(FieldType & initial_lhs,
-                                                                            NeboExpression<ExprType,
-                                                                                           FieldType>
-                                                                            const & initial_rhs,
-                                                                            int const
-                                                                            number_of_partitions) {
+         template<typename ValidGhost, typename InitialShift, typename ExprType, typename FieldType>
+          inline FieldType const & nebo_assignment_thread_parallel_execute(FieldType & initial_lhs,
+                                                                           NeboExpression<ExprType,
+                                                                                          FieldType>
+                                                                           const & initial_rhs,
+                                                                           int const
+                                                                           number_of_partitions) {
 
-             typename NeboField<Initial, FieldType>::template Iterator<CallStyle>::ResizePrepType
-             typedef LhsType;
+             typename NeboField<Initial, FieldType>::template Iterator<ValidGhost, InitialShift>::
+             ResizePrepType typedef LhsType;
 
-             typename ExprType::template Iterator<CallStyle>::ResizePrepType typedef RhsType;
+             typename ExprType::template Iterator<ValidGhost, InitialShift>::ResizePrepType typedef
+             RhsType;
 
              typename FieldType::memory_window typedef MemoryWindow;
 
-             MemoryWindow window = IteratorStyle<CallStyle, FieldType>::memory_window(initial_lhs);
+             MemoryWindow window = initial_lhs.window_with_ghost().template resizeGhost<typename
+                                                                                        structured::
+                                                                                        FromGhost<typename
+                                                                                                  FieldType::
+                                                                                                  Ghost>::
+                                                                                        result,
+                                                                                        ValidGhost>();
 
              int x = 1;
              int y = 1;
@@ -5902,21 +6237,24 @@
              typename std::vector<typename FieldType::memory_window>::const_iterator window_end =
              vec_window.end();
 
-             for(; window_iterator != window_end; ++window_iterator){
+             for( ;window_iterator != window_end ;++window_iterator){
 
                 ThreadPoolFIFO::self().schedule(boost::bind(&
-                                                            field_expression_thread_parallel_execute_internal<CallStyle,
-                                                                                                              LhsType,
-                                                                                                              RhsType,
-                                                                                                              FieldType>,
+                                                            nebo_assignment_thread_parallel_execute_internal<LhsType,
+                                                                                                             RhsType,
+                                                                                                             FieldType>,
                                                             NeboField<Initial, FieldType>(initial_lhs).template
-                                                                                                       resize_prep<CallStyle>(),
-                                                            initial_rhs.expr().template resize_prep<CallStyle>(),
+                                                                                                       resize_prep<ValidGhost,
+                                                                                                                   InitialShift>(),
+                                                            initial_rhs.expr().template resize_prep<ValidGhost,
+                                                                                                    InitialShift>(),
                                                             *window_iterator,
                                                             &semaphore));
              };
 
-             for(int ii = 0; ii < vec_window.size(); ii++){ semaphore.wait(); };
+             int ee = vec_window.size();
+
+             for(int ii = 0 ;ii < ee ;ii++){ semaphore.wait(); };
 
              return initial_lhs;
           }
@@ -5924,25 +6262,39 @@
       /* FIELD_EXPRESSION_THREADS */;
 
       template<typename CallStyle, typename ExprType, typename FieldType>
-       inline FieldType const & field_expression_general_execute(FieldType & initial_lhs,
-                                                                 NeboExpression<ExprType, FieldType>
-                                                                 const & initial_rhs) {
+       inline FieldType const & nebo_assignment_general_execute(FieldType & initial_lhs,
+                                                                NeboExpression<ExprType, FieldType>
+                                                                const & initial_rhs) {
+
+          typename IteratorStyle<CallStyle,
+                                 typename structured::Minimum<typename ExprType::PossibleValidGhost,
+                                                              typename structured::FromGhost<typename
+                                                                                             FieldType::
+                                                                                             Ghost>::
+                                                              result>::result,
+                                 structured::IndexHexlet<0, 0, 0, 0, 0, 0> >::result typedef
+          ValidGhost;
+
+          structured::IndexTriplet<0, 0, 0> typedef InitialShift;
 
           return
 #                ifdef FIELD_EXPRESSION_THREADS
-                    (is_nebo_thread_parallel() ? field_expression_thread_parallel_execute<CallStyle,
-                                                                                          ExprType,
-                                                                                          FieldType>(initial_lhs,
-                                                                                                     initial_rhs,
-                                                                                                     get_nebo_soft_thread_count())
-                     : field_expression_sequential_execute<CallStyle, ExprType, FieldType>(initial_lhs,
-                                                                                           initial_rhs))
+                    (is_nebo_thread_parallel() ? nebo_assignment_thread_parallel_execute<ValidGhost,
+                                                                                         InitialShift,
+                                                                                         ExprType,
+                                                                                         FieldType>(initial_lhs,
+                                                                                                    initial_rhs,
+                                                                                                    get_nebo_soft_thread_count())
+                     : nebo_assignment_sequential_execute<ValidGhost,
+                                                          InitialShift,
+                                                          ExprType,
+                                                          FieldType>(initial_lhs, initial_rhs))
 #                else
-                    field_expression_sequential_execute<CallStyle, ExprType, FieldType>(initial_lhs,
-                                                                                        initial_rhs)
+                    nebo_assignment_sequential_execute<ValidGhost, InitialShift, ExprType, FieldType>(initial_lhs,
+                                                                                                      initial_rhs)
 #                endif
                  /* FIELD_EXPRESSION_THREADS */
-                 ;;
+          ;
        };
 
       template<typename FieldType>
@@ -5965,7 +6317,7 @@
       template<typename ExprType, typename FieldType>
        inline FieldType const & operator <<=(FieldType & lhs,
                                              NeboExpression<ExprType, FieldType> const & rhs) {
-          return field_expression_general_execute<UseWholeIterator, ExprType, FieldType>(lhs, rhs);
+          return nebo_assignment_general_execute<UseWholeIterator, ExprType, FieldType>(lhs, rhs);
        };
 
       template<typename FieldType>
@@ -5988,197 +6340,7 @@
       template<typename ExprType, typename FieldType>
        inline FieldType const & interior_assign(FieldType & lhs,
                                                 NeboExpression<ExprType, FieldType> const & rhs) {
-          return field_expression_general_execute<UseInteriorIterator, ExprType, FieldType>(lhs, rhs);
-       };
-
-      template<typename CurrentMode, typename StencilType, typename FieldType>
-       struct NeboStencil;
-
-      template<typename StencilType, typename FieldType>
-       struct NeboStencil<Initial, StencilType, FieldType> {
-
-         public:
-          NeboStencil<Initial, StencilType, FieldType> typedef This;
-          FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
-          template<typename IteratorType>
-           struct Iterator {
-
-             NeboStencil<ResizePrep<IteratorType, This>, StencilType, FieldType> typedef
-             ResizePrepType;
-
-             NeboStencil<SeqWalk<IteratorType, This>, StencilType, FieldType> typedef SeqWalkType;
-          };
-          typename StencilType::SrcFieldType typedef SFT;
-          typename StencilType::DestFieldType typedef DFT;
-          typename SFT::Location::Offset typedef SFTO;
-          typename DFT::Location::Offset typedef DFTO;
-          typename structured::GreaterThan<SFTO, DFTO>::result::Negate typedef SP1;
-          typename structured::LessThan<SFTO, DFTO>::result typedef SP2;
-          typename structured::Invalidate<typename structured::Invalidate<typename structured::
-                                                                          FromGhost<typename SFT::
-                                                                                    Ghost>::result,
-                                                                          SP1>::result,
-                                          SP2>::result typedef VG;
-          NeboStencil(SFT const & f, double const lo, double const hi)
-          : lo_(lo), hi_(hi), field_(f)
-          {};
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::SeqWalkType init(void) const {
-              return typename Iterator<IteratorType>::SeqWalkType(*this);
-           };
-          template<typename IteratorType>
-           inline typename Iterator<IteratorType>::ResizePrepType resize_prep(void) const {
-              return typename Iterator<IteratorType>::ResizePrepType(*this);
-           };
-          inline SFT const & field(void) const { return field_; };
-          inline double lo(void) const { return lo_; };
-          inline double hi(void) const { return hi_; };
-
-         private:
-          const double lo_;
-          const double hi_;
-          const SFT field_;
-      };
-
-      template<typename IteratorType, typename SourceType, typename StencilType, typename FieldType>
-       struct NeboStencil<ResizePrep<IteratorType, SourceType>, StencilType, FieldType> {
-
-         public:
-          NeboStencil<ResizePrep<IteratorType, SourceType>, StencilType, FieldType> typedef This;
-          FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
-          NeboStencil<Resize<IteratorType, This>, StencilType, FieldType> typedef ResizeType;
-          typename StencilType::SrcFieldType typedef SFT;
-          NeboStencil(SourceType const & source)
-          : lo_(source.lo()), hi_(source.hi()), field_(source.field())
-          {};
-          inline ResizeType resize(MemoryWindow const & newSize) const {
-             return ResizeType(newSize, *this);
-          };
-          inline SFT const & field(void) const { return field_; };
-          inline double lo(void) const { return lo_; };
-          inline double hi(void) const { return hi_; };
-
-         private:
-          const double lo_;
-          const double hi_;
-          const SFT field_;
-      };
-
-      template<typename IteratorType, typename SourceType, typename StencilType, typename FieldType>
-       struct NeboStencil<Resize<IteratorType, SourceType>, StencilType, FieldType> {
-
-         public:
-          NeboStencil<Resize<IteratorType, SourceType>, StencilType, FieldType> typedef This;
-          FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
-          NeboStencil<SeqWalk<IteratorType, This>, StencilType, FieldType> typedef SeqWalkType;
-          typename StencilType::SrcFieldType typedef SFT;
-          NeboStencil(MemoryWindow const & size, SourceType const & source)
-          : lo_(source.lo()),
-            hi_(source.hi()),
-            field_(size, source.field().field_values(), structured::ExternalStorage)
-          {};
-          inline SeqWalkType init(void) const { return SeqWalkType(*this); };
-          inline SFT const & field(void) const { return field_; };
-          inline double lo(void) const { return lo_; };
-          inline double hi(void) const { return hi_; };
-
-         private:
-          const double lo_;
-          const double hi_;
-          const SFT field_;
-      };
-
-      template<typename IteratorType, typename SourceType, typename StencilType, typename FieldType>
-       struct NeboStencil<SeqWalk<IteratorType, SourceType>, StencilType, FieldType> {
-
-         public:
-          NeboStencil<SeqWalk<IteratorType, SourceType>, StencilType, FieldType> typedef This;
-          FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
-          typename StencilType::SrcFieldType typedef SFT;
-          typename StencilType::DestFieldType typedef DFT;
-          typename SFT::Location::Offset typedef SFTO;
-          typename DFT::Location::Offset typedef DFTO;
-          typename structured::GreaterThan<SFTO, DFTO>::result::Negate typedef SP1;
-          typename structured::LessThan<SFTO, DFTO>::result typedef SP2;
-          typename structured::Invalidate<typename structured::Invalidate<typename structured::
-                                                                          FromGhost<typename SFT::
-                                                                                    Ghost>::result,
-                                                                          SP1>::result,
-                                          SP2>::result typedef VG;
-          typename SFT::const_iterator typedef Iterator;
-          typename FieldType::value_type typedef AtomicType;
-          NeboStencil(SourceType const & source)
-          : lo_(source.lo()),
-            hi_(source.hi()),
-            field1_(source.field().template resize_ghost_and_shift<VG, SP1>()),
-            field2_(source.field().template resize_ghost_and_shift<VG, SP2>()),
-            iter1_(IteratorStyle<IteratorType, SFT>::begin(field1_)),
-            iter2_(IteratorStyle<IteratorType, SFT>::begin(field2_))
-          {};
-          inline void next(void) { ++iter1_; ++iter2_; };
-          inline bool at_end(void) const { return false; };
-          inline bool has_length(void) const { return false; };
-          inline AtomicType eval(void) const { return *iter1_ * lo_ + *iter2_ * hi_; };
-
-         private:
-          const double lo_;
-          const double hi_;
-          const SFT field1_;
-          const SFT field2_;
-          Iterator iter1_;
-          Iterator iter2_;
-      };
-
-      template<typename StencilType>
-       struct NeboStencilConstructor {
-
-         private:
-          const double lo_;
-          const double hi_;
-
-         public:
-          NeboStencilConstructor(StencilType * const stencil)
-          : lo_(stencil->get_minus_coef()), hi_(stencil->get_plus_coef())
-          {};
-          inline NeboStencil<Initial, StencilType, typename StencilType::DestFieldType> operator ()(typename
-                                                                                                    StencilType::
-                                                                                                    SrcFieldType
-                                                                                                    const
-                                                                                                    &
-                                                                                                    f) {
-
-             return NeboStencil<Initial, StencilType, typename StencilType::DestFieldType>(f,
-                                                                                           lo_,
-                                                                                           hi_);
-          };
-      };
-
-      template<typename StencilType, typename FieldType>
-       inline FieldType const & operator <<=(FieldType & lhs,
-                                             NeboStencil<Initial, StencilType, FieldType> const &
-                                             rhs) {
-
-          typename NeboStencil<Initial, StencilType, FieldType>::template Iterator<UseWholeIterator>::
-          SeqWalkType local_rhs = rhs.template init<UseWholeIterator>();
-
-          FieldType local_lhs = lhs.template resize_ghost_and_shift<typename NeboStencil<Initial,
-                                                                                         StencilType,
-                                                                                         FieldType>::
-                                                                    VG,
-                                                                    structured::IndexTriplet<0, 0, 0>
-                                    >();
-
-          typename FieldType::iterator iter = local_lhs.begin();
-
-          typename FieldType::iterator const end = local_lhs.end();
-
-          while(iter != end){ *iter = local_rhs.eval(); ++iter; local_rhs.next(); };
-
-          return lhs;
+          return nebo_assignment_general_execute<UseInteriorIterator, ExprType, FieldType>(lhs, rhs);
        };
    } /* SpatialOps */;
 

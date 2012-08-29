@@ -32,6 +32,8 @@
        [m macro-define-chunk]
        [s space-chunk]
        [typedef typedef-smt-chunk]
+       [tpl-pmtr (lambda (pmtr) (c typename-chunk s pmtr))]
+       [VG-chunk 'ValidGhost]
        [fc function-call-chunk]
        [mfc member-function-call-chunk]
        [fcn-def function-define-chunk]
@@ -577,6 +579,12 @@
                                        'double const-chunk 'coef4)
                                     (b s
                                        'int const-chunk 'number_of_partitions))
+                              (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'FromGhost
+                                                                                    (tpl-pmtr (scope 'SrcType 'Ghost))))
+                                                        'result))
+                                       VG-chunk)
+                              (typedef (scope 'structured (tpl-use 'IndexTriplet "0" "0" "0"))
+                                       'InitialShift)
                               (typedef (c typename-chunk
                                           s
                                           (scope (tpl-use NCF-chunk
@@ -584,8 +592,7 @@
                                                           'SrcType)
                                                  template-chunk)
                                           s
-                                          (scope (tpl-use 'Iterator
-                                                          'UseWholeIterator)
+                                          (scope (tpl-use 'Iterator VG-chunk 'InitialShift)
                                                  'ResizePrepType))
                                        'SrcPmtrType)
                               (typedef (c typename-chunk
@@ -595,8 +602,7 @@
                                                           'DestType)
                                                  template-chunk)
                                           s
-                                          (scope (tpl-use 'Iterator
-                                                          'UseWholeIterator)
+                                          (scope (tpl-use 'Iterator VG-chunk 'InitialShift)
                                                  'ResizePrepType))
                                        'DestPmtrType)
                               (b s
@@ -817,16 +823,14 @@
                                                                'src)
                                                            (c template-chunk
                                                               s
-                                                              (tpl-use 'resize_prep
-                                                                       'UseWholeIterator)))
+                                                              (tpl-use 'resize_prep VG-chunk 'InitialShift)))
                                                       (mfc (fc (tpl-use NF-chunk
                                                                         'Initial
                                                                         'DestType)
                                                                'dest)
                                                            (c template-chunk
                                                               s
-                                                              (tpl-use 'resize_prep
-                                                                       'UseWholeIterator)))
+                                                              (tpl-use 'resize_prep VG-chunk 'InitialShift)))
                                                       'coef1
                                                       'coef2
                                                       'coef3
