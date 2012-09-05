@@ -154,6 +154,11 @@ namespace structured{
                          const OperatorDatabase& opdb );    
 
     ~BoundaryConditionOp(){}
+    
+    double getGhostCoef(){return ca_;}
+    double getInteriorCoef(){return cb_;}
+    std::vector<int> getFlatGhostPoints(){return flatGhostPoints_;}
+    std::vector<int> getFlatInteriorPoints(){return flatInteriorPoints_;}    
 
     /**
      *  \brief Impose the boundary condition on the supplied field.
