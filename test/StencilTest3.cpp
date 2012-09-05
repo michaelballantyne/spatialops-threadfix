@@ -139,23 +139,17 @@ inline void evaluate_serial_example(FieldType & result,
 
     RUN_TEST(// X - direction
 	     gradXOp_  ->apply_to_field( phi,    tmpFaceX  );
-	     interpXOp_->apply_to_field( dCoef, tmpFaceX2 );
-	     tmpFaceX <<= tmpFaceX * tmpFaceX2;
 	     divXOp_->apply_to_field( tmpFaceX, tmpX );
 
 	     // Y - direction
-	     gradYOp_  ->apply_to_field( phi,    tmpFaceY  );
-	     interpYOp_->apply_to_field( dCoef, tmpFaceY2 );
-	     tmpFaceY <<= tmpFaceY * tmpFaceY2;
+	     gradYOp_  ->apply_to_field( tmpX,    tmpFaceY  );
 	     divYOp_->apply_to_field( tmpFaceY, tmpY );
 
 	     // Z - direction
-	     gradZOp_  ->apply_to_field( phi,    tmpFaceZ  );
-	     interpZOp_->apply_to_field( dCoef, tmpFaceZ2 );
-	     tmpFaceZ <<= tmpFaceZ * tmpFaceZ2;
+	     gradZOp_  ->apply_to_field( tmpY,    tmpFaceZ  );
 	     divZOp_->apply_to_field( tmpFaceZ, tmpZ );
 
-	     result <<= - tmpX - tmpY - tmpZ,
+	     result <<= - tmpZ,
 	     "old");
 
 };
@@ -190,9 +184,9 @@ inline void evaluate_chaining_example(FieldType & result,
     NeboStencilConstructor<typename BasicOpTypes<FieldType>::DivY> neboDivY(opDB.retrieve_operator<typename BasicOpTypes<FieldType>::DivY>());
     NeboStencilConstructor<typename BasicOpTypes<FieldType>::DivZ> neboDivZ(opDB.retrieve_operator<typename BasicOpTypes<FieldType>::DivZ>());
 
-    RUN_TEST(result <<= (- neboDivX(neboGradX(phi) * neboInterpX(dCoef))
-                         - neboDivY(neboGradY(phi) * neboInterpY(dCoef))
-                         - neboDivZ(neboGradZ(phi) * neboInterpZ(dCoef))),
+    RUN_TEST(result <<= (- neboDivZ(neboGradZ(
+                                              neboDivY(neboGradY(
+                                                                 neboDivX(neboGradX(phi))))))),
              "new");
 
 };
@@ -219,7 +213,7 @@ int main(int iarg, char* carg[]) {
 	  ( "Lx", po::value<double>(&Lx)->default_value(1.0),"Length in x")
 	  ( "Ly", po::value<double>(&Ly)->default_value(1.0),"Length in y")
 	  ( "Lz", po::value<double>(&Lz)->default_value(1.0),"Length in z")
-	  ( "check", po::value<bool>(&test)->default_value(true),"Compare results of old and new versions")
+          ( "check", po::value<bool>(&test)->default_value(true),"Compare results of old and new versions")
 #ifdef FIELD_EXPRESSION_THREADS
       ( "tc", po::value<int>(&thread_count)->default_value(NTHREADS), "Number of threads for Nebo")
 #endif

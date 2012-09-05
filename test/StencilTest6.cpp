@@ -101,6 +101,7 @@ template<typename FieldType>
 inline void evaluate_serial_example(FieldType & result,
 				    FieldType const & phi,
 				    FieldType const & dCoef,
+				    FieldType const & field1,
 				    IntVec const npts,
 				    double const Lx,
 				    double const Ly,
@@ -129,30 +130,36 @@ inline void evaluate_serial_example(FieldType & result,
     MemoryWindow const w = phi.window_with_ghost();
     typename FaceTypes<FieldType>::XFace tmpFaceX( w, NULL );
     typename FaceTypes<FieldType>::XFace tmpFaceX2( w, NULL );
+    typename FaceTypes<FieldType>::XFace tmpFaceX3( w, NULL );
     FieldType tmpX( w, NULL );
     typename FaceTypes<FieldType>::YFace tmpFaceY( w, NULL );
     typename FaceTypes<FieldType>::YFace tmpFaceY2( w, NULL );
+    typename FaceTypes<FieldType>::YFace tmpFaceY3( w, NULL );
     FieldType tmpY( w, NULL );
     typename FaceTypes<FieldType>::ZFace tmpFaceZ( w, NULL );
     typename FaceTypes<FieldType>::ZFace tmpFaceZ2( w, NULL );
+    typename FaceTypes<FieldType>::ZFace tmpFaceZ3( w, NULL );
     FieldType tmpZ( w, NULL );
 
     RUN_TEST(// X - direction
 	     gradXOp_  ->apply_to_field( phi,    tmpFaceX  );
 	     interpXOp_->apply_to_field( dCoef, tmpFaceX2 );
-	     tmpFaceX <<= tmpFaceX * tmpFaceX2;
+	     gradXOp_  ->apply_to_field( field1,tmpFaceX3  );
+	     tmpFaceX <<= tmpFaceX * tmpFaceX2 * tmpFaceX3;
 	     divXOp_->apply_to_field( tmpFaceX, tmpX );
 
 	     // Y - direction
 	     gradYOp_  ->apply_to_field( phi,    tmpFaceY  );
 	     interpYOp_->apply_to_field( dCoef, tmpFaceY2 );
-	     tmpFaceY <<= tmpFaceY * tmpFaceY2;
+	     gradYOp_  ->apply_to_field( field1,tmpFaceY3  );
+	     tmpFaceY <<= tmpFaceY * tmpFaceY2 * tmpFaceY3;
 	     divYOp_->apply_to_field( tmpFaceY, tmpY );
 
 	     // Z - direction
 	     gradZOp_  ->apply_to_field( phi,    tmpFaceZ  );
 	     interpZOp_->apply_to_field( dCoef, tmpFaceZ2 );
-	     tmpFaceZ <<= tmpFaceZ * tmpFaceZ2;
+	     gradZOp_  ->apply_to_field( field1,tmpFaceZ3  );
+	     tmpFaceZ <<= tmpFaceZ * tmpFaceZ2 * tmpFaceZ3;
 	     divZOp_->apply_to_field( tmpFaceZ, tmpZ );
 
 	     result <<= - tmpX - tmpY - tmpZ,
@@ -164,6 +171,7 @@ template<typename FieldType>
 inline void evaluate_chaining_example(FieldType & result,
 				      FieldType const & phi,
 				      FieldType const & dCoef,
+				      FieldType const & field1,
 				      IntVec const npts,
 				      double const Lx,
 				      double const Ly,
@@ -190,9 +198,9 @@ inline void evaluate_chaining_example(FieldType & result,
     NeboStencilConstructor<typename BasicOpTypes<FieldType>::DivY> neboDivY(opDB.retrieve_operator<typename BasicOpTypes<FieldType>::DivY>());
     NeboStencilConstructor<typename BasicOpTypes<FieldType>::DivZ> neboDivZ(opDB.retrieve_operator<typename BasicOpTypes<FieldType>::DivZ>());
 
-    RUN_TEST(result <<= (- neboDivX(neboGradX(phi) * neboInterpX(dCoef))
-                         - neboDivY(neboGradY(phi) * neboInterpY(dCoef))
-                         - neboDivZ(neboGradZ(phi) * neboInterpZ(dCoef))),
+    RUN_TEST(result <<= (- neboDivX(neboGradX(phi) * neboInterpX(dCoef) * neboGradX(field1))
+                         - neboDivY(neboGradY(phi) * neboInterpY(dCoef) * neboGradY(field1))
+                         - neboDivZ(neboGradZ(phi) * neboInterpZ(dCoef) * neboGradZ(field1))),
              "new");
 
 };
@@ -219,7 +227,7 @@ int main(int iarg, char* carg[]) {
 	  ( "Lx", po::value<double>(&Lx)->default_value(1.0),"Length in x")
 	  ( "Ly", po::value<double>(&Ly)->default_value(1.0),"Length in y")
 	  ( "Lz", po::value<double>(&Lz)->default_value(1.0),"Length in z")
-	  ( "check", po::value<bool>(&test)->default_value(true),"Compare results of old and new versions")
+          ( "check", po::value<bool>(&test)->default_value(true),"Compare results of old and new versions")
 #ifdef FIELD_EXPRESSION_THREADS
       ( "tc", po::value<int>(&thread_count)->default_value(NTHREADS), "Number of threads for Nebo")
 #endif
@@ -243,16 +251,19 @@ int main(int iarg, char* carg[]) {
 
     Field a( window, NULL );
     Field b( window, NULL );
+    Field c( window, NULL );
     Field cr( window, NULL );
     Field sr( window, NULL );
 
     Field::iterator ia = a.begin();
     Field::iterator ib = b.begin();
+    Field::iterator ic = c.begin();
     for(int kk = 0; kk < window.glob_dim(2); kk++) {
         for(int jj = 0; jj < window.glob_dim(1); jj++) {
             for(int ii = 0; ii < window.glob_dim(0); ii++, ++ia, ++ib) {
 	      *ia = ii + jj * 2 + kk * 4;
 	      *ib = ii + jj * 3 + kk * 5;
+              *ic = ii + jj * 7 + kk * 6;
             }
         }
     };
@@ -260,6 +271,7 @@ int main(int iarg, char* carg[]) {
     evaluate_serial_example(sr,
 			    a,
 			    b,
+                            c,
 			    IntVec(nx,ny,nz),
 			    Lx,
 			    Ly,
@@ -269,6 +281,7 @@ int main(int iarg, char* carg[]) {
     evaluate_chaining_example(cr,
 			      a,
 			      b,
+                              c,
 			      IntVec(nx,ny,nz),
 			      Lx,
 			      Ly,
