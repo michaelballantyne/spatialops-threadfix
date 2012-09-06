@@ -11,8 +11,8 @@ add_test( field_exprs field_exprs )
 add_executable( assign_test ScalingAssignmentTest.cpp )
 target_link_libraries( assign_test ${libs} )
 
-add_executable( stencil_test StencilTest.cpp )
-target_link_libraries( stencil_test ${libs} )
+add_executable( stencil_test1 StencilTest1.cpp )
+target_link_libraries( stencil_test1 ${libs} )
 
 add_executable( stencil_test2 StencilTest2.cpp )
 target_link_libraries( stencil_test2 ${libs} )

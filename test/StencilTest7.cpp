@@ -103,6 +103,10 @@ inline void evaluate_serial_example(FieldType & result,
 				    FieldType const & dCoef,
 				    FieldType const & field1,
 				    FieldType const & field2,
+				    FieldType const & field3,
+				    FieldType const & field4,
+				    FieldType const & field5,
+				    FieldType const & field6,
 				    IntVec const npts,
 				    double const Lx,
 				    double const Ly,
@@ -129,10 +133,10 @@ inline void evaluate_serial_example(FieldType & result,
     typename BasicOpTypes<FieldType>::DivZ* const divZOp_ = opDB.retrieve_operator<typename BasicOpTypes<FieldType>::DivZ>();
 
     MemoryWindow const w = phi.window_with_ghost();
+    FieldType tmpPhi(w, NULL);
+    FieldType tmpDCoef(w, NULL);
     typename FaceTypes<FieldType>::XFace tmpFaceX( w, NULL );
     typename FaceTypes<FieldType>::XFace tmpFaceX2( w, NULL );
-    typename FaceTypes<FieldType>::XFace tmpFaceX3( w, NULL );
-    typename FaceTypes<FieldType>::XFace tmpFaceX4( w, NULL );
     FieldType tmpX( w, NULL );
     typename FaceTypes<FieldType>::YFace tmpFaceY( w, NULL );
     typename FaceTypes<FieldType>::YFace tmpFaceY2( w, NULL );
@@ -146,30 +150,30 @@ inline void evaluate_serial_example(FieldType & result,
     FieldType tmpZ( w, NULL );
 
     RUN_TEST(// X - direction
-	     gradXOp_  ->apply_to_field( phi,    tmpFaceX  );
-	     interpXOp_->apply_to_field( dCoef, tmpFaceX2 );
-	     gradXOp_  ->apply_to_field( field1,tmpFaceX3  );
-	     interpXOp_->apply_to_field( field2,tmpFaceX4 );
-	     tmpFaceX <<= tmpFaceX * tmpFaceX2 * tmpFaceX3 * tmpFaceX4;
+             tmpPhi <<= phi + field1;
+             tmpDCoef <<= dCoef + field2;
+	     gradXOp_  ->apply_to_field( tmpPhi,    tmpFaceX  );
+	     interpXOp_->apply_to_field( tmpDCoef, tmpFaceX2 );
+	     tmpFaceX <<= tmpFaceX * tmpFaceX2;
 	     divXOp_->apply_to_field( tmpFaceX, tmpX );
 
 	     // Y - direction
-	     gradYOp_  ->apply_to_field( phi,    tmpFaceY  );
-	     interpYOp_->apply_to_field( dCoef, tmpFaceY2 );
-	     gradYOp_  ->apply_to_field( field1,tmpFaceY3  );
-	     interpYOp_->apply_to_field( field2, tmpFaceY4 );
-	     tmpFaceY <<= tmpFaceY * tmpFaceY2 * tmpFaceY3 * tmpFaceY4;
+             tmpPhi <<= phi + field3;
+             tmpDCoef <<= dCoef + field4;
+	     gradYOp_  ->apply_to_field( tmpPhi,    tmpFaceY  );
+	     interpYOp_->apply_to_field( tmpDCoef, tmpFaceY2 );
+	     tmpFaceY <<= tmpFaceY * tmpFaceY2;
 	     divYOp_->apply_to_field( tmpFaceY, tmpY );
 
 	     // Z - direction
-	     gradZOp_  ->apply_to_field( phi,    tmpFaceZ  );
-	     interpZOp_->apply_to_field( dCoef, tmpFaceZ2 );
-	     gradZOp_  ->apply_to_field( field1,tmpFaceZ3  );
-	     interpZOp_->apply_to_field( field2, tmpFaceZ4 );
-	     tmpFaceZ <<= tmpFaceZ * tmpFaceZ2 * tmpFaceZ3 * tmpFaceZ4;
+             tmpPhi <<= phi + field5;
+             tmpDCoef <<= dCoef + field6;
+	     gradZOp_  ->apply_to_field( tmpPhi,    tmpFaceZ  );
+	     interpZOp_->apply_to_field( tmpDCoef, tmpFaceZ2 );
+	     tmpFaceZ <<= tmpFaceZ * tmpFaceZ2;
 	     divZOp_->apply_to_field( tmpFaceZ, tmpZ );
 
-	     result <<= - tmpX - tmpY - tmpZ,
+	     result <<= - sin(tmpX) - cos(tmpY) - tan(tmpZ),
 	     "old");
 
 };
@@ -180,6 +184,10 @@ inline void evaluate_chaining_example(FieldType & result,
 				      FieldType const & dCoef,
 				      FieldType const & field1,
 				      FieldType const & field2,
+				      FieldType const & field3,
+				      FieldType const & field4,
+				      FieldType const & field5,
+				      FieldType const & field6,
 				      IntVec const npts,
 				      double const Lx,
 				      double const Ly,
@@ -206,9 +214,9 @@ inline void evaluate_chaining_example(FieldType & result,
     NeboStencilConstructor<typename BasicOpTypes<FieldType>::DivY> neboDivY(opDB.retrieve_operator<typename BasicOpTypes<FieldType>::DivY>());
     NeboStencilConstructor<typename BasicOpTypes<FieldType>::DivZ> neboDivZ(opDB.retrieve_operator<typename BasicOpTypes<FieldType>::DivZ>());
 
-    RUN_TEST(result <<= (- neboDivX(neboGradX(phi) * neboInterpX(dCoef) * neboGradX(field1) * neboInterpX(field2))
-                         - neboDivY(neboGradY(phi) * neboInterpY(dCoef) * neboGradY(field1) * neboInterpY(field2))
-                         - neboDivZ(neboGradZ(phi) * neboInterpZ(dCoef) * neboGradZ(field1) * neboInterpZ(field2))),
+    RUN_TEST(result <<= (- sin(neboDivX(neboGradX(phi + field1) * neboInterpX(dCoef + field2)))
+                         - cos(neboDivY(neboGradY(phi + field3) * neboInterpY(dCoef + field4)))
+                         - tan(neboDivZ(neboGradZ(phi + field5) * neboInterpZ(dCoef + field6)))),
              "new");
 
 };
@@ -261,6 +269,10 @@ int main(int iarg, char* carg[]) {
     Field b( window, NULL );
     Field c( window, NULL );
     Field d( window, NULL );
+    Field e( window, NULL );
+    Field f( window, NULL );
+    Field g( window, NULL );
+    Field h( window, NULL );
     Field cr( window, NULL );
     Field sr( window, NULL );
 
@@ -268,6 +280,10 @@ int main(int iarg, char* carg[]) {
     Field::iterator ib = b.begin();
     Field::iterator ic = c.begin();
     Field::iterator id = d.begin();
+    Field::iterator ie = e.begin();
+    Field::iterator iff = f.begin();
+    Field::iterator ig = g.begin();
+    Field::iterator ih = h.begin();
     for(int kk = 0; kk < window.glob_dim(2); kk++) {
         for(int jj = 0; jj < window.glob_dim(1); jj++) {
             for(int ii = 0; ii < window.glob_dim(0); ii++, ++ia, ++ib) {
@@ -275,6 +291,10 @@ int main(int iarg, char* carg[]) {
 	      *ib = ii + jj * 3 + kk * 5;
               *ic = ii + jj * 7 + kk * 6;
               *id = ii + jj * 6 + kk * 7;
+              *ie = ii + jj * 4 + kk * 3;
+              *iff = ii + jj * 5 + kk * 4;
+              *ig = ii + jj * 8 + kk * 2;
+              *ih = ii + jj * 2 + kk * 8;
             }
         }
     };
@@ -284,6 +304,10 @@ int main(int iarg, char* carg[]) {
 			    b,
                             c,
                             d,
+                            e,
+                            f,
+                            g,
+                            h,
 			    IntVec(nx,ny,nz),
 			    Lx,
 			    Ly,
@@ -295,7 +319,11 @@ int main(int iarg, char* carg[]) {
 			      b,
                               c,
                               d,
-			      IntVec(nx,ny,nz),
+                              e,
+                              f,
+                              g,
+                              h,
+                              IntVec(nx,ny,nz),
 			      Lx,
 			      Ly,
 			      Lz,
@@ -304,6 +332,6 @@ int main(int iarg, char* carg[]) {
     if(test) {
         INT_EQU(Field, cr, sr, false);
     };
-
+    
     return 0;
 };

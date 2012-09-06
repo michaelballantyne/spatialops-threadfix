@@ -137,19 +137,19 @@ inline void evaluate_serial_example(FieldType & result,
     typename FaceTypes<FieldType>::ZFace tmpFaceZ2( w, NULL );
     FieldType tmpZ( w, NULL );
 
-    RUN_TEST(// Z - direction
-	     gradZOp_  ->apply_to_field( phi,    tmpFaceZ  );
-	     divZOp_->apply_to_field( tmpFaceZ, tmpZ );
-
-	     // Y - direction
-	     gradYOp_  ->apply_to_field( tmpZ,    tmpFaceY  );
-	     divYOp_->apply_to_field( tmpFaceY, tmpY );
-
-	     // X - direction
-	     gradXOp_  ->apply_to_field( tmpY,    tmpFaceX  );
+    RUN_TEST(// X - direction
+	     gradXOp_  ->apply_to_field( phi,    tmpFaceX  );
 	     divXOp_->apply_to_field( tmpFaceX, tmpX );
 
-	     result <<= - tmpX,
+	     // Y - direction
+	     gradYOp_  ->apply_to_field( tmpX,    tmpFaceY  );
+	     divYOp_->apply_to_field( tmpFaceY, tmpY );
+
+	     // Z - direction
+	     gradZOp_  ->apply_to_field( tmpY,    tmpFaceZ  );
+	     divZOp_->apply_to_field( tmpFaceZ, tmpZ );
+
+	     result <<= - tmpZ,
 	     "old");
 
 };
@@ -184,9 +184,13 @@ inline void evaluate_chaining_example(FieldType & result,
     NeboStencilConstructor<typename BasicOpTypes<FieldType>::DivY> neboDivY(opDB.retrieve_operator<typename BasicOpTypes<FieldType>::DivY>());
     NeboStencilConstructor<typename BasicOpTypes<FieldType>::DivZ> neboDivZ(opDB.retrieve_operator<typename BasicOpTypes<FieldType>::DivZ>());
 
-    RUN_TEST(result <<= (- neboDivX(neboGradX(
-                                              neboDivY(neboGradY(
-                                                                 neboDivZ(neboGradZ(phi))))))),
+    MemoryWindow const w = phi.window_with_ghost();
+    typename FaceTypes<FieldType>::YFace tmpFaceY( w, NULL );
+
+    RUN_TEST(tmpFaceY <<= neboGradY(
+                                    neboDivX(neboGradX(phi)));
+             result <<= (- neboDivZ(neboGradZ(
+                                              neboDivY(tmpFaceY)))),
              "new");
 
 };
