@@ -155,10 +155,10 @@ namespace structured{
 
     ~BoundaryConditionOp(){}
     
-    double getGhostCoef(){return ca_;}
-    double getInteriorCoef(){return cb_;}
-    std::vector<int> getFlatGhostPoints(){return flatGhostPoints_;}
-    std::vector<int> getFlatInteriorPoints(){return flatInteriorPoints_;}    
+    double getGhostCoef() const{ return ca_; }
+    double getInteriorCoef() const{ return cb_; }
+    const std::vector<int>& getFlatGhostPoints() const{ return flatGhostPoints_; }
+    const std::vector<int>& getFlatInteriorPoints() const{ return flatInteriorPoints_; }
 
     /**
      *  \brief Impose the boundary condition on the supplied field.
