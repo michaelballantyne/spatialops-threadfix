@@ -749,7 +749,7 @@
    (b blank-line-chunk
       (pp-includes-chunk 'spatialops/SpatialOpsConfigure.h
                          'spatialops/structured/IndexTriplet.h
-                         'spatialops/structured/IndexHexlet.h
+                         'spatialops/structured/GhostData.h
                          'spatialops/structured/SpatialField.h
                          'cmath)
       (comment-env-chunk (pp-include-chunk 'iostream))
@@ -829,7 +829,7 @@
                                 (typedef (scope (tpl-pmtr FT-chunk)
                                                 'value_type)
                                          'AtomicType)
-                                (scope 'structured 'InfiniteIndexHexlet)
+                                (scope 'structured 'InfiniteGhostData)
                                 (bm-constructor (b s 'AtomicType const-chunk 'v)
                                                 (cons-asgn 'value_ 'v)
                                                 null)
@@ -887,7 +887,7 @@
                     (bs-Initial null
                                 null
                                 null
-                                (scope 'structured 'InfiniteIndexHexlet)
+                                (scope 'structured 'InfiniteGhostData)
                                 (bm-constructor (b s 'bool const-chunk 'v)
                                                 (cons-asgn 'value_ 'v)
                                                 null)
@@ -941,7 +941,9 @@
                                 null
                                 (tpl-pmtr (scope (scope 'structured
                                                         (tpl-use 'FromGhost
-                                                                 (tpl-pmtr (scope FT-chunk 'Ghost))))
+                                                                 (tpl-pmtr (scope FT-chunk 'Ghost))
+                                                                 (tpl-pmtr (scope (scope FT-chunk 'Location)
+                                                                                  'BCExtra))))
                                                  'result))
                                 (bm-constructor (b s FT-chunk const-chunk "&" 'f)
                                                 (cons-asgn 'field_ 'f)
@@ -1013,7 +1015,10 @@
                                 null
                                 null
                                 (tpl-pmtr (scope (scope 'structured
-                                                        (tpl-use 'FromGhost (tpl-pmtr (scope FT-chunk 'Ghost))))
+                                                        (tpl-use 'FromGhost
+                                                                 (tpl-pmtr (scope FT-chunk 'Ghost))
+                                                                 (tpl-pmtr (scope (scope FT-chunk 'Location)
+                                                                                  'BCExtra))))
                                                  'result))
                                 (bm-constructor (b s FT-chunk 'f)
                                                 (cons-asgn 'field_ 'f)
@@ -1218,7 +1223,7 @@
                                'INTERNAL_NAME
                                'EXTERNAL_NAME))
       (srt-def (srt-dcl Nil-chunk)
-               (typedef (scope 'structured 'InfiniteIndexHexlet) report-VG-chunk)
+               (typedef (scope 'structured 'InfiniteGhostData) report-VG-chunk)
                (constructor-chunk Nil-chunk
                                   null
                                   null))
@@ -3038,7 +3043,10 @@
                                     "="
                                     (mfc (mfc 'initial_lhs 'window_with_ghost)
                                          (tpl-fcn-use 'resizeGhost
-                                                      (tpl-pmtr (scope (scope 'structured (tpl-use 'FromGhost (tpl-pmtr (scope FT-chunk 'Ghost))))
+                                                      (tpl-pmtr (scope (scope 'structured (tpl-use 'FromGhost
+                                                                                                   (tpl-pmtr (scope FT-chunk 'Ghost))
+                                                                                                   (tpl-pmtr (scope (scope FT-chunk 'Location)
+                                                                                                                    'BCExtra))))
                                                                       'result))
                                                       VG-chunk)))
                                  (let ([=1 (lambda (sym) (b s 'int sym "=" "1"))])
@@ -3133,10 +3141,15 @@
                                                                                                                      report-VG-chunk))
                                                                                                     (tpl-pmtr (scope (scope 'structured
                                                                                                                             (tpl-use 'FromGhost
-                                                                                                                                     (tpl-pmtr (scope FT-chunk 'Ghost))))
+                                                                                                                                     (tpl-pmtr (scope FT-chunk 'Ghost))
+                                                                                                                                     (tpl-pmtr (scope (scope FT-chunk 'Location)
+                                                                                                                                                      'BCExtra))))
                                                                                                                      'result))))
                                                                                     'result))
-                                                                   (c (scope 'structured (tpl-use 'IndexHexlet "0" "0" "0" "0" "0" "0")) s))
+                                                                   (c (scope 'structured (tpl-use 'GhostData
+                                                                                                  "0" "0" "0"
+                                                                                                  "0" "0" "0"
+                                                                                                  "0" "0" "0")) s))
                                                           'result))
                                          'ValidGhost)
                                 (typedef (scope 'structured (tpl-use 'IndexTriplet "0" "0" "0"))

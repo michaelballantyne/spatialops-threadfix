@@ -33,7 +33,8 @@
        [s space-chunk]
        [typedef typedef-smt-chunk]
        [tpl-pmtr (lambda (pmtr) (c typename-chunk s pmtr))]
-       [VG-chunk 'ValidGhost]
+       [SVG-chunk 'SrcValidGhost]
+       [DVG-chunk 'DestValidGhost]
        [fc function-call-chunk]
        [mfc member-function-call-chunk]
        [fcn-def function-define-chunk]
@@ -604,9 +605,17 @@
                                     (b s
                                        'int const-chunk 'number_of_partitions))
                               (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'FromGhost
-                                                                                    (tpl-pmtr (scope 'SrcType 'Ghost))))
+                                                                                    (tpl-pmtr (scope 'SrcType 'Ghost))
+                                                                                    (tpl-pmtr (scope (scope 'SrcType 'Location)
+                                                                                                     'BCExtra))))
                                                         'result))
-                                       VG-chunk)
+                                       SVG-chunk)
+                              (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'FromGhost
+                                                                                    (tpl-pmtr (scope 'DestType 'Ghost))
+                                                                                    (tpl-pmtr (scope (scope 'DestType 'Location)
+                                                                                                     'BCExtra))))
+                                                        'result))
+                                       DVG-chunk)
                               (typedef (scope 'structured (tpl-use 'IndexTriplet "0" "0" "0"))
                                        'InitialShift)
                               (typedef (c typename-chunk
@@ -616,7 +625,7 @@
                                                           'SrcType)
                                                  template-chunk)
                                           s
-                                          (scope (tpl-use 'Iterator VG-chunk 'InitialShift)
+                                          (scope (tpl-use 'Iterator SVG-chunk 'InitialShift)
                                                  'ResizePrepType))
                                        'SrcPmtrType)
                               (typedef (c typename-chunk
@@ -626,7 +635,7 @@
                                                           'DestType)
                                                  template-chunk)
                                           s
-                                          (scope (tpl-use 'Iterator VG-chunk 'InitialShift)
+                                          (scope (tpl-use 'Iterator DVG-chunk 'InitialShift)
                                                  'ResizePrepType))
                                        'DestPmtrType)
                               (b s
@@ -855,14 +864,14 @@
                                                                'src)
                                                            (c template-chunk
                                                               s
-                                                              (tpl-use 'resize_prep VG-chunk 'InitialShift)))
+                                                              (tpl-use 'resize_prep SVG-chunk 'InitialShift)))
                                                       (mfc (fc (tpl-use NF-chunk
                                                                         'Initial
                                                                         'DestType)
                                                                'dest)
                                                            (c template-chunk
                                                               s
-                                                              (tpl-use 'resize_prep VG-chunk 'InitialShift)))
+                                                              (tpl-use 'resize_prep DVG-chunk 'InitialShift)))
                                                       'coefs
                                                       (c "*"
                                                          'ivec_sw)

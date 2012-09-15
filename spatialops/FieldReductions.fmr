@@ -156,7 +156,10 @@
                                                return-type
                                                pmtrs
                                                args
-                                               (list (typedef (scope 'structured (tpl-use 'IndexHexlet "0" "0" "0" "0" "0" "0"))
+                                               (list (typedef (scope 'structured (tpl-use 'GhostData
+                                                                                          "0" "0" "0"
+                                                                                          "0" "0" "0"
+                                                                                          "0" "0" "0"))
                                                               VG-chunk)
                                                      (typedef (scope 'structured (tpl-use 'IndexTriplet "0" "0" "0"))
                                                               SH-chunk)

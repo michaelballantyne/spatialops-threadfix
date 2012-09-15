@@ -41,6 +41,7 @@
 #include <spatialops/structured/ExternalAllocators.h>
 #include <spatialops/structured/MemoryTypes.h>
 #include <spatialops/structured/MemoryWindow.h>
+#include <spatialops/structured/GhostData.h>
 
 #ifdef SOPS_BOOST_SERIALIZATION
 # include <boost/serialization/serialization.hpp>
@@ -414,7 +415,8 @@ namespace structured{
         BOOST_STATIC_ASSERT(Shift::Z < 0 ? (Abs<Shift::Z>::result <= Ghost::NGhostMinus::Z - NewGhost::nZ) : true);
         BOOST_STATIC_ASSERT(Shift::Z > 0 ? (Shift::Z <= Ghost::NGhostPlus::Z - NewGhost::pZ) : true);
 
-        return SpatialField(window_with_ghost().template resizeGhost<typename FromGhost<Ghost>::result,
+        return SpatialField(window_with_ghost().template resizeGhost<typename FromGhost<Ghost,
+                                                                                        typename Location::BCExtra>::result,
                                                                      NewGhost>()
                                                .template shift<Shift>(),
                             field_values(),

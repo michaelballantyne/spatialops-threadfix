@@ -217,15 +217,22 @@
                                                                           int const
                                                                           number_of_partitions) {
 
-                typename structured::FromGhost<typename SrcType::Ghost>::result typedef ValidGhost;
+                typename structured::FromGhost<typename SrcType::Ghost,
+                                               typename SrcType::Location::BCExtra>::result typedef
+                SrcValidGhost;
+
+                typename structured::FromGhost<typename DestType::Ghost,
+                                               typename DestType::Location::BCExtra>::result typedef
+                DestValidGhost;
 
                 structured::IndexTriplet<0, 0, 0> typedef InitialShift;
 
-                typename NeboConstField<Initial, SrcType>::template Iterator<ValidGhost,
+                typename NeboConstField<Initial, SrcType>::template Iterator<SrcValidGhost,
                                                                              InitialShift>::
                 ResizePrepType typedef SrcPmtrType;
 
-                typename NeboField<Initial, DestType>::template Iterator<ValidGhost, InitialShift>::
+                typename NeboField<Initial, DestType>::template Iterator<DestValidGhost,
+                                                                         InitialShift>::
                 ResizePrepType typedef DestPmtrType;
 
                 MemoryWindow sw = src.window_with_ghost();
@@ -280,10 +287,10 @@
                                                                                                                          SrcPmtrType,
                                                                                                                          DestPmtrType>,
                                                                NeboConstField<Initial, SrcType>(src).template
-                                                                                                     resize_prep<ValidGhost,
+                                                                                                     resize_prep<SrcValidGhost,
                                                                                                                  InitialShift>(),
                                                                NeboField<Initial, DestType>(dest).template
-                                                                                                  resize_prep<ValidGhost,
+                                                                                                  resize_prep<DestValidGhost,
                                                                                                               InitialShift>(),
                                                                coefs,
                                                                *ivec_sw,

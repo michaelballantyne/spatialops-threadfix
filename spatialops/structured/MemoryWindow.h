@@ -32,7 +32,6 @@
 
 #include <spatialops/structured/IntVec.h>
 #include <spatialops/structured/IndexTriplet.h>
-#include <spatialops/structured/IndexHexlet.h>
 
 #ifdef SOPS_BOOST_SERIALIZATION
 # include <boost/serialization/serialization.hpp>
@@ -202,8 +201,8 @@ namespace structured{
     /**
      *  \brief Resizes/reduces the MemoryWindow to given number of ghost cells.
      *
-     *  \param oldSize is an IndexHexlet that specifies how many ghost cells are currently on each face.
-     *  \param newSize is an IndexHexlet that specifies how many ghost cells are to be on each face.
+     *  \param oldSize is an GhostData that specifies how many ghost cells are currently on each face.
+     *  \param newSize is an GhostData that specifies how many ghost cells are to be on each face.
      *
      *  \return new MemoryWindow reduced from having oldSize ghostcells to having newSize ghost cells on each face.
      */
@@ -211,8 +210,8 @@ namespace structured{
     inline MemoryWindow resizeGhost() const {
         return MemoryWindow(nptsGlob_,
                             offset_ + OldSize::neg_int_vec() - NewSize::neg_int_vec(),
-                            extent_ - OldSize::neg_int_vec() - OldSize::pos_int_vec()
-                                    + NewSize::neg_int_vec() + NewSize::pos_int_vec(),
+                            extent_ - OldSize::neg_int_vec() - OldSize::real_pos_int_vec(bc_)
+                                    + NewSize::neg_int_vec() + NewSize::real_pos_int_vec(bc_),
                             bc_[0],
                             bc_[1],
                             bc_[2]);

@@ -152,7 +152,9 @@
                                                                              int const
                                                                              number_of_partitions) {
 
-                typename structured::FromGhost<typename FieldType::Ghost>::result typedef ValidGhost;
+                typename structured::FromGhost<typename FieldType::Ghost,
+                                               typename FieldType::Location::BCExtra>::result
+                typedef ValidGhost;
 
                 structured::IndexTriplet<0, 0, 0> typedef InitialShift;
 

@@ -70,7 +70,7 @@
                                             ResultType const & initialValue,
                                             NeboExpression<ExprType, FieldType> const & fexpr) {
 
-          structured::IndexHexlet<0, 0, 0, 0, 0, 0> typedef ValidGhost;
+          structured::GhostData<0, 0, 0, 0, 0, 0, 0, 0, 0> typedef ValidGhost;
 
           structured::IndexTriplet<0, 0, 0> typedef Shift;
 
@@ -161,7 +161,7 @@
                                                                   NeboExpression<ExprType, FieldType>
                                                                   const & fexpr) {
 
-          structured::IndexHexlet<0, 0, 0, 0, 0, 0> typedef ValidGhost;
+          structured::GhostData<0, 0, 0, 0, 0, 0, 0, 0, 0> typedef ValidGhost;
 
           structured::IndexTriplet<0, 0, 0> typedef Shift;
 
@@ -255,7 +255,7 @@
                                                                   NeboExpression<ExprType, FieldType>
                                                                   const & fexpr) {
 
-          structured::IndexHexlet<0, 0, 0, 0, 0, 0> typedef ValidGhost;
+          structured::GhostData<0, 0, 0, 0, 0, 0, 0, 0, 0> typedef ValidGhost;
 
           structured::IndexTriplet<0, 0, 0> typedef Shift;
 

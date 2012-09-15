@@ -26,7 +26,7 @@
 
 #  include <spatialops/SpatialOpsConfigure.h>
 #  include <spatialops/structured/IndexTriplet.h>
-#  include <spatialops/structured/IndexHexlet.h>
+#  include <spatialops/structured/GhostData.h>
 #  include <spatialops/structured/SpatialField.h>
 #  include <cmath>
 
@@ -142,7 +142,7 @@
 
              NeboScalar<SeqWalk<ValidGhost, Shift>, FieldType> typedef SeqWalkType;
           };
-          structured::InfiniteIndexHexlet typedef PossibleValidGhost;
+          structured::InfiniteGhostData typedef PossibleValidGhost;
           NeboScalar(AtomicType const v)
           : value_(v)
           {};
@@ -235,7 +235,7 @@
 
              NeboBoolean<SeqWalk<ValidGhost, Shift>, FieldType> typedef SeqWalkType;
           };
-          structured::InfiniteIndexHexlet typedef PossibleValidGhost;
+          structured::InfiniteGhostData typedef PossibleValidGhost;
           NeboBoolean(bool const v)
           : value_(v)
           {};
@@ -325,7 +325,8 @@
 
              NeboConstField<SeqWalk<ValidGhost, Shift>, FieldType> typedef SeqWalkType;
           };
-          typename structured::FromGhost<typename FieldType::Ghost>::result typedef
+          typename structured::FromGhost<typename FieldType::Ghost,
+                                         typename FieldType::Location::BCExtra>::result typedef
           PossibleValidGhost;
           NeboConstField(FieldType const & f)
           : field_(f)
@@ -427,7 +428,8 @@
 
              NeboField<SeqWalk<ValidGhost, Shift>, FieldType> typedef SeqWalkType;
           };
-          typename structured::FromGhost<typename FieldType::Ghost>::result typedef
+          typename structured::FromGhost<typename FieldType::Ghost,
+                                         typename FieldType::Location::BCExtra>::result typedef
           PossibleValidGhost;
           NeboField(FieldType f)
           : field_(f)
@@ -5183,7 +5185,7 @@
              return ReturnTerm(ReturnType(Type(Standardize<SubExpr, FieldType>::standardType(arg)))); \
           };
 
-      struct NeboNil { structured::InfiniteIndexHexlet typedef PossibleValidGhost; NeboNil() {}; };
+      struct NeboNil { structured::InfiniteGhostData typedef PossibleValidGhost; NeboNil() {}; };
 
       template<typename CurrentMode, typename Test, typename Expr, typename FieldType>
        struct NeboClause;
@@ -6775,7 +6777,11 @@
                                                                                         structured::
                                                                                         FromGhost<typename
                                                                                                   FieldType::
-                                                                                                  Ghost>::
+                                                                                                  Ghost,
+                                                                                                  typename
+                                                                                                  FieldType::
+                                                                                                  Location::
+                                                                                                  BCExtra>::
                                                                                         result,
                                                                                         ValidGhost>();
 
@@ -6840,9 +6846,13 @@
                                  typename structured::Minimum<typename ExprType::PossibleValidGhost,
                                                               typename structured::FromGhost<typename
                                                                                              FieldType::
-                                                                                             Ghost>::
+                                                                                             Ghost,
+                                                                                             typename
+                                                                                             FieldType::
+                                                                                             Location::
+                                                                                             BCExtra>::
                                                               result>::result,
-                                 structured::IndexHexlet<0, 0, 0, 0, 0, 0> >::result typedef
+                                 structured::GhostData<0, 0, 0, 0, 0, 0, 0, 0, 0> >::result typedef
           ValidGhost;
 
           structured::IndexTriplet<0, 0, 0> typedef InitialShift;
