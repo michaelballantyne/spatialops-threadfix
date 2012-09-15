@@ -147,35 +147,59 @@
                                                                                                    coef4);
           };
 
+         struct Coef {
+
+            Coef(double const c1, double const c2, double const c3, double const c4)
+            : coef1_(c1), coef2_(c2), coef3_(c3), coef4_(c4)
+            {};
+
+            double const coef1_;
+
+            double const coef2_;
+
+            double const coef3_;
+
+            double const coef4_;
+
+            inline double coef1(void) const { return coef1_; };
+
+            inline double coef2(void) const { return coef2_; };
+
+            inline double coef3(void) const { return coef3_; };
+
+            inline double coef4(void) const { return coef4_; };
+         };
+
 #        ifdef STENCIL_THREADS
             template<typename OperatorType, typename SrcType, typename DestType>
              inline void stencil_4_apply_to_field_thread_parallel_execute_internal(SrcType const &
                                                                                    src,
                                                                                    DestType & dest,
-                                                                                   double const
-                                                                                   coef1,
-                                                                                   double const
-                                                                                   coef2,
-                                                                                   double const
-                                                                                   coef3,
-                                                                                   double const
-                                                                                   coef4,
+                                                                                   Coef const coefs,
                                                                                    MemoryWindow
                                                                                    const & sw,
                                                                                    MemoryWindow
                                                                                    const & dw,
+                                                                                   IntVec const &
+                                                                                   split,
+                                                                                   IntVec const &
+                                                                                   location,
                                                                                    BI::
                                                                                    interprocess_semaphore
                                                                                    * sem) {
 
                 stencil_4_apply_to_field_sequential_execute_internal<OperatorType,
                                                                      typename SrcType::field_type,
-                                                                     typename DestType::field_type>(src.resize(sw).field(),
-                                                                                                    dest.resize(dw).field(),
-                                                                                                    coef1,
-                                                                                                    coef2,
-                                                                                                    coef3,
-                                                                                                    coef4);
+                                                                     typename DestType::field_type>(src.resize(sw,
+                                                                                                               split,
+                                                                                                               location).field(),
+                                                                                                    dest.resize(dw,
+                                                                                                                split,
+                                                                                                                location).field(),
+                                                                                                    coefs.coef1(),
+                                                                                                    coefs.coef2(),
+                                                                                                    coefs.coef3(),
+                                                                                                    coefs.coef4());
 
                 sem->post();
              }
@@ -221,12 +245,14 @@
                 structured::IntVec sBC = sw.has_bc() * SrcBCExtra::int_vec();
                 structured::IntVec dBC = dw.has_bc() * DestBCExtra::int_vec();
 
-                std::vector<MemoryWindow> vec_sw = sw.split(structured::IntVec(x, y, z),
+                IntVec split = IntVec(x, y, z);
+
+                std::vector<MemoryWindow> vec_sw = sw.split(split,
                                                             SrcType::Ghost::NGhostMinus::int_vec(),
                                                             SrcType::Ghost::NGhostPlus::int_vec(),
                                                             sBC);
 
-                std::vector<MemoryWindow> vec_dw = dw.split(structured::IntVec(x, y, z),
+                std::vector<MemoryWindow> vec_dw = dw.split(split,
                                                             SrcType::Ghost::NGhostMinus::int_vec(),
                                                             SrcType::Ghost::NGhostPlus::int_vec(),
                                                             dBC);
@@ -239,7 +265,15 @@
 
                 typename std::vector<MemoryWindow>::const_iterator evec_sw = vec_sw.end();
 
-                for(; ivec_sw != evec_sw; ++ivec_sw, ++ivec_dw){
+                int count = 0;
+
+                Coef coefs = Coef(coef1, coef2, coef3, coef4);
+
+                for(; ivec_sw != evec_sw; ++ivec_sw, ++ivec_dw, ++count){
+
+                   IntVec location = IntVec(((x == 1) ? 0 : count),
+                                            ((y == 1) ? 0 : count),
+                                            ((z == 1) ? 0 : count));
 
                    ThreadPoolFIFO::self().schedule(boost::bind(&
                                                                stencil_4_apply_to_field_thread_parallel_execute_internal<OperatorType,
@@ -251,12 +285,11 @@
                                                                NeboField<Initial, DestType>(dest).template
                                                                                                   resize_prep<ValidGhost,
                                                                                                               InitialShift>(),
-                                                               coef1,
-                                                               coef2,
-                                                               coef3,
-                                                               coef4,
+                                                               coefs,
                                                                *ivec_sw,
                                                                *ivec_dw,
+                                                               split,
+                                                               location,
                                                                &semaphore));
                 };
 

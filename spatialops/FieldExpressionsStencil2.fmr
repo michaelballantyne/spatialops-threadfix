@@ -383,6 +383,8 @@
                                        'MemoryWindow const-chunk "&" 'sw)
                                     (b s
                                        'MemoryWindow const-chunk "&" 'dw)
+                                    (b s 'IntVec const-chunk "&" 'split)
+                                    (b s 'IntVec const-chunk "&" 'location)
                                     (b s
                                        (scope 'BI
                                               'interprocess_semaphore)
@@ -398,13 +400,9 @@
                                                     s
                                                     (scope 'DestType
                                                            'field_type)))
-                                        (mfc (mfc 'src
-                                                  'resize
-                                                  'sw)
+                                        (mfc (mfc 'src 'resize 'sw 'split 'location)
                                              'field)
-                                        (mfc (mfc 'dest
-                                                  'resize
-                                                  'dw)
+                                        (mfc (mfc 'dest 'resize 'dw 'split 'location)
                                              'field)
                                         'low
                                         'high)
@@ -545,6 +543,7 @@
                                                     "*"
                                                     (fc (scope 'DestBCExtra
                                                                'int_vec)))))
+                              (b s 'IntVec 'split "=" (fc 'IntVec 'x 'y 'z))
                               (c (scope 'std
                                         (tpl-use 'vector
                                                  'MemoryWindow))
@@ -555,11 +554,7 @@
                                  s
                                  (mfc 'sw
                                       'split
-                                      (fc (scope 'structured
-                                                 'IntVec)
-                                          'x
-                                          'y
-                                          'z)
+                                      'split
                                       (fc (scope (scope (scope 'SrcType
                                                                'Ghost)
                                                         'NGhostMinus)
@@ -579,11 +574,7 @@
                                  s
                                  (mfc 'dw
                                       'split
-                                      (fc (scope 'structured
-                                                 'IntVec)
-                                          'x
-                                          'y
-                                          'z)
+                                      'split
                                       (fc (scope (scope (scope 'SrcType
                                                                'Ghost)
                                                         'NGhostMinus)
@@ -637,6 +628,7 @@
                                  s
                                  (mfc 'vec_sw
                                       'end))
+                              (b s 'int 'count "=" "0")
                               (c 'for
                                  open-paren-chunk
                                  semi-colon-chunk
@@ -654,8 +646,21 @@
                                  s
                                  "++"
                                  'ivec_dw
+                                 comma-chunk
+                                 s
+                                 "++"
+                                 'count
                                  close-paren-chunk
-                                 (body-chunk (mfc (fc (scope 'ThreadPoolFIFO
+                                 (body-chunk (let ([option (lambda (arg) (p (b s (p (b s arg "==" "1"))
+                                                                               "?"
+                                                                               "0"
+                                                                               colon-chunk
+                                                                               'count)))])
+                                               (b s 'IntVec 'location "=" (fc 'IntVec
+                                                                              (option 'x)
+                                                                              (option 'y)
+                                                                              (option 'z))))
+                                             (mfc (fc (scope 'ThreadPoolFIFO
                                                              'self))
                                                   'schedule
                                                   (fc (scope 'boost
@@ -685,6 +690,8 @@
                                                          'ivec_sw)
                                                       (c "*"
                                                          'ivec_dw)
+                                                      'split
+                                                      'location
                                                       (c "&"
                                                          'semaphore)))))
                               (c 'for

@@ -125,14 +125,22 @@
                                                                                    const & sw,
                                                                                    MemoryWindow
                                                                                    const & dw,
+                                                                                   IntVec const &
+                                                                                   split,
+                                                                                   IntVec const &
+                                                                                   location,
                                                                                    BI::
                                                                                    interprocess_semaphore
                                                                                    * sem) {
 
                 stencil_2_apply_to_field_sequential_execute_internal<OperatorType,
                                                                      typename SrcType::field_type,
-                                                                     typename DestType::field_type>(src.resize(sw).field(),
-                                                                                                    dest.resize(dw).field(),
+                                                                     typename DestType::field_type>(src.resize(sw,
+                                                                                                               split,
+                                                                                                               location).field(),
+                                                                                                    dest.resize(dw,
+                                                                                                                split,
+                                                                                                                location).field(),
                                                                                                     low,
                                                                                                     high);
 
@@ -178,12 +186,14 @@
                 structured::IntVec sBC = sw.has_bc() * SrcBCExtra::int_vec();
                 structured::IntVec dBC = dw.has_bc() * DestBCExtra::int_vec();
 
-                std::vector<MemoryWindow> vec_sw = sw.split(structured::IntVec(x, y, z),
+                IntVec split = IntVec(x, y, z);
+
+                std::vector<MemoryWindow> vec_sw = sw.split(split,
                                                             SrcType::Ghost::NGhostMinus::int_vec(),
                                                             SrcType::Ghost::NGhostPlus::int_vec(),
                                                             sBC);
 
-                std::vector<MemoryWindow> vec_dw = dw.split(structured::IntVec(x, y, z),
+                std::vector<MemoryWindow> vec_dw = dw.split(split,
                                                             SrcType::Ghost::NGhostMinus::int_vec(),
                                                             SrcType::Ghost::NGhostPlus::int_vec(),
                                                             dBC);
@@ -196,7 +206,13 @@
 
                 typename std::vector<MemoryWindow>::const_iterator evec_sw = vec_sw.end();
 
-                for(; ivec_sw != evec_sw; ++ivec_sw, ++ivec_dw){
+                int count = 0;
+
+                for(; ivec_sw != evec_sw; ++ivec_sw, ++ivec_dw, ++count){
+
+                   IntVec location = IntVec(((x == 1) ? 0 : count),
+                                            ((y == 1) ? 0 : count),
+                                            ((z == 1) ? 0 : count));
 
                    ThreadPoolFIFO::self().schedule(boost::bind(&
                                                                stencil_2_apply_to_field_thread_parallel_execute_internal<OperatorType,
@@ -212,6 +228,8 @@
                                                                high,
                                                                *ivec_sw,
                                                                *ivec_dw,
+                                                               split,
+                                                               location,
                                                                &semaphore));
                 };
 

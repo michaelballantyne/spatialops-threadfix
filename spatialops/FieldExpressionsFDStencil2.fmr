@@ -311,6 +311,8 @@
                                        'SrcType const-chunk "&" 'src)
                                     (b s
                                        'DestType "&" 'dest)
+                                    (b s 'IntVec const-chunk "&" 'split)
+                                    (b s 'IntVec const-chunk "&" 'location)
                                     (b s
                                        'double const-chunk 'low)
                                     (b s
@@ -330,9 +332,9 @@
                                                     s
                                                     (scope 'DestType 'field_type))
                                                  'DirVec)
-                                        (mfc (mfc 'src 'resize 'sw)
+                                        (mfc (mfc 'src 'resize 'sw 'split 'location)
                                              'field)
-                                        (mfc (mfc 'dest 'resize 'dw)
+                                        (mfc (mfc 'dest 'resize 'dw 'split 'location)
                                              'field)
                                         'low
                                         'high)
@@ -457,6 +459,7 @@
                                                     (mfc 'dw 'has_bc)
                                                     "*"
                                                     (fc (scope 'DestBCExtra 'int_vec)))))
+                              (b s 'IntVec 'split "=" (fc 'IntVec 'x 'y 'z))
                               (c (scope 'std
                                         (tpl-use 'vector 'MemoryWindow))
                                  s
@@ -466,10 +469,7 @@
                                  s
                                  (mfc 'sw
                                       'split
-                                      (fc (scope 'structured 'IntVec)
-                                          'x
-                                          'y
-                                          'z)
+                                      'split
                                       (fc (scope (scope (scope 'FieldType
                                                                'Ghost)
                                                         'NGhostMinus)
@@ -488,10 +488,7 @@
                                  s
                                  (mfc 'dw
                                       'split
-                                      (fc (scope 'structured'IntVec)
-                                          'x
-                                          'y
-                                          'z)
+                                      'split
                                       (fc (scope (scope (scope 'FieldType
                                                                'Ghost)
                                                         'NGhostMinus)
@@ -537,6 +534,7 @@
                                  "="
                                  s
                                  (mfc 'vec_sw 'end))
+                              (b s 'int 'count "=" "0")
                               (c 'for
                                  open-paren-chunk
                                  semi-colon-chunk
@@ -554,8 +552,21 @@
                                  s
                                  "++"
                                  'ivec_dw
+                                 comma-chunk
+                                 s
+                                 "++"
+                                 'count
                                  close-paren-chunk
-                                 (body-chunk (mfc (fc (scope 'ThreadPoolFIFO 'self))
+                                 (body-chunk (let ([option (lambda (arg) (p (b s (p (b s arg "==" "1"))
+                                                                               "?"
+                                                                               "0"
+                                                                               colon-chunk
+                                                                               'count)))])
+                                               (b s 'IntVec 'location "=" (fc 'IntVec
+                                                                              (option 'x)
+                                                                              (option 'y)
+                                                                              (option 'z))))
+                                             (mfc (fc (scope 'ThreadPoolFIFO 'self))
                                                   'schedule
                                                   (fc (scope 'boost 'bind)
                                                       (c "&"
@@ -578,6 +589,8 @@
                                                            (c template-chunk
                                                               s
                                                               (tpl-use 'resize_prep VG-chunk 'InitialShift)))
+                                                      'split
+                                                      'location
                                                       'low
                                                       'high
                                                       (c "*" 'ivec_sw)

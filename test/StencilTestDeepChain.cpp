@@ -174,15 +174,15 @@ inline void evaluate_chaining_example(FieldType & result,
 					   Lz,
                                            opDB);
 
-    NeboStencilConstructor<typename BasicOpTypes<FieldType>::GradX> neboGradX(opDB.retrieve_operator<typename BasicOpTypes<FieldType>::GradX>());
-    NeboStencilConstructor<typename BasicOpTypes<FieldType>::GradY> neboGradY(opDB.retrieve_operator<typename BasicOpTypes<FieldType>::GradY>());
-    NeboStencilConstructor<typename BasicOpTypes<FieldType>::GradZ> neboGradZ(opDB.retrieve_operator<typename BasicOpTypes<FieldType>::GradZ>());
-    NeboStencilConstructor<typename BasicOpTypes<FieldType>::InterpC2FX> neboInterpX(opDB.retrieve_operator<typename BasicOpTypes<FieldType>::InterpC2FX>());
-    NeboStencilConstructor<typename BasicOpTypes<FieldType>::InterpC2FY> neboInterpY(opDB.retrieve_operator<typename BasicOpTypes<FieldType>::InterpC2FY>());
-    NeboStencilConstructor<typename BasicOpTypes<FieldType>::InterpC2FZ> neboInterpZ(opDB.retrieve_operator<typename BasicOpTypes<FieldType>::InterpC2FZ>());
-    NeboStencilConstructor<typename BasicOpTypes<FieldType>::DivX> neboDivX(opDB.retrieve_operator<typename BasicOpTypes<FieldType>::DivX>());
-    NeboStencilConstructor<typename BasicOpTypes<FieldType>::DivY> neboDivY(opDB.retrieve_operator<typename BasicOpTypes<FieldType>::DivY>());
-    NeboStencilConstructor<typename BasicOpTypes<FieldType>::DivZ> neboDivZ(opDB.retrieve_operator<typename BasicOpTypes<FieldType>::DivZ>());
+    Nebo1DStencilConstructor<typename BasicOpTypes<FieldType>::GradX> neboGradX(opDB.retrieve_operator<typename BasicOpTypes<FieldType>::GradX>());
+    Nebo1DStencilConstructor<typename BasicOpTypes<FieldType>::GradY> neboGradY(opDB.retrieve_operator<typename BasicOpTypes<FieldType>::GradY>());
+    Nebo1DStencilConstructor<typename BasicOpTypes<FieldType>::GradZ> neboGradZ(opDB.retrieve_operator<typename BasicOpTypes<FieldType>::GradZ>());
+    Nebo1DStencilConstructor<typename BasicOpTypes<FieldType>::InterpC2FX> neboInterpX(opDB.retrieve_operator<typename BasicOpTypes<FieldType>::InterpC2FX>());
+    Nebo1DStencilConstructor<typename BasicOpTypes<FieldType>::InterpC2FY> neboInterpY(opDB.retrieve_operator<typename BasicOpTypes<FieldType>::InterpC2FY>());
+    Nebo1DStencilConstructor<typename BasicOpTypes<FieldType>::InterpC2FZ> neboInterpZ(opDB.retrieve_operator<typename BasicOpTypes<FieldType>::InterpC2FZ>());
+    Nebo1DStencilConstructor<typename BasicOpTypes<FieldType>::DivX> neboDivX(opDB.retrieve_operator<typename BasicOpTypes<FieldType>::DivX>());
+    Nebo1DStencilConstructor<typename BasicOpTypes<FieldType>::DivY> neboDivY(opDB.retrieve_operator<typename BasicOpTypes<FieldType>::DivY>());
+    Nebo1DStencilConstructor<typename BasicOpTypes<FieldType>::DivZ> neboDivZ(opDB.retrieve_operator<typename BasicOpTypes<FieldType>::DivZ>());
 
     RUN_TEST(result <<= (- neboDivZ(neboGradZ(
                                               neboDivY(neboGradY(

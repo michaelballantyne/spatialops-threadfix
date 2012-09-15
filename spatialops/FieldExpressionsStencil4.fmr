@@ -507,6 +507,39 @@
                                  'coef2
                                  'coef3
                                  'coef4)))
+         (b s
+            'struct
+            'Coef
+            (body-chunk (constructor-chunk 'Coef
+                                           (list (b s 'double const-chunk 'c1)
+                                                 (b s 'double const-chunk 'c2)
+                                                 (b s 'double const-chunk 'c3)
+                                                 (b s 'double const-chunk 'c4))
+                                           (list (constructor-assignment-chunk 'coef1_ 'c1)
+                                                 (constructor-assignment-chunk 'coef2_ 'c2)
+                                                 (constructor-assignment-chunk 'coef3_ 'c3)
+                                                 (constructor-assignment-chunk 'coef4_ 'c4))
+                                           null)
+                        (b s 'double const-chunk 'coef1_)
+                        (b s 'double const-chunk 'coef2_)
+                        (b s 'double const-chunk 'coef3_)
+                        (b s 'double const-chunk 'coef4_)
+                        (r-fcn-def (constize (fcn-dcl 'coef1
+                                                      'double))
+                                   null
+                                   'coef1_)
+                        (r-fcn-def (constize (fcn-dcl 'coef2
+                                                      'double))
+                                   null
+                                   'coef2_)
+                        (r-fcn-def (constize (fcn-dcl 'coef3
+                                                      'double))
+                                   null
+                                   'coef3_)
+                        (r-fcn-def (constize (fcn-dcl 'coef4
+                                                      'double))
+                                   null
+                                   'coef4_)))
          (pp-conditional-ifdef-chunk
           'STENCIL_THREADS
           (tpl-def (list (c typename-chunk s 'OperatorType)
@@ -517,18 +550,13 @@
                                        'SrcType const-chunk "&" 'src)
                                     (b s
                                        'DestType "&" 'dest)
-                                    (b s
-                                       'double const-chunk 'coef1)
-                                    (b s
-                                       'double const-chunk 'coef2)
-                                    (b s
-                                       'double const-chunk 'coef3)
-                                    (b s
-                                       'double const-chunk 'coef4)
+                                    (b s 'Coef const-chunk 'coefs)
                                     (b s
                                        'MemoryWindow const-chunk "&" 'sw)
                                     (b s
                                        'MemoryWindow const-chunk "&" 'dw)
+                                    (b s 'IntVec const-chunk "&" 'split)
+                                    (b s 'IntVec const-chunk "&" 'location)
                                     (b s
                                        (scope 'BI
                                               'interprocess_semaphore)
@@ -544,18 +572,14 @@
                                                     s
                                                     (scope 'DestType
                                                            'field_type)))
-                                        (mfc (mfc 'src
-                                                  'resize
-                                                  'sw)
+                                        (mfc (mfc 'src 'resize 'sw 'split 'location)
                                              'field)
-                                        (mfc (mfc 'dest
-                                                  'resize
-                                                  'dw)
+                                        (mfc (mfc 'dest 'resize 'dw 'split 'location)
                                              'field)
-                                        'coef1
-                                        'coef2
-                                        'coef3
-                                        'coef4)
+                                        (mfc 'coefs 'coef1)
+                                        (mfc 'coefs 'coef2)
+                                        (mfc 'coefs 'coef3)
+                                        (mfc 'coefs 'coef4))
                                     (fc (c 'sem
                                            "->"
                                            'post))))))
@@ -697,6 +721,7 @@
                                                     "*"
                                                     (fc (scope 'DestBCExtra
                                                                'int_vec)))))
+                              (b s 'IntVec 'split "=" (fc 'IntVec 'x 'y 'z))
                               (c (scope 'std
                                         (tpl-use 'vector
                                                  'MemoryWindow))
@@ -707,11 +732,7 @@
                                  s
                                  (mfc 'sw
                                       'split
-                                      (fc (scope 'structured
-                                                 'IntVec)
-                                          'x
-                                          'y
-                                          'z)
+                                      'split
                                       (fc (scope (scope (scope 'SrcType
                                                                'Ghost)
                                                         'NGhostMinus)
@@ -731,11 +752,7 @@
                                  s
                                  (mfc 'dw
                                       'split
-                                      (fc (scope 'structured
-                                                 'IntVec)
-                                          'x
-                                          'y
-                                          'z)
+                                      'split
                                       (fc (scope (scope (scope 'SrcType
                                                                'Ghost)
                                                         'NGhostMinus)
@@ -789,6 +806,8 @@
                                  s
                                  (mfc 'vec_sw
                                       'end))
+                              (b s 'int 'count "=" "0")
+                              (b s 'Coef 'coefs "=" (fc 'Coef 'coef1 'coef2 'coef3 'coef4))
                               (c 'for
                                  open-paren-chunk
                                  semi-colon-chunk
@@ -806,8 +825,21 @@
                                  s
                                  "++"
                                  'ivec_dw
+                                 comma-chunk
+                                 s
+                                 "++"
+                                 'count
                                  close-paren-chunk
-                                 (body-chunk (mfc (fc (scope 'ThreadPoolFIFO
+                                 (body-chunk (let ([option (lambda (arg) (p (b s (p (b s arg "==" "1"))
+                                                                               "?"
+                                                                               "0"
+                                                                               colon-chunk
+                                                                               'count)))])
+                                               (b s 'IntVec 'location "=" (fc 'IntVec
+                                                                              (option 'x)
+                                                                              (option 'y)
+                                                                              (option 'z))))
+                                             (mfc (fc (scope 'ThreadPoolFIFO
                                                              'self))
                                                   'schedule
                                                   (fc (scope 'boost
@@ -831,14 +863,13 @@
                                                            (c template-chunk
                                                               s
                                                               (tpl-use 'resize_prep VG-chunk 'InitialShift)))
-                                                      'coef1
-                                                      'coef2
-                                                      'coef3
-                                                      'coef4
+                                                      'coefs
                                                       (c "*"
                                                          'ivec_sw)
                                                       (c "*"
                                                          'ivec_dw)
+                                                      'split
+                                                      'location
                                                       (c "&"
                                                          'semaphore)))))
                               (c 'for

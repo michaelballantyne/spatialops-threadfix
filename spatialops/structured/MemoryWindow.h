@@ -186,6 +186,20 @@ namespace structured{
                                      const IntVec bcExtents=IntVec(0,0,0) ) const;
 
     /**
+     *  \brief Refines/reduces the MemoryWindow into a MemoryWindow within the original.
+     *
+     *  \param splitPattern the number of partitions made in each ordinate direction.
+     *  \param location the specific MemoryWindow to return.
+     *
+     *  \return MemoryWindow containing the new subwindow.
+     */
+    MemoryWindow refine(const IntVec splitPattern,
+                        const IntVec location,
+                        const IntVec nGhostMinus,
+                        const IntVec nGhostPlus,
+                        const IntVec bcExtents) const;
+
+    /**
      *  \brief Resizes/reduces the MemoryWindow to given number of ghost cells.
      *
      *  \param oldSize is an IndexHexlet that specifies how many ghost cells are currently on each face.

@@ -75,6 +75,17 @@
          SecondType typedef result;
       };
 
+      template<bool Boolean, typename FirstType, typename SecondType>
+       struct TemplateIf;
+
+      /* true */
+      template<typename TrueResult, typename FalseResult>
+       struct TemplateIf<true, TrueResult, FalseResult> { TrueResult typedef result; };
+
+      /* false */
+      template<typename TrueResult, typename FalseResult>
+       struct TemplateIf<false, TrueResult, FalseResult> { FalseResult typedef result; };
+
       template<typename Operand, typename FieldType>
        struct NeboExpression {
 
@@ -160,7 +171,11 @@
           NeboScalar(AtomicType const value)
           : value_(value)
           {};
-          inline ResizeType resize(MemoryWindow const & size) const { return ResizeType(value()); };
+          inline ResizeType resize(MemoryWindow const & size,
+                                   structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+             return ResizeType(value());
+          };
           inline AtomicType const value(void) const { return value_; };
 
          private:
@@ -248,7 +263,11 @@
           NeboBoolean(bool const value)
           : value_(value)
           {};
-          inline ResizeType resize(MemoryWindow const & size) const { return ResizeType(value()); };
+          inline ResizeType resize(MemoryWindow const & size,
+                                   structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+             return ResizeType(value());
+          };
           inline bool const value(void) const { return value_; };
 
          private:
@@ -341,7 +360,9 @@
           NeboConstField(FieldType const & f)
           : field_(f)
           {};
-          inline ResizeType resize(MemoryWindow const & size) const {
+          inline ResizeType resize(MemoryWindow const & size,
+                                   structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
 
              return ResizeType(FieldType(size.template shift<Shift>(),
                                          field().field_values(),
@@ -441,7 +462,9 @@
           NeboField(FieldType f)
           : field_(f)
           {};
-          inline ResizeType resize(MemoryWindow const & size) {
+          inline ResizeType resize(MemoryWindow const & size,
+                                   structured::IntVec const & split,
+                                   structured::IntVec const & location) {
 
              return ResizeType(FieldType(size.template shift<Shift>(),
                                          field().field_values(),
@@ -597,8 +620,12 @@
           SumOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & size) const {
-             return ResizeType(operand1().resize(size), operand2().resize(size));
+          inline ResizeType resize(MemoryWindow const & size,
+                                   structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+
+             return ResizeType(operand1().resize(size, split, location),
+                               operand2().resize(size, split, location));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -808,8 +835,12 @@
           DiffOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & size) const {
-             return ResizeType(operand1().resize(size), operand2().resize(size));
+          inline ResizeType resize(MemoryWindow const & size,
+                                   structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+
+             return ResizeType(operand1().resize(size, split, location),
+                               operand2().resize(size, split, location));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -1019,8 +1050,12 @@
           ProdOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & size) const {
-             return ResizeType(operand1().resize(size), operand2().resize(size));
+          inline ResizeType resize(MemoryWindow const & size,
+                                   structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+
+             return ResizeType(operand1().resize(size, split, location),
+                               operand2().resize(size, split, location));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -1230,8 +1265,12 @@
           DivOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & size) const {
-             return ResizeType(operand1().resize(size), operand2().resize(size));
+          inline ResizeType resize(MemoryWindow const & size,
+                                   structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+
+             return ResizeType(operand1().resize(size, split, location),
+                               operand2().resize(size, split, location));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -1424,8 +1463,10 @@
           SinFcn(Operand const & operand)
           : operand_(operand)
           {};
-          inline ResizeType resize(MemoryWindow const & size) const {
-             return ResizeType(operand().resize(size));
+          inline ResizeType resize(MemoryWindow const & size,
+                                   structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+             return ResizeType(operand().resize(size, split, location));
           };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -1543,8 +1584,10 @@
           CosFcn(Operand const & operand)
           : operand_(operand)
           {};
-          inline ResizeType resize(MemoryWindow const & size) const {
-             return ResizeType(operand().resize(size));
+          inline ResizeType resize(MemoryWindow const & size,
+                                   structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+             return ResizeType(operand().resize(size, split, location));
           };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -1662,8 +1705,10 @@
           TanFcn(Operand const & operand)
           : operand_(operand)
           {};
-          inline ResizeType resize(MemoryWindow const & size) const {
-             return ResizeType(operand().resize(size));
+          inline ResizeType resize(MemoryWindow const & size,
+                                   structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+             return ResizeType(operand().resize(size, split, location));
           };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -1781,8 +1826,10 @@
           ExpFcn(Operand const & operand)
           : operand_(operand)
           {};
-          inline ResizeType resize(MemoryWindow const & size) const {
-             return ResizeType(operand().resize(size));
+          inline ResizeType resize(MemoryWindow const & size,
+                                   structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+             return ResizeType(operand().resize(size, split, location));
           };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -1900,8 +1947,10 @@
           TanhFcn(Operand const & operand)
           : operand_(operand)
           {};
-          inline ResizeType resize(MemoryWindow const & size) const {
-             return ResizeType(operand().resize(size));
+          inline ResizeType resize(MemoryWindow const & size,
+                                   structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+             return ResizeType(operand().resize(size, split, location));
           };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -2019,8 +2068,10 @@
           AbsFcn(Operand const & operand)
           : operand_(operand)
           {};
-          inline ResizeType resize(MemoryWindow const & size) const {
-             return ResizeType(operand().resize(size));
+          inline ResizeType resize(MemoryWindow const & size,
+                                   structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+             return ResizeType(operand().resize(size, split, location));
           };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -2138,8 +2189,10 @@
           NegFcn(Operand const & operand)
           : operand_(operand)
           {};
-          inline ResizeType resize(MemoryWindow const & size) const {
-             return ResizeType(operand().resize(size));
+          inline ResizeType resize(MemoryWindow const & size,
+                                   structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+             return ResizeType(operand().resize(size, split, location));
           };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -2274,8 +2327,12 @@
           PowFcn(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & size) const {
-             return ResizeType(operand1().resize(size), operand2().resize(size));
+          inline ResizeType resize(MemoryWindow const & size,
+                                   structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+
+             return ResizeType(operand1().resize(size, split, location),
+                               operand2().resize(size, split, location));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -2470,8 +2527,10 @@
           SqrtFcn(Operand const & operand)
           : operand_(operand)
           {};
-          inline ResizeType resize(MemoryWindow const & size) const {
-             return ResizeType(operand().resize(size));
+          inline ResizeType resize(MemoryWindow const & size,
+                                   structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+             return ResizeType(operand().resize(size, split, location));
           };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -2589,8 +2648,10 @@
           LogFcn(Operand const & operand)
           : operand_(operand)
           {};
-          inline ResizeType resize(MemoryWindow const & size) const {
-             return ResizeType(operand().resize(size));
+          inline ResizeType resize(MemoryWindow const & size,
+                                   structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+             return ResizeType(operand().resize(size, split, location));
           };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -2725,8 +2786,12 @@
           EqualCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & size) const {
-             return ResizeType(operand1().resize(size), operand2().resize(size));
+          inline ResizeType resize(MemoryWindow const & size,
+                                   structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+
+             return ResizeType(operand1().resize(size, split, location),
+                               operand2().resize(size, split, location));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -2944,8 +3009,12 @@
           InequalCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & size) const {
-             return ResizeType(operand1().resize(size), operand2().resize(size));
+          inline ResizeType resize(MemoryWindow const & size,
+                                   structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+
+             return ResizeType(operand1().resize(size, split, location),
+                               operand2().resize(size, split, location));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -3163,8 +3232,12 @@
           LessThanCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & size) const {
-             return ResizeType(operand1().resize(size), operand2().resize(size));
+          inline ResizeType resize(MemoryWindow const & size,
+                                   structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+
+             return ResizeType(operand1().resize(size, split, location),
+                               operand2().resize(size, split, location));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -3382,8 +3455,12 @@
           LessThanEqualCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & size) const {
-             return ResizeType(operand1().resize(size), operand2().resize(size));
+          inline ResizeType resize(MemoryWindow const & size,
+                                   structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+
+             return ResizeType(operand1().resize(size, split, location),
+                               operand2().resize(size, split, location));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -3603,8 +3680,12 @@
           GreaterThanCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & size) const {
-             return ResizeType(operand1().resize(size), operand2().resize(size));
+          inline ResizeType resize(MemoryWindow const & size,
+                                   structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+
+             return ResizeType(operand1().resize(size, split, location),
+                               operand2().resize(size, split, location));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -3824,8 +3905,12 @@
           GreaterThanEqualCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & size) const {
-             return ResizeType(operand1().resize(size), operand2().resize(size));
+          inline ResizeType resize(MemoryWindow const & size,
+                                   structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+
+             return ResizeType(operand1().resize(size, split, location),
+                               operand2().resize(size, split, location));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -4049,8 +4134,12 @@
           AndOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & size) const {
-             return ResizeType(operand1().resize(size), operand2().resize(size));
+          inline ResizeType resize(MemoryWindow const & size,
+                                   structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+
+             return ResizeType(operand1().resize(size, split, location),
+                               operand2().resize(size, split, location));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -4255,8 +4344,12 @@
           OrOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & size) const {
-             return ResizeType(operand1().resize(size), operand2().resize(size));
+          inline ResizeType resize(MemoryWindow const & size,
+                                   structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+
+             return ResizeType(operand1().resize(size, split, location),
+                               operand2().resize(size, split, location));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -4444,8 +4537,10 @@
           NotOp(Operand const & operand)
           : operand_(operand)
           {};
-          inline ResizeType resize(MemoryWindow const & size) const {
-             return ResizeType(operand().resize(size));
+          inline ResizeType resize(MemoryWindow const & size,
+                                   structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+             return ResizeType(operand().resize(size, split, location));
           };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -4581,8 +4676,12 @@
              OBJECT_NAME(Operand1 const & operand1, Operand2 const & operand2)                     \
              : operand1_(operand1), operand2_(operand2)                                            \
              {};                                                                                   \
-             inline ResizeType resize(MemoryWindow const & size) const {                           \
-                return ResizeType(operand1().resize(size), operand2().resize(size));               \
+             inline ResizeType resize(MemoryWindow const & size,                                   \
+                                      structured::IntVec const & split,                            \
+                                      structured::IntVec const & location) const {                 \
+                                                                                                   \
+                return ResizeType(operand1().resize(size, split, location),                        \
+                                  operand2().resize(size, split, location));                       \
              };                                                                                    \
              inline Operand1 const & operand1(void) const { return operand1_; };                   \
              inline Operand2 const & operand2(void) const { return operand2_; };                   \
@@ -4805,8 +4904,12 @@
              OBJECT_NAME(Operand1 const & operand1, Operand2 const & operand2)                     \
              : operand1_(operand1), operand2_(operand2)                                            \
              {};                                                                                   \
-             inline ResizeType resize(MemoryWindow const & size) const {                           \
-                return ResizeType(operand1().resize(size), operand2().resize(size));               \
+             inline ResizeType resize(MemoryWindow const & size,                                   \
+                                      structured::IntVec const & split,                            \
+                                      structured::IntVec const & location) const {                 \
+                                                                                                   \
+                return ResizeType(operand1().resize(size, split, location),                        \
+                                  operand2().resize(size, split, location));                       \
              };                                                                                    \
              inline Operand1 const & operand1(void) const { return operand1_; };                   \
              inline Operand2 const & operand2(void) const { return operand2_; };                   \
@@ -5012,8 +5115,10 @@
              OBJECT_NAME(Operand const & operand)                                                  \
              : operand_(operand)                                                                   \
              {};                                                                                   \
-             inline ResizeType resize(MemoryWindow const & size) const {                           \
-                return ResizeType(operand().resize(size));                                         \
+             inline ResizeType resize(MemoryWindow const & size,                                   \
+                                      structured::IntVec const & split,                            \
+                                      structured::IntVec const & location) const {                 \
+                return ResizeType(operand().resize(size, split, location));                        \
              };                                                                                    \
              inline Operand const & operand(void) const { return operand_; };                      \
                                                                                                    \
@@ -5147,8 +5252,12 @@
           NeboClause(Test const & test, Expr const & expr)
           : test_(test), expr_(expr)
           {};
-          inline ResizeType resize(MemoryWindow const & size) const {
-             return ResizeType(test().resize(size), expr().resize(size));
+          inline ResizeType resize(MemoryWindow const & size,
+                                   structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+
+             return ResizeType(test().resize(size, split, location),
+                               expr().resize(size, split, location));
           };
           inline Test const & test(void) const { return test_; };
           inline Expr const & expr(void) const { return expr_; };
@@ -5272,8 +5381,12 @@
           NeboCond(ClauseType const & clause, Otherwise const & otherwise)
           : clause_(clause), otherwise_(otherwise)
           {};
-          inline ResizeType resize(MemoryWindow const & size) const {
-             return ResizeType(clause().resize(size), otherwise().resize(size));
+          inline ResizeType resize(MemoryWindow const & size,
+                                   structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+
+             return ResizeType(clause().resize(size, split, location),
+                               otherwise().resize(size, split, location));
           };
           inline ClauseType const & clause(void) const { return clause_; };
           inline Otherwise const & otherwise(void) const { return otherwise_; };
@@ -5920,11 +6033,23 @@
       template<typename First, typename Second>
        struct NeboPair { First typedef FirstType; Second typedef SecondType; };
 
+      template<typename First, typename Second, typename Third, typename Fourth>
+       struct NeboQuad {
+
+         First typedef FirstType;
+
+         Second typedef SecondType;
+
+         Third typedef ThirdType;
+
+         Fourth typedef FourthType;
+      };
+
       template<typename CurrentMode, typename StencilType, typename Operand, typename FieldType>
-       struct NeboStencil;
+       struct Nebo1DStencil;
 
       template<typename StencilType, typename Operand, typename FieldType>
-       struct NeboStencil<Initial, StencilType, Operand, FieldType> {
+       struct Nebo1DStencil<Initial, StencilType, Operand, FieldType> {
 
          public:
           FieldType typedef field_type;
@@ -5938,35 +6063,35 @@
           template<typename ValidGhost, typename Shift>
            struct Iterator {
 
-             NeboStencil<ResizePrep<ValidGhost, Shift>,
-                         StencilType,
-                         NeboPair<typename Operand::template Iterator<ValidGhost,
-                                                                      typename structured::Add<Shift,
-                                                                                               SP1>::
-                                                                      result>::ResizePrepType,
-                                  typename Operand::template Iterator<ValidGhost,
-                                                                      typename structured::Add<Shift,
-                                                                                               SP2>::
-                                                                      result>::ResizePrepType>,
-                         FieldType> typedef ResizePrepType;
+             Nebo1DStencil<ResizePrep<ValidGhost, Shift>,
+                           StencilType,
+                           NeboPair<typename Operand::template Iterator<ValidGhost,
+                                                                        typename structured::Add<Shift,
+                                                                                                 SP1>::
+                                                                        result>::ResizePrepType,
+                                    typename Operand::template Iterator<ValidGhost,
+                                                                        typename structured::Add<Shift,
+                                                                                                 SP2>::
+                                                                        result>::ResizePrepType>,
+                           FieldType> typedef ResizePrepType;
 
-             NeboStencil<SeqWalk<ValidGhost, Shift>,
-                         StencilType,
-                         NeboPair<typename Operand::template Iterator<ValidGhost,
-                                                                      typename structured::Add<Shift,
-                                                                                               SP1>::
-                                                                      result>::SeqWalkType,
-                                  typename Operand::template Iterator<ValidGhost,
-                                                                      typename structured::Add<Shift,
-                                                                                               SP2>::
-                                                                      result>::SeqWalkType>,
-                         FieldType> typedef SeqWalkType;
+             Nebo1DStencil<SeqWalk<ValidGhost, Shift>,
+                           StencilType,
+                           NeboPair<typename Operand::template Iterator<ValidGhost,
+                                                                        typename structured::Add<Shift,
+                                                                                                 SP1>::
+                                                                        result>::SeqWalkType,
+                                    typename Operand::template Iterator<ValidGhost,
+                                                                        typename structured::Add<Shift,
+                                                                                                 SP2>::
+                                                                        result>::SeqWalkType>,
+                           FieldType> typedef SeqWalkType;
           };
           typename structured::Invalidate<typename structured::Invalidate<typename Operand::
                                                                           PossibleValidGhost,
                                                                           SP1>::result,
                                           SP2>::result typedef PossibleValidGhost;
-          NeboStencil(Operand const & op, double const lo, double const hi)
+          Nebo1DStencil(Operand const & op, double const lo, double const hi)
           : operand_(op), lo_(lo), hi_(hi)
           {};
           template<typename ValidGhost, typename Shift>
@@ -6022,23 +6147,29 @@
                typename StencilType,
                typename Operand,
                typename FieldType>
-       struct NeboStencil<ResizePrep<ValidGhost, Shift>, StencilType, Operand, FieldType> {
+       struct Nebo1DStencil<ResizePrep<ValidGhost, Shift>, StencilType, Operand, FieldType> {
 
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          NeboStencil<Resize<ValidGhost, Shift>,
-                      StencilType,
-                      NeboPair<typename Operand::FirstType::ResizeType,
-                               typename Operand::SecondType::ResizeType>,
-                      FieldType> typedef ResizeType;
+          Nebo1DStencil<Resize<ValidGhost, Shift>,
+                        StencilType,
+                        NeboPair<typename Operand::FirstType::ResizeType,
+                                 typename Operand::SecondType::ResizeType>,
+                        FieldType> typedef ResizeType;
           typename Operand::FirstType typedef Operand1;
           typename Operand::SecondType typedef Operand2;
-          NeboStencil(Operand1 const & op1, Operand2 const & op2, double const lo, double const hi)
-          : operand1_(op1), operand2_(op2), hi_(lo), lo_(hi)
+          Nebo1DStencil(Operand1 const & op1, Operand2 const & op2, double const lo, double const hi)
+          : operand1_(op1), operand2_(op2), lo_(lo), hi_(hi)
           {};
-          inline ResizeType resize(MemoryWindow const & size) const {
-             return ResizeType(operand1().resize(size), operand2().resize(size), lo(), hi());
+          inline ResizeType resize(MemoryWindow const & size,
+                                   structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+
+             return ResizeType(operand1().resize(size, split, location),
+                               operand2().resize(size, split, location),
+                               lo(),
+                               hi());
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -6057,19 +6188,19 @@
                typename StencilType,
                typename Operand,
                typename FieldType>
-       struct NeboStencil<Resize<ValidGhost, Shift>, StencilType, Operand, FieldType> {
+       struct Nebo1DStencil<Resize<ValidGhost, Shift>, StencilType, Operand, FieldType> {
 
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          NeboStencil<SeqWalk<ValidGhost, Shift>,
-                      StencilType,
-                      NeboPair<typename Operand::FirstType::SeqWalkType,
-                               typename Operand::SecondType::SeqWalkType>,
-                      FieldType> typedef SeqWalkType;
+          Nebo1DStencil<SeqWalk<ValidGhost, Shift>,
+                        StencilType,
+                        NeboPair<typename Operand::FirstType::SeqWalkType,
+                                 typename Operand::SecondType::SeqWalkType>,
+                        FieldType> typedef SeqWalkType;
           typename Operand::FirstType typedef Operand1;
           typename Operand::SecondType typedef Operand2;
-          NeboStencil(Operand1 const & op1, Operand2 const & op2, double const hi, double const lo)
+          Nebo1DStencil(Operand1 const & op1, Operand2 const & op2, double const hi, double const lo)
           : operand1_(op1), operand2_(op2), lo_(lo), hi_(hi)
           {};
           inline SeqWalkType init(void) const {
@@ -6092,14 +6223,14 @@
                typename StencilType,
                typename Operand,
                typename FieldType>
-       struct NeboStencil<SeqWalk<ValidGhost, Shift>, StencilType, Operand, FieldType> {
+       struct Nebo1DStencil<SeqWalk<ValidGhost, Shift>, StencilType, Operand, FieldType> {
 
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           typename Operand::FirstType typedef Operand1;
           typename Operand::SecondType typedef Operand2;
-          NeboStencil(Operand1 const & op1, Operand2 const & op2, double const lo, double const hi)
+          Nebo1DStencil(Operand1 const & op1, Operand2 const & op2, double const lo, double const hi)
           : operand1_(op1), operand2_(op2), lo_(lo), hi_(hi)
           {};
           inline void next(void) { operand1_.next(); operand2_.next(); };
@@ -6118,26 +6249,407 @@
           const double hi_;
       };
 
+      template<typename CurrentMode, typename StencilType, typename Operand, typename FieldType>
+       struct Nebo2DStencil;
+
+      template<typename StencilType, typename Operand, typename FieldType>
+       struct Nebo2DStencil<Initial, StencilType, Operand, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          typename StencilType::SrcFieldType typedef SFT;
+          typename StencilType::DestFieldType typedef DFT;
+          typename SFT::Location::Offset typedef SFTO;
+          typename DFT::Location::Offset typedef DFTO;
+          structured::IndexTriplet<1, 0, 0> typedef XUnit;
+          structured::IndexTriplet<0, 1, 0> typedef YUnit;
+          structured::IndexTriplet<0, 0, 1> typedef ZUnit;
+          typename TemplateIf<(SFTO::X != DFTO::X), XUnit, YUnit>::result typedef D1;
+          typename TemplateIf<(SFTO::Z != DFTO::Z), ZUnit, YUnit>::result typedef D2;
+          typename structured::Multiply<SFTO, D1>::result typedef SFTD1;
+          typename structured::Multiply<SFTO, D2>::result typedef SFTD2;
+          typename structured::Multiply<DFTO, D1>::result typedef DFTD1;
+          typename structured::Multiply<DFTO, D2>::result typedef DFTD2;
+          typename structured::GreaterThan<SFTD1, DFTD1>::result::Negate typedef LoD1;
+          typename structured::LessThan<SFTD1, DFTD1>::result typedef HiD1;
+          typename structured::GreaterThan<SFTD2, DFTD2>::result::Negate typedef LoD2;
+          typename structured::LessThan<SFTD2, DFTD2>::result typedef HiD2;
+          typename structured::Add<LoD1, LoD2>::result typedef SP1;
+          typename structured::Add<HiD1, LoD2>::result typedef SP2;
+          typename structured::Add<LoD1, HiD2>::result typedef SP3;
+          typename structured::Add<HiD1, HiD2>::result typedef SP4;
+          template<typename ValidGhost, typename Shift>
+           struct Iterator {
+
+             Nebo2DStencil<ResizePrep<ValidGhost, Shift>,
+                           StencilType,
+                           NeboQuad<typename Operand::template Iterator<ValidGhost,
+                                                                        typename structured::Add<Shift,
+                                                                                                 SP1>::
+                                                                        result>::ResizePrepType,
+                                    typename Operand::template Iterator<ValidGhost,
+                                                                        typename structured::Add<Shift,
+                                                                                                 SP2>::
+                                                                        result>::ResizePrepType,
+                                    typename Operand::template Iterator<ValidGhost,
+                                                                        typename structured::Add<Shift,
+                                                                                                 SP3>::
+                                                                        result>::ResizePrepType,
+                                    typename Operand::template Iterator<ValidGhost,
+                                                                        typename structured::Add<Shift,
+                                                                                                 SP4>::
+                                                                        result>::ResizePrepType>,
+                           FieldType> typedef ResizePrepType;
+
+             Nebo2DStencil<SeqWalk<ValidGhost, Shift>,
+                           StencilType,
+                           NeboQuad<typename Operand::template Iterator<ValidGhost,
+                                                                        typename structured::Add<Shift,
+                                                                                                 SP1>::
+                                                                        result>::SeqWalkType,
+                                    typename Operand::template Iterator<ValidGhost,
+                                                                        typename structured::Add<Shift,
+                                                                                                 SP2>::
+                                                                        result>::SeqWalkType,
+                                    typename Operand::template Iterator<ValidGhost,
+                                                                        typename structured::Add<Shift,
+                                                                                                 SP3>::
+                                                                        result>::SeqWalkType,
+                                    typename Operand::template Iterator<ValidGhost,
+                                                                        typename structured::Add<Shift,
+                                                                                                 SP4>::
+                                                                        result>::SeqWalkType>,
+                           FieldType> typedef SeqWalkType;
+          };
+          typename structured::Invalidate<typename structured::Invalidate<typename structured::
+                                                                          Invalidate<typename
+                                                                                     structured::
+                                                                                     Invalidate<typename
+                                                                                                Operand::
+                                                                                                PossibleValidGhost,
+                                                                                                SP1>::
+                                                                                     result,
+                                                                                     SP2>::result,
+                                                                          SP3>::result,
+                                          SP4>::result typedef PossibleValidGhost;
+          Nebo2DStencil(Operand const & op,
+                        double const coef1,
+                        double const coef2,
+                        double const coef3,
+                        double const coef4)
+          : operand_(op), coef1_(coef1), coef2_(coef2), coef3_(coef3), coef4_(coef4)
+          {};
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::SeqWalkType(operand().template init<ValidGhost,
+                                                                                               typename
+                                                                                               structured::
+                                                                                               Add<Shift,
+                                                                                                   SP1>::
+                                                                                               result>(),
+                                                                       operand().template init<ValidGhost,
+                                                                                               typename
+                                                                                               structured::
+                                                                                               Add<Shift,
+                                                                                                   SP2>::
+                                                                                               result>(),
+                                                                       operand().template init<ValidGhost,
+                                                                                               typename
+                                                                                               structured::
+                                                                                               Add<Shift,
+                                                                                                   SP3>::
+                                                                                               result>(),
+                                                                       operand().template init<ValidGhost,
+                                                                                               typename
+                                                                                               structured::
+                                                                                               Add<Shift,
+                                                                                                   SP4>::
+                                                                                               result>(),
+                                                                       coef1(),
+                                                                       coef2(),
+                                                                       coef3(),
+                                                                       coef4());
+           };
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::ResizePrepType(operand().template
+                                                                                    resize_prep<ValidGhost,
+                                                                                                typename
+                                                                                                structured::
+                                                                                                Add<Shift,
+                                                                                                    SP1>::
+                                                                                                result>(),
+                                                                          operand().template
+                                                                                    resize_prep<ValidGhost,
+                                                                                                typename
+                                                                                                structured::
+                                                                                                Add<Shift,
+                                                                                                    SP2>::
+                                                                                                result>(),
+                                                                          operand().template
+                                                                                    resize_prep<ValidGhost,
+                                                                                                typename
+                                                                                                structured::
+                                                                                                Add<Shift,
+                                                                                                    SP3>::
+                                                                                                result>(),
+                                                                          operand().template
+                                                                                    resize_prep<ValidGhost,
+                                                                                                typename
+                                                                                                structured::
+                                                                                                Add<Shift,
+                                                                                                    SP4>::
+                                                                                                result>(),
+                                                                          coef1(),
+                                                                          coef2(),
+                                                                          coef3(),
+                                                                          coef4());
+           };
+          inline Operand const & operand(void) const { return operand_; };
+          inline double coef1(void) const { return coef1_; };
+          inline double coef2(void) const { return coef2_; };
+          inline double coef3(void) const { return coef3_; };
+          inline double coef4(void) const { return coef4_; };
+
+         private:
+          const Operand operand_;
+          const double coef1_;
+          const double coef2_;
+          const double coef3_;
+          const double coef4_;
+      };
+
+      template<typename ValidGhost,
+               typename Shift,
+               typename StencilType,
+               typename Operand,
+               typename FieldType>
+       struct Nebo2DStencil<ResizePrep<ValidGhost, Shift>, StencilType, Operand, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          Nebo2DStencil<Resize<ValidGhost, Shift>,
+                        StencilType,
+                        NeboQuad<typename Operand::FirstType::ResizeType,
+                                 typename Operand::SecondType::ResizeType,
+                                 typename Operand::ThirdType::ResizeType,
+                                 typename Operand::FourthType::ResizeType>,
+                        FieldType> typedef ResizeType;
+          typename Operand::FirstType typedef Operand1;
+          typename Operand::SecondType typedef Operand2;
+          typename Operand::ThirdType typedef Operand3;
+          typename Operand::FourthType typedef Operand4;
+          Nebo2DStencil(Operand1 const & op1,
+                        Operand2 const & op2,
+                        Operand3 const & op3,
+                        Operand4 const & op4,
+                        double const coef1,
+                        double const coef2,
+                        double const coef3,
+                        double const coef4)
+          : operand1_(op1),
+            operand2_(op2),
+            operand3_(op3),
+            operand4_(op4),
+            coef1_(coef1),
+            coef2_(coef2),
+            coef3_(coef3),
+            coef4_(coef4)
+          {};
+          inline ResizeType resize(MemoryWindow const & size,
+                                   structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+
+             return ResizeType(operand1().resize(size, split, location),
+                               operand2().resize(size, split, location),
+                               operand3().resize(size, split, location),
+                               operand4().resize(size, split, location),
+                               coef1(),
+                               coef2(),
+                               coef3(),
+                               coef4());
+          };
+          inline Operand1 const & operand1(void) const { return operand1_; };
+          inline Operand2 const & operand2(void) const { return operand2_; };
+          inline Operand3 const & operand3(void) const { return operand3_; };
+          inline Operand4 const & operand4(void) const { return operand4_; };
+          inline double coef1(void) const { return coef1_; };
+          inline double coef2(void) const { return coef2_; };
+          inline double coef3(void) const { return coef3_; };
+          inline double coef4(void) const { return coef4_; };
+
+         private:
+          const Operand1 operand1_;
+          const Operand2 operand2_;
+          const Operand3 operand3_;
+          const Operand4 operand4_;
+          const double coef1_;
+          const double coef2_;
+          const double coef3_;
+          const double coef4_;
+      };
+
+      template<typename ValidGhost,
+               typename Shift,
+               typename StencilType,
+               typename Operand,
+               typename FieldType>
+       struct Nebo2DStencil<Resize<ValidGhost, Shift>, StencilType, Operand, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          Nebo2DStencil<SeqWalk<ValidGhost, Shift>,
+                        StencilType,
+                        NeboQuad<typename Operand::FirstType::SeqWalkType,
+                                 typename Operand::SecondType::SeqWalkType,
+                                 typename Operand::ThirdType::SeqWalkType,
+                                 typename Operand::FourthType::SeqWalkType>,
+                        FieldType> typedef SeqWalkType;
+          typename Operand::FirstType typedef Operand1;
+          typename Operand::SecondType typedef Operand2;
+          typename Operand::ThirdType typedef Operand3;
+          typename Operand::FourthType typedef Operand4;
+          Nebo2DStencil(Operand1 const & op1,
+                        Operand2 const & op2,
+                        Operand3 const & op3,
+                        Operand4 const & op4,
+                        double const coef1,
+                        double const coef2,
+                        double const coef3,
+                        double const coef4)
+          : operand1_(op1),
+            operand2_(op2),
+            operand3_(op3),
+            operand4_(op4),
+            coef1_(coef1),
+            coef2_(coef2),
+            coef3_(coef3),
+            coef4_(coef4)
+          {};
+          inline SeqWalkType init(void) const {
+
+             return SeqWalkType(operand1().init(),
+                                operand2().init(),
+                                operand3().init(),
+                                operand4().init(),
+                                coef1(),
+                                coef2(),
+                                coef3(),
+                                coef4());
+          };
+          inline Operand1 const & operand1(void) const { return operand1_; };
+          inline Operand2 const & operand2(void) const { return operand2_; };
+          inline Operand3 const & operand3(void) const { return operand3_; };
+          inline Operand4 const & operand4(void) const { return operand4_; };
+          inline double coef1(void) const { return coef1_; };
+          inline double coef2(void) const { return coef2_; };
+          inline double coef3(void) const { return coef3_; };
+          inline double coef4(void) const { return coef4_; };
+
+         private:
+          const Operand1 operand1_;
+          const Operand2 operand2_;
+          const Operand3 operand3_;
+          const Operand4 operand4_;
+          const double coef1_;
+          const double coef2_;
+          const double coef3_;
+          const double coef4_;
+      };
+
+      template<typename ValidGhost,
+               typename Shift,
+               typename StencilType,
+               typename Operand,
+               typename FieldType>
+       struct Nebo2DStencil<SeqWalk<ValidGhost, Shift>, StencilType, Operand, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          typename Operand::FirstType typedef Operand1;
+          typename Operand::SecondType typedef Operand2;
+          typename Operand::ThirdType typedef Operand3;
+          typename Operand::FourthType typedef Operand4;
+          Nebo2DStencil(Operand1 const & op1,
+                        Operand2 const & op2,
+                        Operand3 const & op3,
+                        Operand4 const & op4,
+                        double const coef1,
+                        double const coef2,
+                        double const coef3,
+                        double const coef4)
+          : operand1_(op1),
+            operand2_(op2),
+            operand3_(op3),
+            operand4_(op4),
+            coef1_(coef1),
+            coef2_(coef2),
+            coef3_(coef3),
+            coef4_(coef4)
+          {};
+          inline void next(void) {
+
+             operand1_.next();
+
+             operand2_.next();
+
+             operand3_.next();
+
+             operand4_.next();
+          };
+          inline bool at_end(void) const {
+             return operand1_.at_end() || operand2_.at_end() || operand3_.at_end() || operand4_.at_end();
+          };
+          inline bool has_length(void) const {
+
+             return operand1_.has_length() || operand2_.has_length() || operand3_.has_length() ||
+                    operand4_.has_length();
+          };
+          inline typename FieldType::value_type eval(void) const {
+
+             return operand1_.eval() * coef1_ +
+                    operand2_.eval() * coef2_ +
+                    operand3_.eval() * coef3_ +
+                    operand4_.eval() * coef4_;
+          };
+
+         private:
+          Operand1 operand1_;
+          Operand2 operand2_;
+          Operand3 operand3_;
+          Operand4 operand4_;
+          const double coef1_;
+          const double coef2_;
+          const double coef3_;
+          const double coef4_;
+      };
+
       template<typename StencilType>
-       struct NeboStencilConstructor {
+       struct Nebo1DStencilConstructor {
 
          private:
           const double lo_;
           const double hi_;
 
          public:
-          NeboStencilConstructor(StencilType * const stencil)
+          Nebo1DStencilConstructor(const StencilType * const stencil)
           : lo_(stencil->get_minus_coef()), hi_(stencil->get_plus_coef())
           {};
           typename StencilType::DestFieldType typedef FieldType;
           typename StencilType::SrcFieldType typedef OpFieldType;
           NeboConstField<Initial, OpFieldType> typedef OpType;
-          NeboStencil<Initial, StencilType, OpType, FieldType> typedef StandardType;
+          Nebo1DStencil<Initial, StencilType, OpType, FieldType> typedef StandardType;
           NeboExpression<StandardType, FieldType> typedef StandardTerm;
           template<typename OperandType>
            struct OperandInfo {
 
-             NeboStencil<Initial, StencilType, OperandType, FieldType> typedef StandardType;
+             Nebo1DStencil<Initial, StencilType, OperandType, FieldType> typedef StandardType;
 
              NeboExpression<StandardType, FieldType> typedef StandardTerm;
           };
@@ -6154,6 +6666,50 @@
               typename OperandInfo<Operand>::StandardTerm typedef StandardTerm;
 
               return StandardTerm(StandardType(fexpr.expr(), lo_, hi_));
+           };
+      };
+
+      template<typename StencilType>
+       struct Nebo2DStencilConstructor {
+
+         private:
+          const double coef1_;
+          const double coef2_;
+          const double coef3_;
+          const double coef4_;
+
+         public:
+          Nebo2DStencilConstructor(const StencilType * const stencil)
+          : coef1_(stencil->get_coef1()),
+            coef2_(stencil->get_coef2()),
+            coef3_(stencil->get_coef3()),
+            coef4_(stencil->get_coef4())
+          {};
+          typename StencilType::DestFieldType typedef FieldType;
+          typename StencilType::SrcFieldType typedef OpFieldType;
+          NeboConstField<Initial, OpFieldType> typedef OpType;
+          Nebo2DStencil<Initial, StencilType, OpType, FieldType> typedef StandardType;
+          NeboExpression<StandardType, FieldType> typedef StandardTerm;
+          template<typename OperandType>
+           struct OperandInfo {
+
+             Nebo2DStencil<Initial, StencilType, OperandType, FieldType> typedef StandardType;
+
+             NeboExpression<StandardType, FieldType> typedef StandardTerm;
+          };
+          inline StandardTerm operator()(typename StencilType::SrcFieldType const & f) {
+             return StandardTerm(StandardType(OpType(f), coef1_, coef2_, coef3_, coef4_));
+          };
+          template<typename Operand>
+           inline typename OperandInfo<Operand>::StandardTerm operator()(NeboExpression<Operand,
+                                                                                        OpFieldType>
+                                                                         const & fexpr) {
+
+              typename OperandInfo<Operand>::StandardType typedef StandardType;
+
+              typename OperandInfo<Operand>::StandardTerm typedef StandardTerm;
+
+              return StandardTerm(StandardType(fexpr.expr(), coef1_, coef2_, coef3_, coef4_));
            };
       };
 
@@ -6183,10 +6739,15 @@
                                                                        ResizeRhsType const & rhs,
                                                                        typename FieldType::
                                                                        memory_window const & window,
+                                                                       structured::IntVec const &
+                                                                       split,
+                                                                       structured::IntVec const &
+                                                                       location,
                                                                        BI::interprocess_semaphore *
                                                                        semaphore) {
 
-             nebo_assignment_sequential_execute_internal(lhs.resize(window).init(), rhs.resize(window).init());
+             nebo_assignment_sequential_execute_internal(lhs.resize(window, split, location).init(),
+                                                         rhs.resize(window, split, location).init());
 
              semaphore->post();
           }
@@ -6226,8 +6787,9 @@
              else if(number_of_partitions <= window.extent(1)){ y = number_of_partitions; }
              else if(number_of_partitions <= window.extent(0)){ x = number_of_partitions; };
 
-             std::vector<typename FieldType::memory_window> vec_window = window.split(structured::
-                                                                                      IntVec(x, y, z));
+             structured::IntVec split = structured::IntVec(x, y, z);
+
+             std::vector<typename FieldType::memory_window> vec_window = window.split(split);
 
              BI::interprocess_semaphore semaphore(0);
 
@@ -6237,7 +6799,13 @@
              typename std::vector<typename FieldType::memory_window>::const_iterator window_end =
              vec_window.end();
 
-             for( ;window_iterator != window_end ;++window_iterator){
+             int count = 0;
+
+             for(; window_iterator != window_end; ++window_iterator,++count){
+
+                structured::IntVec location = structured::IntVec(((x == 1) ? 0 : count),
+                                                                 ((y == 1) ? 0 : count),
+                                                                 ((z == 1) ? 0 : count));
 
                 ThreadPoolFIFO::self().schedule(boost::bind(&
                                                             nebo_assignment_thread_parallel_execute_internal<LhsType,
@@ -6249,6 +6817,8 @@
                                                             initial_rhs.expr().template resize_prep<ValidGhost,
                                                                                                     InitialShift>(),
                                                             *window_iterator,
+                                                            split,
+                                                            location,
                                                             &semaphore));
              };
 

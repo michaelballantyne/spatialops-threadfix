@@ -11,32 +11,11 @@ add_test( field_exprs field_exprs )
 add_executable( assign_test ScalingAssignmentTest.cpp )
 target_link_libraries( assign_test ${libs} )
 
-add_executable( stencil_test1 StencilTest1.cpp )
-target_link_libraries( stencil_test1 ${libs} )
+add_executable( stencil_test StencilTest.cpp )
+target_link_libraries( stencil_test ${libs} )
 
-add_executable( stencil_test2 StencilTest2.cpp )
-target_link_libraries( stencil_test2 ${libs} )
-
-add_executable( stencil_test3 StencilTest3.cpp )
-target_link_libraries( stencil_test3 ${libs} )
-
-add_executable( stencil_test4 StencilTest4.cpp )
-target_link_libraries( stencil_test4 ${libs} )
-
-add_executable( stencil_test5 StencilTest5.cpp )
-target_link_libraries( stencil_test5 ${libs} )
-
-add_executable( stencil_test6 StencilTest6.cpp )
-target_link_libraries( stencil_test6 ${libs} )
-
-add_executable( stencil_test7 StencilTest7.cpp )
-target_link_libraries( stencil_test7 ${libs} )
-
-add_executable( stencil_test8 StencilTest8.cpp )
-target_link_libraries( stencil_test8 ${libs} )
-
-add_executable( stencil_test9 StencilTest9.cpp )
-target_link_libraries( stencil_test9 ${libs} )
+add_executable( stencil_test_deep StencilTestDeepChain.cpp )
+target_link_libraries( stencil_test_deep ${libs} )
 
 add_executable( stencil_chain_test StencilChainTest.cpp )
 target_link_libraries( stencil_chain_test ${libs} )
