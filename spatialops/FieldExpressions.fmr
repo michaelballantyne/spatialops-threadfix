@@ -2494,6 +2494,10 @@
                      (lambda (given-valid point)
                        (tpl-pmtr (scope (scope 'structured (tpl-use 'Invalidate given-valid point))
                                         'result)))]
+                    [minimum
+                     (lambda (first second)
+                       (tpl-pmtr (scope (scope 'structured (tpl-use 'Minimum first second))
+                                        'result)))]
                     [set-up-point
                      (lambda (call point)
                        (mfc (fc 'operand)
@@ -2524,7 +2528,10 @@
                           (mfc (c 'operand num "_")
                                'eval)
                           "*"
-                          (c 'coef num "_")))])
+                          (c 'coef num "_")))]
+                    [int-cast
+                     (lambda (chunk)
+                       (c (p 'int) (p (c chunk))))])
                 (build-struct NS2D
                               #true
                               (list (tpl-pmtr 'StencilType)
@@ -2559,13 +2566,13 @@
                                                 (typedef (tpl-use (scope 'structured 'IndexTriplet) "0" "0" "1")
                                                          'ZUnit)
                                                 (typedef (tpl-pmtr (scope (tpl-use 'TemplateIf
-                                                                                   (p (b s (scope 'SFTO 'X) "!=" (scope 'DFTO 'X)))
+                                                                                   (p (b s (int-cast (scope 'SFTO 'X)) "!=" (int-cast (scope 'DFTO 'X))))
                                                                                    'XUnit
                                                                                    'YUnit)
                                                                           'result))
                                                          'D1)
                                                 (typedef (tpl-pmtr (scope (tpl-use 'TemplateIf
-                                                                                   (p (b s (scope 'SFTO 'Z) "!=" (scope 'DFTO 'Z)))
+                                                                                   (p (b s (int-cast (scope 'SFTO 'Z)) "!=" (int-cast (scope 'DFTO 'Z))))
                                                                                    'ZUnit
                                                                                    'YUnit)
                                                                           'result))
@@ -2615,12 +2622,24 @@
                                                 (typedef (tpl-pmtr (scope (scope 'structured
                                                                                  (tpl-use 'Add 'HiD1 'HiD2))
                                                                           'result))
-                                                         'SP4))
-                                          (invalidate (invalidate (invalidate (invalidate (tpl-pmtr (scope 'Operand report-VG-chunk))
-                                                                                          'SP1)
-                                                                              'SP2)
-                                                                  'SP3)
-                                                      'SP4)
+                                                         'SP4)
+                                                (typedef (tpl-pmtr (scope 'Operand report-VG-chunk))
+                                                         'OperandPVG)
+                                                (typedef (invalidate 'OperandPVG 'SP1)
+                                                         'SP1PVG)
+                                                (typedef (invalidate 'OperandPVG 'SP2)
+                                                         'SP2PVG)
+                                                (typedef (invalidate 'OperandPVG 'SP3)
+                                                         'SP3PVG)
+                                                (typedef (invalidate 'OperandPVG 'SP4)
+                                                         'SP4PVG)
+                                                (typedef (minimum 'SP1PVG 'SP2PVG)
+                                                         'PVG12)
+                                                (typedef (minimum 'PVG12 'SP3PVG)
+                                                         'PVG123)
+                                                (typedef (minimum 'PVG123 'SP4PVG)
+                                                         'PVG1234))
+                                          'PVG1234
                                           (bm-constructor (list (b s 'Operand const-chunk "&" 'op)
                                                                 (b s 'double const-chunk 'coef1)
                                                                 (b s 'double const-chunk 'coef2)
@@ -2867,9 +2886,9 @@
                                                           'StandardType)
                                                  (typedef (tpl-use NE-chunk 'StandardType FT-chunk)
                                                           'StandardTerm))
-                                    (r-fcn-def (fcn-dcl (c 'operator (p))
-                                                        'StandardTerm
-                                                        (b s (tpl-pmtr (scope 'StencilType 'SrcFieldType)) const-chunk "&" 'f))
+                                    (r-fcn-def (constize (fcn-dcl (c 'operator (p))
+                                                                  'StandardTerm
+                                                                  (b s (tpl-pmtr (scope 'StencilType 'SrcFieldType)) const-chunk "&" 'f)))
                                                null
                                                (fc 'StandardTerm
                                                    (fc 'StandardType
@@ -2877,13 +2896,13 @@
                                                        'lo_
                                                        'hi_)))
                                     (tpl-def (tpl-pmtr 'Operand)
-                                             (r-fcn-def (fcn-dcl (c 'operator (p))
-                                                                 (tpl-pmtr (scope (tpl-use 'OperandInfo 'Operand) 'StandardTerm))
-                                                                 (b s
-                                                                    (tpl-use NE-chunk 'Operand 'OpFieldType)
-                                                                    const-chunk
-                                                                    "&"
-                                                                    'fexpr))
+                                             (r-fcn-def (constize (fcn-dcl (c 'operator (p))
+                                                                           (tpl-pmtr (scope (tpl-use 'OperandInfo 'Operand) 'StandardTerm))
+                                                                           (b s
+                                                                              (tpl-use NE-chunk 'Operand 'OpFieldType)
+                                                                              const-chunk
+                                                                              "&"
+                                                                              'fexpr)))
                                                         (list (typedef (tpl-pmtr (scope (tpl-use 'OperandInfo 'Operand) 'StandardType))
                                                                        'StandardType)
                                                               (typedef (tpl-pmtr (scope (tpl-use 'OperandInfo 'Operand) 'StandardTerm))
@@ -2926,9 +2945,9 @@
                                                           'StandardType)
                                                  (typedef (tpl-use NE-chunk 'StandardType FT-chunk)
                                                           'StandardTerm))
-                                    (r-fcn-def (fcn-dcl (c 'operator (p))
-                                                        'StandardTerm
-                                                        (b s (tpl-pmtr (scope 'StencilType 'SrcFieldType)) const-chunk "&" 'f))
+                                    (r-fcn-def (constize (fcn-dcl (c 'operator (p))
+                                                                  'StandardTerm
+                                                                  (b s (tpl-pmtr (scope 'StencilType 'SrcFieldType)) const-chunk "&" 'f)))
                                                null
                                                (fc 'StandardTerm
                                                    (fc 'StandardType
@@ -2938,13 +2957,13 @@
                                                        'coef3_
                                                        'coef4_)))
                                     (tpl-def (tpl-pmtr 'Operand)
-                                             (r-fcn-def (fcn-dcl (c 'operator (p))
-                                                                 (tpl-pmtr (scope (tpl-use 'OperandInfo 'Operand) 'StandardTerm))
-                                                                 (b s
-                                                                    (tpl-use NE-chunk 'Operand 'OpFieldType)
-                                                                    const-chunk
-                                                                    "&"
-                                                                    'fexpr))
+                                             (r-fcn-def (constize (fcn-dcl (c 'operator (p))
+                                                                           (tpl-pmtr (scope (tpl-use 'OperandInfo 'Operand) 'StandardTerm))
+                                                                           (b s
+                                                                              (tpl-use NE-chunk 'Operand 'OpFieldType)
+                                                                              const-chunk
+                                                                              "&"
+                                                                              'fexpr)))
                                                         (list (typedef (tpl-pmtr (scope (tpl-use 'OperandInfo 'Operand) 'StandardType))
                                                                        'StandardType)
                                                               (typedef (tpl-pmtr (scope (tpl-use 'OperandInfo 'Operand) 'StandardTerm))

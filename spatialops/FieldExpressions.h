@@ -6267,8 +6267,8 @@
           structured::IndexTriplet<1, 0, 0> typedef XUnit;
           structured::IndexTriplet<0, 1, 0> typedef YUnit;
           structured::IndexTriplet<0, 0, 1> typedef ZUnit;
-          typename TemplateIf<(SFTO::X != DFTO::X), XUnit, YUnit>::result typedef D1;
-          typename TemplateIf<(SFTO::Z != DFTO::Z), ZUnit, YUnit>::result typedef D2;
+          typename TemplateIf<((int)(SFTO::X) != (int)(DFTO::X)), XUnit, YUnit>::result typedef D1;
+          typename TemplateIf<((int)(SFTO::Z) != (int)(DFTO::Z)), ZUnit, YUnit>::result typedef D2;
           typename structured::Multiply<SFTO, D1>::result typedef SFTD1;
           typename structured::Multiply<SFTO, D2>::result typedef SFTD2;
           typename structured::Multiply<DFTO, D1>::result typedef DFTD1;
@@ -6281,6 +6281,14 @@
           typename structured::Add<HiD1, LoD2>::result typedef SP2;
           typename structured::Add<LoD1, HiD2>::result typedef SP3;
           typename structured::Add<HiD1, HiD2>::result typedef SP4;
+          typename Operand::PossibleValidGhost typedef OperandPVG;
+          typename structured::Invalidate<OperandPVG, SP1>::result typedef SP1PVG;
+          typename structured::Invalidate<OperandPVG, SP2>::result typedef SP2PVG;
+          typename structured::Invalidate<OperandPVG, SP3>::result typedef SP3PVG;
+          typename structured::Invalidate<OperandPVG, SP4>::result typedef SP4PVG;
+          typename structured::Minimum<SP1PVG, SP2PVG>::result typedef PVG12;
+          typename structured::Minimum<PVG12, SP3PVG>::result typedef PVG123;
+          typename structured::Minimum<PVG123, SP4PVG>::result typedef PVG1234;
           template<typename ValidGhost, typename Shift>
            struct Iterator {
 
@@ -6324,17 +6332,7 @@
                                                                         result>::SeqWalkType>,
                            FieldType> typedef SeqWalkType;
           };
-          typename structured::Invalidate<typename structured::Invalidate<typename structured::
-                                                                          Invalidate<typename
-                                                                                     structured::
-                                                                                     Invalidate<typename
-                                                                                                Operand::
-                                                                                                PossibleValidGhost,
-                                                                                                SP1>::
-                                                                                     result,
-                                                                                     SP2>::result,
-                                                                          SP3>::result,
-                                          SP4>::result typedef PossibleValidGhost;
+          PVG1234 typedef PossibleValidGhost;
           Nebo2DStencil(Operand const & op,
                         double const coef1,
                         double const coef2,
@@ -6655,13 +6653,13 @@
 
              NeboExpression<StandardType, FieldType> typedef StandardTerm;
           };
-          inline StandardTerm operator()(typename StencilType::SrcFieldType const & f) {
+          inline StandardTerm operator()(typename StencilType::SrcFieldType const & f) const {
              return StandardTerm(StandardType(OpType(f), lo_, hi_));
           };
           template<typename Operand>
            inline typename OperandInfo<Operand>::StandardTerm operator()(NeboExpression<Operand,
                                                                                         OpFieldType>
-                                                                         const & fexpr) {
+                                                                         const & fexpr) const {
 
               typename OperandInfo<Operand>::StandardType typedef StandardType;
 
@@ -6699,13 +6697,13 @@
 
              NeboExpression<StandardType, FieldType> typedef StandardTerm;
           };
-          inline StandardTerm operator()(typename StencilType::SrcFieldType const & f) {
+          inline StandardTerm operator()(typename StencilType::SrcFieldType const & f) const {
              return StandardTerm(StandardType(OpType(f), coef1_, coef2_, coef3_, coef4_));
           };
           template<typename Operand>
            inline typename OperandInfo<Operand>::StandardTerm operator()(NeboExpression<Operand,
                                                                                         OpFieldType>
-                                                                         const & fexpr) {
+                                                                         const & fexpr) const {
 
               typename OperandInfo<Operand>::StandardType typedef StandardType;
 
