@@ -171,8 +171,7 @@
           NeboScalar(AtomicType const value)
           : value_(value)
           {};
-          inline ResizeType resize(MemoryWindow const & size,
-                                   structured::IntVec const & split,
+          inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
              return ResizeType(value());
           };
@@ -263,8 +262,7 @@
           NeboBoolean(bool const value)
           : value_(value)
           {};
-          inline ResizeType resize(MemoryWindow const & size,
-                                   structured::IntVec const & split,
+          inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
              return ResizeType(value());
           };
@@ -325,9 +323,7 @@
 
              NeboConstField<SeqWalk<ValidGhost, Shift>, FieldType> typedef SeqWalkType;
           };
-          typename structured::FromGhost<typename FieldType::Ghost,
-                                         typename FieldType::Location::BCExtra>::result typedef
-          PossibleValidGhost;
+          typename structured::GhostFromField<FieldType>::result typedef PossibleValidGhost;
           NeboConstField(FieldType const & f)
           : field_(f)
           {};
@@ -361,11 +357,10 @@
           NeboConstField(FieldType const & f)
           : field_(f)
           {};
-          inline ResizeType resize(MemoryWindow const & size,
-                                   structured::IntVec const & split,
+          inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
 
-             return ResizeType(FieldType(size.template shift<Shift>(),
+             return ResizeType(FieldType(field().window_with_ghost().refine(split, location),
                                          field().field_values(),
                                          structured::ExternalStorage));
           };
@@ -428,9 +423,7 @@
 
              NeboField<SeqWalk<ValidGhost, Shift>, FieldType> typedef SeqWalkType;
           };
-          typename structured::FromGhost<typename FieldType::Ghost,
-                                         typename FieldType::Location::BCExtra>::result typedef
-          PossibleValidGhost;
+          typename structured::GhostFromField<FieldType>::result typedef PossibleValidGhost;
           NeboField(FieldType f)
           : field_(f)
           {};
@@ -464,11 +457,10 @@
           NeboField(FieldType f)
           : field_(f)
           {};
-          inline ResizeType resize(MemoryWindow const & size,
-                                   structured::IntVec const & split,
+          inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) {
 
-             return ResizeType(FieldType(size.template shift<Shift>(),
+             return ResizeType(FieldType(field().window_with_ghost().refine(split, location),
                                          field().field_values(),
                                          structured::ExternalStorage));
           };
@@ -622,12 +614,9 @@
           SumOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & size,
-                                   structured::IntVec const & split,
+          inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-
-             return ResizeType(operand1().resize(size, split, location),
-                               operand2().resize(size, split, location));
+             return ResizeType(operand1().resize(split, location), operand2().resize(split, location));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -837,12 +826,9 @@
           DiffOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & size,
-                                   structured::IntVec const & split,
+          inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-
-             return ResizeType(operand1().resize(size, split, location),
-                               operand2().resize(size, split, location));
+             return ResizeType(operand1().resize(split, location), operand2().resize(split, location));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -1052,12 +1038,9 @@
           ProdOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & size,
-                                   structured::IntVec const & split,
+          inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-
-             return ResizeType(operand1().resize(size, split, location),
-                               operand2().resize(size, split, location));
+             return ResizeType(operand1().resize(split, location), operand2().resize(split, location));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -1267,12 +1250,9 @@
           DivOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & size,
-                                   structured::IntVec const & split,
+          inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-
-             return ResizeType(operand1().resize(size, split, location),
-                               operand2().resize(size, split, location));
+             return ResizeType(operand1().resize(split, location), operand2().resize(split, location));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -1465,10 +1445,9 @@
           SinFcn(Operand const & operand)
           : operand_(operand)
           {};
-          inline ResizeType resize(MemoryWindow const & size,
-                                   structured::IntVec const & split,
+          inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(operand().resize(size, split, location));
+             return ResizeType(operand().resize(split, location));
           };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -1586,10 +1565,9 @@
           CosFcn(Operand const & operand)
           : operand_(operand)
           {};
-          inline ResizeType resize(MemoryWindow const & size,
-                                   structured::IntVec const & split,
+          inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(operand().resize(size, split, location));
+             return ResizeType(operand().resize(split, location));
           };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -1707,10 +1685,9 @@
           TanFcn(Operand const & operand)
           : operand_(operand)
           {};
-          inline ResizeType resize(MemoryWindow const & size,
-                                   structured::IntVec const & split,
+          inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(operand().resize(size, split, location));
+             return ResizeType(operand().resize(split, location));
           };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -1828,10 +1805,9 @@
           ExpFcn(Operand const & operand)
           : operand_(operand)
           {};
-          inline ResizeType resize(MemoryWindow const & size,
-                                   structured::IntVec const & split,
+          inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(operand().resize(size, split, location));
+             return ResizeType(operand().resize(split, location));
           };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -1949,10 +1925,9 @@
           TanhFcn(Operand const & operand)
           : operand_(operand)
           {};
-          inline ResizeType resize(MemoryWindow const & size,
-                                   structured::IntVec const & split,
+          inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(operand().resize(size, split, location));
+             return ResizeType(operand().resize(split, location));
           };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -2070,10 +2045,9 @@
           AbsFcn(Operand const & operand)
           : operand_(operand)
           {};
-          inline ResizeType resize(MemoryWindow const & size,
-                                   structured::IntVec const & split,
+          inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(operand().resize(size, split, location));
+             return ResizeType(operand().resize(split, location));
           };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -2191,10 +2165,9 @@
           NegFcn(Operand const & operand)
           : operand_(operand)
           {};
-          inline ResizeType resize(MemoryWindow const & size,
-                                   structured::IntVec const & split,
+          inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(operand().resize(size, split, location));
+             return ResizeType(operand().resize(split, location));
           };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -2329,12 +2302,9 @@
           PowFcn(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & size,
-                                   structured::IntVec const & split,
+          inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-
-             return ResizeType(operand1().resize(size, split, location),
-                               operand2().resize(size, split, location));
+             return ResizeType(operand1().resize(split, location), operand2().resize(split, location));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -2529,10 +2499,9 @@
           SqrtFcn(Operand const & operand)
           : operand_(operand)
           {};
-          inline ResizeType resize(MemoryWindow const & size,
-                                   structured::IntVec const & split,
+          inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(operand().resize(size, split, location));
+             return ResizeType(operand().resize(split, location));
           };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -2650,10 +2619,9 @@
           LogFcn(Operand const & operand)
           : operand_(operand)
           {};
-          inline ResizeType resize(MemoryWindow const & size,
-                                   structured::IntVec const & split,
+          inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(operand().resize(size, split, location));
+             return ResizeType(operand().resize(split, location));
           };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -2788,12 +2756,9 @@
           EqualCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & size,
-                                   structured::IntVec const & split,
+          inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-
-             return ResizeType(operand1().resize(size, split, location),
-                               operand2().resize(size, split, location));
+             return ResizeType(operand1().resize(split, location), operand2().resize(split, location));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -3011,12 +2976,9 @@
           InequalCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & size,
-                                   structured::IntVec const & split,
+          inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-
-             return ResizeType(operand1().resize(size, split, location),
-                               operand2().resize(size, split, location));
+             return ResizeType(operand1().resize(split, location), operand2().resize(split, location));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -3234,12 +3196,9 @@
           LessThanCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & size,
-                                   structured::IntVec const & split,
+          inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-
-             return ResizeType(operand1().resize(size, split, location),
-                               operand2().resize(size, split, location));
+             return ResizeType(operand1().resize(split, location), operand2().resize(split, location));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -3457,12 +3416,9 @@
           LessThanEqualCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & size,
-                                   structured::IntVec const & split,
+          inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-
-             return ResizeType(operand1().resize(size, split, location),
-                               operand2().resize(size, split, location));
+             return ResizeType(operand1().resize(split, location), operand2().resize(split, location));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -3682,12 +3638,9 @@
           GreaterThanCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & size,
-                                   structured::IntVec const & split,
+          inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-
-             return ResizeType(operand1().resize(size, split, location),
-                               operand2().resize(size, split, location));
+             return ResizeType(operand1().resize(split, location), operand2().resize(split, location));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -3907,12 +3860,9 @@
           GreaterThanEqualCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & size,
-                                   structured::IntVec const & split,
+          inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-
-             return ResizeType(operand1().resize(size, split, location),
-                               operand2().resize(size, split, location));
+             return ResizeType(operand1().resize(split, location), operand2().resize(split, location));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -4136,12 +4086,9 @@
           AndOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & size,
-                                   structured::IntVec const & split,
+          inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-
-             return ResizeType(operand1().resize(size, split, location),
-                               operand2().resize(size, split, location));
+             return ResizeType(operand1().resize(split, location), operand2().resize(split, location));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -4346,12 +4293,9 @@
           OrOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-          inline ResizeType resize(MemoryWindow const & size,
-                                   structured::IntVec const & split,
+          inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-
-             return ResizeType(operand1().resize(size, split, location),
-                               operand2().resize(size, split, location));
+             return ResizeType(operand1().resize(split, location), operand2().resize(split, location));
           };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
@@ -4539,10 +4483,9 @@
           NotOp(Operand const & operand)
           : operand_(operand)
           {};
-          inline ResizeType resize(MemoryWindow const & size,
-                                   structured::IntVec const & split,
+          inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(operand().resize(size, split, location));
+             return ResizeType(operand().resize(split, location));
           };
           inline Operand const & operand(void) const { return operand_; };
 
@@ -4678,12 +4621,11 @@
              OBJECT_NAME(Operand1 const & operand1, Operand2 const & operand2)                     \
              : operand1_(operand1), operand2_(operand2)                                            \
              {};                                                                                   \
-             inline ResizeType resize(MemoryWindow const & size,                                   \
-                                      structured::IntVec const & split,                            \
+             inline ResizeType resize(structured::IntVec const & split,                            \
                                       structured::IntVec const & location) const {                 \
                                                                                                    \
-                return ResizeType(operand1().resize(size, split, location),                        \
-                                  operand2().resize(size, split, location));                       \
+                return ResizeType(operand1().resize(split, location),                              \
+                                  operand2().resize(split, location));                             \
              };                                                                                    \
              inline Operand1 const & operand1(void) const { return operand1_; };                   \
              inline Operand2 const & operand2(void) const { return operand2_; };                   \
@@ -4906,12 +4848,11 @@
              OBJECT_NAME(Operand1 const & operand1, Operand2 const & operand2)                     \
              : operand1_(operand1), operand2_(operand2)                                            \
              {};                                                                                   \
-             inline ResizeType resize(MemoryWindow const & size,                                   \
-                                      structured::IntVec const & split,                            \
+             inline ResizeType resize(structured::IntVec const & split,                            \
                                       structured::IntVec const & location) const {                 \
                                                                                                    \
-                return ResizeType(operand1().resize(size, split, location),                        \
-                                  operand2().resize(size, split, location));                       \
+                return ResizeType(operand1().resize(split, location),                              \
+                                  operand2().resize(split, location));                             \
              };                                                                                    \
              inline Operand1 const & operand1(void) const { return operand1_; };                   \
              inline Operand2 const & operand2(void) const { return operand2_; };                   \
@@ -5117,10 +5058,9 @@
              OBJECT_NAME(Operand const & operand)                                                  \
              : operand_(operand)                                                                   \
              {};                                                                                   \
-             inline ResizeType resize(MemoryWindow const & size,                                   \
-                                      structured::IntVec const & split,                            \
+             inline ResizeType resize(structured::IntVec const & split,                            \
                                       structured::IntVec const & location) const {                 \
-                return ResizeType(operand().resize(size, split, location));                        \
+                return ResizeType(operand().resize(split, location));                              \
              };                                                                                    \
              inline Operand const & operand(void) const { return operand_; };                      \
                                                                                                    \
@@ -5254,12 +5194,9 @@
           NeboClause(Test const & test, Expr const & expr)
           : test_(test), expr_(expr)
           {};
-          inline ResizeType resize(MemoryWindow const & size,
-                                   structured::IntVec const & split,
+          inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-
-             return ResizeType(test().resize(size, split, location),
-                               expr().resize(size, split, location));
+             return ResizeType(test().resize(split, location), expr().resize(split, location));
           };
           inline Test const & test(void) const { return test_; };
           inline Expr const & expr(void) const { return expr_; };
@@ -5383,12 +5320,9 @@
           NeboCond(ClauseType const & clause, Otherwise const & otherwise)
           : clause_(clause), otherwise_(otherwise)
           {};
-          inline ResizeType resize(MemoryWindow const & size,
-                                   structured::IntVec const & split,
+          inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-
-             return ResizeType(clause().resize(size, split, location),
-                               otherwise().resize(size, split, location));
+             return ResizeType(clause().resize(split, location), otherwise().resize(split, location));
           };
           inline ClauseType const & clause(void) const { return clause_; };
           inline Otherwise const & otherwise(void) const { return otherwise_; };
@@ -6164,12 +6098,11 @@
           Nebo1DStencil(Operand1 const & op1, Operand2 const & op2, double const lo, double const hi)
           : operand1_(op1), operand2_(op2), lo_(lo), hi_(hi)
           {};
-          inline ResizeType resize(MemoryWindow const & size,
-                                   structured::IntVec const & split,
+          inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
 
-             return ResizeType(operand1().resize(size, split, location),
-                               operand2().resize(size, split, location),
+             return ResizeType(operand1().resize(split, location),
+                               operand2().resize(split, location),
                                lo(),
                                hi());
           };
@@ -6460,14 +6393,13 @@
             coef3_(coef3),
             coef4_(coef4)
           {};
-          inline ResizeType resize(MemoryWindow const & size,
-                                   structured::IntVec const & split,
+          inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
 
-             return ResizeType(operand1().resize(size, split, location),
-                               operand2().resize(size, split, location),
-                               operand3().resize(size, split, location),
-                               operand4().resize(size, split, location),
+             return ResizeType(operand1().resize(split, location),
+                               operand2().resize(split, location),
+                               operand3().resize(split, location),
+                               operand4().resize(split, location),
                                coef1(),
                                coef2(),
                                coef3(),
@@ -6745,12 +6677,11 @@
           NeboFDStencil(Operand1 const & op1, Operand2 const & op2, double const lo, double const hi)
           : operand1_(op1), operand2_(op2), lo_(lo), hi_(hi)
           {};
-          inline ResizeType resize(MemoryWindow const & size,
-                                   structured::IntVec const & split,
+          inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
 
-             return ResizeType(operand1().resize(size, split, location),
-                               operand2().resize(size, split, location),
+             return ResizeType(operand1().resize(split, location),
+                               operand2().resize(split, location),
                                lo(),
                                hi());
           };
@@ -6978,8 +6909,6 @@
          template<typename ResizeLhsType, typename ResizeRhsType, typename FieldType>
           inline void nebo_assignment_thread_parallel_execute_internal(ResizeLhsType & lhs,
                                                                        ResizeRhsType const & rhs,
-                                                                       typename FieldType::
-                                                                       memory_window const & window,
                                                                        structured::IntVec const &
                                                                        split,
                                                                        structured::IntVec const &
@@ -6987,8 +6916,8 @@
                                                                        BI::interprocess_semaphore *
                                                                        semaphore) {
 
-             nebo_assignment_sequential_execute_internal(lhs.resize(window, split, location).init(),
-                                                         rhs.resize(window, split, location).init());
+             nebo_assignment_sequential_execute_internal(lhs.resize(split, location).init(),
+                                                         rhs.resize(split, location).init());
 
              semaphore->post();
           }
@@ -7012,41 +6941,23 @@
 
              typename FieldType::memory_window typedef MemoryWindow;
 
-             MemoryWindow window = initial_lhs.window_with_ghost().template resizeGhost<typename
-                                                                                        structured::
-                                                                                        FromGhost<typename
-                                                                                                  FieldType::
-                                                                                                  Ghost,
-                                                                                                  typename
-                                                                                                  FieldType::
-                                                                                                  Location::
-                                                                                                  BCExtra>::
-                                                                                        result,
-                                                                                        ValidGhost>();
+             structured::IntVec extent = initial_lhs.template resize_ghost<ValidGhost>().window_with_ghost().extent();
 
              int x = 1;
              int y = 1;
              int z = 1;
 
-             if(number_of_partitions <= window.extent(2)){ z = number_of_partitions; }
-             else if(number_of_partitions <= window.extent(1)){ y = number_of_partitions; }
-             else if(number_of_partitions <= window.extent(0)){ x = number_of_partitions; };
+             if(number_of_partitions <= extent[2]){ z = number_of_partitions; }
+             else if(number_of_partitions <= extent[1]){ y = number_of_partitions; }
+             else if(number_of_partitions <= extent[0]){ x = number_of_partitions; };
 
              structured::IntVec split = structured::IntVec(x, y, z);
 
-             std::vector<typename FieldType::memory_window> vec_window = window.split(split);
-
              BI::interprocess_semaphore semaphore(0);
-
-             typename std::vector<typename FieldType::memory_window>::const_iterator window_iterator
-             = vec_window.begin();
-
-             typename std::vector<typename FieldType::memory_window>::const_iterator window_end =
-             vec_window.end();
 
              int count = 0;
 
-             for(; window_iterator != window_end; ++window_iterator,++count){
+             for(; count < number_of_partitions; ++count){
 
                 structured::IntVec location = structured::IntVec(((x == 1) ? 0 : count),
                                                                  ((y == 1) ? 0 : count),
@@ -7061,15 +6972,12 @@
                                                                                                                    InitialShift>(),
                                                             initial_rhs.expr().template resize_prep<ValidGhost,
                                                                                                     InitialShift>(),
-                                                            *window_iterator,
                                                             split,
                                                             location,
                                                             &semaphore));
              };
 
-             int ee = vec_window.size();
-
-             for(int ii = 0 ;ii < ee ;ii++){ semaphore.wait(); };
+             for(int ii = 0 ;ii < number_of_partitions ;ii++){ semaphore.wait(); };
 
              return initial_lhs;
           }
@@ -7083,13 +6991,7 @@
 
           typename IteratorStyle<CallStyle,
                                  typename structured::Minimum<typename ExprType::PossibleValidGhost,
-                                                              typename structured::FromGhost<typename
-                                                                                             FieldType::
-                                                                                             Ghost,
-                                                                                             typename
-                                                                                             FieldType::
-                                                                                             Location::
-                                                                                             BCExtra>::
+                                                              typename structured::GhostFromField<FieldType>::
                                                               result>::result,
                                  structured::GhostData<0, 0, 0, 0, 0, 0, 0, 0, 0> >::result typedef
           ValidGhost;

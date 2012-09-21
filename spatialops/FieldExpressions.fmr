@@ -332,7 +332,6 @@
                            (RP-constructor ResizePrep)
                            (list (r-fcn-def (add-const (fcn-dcl 'resize
                                                                 'ResizeType
-                                                                (b s 'MemoryWindow const-chunk "&" 'size)
                                                                 (b s IntVec const-chunk "&" 'split)
                                                                 (b s IntVec const-chunk "&" 'location)))
                                             null
@@ -462,7 +461,6 @@
                                          gen-constructor
                                          (mapper (lambda (op) (mfc (fc op)
                                                                    'resize
-                                                                   'size
                                                                    'split
                                                                    'location))
                                                  op-lst)
@@ -940,10 +938,7 @@
                                 null
                                 null
                                 (tpl-pmtr (scope (scope 'structured
-                                                        (tpl-use 'FromGhost
-                                                                 (tpl-pmtr (scope FT-chunk 'Ghost))
-                                                                 (tpl-pmtr (scope (scope FT-chunk 'Location)
-                                                                                  'BCExtra))))
+                                                        (tpl-use 'GhostFromField FT-chunk))
                                                  'result))
                                 (bm-constructor (b s FT-chunk const-chunk "&" 'f)
                                                 (cons-asgn 'field_ 'f)
@@ -963,8 +958,11 @@
                                                    (cons-asgn 'field_ 'f)
                                                    null)
                                    (fc FT-chunk
-                                       (mfc 'size
-                                            (tpl-fcn-use 'shift SH-chunk))
+                                       (mfc (mfc (fc 'field)
+                                                 'window_with_ghost)
+                                            'refine
+                                            'split
+                                            'location)
                                        (mfc (fc 'field)
                                             'field_values)
                                        (scope 'structured 'ExternalStorage))
@@ -1015,10 +1013,7 @@
                                 null
                                 null
                                 (tpl-pmtr (scope (scope 'structured
-                                                        (tpl-use 'FromGhost
-                                                                 (tpl-pmtr (scope FT-chunk 'Ghost))
-                                                                 (tpl-pmtr (scope (scope FT-chunk 'Location)
-                                                                                  'BCExtra))))
+                                                        (tpl-use 'GhostFromField FT-chunk))
                                                  'result))
                                 (bm-constructor (b s FT-chunk 'f)
                                                 (cons-asgn 'field_ 'f)
@@ -1038,8 +1033,11 @@
                                                    (cons-asgn 'field_ 'f)
                                                    null)
                                    (fc FT-chunk
-                                       (mfc 'size
-                                            (tpl-fcn-use 'shift SH-chunk))
+                                       (mfc (mfc (fc 'field)
+                                                 'window_with_ghost)
+                                            'refine
+                                            'split
+                                            'location)
                                        (mfc (fc 'field)
                                             'field_values)
                                        (scope 'structured 'ExternalStorage))
@@ -1283,12 +1281,10 @@
                                                    null)
                                    (list (mfc (fc 'test)
                                               'resize
-                                              'size
                                               'split
                                               'location)
                                          (mfc (fc 'expr)
                                               'resize
-                                              'size
                                               'split
                                               'location))
                                    (list (r-fcn-def (constize (fcn-dcl 'test
@@ -1405,12 +1401,10 @@
                                                    null)
                                    (list (mfc (fc 'clause)
                                               'resize
-                                              'size
                                               'split
                                               'location)
                                          (mfc (fc 'otherwise)
                                               'resize
-                                              'size
                                               'split
                                               'location))
                                    (list (r-fcn-def (constize (fcn-dcl 'clause
@@ -2372,12 +2366,10 @@
                                                            null)
                                            (list (mfc (fc 'operand1)
                                                       'resize
-                                                      'size
                                                       'split
                                                       'location)
                                                  (mfc (fc 'operand2)
                                                       'resize
-                                                      'size
                                                       'split
                                                       'location)
                                                  (fc 'lo)
@@ -2514,7 +2506,6 @@
                      (lambda (num)
                        (mfc (fc (c 'operand num))
                             'resize
-                            'size
                             'split
                             'location))]
                     [operand-accessor
@@ -2954,12 +2945,10 @@
                                                            null)
                                            (list (mfc (fc 'operand1)
                                                       'resize
-                                                      'size
                                                       'split
                                                       'location)
                                                  (mfc (fc 'operand2)
                                                       'resize
-                                                      'size
                                                       'split
                                                       'location)
                                                  (fc 'lo)
@@ -3280,11 +3269,6 @@
                 (v-fcn-def 'nebo_assignment_thread_parallel_execute_internal
                            (list (b s 'ResizeLhsType "&" 'lhs)
                                  (b s 'ResizeRhsType const-chunk "&" 'rhs)
-                                 (b s
-                                    (tpl-pmtr (scope FT-chunk 'memory_window))
-                                    const-chunk
-                                    "&"
-                                    'window)
                                  (b s IntVec const-chunk "&" 'split)
                                  (b s IntVec const-chunk "&" 'location)
                                  (b s
@@ -3292,9 +3276,9 @@
                                     "*"
                                     'semaphore))
                            (list (fc 'nebo_assignment_sequential_execute_internal
-                                     (mfc (mfc 'lhs 'resize 'window 'split 'location)
+                                     (mfc (mfc 'lhs 'resize 'split 'location)
                                           'init)
-                                     (mfc (mfc 'rhs 'resize 'window 'split 'location)
+                                     (mfc (mfc 'rhs 'resize 'split 'location)
                                           'init))
                                  (fc (c 'semaphore "->" 'post))))))
       (pp-conditional-ifdef-chunk
@@ -3322,17 +3306,12 @@
                                  (typedef (tpl-pmtr (scope FT-chunk 'memory_window))
                                           'MemoryWindow)
                                  (b s
-                                    'MemoryWindow
-                                    'window
+                                    (scope 'structured 'IntVec)
+                                    'extent
                                     "="
-                                    (mfc (mfc 'initial_lhs 'window_with_ghost)
-                                         (tpl-fcn-use 'resizeGhost
-                                                      (tpl-pmtr (scope (scope 'structured (tpl-use 'FromGhost
-                                                                                                   (tpl-pmtr (scope FT-chunk 'Ghost))
-                                                                                                   (tpl-pmtr (scope (scope FT-chunk 'Location)
-                                                                                                                    'BCExtra))))
-                                                                      'result))
-                                                      VG-chunk)))
+                                    (mfc (mfc (mfc 'initial_lhs (tpl-fcn-use 'resize_ghost VG-chunk))
+                                              'window_with_ghost)
+                                         'extent))
                                  (let ([=1 (lambda (sym) (b s 'int sym "=" "1"))])
                                    (smt-list-chunk new-line-chunk
                                                    (=1 'x)
@@ -3340,42 +3319,24 @@
                                                    (=1 'z)))
                                  (b new-line-chunk
                                     (c 'if
-                                       (p (b s 'number_of_partitions "<=" (mfc 'window 'extent "2")))
+                                       (p (b s 'number_of_partitions "<=" (c 'extent "[2]")))
                                        (body-chunk (b s 'z "=" 'number_of_partitions)))
                                     (c (b s 'else 'if)
-                                       (p (b s 'number_of_partitions "<=" (mfc 'window 'extent "1")))
+                                       (p (b s 'number_of_partitions "<=" (c 'extent "[1]")))
                                        (body-chunk (b s 'y "="'number_of_partitions)))
                                     (c (b s 'else 'if)
-                                       (p (b s 'number_of_partitions "<=" (mfc 'window 'extent "0")))
+                                       (p (b s 'number_of_partitions "<=" (c 'extent "[0]")))
                                        (body-chunk (b s 'x "=" 'number_of_partitions))))
                                  (b s IntVec 'split "=" (fc IntVec 'x 'y 'z))
                                  (b s
-                                    (scope 'std (tpl-use 'vector (tpl-pmtr (scope FT-chunk 'memory_window))))
-                                    'vec_window
-                                    "="
-                                    (mfc 'window 'split 'split))
-                                 (b s
                                     (scope 'BI 'interprocess_semaphore)
                                     (fc 'semaphore "0"))
-                                 (b s
-                                    (tpl-pmtr (scope (scope 'std (tpl-use 'vector (tpl-pmtr (scope FT-chunk 'memory_window))))
-                                                     'const_iterator))
-                                    'window_iterator
-                                    "="
-                                    (mfc 'vec_window 'begin))
-                                 (b s
-                                    (tpl-pmtr (scope (scope 'std (tpl-use 'vector (tpl-pmtr (scope FT-chunk 'memory_window))))
-                                                     'const_iterator))
-                                    'window_end
-                                    "="
-                                    (mfc 'vec_window 'end))
                                  (b s 'int 'count "=" "0")
                                  (c 'for
                                     (p (b (c semi-colon-chunk s)
                                           empty-chunk
-                                          (b s 'window_iterator "!=" 'window_end)
-                                          (c "++" 'window_iterator comma-chunk
-                                             "++" 'count)))
+                                          (b s 'count "<" 'number_of_partitions)
+                                          (c "++" 'count)))
                                     (body-chunk (let ([option (lambda (arg) (p (b s (p (b s arg "==" "1"))
                                                                                   "?"
                                                                                   "0"
@@ -3394,15 +3355,13 @@
                                                               (tpl-fcn-use 'resize_prep 'ValidGhost 'InitialShift))
                                                          (mfc (mfc 'initial_rhs 'expr)
                                                               (tpl-fcn-use 'resize_prep 'ValidGhost 'InitialShift))
-                                                         (c  "*" 'window_iterator)
                                                          'split
                                                          'location
                                                          (c "&" 'semaphore)))))
-                                 (b s 'int 'ee "=" (mfc 'vec_window 'size))
                                  (c 'for
                                     (p (b (c s semi-colon-chunk)
                                           (b s 'int 'ii "=" "0")
-                                          (b s 'ii "<" 'ee)
+                                          (b s 'ii "<" 'number_of_partitions)
                                           (c 'ii "++")))
                                     (body-chunk (mfc 'semaphore 'wait))))
                            'initial_lhs)))
@@ -3424,10 +3383,7 @@
                                                                                                     (tpl-pmtr (scope 'ExprType
                                                                                                                      report-VG-chunk))
                                                                                                     (tpl-pmtr (scope (scope 'structured
-                                                                                                                            (tpl-use 'FromGhost
-                                                                                                                                     (tpl-pmtr (scope FT-chunk 'Ghost))
-                                                                                                                                     (tpl-pmtr (scope (scope FT-chunk 'Location)
-                                                                                                                                                      'BCExtra))))
+                                                                                                                            (tpl-use 'GhostFromField FT-chunk))
                                                                                                                      'result))))
                                                                                     'result))
                                                                    (c (scope 'structured (tpl-use 'GhostData

@@ -48,12 +48,9 @@ namespace structured{
   Stencil4<OpT,SrcT,DestT>::
   apply_to_field( const SrcT& src, DestT& dest ) const
   {
-    stencil_4_apply_to_field_general_execute<OpT,SrcT,DestT>( src,
-                                                              dest,
-                                                              coef1_,
-                                                              coef2_,
-                                                              coef3_,
-                                                              coef4_ );
+      Nebo2DStencilConstructor<Stencil4<OpT,SrcT,DestT> > typedef Stencil;
+      const Stencil stencil(this);
+      dest <<= stencil(src);
   }
 
   //==================================================================

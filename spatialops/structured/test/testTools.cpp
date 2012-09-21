@@ -93,14 +93,14 @@ int main()
   status( IsSameType< Invalidate<GhostData<2,3,3,4,5,5,6,7,7>,IndexTriplet<-1,0,1> >::result, GhostData<1,3,3,4,5,5,6,6,6> >::result, "GD/trip add test 5");
   status( IsSameType< Invalidate<GhostData<2,3,3,4,5,5,6,7,7>,IndexTriplet<-1,1,0> >::result, GhostData<1,3,3,4,4,4,6,7,7> >::result, "GD/trip add test 6");
 
-  status( IsSameType< FromGhost<NoGhost,  T000>::result, GhostData<0,0,0,0,0,0,0,0,0> >::result, "FromGhost test 1");
-  status( IsSameType< FromGhost<OneGhost, T000>::result, GhostData<1,1,1,1,1,1,1,1,1> >::result, "FromGhost test 2");
-  status( IsSameType< FromGhost<TwoGhost, T000>::result, GhostData<2,2,2,2,2,2,2,2,2> >::result, "FromGhost test 3");
-  status( IsSameType< FromGhost<NoGhost,  T100>::result, GhostData<0,0,1,0,0,0,0,0,0> >::result, "FromGhost test 4");
-  status( IsSameType< FromGhost<NoGhost,  T010>::result, GhostData<0,0,0,0,0,1,0,0,0> >::result, "FromGhost test 5");
-  status( IsSameType< FromGhost<NoGhost,  T111>::result, GhostData<0,0,1,0,0,1,0,0,1> >::result, "FromGhost test 6");
-  status( IsSameType< FromGhost<OneGhost, T100>::result, GhostData<1,1,2,1,1,1,1,1,1> >::result, "FromGhost test 7");
-  status( IsSameType< FromGhost<TwoGhost, T011>::result, GhostData<2,2,2,2,2,3,2,2,3> >::result, "FromGhost test 8");
+  status( IsSameType< GhostFromField<TestField<NoGhost,  T000> >::result, GhostData<0,0,0,0,0,0,0,0,0> >::result, "GhostFromField test 1");
+  status( IsSameType< GhostFromField<TestField<OneGhost, T000> >::result, GhostData<1,1,1,1,1,1,1,1,1> >::result, "GhostFromField test 2");
+  status( IsSameType< GhostFromField<TestField<TwoGhost, T000> >::result, GhostData<2,2,2,2,2,2,2,2,2> >::result, "GhostFromField test 3");
+  status( IsSameType< GhostFromField<TestField<NoGhost,  T100> >::result, GhostData<0,0,1,0,0,0,0,0,0> >::result, "GhostFromField test 4");
+  status( IsSameType< GhostFromField<TestField<NoGhost,  T010> >::result, GhostData<0,0,0,0,0,1,0,0,0> >::result, "GhostFromField test 5");
+  status( IsSameType< GhostFromField<TestField<NoGhost,  T111> >::result, GhostData<0,0,1,0,0,1,0,0,1> >::result, "GhostFromField test 6");
+  status( IsSameType< GhostFromField<TestField<OneGhost, T100> >::result, GhostData<1,1,2,1,1,1,1,1,1> >::result, "GhostFromField test 7");
+  status( IsSameType< GhostFromField<TestField<TwoGhost, T011> >::result, GhostData<2,2,2,2,2,3,2,2,3> >::result, "GhostFromField test 8");
 
   status( IsSameType< Minimum<GhostData<1,1,1,1,1,1,1,1,1>, GhostData<0,0,0,0,0,0,0,0,0> >::result, GhostData<0,0,0,0,0,0,0,0,0> >::result, "Minimum GD test 1");
   status( IsSameType< Minimum<GhostData<0,0,0,0,0,0,0,0,0>, GhostData<1,1,1,1,1,1,1,1,1> >::result, GhostData<0,0,0,0,0,0,0,0,0> >::result, "Minimum GD test 2");

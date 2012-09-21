@@ -38,12 +38,11 @@ namespace SpatialOps{
     class FDStencil2{
       const double coefLo_, coefHi_;
 
-      typedef typename UnitTriplet<DirT>::type  DirVec;
-
     public:
       typedef OpT       type;
       typedef FieldT    SrcFieldType;
       typedef FieldT    DestFieldType;
+      typedef typename UnitTriplet<DirT>::type  DirVec;
 
       FDStencil2( const double coefLo, const double coefHi );
       ~FDStencil2();

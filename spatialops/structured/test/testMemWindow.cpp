@@ -216,9 +216,9 @@ int main()
       const IntVec size(6,6,6);
       const MemoryWindow base(size, false, false, false);
       TestHelper status(true);
-      status( base.resizeGhost<GhostData<0,0,0,0,0,0,0,0,0>, GhostData<0,0,0,0,0,0,0,0,0> >() == base, " no resize with no ghost" );
-      status( base.resizeGhost<GhostData<1,1,1,1,1,1,1,1,1>, GhostData<1,1,1,1,1,1,1,1,1> >() == base, " no resize with ghost" );
-      status( base.resizeGhost<GhostData<2,2,2,2,2,2,2,2,2>, GhostData<2,1,1,2,0,0,1,1,1> >() == MemoryWindow(size, IntVec(0,0,1), IntVec(5,4,4), false, false, false), " complex resize" );
+      status( base.resize_ghost<GhostData<0,0,0,0,0,0,0,0,0>, GhostData<0,0,0,0,0,0,0,0,0> >() == base, " no resize with no ghost" );
+      status( base.resize_ghost<GhostData<1,1,1,1,1,1,1,1,1>, GhostData<1,1,1,1,1,1,1,1,1> >() == base, " no resize with ghost" );
+      status( base.resize_ghost<GhostData<2,2,2,2,2,2,2,2,2>, GhostData<2,1,1,2,0,0,1,1,1> >() == MemoryWindow(size, IntVec(0,0,1), IntVec(5,4,4), false, false, false), " complex resize" );
       overall( status.ok(), "Basic resizing ghost test" );
   }
 
@@ -226,7 +226,7 @@ int main()
   {
       const IntVec size(6,6,6);
       const MemoryWindow base(size, false, false, false);
-      const MemoryWindow shaved = base.resizeGhost<GhostData<2,2,2,2,2,2,2,2,2>, GhostData<1,2,2,2,0,0,1,1,1> >();
+      const MemoryWindow shaved = base.resize_ghost<GhostData<2,2,2,2,2,2,2,2,2>, GhostData<1,2,2,2,0,0,1,1,1> >();
       TestHelper status(true);
       status( shaved.shift<IndexTriplet<0,0,0> >() == shaved, " no shift test 1");
       status( shaved.shift<IndexTriplet<0,0,0> >() == MemoryWindow(size, IntVec(1,0,1), IntVec(5,4,4), false, false, false), " no shift test 2");

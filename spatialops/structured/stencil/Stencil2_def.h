@@ -67,10 +67,11 @@ namespace SpatialOps{ namespace structured{
   {
     switch( dest.memory_device_type() ){
       case LOCAL_RAM:
-        stencil_2_apply_to_field_general_execute<OperatorT,SrcT,DestT>(src,
-                                                                       dest,
-                                                                       coefLo_,
-                                                                       coefHi_);
+          {
+              Nebo1DStencilConstructor<Stencil2<OperatorT,SrcT,DestT> > typedef Stencil;
+              const Stencil stencil(this);
+              dest <<= stencil(src);
+          }
         break;
 
 #ifdef ENABLE_CUDA

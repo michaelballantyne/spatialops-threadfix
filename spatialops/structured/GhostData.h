@@ -126,6 +126,17 @@ namespace SpatialOps{
                        (bc[2] ? bZ : pZ) );
       }
 
+      //returns the change to offset caused by ghost cells
+      static inline IntVec offset() {
+        return neg_int_vec();
+      }
+
+      //returns the change to extent caused by ghost cells (and boundary conditions)
+      static inline IntVec extent(IntVec const bc) {
+        return neg_int_vec() + real_pos_int_vec(bc);
+      }
+
+
     };
 
     struct InfiniteGhostData;
@@ -210,26 +221,40 @@ namespace SpatialOps{
      *   \endcode
      */
     template<typename Other>
-        struct Invalidate<InfiniteGhostData,
-                          Other> {
+    struct Invalidate<InfiniteGhostData,
+                      Other> {
         InfiniteGhostData typedef result;
     };
 
     /**
-     *  \struct FromGhost
-     *  \brief Perform compile-time conversion of a Ghost struct to an GhostData type
+     *  \struct GhostFromField
+     *  \brief Perform compile-time computation to pull GhostData from a FieldType
      */
-    template<typename Ghost, typename BC>
-    struct FromGhost {
-        GhostData<Ghost::NGhostMinus::X,
-                  Ghost::NGhostPlus::X,
-                  (Ghost::NGhostPlus::X + BC::X),
-                  Ghost::NGhostMinus::Y,
-                  Ghost::NGhostPlus::Y,
-                  (Ghost::NGhostPlus::Y + BC::Y),
-                  Ghost::NGhostMinus::Z,
-                  Ghost::NGhostPlus::Z,
-                  (Ghost::NGhostPlus::Z + BC::Z)> typedef result;
+    template<typename FieldType>
+    struct GhostFromField {
+        typename FieldType::Ghost::NGhostMinus typedef GM;
+        typename FieldType::Ghost::NGhostPlus  typedef GP;
+        typename FieldType::Location::BCExtra  typedef BC;
+
+        GhostData<GM::X,
+                  GP::X,
+                  (GP::X + BC::X),
+                  GM::Y,
+                  GP::Y,
+                  (GP::Y + BC::Y),
+                  GM::Z,
+                  GP::Z,
+                  (GP::Z + BC::Z)> typedef result;
+    };
+
+    /**
+     *  \struct TestField
+     *  \brief Provides a way to test GhostFromField without a full SpatialField
+     */
+    template<typename G, typename BC>
+    struct TestField {
+        G typedef Ghost;
+        struct Location { BC typedef BCExtra; };
     };
 
     template<typename T1, typename T2>

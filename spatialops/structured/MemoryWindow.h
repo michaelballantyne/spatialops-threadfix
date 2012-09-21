@@ -192,26 +192,49 @@ namespace structured{
      *
      *  \return MemoryWindow containing the new subwindow.
      */
-    MemoryWindow refine(const IntVec splitPattern,
-                        const IntVec location,
-                        const IntVec nGhostMinus,
-                        const IntVec nGhostPlus,
-                        const IntVec bcExtents) const;
+    inline MemoryWindow
+    refine(const IntVec splitPattern,
+           const IntVec location) const {
+#       ifndef NDEBUG
+        for( size_t i=0; i<3; ++i ){
+            assert( extent_[i] >= splitPattern[i] );
+            assert( splitPattern[i] > 0 );
+            assert( extent_[i] + offset_[i] <= nptsGlob_[i] );
+            assert( location[i] < splitPattern[i] );
+            assert( location[i] >= 0 );
+        }
+#       endif
+        // try to make windows close to same size
+        const IntVec nextra = IntVec(extent_[0] % splitPattern[0],
+                                     extent_[1] % splitPattern[1],
+                                     extent_[2] % splitPattern[2]);
+        const IntVec stdExtent = IntVec(extent_[0] / splitPattern[0],
+                                        extent_[1] / splitPattern[1],
+                                        extent_[2] / splitPattern[2]);
+        const IntVec baseOffset = IntVec(offset_[0] + stdExtent[0] * location[0] + (location[0] < nextra[0] ? location[0] : nextra[0]),
+                                         offset_[1] + stdExtent[1] * location[1] + (location[1] < nextra[1] ? location[1] : nextra[1]),
+                                         offset_[2] + stdExtent[2] * location[2] + (location[2] < nextra[2] ? location[2] : nextra[2]));
+        const IntVec baseExtent = IntVec(stdExtent[0] + (location[0] < nextra[0] ? 1 : 0),
+                                         stdExtent[1] + (location[1] < nextra[1] ? 1 : 0),
+                                         stdExtent[2] + (location[2] < nextra[2] ? 1 : 0));
+
+        return MemoryWindow(nptsGlob_, baseOffset, baseExtent, 0, 0, 0);
+    };
 
     /**
      *  \brief Resizes/reduces the MemoryWindow to given number of ghost cells.
      *
-     *  \param oldSize is an GhostData that specifies how many ghost cells are currently on each face.
-     *  \param newSize is an GhostData that specifies how many ghost cells are to be on each face.
+     *  \param oldGhost is a GhostData that specifices how many ghost cells are currently on each face
+     *  \param newGhost is a GhostData that specifices how many ghost cells are to be on each face
      *
-     *  \return new MemoryWindow reduced from having oldSize ghostcells to having newSize ghost cells on each face.
+     *  \return new MemoryWindow reduced from having oldNeg/oldPos ghost cells (and extra cells along boundary conditions) to having newNeg/newPos ghost cells on each face.
      */
-    template<typename OldSize, typename NewSize>
-    inline MemoryWindow resizeGhost() const {
+    template<typename OldGhost, typename NewGhost>
+    inline MemoryWindow
+    resize_ghost() const {
         return MemoryWindow(nptsGlob_,
-                            offset_ + OldSize::neg_int_vec() - NewSize::neg_int_vec(),
-                            extent_ - OldSize::neg_int_vec() - OldSize::real_pos_int_vec(bc_)
-                                    + NewSize::neg_int_vec() + NewSize::real_pos_int_vec(bc_),
+                            offset_ + OldGhost::offset()    - NewGhost::offset(),
+                            extent_ - OldGhost::extent(bc_) + NewGhost::extent(bc_),
                             bc_[0],
                             bc_[1],
                             bc_[2]);
