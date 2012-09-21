@@ -38,8 +38,6 @@ namespace SpatialOps {
      *  \tparam OpT - the type of operator (Interpolant, Gradient, Divergence)
      *  \tparam SrcT - the type of field the operator is applied to
      *  \tparam DestT - the type of field the operator produces
-     *
-     *  See also Stencil2Helper
      */
     template<typename OperatorT, typename SrcFieldT, typename DestFieldT>
     class Stencil2
@@ -74,8 +72,7 @@ namespace SpatialOps {
     /*******************************************************************
      *
      * NOTE: all information in the s2detail namespace is meant only for
-     *       use within the Stencil2Helper class and should not be used
-     *       elsewhere!
+     *       use within the Stencil2 class and should not be used elsewhere!
      *
      ******************************************************************/
     namespace s2detail {

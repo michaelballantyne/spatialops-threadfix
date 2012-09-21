@@ -87,9 +87,9 @@
 
              DestType d(wd, dest.field_values(), ExternalStorage);
 
-             SrcType s1(ws1, src.field_values(), ExternalStorage);
+             const SrcType s1(ws1, src.field_values(), ExternalStorage);
 
-             SrcType s2(ws2, src.field_values(), ExternalStorage);
+             const SrcType s2(ws2, src.field_values(), ExternalStorage);
 
              typename DestType::iterator id = d.begin();
 

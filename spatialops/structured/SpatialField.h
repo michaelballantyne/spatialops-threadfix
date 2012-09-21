@@ -786,11 +786,11 @@ SpatialField<Location,GhostTraits, T>::end() const
     return i + extent;
   } else {
     std::ostringstream msg;
-    msg << "Unsupported request for const_iterator to field type ( "
+    msg << __FILE__ << " : " << __LINE__ << std::endl
+        << "Unsupported request for const_iterator to field type ( "
         << DeviceTypeTools::get_memory_type_description(memType_) << " )"
-        << "\t - No consumer allocated." << std::endl
-        << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
-    throw(std::runtime_error(msg.str()));
+        << "\t - No consumer allocated." << std::endl;
+    throw std::runtime_error( msg.str() );
   }
 }
 
@@ -808,10 +808,11 @@ SpatialField<Location,GhostTraits, T>::end()
   }
   default:
     std::ostringstream msg;
-    msg << "Unsupported request for iterator to external field type ( "
-        << DeviceTypeTools::get_memory_type_description(memType_) << " )";
-    msg << "\t - " << __FILE__ << " : " << __LINE__;
-    throw(std::runtime_error(msg.str()));
+    msg << __FILE__ << " : " << __LINE__ << std::endl
+        << "Unsupported request for iterator to external field type ( "
+        << DeviceTypeTools::get_memory_type_description(memType_) << " )"
+        << std::endl;
+    throw std::runtime_error( msg.str() );
   }
 }
 
