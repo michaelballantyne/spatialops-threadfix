@@ -6202,7 +6202,7 @@
                         FieldType> typedef SeqWalkType;
           typename Operand::FirstType typedef Operand1;
           typename Operand::SecondType typedef Operand2;
-          Nebo1DStencil(Operand1 const & op1, Operand2 const & op2, double const hi, double const lo)
+          Nebo1DStencil(Operand1 const & op1, Operand2 const & op2, double const lo, double const hi)
           : operand1_(op1), operand2_(op2), lo_(lo), hi_(hi)
           {};
           inline SeqWalkType init(void) const {
