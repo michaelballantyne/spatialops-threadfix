@@ -129,12 +129,7 @@
                                            'expr_))
                        (sec-def private-chunk
                                 (c 'Operand s 'expr_))))]
-       [build-mode-def (lambda (name templated?)
-                         (if templated?
-                             (tpl-srt-dcl name
-                                          (list (tpl-pmtr VG-chunk)
-                                                (tpl-pmtr SH-chunk)))
-                             (struct-declare-chunk name)))]
+       [build-mode-def (lambda (name) (struct-declare-chunk name))]
        [bm-constructor
         (lambda (params
                  assigns
@@ -281,50 +276,39 @@
                            tpl-pars
                            tpl-args
                            (list (IN-typedefs Initial)
-                                 (tpl-srt-def 'Iterator
-                                              (list (tpl-pmtr VG-chunk)
-                                                    (tpl-pmtr SH-chunk))
-                                              null
-                                              (typedef (tpl-use name
-                                                                (tpl-use 'ResizePrep VG-chunk SH-chunk)
-                                                                (IN-tpl-args-RP Initial)
-                                                                FT-chunk)
-                                                       'ResizePrepType)
-                                              (typedef (tpl-use name
-                                                                (tpl-use 'SeqWalk VG-chunk SH-chunk)
-                                                                (IN-tpl-args-SW Initial)
-                                                                FT-chunk)
-                                                       'SeqWalkType))
+                                 (typedef (tpl-use name
+                                                   'ResizePrep
+                                                   (IN-tpl-args-RP Initial)
+                                                   FT-chunk)
+                                          'ResizePrepType)
+                                 (typedef (tpl-use name
+                                                   'SeqWalk
+                                                   (IN-tpl-args-SW Initial)
+                                                   FT-chunk)
+                                          'SeqWalkType)
                                  (typedef (IN-VG-type Initial) report-VG-chunk))
                            (IN-constructor Initial)
                            (list (tpl-def (list (tpl-pmtr VG-chunk)
                                                 (tpl-pmtr SH-chunk))
                                           (r-fcn-def (add-const (fcn-dcl 'init
-                                                                         (tpl-pmtr (scope (tpl-use 'Iterator VG-chunk SH-chunk)
-                                                                                          'SeqWalkType))))
+                                                                         'SeqWalkType))
                                                      null
-                                                     (fc (tpl-pmtr (scope (tpl-use 'Iterator VG-chunk SH-chunk)
-                                                                          'SeqWalkType))
+                                                     (fc 'SeqWalkType
                                                          (IN-SW-cons-args Initial))))
-                                 (tpl-def (list (tpl-pmtr VG-chunk)
-                                                (tpl-pmtr SH-chunk))
+                                 (tpl-def (list (tpl-pmtr VG-chunk))
                                           (r-fcn-def (add-const (fcn-dcl 'resize_prep
-                                                                         (tpl-pmtr (scope (tpl-use 'Iterator VG-chunk SH-chunk)
-                                                                                          'ResizePrepType))))
+                                                                         'ResizePrepType))
                                                      null
-                                                     (fc (tpl-pmtr (scope (tpl-use 'Iterator VG-chunk SH-chunk)
-                                                                          'ResizePrepType))
+                                                     (fc 'ResizePrepType
                                                          (IN-RP-cons-args Initial))))
                                  (IN-publics Initial))
                            (IN-privates Initial))
                (build-mode name
-                           (tpl-use 'ResizePrep VG-chunk SH-chunk)
-                           (list (tpl-pmtr VG-chunk)
-                                 (tpl-pmtr SH-chunk)
-                                 tpl-pars)
+                           'ResizePrep
+                           tpl-pars
                            tpl-args
                            (list (typedef (tpl-use name
-                                                   (tpl-use 'Resize VG-chunk SH-chunk)
+                                                   'Resize
                                                    (RP-tpl-args-RS ResizePrep)
                                                    FT-chunk)
                                           'ResizeType)
@@ -340,29 +324,27 @@
                                  (RP-publics ResizePrep))
                            (RP-privates ResizePrep))
                (build-mode name
-                           (tpl-use 'Resize VG-chunk SH-chunk)
-                           (list (tpl-pmtr VG-chunk)
-                                 (tpl-pmtr SH-chunk)
-                                 tpl-pars)
+                           'Resize
+                           tpl-pars
                            tpl-args
                            (list (typedef (tpl-use name
-                                                   (tpl-use 'SeqWalk VG-chunk SH-chunk)
+                                                   'SeqWalk
                                                    (RS-tpl-args-SW Resize)
                                                    FT-chunk)
                                           'SeqWalkType)
                                  (RS-typedefs Resize))
                            (RS-constructor Resize)
-                           (list (r-fcn-def (add-const (fcn-dcl 'init 'SeqWalkType))
-                                            null
-                                            (fc 'SeqWalkType
-                                                (RS-SW-cons-args Resize)))
+                           (list (tpl-def (tpl-pmtr SH-chunk)
+                                          (r-fcn-def (add-const (fcn-dcl 'init
+                                                                         'SeqWalkType))
+                                                     null
+                                                     (fc 'SeqWalkType
+                                                         (RS-SW-cons-args Resize))))
                                  (RS-publics Resize))
                            (RS-privates Resize))
                (build-mode name
-                           (tpl-use 'SeqWalk VG-chunk SH-chunk)
-                           (list (tpl-pmtr VG-chunk)
-                                 (tpl-pmtr SH-chunk)
-                                 tpl-pars)
+                           'SeqWalk
+                           tpl-pars
                            tpl-args
                            (SW-typedefs SeqWalk)
                            (SW-constructor SeqWalk)
@@ -393,8 +375,7 @@
                            (apply map proc lsts))]
                  [IN-typedef (lambda (type)
                                (lambda (Op)
-                                 (tpl-pmtr (scope (scope Op (tpl-fcn-use 'Iterator VG-chunk SH-chunk))
-                                                  type))))]
+                                 (tpl-pmtr (scope Op type))))]
                  [build-VG (lambda (Op-VG-lst)
                              (cond [(equal? 1 (length Op-VG-lst)) (first Op-VG-lst)]
                                    [(equal? 2 (length Op-VG-lst)) (tpl-pmtr (scope (scope 'structured (tpl-use 'Minimum
@@ -451,7 +432,7 @@
                                                                 (tpl-fcn-use 'init VG-chunk SH-chunk)))
                                               op-lst)
                                       (mapper (lambda (op) (mfc (fc op)
-                                                                (tpl-fcn-use 'resize_prep VG-chunk SH-chunk)))
+                                                                (tpl-fcn-use 'resize_prep VG-chunk)))
                                               op-lst)
                                       gen-ext-fcns
                                       gen-data-mems)
@@ -471,7 +452,7 @@
                                      null
                                      gen-constructor
                                      (mapper (lambda (op) (mfc (fc op)
-                                                               'init))
+                                                               (tpl-fcn-use 'init SH-chunk)))
                                              op-lst)
                                      gen-ext-fcns
                                      gen-data-mems)
@@ -814,10 +795,10 @@
       (build-expression-type NE-chunk)
       (build-expression-type NBE-chunk)
       (d 'Modes:
-         (build-mode-def 'Initial #false)
-         (build-mode-def 'ResizePrep #true)
-         (build-mode-def 'Resize #true)
-         (build-mode-def 'SeqWalk #true))
+         (build-mode-def 'Initial)
+         (build-mode-def 'ResizePrep)
+         (build-mode-def 'Resize)
+         (build-mode-def 'SeqWalk))
       (build-struct NS-chunk
                     #true
                     null
@@ -850,7 +831,7 @@
                                                                  (b s 'AtomicType const-chunk)))
                                               null
                                               'value_)
-                                (b s 'AtomicType const-chunk 'value_))
+                                   (b s 'AtomicType const-chunk 'value_))
                     (bs-Resize null
                                (typedef (scope (tpl-pmtr FT-chunk)
                                                'value_type)
@@ -863,7 +844,7 @@
                                                              (b s 'AtomicType const-chunk)))
                                           null
                                           'value_)
-                                (b s 'AtomicType const-chunk 'value_))
+                               (b s 'AtomicType const-chunk 'value_))
                     (bs-SeqWalk (typedef (scope (tpl-pmtr FT-chunk)
                                                 'value_type)
                                          'AtomicType)
@@ -946,7 +927,7 @@
                                 (mfc (fc 'field)
                                      (tpl-fcn-use 'resize_ghost_and_shift VG-chunk SH-chunk))
                                 (mfc (fc 'field)
-                                     (tpl-fcn-use 'resize_ghost_and_shift VG-chunk SH-chunk))
+                                     (tpl-fcn-use 'resize_ghost VG-chunk))
                                 (r-fcn-def (constize (fcn-dcl 'field
                                                               (b s FT-chunk const-chunk "&")))
                                            null
@@ -976,7 +957,8 @@
                                (bm-constructor (b s FT-chunk const-chunk "&" 'f)
                                                (cons-asgn 'field_ 'f)
                                                null)
-                               (fc 'field)
+                               (mfc (fc 'field)
+                                    (tpl-fcn-use 'shift SH-chunk))
                                (r-fcn-def (constize (fcn-dcl 'field
                                                              (b s FT-chunk const-chunk "&")))
                                           null
@@ -1021,7 +1003,7 @@
                                 (mfc (fc 'field)
                                      (tpl-fcn-use 'resize_ghost_and_shift VG-chunk SH-chunk))
                                 (mfc (fc 'field)
-                                     (tpl-fcn-use 'resize_ghost_and_shift VG-chunk SH-chunk))
+                                     (tpl-fcn-use 'resize_ghost VG-chunk))
                                 (r-fcn-def (fcn-dcl 'field
                                                     (c FT-chunk s "&"))
                                            null
@@ -1051,7 +1033,8 @@
                                (bm-constructor (b s FT-chunk 'f)
                                                (cons-asgn 'field_ 'f)
                                                null)
-                               (fc 'field)
+                               (mfc (fc 'field)
+                                    (tpl-fcn-use 'shift SH-chunk))
                                (r-fcn-def (fcn-dcl 'field
                                                    (c FT-chunk s "&"))
                                           null
@@ -1221,6 +1204,8 @@
                                'INTERNAL_NAME
                                'EXTERNAL_NAME))
       (srt-def (srt-dcl Nil-chunk)
+               (typedef 'NeboNil 'ResizePrepType)
+               (typedef 'NeboNil 'SeqWalkType)
                (typedef (scope 'structured 'InfiniteGhostData) report-VG-chunk)
                (constructor-chunk Nil-chunk
                                   null
@@ -1230,18 +1215,10 @@
                     (list (tpl-pmtr 'Test)
                           (tpl-pmtr 'Expr))
                     (list 'Test 'Expr)
-                    (bs-Initial (list (tpl-pmtr (scope (scope 'Test
-                                                              (tpl-fcn-use 'Iterator VG-chunk SH-chunk))
-                                                       'ResizePrepType))
-                                      (tpl-pmtr (scope (scope 'Expr
-                                                              (tpl-fcn-use 'Iterator VG-chunk SH-chunk))
-                                                       'ResizePrepType)))
-                                (list (tpl-pmtr (scope (scope 'Test
-                                                              (tpl-fcn-use 'Iterator VG-chunk SH-chunk))
-                                                       'SeqWalkType))
-                                      (tpl-pmtr (scope (scope 'Expr
-                                                              (tpl-fcn-use 'Iterator VG-chunk SH-chunk))
-                                                       'SeqWalkType)))
+                    (bs-Initial (list (tpl-pmtr (scope 'Test 'ResizePrepType))
+                                      (tpl-pmtr (scope 'Expr 'ResizePrepType)))
+                                (list (tpl-pmtr (scope 'Test 'SeqWalkType))
+                                      (tpl-pmtr (scope 'Expr 'SeqWalkType)))
                                 null
                                 (tpl-pmtr (scope (scope 'structured
                                                         (tpl-use 'Minimum
@@ -1258,9 +1235,9 @@
                                       (mfc (fc 'expr)
                                            (tpl-fcn-use 'init VG-chunk SH-chunk)))
                                 (list (mfc (fc 'test)
-                                           (tpl-fcn-use 'resize_prep VG-chunk SH-chunk))
+                                           (tpl-fcn-use 'resize_prep VG-chunk))
                                       (mfc (fc 'expr)
-                                           (tpl-fcn-use 'resize_prep VG-chunk SH-chunk)))
+                                           (tpl-fcn-use 'resize_prep VG-chunk)))
                                 (list (r-fcn-def (constize (fcn-dcl 'test
                                                                     (b s 'Test const-chunk "&")))
                                                  null
@@ -1306,9 +1283,9 @@
                                                      (cons-asgn 'expr_ 'expr))
                                                null)
                                (list (mfc (fc 'test)
-                                          'init)
+                                          (tpl-fcn-use 'init SH-chunk))
                                      (mfc (fc 'expr)
-                                          'init))
+                                          (tpl-fcn-use 'init SH-chunk)))
                                (list (r-fcn-def (constize (fcn-dcl 'test
                                                                    (b s 'Test const-chunk "&")))
                                           null
@@ -1351,18 +1328,10 @@
                     (list (tpl-pmtr CT-chunk)
                           (tpl-pmtr 'Otherwise))
                     (list CT-chunk 'Otherwise)
-                    (bs-Initial (list (tpl-pmtr (scope (scope CT-chunk
-                                                              (tpl-fcn-use 'Iterator VG-chunk SH-chunk))
-                                                       'ResizePrepType))
-                                      (tpl-pmtr (scope (scope 'Otherwise
-                                                              (tpl-fcn-use 'Iterator VG-chunk SH-chunk))
-                                                       'ResizePrepType)))
-                                (list (tpl-pmtr (scope (scope CT-chunk
-                                                              (tpl-fcn-use 'Iterator VG-chunk SH-chunk))
-                                                       'SeqWalkType))
-                                      (tpl-pmtr (scope (scope 'Otherwise
-                                                              (tpl-fcn-use 'Iterator VG-chunk SH-chunk))
-                                                       'SeqWalkType)))
+                    (bs-Initial (list (tpl-pmtr (scope CT-chunk 'ResizePrepType))
+                                      (tpl-pmtr (scope 'Otherwise 'ResizePrepType)))
+                                (list (tpl-pmtr (scope CT-chunk 'SeqWalkType))
+                                      (tpl-pmtr (scope 'Otherwise 'SeqWalkType)))
                                 null
                                 (tpl-pmtr (scope (scope 'structured (tpl-use 'Minimum
                                                                              (tpl-pmtr (scope CT-chunk report-VG-chunk))
@@ -1378,9 +1347,9 @@
                                       (mfc (fc 'otherwise)
                                            (tpl-fcn-use 'init VG-chunk SH-chunk)))
                                 (list (mfc (fc 'clause)
-                                           (tpl-fcn-use 'resize_prep VG-chunk SH-chunk))
+                                           (tpl-fcn-use 'resize_prep VG-chunk))
                                       (mfc (fc 'otherwise)
-                                           (tpl-fcn-use 'resize_prep VG-chunk SH-chunk)))
+                                           (tpl-fcn-use 'resize_prep VG-chunk)))
                                 (list (r-fcn-def (constize (fcn-dcl 'clause
                                                                     (b s CT-chunk const-chunk "&")))
                                                  null
@@ -1426,9 +1395,9 @@
                                                      (cons-asgn 'otherwise_ 'otherwise))
                                                null)
                                (list (mfc (fc 'clause)
-                                          'init)
+                                          (tpl-fcn-use 'init SH-chunk))
                                      (mfc (fc 'otherwise)
-                                          'init))
+                                          (tpl-fcn-use 'init SH-chunk)))
                                (list (r-fcn-def (constize (fcn-dcl 'clause
                                                                    (b s CT-chunk const-chunk "&")))
                                           null
@@ -2260,230 +2229,175 @@
       (let ([NS1D 'Nebo1DStencil]
             [NS2D 'Nebo2DStencil]
             [NSFD 'NeboFDStencil])
-        (list (build-struct NS1D
-                            #true
-                            (list (tpl-pmtr 'StencilType)
-                                  (tpl-pmtr 'Operand))
-                            (list 'StencilType 'Operand)
-                            (bs-Initial (list 'StencilType
-                                              (tpl-use Pair-chunk
-                                                       (tpl-pmtr (scope (scope 'Operand (tpl-fcn-use 'Iterator VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'SP1))
-                                                                                                                                         'result))))
-                                                                        'ResizePrepType))
-                                                       (tpl-pmtr (scope (scope 'Operand (tpl-fcn-use 'Iterator VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'SP2))
-                                                                                                                                         'result))))
-                                                                        'ResizePrepType))))
-                                        (list 'StencilType
-                                              (tpl-use Pair-chunk
-                                                       (tpl-pmtr (scope (scope 'Operand (tpl-fcn-use 'Iterator VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'SP1))
-                                                                                                                                         'result))))
-                                                                        'SeqWalkType))
-                                                       (tpl-pmtr (scope (scope 'Operand (tpl-fcn-use 'Iterator VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'SP2))
-                                                                                                                                         'result))))
-                                                                        'SeqWalkType))))
-                                        (list (typedef (tpl-pmtr (scope 'StencilType 'SrcFieldType))
-                                                       'SFT)
-                                              (typedef (tpl-pmtr (scope 'StencilType 'DestFieldType))
-                                                       'DFT)
-                                              (typedef (tpl-pmtr (scope (scope 'SFT 'Location)
-                                                                        'Offset))
-                                                       'SFTO)
-                                              (typedef (tpl-pmtr (scope (scope 'DFT 'Location)
-                                                                        'Offset))
-                                                       'DFTO)
-                                              (typedef (tpl-pmtr (scope (scope (scope 'structured
-                                                                                      (tpl-use 'GreaterThan 'SFTO 'DFTO))
-                                                                               'result)
-                                                                        'Negate))
-                                                       'SP1)
-                                              (typedef (tpl-pmtr (scope (scope 'structured
-                                                                               (tpl-use 'LessThan 'SFTO 'DFTO))
-                                                                        'result))
-                                                       'SP2))
-                                        (tpl-pmtr (scope (scope 'structured (tpl-use 'Invalidate
-                                                                                     (tpl-pmtr (scope (scope 'structured (tpl-use 'Invalidate
-                                                                                                                                  (tpl-pmtr (scope 'Operand report-VG-chunk))
-                                                                                                                                  'SP1))
-                                                                                                      'result))
-                                                                                     'SP2))
-                                                         'result))
-                                        (bm-constructor (list (b s 'Operand const-chunk "&" 'op)
-                                                              (b s 'double const-chunk 'lo)
-                                                              (b s 'double const-chunk 'hi))
-                                                        (list (cons-asgn 'operand_ 'op)
-                                                              (cons-asgn 'lo_ 'lo)
-                                                              (cons-asgn 'hi_ 'hi))
-                                                        null)
-                                        (list (mfc (fc 'operand)
-                                                   (tpl-fcn-use 'init VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'SP1))
-                                                                                                'result))))
-                                              (mfc (fc 'operand)
-                                                   (tpl-fcn-use 'init VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'SP2))
-                                                                                                'result))))
-                                              (fc 'lo)
-                                              (fc 'hi))
-                                        (list (mfc (fc 'operand)
-                                                   (tpl-fcn-use 'resize_prep VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'SP1))
-                                                                                                       'result))))
-                                              (mfc (fc 'operand)
-                                                   (tpl-fcn-use 'resize_prep VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'SP2))
-                                                                                                       'result))))
-                                              (fc 'lo)
-                                              (fc 'hi))
-                                        (list (r-fcn-def (constize (fcn-dcl 'operand
-                                                                            (b s 'Operand const-chunk "&")))
-                                                         null
-                                                         'operand_)
-                                              (r-fcn-def (constize (fcn-dcl 'lo
-                                                                            'double))
-                                                         null
-                                                         'lo_)
-                                              (r-fcn-def (constize (fcn-dcl 'hi
-                                                                            'double))
-                                                         null
-                                                         'hi_))
-                                        (list (b s const-chunk 'Operand 'operand_)
-                                              (b s const-chunk 'double 'lo_)
-                                              (b s const-chunk 'double 'hi_)))
-                            (bs-ResizePrep (list 'StencilType
-                                                 (tpl-use Pair-chunk
-                                                          (tpl-pmtr (scope (scope 'Operand 'FirstType)
-                                                                           'ResizeType))
-                                                          (tpl-pmtr (scope (scope 'Operand 'SecondType)
-                                                                           'ResizeType))))
-                                           (list (typedef (tpl-pmtr (scope 'Operand 'FirstType))
-                                                          'Operand1)
-                                                 (typedef (tpl-pmtr (scope 'Operand 'SecondType))
-                                                          'Operand2))
-                                           (bm-constructor (list (b s 'Operand1 const-chunk "&" 'op1)
-                                                                 (b s 'Operand2 const-chunk "&" 'op2)
-                                                                 (b s 'double const-chunk 'lo)
-                                                                 (b s 'double const-chunk 'hi))
-                                                           (list (cons-asgn 'operand1_ 'op1)
-                                                                 (cons-asgn 'operand2_ 'op2)
-                                                                 (cons-asgn 'lo_ 'lo)
-                                                                 (cons-asgn 'hi_ 'hi))
-                                                           null)
-                                           (list (mfc (fc 'operand1)
-                                                      'resize
-                                                      'split
-                                                      'location)
-                                                 (mfc (fc 'operand2)
-                                                      'resize
-                                                      'split
-                                                      'location)
-                                                 (fc 'lo)
-                                                 (fc 'hi))
-                                           (list (r-fcn-def (constize (fcn-dcl 'operand1
-                                                                               (b s 'Operand1 const-chunk "&")))
-                                                            null
-                                                            'operand1_)
-                                                 (r-fcn-def (constize (fcn-dcl 'operand2
-                                                                               (b s 'Operand2 const-chunk "&")))
-                                                            null
-                                                            'operand2_)
-                                                 (r-fcn-def (constize (fcn-dcl 'lo
-                                                                               'double))
-                                                            null
-                                                            'lo_)
-                                                 (r-fcn-def (constize (fcn-dcl 'hi
-                                                                               'double))
-                                                            null
-                                                            'hi_))
-                                           (list (b s const-chunk 'Operand1 'operand1_)
-                                                 (b s const-chunk 'Operand2 'operand2_)
-                                                 (b s const-chunk 'double 'lo_)
-                                                 (b s const-chunk 'double 'hi_)))
-                            (bs-Resize (list 'StencilType
-                                             (tpl-use Pair-chunk
-                                                      (tpl-pmtr (scope (scope 'Operand 'FirstType)
-                                                                       'SeqWalkType))
-                                                      (tpl-pmtr (scope (scope 'Operand 'SecondType)
-                                                                       'SeqWalkType))))
-                                       (list (typedef (tpl-pmtr (scope 'Operand 'FirstType))
-                                                      'Operand1)
-                                             (typedef (tpl-pmtr (scope 'Operand 'SecondType))
-                                                      'Operand2))
-                                       (bm-constructor (list (b s 'Operand1 const-chunk "&" 'op1)
-                                                             (b s 'Operand2 const-chunk "&" 'op2)
-                                                             (b s 'double const-chunk 'lo)
-                                                             (b s 'double const-chunk 'hi))
-                                                       (list (cons-asgn 'operand1_ 'op1)
-                                                             (cons-asgn 'operand2_ 'op2)
-                                                             (cons-asgn 'lo_ 'lo)
-                                                             (cons-asgn 'hi_ 'hi))
-                                                       null)
-                                       (list (mfc (fc 'operand1)
-                                                  'init)
-                                             (mfc (fc 'operand2)
-                                                  'init)
-                                             (fc 'lo)
-                                             (fc 'hi))
-                                       (list (r-fcn-def (constize (fcn-dcl 'operand1
-                                                                           (b s 'Operand1 const-chunk "&")))
-                                                        null
-                                                        'operand1_)
-                                             (r-fcn-def (constize (fcn-dcl 'operand2
-                                                                           (b s 'Operand2 const-chunk "&")))
-                                                        null
-                                                        'operand2_)
-                                             (r-fcn-def (constize (fcn-dcl 'lo
-                                                                           'double))
-                                                        null
-                                                        'lo_)
-                                             (r-fcn-def (constize (fcn-dcl 'hi
-                                                                           'double))
-                                                        null
+        (list (let ([def-points
+                     (list (typedef (tpl-pmtr (scope 'StencilType 'SrcFieldType))
+                                    'SFT)
+                           (typedef (tpl-pmtr (scope 'StencilType 'DestFieldType))
+                                    'DFT)
+                           (typedef (tpl-pmtr (scope (scope 'SFT 'Location)
+                                                     'Offset))
+                                    'SFTO)
+                           (typedef (tpl-pmtr (scope (scope 'DFT 'Location)
+                                                     'Offset))
+                                    'DFTO)
+                           (typedef (tpl-pmtr (scope (scope (scope 'structured (tpl-use 'GreaterThan 'SFTO 'DFTO))
+                                                            'result)
+                                                     'Negate))
+                                    'SP1)
+                           (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'LessThan 'SFTO 'DFTO))
+                                                     'result))
+                                    'SP2))])
+                (build-struct NS1D
+                              #true
+                              (list (tpl-pmtr 'StencilType)
+                                    (tpl-pmtr 'Operand))
+                              (list 'StencilType 'Operand)
+                              (bs-Initial (list 'StencilType
+                                                (tpl-pmtr (scope 'Operand 'ResizePrepType)))
+                                          (list 'StencilType
+                                                (tpl-pmtr (scope 'Operand 'SeqWalkType)))
+                                          def-points
+                                          (tpl-pmtr (scope (scope 'structured (tpl-use 'Invalidate
+                                                                                       (tpl-pmtr (scope (scope 'structured (tpl-use 'Invalidate
+                                                                                                                                    (tpl-pmtr (scope 'Operand report-VG-chunk))
+                                                                                                                                    'SP1))
+                                                                                                        'result))
+                                                                                       'SP2))
+                                                           'result))
+                                          (bm-constructor (list (b s 'Operand const-chunk "&" 'op)
+                                                                (b s 'double const-chunk 'lo)
+                                                                (b s 'double const-chunk 'hi))
+                                                          (list (cons-asgn 'operand_ 'op)
+                                                                (cons-asgn 'lo_ 'lo)
+                                                                (cons-asgn 'hi_ 'hi))
+                                                          null)
+                                          (list (mfc (fc 'operand)
+                                                     (tpl-fcn-use 'init VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'SP1))
+                                                                                                  'result))))
+                                                (mfc (fc 'operand)
+                                                     (tpl-fcn-use 'init VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'SP2))
+                                                                                                  'result))))
+                                                (fc 'lo)
+                                                (fc 'hi))
+                                          (list (mfc (fc 'operand)
+                                                     (tpl-fcn-use 'resize_prep VG-chunk))
+                                                (fc 'lo)
+                                                (fc 'hi))
+                                          (list (r-fcn-def (constize (fcn-dcl 'operand
+                                                                              (b s 'Operand const-chunk "&")))
+                                                           null
+                                                           'operand_)
+                                                (r-fcn-def (constize (fcn-dcl 'lo
+                                                                              'double))
+                                                           null
+                                                           'lo_)
+                                                (r-fcn-def (constize (fcn-dcl 'hi
+                                                                              'double))
+                                                           null
+                                                           'hi_))
+                                          (list (b s const-chunk 'Operand 'operand_)
+                                                (b s const-chunk 'double 'lo_)
+                                                (b s const-chunk 'double 'hi_)))
+                              (bs-ResizePrep (list 'StencilType
+                                                   (tpl-pmtr (scope 'Operand 'ResizeType)))
+                                             null
+                                             (bm-constructor (list (b s 'Operand const-chunk "&" 'op)
+                                                                   (b s 'double const-chunk 'lo)
+                                                                   (b s 'double const-chunk 'hi))
+                                                             (list (cons-asgn 'operand_ 'op)
+                                                                   (cons-asgn 'lo_ 'lo)
+                                                                   (cons-asgn 'hi_ 'hi))
+                                                             null)
+                                             (list (mfc (fc 'operand)
+                                                        'resize
+                                                        'split
+                                                        'location)
+                                                   (fc 'lo)
+                                                   (fc 'hi))
+                                             (list (r-fcn-def (constize (fcn-dcl 'operand
+                                                                                 (b s 'Operand const-chunk "&")))
+                                                              null
+                                                              'operand_)
+                                                   (r-fcn-def (constize (fcn-dcl 'lo
+                                                                                 'double))
+                                                              null
+                                                              'lo_)
+                                                   (r-fcn-def (constize (fcn-dcl 'hi
+                                                                                 'double))
+                                                              null
+                                                              'hi_))
+                                             (list (b s const-chunk 'Operand 'operand_)
+                                                   (b s const-chunk 'double 'lo_)
+                                                   (b s const-chunk 'double 'hi_)))
+                              (bs-Resize (list 'StencilType
+                                               (tpl-pmtr (scope 'Operand 'SeqWalkType)))
+                                         def-points
+                                         (bm-constructor (list (b s 'Operand const-chunk "&" 'op)
+                                                               (b s 'double const-chunk 'lo)
+                                                               (b s 'double const-chunk 'hi))
+                                                         (list (cons-asgn 'operand_ 'op)
+                                                               (cons-asgn 'lo_ 'lo)
+                                                               (cons-asgn 'hi_ 'hi))
+                                                         null)
+                                         (list (mfc (fc 'operand)
+                                                    (tpl-fcn-use 'init (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'SP1))
+                                                                                        'result))))
+                                               (mfc (fc 'operand)
+                                                    (tpl-fcn-use 'init (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'SP2))
+                                                                                        'result))))
+                                               (fc 'lo)
+                                               (fc 'hi))
+                                         (list (r-fcn-def (constize (fcn-dcl 'operand
+                                                                             (b s 'Operand const-chunk "&")))
+                                                          null
+                                                          'operand_)
+                                               (r-fcn-def (constize (fcn-dcl 'lo
+                                                                             'double))
+                                                          null
+                                                          'lo_)
+                                               (r-fcn-def (constize (fcn-dcl 'hi
+                                                                             'double))
+                                                          null
+                                                          'hi_))
+                                         (list (b s const-chunk 'Operand 'operand_)
+                                               (b s const-chunk 'double 'lo_)
+                                               (b s const-chunk 'double 'hi_)))
+                              (bs-SeqWalk null
+                                          (bm-constructor (list (b s 'Operand const-chunk "&" 'op1)
+                                                                (b s 'Operand const-chunk "&" 'op2)
+                                                                (b s 'double const-chunk 'lo)
+                                                                (b s 'double const-chunk 'hi))
+                                                          (list (cons-asgn 'operand1_ 'op1)
+                                                                (cons-asgn 'operand2_ 'op2)
+                                                                (cons-asgn 'lo_ 'lo)
+                                                                (cons-asgn 'hi_ 'hi))
+                                                          null)
+                                          (list (mfc 'operand1_ 'next)
+                                                (mfc 'operand2_ 'next))
+                                          (b s
+                                             (mfc 'operand1_ 'at_end)
+                                             "||"
+                                             (mfc 'operand2_ 'at_end))
+                                          (b s
+                                             (mfc 'operand1_ 'has_length)
+                                             "||"
+                                             (mfc 'operand2_ 'has_length))
+                                          (r-fcn-def (constize (fcn-dcl 'eval
+                                                                        (tpl-pmtr (scope FT-chunk 'value_type))))
+                                                     null
+                                                     (b s
+                                                        (mfc 'operand1_ 'eval)
+                                                        "*"
+                                                        'lo_
+                                                        "+"
+                                                        (mfc 'operand2_ 'eval)
+                                                        "*"
                                                         'hi_))
-                                       (list (b s const-chunk 'Operand1 'operand1_)
-                                             (b s const-chunk 'Operand2 'operand2_)
-                                             (b s const-chunk 'double 'lo_)
-                                             (b s const-chunk 'double 'hi_)))
-                            (bs-SeqWalk (list (typedef (tpl-pmtr (scope 'Operand 'FirstType))
-                                                       'Operand1)
-                                              (typedef (tpl-pmtr (scope 'Operand 'SecondType))
-                                                       'Operand2))
-                                        (bm-constructor (list (b s 'Operand1 const-chunk "&" 'op1)
-                                                              (b s 'Operand2 const-chunk "&" 'op2)
-                                                              (b s 'double const-chunk 'lo)
-                                                              (b s 'double const-chunk 'hi))
-                                                        (list (cons-asgn 'operand1_ 'op1)
-                                                              (cons-asgn 'operand2_ 'op2)
-                                                              (cons-asgn 'lo_ 'lo)
-                                                              (cons-asgn 'hi_ 'hi))
-                                                        null)
-                                        (list (mfc 'operand1_ 'next)
-                                              (mfc 'operand2_ 'next))
-                                        (b s
-                                           (mfc 'operand1_ 'at_end)
-                                           "||"
-                                           (mfc 'operand2_ 'at_end))
-                                        (b s
-                                           (mfc 'operand1_ 'has_length)
-                                           "||"
-                                           (mfc 'operand2_ 'has_length))
-                                        (r-fcn-def (constize (fcn-dcl 'eval
-                                                                      (tpl-pmtr (scope FT-chunk 'value_type))))
-                                                   null
-                                                   (b s
-                                                      (mfc 'operand1_ 'eval)
-                                                      "*"
-                                                      'lo_
-                                                      "+"
-                                                      (mfc 'operand2_ 'eval)
-                                                      "*"
-                                                      'hi_))
-                                        (list (b s 'Operand1 'operand1_)
-                                              (b s 'Operand2 'operand2_)
-                                              (b s const-chunk 'double 'lo_)
-                                              (b s const-chunk 'double 'hi_))))
-              (let ([pt-desc
-                     (lambda (pt
-                              type)
-                       (tpl-pmtr (scope (scope 'Operand (tpl-fcn-use 'Iterator VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk pt))
-                                                                                                         'result))))
-                                        type)))]
-                    [invalidate
+                                          (list (b s 'Operand 'operand1_)
+                                                (b s 'Operand 'operand2_)
+                                                (b s const-chunk 'double 'lo_)
+                                                (b s const-chunk 'double 'hi_)))))
+              (let ([invalidate
                      (lambda (given-valid point)
                        (tpl-pmtr (scope (scope 'structured (tpl-use 'Invalidate given-valid point))
                                         'result)))]
@@ -2491,29 +2405,22 @@
                      (lambda (first second)
                        (tpl-pmtr (scope (scope 'structured (tpl-use 'Minimum first second))
                                         'result)))]
-                    [set-up-point
-                     (lambda (call point)
+                    [IN-init
+                     (lambda (point)
                        (mfc (fc 'operand)
-                            (tpl-fcn-use call VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk point))
-                                                                        'result)))))]
+                            (tpl-fcn-use 'init VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk point))
+                                                                         'result)))))]
+                    [RS-init
+                     (lambda (point)
+                       (mfc (fc 'operand)
+                            (tpl-fcn-use 'init (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk point))
+                                                                'result)))))]
                     [coef-accessor
                      (lambda (num)
                        (r-fcn-def (constize (fcn-dcl (c 'coef num)
                                                      'double))
                                   null
                                   (c 'coef num "_")))]
-                    [operand-call
-                     (lambda (num)
-                       (mfc (fc (c 'operand num))
-                            'resize
-                            'split
-                            'location))]
-                    [operand-accessor
-                     (lambda (num)
-                       (r-fcn-def (constize (fcn-dcl (c 'operand num)
-                                                     (b s (c 'Operand num) const-chunk "&")))
-                                  null
-                                  (c 'operand num "_")))]
                     [eval-mult
                      (lambda (num)
                        (b s
@@ -2521,100 +2428,92 @@
                                'eval)
                           "*"
                           (c 'coef num "_")))]
-                    [int-cast
-                     (lambda (chunk)
-                       (c (p 'int) (p (c chunk))))])
+                    [def-points
+                      (let ([int-cast (lambda (chunk) (c (p 'int) (p (c chunk))))])
+                        (list (typedef (tpl-pmtr (scope 'StencilType 'SrcFieldType))
+                                       'SFT)
+                              (typedef (tpl-pmtr (scope 'StencilType 'DestFieldType))
+                                       'DFT)
+                              (typedef (tpl-pmtr (scope (scope 'SFT 'Location)
+                                                        'Offset))
+                                       'SFTO)
+                              (typedef (tpl-pmtr (scope (scope 'DFT 'Location)
+                                                        'Offset))
+                                       'DFTO)
+                              (typedef (tpl-use (scope 'structured 'IndexTriplet) "1" "0" "0")
+                                       'XUnit)
+                              (typedef (tpl-use (scope 'structured 'IndexTriplet) "0" "1" "0")
+                                       'YUnit)
+                              (typedef (tpl-use (scope 'structured 'IndexTriplet) "0" "0" "1")
+                                       'ZUnit)
+                              (typedef (tpl-pmtr (scope (tpl-use 'TemplateIf
+                                                                 (p (b s (int-cast (scope 'SFTO 'X)) "!=" (int-cast (scope 'DFTO 'X))))
+                                                                 'XUnit
+                                                                 'YUnit)
+                                                        'result))
+                                       'D1)
+                              (typedef (tpl-pmtr (scope (tpl-use 'TemplateIf
+                                                                 (p (b s (int-cast (scope 'SFTO 'Z)) "!=" (int-cast (scope 'DFTO 'Z))))
+                                                                 'ZUnit
+                                                                 'YUnit)
+                                                        'result))
+                                       'D2)
+                              (typedef (tpl-pmtr (scope (tpl-use (scope 'structured 'Multiply) 'SFTO 'D1)
+                                                        'result))
+                                       'SFTD1)
+                              (typedef (tpl-pmtr (scope (tpl-use (scope 'structured 'Multiply) 'SFTO 'D2)
+                                                        'result))
+                                       'SFTD2)
+                              (typedef (tpl-pmtr (scope (tpl-use (scope 'structured 'Multiply) 'DFTO 'D1)
+                                                        'result))
+                                       'DFTD1)
+                              (typedef (tpl-pmtr (scope (tpl-use (scope 'structured 'Multiply) 'DFTO 'D2)
+                                                        'result))
+                                       'DFTD2)
+                              (typedef (tpl-pmtr (scope (scope (scope 'structured
+                                                                      (tpl-use 'GreaterThan 'SFTD1 'DFTD1))
+                                                               'result)
+                                                        'Negate))
+                                       'LoD1)
+                              (typedef (tpl-pmtr (scope (scope 'structured
+                                                               (tpl-use 'LessThan 'SFTD1 'DFTD1))
+                                                        'result))
+                                       'HiD1)
+                              (typedef (tpl-pmtr (scope (scope (scope 'structured
+                                                                      (tpl-use 'GreaterThan 'SFTD2 'DFTD2))
+                                                               'result)
+                                                        'Negate))
+                                       'LoD2)
+                              (typedef (tpl-pmtr (scope (scope 'structured
+                                                               (tpl-use 'LessThan 'SFTD2 'DFTD2))
+                                                        'result))
+                                       'HiD2)
+                              (typedef (tpl-pmtr (scope (scope 'structured
+                                                               (tpl-use 'Add 'LoD1 'LoD2))
+                                                        'result))
+                                       'SP1)
+                              (typedef (tpl-pmtr (scope (scope 'structured
+                                                               (tpl-use 'Add 'HiD1 'LoD2))
+                                                        'result))
+                                       'SP2)
+                              (typedef (tpl-pmtr (scope (scope 'structured
+                                                               (tpl-use 'Add 'LoD1 'HiD2))
+                                                      'result))
+                                       'SP3)
+                              (typedef (tpl-pmtr (scope (scope 'structured
+                                                               (tpl-use 'Add 'HiD1 'HiD2))
+                                                        'result))
+                                       'SP4)))])
                 (build-struct NS2D
                               #true
                               (list (tpl-pmtr 'StencilType)
                                     (tpl-pmtr 'Operand))
                               (list 'StencilType 'Operand)
                               (bs-Initial (list 'StencilType
-                                                (tpl-use Quad-chunk
-                                                         (pt-desc 'SP1 'ResizePrepType)
-                                                         (pt-desc 'SP2 'ResizePrepType)
-                                                         (pt-desc 'SP3 'ResizePrepType)
-                                                         (pt-desc 'SP4 'ResizePrepType)))
+                                                (tpl-pmtr (scope 'Operand 'ResizePrepType)))
                                           (list 'StencilType
-                                                (tpl-use Quad-chunk
-                                                         (pt-desc 'SP1 'SeqWalkType)
-                                                         (pt-desc 'SP2 'SeqWalkType)
-                                                         (pt-desc 'SP3 'SeqWalkType)
-                                                         (pt-desc 'SP4 'SeqWalkType)))
-                                          (list (typedef (tpl-pmtr (scope 'StencilType 'SrcFieldType))
-                                                         'SFT)
-                                                (typedef (tpl-pmtr (scope 'StencilType 'DestFieldType))
-                                                         'DFT)
-                                                (typedef (tpl-pmtr (scope (scope 'SFT 'Location)
-                                                                          'Offset))
-                                                         'SFTO)
-                                                (typedef (tpl-pmtr (scope (scope 'DFT 'Location)
-                                                                          'Offset))
-                                                         'DFTO)
-                                                (typedef (tpl-use (scope 'structured 'IndexTriplet) "1" "0" "0")
-                                                         'XUnit)
-                                                (typedef (tpl-use (scope 'structured 'IndexTriplet) "0" "1" "0")
-                                                         'YUnit)
-                                                (typedef (tpl-use (scope 'structured 'IndexTriplet) "0" "0" "1")
-                                                         'ZUnit)
-                                                (typedef (tpl-pmtr (scope (tpl-use 'TemplateIf
-                                                                                   (p (b s (int-cast (scope 'SFTO 'X)) "!=" (int-cast (scope 'DFTO 'X))))
-                                                                                   'XUnit
-                                                                                   'YUnit)
-                                                                          'result))
-                                                         'D1)
-                                                (typedef (tpl-pmtr (scope (tpl-use 'TemplateIf
-                                                                                   (p (b s (int-cast (scope 'SFTO 'Z)) "!=" (int-cast (scope 'DFTO 'Z))))
-                                                                                   'ZUnit
-                                                                                   'YUnit)
-                                                                          'result))
-                                                         'D2)
-                                                (typedef (tpl-pmtr (scope (tpl-use (scope 'structured 'Multiply) 'SFTO 'D1)
-                                                                          'result))
-                                                         'SFTD1)
-                                                (typedef (tpl-pmtr (scope (tpl-use (scope 'structured 'Multiply) 'SFTO 'D2)
-                                                                          'result))
-                                                         'SFTD2)
-                                                (typedef (tpl-pmtr (scope (tpl-use (scope 'structured 'Multiply) 'DFTO 'D1)
-                                                                          'result))
-                                                         'DFTD1)
-                                                (typedef (tpl-pmtr (scope (tpl-use (scope 'structured 'Multiply) 'DFTO 'D2)
-                                                                          'result))
-                                                         'DFTD2)
-                                                (typedef (tpl-pmtr (scope (scope (scope 'structured
-                                                                                        (tpl-use 'GreaterThan 'SFTD1 'DFTD1))
-                                                                                 'result)
-                                                                          'Negate))
-                                                         'LoD1)
-                                                (typedef (tpl-pmtr (scope (scope 'structured
-                                                                                 (tpl-use 'LessThan 'SFTD1 'DFTD1))
-                                                                          'result))
-                                                         'HiD1)
-                                                (typedef (tpl-pmtr (scope (scope (scope 'structured
-                                                                                        (tpl-use 'GreaterThan 'SFTD2 'DFTD2))
-                                                                                 'result)
-                                                                          'Negate))
-                                                         'LoD2)
-                                                (typedef (tpl-pmtr (scope (scope 'structured
-                                                                                 (tpl-use 'LessThan 'SFTD2 'DFTD2))
-                                                                          'result))
-                                                         'HiD2)
-                                                (typedef (tpl-pmtr (scope (scope 'structured
-                                                                           (tpl-use 'Add 'LoD1 'LoD2))
-                                                                          'result))
-                                                         'SP1)
-                                                (typedef (tpl-pmtr (scope (scope 'structured
-                                                                                 (tpl-use 'Add 'HiD1 'LoD2))
-                                                                          'result))
-                                                         'SP2)
-                                                (typedef (tpl-pmtr (scope (scope 'structured
-                                                                                 (tpl-use 'Add 'LoD1 'HiD2))
-                                                                          'result))
-                                                         'SP3)
-                                                (typedef (tpl-pmtr (scope (scope 'structured
-                                                                                 (tpl-use 'Add 'HiD1 'HiD2))
-                                                                          'result))
-                                                         'SP4)
+                                                (tpl-pmtr (scope 'Operand 'SeqWalkType)))
+                                          (list def-points
                                                 (typedef (tpl-pmtr (scope 'Operand report-VG-chunk))
                                                          'OperandPVG)
                                                 (typedef (invalidate 'OperandPVG 'SP1)
@@ -2643,18 +2542,16 @@
                                                                 (cons-asgn 'coef3_ 'coef3)
                                                                 (cons-asgn 'coef4_ 'coef4))
                                                           null)
-                                          (list (set-up-point 'init 'SP1)
-                                                (set-up-point 'init 'SP2)
-                                                (set-up-point 'init 'SP3)
-                                                (set-up-point 'init 'SP4)
+                                          (list (IN-init 'SP1)
+                                                (IN-init 'SP2)
+                                                (IN-init 'SP3)
+                                                (IN-init 'SP4)
                                                 (fc 'coef1)
                                                 (fc 'coef2)
                                                 (fc 'coef3)
                                                 (fc 'coef4))
-                                          (list (set-up-point 'resize_prep 'SP1)
-                                                (set-up-point 'resize_prep 'SP2)
-                                                (set-up-point 'resize_prep 'SP3)
-                                                (set-up-point 'resize_prep 'SP4)
+                                          (list (mfc (fc 'operand)
+                                                     (tpl-fcn-use 'resize_prep VG-chunk))
                                                 (fc 'coef1)
                                                 (fc 'coef2)
                                                 (fc 'coef3)
@@ -2673,139 +2570,80 @@
                                                 (b s const-chunk 'double 'coef3_)
                                                 (b s const-chunk 'double 'coef4_)))
                               (bs-ResizePrep (list 'StencilType
-                                                   (tpl-use Quad-chunk
-                                                            (tpl-pmtr (scope (scope 'Operand 'FirstType)
-                                                                             'ResizeType))
-                                                            (tpl-pmtr (scope (scope 'Operand 'SecondType)
-                                                                             'ResizeType))
-                                                            (tpl-pmtr (scope (scope 'Operand 'ThirdType)
-                                                                             'ResizeType))
-                                                            (tpl-pmtr (scope (scope 'Operand 'FourthType)
-                                                                             'ResizeType))))
-                                             (list (typedef (tpl-pmtr (scope 'Operand 'FirstType))
-                                                            'Operand1)
-                                                   (typedef (tpl-pmtr (scope 'Operand 'SecondType))
-                                                            'Operand2)
-                                                   (typedef (tpl-pmtr (scope 'Operand 'ThirdType))
-                                                            'Operand3)
-                                                   (typedef (tpl-pmtr (scope 'Operand 'FourthType))
-                                                            'Operand4))
-                                             (bm-constructor (list (b s 'Operand1 const-chunk "&" 'op1)
-                                                                   (b s 'Operand2 const-chunk "&" 'op2)
-                                                                   (b s 'Operand3 const-chunk "&" 'op3)
-                                                                   (b s 'Operand4 const-chunk "&" 'op4)
+                                                   (tpl-pmtr (scope 'Operand 'ResizeType)))
+                                             null
+                                             (bm-constructor (list (b s 'Operand const-chunk "&" 'op)
                                                                    (b s 'double const-chunk 'coef1)
                                                                    (b s 'double const-chunk 'coef2)
                                                                    (b s 'double const-chunk 'coef3)
                                                                    (b s 'double const-chunk 'coef4))
-                                                             (list (cons-asgn 'operand1_ 'op1)
-                                                                   (cons-asgn 'operand2_ 'op2)
-                                                                   (cons-asgn 'operand3_ 'op3)
-                                                                   (cons-asgn 'operand4_ 'op4)
+                                                             (list (cons-asgn 'operand_ 'op)
                                                                    (cons-asgn 'coef1_ 'coef1)
                                                                    (cons-asgn 'coef2_ 'coef2)
                                                                    (cons-asgn 'coef3_ 'coef3)
                                                                    (cons-asgn 'coef4_ 'coef4))
                                                              null)
-                                             (list (operand-call "1")
-                                                   (operand-call "2")
-                                                   (operand-call "3")
-                                                   (operand-call "4")
+                                             (list (mfc (fc 'operand)
+                                                        'resize
+                                                        'split
+                                                        'location)
                                                    (fc 'coef1)
                                                    (fc 'coef2)
                                                    (fc 'coef3)
                                                    (fc 'coef4))
-                                             (list (operand-accessor "1")
-                                                   (operand-accessor "2")
-                                                   (operand-accessor "3")
-                                                   (operand-accessor "4")
+                                             (list (r-fcn-def (constize (fcn-dcl 'operand
+                                                                                 (b s 'Operand const-chunk "&")))
+                                                              null
+                                                              'operand_)
                                                    (coef-accessor "1")
                                                    (coef-accessor "2")
                                                    (coef-accessor "3")
                                                    (coef-accessor "4"))
-                                             (list (b s const-chunk 'Operand1 'operand1_)
-                                                   (b s const-chunk 'Operand2 'operand2_)
-                                                   (b s const-chunk 'Operand3 'operand3_)
-                                                   (b s const-chunk 'Operand4 'operand4_)
+                                             (list (b s const-chunk 'Operand 'operand_)
                                                    (b s const-chunk 'double 'coef1_)
                                                    (b s const-chunk 'double 'coef2_)
                                                    (b s const-chunk 'double 'coef3_)
                                                    (b s const-chunk 'double 'coef4_)))
                               (bs-Resize (list 'StencilType
-                                               (tpl-use Quad-chunk
-                                                        (tpl-pmtr (scope (scope 'Operand 'FirstType)
-                                                                         'SeqWalkType))
-                                                        (tpl-pmtr (scope (scope 'Operand 'SecondType)
-                                                                         'SeqWalkType))
-                                                        (tpl-pmtr (scope (scope 'Operand 'ThirdType)
-                                                                         'SeqWalkType))
-                                                        (tpl-pmtr (scope (scope 'Operand 'FourthType)
-                                                                         'SeqWalkType))))
-                                         (list (typedef (tpl-pmtr (scope 'Operand 'FirstType))
-                                                        'Operand1)
-                                               (typedef (tpl-pmtr (scope 'Operand 'SecondType))
-                                                        'Operand2)
-                                               (typedef (tpl-pmtr (scope 'Operand 'ThirdType))
-                                                        'Operand3)
-                                               (typedef (tpl-pmtr (scope 'Operand 'FourthType))
-                                                        'Operand4))
-                                         (bm-constructor (list (b s 'Operand1 const-chunk "&" 'op1)
-                                                               (b s 'Operand2 const-chunk "&" 'op2)
-                                                               (b s 'Operand3 const-chunk "&" 'op3)
-                                                               (b s 'Operand4 const-chunk "&" 'op4)
+                                               (tpl-pmtr (scope 'Operand 'SeqWalkType)))
+                                         def-points
+                                         (bm-constructor (list (b s 'Operand const-chunk "&" 'op)
                                                                (b s 'double const-chunk 'coef1)
                                                                (b s 'double const-chunk 'coef2)
                                                                (b s 'double const-chunk 'coef3)
                                                                (b s 'double const-chunk 'coef4))
-                                                         (list (cons-asgn 'operand1_ 'op1)
-                                                               (cons-asgn 'operand2_ 'op2)
-                                                               (cons-asgn 'operand3_ 'op3)
-                                                               (cons-asgn 'operand4_ 'op4)
+                                                         (list (cons-asgn 'operand_ 'op)
                                                                (cons-asgn 'coef1_ 'coef1)
                                                                (cons-asgn 'coef2_ 'coef2)
                                                                (cons-asgn 'coef3_ 'coef3)
                                                                (cons-asgn 'coef4_ 'coef4))
                                                          null)
-                                         (list (mfc (fc 'operand1)
-                                                    'init)
-                                               (mfc (fc 'operand2)
-                                                    'init)
-                                               (mfc (fc 'operand3)
-                                                    'init)
-                                               (mfc (fc 'operand4)
-                                                    'init)
+                                         (list (RS-init 'SP1)
+                                               (RS-init 'SP2)
+                                               (RS-init 'SP3)
+                                               (RS-init 'SP4)
                                                (fc 'coef1)
                                                (fc 'coef2)
                                                (fc 'coef3)
                                                (fc 'coef4))
-                                         (list (operand-accessor "1")
-                                               (operand-accessor "2")
-                                               (operand-accessor "3")
-                                               (operand-accessor "4")
+                                         (list (r-fcn-def (constize (fcn-dcl 'operand
+                                                                             (b s 'Operand const-chunk "&")))
+                                                          null
+                                                          'operand_)
                                                (coef-accessor "1")
                                                (coef-accessor "2")
                                                (coef-accessor "3")
                                                (coef-accessor "4"))
-                                         (list (b s const-chunk 'Operand1 'operand1_)
-                                               (b s const-chunk 'Operand2 'operand2_)
-                                               (b s const-chunk 'Operand3 'operand3_)
-                                               (b s const-chunk 'Operand4 'operand4_)
+                                         (list (b s const-chunk 'Operand 'operand_)
                                                (b s const-chunk 'double 'coef1_)
                                                (b s const-chunk 'double 'coef2_)
                                                (b s const-chunk 'double 'coef3_)
                                                (b s const-chunk 'double 'coef4_)))
-                              (bs-SeqWalk (list (typedef (tpl-pmtr (scope 'Operand 'FirstType))
-                                                         'Operand1)
-                                                (typedef (tpl-pmtr (scope 'Operand 'SecondType))
-                                                         'Operand2)
-                                                (typedef (tpl-pmtr (scope 'Operand 'ThirdType))
-                                                         'Operand3)
-                                                (typedef (tpl-pmtr (scope 'Operand 'FourthType))
-                                                         'Operand4))
-                                          (bm-constructor (list (b s 'Operand1 const-chunk "&" 'op1)
-                                                                (b s 'Operand2 const-chunk "&" 'op2)
-                                                                (b s 'Operand3 const-chunk "&" 'op3)
-                                                                (b s 'Operand4 const-chunk "&" 'op4)
+                              (bs-SeqWalk null
+                                          (bm-constructor (list (b s 'Operand const-chunk "&" 'op1)
+                                                                (b s 'Operand const-chunk "&" 'op2)
+                                                                (b s 'Operand const-chunk "&" 'op3)
+                                                                (b s 'Operand const-chunk "&" 'op4)
                                                                 (b s 'double const-chunk 'coef1)
                                                                 (b s 'double const-chunk 'coef2)
                                                                 (b s 'double const-chunk 'coef3)
@@ -2841,221 +2679,174 @@
                                                           (eval-mult "2")
                                                           (eval-mult "3")
                                                           (eval-mult "4")))
-                                          (list (b s 'Operand1 'operand1_)
-                                                (b s 'Operand2 'operand2_)
-                                                (b s 'Operand3 'operand3_)
-                                                (b s 'Operand4 'operand4_)
+                                          (list (b s 'Operand 'operand1_)
+                                                (b s 'Operand 'operand2_)
+                                                (b s 'Operand 'operand3_)
+                                                (b s 'Operand 'operand4_)
                                                 (b s const-chunk 'double 'coef1_)
                                                 (b s const-chunk 'double 'coef2_)
                                                 (b s const-chunk 'double 'coef3_)
                                                 (b s const-chunk 'double 'coef4_)))))
-              (build-struct NSFD
-                            #true
-                            (list (tpl-pmtr 'StencilType)
-                                  (tpl-pmtr 'Operand))
-                            (list 'StencilType 'Operand)
-                            (bs-Initial (list 'StencilType
-                                              (tpl-use Pair-chunk
-                                                       (tpl-pmtr (scope (scope 'Operand (tpl-fcn-use 'Iterator VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'SP1))
-                                                                                                                                         'result))))
-                                                                        'ResizePrepType))
-                                                       (tpl-pmtr (scope (scope 'Operand (tpl-fcn-use 'Iterator VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'SP2))
-                                                                                                                                         'result))))
-                                                                        'ResizePrepType))))
-                                        (list 'StencilType
-                                              (tpl-use Pair-chunk
-                                                       (tpl-pmtr (scope (scope 'Operand (tpl-fcn-use 'Iterator VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'SP1))
-                                                                                                                                         'result))))
-                                                                        'SeqWalkType))
-                                                       (tpl-pmtr (scope (scope 'Operand (tpl-fcn-use 'Iterator VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'SP2))
-                                                                                                                                         'result))))
-                                                                        'SeqWalkType))))
-                                        (list (typedef (tpl-pmtr (scope 'StencilType 'SrcFieldType))
-                                                       'SFT)
-                                              (typedef (tpl-pmtr (scope 'StencilType 'DestFieldType))
-                                                       'DFT)
-                                              (typedef (tpl-pmtr (scope (scope 'StencilType 'DirVec)
-                                                                        'Negate))
-                                                       'SP1)
-                                              (typedef (tpl-pmtr (scope 'StencilType 'DirVec))
-                                                       'SP2))
-                                        (tpl-pmtr (scope (scope 'structured (tpl-use 'Invalidate
-                                                                                     (tpl-pmtr (scope (scope 'structured (tpl-use 'Invalidate
-                                                                                                                                  (tpl-pmtr (scope 'Operand report-VG-chunk))
-                                                                                                                                  'SP1))
-                                                                                                      'result))
-                                                                                     'SP2))
-                                                         'result))
-                                        (bm-constructor (list (b s 'Operand const-chunk "&" 'op)
-                                                              (b s 'double const-chunk 'lo)
-                                                              (b s 'double const-chunk 'hi))
-                                                        (list (cons-asgn 'operand_ 'op)
-                                                              (cons-asgn 'lo_ 'lo)
-                                                              (cons-asgn 'hi_ 'hi))
-                                                        null)
-                                        (list (mfc (fc 'operand)
-                                                   (tpl-fcn-use 'init VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'SP1))
-                                                                                                'result))))
-                                              (mfc (fc 'operand)
-                                                   (tpl-fcn-use 'init VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'SP2))
-                                                                                                'result))))
-                                              (fc 'lo)
-                                              (fc 'hi))
-                                        (list (mfc (fc 'operand)
-                                                   (tpl-fcn-use 'resize_prep VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'SP1))
-                                                                                                       'result))))
-                                              (mfc (fc 'operand)
-                                                   (tpl-fcn-use 'resize_prep VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'SP2))
-                                                                                                       'result))))
-                                              (fc 'lo)
-                                              (fc 'hi))
-                                        (list (r-fcn-def (constize (fcn-dcl 'operand
-                                                                            (b s 'Operand const-chunk "&")))
-                                                         null
-                                                         'operand_)
-                                              (r-fcn-def (constize (fcn-dcl 'lo
-                                                                            'double))
-                                                         null
-                                                         'lo_)
-                                              (r-fcn-def (constize (fcn-dcl 'hi
-                                                                            'double))
-                                                         null
-                                                         'hi_))
-                                        (list (b s const-chunk 'Operand 'operand_)
-                                              (b s const-chunk 'double 'lo_)
-                                              (b s const-chunk 'double 'hi_)))
-                            (bs-ResizePrep (list 'StencilType
-                                                 (tpl-use Pair-chunk
-                                                          (tpl-pmtr (scope (scope 'Operand 'FirstType)
-                                                                           'ResizeType))
-                                                          (tpl-pmtr (scope (scope 'Operand 'SecondType)
-                                                                           'ResizeType))))
-                                           (list (typedef (tpl-pmtr (scope 'Operand 'FirstType))
-                                                          'Operand1)
-                                                 (typedef (tpl-pmtr (scope 'Operand 'SecondType))
-                                                          'Operand2))
-                                           (bm-constructor (list (b s 'Operand1 const-chunk "&" 'op1)
-                                                                 (b s 'Operand2 const-chunk "&" 'op2)
-                                                                 (b s 'double const-chunk 'lo)
-                                                                 (b s 'double const-chunk 'hi))
-                                                           (list (cons-asgn 'operand1_ 'op1)
-                                                                 (cons-asgn 'operand2_ 'op2)
-                                                                 (cons-asgn 'lo_ 'lo)
-                                                                 (cons-asgn 'hi_ 'hi))
-                                                           null)
-                                           (list (mfc (fc 'operand1)
-                                                      'resize
-                                                      'split
-                                                      'location)
-                                                 (mfc (fc 'operand2)
-                                                      'resize
-                                                      'split
-                                                      'location)
-                                                 (fc 'lo)
-                                                 (fc 'hi))
-                                           (list (r-fcn-def (constize (fcn-dcl 'operand1
-                                                                               (b s 'Operand1 const-chunk "&")))
-                                                            null
-                                                            'operand1_)
-                                                 (r-fcn-def (constize (fcn-dcl 'operand2
-                                                                               (b s 'Operand2 const-chunk "&")))
-                                                            null
-                                                            'operand2_)
-                                                 (r-fcn-def (constize (fcn-dcl 'lo
-                                                                               'double))
-                                                            null
-                                                            'lo_)
-                                                 (r-fcn-def (constize (fcn-dcl 'hi
-                                                                               'double))
-                                                            null
-                                                            'hi_))
-                                           (list (b s const-chunk 'Operand1 'operand1_)
-                                                 (b s const-chunk 'Operand2 'operand2_)
-                                                 (b s const-chunk 'double 'lo_)
-                                                 (b s const-chunk 'double 'hi_)))
-                            (bs-Resize (list 'StencilType
-                                             (tpl-use Pair-chunk
-                                                      (tpl-pmtr (scope (scope 'Operand 'FirstType)
-                                                                       'SeqWalkType))
-                                                      (tpl-pmtr (scope (scope 'Operand 'SecondType)
-                                                                       'SeqWalkType))))
-                                       (list (typedef (tpl-pmtr (scope 'Operand 'FirstType))
-                                                      'Operand1)
-                                             (typedef (tpl-pmtr (scope 'Operand 'SecondType))
-                                                      'Operand2))
-                                       (bm-constructor (list (b s 'Operand1 const-chunk "&" 'op1)
-                                                             (b s 'Operand2 const-chunk "&" 'op2)
-                                                             (b s 'double const-chunk 'lo)
-                                                             (b s 'double const-chunk 'hi))
-                                                       (list (cons-asgn 'operand1_ 'op1)
-                                                             (cons-asgn 'operand2_ 'op2)
-                                                             (cons-asgn 'lo_ 'lo)
-                                                             (cons-asgn 'hi_ 'hi))
-                                                       null)
-                                       (list (mfc (fc 'operand1)
-                                                  'init)
-                                             (mfc (fc 'operand2)
-                                                  'init)
-                                             (fc 'lo)
-                                             (fc 'hi))
-                                       (list (r-fcn-def (constize (fcn-dcl 'operand1
-                                                                           (b s 'Operand1 const-chunk "&")))
-                                                        null
-                                                        'operand1_)
-                                             (r-fcn-def (constize (fcn-dcl 'operand2
-                                                                           (b s 'Operand2 const-chunk "&")))
-                                                        null
-                                                        'operand2_)
-                                             (r-fcn-def (constize (fcn-dcl 'lo
-                                                                           'double))
-                                                        null
-                                                        'lo_)
-                                             (r-fcn-def (constize (fcn-dcl 'hi
-                                                                           'double))
-                                                        null
+              (let ([def-points
+                      (list (typedef (tpl-pmtr (scope 'StencilType 'SrcFieldType))
+                                     'SFT)
+                            (typedef (tpl-pmtr (scope 'StencilType 'DestFieldType))
+                                     'DFT)
+                            (typedef (tpl-pmtr (scope (scope 'StencilType 'DirVec)
+                                                      'Negate))
+                                     'SP1)
+                            (typedef (tpl-pmtr (scope 'StencilType 'DirVec))
+                                     'SP2))])
+                (build-struct NSFD
+                              #true
+                              (list (tpl-pmtr 'StencilType)
+                                    (tpl-pmtr 'Operand))
+                              (list 'StencilType 'Operand)
+                              (bs-Initial (list 'StencilType
+                                                (tpl-pmtr (scope 'Operand 'ResizePrepType)))
+                                          (list 'StencilType
+                                                (tpl-pmtr (scope 'Operand 'SeqWalkType)))
+                                          def-points
+                                          (tpl-pmtr (scope (scope 'structured (tpl-use 'Invalidate
+                                                                                       (tpl-pmtr (scope (scope 'structured (tpl-use 'Invalidate
+                                                                                                                                    (tpl-pmtr (scope 'Operand report-VG-chunk))
+                                                                                                                                    'SP1))
+                                                                                                        'result))
+                                                                                       'SP2))
+                                                           'result))
+                                          (bm-constructor (list (b s 'Operand const-chunk "&" 'op)
+                                                                (b s 'double const-chunk 'lo)
+                                                                (b s 'double const-chunk 'hi))
+                                                          (list (cons-asgn 'operand_ 'op)
+                                                                (cons-asgn 'lo_ 'lo)
+                                                                (cons-asgn 'hi_ 'hi))
+                                                          null)
+                                          (list (mfc (fc 'operand)
+                                                     (tpl-fcn-use 'init VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'SP1))
+                                                                                                  'result))))
+                                                (mfc (fc 'operand)
+                                                     (tpl-fcn-use 'init VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'SP2))
+                                                                                                  'result))))
+                                                (fc 'lo)
+                                                (fc 'hi))
+                                          (list (mfc (fc 'operand)
+                                                     (tpl-fcn-use 'resize_prep VG-chunk))
+                                                (fc 'lo)
+                                                (fc 'hi))
+                                          (list (r-fcn-def (constize (fcn-dcl 'operand
+                                                                              (b s 'Operand const-chunk "&")))
+                                                           null
+                                                           'operand_)
+                                                (r-fcn-def (constize (fcn-dcl 'lo
+                                                                              'double))
+                                                           null
+                                                           'lo_)
+                                                (r-fcn-def (constize (fcn-dcl 'hi
+                                                                              'double))
+                                                           null
+                                                           'hi_))
+                                          (list (b s const-chunk 'Operand 'operand_)
+                                                (b s const-chunk 'double 'lo_)
+                                                (b s const-chunk 'double 'hi_)))
+                              (bs-ResizePrep (list 'StencilType
+                                                   (tpl-pmtr (scope 'Operand 'ResizeType)))
+                                             null
+                                             (bm-constructor (list (b s 'Operand const-chunk "&" 'op)
+                                                                   (b s 'double const-chunk 'lo)
+                                                                   (b s 'double const-chunk 'hi))
+                                                             (list (cons-asgn 'operand_ 'op)
+                                                                   (cons-asgn 'lo_ 'lo)
+                                                                   (cons-asgn 'hi_ 'hi))
+                                                             null)
+                                             (list (mfc (fc 'operand)
+                                                        'resize
+                                                        'split
+                                                        'location)
+                                                   (fc 'lo)
+                                                   (fc 'hi))
+                                             (list (r-fcn-def (constize (fcn-dcl 'operand
+                                                                                 (b s 'Operand const-chunk "&")))
+                                                              null
+                                                              'operand_)
+                                                   (r-fcn-def (constize (fcn-dcl 'lo
+                                                                                 'double))
+                                                              null
+                                                              'lo_)
+                                                   (r-fcn-def (constize (fcn-dcl 'hi
+                                                                                 'double))
+                                                              null
+                                                              'hi_))
+                                             (list (b s const-chunk 'Operand 'operand_)
+                                                   (b s const-chunk 'double 'lo_)
+                                                   (b s const-chunk 'double 'hi_)))
+                              (bs-Resize (list 'StencilType
+                                               (tpl-pmtr (scope 'Operand 'SeqWalkType)))
+                                         def-points
+                                         (bm-constructor (list (b s 'Operand const-chunk "&" 'op)
+                                                               (b s 'double const-chunk 'lo)
+                                                               (b s 'double const-chunk 'hi))
+                                                         (list (cons-asgn 'operand_ 'op)
+                                                               (cons-asgn 'lo_ 'lo)
+                                                               (cons-asgn 'hi_ 'hi))
+                                                         null)
+                                         (list (mfc (fc 'operand)
+                                                    (tpl-fcn-use 'init (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'SP1))
+                                                                                        'result))))
+                                               (mfc (fc 'operand)
+                                                    (tpl-fcn-use 'init (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'SP2))
+                                                                                        'result))))
+                                               (fc 'lo)
+                                               (fc 'hi))
+                                         (list (r-fcn-def (constize (fcn-dcl 'operand
+                                                                             (b s 'Operand const-chunk "&")))
+                                                          null
+                                                          'operand_)
+                                               (r-fcn-def (constize (fcn-dcl 'lo
+                                                                             'double))
+                                                          null
+                                                          'lo_)
+                                               (r-fcn-def (constize (fcn-dcl 'hi
+                                                                             'double))
+                                                          null
+                                                          'hi_))
+                                         (list (b s const-chunk 'Operand 'operand_)
+                                               (b s const-chunk 'double 'lo_)
+                                               (b s const-chunk 'double 'hi_)))
+                              (bs-SeqWalk null
+                                          (bm-constructor (list (b s 'Operand const-chunk "&" 'op1)
+                                                                (b s 'Operand const-chunk "&" 'op2)
+                                                                (b s 'double const-chunk 'lo)
+                                                                (b s 'double const-chunk 'hi))
+                                                          (list (cons-asgn 'operand1_ 'op1)
+                                                                (cons-asgn 'operand2_ 'op2)
+                                                                (cons-asgn 'lo_ 'lo)
+                                                                (cons-asgn 'hi_ 'hi))
+                                                          null)
+                                          (list (mfc 'operand1_ 'next)
+                                                (mfc 'operand2_ 'next))
+                                          (b s
+                                             (mfc 'operand1_ 'at_end)
+                                             "||"
+                                             (mfc 'operand2_ 'at_end))
+                                          (b s
+                                             (mfc 'operand1_ 'has_length)
+                                             "||"
+                                             (mfc 'operand2_ 'has_length))
+                                          (r-fcn-def (constize (fcn-dcl 'eval
+                                                                        (tpl-pmtr (scope FT-chunk 'value_type))))
+                                                     null
+                                                     (b s
+                                                        (mfc 'operand1_ 'eval)
+                                                        "*"
+                                                        'lo_
+                                                        "+"
+                                                        (mfc 'operand2_ 'eval)
+                                                        "*"
                                                         'hi_))
-                                       (list (b s const-chunk 'Operand1 'operand1_)
-                                             (b s const-chunk 'Operand2 'operand2_)
-                                             (b s const-chunk 'double 'lo_)
-                                             (b s const-chunk 'double 'hi_)))
-                            (bs-SeqWalk (list (typedef (tpl-pmtr (scope 'Operand 'FirstType))
-                                                       'Operand1)
-                                              (typedef (tpl-pmtr (scope 'Operand 'SecondType))
-                                                       'Operand2))
-                                        (bm-constructor (list (b s 'Operand1 const-chunk "&" 'op1)
-                                                              (b s 'Operand2 const-chunk "&" 'op2)
-                                                              (b s 'double const-chunk 'lo)
-                                                              (b s 'double const-chunk 'hi))
-                                                        (list (cons-asgn 'operand1_ 'op1)
-                                                              (cons-asgn 'operand2_ 'op2)
-                                                              (cons-asgn 'lo_ 'lo)
-                                                              (cons-asgn 'hi_ 'hi))
-                                                        null)
-                                        (list (mfc 'operand1_ 'next)
-                                              (mfc 'operand2_ 'next))
-                                        (b s
-                                           (mfc 'operand1_ 'at_end)
-                                           "||"
-                                           (mfc 'operand2_ 'at_end))
-                                        (b s
-                                           (mfc 'operand1_ 'has_length)
-                                           "||"
-                                           (mfc 'operand2_ 'has_length))
-                                        (r-fcn-def (constize (fcn-dcl 'eval
-                                                                      (tpl-pmtr (scope FT-chunk 'value_type))))
-                                                   null
-                                                   (b s
-                                                      (mfc 'operand1_ 'eval)
-                                                      "*"
-                                                      'lo_
-                                                      "+"
-                                                      (mfc 'operand2_ 'eval)
-                                                      "*"
-                                                      'hi_))
-                                        (list (b s 'Operand1 'operand1_)
-                                              (b s 'Operand2 'operand2_)
-                                              (b s const-chunk 'double 'lo_)
-                                              (b s const-chunk 'double 'hi_))))
+                                          (list (b s 'Operand 'operand1_)
+                                                (b s 'Operand 'operand2_)
+                                                (b s const-chunk 'double 'lo_)
+                                                (b s const-chunk 'double 'hi_)))))
               (tpl-srt-def 'Nebo1DStencilConstructor
                            (tpl-pmtr 'StencilType)
                            null
@@ -3263,7 +3054,8 @@
                           'initial_lhs))
       (pp-conditional-ifdef-chunk
        'FIELD_EXPRESSION_THREADS
-       (tpl-def (list (tpl-pmtr 'ResizeLhsType)
+       (tpl-def (list (tpl-pmtr 'InitialShift)
+                      (tpl-pmtr 'ResizeLhsType)
                       (tpl-pmtr 'ResizeRhsType)
                       (tpl-pmtr FT-chunk))
                 (v-fcn-def 'nebo_assignment_thread_parallel_execute_internal
@@ -3277,9 +3069,9 @@
                                     'semaphore))
                            (list (fc 'nebo_assignment_sequential_execute_internal
                                      (mfc (mfc 'lhs 'resize 'split 'location)
-                                          'init)
+                                          (tpl-fcn-use 'init 'InitialShift))
                                      (mfc (mfc 'rhs 'resize 'split 'location)
-                                          'init))
+                                          (tpl-fcn-use 'init 'InitialShift)))
                                  (fc (c 'semaphore "->" 'post))))))
       (pp-conditional-ifdef-chunk
        'FIELD_EXPRESSION_THREADS
@@ -3296,12 +3088,10 @@
                                              "&"
                                              'initial_rhs)
                                           (b s 'int const-chunk 'number_of_partitions)))
-                           (list (typedef (tpl-pmtr (scope (scope (tpl-use NF-chunk 'Initial FT-chunk)
-                                                                  (tpl-fcn-use 'Iterator 'ValidGhost 'InitialShift))
+                           (list (typedef (tpl-pmtr (scope (tpl-use NF-chunk 'Initial FT-chunk)
                                                            'ResizePrepType))
                                           'LhsType)
-                                 (typedef (tpl-pmtr (scope (scope 'ExprType (tpl-fcn-use 'Iterator 'ValidGhost 'InitialShift))
-                                                           'ResizePrepType))
+                                 (typedef (tpl-pmtr (scope 'ExprType 'ResizePrepType))
                                           'RhsType)
                                  (typedef (tpl-pmtr (scope FT-chunk 'memory_window))
                                           'MemoryWindow)
@@ -3349,12 +3139,12 @@
                                                 (mfc (fc (scope 'ThreadPoolFIFO 'self))
                                                      'schedule
                                                      (fc (scope 'boost 'bind)
-                                                         (c "&" (tpl-use 'nebo_assignment_thread_parallel_execute_internal 'LhsType 'RhsType FT-chunk))
+                                                         (c "&" (tpl-use 'nebo_assignment_thread_parallel_execute_internal 'InitialShift 'LhsType 'RhsType FT-chunk))
                                                          (mfc (fc (tpl-use NF-chunk 'Initial FT-chunk)
                                                                   'initial_lhs)
-                                                              (tpl-fcn-use 'resize_prep 'ValidGhost 'InitialShift))
+                                                              (tpl-fcn-use 'resize_prep 'ValidGhost))
                                                          (mfc (mfc 'initial_rhs 'expr)
-                                                              (tpl-fcn-use 'resize_prep 'ValidGhost 'InitialShift))
+                                                              (tpl-fcn-use 'resize_prep 'ValidGhost))
                                                          'split
                                                          'location
                                                          (c "&" 'semaphore)))))

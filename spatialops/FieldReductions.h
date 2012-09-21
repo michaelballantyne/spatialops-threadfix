@@ -43,9 +43,7 @@
 
           ResultType result = initialValue;
 
-          typename ExprType::template Iterator<ValidGhost, Shift>::SeqWalkType expr = fexpr.expr().template
-                                                                                                   init<ValidGhost,
-                                                                                                        Shift>();
+          typename ExprType::SeqWalkType expr = fexpr.expr().template init<ValidGhost, Shift>();
 
           while(!expr.at_end()){ result = proc(result, expr.eval()); expr.next(); };
 
@@ -76,9 +74,7 @@
 
           ResultType result = initialValue;
 
-          typename ExprType::template Iterator<ValidGhost, Shift>::SeqWalkType expr = fexpr.expr().template
-                                                                                                   init<ValidGhost,
-                                                                                                        Shift>();
+          typename ExprType::SeqWalkType expr = fexpr.expr().template init<ValidGhost, Shift>();
 
           while(!expr.at_end()){ result = proc(result, expr.eval()); expr.next(); };
 
@@ -120,9 +116,7 @@
 
           structured::IndexTriplet<0, 0, 0> typedef Shift;
 
-          typename ExprType::template Iterator<ValidGhost, Shift>::SeqWalkType expr = fexpr.expr().template
-                                                                                                   init<ValidGhost,
-                                                                                                        Shift>();
+          typename ExprType::SeqWalkType expr = fexpr.expr().template init<ValidGhost, Shift>();
 
           typename FieldType::value_type result = expr.eval();
 
@@ -165,9 +159,7 @@
 
           structured::IndexTriplet<0, 0, 0> typedef Shift;
 
-          typename ExprType::template Iterator<ValidGhost, Shift>::SeqWalkType expr = fexpr.expr().template
-                                                                                                   init<ValidGhost,
-                                                                                                        Shift>();
+          typename ExprType::SeqWalkType expr = fexpr.expr().template init<ValidGhost, Shift>();
 
           typename FieldType::value_type result = expr.eval();
 
@@ -209,9 +201,7 @@
 
           structured::IndexTriplet<0, 0, 0> typedef Shift;
 
-          typename ExprType::template Iterator<ValidGhost, Shift>::SeqWalkType expr = fexpr.expr().template
-                                                                                                   init<ValidGhost,
-                                                                                                        Shift>();
+          typename ExprType::SeqWalkType expr = fexpr.expr().template init<ValidGhost, Shift>();
 
           typename FieldType::value_type result = expr.eval();
 
@@ -259,9 +249,7 @@
 
           structured::IndexTriplet<0, 0, 0> typedef Shift;
 
-          typename ExprType::template Iterator<ValidGhost, Shift>::SeqWalkType expr = fexpr.expr().template
-                                                                                                   init<ValidGhost,
-                                                                                                        Shift>();
+          typename ExprType::SeqWalkType expr = fexpr.expr().template init<ValidGhost, Shift>();
 
           typename FieldType::value_type result = expr.eval();
 

@@ -240,9 +240,7 @@
                                       'initialValue)
                                 (list (b s 'ResultType 'result "=" 'initialValue)
                                       (b s
-                                         (tpl-pmtr (scope (scope 'ExprType 
-                                                                 (tpl-fcn-use 'Iterator VG-chunk SH-chunk))
-                                                          'SeqWalkType))
+                                         (tpl-pmtr (scope 'ExprType 'SeqWalkType))
                                          'expr
                                          "="
                                          (mfc (mfc 'fexpr 'expr)
@@ -273,8 +271,7 @@
                                                                             (b s AtomicType const-chunk "&"))))])
                                                        'proc
                                                        (list (b s
-                                                                (tpl-pmtr (scope (scope 'ExprType (tpl-fcn-use 'Iterator VG-chunk SH-chunk))
-                                                                                 'SeqWalkType))
+                                                                (tpl-pmtr (scope 'ExprType 'SeqWalkType))
                                                                 'expr
                                                                 "="
                                                                 (mfc (mfc 'fexpr 'expr)
