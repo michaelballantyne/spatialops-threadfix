@@ -6630,6 +6630,208 @@
           const double coef4_;
       };
 
+      template<typename CurrentMode, typename StencilType, typename Operand, typename FieldType>
+       struct NeboFDStencil;
+
+      template<typename StencilType, typename Operand, typename FieldType>
+       struct NeboFDStencil<Initial, StencilType, Operand, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          typename StencilType::SrcFieldType typedef SFT;
+          typename StencilType::DestFieldType typedef DFT;
+          typename StencilType::DirVec::Negate typedef SP1;
+          typename StencilType::DirVec typedef SP2;
+          template<typename ValidGhost, typename Shift>
+           struct Iterator {
+
+             NeboFDStencil<ResizePrep<ValidGhost, Shift>,
+                           StencilType,
+                           NeboPair<typename Operand::template Iterator<ValidGhost,
+                                                                        typename structured::Add<Shift,
+                                                                                                 SP1>::
+                                                                        result>::ResizePrepType,
+                                    typename Operand::template Iterator<ValidGhost,
+                                                                        typename structured::Add<Shift,
+                                                                                                 SP2>::
+                                                                        result>::ResizePrepType>,
+                           FieldType> typedef ResizePrepType;
+
+             NeboFDStencil<SeqWalk<ValidGhost, Shift>,
+                           StencilType,
+                           NeboPair<typename Operand::template Iterator<ValidGhost,
+                                                                        typename structured::Add<Shift,
+                                                                                                 SP1>::
+                                                                        result>::SeqWalkType,
+                                    typename Operand::template Iterator<ValidGhost,
+                                                                        typename structured::Add<Shift,
+                                                                                                 SP2>::
+                                                                        result>::SeqWalkType>,
+                           FieldType> typedef SeqWalkType;
+          };
+          typename structured::Invalidate<typename structured::Invalidate<typename Operand::
+                                                                          PossibleValidGhost,
+                                                                          SP1>::result,
+                                          SP2>::result typedef PossibleValidGhost;
+          NeboFDStencil(Operand const & op, double const lo, double const hi)
+          : operand_(op), lo_(lo), hi_(hi)
+          {};
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::SeqWalkType(operand().template init<ValidGhost,
+                                                                                               typename
+                                                                                               structured::
+                                                                                               Add<Shift,
+                                                                                                   SP1>::
+                                                                                               result>(),
+                                                                       operand().template init<ValidGhost,
+                                                                                               typename
+                                                                                               structured::
+                                                                                               Add<Shift,
+                                                                                                   SP2>::
+                                                                                               result>(),
+                                                                       lo(),
+                                                                       hi());
+           };
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::ResizePrepType(operand().template
+                                                                                    resize_prep<ValidGhost,
+                                                                                                typename
+                                                                                                structured::
+                                                                                                Add<Shift,
+                                                                                                    SP1>::
+                                                                                                result>(),
+                                                                          operand().template
+                                                                                    resize_prep<ValidGhost,
+                                                                                                typename
+                                                                                                structured::
+                                                                                                Add<Shift,
+                                                                                                    SP2>::
+                                                                                                result>(),
+                                                                          lo(),
+                                                                          hi());
+           };
+          inline Operand const & operand(void) const { return operand_; };
+          inline double lo(void) const { return lo_; };
+          inline double hi(void) const { return hi_; };
+
+         private:
+          const Operand operand_;
+          const double lo_;
+          const double hi_;
+      };
+
+      template<typename ValidGhost,
+               typename Shift,
+               typename StencilType,
+               typename Operand,
+               typename FieldType>
+       struct NeboFDStencil<ResizePrep<ValidGhost, Shift>, StencilType, Operand, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          NeboFDStencil<Resize<ValidGhost, Shift>,
+                        StencilType,
+                        NeboPair<typename Operand::FirstType::ResizeType,
+                                 typename Operand::SecondType::ResizeType>,
+                        FieldType> typedef ResizeType;
+          typename Operand::FirstType typedef Operand1;
+          typename Operand::SecondType typedef Operand2;
+          NeboFDStencil(Operand1 const & op1, Operand2 const & op2, double const lo, double const hi)
+          : operand1_(op1), operand2_(op2), lo_(lo), hi_(hi)
+          {};
+          inline ResizeType resize(MemoryWindow const & size,
+                                   structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+
+             return ResizeType(operand1().resize(size, split, location),
+                               operand2().resize(size, split, location),
+                               lo(),
+                               hi());
+          };
+          inline Operand1 const & operand1(void) const { return operand1_; };
+          inline Operand2 const & operand2(void) const { return operand2_; };
+          inline double lo(void) const { return lo_; };
+          inline double hi(void) const { return hi_; };
+
+         private:
+          const Operand1 operand1_;
+          const Operand2 operand2_;
+          const double lo_;
+          const double hi_;
+      };
+
+      template<typename ValidGhost,
+               typename Shift,
+               typename StencilType,
+               typename Operand,
+               typename FieldType>
+       struct NeboFDStencil<Resize<ValidGhost, Shift>, StencilType, Operand, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          NeboFDStencil<SeqWalk<ValidGhost, Shift>,
+                        StencilType,
+                        NeboPair<typename Operand::FirstType::SeqWalkType,
+                                 typename Operand::SecondType::SeqWalkType>,
+                        FieldType> typedef SeqWalkType;
+          typename Operand::FirstType typedef Operand1;
+          typename Operand::SecondType typedef Operand2;
+          NeboFDStencil(Operand1 const & op1, Operand2 const & op2, double const lo, double const hi)
+          : operand1_(op1), operand2_(op2), lo_(lo), hi_(hi)
+          {};
+          inline SeqWalkType init(void) const {
+             return SeqWalkType(operand1().init(), operand2().init(), lo(), hi());
+          };
+          inline Operand1 const & operand1(void) const { return operand1_; };
+          inline Operand2 const & operand2(void) const { return operand2_; };
+          inline double lo(void) const { return lo_; };
+          inline double hi(void) const { return hi_; };
+
+         private:
+          const Operand1 operand1_;
+          const Operand2 operand2_;
+          const double lo_;
+          const double hi_;
+      };
+
+      template<typename ValidGhost,
+               typename Shift,
+               typename StencilType,
+               typename Operand,
+               typename FieldType>
+       struct NeboFDStencil<SeqWalk<ValidGhost, Shift>, StencilType, Operand, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          typename Operand::FirstType typedef Operand1;
+          typename Operand::SecondType typedef Operand2;
+          NeboFDStencil(Operand1 const & op1, Operand2 const & op2, double const lo, double const hi)
+          : operand1_(op1), operand2_(op2), lo_(lo), hi_(hi)
+          {};
+          inline void next(void) { operand1_.next(); operand2_.next(); };
+          inline bool at_end(void) const { return operand1_.at_end() || operand2_.at_end(); };
+          inline bool has_length(void) const {
+             return operand1_.has_length() || operand2_.has_length();
+          };
+          inline typename FieldType::value_type eval(void) const {
+             return operand1_.eval() * lo_ + operand2_.eval() * hi_;
+          };
+
+         private:
+          Operand1 operand1_;
+          Operand2 operand2_;
+          const double lo_;
+          const double hi_;
+      };
+
       template<typename StencilType>
        struct Nebo1DStencilConstructor {
 
@@ -6710,6 +6912,45 @@
               typename OperandInfo<Operand>::StandardTerm typedef StandardTerm;
 
               return StandardTerm(StandardType(fexpr.expr(), coef1_, coef2_, coef3_, coef4_));
+           };
+      };
+
+      template<typename StencilType>
+       struct NeboFDStencilConstructor {
+
+         private:
+          const double lo_;
+          const double hi_;
+
+         public:
+          NeboFDStencilConstructor(const StencilType * const stencil)
+          : lo_(stencil->get_minus_coef()), hi_(stencil->get_plus_coef())
+          {};
+          typename StencilType::DestFieldType typedef FieldType;
+          typename StencilType::SrcFieldType typedef OpFieldType;
+          NeboConstField<Initial, OpFieldType> typedef OpType;
+          NeboFDStencil<Initial, StencilType, OpType, FieldType> typedef StandardType;
+          NeboExpression<StandardType, FieldType> typedef StandardTerm;
+          template<typename OperandType>
+           struct OperandInfo {
+
+             NeboFDStencil<Initial, StencilType, OperandType, FieldType> typedef StandardType;
+
+             NeboExpression<StandardType, FieldType> typedef StandardTerm;
+          };
+          inline StandardTerm operator()(typename StencilType::SrcFieldType const & f) const {
+             return StandardTerm(StandardType(OpType(f), lo_, hi_));
+          };
+          template<typename Operand>
+           inline typename OperandInfo<Operand>::StandardTerm operator()(NeboExpression<Operand,
+                                                                                        OpFieldType>
+                                                                         const & fexpr) const {
+
+              typename OperandInfo<Operand>::StandardType typedef StandardType;
+
+              typename OperandInfo<Operand>::StandardTerm typedef StandardTerm;
+
+              return StandardTerm(StandardType(fexpr.expr(), lo_, hi_));
            };
       };
 
