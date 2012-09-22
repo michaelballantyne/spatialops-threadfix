@@ -23,6 +23,7 @@
 #ifndef SpatialOps_MemoryWindow_h
 #define SpatialOps_MemoryWindow_h
 
+#include <cstddef>
 #include <vector>
 #include <iterator>
 # include <sstream>
