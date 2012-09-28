@@ -132,8 +132,10 @@ namespace structured{
 
       typedef IndexTriplet<0,0,0>                           Src1Offset;      ///< offset for the first source field
       typedef typename Add<Dir1Vec,Dir2Vec>::result::Negate Src1Extent;      ///< extent modification for the first source field
-      typedef typename Subtract<SFBCExtra,
-          DFBCExtra>::result::PositiveOrZero::Negate        Src1ExtentBC;    ///< amount to augment source1 extent by if a BC is present
+      typedef typename Subtract<
+          SFBCExtra,
+          typename Add<Dir1Vec,Dir2Vec>::result
+          >::result::PositiveOrZero::Negate                 Src1ExtentBC;    ///< amount to augment source1 extent by if a BC is present
 
       typedef typename Add<Dir1Vec,Src1Offset>::result      Src2Offset;      ///< offset for the second source field
       typedef Src1Extent                                    Src2Extent;      ///< extent modification for the second source field
@@ -141,8 +143,7 @@ namespace structured{
 
       typedef typename Add<Dir2Vec,Src1Offset>::result      Src3Offset;      ///< offset for the third source field
       typedef Src1Extent                                    Src3Extent;      ///< extent modification for the third source field
-      typedef typename Subtract<SFBCExtra,
-          DFBCExtra>::result::PositiveOrZero::Negate        Src3ExtentBC;    ///< amount to augment source3 extent by if a BC is present
+      typedef Src1ExtentBC                                  Src3ExtentBC;    ///< amount to augment source3 extent by if a BC is present
 
       typedef typename Add<Dir1Vec,Src3Offset>::result      Src4Offset;      ///< offset for the fourth source field
       typedef Src1Extent                                    Src4Extent;      ///< extent modification for the fourth source field
@@ -161,10 +162,14 @@ namespace structured{
                 typename Multiply<Dir2Vec,DFO>::result
                 >::result
               >::result::PositiveOrZero
-          >::result                                          DestOffset;     ///< the offset for the destination field
+          >::result                                         DestOffset;      ///< the offset for the destination field
       typedef Src1Extent                                    DestExtent;      ///< the extent for the destination field
-      typedef typename Subtract<DFBCExtra,
-          SFBCExtra>::result::PositiveOrZero::Negate        DestExtentBC;    ///< amount to augment destination extents by if a BC is present
+      typedef typename Subtract<
+          typename Multiply<DFO,DFBCExtra>::result,
+          typename Multiply< typename Add<Dir1Vec,Dir2Vec>::result,
+                             typename Multiply<SFO,SFBCExtra>::result
+                             >::result
+          >::result                                         DestExtentBC;
 
     };
 
