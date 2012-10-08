@@ -65,7 +65,6 @@ if( DEFINED Boost_DIR )
 endif( DEFINED Boost_DIR )
 
 set(BOOST_MIN_VERSION "1.44.0" )
-set(Boost_USE_STATIC_LIBS ON)
 find_package( Boost ${BOOST_MIN_VERSION} REQUIRED COMPONENTS ${boost_comps} )
 if( NOT Boost_FOUND )
   message( FATAL_ERROR "Boost was not found.  Try setting Boost_DIR to the path where boost is installed and try again" )
