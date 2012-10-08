@@ -12,14 +12,6 @@ option( ENABLE_CUDA   "Build Spatial Ops with CUDA support" OFF )
 
 set( NTHREADS 1 CACHE STRING "Number of threads to use if ENABLE_THREADS is ON" )
 
-if( ENABLE_THREADS )
-  set( TILL_THREADS ON )
-  set( FIELD_EXPRESSION_THREADS ON )
-  set( STENCIL_THREADS ON )
-else()
-  set( NTHREADS 1 )  
-endif()
-
 # default to release builds
 if( NOT CMAKE_BUILD_TYPE )
   set( CMAKE_BUILD_TYPE "Release" CACHE STRING
@@ -51,7 +43,15 @@ set( SpatialOps_CONFIG_INSTALL
 set( boost_comps "program_options" )
 
 if( ENABLE_THREADS )
-   set( boost_comps ${boost_comps} "thread;system" )
+  set( TILL_THREADS ON )
+  set( FIELD_EXPRESSION_THREADS ON )
+  set( STENCIL_THREADS ON )
+  find_package( Threads REQUIRED )
+  set( TPL_LIBRARIES ${TPL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} )
+  set( boost_comps ${boost_comps} "thread;system" )
+  message( STATUS "Thread libs: " ${CMAKE_THREAD_LIBS_INIT} )
+else()
+  set( NTHREADS 1 )  
 endif( ENABLE_THREADS )
 
 set(Boost_USE_MULTITHREAD ON)
