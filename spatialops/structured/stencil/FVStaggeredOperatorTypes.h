@@ -120,6 +120,9 @@ namespace structured{
   OP_BUILDER( Stencil2, Interpolant, VOL, FaceTypes<VOL>::XFace )       \
   OP_BUILDER( Stencil2, Interpolant, VOL, FaceTypes<VOL>::YFace )       \
   OP_BUILDER( Stencil2, Interpolant, VOL, FaceTypes<VOL>::ZFace )       \
+  OP_BUILDER( Stencil2, Interpolant, FaceTypes<VOL>::XFace, VOL )       \
+  OP_BUILDER( Stencil2, Interpolant, FaceTypes<VOL>::YFace, VOL )       \
+  OP_BUILDER( Stencil2, Interpolant, FaceTypes<VOL>::ZFace, VOL )       \
   OP_BUILDER( Stencil2, Gradient,    VOL, FaceTypes<VOL>::XFace )       \
   OP_BUILDER( Stencil2, Gradient,    VOL, FaceTypes<VOL>::YFace )       \
   OP_BUILDER( Stencil2, Gradient,    VOL, FaceTypes<VOL>::ZFace )       \
@@ -179,12 +182,6 @@ namespace structured{
 
   OP_BUILDER( Stencil2, Interpolant, ZVolField, SVolField )
   OP_BUILDER( Stencil2, Gradient,    ZVolField, SVolField )
-
-  OP_BUILDER( Stencil2, Interpolant, SSurfXField, SVolField ) // ODT requires this.
-
-  OP_BUILDER( Stencil2, Interpolant, XSurfXField, XVolField )
-  OP_BUILDER( Stencil2, Interpolant, YSurfYField, YVolField )
-  OP_BUILDER( Stencil2, Interpolant, ZSurfZField, ZVolField )
 
 
   OP_BUILDER( NullStencil, Interpolant, XVolField, SSurfXField )

@@ -99,7 +99,13 @@ namespace structured{
     opdb.register_new_operator( new OperatorTypeBuilder<Gradient   ,ZVolField,  SVolField>::type( -1.0/dz, 1.0/dz ) );
 
     opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,XSurfXField,XVolField>::type( 0.5, 0.5 ) );
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,XSurfYField,XVolField>::type( 0.5, 0.5 ) );
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,XSurfZField,XVolField>::type( 0.5, 0.5 ) );
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,YSurfXField,YVolField>::type( 0.5, 0.5 ) );
     opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,YSurfYField,YVolField>::type( 0.5, 0.5 ) );
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,YSurfZField,YVolField>::type( 0.5, 0.5 ) );
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,ZSurfXField,ZVolField>::type( 0.5, 0.5 ) );
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,ZSurfYField,ZVolField>::type( 0.5, 0.5 ) );
     opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,ZSurfZField,ZVolField>::type( 0.5, 0.5 ) );
 
     //___________________________________________________________________
