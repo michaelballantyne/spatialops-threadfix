@@ -695,6 +695,11 @@
           (smt-list-chunk blank-line-chunk
                           (build-unary-logical-function-struct name internal-name)
                           (build-unary-interface name external-name NBE-chunk abs-SubBoolExpr 'SubBoolExpr)))]
+       [build-unary-to-logical-function
+        (lambda (name internal-name external-name)
+          (smt-list-chunk blank-line-chunk
+                          (build-unary-logical-function-struct name internal-name)
+                          (build-unary-interface name external-name NBE-chunk abs-SubExpr 'SubExpr)))]
        [build-assignment
         (lambda (name tpl-pmtrs rhs-type body return-expr)
           (tpl-def (list tpl-pmtrs
@@ -737,7 +742,8 @@
                          'spatialops/structured/IndexTriplet.h
                          'spatialops/structured/IndexHexlet.h
                          'spatialops/structured/SpatialField.h
-                         'cmath)
+                         'cmath
+                         'math.h)
       (comment-env-chunk (pp-include-chunk 'iostream))
       (pp-conditional-ifdef-chunk
        'FIELD_EXPRESSION_THREADS
@@ -1175,6 +1181,9 @@
       (build-unary-logical-function 'NotOp
                                     "!"
                                     (c 'operator s "!"))
+      (build-unary-to-logical-function 'IsNanFcn
+                                       (scope 'std 'isnan)
+                                       'isnan)
       (m 'BUILD_BINARY_FUNCTION
          (list 'OBJECT_NAME
                'INTERNAL_NAME

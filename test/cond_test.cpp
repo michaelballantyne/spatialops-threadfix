@@ -239,6 +239,11 @@ int main()
                  (d > 0, a + 1)
                  (1.1);
 
+  //Cond<nebo> isNan test case:
+  c <<= nebo_cond(isnan(sqrt(a)), 1.1)
+                 (std::isnan(sqrt(-1)), 0.0)
+                 (1.0);
+
   print(c);
   
   return 0;

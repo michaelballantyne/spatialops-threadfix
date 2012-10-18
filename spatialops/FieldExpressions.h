@@ -29,6 +29,7 @@
 #  include <spatialops/structured/IndexHexlet.h>
 #  include <spatialops/structured/SpatialField.h>
 #  include <cmath>
+#  include <math.h>
 
    /*#include <iostream> */
 
@@ -4507,6 +4508,126 @@
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(Type(arg.expr())));
+       };
+
+      template<typename CurrentMode, typename Operand, typename FieldType>
+       struct IsNanFcn;
+
+      template<typename Operand, typename FieldType>
+       struct IsNanFcn<Initial, Operand, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          template<typename ValidGhost, typename Shift>
+           struct Iterator {
+
+             IsNanFcn<ResizePrep<ValidGhost, Shift>,
+                      typename Operand::template Iterator<ValidGhost, Shift>::ResizePrepType,
+                      FieldType> typedef ResizePrepType;
+
+             IsNanFcn<SeqWalk<ValidGhost, Shift>,
+                      typename Operand::template Iterator<ValidGhost, Shift>::SeqWalkType,
+                      FieldType> typedef SeqWalkType;
+          };
+          typename Operand::PossibleValidGhost typedef PossibleValidGhost;
+          IsNanFcn(Operand const & operand)
+          : operand_(operand)
+          {};
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::SeqWalkType(operand().template init<ValidGhost,
+                                                                                               Shift>());
+           };
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::ResizePrepType(operand().template
+                                                                                    resize_prep<ValidGhost,
+                                                                                                Shift>());
+           };
+          inline Operand const & operand(void) const { return operand_; };
+
+         private:
+          Operand const operand_;
+      };
+
+      template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>
+       struct IsNanFcn<ResizePrep<ValidGhost, Shift>, Operand, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          IsNanFcn<Resize<ValidGhost, Shift>, typename Operand::ResizeType, FieldType> typedef
+          ResizeType;
+          IsNanFcn(Operand const & operand)
+          : operand_(operand)
+          {};
+          inline ResizeType resize(MemoryWindow const & size) const {
+             return ResizeType(operand().resize(size));
+          };
+          inline Operand const & operand(void) const { return operand_; };
+
+         private:
+          Operand const operand_;
+      };
+
+      template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>
+       struct IsNanFcn<Resize<ValidGhost, Shift>, Operand, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          IsNanFcn<SeqWalk<ValidGhost, Shift>, typename Operand::SeqWalkType, FieldType> typedef
+          SeqWalkType;
+          IsNanFcn(Operand const & operand)
+          : operand_(operand)
+          {};
+          inline SeqWalkType init(void) const { return SeqWalkType(operand().init()); };
+          inline Operand const & operand(void) const { return operand_; };
+
+         private:
+          Operand const operand_;
+      };
+
+      template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>
+       struct IsNanFcn<SeqWalk<ValidGhost, Shift>, Operand, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          bool typedef EvalReturnType;
+          IsNanFcn(Operand const & operand)
+          : operand_(operand)
+          {};
+          inline void next(void) { operand_.next(); };
+          inline bool at_end(void) const { return (operand_.at_end()); };
+          inline bool has_length(void) const { return (operand_.has_length()); };
+          inline EvalReturnType eval(void) const { return std::isnan(operand_.eval()); };
+
+         private:
+          Operand operand_;
+      };
+
+      /* SubExpr */
+      template<typename SubExpr>
+       inline NeboBooleanExpression<IsNanFcn<Initial,
+                                             typename Standardize<SubExpr,
+                                                                  typename SubExpr::field_type>::
+                                             StandardType,
+                                             typename SubExpr::field_type>,
+                                    typename SubExpr::field_type> isnan(SubExpr const & arg) {
+
+          typename SubExpr::field_type typedef FieldType;
+
+          typename Standardize<SubExpr, typename SubExpr::field_type>::StandardType typedef Type;
+
+          IsNanFcn<Initial, Type, FieldType> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(Type(Standardize<SubExpr, FieldType>::standardType(arg))));
        };
 
 #     define BUILD_BINARY_FUNCTION(OBJECT_NAME, INTERNAL_NAME, EXTERNAL_NAME)                      \
