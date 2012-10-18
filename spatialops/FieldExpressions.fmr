@@ -688,12 +688,12 @@
        [build-binary-logical-operator
         (lambda (name internal-name external-name)
           (smt-list-chunk blank-line-chunk
-                          (build-binary-operator-struct name internal-name)
+                          (build-logical-operator-struct name internal-name)
                           (build-binary-interface name external-name NBE-chunk abs-SubBoolExpr 'SubBoolExpr abs-Boolean 'Boolean)))]
        [build-unary-logical-function
         (lambda (name internal-name external-name)
           (smt-list-chunk blank-line-chunk
-                          (build-unary-function-struct name internal-name)
+                          (build-unary-logical-function-struct name internal-name)
                           (build-unary-interface name external-name NBE-chunk abs-SubBoolExpr 'SubBoolExpr)))]
        [build-assignment
         (lambda (name tpl-pmtrs rhs-type body return-expr)

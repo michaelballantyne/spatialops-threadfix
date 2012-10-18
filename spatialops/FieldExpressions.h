@@ -4098,7 +4098,7 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          typename FieldType::value_type typedef EvalReturnType;
+          bool typedef EvalReturnType;
           AndOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
@@ -4304,7 +4304,7 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          typename FieldType::value_type typedef EvalReturnType;
+          bool typedef EvalReturnType;
           OrOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
@@ -4477,7 +4477,7 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          typename FieldType::value_type typedef EvalReturnType;
+          bool typedef EvalReturnType;
           NotOp(Operand const & operand)
           : operand_(operand)
           {};
