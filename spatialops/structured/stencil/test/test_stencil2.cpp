@@ -232,7 +232,15 @@ int main( int iarg, char* carg[] )
     if( npts[2]>1 )             status( run_convergence< Interpolant, ZVolField,   SVolField,   ZDIR >( npts, bcplus, length, 2.0 ), "InterpZVolSVol" );
 
     if( npts[0]>1 )             status( run_convergence< Interpolant, XSurfXField, XVolField,   XDIR >( npts, bcplus, length, 2.0 ), "InterpXSXXVol" );
+    if( npts[1]>1 )             status( run_convergence< Interpolant, XSurfYField, XVolField,   YDIR >( npts, bcplus, length, 2.0 ), "InterpXSYXVol" );
+    if( npts[2]>1 )             status( run_convergence< Interpolant, XSurfZField, XVolField,   ZDIR >( npts, bcplus, length, 2.0 ), "InterpXSZXVol" );
+
+    if( npts[0]>1 )             status( run_convergence< Interpolant, YSurfXField, YVolField,   XDIR >( npts, bcplus, length, 2.0 ), "InterpYSXYVol" );
     if( npts[1]>1 )             status( run_convergence< Interpolant, YSurfYField, YVolField,   YDIR >( npts, bcplus, length, 2.0 ), "InterpYSYYVol" );
+    if( npts[2]>1 )             status( run_convergence< Interpolant, YSurfZField, YVolField,   ZDIR >( npts, bcplus, length, 2.0 ), "InterpYSZYVol" );
+
+    if( npts[0]>1 )             status( run_convergence< Interpolant, ZSurfXField, ZVolField,   XDIR >( npts, bcplus, length, 2.0 ), "InterpZSXZVol" );
+    if( npts[1]>1 )             status( run_convergence< Interpolant, ZSurfYField, ZVolField,   YDIR >( npts, bcplus, length, 2.0 ), "InterpZSYZVol" );
     if( npts[2]>1 )             status( run_convergence< Interpolant, ZSurfZField, ZVolField,   ZDIR >( npts, bcplus, length, 2.0 ), "InterpZSZZVol" );
 
     if( npts[0]>1 )             status( run_convergence< InterpolantX, SVolField,  SVolField,   XDIR >( npts, bcplus, length, 2.0 ), "Interp SVol->SVol (X)" );
