@@ -274,7 +274,7 @@
                                                                double const coef4) {
 
 #            ifdef STENCIL_THREADS
-                (is_nebo_thread_parallel() ? stencil_4_apply_to_field_thread_parallel_execute<OperatorType,
+                (is_thread_parallel() ? stencil_4_apply_to_field_thread_parallel_execute<OperatorType,
                                                                                               SrcType,
                                                                                               DestType>(src,
                                                                                                         dest,
@@ -282,7 +282,7 @@
                                                                                                         coef2,
                                                                                                         coef3,
                                                                                                         coef4,
-                                                                                                        get_nebo_soft_thread_count())
+                                                                                                        get_soft_thread_count())
                  : stencil_4_apply_to_field_sequential_execute<OperatorType, SrcType, DestType>(src,
                                                                                                 dest,
                                                                                                 coef1,

@@ -34,6 +34,7 @@
    /*#include <iostream> */
 
 #  ifdef FIELD_EXPRESSION_THREADS
+#     include <spatialops/SpatialOpsTools.h>
 #     include <vector>
 #     include <boost/bind.hpp>
 #     include <spatialops/ThreadPool.h>
@@ -44,20 +45,6 @@
    /* FIELD_EXPRESSION_THREADS */
 
    namespace SpatialOps {
-
-#     ifdef FIELD_EXPRESSION_THREADS
-         /* used within nebo to determine if thread parallelism should be used */
-         bool is_nebo_thread_parallel(void);
-         /* used within nebo to get current soft (active) thread count */
-         int get_nebo_soft_thread_count(void);
-         /* used by tests to change current soft (active) thread count at runtime */
-         int set_nebo_soft_thread_count(int thread_count);
-         /* used within nebo to get current hard (max/total) thread count */
-         int get_nebo_hard_thread_count(void);
-         /* used by tests to change current hard (max/total) thread count at runtime */
-         int set_nebo_hard_thread_count(int thread_count);
-#     endif
-      /* FIELD_EXPRESSION_THREADS */;
 
       /* Meta-programming compiler flags */
       struct UseWholeIterator;
@@ -6400,12 +6387,12 @@
 
           return
 #                ifdef FIELD_EXPRESSION_THREADS
-                    (is_nebo_thread_parallel() ? nebo_assignment_thread_parallel_execute<ValidGhost,
+                    (is_thread_parallel() ? nebo_assignment_thread_parallel_execute<ValidGhost,
                                                                                          InitialShift,
                                                                                          ExprType,
                                                                                          FieldType>(initial_lhs,
                                                                                                     initial_rhs,
-                                                                                                    get_nebo_soft_thread_count())
+                                                                                                    get_soft_thread_count())
                      : nebo_assignment_sequential_execute<ValidGhost,
                                                           InitialShift,
                                                           ExprType,
