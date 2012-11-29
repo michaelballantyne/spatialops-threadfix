@@ -49,6 +49,7 @@
        [sec-def section-define-chunk]
        [cons-asgn constructor-assignment-chunk]
        [scope scope-resolution-operator-chunk]
+       [enum (lambda enums (b s 'enum (arg-list-chunk open-crbr-chunk comma-chunk close-crbr-chunk enums)))]
        [report-VG-chunk 'PossibleValidGhost]
        [VG-chunk 'ValidGhost]
        [SH-chunk 'Shift]
@@ -69,6 +70,14 @@
        [Cond-chunk 'NeboCond]
        [CT-chunk 'ClauseType]
        [IntVec (scope 'structured 'IntVec)]
+       [NSP 'NeboStencilPoint]
+       [NSPL 'NeboStencilPointList]
+       [NSCL 'NeboStencilCoefList]
+       [BSPL 'BuildNeboStencilPointList]
+       [MNSPC 'MultipledNeboStencilPointConstructor]
+       [SNSPC 'SummedNeboStencilPointsConstructor]
+       [NSPC 'NeboStencilPointConstructor]
+       [NSC 'NeboStencilConstructor]
        [pp-header-file-chunk-with-license
         (lambda (file-name file-setup . chunks)
           (c (b new-line-chunk
@@ -2226,6 +2235,599 @@
                    (typedef 'Second 'SecondType)
                    (typedef 'Third 'ThirdType)
                    (typedef 'Fourth 'FourthType))
+      (build-struct NSP
+                    #true
+                    (list (tpl-pmtr 'Point)
+                          (tpl-pmtr 'Arg))
+                    (list 'Point 'Arg)
+                    (bs-Initial (list 'Point
+                                      (tpl-pmtr (scope 'Arg 'ResizePrepType)))
+                                (list 'Point
+                                      (tpl-pmtr (scope 'Arg 'SeqWalkType)))
+                                null
+                                (tpl-pmtr (scope (scope 'structured
+                                                        (tpl-use 'Invalidate
+                                                                 (tpl-pmtr (scope 'Arg report-VG-chunk))
+                                                                 'Point))
+                                                 'result))
+                                (bm-constructor (b s 'Arg const-chunk "&" 'a)
+                                                (cons-asgn 'arg_ 'a)
+                                                null)
+                                (mfc (fc 'arg)
+                                     (tpl-fcn-use 'init VG-chunk SH-chunk))
+                                (mfc (fc 'arg)
+                                     (tpl-fcn-use 'resize_prep VG-chunk))
+                                (r-fcn-def (constize (fcn-dcl 'arg
+                                                              (b s 'Arg const-chunk "&")))
+                                           null
+                                           'arg_)
+                                (b s 'Arg const-chunk 'arg_))
+                    (bs-ResizePrep (list 'Point
+                                         (tpl-pmtr (scope 'Arg 'ResizeType)))
+                                   null
+                                   (bm-constructor (b s 'Arg const-chunk "&" 'a)
+                                                   (cons-asgn 'arg_ 'a)
+                                                   null)
+                                   (mfc (fc 'arg)
+                                        'resize
+                                        'split
+                                        'location)
+                                   (r-fcn-def (constize (fcn-dcl 'arg
+                                                                 (b s 'Arg const-chunk "&")))
+                                              null
+                                              'arg_)
+                                   (b s 'Arg const-chunk 'arg_))
+                    (bs-Resize (list 'Point
+                                     (tpl-pmtr (scope 'Arg 'SeqWalkType)))
+                               null
+                               (bm-constructor (b s 'Arg const-chunk "&" 'a)
+                                               (cons-asgn 'arg_ 'a)
+                                               null)
+                               (mfc (fc 'arg)
+                                    (tpl-fcn-use 'init (tpl-pmtr (scope (scope 'structured
+                                                                               (tpl-use 'Add SH-chunk 'Point))
+                                                                        'result))))
+                               (r-fcn-def (constize (fcn-dcl 'arg
+                                                             (b s 'Arg const-chunk "&")))
+                                          null
+                                          'arg_)
+                               (b s 'Arg const-chunk 'arg_))
+                    (bs-SeqWalk (typedef (scope (tpl-pmtr FT-chunk)
+                                                'value_type)
+                                         'AtomicType)
+                                (bm-constructor (b s 'Arg const-chunk "&" 'a)
+                                                (cons-asgn 'arg_ 'a)
+                                                null)
+                                (mfc 'arg_ 'next)
+                                (mfc 'arg_ 'at_end)
+                                (mfc 'arg_ 'has_length)
+                                (r-fcn-def (constize (fcn-dcl 'eval
+                                                              (b s 'AtomicType const-chunk)))
+                                           null
+                                           (mfc 'arg_ 'eval))
+                                (c 'Arg s 'arg_)))
+      (tpl-srt-def NSCL
+                   (c 'int s 'Length)
+                   null
+                   (sec-def public-chunk
+                            (constructor-chunk NSCL
+                                               (list (b s (tpl-use NSCL (c 'Length " - 1")) const-chunk "&" 'l)
+                                                     (b s 'double 'c))
+                                               (list (cons-asgn 'list_ 'l)
+                                                     (cons-asgn 'coef_ 'c))
+                                               null)
+                            (r-fcn-def (constize (fcn-dcl (c 'operator (p))
+                                                          (b s (tpl-use NSCL (c 'Length " + 1")) const-chunk)
+                                                          (b s 'double 'c)))
+                                       null
+                                       (fc (tpl-use NSCL (c 'Length " + 1"))
+                                           '*this
+                                           'c))
+                            (r-fcn-def (constize (fcn-dcl 'coef
+                                                          (b s 'double const-chunk)))
+                                       null
+                                       'coef_)
+                            (r-fcn-def (constize (fcn-dcl 'list
+                                                          (b s (tpl-use NSCL (c 'Length " - 1")) const-chunk)))
+                                       null
+                                       'list_)
+                            (tpl-def (c 'int s 'L)
+                                     (r-fcn-def (fcn-dcl 'internal_reverse
+                                                         (b s (tpl-use NSCL (c 'L " + " 'Length)) const-chunk)
+                                                         (b s (tpl-use NSCL 'L) const-chunk 'l))
+                                                null
+                                                (mfc 'list_
+                                                     'internal_reverse
+                                                     (fc (tpl-use NSCL (c 'Length " + 1"))
+                                                         'l
+                                                         'coef_))))
+                            (r-fcn-def (fcn-dcl 'reverse
+                                                (b s (tpl-use NSCL 'Length) const-chunk))
+                                       null
+                                       (mfc 'list_
+                                            'internal_reverse
+                                            (fc (tpl-use NSCL "1")
+                                                'coef_))))
+                   (sec-def private-chunk
+                            (b s (tpl-use NSCL (c 'Length " - 1")) const-chunk 'list_)
+                            (b s 'double const-chunk 'coef_)))
+      (tpl-srt-def NSCL
+                   null
+                   "1"
+                   (sec-def public-chunk
+                            (constructor-chunk NSCL
+                                               (b s 'double 'c)
+                                               (cons-asgn 'coef_ 'c)
+                                               null)
+                            (r-fcn-def (constize (fcn-dcl (c 'operator (p))
+                                                          (b s (tpl-use NSCL "2") const-chunk)
+                                                          (b s 'double 'c)))
+                                       null
+                                       (fc (tpl-use NSCL "2")
+                                           '*this
+                                           'c))
+                            (r-fcn-def (constize (fcn-dcl 'coef
+                                                          (b s 'double const-chunk)))
+                                       null
+                                       'coef_)
+                            (tpl-def (c 'int s 'L)
+                                     (r-fcn-def (fcn-dcl 'internal_reverse
+                                                         (b s (tpl-use NSCL (c 'L " + 1")) const-chunk)
+                                                         (b s (tpl-use NSCL 'L) const-chunk 'l))
+                                                null
+                                                (fc (tpl-use NSCL (c 'L " + 1"))
+                                                    'l
+                                                    'coef_)))
+                            (r-fcn-def (fcn-dcl 'reverse
+                                                (b s (tpl-use NSCL "1") const-chunk))
+                                       null
+                                       '*this))
+                   (sec-def private-chunk
+                            (b s 'double const-chunk 'coef_)))
+      (r-fcn-def (fcn-dcl 'build_coef_list
+                          (b s (tpl-use NSCL "1") const-chunk)
+                          (b s 'double const-chunk 'c))
+                 null
+                 (fc (tpl-use NSCL "1")
+                     'c))
+      (tpl-srt-def NSPL
+                   (list (tpl-pmtr 'PointType)
+                         (tpl-pmtr 'ListType))
+                   null
+                   (sec-def public-chunk
+                            (enum (b s 'length "=" "1" "+" (scope 'ListType 'length)))
+                            (typedef 'PointType 'Point)
+                            (typedef 'ListType 'List)
+                            (typedef (tpl-use NSPL 'Point 'List)
+                                     'MyType)
+                            (tpl-srt-def 'AddPoint
+                                         (tpl-pmtr 'NewPoint)
+                                         null
+                                         (typedef (tpl-use NSPL 'NewPoint 'MyType)
+                                                  'Result))
+                            (tpl-srt-def 'ReverseInterior
+                                         (tpl-pmtr 'BegunReverse)
+                                         null
+                                         (typedef (tpl-use NSPL 'Point 'BegunReverse)
+                                                  'NewReverse)
+                                         (typedef (tpl-pmtr (scope (scope 'ListType (sub-tpl-use (tpl-use 'ReverseInterior 'NewReverse)))
+                                                                   'Result))
+                                                  'Result))
+                            (typedef (tpl-pmtr (scope (tpl-use 'ReverseInterior Nil-chunk)
+                                                      'Result))
+                                     'Reverse)
+                            (tpl-srt-def 'ConstructExpr
+                                         (list (tpl-pmtr 'ArgPreSeqWalk)
+                                               (tpl-pmtr 'SrcType)
+                                               (tpl-pmtr 'DestType))
+                                         null
+                                         (typedef (tpl-use NS-chunk 'SeqWalk 'DestType)
+                                                  'Coef)
+                                         (typedef (tpl-pmtr (scope 'ArgPreSeqWalk 'SeqWalkType))
+                                                  'Arg)
+                                         (typedef (tpl-use 'ProdOp 'SeqWalk 'Arg 'Coef 'DestType)
+                                                  'MultiplyType)
+                                         (typedef (tpl-pmtr (scope (scope 'List (sub-tpl-use (tpl-use 'ConstructExpr 'ArgPreSeqWalk 'SrcType 'DestType)))
+                                                                   'Result))
+                                                  'LaterPointType)
+                                         (typedef (tpl-use 'SumOp 'SeqWalk 'MultiplyType 'LaterPointType 'DestType)
+                                                  'Result)
+                                         (tpl-def (list (tpl-pmtr VG-chunk)
+                                                        (tpl-pmtr SH-chunk))
+                                                  (r-fcn-def (s-fcn-dcl 'seq_construct
+                                                                        (b s 'Result const-chunk)
+                                                                        (b s 'ArgPreSeqWalk const-chunk "&" 'arg)
+                                                                        (b s (tpl-use NSCL 'length) const-chunk "&" 'coefs))
+                                                             null
+                                                             (fc 'Result (fc 'MultiplyType
+                                                                             (mfc 'arg (tpl-use 'init VG-chunk SH-chunk))
+                                                                             
+                                                               
+)))
+      ;???
+      (tpl-srt-def NSPL
+                   (tpl-pmtr 'PointType)
+                   (list 'PointType Nil-chunk)
+                   (sec-def public-chunk
+                            (enum (b s 'length "=" "1"))
+                            (typedef 'PointType 'Point)
+                            (typedef Nil-chunk 'List)
+                            (typedef (tpl-use NSPL 'Point 'List)
+                                     'MyType)
+                            (tpl-srt-def 'AddPoint
+                                         (tpl-pmtr 'NewPoint)
+                                         null
+                                         (typedef (tpl-use NSPL 'NewPoint 'MyType)
+                                                  'Result))
+                            (tpl-srt-def 'ReverseInterior
+                                         (tpl-pmtr 'BegunReverse)
+                                         null
+                                         (typedef (tpl-use NSPL 'Point 'BegunReverse)
+                                                  'Result))
+                            (typedef (tpl-pmtr (scope (tpl-use 'ReverseInterior Nil-chunk)
+                                                      'Result))
+                                     'Reverse)
+                            (tpl-srt-def 'ConstructExpr
+                                         (list (tpl-pmtr 'ArgPreSeqWalk)
+                                               (tpl-pmtr 'SrcType)
+                                               (tpl-pmtr 'DestType))
+                                         null
+                                         (typedef (tpl-use NS-chunk 'SeqWalk 'DestType)
+                                                  'Coef)
+                                         (typedef (tpl-pmtr (scope 'ArgPreSeqWalk 'SeqWalkType))
+                                                  'Arg)
+                                         (typedef (tpl-use 'ProdOp 'SeqWalk 'Arg 'Coef 'DestType)
+                                                  'Result))))
+      (tpl-srt-def 'BuildStencilPointList
+                   (tpl-pmtr 'First)
+                   null
+                   (typedef (tpl-use NSPL 'First Nil-chunk)
+                            'Result))
+      (tpl-srt-def 'nebo_stencil_expression_constructor
+                   (list (tpl-pmtr 'Points)
+                         (tpl-pmtr 'Arg)
+                         (tpl-pmtr 'Shift)
+                         (tpl-pmtr 'SrcType)
+                         (tpl-pmtr 'DestType))
+                   null
+                   (r-fcn-def (fcn-dcl 'construct
+                                       '???)
+                              null
+                              '???)
+                   'body)
+      (tpl-srt-def 'nebo_stencil_expression_constructor
+                   (list (tpl-pmtr 'Point)
+                         (tpl-pmtr 'Arg)
+                         (tpl-pmtr 'Shift)
+                         (tpl-pmtr 'SrcType)
+                         (tpl-pmtr 'DestType))
+                   (list (tpl-use NSPL 'Point Nil-chunk)
+                         'Arg
+                         'Shift
+                         'SrcType
+                         'DestType)
+                   'body)
+      (tpl-def (list (tpl-pmtr 'Points)
+                     (tpl-pmtr 'Arg)
+                     (tpl-pmtr 'Shift)
+                     (tpl-pmtr 'SrcType)
+                     (tpl-pmtr 'DestType))
+               (r-fcn-def (fcn-dcl 'construct_internal_nebo_stencil
+                                   'double
+                                   (b s 'Arg const-chunk "&" 'arg)
+                                   (b s (tpl-use NSCL (scope 'Points 'length)) const-chunk "&" 'coefs))
+                          null
+                          "0"))
+      
+      ;???
+      ;builds MultOp< StencilPoint< Point, Arg, SrcType>, Scalar< DestType >, DestType >
+      ;(tpl-srt-def MNSPC
+      ;             (list (tpl-pmtr 'Point)
+      ;                   (tpl-pmtr 'Arg)
+      ;                   (tpl-pmtr 'SrcType)
+      ;                   (tpl-pmtr 'DestType))
+      ;             null
+      ;             (sec-def public-chunk
+      ;                      (typedef (tpl-use 'Standardize 'Arg 'SrcType)
+      ;                               'Standard)
+      ;                      (typedef (tpl-pmtr (scope 'Standard 'StandardType))
+      ;                               'StandardArg)
+      ;                      (typedef (tpl-use NSP 'Initial 'Point 'StandardArg 'SrcType)
+      ;                               'StencilPoint)
+      ;                      (typedef (tpl-use NS-chunk 'Initial 'DestType)
+      ;                               'ScalarType)
+      ;                      (typedef (tpl-use 'ProdOp 'Initial 'Point 'ScalarType 'DestType)
+      ;                               'ReturnType)
+      ;                      (typedef (tpl-use NE-chunk 'ReturnType 'DestType)
+      ;                               'ReturnTerm)
+      ;                      (r-fcn-def (s-fcn-dcl 'construct
+      ;                                            (b s 'ReturnTerm const-chunk)
+      ;                                            (b s 'Arg const-chunk "&" 'arg)
+      ;                                            (b s 'double const-chunk "&" 'coef))
+      ;                                 null
+      ;                                 (fc 'ReturnTerm
+      ;                                     (fc 'ReturnType
+      ;                                         (fc 'StencilPoint
+      ;                                             (fc (scope 'Standard 'standardType)
+      ;                                                 'arg))
+      ;                                         (fc 'ScalarType 'coef))))))
+      ;builds arg * coef
+      ;(tpl-srt-def MNSPC
+      ;             (list (tpl-pmtr 'Point)
+      ;                   (tpl-pmtr 'SrcType)
+      ;                   (tpl-pmtr 'DestType))
+      ;             (list 'Point
+      ;                   'double
+      ;                   'SrcType
+      ;                   'DestType)
+      ;             (sec-def public-chunk
+      ;                      (typedef 'double
+      ;                               'ReturnTerm)
+      ;                      (r-fcn-def (s-fcn-dcl 'construct
+      ;                                            (b s 'ReturnTerm)
+      ;                                            (b s 'double const-chunk "&" 'arg)
+      ;                                            (b s 'double const-chunk "&" 'coef))
+      ;                                 null
+      ;                                 (b s 'arg "*" 'coef))))
+      ;builds SumOp< NewPoint, Points >
+      ;(tpl-srt-def SNSPC
+      ;             (list (tpl-pmtr 'Point)
+      ;                   (tpl-pmtr 'Points)
+      ;                   (tpl-pmtr 'Arg)
+      ;                   (tpl-pmtr 'SrcType)
+      ;                   (tpl-pmtr 'DestType))
+      ;             null
+      ;             (sec-def public-chunk
+      ;                      (typedef (tpl-use 'Standardize 'Arg 'SrcType)
+      ;                               'Standard)
+      ;                      (typedef (tpl-pmtr (scope 'Standard 'StandardType))
+      ;                               'StandardArg)
+      ;                      (typedef (tpl-pmtr (scope (tpl-use MNSPC 'Point 'Arg 'SrcType 'DestType)
+      ;                                                'ReturnType))
+      ;                               'PointType)
+      ;                      (typedef (tpl-pmtr (scope (tpl-use MNSPC 'Point 'Arg 'SrcType 'DestType)
+      ;                                                'ReturnTerm))
+      ;                               'PointTerm)
+      ;                      (typedef (tpl-use 'SumOp 'Initial 'PointType 'StandardPoints 'DestType)
+      ;                               'ReturnType)
+      ;                      (typedef (tpl-use NE-chunk 'ReturnType 'DestType)
+      ;                               'ReturnTerm)
+      ;                      (r-fcn-def (s-fcn-dcl 'construct
+      ;                                            (b s 'ReturnTerm const-chunk)
+      ;                                            (b s 'NewPoint const-chunk "&" 'newPoint)
+      ;                                            (b s 'Points const-chunk "&" 'points))
+      ;                                 null
+      ;                                 (fc 'ReturnTerm
+      ;                                     (fc 'ReturnType
+      ;                                         (fc 'StandardNewPoint
+      ;                                             (fc (scope (tpl-use 'Standardize 'NewPoint FT-chunk)
+      ;                                                        'standardType)
+      ;                                                 'newPoint))
+      ;                                         (fc 'StandardPoints
+      ;                                             (fc (scope (tpl-use 'Standardize 'Points FT-chunk)
+      ;                                                        'standardizeType)
+      ;                                                 'points)))))))
+      ;builds Scalar(newPoint + points)
+      ;(tpl-srt-def SNSPC
+      ;             (tpl-pmtr FT-chunk)
+      ;             (list (tpl-use NE-chunk
+      ;                            (tpl-use NS-chunk 'Initial FT-chunk)
+      ;                            FT-chunk)
+      ;                   (tpl-use NE-chunk
+      ;                            (tpl-use NS-chunk 'Initial FT-chunk)
+      ;                            FT-chunk)
+      ;                   FT-chunk)
+      ;             (sec-def public-chunk
+      ;                      (typedef (tpl-use NS-chunk 'Initial FT-chunk)
+      ;                               'ReturnType)
+      ;                      (typedef (tpl-use NE-chunk 'ReturnType FT-chunk)
+      ;                               'ReturnTerm)
+      ;                      (r-fcn-def (s-fcn-dcl 'construct
+      ;                                            (b s 'ReturnTerm const-chunk)
+      ;                                            (b s 'ReturnTerm const-chunk "&" 'newPoint)
+      ;                                            (b s 'ReturnTerm const-chunk "&" 'points))
+      ;                                 null
+      ;                                 (fc 'ReturnTerm
+      ;                                     (fc 'ReturnType
+      ;                                         (b s
+      ;                                            (mfc (mfc 'newPoint 'expr)
+      ;                                                 'value)
+      ;                                            "+"
+      ;                                            (mfc (mfc 'points 'expr)
+      ;                                                 'value)))))))
+      ;(tpl-srt-dcl NSC
+      ;             (list (tpl-pmtr 'Arg)
+      ;                   (tpl-pmtr 'ListType)
+      ;                   (tpl-pmtr 'IResult)
+      ;                   (tpl-pmtr 'SrcType)
+      ;                   (tpl-pmtr 'DestType))
+      ;             null)
+      ;base + iresult present case
+      ;(tpl-srt-def NSC
+      ;             (list (tpl-pmtr 'Arg)
+      ;                   (tpl-pmtr 'Point)
+      ;                   (tpl-pmtr 'IResult)
+      ;                   (tpl-pmtr 'SrcType)
+      ;                   (tpl-pmtr 'DestType))
+      ;             (list 'Arg
+      ;                   (tpl-use Pair-chunk 'Point Nil-chunk)
+      ;                   'IResult
+      ;                   'SrcType
+      ;                   'DestType)
+      ;             (sec-def public-chunk
+      ;                      (typedef (tpl-pmtr (scope (tpl-use 'Standardize 'Arg 'SrcType)
+      ;                                                'StandardType))
+      ;                               'StandardArg)
+      ;                      (typedef (tpl-use NSP 'Initial 'Point 'StandardArg 'SrcType)
+      ;                               'StencilPoint)
+      ;                      (typedef (tpl-use MNSPC 'StencilPoint 'DestType)
+      ;                               'PointConstructor)
+      ;                      (typedef (tpl-pmtr (scope 'PointConstructor
+      ;                                                'Result))
+      ;                               'ConstructedPoint)
+      ;                      (typedef (tpl-use SNSPC 'ConstructedPoint 'IResult 'DestType)
+      ;                               'ResultConstructor)
+      ;                      (typedef (tpl-pmtr (scope 'ResultConstructor
+      ;                                                'Result))
+      ;                               'Result)
+      ;                      (constructor-chunk NSC
+      ;                                         (list (b s 'Arg const-chunk "&" 'a)
+      ;                                               (b s 'IResult const-chunk "&" 'i))
+      ;                                         (list (cons-asgn 'arg_ 'a)
+      ;                                               (cons-asgn 'iresult_ 'i)))
+      ;                      (r-fcn-def (fcn-dcl (c 'operator s (p))
+      ;                                          (b s 'Result const-chunk)
+      ;                                          (b s 'double 'coef))
+      ;                                 null
+      ;                                 (fc (scope 'ResultConstructor 'construct)
+      ;                                     (fc (scope 'PointConstructor 'construct)
+      ;                                         'arg_
+      ;                                         'coef)
+      ;                                     'iresult_)))
+      ;             (sec-def private-chunk
+      ;                      (b s 'Arg const-chunk 'arg_)
+      ;                      (b s 'IResult const-chunk 'iresult_)))
+      ;base + no iresult present case
+      ;(tpl-srt-def NSC
+      ;             (list (tpl-pmtr 'Arg)
+      ;                   (tpl-pmtr 'Point)
+      ;                   (tpl-pmtr 'SrcType)
+      ;                   (tpl-pmtr 'DestType))
+      ;             (list 'Arg
+      ;                   (tpl-use Pair-chunk 'Point Nil-chunk)
+      ;                   Nil-chunk
+      ;                   'SrcType
+      ;                   'DestType)
+      ;             (sec-def public-chunk
+      ;                      (typedef (tpl-use MNSPC 'Point 'Arg FT-chunk)
+      ;                               'PointConstructor)
+      ;                      (typedef (tpl-pmtr (scope 'PointConstructor
+      ;                                                'Result))
+      ;                               'Result)
+      ;                      (constructor-chunk NSC
+      ;                                         (b s 'Arg const-chunk "&" 'a)
+      ;                                         (cons-asgn 'arg_ 'a))
+      ;                      (r-fcn-def (fcn-dcl (c 'operator s (p))
+      ;                                          (b s 'Result const-chunk)
+      ;                                          (b s 'double 'coef))
+      ;                                 null
+      ;                                 (fc (scope 'PointConstructor 'construct)
+      ;                                     'arg_
+      ;                                     'coef)))
+      ;             (sec-def private-chunk
+      ;                      (b s 'Arg const-chunk 'arg_)))
+      ;recursive + iresult present case
+      ;(tpl-srt-def NSC
+      ;             (list (tpl-pmtr 'Arg)
+      ;                   (tpl-pmtr 'Point)
+      ;                   (tpl-pmtr 'ListType)
+      ;                   (tpl-pmtr 'IResult)
+      ;                   (tpl-pmtr FT-chunk))
+      ;             (list 'Arg
+      ;                   (tpl-use Pair-chunk 'Point 'ListType)
+      ;                   'IResult
+      ;                   FT-chunk)
+      ;             (sec-def public-chunk
+      ;                      (typedef (tpl-use MNSPC 'Point 'Arg FT-chunk)
+      ;                               'PointConstructor)
+      ;                      (typedef (tpl-pmtr (scope 'PointConstructor
+      ;                                                'Result))
+      ;                               'ConstructedPoint)
+      ;                      (typedef (tpl-use SNSPC 'ConstructedPoint 'IResult FT-chunk)
+      ;                               'ResultConstructor)
+      ;                      (typedef (tpl-pmtr (scope 'ResultConstructor
+      ;                                                'Result))
+      ;                               'NewIResult)
+      ;                      (typedef (tpl-use NSC
+      ;                                        'Arg
+      ;                                        'ListType
+      ;                                        'NewIResult
+      ;                                        FT-chunk)
+      ;                               'Result)
+      ;                      (constructor-chunk NSC
+      ;                                         (list (b s 'Arg const-chunk "&" 'a)
+      ;                                               (b s 'IResult const-chunk "&" 'i))
+      ;                                         (list (cons-asgn 'arg_ 'a)
+      ;                                               (cons-asgn 'iresult_ 'i)))
+      ;                      (r-fcn-def (fcn-dcl (c 'operator s (p))
+      ;                                          (b s 'Result const-chunk)
+      ;                                          (b s 'double 'coef))
+      ;                                 null
+      ;                                 (fc 'Result
+      ;                                     'arg_
+      ;                                     (fc (scope 'ResultConstructor 'construct)
+      ;                                         (fc (scope 'PointConstructor 'construct)
+      ;                                             'arg_
+      ;                                             'coef)
+      ;                                         'iresult_))))
+      ;             (sec-def private-chunk
+      ;                      (b s 'Arg const-chunk 'arg_)
+      ;                      (b s 'IResult const-chunk 'iresult_)))
+      ;recursive + no iresult present case
+      ;(tpl-srt-def NSC
+      ;             (list (tpl-pmtr 'Arg)
+      ;                   (tpl-pmtr 'Point)
+      ;                   (tpl-pmtr 'ListType)
+      ;                   (tpl-pmtr FT-chunk))
+      ;             (list 'Arg
+      ;                   (tpl-use Pair-chunk 'Point 'ListType)
+      ;                   Nil-chunk
+      ;                   FT-chunk)
+      ;             (sec-def public-chunk
+      ;                      (typedef (tpl-use MNSPC 'Point 'Arg FT-chunk)
+      ;                               'PointConstructor)
+      ;                      (typedef (tpl-pmtr (scope 'PointConstructor
+      ;                                                'Result))
+      ;                               'ConstructedPoint)
+      ;                      (typedef (tpl-use NSC
+      ;                                        'Arg
+      ;                                        'ListType
+      ;                                        'PointConstructor
+      ;                                        FT-chunk)
+      ;                               'Result)
+      ;                      (constructor-chunk NSC
+      ;                                         (b s 'Arg const-chunk "&" 'a)
+      ;                                         (cons-asgn 'arg_ 'a))
+      ;                      (r-fcn-def (fcn-dcl (c 'operator s (p))
+      ;                                          (b s 'Result const-chunk)
+      ;                                          (b s 'double 'coef))
+      ;                                 null
+      ;                                 (fc 'Result
+      ;                                     'arg_
+      ;                                     (fc (scope 'PointConstructor 'construct)
+      ;                                         'arg_
+      ;                                         'coef))))
+      ;             (sec-def private-chunk
+      ;                      (b s 'Arg const-chunk 'arg_)))
+;      (tpl-srt-dcl NSPC
+;                   (list (tpl-pmtr 'Arg)
+;                         (tpl-pmtr 'ListType))
+;                   null)
+;      (tpl-srt-def NSPC
+;                   (list (tpl-pmtr 'Arg)
+;                         (tpl-pmtr 'Point)
+;                         (tpl-pmtr 'ListType))
+;                   (tpl-use Pair-chunk 'Point 'ListType)
+;                   (sec-def public-chunk
+;                            (r-fcn-def (s-fcn-dcl 'apply
+;                                                  ???
+;                                                  (b s 'Arg const-chunk "&")
+;                                                  (b s 
+;      (tpl-srt-def NSPC
+;                   (tpl-pmtr 'Point)
+;                   (tpl-use Pair-chunk 'Point Nil-chunk)
+;                   (sec-def public-chunk
+;                            
+;                   (sec-def private-chunk
+;                            (b s 'Point const-chunk 'point_))
+;                   (sec-def public-chunk
+;                            (constructor-chunk NSPC
+;                                               (list (b s 'Point const-chunk "&" 'p)
+;                                                     (b s Nil-chunk const-chunk "&" 'nil))
+;                                               (cons-asgn 'point_ 'p))
+;                                               
+                                      
+                         
       (let ([NS1D 'Nebo1DStencil]
             [NS2D 'Nebo2DStencil]
             [NSFD 'NeboFDStencil])
