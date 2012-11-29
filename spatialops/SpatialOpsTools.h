@@ -25,6 +25,10 @@
 
 #include <spatialops/SpatialOpsConfigure.h>
 
+#ifdef FIELD_EXPRESSION_THREADS
+# include <spatialops/ThreadPool.h>
+#endif
+
 /**
  *  \file SpatialOpsTools.h
  */
@@ -41,6 +45,33 @@ namespace SpatialOps{
    */
   template< typename T1, typename T2> struct IsSameType       { enum{ result=0 }; };
   template< typename T1             > struct IsSameType<T1,T1>{ enum{ result=1 }; };
+
+#ifdef FIELD_EXPRESSION_THREADS
+
+  /* used within nebo to determine if thread parallelism should be used */
+  inline bool is_thread_parallel(){
+    return ThreadPoolFIFO::get_pool_capacity() > 0;
+  }
+
+  /* used within nebo to get current soft (active) thread count */
+  inline int get_soft_thread_count(){
+    return ThreadPoolFIFO::get_pool_size();
+  }
+
+  /* used by tests to change current soft (active) thread count at runtime */
+  inline int set_soft_thread_count( const int threadCount){
+    return ThreadPoolFIFO::resize_pool(threadCount);
+  }
+
+  /* used within nebo to get current hard (max/total) thread count */
+  inline int get_hard_thread_count(){ return ThreadPoolFIFO::get_pool_size(); }
+
+  /* used by tests to change current hard (max/total) thread count at runtime */
+  inline int set_hard_thread_count( const int threadCount){
+    return ThreadPoolFIFO::set_pool_capacity( threadCount );
+  }
+
+#endif // FIELD_EXPRESSION_THREADS
 
 }
 

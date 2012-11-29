@@ -214,8 +214,10 @@ class SpatialFieldStore {
   class Pool{
     typedef std::stack<T*> FieldQueue;
     typedef std::map<size_t,FieldQueue> FQSizeMap;
+    typedef std::map<double*,size_t> FieldSizeMap;
 
     FQSizeMap fqm_;
+    FieldSizeMap fsm_;
     size_t pad_;
     size_t highWater_;
 
@@ -225,7 +227,7 @@ class SpatialFieldStore {
   public:
     static Pool& self();
     inline T* get( const size_t n );
-    inline void put(T*, size_t);
+    inline void put( T* );
     inline size_t active() const;
     inline size_t total() const{ return highWater_; }
   };
@@ -608,7 +610,6 @@ get_from_window( const structured::MemoryWindow& window,
                  const unsigned short int deviceIndex )
 {
   typedef typename ValTypeSelector<FieldT,typename boost::is_pod<FieldT>::type>::type AtomicT;
-
 #ifdef ENABLE_THREADS
   boost::mutex::scoped_lock lock( get_mutex() );
 #endif
@@ -621,7 +622,8 @@ get_from_window( const structured::MemoryWindow& window,
     const size_t npts = mw.glob_npts();
     AtomicT* fnew = Pool<AtomicT>::self().get(npts);
 #   ifndef NDEBUG  // only zero the field for debug runs.
-    for( size_t i=0; i<npts; ++i )  fnew[i] = 0.0;
+    AtomicT* iftmp = fnew;
+    for( size_t i=0; i<npts; ++i, ++iftmp )  *iftmp = 0.0;
 #   endif
     return SpatFldPtr<FieldT>( new FieldT(mw,fnew,structured::ExternalStorage), true );
   }
@@ -650,14 +652,13 @@ get_from_window( const structured::MemoryWindow& window,
 
 template<typename FieldT>
 inline
-void SpatialFieldStore::restore_field(FieldT& field)
+void SpatialFieldStore::restore_field( FieldT& field )
 {
 # ifdef ENABLE_THREADS
   boost::mutex::scoped_lock lock( get_mutex() );
 # endif
   typedef typename ValTypeSelector<FieldT,typename boost::is_pod<FieldT>::type>::type AtomicT;
-  Pool<AtomicT>::self().put( field.field_values(),
-                             field.window_with_ghost().glob_npts() );
+  Pool<AtomicT>::self().put( field.field_values() );
 }
 
 //------------------------------------------------------------------
@@ -691,18 +692,23 @@ SpatialFieldStore::Pool<T>::self()
 
 template< typename T >
 T*
-SpatialFieldStore::Pool<T>::get( const size_t n )
+SpatialFieldStore::Pool<T>::get( const size_t _n )
 {
-  if( pad_==0 ) pad_ = n+n/10;
+  if( pad_==0 ) pad_ = _n/10;
+  size_t n = _n+pad_;
   typename FQSizeMap::iterator ifq = fqm_.lower_bound( n );
   if( ifq == fqm_.end() ){
-    ifq = fqm_.insert( ifq, make_pair(n+pad_,FieldQueue()) );
+    ifq = fqm_.insert( ifq, make_pair(n,FieldQueue()) );
+  }
+  else{
+    n = ifq->first;
   }
   T* field = NULL;
   FieldQueue& fq = ifq->second;
   if( fq.empty() ){
     ++highWater_;
-    field = new T[n+pad_];
+    field = new T[n];
+    fsm_[field] = n;
   }
   else{
     field = fq.top(); fq.pop();
@@ -712,12 +718,12 @@ SpatialFieldStore::Pool<T>::get( const size_t n )
 
 template< typename T >
 void
-SpatialFieldStore::Pool<T>::put( T* t, size_t n )
+SpatialFieldStore::Pool<T>::put( T* t )
 {
+  const size_t n = fsm_[t];
   const typename FQSizeMap::iterator ifq = fqm_.lower_bound( n );
   assert( ifq != fqm_.end() );
-  FieldQueue& fq = ifq->second;
-  fq.push( t );
+  ifq->second.push(t);
 }
 
 template<typename T>

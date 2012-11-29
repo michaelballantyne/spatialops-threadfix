@@ -29,10 +29,12 @@
 #  include <spatialops/structured/GhostData.h>
 #  include <spatialops/structured/SpatialField.h>
 #  include <cmath>
+#  include <math.h>
 
    /*#include <iostream> */
 
 #  ifdef FIELD_EXPRESSION_THREADS
+#     include <spatialops/SpatialOpsTools.h>
 #     include <vector>
 #     include <boost/bind.hpp>
 #     include <spatialops/ThreadPool.h>
@@ -43,20 +45,6 @@
    /* FIELD_EXPRESSION_THREADS */
 
    namespace SpatialOps {
-
-#     ifdef FIELD_EXPRESSION_THREADS
-         /* used within nebo to determine if thread parallelism should be used */
-         bool is_nebo_thread_parallel(void);
-         /* used within nebo to get current soft (active) thread count */
-         int get_nebo_soft_thread_count(void);
-         /* used by tests to change current soft (active) thread count at runtime */
-         int set_nebo_soft_thread_count(int thread_count);
-         /* used within nebo to get current hard (max/total) thread count */
-         int get_nebo_hard_thread_count(void);
-         /* used by tests to change current hard (max/total) thread count at runtime */
-         int set_nebo_hard_thread_count(int thread_count);
-#     endif
-      /* FIELD_EXPRESSION_THREADS */;
 
       /* Meta-programming compiler flags */
       struct UseWholeIterator;
@@ -3672,7 +3660,7 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          typename FieldType::value_type typedef EvalReturnType;
+          bool typedef EvalReturnType;
           AndOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
@@ -3851,7 +3839,7 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          typename FieldType::value_type typedef EvalReturnType;
+          bool typedef EvalReturnType;
           OrOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
@@ -4012,7 +4000,7 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          typename FieldType::value_type typedef EvalReturnType;
+          bool typedef EvalReturnType;
           NotOp(Operand const & operand)
           : operand_(operand)
           {};
@@ -4042,6 +4030,126 @@
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(Type(arg.expr())));
+       };
+
+      template<typename CurrentMode, typename Operand, typename FieldType>
+       struct IsNanFcn;
+
+      template<typename Operand, typename FieldType>
+       struct IsNanFcn<Initial, Operand, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          template<typename ValidGhost, typename Shift>
+           struct Iterator {
+
+             IsNanFcn<ResizePrep<ValidGhost, Shift>,
+                      typename Operand::template Iterator<ValidGhost, Shift>::ResizePrepType,
+                      FieldType> typedef ResizePrepType;
+
+             IsNanFcn<SeqWalk<ValidGhost, Shift>,
+                      typename Operand::template Iterator<ValidGhost, Shift>::SeqWalkType,
+                      FieldType> typedef SeqWalkType;
+          };
+          typename Operand::PossibleValidGhost typedef PossibleValidGhost;
+          IsNanFcn(Operand const & operand)
+          : operand_(operand)
+          {};
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::SeqWalkType init(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::SeqWalkType(operand().template init<ValidGhost,
+                                                                                               Shift>());
+           };
+          template<typename ValidGhost, typename Shift>
+           inline typename Iterator<ValidGhost, Shift>::ResizePrepType resize_prep(void) const {
+
+              return typename Iterator<ValidGhost, Shift>::ResizePrepType(operand().template
+                                                                                    resize_prep<ValidGhost,
+                                                                                                Shift>());
+           };
+          inline Operand const & operand(void) const { return operand_; };
+
+         private:
+          Operand const operand_;
+      };
+
+      template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>
+       struct IsNanFcn<ResizePrep<ValidGhost, Shift>, Operand, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          IsNanFcn<Resize<ValidGhost, Shift>, typename Operand::ResizeType, FieldType> typedef
+          ResizeType;
+          IsNanFcn(Operand const & operand)
+          : operand_(operand)
+          {};
+          inline ResizeType resize(MemoryWindow const & size) const {
+             return ResizeType(operand().resize(size));
+          };
+          inline Operand const & operand(void) const { return operand_; };
+
+         private:
+          Operand const operand_;
+      };
+
+      template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>
+       struct IsNanFcn<Resize<ValidGhost, Shift>, Operand, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          IsNanFcn<SeqWalk<ValidGhost, Shift>, typename Operand::SeqWalkType, FieldType> typedef
+          SeqWalkType;
+          IsNanFcn(Operand const & operand)
+          : operand_(operand)
+          {};
+          inline SeqWalkType init(void) const { return SeqWalkType(operand().init()); };
+          inline Operand const & operand(void) const { return operand_; };
+
+         private:
+          Operand const operand_;
+      };
+
+      template<typename ValidGhost, typename Shift, typename Operand, typename FieldType>
+       struct IsNanFcn<SeqWalk<ValidGhost, Shift>, Operand, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename FieldType::memory_window typedef MemoryWindow;
+          bool typedef EvalReturnType;
+          IsNanFcn(Operand const & operand)
+          : operand_(operand)
+          {};
+          inline void next(void) { operand_.next(); };
+          inline bool at_end(void) const { return (operand_.at_end()); };
+          inline bool has_length(void) const { return (operand_.has_length()); };
+          inline EvalReturnType eval(void) const { return std::isnan(operand_.eval()); };
+
+         private:
+          Operand operand_;
+      };
+
+      /* SubExpr */
+      template<typename SubExpr>
+       inline NeboBooleanExpression<IsNanFcn<Initial,
+                                             typename Standardize<SubExpr,
+                                                                  typename SubExpr::field_type>::
+                                             StandardType,
+                                             typename SubExpr::field_type>,
+                                    typename SubExpr::field_type> isnan(SubExpr const & arg) {
+
+          typename SubExpr::field_type typedef FieldType;
+
+          typename Standardize<SubExpr, typename SubExpr::field_type>::StandardType typedef Type;
+
+          IsNanFcn<Initial, Type, FieldType> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(Type(Standardize<SubExpr, FieldType>::standardType(arg))));
        };
 
 #     define BUILD_BINARY_FUNCTION(OBJECT_NAME, INTERNAL_NAME, EXTERNAL_NAME)                      \
@@ -6156,12 +6264,12 @@
 
           return
 #                ifdef FIELD_EXPRESSION_THREADS
-                    (is_nebo_thread_parallel() ? nebo_assignment_thread_parallel_execute<ValidGhost,
+                    (is_thread_parallel() ? nebo_assignment_thread_parallel_execute<ValidGhost,
                                                                                          InitialShift,
                                                                                          ExprType,
                                                                                          FieldType>(initial_lhs,
                                                                                                     initial_rhs,
-                                                                                                    get_nebo_soft_thread_count())
+                                                                                                    get_soft_thread_count())
                      : nebo_assignment_sequential_execute<ValidGhost,
                                                           InitialShift,
                                                           ExprType,

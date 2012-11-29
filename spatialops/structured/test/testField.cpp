@@ -234,8 +234,7 @@ bool test_store( const IntVec& dim, const IntVec& bc )
   const MemoryWindow w2 = get_window_with_ghost<FT2>( dim, bc[0]==1, bc[1]==1, bc[2]==1 );
 
 # ifdef ENABLE_THREADS
-//# define USE_FIFO
-  ThreadPoolResourceManager::self().resize_active( ThreadPool::self(), NTHREADS );
+  set_hard_thread_count( NTHREADS );
   ThreadWork<FT1> tw;
   for( int i=0; i<20; ++i ){
 #   ifdef USE_FIFO
