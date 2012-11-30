@@ -271,9 +271,9 @@ int main(int iarg, char* carg[]) {
 
     Field::iterator ia = a.begin();
     Field::iterator ib = b.begin();
-    for(int kk = 0; kk < window.glob_dim(2); kk++) {
-        for(int jj = 0; jj < window.glob_dim(1); jj++) {
-            for(int ii = 0; ii < window.glob_dim(0); ii++, ++ia, ++ib) {
+    for(size_t kk = 0; kk < window.glob_dim(2); kk++) {
+        for(size_t jj = 0; jj < window.glob_dim(1); jj++) {
+            for(size_t ii = 0; ii < window.glob_dim(0); ii++, ++ia, ++ib) {
 	      *ia = ii + jj * 2 + kk * 4;
 	      *ib = ii + jj * 3 + kk * 5;
             }

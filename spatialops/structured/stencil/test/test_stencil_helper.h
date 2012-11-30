@@ -173,7 +173,7 @@ bool check_convergence( const std::vector<double>& spacings,
   const size_t n = spacings.size();
   std::vector<double> errRatio(n,0), calcOrder(n-1,0);
   for( size_t i=0; i<n; ++i ){
-    const double ideal = norms[0] * std::pow( spacings[i] / spacings[0], order );
+    //const double ideal = norms[0] * std::pow( spacings[i] / spacings[0], order );
     errRatio[i] = norms[i] / norms[0];
   }
   for( size_t i=0; i<n-1; ++i ){
@@ -240,7 +240,7 @@ run_convergence( SpatialOps::structured::IntVec npts,
   using namespace SpatialOps;
   typedef typename SpatialOps::structured::OperatorTypeBuilder<OpT,SrcT,DestT>::type  Op;
 
-  const int nrefine = 5;
+  const size_t nrefine = 5;
 
   // directional index for convergence test
   const int ix = (IsSameType<DirT,XDIR>::result) ? 0 : (IsSameType<DirT,YDIR>::result) ? 1 : 2;
@@ -268,7 +268,7 @@ run_convergence( SpatialOps::structured::IntVec npts,
   using namespace SpatialOps;
   typedef typename SpatialOps::structured::OperatorTypeBuilder<OpT,SrcT,DestT>::type  Op;
 
-  const int nrefine = 5;
+  const size_t nrefine = 5;
 
   // directional index for convergence test
   const int ix1 = (IsSameType<Dir1T,XDIR>::result) ? 0 : (IsSameType<Dir1T,YDIR>::result) ? 1 : 2;

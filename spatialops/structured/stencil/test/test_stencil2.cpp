@@ -73,7 +73,7 @@ run_variants( const IntVec npts,
       status( IsSameType< Extents::DestOffset, IndexTriplet<DOx, DOy, DOz  > >::result, string(name) + string(" d  offset" ) );  \
       status( IsSameType< Extents::Src1Extent, IndexTriplet<ULx, ULy, ULz  > >::result, string(name) + string(" UB"        ) );  \
     }
-//status( IsSameType< Extents::UpperLoopBCAug, IndexTriplet<ULBCx, ULBCy, ULBCz> >::result, string(name) + string(" UB Aug."   ) );  \
+//status( IsSameType< Extents::UpperLoopBCAug, IndexTriplet<ULBCx, ULBCy, ULBCz> >::result, string(name) + string(" UB Aug."   ) );
 
 //-------------------------------------------------------------------
 

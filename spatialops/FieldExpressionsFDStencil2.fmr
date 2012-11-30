@@ -352,7 +352,7 @@
                                     (b s
                                        'double const-chunk 'high)
                                     (b s
-                                       'int const-chunk 'number_of_partitions))
+                                       'size_t const-chunk 'number_of_partitions))
                               (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'FromGhost
                                                                                     (tpl-pmtr (scope 'FieldType 'Ghost))))
                                                         'result))
@@ -585,7 +585,7 @@
                                                       (c "&" 'semaphore)))))
                               (c 'for
                                  open-paren-chunk
-                                 'int
+                                 'size_t
                                  s
                                  'ii
                                  s

@@ -24,7 +24,7 @@ using SpatialOps::structured::MemoryWindow;
 int main()
 {
   const size_t np=1;
-  const double dx = 1.0;
+  //const double dx = 1.0;
 
   IntVec totDim(10,1,1);
   for( size_t i=0; i<3; ++i )

@@ -2297,8 +2297,8 @@
                                                          (b s 'double const-chunk 'hi))
                                                    (list (cons-asgn 'operand1_ 'op1)
                                                          (cons-asgn 'operand2_ 'op2)
-                                                         (cons-asgn 'hi_ 'lo)
-                                                         (cons-asgn 'lo_ 'hi))
+                                                         (cons-asgn 'lo_ 'lo)
+                                                         (cons-asgn 'hi_ 'hi))
                                                   null)
                                    (list (mfc (fc 'operand1)
                                               'resize
@@ -2535,7 +2535,7 @@
                                              const-chunk
                                              "&"
                                              'initial_rhs)
-                                          (b s 'int const-chunk 'number_of_partitions)))
+                                          (b s 'size_t const-chunk 'number_of_partitions)))
                            (list (typedef (tpl-pmtr (scope (scope (tpl-use NF-chunk 'Initial FT-chunk)
                                                                   (tpl-fcn-use 'Iterator 'ValidGhost 'InitialShift))
                                                            'ResizePrepType))

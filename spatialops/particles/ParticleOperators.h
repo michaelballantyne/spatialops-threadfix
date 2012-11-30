@@ -144,7 +144,7 @@ namespace Particle{
    {
      dest <<= 0.0;
 
-     const double halfwidth = 0.5*dx_;
+     //const double halfwidth = 0.5*dx_;
 
 #   ifndef NDEBUG
     const int nmax = dest.window_with_ghost().local_npts();
@@ -216,7 +216,7 @@ namespace Particle{
   {
     dest <<= 0.0;
 
-    const double halfwidth = 0.5*dx_;
+    //const double halfwidth = 0.5*dx_;
 #   ifndef NDEBUG
     const int nmax = src.window_with_ghost().local_npts();
 #   endif
