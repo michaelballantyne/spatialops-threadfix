@@ -100,6 +100,9 @@ namespace SpatialOps{ namespace structured{
   DECLARE_STENCIL( Interpolant, VOL, FaceTypes<VOL>::XFace )   \
   DECLARE_STENCIL( Interpolant, VOL, FaceTypes<VOL>::YFace )   \
   DECLARE_STENCIL( Interpolant, VOL, FaceTypes<VOL>::ZFace )   \
+  DECLARE_STENCIL( Interpolant, FaceTypes<VOL>::XFace, VOL )   \
+  DECLARE_STENCIL( Interpolant, FaceTypes<VOL>::YFace, VOL )   \
+  DECLARE_STENCIL( Interpolant, FaceTypes<VOL>::ZFace, VOL )   \
   DECLARE_STENCIL( Gradient,    VOL, FaceTypes<VOL>::XFace )   \
   DECLARE_STENCIL( Gradient,    VOL, FaceTypes<VOL>::YFace )   \
   DECLARE_STENCIL( Gradient,    VOL, FaceTypes<VOL>::ZFace )   \

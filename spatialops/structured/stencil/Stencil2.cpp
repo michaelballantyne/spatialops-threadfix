@@ -61,12 +61,6 @@ namespace structured{
   DECLARE_STENCIL( Gradient, SVolField, XVolField )  // pressure
   DECLARE_STENCIL( Gradient, SVolField, YVolField )  // pressure
   DECLARE_STENCIL( Gradient, SVolField, ZVolField )  // pressure
-
-  DECLARE_STENCIL( Interpolant, SSurfXField, SVolField )  // ODT colocated mesh
-
-  DECLARE_STENCIL( Interpolant, XSurfXField, XVolField )  // BC operator for tau_xx
-  DECLARE_STENCIL( Interpolant, YSurfYField, YVolField )  // BC operator for tau_yy
-  DECLARE_STENCIL( Interpolant, ZSurfZField, ZVolField )  // BC operator for tau_zz
   //
   //==================================================================
 

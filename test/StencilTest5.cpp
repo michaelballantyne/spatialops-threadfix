@@ -231,7 +231,7 @@ int main(int iarg, char* carg[]) {
 	}
 
 #ifdef FIELD_EXPRESSION_THREADS
-    set_nebo_hard_thread_count(thread_count);
+    set_hard_thread_count(thread_count);
 #endif
     }
 
