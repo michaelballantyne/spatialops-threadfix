@@ -5493,7 +5493,9 @@
           {};
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(arg().template init<ValidGhost, Shift>());
+
+              return SeqWalkType(arg().template init<ValidGhost,
+                                                     typename structured::Add<Shift, Point>::result>());
            };
           template<typename ValidGhost>
            inline ResizePrepType resize_prep(void) const {

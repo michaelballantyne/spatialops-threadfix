@@ -2213,7 +2213,9 @@
                                                 (cons-asgn 'arg_ 'a)
                                                 null)
                                 (mfc (fc 'arg)
-                                     (tpl-fcn-use 'init VG-chunk SH-chunk))
+                                     (tpl-fcn-use 'init VG-chunk (tpl-pmtr (scope (scope 'structured
+                                                                                         (tpl-use 'Add SH-chunk 'Point))
+                                                                                  'result))))
                                 (mfc (fc 'arg)
                                      (tpl-fcn-use 'resize_prep VG-chunk))
                                 (r-fcn-def (constize (fcn-dcl 'arg
@@ -2291,17 +2293,17 @@
                                        null
                                        'list_)
                             (tpl-def (c 'int s 'L)
-                                     (r-fcn-def (fcn-dcl 'internal_reverse
-                                                         (b s (tpl-use NSCL (c 'L " + " 'Length)) const-chunk)
-                                                         (b s (tpl-use NSCL 'L) const-chunk 'l))
+                                     (r-fcn-def (constize (fcn-dcl 'internal_reverse
+                                                                   (b s (tpl-use NSCL (c 'L " + " 'Length)) const-chunk)
+                                                                   (b s (tpl-use NSCL 'L) const-chunk 'l)))
                                                 null
                                                 (mfc 'list_
                                                      'internal_reverse
-                                                     (fc (tpl-use NSCL (c 'Length " + 1"))
+                                                     (fc (tpl-use NSCL (b s 'L '+ "1"))
                                                          'l
                                                          'coef_))))
-                            (r-fcn-def (fcn-dcl 'reverse
-                                                (b s (tpl-use NSCL 'Length) const-chunk))
+                            (r-fcn-def (constize (fcn-dcl 'reverse
+                                                          (b s (tpl-use NSCL 'Length) const-chunk)))
                                        null
                                        (mfc 'list_
                                             'internal_reverse
@@ -2330,15 +2332,15 @@
                                        null
                                        'coef_)
                             (tpl-def (c 'int s 'L)
-                                     (r-fcn-def (fcn-dcl 'internal_reverse
-                                                         (b s (tpl-use NSCL (c 'L " + 1")) const-chunk)
-                                                         (b s (tpl-use NSCL 'L) const-chunk 'l))
+                                     (r-fcn-def (constize (fcn-dcl 'internal_reverse
+                                                                   (b s (tpl-use NSCL (c 'L " + 1")) const-chunk)
+                                                                   (b s (tpl-use NSCL 'L) const-chunk 'l)))
                                                 null
                                                 (fc (tpl-use NSCL (c 'L " + 1"))
                                                     'l
                                                     'coef_)))
-                            (r-fcn-def (fcn-dcl 'reverse
-                                                (b s (tpl-use NSCL "1") const-chunk))
+                            (r-fcn-def (constize (fcn-dcl 'reverse
+                                                          (b s (tpl-use NSCL "1") const-chunk)))
                                        null
                                        '*this))
                    (sec-def private-chunk
@@ -2369,7 +2371,7 @@
                                          null
                                          (typedef (tpl-use NSPL 'Point 'BegunReverse)
                                                   'NewReverse)
-                                         (typedef (tpl-pmtr (scope (scope 'ListType (sub-tpl-use (tpl-use 'ReverseInterior 'NewReverse)))
+                                         (typedef (tpl-pmtr (scope (scope 'ListType (tpl-fcn-use 'ReverseInterior 'NewReverse))
                                                                    'Result))
                                                   'Result))
                             (typedef (tpl-pmtr (scope (tpl-use 'ReverseInterior Nil-chunk)
