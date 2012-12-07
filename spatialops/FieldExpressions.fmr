@@ -174,18 +174,18 @@
                          (sec-def private-chunk
                                   privates))))]
        [bs-Initial
-        (lambda (tpl-args-RP
+        (lambda (typedefs
+                 tpl-args-RP
                  tpl-args-SW
-                 typedefs
                  VG-type
                  constructor
                  SW-cons-args
                  RP-cons-args
                  publics
                  privates)
-          (list tpl-args-RP
+          (list typedefs
+                tpl-args-RP
                 tpl-args-SW
-                typedefs
                 VG-type
                 constructor
                 SW-cons-args
@@ -193,27 +193,27 @@
                 publics
                 privates))]
        [bs-ResizePrep
-        (lambda (tpl-args-RS
-                 typedefs
+        (lambda (typedefs
+                 tpl-args-RS
                  constructor
                  RS-cons-args
                  publics
                  privates)
-          (list tpl-args-RS
-                typedefs
+          (list typedefs
+                tpl-args-RS
                 constructor
                 RS-cons-args
                 publics
                 privates))]
        [bs-Resize
-        (lambda (tpl-args-SW
-                 typedefs
+        (lambda (typedefs
+                 tpl-args-SW
                  constructor
                  SW-cons-args
                  publics
                  privates)
-          (list tpl-args-SW
-                typedefs
+          (list typedefs
+                tpl-args-SW
                 constructor
                 SW-cons-args
                 publics
@@ -245,23 +245,23 @@
           (let ([add-const (if const?
                                constize-chunk
                                id)]
-                [IN-tpl-args-RP first]
-                [IN-tpl-args-SW second]
-                [IN-typedefs third]
+                [IN-typedefs first]
+                [IN-tpl-args-RP second]
+                [IN-tpl-args-SW third]
                 [IN-VG-type fourth]
                 [IN-constructor fifth]
                 [IN-SW-cons-args sixth]
                 [IN-RP-cons-args seventh]
                 [IN-publics eighth]
                 [IN-privates ninth]
-                [RP-tpl-args-RS first]
-                [RP-typedefs second]
+                [RP-typedefs first]
+                [RP-tpl-args-RS second]
                 [RP-constructor third]
                 [RP-RS-cons-args fourth]
                 [RP-publics fifth]
                 [RP-privates sixth]
-                [RS-tpl-args-SW first]
-                [RS-typedefs second]
+                [RS-typedefs first]
+                [RS-tpl-args-SW second]
                 [RS-constructor third]
                 [RS-SW-cons-args fourth]
                 [RS-publics fifth]
@@ -314,12 +314,12 @@
                            'ResizePrep
                            tpl-pars
                            tpl-args
-                           (list (typedef (tpl-use name
+                           (list (RP-typedefs ResizePrep)
+                                 (typedef (tpl-use name
                                                    'Resize
                                                    (RP-tpl-args-RS ResizePrep)
                                                    FT-chunk)
-                                          'ResizeType)
-                                 (RP-typedefs ResizePrep))
+                                          'ResizeType))
                            (RP-constructor ResizePrep)
                            (list (r-fcn-def (add-const (fcn-dcl 'resize
                                                                 'ResizeType
@@ -334,12 +334,12 @@
                            'Resize
                            tpl-pars
                            tpl-args
-                           (list (typedef (tpl-use name
+                           (list (RS-typedefs Resize)
+                                 (typedef (tpl-use name
                                                    'SeqWalk
                                                    (RS-tpl-args-SW Resize)
                                                    FT-chunk)
-                                          'SeqWalkType)
-                                 (RS-typedefs Resize))
+                                          'SeqWalkType))
                            (RS-constructor Resize)
                            (list (tpl-def (tpl-pmtr SH-chunk)
                                           (r-fcn-def (add-const (fcn-dcl 'init
@@ -427,11 +427,11 @@
                           (mapper (lambda (Op) (tpl-pmtr Op))
                                   Op-lst)
                           Op-lst
-                          (bs-Initial (mapper (IN-typedef 'ResizePrepType)
+                          (bs-Initial null
+                                      (mapper (IN-typedef 'ResizePrepType)
                                               Op-lst)
                                       (mapper (IN-typedef 'SeqWalkType)
                                               Op-lst)
-                                      null
                                       (build-VG (mapper (lambda (Op) (tpl-pmtr (scope Op report-VG-chunk)))
                                                         Op-lst))
                                       gen-constructor
@@ -443,9 +443,9 @@
                                               op-lst)
                                       gen-ext-fcns
                                       gen-data-mems)
-                          (bs-ResizePrep (mapper (gen-typedef 'ResizeType)
+                          (bs-ResizePrep null
+                                         (mapper (gen-typedef 'ResizeType)
                                                  Op-lst)
-                                         null
                                          gen-constructor
                                          (mapper (lambda (op) (mfc (fc op)
                                                                    'resize
@@ -454,9 +454,9 @@
                                                  op-lst)
                                          gen-ext-fcns
                                          gen-data-mems)
-                          (bs-Resize (mapper (gen-typedef 'SeqWalkType)
+                          (bs-Resize null
+                                     (mapper (gen-typedef 'SeqWalkType)
                                              Op-lst)
-                                     null
                                      gen-constructor
                                      (mapper (lambda (op) (mfc (fc op)
                                                                (tpl-fcn-use 'init SH-chunk)))
@@ -784,11 +784,11 @@
                     #true
                     null
                     null
-                    (bs-Initial null
-                                null
-                                (typedef (scope (tpl-pmtr FT-chunk)
+                    (bs-Initial (typedef (scope (tpl-pmtr FT-chunk)
                                                 'value_type)
                                          'AtomicType)
+                                null
+                                null
                                 (scope 'structured 'InfiniteGhostData)
                                 (bm-constructor (b s 'AtomicType const-chunk 'v)
                                                 (cons-asgn 'value_ 'v)
@@ -800,10 +800,10 @@
                                            null
                                            'value_)
                                 (b s 'AtomicType const-chunk 'value_))
-                    (bs-ResizePrep null
-                                   (typedef (scope (tpl-pmtr FT-chunk)
+                    (bs-ResizePrep (typedef (scope (tpl-pmtr FT-chunk)
                                                    'value_type)
                                             'AtomicType)
+                                   null
                                    (bm-constructor (b s 'AtomicType const-chunk 'value)
                                                    (cons-asgn 'value_ 'value)
                                                    null)
@@ -813,10 +813,10 @@
                                               null
                                               'value_)
                                    (b s 'AtomicType const-chunk 'value_))
-                    (bs-Resize null
-                               (typedef (scope (tpl-pmtr FT-chunk)
+                    (bs-Resize (typedef (scope (tpl-pmtr FT-chunk)
                                                'value_type)
                                         'AtomicType)
+                               null
                                (bm-constructor (b s 'AtomicType const-chunk 'value)
                                                (cons-asgn 'value_ 'value)
                                                null)
@@ -1199,11 +1199,11 @@
                     (list (tpl-pmtr 'Test)
                           (tpl-pmtr 'Expr))
                     (list 'Test 'Expr)
-                    (bs-Initial (list (tpl-pmtr (scope 'Test 'ResizePrepType))
+                    (bs-Initial null
+                                (list (tpl-pmtr (scope 'Test 'ResizePrepType))
                                       (tpl-pmtr (scope 'Expr 'ResizePrepType)))
                                 (list (tpl-pmtr (scope 'Test 'SeqWalkType))
                                       (tpl-pmtr (scope 'Expr 'SeqWalkType)))
-                                null
                                 (tpl-pmtr (scope (scope 'structured
                                                         (tpl-use 'Minimum
                                                                  (tpl-pmtr (scope 'Test report-VG-chunk))
@@ -1232,9 +1232,9 @@
                                                  'expr_))
                                 (list (b s 'Test const-chunk 'test_)
                                       (b s 'Expr const-chunk 'expr_)))
-                    (bs-ResizePrep (list (tpl-pmtr (scope 'Test 'ResizeType))
+                    (bs-ResizePrep null
+                                   (list (tpl-pmtr (scope 'Test 'ResizeType))
                                          (tpl-pmtr (scope 'Expr 'ResizeType)))
-                                   null
                                    (bm-constructor (list (b s 'Test const-chunk "&" 'test)
                                                          (b s 'Expr const-chunk "&" 'expr))
                                                    (list (cons-asgn 'test_ 'test)
@@ -1258,9 +1258,9 @@
                                                     'expr_))
                                    (list (b s 'Test const-chunk 'test_)
                                          (b s 'Expr const-chunk 'expr_)))
-                    (bs-Resize (list (tpl-pmtr (scope 'Test 'SeqWalkType))
+                    (bs-Resize null
+                               (list (tpl-pmtr (scope 'Test 'SeqWalkType))
                                      (tpl-pmtr (scope 'Expr 'SeqWalkType)))
-                               null
                                (bm-constructor (list (b s 'Test const-chunk "&" 'test)
                                                      (b s 'Expr const-chunk "&" 'expr))
                                                (list (cons-asgn 'test_ 'test)
@@ -1312,11 +1312,11 @@
                     (list (tpl-pmtr CT-chunk)
                           (tpl-pmtr 'Otherwise))
                     (list CT-chunk 'Otherwise)
-                    (bs-Initial (list (tpl-pmtr (scope CT-chunk 'ResizePrepType))
+                    (bs-Initial null
+                                (list (tpl-pmtr (scope CT-chunk 'ResizePrepType))
                                       (tpl-pmtr (scope 'Otherwise 'ResizePrepType)))
                                 (list (tpl-pmtr (scope CT-chunk 'SeqWalkType))
                                       (tpl-pmtr (scope 'Otherwise 'SeqWalkType)))
-                                null
                                 (tpl-pmtr (scope (scope 'structured (tpl-use 'Minimum
                                                                              (tpl-pmtr (scope CT-chunk report-VG-chunk))
                                                                              (tpl-pmtr (scope 'Otherwise report-VG-chunk))))
@@ -1344,9 +1344,9 @@
                                                  'otherwise_))
                                 (list (b s CT-chunk const-chunk 'clause_)
                                       (b s 'Otherwise const-chunk 'otherwise_)))
-                    (bs-ResizePrep (list (tpl-pmtr (scope CT-chunk 'ResizeType))
+                    (bs-ResizePrep null
+                                   (list (tpl-pmtr (scope CT-chunk 'ResizeType))
                                          (tpl-pmtr (scope 'Otherwise 'ResizeType)))
-                                   null
                                    (bm-constructor (list (b s CT-chunk const-chunk "&" 'clause)
                                                          (b s 'Otherwise const-chunk "&" 'otherwise))
                                                    (list (cons-asgn 'clause_ 'clause)
@@ -1370,9 +1370,9 @@
                                                     'otherwise_))
                                    (list (b s CT-chunk const-chunk 'clause_)
                                          (b s 'Otherwise const-chunk 'otherwise_)))
-                    (bs-Resize (list (tpl-pmtr (scope CT-chunk 'SeqWalkType))
+                    (bs-Resize null
+                               (list (tpl-pmtr (scope CT-chunk 'SeqWalkType))
                                      (tpl-pmtr (scope 'Otherwise 'SeqWalkType)))
-                               null
                                (bm-constructor (list (b s CT-chunk const-chunk "&" 'clause)
                                                      (b s 'Otherwise const-chunk "&" 'otherwise))
                                                (list (cons-asgn 'clause_ 'clause)
@@ -2199,11 +2199,11 @@
                     (list (tpl-pmtr 'Point)
                           (tpl-pmtr 'Arg))
                     (list 'Point 'Arg)
-                    (bs-Initial (list 'Point
+                    (bs-Initial null
+                                (list 'Point
                                       (tpl-pmtr (scope 'Arg 'ResizePrepType)))
                                 (list 'Point
                                       (tpl-pmtr (scope 'Arg 'SeqWalkType)))
-                                null
                                 (tpl-pmtr (scope (scope 'structured
                                                         (tpl-use 'Invalidate
                                                                  (tpl-pmtr (scope 'Arg report-VG-chunk))
@@ -2221,9 +2221,9 @@
                                            null
                                            'arg_)
                                 (b s 'Arg const-chunk 'arg_))
-                    (bs-ResizePrep (list 'Point
+                    (bs-ResizePrep null
+                                   (list 'Point
                                          (tpl-pmtr (scope 'Arg 'ResizeType)))
-                                   null
                                    (bm-constructor (b s 'Arg const-chunk "&" 'a)
                                                    (cons-asgn 'arg_ 'a)
                                                    null)
@@ -2236,9 +2236,9 @@
                                               null
                                               'arg_)
                                    (b s 'Arg const-chunk 'arg_))
-                    (bs-Resize (list 'Point
+                    (bs-Resize null
+                               (list 'Point
                                      (tpl-pmtr (scope 'Arg 'SeqWalkType)))
-                               null
                                (bm-constructor (b s 'Arg const-chunk "&" 'a)
                                                (cons-asgn 'arg_ 'a)
                                                null)
@@ -2813,11 +2813,11 @@
                               (list (tpl-pmtr 'StencilType)
                                     (tpl-pmtr 'Operand))
                               (list 'StencilType 'Operand)
-                              (bs-Initial (list 'StencilType
+                              (bs-Initial def-points
+                                          (list 'StencilType
                                                 (tpl-pmtr (scope 'Operand 'ResizePrepType)))
                                           (list 'StencilType
                                                 (tpl-pmtr (scope 'Operand 'SeqWalkType)))
-                                          def-points
                                           (tpl-pmtr (scope (scope 'structured (tpl-use 'Invalidate
                                                                                        (tpl-pmtr (scope (scope 'structured (tpl-use 'Invalidate
                                                                                                                                     (tpl-pmtr (scope 'Operand report-VG-chunk))
@@ -2859,9 +2859,9 @@
                                           (list (b s const-chunk 'Operand 'operand_)
                                                 (b s const-chunk 'double 'lo_)
                                                 (b s const-chunk 'double 'hi_)))
-                              (bs-ResizePrep (list 'StencilType
+                              (bs-ResizePrep null
+                                             (list 'StencilType
                                                    (tpl-pmtr (scope 'Operand 'ResizeType)))
-                                             null
                                              (bm-constructor (list (b s 'Operand const-chunk "&" 'op)
                                                                    (b s 'double const-chunk 'lo)
                                                                    (b s 'double const-chunk 'hi))
@@ -2890,9 +2890,9 @@
                                              (list (b s const-chunk 'Operand 'operand_)
                                                    (b s const-chunk 'double 'lo_)
                                                    (b s const-chunk 'double 'hi_)))
-                              (bs-Resize (list 'StencilType
+                              (bs-Resize def-points
+                                         (list 'StencilType
                                                (tpl-pmtr (scope 'Operand 'SeqWalkType)))
-                                         def-points
                                          (bm-constructor (list (b s 'Operand const-chunk "&" 'op)
                                                                (b s 'double const-chunk 'lo)
                                                                (b s 'double const-chunk 'hi))
@@ -3070,11 +3070,7 @@
                               (list (tpl-pmtr 'StencilType)
                                     (tpl-pmtr 'Operand))
                               (list 'StencilType 'Operand)
-                              (bs-Initial (list 'StencilType
-                                                (tpl-pmtr (scope 'Operand 'ResizePrepType)))
-                                          (list 'StencilType
-                                                (tpl-pmtr (scope 'Operand 'SeqWalkType)))
-                                          (list def-points
+                              (bs-Initial (list def-points
                                                 (typedef (tpl-pmtr (scope 'Operand report-VG-chunk))
                                                          'OperandPVG)
                                                 (typedef (invalidate 'OperandPVG 'SP1)
@@ -3091,6 +3087,10 @@
                                                          'PVG123)
                                                 (typedef (minimum 'PVG123 'SP4PVG)
                                                          'PVG1234))
+                                          (list 'StencilType
+                                                (tpl-pmtr (scope 'Operand 'ResizePrepType)))
+                                          (list 'StencilType
+                                                (tpl-pmtr (scope 'Operand 'SeqWalkType)))
                                           'PVG1234
                                           (bm-constructor (list (b s 'Operand const-chunk "&" 'op)
                                                                 (b s 'double const-chunk 'coef1)
@@ -3130,9 +3130,9 @@
                                                 (b s const-chunk 'double 'coef2_)
                                                 (b s const-chunk 'double 'coef3_)
                                                 (b s const-chunk 'double 'coef4_)))
-                              (bs-ResizePrep (list 'StencilType
+                              (bs-ResizePrep null
+                                             (list 'StencilType
                                                    (tpl-pmtr (scope 'Operand 'ResizeType)))
-                                             null
                                              (bm-constructor (list (b s 'Operand const-chunk "&" 'op)
                                                                    (b s 'double const-chunk 'coef1)
                                                                    (b s 'double const-chunk 'coef2)
@@ -3165,9 +3165,9 @@
                                                    (b s const-chunk 'double 'coef2_)
                                                    (b s const-chunk 'double 'coef3_)
                                                    (b s const-chunk 'double 'coef4_)))
-                              (bs-Resize (list 'StencilType
+                              (bs-Resize def-points
+                                         (list 'StencilType
                                                (tpl-pmtr (scope 'Operand 'SeqWalkType)))
-                                         def-points
                                          (bm-constructor (list (b s 'Operand const-chunk "&" 'op)
                                                                (b s 'double const-chunk 'coef1)
                                                                (b s 'double const-chunk 'coef2)
@@ -3263,11 +3263,11 @@
                               (list (tpl-pmtr 'StencilType)
                                     (tpl-pmtr 'Operand))
                               (list 'StencilType 'Operand)
-                              (bs-Initial (list 'StencilType
+                              (bs-Initial def-points
+                                          (list 'StencilType
                                                 (tpl-pmtr (scope 'Operand 'ResizePrepType)))
                                           (list 'StencilType
                                                 (tpl-pmtr (scope 'Operand 'SeqWalkType)))
-                                          def-points
                                           (tpl-pmtr (scope (scope 'structured (tpl-use 'Invalidate
                                                                                        (tpl-pmtr (scope (scope 'structured (tpl-use 'Invalidate
                                                                                                                                     (tpl-pmtr (scope 'Operand report-VG-chunk))
@@ -3309,9 +3309,9 @@
                                           (list (b s const-chunk 'Operand 'operand_)
                                                 (b s const-chunk 'double 'lo_)
                                                 (b s const-chunk 'double 'hi_)))
-                              (bs-ResizePrep (list 'StencilType
+                              (bs-ResizePrep null
+                                             (list 'StencilType
                                                    (tpl-pmtr (scope 'Operand 'ResizeType)))
-                                             null
                                              (bm-constructor (list (b s 'Operand const-chunk "&" 'op)
                                                                    (b s 'double const-chunk 'lo)
                                                                    (b s 'double const-chunk 'hi))
@@ -3340,9 +3340,9 @@
                                              (list (b s const-chunk 'Operand 'operand_)
                                                    (b s const-chunk 'double 'lo_)
                                                    (b s const-chunk 'double 'hi_)))
-                              (bs-Resize (list 'StencilType
+                              (bs-Resize def-points
+                                         (list 'StencilType
                                                (tpl-pmtr (scope 'Operand 'SeqWalkType)))
-                                         def-points
                                          (bm-constructor (list (b s 'Operand const-chunk "&" 'op)
                                                                (b s 'double const-chunk 'lo)
                                                                (b s 'double const-chunk 'hi))

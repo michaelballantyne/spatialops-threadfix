@@ -142,8 +142,8 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          NeboScalar<Resize, FieldType> typedef ResizeType;
           typename FieldType::value_type typedef AtomicType;
+          NeboScalar<Resize, FieldType> typedef ResizeType;
           NeboScalar(AtomicType const value)
           : value_(value)
           {};
@@ -163,8 +163,8 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          NeboScalar<SeqWalk, FieldType> typedef SeqWalkType;
           typename FieldType::value_type typedef AtomicType;
+          NeboScalar<SeqWalk, FieldType> typedef SeqWalkType;
           NeboScalar(AtomicType const value)
           : value_(value)
           {};
@@ -5779,14 +5779,14 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          Nebo1DStencil<SeqWalk, StencilType, typename Operand::SeqWalkType, FieldType> typedef
-          SeqWalkType;
           typename StencilType::SrcFieldType typedef SFT;
           typename StencilType::DestFieldType typedef DFT;
           typename SFT::Location::Offset typedef SFTO;
           typename DFT::Location::Offset typedef DFTO;
           typename structured::GreaterThan<SFTO, DFTO>::result::Negate typedef SP1;
           typename structured::LessThan<SFTO, DFTO>::result typedef SP2;
+          Nebo1DStencil<SeqWalk, StencilType, typename Operand::SeqWalkType, FieldType> typedef
+          SeqWalkType;
           Nebo1DStencil(Operand const & op, double const lo, double const hi)
           : operand_(op), lo_(lo), hi_(hi)
           {};
@@ -5967,8 +5967,6 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          Nebo2DStencil<SeqWalk, StencilType, typename Operand::SeqWalkType, FieldType> typedef
-          SeqWalkType;
           typename StencilType::SrcFieldType typedef SFT;
           typename StencilType::DestFieldType typedef DFT;
           typename SFT::Location::Offset typedef SFTO;
@@ -5990,6 +5988,8 @@
           typename structured::Add<HiD1, LoD2>::result typedef SP2;
           typename structured::Add<LoD1, HiD2>::result typedef SP3;
           typename structured::Add<HiD1, HiD2>::result typedef SP4;
+          Nebo2DStencil<SeqWalk, StencilType, typename Operand::SeqWalkType, FieldType> typedef
+          SeqWalkType;
           Nebo2DStencil(Operand const & op,
                         double const coef1,
                         double const coef2,
@@ -6168,12 +6168,12 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          NeboFDStencil<SeqWalk, StencilType, typename Operand::SeqWalkType, FieldType> typedef
-          SeqWalkType;
           typename StencilType::SrcFieldType typedef SFT;
           typename StencilType::DestFieldType typedef DFT;
           typename StencilType::DirVec::Negate typedef SP1;
           typename StencilType::DirVec typedef SP2;
+          NeboFDStencil<SeqWalk, StencilType, typename Operand::SeqWalkType, FieldType> typedef
+          SeqWalkType;
           NeboFDStencil(Operand const & op, double const lo, double const hi)
           : operand_(op), lo_(lo), hi_(hi)
           {};
