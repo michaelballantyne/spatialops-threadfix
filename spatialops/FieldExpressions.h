@@ -5474,21 +5474,6 @@
 
 #     define nebo_cond cond//;
 
-      template<typename First, typename Second>
-       struct NeboPair { First typedef FirstType; Second typedef SecondType; };
-
-      template<typename First, typename Second, typename Third, typename Fourth>
-       struct NeboQuad {
-
-         First typedef FirstType;
-
-         Second typedef SecondType;
-
-         Third typedef ThirdType;
-
-         Fourth typedef FourthType;
-      };
-
       template<typename CurrentMode, typename Point, typename Arg, typename FieldType>
        struct NeboStencilPoint;
 

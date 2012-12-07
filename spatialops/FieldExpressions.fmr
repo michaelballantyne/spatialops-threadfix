@@ -60,8 +60,6 @@
        [NB-chunk 'NeboBoolean]
        [NCF-chunk 'NeboConstField]
        [NF-chunk 'NeboField]
-       [Pair-chunk 'NeboPair]
-       [Quad-chunk 'NeboQuad]
        [Nil-chunk 'NeboNil]
        [SClause-chunk 'NeboSimpleClause]
        [SFClause-chunk 'NeboSimpleFinalClause]
@@ -2196,22 +2194,6 @@
                                              'e))
                                      (fc Nil-chunk))))))
       (m 'nebo_cond null (c 'cond "//"))
-      (tpl-srt-def Pair-chunk
-                   (list (tpl-pmtr 'First)
-                         (tpl-pmtr 'Second))
-                   null
-                   (typedef 'First 'FirstType)
-                   (typedef 'Second 'SecondType))
-      (tpl-srt-def Quad-chunk
-                   (list (tpl-pmtr 'First)
-                         (tpl-pmtr 'Second)
-                         (tpl-pmtr 'Third)
-                         (tpl-pmtr 'Fourth))
-                   null
-                   (typedef 'First 'FirstType)
-                   (typedef 'Second 'SecondType)
-                   (typedef 'Third 'ThirdType)
-                   (typedef 'Fourth 'FourthType))
       (build-struct NSP
                     #true
                     (list (tpl-pmtr 'Point)
