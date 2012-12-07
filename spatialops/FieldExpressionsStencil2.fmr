@@ -269,12 +269,14 @@
                                           "dest.field_values()"
                                           'ExternalStorage))
                                    (b s
+                                      const-chunk
                                       'SrcType
                                       (fc 's1
                                           'ws1
                                           "src.field_values()"
                                           'ExternalStorage))
                                    (b s
+                                      const-chunk
                                       'SrcType
                                       (fc 's2
                                           'ws2
@@ -427,7 +429,7 @@
                                        'double const-chunk 'high)
                                     (b s
                                        'int const-chunk 'number_of_partitions))
-                              (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'FromGhost
+                              (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'GhostFromField
                                                                                     (tpl-pmtr (scope 'SrcType 'Ghost))))
                                                         'result))
                                        VG-chunk)
