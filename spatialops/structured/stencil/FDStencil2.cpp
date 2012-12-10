@@ -31,7 +31,8 @@ namespace structured{
 template< typename OpT, typename FieldT, typename DirT >
 FDStencil2<OpT,FieldT,DirT>::FDStencil2( const double coefLo, const double coefHi )
 : coefLo_( coefLo ),
-  coefHi_( coefHi )
+  coefHi_( coefHi ),
+  coefList_( build_two_point_coef_list(coefLo, coefHi) )
 {}
 
 template< typename OpT, typename FieldT, typename DirT >
@@ -42,9 +43,13 @@ template< typename OpT, typename FieldT, typename DirT >
 void
 FDStencil2<OpT,FieldT,DirT>::apply_to_field( const FieldT& src, FieldT& dest ) const
 {
-    NeboFDStencilConstructor<FDStencil2<OpT,FieldT,DirT> > typedef Stencil;
-    const Stencil stencil(this);
-    dest <<= stencil(src);
+    typedef NeboConstField<Initial, FieldT> ArgType;
+    typedef NeboStencil<Initial, StPtList, ArgType, FieldT> Stencil;
+    const ArgType arg(src);
+    dest <<= NeboExpression<Stencil, FieldT>(Stencil(arg, coefList_));
+//     NeboFDStencilConstructor<FDStencil2<OpT,FieldT,DirT> > typedef Stencil;
+//     const Stencil stencil(this);
+//     dest <<= stencil(src);
     //fd_stencil_2_apply_to_field_general_execute<OpT,FieldT,DirVec>(src, dest, coefLo_, coefHi_);
 }
 

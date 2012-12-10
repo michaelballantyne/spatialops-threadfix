@@ -24,6 +24,7 @@
 #define SpatialOps_Structured_Stencil_h
 
 #include <spatialops/structured/IndexTriplet.h>
+#include <spatialops/FieldExpressions.h>
 
 namespace SpatialOps {
   namespace structured {
@@ -43,11 +44,25 @@ namespace SpatialOps {
     class Stencil2
     {
       const double coefLo_, coefHi_;
+      const NeboStencilCoefList<2> coefList_;
+
     public:
 
       typedef OperatorT   type;           ///< The operator type (Interpolant, Gradient, Divergence)
       typedef SrcFieldT   SrcFieldType;   ///< The source field type
       typedef DestFieldT  DestFieldType;  ///< The destination field type
+      typedef typename SrcFieldType::Location::Offset
+                          SrcOffset;      ///< The source field offset
+      typedef typename DestFieldType::Location::Offset
+                          DestOffset;     ///< The destination field offset
+      typedef typename structured::GreaterThan<SrcOffset, DestOffset>::result::Negate
+                          LowStPt;        ///< The low (first) stencil point location
+                                          ///  (relative to the destination point)
+      typedef typename structured::LessThan<SrcOffset, DestOffset>::result
+                          HighStPt;       ///< The high (second) stencil point location
+                                          ///  (relative to the destination point)
+      typedef typename BuildTwoPointList<LowStPt, HighStPt>::Result
+                          StPtList;       ///< The list of all stencil points in this stencil
 
       /**
        *  \brief construct a stencil with the specified coefficients

@@ -48,7 +48,8 @@ namespace SpatialOps{ namespace structured{
   Stencil2<OperatorT,SrcT,DestT>::
   Stencil2( const double coefLo, const double coefHi )
     : coefLo_( coefLo ),
-      coefHi_( coefHi )
+      coefHi_( coefHi ),
+      coefList_( build_two_point_coef_list(coefLo, coefHi) )
   {}
 
   //------------------------------------------------------------------
@@ -68,9 +69,14 @@ namespace SpatialOps{ namespace structured{
     switch( dest.memory_device_type() ){
       case LOCAL_RAM:
           {
-              Nebo1DStencilConstructor<Stencil2<OperatorT,SrcT,DestT> > typedef Stencil;
-              const Stencil stencil(this);
-              dest <<= stencil(src);
+              typedef NeboConstField<Initial, SrcT> ArgType;
+              typedef NeboStencil<Initial, StPtList, ArgType, DestT> Stencil;
+              const ArgType arg(src);
+              dest <<= NeboExpression<Stencil, DestT>(Stencil(arg, coefList_));
+/*               dest <<= Stencil(arg, coefList_); */
+/*               Nebo1DStencilConstructor<Stencil2<OperatorT,SrcT,DestT> > typedef Stencil; */
+/*               const Stencil stencil(this); */
+/*               dest <<= stencil(src); */
           }
         break;
 

@@ -24,6 +24,7 @@
 #define SpatialOps_Structured_Stencil4_h
 
 #include <spatialops/structured/IndexTriplet.h>
+#include <spatialops/FieldExpressions.h>
 
 namespace SpatialOps{
 namespace structured{
@@ -49,6 +50,54 @@ namespace structured{
     typedef OpT         type;           ///< The operator type (Interpolant, Gradient, Divergence)
     typedef SrcFieldT   SrcFieldType;   ///< The source field type
     typedef DestFieldT  DestFieldType;  ///< The destination field type
+    typedef typename SrcFieldType::Location::Offset
+                        SrcOffset;      ///< The source field offset
+    typedef typename DestFieldType::Location::Offset
+                        DestOffset;     ///< The destination field offset
+    typedef structured::IndexTriplet<1, 0, 0>
+                        XUnit;          ///< X-axis unit vector
+    typedef structured::IndexTriplet<0, 1, 0>
+                        YUnit;          ///< Y-axis unit vector
+    typedef structured::IndexTriplet<0, 0, 1>
+                        ZUnit;          ///< Z-axis unit vector
+    typedef typename TemplateIf<((int)(SrcOffset::X) != (int)(DestOffset::X)),
+                                XUnit,
+                                YUnit>::result
+                        FirstDir;       ///< The first direction (unit vector)
+    typedef typename TemplateIf<((int)(SrcOffset::Z) != (int)(DestOffset::Z)),
+                                ZUnit,
+                                YUnit>::result
+                        SecondDir;      ///< The second direction (unit vector)
+    typedef typename structured::Multiply<SrcOffset, FirstDir>::result
+                        SrcInFirstDir;  ///< The source offset in the first direction
+    typedef typename structured::Multiply<SrcOffset, SecondDir>::result
+                        SrcInSecondDir; ///< The source offset in the second direction
+    typedef typename structured::Multiply<DestOffset, FirstDir>::result
+                        DestInFirstDir; ///< The destination offset in the first direction
+    typedef typename structured::Multiply<DestOffset, SecondDir>::result
+                        DestInSecondDir; ///< The destination offset in the second direction
+    typedef typename structured::GreaterThan<SrcInFirstDir, DestInFirstDir>::result::Negate
+                        LoValInFirstDir; ///< The low value in the first direction
+    typedef typename structured::LessThan<SrcInFirstDir, DestInFirstDir>::result
+                        HiValInFirstDir; ///< The high value in the first direction
+    typedef typename structured::GreaterThan<SrcInSecondDir, DestInSecondDir>::result::Negate
+                        LoValInSecondDir; ///< The low value in the second direction
+    typedef typename structured::LessThan<SrcInSecondDir, DestInSecondDir>::result
+                        HiValInSecondDir; ///< The high value in the second direction
+    typedef typename structured::Add<LoValInFirstDir, LoValInSecondDir>::result
+                        StPt1;          ///< First stencil point location
+                                        ///  (relative to the destination point)
+    typedef typename structured::Add<HiValInFirstDir, LoValInSecondDir>::result
+                        StPt2;          ///< Second stencil point location
+                                        ///  (relative to the destination point)
+    typedef typename structured::Add<LoValInFirstDir, HiValInSecondDir>::result
+                        StPt3;          ///< Third stencil point location
+                                        ///  (relative to the destination point)
+    typedef typename structured::Add<HiValInFirstDir, HiValInSecondDir>::result
+                        StPt4;          ///< Fourth stencil point location
+                                        ///  (relative to the destination point)
+    typedef typename BuildFourPointList<StPt1, StPt2, StPt3, StPt4>::Result
+                        StPtList;       ///< The list of all stencil points in this stencil
 
 
     Stencil4( const double coef1,
@@ -65,6 +114,7 @@ namespace structured{
 
   private:
     const double coef1_, coef2_, coef3_, coef4_;
+    const NeboStencilCoefList<4> coefList_;
   };
 
 

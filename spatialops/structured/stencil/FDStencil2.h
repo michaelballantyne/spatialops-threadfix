@@ -24,6 +24,7 @@
 #define FDSTENCIL2_H_
 
 #include <spatialops/structured/IndexTriplet.h>
+#include <spatialops/FieldExpressions.h>
 
 namespace SpatialOps{
   namespace structured{
@@ -37,12 +38,16 @@ namespace SpatialOps{
     template< typename OpT, typename FieldT, typename DirT >
     class FDStencil2{
       const double coefLo_, coefHi_;
+      const NeboStencilCoefList<2> coefList_;
 
     public:
       typedef OpT       type;
       typedef FieldT    SrcFieldType;
       typedef FieldT    DestFieldType;
       typedef typename UnitTriplet<DirT>::type  DirVec;
+      typedef typename DirVec::Negate LowStPt;
+      typedef DirVec                  HighStPt;
+      typedef typename BuildTwoPointList<LowStPt, HighStPt>::Result StPtList;
 
       FDStencil2( const double coefLo, const double coefHi );
       ~FDStencil2();

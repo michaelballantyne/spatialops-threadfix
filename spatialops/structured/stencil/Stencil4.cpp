@@ -38,7 +38,8 @@ namespace structured{
     : coef1_( coef1 ),
       coef2_( coef2 ),
       coef3_( coef3 ),
-      coef4_( coef4 )
+      coef4_( coef4 ),
+      coefList_( build_four_point_coef_list(coef1, coef2, coef3, coef4) )
   {}
 
   //------------------------------------------------------------------
@@ -48,9 +49,13 @@ namespace structured{
   Stencil4<OpT,SrcT,DestT>::
   apply_to_field( const SrcT& src, DestT& dest ) const
   {
-      Nebo2DStencilConstructor<Stencil4<OpT,SrcT,DestT> > typedef Stencil;
-      const Stencil stencil(this);
-      dest <<= stencil(src);
+      typedef NeboConstField<Initial, SrcT> ArgType;
+      typedef NeboStencil<Initial, StPtList, ArgType, DestT> Stencil;
+      const ArgType arg(src);
+      dest <<= NeboExpression<Stencil, DestT>(Stencil(arg, coefList_));
+//       Nebo2DStencilConstructor<Stencil4<OpT,SrcT,DestT> > typedef Stencil;
+//       const Stencil stencil(this);
+//       dest <<= stencil(src);
   }
 
   //==================================================================
