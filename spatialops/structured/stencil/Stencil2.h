@@ -64,6 +64,22 @@ namespace SpatialOps {
       typedef typename BuildTwoPointList<LowStPt, HighStPt>::Result
                           StPtList;       ///< The list of all stencil points in this stencil
 
+      typedef typename DestFieldType::value_type  AtomicType;  // scalar type
+
+      // Nebo-related internal struct
+      // argument is a Nebo expression
+      template<typename Arg>
+      struct ResultConstructor {
+          typedef NeboStencil<Initial, StPtList, Arg, DestFieldType> Stencil;
+          typedef NeboExpression<Stencil, DestFieldType> Result;
+      };
+
+      // Nebo-related internal struct
+      // argument is a field
+      typedef NeboConstField<Initial, SrcFieldType> FieldArg;
+      typedef NeboStencil<Initial, StPtList, FieldArg, DestFieldType> FieldStencil;
+      typedef NeboExpression<FieldStencil, DestFieldType> FieldResult;
+
       /**
        *  \brief construct a stencil with the specified coefficients
        *  \param coefLo the coefficient to multiply the (-) side field by
@@ -79,6 +95,36 @@ namespace SpatialOps {
        * \param dest the resulting field.
        */
       void apply_to_field( const SrcFieldType& src, DestFieldType& dest ) const;
+
+      /**
+       * \brief Nebo's inline operator for scalar values
+       * \param src the scalar to which the operator is applied
+       */
+      inline AtomicType operator ()( const AtomicType src ) const
+      {
+          return get_minus_coef() * src + get_plus_coef() * src;
+      }
+
+      /**
+       * \brief Nebo's inline operator for field values
+       * \param src the field to which the operator is applied
+       */
+      inline FieldResult operator ()( const SrcFieldType & src ) const
+      {
+          return FieldResult(FieldStencil(FieldArg(src), coefList_));
+      }
+
+      /**
+       * \brief Nebo's inline operator for Nebo expressions
+       * \param src the Nebo expression to which the operator is applied
+       */
+      template<typename Arg>
+      inline typename ResultConstructor<Arg>::Result operator ()( const NeboExpression<Arg, SrcFieldType> & src ) const
+      {
+          typedef typename ResultConstructor<Arg>::Stencil Stencil;
+          typedef typename ResultConstructor<Arg>::Result Result;
+          return Result(Stencil(src.expr(), coefList_));
+      }
 
       inline double get_minus_coef() const{ return coefLo_; } ///< get the (-) coefficient
       inline double  get_plus_coef() const{ return coefHi_; } ///< get the (+) coefficient

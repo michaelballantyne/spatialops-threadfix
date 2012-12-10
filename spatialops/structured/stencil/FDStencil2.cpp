@@ -43,14 +43,7 @@ template< typename OpT, typename FieldT, typename DirT >
 void
 FDStencil2<OpT,FieldT,DirT>::apply_to_field( const FieldT& src, FieldT& dest ) const
 {
-    typedef NeboConstField<Initial, FieldT> ArgType;
-    typedef NeboStencil<Initial, StPtList, ArgType, FieldT> Stencil;
-    const ArgType arg(src);
-    dest <<= NeboExpression<Stencil, FieldT>(Stencil(arg, coefList_));
-//     NeboFDStencilConstructor<FDStencil2<OpT,FieldT,DirT> > typedef Stencil;
-//     const Stencil stencil(this);
-//     dest <<= stencil(src);
-    //fd_stencil_2_apply_to_field_general_execute<OpT,FieldT,DirVec>(src, dest, coefLo_, coefHi_);
+    dest <<= operator()(src);
 }
 
 // Explicit template instantiation

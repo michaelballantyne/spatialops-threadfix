@@ -49,13 +49,7 @@ namespace structured{
   Stencil4<OpT,SrcT,DestT>::
   apply_to_field( const SrcT& src, DestT& dest ) const
   {
-      typedef NeboConstField<Initial, SrcT> ArgType;
-      typedef NeboStencil<Initial, StPtList, ArgType, DestT> Stencil;
-      const ArgType arg(src);
-      dest <<= NeboExpression<Stencil, DestT>(Stencil(arg, coefList_));
-//       Nebo2DStencilConstructor<Stencil4<OpT,SrcT,DestT> > typedef Stencil;
-//       const Stencil stencil(this);
-//       dest <<= stencil(src);
+      dest <<= operator()(src);
   }
 
   //==================================================================

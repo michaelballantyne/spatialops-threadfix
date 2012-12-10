@@ -69,14 +69,7 @@ namespace SpatialOps{ namespace structured{
     switch( dest.memory_device_type() ){
       case LOCAL_RAM:
           {
-              typedef NeboConstField<Initial, SrcT> ArgType;
-              typedef NeboStencil<Initial, StPtList, ArgType, DestT> Stencil;
-              const ArgType arg(src);
-              dest <<= NeboExpression<Stencil, DestT>(Stencil(arg, coefList_));
-/*               dest <<= Stencil(arg, coefList_); */
-/*               Nebo1DStencilConstructor<Stencil2<OperatorT,SrcT,DestT> > typedef Stencil; */
-/*               const Stencil stencil(this); */
-/*               dest <<= stencil(src); */
+              dest <<= operator()(src);
           }
         break;
 
