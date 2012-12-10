@@ -32,7 +32,4 @@ target_link_libraries( till_5_test ${libs} )
 add_executable( cond_test cond_test.cpp )
 target_link_libraries( cond_test ${libs} )
 
-add_executable( error_test ErrorTest.cpp )
-target_link_libraries( error_test ${libs} )
-
 add_subdirectory( heatEqn )
