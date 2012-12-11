@@ -22,7 +22,7 @@
 
 #include "Stencil4.h"
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/FieldExpressionsStencil4.h>
+#include <spatialops/FieldExpressions.h>
 
 namespace SpatialOps{
 namespace structured{

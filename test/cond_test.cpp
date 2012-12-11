@@ -2,7 +2,6 @@
 #include <spatialops/structured/FVTools.h>
 
 #include <spatialops/FieldExpressions.h>
-#include <spatialops/FieldExpressionsExtended.h>
 #include <spatialops/FieldReductions.h>
 
 #include <iostream>

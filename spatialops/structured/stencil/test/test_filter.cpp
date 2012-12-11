@@ -3,7 +3,6 @@
 #include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/Grid.h>
 #include <spatialops/FieldExpressions.h>
-#include <spatialops/FieldExpressionsExtended.h>
 
 #include <test/TestHelper.h>
 

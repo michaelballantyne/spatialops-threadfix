@@ -23,7 +23,7 @@
 #include "FDStencil2.h"
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/WriteMatlab.h>
-#include <spatialops/FieldExpressionsFDStencil2.h>
+#include <spatialops/FieldExpressions.h>
 
 namespace SpatialOps{
 namespace structured{

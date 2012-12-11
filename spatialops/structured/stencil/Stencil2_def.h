@@ -39,7 +39,7 @@
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/MemoryTypes.h>
-#include <spatialops/FieldExpressionsStencil2.h>
+#include <spatialops/FieldExpressions.h>
 
 namespace SpatialOps{ namespace structured{
 

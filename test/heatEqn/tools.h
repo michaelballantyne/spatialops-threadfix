@@ -3,7 +3,6 @@
 
 #include <spatialops/structured/SpatialFieldStore.h>
 #include <spatialops/FieldExpressions.h>
-#include <spatialops/FieldExpressionsExtended.h>
 
 
 //--------------------------------------------------------------------
