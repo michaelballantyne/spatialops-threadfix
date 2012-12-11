@@ -2731,7 +2731,7 @@
                                              const-chunk
                                              "&"
                                              'initial_rhs)
-                                          (b s 'size_t const-chunk 'number_of_partitions)))
+                                          (b s 'int const-chunk 'number_of_partitions)))
                            (list (typedef (tpl-pmtr (scope (tpl-use NF-chunk 'Initial FT-chunk)
                                                            'ResizePrepType))
                                           'LhsType)

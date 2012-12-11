@@ -5928,7 +5928,7 @@
                                                                            NeboExpression<ExprType,
                                                                                           FieldType>
                                                                            const & initial_rhs,
-                                                                           size_t const
+                                                                           int const
                                                                            number_of_partitions) {
 
              typename NeboField<Initial, FieldType>::ResizePrepType typedef LhsType;
