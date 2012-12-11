@@ -114,7 +114,7 @@ namespace structured{
    *  \tparam FieldT the type of field that we want NZ for.
    */
   template<typename FieldT>
-  int get_nz_with_ghost( const int nzNoGhost, const bool hasPlusFaceZ )
+  inline int get_nz_with_ghost( const int nzNoGhost, const bool hasPlusFaceZ )
   {
     return ( nzNoGhost>1
              ? ( nzNoGhost + FieldT::Ghost::NGhostMinus::z_value() + FieldT::Ghost::NGhostPlus::z_value()
@@ -148,7 +148,7 @@ namespace structured{
    *  \tparam FieldT the type of field that we want (NX,NY,NZ) for.
    */
   template<typename FieldT>
-  IntVec get_dim_with_ghost( const IntVec& dimNoGhost,
+  inline IntVec get_dim_with_ghost( const IntVec& dimNoGhost,
                              const bool hasPlusFaceX,
                              const bool hasPlusFaceY,
                              const bool hasPlusFaceZ )
@@ -181,7 +181,7 @@ namespace structured{
    */
   template<typename FieldT>
   MemoryWindow
-  get_window_with_ghost( const IntVec& localDim, const bool hasPlusFaceX, const bool hasPlusFaceY, const bool hasPlusFaceZ )
+  inline get_window_with_ghost( const IntVec& localDim, const bool hasPlusFaceX, const bool hasPlusFaceY, const bool hasPlusFaceZ )
   {
     const IntVec dim( get_nx_with_ghost<FieldT>(localDim[0],hasPlusFaceX),
                       get_ny_with_ghost<FieldT>(localDim[1],hasPlusFaceY),
@@ -209,7 +209,7 @@ namespace structured{
    */
   template<typename FieldT>
   MemoryWindow
-  get_window_with_ghost( const IntVec& globalDim, const IntVec& localDim, const IntVec& offset,
+  inline get_window_with_ghost( const IntVec& globalDim, const IntVec& localDim, const IntVec& offset,
                          const bool hasPlusFaceX, const bool hasPlusFaceY, const bool hasPlusFaceZ )
   {
     const IntVec dimLoc( get_nx_with_ghost<FieldT>(localDim[0],hasPlusFaceX),
