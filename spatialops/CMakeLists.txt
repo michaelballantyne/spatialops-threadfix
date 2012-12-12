@@ -13,6 +13,7 @@ set( SO_HEADERS
   SpatialOpsDefs.h
   SpatialOpsTools.h
   WriteMatlab.h
+  FieldExpressionsExtended.h
   )
   
 if ( ENABLE_THREADS )
