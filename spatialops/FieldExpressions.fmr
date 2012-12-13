@@ -2416,7 +2416,7 @@
                                                   'Coef)
                                          (typedef (tpl-pmtr (scope 'ArgPreSeqWalk 'SeqWalkType))
                                                   'Arg)
-                                         (typedef (tpl-use 'ProdOp 'SeqWalk 'Arg 'Coef 'DestType)
+                                         (typedef (tpl-use 'ProdOp 'SeqWalk 'Coef 'Arg 'DestType)
                                                   'MultiplyType)
                                          (typedef (tpl-pmtr (scope 'List (tpl-fcn-use 'ConstructExpr 'ArgPreSeqWalk 'DestType)))
                                                   'LaterPointsType)
@@ -2437,8 +2437,8 @@
                                                                       'NewShift)
                                                              (fc 'Result
                                                                  (fc 'MultiplyType
-                                                                     (mfc 'arg (tpl-fcn-use 'init VG-chunk 'NewShift))
-                                                                     (fc 'Coef (mfc 'coefs 'coef)))
+                                                                     (fc 'Coef (mfc 'coefs 'coef))
+                                                                     (mfc 'arg (tpl-fcn-use 'init VG-chunk 'NewShift)))
                                                                  (fc (scope 'LaterPointsType
                                                                             (tpl-fcn-use 'in_sq_construct VG-chunk SH-chunk))
                                                                      'arg
@@ -2495,7 +2495,7 @@
                                                   'Coef)
                                          (typedef (tpl-pmtr (scope 'ArgPreSeqWalk 'SeqWalkType))
                                                   'Arg)
-                                         (typedef (tpl-use 'ProdOp 'SeqWalk 'Arg 'Coef 'DestType)
+                                         (typedef (tpl-use 'ProdOp 'SeqWalk 'Coef 'Arg 'DestType)
                                                   'Result)
                                          (tpl-def (list (tpl-pmtr VG-chunk)
                                                         (tpl-pmtr SH-chunk))
@@ -2508,8 +2508,8 @@
                                                                                        'result))
                                                                       'NewShift)
                                                              (fc 'Result
-                                                                 (mfc 'arg (tpl-fcn-use 'init VG-chunk 'NewShift))
-                                                                 (fc 'Coef (mfc 'coefs 'coef)))))
+                                                                 (fc 'Coef (mfc 'coefs 'coef))
+                                                                 (mfc 'arg (tpl-fcn-use 'init VG-chunk 'NewShift)))))
                                          (tpl-def (tpl-pmtr SH-chunk)
                                                   (r-fcn-def (s-fcn-dcl 'rs_sq_construct
                                                                         (b s 'Result const-chunk)

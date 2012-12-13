@@ -5667,7 +5667,7 @@
 
              typename ArgPreSeqWalk::SeqWalkType typedef Arg;
 
-             ProdOp<SeqWalk, Arg, Coef, DestType> typedef MultiplyType;
+             ProdOp<SeqWalk, Coef, Arg, DestType> typedef MultiplyType;
 
              typename List::template ConstructExpr<ArgPreSeqWalk, DestType> typedef LaterPointsType;
 
@@ -5681,7 +5681,8 @@
 
                  typename structured::Add<Shift, Point>::result typedef NewShift;
 
-                 return Result(MultiplyType(arg.template init<ValidGhost, NewShift>(), Coef(coefs.coef())),
+                 return Result(MultiplyType(Coef(coefs.coef()),
+                                            arg.template init<ValidGhost, NewShift>()),
                                LaterPointsType::template in_sq_construct<ValidGhost, Shift>(arg,
                                                                                             coefs.list()));
               };
@@ -5722,7 +5723,7 @@
 
              typename ArgPreSeqWalk::SeqWalkType typedef Arg;
 
-             ProdOp<SeqWalk, Arg, Coef, DestType> typedef Result;
+             ProdOp<SeqWalk, Coef, Arg, DestType> typedef Result;
 
              template<typename ValidGhost, typename Shift>
               static inline Result const in_sq_construct(ArgPreSeqWalk const & arg,
@@ -5730,7 +5731,7 @@
 
                  typename structured::Add<Shift, Point>::result typedef NewShift;
 
-                 return Result(arg.template init<ValidGhost, NewShift>(), Coef(coefs.coef()));
+                 return Result(Coef(coefs.coef()), arg.template init<ValidGhost, NewShift>());
               };
 
              template<typename Shift>
