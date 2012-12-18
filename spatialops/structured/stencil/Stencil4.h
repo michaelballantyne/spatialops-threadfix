@@ -58,6 +58,11 @@ namespace structured{
 
     void apply_to_field( const SrcFieldT& src, DestFieldT& dest ) const;
 
+    inline double get_coef1() const{ return coef1_; } ///< get the first coefficient
+    inline double get_coef2() const{ return coef2_; } ///< get the second coefficient
+    inline double get_coef3() const{ return coef3_; } ///< get the third coefficient
+    inline double get_coef4() const{ return coef4_; } ///< get the fourth coefficient
+
   private:
     const double coef1_, coef2_, coef3_, coef4_;
   };
