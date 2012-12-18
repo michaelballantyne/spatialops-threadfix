@@ -238,7 +238,7 @@ namespace structured{
   FD_ALL_VOL_FIELDS( GradientY )
   FD_ALL_VOL_FIELDS( GradientZ )
 
-} // namespace SpatialOps
 } // namespace structured
+} // namespace SpatialOps
 
 #endif // SpatialOps_structured_FVStaggeredOpTypes_h
