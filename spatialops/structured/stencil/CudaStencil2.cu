@@ -132,7 +132,7 @@ namespace SpatialOps {
 										 const int s2OFF_x, const int s2OFF_y, const int s2OFF_z );
 
 #define DECLARE_STENCIL_CUDA( TYPE, DIR) template void \
-		__cuda_stencil_2_apply_to_field< TYPE , DIR >( TYPE* dest, const TYPE* src, \
+		__global__ __cuda_stencil_2_apply_to_field< TYPE , DIR >( TYPE* dest, const TYPE* src, \
 										 TYPE low,   TYPE high, \
 										 const int nx,      const int ny,      const int nz, \
 										 const int dEX_x,   const int dEX_y,   const int dEX_z, \
