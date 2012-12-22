@@ -182,10 +182,16 @@ namespace SpatialOps {
 
         typedef typename UnitTriplet<Dir>::type                 DirUnitVec;     ///< unit vector for the direction that this operator acts in.
 
+        typedef typename Subtract<
+            typename Multiply<SFBCExtra,DFBCExtra>::result,
+            DirUnitVec>::result::PositiveOrZero                 BCMatchNotOnDir;///< amount to augment for BCExtra along axis that is not Dir
+
         typedef IndexTriplet<0,0,0>                             Src1Offset;     ///< offset for the first source field
         typedef typename DirUnitVec::Negate                     Src1Extent;     ///< extent modification for the first source field
-        typedef typename Subtract<SFBCExtra,
-            DirUnitVec>::result::PositiveOrZero::Negate         Src1ExtentBC;   ///< amount to augment source extents by if a BC is present
+        typedef typename Add<BCMatchNotOnDir,
+            typename Subtract<SFBCExtra,
+                DirUnitVec>::result::PositiveOrZero::Negate
+            >::result                                           Src1ExtentBC;   ///< amount to augment source extents by if a BC is present
 
         typedef typename Add<DirUnitVec,Src1Offset>::result     Src2Offset;     ///< offset for the second source field
         typedef Src1Extent                                      Src2Extent;     ///< extent modification for the second source field
@@ -198,11 +204,13 @@ namespace SpatialOps {
               >::result
             >::result::PositiveOrZero                           DestOffset;     ///< the offset for the destination field
         typedef Src1Extent                                      DestExtent;     ///< the extent for the destination field
-        typedef typename Subtract<
-            typename Multiply<DFO,DFBCExtra>::result,
-            typename Multiply< DirUnitVec,
-                               typename Multiply<SFO,SFBCExtra>::result
-                               >::result
+        typedef typename Add<BCMatchNotOnDir,
+            typename Subtract<
+                typename Multiply<DFO,DFBCExtra>::result,
+                typename Multiply< DirUnitVec,
+                    typename Multiply<SFO,SFBCExtra>::result
+                    >::result
+                >::result
             >::result                                           DestExtentBC;   ///< amount to augment destination extents by if a BC is present
       };
 
