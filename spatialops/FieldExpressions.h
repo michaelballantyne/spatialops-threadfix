@@ -5578,14 +5578,6 @@
           };
           inline double const coef(void) const { return coef_; };
           inline NeboStencilCoefList<Length - 1> const list(void) const { return list_; };
-          template<int L>
-           inline NeboStencilCoefList<L + Length> const internal_reverse(NeboStencilCoefList<L>
-                                                                         const l) const {
-              return list_.internal_reverse(NeboStencilCoefList<L + 1>(l, coef_));
-           };
-          inline NeboStencilCoefList<Length> const reverse(void) const {
-             return list_.internal_reverse(NeboStencilCoefList<1>(coef_));
-          };
 
          private:
           NeboStencilCoefList<Length - 1> const list_;
@@ -5603,11 +5595,6 @@
              return NeboStencilCoefList<2>(*this, c);
           };
           inline double const coef(void) const { return coef_; };
-          template<int L>
-           inline NeboStencilCoefList<L + 1> const internal_reverse(NeboStencilCoefList<L> const l) const {
-              return NeboStencilCoefList<L + 1>(l, coef_);
-           };
-          inline NeboStencilCoefList<1> const reverse(void) const { return *this; };
 
          private:
           double const coef_;
@@ -5618,14 +5605,14 @@
       };
 
       inline NeboStencilCoefList<2> const build_two_point_coef_list(double const c1, double const c2) {
-         return NeboStencilCoefList<1>(c1)(c2).reverse();
+         return NeboStencilCoefList<1>(c1)(c2);
       };
 
       inline NeboStencilCoefList<4> const build_four_point_coef_list(double const c1,
                                                                      double const c2,
                                                                      double const c3,
                                                                      double const c4) {
-         return NeboStencilCoefList<1>(c1)(c2)(c3)(c4).reverse();
+         return NeboStencilCoefList<1>(c1)(c2)(c3)(c4);
       };
 
       template<typename PointType, typename ListType>
@@ -5638,14 +5625,6 @@
           enum {length = 1 + List::length};
           template<typename NewPoint>
            struct AddPoint { NeboStencilPointList<NewPoint, MyType> typedef Result; };
-          template<typename BegunReverse>
-           struct ReverseInterior {
-
-             NeboStencilPointList<Point, BegunReverse> typedef NewReverse;
-
-             typename ListType::template ReverseInterior<NewReverse>::Result typedef Result;
-          };
-          typename ReverseInterior<NeboNil>::Result typedef Reverse;
           template<typename GivenPossibleValidGhost>
            struct PossibleGhost {
 
@@ -5653,11 +5632,11 @@
              CurrentPossibleValidGhost;
 
              typename List::template PossibleGhost<GivenPossibleValidGhost> typedef
-             LaterPointsPossibleGhost;
+             EarlierPointsPossibleGhost;
 
-             typename LaterPointsPossibleGhost::Result typedef LaterPointsPossibleValidGhost;
+             typename EarlierPointsPossibleGhost::Result typedef EarlierPointsPossibleValidGhost;
 
-             typename structured::Minimum<CurrentPossibleValidGhost, LaterPointsPossibleValidGhost>::
+             typename structured::Minimum<CurrentPossibleValidGhost, EarlierPointsPossibleValidGhost>::
              result typedef Result;
           };
           template<typename ArgPreSeqWalk, typename DestType>
@@ -5667,13 +5646,14 @@
 
              typename ArgPreSeqWalk::SeqWalkType typedef Arg;
 
-             ProdOp<SeqWalk, Coef, Arg, DestType> typedef MultiplyType;
+             ProdOp<SeqWalk, Arg, Coef, DestType> typedef MultiplyType;
 
-             typename List::template ConstructExpr<ArgPreSeqWalk, DestType> typedef LaterPointsType;
+             typename List::template ConstructExpr<ArgPreSeqWalk, DestType> typedef
+             EarlierPointsType;
 
-             typename LaterPointsType::Result typedef LaterPointsResult;
+             typename EarlierPointsType::Result typedef EarlierPointsResult;
 
-             SumOp<SeqWalk, MultiplyType, LaterPointsResult, DestType> typedef Result;
+             SumOp<SeqWalk, EarlierPointsResult, MultiplyType, DestType> typedef Result;
 
              template<typename ValidGhost, typename Shift>
               static inline Result const in_sq_construct(ArgPreSeqWalk const & arg,
@@ -5681,10 +5661,9 @@
 
                  typename structured::Add<Shift, Point>::result typedef NewShift;
 
-                 return Result(MultiplyType(Coef(coefs.coef()),
-                                            arg.template init<ValidGhost, NewShift>()),
-                               LaterPointsType::template in_sq_construct<ValidGhost, Shift>(arg,
-                                                                                            coefs.list()));
+                 return Result(EarlierPointsType::template in_sq_construct<ValidGhost, Shift>(arg,
+                                                                                              coefs.list()),
+                               MultiplyType(arg.template init<ValidGhost, NewShift>(), Coef(coefs.coef())));
               };
 
              template<typename Shift>
@@ -5693,8 +5672,8 @@
 
                  typename structured::Add<Shift, Point>::result typedef NewShift;
 
-                 return Result(MultiplyType(arg.template init<NewShift>(), Coef(coefs.coef())),
-                               LaterPointsType::template rs_sq_construct<Shift>(arg, coefs.list()));
+                 return Result(EarlierPointsType::template rs_sq_construct<Shift>(arg, coefs.list()),
+                               MultiplyType(arg.template init<NewShift>(), Coef(coefs.coef())));
               };
           };
       };
@@ -5709,9 +5688,6 @@
           enum {length = 1};
           template<typename NewPoint>
            struct AddPoint { NeboStencilPointList<NewPoint, MyType> typedef Result; };
-          template<typename BegunReverse>
-           struct ReverseInterior { NeboStencilPointList<Point, BegunReverse> typedef Result; };
-          MyType typedef Reverse;
           template<typename GivenPossibleValidGhost>
            struct PossibleGhost {
              typename structured::Invalidate<GivenPossibleValidGhost, Point>::result typedef Result;
@@ -5723,7 +5699,7 @@
 
              typename ArgPreSeqWalk::SeqWalkType typedef Arg;
 
-             ProdOp<SeqWalk, Coef, Arg, DestType> typedef Result;
+             ProdOp<SeqWalk, Arg, Coef, DestType> typedef Result;
 
              template<typename ValidGhost, typename Shift>
               static inline Result const in_sq_construct(ArgPreSeqWalk const & arg,
@@ -5731,7 +5707,7 @@
 
                  typename structured::Add<Shift, Point>::result typedef NewShift;
 
-                 return Result(Coef(coefs.coef()), arg.template init<ValidGhost, NewShift>());
+                 return Result(arg.template init<ValidGhost, NewShift>(), Coef(coefs.coef()));
               };
 
              template<typename Shift>
@@ -5751,26 +5727,21 @@
       template<typename First, typename Second>
        struct BuildTwoPointList {
 
-         NeboStencilPointList<First, NeboNil> typedef FirstPoint;
+         typename BuildStencilPointList<First>::Result typedef FirstPoint;
 
-         typename FirstPoint::template AddPoint<Second>::Result typedef SecondFirstList;
-
-         typename SecondFirstList::Reverse typedef Result;
+         typename FirstPoint::template AddPoint<Second>::Result typedef Result;
       };
 
       template<typename First, typename Second, typename Third, typename Fourth>
        struct BuildFourPointList {
 
-         NeboStencilPointList<First, NeboNil> typedef FirstPoint;
+         typename BuildStencilPointList<First>::Result typedef FirstPoint;
 
          typename FirstPoint::template AddPoint<Second>::Result typedef SecondFirstList;
 
          typename SecondFirstList::template AddPoint<Third>::Result typedef ThirdSecondFirstList;
 
-         typename ThirdSecondFirstList::template AddPoint<Fourth>::Result typedef
-         FourthThirdSecondFirstList;
-
-         typename FourthThirdSecondFirstList::Reverse typedef Result;
+         typename ThirdSecondFirstList::template AddPoint<Fourth>::Result typedef Result;
       };
 
       template<typename CurrentMode, typename Pts, typename Arg, typename FieldType>
