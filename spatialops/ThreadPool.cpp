@@ -158,14 +158,14 @@ namespace SpatialOps {
      return ThreadPoolResourceManager::resize_active(self(),threadCount);
    }
    int ThreadPool::get_pool_size(){
-     return ThreadPoolResourceManager::get_worker_count(self());
+     return ThreadPoolResourceManager::get_max_active_worker_count(self());
    }
 
    int ThreadPool::set_pool_capacity( const int threadCount ){
      return ThreadPoolResourceManager::resize(self(),threadCount);
    }
    int ThreadPool::get_pool_capacity(){
-     return ThreadPoolResourceManager::get_max_active_worker_count(self());
+     return ThreadPoolResourceManager::get_worker_count(self());
    }
 
    ThreadPool& ThreadPool::self()
@@ -206,14 +206,14 @@ namespace SpatialOps {
      return ThreadPoolResourceManager::resize_active(self(),threadCount);
    }
    int ThreadPoolFIFO::get_pool_size(){
-     return ThreadPoolResourceManager::get_worker_count(self());
+     return ThreadPoolResourceManager::get_max_active_worker_count(self());
    }
 
    int ThreadPoolFIFO::set_pool_capacity( const int threadCount ){
      return ThreadPoolResourceManager::resize(self(),threadCount);
    }
    int ThreadPoolFIFO::get_pool_capacity(){
-     return ThreadPoolResourceManager::get_max_active_worker_count(self());
+     return ThreadPoolResourceManager::get_worker_count(self());
    }
 
    //===========================================================================
