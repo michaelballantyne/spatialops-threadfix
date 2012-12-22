@@ -64,7 +64,7 @@ namespace SpatialOps{
   }
 
   /* used within nebo to get current hard (max/total) thread count */
-  inline int get_hard_thread_count(){ return ThreadPoolFIFO::get_pool_size(); }
+  inline int get_hard_thread_count(){ return ThreadPoolFIFO::get_pool_capacity(); }
 
   /* used by tests to change current hard (max/total) thread count at runtime */
   inline int set_hard_thread_count( const int threadCount){
