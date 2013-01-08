@@ -42,6 +42,7 @@
 #include <spatialops/structured/MemoryTypes.h>
 #include <spatialops/structured/MemoryWindow.h>
 #include <spatialops/structured/GhostData.h>
+#include <boost/static_assert.hpp>
 
 #ifdef SOPS_BOOST_SERIALIZATION
 # include <boost/serialization/serialization.hpp>
@@ -401,13 +402,82 @@ namespace structured{
     inline field_type resize_ghost() const {
         typename GhostFromField<MyType>::result typedef OldGhost;
 
-        //check for valid ghost resize
+        /* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         * If one of the following Boost static asserts has failed,
+         *  then the Nebo calculation you are trying cannot be
+         *  performed because there are not enough ghost cells.
+         *  Essentially, the chain of stencil operators you are
+         *  trying requires more ghost cells than are present in
+         *  the given fields.
+         *
+         * There are two possible solutions:
+         * 1) Add more ghost cells to the fields.
+         * 2) Change the calculation.
+         * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         */
         BOOST_STATIC_ASSERT(int(NewGhost::nX) <= int(OldGhost::nX));
         BOOST_STATIC_ASSERT(int(NewGhost::pX) <= int(OldGhost::pX));
+        BOOST_STATIC_ASSERT(int(NewGhost::bX) <= int(OldGhost::bX));
         BOOST_STATIC_ASSERT(int(NewGhost::nY) <= int(OldGhost::nY));
         BOOST_STATIC_ASSERT(int(NewGhost::pY) <= int(OldGhost::pY));
+        BOOST_STATIC_ASSERT(int(NewGhost::bY) <= int(OldGhost::bY));
         BOOST_STATIC_ASSERT(int(NewGhost::nZ) <= int(OldGhost::nZ));
         BOOST_STATIC_ASSERT(int(NewGhost::pZ) <= int(OldGhost::pZ));
+        BOOST_STATIC_ASSERT(int(NewGhost::bZ) <= int(OldGhost::bZ));
+
+        return MyType(window_with_ghost().template resize_ghost<OldGhost, NewGhost>(),
+                      field_values(),
+                      ExternalStorage);
+    }
+
+    template<typename NewGhost>
+    inline field_type resize_ghost_and_maintain_interior() const {
+        typename GhostFromField<MyType>::result typedef OldGhost;
+        typename MinimumGhostFromField<MyType>::result typedef Minimum;
+
+        /* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         * If one of the following Boost static asserts has failed,
+         *  then the Nebo calculation you are trying cannot be
+         *  performed because there are not enough ghost cells.
+         *  Essentially, the chain of stencil operators you are
+         *  trying requires more ghost cells than are present in
+         *  the given fields.
+         *
+         * There are two possible solutions:
+         * 1) Add more ghost cells to the fields.
+         * 2) Change the calculation.
+         * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         */
+        BOOST_STATIC_ASSERT(int(NewGhost::nX) <= int(OldGhost::nX));
+        BOOST_STATIC_ASSERT(int(NewGhost::pX) <= int(OldGhost::pX));
+        BOOST_STATIC_ASSERT(int(NewGhost::bX) <= int(OldGhost::bX));
+        BOOST_STATIC_ASSERT(int(NewGhost::nY) <= int(OldGhost::nY));
+        BOOST_STATIC_ASSERT(int(NewGhost::pY) <= int(OldGhost::pY));
+        BOOST_STATIC_ASSERT(int(NewGhost::bY) <= int(OldGhost::bY));
+        BOOST_STATIC_ASSERT(int(NewGhost::nZ) <= int(OldGhost::nZ));
+        BOOST_STATIC_ASSERT(int(NewGhost::pZ) <= int(OldGhost::pZ));
+        BOOST_STATIC_ASSERT(int(NewGhost::bZ) <= int(OldGhost::bZ));
+
+        /* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         * If one of the following Boost static asserts has failed,
+         *  then the Nebo calculation you are trying cannot be
+         *  performed because in the presense of boundary conditions,
+         *  the extra cells would not be populated with valid results.
+         *
+         * There are two possible solutions:
+         * 1) Add more ghost cells to the fields.
+         * 2) Change the calculation.
+         * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         */
+        BOOST_STATIC_ASSERT(int(NewGhost::nX) >= int(Minimum::nX));
+        BOOST_STATIC_ASSERT(int(NewGhost::pX) >= int(Minimum::pX));
+        BOOST_STATIC_ASSERT(int(NewGhost::bX) >= int(Minimum::bX));
+        BOOST_STATIC_ASSERT(int(NewGhost::nY) >= int(Minimum::nY));
+        BOOST_STATIC_ASSERT(int(NewGhost::pY) >= int(Minimum::pY));
+        BOOST_STATIC_ASSERT(int(NewGhost::bY) >= int(Minimum::bY));
+        BOOST_STATIC_ASSERT(int(NewGhost::nZ) >= int(Minimum::nZ));
+        BOOST_STATIC_ASSERT(int(NewGhost::pZ) >= int(Minimum::pZ));
+        BOOST_STATIC_ASSERT(int(NewGhost::bZ) >= int(Minimum::bZ));
 
         return MyType(window_with_ghost().template resize_ghost<OldGhost, NewGhost>(),
                       field_values(),
@@ -418,22 +488,63 @@ namespace structured{
     inline field_type shift() const {
         typename GhostFromField<MyType>::result typedef OldGhost;
 
-        //check for valid shift with respect to new ghosts
+        /* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         * If one of the following Boost static asserts has failed,
+         *  then the Nebo calculation you are trying cannot be
+         *  performed because there are not enough ghost cells.
+         *  Essentially, the chain of stencil operators you are
+         *  trying requires more ghost cells than are present in
+         *  the given fields.
+         *
+         * There are two possible solutions:
+         * 1) Add more ghost cells to the fields.
+         * 2) Change the calculation.
+         * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         */
         BOOST_STATIC_ASSERT(Shift::X < 0 ? ((int)(Abs<Shift::X>::result) <= (int)(OldGhost::nX)) : true);
         BOOST_STATIC_ASSERT(Shift::X > 0 ? ((int)(Shift::X) <= (int)(OldGhost::pX)) : true);
+        BOOST_STATIC_ASSERT(Shift::X > 0 ? ((int)(Shift::X) <= (int)(OldGhost::bX)) : true);
         BOOST_STATIC_ASSERT(Shift::Y < 0 ? ((int)(Abs<Shift::Y>::result) <= (int)(OldGhost::nY)) : true);
         BOOST_STATIC_ASSERT(Shift::Y > 0 ? ((int)(Shift::Y) <= (int)(OldGhost::pY)) : true);
+        BOOST_STATIC_ASSERT(Shift::Y > 0 ? ((int)(Shift::Y) <= (int)(OldGhost::bY)) : true);
         BOOST_STATIC_ASSERT(Shift::Z < 0 ? ((int)(Abs<Shift::Z>::result) <= (int)(OldGhost::nZ)) : true);
         BOOST_STATIC_ASSERT(Shift::Z > 0 ? ((int)(Shift::Z) <= (int)(OldGhost::pZ)) : true);
+        BOOST_STATIC_ASSERT(Shift::Z > 0 ? ((int)(Shift::Z) <= (int)(OldGhost::bZ)) : true);
 
         return MyType(window_with_ghost().template shift<Shift>(),
                       field_values(),
                       ExternalStorage);
     }
 
+    template<typename Shift>
+    inline field_type shift_and_maintain_interior() const {
+
+        /* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         * If one of the following Boost static asserts has failed,
+         *  then somehow a shift is being performed on a field that
+         *  is being written to.  That is, there is a shift on the
+         *  lhs of an assignment.
+         *
+         * If one of these asserts has failed, you probably modified
+         *  Nebo, and there is a side-effect that you did not
+         *  anticipate.
+         * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         */
+        BOOST_STATIC_ASSERT(Shift::X == 0);
+        BOOST_STATIC_ASSERT(Shift::Y == 0);
+        BOOST_STATIC_ASSERT(Shift::Z == 0);
+
+        return *this;
+    }
+
     template<typename NewGhost, typename Shift>
     inline field_type resize_ghost_and_shift() const {
         return resize_ghost<NewGhost>().shift<Shift>();
+    }
+
+    template<typename NewGhost, typename Shift>
+    inline field_type resize_ghost_and_shift_and_maintain_interior() const {
+        return resize_ghost_and_maintain_interior<NewGhost>().shift_and_maintain_interior<Shift>();
     }
   };
 

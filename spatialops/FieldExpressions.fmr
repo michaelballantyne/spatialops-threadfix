@@ -978,9 +978,12 @@
                                                 (cons-asgn 'field_ 'f)
                                                 null)
                                 (mfc (fc 'field)
-                                     (tpl-fcn-use 'resize_ghost_and_shift VG-chunk SH-chunk))
+                                     (tpl-fcn-use 'resize_ghost_and_shift_and_maintain_interior
+                                                  VG-chunk
+                                                  SH-chunk))
                                 (mfc (fc 'field)
-                                     (tpl-fcn-use 'resize_ghost VG-chunk))
+                                     (tpl-fcn-use 'resize_ghost_and_maintain_interior
+                                                  VG-chunk))
                                 (r-fcn-def (fcn-dcl 'field
                                                     (c FT-chunk s "&"))
                                            null
@@ -1011,7 +1014,7 @@
                                                (cons-asgn 'field_ 'f)
                                                null)
                                (mfc (fc 'field)
-                                    (tpl-fcn-use 'shift SH-chunk))
+                                    (tpl-fcn-use 'shift_and_maintain_interior SH-chunk))
                                (r-fcn-def (fcn-dcl 'field
                                                    (c FT-chunk s "&"))
                                           null
