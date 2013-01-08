@@ -385,11 +385,13 @@
           {};
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) {
-              return SeqWalkType(field().template resize_ghost_and_shift<ValidGhost, Shift>());
+
+              return SeqWalkType(field().template resize_ghost_and_shift_and_maintain_interior<ValidGhost,
+                                                                                               Shift>());
            };
           template<typename ValidGhost>
            inline ResizePrepType resize_prep(void) {
-              return ResizePrepType(field().template resize_ghost<ValidGhost>());
+              return ResizePrepType(field().template resize_ghost_and_maintain_interior<ValidGhost>());
            };
           inline FieldType & field(void) { return field_; };
 
@@ -431,7 +433,9 @@
           : field_(f)
           {};
           template<typename Shift>
-           inline SeqWalkType init(void) { return SeqWalkType(field().template shift<Shift>()); };
+           inline SeqWalkType init(void) {
+              return SeqWalkType(field().template shift_and_maintain_interior<Shift>());
+           };
           inline FieldType & field(void) { return field_; };
 
          private:

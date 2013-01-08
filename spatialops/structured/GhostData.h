@@ -44,8 +44,6 @@
 #include <string>
 #include <sstream>
 
-#include <boost/static_assert.hpp>
-
 namespace SpatialOps{
   namespace structured{
 
@@ -245,6 +243,29 @@ namespace SpatialOps{
                   GM::Z,
                   GP::Z,
                   (GP::Z + BC::Z)> typedef result;
+    };
+
+    /**
+     *  \struct MinimumGhostFromField
+     *  \brief Perform compile-time computation to pull Minimum GhostData from a FieldType
+     *
+     *  MinimumGhostFromField is the inverse of GhostFromField.
+     *  MinimumGhostFromField returns the minimum number of ghost cells needed to maintain the interior cells of the field.
+     *  Practically speaking, the minimum is just the boundary condition cells.
+     */
+    template<typename FieldType>
+    struct MinimumGhostFromField {
+        typename FieldType::Location::BCExtra typedef BC;
+
+        GhostData<0,
+                  0,
+                  BC::X,
+                  0,
+                  0,
+                  BC::Y,
+                  0,
+                  0,
+                  BC::Z> typedef result;
     };
 
     /**
