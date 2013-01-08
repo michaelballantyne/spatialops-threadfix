@@ -204,8 +204,8 @@
         (lambda (point)
           (let ([invalid-faces (point-invalid-faces point)])
             (define (check-dir face1 face2 dir)
-              (if (or (memq face1 invalid-faces)
-                      (memq face2 invalid-faces))
+              (if (or (member face1 invalid-faces)
+                      (member face2 invalid-faces))
                   dir
                   null))
             (flatten* (list (check-dir negX posX X)
@@ -285,7 +285,7 @@
                  ;necessary:
                  ; destination boundary condition is invalidated by second stencil operator
                  [destBC-invalidated-by-second
-                  (memq destBC (stencil-invalid-dirs stencil2))]
+                  (member destBC (stencil-invalid-dirs stencil2))]
                  ;necessary:
                  ; either:
                  ;   intermediate and destination boundary conditions the same
@@ -299,8 +299,8 @@
                  ;   and:
                  ;     destination boundary condition invalidated by first stencil on the positive face
                  [destBC-invalidated-by-first-on-positive
-                  (memq destBC (flatten (map pos-face->dir
-                                             (stencil-invalid-faces stencil1))))])
+                  (member destBC (flatten (map pos-face->dir
+                                               (stencil-invalid-faces stencil1))))])
             ;complete condition for bc-improperly-invalid?:
             (and diff-BC
                  destBC-invalidated-by-second
@@ -434,6 +434,16 @@
                       (build-FDstencil 'GradientY    ZVol ZVol Y)
                       (build-FDstencil 'GradientZ    ZVol ZVol Z)
                       ))]
+       ;stencil short list
+       ; this list conatains only stencil with different stencil point lists
+       [stencil-short-list
+        (reverse (foldl (lambda (stencil previous)
+                          (if (member (stencil-point-list stencil)
+                                      (map stencil-point-list previous))
+                              previous
+                              (cons stencil previous)))
+                        null
+                        stencil-list))]
 
        ;builds string representation of stencil
        [build-stencil-string
@@ -712,8 +722,8 @@
                             'opdb)
                         (c 'try
                            (body-chunk
-                            (for*/list ([first-stencil stencil-list])
-                                       (let* ([raw-tests (for*/list ([second-stencil stencil-list])
+                            (for*/list ([first-stencil stencil-short-list])
+                                       (let* ([raw-tests (for*/list ([second-stencil stencil-short-list])
                                                                     (if (eq? (stencil-dest first-stencil)
                                                                              (stencil-src  second-stencil))
                                                                         (build-test first-stencil
