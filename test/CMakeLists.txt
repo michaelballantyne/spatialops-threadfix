@@ -1,5 +1,8 @@
 set( libs spatialops ${TPL_LIBRARIES} )
 
+add_executable( gpu_test GPUtest.cpp )
+target_link_libraries( gpu_test ${libs} )
+
 add_executable( simple_field SimpleFieldTest.cpp )
 target_link_libraries( simple_field ${libs} )
 add_test( simple_field simple_field )

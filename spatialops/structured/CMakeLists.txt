@@ -22,6 +22,7 @@ if( ENABLE_CUDA )
     set( TPL_LIBRARIES ${TPL_LIBRARIES} ${CUDA_LIBRARIES} )
     set( src ${src}
       ${dir}/CudaMemoryAllocator.cu
+      ${dir}/GPUtest.cu
     )
 endif( ENABLE_CUDA )
 

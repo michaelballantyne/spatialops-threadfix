@@ -1182,6 +1182,8 @@ SpatialField<Location, GhostTraits, T>::operator=(const MyType& other)
       CDI.memcpy_to( fieldValuesExtDevice_, other.fieldValues_, allocatedBytes_, deviceIndex_ );
 
     }
+    break;
+
     case EXTERNAL_CUDA_GPU: {
 
       //Check for self assignment

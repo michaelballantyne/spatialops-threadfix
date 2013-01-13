@@ -104,12 +104,13 @@ inline bool internal_display_fields_compare(typename Field::const_iterator fi1,
     typename Field::const_iterator cfi1 = fi1;
     typename Field::const_iterator cif2 = if2;
 
-    // end condition for each test: index < axisLength && (result || print)
-    //  this ends the loops early if and only if the result has been found to be false
-    //                                       AND printing has been turned only
-    for(int z = 0; z < zLength && (result || print); z++) {
-        for(int y = 0; y < yLength && (result || print); y++) {
-            for(int x = 0; x < xLength && (result || print); x++, fi1++, if2++) {
+    // end condition for each test: index < axisLength && (result || print || display)
+    //  this ends the loops early if and only if the result has been found to be false in some cell
+    //                                       AND print   == false
+    //                                       AND display == false
+    for(int z = 0; z < zLength && (result || print || display); z++) {
+        for(int y = 0; y < yLength && (result || print || display); y++) {
+            for(int x = 0; x < xLength && (result || print || display); x++, fi1++, if2++) {
                 bool compare = (*fi1 == *if2);
                 result = result && compare;
                 if(display) cout << compare << " ";
@@ -123,10 +124,10 @@ inline bool internal_display_fields_compare(typename Field::const_iterator fi1,
                 for(int x = 0; x < xLength; x++, cif2++) {
                     cout << *cif2 << " ";
                 };
-                cout << endl;
             };
+            if(print || display) cout << endl;
         };
-        if(print) cout << endl;
+        if(print || display) cout << endl;
     };
 
     return result;

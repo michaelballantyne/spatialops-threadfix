@@ -109,6 +109,7 @@
       struct ResizePrep;
       struct Resize;
       struct SeqWalk;
+      struct GPUWalk;
 
       template<typename CurrentMode, typename FieldType>
        struct NeboScalar;
@@ -120,6 +121,7 @@
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef AtomicType;
+          NeboScalar<GPUWalk, FieldType> typedef GPUWalkType;
           NeboScalar<ResizePrep, FieldType> typedef ResizePrepType;
           NeboScalar<SeqWalk, FieldType> typedef SeqWalkType;
           structured::InfiniteGhostData typedef PossibleValidGhost;
@@ -204,6 +206,7 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          NeboBoolean<GPUWalk, FieldType> typedef GPUWalkType;
           NeboBoolean<ResizePrep, FieldType> typedef ResizePrepType;
           NeboBoolean<SeqWalk, FieldType> typedef SeqWalkType;
           structured::InfiniteGhostData typedef PossibleValidGhost;
@@ -285,6 +288,7 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          NeboConstField<GPUWalk, FieldType> typedef GPUWalkType;
           NeboConstField<ResizePrep, FieldType> typedef ResizePrepType;
           NeboConstField<SeqWalk, FieldType> typedef SeqWalkType;
           typename structured::GhostFromField<FieldType>::result typedef PossibleValidGhost;
@@ -300,6 +304,7 @@
               return ResizePrepType(field().template resize_ghost<ValidGhost>());
            };
           inline FieldType const & field(void) const { return field_; };
+          inline GPUWalkType gpu_init(void) const { return GPUWalkType(field()); };
 
          private:
           FieldType const field_;
@@ -368,6 +373,52 @@
           typename FieldType::const_iterator const end_;
       };
 
+#     ifdef __CUDACC__
+         template<typename FieldType>
+          struct NeboConstField<GPUWalk, FieldType> {
+
+            public:
+             FieldType typedef field_type;
+             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::value_type typedef AtomicType;
+             NeboConstField(FieldType const & f)
+             : current_(NULL),
+               begin_(f.field_values(EXTERNAL_CUDA_GPU, f.device_index())),
+               location_(0),
+               xLength_(f.window_with_ghost().glob_dim(0)),
+               xExtent_(f.window_with_ghost().extent(0)),
+               yLength_(f.window_with_ghost().glob_dim(1)),
+               yExtent_(f.window_with_ghost().extent(1)),
+               zExtent_(f.window_with_ghost().extent(2)),
+               step_((xLength_*yLength_)),
+               valid_(false)
+             {};
+             __device__ inline void start(int x, int y) {
+
+                valid_ = (x < xExtent_ && x >= 0 && y < yExtent_ && y >= 0);
+
+                if(valid()) { location_ = 0; current_ = (begin_ + x + y * xLength_); };
+             };
+             __device__ inline bool valid(void) { return valid_; };
+             __device__ inline bool at_end(void) { return location_ >= zExtent_; };
+             __device__ inline void next(void) { current_ += step_; location_++; };
+             __device__ inline AtomicType eval(void) { return *current_; };
+
+            private:
+             const AtomicType * current_;
+             const AtomicType * begin_;
+             int location_;
+             int xLength_;
+             int xExtent_;
+             int yLength_;
+             int yExtent_;
+             int zExtent_;
+             int step_;
+             int valid_;
+         }
+#     endif
+      /* __CUDACC__ */;
+
       template<typename CurrentMode, typename FieldType>
        struct NeboField;
 
@@ -377,6 +428,7 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          NeboField<GPUWalk, FieldType> typedef GPUWalkType;
           NeboField<ResizePrep, FieldType> typedef ResizePrepType;
           NeboField<SeqWalk, FieldType> typedef SeqWalkType;
           typename structured::GhostFromField<FieldType>::result typedef PossibleValidGhost;
@@ -394,6 +446,7 @@
               return ResizePrepType(field().template resize_ghost_and_maintain_interior<ValidGhost>());
            };
           inline FieldType & field(void) { return field_; };
+          inline GPUWalkType gpu_init(void) { return GPUWalkType(field()); };
 
          private:
           FieldType field_;
@@ -463,6 +516,52 @@
           typename FieldType::iterator const end_;
       };
 
+#     ifdef __CUDACC__
+         template<typename FieldType>
+          struct NeboField<GPUWalk, FieldType> {
+
+            public:
+             FieldType typedef field_type;
+             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::value_type typedef AtomicType;
+             NeboField(FieldType & f)
+             : current_(NULL),
+               begin_(f.field_values(EXTERNAL_CUDA_GPU, f.device_index())),
+               location_(0),
+               xLength_(f.window_with_ghost().glob_dim(0)),
+               xExtent_(f.window_with_ghost().extent(0)),
+               yLength_(f.window_with_ghost().glob_dim(1)),
+               yExtent_(f.window_with_ghost().extent(1)),
+               zExtent_(f.window_with_ghost().extent(2)),
+               step_((xLength_*yLength_)),
+               valid_(false)
+             {};
+             __device__ inline void start(int x, int y) {
+
+                valid_ = (x < xExtent_ && x >= 0 && y < yExtent_ && y >= 0);
+
+                if(valid()) { location_ = 0; current_ = (begin_ + x + y * xLength_); };
+             };
+             __device__ inline bool valid(void) { return valid_; };
+             __device__ inline bool at_end(void) { return location_ >= zExtent_; };
+             __device__ inline void next(void) { current_ += step_; location_ ++; };
+             __device__ inline AtomicType & ref(void) { return *current_; };
+
+            private:
+             AtomicType * current_;
+             AtomicType * begin_;
+             int location_;
+             int xLength_;
+             int xExtent_;
+             int yLength_;
+             int yExtent_;
+             int zExtent_;
+             int step_;
+             int valid_;
+         }
+#     endif
+      /* __CUDACC__ */;
+
       template<typename Input, typename FieldType>
        struct Standardize;
 
@@ -507,6 +606,8 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          SumOp<GPUWalk, typename Operand1::GPUWalkType, typename Operand2::GPUWalkType, FieldType>
+          typedef GPUWalkType;
           SumOp<ResizePrep,
                 typename Operand1::ResizePrepType,
                 typename Operand2::ResizePrepType,
@@ -533,6 +634,9 @@
            };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
+          inline GPUWalkType gpu_init(void) const {
+             return GPUWalkType(operand1().gpu_init(), operand2().gpu_init());
+          };
 
          private:
           Operand1 const operand1_;
@@ -682,6 +786,35 @@
                                        Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
        };
 
+#     ifdef __CUDACC__
+         template<typename Operand1, typename Operand2, typename FieldType>
+          struct SumOp<GPUWalk, Operand1, Operand2, FieldType> {
+
+            public:
+             FieldType typedef field_type;
+             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::value_type typedef AtomicType;
+             SumOp(Operand1 const & operand1, Operand2 const & operand2)
+             : operand1_(operand1), operand2_(operand2)
+             {};
+             __device__ inline void start(int x, int y) {
+
+                operand1_.start(x, y);
+
+                operand2_.start(x, y);
+             };
+             __device__ inline bool valid(void) { return operand1_.valid() && operand2_.valid(); };
+             __device__ inline bool at_end(void) { return operand1_.at_end() || operand2_.at_end(); };
+             __device__ inline void next(void) { operand1_.next(); operand2_.next(); };
+             __device__ inline AtomicType eval(void) { return operand1_.eval() + operand2_.eval(); };
+
+            private:
+             Operand1 operand1_;
+             Operand2 operand2_;
+         }
+#     endif
+      /* __CUDACC__ */;
+
       template<typename CurrentMode, typename Operand1, typename Operand2, typename FieldType>
        struct DiffOp;
 
@@ -691,6 +824,8 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          DiffOp<GPUWalk, typename Operand1::GPUWalkType, typename Operand2::GPUWalkType, FieldType>
+          typedef GPUWalkType;
           DiffOp<ResizePrep,
                  typename Operand1::ResizePrepType,
                  typename Operand2::ResizePrepType,
@@ -717,6 +852,9 @@
            };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
+          inline GPUWalkType gpu_init(void) const {
+             return GPUWalkType(operand1().gpu_init(), operand2().gpu_init());
+          };
 
          private:
           Operand1 const operand1_;
@@ -875,6 +1013,8 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          ProdOp<GPUWalk, typename Operand1::GPUWalkType, typename Operand2::GPUWalkType, FieldType>
+          typedef GPUWalkType;
           ProdOp<ResizePrep,
                  typename Operand1::ResizePrepType,
                  typename Operand2::ResizePrepType,
@@ -901,6 +1041,9 @@
            };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
+          inline GPUWalkType gpu_init(void) const {
+             return GPUWalkType(operand1().gpu_init(), operand2().gpu_init());
+          };
 
          private:
           Operand1 const operand1_;
@@ -1059,6 +1202,8 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          DivOp<GPUWalk, typename Operand1::GPUWalkType, typename Operand2::GPUWalkType, FieldType>
+          typedef GPUWalkType;
           DivOp<ResizePrep,
                 typename Operand1::ResizePrepType,
                 typename Operand2::ResizePrepType,
@@ -1085,6 +1230,9 @@
            };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
+          inline GPUWalkType gpu_init(void) const {
+             return GPUWalkType(operand1().gpu_init(), operand2().gpu_init());
+          };
 
          private:
           Operand1 const operand1_;
@@ -1243,6 +1391,7 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          SinFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType;
           SinFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
           SinFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
           typename Operand::PossibleValidGhost typedef PossibleValidGhost;
@@ -1258,6 +1407,7 @@
               return ResizePrepType(operand().template resize_prep<ValidGhost>());
            };
           inline Operand const & operand(void) const { return operand_; };
+          inline GPUWalkType gpu_init(void) const { return GPUWalkType(operand().gpu_init()); };
 
          private:
           Operand const operand_;
@@ -1341,6 +1491,29 @@
           return ReturnTerm(ReturnType(Type(Standardize<SubExpr, FieldType>::standardType(arg))));
        };
 
+#     ifdef __CUDACC__
+         template<typename Operand, typename FieldType>
+          struct SinFcn<GPUWalk, Operand, FieldType> {
+
+            public:
+             FieldType typedef field_type;
+             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::value_type typedef AtomicType;
+             SinFcn(Operand const & operand)
+             : operand_(operand)
+             {};
+             __device__ inline void start(int x, int y) { operand_.start(x, y); };
+             __device__ inline bool valid(void) { return operand_.valid(); };
+             __device__ inline bool at_end(void) { return operand_.at_end(); };
+             __device__ inline void next(void) { operand_.next(); };
+             __device__ inline AtomicType eval(void) { return std::sin(operand_.eval()); };
+
+            private:
+             Operand operand_;
+         }
+#     endif
+      /* __CUDACC__ */;
+
       template<typename CurrentMode, typename Operand, typename FieldType>
        struct CosFcn;
 
@@ -1350,6 +1523,7 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          CosFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType;
           CosFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
           CosFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
           typename Operand::PossibleValidGhost typedef PossibleValidGhost;
@@ -1365,6 +1539,7 @@
               return ResizePrepType(operand().template resize_prep<ValidGhost>());
            };
           inline Operand const & operand(void) const { return operand_; };
+          inline GPUWalkType gpu_init(void) const { return GPUWalkType(operand().gpu_init()); };
 
          private:
           Operand const operand_;
@@ -1457,6 +1632,7 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          TanFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType;
           TanFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
           TanFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
           typename Operand::PossibleValidGhost typedef PossibleValidGhost;
@@ -1472,6 +1648,7 @@
               return ResizePrepType(operand().template resize_prep<ValidGhost>());
            };
           inline Operand const & operand(void) const { return operand_; };
+          inline GPUWalkType gpu_init(void) const { return GPUWalkType(operand().gpu_init()); };
 
          private:
           Operand const operand_;
@@ -1564,6 +1741,7 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          ExpFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType;
           ExpFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
           ExpFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
           typename Operand::PossibleValidGhost typedef PossibleValidGhost;
@@ -1579,6 +1757,7 @@
               return ResizePrepType(operand().template resize_prep<ValidGhost>());
            };
           inline Operand const & operand(void) const { return operand_; };
+          inline GPUWalkType gpu_init(void) const { return GPUWalkType(operand().gpu_init()); };
 
          private:
           Operand const operand_;
@@ -1671,6 +1850,7 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          TanhFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType;
           TanhFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
           TanhFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
           typename Operand::PossibleValidGhost typedef PossibleValidGhost;
@@ -1686,6 +1866,7 @@
               return ResizePrepType(operand().template resize_prep<ValidGhost>());
            };
           inline Operand const & operand(void) const { return operand_; };
+          inline GPUWalkType gpu_init(void) const { return GPUWalkType(operand().gpu_init()); };
 
          private:
           Operand const operand_;
@@ -1778,6 +1959,7 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          AbsFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType;
           AbsFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
           AbsFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
           typename Operand::PossibleValidGhost typedef PossibleValidGhost;
@@ -1793,6 +1975,7 @@
               return ResizePrepType(operand().template resize_prep<ValidGhost>());
            };
           inline Operand const & operand(void) const { return operand_; };
+          inline GPUWalkType gpu_init(void) const { return GPUWalkType(operand().gpu_init()); };
 
          private:
           Operand const operand_;
@@ -1885,6 +2068,7 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          NegFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType;
           NegFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
           NegFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
           typename Operand::PossibleValidGhost typedef PossibleValidGhost;
@@ -1900,6 +2084,7 @@
               return ResizePrepType(operand().template resize_prep<ValidGhost>());
            };
           inline Operand const & operand(void) const { return operand_; };
+          inline GPUWalkType gpu_init(void) const { return GPUWalkType(operand().gpu_init()); };
 
          private:
           Operand const operand_;
@@ -1992,6 +2177,8 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          PowFcn<GPUWalk, typename Operand1::GPUWalkType, typename Operand2::GPUWalkType, FieldType>
+          typedef GPUWalkType;
           PowFcn<ResizePrep,
                  typename Operand1::ResizePrepType,
                  typename Operand2::ResizePrepType,
@@ -2018,6 +2205,9 @@
            };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
+          inline GPUWalkType gpu_init(void) const {
+             return GPUWalkType(operand1().gpu_init(), operand2().gpu_init());
+          };
 
          private:
           Operand1 const operand1_;
@@ -2178,6 +2368,7 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          SqrtFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType;
           SqrtFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
           SqrtFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
           typename Operand::PossibleValidGhost typedef PossibleValidGhost;
@@ -2193,6 +2384,7 @@
               return ResizePrepType(operand().template resize_prep<ValidGhost>());
            };
           inline Operand const & operand(void) const { return operand_; };
+          inline GPUWalkType gpu_init(void) const { return GPUWalkType(operand().gpu_init()); };
 
          private:
           Operand const operand_;
@@ -2285,6 +2477,7 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          LogFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType;
           LogFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
           LogFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
           typename Operand::PossibleValidGhost typedef PossibleValidGhost;
@@ -2300,6 +2493,7 @@
               return ResizePrepType(operand().template resize_prep<ValidGhost>());
            };
           inline Operand const & operand(void) const { return operand_; };
+          inline GPUWalkType gpu_init(void) const { return GPUWalkType(operand().gpu_init()); };
 
          private:
           Operand const operand_;
@@ -2392,6 +2586,10 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          EqualCmp<GPUWalk,
+                   typename Operand1::GPUWalkType,
+                   typename Operand2::GPUWalkType,
+                   FieldType> typedef GPUWalkType;
           EqualCmp<ResizePrep,
                    typename Operand1::ResizePrepType,
                    typename Operand2::ResizePrepType,
@@ -2420,6 +2618,9 @@
            };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
+          inline GPUWalkType gpu_init(void) const {
+             return GPUWalkType(operand1().gpu_init(), operand2().gpu_init());
+          };
 
          private:
           Operand1 const operand1_;
@@ -2588,6 +2789,10 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          InequalCmp<GPUWalk,
+                     typename Operand1::GPUWalkType,
+                     typename Operand2::GPUWalkType,
+                     FieldType> typedef GPUWalkType;
           InequalCmp<ResizePrep,
                      typename Operand1::ResizePrepType,
                      typename Operand2::ResizePrepType,
@@ -2616,6 +2821,9 @@
            };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
+          inline GPUWalkType gpu_init(void) const {
+             return GPUWalkType(operand1().gpu_init(), operand2().gpu_init());
+          };
 
          private:
           Operand1 const operand1_;
@@ -2784,6 +2992,10 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          LessThanCmp<GPUWalk,
+                      typename Operand1::GPUWalkType,
+                      typename Operand2::GPUWalkType,
+                      FieldType> typedef GPUWalkType;
           LessThanCmp<ResizePrep,
                       typename Operand1::ResizePrepType,
                       typename Operand2::ResizePrepType,
@@ -2812,6 +3024,9 @@
            };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
+          inline GPUWalkType gpu_init(void) const {
+             return GPUWalkType(operand1().gpu_init(), operand2().gpu_init());
+          };
 
          private:
           Operand1 const operand1_;
@@ -2980,6 +3195,10 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          LessThanEqualCmp<GPUWalk,
+                           typename Operand1::GPUWalkType,
+                           typename Operand2::GPUWalkType,
+                           FieldType> typedef GPUWalkType;
           LessThanEqualCmp<ResizePrep,
                            typename Operand1::ResizePrepType,
                            typename Operand2::ResizePrepType,
@@ -3008,6 +3227,9 @@
            };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
+          inline GPUWalkType gpu_init(void) const {
+             return GPUWalkType(operand1().gpu_init(), operand2().gpu_init());
+          };
 
          private:
           Operand1 const operand1_;
@@ -3180,6 +3402,10 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          GreaterThanCmp<GPUWalk,
+                         typename Operand1::GPUWalkType,
+                         typename Operand2::GPUWalkType,
+                         FieldType> typedef GPUWalkType;
           GreaterThanCmp<ResizePrep,
                          typename Operand1::ResizePrepType,
                          typename Operand2::ResizePrepType,
@@ -3208,6 +3434,9 @@
            };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
+          inline GPUWalkType gpu_init(void) const {
+             return GPUWalkType(operand1().gpu_init(), operand2().gpu_init());
+          };
 
          private:
           Operand1 const operand1_;
@@ -3376,6 +3605,10 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          GreaterThanEqualCmp<GPUWalk,
+                              typename Operand1::GPUWalkType,
+                              typename Operand2::GPUWalkType,
+                              FieldType> typedef GPUWalkType;
           GreaterThanEqualCmp<ResizePrep,
                               typename Operand1::ResizePrepType,
                               typename Operand2::ResizePrepType,
@@ -3404,6 +3637,9 @@
            };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
+          inline GPUWalkType gpu_init(void) const {
+             return GPUWalkType(operand1().gpu_init(), operand2().gpu_init());
+          };
 
          private:
           Operand1 const operand1_;
@@ -3580,6 +3816,8 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          AndOp<GPUWalk, typename Operand1::GPUWalkType, typename Operand2::GPUWalkType, FieldType>
+          typedef GPUWalkType;
           AndOp<ResizePrep,
                 typename Operand1::ResizePrepType,
                 typename Operand2::ResizePrepType,
@@ -3606,6 +3844,9 @@
            };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
+          inline GPUWalkType gpu_init(void) const {
+             return GPUWalkType(operand1().gpu_init(), operand2().gpu_init());
+          };
 
          private:
           Operand1 const operand1_;
@@ -3759,6 +4000,8 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          OrOp<GPUWalk, typename Operand1::GPUWalkType, typename Operand2::GPUWalkType, FieldType>
+          typedef GPUWalkType;
           OrOp<ResizePrep,
                typename Operand1::ResizePrepType,
                typename Operand2::ResizePrepType,
@@ -3785,6 +4028,9 @@
            };
           inline Operand1 const & operand1(void) const { return operand1_; };
           inline Operand2 const & operand2(void) const { return operand2_; };
+          inline GPUWalkType gpu_init(void) const {
+             return GPUWalkType(operand1().gpu_init(), operand2().gpu_init());
+          };
 
          private:
           Operand1 const operand1_;
@@ -3938,6 +4184,7 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          NotOp<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType;
           NotOp<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
           NotOp<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
           typename Operand::PossibleValidGhost typedef PossibleValidGhost;
@@ -3953,6 +4200,7 @@
               return ResizePrepType(operand().template resize_prep<ValidGhost>());
            };
           inline Operand const & operand(void) const { return operand_; };
+          inline GPUWalkType gpu_init(void) const { return GPUWalkType(operand().gpu_init()); };
 
          private:
           Operand const operand_;
@@ -4036,114 +4284,6 @@
           return ReturnTerm(ReturnType(Type(arg.expr())));
        };
 
-      template<typename CurrentMode, typename Operand, typename FieldType>
-       struct IsNanFcn;
-
-      template<typename Operand, typename FieldType>
-       struct IsNanFcn<Initial, Operand, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
-          IsNanFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
-          IsNanFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
-          typename Operand::PossibleValidGhost typedef PossibleValidGhost;
-          IsNanFcn(Operand const & operand)
-          : operand_(operand)
-          {};
-          template<typename ValidGhost, typename Shift>
-           inline SeqWalkType init(void) const {
-              return SeqWalkType(operand().template init<ValidGhost, Shift>());
-           };
-          template<typename ValidGhost>
-           inline ResizePrepType resize_prep(void) const {
-              return ResizePrepType(operand().template resize_prep<ValidGhost>());
-           };
-          inline Operand const & operand(void) const { return operand_; };
-
-         private:
-          Operand const operand_;
-      };
-
-      template<typename Operand, typename FieldType>
-       struct IsNanFcn<ResizePrep, Operand, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
-          IsNanFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
-          IsNanFcn(Operand const & operand)
-          : operand_(operand)
-          {};
-          inline ResizeType resize(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-             return ResizeType(operand().resize(split, location));
-          };
-          inline Operand const & operand(void) const { return operand_; };
-
-         private:
-          Operand const operand_;
-      };
-
-      template<typename Operand, typename FieldType>
-       struct IsNanFcn<Resize, Operand, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
-          IsNanFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
-          IsNanFcn(Operand const & operand)
-          : operand_(operand)
-          {};
-          template<typename Shift>
-           inline SeqWalkType init(void) const {
-              return SeqWalkType(operand().template init<Shift>());
-           };
-          inline Operand const & operand(void) const { return operand_; };
-
-         private:
-          Operand const operand_;
-      };
-
-      template<typename Operand, typename FieldType>
-       struct IsNanFcn<SeqWalk, Operand, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
-          bool typedef EvalReturnType;
-          IsNanFcn(Operand const & operand)
-          : operand_(operand)
-          {};
-          inline void next(void) { operand_.next(); };
-          inline bool at_end(void) const { return (operand_.at_end()); };
-          inline bool has_length(void) const { return (operand_.has_length()); };
-          inline EvalReturnType eval(void) const { return std::isnan(operand_.eval()); };
-
-         private:
-          Operand operand_;
-      };
-
-      /* SubExpr */
-      template<typename SubExpr>
-       inline NeboBooleanExpression<IsNanFcn<Initial,
-                                             typename Standardize<SubExpr,
-                                                                  typename SubExpr::field_type>::
-                                             StandardType,
-                                             typename SubExpr::field_type>,
-                                    typename SubExpr::field_type> isnan(SubExpr const & arg) {
-
-          typename SubExpr::field_type typedef FieldType;
-
-          typename Standardize<SubExpr, typename SubExpr::field_type>::StandardType typedef Type;
-
-          IsNanFcn<Initial, Type, FieldType> typedef ReturnType;
-
-          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type(Standardize<SubExpr, FieldType>::standardType(arg))));
-       };
-
 #     define BUILD_BINARY_FUNCTION(OBJECT_NAME, INTERNAL_NAME, EXTERNAL_NAME)                      \
          template<typename CurrentMode, typename Operand1, typename Operand2, typename FieldType>  \
           struct OBJECT_NAME;                                                                      \
@@ -4154,6 +4294,10 @@
             public:                                                                                \
              FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
+             OBJECT_NAME<GPUWalk,                                                                  \
+                         typename Operand1::GPUWalkType,                                           \
+                         typename Operand2::GPUWalkType,                                           \
+                         FieldType> typedef GPUWalkType;                                           \
              OBJECT_NAME<ResizePrep,                                                               \
                          typename Operand1::ResizePrepType,                                        \
                          typename Operand2::ResizePrepType,                                        \
@@ -4182,6 +4326,9 @@
               };                                                                                   \
              inline Operand1 const & operand1(void) const { return operand1_; };                   \
              inline Operand2 const & operand2(void) const { return operand2_; };                   \
+             inline GPUWalkType gpu_init(void) const {                                             \
+                return GPUWalkType(operand1().gpu_init(), operand2().gpu_init());                  \
+             };                                                                                    \
                                                                                                    \
             private:                                                                               \
              Operand1 const operand1_;                                                             \
@@ -4359,6 +4506,10 @@
             public:                                                                                \
              FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
+             OBJECT_NAME<GPUWalk,                                                                  \
+                         typename Operand1::GPUWalkType,                                           \
+                         typename Operand2::GPUWalkType,                                           \
+                         FieldType> typedef GPUWalkType;                                           \
              OBJECT_NAME<ResizePrep,                                                               \
                          typename Operand1::ResizePrepType,                                        \
                          typename Operand2::ResizePrepType,                                        \
@@ -4387,6 +4538,9 @@
               };                                                                                   \
              inline Operand1 const & operand1(void) const { return operand1_; };                   \
              inline Operand2 const & operand2(void) const { return operand2_; };                   \
+             inline GPUWalkType gpu_init(void) const {                                             \
+                return GPUWalkType(operand1().gpu_init(), operand2().gpu_init());                  \
+             };                                                                                    \
                                                                                                    \
             private:                                                                               \
              Operand1 const operand1_;                                                             \
@@ -4564,6 +4718,7 @@
             public:                                                                                \
              FieldType typedef field_type;                                                         \
              typename FieldType::memory_window typedef MemoryWindow;                               \
+             OBJECT_NAME<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType;   \
              OBJECT_NAME<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef          \
              ResizePrepType;                                                                       \
              OBJECT_NAME<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;   \
@@ -4580,6 +4735,7 @@
                  return ResizePrepType(operand().template resize_prep<ValidGhost>());              \
               };                                                                                   \
              inline Operand const & operand(void) const { return operand_; };                      \
+             inline GPUWalkType gpu_init(void) const { return GPUWalkType(operand().gpu_init()); }; \
                                                                                                    \
             private:                                                                               \
              Operand const operand_;                                                               \
@@ -5487,6 +5643,7 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
+          NeboStencilPoint<GPUWalk, Point, typename Arg::GPUWalkType, FieldType> typedef GPUWalkType;
           NeboStencilPoint<ResizePrep, Point, typename Arg::ResizePrepType, FieldType> typedef
           ResizePrepType;
           NeboStencilPoint<SeqWalk, Point, typename Arg::SeqWalkType, FieldType> typedef SeqWalkType;
@@ -5761,6 +5918,7 @@
           NeboStencilCoefList<numPts> typedef Coefs;
           typename Pts::template ConstructExpr<Arg, FieldType> typedef ConstructExpr;
           typename ConstructExpr::Result typedef ArgSeqWalkType;
+          NeboStencil<GPUWalk, Pts, typename Arg::GPUWalkType, FieldType> typedef GPUWalkType;
           NeboStencil<ResizePrep, Pts, typename Arg::ResizePrepType, FieldType> typedef
           ResizePrepType;
           NeboStencil<SeqWalk, Pts, ArgSeqWalkType, FieldType> typedef SeqWalkType;
@@ -6034,6 +6192,75 @@
                                                 NeboExpression<ExprType, FieldType> const & rhs) {
           return nebo_assignment_general_execute<UseInteriorIterator, ExprType, FieldType>(lhs, rhs);
        };
+
+#     ifdef __CUDACC__
+         template<typename Dest, typename Src>
+          __global__ inline void gpu_assign_kernel(Dest dest, Src src) {
+
+             const int ii = blockIdx.x * blockDim.x + threadIdx.x;
+
+             const int jj = blockIdx.y * blockDim.y + threadIdx.y;
+
+             dest.start(ii, jj);
+
+             src.start(ii, jj);
+
+             if(dest.valid()) {
+                while(!dest.at_end()) { dest.ref() = src.eval(); dest.next(); src.next(); };
+             };
+          }
+#     endif
+      /* __CUDACC__ */;
+
+#     ifdef __CUDACC__
+         template<typename ExprType, typename FieldType>
+          inline void gpu_assign(FieldType & initial_lhs,
+                                 NeboExpression<ExprType, FieldType> const & initial_rhs) {
+
+             typename FieldType::memory_window typedef MemoryWindow;
+
+             MemoryWindow mw = initial_lhs.window_with_ghost();
+
+             int blockDim = 16;
+
+             int gDimX = mw.extent(0) / blockDim + (mw.extent(0) % blockDim > 0 ? 1 : 0);
+
+             int gDimY = mw.extent(1) / blockDim + (mw.extent(1) % blockDim > 0 ? 1 : 0);
+
+             dim3 dimBlock(blockDim, blockDim);
+
+             dim3 dimGrid(gDimX, gDimY);
+
+             NeboField<GPUWalk, FieldType> typedef LhsType;
+
+             typename ExprType::GPUWalkType typedef RhsType;
+
+             LhsType lhs(initial_lhs);
+
+             gpu_assign_kernel<LhsType, RhsType><<<dimGrid, dimBlock>>>(LhsType(initial_lhs),
+                                                                        initial_rhs.expr().gpu_init());
+          }
+#     endif
+      /* __CUDACC__ */;
+
+#     ifdef __CUDACC__
+         template<typename FieldType>
+          inline void operator |=(FieldType & lhs, FieldType const & rhs) {
+
+             NeboConstField<Initial, FieldType> typedef ExprType;
+
+             lhs |= NeboExpression<ExprType, FieldType>(ExprType(rhs));
+          }
+#     endif
+      /* __CUDACC__ */;
+
+#     ifdef __CUDACC__
+         template<typename ExprType, typename FieldType>
+          inline void operator |=(FieldType & lhs, NeboExpression<ExprType, FieldType> const & rhs) {
+             gpu_assign(lhs, rhs);
+          }
+#     endif
+      /* __CUDACC__ */;
    } /* SpatialOps */;
 
 #endif
