@@ -382,39 +382,18 @@
              typename FieldType::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
              NeboConstField(FieldType const & f)
-             : current_(NULL),
-               begin_(f.field_values(EXTERNAL_CUDA_GPU, f.device_index())),
-               location_(0),
+             : current_(f.field_values(EXTERNAL_CUDA_GPU, f.device_index())),
                xLength_(f.window_with_ghost().glob_dim(0)),
-               xExtent_(f.window_with_ghost().extent(0)),
-               yLength_(f.window_with_ghost().glob_dim(1)),
-               yExtent_(f.window_with_ghost().extent(1)),
-               zExtent_(f.window_with_ghost().extent(2)),
-               step_((xLength_*yLength_)),
-               valid_(false)
+               step_((xLength_ * f.window_with_ghost().glob_dim(1)))
              {};
-             __device__ inline void start(int x, int y) {
-
-                valid_ = (x < xExtent_ && x >= 0 && y < yExtent_ && y >= 0);
-
-                if(valid()) { location_ = 0; current_ = (begin_ + x + y * xLength_); };
-             };
-             __device__ inline bool valid(void) { return valid_; };
-             __device__ inline bool at_end(void) { return location_ >= zExtent_; };
-             __device__ inline void next(void) { current_ += step_; location_++; };
+             __device__ inline void start(int x, int y) { current_ += x + y * xLength_; };
+             __device__ inline void next(void) { current_ += step_; };
              __device__ inline AtomicType eval(void) { return *current_; };
 
             private:
              const AtomicType * current_;
-             const AtomicType * begin_;
-             int location_;
              int xLength_;
-             int xExtent_;
-             int yLength_;
-             int yExtent_;
-             int zExtent_;
              int step_;
-             int valid_;
          }
 #     endif
       /* __CUDACC__ */;
@@ -525,35 +504,31 @@
              typename FieldType::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
              NeboField(FieldType & f)
-             : current_(NULL),
-               begin_(f.field_values(EXTERNAL_CUDA_GPU, f.device_index())),
+             : current_(f.field_values(EXTERNAL_CUDA_GPU, f.device_index())),
                location_(0),
                xLength_(f.window_with_ghost().glob_dim(0)),
                xExtent_(f.window_with_ghost().extent(0)),
-               yLength_(f.window_with_ghost().glob_dim(1)),
                yExtent_(f.window_with_ghost().extent(1)),
                zExtent_(f.window_with_ghost().extent(2)),
-               step_((xLength_*yLength_)),
+               step_((xLength_ * f.window_with_ghost().glob_dim(1))),
                valid_(false)
              {};
              __device__ inline void start(int x, int y) {
 
                 valid_ = (x < xExtent_ && x >= 0 && y < yExtent_ && y >= 0);
 
-                if(valid()) { location_ = 0; current_ = (begin_ + x + y * xLength_); };
+                if(valid()) { location_ = 0; current_ = x + y * xLength_; };
              };
+             __device__ inline void next(void) { current_ += step_; location_ ++; };
              __device__ inline bool valid(void) { return valid_; };
              __device__ inline bool at_end(void) { return location_ >= zExtent_; };
-             __device__ inline void next(void) { current_ += step_; location_ ++; };
              __device__ inline AtomicType & ref(void) { return *current_; };
 
             private:
              AtomicType * current_;
-             AtomicType * begin_;
              int location_;
              int xLength_;
              int xExtent_;
-             int yLength_;
              int yExtent_;
              int zExtent_;
              int step_;
@@ -803,8 +778,6 @@
 
                 operand2_.start(x, y);
              };
-             __device__ inline bool valid(void) { return operand1_.valid() && operand2_.valid(); };
-             __device__ inline bool at_end(void) { return operand1_.at_end() || operand2_.at_end(); };
              __device__ inline void next(void) { operand1_.next(); operand2_.next(); };
              __device__ inline AtomicType eval(void) { return operand1_.eval() + operand2_.eval(); };
 
@@ -1503,8 +1476,6 @@
              : operand_(operand)
              {};
              __device__ inline void start(int x, int y) { operand_.start(x, y); };
-             __device__ inline bool valid(void) { return operand_.valid(); };
-             __device__ inline bool at_end(void) { return operand_.at_end(); };
              __device__ inline void next(void) { operand_.next(); };
              __device__ inline AtomicType eval(void) { return std::sin(operand_.eval()); };
 

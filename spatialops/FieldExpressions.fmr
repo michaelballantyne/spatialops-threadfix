@@ -180,8 +180,6 @@
                  typedefs
                  constructor
                  start-body
-                 valid-result
-                 at-end-result
                  next-body
                  publics
                  privates)
@@ -199,14 +197,6 @@
                                                     (list (bs 'int 'x)
                                                           (bs 'int 'y))
                                                     start-body))
-                             (device-use (r-fcn-def (fcn-dcl 'valid
-                                                             'bool)
-                                                    null
-                                                    valid-result))
-                             (device-use (r-fcn-def (fcn-dcl 'at_end
-                                                             'bool)
-                                                    null
-                                                    at-end-result))
                              (device-use (v-fcn-def 'next
                                                     null
                                                     next-body))
@@ -219,8 +209,6 @@
                  typedefs
                  constructor
                  start-body
-                 valid-result
-                 at-end-result
                  next-body
                  eval-result
                  publics
@@ -231,8 +219,6 @@
                              typedefs
                              constructor
                              start-body
-                             valid-result
-                             at-end-result
                              next-body
                              (list (device-use (r-fcn-def (fcn-dcl 'eval
                                                                    'AtomicType)
@@ -247,9 +233,9 @@
                  typedefs
                  constructor
                  start-body
+                 next-body
                  valid-result
                  at-end-result
-                 next-body
                  ref-result
                  publics
                  privates)
@@ -259,10 +245,16 @@
                              typedefs
                              constructor
                              start-body
-                             valid-result
-                             at-end-result
                              next-body
-                             (list (device-use (r-fcn-def (fcn-dcl 'ref
+                             (list (device-use (r-fcn-def (fcn-dcl 'valid
+                                                                   'bool)
+                                                          null
+                                                          valid-result))
+                                   (device-use (r-fcn-def (fcn-dcl 'at_end
+                                                                   'bool)
+                                                          null
+                                                          at-end-result))
+                                   (device-use (r-fcn-def (fcn-dcl 'ref
                                                                    (bs 'AtomicType "&"))
                                                           null
                                                           ref-result))
@@ -1089,58 +1081,23 @@
        null
        null
        (bm-constructor (bs FT-chunk const-chunk "&" 'f)
-                       (list (cons-asgn 'current_ 'NULL)
-                             (cons-asgn 'begin_ (mfc 'f 'field_values 'EXTERNAL_CUDA_GPU (mfc 'f 'device_index)))
-                             (cons-asgn 'location_ "0")
+                       (list (cons-asgn 'current_ (mfc 'f 'field_values 'EXTERNAL_CUDA_GPU (mfc 'f 'device_index)))
                              (cons-asgn 'xLength_ (mfc (mfc 'f
                                                             'window_with_ghost)
                                                        'glob_dim
                                                        "0"))
-                             (cons-asgn 'xExtent_ (mfc (mfc 'f
-                                                            'window_with_ghost)
-                                                       'extent
-                                                       "0"))
-                             (cons-asgn 'yLength_ (mfc (mfc 'f
-                                                            'window_with_ghost)
-                                                       'glob_dim
-                                                       "1"))
-                             (cons-asgn 'yExtent_ (mfc (mfc 'f
-                                                            'window_with_ghost)
-                                                       'extent
-                                                       "1"))
-                             (cons-asgn 'zExtent_ (mfc (mfc 'f
-                                                            'window_with_ghost)
-                                                       'extent
-                                                       "2"))
-                             (cons-asgn 'step_ (p (c 'xLength_ "*" 'yLength_)))
-                             (cons-asgn 'valid_ 'false))
+                             (cons-asgn 'step_ (p (bs 'xLength_ "*" (mfc (mfc 'f
+                                                                              'window_with_ghost)
+                                                                         'glob_dim
+                                                                         "1")))))
                        null)
-       (list (bs 'valid_ '= (p (bs 'x '< 'xExtent_ "&&"
-                                   'x '>= "0" "&&"
-                                   'y '< 'yExtent_ "&&"
-                                   'y '>= "0")))
-             (c (fc 'if (fc 'valid))
-                s
-                (body-chunk (bs 'location_ '= "0")
-                            (bs 'current_ '= (p (bs 'begin_ '+
-                                                    'x '+
-                                                    'y '* 'xLength_))))))
-       'valid_
-       (bs 'location_ '>= 'zExtent_)
-       (list (bs 'current_ '+= 'step_)
-             (c 'location_ '++))
+       (bs 'current_ '+= 'x '+ 'y '* 'xLength_)
+       (bs 'current_ '+= 'step_)
        (c '* 'current_)
        null
        (list (bs const-chunk 'AtomicType '* 'current_)
-             (bs const-chunk 'AtomicType '* 'begin_)
-             (bs 'int 'location_)
              (bs 'int 'xLength_)
-             (bs 'int 'xExtent_)
-             (bs 'int 'yLength_)
-             (bs 'int 'yExtent_)
-             (bs 'int 'zExtent_)
-             (bs 'int 'step_)
-             (bs 'int 'valid_)))
+             (bs 'int 'step_)))
       (build-struct NF-chunk
                     #false
                     null
@@ -1233,8 +1190,7 @@
        null
        null
        (bm-constructor (bs FT-chunk "&" 'f)
-                       (list (cons-asgn 'current_ 'NULL)
-                             (cons-asgn 'begin_ (mfc 'f 'field_values 'EXTERNAL_CUDA_GPU (mfc 'f 'device_index)))
+                       (list (cons-asgn 'current_ (mfc 'f 'field_values 'EXTERNAL_CUDA_GPU (mfc 'f 'device_index)))
                              (cons-asgn 'location_ "0")
                              (cons-asgn 'xLength_ (mfc (mfc 'f
                                                             'window_with_ghost)
@@ -1244,10 +1200,6 @@
                                                             'window_with_ghost)
                                                        'extent
                                                        "0"))
-                             (cons-asgn 'yLength_ (mfc (mfc 'f
-                                                            'window_with_ghost)
-                                                       'glob_dim
-                                                       "1"))
                              (cons-asgn 'yExtent_ (mfc (mfc 'f
                                                             'window_with_ghost)
                                                        'extent
@@ -1256,7 +1208,10 @@
                                                             'window_with_ghost)
                                                        'extent
                                                        "2"))
-                             (cons-asgn 'step_ (p (c 'xLength_ "*" 'yLength_)))
+                             (cons-asgn 'step_ (p (bs 'xLength_ "*" (mfc (mfc 'f
+                                                                              'window_with_ghost)
+                                                                         'glob_dim
+                                                                         "1"))))
                              (cons-asgn 'valid_ 'false))
                        null)
        (list (bs 'valid_ '= (p (bs 'x '< 'xExtent_ "&&"
@@ -1266,21 +1221,17 @@
              (c (fc 'if (fc 'valid))
                 s
                 (body-chunk (bs 'location_ '= "0")
-                            (bs 'current_ '= (p (bs 'begin_ '+
-                                                    'x '+
-                                                    'y '* 'xLength_))))))
-       'valid_
-       (bs 'location_ '>= 'zExtent_)
+                            (bs 'current_ '= 'x '+ 'y '* 'xLength_))))
        (list (bs 'current_ '+= 'step_)
              (bs 'location_ '++))
+       'valid_
+       (bs 'location_ '>= 'zExtent_)
        (c '* 'current_)
        null
        (list (bs 'AtomicType '* 'current_)
-             (bs 'AtomicType '* 'begin_)
              (bs 'int 'location_)
              (bs 'int 'xLength_)
              (bs 'int 'xExtent_)
-             (bs 'int 'yLength_)
              (bs 'int 'yExtent_)
              (bs 'int 'zExtent_)
              (bs 'int 'step_)
@@ -1350,12 +1301,6 @@
                        null)
        (list (mfc 'operand1_ 'start 'x 'y)
              (mfc 'operand2_ 'start 'x 'y))
-       (bs (mfc 'operand1_ 'valid)
-           '&&
-           (mfc 'operand2_ 'valid))
-       (bs (mfc 'operand1_ 'at_end)
-           "||"
-           (mfc 'operand2_ 'at_end))
        (list (mfc 'operand1_ 'next)
              (mfc 'operand2_ 'next))
        (bs (mfc 'operand1_ 'eval)
@@ -1385,8 +1330,6 @@
                        (cons-asgn 'operand_ 'operand)
                        null)
        (mfc 'operand_ 'start 'x 'y)
-       (mfc 'operand_ 'valid)
-       (mfc 'operand_ 'at_end)
        (mfc 'operand_ 'next)
        (fc (scope 'std 'sin) (mfc 'operand_ 'eval))
        null
@@ -3148,14 +3091,14 @@
                                'blockDim
                                '+
                                (p (bs (mfc 'mw 'extent "0")
-                                     '%
-                                     'blockDim
-                                     '>
-                                     "0"
-                                     '?
-                                     "1"
-                                     ':
-                                     "0")))
+                                      '%
+                                      'blockDim
+                                      '>
+                                      "0"
+                                      '?
+                                      "1"
+                                      ':
+                                      "0")))
                            (bs 'int
                                'gDimY
                                '=
@@ -3164,14 +3107,14 @@
                                'blockDim
                                '+
                                (p (bs (mfc 'mw 'extent "1")
-                                     '%
-                                     'blockDim
-                                     '>
-                                     "0"
-                                     '?
-                                     "1"
-                                     ':
-                                     "0")))
+                                      '%
+                                      'blockDim
+                                      '>
+                                      "0"
+                                      '?
+                                      "1"
+                                      ':
+                                      "0")))
                            (bs 'dim3 (fc 'dimBlock 'blockDim 'blockDim))
                            (bs 'dim3 (fc 'dimGrid 'gDimX 'gDimY))
                            (typedef (tpl-use NF-chunk 'GPUWalk FT-chunk)
