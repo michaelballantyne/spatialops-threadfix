@@ -510,68 +510,86 @@
                  [SW-data-mems (mapper (lambda (Op op_) (c Op s op_))
                                        Op-lst
                                        op_-lst)])
-            (build-struct name
-                          #true
-                          (mapper (lambda (Op) (tpl-pmtr Op))
-                                  Op-lst)
-                          Op-lst
-                          (bs-Initial (gpu-only (typedef (tpl-use name
-                                                                  'GPUWalk
-                                                                  (mapper (IN-typedef 'GPUWalkType)
-                                                                          Op-lst)
-                                                                  FT-chunk)
-                                                         'GPUWalkType))
-                                      (mapper (IN-typedef 'ResizePrepType)
+            (list
+             (build-struct name
+                           #true
+                           (mapper (lambda (Op) (tpl-pmtr Op))
+                                   Op-lst)
+                           Op-lst
+                           (bs-Initial (gpu-only (typedef (tpl-use name
+                                                                   'GPUWalk
+                                                                   (mapper (IN-typedef 'GPUWalkType)
+                                                                           Op-lst)
+                                                                   FT-chunk)
+                                                          'GPUWalkType))
+                                       (mapper (IN-typedef 'ResizePrepType)
+                                               Op-lst)
+                                       (mapper (IN-typedef 'SeqWalkType)
+                                               Op-lst)
+                                       (build-VG (mapper (lambda (Op) (tpl-pmtr (scope Op report-VG-chunk)))
+                                                         Op-lst))
+                                       gen-constructor
+                                       (mapper (lambda (op) (mfc (fc op)
+                                                                 (tpl-fcn-use 'init VG-chunk SH-chunk)))
+                                               op-lst)
+                                       (mapper (lambda (op) (mfc (fc op)
+                                                                 (tpl-fcn-use 'resize_prep VG-chunk)))
+                                               op-lst)
+                                       (list gen-ext-fcns
+                                             (gpu-only (r-fcn-def (constize (fcn-dcl 'gpu_init
+                                                                                     'GPUWalkType))
+                                                                  null
+                                                                  (fc 'GPUWalkType
+                                                                      (mapper (lambda (op) (mfc (fc op) 'gpu_init))
+                                                                              op-lst)))))
+                                       gen-data-mems)
+                           (bs-ResizePrep null
+                                          (mapper (gen-typedef 'ResizeType)
+                                                  Op-lst)
+                                          gen-constructor
+                                          (mapper (lambda (op) (mfc (fc op)
+                                                                    'resize
+                                                                    'split
+                                                                    'location))
+                                                  op-lst)
+                                          gen-ext-fcns
+                                          gen-data-mems)
+                           (bs-Resize null
+                                      (mapper (gen-typedef 'SeqWalkType)
                                               Op-lst)
-                                      (mapper (IN-typedef 'SeqWalkType)
-                                              Op-lst)
-                                      (build-VG (mapper (lambda (Op) (tpl-pmtr (scope Op report-VG-chunk)))
-                                                        Op-lst))
                                       gen-constructor
                                       (mapper (lambda (op) (mfc (fc op)
-                                                                (tpl-fcn-use 'init VG-chunk SH-chunk)))
+                                                                (tpl-fcn-use 'init SH-chunk)))
                                               op-lst)
-                                      (mapper (lambda (op) (mfc (fc op)
-                                                                (tpl-fcn-use 'resize_prep VG-chunk)))
-                                              op-lst)
-                                      (list gen-ext-fcns
-                                            (gpu-only (r-fcn-def (constize (fcn-dcl 'gpu_init
-                                                                                    'GPUWalkType))
-                                                                 null
-                                                                 (fc 'GPUWalkType
-                                                                     (mapper (lambda (op) (mfc (fc op) 'gpu_init))
-                                                                             op-lst)))))
+                                      gen-ext-fcns
                                       gen-data-mems)
-                          (bs-ResizePrep null
-                                         (mapper (gen-typedef 'ResizeType)
-                                                 Op-lst)
-                                         gen-constructor
-                                         (mapper (lambda (op) (mfc (fc op)
-                                                                   'resize
-                                                                   'split
-                                                                   'location))
-                                                 op-lst)
-                                         gen-ext-fcns
-                                         gen-data-mems)
-                          (bs-Resize null
-                                     (mapper (gen-typedef 'SeqWalkType)
-                                             Op-lst)
-                                     gen-constructor
-                                     (mapper (lambda (op) (mfc (fc op)
-                                                               (tpl-fcn-use 'init SH-chunk)))
-                                             op-lst)
-                                     gen-ext-fcns
-                                     gen-data-mems)
-                          (bs-SeqWalk (typedef eval-return-type
-                                               'EvalReturnType)
-                                      gen-constructor
-                                      (SW-fcn semi-colon-chunk s 'next)
-                                      (SW-check 'at_end)
-                                      (SW-check 'has_length)
-                                      (r-fcn-def (constize (fcn-dcl 'eval 'EvalReturnType))
-                                                 null
-                                                 internal-use)
-                                      SW-data-mems))))]
+                           (bs-SeqWalk (typedef eval-return-type
+                                                'EvalReturnType)
+                                       gen-constructor
+                                       (SW-fcn semi-colon-chunk s 'next)
+                                       (SW-check 'at_end)
+                                       (SW-check 'has_length)
+                                       (r-fcn-def (constize (fcn-dcl 'eval 'EvalReturnType))
+                                                  null
+                                                  internal-use)
+                                       SW-data-mems))
+             (build-GPU-const name
+                              (mapper (lambda (Op) (tpl-pmtr Op))
+                                      Op-lst)
+                              Op-lst
+                              null
+                              gen-constructor
+                              (mapper (lambda (op_) (mfc op_
+                                                        'start
+                                                        'x
+                                                        'y))
+                                      op_-lst)
+                              (mapper (lambda (op_) (mfc op_
+                                                        'next))
+                                      op_-lst)
+                              internal-use
+                              null
+                              SW-data-mems))))]
        [build-binary-function-struct
         (lambda (name internal-name)
           (build-Nary-struct name
@@ -942,6 +960,19 @@
                                           null
                                           'value_)
                                 (b s 'AtomicType const-chunk 'value_)))
+      (build-GPU-const
+       NS-chunk
+       null
+       null
+       null
+       (bm-constructor (bs 'AtomicType const-chunk 'value)
+                       (cons-asgn 'value_ 'value)
+                       null)
+       null
+       null
+       'value_
+       null
+       (bs const-chunk 'AtomicType 'value_))
       (build-struct NB-chunk
                     #true
                     null
@@ -1082,7 +1113,27 @@
        null
        null
        (bm-constructor (bs FT-chunk const-chunk "&" 'f)
-                       (list (cons-asgn 'current_ (mfc 'f 'field_values 'EXTERNAL_CUDA_GPU (mfc 'f 'device_index)))
+                       (list (cons-asgn 'current_ (bs (mfc 'f 'field_values 'EXTERNAL_CUDA_GPU (mfc 'f 'device_index))
+                                                      '+
+                                                      (mfc (mfc 'f 'window_with_ghost)
+                                                           'offset
+                                                           "0")
+                                                      '+
+                                                      (mfc (mfc 'f 'window_with_ghost)
+                                                           'glob_dim
+                                                           "0")
+                                                      '*
+                                                      (p (bs (mfc (mfc 'f 'window_with_ghost)
+                                                                  'offset
+                                                                  "1")
+                                                             '+
+                                                             (p (bs (mfc (mfc 'f 'window_with_ghost)
+                                                                         'glob_dim
+                                                                         "1")
+                                                                    '*
+                                                                    (mfc (mfc 'f 'window_with_ghost)
+                                                                         'offset
+                                                                         "2")))))))
                              (cons-asgn 'xLength_ (mfc (mfc 'f
                                                             'window_with_ghost)
                                                        'glob_dim
@@ -1191,7 +1242,27 @@
        null
        null
        (bm-constructor (bs FT-chunk "&" 'f)
-                       (list (cons-asgn 'current_ (mfc 'f 'field_values 'EXTERNAL_CUDA_GPU (mfc 'f 'device_index)))
+                       (list (cons-asgn 'current_ (bs (mfc 'f 'field_values 'EXTERNAL_CUDA_GPU (mfc 'f 'device_index))
+                                                      '+
+                                                      (mfc (mfc 'f 'window_with_ghost)
+                                                           'offset
+                                                           "0")
+                                                      '+
+                                                      (mfc (mfc 'f 'window_with_ghost)
+                                                           'glob_dim
+                                                           "0")
+                                                      '*
+                                                      (p (bs (mfc (mfc 'f 'window_with_ghost)
+                                                                  'offset
+                                                                  "1")
+                                                             '+
+                                                             (p (bs (mfc (mfc 'f 'window_with_ghost)
+                                                                         'glob_dim
+                                                                         "1")
+                                                                    '*
+                                                                    (mfc (mfc 'f 'window_with_ghost)
+                                                                         'offset
+                                                                         "2")))))))
                              (cons-asgn 'location_ "0")
                              (cons-asgn 'xLength_ (mfc (mfc 'f
                                                             'window_with_ghost)
@@ -1224,7 +1295,7 @@
                 (body-chunk (bs 'location_ '= "0")
                             (bs 'current_ '= 'x '+ 'y '* 'xLength_))))
        (list (bs 'current_ '+= 'step_)
-             (bs 'location_ '++))
+             (c 'location_ '++))
        'valid_
        (bs 'location_ '>= 'zExtent_)
        (c '* 'current_)
@@ -1288,28 +1359,6 @@
       (build-binary-operator 'SumOp
                              "+"
                              (c 'operator s "+"))
-      (build-GPU-const
-       'SumOp
-       (list (tpl-pmtr 'Operand1)
-             (tpl-pmtr 'Operand2))
-       (list 'Operand1
-             'Operand2)
-       null
-       (bm-constructor (list (bs 'Operand1 const-chunk "&" 'operand1)
-                             (bs 'Operand2 const-chunk "&" 'operand2))
-                       (list (cons-asgn 'operand1_ 'operand1)
-                             (cons-asgn 'operand2_ 'operand2))
-                       null)
-       (list (mfc 'operand1_ 'start 'x 'y)
-             (mfc 'operand2_ 'start 'x 'y))
-       (list (mfc 'operand1_ 'next)
-             (mfc 'operand2_ 'next))
-       (bs (mfc 'operand1_ 'eval)
-           '+
-           (mfc 'operand2_ 'eval))
-       null
-       (list (bs 'Operand1 'operand1_)
-             (bs 'Operand2 'operand2_)))
       (build-binary-operator 'DiffOp
                              "-"
                              (c 'operator s "-"))
@@ -1322,19 +1371,6 @@
       (build-unary-function 'SinFcn
                             (scope 'std 'sin)
                             'sin)
-      (build-GPU-const
-       'SinFcn
-       (tpl-pmtr 'Operand)
-       'Operand
-       null
-       (bm-constructor (bs 'Operand const-chunk "&" 'operand)
-                       (cons-asgn 'operand_ 'operand)
-                       null)
-       (mfc 'operand_ 'start 'x 'y)
-       (mfc 'operand_ 'next)
-       (fc (scope 'std 'sin) (mfc 'operand_ 'eval))
-       null
-       (bs 'Operand 'operand_))
       (build-unary-function 'CosFcn
                             (scope 'std 'cos)
                             'cos)

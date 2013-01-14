@@ -203,6 +203,27 @@
           AtomicType const value_;
       };
 
+#     ifdef __CUDACC__
+         template<typename FieldType>
+          struct NeboScalar<GPUWalk, FieldType> {
+
+            public:
+             FieldType typedef field_type;
+             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::value_type typedef AtomicType;
+             NeboScalar(AtomicType const value)
+             : value_(value)
+             {};
+             __device__ inline void start(int x, int y) {};
+             __device__ inline void next(void) {};
+             __device__ inline AtomicType eval(void) { return value_; };
+
+            private:
+             const AtomicType value_;
+         }
+#     endif
+      /* __CUDACC__ */;
+
       template<typename CurrentMode, typename FieldType>
        struct NeboBoolean;
 
@@ -397,7 +418,9 @@
              typename FieldType::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
              NeboConstField(FieldType const & f)
-             : current_(f.field_values(EXTERNAL_CUDA_GPU, f.device_index())),
+             : current_(f.field_values(EXTERNAL_CUDA_GPU, f.device_index()) + f.window_with_ghost().offset(0)
+               + f.window_with_ghost().glob_dim(0) * (f.window_with_ghost().offset(1) + (f.window_with_ghost().glob_dim(1)
+                                                                                         * f.window_with_ghost().offset(2)))),
                xLength_(f.window_with_ghost().glob_dim(0)),
                step_((xLength_ * f.window_with_ghost().glob_dim(1)))
              {};
@@ -525,7 +548,9 @@
              typename FieldType::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
              NeboField(FieldType & f)
-             : current_(f.field_values(EXTERNAL_CUDA_GPU, f.device_index())),
+             : current_(f.field_values(EXTERNAL_CUDA_GPU, f.device_index()) + f.window_with_ghost().offset(0)
+               + f.window_with_ghost().glob_dim(0) * (f.window_with_ghost().offset(1) + (f.window_with_ghost().glob_dim(1)
+                                                                                         * f.window_with_ghost().offset(2)))),
                location_(0),
                xLength_(f.window_with_ghost().glob_dim(0)),
                xExtent_(f.window_with_ghost().extent(0)),
@@ -540,7 +565,7 @@
 
                 if(valid()) { location_ = 0; current_ = x + y * xLength_; };
              };
-             __device__ inline void next(void) { current_ += step_; location_ ++; };
+             __device__ inline void next(void) { current_ += step_; location_++; };
              __device__ inline bool valid(void) { return valid_; };
              __device__ inline bool at_end(void) { return location_ >= zExtent_; };
              __device__ inline AtomicType & ref(void) { return *current_; };
@@ -715,6 +740,35 @@
           Operand2 operand2_;
       };
 
+#     ifdef __CUDACC__
+         template<typename Operand1, typename Operand2, typename FieldType>
+          struct SumOp<GPUWalk, Operand1, Operand2, FieldType> {
+
+            public:
+             FieldType typedef field_type;
+             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::value_type typedef AtomicType;
+             SumOp(Operand1 const & operand1, Operand2 const & operand2)
+             : operand1_(operand1), operand2_(operand2)
+             {};
+             __device__ inline void start(int x, int y) {
+
+                operand1_.start(x, y);
+
+                operand2_.start(x, y);
+             };
+             __device__ inline void next(void) { operand1_.next(); operand2_.next(); };
+             __device__ inline AtomicType eval(void) {
+                return (operand1_.eval() + operand2_.eval());
+             };
+
+            private:
+             Operand1 operand1_;
+             Operand2 operand2_;
+         }
+#     endif
+      /* __CUDACC__ */;
+
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2>
        inline NeboExpression<SumOp<Initial,
@@ -789,33 +843,6 @@
           return ReturnTerm(ReturnType(Type1(Type1(arg1)),
                                        Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
        };
-
-#     ifdef __CUDACC__
-         template<typename Operand1, typename Operand2, typename FieldType>
-          struct SumOp<GPUWalk, Operand1, Operand2, FieldType> {
-
-            public:
-             FieldType typedef field_type;
-             typename FieldType::memory_window typedef MemoryWindow;
-             typename field_type::value_type typedef AtomicType;
-             SumOp(Operand1 const & operand1, Operand2 const & operand2)
-             : operand1_(operand1), operand2_(operand2)
-             {};
-             __device__ inline void start(int x, int y) {
-
-                operand1_.start(x, y);
-
-                operand2_.start(x, y);
-             };
-             __device__ inline void next(void) { operand1_.next(); operand2_.next(); };
-             __device__ inline AtomicType eval(void) { return operand1_.eval() + operand2_.eval(); };
-
-            private:
-             Operand1 operand1_;
-             Operand2 operand2_;
-         }
-#     endif
-      /* __CUDACC__ */;
 
       template<typename CurrentMode, typename Operand1, typename Operand2, typename FieldType>
        struct DiffOp;
@@ -938,6 +965,35 @@
           Operand1 operand1_;
           Operand2 operand2_;
       };
+
+#     ifdef __CUDACC__
+         template<typename Operand1, typename Operand2, typename FieldType>
+          struct DiffOp<GPUWalk, Operand1, Operand2, FieldType> {
+
+            public:
+             FieldType typedef field_type;
+             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::value_type typedef AtomicType;
+             DiffOp(Operand1 const & operand1, Operand2 const & operand2)
+             : operand1_(operand1), operand2_(operand2)
+             {};
+             __device__ inline void start(int x, int y) {
+
+                operand1_.start(x, y);
+
+                operand2_.start(x, y);
+             };
+             __device__ inline void next(void) { operand1_.next(); operand2_.next(); };
+             __device__ inline AtomicType eval(void) {
+                return (operand1_.eval() - operand2_.eval());
+             };
+
+            private:
+             Operand1 operand1_;
+             Operand2 operand2_;
+         }
+#     endif
+      /* __CUDACC__ */;
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2>
@@ -1136,6 +1192,35 @@
           Operand2 operand2_;
       };
 
+#     ifdef __CUDACC__
+         template<typename Operand1, typename Operand2, typename FieldType>
+          struct ProdOp<GPUWalk, Operand1, Operand2, FieldType> {
+
+            public:
+             FieldType typedef field_type;
+             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::value_type typedef AtomicType;
+             ProdOp(Operand1 const & operand1, Operand2 const & operand2)
+             : operand1_(operand1), operand2_(operand2)
+             {};
+             __device__ inline void start(int x, int y) {
+
+                operand1_.start(x, y);
+
+                operand2_.start(x, y);
+             };
+             __device__ inline void next(void) { operand1_.next(); operand2_.next(); };
+             __device__ inline AtomicType eval(void) {
+                return (operand1_.eval() * operand2_.eval());
+             };
+
+            private:
+             Operand1 operand1_;
+             Operand2 operand2_;
+         }
+#     endif
+      /* __CUDACC__ */;
+
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2>
        inline NeboExpression<ProdOp<Initial,
@@ -1333,6 +1418,35 @@
           Operand2 operand2_;
       };
 
+#     ifdef __CUDACC__
+         template<typename Operand1, typename Operand2, typename FieldType>
+          struct DivOp<GPUWalk, Operand1, Operand2, FieldType> {
+
+            public:
+             FieldType typedef field_type;
+             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::value_type typedef AtomicType;
+             DivOp(Operand1 const & operand1, Operand2 const & operand2)
+             : operand1_(operand1), operand2_(operand2)
+             {};
+             __device__ inline void start(int x, int y) {
+
+                operand1_.start(x, y);
+
+                operand2_.start(x, y);
+             };
+             __device__ inline void next(void) { operand1_.next(); operand2_.next(); };
+             __device__ inline AtomicType eval(void) {
+                return (operand1_.eval() / operand2_.eval());
+             };
+
+            private:
+             Operand1 operand1_;
+             Operand2 operand2_;
+         }
+#     endif
+      /* __CUDACC__ */;
+
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2>
        inline NeboExpression<DivOp<Initial,
@@ -1504,25 +1618,6 @@
           Operand operand_;
       };
 
-      /* SubExpr */
-      template<typename SubExpr>
-       inline NeboExpression<SinFcn<Initial,
-                                    typename Standardize<SubExpr, typename SubExpr::field_type>::
-                                    StandardType,
-                                    typename SubExpr::field_type>,
-                             typename SubExpr::field_type> sin(SubExpr const & arg) {
-
-          typename SubExpr::field_type typedef FieldType;
-
-          typename Standardize<SubExpr, typename SubExpr::field_type>::StandardType typedef Type;
-
-          SinFcn<Initial, Type, FieldType> typedef ReturnType;
-
-          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type(Standardize<SubExpr, FieldType>::standardType(arg))));
-       };
-
 #     ifdef __CUDACC__
          template<typename Operand, typename FieldType>
           struct SinFcn<GPUWalk, Operand, FieldType> {
@@ -1543,6 +1638,25 @@
          }
 #     endif
       /* __CUDACC__ */;
+
+      /* SubExpr */
+      template<typename SubExpr>
+       inline NeboExpression<SinFcn<Initial,
+                                    typename Standardize<SubExpr, typename SubExpr::field_type>::
+                                    StandardType,
+                                    typename SubExpr::field_type>,
+                             typename SubExpr::field_type> sin(SubExpr const & arg) {
+
+          typename SubExpr::field_type typedef FieldType;
+
+          typename Standardize<SubExpr, typename SubExpr::field_type>::StandardType typedef Type;
+
+          SinFcn<Initial, Type, FieldType> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(Type(Standardize<SubExpr, FieldType>::standardType(arg))));
+       };
 
       template<typename CurrentMode, typename Operand, typename FieldType>
        struct CosFcn;
@@ -1639,6 +1753,27 @@
          private:
           Operand operand_;
       };
+
+#     ifdef __CUDACC__
+         template<typename Operand, typename FieldType>
+          struct CosFcn<GPUWalk, Operand, FieldType> {
+
+            public:
+             FieldType typedef field_type;
+             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::value_type typedef AtomicType;
+             CosFcn(Operand const & operand)
+             : operand_(operand)
+             {};
+             __device__ inline void start(int x, int y) { operand_.start(x, y); };
+             __device__ inline void next(void) { operand_.next(); };
+             __device__ inline AtomicType eval(void) { return std::cos(operand_.eval()); };
+
+            private:
+             Operand operand_;
+         }
+#     endif
+      /* __CUDACC__ */;
 
       /* SubExpr */
       template<typename SubExpr>
@@ -1755,6 +1890,27 @@
           Operand operand_;
       };
 
+#     ifdef __CUDACC__
+         template<typename Operand, typename FieldType>
+          struct TanFcn<GPUWalk, Operand, FieldType> {
+
+            public:
+             FieldType typedef field_type;
+             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::value_type typedef AtomicType;
+             TanFcn(Operand const & operand)
+             : operand_(operand)
+             {};
+             __device__ inline void start(int x, int y) { operand_.start(x, y); };
+             __device__ inline void next(void) { operand_.next(); };
+             __device__ inline AtomicType eval(void) { return std::tan(operand_.eval()); };
+
+            private:
+             Operand operand_;
+         }
+#     endif
+      /* __CUDACC__ */;
+
       /* SubExpr */
       template<typename SubExpr>
        inline NeboExpression<TanFcn<Initial,
@@ -1869,6 +2025,27 @@
          private:
           Operand operand_;
       };
+
+#     ifdef __CUDACC__
+         template<typename Operand, typename FieldType>
+          struct ExpFcn<GPUWalk, Operand, FieldType> {
+
+            public:
+             FieldType typedef field_type;
+             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::value_type typedef AtomicType;
+             ExpFcn(Operand const & operand)
+             : operand_(operand)
+             {};
+             __device__ inline void start(int x, int y) { operand_.start(x, y); };
+             __device__ inline void next(void) { operand_.next(); };
+             __device__ inline AtomicType eval(void) { return std::exp(operand_.eval()); };
+
+            private:
+             Operand operand_;
+         }
+#     endif
+      /* __CUDACC__ */;
 
       /* SubExpr */
       template<typename SubExpr>
@@ -1985,6 +2162,27 @@
           Operand operand_;
       };
 
+#     ifdef __CUDACC__
+         template<typename Operand, typename FieldType>
+          struct TanhFcn<GPUWalk, Operand, FieldType> {
+
+            public:
+             FieldType typedef field_type;
+             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::value_type typedef AtomicType;
+             TanhFcn(Operand const & operand)
+             : operand_(operand)
+             {};
+             __device__ inline void start(int x, int y) { operand_.start(x, y); };
+             __device__ inline void next(void) { operand_.next(); };
+             __device__ inline AtomicType eval(void) { return std::tanh(operand_.eval()); };
+
+            private:
+             Operand operand_;
+         }
+#     endif
+      /* __CUDACC__ */;
+
       /* SubExpr */
       template<typename SubExpr>
        inline NeboExpression<TanhFcn<Initial,
@@ -2100,6 +2298,27 @@
           Operand operand_;
       };
 
+#     ifdef __CUDACC__
+         template<typename Operand, typename FieldType>
+          struct AbsFcn<GPUWalk, Operand, FieldType> {
+
+            public:
+             FieldType typedef field_type;
+             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::value_type typedef AtomicType;
+             AbsFcn(Operand const & operand)
+             : operand_(operand)
+             {};
+             __device__ inline void start(int x, int y) { operand_.start(x, y); };
+             __device__ inline void next(void) { operand_.next(); };
+             __device__ inline AtomicType eval(void) { return std::abs(operand_.eval()); };
+
+            private:
+             Operand operand_;
+         }
+#     endif
+      /* __CUDACC__ */;
+
       /* SubExpr */
       template<typename SubExpr>
        inline NeboExpression<AbsFcn<Initial,
@@ -2214,6 +2433,27 @@
          private:
           Operand operand_;
       };
+
+#     ifdef __CUDACC__
+         template<typename Operand, typename FieldType>
+          struct NegFcn<GPUWalk, Operand, FieldType> {
+
+            public:
+             FieldType typedef field_type;
+             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::value_type typedef AtomicType;
+             NegFcn(Operand const & operand)
+             : operand_(operand)
+             {};
+             __device__ inline void start(int x, int y) { operand_.start(x, y); };
+             __device__ inline void next(void) { operand_.next(); };
+             __device__ inline AtomicType eval(void) { return -(operand_.eval()); };
+
+            private:
+             Operand operand_;
+         }
+#     endif
+      /* __CUDACC__ */;
 
       /* SubExpr */
       template<typename SubExpr>
@@ -2357,6 +2597,35 @@
           Operand1 operand1_;
           Operand2 operand2_;
       };
+
+#     ifdef __CUDACC__
+         template<typename Operand1, typename Operand2, typename FieldType>
+          struct PowFcn<GPUWalk, Operand1, Operand2, FieldType> {
+
+            public:
+             FieldType typedef field_type;
+             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::value_type typedef AtomicType;
+             PowFcn(Operand1 const & operand1, Operand2 const & operand2)
+             : operand1_(operand1), operand2_(operand2)
+             {};
+             __device__ inline void start(int x, int y) {
+
+                operand1_.start(x, y);
+
+                operand2_.start(x, y);
+             };
+             __device__ inline void next(void) { operand1_.next(); operand2_.next(); };
+             __device__ inline AtomicType eval(void) {
+                return std::pow(operand1_.eval(), operand2_.eval());
+             };
+
+            private:
+             Operand1 operand1_;
+             Operand2 operand2_;
+         }
+#     endif
+      /* __CUDACC__ */;
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2>
@@ -2529,6 +2798,27 @@
           Operand operand_;
       };
 
+#     ifdef __CUDACC__
+         template<typename Operand, typename FieldType>
+          struct SqrtFcn<GPUWalk, Operand, FieldType> {
+
+            public:
+             FieldType typedef field_type;
+             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::value_type typedef AtomicType;
+             SqrtFcn(Operand const & operand)
+             : operand_(operand)
+             {};
+             __device__ inline void start(int x, int y) { operand_.start(x, y); };
+             __device__ inline void next(void) { operand_.next(); };
+             __device__ inline AtomicType eval(void) { return std::sqrt(operand_.eval()); };
+
+            private:
+             Operand operand_;
+         }
+#     endif
+      /* __CUDACC__ */;
+
       /* SubExpr */
       template<typename SubExpr>
        inline NeboExpression<SqrtFcn<Initial,
@@ -2643,6 +2933,27 @@
          private:
           Operand operand_;
       };
+
+#     ifdef __CUDACC__
+         template<typename Operand, typename FieldType>
+          struct LogFcn<GPUWalk, Operand, FieldType> {
+
+            public:
+             FieldType typedef field_type;
+             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::value_type typedef AtomicType;
+             LogFcn(Operand const & operand)
+             : operand_(operand)
+             {};
+             __device__ inline void start(int x, int y) { operand_.start(x, y); };
+             __device__ inline void next(void) { operand_.next(); };
+             __device__ inline AtomicType eval(void) { return std::log(operand_.eval()); };
+
+            private:
+             Operand operand_;
+         }
+#     endif
+      /* __CUDACC__ */;
 
       /* SubExpr */
       template<typename SubExpr>
@@ -2788,6 +3099,35 @@
           Operand1 operand1_;
           Operand2 operand2_;
       };
+
+#     ifdef __CUDACC__
+         template<typename Operand1, typename Operand2, typename FieldType>
+          struct EqualCmp<GPUWalk, Operand1, Operand2, FieldType> {
+
+            public:
+             FieldType typedef field_type;
+             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::value_type typedef AtomicType;
+             EqualCmp(Operand1 const & operand1, Operand2 const & operand2)
+             : operand1_(operand1), operand2_(operand2)
+             {};
+             __device__ inline void start(int x, int y) {
+
+                operand1_.start(x, y);
+
+                operand2_.start(x, y);
+             };
+             __device__ inline void next(void) { operand1_.next(); operand2_.next(); };
+             __device__ inline AtomicType eval(void) {
+                return (operand1_.eval() == operand2_.eval());
+             };
+
+            private:
+             Operand1 operand1_;
+             Operand2 operand2_;
+         }
+#     endif
+      /* __CUDACC__ */;
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2>
@@ -2997,6 +3337,35 @@
           Operand1 operand1_;
           Operand2 operand2_;
       };
+
+#     ifdef __CUDACC__
+         template<typename Operand1, typename Operand2, typename FieldType>
+          struct InequalCmp<GPUWalk, Operand1, Operand2, FieldType> {
+
+            public:
+             FieldType typedef field_type;
+             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::value_type typedef AtomicType;
+             InequalCmp(Operand1 const & operand1, Operand2 const & operand2)
+             : operand1_(operand1), operand2_(operand2)
+             {};
+             __device__ inline void start(int x, int y) {
+
+                operand1_.start(x, y);
+
+                operand2_.start(x, y);
+             };
+             __device__ inline void next(void) { operand1_.next(); operand2_.next(); };
+             __device__ inline AtomicType eval(void) {
+                return (operand1_.eval() != operand2_.eval());
+             };
+
+            private:
+             Operand1 operand1_;
+             Operand2 operand2_;
+         }
+#     endif
+      /* __CUDACC__ */;
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2>
@@ -3209,6 +3578,35 @@
           Operand2 operand2_;
       };
 
+#     ifdef __CUDACC__
+         template<typename Operand1, typename Operand2, typename FieldType>
+          struct LessThanCmp<GPUWalk, Operand1, Operand2, FieldType> {
+
+            public:
+             FieldType typedef field_type;
+             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::value_type typedef AtomicType;
+             LessThanCmp(Operand1 const & operand1, Operand2 const & operand2)
+             : operand1_(operand1), operand2_(operand2)
+             {};
+             __device__ inline void start(int x, int y) {
+
+                operand1_.start(x, y);
+
+                operand2_.start(x, y);
+             };
+             __device__ inline void next(void) { operand1_.next(); operand2_.next(); };
+             __device__ inline AtomicType eval(void) {
+                return (operand1_.eval() < operand2_.eval());
+             };
+
+            private:
+             Operand1 operand1_;
+             Operand2 operand2_;
+         }
+#     endif
+      /* __CUDACC__ */;
+
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2>
        inline NeboBooleanExpression<LessThanCmp<Initial,
@@ -3417,6 +3815,35 @@
           Operand1 operand1_;
           Operand2 operand2_;
       };
+
+#     ifdef __CUDACC__
+         template<typename Operand1, typename Operand2, typename FieldType>
+          struct LessThanEqualCmp<GPUWalk, Operand1, Operand2, FieldType> {
+
+            public:
+             FieldType typedef field_type;
+             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::value_type typedef AtomicType;
+             LessThanEqualCmp(Operand1 const & operand1, Operand2 const & operand2)
+             : operand1_(operand1), operand2_(operand2)
+             {};
+             __device__ inline void start(int x, int y) {
+
+                operand1_.start(x, y);
+
+                operand2_.start(x, y);
+             };
+             __device__ inline void next(void) { operand1_.next(); operand2_.next(); };
+             __device__ inline AtomicType eval(void) {
+                return (operand1_.eval() <= operand2_.eval());
+             };
+
+            private:
+             Operand1 operand1_;
+             Operand2 operand2_;
+         }
+#     endif
+      /* __CUDACC__ */;
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2>
@@ -3631,6 +4058,35 @@
           Operand2 operand2_;
       };
 
+#     ifdef __CUDACC__
+         template<typename Operand1, typename Operand2, typename FieldType>
+          struct GreaterThanCmp<GPUWalk, Operand1, Operand2, FieldType> {
+
+            public:
+             FieldType typedef field_type;
+             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::value_type typedef AtomicType;
+             GreaterThanCmp(Operand1 const & operand1, Operand2 const & operand2)
+             : operand1_(operand1), operand2_(operand2)
+             {};
+             __device__ inline void start(int x, int y) {
+
+                operand1_.start(x, y);
+
+                operand2_.start(x, y);
+             };
+             __device__ inline void next(void) { operand1_.next(); operand2_.next(); };
+             __device__ inline AtomicType eval(void) {
+                return (operand1_.eval() > operand2_.eval());
+             };
+
+            private:
+             Operand1 operand1_;
+             Operand2 operand2_;
+         }
+#     endif
+      /* __CUDACC__ */;
+
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2>
        inline NeboBooleanExpression<GreaterThanCmp<Initial,
@@ -3839,6 +4295,35 @@
           Operand1 operand1_;
           Operand2 operand2_;
       };
+
+#     ifdef __CUDACC__
+         template<typename Operand1, typename Operand2, typename FieldType>
+          struct GreaterThanEqualCmp<GPUWalk, Operand1, Operand2, FieldType> {
+
+            public:
+             FieldType typedef field_type;
+             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::value_type typedef AtomicType;
+             GreaterThanEqualCmp(Operand1 const & operand1, Operand2 const & operand2)
+             : operand1_(operand1), operand2_(operand2)
+             {};
+             __device__ inline void start(int x, int y) {
+
+                operand1_.start(x, y);
+
+                operand2_.start(x, y);
+             };
+             __device__ inline void next(void) { operand1_.next(); operand2_.next(); };
+             __device__ inline AtomicType eval(void) {
+                return (operand1_.eval() >= operand2_.eval());
+             };
+
+            private:
+             Operand1 operand1_;
+             Operand2 operand2_;
+         }
+#     endif
+      /* __CUDACC__ */;
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2>
@@ -4051,6 +4536,35 @@
           Operand2 operand2_;
       };
 
+#     ifdef __CUDACC__
+         template<typename Operand1, typename Operand2, typename FieldType>
+          struct AndOp<GPUWalk, Operand1, Operand2, FieldType> {
+
+            public:
+             FieldType typedef field_type;
+             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::value_type typedef AtomicType;
+             AndOp(Operand1 const & operand1, Operand2 const & operand2)
+             : operand1_(operand1), operand2_(operand2)
+             {};
+             __device__ inline void start(int x, int y) {
+
+                operand1_.start(x, y);
+
+                operand2_.start(x, y);
+             };
+             __device__ inline void next(void) { operand1_.next(); operand2_.next(); };
+             __device__ inline AtomicType eval(void) {
+                return (operand1_.eval() && operand2_.eval());
+             };
+
+            private:
+             Operand1 operand1_;
+             Operand2 operand2_;
+         }
+#     endif
+      /* __CUDACC__ */;
+
       /* SubBoolExpr X SubBoolExpr */
       template<typename SubBoolExpr1, typename SubBoolExpr2>
        inline NeboBooleanExpression<AndOp<Initial,
@@ -4241,6 +4755,35 @@
           Operand2 operand2_;
       };
 
+#     ifdef __CUDACC__
+         template<typename Operand1, typename Operand2, typename FieldType>
+          struct OrOp<GPUWalk, Operand1, Operand2, FieldType> {
+
+            public:
+             FieldType typedef field_type;
+             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::value_type typedef AtomicType;
+             OrOp(Operand1 const & operand1, Operand2 const & operand2)
+             : operand1_(operand1), operand2_(operand2)
+             {};
+             __device__ inline void start(int x, int y) {
+
+                operand1_.start(x, y);
+
+                operand2_.start(x, y);
+             };
+             __device__ inline void next(void) { operand1_.next(); operand2_.next(); };
+             __device__ inline AtomicType eval(void) {
+                return (operand1_.eval() || operand2_.eval());
+             };
+
+            private:
+             Operand1 operand1_;
+             Operand2 operand2_;
+         }
+#     endif
+      /* __CUDACC__ */;
+
       /* SubBoolExpr X SubBoolExpr */
       template<typename SubBoolExpr1, typename SubBoolExpr2>
        inline NeboBooleanExpression<OrOp<Initial,
@@ -4407,6 +4950,27 @@
           Operand operand_;
       };
 
+#     ifdef __CUDACC__
+         template<typename Operand, typename FieldType>
+          struct NotOp<GPUWalk, Operand, FieldType> {
+
+            public:
+             FieldType typedef field_type;
+             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::value_type typedef AtomicType;
+             NotOp(Operand const & operand)
+             : operand_(operand)
+             {};
+             __device__ inline void start(int x, int y) { operand_.start(x, y); };
+             __device__ inline void next(void) { operand_.next(); };
+             __device__ inline AtomicType eval(void) { return !(operand_.eval()); };
+
+            private:
+             Operand operand_;
+         }
+#     endif
+      /* __CUDACC__ */;
+
       /* SubBoolExpr */
       template<typename SubBoolExpr>
        inline NeboBooleanExpression<NotOp<Initial,
@@ -4558,6 +5122,35 @@
              Operand1 operand1_;                                                                   \
              Operand2 operand2_;                                                                   \
          };                                                                                        \
+                                                                                                   \
+#        ifdef __CUDACC__                                                                          \
+            template<typename Operand1, typename Operand2, typename FieldType>                     \
+             struct OBJECT_NAME<GPUWalk, Operand1, Operand2, FieldType> {                          \
+                                                                                                   \
+               public:                                                                             \
+                FieldType typedef field_type;                                                      \
+                typename FieldType::memory_window typedef MemoryWindow;                            \
+                typename field_type::value_type typedef AtomicType;                                \
+                OBJECT_NAME(Operand1 const & operand1, Operand2 const & operand2)                  \
+                : operand1_(operand1), operand2_(operand2)                                         \
+                {};                                                                                \
+                __device__ inline void start(int x, int y) {                                       \
+                                                                                                   \
+                   operand1_.start(x, y);                                                          \
+                                                                                                   \
+                   operand2_.start(x, y);                                                          \
+                };                                                                                 \
+                __device__ inline void next(void) { operand1_.next(); operand2_.next(); };         \
+                __device__ inline AtomicType eval(void) {                                          \
+                   return INTERNAL_NAME(operand1_.eval(), operand2_.eval());                       \
+                };                                                                                 \
+                                                                                                   \
+               private:                                                                            \
+                Operand1 operand1_;                                                                \
+                Operand2 operand2_;                                                                \
+            }                                                                                      \
+#        endif                                                                                     \
+         /* __CUDACC__ */;                                                                         \
                                                                                                    \
          /* SubExpr X SubExpr */                                                                   \
          template<typename SubExpr1, typename SubExpr2>                                            \
@@ -4777,6 +5370,35 @@
              Operand2 operand2_;                                                                   \
          };                                                                                        \
                                                                                                    \
+#        ifdef __CUDACC__                                                                          \
+            template<typename Operand1, typename Operand2, typename FieldType>                     \
+             struct OBJECT_NAME<GPUWalk, Operand1, Operand2, FieldType> {                          \
+                                                                                                   \
+               public:                                                                             \
+                FieldType typedef field_type;                                                      \
+                typename FieldType::memory_window typedef MemoryWindow;                            \
+                typename field_type::value_type typedef AtomicType;                                \
+                OBJECT_NAME(Operand1 const & operand1, Operand2 const & operand2)                  \
+                : operand1_(operand1), operand2_(operand2)                                         \
+                {};                                                                                \
+                __device__ inline void start(int x, int y) {                                       \
+                                                                                                   \
+                   operand1_.start(x, y);                                                          \
+                                                                                                   \
+                   operand2_.start(x, y);                                                          \
+                };                                                                                 \
+                __device__ inline void next(void) { operand1_.next(); operand2_.next(); };         \
+                __device__ inline AtomicType eval(void) {                                          \
+                   return (operand1_.eval() INTERNAL_NAME operand2_.eval());                       \
+                };                                                                                 \
+                                                                                                   \
+               private:                                                                            \
+                Operand1 operand1_;                                                                \
+                Operand2 operand2_;                                                                \
+            }                                                                                      \
+#        endif                                                                                     \
+         /* __CUDACC__ */;                                                                         \
+                                                                                                   \
          /* SubExpr X SubExpr */                                                                   \
          template<typename SubExpr1, typename SubExpr2>                                            \
           inline NeboExpression<OBJECT_NAME<Initial,                                               \
@@ -4959,6 +5581,27 @@
             private:                                                                               \
              Operand operand_;                                                                     \
          };                                                                                        \
+                                                                                                   \
+#        ifdef __CUDACC__                                                                          \
+            template<typename Operand, typename FieldType>                                         \
+             struct OBJECT_NAME<GPUWalk, Operand, FieldType> {                                     \
+                                                                                                   \
+               public:                                                                             \
+                FieldType typedef field_type;                                                      \
+                typename FieldType::memory_window typedef MemoryWindow;                            \
+                typename field_type::value_type typedef AtomicType;                                \
+                OBJECT_NAME(Operand const & operand)                                               \
+                : operand_(operand)                                                                \
+                {};                                                                                \
+                __device__ inline void start(int x, int y) { operand_.start(x, y); };              \
+                __device__ inline void next(void) { operand_.next(); };                            \
+                __device__ inline AtomicType eval(void) { return INTERNAL_NAME(operand_.eval()); }; \
+                                                                                                   \
+               private:                                                                            \
+                Operand operand_;                                                                  \
+            }                                                                                      \
+#        endif                                                                                     \
+         /* __CUDACC__ */;                                                                         \
                                                                                                    \
          /* SubExpr */                                                                             \
          template<typename SubExpr>                                                                \
