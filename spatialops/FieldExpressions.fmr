@@ -2773,10 +2773,9 @@
                                                                                                                             (tpl-use 'GhostFromField FT-chunk))
                                                                                                                      'result))))
                                                                                     'result))
-                                                                   (c (scope 'structured (tpl-use 'GhostData
-                                                                                                  "0" "0" "0"
-                                                                                                  "0" "0" "0"
-                                                                                                  "0" "0" "0")) s))
+                                                                   (tpl-pmtr (scope (scope 'structured
+                                                                                           (tpl-use 'MinimumGhostFromField FT-chunk))
+                                                                                    'result)))
                                                           'result))
                                          'ValidGhost)
                                 (typedef (scope 'structured (tpl-use 'IndexTriplet "0" "0" "0"))
