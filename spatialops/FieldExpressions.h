@@ -6289,8 +6289,8 @@
                                  typename structured::Minimum<typename ExprType::PossibleValidGhost,
                                                               typename structured::GhostFromField<FieldType>::
                                                               result>::result,
-                                 structured::GhostData<0, 0, 0, 0, 0, 0, 0, 0, 0> >::result typedef
-          ValidGhost;
+                                 typename structured::MinimumGhostFromField<FieldType>::result>::
+          result typedef ValidGhost;
 
           structured::IndexTriplet<0, 0, 0> typedef InitialShift;
 
