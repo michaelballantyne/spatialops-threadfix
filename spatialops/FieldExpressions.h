@@ -219,7 +219,7 @@
              __device__ inline AtomicType eval(void) { return value_; };
 
             private:
-             const AtomicType value_;
+             AtomicType const value_;
          }
 #     endif
       /* __CUDACC__ */;
@@ -399,8 +399,8 @@
           NeboConstField(FieldType const & f)
           : iter_(f.begin()), end_(f.end())
           {};
-          inline void next(void) { ++iter_; };
-          inline bool at_end(void) const { return (iter_ == end_); };
+          inline void next(void) { iter_++; };
+          inline bool at_end(void) const { return iter_ == end_; };
           inline bool has_length(void) const { return true; };
           inline AtomicType const & eval(void) const { return *iter_; };
 
@@ -422,16 +422,16 @@
                + f.window_with_ghost().glob_dim(0) * (f.window_with_ghost().offset(1) + (f.window_with_ghost().glob_dim(1)
                                                                                          * f.window_with_ghost().offset(2)))),
                xLength_(f.window_with_ghost().glob_dim(0)),
-               step_((xLength_ * f.window_with_ghost().glob_dim(1)))
+               step_(xLength_ * f.window_with_ghost().glob_dim(1))
              {};
              __device__ inline void start(int x, int y) { current_ += x + y * xLength_; };
              __device__ inline void next(void) { current_ += step_; };
              __device__ inline AtomicType eval(void) { return *current_; };
 
             private:
-             const AtomicType * current_;
-             int xLength_;
-             int step_;
+             AtomicType const * current_;
+             int const xLength_;
+             int const step_;
          }
 #     endif
       /* __CUDACC__ */;
@@ -482,7 +482,7 @@
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           NeboField<Resize, FieldType> typedef ResizeType;
-          NeboField(FieldType f)
+          NeboField(FieldType & f)
           : field_(f)
           {};
           inline ResizeType resize(structured::IntVec const & split,
@@ -505,7 +505,7 @@
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           NeboField<SeqWalk, FieldType> typedef SeqWalkType;
-          NeboField(FieldType f)
+          NeboField(FieldType & f)
           : field_(f)
           {};
           template<typename Shift>
@@ -525,11 +525,11 @@
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef AtomicType;
-          NeboField(FieldType f)
+          NeboField(FieldType & f)
           : iter_(f.begin()), end_(f.end())
           {};
-          inline void next(void) { ++iter_; };
-          inline bool at_end(void) const { return (iter_ == end_); };
+          inline void next(void) { iter_++; };
+          inline bool at_end(void) const { return iter_ == end_; };
           inline bool has_length(void) const { return true; };
           inline AtomicType & ref(void) { return *iter_; };
           inline AtomicType * ptr(void) { return &(*iter_); };
@@ -556,7 +556,7 @@
                xExtent_(f.window_with_ghost().extent(0)),
                yExtent_(f.window_with_ghost().extent(1)),
                zExtent_(f.window_with_ghost().extent(2)),
-               step_((xLength_ * f.window_with_ghost().glob_dim(1))),
+               step_(xLength_ * f.window_with_ghost().glob_dim(1)),
                valid_(false)
              {};
              __device__ inline void start(int x, int y) {
@@ -573,12 +573,12 @@
             private:
              AtomicType * current_;
              int location_;
-             int xLength_;
-             int xExtent_;
-             int yExtent_;
-             int zExtent_;
-             int step_;
-             int valid_;
+             int const xLength_;
+             int const xExtent_;
+             int const yExtent_;
+             int const zExtent_;
+             int const step_;
+             int const valid_;
          }
 #     endif
       /* __CUDACC__ */;
@@ -5851,7 +5851,7 @@
              return (clause_.has_length() || otherwise_.has_length());
           };
           inline AtomicType const eval(void) const {
-             return clause_.check() ? clause_.eval() : otherwise_.eval();
+             return (clause_.check() ? clause_.eval() : otherwise_.eval());
           };
 
          private:
@@ -5862,7 +5862,7 @@
       struct NeboSimpleClause {
 
          public:
-          NeboSimpleClause(bool b, double d)
+          NeboSimpleClause(bool const & b, double const & d)
           : b_(b), d_(d)
           {};
           inline bool check(void) const { return b_; };
@@ -5876,7 +5876,7 @@
 
              NeboClause<Initial, Boolean, Scalar, FieldType> typedef Converted;
 
-             static inline Converted convert(bool b, double d) {
+             static inline Converted convert(bool const b, double const d) {
                 return Converted(Boolean(b), Scalar(d));
              };
           };
@@ -5889,7 +5889,7 @@
       struct NeboSimpleFinalClause {
 
          public:
-          NeboSimpleFinalClause(double d)
+          NeboSimpleFinalClause(double const d)
           : d_(d)
           {};
           inline double eval(void) const { return d_; };
@@ -5902,10 +5902,10 @@
        struct NeboSimpleCond {
 
          public:
-          NeboSimpleCond(NeboSimpleClause c, Otherwise otherwise)
+          NeboSimpleCond(NeboSimpleClause const & c, Otherwise const & otherwise)
           : c_(c), otherwise_(otherwise)
           {};
-          inline double eval(void) const { return c_.check() ? c_.eval() : otherwise_.eval(); };
+          inline double eval(void) const { return (c_.check() ? c_.eval() : otherwise_.eval()); };
           template<typename FieldType>
            struct Convert {
 
@@ -5919,7 +5919,7 @@
 
              NeboCond<Initial, ConvertedClause, ConvertedList, FieldType> typedef Converted;
 
-             static inline Converted convert(NeboSimpleClause c, Otherwise o) {
+             static inline Converted convert(NeboSimpleClause const & c, Otherwise const & o) {
                 return Converted(ConvertingClause::convert(c.check(), c.eval()), o.template convert<FieldType>());
              };
           };
@@ -5942,7 +5942,7 @@
        struct NeboSimpleCond<NeboNil> {
 
          public:
-          NeboSimpleCond(NeboSimpleClause c, NeboNil nil)
+          NeboSimpleCond(NeboSimpleClause const & c, NeboNil const & nil)
           : c_(c)
           {};
           template<typename FieldType>
@@ -5956,7 +5956,7 @@
 
              NeboCond<Initial, ConvertedClause, ConvertedList, FieldType> typedef Converted;
 
-             static inline Converted convert(NeboSimpleClause c) {
+             static inline Converted convert(NeboSimpleClause const & c) {
                 return Converted(ConvertingClause::convert(c.check(), c.eval()), NeboNil());
              };
           };
@@ -5991,7 +5991,9 @@
 
              PreceedingResult typedef Result;
 
-             static inline Result reverse(NeboNil nil, PreceedingResult r) { return r; };
+             static inline Result reverse(NeboNil const & nil, PreceedingResult const & r) {
+                return r;
+             };
           };
           template<typename Next, typename Field, typename Following, typename PreceedingResult>
            struct ReverseListRecursive<NeboCond<Initial, Next, Following, Field>, PreceedingResult> {
@@ -6004,14 +6006,14 @@
 
              typename InternalCall::Result typedef Result;
 
-             static inline Result reverse(Remaining l, PreceedingResult r) {
+             static inline Result reverse(Remaining const & l, PreceedingResult const & r) {
                 return InternalCall::reverse(l.otherwise(), NewResult(l.clause(), r));
              };
           };
-          List list_;
+          List const & list_;
 
          public:
-          CondBuilder(NeboCond<Initial, ClauseType, Otherwise, FieldType> l)
+          CondBuilder(NeboCond<Initial, ClauseType, Otherwise, FieldType> const & l)
           : list_(l)
           {};
           template<typename Final>
@@ -6023,17 +6025,19 @@
 
              typename InternalCall::Result typedef Result;
 
-             static inline Result reverse(List l, Final f) { return InternalCall::reverse(l, f); };
+             static inline Result reverse(List const & l, Final const & f) {
+                return InternalCall::reverse(l, f);
+             };
           };
           template<typename Final>
-           inline typename ReverseList<Final>::Result reverse(Final f) {
+           inline typename ReverseList<Final>::Result reverse(Final const & f) {
 
               ReverseList<Final> typedef InternalCall;
 
               return InternalCall::reverse(list_, f);
            };
           inline NeboExpression<typename ReverseList<NeboScalar<Initial, FieldType> >::Result,
-                                FieldType> operator ()(double d) {
+                                FieldType> operator ()(double const d) {
 
              NeboScalar<Initial, FieldType> typedef Scalar;
 
@@ -6048,7 +6052,7 @@
           template<typename Expr>
            inline NeboExpression<typename ReverseList<typename Standardize<Expr, FieldType>::
                                                       StandardType>::Result,
-                                 FieldType> operator ()(Expr e) {
+                                 FieldType> operator ()(Expr const & e) {
 
               Standardize<Expr, FieldType> typedef Standardize;
 
@@ -6068,7 +6072,7 @@
                                                  NeboScalar<Initial, FieldType>,
                                                  FieldType>,
                                       List,
-                                      FieldType> > operator ()(bool b, double d) {
+                                      FieldType> > operator ()(bool const b, double const d) {
 
              NeboBoolean<Initial, FieldType> typedef Boolean;
 
@@ -6090,7 +6094,7 @@
                                                   StandardType,
                                                   FieldType>,
                                        List,
-                                       FieldType> > operator ()(bool b, Expr e) {
+                                       FieldType> > operator ()(bool const b, Expr const & e) {
 
               NeboBoolean<Initial, FieldType> typedef Boolean;
 
@@ -6114,8 +6118,9 @@
                                                   FieldType>,
                                        List,
                                        FieldType> > operator ()(NeboBooleanExpression<BoolExpr,
-                                                                                      FieldType> nb,
-                                                                double d) {
+                                                                                      FieldType>
+                                                                const & nb,
+                                                                double const d) {
 
               NeboScalar<Initial, FieldType> typedef Scalar;
 
@@ -6137,8 +6142,9 @@
                                        List,
                                        FieldType> > operator ()(NeboBooleanExpression<BoolExpr,
                                                                                       typename Expr::
-                                                                                      field_type> nb,
-                                                                Expr e) {
+                                                                                      field_type>
+                                                                const & nb,
+                                                                Expr const & e) {
 
               Standardize<Expr, FieldType> typedef Standardize;
 
@@ -6168,7 +6174,9 @@
 
              PreceedingResult typedef Result;
 
-             static inline Result reverse(NeboNil nil, PreceedingResult r) { return r; };
+             static inline Result reverse(NeboNil const & nil, PreceedingResult const & r) {
+                return r;
+             };
           };
           template<typename Following, typename PreceedingResult>
            struct ReverseListRecursive<NeboSimpleCond<Following>, PreceedingResult> {
@@ -6181,14 +6189,14 @@
 
              typename InternalCall::Result typedef Result;
 
-             static inline Result reverse(Remaining l, PreceedingResult r) {
+             static inline Result reverse(Remaining const & l, PreceedingResult const & r) {
                 return InternalCall::reverse(l.otherwise(), NewResult(l.clause(), r));
              };
           };
-          List list_;
+          List const & list_;
 
          public:
-          CondBuilder(NeboSimpleCond<Otherwise> l)
+          CondBuilder(NeboSimpleCond<Otherwise> const & l)
           : list_(l)
           {};
           template<typename Final>
@@ -6200,16 +6208,20 @@
 
              typename InternalCall::Result typedef Result;
 
-             static inline Result reverse(List l, Final f) { return InternalCall::reverse(l, f); };
+             static inline Result reverse(List const & l, Final const & f) {
+                return InternalCall::reverse(l, f);
+             };
           };
           template<typename Final>
-           inline typename ReverseList<Final>::Result reverse(Final f) {
+           inline typename ReverseList<Final>::Result reverse(Final const & f) {
 
               ReverseList<Final> typedef InternalCall;
 
               return InternalCall::reverse(list_, f);
            };
-          inline double operator ()(double d) { return reverse(NeboSimpleFinalClause(d)).eval(); };
+          inline double operator ()(double const d) {
+             return reverse(NeboSimpleFinalClause(d)).eval();
+          };
           template<typename Expr>
            inline NeboExpression<typename CondBuilder<typename List::template Convert<typename Expr::
                                                                                       field_type>::
@@ -6220,7 +6232,7 @@
                                                                                                    field_type>::
                                                                                        StandardType>::
                                  Result,
-                                 typename Expr::field_type> operator ()(Expr e) {
+                                 typename Expr::field_type> operator ()(Expr const & e) {
 
               typename Expr::field_type typedef FieldType;
 
@@ -6231,7 +6243,7 @@
 
               return NewCondBuilder(list_.template convert<FieldType>())(e);
            };
-          inline CondBuilder<NeboSimpleCond<List> > operator ()(bool b, double d) {
+          inline CondBuilder<NeboSimpleCond<List> > operator ()(bool const b, double const d) {
 
              NeboSimpleCond<List> typedef Cond;
 
@@ -6249,7 +6261,8 @@
                                                   typename Expr::field_type>,
                                        typename List::template Convert<typename Expr::field_type>::
                                        Converted,
-                                       typename Expr::field_type> > operator ()(bool b, Expr e) {
+                                       typename Expr::field_type> > operator ()(bool const b,
+                                                                                Expr const & e) {
 
               typename Expr::field_type typedef FieldType;
 
@@ -6278,8 +6291,9 @@
                                                   FieldType>,
                                        typename List::template Convert<FieldType>::Converted,
                                        FieldType> > operator ()(NeboBooleanExpression<BoolExpr,
-                                                                                      FieldType> nb,
-                                                                double d) {
+                                                                                      FieldType>
+                                                                const & nb,
+                                                                double const d) {
 
               NeboScalar<Initial, FieldType> typedef Scalar;
 
@@ -6307,8 +6321,8 @@
                                                                                                       typename
                                                                                                       Expr::
                                                                                                       field_type>
-                                                                                nb,
-                                                                                Expr e) {
+                                                                                const & nb,
+                                                                                Expr const & e) {
 
               typename Expr::field_type typedef FieldType;
 
@@ -6336,10 +6350,11 @@
           CondBuilder() {};
       };
 
-      inline double cond(double d) { return d; };
+      inline double cond(double const d) { return d; };
 
       template<typename Expr>
-       inline typename Standardize<Expr, typename Expr::field_type>::StandardTerm cond(Expr e) {
+       inline typename Standardize<Expr, typename Expr::field_type>::StandardTerm cond(Expr const &
+                                                                                       e) {
 
           typename Expr::field_type typedef FieldType;
 
@@ -6348,7 +6363,7 @@
           return Standardize::standardTerm(e);
        };
 
-      inline CondBuilder<NeboSimpleCond<NeboNil> > cond(bool b, double d) {
+      inline CondBuilder<NeboSimpleCond<NeboNil> > cond(bool const b, double const d) {
 
          NeboSimpleCond<NeboNil> typedef Cond;
 
@@ -6365,7 +6380,7 @@
                                               StandardType,
                                               typename Expr::field_type>,
                                    NeboNil,
-                                   typename Expr::field_type> > cond(bool b, Expr e) {
+                                   typename Expr::field_type> > cond(bool const b, Expr const & e) {
 
           typename Expr::field_type typedef FieldType;
 
@@ -6391,8 +6406,9 @@
                                               NeboScalar<Initial, FieldType>,
                                               FieldType>,
                                    NeboNil,
-                                   FieldType> > cond(NeboBooleanExpression<BoolExpr, FieldType> nb,
-                                                     double d) {
+                                   FieldType> > cond(NeboBooleanExpression<BoolExpr, FieldType>
+                                                     const & nb,
+                                                     double const d) {
 
           NeboScalar<Initial, FieldType> typedef Scalar;
 
@@ -6417,8 +6433,8 @@
                                                                                            typename
                                                                                            Expr::
                                                                                            field_type>
-                                                                     nb,
-                                                                     Expr e) {
+                                                                     const & nb,
+                                                                     Expr const & e) {
 
           typename Expr::field_type typedef FieldType;
 
@@ -6538,10 +6554,10 @@
        struct NeboStencilCoefList {
 
          public:
-          NeboStencilCoefList(NeboStencilCoefList<Length - 1> const & l, double c)
+          NeboStencilCoefList(NeboStencilCoefList<Length - 1> const & l, double const c)
           : list_(l), coef_(c)
           {};
-          inline NeboStencilCoefList<Length + 1> const operator()(double c) const {
+          inline NeboStencilCoefList<Length + 1> const operator ()(double const c) const {
              return NeboStencilCoefList<Length + 1>(*this, c);
           };
           inline double const coef(void) const { return coef_; };
@@ -6556,10 +6572,10 @@
        struct NeboStencilCoefList<1> {
 
          public:
-          NeboStencilCoefList(double c)
+          NeboStencilCoefList(double const c)
           : coef_(c)
           {};
-          inline NeboStencilCoefList<2> const operator()(double c) const {
+          inline NeboStencilCoefList<2> const operator ()(double const c) const {
              return NeboStencilCoefList<2>(*this, c);
           };
           inline double const coef(void) const { return coef_; };
@@ -6826,7 +6842,7 @@
 
       template<typename LhsType, typename RhsType>
        inline void nebo_assignment_sequential_execute_internal(LhsType lhs, RhsType rhs) {
-          while(!lhs.at_end()){ lhs.ref() = rhs.eval(); lhs.next(); rhs.next(); };
+          while(!lhs.at_end()) { lhs.ref() = rhs.eval(); lhs.next(); rhs.next(); };
        };
 
       template<typename ValidGhost, typename InitialShift, typename ExprType, typename FieldType>
@@ -6887,9 +6903,9 @@
              int y = 1;
              int z = 1;
 
-             if(number_of_partitions <= extent[2]){ z = number_of_partitions; }
-             else if(number_of_partitions <= extent[1]){ y = number_of_partitions; }
-             else if(number_of_partitions <= extent[0]){ x = number_of_partitions; };
+             if(number_of_partitions <= extent[2]) { z = number_of_partitions; }
+             else if(number_of_partitions <= extent[1]) { y = number_of_partitions; }
+             else if(number_of_partitions <= extent[0]) { x = number_of_partitions; };
 
              structured::IntVec split = structured::IntVec(x, y, z);
 
@@ -6897,7 +6913,7 @@
 
              int count = 0;
 
-             for(; count < number_of_partitions; ++count){
+             for(; count < number_of_partitions; count++) {
 
                 structured::IntVec location = structured::IntVec(((x == 1) ? 0 : count),
                                                                  ((y == 1) ? 0 : count),
@@ -6916,7 +6932,7 @@
                                                             &semaphore));
              };
 
-             for(int ii = 0 ;ii < number_of_partitions ;ii++){ semaphore.wait(); };
+             for(int ii = 0; ii < number_of_partitions; ii++) { semaphore.wait(); };
 
              return initial_lhs;
           }
@@ -7033,9 +7049,9 @@
 
              int blockDim = 16;
 
-             int gDimX = mw.extent(0) / blockDim + (mw.extent(0) % blockDim > 0 ? 1 : 0);
+             int gDimX = mw.extent(0) / blockDim + ((mw.extent(0) % blockDim) > 0 ? 1 : 0);
 
-             int gDimY = mw.extent(1) / blockDim + (mw.extent(1) % blockDim > 0 ? 1 : 0);
+             int gDimY = mw.extent(1) / blockDim + ((mw.extent(1) % blockDim) > 0 ? 1 : 0);
 
              dim3 dimBlock(blockDim, blockDim);
 
