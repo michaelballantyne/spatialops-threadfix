@@ -521,7 +521,7 @@
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           NeboField<Resize, FieldType> typedef ResizeType;
-          NeboField(FieldType & f)
+          NeboField(FieldType f)
           : field_(f)
           {};
           inline ResizeType resize(structured::IntVec const & split,
@@ -544,7 +544,7 @@
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           NeboField<SeqWalk, FieldType> typedef SeqWalkType;
-          NeboField(FieldType & f)
+          NeboField(FieldType f)
           : field_(f)
           {};
           template<typename Shift>
@@ -564,7 +564,7 @@
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef AtomicType;
-          NeboField(FieldType & f)
+          NeboField(FieldType f)
           : iter_(f.begin()), end_(f.end())
           {};
           inline void next(void) { iter_++; };
@@ -586,23 +586,23 @@
              FieldType typedef field_type;
              typename FieldType::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
-             NeboField(FieldType & f)
+             NeboField(FieldType f)
              : current_(f.field_values(EXTERNAL_CUDA_GPU, f.device_index()) + f.window_with_ghost().offset(0)
                + f.window_with_ghost().glob_dim(0) * (f.window_with_ghost().offset(1) + (f.window_with_ghost().glob_dim(1)
                                                                                          * f.window_with_ghost().offset(2)))),
                location_(0),
+               valid_(false),
                xLength_(f.window_with_ghost().glob_dim(0)),
                xExtent_(f.window_with_ghost().extent(0)),
                yExtent_(f.window_with_ghost().extent(1)),
                zExtent_(f.window_with_ghost().extent(2)),
-               step_(xLength_ * f.window_with_ghost().glob_dim(1)),
-               valid_(false)
+               step_(xLength_ * f.window_with_ghost().glob_dim(1))
              {};
              __device__ inline void start(int x, int y) {
 
                 valid_ = (x < xExtent_ && x >= 0 && y < yExtent_ && y >= 0);
 
-                if(valid()) { location_ = 0; current_ = x + y * xLength_; };
+                if(valid()) { location_ = 0; current_ += x + y * xLength_; };
              };
              __device__ inline void next(void) { current_ += step_; location_++; };
              __device__ inline bool valid(void) { return valid_; };
@@ -612,12 +612,12 @@
             private:
              AtomicType * current_;
              int location_;
+             int valid_;
              int const xLength_;
              int const xExtent_;
              int const yExtent_;
              int const zExtent_;
              int const step_;
-             int const valid_;
          }
 #     endif
       /* __CUDACC__ */;
@@ -5098,648 +5098,6 @@
           return ReturnTerm(ReturnType(Type(arg.expr())));
        };
 
-#     define BUILD_BINARY_FUNCTION(OBJECT_NAME, INTERNAL_NAME, EXTERNAL_NAME)                      \
-         template<typename CurrentMode, typename Operand1, typename Operand2, typename FieldType>  \
-          struct OBJECT_NAME;                                                                      \
-                                                                                                   \
-         template<typename Operand1, typename Operand2, typename FieldType>                        \
-          struct OBJECT_NAME<Initial, Operand1, Operand2, FieldType> {                             \
-                                                                                                   \
-            public:                                                                                \
-             FieldType typedef field_type;                                                         \
-             typename FieldType::memory_window typedef MemoryWindow;                               \
-             OBJECT_NAME<ResizePrep,                                                               \
-                         typename Operand1::ResizePrepType,                                        \
-                         typename Operand2::ResizePrepType,                                        \
-                         FieldType> typedef ResizePrepType;                                        \
-             OBJECT_NAME<SeqWalk,                                                                  \
-                         typename Operand1::SeqWalkType,                                           \
-                         typename Operand2::SeqWalkType,                                           \
-                         FieldType> typedef SeqWalkType;                                           \
-#            ifdef __CUDACC__                                                                      \
-                OBJECT_NAME<GPUWalk,                                                               \
-                            typename Operand1::GPUWalkType,                                        \
-                            typename Operand2::GPUWalkType,                                        \
-                            FieldType> typedef GPUWalkType                                         \
-#            endif                                                                                 \
-             /* __CUDACC__ */;                                                                     \
-             typename structured::Minimum<typename Operand1::PossibleValidGhost,                   \
-                                          typename Operand2::PossibleValidGhost>::result typedef   \
-             PossibleValidGhost;                                                                   \
-             OBJECT_NAME(Operand1 const & operand1, Operand2 const & operand2)                     \
-             : operand1_(operand1), operand2_(operand2)                                            \
-             {};                                                                                   \
-             template<typename ValidGhost, typename Shift>                                         \
-              inline SeqWalkType init(void) const {                                                \
-                                                                                                   \
-                 return SeqWalkType(operand1().template init<ValidGhost, Shift>(),                 \
-                                    operand2().template init<ValidGhost, Shift>());                \
-              };                                                                                   \
-             template<typename ValidGhost>                                                         \
-              inline ResizePrepType resize_prep(void) const {                                      \
-                                                                                                   \
-                 return ResizePrepType(operand1().template resize_prep<ValidGhost>(),              \
-                                       operand2().template resize_prep<ValidGhost>());             \
-              };                                                                                   \
-#            ifdef __CUDACC__                                                                      \
-                template<typename ValidGhost, typename Shift>                                      \
-                 inline GPUWalkType gpu_init(void) const {                                         \
-                                                                                                   \
-                    return GPUWalkType(operand1().template gpu_init<ValidGhost, Shift>(),          \
-                                       operand2().template gpu_init<ValidGhost, Shift>());         \
-                 }                                                                                 \
-#            endif                                                                                 \
-             /* __CUDACC__ */;                                                                     \
-             inline Operand1 const & operand1(void) const { return operand1_; };                   \
-             inline Operand2 const & operand2(void) const { return operand2_; };                   \
-                                                                                                   \
-            private:                                                                               \
-             Operand1 const operand1_;                                                             \
-             Operand2 const operand2_;                                                             \
-         };                                                                                        \
-                                                                                                   \
-         template<typename Operand1, typename Operand2, typename FieldType>                        \
-          struct OBJECT_NAME<ResizePrep, Operand1, Operand2, FieldType> {                          \
-                                                                                                   \
-            public:                                                                                \
-             FieldType typedef field_type;                                                         \
-             typename FieldType::memory_window typedef MemoryWindow;                               \
-             OBJECT_NAME<Resize,                                                                   \
-                         typename Operand1::ResizeType,                                            \
-                         typename Operand2::ResizeType,                                            \
-                         FieldType> typedef ResizeType;                                            \
-             OBJECT_NAME(Operand1 const & operand1, Operand2 const & operand2)                     \
-             : operand1_(operand1), operand2_(operand2)                                            \
-             {};                                                                                   \
-             inline ResizeType resize(structured::IntVec const & split,                            \
-                                      structured::IntVec const & location) const {                 \
-                                                                                                   \
-                return ResizeType(operand1().resize(split, location),                              \
-                                  operand2().resize(split, location));                             \
-             };                                                                                    \
-             inline Operand1 const & operand1(void) const { return operand1_; };                   \
-             inline Operand2 const & operand2(void) const { return operand2_; };                   \
-                                                                                                   \
-            private:                                                                               \
-             Operand1 const operand1_;                                                             \
-             Operand2 const operand2_;                                                             \
-         };                                                                                        \
-                                                                                                   \
-         template<typename Operand1, typename Operand2, typename FieldType>                        \
-          struct OBJECT_NAME<Resize, Operand1, Operand2, FieldType> {                              \
-                                                                                                   \
-            public:                                                                                \
-             FieldType typedef field_type;                                                         \
-             typename FieldType::memory_window typedef MemoryWindow;                               \
-             OBJECT_NAME<SeqWalk,                                                                  \
-                         typename Operand1::SeqWalkType,                                           \
-                         typename Operand2::SeqWalkType,                                           \
-                         FieldType> typedef SeqWalkType;                                           \
-             OBJECT_NAME(Operand1 const & operand1, Operand2 const & operand2)                     \
-             : operand1_(operand1), operand2_(operand2)                                            \
-             {};                                                                                   \
-             template<typename Shift>                                                              \
-              inline SeqWalkType init(void) const {                                                \
-                 return SeqWalkType(operand1().template init<Shift>(), operand2().template init<Shift>()); \
-              };                                                                                   \
-             inline Operand1 const & operand1(void) const { return operand1_; };                   \
-             inline Operand2 const & operand2(void) const { return operand2_; };                   \
-                                                                                                   \
-            private:                                                                               \
-             Operand1 const operand1_;                                                             \
-             Operand2 const operand2_;                                                             \
-         };                                                                                        \
-                                                                                                   \
-         template<typename Operand1, typename Operand2, typename FieldType>                        \
-          struct OBJECT_NAME<SeqWalk, Operand1, Operand2, FieldType> {                             \
-                                                                                                   \
-            public:                                                                                \
-             FieldType typedef field_type;                                                         \
-             typename FieldType::memory_window typedef MemoryWindow;                               \
-             typename FieldType::value_type typedef EvalReturnType;                                \
-             OBJECT_NAME(Operand1 const & operand1, Operand2 const & operand2)                     \
-             : operand1_(operand1), operand2_(operand2)                                            \
-             {};                                                                                   \
-             inline void next(void) { operand1_.next(); operand2_.next(); };                       \
-             inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); }; \
-             inline bool has_length(void) const {                                                  \
-                return (operand1_.has_length() || operand2_.has_length());                         \
-             };                                                                                    \
-             inline EvalReturnType eval(void) const {                                              \
-                return INTERNAL_NAME(operand1_.eval(), operand2_.eval());                          \
-             };                                                                                    \
-                                                                                                   \
-            private:                                                                               \
-             Operand1 operand1_;                                                                   \
-             Operand2 operand2_;                                                                   \
-         };                                                                                        \
-                                                                                                   \
-#        ifdef __CUDACC__                                                                          \
-            template<typename Operand1, typename Operand2, typename FieldType>                     \
-             struct OBJECT_NAME<GPUWalk, Operand1, Operand2, FieldType> {                          \
-                                                                                                   \
-               public:                                                                             \
-                FieldType typedef field_type;                                                      \
-                typename FieldType::memory_window typedef MemoryWindow;                            \
-                typename field_type::value_type typedef AtomicType;                                \
-                OBJECT_NAME(Operand1 const & operand1, Operand2 const & operand2)                  \
-                : operand1_(operand1), operand2_(operand2)                                         \
-                {};                                                                                \
-                __device__ inline void start(int x, int y) {                                       \
-                                                                                                   \
-                   operand1_.start(x, y);                                                          \
-                                                                                                   \
-                   operand2_.start(x, y);                                                          \
-                };                                                                                 \
-                __device__ inline void next(void) { operand1_.next(); operand2_.next(); };         \
-                __device__ inline AtomicType eval(void) {                                          \
-                   return INTERNAL_NAME(operand1_.eval(), operand2_.eval());                       \
-                };                                                                                 \
-                                                                                                   \
-               private:                                                                            \
-                Operand1 operand1_;                                                                \
-                Operand2 operand2_;                                                                \
-            }                                                                                      \
-#        endif                                                                                     \
-         /* __CUDACC__ */;                                                                         \
-                                                                                                   \
-         /* SubExpr X SubExpr */                                                                   \
-         template<typename SubExpr1, typename SubExpr2>                                            \
-          inline NeboExpression<OBJECT_NAME<Initial,                                               \
-                                            typename Standardize<SubExpr1,                         \
-                                                                 typename SubExpr1::field_type>::  \
-                                            StandardType,                                          \
-                                            typename Standardize<SubExpr2,                         \
-                                                                 typename SubExpr1::field_type>::  \
-                                            StandardType,                                          \
-                                            typename SubExpr1::field_type>,                        \
-                                typename SubExpr1::field_type> EXTERNAL_NAME(SubExpr1 const & arg1, \
-                                                                             SubExpr2 const & arg2) { \
-                                                                                                   \
-             typename SubExpr1::field_type typedef FieldType;                                      \
-                                                                                                   \
-             typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef   \
-             Type1;                                                                                \
-                                                                                                   \
-             typename Standardize<SubExpr2, typename SubExpr1::field_type>::StandardType typedef   \
-             Type2;                                                                                \
-                                                                                                   \
-             OBJECT_NAME<Initial, Type1, Type2, FieldType> typedef ReturnType;                     \
-                                                                                                   \
-             NeboExpression<ReturnType, FieldType> typedef ReturnTerm;                             \
-                                                                                                   \
-             return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)), \
-                                          Type2(Standardize<SubExpr2, FieldType>::standardType(arg2)))); \
-          };                                                                                       \
-                                                                                                   \
-         /* SubExpr X Scalar */                                                                    \
-         template<typename SubExpr1>                                                               \
-          inline NeboExpression<OBJECT_NAME<Initial,                                               \
-                                            typename Standardize<SubExpr1,                         \
-                                                                 typename SubExpr1::field_type>::  \
-                                            StandardType,                                          \
-                                            NeboScalar<Initial, typename SubExpr1::field_type>,    \
-                                            typename SubExpr1::field_type>,                        \
-                                typename SubExpr1::field_type> EXTERNAL_NAME(SubExpr1 const & arg1, \
-                                                                             typename SubExpr1::   \
-                                                                             field_type::value_type \
-                                                                             const & arg2) {       \
-                                                                                                   \
-             typename SubExpr1::field_type typedef FieldType;                                      \
-                                                                                                   \
-             typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef   \
-             Type1;                                                                                \
-                                                                                                   \
-             NeboScalar<Initial, typename SubExpr1::field_type> typedef Type2;                     \
-                                                                                                   \
-             OBJECT_NAME<Initial, Type1, Type2, FieldType> typedef ReturnType;                     \
-                                                                                                   \
-             NeboExpression<ReturnType, FieldType> typedef ReturnTerm;                             \
-                                                                                                   \
-             return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)), \
-                                          Type2(Type2(arg2))));                                    \
-          };                                                                                       \
-                                                                                                   \
-         /* Scalar X SubExpr */                                                                    \
-         template<typename SubExpr2>                                                               \
-          inline NeboExpression<OBJECT_NAME<Initial,                                               \
-                                            NeboScalar<Initial, typename SubExpr2::field_type>,    \
-                                            typename Standardize<SubExpr2,                         \
-                                                                 typename SubExpr2::field_type>::  \
-                                            StandardType,                                          \
-                                            typename SubExpr2::field_type>,                        \
-                                typename SubExpr2::field_type> EXTERNAL_NAME(typename SubExpr2::   \
-                                                                             field_type::value_type \
-                                                                             const & arg1,         \
-                                                                             SubExpr2 const & arg2) { \
-                                                                                                   \
-             typename SubExpr2::field_type typedef FieldType;                                      \
-                                                                                                   \
-             NeboScalar<Initial, typename SubExpr2::field_type> typedef Type1;                     \
-                                                                                                   \
-             typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType typedef   \
-             Type2;                                                                                \
-                                                                                                   \
-             OBJECT_NAME<Initial, Type1, Type2, FieldType> typedef ReturnType;                     \
-                                                                                                   \
-             NeboExpression<ReturnType, FieldType> typedef ReturnTerm;                             \
-                                                                                                   \
-             return ReturnTerm(ReturnType(Type1(Type1(arg1)),                                      \
-                                          Type2(Standardize<SubExpr2, FieldType>::standardType(arg2)))); \
-          };
-
-#     define BUILD_BINARY_OPERATOR(OBJECT_NAME, INTERNAL_NAME, EXTERNAL_NAME)                      \
-         template<typename CurrentMode, typename Operand1, typename Operand2, typename FieldType>  \
-          struct OBJECT_NAME;                                                                      \
-                                                                                                   \
-         template<typename Operand1, typename Operand2, typename FieldType>                        \
-          struct OBJECT_NAME<Initial, Operand1, Operand2, FieldType> {                             \
-                                                                                                   \
-            public:                                                                                \
-             FieldType typedef field_type;                                                         \
-             typename FieldType::memory_window typedef MemoryWindow;                               \
-             OBJECT_NAME<ResizePrep,                                                               \
-                         typename Operand1::ResizePrepType,                                        \
-                         typename Operand2::ResizePrepType,                                        \
-                         FieldType> typedef ResizePrepType;                                        \
-             OBJECT_NAME<SeqWalk,                                                                  \
-                         typename Operand1::SeqWalkType,                                           \
-                         typename Operand2::SeqWalkType,                                           \
-                         FieldType> typedef SeqWalkType;                                           \
-#            ifdef __CUDACC__                                                                      \
-                OBJECT_NAME<GPUWalk,                                                               \
-                            typename Operand1::GPUWalkType,                                        \
-                            typename Operand2::GPUWalkType,                                        \
-                            FieldType> typedef GPUWalkType                                         \
-#            endif                                                                                 \
-             /* __CUDACC__ */;                                                                     \
-             typename structured::Minimum<typename Operand1::PossibleValidGhost,                   \
-                                          typename Operand2::PossibleValidGhost>::result typedef   \
-             PossibleValidGhost;                                                                   \
-             OBJECT_NAME(Operand1 const & operand1, Operand2 const & operand2)                     \
-             : operand1_(operand1), operand2_(operand2)                                            \
-             {};                                                                                   \
-             template<typename ValidGhost, typename Shift>                                         \
-              inline SeqWalkType init(void) const {                                                \
-                                                                                                   \
-                 return SeqWalkType(operand1().template init<ValidGhost, Shift>(),                 \
-                                    operand2().template init<ValidGhost, Shift>());                \
-              };                                                                                   \
-             template<typename ValidGhost>                                                         \
-              inline ResizePrepType resize_prep(void) const {                                      \
-                                                                                                   \
-                 return ResizePrepType(operand1().template resize_prep<ValidGhost>(),              \
-                                       operand2().template resize_prep<ValidGhost>());             \
-              };                                                                                   \
-#            ifdef __CUDACC__                                                                      \
-                template<typename ValidGhost, typename Shift>                                      \
-                 inline GPUWalkType gpu_init(void) const {                                         \
-                                                                                                   \
-                    return GPUWalkType(operand1().template gpu_init<ValidGhost, Shift>(),          \
-                                       operand2().template gpu_init<ValidGhost, Shift>());         \
-                 }                                                                                 \
-#            endif                                                                                 \
-             /* __CUDACC__ */;                                                                     \
-             inline Operand1 const & operand1(void) const { return operand1_; };                   \
-             inline Operand2 const & operand2(void) const { return operand2_; };                   \
-                                                                                                   \
-            private:                                                                               \
-             Operand1 const operand1_;                                                             \
-             Operand2 const operand2_;                                                             \
-         };                                                                                        \
-                                                                                                   \
-         template<typename Operand1, typename Operand2, typename FieldType>                        \
-          struct OBJECT_NAME<ResizePrep, Operand1, Operand2, FieldType> {                          \
-                                                                                                   \
-            public:                                                                                \
-             FieldType typedef field_type;                                                         \
-             typename FieldType::memory_window typedef MemoryWindow;                               \
-             OBJECT_NAME<Resize,                                                                   \
-                         typename Operand1::ResizeType,                                            \
-                         typename Operand2::ResizeType,                                            \
-                         FieldType> typedef ResizeType;                                            \
-             OBJECT_NAME(Operand1 const & operand1, Operand2 const & operand2)                     \
-             : operand1_(operand1), operand2_(operand2)                                            \
-             {};                                                                                   \
-             inline ResizeType resize(structured::IntVec const & split,                            \
-                                      structured::IntVec const & location) const {                 \
-                                                                                                   \
-                return ResizeType(operand1().resize(split, location),                              \
-                                  operand2().resize(split, location));                             \
-             };                                                                                    \
-             inline Operand1 const & operand1(void) const { return operand1_; };                   \
-             inline Operand2 const & operand2(void) const { return operand2_; };                   \
-                                                                                                   \
-            private:                                                                               \
-             Operand1 const operand1_;                                                             \
-             Operand2 const operand2_;                                                             \
-         };                                                                                        \
-                                                                                                   \
-         template<typename Operand1, typename Operand2, typename FieldType>                        \
-          struct OBJECT_NAME<Resize, Operand1, Operand2, FieldType> {                              \
-                                                                                                   \
-            public:                                                                                \
-             FieldType typedef field_type;                                                         \
-             typename FieldType::memory_window typedef MemoryWindow;                               \
-             OBJECT_NAME<SeqWalk,                                                                  \
-                         typename Operand1::SeqWalkType,                                           \
-                         typename Operand2::SeqWalkType,                                           \
-                         FieldType> typedef SeqWalkType;                                           \
-             OBJECT_NAME(Operand1 const & operand1, Operand2 const & operand2)                     \
-             : operand1_(operand1), operand2_(operand2)                                            \
-             {};                                                                                   \
-             template<typename Shift>                                                              \
-              inline SeqWalkType init(void) const {                                                \
-                 return SeqWalkType(operand1().template init<Shift>(), operand2().template init<Shift>()); \
-              };                                                                                   \
-             inline Operand1 const & operand1(void) const { return operand1_; };                   \
-             inline Operand2 const & operand2(void) const { return operand2_; };                   \
-                                                                                                   \
-            private:                                                                               \
-             Operand1 const operand1_;                                                             \
-             Operand2 const operand2_;                                                             \
-         };                                                                                        \
-                                                                                                   \
-         template<typename Operand1, typename Operand2, typename FieldType>                        \
-          struct OBJECT_NAME<SeqWalk, Operand1, Operand2, FieldType> {                             \
-                                                                                                   \
-            public:                                                                                \
-             FieldType typedef field_type;                                                         \
-             typename FieldType::memory_window typedef MemoryWindow;                               \
-             typename FieldType::value_type typedef EvalReturnType;                                \
-             OBJECT_NAME(Operand1 const & operand1, Operand2 const & operand2)                     \
-             : operand1_(operand1), operand2_(operand2)                                            \
-             {};                                                                                   \
-             inline void next(void) { operand1_.next(); operand2_.next(); };                       \
-             inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); }; \
-             inline bool has_length(void) const {                                                  \
-                return (operand1_.has_length() || operand2_.has_length());                         \
-             };                                                                                    \
-             inline EvalReturnType eval(void) const {                                              \
-                return (operand1_.eval() INTERNAL_NAME operand2_.eval());                          \
-             };                                                                                    \
-                                                                                                   \
-            private:                                                                               \
-             Operand1 operand1_;                                                                   \
-             Operand2 operand2_;                                                                   \
-         };                                                                                        \
-                                                                                                   \
-#        ifdef __CUDACC__                                                                          \
-            template<typename Operand1, typename Operand2, typename FieldType>                     \
-             struct OBJECT_NAME<GPUWalk, Operand1, Operand2, FieldType> {                          \
-                                                                                                   \
-               public:                                                                             \
-                FieldType typedef field_type;                                                      \
-                typename FieldType::memory_window typedef MemoryWindow;                            \
-                typename field_type::value_type typedef AtomicType;                                \
-                OBJECT_NAME(Operand1 const & operand1, Operand2 const & operand2)                  \
-                : operand1_(operand1), operand2_(operand2)                                         \
-                {};                                                                                \
-                __device__ inline void start(int x, int y) {                                       \
-                                                                                                   \
-                   operand1_.start(x, y);                                                          \
-                                                                                                   \
-                   operand2_.start(x, y);                                                          \
-                };                                                                                 \
-                __device__ inline void next(void) { operand1_.next(); operand2_.next(); };         \
-                __device__ inline AtomicType eval(void) {                                          \
-                   return (operand1_.eval() INTERNAL_NAME operand2_.eval());                       \
-                };                                                                                 \
-                                                                                                   \
-               private:                                                                            \
-                Operand1 operand1_;                                                                \
-                Operand2 operand2_;                                                                \
-            }                                                                                      \
-#        endif                                                                                     \
-         /* __CUDACC__ */;                                                                         \
-                                                                                                   \
-         /* SubExpr X SubExpr */                                                                   \
-         template<typename SubExpr1, typename SubExpr2>                                            \
-          inline NeboExpression<OBJECT_NAME<Initial,                                               \
-                                            typename Standardize<SubExpr1,                         \
-                                                                 typename SubExpr1::field_type>::  \
-                                            StandardType,                                          \
-                                            typename Standardize<SubExpr2,                         \
-                                                                 typename SubExpr1::field_type>::  \
-                                            StandardType,                                          \
-                                            typename SubExpr1::field_type>,                        \
-                                typename SubExpr1::field_type> EXTERNAL_NAME(SubExpr1 const & arg1, \
-                                                                             SubExpr2 const & arg2) { \
-                                                                                                   \
-             typename SubExpr1::field_type typedef FieldType;                                      \
-                                                                                                   \
-             typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef   \
-             Type1;                                                                                \
-                                                                                                   \
-             typename Standardize<SubExpr2, typename SubExpr1::field_type>::StandardType typedef   \
-             Type2;                                                                                \
-                                                                                                   \
-             OBJECT_NAME<Initial, Type1, Type2, FieldType> typedef ReturnType;                     \
-                                                                                                   \
-             NeboExpression<ReturnType, FieldType> typedef ReturnTerm;                             \
-                                                                                                   \
-             return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)), \
-                                          Type2(Standardize<SubExpr2, FieldType>::standardType(arg2)))); \
-          };                                                                                       \
-                                                                                                   \
-         /* SubExpr X Scalar */                                                                    \
-         template<typename SubExpr1>                                                               \
-          inline NeboExpression<OBJECT_NAME<Initial,                                               \
-                                            typename Standardize<SubExpr1,                         \
-                                                                 typename SubExpr1::field_type>::  \
-                                            StandardType,                                          \
-                                            NeboScalar<Initial, typename SubExpr1::field_type>,    \
-                                            typename SubExpr1::field_type>,                        \
-                                typename SubExpr1::field_type> EXTERNAL_NAME(SubExpr1 const & arg1, \
-                                                                             typename SubExpr1::   \
-                                                                             field_type::value_type \
-                                                                             const & arg2) {       \
-                                                                                                   \
-             typename SubExpr1::field_type typedef FieldType;                                      \
-                                                                                                   \
-             typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef   \
-             Type1;                                                                                \
-                                                                                                   \
-             NeboScalar<Initial, typename SubExpr1::field_type> typedef Type2;                     \
-                                                                                                   \
-             OBJECT_NAME<Initial, Type1, Type2, FieldType> typedef ReturnType;                     \
-                                                                                                   \
-             NeboExpression<ReturnType, FieldType> typedef ReturnTerm;                             \
-                                                                                                   \
-             return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)), \
-                                          Type2(Type2(arg2))));                                    \
-          };                                                                                       \
-                                                                                                   \
-         /* Scalar X SubExpr */                                                                    \
-         template<typename SubExpr2>                                                               \
-          inline NeboExpression<OBJECT_NAME<Initial,                                               \
-                                            NeboScalar<Initial, typename SubExpr2::field_type>,    \
-                                            typename Standardize<SubExpr2,                         \
-                                                                 typename SubExpr2::field_type>::  \
-                                            StandardType,                                          \
-                                            typename SubExpr2::field_type>,                        \
-                                typename SubExpr2::field_type> EXTERNAL_NAME(typename SubExpr2::   \
-                                                                             field_type::value_type \
-                                                                             const & arg1,         \
-                                                                             SubExpr2 const & arg2) { \
-                                                                                                   \
-             typename SubExpr2::field_type typedef FieldType;                                      \
-                                                                                                   \
-             NeboScalar<Initial, typename SubExpr2::field_type> typedef Type1;                     \
-                                                                                                   \
-             typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType typedef   \
-             Type2;                                                                                \
-                                                                                                   \
-             OBJECT_NAME<Initial, Type1, Type2, FieldType> typedef ReturnType;                     \
-                                                                                                   \
-             NeboExpression<ReturnType, FieldType> typedef ReturnTerm;                             \
-                                                                                                   \
-             return ReturnTerm(ReturnType(Type1(Type1(arg1)),                                      \
-                                          Type2(Standardize<SubExpr2, FieldType>::standardType(arg2)))); \
-          };
-
-#     define BUILD_UNARY_FUNCTION(OBJECT_NAME, INTERNAL_NAME, EXTERNAL_NAME)                       \
-         template<typename CurrentMode, typename Operand, typename FieldType>                      \
-          struct OBJECT_NAME;                                                                      \
-                                                                                                   \
-         template<typename Operand, typename FieldType>                                            \
-          struct OBJECT_NAME<Initial, Operand, FieldType> {                                        \
-                                                                                                   \
-            public:                                                                                \
-             FieldType typedef field_type;                                                         \
-             typename FieldType::memory_window typedef MemoryWindow;                               \
-             OBJECT_NAME<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef          \
-             ResizePrepType;                                                                       \
-             OBJECT_NAME<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;   \
-#            ifdef __CUDACC__                                                                      \
-                OBJECT_NAME<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType \
-#            endif                                                                                 \
-             /* __CUDACC__ */;                                                                     \
-             typename Operand::PossibleValidGhost typedef PossibleValidGhost;                      \
-             OBJECT_NAME(Operand const & operand)                                                  \
-             : operand_(operand)                                                                   \
-             {};                                                                                   \
-             template<typename ValidGhost, typename Shift>                                         \
-              inline SeqWalkType init(void) const {                                                \
-                 return SeqWalkType(operand().template init<ValidGhost, Shift>());                 \
-              };                                                                                   \
-             template<typename ValidGhost>                                                         \
-              inline ResizePrepType resize_prep(void) const {                                      \
-                 return ResizePrepType(operand().template resize_prep<ValidGhost>());              \
-              };                                                                                   \
-#            ifdef __CUDACC__                                                                      \
-                template<typename ValidGhost, typename Shift>                                      \
-                 inline GPUWalkType gpu_init(void) const {                                         \
-                    return GPUWalkType(operand().template gpu_init<ValidGhost, Shift>());          \
-                 }                                                                                 \
-#            endif                                                                                 \
-             /* __CUDACC__ */;                                                                     \
-             inline Operand const & operand(void) const { return operand_; };                      \
-                                                                                                   \
-            private:                                                                               \
-             Operand const operand_;                                                               \
-         };                                                                                        \
-                                                                                                   \
-         template<typename Operand, typename FieldType>                                            \
-          struct OBJECT_NAME<ResizePrep, Operand, FieldType> {                                     \
-                                                                                                   \
-            public:                                                                                \
-             FieldType typedef field_type;                                                         \
-             typename FieldType::memory_window typedef MemoryWindow;                               \
-             OBJECT_NAME<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;      \
-             OBJECT_NAME(Operand const & operand)                                                  \
-             : operand_(operand)                                                                   \
-             {};                                                                                   \
-             inline ResizeType resize(structured::IntVec const & split,                            \
-                                      structured::IntVec const & location) const {                 \
-                return ResizeType(operand().resize(split, location));                              \
-             };                                                                                    \
-             inline Operand const & operand(void) const { return operand_; };                      \
-                                                                                                   \
-            private:                                                                               \
-             Operand const operand_;                                                               \
-         };                                                                                        \
-                                                                                                   \
-         template<typename Operand, typename FieldType>                                            \
-          struct OBJECT_NAME<Resize, Operand, FieldType> {                                         \
-                                                                                                   \
-            public:                                                                                \
-             FieldType typedef field_type;                                                         \
-             typename FieldType::memory_window typedef MemoryWindow;                               \
-             OBJECT_NAME<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;   \
-             OBJECT_NAME(Operand const & operand)                                                  \
-             : operand_(operand)                                                                   \
-             {};                                                                                   \
-             template<typename Shift>                                                              \
-              inline SeqWalkType init(void) const {                                                \
-                 return SeqWalkType(operand().template init<Shift>());                             \
-              };                                                                                   \
-             inline Operand const & operand(void) const { return operand_; };                      \
-                                                                                                   \
-            private:                                                                               \
-             Operand const operand_;                                                               \
-         };                                                                                        \
-                                                                                                   \
-         template<typename Operand, typename FieldType>                                            \
-          struct OBJECT_NAME<SeqWalk, Operand, FieldType> {                                        \
-                                                                                                   \
-            public:                                                                                \
-             FieldType typedef field_type;                                                         \
-             typename FieldType::memory_window typedef MemoryWindow;                               \
-             typename FieldType::value_type typedef EvalReturnType;                                \
-             OBJECT_NAME(Operand const & operand)                                                  \
-             : operand_(operand)                                                                   \
-             {};                                                                                   \
-             inline void next(void) { operand_.next(); };                                          \
-             inline bool at_end(void) const { return (operand_.at_end()); };                       \
-             inline bool has_length(void) const { return (operand_.has_length()); };               \
-             inline EvalReturnType eval(void) const { return INTERNAL_NAME(operand_.eval()); };    \
-                                                                                                   \
-            private:                                                                               \
-             Operand operand_;                                                                     \
-         };                                                                                        \
-                                                                                                   \
-#        ifdef __CUDACC__                                                                          \
-            template<typename Operand, typename FieldType>                                         \
-             struct OBJECT_NAME<GPUWalk, Operand, FieldType> {                                     \
-                                                                                                   \
-               public:                                                                             \
-                FieldType typedef field_type;                                                      \
-                typename FieldType::memory_window typedef MemoryWindow;                            \
-                typename field_type::value_type typedef AtomicType;                                \
-                OBJECT_NAME(Operand const & operand)                                               \
-                : operand_(operand)                                                                \
-                {};                                                                                \
-                __device__ inline void start(int x, int y) { operand_.start(x, y); };              \
-                __device__ inline void next(void) { operand_.next(); };                            \
-                __device__ inline AtomicType eval(void) { return INTERNAL_NAME(operand_.eval()); }; \
-                                                                                                   \
-               private:                                                                            \
-                Operand operand_;                                                                  \
-            }                                                                                      \
-#        endif                                                                                     \
-         /* __CUDACC__ */;                                                                         \
-                                                                                                   \
-         /* SubExpr */                                                                             \
-         template<typename SubExpr>                                                                \
-          inline NeboExpression<OBJECT_NAME<Initial,                                               \
-                                            typename Standardize<SubExpr,                          \
-                                                                 typename SubExpr::field_type>::   \
-                                            StandardType,                                          \
-                                            typename SubExpr::field_type>,                         \
-                                typename SubExpr::field_type> EXTERNAL_NAME(SubExpr const & arg) { \
-                                                                                                   \
-             typename SubExpr::field_type typedef FieldType;                                       \
-                                                                                                   \
-             typename Standardize<SubExpr, typename SubExpr::field_type>::StandardType typedef Type; \
-                                                                                                   \
-             OBJECT_NAME<Initial, Type, FieldType> typedef ReturnType;                             \
-                                                                                                   \
-             NeboExpression<ReturnType, FieldType> typedef ReturnTerm;                             \
-                                                                                                   \
-             return ReturnTerm(ReturnType(Type(Standardize<SubExpr, FieldType>::standardType(arg)))); \
-          };
-
       struct NeboNil {
 
          NeboNil typedef ResizePrepType;
@@ -5881,7 +5239,6 @@
              FieldType typedef field_type;
              typename FieldType::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
-             typename FieldType::value_type typedef AtomicType;
              NeboClause(Test const & test, Expr const & expr)
              : test_(test), expr_(expr)
              {};
@@ -6038,7 +5395,6 @@
              FieldType typedef field_type;
              typename FieldType::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
-             typename FieldType::value_type typedef AtomicType;
              NeboCond(ClauseType const & clause, Otherwise const & otherwise)
              : clause_(clause), otherwise_(otherwise)
              {};
@@ -6889,33 +6245,37 @@
                                MultiplyType(arg.template init<NewShift>(), Coef(coefs.coef())));
               };
           };
-          template<typename ArgPreGPUWalk, typename DestType>
-           struct ConstructGPUExpr {
+#         ifdef __CUDACC__
+             template<typename ArgPreGPUWalk, typename DestType>
+              struct ConstructGPUExpr {
 
-             NeboScalar<GPUWalk, DestType> typedef Coef;
+                NeboScalar<GPUWalk, DestType> typedef Coef;
 
-             typename ArgPreGPUWalk::GPUWalkType typedef Arg;
+                typename ArgPreGPUWalk::GPUWalkType typedef Arg;
 
-             ProdOp<GPUWalk, Arg, Coef, DestType> typedef MultiplyType;
+                ProdOp<GPUWalk, Arg, Coef, DestType> typedef MultiplyType;
 
-             typename List::template ConstructExpr<ArgPreGPUWalk, DestType> typedef
-             EarlierPointsType;
+                typename List::template ConstructExpr<ArgPreGPUWalk, DestType> typedef
+                EarlierPointsType;
 
-             typename EarlierPointsType::Result typedef EarlierPointsResult;
+                typename EarlierPointsType::Result typedef EarlierPointsResult;
 
-             SumOp<GPUWalk, EarlierPointsResult, MultiplyType, DestType> typedef Result;
+                SumOp<GPUWalk, EarlierPointsResult, MultiplyType, DestType> typedef Result;
 
-             template<typename ValidGhost, typename Shift>
-              static inline Result const in_gpu_construct(ArgPreGPUWalk const & arg,
-                                                          NeboStencilCoefList<length> const & coefs) {
+                template<typename ValidGhost, typename Shift>
+                 static inline Result const in_gpu_construct(ArgPreGPUWalk const & arg,
+                                                             NeboStencilCoefList<length> const &
+                                                             coefs) {
 
-                 typename structured::Add<Shift, Point>::result typedef NewShift;
+                    typename structured::Add<Shift, Point>::result typedef NewShift;
 
-                 return Result(EarlierPointsType::template in_sq_construct<ValidGhost, Shift>(arg,
-                                                                                              coefs.list()),
-                               MultiplyType(arg.template init<ValidGhost, NewShift>(), Coef(coefs.coef())));
-              };
-          };
+                    return Result(EarlierPointsType::template in_sq_construct<ValidGhost, Shift>(arg,
+                                                                                                 coefs.list()),
+                                  MultiplyType(arg.template init<ValidGhost, NewShift>(), Coef(coefs.coef())));
+                 };
+             }
+#         endif
+          /* __CUDACC__ */;
       };
 
       template<typename PointType>
@@ -6959,24 +6319,27 @@
                  return Result(arg.template init<NewShift>(), Coef(coefs.coef()));
               };
           };
-          template<typename ArgPreGPUWalk, typename DestType>
-           struct ConstructGPUExpr {
+#         ifdef __CUDACC__
+             template<typename ArgPreGPUWalk, typename DestType>
+              struct ConstructGPUExpr {
 
-             NeboScalar<GPUWalk, DestType> typedef Coef;
+                NeboScalar<GPUWalk, DestType> typedef Coef;
 
-             typename ArgPreGPUWalk::GPUWalkType typedef Arg;
+                typename ArgPreGPUWalk::GPUWalkType typedef Arg;
 
-             ProdOp<GPUWalk, Arg, Coef, DestType> typedef Result;
+                ProdOp<GPUWalk, Arg, Coef, DestType> typedef Result;
 
-             template<typename ValidGhost, typename Shift>
-              static inline Result const in_gpu_construct(ArgPreGPUWalk const & arg,
-                                                          NeboStencilCoefList<1> const & coefs) {
+                template<typename ValidGhost, typename Shift>
+                 static inline Result const in_gpu_construct(ArgPreGPUWalk const & arg,
+                                                             NeboStencilCoefList<1> const & coefs) {
 
-                 typename structured::Add<Shift, Point>::result typedef NewShift;
+                    typename structured::Add<Shift, Point>::result typedef NewShift;
 
-                 return Result(arg.template init<ValidGhost, NewShift>(), Coef(coefs.coef()));
-              };
-          };
+                    return Result(arg.template init<ValidGhost, NewShift>(), Coef(coefs.coef()));
+                 };
+             }
+#         endif
+          /* __CUDACC__ */;
       };
 
       template<typename First>
@@ -7016,9 +6379,8 @@
           typename Pts::template ConstructExpr<Arg, FieldType> typedef ConstructExpr;
           typename ConstructExpr::Result typedef ArgSeqWalkType;
 #         ifdef __CUDACC__
-             typename Pts::template ConstructGPUExpr<Arg, FieldType> typedef ConstructExpr;
-             typename ConstructGPUExpr::Result typedef ArgGPUWalkType;
-             NeboStencil<GPUWalk, Pts, ArgGPUWalkType, FieldType> typedef GPUWalkType
+             typename Pts::template ConstructGPUExpr<Arg, FieldType> typedef ConstructGPUExpr;
+             typename ConstructGPUExpr::Result typedef ArgGPUWalkType
 #         endif
           /* __CUDACC__ */;
           NeboStencil<ResizePrep, Pts, typename Arg::ResizePrepType, FieldType> typedef
@@ -7353,6 +6715,12 @@
           inline void gpu_assign(FieldType & initial_lhs,
                                  NeboExpression<ExprType, FieldType> const & initial_rhs) {
 
+             typename structured::Minimum<typename ExprType::PossibleValidGhost,
+                                          typename structured::GhostFromField<FieldType>::result>::
+             result typedef ValidGhost;
+
+             structured::IndexTriplet<0, 0, 0> typedef InitialShift;
+
              typename FieldType::memory_window typedef MemoryWindow;
 
              MemoryWindow mw = initial_lhs.window_with_ghost();
@@ -7367,14 +6735,22 @@
 
              dim3 dimGrid(gDimX, gDimY);
 
-             NeboField<GPUWalk, FieldType> typedef LhsType;
+             NeboField<Initial, FieldType> typedef LhsType;
 
-             typename ExprType::GPUWalkType typedef RhsType;
+             typename LhsType::GPUWalkType typedef LhsGPUType;
+
+             ExprType typedef RhsType;
+
+             typename RhsType::GPUWalkType typedef RhsGPUType;
 
              LhsType lhs(initial_lhs);
 
-             gpu_assign_kernel<LhsType, RhsType><<<dimGrid, dimBlock>>>(LhsType(initial_lhs),
-                                                                        initial_rhs.expr().gpu_init());
+             RhsType rhs(initial_rhs.expr());
+
+             gpu_assign_kernel<LhsGPUType, RhsGPUType><<<dimGrid, dimBlock>>>(lhs.template gpu_init<ValidGhost,
+                                                                                                    InitialShift>(),
+                                                                              rhs.template gpu_init<ValidGhost,
+                                                                                                    InitialShift>());
           }
 #     endif
       /* __CUDACC__ */;
