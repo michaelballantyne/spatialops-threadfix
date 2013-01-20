@@ -23,15 +23,6 @@ target_link_libraries( stencil_test_deep ${libs} )
 add_executable( stencil_chain_test StencilChainTest.cpp )
 target_link_libraries( stencil_chain_test ${libs} )
 
-add_executable( till_10_test StencilChainTill10Test.cpp )
-target_link_libraries( till_10_test ${libs} )
-
-add_executable( till_20_test StencilChainTill20Test.cpp )
-target_link_libraries( till_20_test ${libs} )
-
-add_executable( till_5_test StencilChainTill5Test.cpp )
-target_link_libraries( till_5_test ${libs} )
-
 add_executable( cond_test cond_test.cpp )
 target_link_libraries( cond_test ${libs} )
 

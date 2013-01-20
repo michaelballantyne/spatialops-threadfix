@@ -1206,7 +1206,7 @@
                                 (ad FT-chunk 'field_))
                     (bs-ResizePrep null
                                    null
-                                   (bm-constructor (adr FT-chunk 'f)
+                                   (bm-constructor (ad FT-chunk 'f)
                                                    (cons-asgn 'field_ 'f)
                                                    null)
                                    (fc FT-chunk
@@ -1224,7 +1224,7 @@
                                    (ad FT-chunk 'field_))
                     (bs-Resize null
                                null
-                               (bm-constructor (adr FT-chunk 'f)
+                               (bm-constructor (ad FT-chunk 'f)
                                                (cons-asgn 'field_ 'f)
                                                null)
                                (mfc (fc 'field)
@@ -1236,7 +1236,7 @@
                     (bs-SeqWalk (typedef (scope (tpl-pmtr FT-chunk)
                                                 'value_type)
                                          'AtomicType)
-                                (bm-constructor (adr FT-chunk 'f)
+                                (bm-constructor (ad FT-chunk 'f)
                                                 (list (cons-asgn 'iter_
                                                                  (mfc 'f 'begin))
                                                       (cons-asgn 'end_
@@ -1261,7 +1261,7 @@
                      null
                      null
                      (bm-constructor
-                      (adr FT-chunk 'f)
+                      (ad FT-chunk 'f)
                        (list
                         (cons-asgn 'current_ (bs (n+ (mfc 'f 'field_values 'EXTERNAL_CUDA_GPU (mfc 'f 'device_index))
                                                      (n+ (mfc (mfc 'f 'window_with_ghost)
@@ -1280,6 +1280,7 @@
                                                                                     'offset
                                                                                     "2"))))))))))
                         (cons-asgn 'location_ "0")
+                        (cons-asgn 'valid_ 'false)
                         (cons-asgn 'xLength_ (mfc (mfc 'f
                                                        'window_with_ghost)
                                                   'glob_dim
@@ -1299,8 +1300,7 @@
                         (cons-asgn 'step_ (n* 'xLength_ (mfc (mfc 'f
                                                                   'window_with_ghost)
                                                              'glob_dim
-                                                             "1")))
-                        (cons-asgn 'valid_ 'false))
+                                                             "1"))))
                        null)
                      (list (n= 'valid_ (par (n< 'x 'xExtent_) '&&
                                             (n>= 'x "0") '&&
@@ -1308,7 +1308,7 @@
                                             (n>= 'y "0")))
                            (bs (fc 'if (fc 'valid))
                                (body-chunk (n= 'location_ "0")
-                                           (n= 'current_ (n+ 'x (n* 'y 'xLength_))))))
+                                           (n+= 'current_ (n+ 'x (n* 'y 'xLength_))))))
                      (list (n+= 'current_ 'step_)
                            (n++ 'location_))
                      'valid_
@@ -1317,12 +1317,12 @@
                      null
                      (list (adp 'AtomicType 'current_)
                            (ad 'int 'location_)
+                           (ad 'int 'valid_)
                            (adc 'int 'xLength_)
                            (adc 'int 'xExtent_)
                            (adc 'int 'yExtent_)
                            (adc 'int 'zExtent_)
-                           (adc 'int 'step_)
-                           (adc 'int 'valid_))))
+                           (adc 'int 'step_))))
       (tpl-srt-dcl 'Standardize
                    (list (tpl-pmtr 'Input)
                          (tpl-pmtr FT-chunk))
@@ -1410,27 +1410,6 @@
 ;      (build-unary-to-logical-function 'IsNanFcn
 ;                                       (scope 'std 'isnan)
 ;                                       'isnan)
-      (m 'BUILD_BINARY_FUNCTION
-         (list 'OBJECT_NAME
-               'INTERNAL_NAME
-               'EXTERNAL_NAME)
-         (build-binary-function 'OBJECT_NAME
-                                'INTERNAL_NAME
-                                'EXTERNAL_NAME))
-      (m 'BUILD_BINARY_OPERATOR
-         (list 'OBJECT_NAME
-               'INTERNAL_NAME
-               'EXTERNAL_NAME)
-         (build-binary-operator 'OBJECT_NAME
-                                'INTERNAL_NAME
-                                'EXTERNAL_NAME))
-      (m 'BUILD_UNARY_FUNCTION
-         (list 'OBJECT_NAME
-               'INTERNAL_NAME
-               'EXTERNAL_NAME)
-         (build-unary-function 'OBJECT_NAME
-                               'INTERNAL_NAME
-                               'EXTERNAL_NAME))
       (srt-def (srt-dcl Nil-chunk)
                (typedef 'NeboNil 'ResizePrepType)
                (typedef 'NeboNil 'SeqWalkType)
@@ -1554,9 +1533,7 @@
                      (list (tpl-pmtr 'Test)
                            (tpl-pmtr 'Expr))
                      (list 'Test 'Expr)
-                     (typedef (scope (tpl-pmtr FT-chunk)
-                                     'value_type)
-                              'AtomicType)
+                     null
                      (bm-constructor (list (adcr 'Test 'test)
                                            (adcr 'Expr 'expr))
                                      (list (cons-asgn 'test_ 'test)
@@ -1688,9 +1665,7 @@
                      (list (tpl-pmtr CT-chunk)
                            (tpl-pmtr 'Otherwise))
                      (list CT-chunk 'Otherwise)
-                     (typedef (scope (tpl-pmtr FT-chunk)
-                                     'value_type)
-                              'AtomicType)
+                     null
                      (bm-constructor (list (adcr CT-chunk 'clause)
                                            (adcr 'Otherwise 'otherwise))
                                      (list (cons-asgn 'clause_ 'clause)
@@ -2715,41 +2690,42 @@
                                                                  (fc 'MultiplyType
                                                                      (mfc 'arg (tpl-fcn-use 'init 'NewShift))
                                                                      (fc 'Coef (mfc 'coefs 'coef)))))))
-                            (tpl-srt-def 'ConstructGPUExpr
-                                         (list (tpl-pmtr 'ArgPreGPUWalk)
-                                               (tpl-pmtr 'DestType))
-                                         null
-                                         (typedef (tpl-use NS-chunk 'GPUWalk 'DestType)
-                                                  'Coef)
-                                         (typedef (tpl-pmtr (scope 'ArgPreGPUWalk 'GPUWalkType))
-                                                  'Arg)
-                                         (typedef (tpl-use 'ProdOp 'GPUWalk 'Arg 'Coef 'DestType)
-                                                  'MultiplyType)
-                                         (typedef (tpl-pmtr (scope 'List (tpl-fcn-use 'ConstructExpr 'ArgPreGPUWalk 'DestType)))
-                                                  'EarlierPointsType)
-                                         (typedef (tpl-pmtr (scope 'EarlierPointsType
-                                                                   'Result))
-                                                  'EarlierPointsResult)
-                                         (typedef (tpl-use 'SumOp 'GPUWalk 'EarlierPointsResult 'MultiplyType 'DestType)
-                                                  'Result)
-                                         (tpl-def (list (tpl-pmtr VG-chunk)
-                                                        (tpl-pmtr SH-chunk))
-                                                  (r-fcn-def (s-fcn-dcl 'in_gpu_construct
-                                                                        (tc 'Result)
-                                                                        (adcr 'ArgPreGPUWalk 'arg)
-                                                                        (adcr (tpl-use NSCL 'length) 'coefs))
-                                                             (typedef (tpl-pmtr (scope (scope 'structured
-                                                                                              (tpl-use 'Add SH-chunk 'Point))
-                                                                                       'result))
-                                                                      'NewShift)
-                                                             (fc 'Result
-                                                                 (fc (scope 'EarlierPointsType
-                                                                            (tpl-fcn-use 'in_sq_construct VG-chunk SH-chunk))
-                                                                     'arg
-                                                                     (mfc 'coefs 'list))
-                                                                 (fc 'MultiplyType
-                                                                     (mfc 'arg (tpl-fcn-use 'init VG-chunk 'NewShift))
-                                                                     (fc 'Coef (mfc 'coefs 'coef)))))))))
+                            (gpu-only
+                             (tpl-srt-def 'ConstructGPUExpr
+                                          (list (tpl-pmtr 'ArgPreGPUWalk)
+                                                (tpl-pmtr 'DestType))
+                                          null
+                                          (typedef (tpl-use NS-chunk 'GPUWalk 'DestType)
+                                                   'Coef)
+                                          (typedef (tpl-pmtr (scope 'ArgPreGPUWalk 'GPUWalkType))
+                                                   'Arg)
+                                          (typedef (tpl-use 'ProdOp 'GPUWalk 'Arg 'Coef 'DestType)
+                                                   'MultiplyType)
+                                          (typedef (tpl-pmtr (scope 'List (tpl-fcn-use 'ConstructExpr 'ArgPreGPUWalk 'DestType)))
+                                                   'EarlierPointsType)
+                                          (typedef (tpl-pmtr (scope 'EarlierPointsType
+                                                                    'Result))
+                                                   'EarlierPointsResult)
+                                          (typedef (tpl-use 'SumOp 'GPUWalk 'EarlierPointsResult 'MultiplyType 'DestType)
+                                                   'Result)
+                                          (tpl-def (list (tpl-pmtr VG-chunk)
+                                                         (tpl-pmtr SH-chunk))
+                                                   (r-fcn-def (s-fcn-dcl 'in_gpu_construct
+                                                                         (tc 'Result)
+                                                                         (adcr 'ArgPreGPUWalk 'arg)
+                                                                         (adcr (tpl-use NSCL 'length) 'coefs))
+                                                              (typedef (tpl-pmtr (scope (scope 'structured
+                                                                                               (tpl-use 'Add SH-chunk 'Point))
+                                                                                        'result))
+                                                                       'NewShift)
+                                                              (fc 'Result
+                                                                  (fc (scope 'EarlierPointsType
+                                                                             (tpl-fcn-use 'in_sq_construct VG-chunk SH-chunk))
+                                                                      'arg
+                                                                      (mfc 'coefs 'list))
+                                                                  (fc 'MultiplyType
+                                                                      (mfc 'arg (tpl-fcn-use 'init VG-chunk 'NewShift))
+                                                                      (fc 'Coef (mfc 'coefs 'coef))))))))))
       (tpl-srt-def NSPL
                    (tpl-pmtr 'PointType)
                    (list 'PointType Nil-chunk)
@@ -2806,29 +2782,30 @@
                                                              (fc 'Result
                                                                  (mfc 'arg (tpl-fcn-use 'init 'NewShift))
                                                                  (fc 'Coef (mfc 'coefs 'coef))))))
-                            (tpl-srt-def 'ConstructGPUExpr
-                                         (list (tpl-pmtr 'ArgPreGPUWalk)
-                                               (tpl-pmtr 'DestType))
-                                         null
-                                         (typedef (tpl-use NS-chunk 'GPUWalk 'DestType)
-                                                  'Coef)
-                                         (typedef (tpl-pmtr (scope 'ArgPreGPUWalk 'GPUWalkType))
-                                                  'Arg)
-                                         (typedef (tpl-use 'ProdOp 'GPUWalk 'Arg 'Coef 'DestType)
-                                                  'Result)
-                                         (tpl-def (list (tpl-pmtr VG-chunk)
-                                                        (tpl-pmtr SH-chunk))
-                                                  (r-fcn-def (s-fcn-dcl 'in_gpu_construct
-                                                                        (tc 'Result)
-                                                                        (adcr 'ArgPreGPUWalk 'arg)
-                                                                        (adcr (tpl-use NSCL "1") 'coefs))
-                                                             (typedef (tpl-pmtr (scope (scope 'structured
-                                                                                              (tpl-use 'Add SH-chunk 'Point))
-                                                                                       'result))
-                                                                      'NewShift)
-                                                             (fc 'Result
-                                                                 (mfc 'arg (tpl-fcn-use 'init VG-chunk 'NewShift))
-                                                                 (fc 'Coef (mfc 'coefs 'coef))))))))
+                            (gpu-only
+                             (tpl-srt-def 'ConstructGPUExpr
+                                          (list (tpl-pmtr 'ArgPreGPUWalk)
+                                                (tpl-pmtr 'DestType))
+                                          null
+                                          (typedef (tpl-use NS-chunk 'GPUWalk 'DestType)
+                                                   'Coef)
+                                          (typedef (tpl-pmtr (scope 'ArgPreGPUWalk 'GPUWalkType))
+                                                   'Arg)
+                                          (typedef (tpl-use 'ProdOp 'GPUWalk 'Arg 'Coef 'DestType)
+                                                   'Result)
+                                          (tpl-def (list (tpl-pmtr VG-chunk)
+                                                         (tpl-pmtr SH-chunk))
+                                                   (r-fcn-def (s-fcn-dcl 'in_gpu_construct
+                                                                         (tc 'Result)
+                                                                         (adcr 'ArgPreGPUWalk 'arg)
+                                                                         (adcr (tpl-use NSCL "1") 'coefs))
+                                                              (typedef (tpl-pmtr (scope (scope 'structured
+                                                                                               (tpl-use 'Add SH-chunk 'Point))
+                                                                                        'result))
+                                                                       'NewShift)
+                                                              (fc 'Result
+                                                                  (mfc 'arg (tpl-fcn-use 'init VG-chunk 'NewShift))
+                                                                  (fc 'Coef (mfc 'coefs 'coef)))))))))
       (tpl-srt-def 'BuildStencilPointList
                    (tpl-pmtr 'First)
                    null
@@ -2877,16 +2854,10 @@
                                                'ArgSeqWalkType)
                                       (gpu-only (smt-list-chunk new-line-chunk
                                                                 (typedef (tpl-pmtr (scope 'Pts (tpl-fcn-use 'ConstructGPUExpr 'Arg FT-chunk)))
-                                                                         'ConstructExpr)
+                                                                         'ConstructGPUExpr)
                                                                 (typedef (tpl-pmtr (scope 'ConstructGPUExpr
                                                                                           'Result))
-                                                                         'ArgGPUWalkType)
-                                                                (typedef (tpl-use NSt
-                                                                                  'GPUWalk
-                                                                                  'Pts
-                                                                                  'ArgGPUWalkType
-                                                                                  FT-chunk)
-                                                                         'GPUWalkType))))
+                                                                         'ArgGPUWalkType))))
                                 (list 'Pts
                                       (tpl-pmtr (scope 'Arg 'ResizePrepType)))
                                 (list 'Pts
@@ -3185,6 +3156,17 @@
                            (list (adr FT-chunk 'initial_lhs)
                                  (adcr (tpl-use NE-chunk 'ExprType FT-chunk)
                                        'initial_rhs))
+                           (typedef (tpl-pmtr (scope (scope 'structured
+                                                            (tpl-use 'Minimum
+                                                                     (tpl-pmtr (scope 'ExprType
+                                                                                      report-VG-chunk))
+                                                                     (tpl-pmtr (scope (scope 'structured
+                                                                                             (tpl-use 'GhostFromField FT-chunk))
+                                                                                      'result))))
+                                                     'result))
+                                    'ValidGhost)
+                           (typedef (scope 'structured (tpl-use 'IndexTriplet "0" "0" "0"))
+                                    'InitialShift)
                            (typedef (tpl-pmtr (scope FT-chunk 'memory_window))
                                     'MemoryWindow)
                            (nt= 'MemoryWindow 'mw (mfc 'initial_lhs 'window_with_ghost))
@@ -3205,17 +3187,20 @@
                                                           "0")))
                            (bs 'dim3 (fc 'dimBlock 'blockDim 'blockDim))
                            (bs 'dim3 (fc 'dimGrid 'gDimX 'gDimY))
-                           (typedef (tpl-use NF-chunk 'GPUWalk FT-chunk)
+                           (typedef (tpl-use NF-chunk 'Initial FT-chunk)
                                     'LhsType)
-                           (typedef (tpl-pmtr (scope 'ExprType 'GPUWalkType))
-                                    'RhsType)
+                           (typedef (tpl-pmtr (scope 'LhsType 'GPUWalkType))
+                                    'LhsGPUType)
+                           (typedef 'ExprType 'RhsType)
+                           (typedef (tpl-pmtr (scope 'RhsType 'GPUWalkType))
+                                    'RhsGPUType)
                            (bs 'LhsType (fc 'lhs 'initial_lhs))
-                           (fc (kernel-use (tpl-use 'gpu_assign_kernel 'LhsType 'RhsType)
+                           (bs 'RhsType (fc 'rhs (mfc 'initial_rhs 'expr)))
+                           (fc (kernel-use (tpl-use 'gpu_assign_kernel 'LhsGPUType 'RhsGPUType)
                                            'dimGrid
                                            'dimBlock)
-                               (fc 'LhsType 'initial_lhs)
-                               (mfc (mfc 'initial_rhs 'expr)
-                                    'gpu_init)))))
+                               (mfc 'lhs (tpl-fcn-use 'gpu_init 'ValidGhost 'InitialShift))
+                               (mfc 'rhs (tpl-fcn-use 'gpu_init 'ValidGhost 'InitialShift))))))
       (gpu-only
        (tpl-def (tpl-pmtr FT-chunk)
                 (v-fcn-def (bs 'operator "|=")
