@@ -135,15 +135,14 @@
           : value_(v)
           {};
           template<typename ValidGhost, typename Shift>
-           inline SeqWalkType init(void) const { return SeqWalkType(value()); };
+           inline SeqWalkType init(void) const { return SeqWalkType(value_); };
           template<typename ValidGhost>
-           inline ResizePrepType resize_prep(void) const { return ResizePrepType(value()); };
+           inline ResizePrepType resize_prep(void) const { return ResizePrepType(value_); };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
-              inline GPUWalkType gpu_init(void) const { return GPUWalkType(value()); }
+              inline GPUWalkType gpu_init(void) const { return GPUWalkType(value_); }
 #         endif
           /* __CUDACC__ */;
-          inline AtomicType const value(void) const { return value_; };
 
          private:
           AtomicType const value_;
@@ -162,9 +161,8 @@
           {};
           inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(value());
+             return ResizeType(value_);
           };
-          inline AtomicType const value(void) const { return value_; };
 
          private:
           AtomicType const value_;
@@ -182,8 +180,7 @@
           : value_(value)
           {};
           template<typename Shift>
-           inline SeqWalkType init(void) const { return SeqWalkType(value()); };
-          inline AtomicType const value(void) const { return value_; };
+           inline SeqWalkType init(void) const { return SeqWalkType(value_); };
 
          private:
           AtomicType const value_;
@@ -249,15 +246,14 @@
           : value_(v)
           {};
           template<typename ValidGhost, typename Shift>
-           inline SeqWalkType init(void) const { return SeqWalkType(value()); };
+           inline SeqWalkType init(void) const { return SeqWalkType(value_); };
           template<typename ValidGhost>
-           inline ResizePrepType resize_prep(void) const { return ResizePrepType(value()); };
+           inline ResizePrepType resize_prep(void) const { return ResizePrepType(value_); };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
-              inline GPUWalkType gpu_init(void) const { return GPUWalkType(value()); }
+              inline GPUWalkType gpu_init(void) const { return GPUWalkType(value_); }
 #         endif
           /* __CUDACC__ */;
-          inline bool const value(void) const { return value_; };
 
          private:
           bool const value_;
@@ -275,9 +271,8 @@
           {};
           inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(value());
+             return ResizeType(value_);
           };
-          inline bool const value(void) const { return value_; };
 
          private:
           bool const value_;
@@ -294,8 +289,7 @@
           : value_(value)
           {};
           template<typename Shift>
-           inline SeqWalkType init(void) const { return SeqWalkType(value()); };
-          inline bool const value(void) const { return value_; };
+           inline SeqWalkType init(void) const { return SeqWalkType(value_); };
 
          private:
           bool const value_;
@@ -361,16 +355,16 @@
           {};
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(field().template resize_ghost_and_shift<ValidGhost, Shift>());
+              return SeqWalkType(field_.template resize_ghost_and_shift<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
            inline ResizePrepType resize_prep(void) const {
-              return ResizePrepType(field().template resize_ghost<ValidGhost>());
+              return ResizePrepType(field_.template resize_ghost<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
-                 return GPUWalkType(field().template resize_ghost_and_shift<ValidGhost, Shift>());
+                 return GPUWalkType(field_.template resize_ghost_and_shift<ValidGhost, Shift>());
               }
 #         endif
           /* __CUDACC__ */;
@@ -393,11 +387,10 @@
           inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
 
-             return ResizeType(FieldType(field().window_with_ghost().refine(split, location),
-                                         field().field_values(),
+             return ResizeType(FieldType(field_.window_with_ghost().refine(split, location),
+                                         field_.field_values(),
                                          structured::ExternalStorage));
           };
-          inline FieldType const & field(void) const { return field_; };
 
          private:
           FieldType const field_;
@@ -415,9 +408,8 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(field().template shift<Shift>());
+              return SeqWalkType(field_.template shift<Shift>());
            };
-          inline FieldType const & field(void) const { return field_; };
 
          private:
           FieldType const field_;
@@ -492,23 +484,22 @@
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) {
 
-              return SeqWalkType(field().template resize_ghost_and_shift_and_maintain_interior<ValidGhost,
-                                                                                               Shift>());
+              return SeqWalkType(field_.template resize_ghost_and_shift_and_maintain_interior<ValidGhost,
+                                                                                              Shift>());
            };
           template<typename ValidGhost>
            inline ResizePrepType resize_prep(void) {
-              return ResizePrepType(field().template resize_ghost_and_maintain_interior<ValidGhost>());
+              return ResizePrepType(field_.template resize_ghost_and_maintain_interior<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) {
 
-                 return GPUWalkType(field().template resize_ghost_and_shift_and_maintain_interior<ValidGhost,
-                                                                                                  Shift>());
+                 return GPUWalkType(field_.template resize_ghost_and_shift_and_maintain_interior<ValidGhost,
+                                                                                                 Shift>());
               }
 #         endif
           /* __CUDACC__ */;
-          inline FieldType & field(void) { return field_; };
 
          private:
           FieldType field_;
@@ -527,11 +518,10 @@
           inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) {
 
-             return ResizeType(FieldType(field().window_with_ghost().refine(split, location),
-                                         field().field_values(),
+             return ResizeType(FieldType(field_.window_with_ghost().refine(split, location),
+                                         field_.field_values(),
                                          structured::ExternalStorage));
           };
-          inline FieldType & field(void) { return field_; };
 
          private:
           FieldType field_;
@@ -549,9 +539,8 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) {
-              return SeqWalkType(field().template shift_and_maintain_interior<Shift>());
+              return SeqWalkType(field_.template shift_and_maintain_interior<Shift>());
            };
-          inline FieldType & field(void) { return field_; };
 
          private:
           FieldType field_;
@@ -571,7 +560,6 @@
           inline bool at_end(void) const { return iter_ == end_; };
           inline bool has_length(void) const { return true; };
           inline AtomicType & ref(void) { return *iter_; };
-          inline AtomicType * ptr(void) { return &(*iter_); };
 
          private:
           typename FieldType::iterator iter_;
@@ -688,26 +676,24 @@
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
 
-              return SeqWalkType(operand1().template init<ValidGhost, Shift>(),
-                                 operand2().template init<ValidGhost, Shift>());
+              return SeqWalkType(operand1_.template init<ValidGhost, Shift>(),
+                                 operand2_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
            inline ResizePrepType resize_prep(void) const {
 
-              return ResizePrepType(operand1().template resize_prep<ValidGhost>(),
-                                    operand2().template resize_prep<ValidGhost>());
+              return ResizePrepType(operand1_.template resize_prep<ValidGhost>(),
+                                    operand2_.template resize_prep<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
 
-                 return GPUWalkType(operand1().template gpu_init<ValidGhost, Shift>(),
-                                    operand2().template gpu_init<ValidGhost, Shift>());
+                 return GPUWalkType(operand1_.template gpu_init<ValidGhost, Shift>(),
+                                    operand2_.template gpu_init<ValidGhost, Shift>());
               }
 #         endif
           /* __CUDACC__ */;
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -727,10 +713,8 @@
           {};
           inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(operand1().resize(split, location), operand2().resize(split, location));
+             return ResizeType(operand1_.resize(split, location), operand2_.resize(split, location));
           };
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -750,10 +734,8 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1().template init<Shift>(), operand2().template init<Shift>());
+              return SeqWalkType(operand1.template init<Shift>(), operand2.template init<Shift>());
            };
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -917,26 +899,24 @@
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
 
-              return SeqWalkType(operand1().template init<ValidGhost, Shift>(),
-                                 operand2().template init<ValidGhost, Shift>());
+              return SeqWalkType(operand1_.template init<ValidGhost, Shift>(),
+                                 operand2_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
            inline ResizePrepType resize_prep(void) const {
 
-              return ResizePrepType(operand1().template resize_prep<ValidGhost>(),
-                                    operand2().template resize_prep<ValidGhost>());
+              return ResizePrepType(operand1_.template resize_prep<ValidGhost>(),
+                                    operand2_.template resize_prep<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
 
-                 return GPUWalkType(operand1().template gpu_init<ValidGhost, Shift>(),
-                                    operand2().template gpu_init<ValidGhost, Shift>());
+                 return GPUWalkType(operand1_.template gpu_init<ValidGhost, Shift>(),
+                                    operand2_.template gpu_init<ValidGhost, Shift>());
               }
 #         endif
           /* __CUDACC__ */;
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -956,10 +936,8 @@
           {};
           inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(operand1().resize(split, location), operand2().resize(split, location));
+             return ResizeType(operand1_.resize(split, location), operand2_.resize(split, location));
           };
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -979,10 +957,8 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1().template init<Shift>(), operand2().template init<Shift>());
+              return SeqWalkType(operand1.template init<Shift>(), operand2.template init<Shift>());
            };
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -1146,26 +1122,24 @@
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
 
-              return SeqWalkType(operand1().template init<ValidGhost, Shift>(),
-                                 operand2().template init<ValidGhost, Shift>());
+              return SeqWalkType(operand1_.template init<ValidGhost, Shift>(),
+                                 operand2_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
            inline ResizePrepType resize_prep(void) const {
 
-              return ResizePrepType(operand1().template resize_prep<ValidGhost>(),
-                                    operand2().template resize_prep<ValidGhost>());
+              return ResizePrepType(operand1_.template resize_prep<ValidGhost>(),
+                                    operand2_.template resize_prep<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
 
-                 return GPUWalkType(operand1().template gpu_init<ValidGhost, Shift>(),
-                                    operand2().template gpu_init<ValidGhost, Shift>());
+                 return GPUWalkType(operand1_.template gpu_init<ValidGhost, Shift>(),
+                                    operand2_.template gpu_init<ValidGhost, Shift>());
               }
 #         endif
           /* __CUDACC__ */;
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -1185,10 +1159,8 @@
           {};
           inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(operand1().resize(split, location), operand2().resize(split, location));
+             return ResizeType(operand1_.resize(split, location), operand2_.resize(split, location));
           };
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -1208,10 +1180,8 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1().template init<Shift>(), operand2().template init<Shift>());
+              return SeqWalkType(operand1.template init<Shift>(), operand2.template init<Shift>());
            };
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -1375,26 +1345,24 @@
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
 
-              return SeqWalkType(operand1().template init<ValidGhost, Shift>(),
-                                 operand2().template init<ValidGhost, Shift>());
+              return SeqWalkType(operand1_.template init<ValidGhost, Shift>(),
+                                 operand2_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
            inline ResizePrepType resize_prep(void) const {
 
-              return ResizePrepType(operand1().template resize_prep<ValidGhost>(),
-                                    operand2().template resize_prep<ValidGhost>());
+              return ResizePrepType(operand1_.template resize_prep<ValidGhost>(),
+                                    operand2_.template resize_prep<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
 
-                 return GPUWalkType(operand1().template gpu_init<ValidGhost, Shift>(),
-                                    operand2().template gpu_init<ValidGhost, Shift>());
+                 return GPUWalkType(operand1_.template gpu_init<ValidGhost, Shift>(),
+                                    operand2_.template gpu_init<ValidGhost, Shift>());
               }
 #         endif
           /* __CUDACC__ */;
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -1414,10 +1382,8 @@
           {};
           inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(operand1().resize(split, location), operand2().resize(split, location));
+             return ResizeType(operand1_.resize(split, location), operand2_.resize(split, location));
           };
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -1437,10 +1403,8 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1().template init<Shift>(), operand2().template init<Shift>());
+              return SeqWalkType(operand1.template init<Shift>(), operand2.template init<Shift>());
            };
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -1594,20 +1558,19 @@
           {};
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand().template init<ValidGhost, Shift>());
+              return SeqWalkType(operand_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
            inline ResizePrepType resize_prep(void) const {
-              return ResizePrepType(operand().template resize_prep<ValidGhost>());
+              return ResizePrepType(operand_.template resize_prep<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
-                 return GPUWalkType(operand().template gpu_init<ValidGhost, Shift>());
+                 return GPUWalkType(operand_.template gpu_init<ValidGhost, Shift>());
               }
 #         endif
           /* __CUDACC__ */;
-          inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
@@ -1625,9 +1588,8 @@
           {};
           inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(operand().resize(split, location));
+             return ResizeType(operand_.resize(split, location));
           };
-          inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
@@ -1645,9 +1607,8 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand().template init<Shift>());
+              return SeqWalkType(operand.template init<Shift>());
            };
-          inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
@@ -1733,20 +1694,19 @@
           {};
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand().template init<ValidGhost, Shift>());
+              return SeqWalkType(operand_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
            inline ResizePrepType resize_prep(void) const {
-              return ResizePrepType(operand().template resize_prep<ValidGhost>());
+              return ResizePrepType(operand_.template resize_prep<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
-                 return GPUWalkType(operand().template gpu_init<ValidGhost, Shift>());
+                 return GPUWalkType(operand_.template gpu_init<ValidGhost, Shift>());
               }
 #         endif
           /* __CUDACC__ */;
-          inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
@@ -1764,9 +1724,8 @@
           {};
           inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(operand().resize(split, location));
+             return ResizeType(operand_.resize(split, location));
           };
-          inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
@@ -1784,9 +1743,8 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand().template init<Shift>());
+              return SeqWalkType(operand.template init<Shift>());
            };
-          inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
@@ -1872,20 +1830,19 @@
           {};
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand().template init<ValidGhost, Shift>());
+              return SeqWalkType(operand_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
            inline ResizePrepType resize_prep(void) const {
-              return ResizePrepType(operand().template resize_prep<ValidGhost>());
+              return ResizePrepType(operand_.template resize_prep<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
-                 return GPUWalkType(operand().template gpu_init<ValidGhost, Shift>());
+                 return GPUWalkType(operand_.template gpu_init<ValidGhost, Shift>());
               }
 #         endif
           /* __CUDACC__ */;
-          inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
@@ -1903,9 +1860,8 @@
           {};
           inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(operand().resize(split, location));
+             return ResizeType(operand_.resize(split, location));
           };
-          inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
@@ -1923,9 +1879,8 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand().template init<Shift>());
+              return SeqWalkType(operand.template init<Shift>());
            };
-          inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
@@ -2011,20 +1966,19 @@
           {};
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand().template init<ValidGhost, Shift>());
+              return SeqWalkType(operand_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
            inline ResizePrepType resize_prep(void) const {
-              return ResizePrepType(operand().template resize_prep<ValidGhost>());
+              return ResizePrepType(operand_.template resize_prep<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
-                 return GPUWalkType(operand().template gpu_init<ValidGhost, Shift>());
+                 return GPUWalkType(operand_.template gpu_init<ValidGhost, Shift>());
               }
 #         endif
           /* __CUDACC__ */;
-          inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
@@ -2042,9 +1996,8 @@
           {};
           inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(operand().resize(split, location));
+             return ResizeType(operand_.resize(split, location));
           };
-          inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
@@ -2062,9 +2015,8 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand().template init<Shift>());
+              return SeqWalkType(operand.template init<Shift>());
            };
-          inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
@@ -2150,20 +2102,19 @@
           {};
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand().template init<ValidGhost, Shift>());
+              return SeqWalkType(operand_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
            inline ResizePrepType resize_prep(void) const {
-              return ResizePrepType(operand().template resize_prep<ValidGhost>());
+              return ResizePrepType(operand_.template resize_prep<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
-                 return GPUWalkType(operand().template gpu_init<ValidGhost, Shift>());
+                 return GPUWalkType(operand_.template gpu_init<ValidGhost, Shift>());
               }
 #         endif
           /* __CUDACC__ */;
-          inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
@@ -2181,9 +2132,8 @@
           {};
           inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(operand().resize(split, location));
+             return ResizeType(operand_.resize(split, location));
           };
-          inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
@@ -2201,9 +2151,8 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand().template init<Shift>());
+              return SeqWalkType(operand.template init<Shift>());
            };
-          inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
@@ -2289,20 +2238,19 @@
           {};
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand().template init<ValidGhost, Shift>());
+              return SeqWalkType(operand_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
            inline ResizePrepType resize_prep(void) const {
-              return ResizePrepType(operand().template resize_prep<ValidGhost>());
+              return ResizePrepType(operand_.template resize_prep<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
-                 return GPUWalkType(operand().template gpu_init<ValidGhost, Shift>());
+                 return GPUWalkType(operand_.template gpu_init<ValidGhost, Shift>());
               }
 #         endif
           /* __CUDACC__ */;
-          inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
@@ -2320,9 +2268,8 @@
           {};
           inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(operand().resize(split, location));
+             return ResizeType(operand_.resize(split, location));
           };
-          inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
@@ -2340,9 +2287,8 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand().template init<Shift>());
+              return SeqWalkType(operand.template init<Shift>());
            };
-          inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
@@ -2428,20 +2374,19 @@
           {};
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand().template init<ValidGhost, Shift>());
+              return SeqWalkType(operand_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
            inline ResizePrepType resize_prep(void) const {
-              return ResizePrepType(operand().template resize_prep<ValidGhost>());
+              return ResizePrepType(operand_.template resize_prep<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
-                 return GPUWalkType(operand().template gpu_init<ValidGhost, Shift>());
+                 return GPUWalkType(operand_.template gpu_init<ValidGhost, Shift>());
               }
 #         endif
           /* __CUDACC__ */;
-          inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
@@ -2459,9 +2404,8 @@
           {};
           inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(operand().resize(split, location));
+             return ResizeType(operand_.resize(split, location));
           };
-          inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
@@ -2479,9 +2423,8 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand().template init<Shift>());
+              return SeqWalkType(operand.template init<Shift>());
            };
-          inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
@@ -2577,26 +2520,24 @@
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
 
-              return SeqWalkType(operand1().template init<ValidGhost, Shift>(),
-                                 operand2().template init<ValidGhost, Shift>());
+              return SeqWalkType(operand1_.template init<ValidGhost, Shift>(),
+                                 operand2_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
            inline ResizePrepType resize_prep(void) const {
 
-              return ResizePrepType(operand1().template resize_prep<ValidGhost>(),
-                                    operand2().template resize_prep<ValidGhost>());
+              return ResizePrepType(operand1_.template resize_prep<ValidGhost>(),
+                                    operand2_.template resize_prep<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
 
-                 return GPUWalkType(operand1().template gpu_init<ValidGhost, Shift>(),
-                                    operand2().template gpu_init<ValidGhost, Shift>());
+                 return GPUWalkType(operand1_.template gpu_init<ValidGhost, Shift>(),
+                                    operand2_.template gpu_init<ValidGhost, Shift>());
               }
 #         endif
           /* __CUDACC__ */;
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -2616,10 +2557,8 @@
           {};
           inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(operand1().resize(split, location), operand2().resize(split, location));
+             return ResizeType(operand1_.resize(split, location), operand2_.resize(split, location));
           };
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -2639,10 +2578,8 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1().template init<Shift>(), operand2().template init<Shift>());
+              return SeqWalkType(operand1.template init<Shift>(), operand2.template init<Shift>());
            };
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -2798,20 +2735,19 @@
           {};
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand().template init<ValidGhost, Shift>());
+              return SeqWalkType(operand_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
            inline ResizePrepType resize_prep(void) const {
-              return ResizePrepType(operand().template resize_prep<ValidGhost>());
+              return ResizePrepType(operand_.template resize_prep<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
-                 return GPUWalkType(operand().template gpu_init<ValidGhost, Shift>());
+                 return GPUWalkType(operand_.template gpu_init<ValidGhost, Shift>());
               }
 #         endif
           /* __CUDACC__ */;
-          inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
@@ -2829,9 +2765,8 @@
           {};
           inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(operand().resize(split, location));
+             return ResizeType(operand_.resize(split, location));
           };
-          inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
@@ -2849,9 +2784,8 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand().template init<Shift>());
+              return SeqWalkType(operand.template init<Shift>());
            };
-          inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
@@ -2937,20 +2871,19 @@
           {};
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand().template init<ValidGhost, Shift>());
+              return SeqWalkType(operand_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
            inline ResizePrepType resize_prep(void) const {
-              return ResizePrepType(operand().template resize_prep<ValidGhost>());
+              return ResizePrepType(operand_.template resize_prep<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
-                 return GPUWalkType(operand().template gpu_init<ValidGhost, Shift>());
+                 return GPUWalkType(operand_.template gpu_init<ValidGhost, Shift>());
               }
 #         endif
           /* __CUDACC__ */;
-          inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
@@ -2968,9 +2901,8 @@
           {};
           inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(operand().resize(split, location));
+             return ResizeType(operand_.resize(split, location));
           };
-          inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
@@ -2988,9 +2920,8 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand().template init<Shift>());
+              return SeqWalkType(operand.template init<Shift>());
            };
-          inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
@@ -3088,26 +3019,24 @@
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
 
-              return SeqWalkType(operand1().template init<ValidGhost, Shift>(),
-                                 operand2().template init<ValidGhost, Shift>());
+              return SeqWalkType(operand1_.template init<ValidGhost, Shift>(),
+                                 operand2_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
            inline ResizePrepType resize_prep(void) const {
 
-              return ResizePrepType(operand1().template resize_prep<ValidGhost>(),
-                                    operand2().template resize_prep<ValidGhost>());
+              return ResizePrepType(operand1_.template resize_prep<ValidGhost>(),
+                                    operand2_.template resize_prep<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
 
-                 return GPUWalkType(operand1().template gpu_init<ValidGhost, Shift>(),
-                                    operand2().template gpu_init<ValidGhost, Shift>());
+                 return GPUWalkType(operand1_.template gpu_init<ValidGhost, Shift>(),
+                                    operand2_.template gpu_init<ValidGhost, Shift>());
               }
 #         endif
           /* __CUDACC__ */;
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -3127,10 +3056,8 @@
           {};
           inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(operand1().resize(split, location), operand2().resize(split, location));
+             return ResizeType(operand1_.resize(split, location), operand2_.resize(split, location));
           };
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -3152,10 +3079,8 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1().template init<Shift>(), operand2().template init<Shift>());
+              return SeqWalkType(operand1.template init<Shift>(), operand2.template init<Shift>());
            };
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -3329,26 +3254,24 @@
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
 
-              return SeqWalkType(operand1().template init<ValidGhost, Shift>(),
-                                 operand2().template init<ValidGhost, Shift>());
+              return SeqWalkType(operand1_.template init<ValidGhost, Shift>(),
+                                 operand2_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
            inline ResizePrepType resize_prep(void) const {
 
-              return ResizePrepType(operand1().template resize_prep<ValidGhost>(),
-                                    operand2().template resize_prep<ValidGhost>());
+              return ResizePrepType(operand1_.template resize_prep<ValidGhost>(),
+                                    operand2_.template resize_prep<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
 
-                 return GPUWalkType(operand1().template gpu_init<ValidGhost, Shift>(),
-                                    operand2().template gpu_init<ValidGhost, Shift>());
+                 return GPUWalkType(operand1_.template gpu_init<ValidGhost, Shift>(),
+                                    operand2_.template gpu_init<ValidGhost, Shift>());
               }
 #         endif
           /* __CUDACC__ */;
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -3368,10 +3291,8 @@
           {};
           inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(operand1().resize(split, location), operand2().resize(split, location));
+             return ResizeType(operand1_.resize(split, location), operand2_.resize(split, location));
           };
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -3393,10 +3314,8 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1().template init<Shift>(), operand2().template init<Shift>());
+              return SeqWalkType(operand1.template init<Shift>(), operand2.template init<Shift>());
            };
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -3570,26 +3489,24 @@
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
 
-              return SeqWalkType(operand1().template init<ValidGhost, Shift>(),
-                                 operand2().template init<ValidGhost, Shift>());
+              return SeqWalkType(operand1_.template init<ValidGhost, Shift>(),
+                                 operand2_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
            inline ResizePrepType resize_prep(void) const {
 
-              return ResizePrepType(operand1().template resize_prep<ValidGhost>(),
-                                    operand2().template resize_prep<ValidGhost>());
+              return ResizePrepType(operand1_.template resize_prep<ValidGhost>(),
+                                    operand2_.template resize_prep<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
 
-                 return GPUWalkType(operand1().template gpu_init<ValidGhost, Shift>(),
-                                    operand2().template gpu_init<ValidGhost, Shift>());
+                 return GPUWalkType(operand1_.template gpu_init<ValidGhost, Shift>(),
+                                    operand2_.template gpu_init<ValidGhost, Shift>());
               }
 #         endif
           /* __CUDACC__ */;
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -3611,10 +3528,8 @@
           {};
           inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(operand1().resize(split, location), operand2().resize(split, location));
+             return ResizeType(operand1_.resize(split, location), operand2_.resize(split, location));
           };
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -3636,10 +3551,8 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1().template init<Shift>(), operand2().template init<Shift>());
+              return SeqWalkType(operand1.template init<Shift>(), operand2.template init<Shift>());
            };
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -3811,26 +3724,24 @@
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
 
-              return SeqWalkType(operand1().template init<ValidGhost, Shift>(),
-                                 operand2().template init<ValidGhost, Shift>());
+              return SeqWalkType(operand1_.template init<ValidGhost, Shift>(),
+                                 operand2_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
            inline ResizePrepType resize_prep(void) const {
 
-              return ResizePrepType(operand1().template resize_prep<ValidGhost>(),
-                                    operand2().template resize_prep<ValidGhost>());
+              return ResizePrepType(operand1_.template resize_prep<ValidGhost>(),
+                                    operand2_.template resize_prep<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
 
-                 return GPUWalkType(operand1().template gpu_init<ValidGhost, Shift>(),
-                                    operand2().template gpu_init<ValidGhost, Shift>());
+                 return GPUWalkType(operand1_.template gpu_init<ValidGhost, Shift>(),
+                                    operand2_.template gpu_init<ValidGhost, Shift>());
               }
 #         endif
           /* __CUDACC__ */;
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -3852,10 +3763,8 @@
           {};
           inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(operand1().resize(split, location), operand2().resize(split, location));
+             return ResizeType(operand1_.resize(split, location), operand2_.resize(split, location));
           };
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -3877,10 +3786,8 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1().template init<Shift>(), operand2().template init<Shift>());
+              return SeqWalkType(operand1.template init<Shift>(), operand2.template init<Shift>());
            };
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -4056,26 +3963,24 @@
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
 
-              return SeqWalkType(operand1().template init<ValidGhost, Shift>(),
-                                 operand2().template init<ValidGhost, Shift>());
+              return SeqWalkType(operand1_.template init<ValidGhost, Shift>(),
+                                 operand2_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
            inline ResizePrepType resize_prep(void) const {
 
-              return ResizePrepType(operand1().template resize_prep<ValidGhost>(),
-                                    operand2().template resize_prep<ValidGhost>());
+              return ResizePrepType(operand1_.template resize_prep<ValidGhost>(),
+                                    operand2_.template resize_prep<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
 
-                 return GPUWalkType(operand1().template gpu_init<ValidGhost, Shift>(),
-                                    operand2().template gpu_init<ValidGhost, Shift>());
+                 return GPUWalkType(operand1_.template gpu_init<ValidGhost, Shift>(),
+                                    operand2_.template gpu_init<ValidGhost, Shift>());
               }
 #         endif
           /* __CUDACC__ */;
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -4097,10 +4002,8 @@
           {};
           inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(operand1().resize(split, location), operand2().resize(split, location));
+             return ResizeType(operand1_.resize(split, location), operand2_.resize(split, location));
           };
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -4122,10 +4025,8 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1().template init<Shift>(), operand2().template init<Shift>());
+              return SeqWalkType(operand1.template init<Shift>(), operand2.template init<Shift>());
            };
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -4297,26 +4198,24 @@
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
 
-              return SeqWalkType(operand1().template init<ValidGhost, Shift>(),
-                                 operand2().template init<ValidGhost, Shift>());
+              return SeqWalkType(operand1_.template init<ValidGhost, Shift>(),
+                                 operand2_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
            inline ResizePrepType resize_prep(void) const {
 
-              return ResizePrepType(operand1().template resize_prep<ValidGhost>(),
-                                    operand2().template resize_prep<ValidGhost>());
+              return ResizePrepType(operand1_.template resize_prep<ValidGhost>(),
+                                    operand2_.template resize_prep<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
 
-                 return GPUWalkType(operand1().template gpu_init<ValidGhost, Shift>(),
-                                    operand2().template gpu_init<ValidGhost, Shift>());
+                 return GPUWalkType(operand1_.template gpu_init<ValidGhost, Shift>(),
+                                    operand2_.template gpu_init<ValidGhost, Shift>());
               }
 #         endif
           /* __CUDACC__ */;
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -4338,10 +4237,8 @@
           {};
           inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(operand1().resize(split, location), operand2().resize(split, location));
+             return ResizeType(operand1_.resize(split, location), operand2_.resize(split, location));
           };
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -4363,10 +4260,8 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1().template init<Shift>(), operand2().template init<Shift>());
+              return SeqWalkType(operand1.template init<Shift>(), operand2.template init<Shift>());
            };
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -4544,26 +4439,24 @@
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
 
-              return SeqWalkType(operand1().template init<ValidGhost, Shift>(),
-                                 operand2().template init<ValidGhost, Shift>());
+              return SeqWalkType(operand1_.template init<ValidGhost, Shift>(),
+                                 operand2_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
            inline ResizePrepType resize_prep(void) const {
 
-              return ResizePrepType(operand1().template resize_prep<ValidGhost>(),
-                                    operand2().template resize_prep<ValidGhost>());
+              return ResizePrepType(operand1_.template resize_prep<ValidGhost>(),
+                                    operand2_.template resize_prep<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
 
-                 return GPUWalkType(operand1().template gpu_init<ValidGhost, Shift>(),
-                                    operand2().template gpu_init<ValidGhost, Shift>());
+                 return GPUWalkType(operand1_.template gpu_init<ValidGhost, Shift>(),
+                                    operand2_.template gpu_init<ValidGhost, Shift>());
               }
 #         endif
           /* __CUDACC__ */;
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -4583,10 +4476,8 @@
           {};
           inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(operand1().resize(split, location), operand2().resize(split, location));
+             return ResizeType(operand1_.resize(split, location), operand2_.resize(split, location));
           };
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -4606,10 +4497,8 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1().template init<Shift>(), operand2().template init<Shift>());
+              return SeqWalkType(operand1.template init<Shift>(), operand2.template init<Shift>());
            };
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -4766,26 +4655,24 @@
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
 
-              return SeqWalkType(operand1().template init<ValidGhost, Shift>(),
-                                 operand2().template init<ValidGhost, Shift>());
+              return SeqWalkType(operand1_.template init<ValidGhost, Shift>(),
+                                 operand2_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
            inline ResizePrepType resize_prep(void) const {
 
-              return ResizePrepType(operand1().template resize_prep<ValidGhost>(),
-                                    operand2().template resize_prep<ValidGhost>());
+              return ResizePrepType(operand1_.template resize_prep<ValidGhost>(),
+                                    operand2_.template resize_prep<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
 
-                 return GPUWalkType(operand1().template gpu_init<ValidGhost, Shift>(),
-                                    operand2().template gpu_init<ValidGhost, Shift>());
+                 return GPUWalkType(operand1_.template gpu_init<ValidGhost, Shift>(),
+                                    operand2_.template gpu_init<ValidGhost, Shift>());
               }
 #         endif
           /* __CUDACC__ */;
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -4805,10 +4692,8 @@
           {};
           inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(operand1().resize(split, location), operand2().resize(split, location));
+             return ResizeType(operand1_.resize(split, location), operand2_.resize(split, location));
           };
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -4828,10 +4713,8 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1().template init<Shift>(), operand2().template init<Shift>());
+              return SeqWalkType(operand1.template init<Shift>(), operand2.template init<Shift>());
            };
-          inline Operand1 const & operand1(void) const { return operand1_; };
-          inline Operand2 const & operand2(void) const { return operand2_; };
 
          private:
           Operand1 const operand1_;
@@ -4980,20 +4863,19 @@
           {};
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand().template init<ValidGhost, Shift>());
+              return SeqWalkType(operand_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
            inline ResizePrepType resize_prep(void) const {
-              return ResizePrepType(operand().template resize_prep<ValidGhost>());
+              return ResizePrepType(operand_.template resize_prep<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
-                 return GPUWalkType(operand().template gpu_init<ValidGhost, Shift>());
+                 return GPUWalkType(operand_.template gpu_init<ValidGhost, Shift>());
               }
 #         endif
           /* __CUDACC__ */;
-          inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
@@ -5011,9 +4893,8 @@
           {};
           inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(operand().resize(split, location));
+             return ResizeType(operand_.resize(split, location));
           };
-          inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
@@ -5031,9 +4912,8 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand().template init<Shift>());
+              return SeqWalkType(operand.template init<Shift>());
            };
-          inline Operand const & operand(void) const { return operand_; };
 
          private:
           Operand const operand_;
@@ -5138,26 +5018,24 @@
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
 
-              return SeqWalkType(test().template init<ValidGhost, Shift>(),
-                                 expr().template init<ValidGhost, Shift>());
+              return SeqWalkType(test_.template init<ValidGhost, Shift>(),
+                                 expr_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
            inline ResizePrepType resize_prep(void) const {
 
-              return ResizePrepType(test().template resize_prep<ValidGhost>(),
-                                    expr().template resize_prep<ValidGhost>());
+              return ResizePrepType(test_.template resize_prep<ValidGhost>(),
+                                    expr_.template resize_prep<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
 
-                 return GPUWalkType(test().template gpu_init<ValidGhost, Shift>(),
-                                    expr().template gpu_init<ValidGhost, Shift>());
+                 return GPUWalkType(test_.template gpu_init<ValidGhost, Shift>(),
+                                    expr_.template gpu_init<ValidGhost, Shift>());
               }
 #         endif
           /* __CUDACC__ */;
-          inline Test const & test(void) const { return test_; };
-          inline Expr const & expr(void) const { return expr_; };
 
          private:
           Test const test_;
@@ -5177,10 +5055,8 @@
           {};
           inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(test().resize(split, location), expr().resize(split, location));
+             return ResizeType(test_.resize(split, location), expr_.resize(split, location));
           };
-          inline Test const & test(void) const { return test_; };
-          inline Expr const & expr(void) const { return expr_; };
 
          private:
           Test const test_;
@@ -5200,10 +5076,8 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(test().template init<Shift>(), expr().template init<Shift>());
+              return SeqWalkType(test_.template init<Shift>(), expr_.template init<Shift>());
            };
-          inline Test const & test(void) const { return test_; };
-          inline Expr const & expr(void) const { return expr_; };
 
          private:
           Test const test_;
@@ -5287,26 +5161,24 @@
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
 
-              return SeqWalkType(clause().template init<ValidGhost, Shift>(),
-                                 otherwise().template init<ValidGhost, Shift>());
+              return SeqWalkType(clause_.template init<ValidGhost, Shift>(),
+                                 otherwise_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
            inline ResizePrepType resize_prep(void) const {
 
-              return ResizePrepType(clause().template resize_prep<ValidGhost>(),
-                                    otherwise().template resize_prep<ValidGhost>());
+              return ResizePrepType(clause_.template resize_prep<ValidGhost>(),
+                                    otherwise_.template resize_prep<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
 
-                 return GPUWalkType(clause().template gpu_init<ValidGhost, Shift>(),
-                                    otherwise().template gpu_init<ValidGhost, Shift>());
+                 return GPUWalkType(clause_.template gpu_init<ValidGhost, Shift>(),
+                                    otherwise_.template gpu_init<ValidGhost, Shift>());
               }
 #         endif
           /* __CUDACC__ */;
-          inline ClauseType const & clause(void) const { return clause_; };
-          inline Otherwise const & otherwise(void) const { return otherwise_; };
 
          private:
           ClauseType const clause_;
@@ -5328,10 +5200,8 @@
           {};
           inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(clause().resize(split, location), otherwise().resize(split, location));
+             return ResizeType(clause_.resize(split, location), otherwise_.resize(split, location));
           };
-          inline ClauseType const & clause(void) const { return clause_; };
-          inline Otherwise const & otherwise(void) const { return otherwise_; };
 
          private:
           ClauseType const clause_;
@@ -5353,10 +5223,8 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(clause().template init<Shift>(), otherwise().template init<Shift>());
+              return SeqWalkType(clause_.template init<Shift>(), otherwise_.template init<Shift>());
            };
-          inline ClauseType const & clause(void) const { return clause_; };
-          inline Otherwise const & otherwise(void) const { return otherwise_; };
 
          private:
           ClauseType const clause_;
@@ -6032,24 +5900,23 @@
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
 
-              return SeqWalkType(arg().template init<ValidGhost,
-                                                     typename structured::Add<Shift, Point>::result>());
+              return SeqWalkType(arg_.template init<ValidGhost,
+                                                    typename structured::Add<Shift, Point>::result>());
            };
           template<typename ValidGhost>
            inline ResizePrepType resize_prep(void) const {
-              return ResizePrepType(arg().template resize_prep<ValidGhost>());
+              return ResizePrepType(arg_.template resize_prep<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
 
-                 return GPUWalkType(arg().template gpu_init<ValidGhost,
-                                                            typename structured::Add<Shift, Point>::
-                                                            result>());
+                 return GPUWalkType(arg_.template gpu_init<ValidGhost,
+                                                           typename structured::Add<Shift, Point>::
+                                                           result>());
               }
 #         endif
           /* __CUDACC__ */;
-          inline Arg const & arg(void) const { return arg_; };
 
          private:
           Arg const arg_;
@@ -6067,9 +5934,8 @@
           {};
           inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(arg().resize(split, location));
+             return ResizeType(arg_.resize(split, location));
           };
-          inline Arg const & arg(void) const { return arg_; };
 
          private:
           Arg const arg_;
@@ -6087,9 +5953,8 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(arg().template init<typename structured::Add<Shift, Point>::result>());
+              return SeqWalkType(arg_.template init<typename structured::Add<Shift, Point>::result>());
            };
-          inline Arg const & arg(void) const { return arg_; };
 
          private:
           Arg const arg_;
@@ -6374,8 +6239,7 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          enum {numPts = Pts::length};
-          NeboStencilCoefList<numPts> typedef Coefs;
+          NeboStencilCoefList<Pts::length> typedef Coefs;
           typename Pts::template ConstructExpr<Arg, FieldType> typedef ConstructExpr;
           typename ConstructExpr::Result typedef ArgSeqWalkType;
 #         ifdef __CUDACC__
@@ -6398,24 +6262,22 @@
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
 
-              return SeqWalkType(ConstructExpr::template in_sq_construct<ValidGhost, Shift>(arg(),
-                                                                                            coefs()));
+              return SeqWalkType(ConstructExpr::template in_sq_construct<ValidGhost, Shift>(arg_,
+                                                                                            coefs_));
            };
           template<typename ValidGhost>
            inline ResizePrepType resize_prep(void) const {
-              return ResizePrepType(arg().template resize_prep<ValidGhost>(), coefs());
+              return ResizePrepType(arg_.template resize_prep<ValidGhost>(), coefs_);
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
 
-                 return GPUWalkType(ConstructGPUExpr::template in_gpu_construct<ValidGhost, Shift>(arg(),
-                                                                                                   coefs()));
+                 return GPUWalkType(ConstructGPUExpr::template in_gpu_construct<ValidGhost, Shift>(arg_,
+                                                                                                   coefs_));
               }
 #         endif
           /* __CUDACC__ */;
-          inline Arg const & arg(void) const { return arg_; };
-          inline Coefs const & coefs(void) const { return coefs_; };
 
          private:
           Arg const arg_;
@@ -6428,18 +6290,15 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          enum {numPts = Pts::length};
-          NeboStencilCoefList<numPts> typedef Coefs;
+          NeboStencilCoefList<Pts::length> typedef Coefs;
           NeboStencil<Resize, Pts, typename Arg::ResizeType, FieldType> typedef ResizeType;
           NeboStencil(Arg const & arg, Coefs const & coefs)
           : arg_(arg), coefs_(coefs)
           {};
           inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-             return ResizeType(arg().resize(split, location), coefs());
+             return ResizeType(arg_.resize(split, location), coefs_);
           };
-          inline Arg const & arg(void) const { return arg_; };
-          inline Coefs const & coefs(void) const { return coefs_; };
 
          private:
           Arg const arg_;
@@ -6452,8 +6311,7 @@
          public:
           FieldType typedef field_type;
           typename FieldType::memory_window typedef MemoryWindow;
-          enum {numPts = Pts::length};
-          NeboStencilCoefList<numPts> typedef Coefs;
+          NeboStencilCoefList<Pts::length> typedef Coefs;
           typename Pts::template ConstructExpr<Arg, FieldType> typedef ConstructExpr;
           typename ConstructExpr::Result typedef ArgSeqWalkType;
           NeboStencil<SeqWalk, Pts, ArgSeqWalkType, FieldType> typedef SeqWalkType;
@@ -6462,10 +6320,8 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(ConstructExpr::template rs_sq_construct<Shift>(arg(), coefs()));
+              return SeqWalkType(ConstructExpr::template rs_sq_construct<Shift>(arg_, coefs_));
            };
-          inline Arg const & arg(void) const { return arg_; };
-          inline Coefs const & coefs(void) const { return coefs_; };
 
          private:
           Arg const arg_;
