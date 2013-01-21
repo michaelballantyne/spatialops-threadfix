@@ -122,10 +122,10 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef AtomicType;
-          NeboScalar<ResizePrep, FieldType> typedef ResizePrepType;
           NeboScalar<SeqWalk, FieldType> typedef SeqWalkType;
+          NeboScalar<ResizePrep, FieldType> typedef ResizePrepType;
 #         ifdef __CUDACC__
              NeboScalar<GPUWalk, FieldType> typedef GPUWalkType
 #         endif
@@ -153,7 +153,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef AtomicType;
           NeboScalar<Resize, FieldType> typedef ResizeType;
           NeboScalar(AtomicType const value)
@@ -173,7 +173,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef AtomicType;
           NeboScalar<SeqWalk, FieldType> typedef SeqWalkType;
           NeboScalar(AtomicType const value)
@@ -191,7 +191,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef AtomicType;
           NeboScalar(AtomicType const value)
           : value_(value)
@@ -211,7 +211,7 @@
 
             public:
              FieldType typedef field_type;
-             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
              NeboScalar(AtomicType const value)
              : value_(value)
@@ -234,9 +234,9 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
-          NeboBoolean<ResizePrep, FieldType> typedef ResizePrepType;
+          typename field_type::memory_window typedef MemoryWindow;
           NeboBoolean<SeqWalk, FieldType> typedef SeqWalkType;
+          NeboBoolean<ResizePrep, FieldType> typedef ResizePrepType;
 #         ifdef __CUDACC__
              NeboBoolean<GPUWalk, FieldType> typedef GPUWalkType
 #         endif
@@ -264,7 +264,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           NeboBoolean<Resize, FieldType> typedef ResizeType;
           NeboBoolean(bool const value)
           : value_(value)
@@ -283,7 +283,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           NeboBoolean<SeqWalk, FieldType> typedef SeqWalkType;
           NeboBoolean(bool const value)
           : value_(value)
@@ -300,7 +300,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           NeboBoolean(bool const value)
           : value_(value)
           {};
@@ -319,7 +319,7 @@
 
             public:
              FieldType typedef field_type;
-             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
              NeboBoolean(bool const value)
              : value_(value)
@@ -342,9 +342,9 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
-          NeboConstField<ResizePrep, FieldType> typedef ResizePrepType;
+          typename field_type::memory_window typedef MemoryWindow;
           NeboConstField<SeqWalk, FieldType> typedef SeqWalkType;
+          NeboConstField<ResizePrep, FieldType> typedef ResizePrepType;
 #         ifdef __CUDACC__
              NeboConstField<GPUWalk, FieldType> typedef GPUWalkType
 #         endif
@@ -379,7 +379,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           NeboConstField<Resize, FieldType> typedef ResizeType;
           NeboConstField(FieldType const & f)
           : field_(f)
@@ -401,7 +401,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           NeboConstField<SeqWalk, FieldType> typedef SeqWalkType;
           NeboConstField(FieldType const & f)
           : field_(f)
@@ -420,7 +420,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef AtomicType;
           NeboConstField(FieldType const & f)
           : iter_(f.begin()), end_(f.end())
@@ -441,7 +441,7 @@
 
             public:
              FieldType typedef field_type;
-             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
              NeboConstField(FieldType const & f)
              : current_(f.field_values(EXTERNAL_CUDA_GPU, f.device_index()) + f.window_with_ghost().offset(0)
@@ -470,9 +470,9 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
-          NeboField<ResizePrep, FieldType> typedef ResizePrepType;
+          typename field_type::memory_window typedef MemoryWindow;
           NeboField<SeqWalk, FieldType> typedef SeqWalkType;
+          NeboField<ResizePrep, FieldType> typedef ResizePrepType;
 #         ifdef __CUDACC__
              NeboField<GPUWalk, FieldType> typedef GPUWalkType
 #         endif
@@ -510,7 +510,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           NeboField<Resize, FieldType> typedef ResizeType;
           NeboField(FieldType f)
           : field_(f)
@@ -532,7 +532,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           NeboField<SeqWalk, FieldType> typedef SeqWalkType;
           NeboField(FieldType f)
           : field_(f)
@@ -551,7 +551,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef AtomicType;
           NeboField(FieldType f)
           : iter_(f.begin()), end_(f.end())
@@ -572,7 +572,7 @@
 
             public:
              FieldType typedef field_type;
-             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
              NeboField(FieldType f)
              : current_(f.field_values(EXTERNAL_CUDA_GPU, f.device_index()) + f.window_with_ghost().offset(0)
@@ -653,13 +653,13 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
+          SumOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
+          typedef SeqWalkType;
           SumOp<ResizePrep,
                 typename Operand1::ResizePrepType,
                 typename Operand2::ResizePrepType,
                 FieldType> typedef ResizePrepType;
-          SumOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
-          typedef SeqWalkType;
 #         ifdef __CUDACC__
              SumOp<GPUWalk,
                    typename Operand1::GPUWalkType,
@@ -705,7 +705,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           SumOp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
           typedef ResizeType;
           SumOp(Operand1 const & operand1, Operand2 const & operand2)
@@ -726,7 +726,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           SumOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
           typedef SeqWalkType;
           SumOp(Operand1 const & operand1, Operand2 const & operand2)
@@ -747,7 +747,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef EvalReturnType;
           SumOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -770,7 +770,7 @@
 
             public:
              FieldType typedef field_type;
-             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
              SumOp(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -876,13 +876,13 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
+          DiffOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
+          typedef SeqWalkType;
           DiffOp<ResizePrep,
                  typename Operand1::ResizePrepType,
                  typename Operand2::ResizePrepType,
                  FieldType> typedef ResizePrepType;
-          DiffOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
-          typedef SeqWalkType;
 #         ifdef __CUDACC__
              DiffOp<GPUWalk,
                     typename Operand1::GPUWalkType,
@@ -928,7 +928,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           DiffOp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
           typedef ResizeType;
           DiffOp(Operand1 const & operand1, Operand2 const & operand2)
@@ -949,7 +949,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           DiffOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
           typedef SeqWalkType;
           DiffOp(Operand1 const & operand1, Operand2 const & operand2)
@@ -970,7 +970,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef EvalReturnType;
           DiffOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -993,7 +993,7 @@
 
             public:
              FieldType typedef field_type;
-             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
              DiffOp(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -1099,13 +1099,13 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
+          ProdOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
+          typedef SeqWalkType;
           ProdOp<ResizePrep,
                  typename Operand1::ResizePrepType,
                  typename Operand2::ResizePrepType,
                  FieldType> typedef ResizePrepType;
-          ProdOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
-          typedef SeqWalkType;
 #         ifdef __CUDACC__
              ProdOp<GPUWalk,
                     typename Operand1::GPUWalkType,
@@ -1151,7 +1151,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           ProdOp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
           typedef ResizeType;
           ProdOp(Operand1 const & operand1, Operand2 const & operand2)
@@ -1172,7 +1172,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           ProdOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
           typedef SeqWalkType;
           ProdOp(Operand1 const & operand1, Operand2 const & operand2)
@@ -1193,7 +1193,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef EvalReturnType;
           ProdOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -1216,7 +1216,7 @@
 
             public:
              FieldType typedef field_type;
-             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
              ProdOp(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -1322,13 +1322,13 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
+          DivOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
+          typedef SeqWalkType;
           DivOp<ResizePrep,
                 typename Operand1::ResizePrepType,
                 typename Operand2::ResizePrepType,
                 FieldType> typedef ResizePrepType;
-          DivOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
-          typedef SeqWalkType;
 #         ifdef __CUDACC__
              DivOp<GPUWalk,
                    typename Operand1::GPUWalkType,
@@ -1374,7 +1374,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           DivOp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
           typedef ResizeType;
           DivOp(Operand1 const & operand1, Operand2 const & operand2)
@@ -1395,7 +1395,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           DivOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
           typedef SeqWalkType;
           DivOp(Operand1 const & operand1, Operand2 const & operand2)
@@ -1416,7 +1416,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef EvalReturnType;
           DivOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -1439,7 +1439,7 @@
 
             public:
              FieldType typedef field_type;
-             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
              DivOp(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -1545,9 +1545,9 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
-          SinFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
+          typename field_type::memory_window typedef MemoryWindow;
           SinFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
+          SinFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
 #         ifdef __CUDACC__
              SinFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
@@ -1581,7 +1581,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           SinFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
           SinFcn(Operand const & operand)
           : operand_(operand)
@@ -1600,7 +1600,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           SinFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
           SinFcn(Operand const & operand)
           : operand_(operand)
@@ -1619,7 +1619,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef EvalReturnType;
           SinFcn(Operand const & operand)
           : operand_(operand)
@@ -1639,7 +1639,7 @@
 
             public:
              FieldType typedef field_type;
-             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
              SinFcn(Operand const & operand)
              : operand_(operand)
@@ -1681,9 +1681,9 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
-          CosFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
+          typename field_type::memory_window typedef MemoryWindow;
           CosFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
+          CosFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
 #         ifdef __CUDACC__
              CosFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
@@ -1717,7 +1717,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           CosFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
           CosFcn(Operand const & operand)
           : operand_(operand)
@@ -1736,7 +1736,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           CosFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
           CosFcn(Operand const & operand)
           : operand_(operand)
@@ -1755,7 +1755,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef EvalReturnType;
           CosFcn(Operand const & operand)
           : operand_(operand)
@@ -1775,7 +1775,7 @@
 
             public:
              FieldType typedef field_type;
-             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
              CosFcn(Operand const & operand)
              : operand_(operand)
@@ -1817,9 +1817,9 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
-          TanFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
+          typename field_type::memory_window typedef MemoryWindow;
           TanFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
+          TanFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
 #         ifdef __CUDACC__
              TanFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
@@ -1853,7 +1853,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           TanFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
           TanFcn(Operand const & operand)
           : operand_(operand)
@@ -1872,7 +1872,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           TanFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
           TanFcn(Operand const & operand)
           : operand_(operand)
@@ -1891,7 +1891,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef EvalReturnType;
           TanFcn(Operand const & operand)
           : operand_(operand)
@@ -1911,7 +1911,7 @@
 
             public:
              FieldType typedef field_type;
-             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
              TanFcn(Operand const & operand)
              : operand_(operand)
@@ -1953,9 +1953,9 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
-          ExpFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
+          typename field_type::memory_window typedef MemoryWindow;
           ExpFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
+          ExpFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
 #         ifdef __CUDACC__
              ExpFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
@@ -1989,7 +1989,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           ExpFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
           ExpFcn(Operand const & operand)
           : operand_(operand)
@@ -2008,7 +2008,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           ExpFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
           ExpFcn(Operand const & operand)
           : operand_(operand)
@@ -2027,7 +2027,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef EvalReturnType;
           ExpFcn(Operand const & operand)
           : operand_(operand)
@@ -2047,7 +2047,7 @@
 
             public:
              FieldType typedef field_type;
-             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
              ExpFcn(Operand const & operand)
              : operand_(operand)
@@ -2089,9 +2089,9 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
-          TanhFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
+          typename field_type::memory_window typedef MemoryWindow;
           TanhFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
+          TanhFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
 #         ifdef __CUDACC__
              TanhFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
@@ -2125,7 +2125,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           TanhFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
           TanhFcn(Operand const & operand)
           : operand_(operand)
@@ -2144,7 +2144,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           TanhFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
           TanhFcn(Operand const & operand)
           : operand_(operand)
@@ -2163,7 +2163,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef EvalReturnType;
           TanhFcn(Operand const & operand)
           : operand_(operand)
@@ -2183,7 +2183,7 @@
 
             public:
              FieldType typedef field_type;
-             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
              TanhFcn(Operand const & operand)
              : operand_(operand)
@@ -2225,9 +2225,9 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
-          AbsFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
+          typename field_type::memory_window typedef MemoryWindow;
           AbsFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
+          AbsFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
 #         ifdef __CUDACC__
              AbsFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
@@ -2261,7 +2261,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           AbsFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
           AbsFcn(Operand const & operand)
           : operand_(operand)
@@ -2280,7 +2280,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           AbsFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
           AbsFcn(Operand const & operand)
           : operand_(operand)
@@ -2299,7 +2299,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef EvalReturnType;
           AbsFcn(Operand const & operand)
           : operand_(operand)
@@ -2319,7 +2319,7 @@
 
             public:
              FieldType typedef field_type;
-             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
              AbsFcn(Operand const & operand)
              : operand_(operand)
@@ -2361,9 +2361,9 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
-          NegFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
+          typename field_type::memory_window typedef MemoryWindow;
           NegFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
+          NegFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
 #         ifdef __CUDACC__
              NegFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
@@ -2397,7 +2397,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           NegFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
           NegFcn(Operand const & operand)
           : operand_(operand)
@@ -2416,7 +2416,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           NegFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
           NegFcn(Operand const & operand)
           : operand_(operand)
@@ -2435,7 +2435,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef EvalReturnType;
           NegFcn(Operand const & operand)
           : operand_(operand)
@@ -2455,7 +2455,7 @@
 
             public:
              FieldType typedef field_type;
-             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
              NegFcn(Operand const & operand)
              : operand_(operand)
@@ -2497,13 +2497,13 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
+          PowFcn<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
+          typedef SeqWalkType;
           PowFcn<ResizePrep,
                  typename Operand1::ResizePrepType,
                  typename Operand2::ResizePrepType,
                  FieldType> typedef ResizePrepType;
-          PowFcn<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
-          typedef SeqWalkType;
 #         ifdef __CUDACC__
              PowFcn<GPUWalk,
                     typename Operand1::GPUWalkType,
@@ -2549,7 +2549,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           PowFcn<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
           typedef ResizeType;
           PowFcn(Operand1 const & operand1, Operand2 const & operand2)
@@ -2570,7 +2570,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           PowFcn<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
           typedef SeqWalkType;
           PowFcn(Operand1 const & operand1, Operand2 const & operand2)
@@ -2591,7 +2591,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef EvalReturnType;
           PowFcn(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -2616,7 +2616,7 @@
 
             public:
              FieldType typedef field_type;
-             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
              PowFcn(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -2722,9 +2722,9 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
-          SqrtFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
+          typename field_type::memory_window typedef MemoryWindow;
           SqrtFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
+          SqrtFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
 #         ifdef __CUDACC__
              SqrtFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
@@ -2758,7 +2758,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           SqrtFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
           SqrtFcn(Operand const & operand)
           : operand_(operand)
@@ -2777,7 +2777,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           SqrtFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
           SqrtFcn(Operand const & operand)
           : operand_(operand)
@@ -2796,7 +2796,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef EvalReturnType;
           SqrtFcn(Operand const & operand)
           : operand_(operand)
@@ -2816,7 +2816,7 @@
 
             public:
              FieldType typedef field_type;
-             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
              SqrtFcn(Operand const & operand)
              : operand_(operand)
@@ -2858,9 +2858,9 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
-          LogFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
+          typename field_type::memory_window typedef MemoryWindow;
           LogFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
+          LogFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
 #         ifdef __CUDACC__
              LogFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
@@ -2894,7 +2894,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           LogFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
           LogFcn(Operand const & operand)
           : operand_(operand)
@@ -2913,7 +2913,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           LogFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
           LogFcn(Operand const & operand)
           : operand_(operand)
@@ -2932,7 +2932,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef EvalReturnType;
           LogFcn(Operand const & operand)
           : operand_(operand)
@@ -2952,7 +2952,7 @@
 
             public:
              FieldType typedef field_type;
-             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
              LogFcn(Operand const & operand)
              : operand_(operand)
@@ -2994,15 +2994,15 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
-          EqualCmp<ResizePrep,
-                   typename Operand1::ResizePrepType,
-                   typename Operand2::ResizePrepType,
-                   FieldType> typedef ResizePrepType;
+          typename field_type::memory_window typedef MemoryWindow;
           EqualCmp<SeqWalk,
                    typename Operand1::SeqWalkType,
                    typename Operand2::SeqWalkType,
                    FieldType> typedef SeqWalkType;
+          EqualCmp<ResizePrep,
+                   typename Operand1::ResizePrepType,
+                   typename Operand2::ResizePrepType,
+                   FieldType> typedef ResizePrepType;
 #         ifdef __CUDACC__
              EqualCmp<GPUWalk,
                       typename Operand1::GPUWalkType,
@@ -3048,7 +3048,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           EqualCmp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
           typedef ResizeType;
           EqualCmp(Operand1 const & operand1, Operand2 const & operand2)
@@ -3069,7 +3069,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           EqualCmp<SeqWalk,
                    typename Operand1::SeqWalkType,
                    typename Operand2::SeqWalkType,
@@ -3092,7 +3092,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           bool typedef EvalReturnType;
           EqualCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -3115,7 +3115,7 @@
 
             public:
              FieldType typedef field_type;
-             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
              EqualCmp(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -3229,15 +3229,15 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
-          InequalCmp<ResizePrep,
-                     typename Operand1::ResizePrepType,
-                     typename Operand2::ResizePrepType,
-                     FieldType> typedef ResizePrepType;
+          typename field_type::memory_window typedef MemoryWindow;
           InequalCmp<SeqWalk,
                      typename Operand1::SeqWalkType,
                      typename Operand2::SeqWalkType,
                      FieldType> typedef SeqWalkType;
+          InequalCmp<ResizePrep,
+                     typename Operand1::ResizePrepType,
+                     typename Operand2::ResizePrepType,
+                     FieldType> typedef ResizePrepType;
 #         ifdef __CUDACC__
              InequalCmp<GPUWalk,
                         typename Operand1::GPUWalkType,
@@ -3283,7 +3283,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           InequalCmp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
           typedef ResizeType;
           InequalCmp(Operand1 const & operand1, Operand2 const & operand2)
@@ -3304,7 +3304,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           InequalCmp<SeqWalk,
                      typename Operand1::SeqWalkType,
                      typename Operand2::SeqWalkType,
@@ -3327,7 +3327,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           bool typedef EvalReturnType;
           InequalCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -3350,7 +3350,7 @@
 
             public:
              FieldType typedef field_type;
-             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
              InequalCmp(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -3464,15 +3464,15 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
-          LessThanCmp<ResizePrep,
-                      typename Operand1::ResizePrepType,
-                      typename Operand2::ResizePrepType,
-                      FieldType> typedef ResizePrepType;
+          typename field_type::memory_window typedef MemoryWindow;
           LessThanCmp<SeqWalk,
                       typename Operand1::SeqWalkType,
                       typename Operand2::SeqWalkType,
                       FieldType> typedef SeqWalkType;
+          LessThanCmp<ResizePrep,
+                      typename Operand1::ResizePrepType,
+                      typename Operand2::ResizePrepType,
+                      FieldType> typedef ResizePrepType;
 #         ifdef __CUDACC__
              LessThanCmp<GPUWalk,
                          typename Operand1::GPUWalkType,
@@ -3518,7 +3518,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           LessThanCmp<Resize,
                       typename Operand1::ResizeType,
                       typename Operand2::ResizeType,
@@ -3541,7 +3541,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           LessThanCmp<SeqWalk,
                       typename Operand1::SeqWalkType,
                       typename Operand2::SeqWalkType,
@@ -3564,7 +3564,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           bool typedef EvalReturnType;
           LessThanCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -3587,7 +3587,7 @@
 
             public:
              FieldType typedef field_type;
-             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
              LessThanCmp(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -3699,15 +3699,15 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
-          LessThanEqualCmp<ResizePrep,
-                           typename Operand1::ResizePrepType,
-                           typename Operand2::ResizePrepType,
-                           FieldType> typedef ResizePrepType;
+          typename field_type::memory_window typedef MemoryWindow;
           LessThanEqualCmp<SeqWalk,
                            typename Operand1::SeqWalkType,
                            typename Operand2::SeqWalkType,
                            FieldType> typedef SeqWalkType;
+          LessThanEqualCmp<ResizePrep,
+                           typename Operand1::ResizePrepType,
+                           typename Operand2::ResizePrepType,
+                           FieldType> typedef ResizePrepType;
 #         ifdef __CUDACC__
              LessThanEqualCmp<GPUWalk,
                               typename Operand1::GPUWalkType,
@@ -3753,7 +3753,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           LessThanEqualCmp<Resize,
                            typename Operand1::ResizeType,
                            typename Operand2::ResizeType,
@@ -3776,7 +3776,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           LessThanEqualCmp<SeqWalk,
                            typename Operand1::SeqWalkType,
                            typename Operand2::SeqWalkType,
@@ -3799,7 +3799,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           bool typedef EvalReturnType;
           LessThanEqualCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -3822,7 +3822,7 @@
 
             public:
              FieldType typedef field_type;
-             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
              LessThanEqualCmp(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -3938,15 +3938,15 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
-          GreaterThanCmp<ResizePrep,
-                         typename Operand1::ResizePrepType,
-                         typename Operand2::ResizePrepType,
-                         FieldType> typedef ResizePrepType;
+          typename field_type::memory_window typedef MemoryWindow;
           GreaterThanCmp<SeqWalk,
                          typename Operand1::SeqWalkType,
                          typename Operand2::SeqWalkType,
                          FieldType> typedef SeqWalkType;
+          GreaterThanCmp<ResizePrep,
+                         typename Operand1::ResizePrepType,
+                         typename Operand2::ResizePrepType,
+                         FieldType> typedef ResizePrepType;
 #         ifdef __CUDACC__
              GreaterThanCmp<GPUWalk,
                             typename Operand1::GPUWalkType,
@@ -3992,7 +3992,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           GreaterThanCmp<Resize,
                          typename Operand1::ResizeType,
                          typename Operand2::ResizeType,
@@ -4015,7 +4015,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           GreaterThanCmp<SeqWalk,
                          typename Operand1::SeqWalkType,
                          typename Operand2::SeqWalkType,
@@ -4038,7 +4038,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           bool typedef EvalReturnType;
           GreaterThanCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -4061,7 +4061,7 @@
 
             public:
              FieldType typedef field_type;
-             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
              GreaterThanCmp(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -4173,15 +4173,15 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
-          GreaterThanEqualCmp<ResizePrep,
-                              typename Operand1::ResizePrepType,
-                              typename Operand2::ResizePrepType,
-                              FieldType> typedef ResizePrepType;
+          typename field_type::memory_window typedef MemoryWindow;
           GreaterThanEqualCmp<SeqWalk,
                               typename Operand1::SeqWalkType,
                               typename Operand2::SeqWalkType,
                               FieldType> typedef SeqWalkType;
+          GreaterThanEqualCmp<ResizePrep,
+                              typename Operand1::ResizePrepType,
+                              typename Operand2::ResizePrepType,
+                              FieldType> typedef ResizePrepType;
 #         ifdef __CUDACC__
              GreaterThanEqualCmp<GPUWalk,
                                  typename Operand1::GPUWalkType,
@@ -4227,7 +4227,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           GreaterThanEqualCmp<Resize,
                               typename Operand1::ResizeType,
                               typename Operand2::ResizeType,
@@ -4250,7 +4250,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           GreaterThanEqualCmp<SeqWalk,
                               typename Operand1::SeqWalkType,
                               typename Operand2::SeqWalkType,
@@ -4273,7 +4273,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           bool typedef EvalReturnType;
           GreaterThanEqualCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -4296,7 +4296,7 @@
 
             public:
              FieldType typedef field_type;
-             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
              GreaterThanEqualCmp(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -4416,13 +4416,13 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
+          AndOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
+          typedef SeqWalkType;
           AndOp<ResizePrep,
                 typename Operand1::ResizePrepType,
                 typename Operand2::ResizePrepType,
                 FieldType> typedef ResizePrepType;
-          AndOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
-          typedef SeqWalkType;
 #         ifdef __CUDACC__
              AndOp<GPUWalk,
                    typename Operand1::GPUWalkType,
@@ -4468,7 +4468,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           AndOp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
           typedef ResizeType;
           AndOp(Operand1 const & operand1, Operand2 const & operand2)
@@ -4489,7 +4489,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           AndOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
           typedef SeqWalkType;
           AndOp(Operand1 const & operand1, Operand2 const & operand2)
@@ -4510,7 +4510,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           bool typedef EvalReturnType;
           AndOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -4533,7 +4533,7 @@
 
             public:
              FieldType typedef field_type;
-             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
              AndOp(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -4634,13 +4634,13 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
+          OrOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
+          typedef SeqWalkType;
           OrOp<ResizePrep,
                typename Operand1::ResizePrepType,
                typename Operand2::ResizePrepType,
                FieldType> typedef ResizePrepType;
-          OrOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
-          typedef SeqWalkType;
 #         ifdef __CUDACC__
              OrOp<GPUWalk, typename Operand1::GPUWalkType, typename Operand2::GPUWalkType, FieldType>
              typedef GPUWalkType
@@ -4684,7 +4684,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           OrOp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
           typedef ResizeType;
           OrOp(Operand1 const & operand1, Operand2 const & operand2)
@@ -4705,7 +4705,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           OrOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
           typedef SeqWalkType;
           OrOp(Operand1 const & operand1, Operand2 const & operand2)
@@ -4726,7 +4726,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           bool typedef EvalReturnType;
           OrOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -4749,7 +4749,7 @@
 
             public:
              FieldType typedef field_type;
-             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
              OrOp(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -4850,9 +4850,9 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
-          NotOp<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
+          typename field_type::memory_window typedef MemoryWindow;
           NotOp<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
+          NotOp<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
 #         ifdef __CUDACC__
              NotOp<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
@@ -4886,7 +4886,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           NotOp<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
           NotOp(Operand const & operand)
           : operand_(operand)
@@ -4905,7 +4905,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           NotOp<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
           NotOp(Operand const & operand)
           : operand_(operand)
@@ -4924,7 +4924,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           bool typedef EvalReturnType;
           NotOp(Operand const & operand)
           : operand_(operand)
@@ -4944,7 +4944,7 @@
 
             public:
              FieldType typedef field_type;
-             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
              NotOp(Operand const & operand)
              : operand_(operand)
@@ -4997,13 +4997,13 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
+          NeboClause<SeqWalk, typename Test::SeqWalkType, typename Expr::SeqWalkType, FieldType>
+          typedef SeqWalkType;
           NeboClause<ResizePrep,
                      typename Test::ResizePrepType,
                      typename Expr::ResizePrepType,
                      FieldType> typedef ResizePrepType;
-          NeboClause<SeqWalk, typename Test::SeqWalkType, typename Expr::SeqWalkType, FieldType>
-          typedef SeqWalkType;
 #         ifdef __CUDACC__
              NeboClause<GPUWalk, typename Test::GPUWalkType, typename Expr::GPUWalkType, FieldType>
              typedef GPUWalkType
@@ -5047,7 +5047,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           NeboClause<Resize, typename Test::ResizeType, typename Expr::ResizeType, FieldType>
           typedef ResizeType;
           NeboClause(Test const & test, Expr const & expr)
@@ -5068,7 +5068,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           NeboClause<SeqWalk, typename Test::SeqWalkType, typename Expr::SeqWalkType, FieldType>
           typedef SeqWalkType;
           NeboClause(Test const & test, Expr const & expr)
@@ -5089,7 +5089,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef AtomicType;
           NeboClause(Test const & test, Expr const & expr)
           : test_(test), expr_(expr)
@@ -5111,7 +5111,7 @@
 
             public:
              FieldType typedef field_type;
-             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
              NeboClause(Test const & test, Expr const & expr)
              : test_(test), expr_(expr)
@@ -5136,15 +5136,15 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
-          NeboCond<ResizePrep,
-                   typename ClauseType::ResizePrepType,
-                   typename Otherwise::ResizePrepType,
-                   FieldType> typedef ResizePrepType;
+          typename field_type::memory_window typedef MemoryWindow;
           NeboCond<SeqWalk,
                    typename ClauseType::SeqWalkType,
                    typename Otherwise::SeqWalkType,
                    FieldType> typedef SeqWalkType;
+          NeboCond<ResizePrep,
+                   typename ClauseType::ResizePrepType,
+                   typename Otherwise::ResizePrepType,
+                   FieldType> typedef ResizePrepType;
 #         ifdef __CUDACC__
              NeboCond<GPUWalk,
                       typename ClauseType::GPUWalkType,
@@ -5190,7 +5190,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           NeboCond<Resize,
                    typename ClauseType::ResizeType,
                    typename Otherwise::ResizeType,
@@ -5213,7 +5213,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           NeboCond<SeqWalk,
                    typename ClauseType::SeqWalkType,
                    typename Otherwise::SeqWalkType,
@@ -5236,7 +5236,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef AtomicType;
           NeboCond(ClauseType const & clause, Otherwise const & otherwise)
           : clause_(clause), otherwise_(otherwise)
@@ -5261,7 +5261,7 @@
 
             public:
              FieldType typedef field_type;
-             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
              NeboCond(ClauseType const & clause, Otherwise const & otherwise)
              : clause_(clause), otherwise_(otherwise)
@@ -5883,10 +5883,10 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
+          NeboStencilPoint<SeqWalk, Point, typename Arg::SeqWalkType, FieldType> typedef SeqWalkType;
           NeboStencilPoint<ResizePrep, Point, typename Arg::ResizePrepType, FieldType> typedef
           ResizePrepType;
-          NeboStencilPoint<SeqWalk, Point, typename Arg::SeqWalkType, FieldType> typedef SeqWalkType;
 #         ifdef __CUDACC__
              NeboStencilPoint<GPUWalk, Point, typename Arg::GPUWalkType, FieldType> typedef
              GPUWalkType
@@ -5927,7 +5927,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           NeboStencilPoint<Resize, Point, typename Arg::ResizeType, FieldType> typedef ResizeType;
           NeboStencilPoint(Arg const & a)
           : arg_(a)
@@ -5946,7 +5946,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           NeboStencilPoint<SeqWalk, Point, typename Arg::SeqWalkType, FieldType> typedef SeqWalkType;
           NeboStencilPoint(Arg const & a)
           : arg_(a)
@@ -5965,7 +5965,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef AtomicType;
           NeboStencilPoint(Arg const & a)
           : arg_(a)
@@ -5980,12 +5980,12 @@
       };
 
 #     ifdef __CUDACC__
-         template<typename Pts, typename Arg, typename FieldType>
-          struct NeboStencilPoint<GPUWalk, Pts, Arg, FieldType> {
+         template<typename Point, typename Arg, typename FieldType>
+          struct NeboStencilPoint<GPUWalk, Point, Arg, FieldType> {
 
             public:
              FieldType typedef field_type;
-             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
              NeboStencilPoint(Arg const & a)
              : arg_(a)
@@ -6238,7 +6238,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           NeboStencilCoefList<Pts::length> typedef Coefs;
           typename Pts::template ConstructExpr<Arg, FieldType> typedef ConstructExpr;
           typename ConstructExpr::Result typedef ArgSeqWalkType;
@@ -6247,9 +6247,9 @@
              typename ConstructGPUExpr::Result typedef ArgGPUWalkType
 #         endif
           /* __CUDACC__ */;
+          NeboStencil<SeqWalk, Pts, ArgSeqWalkType, FieldType> typedef SeqWalkType;
           NeboStencil<ResizePrep, Pts, typename Arg::ResizePrepType, FieldType> typedef
           ResizePrepType;
-          NeboStencil<SeqWalk, Pts, ArgSeqWalkType, FieldType> typedef SeqWalkType;
 #         ifdef __CUDACC__
              NeboStencil<GPUWalk, Pts, ArgGPUWalkType, FieldType> typedef GPUWalkType
 #         endif
@@ -6289,7 +6289,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           NeboStencilCoefList<Pts::length> typedef Coefs;
           NeboStencil<Resize, Pts, typename Arg::ResizeType, FieldType> typedef ResizeType;
           NeboStencil(Arg const & arg, Coefs const & coefs)
@@ -6310,7 +6310,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           NeboStencilCoefList<Pts::length> typedef Coefs;
           typename Pts::template ConstructExpr<Arg, FieldType> typedef ConstructExpr;
           typename ConstructExpr::Result typedef ArgSeqWalkType;
@@ -6333,7 +6333,7 @@
 
          public:
           FieldType typedef field_type;
-          typename FieldType::memory_window typedef MemoryWindow;
+          typename field_type::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef AtomicType;
           NeboStencil(Arg const & arg)
           : arg_(arg)
@@ -6353,7 +6353,7 @@
 
             public:
              FieldType typedef field_type;
-             typename FieldType::memory_window typedef MemoryWindow;
+             typename field_type::memory_window typedef MemoryWindow;
              typename field_type::value_type typedef AtomicType;
              NeboStencil(Arg const & a)
              : arg_(a)
