@@ -140,17 +140,16 @@
         (lambda (name
                  mode
                  tpl-pars
-                 tpl-args
                  typedefs
                  constructor
                  publics
                  privates)
           (tpl-srt-def name
-                       (flatten* tpl-pars (tpl-pmtr FT-chunk))
-                       (flatten* mode tpl-args FT-chunk)
+                       (map tpl-pmtr (flatten* tpl-pars FT-chunk))
+                       (list mode tpl-pars FT-chunk)
                        (sec-def public-chunk
                                 (typedef FT-chunk 'field_type)
-                                (typedef (scope (tpl-pmtr FT-chunk)
+                                (typedef (scope (tpl-pmtr 'field_type)
                                                 'memory_window)
                                          'MemoryWindow)
                                 typedefs
@@ -160,7 +159,6 @@
        [build-GPU-general
         (lambda (name
                  tpl-pars
-                 tpl-args
                  typedefs
                  constructor
                  start-body
@@ -171,7 +169,6 @@
            (build-mode name
                        'GPUWalk
                        tpl-pars
-                       tpl-args
                        (list (typedef (tpl-pmtr (scope 'field_type 'value_type))
                                       'AtomicType)
                              typedefs)
@@ -188,7 +185,6 @@
        [build-GPU-const
         (lambda (name
                  tpl-pars
-                 tpl-args
                  typedefs
                  constructor
                  start-body
@@ -198,13 +194,11 @@
                  privates)
           (build-GPU-general name
                              tpl-pars
-                             tpl-args
                              typedefs
                              constructor
                              start-body
                              next-body
-                             (list (device-use (r-fcn-def (fcn-dcl 'eval
-                                                                   'AtomicType)
+                             (list (device-use (r-fcn-def (fcn-dcl 'eval 'AtomicType)
                                                           null
                                                           eval-result))
                                    publics)
@@ -212,7 +206,6 @@
        [build-GPU-nonconst
         (lambda (name
                  tpl-pars
-                 tpl-args
                  typedefs
                  constructor
                  start-body
@@ -224,17 +217,14 @@
                  privates)
           (build-GPU-general name
                              tpl-pars
-                             tpl-args
                              typedefs
                              constructor
                              start-body
                              next-body
-                             (list (device-use (r-fcn-def (fcn-dcl 'valid
-                                                                   'bool)
+                             (list (device-use (r-fcn-def (fcn-dcl 'valid 'bool)
                                                           null
                                                           valid-result))
-                                   (device-use (r-fcn-def (fcn-dcl 'at_end
-                                                                   'bool)
+                                   (device-use (r-fcn-def (fcn-dcl 'at_end 'bool)
                                                           null
                                                           at-end-result))
                                    (device-use (r-fcn-def (fcn-dcl 'ref (ref 'AtomicType))
@@ -242,15 +232,19 @@
                                                           ref-result))
                                    publics)
                              privates))]
+       [type-trans (lambda (new-type)
+                     (lambda (old-type) (tpl-pmtr (scope old-type new-type))))]
+       [flatten*-to-list (lambda args (let ([flat-args (flatten* args)])
+                                        (if (list? flat-args)
+                                            flat-args
+                                            (list flat-args))))]
        [build-Initial
         (lambda (name
                  add-const
-                 tpl-pars
-                 tpl-args
+                 tpl-irreg-pars
+                 tpl-reg-pars
                  typedefs
-                 tpl-args-RP
-                 tpl-args-SW
-                 tpl-args-GPU
+                 tpl-irreg-args
                  VG-type
                  constructor
                  SW-cons-args
@@ -258,40 +252,55 @@
                  GPU-cons-args
                  publics
                  privates)
-          (build-mode name
-                      'Initial
-                      tpl-pars
-                      tpl-args
-                      (list typedefs
-                            (typedef (tpl-use name 'ResizePrep tpl-args-RP FT-chunk)
-                                     'ResizePrepType)
-                            (typedef (tpl-use name 'SeqWalk tpl-args-SW FT-chunk)
-                                     'SeqWalkType)
-                            (gpu-only (typedef (tpl-use name 'GPUWalk tpl-args-GPU FT-chunk)
-                                               'GPUWalkType))
-                            (typedef VG-type report-VG-chunk))
-                      constructor
-                      (list (tpl-def (list (tpl-pmtr VG-chunk)
-                                           (tpl-pmtr SH-chunk))
-                                     (r-fcn-def (add-const (fcn-dcl 'init 'SeqWalkType))
-                                                null
-                                                (fc 'SeqWalkType SW-cons-args)))
-                            (tpl-def (list (tpl-pmtr VG-chunk))
-                                     (r-fcn-def (add-const (fcn-dcl 'resize_prep 'ResizePrepType))
-                                                null
-                                                (fc 'ResizePrepType RP-cons-args)))
-                            (gpu-only (tpl-def (list (tpl-pmtr VG-chunk)
-                                                     (tpl-pmtr SH-chunk))
-                                               (r-fcn-def (add-const (fcn-dcl 'gpu_init 'GPUWalkType))
-                                                          null
-                                                          (fc 'GPUWalkType GPU-cons-args))))
-                            publics)
-                      privates))]
+          (let ([SW-tpl-irreg-args (if (null? tpl-irreg-args) null (first tpl-irreg-args))]
+                [RP-tpl-irreg-args (if (null? tpl-irreg-args) null (second tpl-irreg-args))]
+                [GPU-tpl-irreg-args (if (null? tpl-irreg-args) null (third tpl-irreg-args))])
+            (build-mode name
+                        'Initial
+                        (list tpl-irreg-pars tpl-reg-pars)
+                        (list typedefs
+                              (typedef (tpl-use name
+                                                'SeqWalk
+                                                SW-tpl-irreg-args
+                                                (map (type-trans 'SeqWalkType)
+                                                     (flatten*-to-list tpl-reg-pars))
+                                                FT-chunk)
+                                       'SeqWalkType)
+                              (typedef (tpl-use name
+                                                'ResizePrep
+                                                RP-tpl-irreg-args
+                                                (map (type-trans 'ResizePrepType)
+                                                     (flatten*-to-list tpl-reg-pars))
+                                                FT-chunk)
+                                       'ResizePrepType)
+                              (gpu-only (typedef (tpl-use name
+                                                          'GPUWalk
+                                                          GPU-tpl-irreg-args
+                                                          (map (type-trans 'GPUWalkType)
+                                                               (flatten*-to-list tpl-reg-pars))
+                                                          FT-chunk)
+                                                 'GPUWalkType))
+                              (typedef VG-type report-VG-chunk))
+                        constructor
+                        (list (tpl-def (list (tpl-pmtr VG-chunk)
+                                             (tpl-pmtr SH-chunk))
+                                       (r-fcn-def (add-const (fcn-dcl 'init 'SeqWalkType))
+                                                  null
+                                                  (fc 'SeqWalkType SW-cons-args)))
+                              (tpl-def (list (tpl-pmtr VG-chunk))
+                                       (r-fcn-def (add-const (fcn-dcl 'resize_prep 'ResizePrepType))
+                                                  null
+                                                  (fc 'ResizePrepType RP-cons-args)))
+                              (gpu-only (tpl-def (list (tpl-pmtr VG-chunk)
+                                                       (tpl-pmtr SH-chunk))
+                                                 (r-fcn-def (add-const (fcn-dcl 'gpu_init 'GPUWalkType))
+                                                            null
+                                                            (fc 'GPUWalkType GPU-cons-args))))
+                              publics)
+                        privates)))]
        [bs-Initial
         (lambda (typedefs
-                 tpl-args-RP
-                 tpl-args-SW
-                 tpl-args-GPU
+                 tpl-irreg-args
                  VG-type
                  constructor
                  SW-cons-args
@@ -301,16 +310,14 @@
                  privates)
           (lambda (name
                    add-const
-                   tpl-pars
-                   tpl-args)
+                   tpl-irreg-pars
+                   tpl-reg-pars)
             (build-Initial name
                            add-const
-                           tpl-pars
-                           tpl-args
+                           tpl-irreg-pars
+                           tpl-reg-pars
                            typedefs
-                           tpl-args-RP
-                           tpl-args-SW
-                           tpl-args-GPU
+                           tpl-irreg-args
                            VG-type
                            constructor
                            SW-cons-args
@@ -321,20 +328,24 @@
        [build-ResizePrep
         (lambda (name
                  add-const
-                 tpl-pars
-                 tpl-args
+                 tpl-irreg-pars
+                 tpl-reg-pars
                  typedefs
-                 tpl-args-RS
+                 tpl-irreg-args
                  constructor
                  RS-cons-args
                  publics
                  privates)
           (build-mode name
                       'ResizePrep
-                      tpl-pars
-                      tpl-args
+                      (list tpl-irreg-pars tpl-reg-pars)
                       (list typedefs
-                            (typedef (tpl-use name 'Resize tpl-args-RS FT-chunk)
+                            (typedef (tpl-use name
+                                              'Resize
+                                              tpl-irreg-args
+                                              (map (type-trans 'ResizeType)
+                                                   (flatten*-to-list tpl-reg-pars))
+                                              FT-chunk)
                                      'ResizeType))
                       constructor
                       (list (r-fcn-def (add-const (fcn-dcl 'resize
@@ -347,21 +358,21 @@
                       privates))]
        [bs-ResizePrep
         (lambda (typedefs
-                 tpl-args-RS
+                 tpl-irreg-args
                  constructor
                  RS-cons-args
                  publics
                  privates)
           (lambda (name
                    add-const
-                   tpl-pars
-                   tpl-args)
+                   tpl-irreg-pars
+                   tpl-reg-pars)
             (build-ResizePrep name
                               add-const
-                              tpl-pars
-                              tpl-args
+                              tpl-irreg-pars
+                              tpl-reg-pars
                               typedefs
-                              tpl-args-RS
+                              tpl-irreg-args
                               constructor
                               RS-cons-args
                               publics
@@ -369,20 +380,24 @@
        [build-Resize
         (lambda (name
                  add-const
-                 tpl-pars
-                 tpl-args
+                 tpl-irreg-pars
+                 tpl-reg-pars
                  typedefs
-                 tpl-args-SW
+                 tpl-irreg-args
                  constructor
                  SW-cons-args
                  publics
                  privates)
             (build-mode name
                         'Resize
-                        tpl-pars
-                        tpl-args
+                        (list tpl-irreg-pars tpl-reg-pars)
                         (list typedefs
-                              (typedef (tpl-use name 'SeqWalk tpl-args-SW FT-chunk)
+                              (typedef (tpl-use name
+                                                'SeqWalk
+                                                tpl-irreg-args
+                                                (map (type-trans 'SeqWalkType)
+                                                     (flatten*-to-list tpl-reg-pars))
+                                                FT-chunk)
                                        'SeqWalkType))
                         constructor
                         (list (tpl-def (tpl-pmtr SH-chunk)
@@ -393,21 +408,21 @@
                         privates))]
        [bs-Resize
         (lambda (typedefs
-                 tpl-args-SW
+                 tpl-irreg-args
                  constructor
                  SW-cons-args
                  publics
                  privates)
           (lambda (name
                    add-const
-                   tpl-pars
-                   tpl-args)
+                   tpl-irreg-pars
+                   tpl-reg-pars)
             (build-Resize name
                           add-const
-                          tpl-pars
-                          tpl-args
+                          tpl-irreg-pars
+                          tpl-reg-pars
                           typedefs
-                          tpl-args-SW
+                          tpl-irreg-args
                           constructor
                           SW-cons-args
                           publics
@@ -415,7 +430,6 @@
        [build-SeqWalk
         (lambda (name
                  tpl-pars
-                 tpl-args
                  typedefs
                  constructor
                  next
@@ -426,18 +440,13 @@
           (build-mode name
                       'SeqWalk
                       tpl-pars
-                      tpl-args
                       typedefs
                       constructor
-                      (list (v-fcn-def 'next
-                                       null
-                                       next)
-                            (r-fcn-def (constize (fcn-dcl 'at_end
-                                                          'bool))
+                      (list (v-fcn-def 'next null next)
+                            (r-fcn-def (constize (fcn-dcl 'at_end 'bool))
                                        null
                                        at-end)
-                            (r-fcn-def (constize (fcn-dcl 'has_length
-                                                          'bool))
+                            (r-fcn-def (constize (fcn-dcl 'has_length 'bool))
                                        null
                                        has-length)
                             publics)
@@ -451,11 +460,9 @@
                  publics
                  privates)
           (lambda (name
-                   tpl-pars
-                   tpl-args)
+                   tpl-pars)
             (build-SeqWalk name
                            tpl-pars
-                           tpl-args
                            typedefs
                            constructor
                            next
@@ -466,8 +473,8 @@
        [build-struct
         (lambda (name
                  const?
-                 tpl-pars
-                 tpl-args
+                 tpl-irreg-pars
+                 tpl-reg-pars
                  Initial
                  ResizePrep
                  Resize
@@ -475,21 +482,18 @@
                  GPUWalk)
           (let ([add-const (if const? constize-chunk id)])
             (i (tpl-srt-dcl name
-                            (list (tpl-pmtr 'CurrentMode)
-                                  tpl-pars
-                                  (tpl-pmtr FT-chunk))
+                            (map tpl-pmtr (flatten* 'CurrentMode tpl-irreg-pars tpl-reg-pars FT-chunk))
                             null)
-               (Initial name add-const tpl-pars tpl-args)
-               (ResizePrep name add-const tpl-pars tpl-args)
-               (Resize name add-const tpl-pars tpl-args)
-               (SeqWalk name tpl-pars tpl-args)
+               (Initial name add-const tpl-irreg-pars tpl-reg-pars)
+               (ResizePrep name add-const tpl-irreg-pars tpl-reg-pars)
+               (Resize name add-const tpl-irreg-pars tpl-reg-pars)
+               (SeqWalk name (list tpl-irreg-pars tpl-reg-pars))
                GPUWalk)))]
        [build-Nary-struct
         (lambda (name number eval-return-type internal-use)
           (let* ([num-lst (if (>= 1 number)
                                '("")
-                               (map number->string
-                                    (sequence->list (in-range 1 (+ 1 number)))))]
+                               (map number->string (sequence->list (in-range 1 (+ 1 number)))))]
                  [IN-op-lst (map (lambda (str) (c 'op str)) num-lst)]
                  [op-lst (map (lambda (str) (c 'operand str)) num-lst)]
                  [Op-lst (map (lambda (str) (c 'Operand str)) num-lst)]
@@ -531,16 +535,10 @@
             (list
              (build-struct name
                            #true
-                           (mapper (lambda (Op) (tpl-pmtr Op))
-                                   Op-lst)
+                           null
                            Op-lst
                            (bs-Initial null
-                                       (mapper (IN-typedef 'ResizePrepType)
-                                               Op-lst)
-                                       (mapper (IN-typedef 'SeqWalkType)
-                                               Op-lst)
-                                       (mapper (IN-typedef 'GPUWalkType)
-                                               Op-lst)
+                                       null
                                        (build-VG (mapper (lambda (Op) (tpl-pmtr (scope Op report-VG-chunk)))
                                                          Op-lst))
                                        gen-constructor
@@ -553,23 +551,20 @@
                                        null
                                        gen-data-mems)
                            (bs-ResizePrep null
-                                          (mapper (gen-typedef 'ResizeType)
-                                                  Op-lst)
+                                          null
                                           gen-constructor
                                           (mapper (lambda (op_) (mfc op_ 'resize 'split 'location))
                                                   op_-lst)
                                           null
                                           gen-data-mems)
                            (bs-Resize null
-                                      (mapper (gen-typedef 'SeqWalkType)
-                                              Op-lst)
+                                      null
                                       gen-constructor
                                       (mapper (lambda (op_) (mfc op_ (tpl-fcn-use 'init SH-chunk)))
                                               op-lst)
                                       null
                                       gen-data-mems)
-                           (bs-SeqWalk (typedef eval-return-type
-                                                'EvalReturnType)
+                           (bs-SeqWalk (typedef eval-return-type 'EvalReturnType)
                                        gen-constructor
                                        (SW-fcn semi-colon-chunk s 'next)
                                        (SW-check 'at_end)
@@ -579,8 +574,6 @@
                                                   internal-use)
                                        SW-data-mems)
                            (build-GPU-const name
-                                            (mapper (lambda (Op) (tpl-pmtr Op))
-                                                    Op-lst)
                                             Op-lst
                                             null
                                             gen-constructor
@@ -901,8 +894,6 @@
                                                 'value_type)
                                          'AtomicType)
                                 null
-                                null
-                                null
                                 (scope 'structured 'InfiniteGhostData)
                                 (bm-constructor (adc 'AtomicType 'v)
                                                 (cons-asgn 'value_ 'v)
@@ -948,7 +939,6 @@
                     (build-GPU-const NS-chunk
                                      null
                                      null
-                                     null
                                      (bm-constructor (adc 'AtomicType 'value)
                                                      (cons-asgn 'value_ 'value)
                                                      null)
@@ -962,8 +952,6 @@
                     null
                     null
                     (bs-Initial null
-                                null
-                                null
                                 null
                                 (scope 'structured 'InfiniteGhostData)
                                 (bm-constructor (adc 'bool 'v)
@@ -1004,7 +992,6 @@
                     (build-GPU-const NB-chunk
                                      null
                                      null
-                                     null
                                      (bm-constructor (adc 'bool 'value)
                                                      (cons-asgn 'value_ 'value)
                                                      null)
@@ -1018,8 +1005,6 @@
                     null
                     null
                     (bs-Initial null
-                                null
-                                null
                                 null
                                 (tpl-pmtr (scope (scope 'structured (tpl-use 'GhostFromField FT-chunk))
                                                  'result))
@@ -1076,7 +1061,6 @@
                      NCF-chunk
                      null
                      null
-                     null
                      (bm-constructor
                       (adcr FT-chunk 'f)
                       (list
@@ -1117,8 +1101,6 @@
                     null
                     null
                     (bs-Initial null
-                                null
-                                null
                                 null
                                 (tpl-pmtr (scope (scope 'structured
                                                         (tpl-use 'GhostFromField FT-chunk))
@@ -1174,7 +1156,6 @@
                                            'end_)))
                     (build-GPU-nonconst
                      NF-chunk
-                     null
                      null
                      null
                      (bm-constructor
@@ -1331,16 +1312,10 @@
                                   null))
       (build-struct Clause-chunk
                     #true
-                    (list (tpl-pmtr 'Test)
-                          (tpl-pmtr 'Expr))
+                    null
                     (list 'Test 'Expr)
                     (bs-Initial null
-                                (list (tpl-pmtr (scope 'Test 'ResizePrepType))
-                                      (tpl-pmtr (scope 'Expr 'ResizePrepType)))
-                                (list (tpl-pmtr (scope 'Test 'SeqWalkType))
-                                      (tpl-pmtr (scope 'Expr 'SeqWalkType)))
-                                (list (tpl-pmtr (scope 'Test 'GPUWalkType))
-                                      (tpl-pmtr (scope 'Expr 'GPUWalkType)))
+                                null
                                 (tpl-pmtr (scope (scope 'structured
                                                         (tpl-use 'Minimum 
                                                                  (tpl-pmtr (scope 'Test report-VG-chunk))
@@ -1361,8 +1336,7 @@
                                 (list (adc 'Test 'test_)
                                       (adc 'Expr 'expr_)))
                     (bs-ResizePrep null
-                                   (list (tpl-pmtr (scope 'Test 'ResizeType))
-                                         (tpl-pmtr (scope 'Expr 'ResizeType)))
+                                   null
                                    (bm-constructor (list (adcr 'Test 'test)
                                                          (adcr 'Expr 'expr))
                                                    (list (cons-asgn 'test_ 'test)
@@ -1374,8 +1348,7 @@
                                    (list (adc 'Test 'test_)
                                          (adc 'Expr 'expr_)))
                     (bs-Resize null
-                               (list (tpl-pmtr (scope 'Test 'SeqWalkType))
-                                     (tpl-pmtr (scope 'Expr 'SeqWalkType)))
+                               null
                                (bm-constructor (list (adcr 'Test 'test)
                                                      (adcr 'Expr 'expr))
                                                (list (cons-asgn 'test_ 'test)
@@ -1413,8 +1386,6 @@
                                       (ad 'Expr 'expr_)))
                     (build-GPU-const
                      Clause-chunk
-                     (list (tpl-pmtr 'Test)
-                           (tpl-pmtr 'Expr))
                      (list 'Test 'Expr)
                      null
                      (bm-constructor (list (adcr 'Test 'test)
@@ -1436,16 +1407,10 @@
                            (ad 'Expr 'expr_))))
       (build-struct Cond-chunk
                     #true
-                    (list (tpl-pmtr CT-chunk)
-                          (tpl-pmtr 'Otherwise))
+                    null
                     (list CT-chunk 'Otherwise)
                     (bs-Initial null
-                                (list (tpl-pmtr (scope CT-chunk 'ResizePrepType))
-                                      (tpl-pmtr (scope 'Otherwise 'ResizePrepType)))
-                                (list (tpl-pmtr (scope CT-chunk 'SeqWalkType))
-                                      (tpl-pmtr (scope 'Otherwise 'SeqWalkType)))
-                                (list (tpl-pmtr (scope CT-chunk 'GPUWalkType))
-                                      (tpl-pmtr (scope 'Otherwise 'GPUWalkType)))
+                                null
                                 (tpl-pmtr (scope (scope 'structured (tpl-use 'Minimum
                                                                              (tpl-pmtr (scope CT-chunk report-VG-chunk))
                                                                              (tpl-pmtr (scope 'Otherwise report-VG-chunk))))
@@ -1465,8 +1430,7 @@
                                 (list (adc CT-chunk 'clause_)
                                       (adc 'Otherwise 'otherwise_)))
                     (bs-ResizePrep null
-                                   (list (tpl-pmtr (scope CT-chunk 'ResizeType))
-                                         (tpl-pmtr (scope 'Otherwise 'ResizeType)))
+                                   null
                                    (bm-constructor (list (adcr CT-chunk 'clause)
                                                          (adcr 'Otherwise 'otherwise))
                                                    (list (cons-asgn 'clause_ 'clause)
@@ -1478,8 +1442,7 @@
                                    (list (adc CT-chunk 'clause_)
                                          (adc 'Otherwise 'otherwise_)))
                     (bs-Resize null
-                               (list (tpl-pmtr (scope CT-chunk 'SeqWalkType))
-                                     (tpl-pmtr (scope 'Otherwise 'SeqWalkType)))
+                               null
                                (bm-constructor (list (adcr CT-chunk 'clause)
                                                      (adcr 'Otherwise 'otherwise))
                                                (list (cons-asgn 'clause_ 'clause)
@@ -1516,8 +1479,6 @@
                                       (ad 'Otherwise 'otherwise_)))
                     (build-GPU-const
                      Cond-chunk
-                     (list (tpl-pmtr CT-chunk)
-                           (tpl-pmtr 'Otherwise))
                      (list CT-chunk 'Otherwise)
                      null
                      (bm-constructor (list (adcr CT-chunk 'clause)
@@ -2306,16 +2267,10 @@
       (m 'nebo_cond null (c 'cond '//))
       (build-struct NSP
                     #true
-                    (list (tpl-pmtr 'Point)
-                          (tpl-pmtr 'Arg))
-                    (list 'Point 'Arg)
+                    'Point
+                    'Arg
                     (bs-Initial null
-                                (list 'Point
-                                      (tpl-pmtr (scope 'Arg 'ResizePrepType)))
-                                (list 'Point
-                                      (tpl-pmtr (scope 'Arg 'SeqWalkType)))
-                                (list 'Point
-                                      (tpl-pmtr (scope 'Arg 'GPUWalkType)))
+                                (list 'Point 'Point 'Point)
                                 (tpl-pmtr (scope (scope 'structured
                                                         (tpl-use 'Invalidate
                                                                  (tpl-pmtr (scope 'Arg report-VG-chunk))
@@ -2332,8 +2287,7 @@
                                 null
                                 (adc 'Arg 'arg_))
                     (bs-ResizePrep null
-                                   (list 'Point
-                                         (tpl-pmtr (scope 'Arg 'ResizeType)))
+                                   'Point
                                    (bm-constructor (adcr 'Arg 'a)
                                                    (cons-asgn 'arg_ 'a)
                                                    null)
@@ -2341,8 +2295,7 @@
                                    null
                                    (adc 'Arg 'arg_))
                     (bs-Resize null
-                               (list 'Point
-                                     (tpl-pmtr (scope 'Arg 'SeqWalkType)))
+                               'Point
                                (bm-constructor (adcr 'Arg 'a)
                                                (cons-asgn 'arg_ 'a)
                                                null)
@@ -2364,9 +2317,7 @@
                                            (mfc 'arg_ 'eval))
                                 (ad 'Arg 'arg_))
                     (build-GPU-const NSP
-                                     (list (tpl-pmtr 'Pts)
-                                           (tpl-pmtr 'Arg))
-                                     (list 'Pts 'Arg)
+                                     (list 'Point 'Arg)
                                      null
                                      (bm-constructor (adcr 'Arg 'a)
                                                      (cons-asgn 'arg_ 'a)
@@ -2679,9 +2630,8 @@
                             'Result))
       (build-struct NSt
                     #true
-                    (list (tpl-pmtr 'Pts)
-                          (tpl-pmtr 'Arg))
                     (list 'Pts 'Arg)
+                    null
                     (bs-Initial (list (typedef (tpl-use NSCL (scope 'Pts 'length))
                                                'Coefs)
                                       (typedef (tpl-pmtr (scope 'Pts (tpl-fcn-use 'ConstructExpr 'Arg FT-chunk)))
@@ -2695,12 +2645,9 @@
                                                                 (typedef (tpl-pmtr (scope 'ConstructGPUExpr
                                                                                           'Result))
                                                                          'ArgGPUWalkType))))
-                                (list 'Pts
-                                      (tpl-pmtr (scope 'Arg 'ResizePrepType)))
-                                (list 'Pts
-                                      'ArgSeqWalkType)
-                                (list 'Pts
-                                      'ArgGPUWalkType)
+                                (list (list 'Pts 'ArgSeqWalkType)
+                                      (list 'Pts (tpl-pmtr (scope 'Arg 'ResizePrepType)))
+                                      (list 'Pts 'ArgGPUWalkType))
                                 (tpl-pmtr (scope (scope 'Pts (tpl-fcn-use 'PossibleGhost (tpl-pmtr (scope 'Arg report-VG-chunk))))
                                                  'Result))
                                 (bm-constructor (list (adcr 'Arg 'a)
@@ -2721,8 +2668,7 @@
                                       (adc 'Coefs 'coefs_)))
                     (bs-ResizePrep (typedef (tpl-use NSCL (scope 'Pts 'length))
                                             'Coefs)
-                                   (list 'Pts
-                                         (tpl-pmtr (scope 'Arg 'ResizeType)))
+                                   (list 'Pts (tpl-pmtr (scope 'Arg 'ResizeType)))
                                    (bm-constructor (list (adcr 'Arg 'arg)
                                                          (adcr 'Coefs 'coefs))
                                                    (list (cons-asgn 'arg_ 'arg)
@@ -2740,8 +2686,7 @@
                                      (typedef (tpl-pmtr (scope 'ConstructExpr
                                                                'Result))
                                               'ArgSeqWalkType))
-                               (list 'Pts
-                                     'ArgSeqWalkType)
+                               (list 'Pts 'ArgSeqWalkType)
                                (bm-constructor (list (adcr 'Arg 'arg)
                                                      (adcr 'Coefs 'coefs))
                                                (list (cons-asgn 'arg_ 'arg)
@@ -2767,8 +2712,6 @@
                                            (mfc 'arg_ 'eval))
                                 (ad 'Arg 'arg_))
                     (build-GPU-const NSt
-                                     (list (tpl-pmtr 'Pts)
-                                           (tpl-pmtr 'Arg))
                                      (list 'Pts 'Arg)
                                      null
                                      (bm-constructor (adcr 'Arg 'a)
