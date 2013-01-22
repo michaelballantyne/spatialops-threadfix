@@ -469,7 +469,7 @@
                                       null
                                       gen-constructor
                                       (mapper (lambda (op_) (mfc op_ (tpl-fcn-use 'init SH-chunk)))
-                                              op-lst)
+                                              op_-lst)
                                       null
                                       gen-data-mems)
                            (bs-SeqWalk (typedef eval-return-type 'EvalReturnType)
@@ -1317,7 +1317,12 @@
                                       (mfc 'otherwise_ (tpl-fcn-use 'resize_prep VG-chunk)))
                                 (list (mfc 'clause_ (tpl-fcn-use 'gpu_init VG-chunk SH-chunk))
                                       (mfc 'otherwise_ (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)))
-                                null
+                                (list (r-fcn-def (constize (fcn-dcl 'clause (cref CT-chunk)))
+                                                 null
+                                                 'clause_)
+                                      (r-fcn-def (constize (fcn-dcl 'otherwise (cref 'Otherwise)))
+                                                 null
+                                                 'otherwise_))
                                 (list (adc CT-chunk 'clause_)
                                       (adc 'Otherwise 'otherwise_)))
                     (bs-ResizePrep null
