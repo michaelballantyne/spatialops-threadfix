@@ -317,14 +317,12 @@
                               publics)
                         privates))]
        [bs-Resize (arg-swap build-Resize 6 4 "bs-Resize")]
-       [build-SeqWalk
+       [build-SeqWalk-general
         (lambda (name
                  tpl-pars
                  typedefs
                  constructor
                  next
-                 at-end
-                 has-length
                  publics
                  privates)
           (build-mode name
@@ -333,15 +331,32 @@
                       typedefs
                       constructor
                       (list (v-fcn-def 'next null next)
-                            (r-fcn-def (constize (fcn-dcl 'at_end 'bool))
-                                       null
-                                       at-end)
-                            (r-fcn-def (constize (fcn-dcl 'has_length 'bool))
-                                       null
-                                       has-length)
                             publics)
                       privates))]
-       [bs-SeqWalk (arg-swap build-SeqWalk 7 2 "bs-SeqWalk")]
+       [build-SeqWalk-rhs (combine-args build-SeqWalk-general
+                                        (lambda (eval-type eval-result publics)
+                                          (list (r-fcn-def (constize (fcn-dcl 'eval eval-type))
+                                                           null
+                                                           eval-result)
+                                                publics))
+                                        (list 5 3 1)
+                                        "build-SeqWalk-rhs")]
+       [bs-SeqWalk-rhs (arg-swap build-SeqWalk-rhs 7 2 "bs-SeqWalk-rhs")]
+       [build-SeqWalk-lhs (combine-args build-SeqWalk-general
+                                        (lambda (at-end has-length ref-result publics)
+                                          (list (r-fcn-def (constize (fcn-dcl 'at_end 'bool))
+                                                           null
+                                                           at-end)
+                                                (r-fcn-def (constize (fcn-dcl 'has_length 'bool))
+                                                           null
+                                                           has-length)
+                                                (r-fcn-def (fcn-dcl 'ref (ref 'AtomicType))
+                                                           null
+                                                           ref-result)
+                                                publics))
+                                        (list 5 4 1)
+                                        "build-SeqWalk-lhs")]
+       [bs-SeqWalk-lhs (arg-swap build-SeqWalk-lhs 8 2 "bs-SeqWalk-lhs")]
        [build-GPU-general
         (lambda (name
                  tpl-pars
@@ -477,16 +492,16 @@
                                                           op_-lst
                                                           op-lst)
                                                   null)]
-                 [SW-fcn (lambda (att btwn fcn)
-                           (b/a att btwn (mapper (lambda (op_) (mfc op_ fcn))
-                                                 op_-lst)))]
-                 [SW-check (lambda (fcn)
-                             (par (SW-fcn empty-chunk
-                                          (c s "||" s)
-                                          fcn)))]
-                 [SW-data-mems (mapper (lambda (Op op_) (bs Op op_))
-                                       Op-lst
-                                       op_-lst)])
+                 [exec-fcn (lambda (att btwn fcn)
+                             (b/a att btwn (mapper (lambda (op_) (mfc op_ fcn))
+                                                   op_-lst)))]
+                 [exec-check (lambda (fcn)
+                               (par (exec-fcn empty-chunk
+                                              (c s "||" s)
+                                              fcn)))]
+                 [exec-data-mems (mapper (lambda (Op op_) (bs Op op_))
+                                         Op-lst
+                                         op_-lst)])
             (list
              (build-struct name
                            #true
@@ -521,15 +536,13 @@
                                               op_-lst)
                                       null
                                       gen-data-mems)
-                           (bs-SeqWalk (typedef eval-return-type 'EvalReturnType)
-                                       gen-constructor
-                                       (SW-fcn semi-colon-chunk s 'next)
-                                       (SW-check 'at_end)
-                                       (SW-check 'has_length)
-                                       (r-fcn-def (constize (fcn-dcl 'eval 'EvalReturnType))
-                                                  null
-                                                  internal-use)
-                                       SW-data-mems)
+                           (bs-SeqWalk-rhs (typedef eval-return-type 'EvalReturnType)
+                                           gen-constructor
+                                           (exec-fcn semi-colon-chunk s 'next)
+                                           'EvalReturnType
+                                           internal-use
+                                           null
+                                           exec-data-mems)
                            (bs-GPU-const null
                                          gen-constructor
                                          (mapper (lambda (op_) (mfc op_ 'start 'x 'y))
@@ -538,16 +551,16 @@
                                                  op_-lst)
                                          internal-use
                                          null
-                                         SW-data-mems)
+                                         exec-data-mems)
                            (bs-Reduction (typedef eval-return-type 'EvalReturnType)
                                          gen-constructor
-                                         (SW-fcn semi-colon-chunk s 'next)
-                                         (SW-check 'at_end)
-                                         (SW-check 'has_length)
+                                         (exec-fcn semi-colon-chunk s 'next)
+                                         (exec-check 'at_end)
+                                         (exec-check 'has_length)
                                          'EvalReturnType
                                          internal-use
                                          null
-                                         SW-data-mems)))))]
+                                         exec-data-mems)))))]
        [build-binary-function-struct
         (lambda (name internal-name)
           (build-Nary-struct name
@@ -649,17 +662,16 @@
                  [StdType third]
                  [parameter fourth]
                  [argument fifth]
-                 [number (length abs-type-lst)]
-                 [num-lst (if (>= 1 number)
-                              '("")
-                              (map number->string (sequence->list (in-range 1 (+ 1 number)))))]
+                 [num-lst (let ([number (length abs-type-lst)])
+                            (if (>= 1 number)
+                                '("")
+                                (map number->string (sequence->list (in-range 1 (+ 1 number))))))]
                  [type-lst (map (lambda (abs-type str) (abs-type str))
                                 abs-type-lst
                                 num-lst)]
                  [Type-lst (map (lambda (str) (c 'Type str))
                                 num-lst)]
-                 [mapper (lambda (proc)
-                           (map proc type-lst))]
+                 [mapper (lambda (proc) (map proc type-lst))]
                  [tpl-arg-lst (map (lambda (type) (tpl-pmtr type))
                                    (reverse (foldl (lambda (next crt) (if next
                                                                           (cons next crt)
@@ -680,7 +692,7 @@
                                    Type-lst
                                    type-lst)])
             (if (not FT)
-                "ERROR: No FieldType found for use in a build-interface-case"
+                (error "ERROR: No FieldType found for use in a build-interface-case")
                 (d description-chunk
                    (tpl-def tpl-arg-lst
                             (r-fcn-def
@@ -889,19 +901,17 @@
                                'value_
                                null
                                (adc 'AtomicType 'value_))
-                    (bs-SeqWalk (typedef (scope (tpl-pmtr FT-chunk)
-                                                'value_type)
-                                         'AtomicType)
-                                (bm-constructor (adc 'AtomicType 'value)
-                                                (cons-asgn 'value_ 'value)
-                                                null)
-                                null
-                                'false
-                                'false
-                                (r-fcn-def (constize (fcn-dcl 'eval (tc 'AtomicType)))
-                                          null
-                                          'value_)
-                                (adc 'AtomicType 'value_))
+                    (bs-SeqWalk-rhs (typedef (scope (tpl-pmtr FT-chunk)
+                                                    'value_type)
+                                             'AtomicType)
+                                    (bm-constructor (adc 'AtomicType 'value)
+                                                    (cons-asgn 'value_ 'value)
+                                                    null)
+                                    null
+                                    'AtomicType
+                                    'value_
+                                    null
+                                    (adc 'AtomicType 'value_))
                     (bs-GPU-const null
                                   (bm-constructor (adc 'AtomicType 'value)
                                                   (cons-asgn 'value_ 'value)
@@ -956,17 +966,15 @@
                                'value_
                                null
                                (adc 'bool 'value_))
-                    (bs-SeqWalk null
-                                (bm-constructor (adc 'bool 'value)
-                                                (cons-asgn 'value_ 'value)
-                                                null)
-                                null
-                                'false
-                                'false
-                                (r-fcn-def (constize (fcn-dcl 'eval (tc 'bool)))
-                                          null
-                                          'value_)
-                                (adc 'bool 'value_))
+                    (bs-SeqWalk-rhs null
+                                    (bm-constructor (adc 'bool 'value)
+                                                    (cons-asgn 'value_ 'value)
+                                                    null)
+                                    null
+                                    'bool
+                                    'value_
+                                    null
+                                    (adc 'bool 'value_))
                     (bs-GPU-const null
                                   (bm-constructor (adc 'bool 'value)
                                                   (cons-asgn 'value_ 'value)
@@ -1028,23 +1036,18 @@
                                (mfc 'field_ (tpl-fcn-use 'shift SH-chunk))
                                null
                                (adc FT-chunk 'field_))
-                    (bs-SeqWalk (typedef (scope (tpl-pmtr FT-chunk)
-                                                'value_type)
-                                         'AtomicType)
-                                (bm-constructor (adcr FT-chunk 'f)
-                                                (list (cons-asgn 'iter_ (mfc 'f 'begin))
-                                                      (cons-asgn 'end_ (mfc 'f 'end)))
-                                                null)
-                                (n++ 'iter_)
-                                (n== 'iter_ 'end_)
-                                'true
-                                (r-fcn-def (constize (fcn-dcl 'eval (cref 'AtomicType)))
-                                           null
-                                           (c '* 'iter_))
-                                (list (ad (tpl-pmtr (scope FT-chunk 'const_iterator))
-                                          'iter_)
-                                      (adc (tpl-pmtr (scope FT-chunk 'const_iterator))
-                                           'end_)))
+                    (bs-SeqWalk-rhs (typedef (scope (tpl-pmtr FT-chunk)
+                                                    'value_type)
+                                             'AtomicType)
+                                    (bm-constructor (adcr FT-chunk 'f)
+                                                    (cons-asgn 'iter_ (mfc 'f 'begin))
+                                                    null)
+                                    (n++ 'iter_)
+                                    'AtomicType
+                                    (c '* 'iter_)
+                                    null
+                                    (ad (tpl-pmtr (scope FT-chunk 'const_iterator))
+                                        'iter_))
                     (bs-GPU-const null
                                   (bm-constructor
                                    (adcr FT-chunk 'f)
@@ -1137,23 +1140,22 @@
                                (mfc 'field_ (tpl-fcn-use 'shift_and_maintain_interior SH-chunk))
                                null
                                (ad FT-chunk 'field_))
-                    (bs-SeqWalk (typedef (scope (tpl-pmtr FT-chunk)
-                                                'value_type)
-                                         'AtomicType)
-                                (bm-constructor (ad FT-chunk 'f)
-                                                (list (cons-asgn 'iter_ (mfc 'f 'begin))
-                                                      (cons-asgn 'end_ (mfc 'f 'end)))
-                                                null)
-                                (n++ 'iter_)
-                                (n== 'iter_ 'end_)
-                                'true
-                                (r-fcn-def (fcn-dcl 'ref (ref 'AtomicType))
-                                           null
-                                           (c '* 'iter_))
-                                (list (ad (tpl-pmtr (scope FT-chunk 'iterator))
-                                          'iter_)
-                                      (adc (tpl-pmtr (scope FT-chunk 'iterator))
-                                           'end_)))
+                    (bs-SeqWalk-lhs (typedef (scope (tpl-pmtr FT-chunk)
+                                                    'value_type)
+                                             'AtomicType)
+                                    (bm-constructor (ad FT-chunk 'f)
+                                                    (list (cons-asgn 'iter_ (mfc 'f 'begin))
+                                                          (cons-asgn 'end_ (mfc 'f 'end)))
+                                                    null)
+                                    (n++ 'iter_)
+                                    (n== 'iter_ 'end_)
+                                    'true
+                                    (c '* 'iter_)
+                                    null
+                                    (list (ad (tpl-pmtr (scope FT-chunk 'iterator))
+                                              'iter_)
+                                          (adc (tpl-pmtr (scope FT-chunk 'iterator))
+                                               'end_)))
                     (bs-GPU-nonconst  null
                                       (bm-constructor
                                        (ad FT-chunk 'f)
@@ -1376,31 +1378,24 @@
                                null
                                (list (adc 'Test 'test_)
                                      (adc 'Expr 'expr_)))
-                    (bs-SeqWalk (typedef (scope (tpl-pmtr FT-chunk)
-                                                'value_type)
-                                         'AtomicType)
-                                (bm-constructor (list (adcr 'Test 'test)
-                                                      (adcr 'Expr 'expr))
-                                                (list (cons-asgn 'test_ 'test)
-                                                      (cons-asgn 'expr_ 'expr))
-                                                null)
-                                (c (mfc 'test_ 'next)
-                                   semi-colon-chunk s
-                                   (mfc 'expr_ 'next))
-                                (par (mfc 'test_ 'at_end)
-                                     "||"
-                                     (mfc 'expr_ 'at_end))
-                                (par (mfc 'test_ 'has_length)
-                                     "||"
-                                     (mfc 'expr_ 'has_length))
-                                (list (r-fcn-def (constize (fcn-dcl 'check (tc 'bool)))
-                                                 null
-                                                 (mfc 'test_ 'eval))
-                                      (r-fcn-def (constize (fcn-dcl 'eval (tc 'AtomicType)))
-                                                 null
-                                                 (mfc 'expr_ 'eval)))
-                                (list (ad 'Test 'test_)
-                                      (ad 'Expr 'expr_)))
+                    (bs-SeqWalk-rhs (typedef (scope (tpl-pmtr FT-chunk)
+                                                    'value_type)
+                                             'AtomicType)
+                                    (bm-constructor (list (adcr 'Test 'test)
+                                                          (adcr 'Expr 'expr))
+                                                    (list (cons-asgn 'test_ 'test)
+                                                          (cons-asgn 'expr_ 'expr))
+                                                    null)
+                                    (c (mfc 'test_ 'next)
+                                       semi-colon-chunk s
+                                       (mfc 'expr_ 'next))
+                                    'AtomicType
+                                    (mfc 'expr_ 'eval)
+                                    (r-fcn-def (constize (fcn-dcl 'check (tc 'bool)))
+                                               null
+                                               (mfc 'test_ 'eval))
+                                    (list (ad 'Test 'test_)
+                                          (ad 'Expr 'expr_)))
                     (bs-GPU-const null
                                   (bm-constructor (list (adcr 'Test 'test)
                                                         (adcr 'Expr 'expr))
@@ -1498,30 +1493,24 @@
                                null
                                (list (adc CT-chunk 'clause_)
                                      (adc 'Otherwise 'otherwise_)))
-                    (bs-SeqWalk (typedef (scope (tpl-pmtr FT-chunk)
-                                                'value_type)
-                                         'AtomicType)
-                                (bm-constructor (list (adcr CT-chunk 'clause)
-                                                      (adcr 'Otherwise 'otherwise))
-                                                (list (cons-asgn 'clause_ 'clause)
-                                                      (cons-asgn 'otherwise_ 'otherwise))
-                                                null)
-                                (c (mfc 'clause_ 'next)
-                                   semi-colon-chunk s
-                                   (mfc 'otherwise_ 'next))
-                                (par (mfc 'clause_ 'at_end)
-                                     "||"
-                                     (mfc 'otherwise_ 'at_end))
-                                (par (mfc 'clause_ 'has_length)
-                                     "||"
-                                     (mfc 'otherwise_ 'has_length))
-                                (r-fcn-def (constize (fcn-dcl 'eval (tc 'AtomicType)))
-                                           null
-                                           (ter-cond (mfc 'clause_ 'check)
-                                                     (mfc 'clause_ 'eval)
-                                                     (mfc 'otherwise_ 'eval)))
-                                (list (ad CT-chunk 'clause_)
-                                      (ad 'Otherwise 'otherwise_)))
+                    (bs-SeqWalk-rhs (typedef (scope (tpl-pmtr FT-chunk)
+                                                    'value_type)
+                                             'AtomicType)
+                                    (bm-constructor (list (adcr CT-chunk 'clause)
+                                                          (adcr 'Otherwise 'otherwise))
+                                                    (list (cons-asgn 'clause_ 'clause)
+                                                          (cons-asgn 'otherwise_ 'otherwise))
+                                                    null)
+                                    (c (mfc 'clause_ 'next)
+                                       semi-colon-chunk s
+                                       (mfc 'otherwise_ 'next))
+                                    'AtomicType
+                                    (ter-cond (mfc 'clause_ 'check)
+                                              (mfc 'clause_ 'eval)
+                                              (mfc 'otherwise_ 'eval))
+                                    null
+                                    (list (ad CT-chunk 'clause_)
+                                          (ad 'Otherwise 'otherwise_)))
                     (bs-GPU-const null
                                   (bm-constructor (list (adcr CT-chunk 'clause)
                                                         (adcr 'Otherwise 'otherwise))
@@ -2371,19 +2360,17 @@
                                                                               'result))))
                                null
                                (adc 'Arg 'arg_))
-                    (bs-SeqWalk (typedef (scope (tpl-pmtr FT-chunk)
-                                                'value_type)
-                                         'AtomicType)
-                                (bm-constructor (adcr 'Arg 'a)
-                                                (cons-asgn 'arg_ 'a)
-                                                null)
-                                (mfc 'arg_ 'next)
-                                (mfc 'arg_ 'at_end)
-                                (mfc 'arg_ 'has_length)
-                                (r-fcn-def (constize (fcn-dcl 'eval (tc 'AtomicType)))
-                                           null
-                                           (mfc 'arg_ 'eval))
-                                (ad 'Arg 'arg_))
+                    (bs-SeqWalk-rhs (typedef (scope (tpl-pmtr FT-chunk)
+                                                    'value_type)
+                                             'AtomicType)
+                                    (bm-constructor (adcr 'Arg 'a)
+                                                    (cons-asgn 'arg_ 'a)
+                                                    null)
+                                    (mfc 'arg_ 'next)
+                                    'AtomicType
+                                    (mfc 'arg_ 'eval)
+                                    null
+                                    (ad 'Arg 'arg_))
                     (bs-GPU-const null
                                   (bm-constructor (adcr 'Arg 'a)
                                                   (cons-asgn 'arg_ 'a)
@@ -2857,19 +2844,17 @@
                                null
                                (list (adc 'Arg 'arg_)
                                      (adc 'Coefs 'coefs_)))
-                    (bs-SeqWalk (typedef (scope (tpl-pmtr FT-chunk)
-                                                'value_type)
-                                         'AtomicType)
-                                (bm-constructor (adcr 'Arg 'arg)
-                                                (cons-asgn 'arg_ 'arg)
-                                                null)
-                                (mfc 'arg_ 'next)
-                                (mfc 'arg_ 'at_end)
-                                (mfc 'arg_ 'has_length)
-                                (r-fcn-def (constize (fcn-dcl 'eval (tc 'AtomicType)))
-                                           null
-                                           (mfc 'arg_ 'eval))
-                                (ad 'Arg 'arg_))
+                    (bs-SeqWalk-rhs (typedef (scope (tpl-pmtr FT-chunk)
+                                                    'value_type)
+                                             'AtomicType)
+                                    (bm-constructor (adcr 'Arg 'arg)
+                                                    (cons-asgn 'arg_ 'arg)
+                                                    null)
+                                    (mfc 'arg_ 'next)
+                                    'AtomicType
+                                    (mfc 'arg_ 'eval)
+                                    null
+                                    (ad 'Arg 'arg_))
                     (bs-GPU-const null
                                   (bm-constructor (adcr 'Arg 'a)
                                                   (cons-asgn 'arg_ 'a)
