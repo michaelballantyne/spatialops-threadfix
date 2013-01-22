@@ -56,7 +56,6 @@ namespace structured{
   void Stencil4<OpT,SrcT,DestT>::apply_to_field( const SrcT& src, DestT& dest ) const
   {   switch( dest.memory_device_type() ){
       case LOCAL_RAM:
-//std::cout << "into the CPU Stencil4 .cpp \n";
         stencil_4_apply_to_field_general_execute<OpT,SrcT,DestT>( src,
                                                                   dest,
                                                                   coef1_,
@@ -66,7 +65,6 @@ namespace structured{
         break;
 #ifdef ENABLE_CUDA
       case EXTERNAL_CUDA_GPU:
-//std::cout<<"into the GPU Stencil4 in Stencil4.cpp \n";
         cuda_stencil_4_apply_to_field_helper<OpT,SrcT,DestT>( src, dest, coef1_, coef2_, coef3_, coef4_ );
         break;
 #endif
