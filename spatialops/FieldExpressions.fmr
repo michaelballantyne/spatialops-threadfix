@@ -1317,9 +1317,10 @@
 ;                                       (scope 'std 'isnan)
 ;                                       'isnan)
       (srt-def (srt-dcl Nil-chunk)
-               (typedef 'NeboNil 'ResizePrepType)
-               (typedef 'NeboNil 'SeqWalkType)
-               (typedef 'NeboNil 'ReductionType)
+               (typedef Nil-chunk 'ResizePrepType)
+               (typedef Nil-chunk 'SeqWalkType)
+               (gpu-only (typedef Nil-chunk 'GPUWalkType))
+               (typedef Nil-chunk 'ReductionType)
                (typedef (scope 'structured 'InfiniteGhostData) report-VG-chunk)
                (constructor-chunk Nil-chunk
                                   null
