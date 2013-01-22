@@ -201,9 +201,7 @@
           : value_(value)
           {};
           inline void next(void) {};
-          inline bool at_end(void) const { return false; };
-          inline bool has_length(void) const { return false; };
-          inline AtomicType const eval(void) const { return value_; };
+          inline AtomicType eval(void) const { return value_; };
 
          private:
           AtomicType const value_;
@@ -331,9 +329,7 @@
           : value_(value)
           {};
           inline void next(void) {};
-          inline bool at_end(void) const { return false; };
-          inline bool has_length(void) const { return false; };
-          inline bool const eval(void) const { return value_; };
+          inline bool eval(void) const { return value_; };
 
          private:
           bool const value_;
@@ -472,16 +468,13 @@
           typename field_type::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef AtomicType;
           NeboConstField(FieldType const & f)
-          : iter_(f.begin()), end_(f.end())
+          : iter_(f.begin())
           {};
           inline void next(void) { iter_++; };
-          inline bool at_end(void) const { return iter_ == end_; };
-          inline bool has_length(void) const { return true; };
-          inline AtomicType const & eval(void) const { return *iter_; };
+          inline AtomicType eval(void) const { return *iter_; };
 
          private:
           typename FieldType::const_iterator iter_;
-          typename FieldType::const_iterator const end_;
       };
 
 #     ifdef __CUDACC__
@@ -859,10 +852,6 @@
           : operand1_(operand1), operand2_(operand2)
           {};
           inline void next(void) { operand1_.next(); operand2_.next(); };
-          inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
-          inline bool has_length(void) const {
-             return (operand1_.has_length() || operand2_.has_length());
-          };
           inline EvalReturnType eval(void) const { return (operand1_.eval() + operand2_.eval()); };
 
          private:
@@ -1114,10 +1103,6 @@
           : operand1_(operand1), operand2_(operand2)
           {};
           inline void next(void) { operand1_.next(); operand2_.next(); };
-          inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
-          inline bool has_length(void) const {
-             return (operand1_.has_length() || operand2_.has_length());
-          };
           inline EvalReturnType eval(void) const { return (operand1_.eval() - operand2_.eval()); };
 
          private:
@@ -1369,10 +1354,6 @@
           : operand1_(operand1), operand2_(operand2)
           {};
           inline void next(void) { operand1_.next(); operand2_.next(); };
-          inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
-          inline bool has_length(void) const {
-             return (operand1_.has_length() || operand2_.has_length());
-          };
           inline EvalReturnType eval(void) const { return (operand1_.eval() * operand2_.eval()); };
 
          private:
@@ -1624,10 +1605,6 @@
           : operand1_(operand1), operand2_(operand2)
           {};
           inline void next(void) { operand1_.next(); operand2_.next(); };
-          inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
-          inline bool has_length(void) const {
-             return (operand1_.has_length() || operand2_.has_length());
-          };
           inline EvalReturnType eval(void) const { return (operand1_.eval() / operand2_.eval()); };
 
          private:
@@ -1854,8 +1831,6 @@
           : operand_(operand)
           {};
           inline void next(void) { operand_.next(); };
-          inline bool at_end(void) const { return (operand_.at_end()); };
-          inline bool has_length(void) const { return (operand_.has_length()); };
           inline EvalReturnType eval(void) const { return std::sin(operand_.eval()); };
 
          private:
@@ -2014,8 +1989,6 @@
           : operand_(operand)
           {};
           inline void next(void) { operand_.next(); };
-          inline bool at_end(void) const { return (operand_.at_end()); };
-          inline bool has_length(void) const { return (operand_.has_length()); };
           inline EvalReturnType eval(void) const { return std::cos(operand_.eval()); };
 
          private:
@@ -2174,8 +2147,6 @@
           : operand_(operand)
           {};
           inline void next(void) { operand_.next(); };
-          inline bool at_end(void) const { return (operand_.at_end()); };
-          inline bool has_length(void) const { return (operand_.has_length()); };
           inline EvalReturnType eval(void) const { return std::tan(operand_.eval()); };
 
          private:
@@ -2334,8 +2305,6 @@
           : operand_(operand)
           {};
           inline void next(void) { operand_.next(); };
-          inline bool at_end(void) const { return (operand_.at_end()); };
-          inline bool has_length(void) const { return (operand_.has_length()); };
           inline EvalReturnType eval(void) const { return std::exp(operand_.eval()); };
 
          private:
@@ -2494,8 +2463,6 @@
           : operand_(operand)
           {};
           inline void next(void) { operand_.next(); };
-          inline bool at_end(void) const { return (operand_.at_end()); };
-          inline bool has_length(void) const { return (operand_.has_length()); };
           inline EvalReturnType eval(void) const { return std::tanh(operand_.eval()); };
 
          private:
@@ -2654,8 +2621,6 @@
           : operand_(operand)
           {};
           inline void next(void) { operand_.next(); };
-          inline bool at_end(void) const { return (operand_.at_end()); };
-          inline bool has_length(void) const { return (operand_.has_length()); };
           inline EvalReturnType eval(void) const { return std::abs(operand_.eval()); };
 
          private:
@@ -2814,8 +2779,6 @@
           : operand_(operand)
           {};
           inline void next(void) { operand_.next(); };
-          inline bool at_end(void) const { return (operand_.at_end()); };
-          inline bool has_length(void) const { return (operand_.has_length()); };
           inline EvalReturnType eval(void) const { return -(operand_.eval()); };
 
          private:
@@ -2999,10 +2962,6 @@
           : operand1_(operand1), operand2_(operand2)
           {};
           inline void next(void) { operand1_.next(); operand2_.next(); };
-          inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
-          inline bool has_length(void) const {
-             return (operand1_.has_length() || operand2_.has_length());
-          };
           inline EvalReturnType eval(void) const {
              return std::pow(operand1_.eval(), operand2_.eval());
           };
@@ -3233,8 +3192,6 @@
           : operand_(operand)
           {};
           inline void next(void) { operand_.next(); };
-          inline bool at_end(void) const { return (operand_.at_end()); };
-          inline bool has_length(void) const { return (operand_.has_length()); };
           inline EvalReturnType eval(void) const { return std::sqrt(operand_.eval()); };
 
          private:
@@ -3393,8 +3350,6 @@
           : operand_(operand)
           {};
           inline void next(void) { operand_.next(); };
-          inline bool at_end(void) const { return (operand_.at_end()); };
-          inline bool has_length(void) const { return (operand_.has_length()); };
           inline EvalReturnType eval(void) const { return std::log(operand_.eval()); };
 
          private:
@@ -3582,10 +3537,6 @@
           : operand1_(operand1), operand2_(operand2)
           {};
           inline void next(void) { operand1_.next(); operand2_.next(); };
-          inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
-          inline bool has_length(void) const {
-             return (operand1_.has_length() || operand2_.has_length());
-          };
           inline EvalReturnType eval(void) const { return (operand1_.eval() == operand2_.eval()); };
 
          private:
@@ -3849,10 +3800,6 @@
           : operand1_(operand1), operand2_(operand2)
           {};
           inline void next(void) { operand1_.next(); operand2_.next(); };
-          inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
-          inline bool has_length(void) const {
-             return (operand1_.has_length() || operand2_.has_length());
-          };
           inline EvalReturnType eval(void) const { return (operand1_.eval() != operand2_.eval()); };
 
          private:
@@ -4118,10 +4065,6 @@
           : operand1_(operand1), operand2_(operand2)
           {};
           inline void next(void) { operand1_.next(); operand2_.next(); };
-          inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
-          inline bool has_length(void) const {
-             return (operand1_.has_length() || operand2_.has_length());
-          };
           inline EvalReturnType eval(void) const { return (operand1_.eval() < operand2_.eval()); };
 
          private:
@@ -4385,10 +4328,6 @@
           : operand1_(operand1), operand2_(operand2)
           {};
           inline void next(void) { operand1_.next(); operand2_.next(); };
-          inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
-          inline bool has_length(void) const {
-             return (operand1_.has_length() || operand2_.has_length());
-          };
           inline EvalReturnType eval(void) const { return (operand1_.eval() <= operand2_.eval()); };
 
          private:
@@ -4656,10 +4595,6 @@
           : operand1_(operand1), operand2_(operand2)
           {};
           inline void next(void) { operand1_.next(); operand2_.next(); };
-          inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
-          inline bool has_length(void) const {
-             return (operand1_.has_length() || operand2_.has_length());
-          };
           inline EvalReturnType eval(void) const { return (operand1_.eval() > operand2_.eval()); };
 
          private:
@@ -4923,10 +4858,6 @@
           : operand1_(operand1), operand2_(operand2)
           {};
           inline void next(void) { operand1_.next(); operand2_.next(); };
-          inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
-          inline bool has_length(void) const {
-             return (operand1_.has_length() || operand2_.has_length());
-          };
           inline EvalReturnType eval(void) const { return (operand1_.eval() >= operand2_.eval()); };
 
          private:
@@ -5192,10 +5123,6 @@
           : operand1_(operand1), operand2_(operand2)
           {};
           inline void next(void) { operand1_.next(); operand2_.next(); };
-          inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
-          inline bool has_length(void) const {
-             return (operand1_.has_length() || operand2_.has_length());
-          };
           inline EvalReturnType eval(void) const { return (operand1_.eval() && operand2_.eval()); };
 
          private:
@@ -5440,10 +5367,6 @@
           : operand1_(operand1), operand2_(operand2)
           {};
           inline void next(void) { operand1_.next(); operand2_.next(); };
-          inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
-          inline bool has_length(void) const {
-             return (operand1_.has_length() || operand2_.has_length());
-          };
           inline EvalReturnType eval(void) const { return (operand1_.eval() || operand2_.eval()); };
 
          private:
@@ -5665,8 +5588,6 @@
           : operand_(operand)
           {};
           inline void next(void) { operand_.next(); };
-          inline bool at_end(void) const { return (operand_.at_end()); };
-          inline bool has_length(void) const { return (operand_.has_length()); };
           inline EvalReturnType eval(void) const { return !(operand_.eval()); };
 
          private:
@@ -5866,10 +5787,8 @@
           : test_(test), expr_(expr)
           {};
           inline void next(void) { test_.next(); expr_.next(); };
-          inline bool at_end(void) const { return (test_.at_end() || expr_.at_end()); };
-          inline bool has_length(void) const { return (test_.has_length() || expr_.has_length()); };
+          inline AtomicType eval(void) const { return expr_.eval(); };
           inline bool const check(void) const { return test_.eval(); };
-          inline AtomicType const eval(void) const { return expr_.eval(); };
 
          private:
           Test test_;
@@ -6046,11 +5965,7 @@
           : clause_(clause), otherwise_(otherwise)
           {};
           inline void next(void) { clause_.next(); otherwise_.next(); };
-          inline bool at_end(void) const { return (clause_.at_end() || otherwise_.at_end()); };
-          inline bool has_length(void) const {
-             return (clause_.has_length() || otherwise_.has_length());
-          };
-          inline AtomicType const eval(void) const {
+          inline AtomicType eval(void) const {
              return (clause_.check() ? clause_.eval() : otherwise_.eval());
           };
 
@@ -6808,9 +6723,7 @@
           : arg_(a)
           {};
           inline void next(void) { arg_.next(); };
-          inline bool at_end(void) const { return arg_.at_end(); };
-          inline bool has_length(void) const { return arg_.has_length(); };
-          inline AtomicType const eval(void) const { return arg_.eval(); };
+          inline AtomicType eval(void) const { return arg_.eval(); };
 
          private:
           Arg arg_;
@@ -7269,9 +7182,7 @@
           : arg_(arg)
           {};
           inline void next(void) { arg_.next(); };
-          inline bool at_end(void) const { return arg_.at_end(); };
-          inline bool has_length(void) const { return arg_.has_length(); };
-          inline AtomicType const eval(void) const { return arg_.eval(); };
+          inline AtomicType eval(void) const { return arg_.eval(); };
 
          private:
           Arg arg_;
