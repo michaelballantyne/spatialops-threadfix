@@ -5738,6 +5738,11 @@
 
          NeboNil typedef SeqWalkType;
 
+#        ifdef __CUDACC__
+            NeboNil typedef GPUWalkType
+#        endif
+         /* __CUDACC__ */;
+
          NeboNil typedef ReductionType;
 
          structured::InfiniteGhostData typedef PossibleValidGhost;
