@@ -240,11 +240,11 @@
                                       'initialValue)
                                 (list (b s 'ResultType 'result "=" 'initialValue)
                                       (b s
-                                         (tpl-pmtr (scope 'ExprType 'SeqWalkType))
+                                         (tpl-pmtr (scope 'ExprType 'ReductionType))
                                          'expr
                                          "="
                                          (mfc (mfc 'fexpr 'expr)
-                                              (tpl-fcn-use 'init VG-chunk SH-chunk)))
+                                              (tpl-fcn-use 'reduce_init VG-chunk SH-chunk)))
                                       (c 'while
                                          (p (c "!" (mfc 'expr 'at_end)))
                                          (body-chunk (b s 'result "=" (fc 'proc 'result (mfc 'expr 'eval)))
@@ -271,11 +271,11 @@
                                                                             (b s AtomicType const-chunk "&"))))])
                                                        'proc
                                                        (list (b s
-                                                                (tpl-pmtr (scope 'ExprType 'SeqWalkType))
+                                                                (tpl-pmtr (scope 'ExprType 'ReductionType))
                                                                 'expr
                                                                 "="
                                                                 (mfc (mfc 'fexpr 'expr)
-                                                                     (tpl-fcn-use 'init VG-chunk SH-chunk)))
+                                                                     (tpl-fcn-use 'reduce_init VG-chunk SH-chunk)))
                                                              (b s AtomicType 'result "=" (mfc 'expr 'eval))
                                                              (mfc 'expr 'next)
                                                              (c 'while
