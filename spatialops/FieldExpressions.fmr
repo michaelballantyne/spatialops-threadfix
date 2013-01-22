@@ -192,11 +192,13 @@
                  SW-cons-args
                  RP-cons-args
                  GPU-cons-args
+                 RD-cons-args
                  publics
                  privates)
           (let ([SW-tpl-irreg-args (if (null? tpl-irreg-args) null (first tpl-irreg-args))]
                 [RP-tpl-irreg-args (if (null? tpl-irreg-args) null (second tpl-irreg-args))]
-                [GPU-tpl-irreg-args (if (null? tpl-irreg-args) null (third tpl-irreg-args))])
+                [GPU-tpl-irreg-args (if (null? tpl-irreg-args) null (third tpl-irreg-args))]
+                [RD-tpl-irreg-args (if (null? tpl-irreg-args) null (fourth tpl-irreg-args))])
             (build-mode name
                         'Initial
                         (list tpl-irreg-pars tpl-reg-pars)
@@ -222,6 +224,13 @@
                                                                (flatten*-to-list tpl-reg-pars))
                                                           FT-chunk)
                                                  'GPUWalkType))
+                              (typedef (tpl-use name
+                                                'Reduction
+                                                RD-tpl-irreg-args
+                                                (map (type-trans 'ReductionType)
+                                                     (flatten*-to-list tpl-reg-pars))
+                                                FT-chunk)
+                                       'ReductionType)
                               (typedef VG-type report-VG-chunk))
                         constructor
                         (list (tpl-def (list (tpl-pmtr VG-chunk)
@@ -238,9 +247,14 @@
                                                  (r-fcn-def (add-const (fcn-dcl 'gpu_init 'GPUWalkType))
                                                             null
                                                             (fc 'GPUWalkType GPU-cons-args))))
+                              (tpl-def (list (tpl-pmtr VG-chunk)
+                                             (tpl-pmtr SH-chunk))
+                                       (r-fcn-def (add-const (fcn-dcl 'reduce_init 'ReductionType))
+                                                  null
+                                                  (fc 'ReductionType RD-cons-args)))
                               publics)
                         privates)))]
-       [bs-Initial (arg-swap build-Initial 9 4 "bs-Initial")]
+       [bs-Initial (arg-swap build-Initial 10 4 "bs-Initial")]
        [build-ResizePrep
         (lambda (name
                  add-const
@@ -378,6 +392,36 @@
                                          (list 6 4 1)
                                          "build-GPU-nonconst")]
        [bs-GPU-nonconst (arg-swap build-GPU-nonconst 9 2 "bs-GPU-nonconst")]
+       [build-Reduction
+        (lambda (name
+                 tpl-pars
+                 typedefs
+                 constructor
+                 next
+                 at-end
+                 has-length
+                 eval-type
+                 eval-result
+                 publics
+                 privates)
+          (build-mode name
+                      'Reduction
+                      tpl-pars
+                      typedefs
+                      constructor
+                      (list (v-fcn-def 'next null next)
+                            (r-fcn-def (constize (fcn-dcl 'at_end 'bool))
+                                       null
+                                       at-end)
+                            (r-fcn-def (constize (fcn-dcl 'has_length 'bool))
+                                       null
+                                       has-length)
+                            (r-fcn-def (constize (fcn-dcl 'eval eval-type))
+                                       null
+                                       eval-result)
+                            publics)
+                      privates))]
+       [bs-Reduction (arg-swap build-Reduction 9 2 "bs-Reduction")]
        [build-struct
         (lambda (name
                  const?
@@ -387,16 +431,19 @@
                  ResizePrep
                  Resize
                  SeqWalk
-                 GPUWalk)
-          (let ([add-const (if const? constize-chunk id)])
+                 GPUWalk
+                 Reduction)
+          (let ([add-const (if const? constize-chunk id)]
+                [tpl-pars (list tpl-irreg-pars tpl-reg-pars)])
             (i (tpl-srt-dcl name
                             (map tpl-pmtr (flatten* 'CurrentMode tpl-irreg-pars tpl-reg-pars FT-chunk))
                             null)
                (Initial name add-const tpl-irreg-pars tpl-reg-pars)
                (ResizePrep name add-const tpl-irreg-pars tpl-reg-pars)
                (Resize name add-const tpl-irreg-pars tpl-reg-pars)
-               (SeqWalk name (list tpl-irreg-pars tpl-reg-pars))
-               (GPUWalk name (list tpl-irreg-pars tpl-reg-pars)))))]
+               (SeqWalk name tpl-pars)
+               (GPUWalk name tpl-pars)
+               (Reduction name tpl-pars))))]
        [build-Nary-struct
         (lambda (name number eval-return-type internal-use)
           (let* ([num-lst (if (>= 1 number)
@@ -456,6 +503,8 @@
                                                op_-lst)
                                        (mapper (lambda (op_) (mfc op_ (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)))
                                                op_-lst)
+                                       (mapper (lambda (op_) (mfc op_ (tpl-fcn-use 'reduce_init VG-chunk SH-chunk)))
+                                               op_-lst)
                                        null
                                        gen-data-mems)
                            (bs-ResizePrep null
@@ -487,6 +536,15 @@
                                                  op_-lst)
                                          (mapper (lambda (op_) (mfc op_ 'next))
                                                  op_-lst)
+                                         internal-use
+                                         null
+                                         SW-data-mems)
+                           (bs-Reduction (typedef eval-return-type 'EvalReturnType)
+                                         gen-constructor
+                                         (SW-fcn semi-colon-chunk s 'next)
+                                         (SW-check 'at_end)
+                                         (SW-check 'has_length)
+                                         'EvalReturnType
                                          internal-use
                                          null
                                          SW-data-mems)))))]
@@ -791,7 +849,8 @@
            (build-mode-def 'ResizePrep)
            (build-mode-def 'Resize)
            (build-mode-def 'SeqWalk)
-           (gpu-only (build-mode-def 'GPUWalk))))
+           (gpu-only (build-mode-def 'GPUWalk))
+           (build-mode-def 'Reduction)))
       (build-struct NS-chunk
                     #true
                     null
@@ -804,6 +863,7 @@
                                 (bm-constructor (adc 'AtomicType 'v)
                                                 (cons-asgn 'value_ 'v)
                                                 null)
+                                'value_
                                 'value_
                                 'value_
                                 'value_
@@ -850,6 +910,19 @@
                                   null
                                   'value_
                                   null
+                                  (adc 'AtomicType 'value_))
+                    (bs-Reduction (typedef (scope (tpl-pmtr FT-chunk)
+                                                  'value_type)
+                                           'AtomicType)
+                                  (bm-constructor (adc 'AtomicType 'value)
+                                                  (cons-asgn 'value_ 'value)
+                                                  null)
+                                  null
+                                  'false
+                                  'false
+                                  'AtomicType
+                                  'value_
+                                  null
                                   (adc 'AtomicType 'value_)))
       (build-struct NB-chunk
                     #true
@@ -861,6 +934,7 @@
                                 (bm-constructor (adc 'bool 'v)
                                                 (cons-asgn 'value_ 'v)
                                                 null)
+                                'value_
                                 'value_
                                 'value_
                                 'value_
@@ -901,6 +975,17 @@
                                   null
                                   'value_
                                   null
+                                  (adc 'bool 'value_))
+                    (bs-Reduction null
+                                  (bm-constructor (adc 'bool 'value)
+                                                  (cons-asgn 'value_ 'value)
+                                                  null)
+                                  null
+                                  'false
+                                  'false
+                                  'bool
+                                  'value_
+                                  null
                                   (adc 'bool 'value_)))
       (build-struct NCF-chunk
                     #true
@@ -915,6 +1000,7 @@
                                                 null)
                                 (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift VG-chunk SH-chunk))
                                 (mfc 'field_ (tpl-fcn-use 'resize_ghost VG-chunk))
+                                (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift VG-chunk SH-chunk))
                                 (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift VG-chunk SH-chunk))
                                 (r-fcn-def (constize (fcn-dcl 'field (cref FT-chunk)))
                                            null
@@ -993,7 +1079,24 @@
                                   null
                                   (list (adcp 'AtomicType 'current_)
                                         (adc 'int 'xLength_)
-                                        (adc 'int 'step_))))
+                                        (adc 'int 'step_)))
+                    (bs-Reduction (typedef (scope (tpl-pmtr FT-chunk)
+                                                  'value_type)
+                                           'AtomicType)
+                                  (bm-constructor (adcr FT-chunk 'f)
+                                                  (list (cons-asgn 'iter_ (mfc 'f 'begin))
+                                                        (cons-asgn 'end_ (mfc 'f 'end)))
+                                                  null)
+                                  (n++ 'iter_)
+                                  (n== 'iter_ 'end_)
+                                  'true
+                                  'AtomicType
+                                  (c '* 'iter_)
+                                  null
+                                  (list (ad (tpl-pmtr (scope FT-chunk 'const_iterator))
+                                            'iter_)
+                                        (adc (tpl-pmtr (scope FT-chunk 'const_iterator))
+                                             'end_))))
       (build-struct NF-chunk
                     #false
                     null
@@ -1008,6 +1111,7 @@
                                                 null)
                                 (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift_and_maintain_interior VG-chunk SH-chunk))
                                 (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_maintain_interior VG-chunk))
+                                (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift_and_maintain_interior VG-chunk SH-chunk))
                                 (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift_and_maintain_interior VG-chunk SH-chunk))
                                 null
                                 (ad FT-chunk 'field_))
@@ -1037,10 +1141,8 @@
                                                 'value_type)
                                          'AtomicType)
                                 (bm-constructor (ad FT-chunk 'f)
-                                                (list (cons-asgn 'iter_
-                                                                 (mfc 'f 'begin))
-                                                      (cons-asgn 'end_
-                                                                 (mfc 'f 'end)))
+                                                (list (cons-asgn 'iter_ (mfc 'f 'begin))
+                                                      (cons-asgn 'end_ (mfc 'f 'end)))
                                                 null)
                                 (n++ 'iter_)
                                 (n== 'iter_ 'end_)
@@ -1109,7 +1211,24 @@
                                             (adc 'int 'xExtent_)
                                             (adc 'int 'yExtent_)
                                             (adc 'int 'zExtent_)
-                                            (adc 'int 'step_))))
+                                            (adc 'int 'step_)))
+                    (bs-Reduction (typedef (scope (tpl-pmtr FT-chunk)
+                                                  'value_type)
+                                           'AtomicType)
+                                  (bm-constructor (ad FT-chunk 'f)
+                                                  (list (cons-asgn 'iter_ (mfc 'f 'begin))
+                                                      (cons-asgn 'end_ (mfc 'f 'end)))
+                                                  null)
+                                  (n++ 'iter_)
+                                  (n== 'iter_ 'end_)
+                                  'true
+                                  (ref 'AtomicType)
+                                  (c '* 'iter_)
+                                  null
+                                  (list (ad (tpl-pmtr (scope FT-chunk 'iterator))
+                                            'iter_)
+                                        (adc (tpl-pmtr (scope FT-chunk 'iterator))
+                                             'end_))))
       (tpl-srt-dcl 'Standardize
                    (list (tpl-pmtr 'Input)
                          (tpl-pmtr FT-chunk))
@@ -1200,6 +1319,7 @@
       (srt-def (srt-dcl Nil-chunk)
                (typedef 'NeboNil 'ResizePrepType)
                (typedef 'NeboNil 'SeqWalkType)
+               (typedef 'NeboNil 'ReductionType)
                (typedef (scope 'structured 'InfiniteGhostData) report-VG-chunk)
                (constructor-chunk Nil-chunk
                                   null
@@ -1226,6 +1346,8 @@
                                       (mfc 'expr_ (tpl-fcn-use 'resize_prep VG-chunk)))
                                 (list (mfc 'test_ (tpl-fcn-use 'gpu_init VG-chunk SH-chunk))
                                       (mfc 'expr_ (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)))
+                                (list (mfc 'test_ (tpl-fcn-use 'reduce_init VG-chunk SH-chunk))
+                                      (mfc 'expr_ (tpl-fcn-use 'reduce_init VG-chunk SH-chunk)))
                                 null
                                 (list (adc 'Test 'test_)
                                       (adc 'Expr 'expr_)))
@@ -1295,6 +1417,30 @@
                                              null
                                              (mfc 'test_ 'eval))
                                   (list (ad 'Test 'test_)
+                                        (ad 'Expr 'expr_)))
+                    (bs-Reduction (typedef (scope (tpl-pmtr FT-chunk)
+                                                  'value_type)
+                                           'AtomicType)
+                                  (bm-constructor (list (adcr 'Test 'test)
+                                                        (adcr 'Expr 'expr))
+                                                  (list (cons-asgn 'test_ 'test)
+                                                        (cons-asgn 'expr_ 'expr))
+                                                  null)
+                                  (c (mfc 'test_ 'next)
+                                     semi-colon-chunk s
+                                     (mfc 'expr_ 'next))
+                                  (par (mfc 'test_ 'at_end)
+                                       "||"
+                                       (mfc 'expr_ 'at_end))
+                                  (par (mfc 'test_ 'has_length)
+                                       "||"
+                                       (mfc 'expr_ 'has_length))
+                                  'AtomicType
+                                  (mfc 'expr_ 'eval)
+                                  (r-fcn-def (constize (fcn-dcl 'check (tc 'bool)))
+                                             null
+                                             (mfc 'test_ 'eval))
+                                  (list (ad 'Test 'test_)
                                         (ad 'Expr 'expr_))))
       (build-struct Cond-chunk
                     #true
@@ -1317,6 +1463,8 @@
                                       (mfc 'otherwise_ (tpl-fcn-use 'resize_prep VG-chunk)))
                                 (list (mfc 'clause_ (tpl-fcn-use 'gpu_init VG-chunk SH-chunk))
                                       (mfc 'otherwise_ (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)))
+                                (list (mfc 'clause_ (tpl-fcn-use 'reduce_init VG-chunk SH-chunk))
+                                      (mfc 'otherwise_ (tpl-fcn-use 'reduce_init VG-chunk SH-chunk)))
                                 (list (r-fcn-def (constize (fcn-dcl 'clause (cref CT-chunk)))
                                                  null
                                                  'clause_)
@@ -1385,6 +1533,30 @@
                                   (c (mfc 'clause_ 'next)
                                      semi-colon-chunk s
                                      (mfc 'otherwise_ 'next))
+                                  (ter-cond (mfc 'clause_ 'check)
+                                            (mfc 'clause_ 'eval)
+                                            (mfc 'otherwise_ 'eval))
+                                  null
+                                  (list (ad CT-chunk 'clause_)
+                                        (ad 'Otherwise 'otherwise_)))
+                    (bs-Reduction (typedef (scope (tpl-pmtr FT-chunk)
+                                                  'value_type)
+                                           'AtomicType)
+                                  (bm-constructor (list (adcr CT-chunk 'clause)
+                                                        (adcr 'Otherwise 'otherwise))
+                                                  (list (cons-asgn 'clause_ 'clause)
+                                                        (cons-asgn 'otherwise_ 'otherwise))
+                                                  null)
+                                  (c (mfc 'clause_ 'next)
+                                     semi-colon-chunk s
+                                     (mfc 'otherwise_ 'next))
+                                  (par (mfc 'clause_ 'at_end)
+                                       "||"
+                                       (mfc 'otherwise_ 'at_end))
+                                  (par (mfc 'clause_ 'has_length)
+                                       "||"
+                                       (mfc 'otherwise_ 'has_length))
+                                  'AtomicType
                                   (ter-cond (mfc 'clause_ 'check)
                                             (mfc 'clause_ 'eval)
                                             (mfc 'otherwise_ 'eval))
@@ -2163,7 +2335,7 @@
                     'Point
                     'Arg
                     (bs-Initial null
-                                (list 'Point 'Point 'Point)
+                                (list 'Point 'Point 'Point 'Point)
                                 (tpl-pmtr (scope (scope 'structured
                                                         (tpl-use 'Invalidate
                                                                  (tpl-pmtr (scope 'Arg report-VG-chunk))
@@ -2177,6 +2349,8 @@
                                 (mfc 'arg_ (tpl-fcn-use 'resize_prep VG-chunk))
                                 (mfc 'arg_ (tpl-fcn-use 'gpu_init VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
                                                                                       'result))))
+                                (mfc 'arg_ (tpl-fcn-use 'reduce_init VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
+                                                                                               'result))))
                                 null
                                 (adc 'Arg 'arg_))
                     (bs-ResizePrep null
@@ -2215,6 +2389,19 @@
                                                   null)
                                   (mfc 'arg_ 'start 'x 'y)
                                   (mfc 'arg_ 'next)
+                                  (mfc 'arg_ 'eval)
+                                  null
+                                  (ad 'Arg 'arg_))
+                    (bs-Reduction (typedef (scope (tpl-pmtr FT-chunk)
+                                                  'value_type)
+                                           'AtomicType)
+                                  (bm-constructor (adcr 'Arg 'a)
+                                                  (cons-asgn 'arg_ 'a)
+                                                  null)
+                                  (mfc 'arg_ 'next)
+                                  (mfc 'arg_ 'at_end)
+                                  (mfc 'arg_ 'has_length)
+                                  'AtomicType
                                   (mfc 'arg_ 'eval)
                                   null
                                   (ad 'Arg 'arg_)))
@@ -2341,8 +2528,7 @@
                                                                         (tc 'Result)
                                                                         (adcr 'ArgPreSeqWalk 'arg)
                                                                         (adcr (tpl-use NSCL 'length) 'coefs))
-                                                             (typedef (tpl-pmtr (scope (scope 'structured
-                                                                                              (tpl-use 'Add SH-chunk 'Point))
+                                                             (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
                                                                                        'result))
                                                                       'NewShift)
                                                              (fc 'Result
@@ -2358,13 +2544,11 @@
                                                                         (tc 'Result)
                                                                         (adcr 'ArgPreSeqWalk 'arg)
                                                                         (adcr (tpl-use NSCL 'length) 'coefs))
-                                                             (typedef (tpl-pmtr (scope (scope 'structured
-                                                                                              (tpl-use 'Add SH-chunk 'Point))
+                                                             (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
                                                                                        'result))
                                                                       'NewShift)
                                                              (fc 'Result
-                                                                 (fc (scope 'EarlierPointsType
-                                                                            (tpl-fcn-use 'rs_sq_construct SH-chunk))
+                                                                 (fc (scope 'EarlierPointsType (tpl-fcn-use 'rs_sq_construct SH-chunk))
                                                                      'arg
                                                                      (mfc 'coefs 'list))
                                                                  (fc 'MultiplyType
@@ -2394,18 +2578,64 @@
                                                                          (tc 'Result)
                                                                          (adcr 'ArgPreGPUWalk 'arg)
                                                                          (adcr (tpl-use NSCL 'length) 'coefs))
-                                                              (typedef (tpl-pmtr (scope (scope 'structured
-                                                                                               (tpl-use 'Add SH-chunk 'Point))
+                                                              (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
                                                                                         'result))
                                                                        'NewShift)
                                                               (fc 'Result
-                                                                  (fc (scope 'EarlierPointsType
-                                                                             (tpl-fcn-use 'in_sq_construct VG-chunk SH-chunk))
+                                                                  (fc (scope 'EarlierPointsType (tpl-fcn-use 'in_sq_construct VG-chunk SH-chunk))
                                                                       'arg
                                                                       (mfc 'coefs 'list))
                                                                   (fc 'MultiplyType
                                                                       (mfc 'arg (tpl-fcn-use 'init VG-chunk 'NewShift))
-                                                                      (fc 'Coef (mfc 'coefs 'coef))))))))))
+                                                                      (fc 'Coef (mfc 'coefs 'coef))))))))
+                            (tpl-srt-def 'ConstructReductionExpr
+                                         (list (tpl-pmtr 'ArgPreReduction)
+                                               (tpl-pmtr 'DestType))
+                                         null
+                                         (typedef (tpl-use NS-chunk 'Reduction 'DestType)
+                                                  'Coef)
+                                         (typedef (tpl-pmtr (scope 'ArgPreReduction 'ReductionType))
+                                                  'Arg)
+                                         (typedef (tpl-use 'ProdOp 'Reduction 'Arg 'Coef 'DestType)
+                                                  'MultiplyType)
+                                         (typedef (tpl-pmtr (scope 'List (tpl-fcn-use 'ConstructReductionExpr 'ArgPreReduction 'DestType)))
+                                                  'EarlierPointsType)
+                                         (typedef (tpl-pmtr (scope 'EarlierPointsType
+                                                                   'Result))
+                                                  'EarlierPointsResult)
+                                         (typedef (tpl-use 'SumOp 'Reduction 'EarlierPointsResult 'MultiplyType 'DestType)
+                                                  'Result)
+                                         (tpl-def (list (tpl-pmtr VG-chunk)
+                                                        (tpl-pmtr SH-chunk))
+                                                  (r-fcn-def (s-fcn-dcl 'in_rd_construct
+                                                                        (tc 'Result)
+                                                                        (adcr 'ArgPreReduction 'arg)
+                                                                        (adcr (tpl-use NSCL 'length) 'coefs))
+                                                             (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
+                                                                                       'result))
+                                                                      'NewShift)
+                                                             (fc 'Result
+                                                                 (fc (scope 'EarlierPointsType (tpl-fcn-use 'in_rd_construct VG-chunk SH-chunk))
+                                                                     'arg
+                                                                     (mfc 'coefs 'list))
+                                                                 (fc 'MultiplyType
+                                                                     (mfc 'arg (tpl-fcn-use 'reduce_init VG-chunk 'NewShift))
+                                                                     (fc 'Coef (mfc 'coefs 'coef))))))
+                                         (tpl-def (tpl-pmtr SH-chunk)
+                                                  (r-fcn-def (s-fcn-dcl 'rs_rd_construct
+                                                                        (tc 'Result)
+                                                                        (adcr 'ArgPreReduction 'arg)
+                                                                        (adcr (tpl-use NSCL 'length) 'coefs))
+                                                             (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
+                                                                                       'result))
+                                                                      'NewShift)
+                                                             (fc 'Result
+                                                                 (fc (scope 'EarlierPointsType (tpl-fcn-use 'rs_rd_construct SH-chunk))
+                                                                     'arg
+                                                                     (mfc 'coefs 'list))
+                                                                 (fc 'MultiplyType
+                                                                     (mfc 'arg (tpl-fcn-use 'reduce_init 'NewShift))
+                                                                     (fc 'Coef (mfc 'coefs 'coef)))))))))
       (tpl-srt-def NSPL
                    (tpl-pmtr 'PointType)
                    (list 'PointType Nil-chunk)
@@ -2443,8 +2673,7 @@
                                                                         (tc 'Result)
                                                                         (adcr 'ArgPreSeqWalk 'arg)
                                                                         (adcr (tpl-use NSCL "1") 'coefs))
-                                                             (typedef (tpl-pmtr (scope (scope 'structured
-                                                                                              (tpl-use 'Add SH-chunk 'Point))
+                                                             (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
                                                                                        'result))
                                                                       'NewShift)
                                                              (fc 'Result
@@ -2455,8 +2684,7 @@
                                                                         (tc 'Result)
                                                                         (adcr 'ArgPreSeqWalk 'arg)
                                                                         (adcr (tpl-use NSCL "1") 'coefs))
-                                                             (typedef (tpl-pmtr (scope (scope 'structured
-                                                                                              (tpl-use 'Add SH-chunk 'Point))
+                                                             (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
                                                                                        'result))
                                                                       'NewShift)
                                                              (fc 'Result
@@ -2479,13 +2707,45 @@
                                                                          (tc 'Result)
                                                                          (adcr 'ArgPreGPUWalk 'arg)
                                                                          (adcr (tpl-use NSCL "1") 'coefs))
-                                                              (typedef (tpl-pmtr (scope (scope 'structured
-                                                                                               (tpl-use 'Add SH-chunk 'Point))
+                                                              (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
                                                                                         'result))
                                                                        'NewShift)
                                                               (fc 'Result
                                                                   (mfc 'arg (tpl-fcn-use 'init VG-chunk 'NewShift))
-                                                                  (fc 'Coef (mfc 'coefs 'coef)))))))))
+                                                                  (fc 'Coef (mfc 'coefs 'coef)))))))
+                            (tpl-srt-def 'ConstructReductionExpr
+                                         (list (tpl-pmtr 'ArgPreReduction)
+                                               (tpl-pmtr 'DestType))
+                                         null
+                                         (typedef (tpl-use NS-chunk 'Reduction 'DestType)
+                                                  'Coef)
+                                         (typedef (tpl-pmtr (scope 'ArgPreReduction 'ReductionType))
+                                                  'Arg)
+                                         (typedef (tpl-use 'ProdOp 'Reduction 'Arg 'Coef 'DestType)
+                                                  'Result)
+                                         (tpl-def (list (tpl-pmtr VG-chunk)
+                                                        (tpl-pmtr SH-chunk))
+                                                  (r-fcn-def (s-fcn-dcl 'in_rd_construct
+                                                                        (tc 'Result)
+                                                                        (adcr 'ArgPreReduction 'arg)
+                                                                        (adcr (tpl-use NSCL "1") 'coefs))
+                                                             (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
+                                                                                       'result))
+                                                                      'NewShift)
+                                                             (fc 'Result
+                                                                 (mfc 'arg (tpl-fcn-use 'reduce_init VG-chunk 'NewShift))
+                                                                 (fc 'Coef (mfc 'coefs 'coef)))))
+                                         (tpl-def (tpl-pmtr SH-chunk)
+                                                  (r-fcn-def (s-fcn-dcl 'rs_rd_construct
+                                                                        (tc 'Result)
+                                                                        (adcr 'ArgPreReduction 'arg)
+                                                                        (adcr (tpl-use NSCL "1") 'coefs))
+                                                             (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
+                                                                                       'result))
+                                                                      'NewShift)
+                                                             (fc 'Result
+                                                                 (mfc 'arg (tpl-fcn-use 'reduce_init 'NewShift))
+                                                                 (fc 'Coef (mfc 'coefs 'coef))))))))
       (tpl-srt-def 'BuildStencilPointList
                    (tpl-pmtr 'First)
                    null
@@ -2533,12 +2793,16 @@
                                       (gpu-only (smt-list-chunk new-line-chunk
                                                                 (typedef (tpl-pmtr (scope 'Pts (tpl-fcn-use 'ConstructGPUExpr 'Arg FT-chunk)))
                                                                          'ConstructGPUExpr)
-                                                                (typedef (tpl-pmtr (scope 'ConstructGPUExpr
-                                                                                          'Result))
-                                                                         'ArgGPUWalkType))))
+                                                                (typedef (tpl-pmtr (scope 'ConstructGPUExpr 'Result))
+                                                                         'ArgGPUWalkType)))
+                                      (typedef (tpl-pmtr (scope 'Pts (tpl-fcn-use 'ConstructReductionExpr 'Arg FT-chunk)))
+                                               'ConstructReductionExpr)
+                                      (typedef (tpl-pmtr (scope 'ConstructReductionExpr 'Result))
+                                               'ArgReductionType))
                                 (list (list 'Pts 'ArgSeqWalkType)
                                       (list 'Pts (tpl-pmtr (scope 'Arg 'ResizePrepType)))
-                                      (list 'Pts 'ArgGPUWalkType))
+                                      (list 'Pts 'ArgGPUWalkType)
+                                      (list 'Pts 'ArgReductionType))
                                 (tpl-pmtr (scope (scope 'Pts (tpl-fcn-use 'PossibleGhost (tpl-pmtr (scope 'Arg report-VG-chunk))))
                                                  'Result))
                                 (bm-constructor (list (adcr 'Arg 'a)
@@ -2552,6 +2816,9 @@
                                 (list (mfc 'arg_ (tpl-fcn-use 'resize_prep VG-chunk))
                                       'coefs_)
                                 (fc (scope 'ConstructGPUExpr (tpl-fcn-use 'in_gpu_construct VG-chunk SH-chunk))
+                                    'arg_
+                                    'coefs_)
+                                (fc (scope 'ConstructExpr (tpl-fcn-use 'in_reduce_construct VG-chunk SH-chunk))
                                     'arg_
                                     'coefs_)
                                 null
@@ -2608,6 +2875,19 @@
                                                   null)
                                   (mfc 'arg_ 'start 'x 'y)
                                   (mfc 'arg_ 'next)
+                                  (mfc 'arg_ 'eval)
+                                  null
+                                  (ad 'Arg 'arg_))
+                    (bs-Reduction (typedef (scope (tpl-pmtr FT-chunk)
+                                                  'value_type)
+                                           'AtomicType)
+                                  (bm-constructor (adcr 'Arg 'arg)
+                                                  (cons-asgn 'arg_ 'arg)
+                                                  null)
+                                  (mfc 'arg_ 'next)
+                                  (mfc 'arg_ 'at_end)
+                                  (mfc 'arg_ 'has_length)
+                                  'AtomicType
                                   (mfc 'arg_ 'eval)
                                   null
                                   (ad 'Arg 'arg_)))

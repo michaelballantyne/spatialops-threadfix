@@ -113,6 +113,7 @@
          struct GPUWalk
 #     endif
       /* __CUDACC__ */;
+      struct Reduction;
 
       template<typename CurrentMode, typename FieldType>
        struct NeboScalar;
@@ -130,6 +131,7 @@
              NeboScalar<GPUWalk, FieldType> typedef GPUWalkType
 #         endif
           /* __CUDACC__ */;
+          NeboScalar<Reduction, FieldType> typedef ReductionType;
           structured::InfiniteGhostData typedef PossibleValidGhost;
           NeboScalar(AtomicType const v)
           : value_(v)
@@ -143,6 +145,8 @@
               inline GPUWalkType gpu_init(void) const { return GPUWalkType(value_); }
 #         endif
           /* __CUDACC__ */;
+          template<typename ValidGhost, typename Shift>
+           inline ReductionType reduce_init(void) const { return ReductionType(value_); };
 
          private:
           AtomicType const value_;
@@ -226,6 +230,25 @@
 #     endif
       /* __CUDACC__ */;
 
+      template<typename FieldType>
+       struct NeboScalar<Reduction, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename field_type::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef AtomicType;
+          NeboScalar(AtomicType const value)
+          : value_(value)
+          {};
+          inline void next(void) {};
+          inline bool at_end(void) const { return false; };
+          inline bool has_length(void) const { return false; };
+          inline AtomicType eval(void) const { return value_; };
+
+         private:
+          AtomicType const value_;
+      };
+
       template<typename CurrentMode, typename FieldType>
        struct NeboBoolean;
 
@@ -241,6 +264,7 @@
              NeboBoolean<GPUWalk, FieldType> typedef GPUWalkType
 #         endif
           /* __CUDACC__ */;
+          NeboBoolean<Reduction, FieldType> typedef ReductionType;
           structured::InfiniteGhostData typedef PossibleValidGhost;
           NeboBoolean(bool const v)
           : value_(v)
@@ -254,6 +278,8 @@
               inline GPUWalkType gpu_init(void) const { return GPUWalkType(value_); }
 #         endif
           /* __CUDACC__ */;
+          template<typename ValidGhost, typename Shift>
+           inline ReductionType reduce_init(void) const { return ReductionType(value_); };
 
          private:
           bool const value_;
@@ -334,6 +360,24 @@
 #     endif
       /* __CUDACC__ */;
 
+      template<typename FieldType>
+       struct NeboBoolean<Reduction, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename field_type::memory_window typedef MemoryWindow;
+          NeboBoolean(bool const value)
+          : value_(value)
+          {};
+          inline void next(void) {};
+          inline bool at_end(void) const { return false; };
+          inline bool has_length(void) const { return false; };
+          inline bool eval(void) const { return value_; };
+
+         private:
+          bool const value_;
+      };
+
       template<typename CurrentMode, typename FieldType>
        struct NeboConstField;
 
@@ -349,6 +393,7 @@
              NeboConstField<GPUWalk, FieldType> typedef GPUWalkType
 #         endif
           /* __CUDACC__ */;
+          NeboConstField<Reduction, FieldType> typedef ReductionType;
           typename structured::GhostFromField<FieldType>::result typedef PossibleValidGhost;
           NeboConstField(FieldType const & f)
           : field_(f)
@@ -368,6 +413,10 @@
               }
 #         endif
           /* __CUDACC__ */;
+          template<typename ValidGhost, typename Shift>
+           inline ReductionType reduce_init(void) const {
+              return ReductionType(field_.template resize_ghost_and_shift<ValidGhost, Shift>());
+           };
           inline FieldType const & field(void) const { return field_; };
 
          private:
@@ -462,6 +511,26 @@
 #     endif
       /* __CUDACC__ */;
 
+      template<typename FieldType>
+       struct NeboConstField<Reduction, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename field_type::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef AtomicType;
+          NeboConstField(FieldType const & f)
+          : iter_(f.begin()), end_(f.end())
+          {};
+          inline void next(void) { iter_++; };
+          inline bool at_end(void) const { return iter_ == end_; };
+          inline bool has_length(void) const { return true; };
+          inline AtomicType eval(void) const { return *iter_; };
+
+         private:
+          typename FieldType::const_iterator iter_;
+          typename FieldType::const_iterator const end_;
+      };
+
       template<typename CurrentMode, typename FieldType>
        struct NeboField;
 
@@ -477,6 +546,7 @@
              NeboField<GPUWalk, FieldType> typedef GPUWalkType
 #         endif
           /* __CUDACC__ */;
+          NeboField<Reduction, FieldType> typedef ReductionType;
           typename structured::GhostFromField<FieldType>::result typedef PossibleValidGhost;
           NeboField(FieldType f)
           : field_(f)
@@ -500,6 +570,12 @@
               }
 #         endif
           /* __CUDACC__ */;
+          template<typename ValidGhost, typename Shift>
+           inline ReductionType reduce_init(void) {
+
+              return ReductionType(field_.template resize_ghost_and_shift_and_maintain_interior<ValidGhost,
+                                                                                                Shift>());
+           };
 
          private:
           FieldType field_;
@@ -610,6 +686,26 @@
 #     endif
       /* __CUDACC__ */;
 
+      template<typename FieldType>
+       struct NeboField<Reduction, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename field_type::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef AtomicType;
+          NeboField(FieldType f)
+          : iter_(f.begin()), end_(f.end())
+          {};
+          inline void next(void) { iter_++; };
+          inline bool at_end(void) const { return iter_ == end_; };
+          inline bool has_length(void) const { return true; };
+          inline AtomicType & eval(void) const { return *iter_; };
+
+         private:
+          typename FieldType::iterator iter_;
+          typename FieldType::iterator const end_;
+      };
+
       template<typename Input, typename FieldType>
        struct Standardize;
 
@@ -667,6 +763,10 @@
                    FieldType> typedef GPUWalkType
 #         endif
           /* __CUDACC__ */;
+          SumOp<Reduction,
+                typename Operand1::ReductionType,
+                typename Operand2::ReductionType,
+                FieldType> typedef ReductionType;
           typename structured::Minimum<typename Operand1::PossibleValidGhost,
                                        typename Operand2::PossibleValidGhost>::result typedef
           PossibleValidGhost;
@@ -694,6 +794,12 @@
               }
 #         endif
           /* __CUDACC__ */;
+          template<typename ValidGhost, typename Shift>
+           inline ReductionType reduce_init(void) const {
+
+              return ReductionType(operand1_.template reduce_init<ValidGhost, Shift>(),
+                                   operand2_.template reduce_init<ValidGhost, Shift>());
+           };
 
          private:
           Operand1 const operand1_;
@@ -793,6 +899,28 @@
 #     endif
       /* __CUDACC__ */;
 
+      template<typename Operand1, typename Operand2, typename FieldType>
+       struct SumOp<Reduction, Operand1, Operand2, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename field_type::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef EvalReturnType;
+          SumOp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
+          {};
+          inline void next(void) { operand1_.next(); operand2_.next(); };
+          inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
+          inline bool has_length(void) const {
+             return (operand1_.has_length() || operand2_.has_length());
+          };
+          inline EvalReturnType eval(void) const { return (operand1_.eval() + operand2_.eval()); };
+
+         private:
+          Operand1 operand1_;
+          Operand2 operand2_;
+      };
+
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2>
        inline NeboExpression<SumOp<Initial,
@@ -890,6 +1018,10 @@
                     FieldType> typedef GPUWalkType
 #         endif
           /* __CUDACC__ */;
+          DiffOp<Reduction,
+                 typename Operand1::ReductionType,
+                 typename Operand2::ReductionType,
+                 FieldType> typedef ReductionType;
           typename structured::Minimum<typename Operand1::PossibleValidGhost,
                                        typename Operand2::PossibleValidGhost>::result typedef
           PossibleValidGhost;
@@ -917,6 +1049,12 @@
               }
 #         endif
           /* __CUDACC__ */;
+          template<typename ValidGhost, typename Shift>
+           inline ReductionType reduce_init(void) const {
+
+              return ReductionType(operand1_.template reduce_init<ValidGhost, Shift>(),
+                                   operand2_.template reduce_init<ValidGhost, Shift>());
+           };
 
          private:
           Operand1 const operand1_;
@@ -1016,6 +1154,28 @@
 #     endif
       /* __CUDACC__ */;
 
+      template<typename Operand1, typename Operand2, typename FieldType>
+       struct DiffOp<Reduction, Operand1, Operand2, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename field_type::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef EvalReturnType;
+          DiffOp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
+          {};
+          inline void next(void) { operand1_.next(); operand2_.next(); };
+          inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
+          inline bool has_length(void) const {
+             return (operand1_.has_length() || operand2_.has_length());
+          };
+          inline EvalReturnType eval(void) const { return (operand1_.eval() - operand2_.eval()); };
+
+         private:
+          Operand1 operand1_;
+          Operand2 operand2_;
+      };
+
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2>
        inline NeboExpression<DiffOp<Initial,
@@ -1113,6 +1273,10 @@
                     FieldType> typedef GPUWalkType
 #         endif
           /* __CUDACC__ */;
+          ProdOp<Reduction,
+                 typename Operand1::ReductionType,
+                 typename Operand2::ReductionType,
+                 FieldType> typedef ReductionType;
           typename structured::Minimum<typename Operand1::PossibleValidGhost,
                                        typename Operand2::PossibleValidGhost>::result typedef
           PossibleValidGhost;
@@ -1140,6 +1304,12 @@
               }
 #         endif
           /* __CUDACC__ */;
+          template<typename ValidGhost, typename Shift>
+           inline ReductionType reduce_init(void) const {
+
+              return ReductionType(operand1_.template reduce_init<ValidGhost, Shift>(),
+                                   operand2_.template reduce_init<ValidGhost, Shift>());
+           };
 
          private:
           Operand1 const operand1_;
@@ -1239,6 +1409,28 @@
 #     endif
       /* __CUDACC__ */;
 
+      template<typename Operand1, typename Operand2, typename FieldType>
+       struct ProdOp<Reduction, Operand1, Operand2, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename field_type::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef EvalReturnType;
+          ProdOp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
+          {};
+          inline void next(void) { operand1_.next(); operand2_.next(); };
+          inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
+          inline bool has_length(void) const {
+             return (operand1_.has_length() || operand2_.has_length());
+          };
+          inline EvalReturnType eval(void) const { return (operand1_.eval() * operand2_.eval()); };
+
+         private:
+          Operand1 operand1_;
+          Operand2 operand2_;
+      };
+
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2>
        inline NeboExpression<ProdOp<Initial,
@@ -1336,6 +1528,10 @@
                    FieldType> typedef GPUWalkType
 #         endif
           /* __CUDACC__ */;
+          DivOp<Reduction,
+                typename Operand1::ReductionType,
+                typename Operand2::ReductionType,
+                FieldType> typedef ReductionType;
           typename structured::Minimum<typename Operand1::PossibleValidGhost,
                                        typename Operand2::PossibleValidGhost>::result typedef
           PossibleValidGhost;
@@ -1363,6 +1559,12 @@
               }
 #         endif
           /* __CUDACC__ */;
+          template<typename ValidGhost, typename Shift>
+           inline ReductionType reduce_init(void) const {
+
+              return ReductionType(operand1_.template reduce_init<ValidGhost, Shift>(),
+                                   operand2_.template reduce_init<ValidGhost, Shift>());
+           };
 
          private:
           Operand1 const operand1_;
@@ -1462,6 +1664,28 @@
 #     endif
       /* __CUDACC__ */;
 
+      template<typename Operand1, typename Operand2, typename FieldType>
+       struct DivOp<Reduction, Operand1, Operand2, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename field_type::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef EvalReturnType;
+          DivOp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
+          {};
+          inline void next(void) { operand1_.next(); operand2_.next(); };
+          inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
+          inline bool has_length(void) const {
+             return (operand1_.has_length() || operand2_.has_length());
+          };
+          inline EvalReturnType eval(void) const { return (operand1_.eval() / operand2_.eval()); };
+
+         private:
+          Operand1 operand1_;
+          Operand2 operand2_;
+      };
+
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2>
        inline NeboExpression<DivOp<Initial,
@@ -1552,6 +1776,7 @@
              SinFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
           /* __CUDACC__ */;
+          SinFcn<Reduction, typename Operand::ReductionType, FieldType> typedef ReductionType;
           typename Operand::PossibleValidGhost typedef PossibleValidGhost;
           SinFcn(Operand const & operand)
           : operand_(operand)
@@ -1571,6 +1796,10 @@
               }
 #         endif
           /* __CUDACC__ */;
+          template<typename ValidGhost, typename Shift>
+           inline ReductionType reduce_init(void) const {
+              return ReductionType(operand_.template reduce_init<ValidGhost, Shift>());
+           };
 
          private:
           Operand const operand_;
@@ -1654,6 +1883,25 @@
 #     endif
       /* __CUDACC__ */;
 
+      template<typename Operand, typename FieldType>
+       struct SinFcn<Reduction, Operand, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename field_type::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef EvalReturnType;
+          SinFcn(Operand const & operand)
+          : operand_(operand)
+          {};
+          inline void next(void) { operand_.next(); };
+          inline bool at_end(void) const { return (operand_.at_end()); };
+          inline bool has_length(void) const { return (operand_.has_length()); };
+          inline EvalReturnType eval(void) const { return std::sin(operand_.eval()); };
+
+         private:
+          Operand operand_;
+      };
+
       /* SubExpr */
       template<typename SubExpr>
        inline NeboExpression<SinFcn<Initial,
@@ -1688,6 +1936,7 @@
              CosFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
           /* __CUDACC__ */;
+          CosFcn<Reduction, typename Operand::ReductionType, FieldType> typedef ReductionType;
           typename Operand::PossibleValidGhost typedef PossibleValidGhost;
           CosFcn(Operand const & operand)
           : operand_(operand)
@@ -1707,6 +1956,10 @@
               }
 #         endif
           /* __CUDACC__ */;
+          template<typename ValidGhost, typename Shift>
+           inline ReductionType reduce_init(void) const {
+              return ReductionType(operand_.template reduce_init<ValidGhost, Shift>());
+           };
 
          private:
           Operand const operand_;
@@ -1790,6 +2043,25 @@
 #     endif
       /* __CUDACC__ */;
 
+      template<typename Operand, typename FieldType>
+       struct CosFcn<Reduction, Operand, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename field_type::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef EvalReturnType;
+          CosFcn(Operand const & operand)
+          : operand_(operand)
+          {};
+          inline void next(void) { operand_.next(); };
+          inline bool at_end(void) const { return (operand_.at_end()); };
+          inline bool has_length(void) const { return (operand_.has_length()); };
+          inline EvalReturnType eval(void) const { return std::cos(operand_.eval()); };
+
+         private:
+          Operand operand_;
+      };
+
       /* SubExpr */
       template<typename SubExpr>
        inline NeboExpression<CosFcn<Initial,
@@ -1824,6 +2096,7 @@
              TanFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
           /* __CUDACC__ */;
+          TanFcn<Reduction, typename Operand::ReductionType, FieldType> typedef ReductionType;
           typename Operand::PossibleValidGhost typedef PossibleValidGhost;
           TanFcn(Operand const & operand)
           : operand_(operand)
@@ -1843,6 +2116,10 @@
               }
 #         endif
           /* __CUDACC__ */;
+          template<typename ValidGhost, typename Shift>
+           inline ReductionType reduce_init(void) const {
+              return ReductionType(operand_.template reduce_init<ValidGhost, Shift>());
+           };
 
          private:
           Operand const operand_;
@@ -1926,6 +2203,25 @@
 #     endif
       /* __CUDACC__ */;
 
+      template<typename Operand, typename FieldType>
+       struct TanFcn<Reduction, Operand, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename field_type::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef EvalReturnType;
+          TanFcn(Operand const & operand)
+          : operand_(operand)
+          {};
+          inline void next(void) { operand_.next(); };
+          inline bool at_end(void) const { return (operand_.at_end()); };
+          inline bool has_length(void) const { return (operand_.has_length()); };
+          inline EvalReturnType eval(void) const { return std::tan(operand_.eval()); };
+
+         private:
+          Operand operand_;
+      };
+
       /* SubExpr */
       template<typename SubExpr>
        inline NeboExpression<TanFcn<Initial,
@@ -1960,6 +2256,7 @@
              ExpFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
           /* __CUDACC__ */;
+          ExpFcn<Reduction, typename Operand::ReductionType, FieldType> typedef ReductionType;
           typename Operand::PossibleValidGhost typedef PossibleValidGhost;
           ExpFcn(Operand const & operand)
           : operand_(operand)
@@ -1979,6 +2276,10 @@
               }
 #         endif
           /* __CUDACC__ */;
+          template<typename ValidGhost, typename Shift>
+           inline ReductionType reduce_init(void) const {
+              return ReductionType(operand_.template reduce_init<ValidGhost, Shift>());
+           };
 
          private:
           Operand const operand_;
@@ -2062,6 +2363,25 @@
 #     endif
       /* __CUDACC__ */;
 
+      template<typename Operand, typename FieldType>
+       struct ExpFcn<Reduction, Operand, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename field_type::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef EvalReturnType;
+          ExpFcn(Operand const & operand)
+          : operand_(operand)
+          {};
+          inline void next(void) { operand_.next(); };
+          inline bool at_end(void) const { return (operand_.at_end()); };
+          inline bool has_length(void) const { return (operand_.has_length()); };
+          inline EvalReturnType eval(void) const { return std::exp(operand_.eval()); };
+
+         private:
+          Operand operand_;
+      };
+
       /* SubExpr */
       template<typename SubExpr>
        inline NeboExpression<ExpFcn<Initial,
@@ -2096,6 +2416,7 @@
              TanhFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
           /* __CUDACC__ */;
+          TanhFcn<Reduction, typename Operand::ReductionType, FieldType> typedef ReductionType;
           typename Operand::PossibleValidGhost typedef PossibleValidGhost;
           TanhFcn(Operand const & operand)
           : operand_(operand)
@@ -2115,6 +2436,10 @@
               }
 #         endif
           /* __CUDACC__ */;
+          template<typename ValidGhost, typename Shift>
+           inline ReductionType reduce_init(void) const {
+              return ReductionType(operand_.template reduce_init<ValidGhost, Shift>());
+           };
 
          private:
           Operand const operand_;
@@ -2198,6 +2523,25 @@
 #     endif
       /* __CUDACC__ */;
 
+      template<typename Operand, typename FieldType>
+       struct TanhFcn<Reduction, Operand, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename field_type::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef EvalReturnType;
+          TanhFcn(Operand const & operand)
+          : operand_(operand)
+          {};
+          inline void next(void) { operand_.next(); };
+          inline bool at_end(void) const { return (operand_.at_end()); };
+          inline bool has_length(void) const { return (operand_.has_length()); };
+          inline EvalReturnType eval(void) const { return std::tanh(operand_.eval()); };
+
+         private:
+          Operand operand_;
+      };
+
       /* SubExpr */
       template<typename SubExpr>
        inline NeboExpression<TanhFcn<Initial,
@@ -2232,6 +2576,7 @@
              AbsFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
           /* __CUDACC__ */;
+          AbsFcn<Reduction, typename Operand::ReductionType, FieldType> typedef ReductionType;
           typename Operand::PossibleValidGhost typedef PossibleValidGhost;
           AbsFcn(Operand const & operand)
           : operand_(operand)
@@ -2251,6 +2596,10 @@
               }
 #         endif
           /* __CUDACC__ */;
+          template<typename ValidGhost, typename Shift>
+           inline ReductionType reduce_init(void) const {
+              return ReductionType(operand_.template reduce_init<ValidGhost, Shift>());
+           };
 
          private:
           Operand const operand_;
@@ -2334,6 +2683,25 @@
 #     endif
       /* __CUDACC__ */;
 
+      template<typename Operand, typename FieldType>
+       struct AbsFcn<Reduction, Operand, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename field_type::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef EvalReturnType;
+          AbsFcn(Operand const & operand)
+          : operand_(operand)
+          {};
+          inline void next(void) { operand_.next(); };
+          inline bool at_end(void) const { return (operand_.at_end()); };
+          inline bool has_length(void) const { return (operand_.has_length()); };
+          inline EvalReturnType eval(void) const { return std::abs(operand_.eval()); };
+
+         private:
+          Operand operand_;
+      };
+
       /* SubExpr */
       template<typename SubExpr>
        inline NeboExpression<AbsFcn<Initial,
@@ -2368,6 +2736,7 @@
              NegFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
           /* __CUDACC__ */;
+          NegFcn<Reduction, typename Operand::ReductionType, FieldType> typedef ReductionType;
           typename Operand::PossibleValidGhost typedef PossibleValidGhost;
           NegFcn(Operand const & operand)
           : operand_(operand)
@@ -2387,6 +2756,10 @@
               }
 #         endif
           /* __CUDACC__ */;
+          template<typename ValidGhost, typename Shift>
+           inline ReductionType reduce_init(void) const {
+              return ReductionType(operand_.template reduce_init<ValidGhost, Shift>());
+           };
 
          private:
           Operand const operand_;
@@ -2470,6 +2843,25 @@
 #     endif
       /* __CUDACC__ */;
 
+      template<typename Operand, typename FieldType>
+       struct NegFcn<Reduction, Operand, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename field_type::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef EvalReturnType;
+          NegFcn(Operand const & operand)
+          : operand_(operand)
+          {};
+          inline void next(void) { operand_.next(); };
+          inline bool at_end(void) const { return (operand_.at_end()); };
+          inline bool has_length(void) const { return (operand_.has_length()); };
+          inline EvalReturnType eval(void) const { return -(operand_.eval()); };
+
+         private:
+          Operand operand_;
+      };
+
       /* SubExpr */
       template<typename SubExpr>
        inline NeboExpression<NegFcn<Initial,
@@ -2511,6 +2903,10 @@
                     FieldType> typedef GPUWalkType
 #         endif
           /* __CUDACC__ */;
+          PowFcn<Reduction,
+                 typename Operand1::ReductionType,
+                 typename Operand2::ReductionType,
+                 FieldType> typedef ReductionType;
           typename structured::Minimum<typename Operand1::PossibleValidGhost,
                                        typename Operand2::PossibleValidGhost>::result typedef
           PossibleValidGhost;
@@ -2538,6 +2934,12 @@
               }
 #         endif
           /* __CUDACC__ */;
+          template<typename ValidGhost, typename Shift>
+           inline ReductionType reduce_init(void) const {
+
+              return ReductionType(operand1_.template reduce_init<ValidGhost, Shift>(),
+                                   operand2_.template reduce_init<ValidGhost, Shift>());
+           };
 
          private:
           Operand1 const operand1_;
@@ -2639,6 +3041,30 @@
 #     endif
       /* __CUDACC__ */;
 
+      template<typename Operand1, typename Operand2, typename FieldType>
+       struct PowFcn<Reduction, Operand1, Operand2, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename field_type::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef EvalReturnType;
+          PowFcn(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
+          {};
+          inline void next(void) { operand1_.next(); operand2_.next(); };
+          inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
+          inline bool has_length(void) const {
+             return (operand1_.has_length() || operand2_.has_length());
+          };
+          inline EvalReturnType eval(void) const {
+             return std::pow(operand1_.eval(), operand2_.eval());
+          };
+
+         private:
+          Operand1 operand1_;
+          Operand2 operand2_;
+      };
+
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2>
        inline NeboExpression<PowFcn<Initial,
@@ -2729,6 +3155,7 @@
              SqrtFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
           /* __CUDACC__ */;
+          SqrtFcn<Reduction, typename Operand::ReductionType, FieldType> typedef ReductionType;
           typename Operand::PossibleValidGhost typedef PossibleValidGhost;
           SqrtFcn(Operand const & operand)
           : operand_(operand)
@@ -2748,6 +3175,10 @@
               }
 #         endif
           /* __CUDACC__ */;
+          template<typename ValidGhost, typename Shift>
+           inline ReductionType reduce_init(void) const {
+              return ReductionType(operand_.template reduce_init<ValidGhost, Shift>());
+           };
 
          private:
           Operand const operand_;
@@ -2831,6 +3262,25 @@
 #     endif
       /* __CUDACC__ */;
 
+      template<typename Operand, typename FieldType>
+       struct SqrtFcn<Reduction, Operand, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename field_type::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef EvalReturnType;
+          SqrtFcn(Operand const & operand)
+          : operand_(operand)
+          {};
+          inline void next(void) { operand_.next(); };
+          inline bool at_end(void) const { return (operand_.at_end()); };
+          inline bool has_length(void) const { return (operand_.has_length()); };
+          inline EvalReturnType eval(void) const { return std::sqrt(operand_.eval()); };
+
+         private:
+          Operand operand_;
+      };
+
       /* SubExpr */
       template<typename SubExpr>
        inline NeboExpression<SqrtFcn<Initial,
@@ -2865,6 +3315,7 @@
              LogFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
           /* __CUDACC__ */;
+          LogFcn<Reduction, typename Operand::ReductionType, FieldType> typedef ReductionType;
           typename Operand::PossibleValidGhost typedef PossibleValidGhost;
           LogFcn(Operand const & operand)
           : operand_(operand)
@@ -2884,6 +3335,10 @@
               }
 #         endif
           /* __CUDACC__ */;
+          template<typename ValidGhost, typename Shift>
+           inline ReductionType reduce_init(void) const {
+              return ReductionType(operand_.template reduce_init<ValidGhost, Shift>());
+           };
 
          private:
           Operand const operand_;
@@ -2967,6 +3422,25 @@
 #     endif
       /* __CUDACC__ */;
 
+      template<typename Operand, typename FieldType>
+       struct LogFcn<Reduction, Operand, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename field_type::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef EvalReturnType;
+          LogFcn(Operand const & operand)
+          : operand_(operand)
+          {};
+          inline void next(void) { operand_.next(); };
+          inline bool at_end(void) const { return (operand_.at_end()); };
+          inline bool has_length(void) const { return (operand_.has_length()); };
+          inline EvalReturnType eval(void) const { return std::log(operand_.eval()); };
+
+         private:
+          Operand operand_;
+      };
+
       /* SubExpr */
       template<typename SubExpr>
        inline NeboExpression<LogFcn<Initial,
@@ -3010,6 +3484,10 @@
                       FieldType> typedef GPUWalkType
 #         endif
           /* __CUDACC__ */;
+          EqualCmp<Reduction,
+                   typename Operand1::ReductionType,
+                   typename Operand2::ReductionType,
+                   FieldType> typedef ReductionType;
           typename structured::Minimum<typename Operand1::PossibleValidGhost,
                                        typename Operand2::PossibleValidGhost>::result typedef
           PossibleValidGhost;
@@ -3037,6 +3515,12 @@
               }
 #         endif
           /* __CUDACC__ */;
+          template<typename ValidGhost, typename Shift>
+           inline ReductionType reduce_init(void) const {
+
+              return ReductionType(operand1_.template reduce_init<ValidGhost, Shift>(),
+                                   operand2_.template reduce_init<ValidGhost, Shift>());
+           };
 
          private:
           Operand1 const operand1_;
@@ -3137,6 +3621,28 @@
          }
 #     endif
       /* __CUDACC__ */;
+
+      template<typename Operand1, typename Operand2, typename FieldType>
+       struct EqualCmp<Reduction, Operand1, Operand2, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename field_type::memory_window typedef MemoryWindow;
+          bool typedef EvalReturnType;
+          EqualCmp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
+          {};
+          inline void next(void) { operand1_.next(); operand2_.next(); };
+          inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
+          inline bool has_length(void) const {
+             return (operand1_.has_length() || operand2_.has_length());
+          };
+          inline EvalReturnType eval(void) const { return (operand1_.eval() == operand2_.eval()); };
+
+         private:
+          Operand1 operand1_;
+          Operand2 operand2_;
+      };
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2>
@@ -3245,6 +3751,10 @@
                         FieldType> typedef GPUWalkType
 #         endif
           /* __CUDACC__ */;
+          InequalCmp<Reduction,
+                     typename Operand1::ReductionType,
+                     typename Operand2::ReductionType,
+                     FieldType> typedef ReductionType;
           typename structured::Minimum<typename Operand1::PossibleValidGhost,
                                        typename Operand2::PossibleValidGhost>::result typedef
           PossibleValidGhost;
@@ -3272,6 +3782,12 @@
               }
 #         endif
           /* __CUDACC__ */;
+          template<typename ValidGhost, typename Shift>
+           inline ReductionType reduce_init(void) const {
+
+              return ReductionType(operand1_.template reduce_init<ValidGhost, Shift>(),
+                                   operand2_.template reduce_init<ValidGhost, Shift>());
+           };
 
          private:
           Operand1 const operand1_;
@@ -3372,6 +3888,28 @@
          }
 #     endif
       /* __CUDACC__ */;
+
+      template<typename Operand1, typename Operand2, typename FieldType>
+       struct InequalCmp<Reduction, Operand1, Operand2, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename field_type::memory_window typedef MemoryWindow;
+          bool typedef EvalReturnType;
+          InequalCmp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
+          {};
+          inline void next(void) { operand1_.next(); operand2_.next(); };
+          inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
+          inline bool has_length(void) const {
+             return (operand1_.has_length() || operand2_.has_length());
+          };
+          inline EvalReturnType eval(void) const { return (operand1_.eval() != operand2_.eval()); };
+
+         private:
+          Operand1 operand1_;
+          Operand2 operand2_;
+      };
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2>
@@ -3480,6 +4018,10 @@
                          FieldType> typedef GPUWalkType
 #         endif
           /* __CUDACC__ */;
+          LessThanCmp<Reduction,
+                      typename Operand1::ReductionType,
+                      typename Operand2::ReductionType,
+                      FieldType> typedef ReductionType;
           typename structured::Minimum<typename Operand1::PossibleValidGhost,
                                        typename Operand2::PossibleValidGhost>::result typedef
           PossibleValidGhost;
@@ -3507,6 +4049,12 @@
               }
 #         endif
           /* __CUDACC__ */;
+          template<typename ValidGhost, typename Shift>
+           inline ReductionType reduce_init(void) const {
+
+              return ReductionType(operand1_.template reduce_init<ValidGhost, Shift>(),
+                                   operand2_.template reduce_init<ValidGhost, Shift>());
+           };
 
          private:
           Operand1 const operand1_;
@@ -3609,6 +4157,28 @@
          }
 #     endif
       /* __CUDACC__ */;
+
+      template<typename Operand1, typename Operand2, typename FieldType>
+       struct LessThanCmp<Reduction, Operand1, Operand2, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename field_type::memory_window typedef MemoryWindow;
+          bool typedef EvalReturnType;
+          LessThanCmp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
+          {};
+          inline void next(void) { operand1_.next(); operand2_.next(); };
+          inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
+          inline bool has_length(void) const {
+             return (operand1_.has_length() || operand2_.has_length());
+          };
+          inline EvalReturnType eval(void) const { return (operand1_.eval() < operand2_.eval()); };
+
+         private:
+          Operand1 operand1_;
+          Operand2 operand2_;
+      };
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2>
@@ -3715,6 +4285,10 @@
                               FieldType> typedef GPUWalkType
 #         endif
           /* __CUDACC__ */;
+          LessThanEqualCmp<Reduction,
+                           typename Operand1::ReductionType,
+                           typename Operand2::ReductionType,
+                           FieldType> typedef ReductionType;
           typename structured::Minimum<typename Operand1::PossibleValidGhost,
                                        typename Operand2::PossibleValidGhost>::result typedef
           PossibleValidGhost;
@@ -3742,6 +4316,12 @@
               }
 #         endif
           /* __CUDACC__ */;
+          template<typename ValidGhost, typename Shift>
+           inline ReductionType reduce_init(void) const {
+
+              return ReductionType(operand1_.template reduce_init<ValidGhost, Shift>(),
+                                   operand2_.template reduce_init<ValidGhost, Shift>());
+           };
 
          private:
           Operand1 const operand1_;
@@ -3844,6 +4424,28 @@
          }
 #     endif
       /* __CUDACC__ */;
+
+      template<typename Operand1, typename Operand2, typename FieldType>
+       struct LessThanEqualCmp<Reduction, Operand1, Operand2, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename field_type::memory_window typedef MemoryWindow;
+          bool typedef EvalReturnType;
+          LessThanEqualCmp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
+          {};
+          inline void next(void) { operand1_.next(); operand2_.next(); };
+          inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
+          inline bool has_length(void) const {
+             return (operand1_.has_length() || operand2_.has_length());
+          };
+          inline EvalReturnType eval(void) const { return (operand1_.eval() <= operand2_.eval()); };
+
+         private:
+          Operand1 operand1_;
+          Operand2 operand2_;
+      };
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2>
@@ -3954,6 +4556,10 @@
                             FieldType> typedef GPUWalkType
 #         endif
           /* __CUDACC__ */;
+          GreaterThanCmp<Reduction,
+                         typename Operand1::ReductionType,
+                         typename Operand2::ReductionType,
+                         FieldType> typedef ReductionType;
           typename structured::Minimum<typename Operand1::PossibleValidGhost,
                                        typename Operand2::PossibleValidGhost>::result typedef
           PossibleValidGhost;
@@ -3981,6 +4587,12 @@
               }
 #         endif
           /* __CUDACC__ */;
+          template<typename ValidGhost, typename Shift>
+           inline ReductionType reduce_init(void) const {
+
+              return ReductionType(operand1_.template reduce_init<ValidGhost, Shift>(),
+                                   operand2_.template reduce_init<ValidGhost, Shift>());
+           };
 
          private:
           Operand1 const operand1_;
@@ -4083,6 +4695,28 @@
          }
 #     endif
       /* __CUDACC__ */;
+
+      template<typename Operand1, typename Operand2, typename FieldType>
+       struct GreaterThanCmp<Reduction, Operand1, Operand2, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename field_type::memory_window typedef MemoryWindow;
+          bool typedef EvalReturnType;
+          GreaterThanCmp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
+          {};
+          inline void next(void) { operand1_.next(); operand2_.next(); };
+          inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
+          inline bool has_length(void) const {
+             return (operand1_.has_length() || operand2_.has_length());
+          };
+          inline EvalReturnType eval(void) const { return (operand1_.eval() > operand2_.eval()); };
+
+         private:
+          Operand1 operand1_;
+          Operand2 operand2_;
+      };
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2>
@@ -4189,6 +4823,10 @@
                                  FieldType> typedef GPUWalkType
 #         endif
           /* __CUDACC__ */;
+          GreaterThanEqualCmp<Reduction,
+                              typename Operand1::ReductionType,
+                              typename Operand2::ReductionType,
+                              FieldType> typedef ReductionType;
           typename structured::Minimum<typename Operand1::PossibleValidGhost,
                                        typename Operand2::PossibleValidGhost>::result typedef
           PossibleValidGhost;
@@ -4216,6 +4854,12 @@
               }
 #         endif
           /* __CUDACC__ */;
+          template<typename ValidGhost, typename Shift>
+           inline ReductionType reduce_init(void) const {
+
+              return ReductionType(operand1_.template reduce_init<ValidGhost, Shift>(),
+                                   operand2_.template reduce_init<ValidGhost, Shift>());
+           };
 
          private:
           Operand1 const operand1_;
@@ -4318,6 +4962,28 @@
          }
 #     endif
       /* __CUDACC__ */;
+
+      template<typename Operand1, typename Operand2, typename FieldType>
+       struct GreaterThanEqualCmp<Reduction, Operand1, Operand2, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename field_type::memory_window typedef MemoryWindow;
+          bool typedef EvalReturnType;
+          GreaterThanEqualCmp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
+          {};
+          inline void next(void) { operand1_.next(); operand2_.next(); };
+          inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
+          inline bool has_length(void) const {
+             return (operand1_.has_length() || operand2_.has_length());
+          };
+          inline EvalReturnType eval(void) const { return (operand1_.eval() >= operand2_.eval()); };
+
+         private:
+          Operand1 operand1_;
+          Operand2 operand2_;
+      };
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2>
@@ -4430,6 +5096,10 @@
                    FieldType> typedef GPUWalkType
 #         endif
           /* __CUDACC__ */;
+          AndOp<Reduction,
+                typename Operand1::ReductionType,
+                typename Operand2::ReductionType,
+                FieldType> typedef ReductionType;
           typename structured::Minimum<typename Operand1::PossibleValidGhost,
                                        typename Operand2::PossibleValidGhost>::result typedef
           PossibleValidGhost;
@@ -4457,6 +5127,12 @@
               }
 #         endif
           /* __CUDACC__ */;
+          template<typename ValidGhost, typename Shift>
+           inline ReductionType reduce_init(void) const {
+
+              return ReductionType(operand1_.template reduce_init<ValidGhost, Shift>(),
+                                   operand2_.template reduce_init<ValidGhost, Shift>());
+           };
 
          private:
           Operand1 const operand1_;
@@ -4556,6 +5232,28 @@
 #     endif
       /* __CUDACC__ */;
 
+      template<typename Operand1, typename Operand2, typename FieldType>
+       struct AndOp<Reduction, Operand1, Operand2, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename field_type::memory_window typedef MemoryWindow;
+          bool typedef EvalReturnType;
+          AndOp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
+          {};
+          inline void next(void) { operand1_.next(); operand2_.next(); };
+          inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
+          inline bool has_length(void) const {
+             return (operand1_.has_length() || operand2_.has_length());
+          };
+          inline EvalReturnType eval(void) const { return (operand1_.eval() && operand2_.eval()); };
+
+         private:
+          Operand1 operand1_;
+          Operand2 operand2_;
+      };
+
       /* SubBoolExpr X SubBoolExpr */
       template<typename SubBoolExpr1, typename SubBoolExpr2>
        inline NeboBooleanExpression<AndOp<Initial,
@@ -4646,6 +5344,10 @@
              typedef GPUWalkType
 #         endif
           /* __CUDACC__ */;
+          OrOp<Reduction,
+               typename Operand1::ReductionType,
+               typename Operand2::ReductionType,
+               FieldType> typedef ReductionType;
           typename structured::Minimum<typename Operand1::PossibleValidGhost,
                                        typename Operand2::PossibleValidGhost>::result typedef
           PossibleValidGhost;
@@ -4673,6 +5375,12 @@
               }
 #         endif
           /* __CUDACC__ */;
+          template<typename ValidGhost, typename Shift>
+           inline ReductionType reduce_init(void) const {
+
+              return ReductionType(operand1_.template reduce_init<ValidGhost, Shift>(),
+                                   operand2_.template reduce_init<ValidGhost, Shift>());
+           };
 
          private:
           Operand1 const operand1_;
@@ -4772,6 +5480,28 @@
 #     endif
       /* __CUDACC__ */;
 
+      template<typename Operand1, typename Operand2, typename FieldType>
+       struct OrOp<Reduction, Operand1, Operand2, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename field_type::memory_window typedef MemoryWindow;
+          bool typedef EvalReturnType;
+          OrOp(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
+          {};
+          inline void next(void) { operand1_.next(); operand2_.next(); };
+          inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); };
+          inline bool has_length(void) const {
+             return (operand1_.has_length() || operand2_.has_length());
+          };
+          inline EvalReturnType eval(void) const { return (operand1_.eval() || operand2_.eval()); };
+
+         private:
+          Operand1 operand1_;
+          Operand2 operand2_;
+      };
+
       /* SubBoolExpr X SubBoolExpr */
       template<typename SubBoolExpr1, typename SubBoolExpr2>
        inline NeboBooleanExpression<OrOp<Initial,
@@ -4857,6 +5587,7 @@
              NotOp<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
           /* __CUDACC__ */;
+          NotOp<Reduction, typename Operand::ReductionType, FieldType> typedef ReductionType;
           typename Operand::PossibleValidGhost typedef PossibleValidGhost;
           NotOp(Operand const & operand)
           : operand_(operand)
@@ -4876,6 +5607,10 @@
               }
 #         endif
           /* __CUDACC__ */;
+          template<typename ValidGhost, typename Shift>
+           inline ReductionType reduce_init(void) const {
+              return ReductionType(operand_.template reduce_init<ValidGhost, Shift>());
+           };
 
          private:
           Operand const operand_;
@@ -4959,6 +5694,25 @@
 #     endif
       /* __CUDACC__ */;
 
+      template<typename Operand, typename FieldType>
+       struct NotOp<Reduction, Operand, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename field_type::memory_window typedef MemoryWindow;
+          bool typedef EvalReturnType;
+          NotOp(Operand const & operand)
+          : operand_(operand)
+          {};
+          inline void next(void) { operand_.next(); };
+          inline bool at_end(void) const { return (operand_.at_end()); };
+          inline bool has_length(void) const { return (operand_.has_length()); };
+          inline EvalReturnType eval(void) const { return !(operand_.eval()); };
+
+         private:
+          Operand operand_;
+      };
+
       /* SubBoolExpr */
       template<typename SubBoolExpr>
        inline NeboBooleanExpression<NotOp<Initial,
@@ -4983,6 +5737,8 @@
          NeboNil typedef ResizePrepType;
 
          NeboNil typedef SeqWalkType;
+
+         NeboNil typedef ReductionType;
 
          structured::InfiniteGhostData typedef PossibleValidGhost;
 
@@ -5009,6 +5765,10 @@
              typedef GPUWalkType
 #         endif
           /* __CUDACC__ */;
+          NeboClause<Reduction,
+                     typename Test::ReductionType,
+                     typename Expr::ReductionType,
+                     FieldType> typedef ReductionType;
           typename structured::Minimum<typename Test::PossibleValidGhost,
                                        typename Expr::PossibleValidGhost>::result typedef
           PossibleValidGhost;
@@ -5036,6 +5796,12 @@
               }
 #         endif
           /* __CUDACC__ */;
+          template<typename ValidGhost, typename Shift>
+           inline ReductionType reduce_init(void) const {
+
+              return ReductionType(test_.template reduce_init<ValidGhost, Shift>(),
+                                   expr_.template reduce_init<ValidGhost, Shift>());
+           };
 
          private:
           Test const test_;
@@ -5128,6 +5894,27 @@
 #     endif
       /* __CUDACC__ */;
 
+      template<typename Test, typename Expr, typename FieldType>
+       struct NeboClause<Reduction, Test, Expr, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename field_type::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef AtomicType;
+          NeboClause(Test const & test, Expr const & expr)
+          : test_(test), expr_(expr)
+          {};
+          inline void next(void) { test_.next(); expr_.next(); };
+          inline bool at_end(void) const { return (test_.at_end() || expr_.at_end()); };
+          inline bool has_length(void) const { return (test_.has_length() || expr_.has_length()); };
+          inline AtomicType eval(void) const { return expr_.eval(); };
+          inline bool const check(void) const { return test_.eval(); };
+
+         private:
+          Test test_;
+          Expr expr_;
+      };
+
       template<typename CurrentMode, typename ClauseType, typename Otherwise, typename FieldType>
        struct NeboCond;
 
@@ -5152,6 +5939,10 @@
                       FieldType> typedef GPUWalkType
 #         endif
           /* __CUDACC__ */;
+          NeboCond<Reduction,
+                   typename ClauseType::ReductionType,
+                   typename Otherwise::ReductionType,
+                   FieldType> typedef ReductionType;
           typename structured::Minimum<typename ClauseType::PossibleValidGhost,
                                        typename Otherwise::PossibleValidGhost>::result typedef
           PossibleValidGhost;
@@ -5179,6 +5970,12 @@
               }
 #         endif
           /* __CUDACC__ */;
+          template<typename ValidGhost, typename Shift>
+           inline ReductionType reduce_init(void) const {
+
+              return ReductionType(clause_.template reduce_init<ValidGhost, Shift>(),
+                                   otherwise_.template reduce_init<ValidGhost, Shift>());
+           };
           inline ClauseType const & clause(void) const { return clause_; };
           inline Otherwise const & otherwise(void) const { return otherwise_; };
 
@@ -5282,6 +6079,30 @@
          }
 #     endif
       /* __CUDACC__ */;
+
+      template<typename ClauseType, typename Otherwise, typename FieldType>
+       struct NeboCond<Reduction, ClauseType, Otherwise, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename field_type::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef AtomicType;
+          NeboCond(ClauseType const & clause, Otherwise const & otherwise)
+          : clause_(clause), otherwise_(otherwise)
+          {};
+          inline void next(void) { clause_.next(); otherwise_.next(); };
+          inline bool at_end(void) const { return (clause_.at_end() || otherwise_.at_end()); };
+          inline bool has_length(void) const {
+             return (clause_.has_length() || otherwise_.has_length());
+          };
+          inline AtomicType eval(void) const {
+             return (clause_.check() ? clause_.eval() : otherwise_.eval());
+          };
+
+         private:
+          ClauseType clause_;
+          Otherwise otherwise_;
+      };
 
       struct NeboSimpleClause {
 
@@ -5894,6 +6715,8 @@
              GPUWalkType
 #         endif
           /* __CUDACC__ */;
+          NeboStencilPoint<Reduction, Point, typename Arg::ReductionType, FieldType> typedef
+          ReductionType;
           typename structured::Invalidate<typename Arg::PossibleValidGhost, Point>::result typedef
           PossibleValidGhost;
           NeboStencilPoint(Arg const & a)
@@ -5919,6 +6742,13 @@
               }
 #         endif
           /* __CUDACC__ */;
+          template<typename ValidGhost, typename Shift>
+           inline ReductionType reduce_init(void) const {
+
+              return ReductionType(arg_.template reduce_init<ValidGhost,
+                                                             typename structured::Add<Shift, Point>::
+                                                             result>());
+           };
 
          private:
           Arg const arg_;
@@ -6001,6 +6831,25 @@
          }
 #     endif
       /* __CUDACC__ */;
+
+      template<typename Point, typename Arg, typename FieldType>
+       struct NeboStencilPoint<Reduction, Point, Arg, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename field_type::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef AtomicType;
+          NeboStencilPoint(Arg const & a)
+          : arg_(a)
+          {};
+          inline void next(void) { arg_.next(); };
+          inline bool at_end(void) const { return arg_.at_end(); };
+          inline bool has_length(void) const { return arg_.has_length(); };
+          inline AtomicType eval(void) const { return arg_.eval(); };
+
+         private:
+          Arg arg_;
+      };
 
       template<int Length>
        struct NeboStencilCoefList {
@@ -6143,6 +6992,43 @@
              }
 #         endif
           /* __CUDACC__ */;
+          template<typename ArgPreReduction, typename DestType>
+           struct ConstructReductionExpr {
+
+             NeboScalar<Reduction, DestType> typedef Coef;
+
+             typename ArgPreReduction::ReductionType typedef Arg;
+
+             ProdOp<Reduction, Arg, Coef, DestType> typedef MultiplyType;
+
+             typename List::template ConstructReductionExpr<ArgPreReduction, DestType> typedef
+             EarlierPointsType;
+
+             typename EarlierPointsType::Result typedef EarlierPointsResult;
+
+             SumOp<Reduction, EarlierPointsResult, MultiplyType, DestType> typedef Result;
+
+             template<typename ValidGhost, typename Shift>
+              static inline Result const in_rd_construct(ArgPreReduction const & arg,
+                                                         NeboStencilCoefList<length> const & coefs) {
+
+                 typename structured::Add<Shift, Point>::result typedef NewShift;
+
+                 return Result(EarlierPointsType::template in_rd_construct<ValidGhost, Shift>(arg,
+                                                                                              coefs.list()),
+                               MultiplyType(arg.template reduce_init<ValidGhost, NewShift>(), Coef(coefs.coef())));
+              };
+
+             template<typename Shift>
+              static inline Result const rs_rd_construct(ArgPreReduction const & arg,
+                                                         NeboStencilCoefList<length> const & coefs) {
+
+                 typename structured::Add<Shift, Point>::result typedef NewShift;
+
+                 return Result(EarlierPointsType::template rs_rd_construct<Shift>(arg, coefs.list()),
+                               MultiplyType(arg.template reduce_init<NewShift>(), Coef(coefs.coef())));
+              };
+          };
       };
 
       template<typename PointType>
@@ -6207,6 +7093,33 @@
              }
 #         endif
           /* __CUDACC__ */;
+          template<typename ArgPreReduction, typename DestType>
+           struct ConstructReductionExpr {
+
+             NeboScalar<Reduction, DestType> typedef Coef;
+
+             typename ArgPreReduction::ReductionType typedef Arg;
+
+             ProdOp<Reduction, Arg, Coef, DestType> typedef Result;
+
+             template<typename ValidGhost, typename Shift>
+              static inline Result const in_rd_construct(ArgPreReduction const & arg,
+                                                         NeboStencilCoefList<1> const & coefs) {
+
+                 typename structured::Add<Shift, Point>::result typedef NewShift;
+
+                 return Result(arg.template reduce_init<ValidGhost, NewShift>(), Coef(coefs.coef()));
+              };
+
+             template<typename Shift>
+              static inline Result const rs_rd_construct(ArgPreReduction const & arg,
+                                                         NeboStencilCoefList<1> const & coefs) {
+
+                 typename structured::Add<Shift, Point>::result typedef NewShift;
+
+                 return Result(arg.template reduce_init<NewShift>(), Coef(coefs.coef()));
+              };
+          };
       };
 
       template<typename First>
@@ -6249,6 +7162,9 @@
              typename ConstructGPUExpr::Result typedef ArgGPUWalkType
 #         endif
           /* __CUDACC__ */;
+          typename Pts::template ConstructReductionExpr<Arg, FieldType> typedef
+          ConstructReductionExpr;
+          typename ConstructReductionExpr::Result typedef ArgReductionType;
           NeboStencil<SeqWalk, Pts, ArgSeqWalkType, FieldType> typedef SeqWalkType;
           NeboStencil<ResizePrep, Pts, typename Arg::ResizePrepType, FieldType> typedef
           ResizePrepType;
@@ -6256,6 +7172,7 @@
              NeboStencil<GPUWalk, Pts, ArgGPUWalkType, FieldType> typedef GPUWalkType
 #         endif
           /* __CUDACC__ */;
+          NeboStencil<Reduction, Pts, ArgReductionType, FieldType> typedef ReductionType;
           typename Pts::template PossibleGhost<typename Arg::PossibleValidGhost>::Result typedef
           PossibleValidGhost;
           NeboStencil(Arg const & a, Coefs const & coefs)
@@ -6280,6 +7197,12 @@
               }
 #         endif
           /* __CUDACC__ */;
+          template<typename ValidGhost, typename Shift>
+           inline ReductionType reduce_init(void) const {
+
+              return ReductionType(ConstructExpr::template in_reduce_construct<ValidGhost, Shift>(arg_,
+                                                                                                  coefs_));
+           };
 
          private:
           Arg const arg_;
@@ -6369,6 +7292,25 @@
          }
 #     endif
       /* __CUDACC__ */;
+
+      template<typename Pts, typename Arg, typename FieldType>
+       struct NeboStencil<Reduction, Pts, Arg, FieldType> {
+
+         public:
+          FieldType typedef field_type;
+          typename field_type::memory_window typedef MemoryWindow;
+          typename FieldType::value_type typedef AtomicType;
+          NeboStencil(Arg const & arg)
+          : arg_(arg)
+          {};
+          inline void next(void) { arg_.next(); };
+          inline bool at_end(void) const { return arg_.at_end(); };
+          inline bool has_length(void) const { return arg_.has_length(); };
+          inline AtomicType eval(void) const { return arg_.eval(); };
+
+         private:
+          Arg arg_;
+      };
 
       template<typename LhsType, typename RhsType>
        inline void nebo_assignment_sequential_execute_internal(LhsType lhs, RhsType rhs) {
