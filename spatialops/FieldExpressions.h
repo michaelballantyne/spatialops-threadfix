@@ -734,7 +734,7 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1.template init<Shift>(), operand2.template init<Shift>());
+              return SeqWalkType(operand1_.template init<Shift>(), operand2_.template init<Shift>());
            };
 
          private:
@@ -957,7 +957,7 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1.template init<Shift>(), operand2.template init<Shift>());
+              return SeqWalkType(operand1_.template init<Shift>(), operand2_.template init<Shift>());
            };
 
          private:
@@ -1180,7 +1180,7 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1.template init<Shift>(), operand2.template init<Shift>());
+              return SeqWalkType(operand1_.template init<Shift>(), operand2_.template init<Shift>());
            };
 
          private:
@@ -1403,7 +1403,7 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1.template init<Shift>(), operand2.template init<Shift>());
+              return SeqWalkType(operand1_.template init<Shift>(), operand2_.template init<Shift>());
            };
 
          private:
@@ -1607,7 +1607,7 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand.template init<Shift>());
+              return SeqWalkType(operand_.template init<Shift>());
            };
 
          private:
@@ -1743,7 +1743,7 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand.template init<Shift>());
+              return SeqWalkType(operand_.template init<Shift>());
            };
 
          private:
@@ -1879,7 +1879,7 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand.template init<Shift>());
+              return SeqWalkType(operand_.template init<Shift>());
            };
 
          private:
@@ -2015,7 +2015,7 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand.template init<Shift>());
+              return SeqWalkType(operand_.template init<Shift>());
            };
 
          private:
@@ -2151,7 +2151,7 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand.template init<Shift>());
+              return SeqWalkType(operand_.template init<Shift>());
            };
 
          private:
@@ -2287,7 +2287,7 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand.template init<Shift>());
+              return SeqWalkType(operand_.template init<Shift>());
            };
 
          private:
@@ -2423,7 +2423,7 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand.template init<Shift>());
+              return SeqWalkType(operand_.template init<Shift>());
            };
 
          private:
@@ -2578,7 +2578,7 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1.template init<Shift>(), operand2.template init<Shift>());
+              return SeqWalkType(operand1_.template init<Shift>(), operand2_.template init<Shift>());
            };
 
          private:
@@ -2784,7 +2784,7 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand.template init<Shift>());
+              return SeqWalkType(operand_.template init<Shift>());
            };
 
          private:
@@ -2920,7 +2920,7 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand.template init<Shift>());
+              return SeqWalkType(operand_.template init<Shift>());
            };
 
          private:
@@ -3079,7 +3079,7 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1.template init<Shift>(), operand2.template init<Shift>());
+              return SeqWalkType(operand1_.template init<Shift>(), operand2_.template init<Shift>());
            };
 
          private:
@@ -3314,7 +3314,7 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1.template init<Shift>(), operand2.template init<Shift>());
+              return SeqWalkType(operand1_.template init<Shift>(), operand2_.template init<Shift>());
            };
 
          private:
@@ -3551,7 +3551,7 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1.template init<Shift>(), operand2.template init<Shift>());
+              return SeqWalkType(operand1_.template init<Shift>(), operand2_.template init<Shift>());
            };
 
          private:
@@ -3786,7 +3786,7 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1.template init<Shift>(), operand2.template init<Shift>());
+              return SeqWalkType(operand1_.template init<Shift>(), operand2_.template init<Shift>());
            };
 
          private:
@@ -4025,7 +4025,7 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1.template init<Shift>(), operand2.template init<Shift>());
+              return SeqWalkType(operand1_.template init<Shift>(), operand2_.template init<Shift>());
            };
 
          private:
@@ -4260,7 +4260,7 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1.template init<Shift>(), operand2.template init<Shift>());
+              return SeqWalkType(operand1_.template init<Shift>(), operand2_.template init<Shift>());
            };
 
          private:
@@ -4497,7 +4497,7 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1.template init<Shift>(), operand2.template init<Shift>());
+              return SeqWalkType(operand1_.template init<Shift>(), operand2_.template init<Shift>());
            };
 
          private:
@@ -4713,7 +4713,7 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1.template init<Shift>(), operand2.template init<Shift>());
+              return SeqWalkType(operand1_.template init<Shift>(), operand2_.template init<Shift>());
            };
 
          private:
@@ -4912,7 +4912,7 @@
           {};
           template<typename Shift>
            inline SeqWalkType init(void) const {
-              return SeqWalkType(operand.template init<Shift>());
+              return SeqWalkType(operand_.template init<Shift>());
            };
 
          private:
@@ -5179,6 +5179,8 @@
               }
 #         endif
           /* __CUDACC__ */;
+          inline ClauseType const & clause(void) const { return clause_; };
+          inline Otherwise const & otherwise(void) const { return otherwise_; };
 
          private:
           ClauseType const clause_;
