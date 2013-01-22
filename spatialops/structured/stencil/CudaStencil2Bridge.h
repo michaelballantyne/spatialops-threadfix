@@ -29,6 +29,7 @@ namespace SpatialOps {
 		void cuda_stencil_2_apply_to_field( DataType* dest, const DataType* src,
 									 DataType low,   DataType high,
 									 const int nx,      const int ny,      const int nz,
+                                                                         const int sEX_x,   const int sEX_y,   const int sEX_z, 
 									 const int dEX_x,   const int dEX_y,   const int dEX_z,
 									 const int dOFF_x,  const int dOFF_y,  const int dOFF_z,
 									 const int s1OFF_x, const int s1OFF_y, const int s1OFF_z,

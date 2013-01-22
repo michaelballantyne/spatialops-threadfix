@@ -20,8 +20,17 @@
  * IN THE SOFTWARE.
  */
 
+#include <spatialops/SpatialOpsConfigure.h>
+
+#ifdef ENABLE_CUDA
+#include "CudaStencil4.h"
+#else
 #include "Stencil4.h"
+#endif
+
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
+#include <spatialops/structured/FVTools.h>
+#include <spatialops/structured/MemoryTypes.h>
 #include <spatialops/FieldExpressionsStencil4.h>
 
 namespace SpatialOps{
@@ -44,16 +53,32 @@ namespace structured{
   //------------------------------------------------------------------
 
   template< typename OpT, typename SrcT, typename DestT >
-  void
-  Stencil4<OpT,SrcT,DestT>::
-  apply_to_field( const SrcT& src, DestT& dest ) const
-  {
-    stencil_4_apply_to_field_general_execute<OpT,SrcT,DestT>( src,
-                                                              dest,
-                                                              coef1_,
-                                                              coef2_,
-                                                              coef3_,
-                                                              coef4_ );
+  void Stencil4<OpT,SrcT,DestT>::apply_to_field( const SrcT& src, DestT& dest ) const
+  {   switch( dest.memory_device_type() ){
+      case LOCAL_RAM:
+//std::cout << "into the CPU Stencil4 .cpp \n";
+        stencil_4_apply_to_field_general_execute<OpT,SrcT,DestT>( src,
+                                                                  dest,
+                                                                  coef1_,
+                                                                  coef2_,
+                                                                  coef3_,
+                                                                  coef4_ );
+        break;
+#ifdef ENABLE_CUDA
+      case EXTERNAL_CUDA_GPU:
+//std::cout<<"into the GPU Stencil4 in Stencil4.cpp \n";
+        cuda_stencil_4_apply_to_field_helper<OpT,SrcT,DestT>( src, dest, coef1_, coef2_, coef3_, coef4_ );
+        break;
+#endif
+      default:{
+        std::ostringstream msg;
+        msg << "Destination field has unsupported device type ( "
+            << DeviceTypeTools::get_memory_type_description( dest.memory_device_type() )
+            << " )\n";
+        msg << "\t - " << __FILE__ << " : " << __LINE__;
+        throw(std::runtime_error(msg.str()));
+      }
+    }
   }
 
   //==================================================================
@@ -85,7 +110,7 @@ namespace structured{
   DECLARE_STENCIL( Interpolant, YVolField, ZVolField )
   DECLARE_STENCIL( Interpolant, ZVolField, XVolField )
   DECLARE_STENCIL( Interpolant, ZVolField, YVolField )
-  //
+
   //==================================================================
 
 } // namespace structured

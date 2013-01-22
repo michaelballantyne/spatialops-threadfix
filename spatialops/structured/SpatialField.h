@@ -24,6 +24,7 @@
  * 	DEBUG_SF_ALL -- Enable all Spatial Field debugging flags.
  *
  */
+//#define DEBUG_SF_ALL
 
 #ifndef SpatialOps_SpatialField_h
 #define SpatialOps_SpatialField_h
@@ -442,14 +443,13 @@ SpatialField( const MemoryWindow window,
                     : ( NULL ) ),
       fieldValuesExtDevice_( (mtype == EXTERNAL_CUDA_GPU ) ?
     		  	  	  	  	 // Note: this assumes fieldValues is on the proper GPU....
-                             ( ( mode == ExternalStorage ) ? fieldValues
-                               : (NULL) ) // reset gpu memory later
+                             ( ( mode == ExternalStorage ) ? fieldValues : (NULL) ) // reset gpu memory later
                              : ( NULL ) ),
       builtField_( mode == InternalStorage ),
       memType_( mtype ),
       deviceIndex_( devIdx ),
       allocatedBytes_( 0 )
-{
+{ //std::cout<<"into the SpatialOps constructor \n";
   //InteriorStorage => we build a new field
   //Exterior storage => we wrap T*
   IntVec ext = window.extent();
@@ -466,15 +466,15 @@ SpatialField( const MemoryWindow window,
   allocatedBytes_ = sizeof(T) * ( window.glob_npts() );
 
   interiorFieldWindow_ = MemoryWindow( window.glob_dim(), ofs, ext, window.has_bc(0), window.has_bc(1), window.has_bc(2) );
-
+  //std::cout<<"mtype in SpatialOps constructor :"<<mtype<<std::endl;
   switch ( mtype ) {
-    case LOCAL_RAM:
+      case LOCAL_RAM:
       //Default case, no action required.
       break;
 #ifdef ENABLE_CUDA
       case EXTERNAL_CUDA_GPU: {
         if( mode == InternalStorage ){
-          // We only allocate space if were storing internally
+          // Allocate Memory, only if Storage Mode is INTERNAL.
           ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
           fieldValuesExtDevice_ = (T*)CDI.get_raw_pointer( allocatedBytes_, deviceIndex_ );
         }
@@ -492,7 +492,10 @@ SpatialField( const MemoryWindow window,
   }
 
   if (mode == InternalStorage){
+    //std::cout<<"before getting into reset_values(fieldValues) \n";
+    //std::cout<<"field values of SpatialField :" << fieldValues << std::endl;
     reset_values(fieldValues);
+    //std::cout<<"after coming out of the reset_values(fieldValues) \n";
   }
 }
 
@@ -539,7 +542,6 @@ SpatialField<Location, GhostTraits, T>::~SpatialField() {
     		delete[] fieldValues_;
     		fieldValues_ = NULL;
     	}
-
     	ema::cuda::CUDADeviceInterface::self().release( (void*)fieldValuesExtDevice_, deviceIndex_);
     }
     break;
@@ -560,12 +562,13 @@ SpatialField<Location, GhostTraits, T>::~SpatialField() {
 template<typename FieldLocation, typename GhostTraits, typename T>
 void SpatialField<FieldLocation, GhostTraits, T>::
 reset_values( const T* values )
-{
-  switch (memType_) {
+{ //std::cout<<"memType_ in the reset_values :"<<memType_<<std::endl;
+  //std::cout<<"values in reset_values :"<<values<<std::endl;
+  switch ( memType_ ) {
   case LOCAL_RAM: {
     iterator ifld = begin();
     const iterator iflde = end();
-    if (NULL == values) {
+    if ( values == NULL ) {
       for (; ifld != iflde; ++ifld)
         *ifld = 0.0;
     } else {
@@ -604,18 +607,21 @@ template<typename Location, typename GhostTraits, typename T>
 T* SpatialField<Location, GhostTraits, T>::
 field_values( const MemoryType consumerMemoryType,
               const unsigned short int consumerDeviceIndex ) const
-{
+{ //std::cout<<"into the field_values() in SpatialField.h \n";
 #ifdef DEBUG_SF_ALL
   std::cout << "Caught call to field_values for field : " << this->field_values() << "\n";
-  std::cout << "\t -- mtype:        " << DeviceTypeTools::get_memory_type_description(mtype) << std::endl
+  std::cout << "\t -- mtype:        " << DeviceTypeTools::get_memory_type_description( consumerMemoryType ) << std::endl
       << "\t -- Device index: " << consumerDeviceIndex << std::endl
       << "\t -- Value:        " << consumerFieldValues_.find(consumerDeviceIndex)->first
       << " " <<consumerFieldValues_.find(consumerDeviceIndex)->second << std::endl;
 #endif
-
+//std::cout << "consumerMemoryType of field_values() : " << consumerMemoryType << std::endl;
   switch( consumerMemoryType ){
   case LOCAL_RAM:{
+ //std::cout <<  "LOCAL_RAM of field_values() \n";
+ //std::cout << "fieldvalues = " << fieldValues_ <<std::endl;
     if( fieldValues_ == NULL ){
+ //std::cout << "if statement of field_values_ = NULL \n";
       std::ostringstream msg;
       msg << "Request for consumer field pointer on a device for which it has not been allocated\n";
       msg << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
@@ -626,8 +632,9 @@ field_values( const MemoryType consumerMemoryType,
 
 #ifdef ENABLE_CUDA
   case EXTERNAL_CUDA_GPU: {
+    //std::cout << "if statement in field_values() of ENABLE_CUDA_GPU \n";
     //Check local allocations first
-    if( ( consumerMemoryType == memType_ ) && ( consumerDeviceIndex == deviceIndex_ ) ) {
+    if( consumerMemoryType == memType_  &&  consumerDeviceIndex == deviceIndex_  ) {
       return fieldValuesExtDevice_;
     }
 
@@ -650,6 +657,7 @@ field_values( const MemoryType consumerMemoryType,
     throw(std::runtime_error(msg.str()));
   }
   }
+ //std::cout<<"out of field_values() \n";
 }
 
 //------------------------------------------------------------------

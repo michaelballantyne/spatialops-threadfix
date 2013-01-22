@@ -1,5 +1,4 @@
-/*
- * Copyright (c) 2011 The University of Utah
+/* Copyright (c) 2011 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -32,6 +31,7 @@
  *      and destruction of shared pointer objects
  */
 
+
 #ifdef DEBUG_CUDA_VERBOSE
 #define DEBUG_EXT_ALLOC_CUDA_DEVICE_MNGR
 #define DEBUG_EXT_ALLOC_MEM
@@ -61,19 +61,20 @@
 namespace ema {
 namespace cuda {
 
-/**---- CUDA wrappers with error checking/processing */
+/*---- CUDA wrappers with error checking/processing */
 void CudaSetDevice(const int device);
 void CudaMalloc(void** src, const size_t sz, const unsigned int device);
 void CudaFree(void* src, const unsigned int device);
 void CudaMemcpy(void* src, const void* dest, const unsigned int device, const size_t sz,
-    cudaMemcpyKind cmkk);
+                cudaMemcpyKind cmkk);
 
-/** \brief Device management structure for all GPU devices */
+/* \brief Device management structure for all GPU devices */
 class CUDADeviceManager {
     friend class CUDADeviceInterface;
     CUDADeviceManager();
 
   public:
+
     ~CUDADeviceManager();
 
     /** \brief Return reference to the device manager object */
@@ -91,19 +92,20 @@ class CUDADeviceManager {
      * */
     void update_memory_statistics();
 
-    /** \brief output a list of all available CUDA hardware and capabilities */
+    /** \brief output a list of all available CUDA hardware and compute capabilities */
     void print_device_info() const;
 
   private:
-    int device_count; ///< Number of CUDA capable devices
+    int device_count;                          ///< Number of CUDA capable devices
     std::vector<cudaDeviceProp*> device_props; ///< Capability information for each compute device
-    std::vector<CUDAMemStats*> device_stats; ///< Global memory statistics for each device
+    std::vector<CUDAMemStats*> device_stats;   ///< Global memory statistics for each device
 
-    //TODO-> not sure if this needs a mutex... maybe later
+
+    //TODO-> not sure if this needs a mutex... maybe later (NEED SOME MORE INFO TO IT)
     /**
      *  \class ExecMutex
      *  \brief Scoped lock. An instance should be constructed within any function that touches
-     *  thread-shared memory.
+     *   thread-shared memory.
      */
     class ExecMutex {
 #   ifdef ENABLE_THREADS

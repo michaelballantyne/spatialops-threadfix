@@ -41,7 +41,14 @@
 #include <spatialops/structured/MemoryTypes.h>
 #include <spatialops/FieldExpressionsStencil2.h>
 
-namespace SpatialOps{ namespace structured{
+#include <iostream>
+using std::cout;
+using std::endl;
+using std::cerr;
+using std::flush;
+
+namespace SpatialOps{
+namespace structured{
 
 
   template< typename OperatorT, typename SrcT, typename DestT >
@@ -64,9 +71,11 @@ namespace SpatialOps{ namespace structured{
   void
   Stencil2<OperatorT,SrcT,DestT>::
   apply_to_field( const SrcT& src, DestT& dest ) const
-  {
+  {//std::cout << " into the apply_to_field of Stencil2_def.h " << std::flush;
     switch( dest.memory_device_type() ){
+//std::cerr << "dest " << dest.memory_device_type() << std::flush;
       case LOCAL_RAM:
+        //std::cerr << " into  the CPU Stencil2 \n "<< std::flush;
         stencil_2_apply_to_field_general_execute<OperatorT,SrcT,DestT>(src,
                                                                        dest,
                                                                        coefLo_,
@@ -75,6 +84,7 @@ namespace SpatialOps{ namespace structured{
 
 #ifdef ENABLE_CUDA
       case EXTERNAL_CUDA_GPU:
+//std::cerr << "into the CUDA stencil4 of Stencil2_defs.h " << std::flush;
         cuda_stencil_2_apply_to_field_helper<OperatorT, SrcT, DestT>( src, dest, coefLo_, coefHi_ );
         break;
 #endif
