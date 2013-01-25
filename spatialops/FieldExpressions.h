@@ -734,6 +734,20 @@
          };
       };
 
+      template<typename ExprType, typename FieldType>
+       struct Standardize<NeboBooleanExpression<ExprType, FieldType>, FieldType> {
+
+         ExprType typedef StandardType;
+
+         NeboBooleanExpression<StandardType, FieldType> typedef StandardTerm;
+
+         static inline StandardType standardType(NeboBooleanExpression<ExprType, FieldType> const &
+                                                 given) { return given.expr(); };
+
+         static inline StandardTerm standardTerm(NeboBooleanExpression<ExprType, FieldType> const &
+                                                 given) { return given; };
+      };
+
       template<typename CurrentMode, typename Operand1, typename Operand2, typename FieldType>
        struct SumOp;
 
@@ -921,18 +935,17 @@
                              typename SubExpr1::field_type> operator +(SubExpr1 const & arg1,
                                                                        SubExpr2 const & arg2) {
 
-          typename SubExpr1::field_type typedef FieldType;
+          SumOp<Initial,
+                typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType,
+                typename Standardize<SubExpr2, typename SubExpr1::field_type>::StandardType,
+                typename SubExpr1::field_type> typedef ReturnType;
 
-          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+          NeboExpression<ReturnType, typename SubExpr1::field_type> typedef ReturnTerm;
 
-          typename Standardize<SubExpr2, typename SubExpr1::field_type>::StandardType typedef Type2;
-
-          SumOp<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
-                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+          return ReturnTerm(ReturnType(Standardize<SubExpr1, typename SubExpr1::field_type>::
+                                       standardType(arg1),
+                                       Standardize<SubExpr2, typename SubExpr1::field_type>::
+                                       standardType(arg2)));
        };
 
       /* SubExpr X Scalar */
@@ -946,18 +959,16 @@
                                                                        typename SubExpr1::field_type::
                                                                        value_type const & arg2) {
 
-          typename SubExpr1::field_type typedef FieldType;
+          SumOp<Initial,
+                typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType,
+                NeboScalar<Initial, typename SubExpr1::field_type>,
+                typename SubExpr1::field_type> typedef ReturnType;
 
-          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+          NeboExpression<ReturnType, typename SubExpr1::field_type> typedef ReturnTerm;
 
-          NeboScalar<Initial, typename SubExpr1::field_type> typedef Type2;
-
-          SumOp<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
-                                       Type2(Type2(arg2))));
+          return ReturnTerm(ReturnType(Standardize<SubExpr1, typename SubExpr1::field_type>::
+                                       standardType(arg1),
+                                       NeboScalar<Initial, typename SubExpr1::field_type>(arg2)));
        };
 
       /* Scalar X SubExpr */
@@ -971,18 +982,16 @@
                                                                        value_type const & arg1,
                                                                        SubExpr2 const & arg2) {
 
-          typename SubExpr2::field_type typedef FieldType;
+          SumOp<Initial,
+                NeboScalar<Initial, typename SubExpr2::field_type>,
+                typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType,
+                typename SubExpr2::field_type> typedef ReturnType;
 
-          NeboScalar<Initial, typename SubExpr2::field_type> typedef Type1;
+          NeboExpression<ReturnType, typename SubExpr2::field_type> typedef ReturnTerm;
 
-          typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType typedef Type2;
-
-          SumOp<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(Type1(arg1)),
-                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+          return ReturnTerm(ReturnType(NeboScalar<Initial, typename SubExpr2::field_type>(arg1),
+                                       Standardize<SubExpr2, typename SubExpr2::field_type>::
+                                       standardType(arg2)));
        };
 
       template<typename CurrentMode, typename Operand1, typename Operand2, typename FieldType>
@@ -1172,18 +1181,17 @@
                              typename SubExpr1::field_type> operator -(SubExpr1 const & arg1,
                                                                        SubExpr2 const & arg2) {
 
-          typename SubExpr1::field_type typedef FieldType;
+          DiffOp<Initial,
+                 typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType,
+                 typename Standardize<SubExpr2, typename SubExpr1::field_type>::StandardType,
+                 typename SubExpr1::field_type> typedef ReturnType;
 
-          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+          NeboExpression<ReturnType, typename SubExpr1::field_type> typedef ReturnTerm;
 
-          typename Standardize<SubExpr2, typename SubExpr1::field_type>::StandardType typedef Type2;
-
-          DiffOp<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
-                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+          return ReturnTerm(ReturnType(Standardize<SubExpr1, typename SubExpr1::field_type>::
+                                       standardType(arg1),
+                                       Standardize<SubExpr2, typename SubExpr1::field_type>::
+                                       standardType(arg2)));
        };
 
       /* SubExpr X Scalar */
@@ -1197,18 +1205,16 @@
                                                                        typename SubExpr1::field_type::
                                                                        value_type const & arg2) {
 
-          typename SubExpr1::field_type typedef FieldType;
+          DiffOp<Initial,
+                 typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType,
+                 NeboScalar<Initial, typename SubExpr1::field_type>,
+                 typename SubExpr1::field_type> typedef ReturnType;
 
-          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+          NeboExpression<ReturnType, typename SubExpr1::field_type> typedef ReturnTerm;
 
-          NeboScalar<Initial, typename SubExpr1::field_type> typedef Type2;
-
-          DiffOp<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
-                                       Type2(Type2(arg2))));
+          return ReturnTerm(ReturnType(Standardize<SubExpr1, typename SubExpr1::field_type>::
+                                       standardType(arg1),
+                                       NeboScalar<Initial, typename SubExpr1::field_type>(arg2)));
        };
 
       /* Scalar X SubExpr */
@@ -1222,18 +1228,16 @@
                                                                        value_type const & arg1,
                                                                        SubExpr2 const & arg2) {
 
-          typename SubExpr2::field_type typedef FieldType;
+          DiffOp<Initial,
+                 NeboScalar<Initial, typename SubExpr2::field_type>,
+                 typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType,
+                 typename SubExpr2::field_type> typedef ReturnType;
 
-          NeboScalar<Initial, typename SubExpr2::field_type> typedef Type1;
+          NeboExpression<ReturnType, typename SubExpr2::field_type> typedef ReturnTerm;
 
-          typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType typedef Type2;
-
-          DiffOp<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(Type1(arg1)),
-                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+          return ReturnTerm(ReturnType(NeboScalar<Initial, typename SubExpr2::field_type>(arg1),
+                                       Standardize<SubExpr2, typename SubExpr2::field_type>::
+                                       standardType(arg2)));
        };
 
       template<typename CurrentMode, typename Operand1, typename Operand2, typename FieldType>
@@ -1423,18 +1427,17 @@
                              typename SubExpr1::field_type> operator *(SubExpr1 const & arg1,
                                                                        SubExpr2 const & arg2) {
 
-          typename SubExpr1::field_type typedef FieldType;
+          ProdOp<Initial,
+                 typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType,
+                 typename Standardize<SubExpr2, typename SubExpr1::field_type>::StandardType,
+                 typename SubExpr1::field_type> typedef ReturnType;
 
-          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+          NeboExpression<ReturnType, typename SubExpr1::field_type> typedef ReturnTerm;
 
-          typename Standardize<SubExpr2, typename SubExpr1::field_type>::StandardType typedef Type2;
-
-          ProdOp<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
-                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+          return ReturnTerm(ReturnType(Standardize<SubExpr1, typename SubExpr1::field_type>::
+                                       standardType(arg1),
+                                       Standardize<SubExpr2, typename SubExpr1::field_type>::
+                                       standardType(arg2)));
        };
 
       /* SubExpr X Scalar */
@@ -1448,18 +1451,16 @@
                                                                        typename SubExpr1::field_type::
                                                                        value_type const & arg2) {
 
-          typename SubExpr1::field_type typedef FieldType;
+          ProdOp<Initial,
+                 typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType,
+                 NeboScalar<Initial, typename SubExpr1::field_type>,
+                 typename SubExpr1::field_type> typedef ReturnType;
 
-          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+          NeboExpression<ReturnType, typename SubExpr1::field_type> typedef ReturnTerm;
 
-          NeboScalar<Initial, typename SubExpr1::field_type> typedef Type2;
-
-          ProdOp<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
-                                       Type2(Type2(arg2))));
+          return ReturnTerm(ReturnType(Standardize<SubExpr1, typename SubExpr1::field_type>::
+                                       standardType(arg1),
+                                       NeboScalar<Initial, typename SubExpr1::field_type>(arg2)));
        };
 
       /* Scalar X SubExpr */
@@ -1473,18 +1474,16 @@
                                                                        value_type const & arg1,
                                                                        SubExpr2 const & arg2) {
 
-          typename SubExpr2::field_type typedef FieldType;
+          ProdOp<Initial,
+                 NeboScalar<Initial, typename SubExpr2::field_type>,
+                 typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType,
+                 typename SubExpr2::field_type> typedef ReturnType;
 
-          NeboScalar<Initial, typename SubExpr2::field_type> typedef Type1;
+          NeboExpression<ReturnType, typename SubExpr2::field_type> typedef ReturnTerm;
 
-          typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType typedef Type2;
-
-          ProdOp<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(Type1(arg1)),
-                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+          return ReturnTerm(ReturnType(NeboScalar<Initial, typename SubExpr2::field_type>(arg1),
+                                       Standardize<SubExpr2, typename SubExpr2::field_type>::
+                                       standardType(arg2)));
        };
 
       template<typename CurrentMode, typename Operand1, typename Operand2, typename FieldType>
@@ -1674,18 +1673,17 @@
                              typename SubExpr1::field_type> operator /(SubExpr1 const & arg1,
                                                                        SubExpr2 const & arg2) {
 
-          typename SubExpr1::field_type typedef FieldType;
+          DivOp<Initial,
+                typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType,
+                typename Standardize<SubExpr2, typename SubExpr1::field_type>::StandardType,
+                typename SubExpr1::field_type> typedef ReturnType;
 
-          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+          NeboExpression<ReturnType, typename SubExpr1::field_type> typedef ReturnTerm;
 
-          typename Standardize<SubExpr2, typename SubExpr1::field_type>::StandardType typedef Type2;
-
-          DivOp<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
-                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+          return ReturnTerm(ReturnType(Standardize<SubExpr1, typename SubExpr1::field_type>::
+                                       standardType(arg1),
+                                       Standardize<SubExpr2, typename SubExpr1::field_type>::
+                                       standardType(arg2)));
        };
 
       /* SubExpr X Scalar */
@@ -1699,18 +1697,16 @@
                                                                        typename SubExpr1::field_type::
                                                                        value_type const & arg2) {
 
-          typename SubExpr1::field_type typedef FieldType;
+          DivOp<Initial,
+                typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType,
+                NeboScalar<Initial, typename SubExpr1::field_type>,
+                typename SubExpr1::field_type> typedef ReturnType;
 
-          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+          NeboExpression<ReturnType, typename SubExpr1::field_type> typedef ReturnTerm;
 
-          NeboScalar<Initial, typename SubExpr1::field_type> typedef Type2;
-
-          DivOp<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
-                                       Type2(Type2(arg2))));
+          return ReturnTerm(ReturnType(Standardize<SubExpr1, typename SubExpr1::field_type>::
+                                       standardType(arg1),
+                                       NeboScalar<Initial, typename SubExpr1::field_type>(arg2)));
        };
 
       /* Scalar X SubExpr */
@@ -1724,18 +1720,16 @@
                                                                        value_type const & arg1,
                                                                        SubExpr2 const & arg2) {
 
-          typename SubExpr2::field_type typedef FieldType;
+          DivOp<Initial,
+                NeboScalar<Initial, typename SubExpr2::field_type>,
+                typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType,
+                typename SubExpr2::field_type> typedef ReturnType;
 
-          NeboScalar<Initial, typename SubExpr2::field_type> typedef Type1;
+          NeboExpression<ReturnType, typename SubExpr2::field_type> typedef ReturnTerm;
 
-          typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType typedef Type2;
-
-          DivOp<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(Type1(arg1)),
-                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+          return ReturnTerm(ReturnType(NeboScalar<Initial, typename SubExpr2::field_type>(arg1),
+                                       Standardize<SubExpr2, typename SubExpr2::field_type>::
+                                       standardType(arg2)));
        };
 
       template<typename CurrentMode, typename Operand, typename FieldType>
@@ -1885,15 +1879,14 @@
                                     typename SubExpr::field_type>,
                              typename SubExpr::field_type> sin(SubExpr const & arg) {
 
-          typename SubExpr::field_type typedef FieldType;
+          SinFcn<Initial,
+                 typename Standardize<SubExpr, typename SubExpr::field_type>::StandardType,
+                 typename SubExpr::field_type> typedef ReturnType;
 
-          typename Standardize<SubExpr, typename SubExpr::field_type>::StandardType typedef Type;
+          NeboExpression<ReturnType, typename SubExpr::field_type> typedef ReturnTerm;
 
-          SinFcn<Initial, Type, FieldType> typedef ReturnType;
-
-          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type(Standardize<SubExpr, FieldType>::standardType(arg))));
+          return ReturnTerm(ReturnType(Standardize<SubExpr, typename SubExpr::field_type>::
+                                       standardType(arg)));
        };
 
       template<typename CurrentMode, typename Operand, typename FieldType>
@@ -2043,15 +2036,14 @@
                                     typename SubExpr::field_type>,
                              typename SubExpr::field_type> cos(SubExpr const & arg) {
 
-          typename SubExpr::field_type typedef FieldType;
+          CosFcn<Initial,
+                 typename Standardize<SubExpr, typename SubExpr::field_type>::StandardType,
+                 typename SubExpr::field_type> typedef ReturnType;
 
-          typename Standardize<SubExpr, typename SubExpr::field_type>::StandardType typedef Type;
+          NeboExpression<ReturnType, typename SubExpr::field_type> typedef ReturnTerm;
 
-          CosFcn<Initial, Type, FieldType> typedef ReturnType;
-
-          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type(Standardize<SubExpr, FieldType>::standardType(arg))));
+          return ReturnTerm(ReturnType(Standardize<SubExpr, typename SubExpr::field_type>::
+                                       standardType(arg)));
        };
 
       template<typename CurrentMode, typename Operand, typename FieldType>
@@ -2201,15 +2193,14 @@
                                     typename SubExpr::field_type>,
                              typename SubExpr::field_type> tan(SubExpr const & arg) {
 
-          typename SubExpr::field_type typedef FieldType;
+          TanFcn<Initial,
+                 typename Standardize<SubExpr, typename SubExpr::field_type>::StandardType,
+                 typename SubExpr::field_type> typedef ReturnType;
 
-          typename Standardize<SubExpr, typename SubExpr::field_type>::StandardType typedef Type;
+          NeboExpression<ReturnType, typename SubExpr::field_type> typedef ReturnTerm;
 
-          TanFcn<Initial, Type, FieldType> typedef ReturnType;
-
-          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type(Standardize<SubExpr, FieldType>::standardType(arg))));
+          return ReturnTerm(ReturnType(Standardize<SubExpr, typename SubExpr::field_type>::
+                                       standardType(arg)));
        };
 
       template<typename CurrentMode, typename Operand, typename FieldType>
@@ -2359,15 +2350,14 @@
                                     typename SubExpr::field_type>,
                              typename SubExpr::field_type> exp(SubExpr const & arg) {
 
-          typename SubExpr::field_type typedef FieldType;
+          ExpFcn<Initial,
+                 typename Standardize<SubExpr, typename SubExpr::field_type>::StandardType,
+                 typename SubExpr::field_type> typedef ReturnType;
 
-          typename Standardize<SubExpr, typename SubExpr::field_type>::StandardType typedef Type;
+          NeboExpression<ReturnType, typename SubExpr::field_type> typedef ReturnTerm;
 
-          ExpFcn<Initial, Type, FieldType> typedef ReturnType;
-
-          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type(Standardize<SubExpr, FieldType>::standardType(arg))));
+          return ReturnTerm(ReturnType(Standardize<SubExpr, typename SubExpr::field_type>::
+                                       standardType(arg)));
        };
 
       template<typename CurrentMode, typename Operand, typename FieldType>
@@ -2517,15 +2507,14 @@
                                      typename SubExpr::field_type>,
                              typename SubExpr::field_type> tanh(SubExpr const & arg) {
 
-          typename SubExpr::field_type typedef FieldType;
+          TanhFcn<Initial,
+                  typename Standardize<SubExpr, typename SubExpr::field_type>::StandardType,
+                  typename SubExpr::field_type> typedef ReturnType;
 
-          typename Standardize<SubExpr, typename SubExpr::field_type>::StandardType typedef Type;
+          NeboExpression<ReturnType, typename SubExpr::field_type> typedef ReturnTerm;
 
-          TanhFcn<Initial, Type, FieldType> typedef ReturnType;
-
-          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type(Standardize<SubExpr, FieldType>::standardType(arg))));
+          return ReturnTerm(ReturnType(Standardize<SubExpr, typename SubExpr::field_type>::
+                                       standardType(arg)));
        };
 
       template<typename CurrentMode, typename Operand, typename FieldType>
@@ -2675,15 +2664,14 @@
                                     typename SubExpr::field_type>,
                              typename SubExpr::field_type> abs(SubExpr const & arg) {
 
-          typename SubExpr::field_type typedef FieldType;
+          AbsFcn<Initial,
+                 typename Standardize<SubExpr, typename SubExpr::field_type>::StandardType,
+                 typename SubExpr::field_type> typedef ReturnType;
 
-          typename Standardize<SubExpr, typename SubExpr::field_type>::StandardType typedef Type;
+          NeboExpression<ReturnType, typename SubExpr::field_type> typedef ReturnTerm;
 
-          AbsFcn<Initial, Type, FieldType> typedef ReturnType;
-
-          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type(Standardize<SubExpr, FieldType>::standardType(arg))));
+          return ReturnTerm(ReturnType(Standardize<SubExpr, typename SubExpr::field_type>::
+                                       standardType(arg)));
        };
 
       template<typename CurrentMode, typename Operand, typename FieldType>
@@ -2833,15 +2821,14 @@
                                     typename SubExpr::field_type>,
                              typename SubExpr::field_type> operator -(SubExpr const & arg) {
 
-          typename SubExpr::field_type typedef FieldType;
+          NegFcn<Initial,
+                 typename Standardize<SubExpr, typename SubExpr::field_type>::StandardType,
+                 typename SubExpr::field_type> typedef ReturnType;
 
-          typename Standardize<SubExpr, typename SubExpr::field_type>::StandardType typedef Type;
+          NeboExpression<ReturnType, typename SubExpr::field_type> typedef ReturnTerm;
 
-          NegFcn<Initial, Type, FieldType> typedef ReturnType;
-
-          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type(Standardize<SubExpr, FieldType>::standardType(arg))));
+          return ReturnTerm(ReturnType(Standardize<SubExpr, typename SubExpr::field_type>::
+                                       standardType(arg)));
        };
 
       template<typename CurrentMode, typename Operand1, typename Operand2, typename FieldType>
@@ -3035,18 +3022,17 @@
                              typename SubExpr1::field_type> pow(SubExpr1 const & arg1,
                                                                 SubExpr2 const & arg2) {
 
-          typename SubExpr1::field_type typedef FieldType;
+          PowFcn<Initial,
+                 typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType,
+                 typename Standardize<SubExpr2, typename SubExpr1::field_type>::StandardType,
+                 typename SubExpr1::field_type> typedef ReturnType;
 
-          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+          NeboExpression<ReturnType, typename SubExpr1::field_type> typedef ReturnTerm;
 
-          typename Standardize<SubExpr2, typename SubExpr1::field_type>::StandardType typedef Type2;
-
-          PowFcn<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
-                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+          return ReturnTerm(ReturnType(Standardize<SubExpr1, typename SubExpr1::field_type>::
+                                       standardType(arg1),
+                                       Standardize<SubExpr2, typename SubExpr1::field_type>::
+                                       standardType(arg2)));
        };
 
       /* SubExpr X Scalar */
@@ -3060,18 +3046,16 @@
                                                                 typename SubExpr1::field_type::
                                                                 value_type const & arg2) {
 
-          typename SubExpr1::field_type typedef FieldType;
+          PowFcn<Initial,
+                 typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType,
+                 NeboScalar<Initial, typename SubExpr1::field_type>,
+                 typename SubExpr1::field_type> typedef ReturnType;
 
-          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+          NeboExpression<ReturnType, typename SubExpr1::field_type> typedef ReturnTerm;
 
-          NeboScalar<Initial, typename SubExpr1::field_type> typedef Type2;
-
-          PowFcn<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
-                                       Type2(Type2(arg2))));
+          return ReturnTerm(ReturnType(Standardize<SubExpr1, typename SubExpr1::field_type>::
+                                       standardType(arg1),
+                                       NeboScalar<Initial, typename SubExpr1::field_type>(arg2)));
        };
 
       /* Scalar X SubExpr */
@@ -3085,18 +3069,16 @@
                                                                 value_type const & arg1,
                                                                 SubExpr2 const & arg2) {
 
-          typename SubExpr2::field_type typedef FieldType;
+          PowFcn<Initial,
+                 NeboScalar<Initial, typename SubExpr2::field_type>,
+                 typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType,
+                 typename SubExpr2::field_type> typedef ReturnType;
 
-          NeboScalar<Initial, typename SubExpr2::field_type> typedef Type1;
+          NeboExpression<ReturnType, typename SubExpr2::field_type> typedef ReturnTerm;
 
-          typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType typedef Type2;
-
-          PowFcn<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(Type1(arg1)),
-                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+          return ReturnTerm(ReturnType(NeboScalar<Initial, typename SubExpr2::field_type>(arg1),
+                                       Standardize<SubExpr2, typename SubExpr2::field_type>::
+                                       standardType(arg2)));
        };
 
       template<typename CurrentMode, typename Operand, typename FieldType>
@@ -3246,15 +3228,14 @@
                                      typename SubExpr::field_type>,
                              typename SubExpr::field_type> sqrt(SubExpr const & arg) {
 
-          typename SubExpr::field_type typedef FieldType;
+          SqrtFcn<Initial,
+                  typename Standardize<SubExpr, typename SubExpr::field_type>::StandardType,
+                  typename SubExpr::field_type> typedef ReturnType;
 
-          typename Standardize<SubExpr, typename SubExpr::field_type>::StandardType typedef Type;
+          NeboExpression<ReturnType, typename SubExpr::field_type> typedef ReturnTerm;
 
-          SqrtFcn<Initial, Type, FieldType> typedef ReturnType;
-
-          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type(Standardize<SubExpr, FieldType>::standardType(arg))));
+          return ReturnTerm(ReturnType(Standardize<SubExpr, typename SubExpr::field_type>::
+                                       standardType(arg)));
        };
 
       template<typename CurrentMode, typename Operand, typename FieldType>
@@ -3404,15 +3385,14 @@
                                     typename SubExpr::field_type>,
                              typename SubExpr::field_type> log(SubExpr const & arg) {
 
-          typename SubExpr::field_type typedef FieldType;
+          LogFcn<Initial,
+                 typename Standardize<SubExpr, typename SubExpr::field_type>::StandardType,
+                 typename SubExpr::field_type> typedef ReturnType;
 
-          typename Standardize<SubExpr, typename SubExpr::field_type>::StandardType typedef Type;
+          NeboExpression<ReturnType, typename SubExpr::field_type> typedef ReturnTerm;
 
-          LogFcn<Initial, Type, FieldType> typedef ReturnType;
-
-          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type(Standardize<SubExpr, FieldType>::standardType(arg))));
+          return ReturnTerm(ReturnType(Standardize<SubExpr, typename SubExpr::field_type>::
+                                       standardType(arg)));
        };
 
       template<typename CurrentMode, typename Operand1, typename Operand2, typename FieldType>
@@ -3608,18 +3588,17 @@
                                     typename SubExpr1::field_type> operator ==(SubExpr1 const & arg1,
                                                                                SubExpr2 const & arg2) {
 
-          typename SubExpr1::field_type typedef FieldType;
+          EqualCmp<Initial,
+                   typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType,
+                   typename Standardize<SubExpr2, typename SubExpr1::field_type>::StandardType,
+                   typename SubExpr1::field_type> typedef ReturnType;
 
-          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+          NeboBooleanExpression<ReturnType, typename SubExpr1::field_type> typedef ReturnTerm;
 
-          typename Standardize<SubExpr2, typename SubExpr1::field_type>::StandardType typedef Type2;
-
-          EqualCmp<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
-                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+          return ReturnTerm(ReturnType(Standardize<SubExpr1, typename SubExpr1::field_type>::
+                                       standardType(arg1),
+                                       Standardize<SubExpr2, typename SubExpr1::field_type>::
+                                       standardType(arg2)));
        };
 
       /* SubExpr X Scalar */
@@ -3636,18 +3615,16 @@
                                                                                value_type const &
                                                                                arg2) {
 
-          typename SubExpr1::field_type typedef FieldType;
+          EqualCmp<Initial,
+                   typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType,
+                   NeboScalar<Initial, typename SubExpr1::field_type>,
+                   typename SubExpr1::field_type> typedef ReturnType;
 
-          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+          NeboBooleanExpression<ReturnType, typename SubExpr1::field_type> typedef ReturnTerm;
 
-          NeboScalar<Initial, typename SubExpr1::field_type> typedef Type2;
-
-          EqualCmp<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
-                                       Type2(Type2(arg2))));
+          return ReturnTerm(ReturnType(Standardize<SubExpr1, typename SubExpr1::field_type>::
+                                       standardType(arg1),
+                                       NeboScalar<Initial, typename SubExpr1::field_type>(arg2)));
        };
 
       /* Scalar X SubExpr */
@@ -3664,18 +3641,16 @@
                                                                                arg1,
                                                                                SubExpr2 const & arg2) {
 
-          typename SubExpr2::field_type typedef FieldType;
+          EqualCmp<Initial,
+                   NeboScalar<Initial, typename SubExpr2::field_type>,
+                   typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType,
+                   typename SubExpr2::field_type> typedef ReturnType;
 
-          NeboScalar<Initial, typename SubExpr2::field_type> typedef Type1;
+          NeboBooleanExpression<ReturnType, typename SubExpr2::field_type> typedef ReturnTerm;
 
-          typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType typedef Type2;
-
-          EqualCmp<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(Type1(arg1)),
-                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+          return ReturnTerm(ReturnType(NeboScalar<Initial, typename SubExpr2::field_type>(arg1),
+                                       Standardize<SubExpr2, typename SubExpr2::field_type>::
+                                       standardType(arg2)));
        };
 
       template<typename CurrentMode, typename Operand1, typename Operand2, typename FieldType>
@@ -3871,18 +3846,17 @@
                                     typename SubExpr1::field_type> operator !=(SubExpr1 const & arg1,
                                                                                SubExpr2 const & arg2) {
 
-          typename SubExpr1::field_type typedef FieldType;
+          InequalCmp<Initial,
+                     typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType,
+                     typename Standardize<SubExpr2, typename SubExpr1::field_type>::StandardType,
+                     typename SubExpr1::field_type> typedef ReturnType;
 
-          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+          NeboBooleanExpression<ReturnType, typename SubExpr1::field_type> typedef ReturnTerm;
 
-          typename Standardize<SubExpr2, typename SubExpr1::field_type>::StandardType typedef Type2;
-
-          InequalCmp<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
-                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+          return ReturnTerm(ReturnType(Standardize<SubExpr1, typename SubExpr1::field_type>::
+                                       standardType(arg1),
+                                       Standardize<SubExpr2, typename SubExpr1::field_type>::
+                                       standardType(arg2)));
        };
 
       /* SubExpr X Scalar */
@@ -3899,18 +3873,16 @@
                                                                                value_type const &
                                                                                arg2) {
 
-          typename SubExpr1::field_type typedef FieldType;
+          InequalCmp<Initial,
+                     typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType,
+                     NeboScalar<Initial, typename SubExpr1::field_type>,
+                     typename SubExpr1::field_type> typedef ReturnType;
 
-          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+          NeboBooleanExpression<ReturnType, typename SubExpr1::field_type> typedef ReturnTerm;
 
-          NeboScalar<Initial, typename SubExpr1::field_type> typedef Type2;
-
-          InequalCmp<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
-                                       Type2(Type2(arg2))));
+          return ReturnTerm(ReturnType(Standardize<SubExpr1, typename SubExpr1::field_type>::
+                                       standardType(arg1),
+                                       NeboScalar<Initial, typename SubExpr1::field_type>(arg2)));
        };
 
       /* Scalar X SubExpr */
@@ -3927,18 +3899,16 @@
                                                                                arg1,
                                                                                SubExpr2 const & arg2) {
 
-          typename SubExpr2::field_type typedef FieldType;
+          InequalCmp<Initial,
+                     NeboScalar<Initial, typename SubExpr2::field_type>,
+                     typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType,
+                     typename SubExpr2::field_type> typedef ReturnType;
 
-          NeboScalar<Initial, typename SubExpr2::field_type> typedef Type1;
+          NeboBooleanExpression<ReturnType, typename SubExpr2::field_type> typedef ReturnTerm;
 
-          typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType typedef Type2;
-
-          InequalCmp<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(Type1(arg1)),
-                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+          return ReturnTerm(ReturnType(NeboScalar<Initial, typename SubExpr2::field_type>(arg1),
+                                       Standardize<SubExpr2, typename SubExpr2::field_type>::
+                                       standardType(arg2)));
        };
 
       template<typename CurrentMode, typename Operand1, typename Operand2, typename FieldType>
@@ -4136,18 +4106,17 @@
                                     typename SubExpr1::field_type> operator <(SubExpr1 const & arg1,
                                                                               SubExpr2 const & arg2) {
 
-          typename SubExpr1::field_type typedef FieldType;
+          LessThanCmp<Initial,
+                      typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType,
+                      typename Standardize<SubExpr2, typename SubExpr1::field_type>::StandardType,
+                      typename SubExpr1::field_type> typedef ReturnType;
 
-          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+          NeboBooleanExpression<ReturnType, typename SubExpr1::field_type> typedef ReturnTerm;
 
-          typename Standardize<SubExpr2, typename SubExpr1::field_type>::StandardType typedef Type2;
-
-          LessThanCmp<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
-                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+          return ReturnTerm(ReturnType(Standardize<SubExpr1, typename SubExpr1::field_type>::
+                                       standardType(arg1),
+                                       Standardize<SubExpr2, typename SubExpr1::field_type>::
+                                       standardType(arg2)));
        };
 
       /* SubExpr X Scalar */
@@ -4163,18 +4132,16 @@
                                                                               field_type::value_type
                                                                               const & arg2) {
 
-          typename SubExpr1::field_type typedef FieldType;
+          LessThanCmp<Initial,
+                      typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType,
+                      NeboScalar<Initial, typename SubExpr1::field_type>,
+                      typename SubExpr1::field_type> typedef ReturnType;
 
-          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+          NeboBooleanExpression<ReturnType, typename SubExpr1::field_type> typedef ReturnTerm;
 
-          NeboScalar<Initial, typename SubExpr1::field_type> typedef Type2;
-
-          LessThanCmp<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
-                                       Type2(Type2(arg2))));
+          return ReturnTerm(ReturnType(Standardize<SubExpr1, typename SubExpr1::field_type>::
+                                       standardType(arg1),
+                                       NeboScalar<Initial, typename SubExpr1::field_type>(arg2)));
        };
 
       /* Scalar X SubExpr */
@@ -4190,18 +4157,16 @@
                                                                               const & arg1,
                                                                               SubExpr2 const & arg2) {
 
-          typename SubExpr2::field_type typedef FieldType;
+          LessThanCmp<Initial,
+                      NeboScalar<Initial, typename SubExpr2::field_type>,
+                      typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType,
+                      typename SubExpr2::field_type> typedef ReturnType;
 
-          NeboScalar<Initial, typename SubExpr2::field_type> typedef Type1;
+          NeboBooleanExpression<ReturnType, typename SubExpr2::field_type> typedef ReturnTerm;
 
-          typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType typedef Type2;
-
-          LessThanCmp<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(Type1(arg1)),
-                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+          return ReturnTerm(ReturnType(NeboScalar<Initial, typename SubExpr2::field_type>(arg1),
+                                       Standardize<SubExpr2, typename SubExpr2::field_type>::
+                                       standardType(arg2)));
        };
 
       template<typename CurrentMode, typename Operand1, typename Operand2, typename FieldType>
@@ -4399,18 +4364,19 @@
                                     typename SubExpr1::field_type> operator <=(SubExpr1 const & arg1,
                                                                                SubExpr2 const & arg2) {
 
-          typename SubExpr1::field_type typedef FieldType;
+          LessThanEqualCmp<Initial,
+                           typename Standardize<SubExpr1, typename SubExpr1::field_type>::
+                           StandardType,
+                           typename Standardize<SubExpr2, typename SubExpr1::field_type>::
+                           StandardType,
+                           typename SubExpr1::field_type> typedef ReturnType;
 
-          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+          NeboBooleanExpression<ReturnType, typename SubExpr1::field_type> typedef ReturnTerm;
 
-          typename Standardize<SubExpr2, typename SubExpr1::field_type>::StandardType typedef Type2;
-
-          LessThanEqualCmp<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
-                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+          return ReturnTerm(ReturnType(Standardize<SubExpr1, typename SubExpr1::field_type>::
+                                       standardType(arg1),
+                                       Standardize<SubExpr2, typename SubExpr1::field_type>::
+                                       standardType(arg2)));
        };
 
       /* SubExpr X Scalar */
@@ -4428,18 +4394,17 @@
                                                                                value_type const &
                                                                                arg2) {
 
-          typename SubExpr1::field_type typedef FieldType;
+          LessThanEqualCmp<Initial,
+                           typename Standardize<SubExpr1, typename SubExpr1::field_type>::
+                           StandardType,
+                           NeboScalar<Initial, typename SubExpr1::field_type>,
+                           typename SubExpr1::field_type> typedef ReturnType;
 
-          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+          NeboBooleanExpression<ReturnType, typename SubExpr1::field_type> typedef ReturnTerm;
 
-          NeboScalar<Initial, typename SubExpr1::field_type> typedef Type2;
-
-          LessThanEqualCmp<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
-                                       Type2(Type2(arg2))));
+          return ReturnTerm(ReturnType(Standardize<SubExpr1, typename SubExpr1::field_type>::
+                                       standardType(arg1),
+                                       NeboScalar<Initial, typename SubExpr1::field_type>(arg2)));
        };
 
       /* Scalar X SubExpr */
@@ -4457,18 +4422,17 @@
                                                                                arg1,
                                                                                SubExpr2 const & arg2) {
 
-          typename SubExpr2::field_type typedef FieldType;
+          LessThanEqualCmp<Initial,
+                           NeboScalar<Initial, typename SubExpr2::field_type>,
+                           typename Standardize<SubExpr2, typename SubExpr2::field_type>::
+                           StandardType,
+                           typename SubExpr2::field_type> typedef ReturnType;
 
-          NeboScalar<Initial, typename SubExpr2::field_type> typedef Type1;
+          NeboBooleanExpression<ReturnType, typename SubExpr2::field_type> typedef ReturnTerm;
 
-          typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType typedef Type2;
-
-          LessThanEqualCmp<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(Type1(arg1)),
-                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+          return ReturnTerm(ReturnType(NeboScalar<Initial, typename SubExpr2::field_type>(arg1),
+                                       Standardize<SubExpr2, typename SubExpr2::field_type>::
+                                       standardType(arg2)));
        };
 
       template<typename CurrentMode, typename Operand1, typename Operand2, typename FieldType>
@@ -4666,18 +4630,17 @@
                                     typename SubExpr1::field_type> operator >(SubExpr1 const & arg1,
                                                                               SubExpr2 const & arg2) {
 
-          typename SubExpr1::field_type typedef FieldType;
+          GreaterThanCmp<Initial,
+                         typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType,
+                         typename Standardize<SubExpr2, typename SubExpr1::field_type>::StandardType,
+                         typename SubExpr1::field_type> typedef ReturnType;
 
-          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+          NeboBooleanExpression<ReturnType, typename SubExpr1::field_type> typedef ReturnTerm;
 
-          typename Standardize<SubExpr2, typename SubExpr1::field_type>::StandardType typedef Type2;
-
-          GreaterThanCmp<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
-                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+          return ReturnTerm(ReturnType(Standardize<SubExpr1, typename SubExpr1::field_type>::
+                                       standardType(arg1),
+                                       Standardize<SubExpr2, typename SubExpr1::field_type>::
+                                       standardType(arg2)));
        };
 
       /* SubExpr X Scalar */
@@ -4693,18 +4656,16 @@
                                                                               field_type::value_type
                                                                               const & arg2) {
 
-          typename SubExpr1::field_type typedef FieldType;
+          GreaterThanCmp<Initial,
+                         typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType,
+                         NeboScalar<Initial, typename SubExpr1::field_type>,
+                         typename SubExpr1::field_type> typedef ReturnType;
 
-          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+          NeboBooleanExpression<ReturnType, typename SubExpr1::field_type> typedef ReturnTerm;
 
-          NeboScalar<Initial, typename SubExpr1::field_type> typedef Type2;
-
-          GreaterThanCmp<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
-                                       Type2(Type2(arg2))));
+          return ReturnTerm(ReturnType(Standardize<SubExpr1, typename SubExpr1::field_type>::
+                                       standardType(arg1),
+                                       NeboScalar<Initial, typename SubExpr1::field_type>(arg2)));
        };
 
       /* Scalar X SubExpr */
@@ -4720,18 +4681,16 @@
                                                                               const & arg1,
                                                                               SubExpr2 const & arg2) {
 
-          typename SubExpr2::field_type typedef FieldType;
+          GreaterThanCmp<Initial,
+                         NeboScalar<Initial, typename SubExpr2::field_type>,
+                         typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType,
+                         typename SubExpr2::field_type> typedef ReturnType;
 
-          NeboScalar<Initial, typename SubExpr2::field_type> typedef Type1;
+          NeboBooleanExpression<ReturnType, typename SubExpr2::field_type> typedef ReturnTerm;
 
-          typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType typedef Type2;
-
-          GreaterThanCmp<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(Type1(arg1)),
-                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+          return ReturnTerm(ReturnType(NeboScalar<Initial, typename SubExpr2::field_type>(arg1),
+                                       Standardize<SubExpr2, typename SubExpr2::field_type>::
+                                       standardType(arg2)));
        };
 
       template<typename CurrentMode, typename Operand1, typename Operand2, typename FieldType>
@@ -4931,18 +4890,19 @@
                                     typename SubExpr1::field_type> operator >=(SubExpr1 const & arg1,
                                                                                SubExpr2 const & arg2) {
 
-          typename SubExpr1::field_type typedef FieldType;
+          GreaterThanEqualCmp<Initial,
+                              typename Standardize<SubExpr1, typename SubExpr1::field_type>::
+                              StandardType,
+                              typename Standardize<SubExpr2, typename SubExpr1::field_type>::
+                              StandardType,
+                              typename SubExpr1::field_type> typedef ReturnType;
 
-          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+          NeboBooleanExpression<ReturnType, typename SubExpr1::field_type> typedef ReturnTerm;
 
-          typename Standardize<SubExpr2, typename SubExpr1::field_type>::StandardType typedef Type2;
-
-          GreaterThanEqualCmp<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
-                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+          return ReturnTerm(ReturnType(Standardize<SubExpr1, typename SubExpr1::field_type>::
+                                       standardType(arg1),
+                                       Standardize<SubExpr2, typename SubExpr1::field_type>::
+                                       standardType(arg2)));
        };
 
       /* SubExpr X Scalar */
@@ -4961,18 +4921,17 @@
                                                                                value_type const &
                                                                                arg2) {
 
-          typename SubExpr1::field_type typedef FieldType;
+          GreaterThanEqualCmp<Initial,
+                              typename Standardize<SubExpr1, typename SubExpr1::field_type>::
+                              StandardType,
+                              NeboScalar<Initial, typename SubExpr1::field_type>,
+                              typename SubExpr1::field_type> typedef ReturnType;
 
-          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+          NeboBooleanExpression<ReturnType, typename SubExpr1::field_type> typedef ReturnTerm;
 
-          NeboScalar<Initial, typename SubExpr1::field_type> typedef Type2;
-
-          GreaterThanEqualCmp<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
-                                       Type2(Type2(arg2))));
+          return ReturnTerm(ReturnType(Standardize<SubExpr1, typename SubExpr1::field_type>::
+                                       standardType(arg1),
+                                       NeboScalar<Initial, typename SubExpr1::field_type>(arg2)));
        };
 
       /* Scalar X SubExpr */
@@ -4991,18 +4950,17 @@
                                                                                arg1,
                                                                                SubExpr2 const & arg2) {
 
-          typename SubExpr2::field_type typedef FieldType;
+          GreaterThanEqualCmp<Initial,
+                              NeboScalar<Initial, typename SubExpr2::field_type>,
+                              typename Standardize<SubExpr2, typename SubExpr2::field_type>::
+                              StandardType,
+                              typename SubExpr2::field_type> typedef ReturnType;
 
-          NeboScalar<Initial, typename SubExpr2::field_type> typedef Type1;
+          NeboBooleanExpression<ReturnType, typename SubExpr2::field_type> typedef ReturnTerm;
 
-          typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType typedef Type2;
-
-          GreaterThanEqualCmp<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(Type1(arg1)),
-                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+          return ReturnTerm(ReturnType(NeboScalar<Initial, typename SubExpr2::field_type>(arg1),
+                                       Standardize<SubExpr2, typename SubExpr2::field_type>::
+                                       standardType(arg2)));
        };
 
       template<typename CurrentMode, typename Operand1, typename Operand2, typename FieldType>
@@ -5184,71 +5142,77 @@
       /* SubBoolExpr X SubBoolExpr */
       template<typename SubBoolExpr1, typename SubBoolExpr2>
        inline NeboBooleanExpression<AndOp<Initial,
-                                          typename SubBoolExpr1::Expression,
-                                          typename SubBoolExpr2::Expression,
+                                          typename Standardize<SubBoolExpr1,
+                                                               typename SubBoolExpr1::field_type>::
+                                          StandardType,
+                                          typename Standardize<SubBoolExpr2,
+                                                               typename SubBoolExpr1::field_type>::
+                                          StandardType,
                                           typename SubBoolExpr1::field_type>,
                                     typename SubBoolExpr1::field_type> operator &&(SubBoolExpr1
                                                                                    const & arg1,
                                                                                    SubBoolExpr2
                                                                                    const & arg2) {
 
-          typename SubBoolExpr1::field_type typedef FieldType;
+          AndOp<Initial,
+                typename Standardize<SubBoolExpr1, typename SubBoolExpr1::field_type>::StandardType,
+                typename Standardize<SubBoolExpr2, typename SubBoolExpr1::field_type>::StandardType,
+                typename SubBoolExpr1::field_type> typedef ReturnType;
 
-          typename SubBoolExpr1::Expression typedef Type1;
+          NeboBooleanExpression<ReturnType, typename SubBoolExpr1::field_type> typedef ReturnTerm;
 
-          typename SubBoolExpr2::Expression typedef Type2;
-
-          AndOp<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(arg1.expr()), Type2(arg2.expr())));
+          return ReturnTerm(ReturnType(Standardize<SubBoolExpr1, typename SubBoolExpr1::field_type>::
+                                       standardType(arg1),
+                                       Standardize<SubBoolExpr2, typename SubBoolExpr1::field_type>::
+                                       standardType(arg2)));
        };
 
       /* SubBoolExpr X Boolean */
       template<typename SubBoolExpr1>
        inline NeboBooleanExpression<AndOp<Initial,
-                                          typename SubBoolExpr1::Expression,
+                                          typename Standardize<SubBoolExpr1,
+                                                               typename SubBoolExpr1::field_type>::
+                                          StandardType,
                                           NeboBoolean<Initial, typename SubBoolExpr1::field_type>,
                                           typename SubBoolExpr1::field_type>,
                                     typename SubBoolExpr1::field_type> operator &&(SubBoolExpr1
                                                                                    const & arg1,
                                                                                    bool const & arg2) {
 
-          typename SubBoolExpr1::field_type typedef FieldType;
+          AndOp<Initial,
+                typename Standardize<SubBoolExpr1, typename SubBoolExpr1::field_type>::StandardType,
+                NeboBoolean<Initial, typename SubBoolExpr1::field_type>,
+                typename SubBoolExpr1::field_type> typedef ReturnType;
 
-          typename SubBoolExpr1::Expression typedef Type1;
+          NeboBooleanExpression<ReturnType, typename SubBoolExpr1::field_type> typedef ReturnTerm;
 
-          NeboBoolean<Initial, typename SubBoolExpr1::field_type> typedef Type2;
-
-          AndOp<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(arg1.expr()), Type2(Type2(arg2))));
+          return ReturnTerm(ReturnType(Standardize<SubBoolExpr1, typename SubBoolExpr1::field_type>::
+                                       standardType(arg1),
+                                       NeboBoolean<Initial, typename SubBoolExpr1::field_type>(arg2)));
        };
 
       /* Boolean X SubBoolExpr */
       template<typename SubBoolExpr2>
        inline NeboBooleanExpression<AndOp<Initial,
                                           NeboBoolean<Initial, typename SubBoolExpr2::field_type>,
-                                          typename SubBoolExpr2::Expression,
+                                          typename Standardize<SubBoolExpr2,
+                                                               typename SubBoolExpr2::field_type>::
+                                          StandardType,
                                           typename SubBoolExpr2::field_type>,
                                     typename SubBoolExpr2::field_type> operator &&(bool const & arg1,
                                                                                    SubBoolExpr2
                                                                                    const & arg2) {
 
-          typename SubBoolExpr2::field_type typedef FieldType;
+          AndOp<Initial,
+                NeboBoolean<Initial, typename SubBoolExpr2::field_type>,
+                typename Standardize<SubBoolExpr2, typename SubBoolExpr2::field_type>::StandardType,
+                typename SubBoolExpr2::field_type> typedef ReturnType;
 
-          NeboBoolean<Initial, typename SubBoolExpr2::field_type> typedef Type1;
+          NeboBooleanExpression<ReturnType, typename SubBoolExpr2::field_type> typedef ReturnTerm;
 
-          typename SubBoolExpr2::Expression typedef Type2;
-
-          AndOp<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(Type1(arg1)), Type2(arg2.expr())));
+          return ReturnTerm(ReturnType(NeboBoolean<Initial, typename SubBoolExpr2::field_type>(arg1),
+                                       Standardize<SubBoolExpr2, typename SubBoolExpr2::field_type>::
+                                       standardType(arg2)));
        };
 
       template<typename CurrentMode, typename Operand1, typename Operand2, typename FieldType>
@@ -5428,71 +5392,77 @@
       /* SubBoolExpr X SubBoolExpr */
       template<typename SubBoolExpr1, typename SubBoolExpr2>
        inline NeboBooleanExpression<OrOp<Initial,
-                                         typename SubBoolExpr1::Expression,
-                                         typename SubBoolExpr2::Expression,
+                                         typename Standardize<SubBoolExpr1,
+                                                              typename SubBoolExpr1::field_type>::
+                                         StandardType,
+                                         typename Standardize<SubBoolExpr2,
+                                                              typename SubBoolExpr1::field_type>::
+                                         StandardType,
                                          typename SubBoolExpr1::field_type>,
                                     typename SubBoolExpr1::field_type> operator ||(SubBoolExpr1
                                                                                    const & arg1,
                                                                                    SubBoolExpr2
                                                                                    const & arg2) {
 
-          typename SubBoolExpr1::field_type typedef FieldType;
+          OrOp<Initial,
+               typename Standardize<SubBoolExpr1, typename SubBoolExpr1::field_type>::StandardType,
+               typename Standardize<SubBoolExpr2, typename SubBoolExpr1::field_type>::StandardType,
+               typename SubBoolExpr1::field_type> typedef ReturnType;
 
-          typename SubBoolExpr1::Expression typedef Type1;
+          NeboBooleanExpression<ReturnType, typename SubBoolExpr1::field_type> typedef ReturnTerm;
 
-          typename SubBoolExpr2::Expression typedef Type2;
-
-          OrOp<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(arg1.expr()), Type2(arg2.expr())));
+          return ReturnTerm(ReturnType(Standardize<SubBoolExpr1, typename SubBoolExpr1::field_type>::
+                                       standardType(arg1),
+                                       Standardize<SubBoolExpr2, typename SubBoolExpr1::field_type>::
+                                       standardType(arg2)));
        };
 
       /* SubBoolExpr X Boolean */
       template<typename SubBoolExpr1>
        inline NeboBooleanExpression<OrOp<Initial,
-                                         typename SubBoolExpr1::Expression,
+                                         typename Standardize<SubBoolExpr1,
+                                                              typename SubBoolExpr1::field_type>::
+                                         StandardType,
                                          NeboBoolean<Initial, typename SubBoolExpr1::field_type>,
                                          typename SubBoolExpr1::field_type>,
                                     typename SubBoolExpr1::field_type> operator ||(SubBoolExpr1
                                                                                    const & arg1,
                                                                                    bool const & arg2) {
 
-          typename SubBoolExpr1::field_type typedef FieldType;
+          OrOp<Initial,
+               typename Standardize<SubBoolExpr1, typename SubBoolExpr1::field_type>::StandardType,
+               NeboBoolean<Initial, typename SubBoolExpr1::field_type>,
+               typename SubBoolExpr1::field_type> typedef ReturnType;
 
-          typename SubBoolExpr1::Expression typedef Type1;
+          NeboBooleanExpression<ReturnType, typename SubBoolExpr1::field_type> typedef ReturnTerm;
 
-          NeboBoolean<Initial, typename SubBoolExpr1::field_type> typedef Type2;
-
-          OrOp<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(arg1.expr()), Type2(Type2(arg2))));
+          return ReturnTerm(ReturnType(Standardize<SubBoolExpr1, typename SubBoolExpr1::field_type>::
+                                       standardType(arg1),
+                                       NeboBoolean<Initial, typename SubBoolExpr1::field_type>(arg2)));
        };
 
       /* Boolean X SubBoolExpr */
       template<typename SubBoolExpr2>
        inline NeboBooleanExpression<OrOp<Initial,
                                          NeboBoolean<Initial, typename SubBoolExpr2::field_type>,
-                                         typename SubBoolExpr2::Expression,
+                                         typename Standardize<SubBoolExpr2,
+                                                              typename SubBoolExpr2::field_type>::
+                                         StandardType,
                                          typename SubBoolExpr2::field_type>,
                                     typename SubBoolExpr2::field_type> operator ||(bool const & arg1,
                                                                                    SubBoolExpr2
                                                                                    const & arg2) {
 
-          typename SubBoolExpr2::field_type typedef FieldType;
+          OrOp<Initial,
+               NeboBoolean<Initial, typename SubBoolExpr2::field_type>,
+               typename Standardize<SubBoolExpr2, typename SubBoolExpr2::field_type>::StandardType,
+               typename SubBoolExpr2::field_type> typedef ReturnType;
 
-          NeboBoolean<Initial, typename SubBoolExpr2::field_type> typedef Type1;
+          NeboBooleanExpression<ReturnType, typename SubBoolExpr2::field_type> typedef ReturnTerm;
 
-          typename SubBoolExpr2::Expression typedef Type2;
-
-          OrOp<Initial, Type1, Type2, FieldType> typedef ReturnType;
-
-          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type1(Type1(arg1)), Type2(arg2.expr())));
+          return ReturnTerm(ReturnType(NeboBoolean<Initial, typename SubBoolExpr2::field_type>(arg1),
+                                       Standardize<SubBoolExpr2, typename SubBoolExpr2::field_type>::
+                                       standardType(arg2)));
        };
 
       template<typename CurrentMode, typename Operand, typename FieldType>
@@ -5637,20 +5607,21 @@
       /* SubBoolExpr */
       template<typename SubBoolExpr>
        inline NeboBooleanExpression<NotOp<Initial,
-                                          typename SubBoolExpr::Expression,
+                                          typename Standardize<SubBoolExpr,
+                                                               typename SubBoolExpr::field_type>::
+                                          StandardType,
                                           typename SubBoolExpr::field_type>,
                                     typename SubBoolExpr::field_type> operator !(SubBoolExpr const &
                                                                                  arg) {
 
-          typename SubBoolExpr::field_type typedef FieldType;
+          NotOp<Initial,
+                typename Standardize<SubBoolExpr, typename SubBoolExpr::field_type>::StandardType,
+                typename SubBoolExpr::field_type> typedef ReturnType;
 
-          typename SubBoolExpr::Expression typedef Type;
+          NeboBooleanExpression<ReturnType, typename SubBoolExpr::field_type> typedef ReturnTerm;
 
-          NotOp<Initial, Type, FieldType> typedef ReturnType;
-
-          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
-
-          return ReturnTerm(ReturnType(Type(arg.expr())));
+          return ReturnTerm(ReturnType(Standardize<SubBoolExpr, typename SubBoolExpr::field_type>::
+                                       standardType(arg)));
        };
 
       struct NeboNil {
