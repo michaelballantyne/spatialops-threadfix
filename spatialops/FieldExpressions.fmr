@@ -1902,7 +1902,7 @@
                                  (tpl-use Cond-chunk 'Initial 'Next 'PreceedingResult 'Field)
                                  (list CT-chunk 'Otherwise FT-chunk)
                                  (c (tpl-use Cond-chunk 'Initial CT-chunk 'Otherwise FT-chunk) s)
-                                 (adcr 'List 'list_)
+                                 (adc 'List 'list_)
                                  (adcr (tpl-use Cond-chunk 'Initial CT-chunk 'Otherwise FT-chunk) 'l)
                                  (cons-asgn 'list_ 'l)
                                  (list (end-val (bs 'operator (p))
@@ -2057,7 +2057,7 @@
                                  (tpl-use SCond-chunk 'PreceedingResult)
                                  'Otherwise
                                  (c (tpl-use SCond-chunk 'Otherwise) s)
-                                 (adcr 'List 'list_)
+                                 (adc 'List 'list_)
                                  (adcr (tpl-use SCond-chunk 'Otherwise) 'l)
                                  (cons-asgn 'list_ 'l)
                                  (list (end-val (bs 'operator (p))
