@@ -6146,7 +6146,7 @@
                 return InternalCall::reverse(l.otherwise(), NewResult(l.clause(), r));
              };
           };
-          List const & list_;
+          List const list_;
 
          public:
           CondBuilder(NeboCond<Initial, ClauseType, Otherwise, FieldType> const & l)
@@ -6329,7 +6329,7 @@
                 return InternalCall::reverse(l.otherwise(), NewResult(l.clause(), r));
              };
           };
-          List const & list_;
+          List const list_;
 
          public:
           CondBuilder(NeboSimpleCond<Otherwise> const & l)
