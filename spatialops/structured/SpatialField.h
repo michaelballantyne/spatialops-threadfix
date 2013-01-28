@@ -426,8 +426,10 @@ namespace structured{
         BOOST_STATIC_ASSERT(int(NewGhost::bZ) <= int(OldGhost::bZ));
 
         return MyType(window_with_ghost().template resize_ghost<OldGhost, NewGhost>(),
-                      field_values(),
-                      ExternalStorage);
+                      ( (memType_ == LOCAL_RAM) ? fieldValues_ : fieldValuesExtDevice_ ),
+                      ExternalStorage,
+                      memType_,
+                      deviceIndex_);
     }
 
     template<typename NewGhost>
@@ -480,8 +482,10 @@ namespace structured{
         BOOST_STATIC_ASSERT(int(NewGhost::bZ) >= int(Minimum::bZ));
 
         return MyType(window_with_ghost().template resize_ghost<OldGhost, NewGhost>(),
-                      field_values(),
-                      ExternalStorage);
+                      ( (memType_ == LOCAL_RAM) ? fieldValues_ : fieldValuesExtDevice_ ),
+                      ExternalStorage,
+                      memType_,
+                      deviceIndex_);
     }
 
     template<typename Shift>
@@ -512,8 +516,10 @@ namespace structured{
         BOOST_STATIC_ASSERT(Shift::Z > 0 ? ((int)(Shift::Z) <= (int)(OldGhost::bZ)) : true);
 
         return MyType(window_with_ghost().template shift<Shift>(),
-                      field_values(),
-                      ExternalStorage);
+                      ( (memType_ == LOCAL_RAM) ? fieldValues_ : fieldValuesExtDevice_ ),
+                      ExternalStorage,
+                      memType_,
+                      deviceIndex_);
     }
 
     template<typename Shift>
