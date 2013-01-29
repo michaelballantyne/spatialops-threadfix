@@ -19,8 +19,6 @@ using namespace SpatialOps;
 using namespace structured;
 
 #include <stdexcept>
-using std::cout;
-using std::endl;
 
 //--------------------------------------------------------------------
 
@@ -136,10 +134,8 @@ bool test_compile_time()
 //--------------------------------------------------------------------
 
 int main( int iarg, char* carg[] )
-{
-  int nx, ny, nz;
+{ int nx, ny, nz;
   bool bcplus[] = { false, false, false };
-
   {
     po::options_description desc("Supported Options");
     desc.add_options()
@@ -162,9 +158,9 @@ int main( int iarg, char* carg[] )
     if( args.count("help") ){
       cout << desc << endl
            << "Examples:" << endl
-           << " test_stencil --nx 5 --ny 10 --nz 3 --bcx" << endl
-           << " test_stencil --bcx --bcy --bcz" << endl
-           << " test_stencil --nx 50 --bcz" << endl
+           << " test_stencil2 --nx 5 --ny 10 --nz 3 --bcx" << endl
+           << " test_stencil2 --bcx --bcy --bcz" << endl
+           << " test_stencil2 --nx 50 --bcz" << endl
            << endl;
       return -1;
     }
@@ -172,7 +168,6 @@ int main( int iarg, char* carg[] )
 
   TestHelper status( true );
   const IntVec npts(nx,ny,nz);
-
   {
     const std::string bcx = bcplus[0] ? "ON" : "OFF";
     const std::string bcy = bcplus[1] ? "ON" : "OFF";
@@ -187,19 +182,62 @@ int main( int iarg, char* carg[] )
 
   status( test_compile_time(), "Compile time type introspection tests" );
   cout << endl;
-
   const double length = 10.0;
 
-//    status( run_convergence<Interpolant,SVolField,SSurfXField,XDIR>(npts,bcplus,length,2.0) );
-//    status( run_convergence<Interpolant,SVolField,SSurfYField,YDIR>(npts,bcplus,length,2.0) );
-//    status( run_convergence<Divergence,SSurfXField,SVolField,XDIR>(npts,bcplus,length,2.0) );
-//  status( run_convergence<Divergence,SSurfYField,SVolField,YDIR>(npts,bcplus,length,2.0) );
-//  status( run_convergence<Divergence,SSurfYField,SVolField,YDIR>(npts,bcplus,length,2.0) );
-//    status( run_convergence<Interpolant,XVolField,XSurfXField,XDIR>(npts,bcplus,length,2.0) );
-//    status( run_convergence<Divergence,XSurfYField,XVolField,YDIR>(npts,bcplus,length,2.0) );
+//   status( run_convergence<Interpolant,SVolField,SSurfXField,XDIR>(npts,bcplus,length,2.0) );
+//   status( run_convergence<Interpolant,SVolField,SSurfYField,YDIR>(npts,bcplus,length,2.0) );
+//   status( run_convergence<Divergence,SSurfXField,SVolField,XDIR>(npts,bcplus,length,2.0) );
+//   status( run_convergence<Divergence,SSurfYField,SVolField,YDIR>(npts,bcplus,length,2.0) );
+//   status( run_convergence<Divergence,SSurfYField,SVolField,YDIR>(npts,bcplus,length,2.0) );
+//   status( run_convergence<Interpolant,XVolField,XSurfXField,XDIR>(npts,bcplus,length,2.0) );
+//   status( run_convergence<Divergence,XSurfYField,XVolField,YDIR>(npts,bcplus,length,2.0) );
 //return 0;
 
   try{
+#ifdef ENABLE_CUDA
+    status( run_variants< SVolField >( npts, bcplus ), "SVol operators" );
+    if( npts[0] > 1 ) status( run_variants< XVolField >( npts, bcplus ), "XVol operators" );
+    if( npts[1] > 1 ) status( run_variants< YVolField >( npts, bcplus ), "YVol operators" );
+    if( npts[2] > 1 ) status( run_variants< ZVolField >( npts, bcplus ), "ZVol operators" );
+
+    if( npts[0]>1 & npts[1]>1 ) status( run_convergence< Interpolant, XVolField,   YSurfXField, YDIR >( npts, bcplus, length, 2.0 ), "InterpXVolYSurfX" );
+    if( npts[0]>1 & npts[2]>1 ) status( run_convergence< Interpolant, XVolField,   ZSurfXField, ZDIR >( npts, bcplus, length, 2.0 ), "InterpXVolZSurfX" );
+
+    if( npts[0]>1 & npts[1]>1 ) status( run_convergence< Gradient,    XVolField,   YSurfXField, YDIR >( npts, bcplus, length, 2.0 ), "GradXVolYSurfX" );
+    if( npts[0]>1 & npts[2]>1 ) status( run_convergence< Gradient,    XVolField,   ZSurfXField, ZDIR >( npts, bcplus, length, 2.0 ), "GradXVolZSurfX" );
+
+    if( npts[1]>1 & npts[0]>1 ) status( run_convergence< Interpolant, YVolField,   XSurfYField, XDIR >( npts, bcplus, length, 2.0 ), "InterpYVolXSurfY" );
+    if( npts[1]>1 & npts[2]>1 ) status( run_convergence< Interpolant, YVolField,   ZSurfYField, ZDIR >( npts, bcplus, length, 2.0 ), "InterpYVolZSurfY" );
+
+    if( npts[1]>1 & npts[0]>1 ) status( run_convergence< Gradient,    YVolField,   XSurfYField, XDIR >( npts, bcplus, length, 2.0 ), "GradYVolXSurfY" );
+    if( npts[1]>1 & npts[2]>1 ) status( run_convergence< Gradient,    YVolField,   ZSurfYField, ZDIR >( npts, bcplus, length, 2.0 ), "GradYVolZSurfY" );
+
+    if( npts[2]>1 & npts[0]>1 ) status( run_convergence< Interpolant, ZVolField,   XSurfZField, XDIR >( npts, bcplus, length, 2.0 ), "InterpZVolXSurfZ" );
+    if( npts[2]>1 & npts[1]>1 ) status( run_convergence< Interpolant, ZVolField,   YSurfZField, YDIR >( npts, bcplus, length, 2.0 ), "InterpZVolYSurfZ" );
+
+    if( npts[2]>1 & npts[0]>1 ) status( run_convergence< Gradient,    ZVolField,   XSurfZField, XDIR >( npts, bcplus, length, 2.0 ), "GradZVolXSurfZ" );
+    if( npts[2]>1 & npts[1]>1 ) status( run_convergence< Gradient,    ZVolField,   YSurfZField, YDIR >( npts, bcplus, length, 2.0 ), "GradZVolYSurfZ" );
+
+    if( npts[0]>1 )             status( run_convergence< Interpolant, SVolField,   XVolField,   XDIR >( npts, bcplus, length, 2.0 ), "InterpSVolXVol" );
+    if( npts[1]>1 )             status( run_convergence< Interpolant, SVolField,   YVolField,   YDIR >( npts, bcplus, length, 2.0 ), "InterpSVolYVol" );
+    if( npts[2]>1 )             status( run_convergence< Interpolant, SVolField,   ZVolField,   ZDIR >( npts, bcplus, length, 2.0 ), "InterpSVolZVol" );
+
+    if( npts[0]>1 )             status( run_convergence< Interpolant, XVolField,   SVolField,   XDIR >( npts, bcplus, length, 2.0 ), "InterpXVolSVol" );
+    if( npts[1]>1 )             status( run_convergence< Interpolant, YVolField,   SVolField,   YDIR >( npts, bcplus, length, 2.0 ), "InterpYVolSVol" );
+    if( npts[2]>1 )             status( run_convergence< Interpolant, ZVolField,   SVolField,   ZDIR >( npts, bcplus, length, 2.0 ), "InterpZVolSVol" );
+
+    if( npts[0]>1 )             status( run_convergence< Interpolant, XSurfXField, XVolField,   XDIR >( npts, bcplus, length, 2.0 ), "InterpXSXXVol" );
+    if( npts[1]>1 )             status( run_convergence< Interpolant, XSurfYField, XVolField,   YDIR >( npts, bcplus, length, 2.0 ), "InterpXSYXVol" );
+    if( npts[2]>1 )             status( run_convergence< Interpolant, XSurfZField, XVolField,   ZDIR >( npts, bcplus, length, 2.0 ), "InterpXSZXVol" );
+
+    if( npts[0]>1 )             status( run_convergence< Interpolant, YSurfXField, YVolField,   XDIR >( npts, bcplus, length, 2.0 ), "InterpYSXYVol" );
+    if( npts[1]>1 )             status( run_convergence< Interpolant, YSurfYField, YVolField,   YDIR >( npts, bcplus, length, 2.0 ), "InterpYSYYVol" );
+    if( npts[2]>1 )             status( run_convergence< Interpolant, YSurfZField, YVolField,   ZDIR >( npts, bcplus, length, 2.0 ), "InterpYSZYVol" );
+
+    if( npts[0]>1 )             status( run_convergence< Interpolant, ZSurfXField, ZVolField,   XDIR >( npts, bcplus, length, 2.0 ), "InterpZSXZVol" );
+    if( npts[1]>1 )             status( run_convergence< Interpolant, ZSurfYField, ZVolField,   YDIR >( npts, bcplus, length, 2.0 ), "InterpZSYZVol" );
+    if( npts[2]>1 )             status( run_convergence< Interpolant, ZSurfZField, ZVolField,   ZDIR >( npts, bcplus, length, 2.0 ), "InterpZSZZVol" );
+#else
     status( run_variants< SVolField >( npts, bcplus ), "SVol operators" );
     if( npts[0] > 1 ) status( run_variants< XVolField >( npts, bcplus ), "XVol operators" );
     if( npts[1] > 1 ) status( run_variants< YVolField >( npts, bcplus ), "YVol operators" );
@@ -268,7 +306,7 @@ int main( int iarg, char* carg[] )
     if( npts[0]>1 )             status( run_convergence< GradientX,    ZVolField,  ZVolField,   XDIR >( npts, bcplus, length, 2.0 ), "Grad ZVol->ZVol (X)" );
     if( npts[1]>1 )             status( run_convergence< GradientY,    ZVolField,  ZVolField,   YDIR >( npts, bcplus, length, 2.0 ), "Grad ZVol->ZVol (Y)" );
     if( npts[2]>1 )             status( run_convergence< GradientZ,    ZVolField,  ZVolField,   ZDIR >( npts, bcplus, length, 2.0 ), "Grad ZVol->ZVol (Z)" );
-
+#endif
     if( status.ok() ){
       cout << "ALL TESTS PASSED :)" << endl;
       return 0;
@@ -285,4 +323,3 @@ int main( int iarg, char* carg[] )
 }
 
 //--------------------------------------------------------------------
-

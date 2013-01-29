@@ -41,7 +41,14 @@
 #include <spatialops/structured/MemoryTypes.h>
 #include <spatialops/FieldExpressionsStencil2.h>
 
-namespace SpatialOps{ namespace structured{
+#include <iostream>
+using std::cout;
+using std::endl;
+using std::cerr;
+using std::flush;
+
+namespace SpatialOps{
+namespace structured{
 
 
   template< typename OperatorT, typename SrcT, typename DestT >
@@ -66,7 +73,7 @@ namespace SpatialOps{ namespace structured{
   apply_to_field( const SrcT& src, DestT& dest ) const
   {
     switch( dest.memory_device_type() ){
-      case LOCAL_RAM:
+    case LOCAL_RAM:
         stencil_2_apply_to_field_general_execute<OperatorT,SrcT,DestT>(src,
                                                                        dest,
                                                                        coefLo_,
