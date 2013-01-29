@@ -41,7 +41,14 @@
 #include <spatialops/structured/MemoryTypes.h>
 #include <spatialops/FieldExpressions.h>
 
-namespace SpatialOps{ namespace structured{
+#include <iostream>
+using std::cout;
+using std::endl;
+using std::cerr;
+using std::flush;
+
+namespace SpatialOps{
+namespace structured{
 
 
   template< typename OperatorT, typename SrcT, typename DestT >
@@ -68,9 +75,7 @@ namespace SpatialOps{ namespace structured{
   {
     switch( dest.memory_device_type() ){
       case LOCAL_RAM:
-          {
-              dest <<= operator()(src);
-          }
+        dest <<= operator()(src);
         break;
 
 #ifdef ENABLE_CUDA

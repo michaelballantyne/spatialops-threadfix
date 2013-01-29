@@ -20,21 +20,24 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef CUDASTENCIL2BRIDGE_H_
-#define CUDASTENCIL2BRIDGE_H_
+#ifndef CUDASTENCIL4BRIDGE_H_
+#define CUDASTENCIL4BRIDGE_H_
 
 namespace SpatialOps {
-	namespace structured {
-		template< class DataType, class Dir>
-		void cuda_stencil_2_apply_to_field( DataType* dest, const DataType* src,
-									 DataType low,   DataType high,
+namespace structured {
+		template< class DataType, class Dir1 >
+		void cuda_stencil_4_apply_to_field (DataType* dest, const DataType* src,
+									 DataType Coef1, DataType Coef2, DataType Coef3, DataType Coef4,
 									 const int nx,      const int ny,      const int nz,
-                                                                         const int sEX_x,   const int sEX_y,   const int sEX_z, 
+									 const int sEX_x,   const int sEX_y,   const int sEX_z,
 									 const int dEX_x,   const int dEX_y,   const int dEX_z,
 									 const int dOFF_x,  const int dOFF_y,  const int dOFF_z,
 									 const int s1OFF_x, const int s1OFF_y, const int s1OFF_z,
-									 const int s2OFF_x, const int s2OFF_y, const int s2OFF_z );
+									 const int s2OFF_x, const int s2OFF_y, const int s2OFF_z,
+                                                                         const int s3OFF_x, const int s3OFF_y, const int s3OFF_z,
+                                                                         const int s4OFF_x, const int s4OFF_y, const int s4OFF_z );
 
 	}
 }
-#endif /* CUDASTENCIL2BRIDGE_H_ */
+#endif /* CUDASTENCIL4BRIDGE_H_ */
+
