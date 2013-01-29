@@ -9,9 +9,9 @@ set( src
   ${dir}/StencilBuilder.cpp
   )
 
-##Stencil2.(cpp/cu) switch
+##Stencil2.(cpp/cu) && Stencil4.(cpp/cu)switch
 if( ENABLE_CUDA )
-    set(src ${src} ${dir}/CudaStencil2.cu)
+    set(src ${src} ${dir}/CudaStencil2.cu ${src} ${dir}/CudaStencil4.cu)
     cuda_add_library(
         spatialops-stencil
         STATIC
@@ -38,6 +38,8 @@ install( FILES
   NullStencil.h
   CudaStencil2.h
   CudaStencil2Bridge.h
+  CudaStencil4.h
+  CudaStencil4Bridge.h
   Stencil2.h
   Stencil2_def.h
   Stencil4.h

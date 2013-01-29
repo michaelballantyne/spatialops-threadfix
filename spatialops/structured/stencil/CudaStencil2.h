@@ -45,25 +45,28 @@ namespace SpatialOps {
 
         // Gather destination window information to generate blocking info
         const MemoryWindow& wdest = dest.window_with_ghost();
+        const MemoryWindow& ws = src.window_with_ghost();
+
         IntVec dOFF  = Extents::DestOffset::int_vec();
         IntVec s1OFF = Extents::Src1Offset::int_vec();
         IntVec s2OFF = Extents::Src2Offset::int_vec();
 
         IntVec wEX = wdest.extent();
-        IntVec dEX = wEX + Extents::DestExtent::int_vec()
-                   + wdest.has_bc() * Extents::DestExtentBC::int_vec();
+        IntVec dEX = wEX + Extents::DestOffset::int_vec() + wdest.has_bc() * Extents::DestOffset::int_vec();
+        IntVec sEX = ws.glob_dim();
 
         //Call interface function -- hack to avoid nvcc meta-template failures
         cuda_stencil_2_apply_to_field< typename DestType::AtomicT, typename Extents::Dir >(
-            dest.field_values(EXTERNAL_CUDA_GPU, dest.device_index()),
-            src.field_values(EXTERNAL_CUDA_GPU, dest.device_index()),
-            low, high,                  	//Stencil Coeffcients
-            wEX[0], wEX[1], wEX[2],			// Global field dimensions
-            dEX[0], dEX[1], dEX[3],         //Destination extents dEX <= wdest.extent
-            dOFF[0], dOFF[1], dOFF[2],      //Destination point offsets
-            s1OFF[0], s1OFF[1], s1OFF[2],   //Source 1 point offsets
-            s2OFF[0], s2OFF[1], s2OFF[2]    //Source 2 point offsets
-        );
+            dest.field_values( EXTERNAL_CUDA_GPU, dest.device_index() ),
+            src.field_values( EXTERNAL_CUDA_GPU, dest.device_index() ),
+            low,      high,                 // Stencil2 Coeffcients
+            wEX[0],   wEX[1],   wEX[2],     // Global field dimensions
+            sEX[0],   sEX[1],   sEX[2],     // Global source extents
+            dEX[0],   dEX[1],   dEX[2],     // Destination extents dEX <= wdest.extent
+            dOFF[0],  dOFF[1],  dOFF[2],    // Destination point offsets
+            s1OFF[0], s1OFF[1], s1OFF[2],   // Source 1 point offsets
+            s2OFF[0], s2OFF[1], s2OFF[2]    // Source 2 point offsets
+            );
       }
   }  // structured
 }  // SpatialOps

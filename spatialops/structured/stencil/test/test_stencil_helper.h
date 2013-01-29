@@ -1,3 +1,4 @@
+
 #ifndef SpatialOps_test_stencil_helper_h
 #define SpatialOps_test_stencil_helper_h
 
@@ -5,6 +6,7 @@
 #include <spatialops/FieldReductions.h>
 #include <spatialops/OperatorDatabase.h>
 
+#include <spatialops/structured/ExternalAllocators.h>
 #include <spatialops/structured/SpatialField.h>
 #include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
 #include <spatialops/structured/Grid.h>
@@ -14,6 +16,14 @@
 #include <vector>
 
 #include <test/TestHelper.h>
+
+#ifdef ENABLE_CUDA
+  #include <spatialops/structured/MemoryTypes.h>
+  #include <spatialops/structured/MemoryWindow.h>
+#endif
+
+using std::cout;
+using std::endl;
 
 template< typename FieldT >
 void function( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& f ){
@@ -158,6 +168,7 @@ double interior_norm( const FieldT& f1, const FieldT& f2 )
   const FieldT f1interior( f1.window_without_ghost(), f1.field_values(), SpatialOps::structured::ExternalStorage );
   const FieldT f2interior( f2.window_without_ghost(), f2.field_values(), SpatialOps::structured::ExternalStorage );
   const double l2 = field_norm( f1interior-f2interior ) / field_norm(f2interior);
+
 //   const double linf = field_max( abs(f1interior-f2interior) );
 //   const double l1 = field_sum( abs(f1interior-f2interior) ) / f1.window_without_ghost().npts();
   return l2;
@@ -183,7 +194,6 @@ bool check_convergence( const std::vector<double>& spacings,
   const double maxOrd = *std::max_element( calcOrder.begin(), calcOrder.end() );
 
   if( maxOrd < 0.99*order ){
-    std::cout << "Order of accuracy: " << maxOrd << std::endl;
     return false;
   }
   return true;
@@ -192,10 +202,9 @@ bool check_convergence( const std::vector<double>& spacings,
 //===================================================================
 
 template< typename OpT, typename DirT >
-double
-apply_stencil( const SpatialOps::structured::IntVec& npts,
-               const double length,
-               const bool bcPlus[3] )
+double apply_stencil( const SpatialOps::structured::IntVec& npts,
+                      const double length,
+                      const bool bcPlus[3] )
 {
   using namespace SpatialOps;
   using namespace structured;
@@ -206,15 +215,15 @@ apply_stencil( const SpatialOps::structured::IntVec& npts,
   const MemoryWindow smw = get_window_with_ghost<SrcT >( npts, bcPlus[0], bcPlus[1], bcPlus[2] );
   const MemoryWindow dmw = get_window_with_ghost<DestT>( npts, bcPlus[0], bcPlus[1], bcPlus[2] );
 
-  SrcT   src( smw, NULL ), xs(smw,NULL), ys(smw,NULL), zs(smw,NULL);
-  DestT dest( dmw, NULL ), xd(dmw,NULL), yd(dmw,NULL), zd(dmw,NULL), destExact(dmw,NULL);
+  SrcT src(smw, NULL), xs(smw,NULL), ys(smw, NULL), zs(smw,NULL);
+  DestT dest(dmw, NULL), xd(dmw, NULL), yd(dmw,NULL), zd(dmw,NULL), destExact(dmw, NULL);
 
   const Grid grid( npts, std::vector<double>(3,length) );
 
   grid.set_coord<XDIR>( xs );  grid.set_coord<YDIR>( ys );  grid.set_coord<ZDIR>( zs );
   grid.set_coord<XDIR>( xd );  grid.set_coord<YDIR>( yd );  grid.set_coord<ZDIR>( zd );
 
-  FuncEvaluator< SrcT,OpType,DirT,1>::value( xs, ys, zs, src      );
+  FuncEvaluator<SrcT,OpType,DirT,1>::value( xs, ys, zs, src      );
   FuncEvaluator<DestT,OpType,DirT,0>::value( xd, yd, zd, destExact);
 
   // resolve the operator
@@ -222,9 +231,21 @@ apply_stencil( const SpatialOps::structured::IntVec& npts,
   build_stencils( npts[0], npts[1], npts[2], length, length, length, opdb );
   const OpT* const op = opdb.retrieve_operator<OpT>();
 
-  op->apply_to_field( src, dest );
+  #ifdef ENABLE_CUDA
+  const MemoryType mtype = EXTERNAL_CUDA_GPU;
+  const StorageMode mode = InternalStorage;
+  DestT gpuDest( dmw, NULL, mode, mtype );
+  #endif
 
-  return interior_norm( dest, destExact );
+  #ifdef ENABLE_CUDA
+    src.add_consumer( EXTERNAL_CUDA_GPU, gpuDest.device_index() );
+    op->apply_to_field( src, gpuDest );
+    gpuDest.add_consumer( LOCAL_RAM, dest.device_index() );
+    return interior_norm( gpuDest, destExact );
+  #else
+    op->apply_to_field( src, dest );
+    return interior_norm( dest, destExact );
+  #endif
 }
 
 //===================================================================
