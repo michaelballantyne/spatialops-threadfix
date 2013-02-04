@@ -73,7 +73,6 @@ int main( int iarg, char* carg[] )
 
   if( npts[0]>1 && npts[1]>1 ) status( run_convergence<Interpolant,SVolField,XSurfYField,XDIR,YDIR>( npts, bcplus, length, 2.0 ), "SVol->XSurfY" );
   if( npts[0]>1 && npts[2]>1 ) status( run_convergence<Interpolant,SVolField,XSurfZField,XDIR,ZDIR>( npts, bcplus, length, 2.0 ), "SVol->XSurfZ" );
-
   if( npts[1]>1 && npts[0]>1 ) status( run_convergence<Interpolant,SVolField,YSurfXField,XDIR,YDIR>( npts, bcplus, length, 2.0 ), "SVol->YSurfX" );
   if( npts[1]>1 && npts[2]>1 ) status( run_convergence<Interpolant,SVolField,YSurfZField,YDIR,ZDIR>( npts, bcplus, length, 2.0 ), "SVol->YSurfZ" );
 
