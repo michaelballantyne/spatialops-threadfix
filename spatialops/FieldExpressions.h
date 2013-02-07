@@ -5927,9 +5927,9 @@
 
              BI::interprocess_semaphore semaphore(0);
 
-             int count = 0;
+             int max = (x == 1 && y == 1 && z == 1) ? 1 : number_of_partitions;
 
-             for(; count < number_of_partitions; ++count){
+             for(int count = 0; count < max; ++count){
 
                 structured::IntVec location = structured::IntVec(((x == 1) ? 0 : count),
                                                                  ((y == 1) ? 0 : count),
@@ -5948,7 +5948,7 @@
                                                             &semaphore));
              };
 
-             for(int ii = 0 ;ii < number_of_partitions ;ii++){ semaphore.wait(); };
+             for(int ii = 0 ;ii < max ;ii++){ semaphore.wait(); };
 
              return initial_lhs;
           }
