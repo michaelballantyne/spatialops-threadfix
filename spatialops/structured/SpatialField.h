@@ -540,12 +540,12 @@ namespace structured{
 
     template<typename NewGhost, typename Shift>
     inline field_type resize_ghost_and_shift() const {
-        return resize_ghost<NewGhost>().shift<Shift>();
+        return resize_ghost<NewGhost>().template shift<Shift>();
     }
 
     template<typename NewGhost, typename Shift>
     inline field_type resize_ghost_and_shift_and_maintain_interior() const {
-        return resize_ghost_and_maintain_interior<NewGhost>().shift_and_maintain_interior<Shift>();
+        return resize_ghost_and_maintain_interior<NewGhost>().template shift_and_maintain_interior<Shift>();
     }
   };
 
