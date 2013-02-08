@@ -2718,11 +2718,22 @@
                                  (b s
                                     (scope 'BI 'interprocess_semaphore)
                                     (fc 'semaphore "0"))
-                                 (b s 'int 'count "=" "0")
+                                 (b s
+                                    'int 'max "="
+                                    (p (b s
+                                          'x '== "1"
+                                          '&&
+                                          'y '== "1"
+                                          '&&
+                                          'z '== "1"))
+                                    '?
+                                    "1"
+                                    ':
+                                    'number_of_partitions)
                                  (c 'for
                                     (p (b (c semi-colon-chunk s)
-                                          empty-chunk
-                                          (b s 'count "<" 'number_of_partitions)
+                                          (b s 'int 'count '= "0")
+                                          (b s 'count "<" 'max)
                                           (c "++" 'count)))
                                     (body-chunk (let ([option (lambda (arg) (p (b s (p (b s arg "==" "1"))
                                                                                   "?"
@@ -2748,7 +2759,7 @@
                                  (c 'for
                                     (p (b (c s semi-colon-chunk)
                                           (b s 'int 'ii "=" "0")
-                                          (b s 'ii "<" 'number_of_partitions)
+                                          (b s 'ii "<" 'max)
                                           (c 'ii "++")))
                                     (body-chunk (mfc 'semaphore 'wait))))
                            'initial_lhs)))
