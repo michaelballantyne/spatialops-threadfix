@@ -42,10 +42,6 @@
 #include <spatialops/FieldExpressions.h>
 
 #include <iostream>
-using std::cout;
-using std::endl;
-using std::cerr;
-using std::flush;
 
 namespace SpatialOps{
 namespace structured{

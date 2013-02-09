@@ -2749,11 +2749,9 @@
                                       (mfc (mfc (mfc 'initial_lhs (tpl-fcn-use 'resize_ghost VG-chunk))
                                                 'window_with_ghost)
                                            'extent))
-                                 (let ([=1 (lambda (sym) (nt= 'int sym "1"))])
-                                   (smt-list-chunk new-line-chunk
-                                                   (=1 'x)
-                                                   (=1 'y)
-                                                   (=1 'z)))
+                                 (smt-list-chunk new-line-chunk
+                                                 (map (lambda (sym) (nt= 'int sym "1"))
+                                                      (list 'x 'y 'z)))
                                  (b new-line-chunk
                                     (bs (fc 'if (n<= 'number_of_partitions (c 'extent "[2]")))
                                         (body-chunk (n= 'z 'number_of_partitions)))
@@ -2766,11 +2764,15 @@
                                  (nt= IntVec 'split (fc IntVec 'x 'y 'z))
                                  (bs (scope 'BI 'interprocess_semaphore)
                                      (fc 'semaphore "0"))
-                                 (nt= 'int 'count "0")
-                                 (bs (fc 'for (bs semi-colon-chunk
-                                                  (c (n< 'count 'number_of_partitions)
-                                                     semi-colon-chunk)
-                                                  (n++ 'count)))
+                                 (nt= 'int 'max (ter-cond (b (c s '&& s) 
+                                                             (map (lambda (sym) (bs sym '== "1"))
+                                                                  (list 'x 'y 'z)))
+                                                          "1"
+                                                          'number_of_partitions))
+                                 (bs (c 'for (par (b (c semi-colon-chunk s)
+                                                     (nt= 'int 'count "0")
+                                                     (n< 'count 'max)
+                                                     (n++ 'count))))
                                      (body-chunk (let ([option (lambda (arg) (ter-cond (par (n== arg "1"))
                                                                                        "0"
                                                                                        'count))])
