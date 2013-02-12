@@ -28,6 +28,7 @@ namespace structured{
 
   template< typename OpT, typename SrcT, typename DestT >
   NullStencil<OpT,SrcT,DestT>::NullStencil()
+    : coefList_( build_coef_list(1.0) )
   {}
 
   template< typename OpT, typename SrcT, typename DestT >
