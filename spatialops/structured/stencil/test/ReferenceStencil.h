@@ -77,6 +77,17 @@ namespace structured {
                                                 const FieldType & src,
                                                       FieldType & dest );
 
+    /**
+     * \brief apply reference (null) stencil on given fields
+     * \tparam SrcType - the type of field the operator is applied to
+     * \tparam DestType - the type of field the operator produces
+     * \param src the field that the operator is applied to
+     * \param dest the resulting field.
+     */
+    template<typename SrcType, typename DestType>
+    inline void ref_null_stencil_apply_to_field( const SrcType  & src,
+                                                       DestType & dest );
+
     /*******************************************************************
      *
      * NOTE: all information in the RefStencil2Detail namespace is meant only for
@@ -410,6 +421,26 @@ namespace structured {
         for(; id != ide; ++id, ++is1, ++is2) {
             *id = *is1 * coefLo + *is2 * coefHi;
         };
+    };
+
+    //------------------------------------------------------------------
+
+    template<typename SrcType, typename DestType>
+    inline void ref_null_stencil_apply_to_field( const SrcType  & src,
+                                                       DestType & dest )
+    {
+
+#       ifndef NDEBUG
+            assert( src.window_with_ghost() == dest.window_with_ghost() );
+#       endif
+
+        typename SrcType::const_iterator isrc = src.begin();
+        typename DestType::iterator idest = dest.begin();
+        const typename DestType::iterator ideste = dest.end();
+
+        for( ; idest!=ideste; ++isrc, ++idest ){
+            *idest = *isrc;
+        }
     };
 
   }// namespace structured

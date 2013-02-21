@@ -23,7 +23,6 @@
 #ifndef SpatialOps_structured_NullStencil_h
 #define SpatialOps_structured_NullStencil_h
 
-#include <spatialops/structured/IndexTriplet.h>
 #include <spatialops/FieldExpressions.h>
 
 namespace SpatialOps{
@@ -43,34 +42,14 @@ namespace structured{
   template< typename OperatorT, typename SrcFieldT, typename DestFieldT >
   struct NullStencil
   {
-  private:
-    const NeboStencilCoefList<1> coefList_;
-
-  public:
     typedef OperatorT  OpT;
     typedef SrcFieldT  SrcFieldType;
     typedef DestFieldT DestFieldType;
 
-    typedef typename BuildStencilPointList<IndexTriplet<0,0,0> >::Result StPtList;
-
-    // Nebo-related internal struct
-    // argument is a Nebo expression
-    template<typename Arg>
-    struct ResultConstructor {
-        typedef NeboStencil<Initial, StPtList, Arg, DestFieldType> Stencil;
-        typedef NeboExpression<Stencil, DestFieldType> Result;
-    };
-
-    // Nebo-related internal struct
-    // argument is a field
-    typedef NeboConstField<Initial, SrcFieldType> FieldArg;
-    typedef NeboStencil<Initial, StPtList, FieldArg, DestFieldType> FieldStencil;
-    typedef NeboExpression<FieldStencil, DestFieldType> FieldResult;
-
-    typedef typename DestFieldType::value_type  AtomicType;  // scalar type
-
     NullStencil();
     void apply_to_field( const SrcFieldT& src, DestFieldT& dest ) const;
+
+    typedef typename DestFieldType::value_type AtomicType;  // scalar type
 
     /**
      * \brief Nebo's inline operator for scalar values
@@ -81,13 +60,18 @@ namespace structured{
         return src;
     }
 
+    // Nebo-related typedefs
+    // argument is a field
+    typedef NeboConstField<Initial, SrcFieldType> FieldArg;
+    typedef NeboExpression<FieldArg, DestFieldType> FieldResult;
+
     /**
      * \brief Nebo's inline operator for field values
      * \param src the field to which the operator is applied
      */
     inline FieldResult operator ()( const SrcFieldType & src ) const
     {
-        return FieldResult(FieldStencil(FieldArg(src), coefList_));
+        return FieldResult(FieldArg(src));
     }
 
     /**
@@ -95,11 +79,9 @@ namespace structured{
      * \param src the Nebo expression to which the operator is applied
      */
     template<typename Arg>
-    inline typename ResultConstructor<Arg>::Result operator ()( const NeboExpression<Arg, SrcFieldType> & src ) const
+    inline NeboExpression<Arg, DestFieldType> operator ()( const NeboExpression<Arg, SrcFieldType> & src ) const
     {
-        typedef typename ResultConstructor<Arg>::Stencil Stencil;
-        typedef typename ResultConstructor<Arg>::Result Result;
-        return Result(Stencil(src.expr(), coefList_));
+        return NeboExpression<Arg, DestFieldType>(src.expr());
     }
   };
 
