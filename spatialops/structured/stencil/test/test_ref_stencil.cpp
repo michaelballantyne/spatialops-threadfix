@@ -180,6 +180,37 @@ bool test_null_stencil(IntVec npts,
 
 //--------------------------------------------------------------------
 
+template<typename OpType, typename FieldType>
+bool test_box_filter_stencil(IntVec npts,
+                             OperatorDatabase & opdb,
+                             bool bc[]) {
+    //basic definitions:
+    const MemoryWindow mwSrc  = get_window_with_ghost<FieldType> (npts, bc[0], bc[1], bc[2]);
+    const MemoryWindow mwDest = get_window_with_ghost<FieldType>(npts, bc[0], bc[1], bc[2]);
+    FieldType src (mwSrc,  NULL);
+    FieldType ref (mwDest, NULL);
+    FieldType test(mwDest, NULL);
+
+    //initialize source field / zero out result fields:
+    initialize_field(src);
+    ref <<= 0.0;
+    test <<= 0.0;
+
+    //get operator:
+    typedef typename SpatialOps::structured::OperatorTypeBuilder<OpType,FieldType,FieldType>::type Op;
+    const Op* const op = opdb.retrieve_operator<Op>();
+
+    //run reference:
+    ref_box_filter_stencil_apply_to_field(src, ref);
+
+    //run operator:
+    op->apply_to_field(src, test);
+
+    return (test == ref);
+};
+
+//--------------------------------------------------------------------
+
 template<typename VolField>
 inline bool test_basic_stencils(const IntVec npts,
                                 OperatorDatabase & opdb,
@@ -479,7 +510,10 @@ int main( int iarg, char* carg[] )
       status( test_null_stencil<Interpolant, SVolField, ZSurfZField>(npts, opdb, bc), "Interpolant SVolField -> ZSurfZField (Null)" );
 
       //Box filter tests:
-      //Not yet added
+      status( test_box_filter_stencil<Filter, SVolField>(npts, opdb, bc), "Filter SVolField -> SVolField (box filter)" );
+      status( test_box_filter_stencil<Filter, XVolField>(npts, opdb, bc), "Filter XVolField -> XVolField (box filter)" );
+      status( test_box_filter_stencil<Filter, YVolField>(npts, opdb, bc), "Filter YVolField -> YVolField (box filter)" );
+      status( test_box_filter_stencil<Filter, ZVolField>(npts, opdb, bc), "Filter ZVolField -> ZVolField (box filter)" );
 
       if( status.ok() ){
           cout << "ALL TESTS PASSED :)" << endl;
