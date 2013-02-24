@@ -19,6 +19,7 @@
  ; IN THE SOFTWARE.
 
 (let* ([id (lambda (x) x)]
+       [l literal-chunk]
        [c concat-chunk]
        [b between-chunk]
        [b/a between/attach-chunk]
@@ -610,44 +611,48 @@
                              (par (mfc 'operand1_ 'eval)
                                   internal-name
                                   (mfc 'operand2_ 'eval))))]
-       [if-arg-SubExpr (lambda (num)
-                         (let ([name (c 'SubExpr num)])
-                           (list (tpl-pmtr (scope name 'field_type))
-                                 (lambda (FT)
-                                   (let ([Standard (tpl-use 'Standardize name FT)])
-                                     (list 'SubExpr
-                                           (tpl-pmtr name)
-                                           (tpl-pmtr (scope Standard 'StandardType))
-                                           name
-                                           (scope Standard 'standardType)))))))]
        [if-arg-Scalar (lambda (num)
-                        (list #false
-                              (lambda (FT)
-                                (let ([type (tpl-use NS-chunk 'Initial FT)])
-                                  (list 'Scalar
-                                        null
-                                        type
-                                        (scope FT 'value_type)
-                                        type)))))]
-       [if-arg-SubBoolExpr (lambda (num)
-                             (let ([name (c 'SubBoolExpr num)])
-                               (list (tpl-pmtr (scope name 'field_type))
-                                     (lambda (FT)
-                                       (let ([Standard (tpl-use 'Standardize name FT)])
-                                         (list 'SubBoolExpr
-                                               (tpl-pmtr name)
-                                               (tpl-pmtr (scope Standard 'StandardType))
-                                               name
-                                               (scope Standard 'standardType)))))))]
+                        (let ([type (tpl-use NS-chunk 'Initial FT-chunk)]
+                              [arg (l 'arg num)])
+                          (list 'Scalar
+                                null
+                                type
+                                (adcr 'AtomicType arg)
+                                (fc type arg))))]
+       [if-arg-Field (lambda (num)
+                       (let ([type (tpl-use NCF-chunk 'Initial FT-chunk)]
+                             [arg (l 'arg num)])
+                         (list 'Field
+                               null
+                               type
+                               (adcr FT-chunk arg)
+                               (fc type arg))))]
+       [if-arg-SubExpr (lambda (num)
+                         (let* ([type (l 'SubExpr num)]
+                                [input-type (tpl-use NE-chunk type FT-chunk)]
+                                [arg (l 'arg num)])
+                           (list 'SubExpr
+                                 (tpl-pmtr type)
+                                 type
+                                 (adcr input-type arg)
+                                 (mfc arg 'expr))))]
        [if-arg-Boolean (lambda (num)
-                         (list #false
-                               (lambda (FT)
-                                 (let ([type (tpl-use NB-chunk 'Initial FT)])
-                                   (list 'Boolean
-                                         null
-                                         type
-                                         'bool
-                                         type)))))]
+                         (let ([type (tpl-use NB-chunk 'Initial FT-chunk)]
+                               [arg (l 'arg num)])
+                           (list 'Boolean
+                                 null
+                                 type
+                                 (adcr 'bool arg)
+                                 (fc type arg))))]
+       [if-arg-SubBoolExpr (lambda (num)
+                             (let* ([type (l 'SubBoolExpr num)]
+                                    [input-type (tpl-use NBE-chunk type FT-chunk)]
+                                    [arg (l 'arg num)])
+                               (list 'SubBoolExpr
+                                     (tpl-pmtr type)
+                                     type
+                                     (adcr input-type arg)
+                                     (mfc arg 'expr))))]
        [build-interface-case
         (lambda (name
                  external-name
@@ -657,41 +662,26 @@
                             (cond [(= 0 number) (error "Empty list of arguments to build-interface-case")]
                                   [(= 1 number) (list "")]
                                   [else (map number->string (sequence->list (in-range 1 (+ 1 number))))]))]
-                 [numbered-arg-info-lst (map (lambda (arg num) (arg num))
-                                        input-arg-info-lst
-                                        num-lst)]
-                 [FT (foldl (lambda (arg crt) (cond [crt]
-                                                    [(first arg)]
-                                                    [else #false]))
-                            #false
-                            numbered-arg-info-lst)])
-            (if (not FT)
-                (error "ERROR: No FieldType found for use in a build-interface-case")
-                (let* ([arg-info-lst (map (lambda (arg) ((second arg) FT))
-                                     numbered-arg-info-lst)]
-                       [description-lst (map first arg-info-lst)]
-                       [tpl-arg-lst (map second arg-info-lst)]
-                       [result-tpl-arg-lst (map third arg-info-lst)]
-                       [arg-lst (map (lambda (num) (c 'arg num))
-                                     num-lst)]
-                       [parameter-lst (map (lambda (type arg) (adcr type arg))
-                                           (map fourth arg-info-lst)
-                                           arg-lst)]
-                       [arg-use-lst (map (lambda (fcn arg) (fc fcn arg))
-                                         (map fifth arg-info-lst)
-                                         arg-lst)])
-                  (d (c (add-between description-lst (c s 'X s)))
-                     (tpl-def tpl-arg-lst
-                              (r-fcn-def (fcn-dcl external-name
-                                                  (tpl-use result-term
-                                                           (tpl-use name 'Initial result-tpl-arg-lst FT)
-                                                           FT)
-                                                  parameter-lst)
-                                         (list (typedef (tpl-use name 'Initial result-tpl-arg-lst FT)
-                                                        'ReturnType)
-                                               (typedef (tpl-use result-term 'ReturnType FT)
-                                                        'ReturnTerm))
-                                         (fc 'ReturnTerm (fc 'ReturnType arg-use-lst)))))))))]
+                 [arg-info-lst (map (lambda (arg num) (arg num))
+                                    input-arg-info-lst
+                                    num-lst)]
+                 [description-lst (map first arg-info-lst)]
+                 [tpl-arg-lst (map second arg-info-lst)]
+                 [result-tpl-arg-lst (map third arg-info-lst)]
+                 [parameter-lst (map fourth arg-info-lst)]
+                 [arg-use-lst (map fifth arg-info-lst)])
+            (d (c (add-between description-lst (c s 'X s)))
+               (tpl-def tpl-arg-lst
+                        (r-fcn-def (fcn-dcl external-name
+                                            (tpl-use result-term
+                                                     (tpl-use name 'Initial result-tpl-arg-lst FT-chunk)
+                                                     FT-chunk)
+                                            parameter-lst)
+                                   (list (typedef (tpl-use name 'Initial result-tpl-arg-lst FT-chunk)
+                                                  'ReturnType)
+                                         (typedef (tpl-use result-term 'ReturnType FT-chunk)
+                                                  'ReturnTerm))
+                                   (fc 'ReturnTerm (fc 'ReturnType arg-use-lst)))))))]
        [build-binary-interface
         (lambda (name
                  external-name
