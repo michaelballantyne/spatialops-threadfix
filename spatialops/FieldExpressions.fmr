@@ -1833,6 +1833,7 @@
                                                        public)))]
              [build-cond-end-val ; end case - given scalar value
               (lambda (name
+                       FT-defined?
                        return-type
                        return-expr)
                 (r-fcn-def (fcn-dcl name
@@ -1840,20 +1841,43 @@
                                     (adc 'double 'd))
                            null
                            return-expr))]
-             [bcev (arg-swap build-cond-end-val 2 1 "build-cond-end-val")]
-             [build-cond-end-expr ; end case - given expression
+             [bcev (arg-swap build-cond-end-val 3 1 "build-cond-end-val")]
+             [build-cond-end-field ; end case - given field
               (lambda (name
+                       FT-defined?
                        return-type
                        return-expr)
-                (tpl-def (tpl-pmtr 'Expr)
+                (let ([FT-arg (if FT-defined? FT-chunk (tpl-pmtr (scope (tpl-use 'NeboFieldCheck
+                                                                                 (tpl-pmtr (scope FT-chunk 'field_type))
+                                                                                 FT-chunk)
+                                                                        'Result)))]
+                      [tpl-def-proc (lambda (fcn-def) (if FT-defined? fcn-def (tpl-def (tpl-pmtr FT-chunk)
+                                                                                       fcn-def)))])
+                  (tpl-def-proc (r-fcn-def (fcn-dcl name
+                                                    (tpl-use NE-chunk return-type FT-arg)
+                                                    (adcr FT-chunk 'f))
+                                           (list (typedef (tpl-use NCF-chunk 'Initial FT-chunk)
+                                                          'Field)
+                                                 (typedef (tpl-use NE-chunk 'Field FT-chunk)
+                                                          'Expression))
+                                           return-expr))))]
+             [bcef (arg-swap build-cond-end-field 3 1 "build-cond-end-field")]
+             [build-cond-end-expr ; end case - given expression
+              (lambda (name
+                       FT-defined?
+                       return-type
+                       return-expr)
+                (tpl-def (list (tpl-pmtr 'Expr)
+                               (if FT-defined? null (tpl-pmtr FT-chunk)))
                          (r-fcn-def (fcn-dcl name
-                                             return-type
-                                             (adcr 'Expr 'e))
+                                             (tpl-use NE-chunk return-type FT-chunk)
+                                             (adcr (tpl-use NE-chunk 'Expr FT-chunk) 'e))
                                     null
                                     return-expr)))]
-             [bcee (arg-swap build-cond-end-expr 2 1 "build-cond-end-expr")]
+             [bcee (arg-swap build-cond-end-expr 3 1 "build-cond-end-expr")]
              [build-cond-bool-val ; conditional case - given a boolean value and a scalar value
               (lambda (name
+                       FT-defined?
                        return-type
                        internals
                        cond-type
@@ -1871,7 +1895,7 @@
                                (fc 'Cond
                                    clause-expr
                                    list-expr))))]
-             [bcbv (arg-swap build-cond-bool-val 5 1 "build-cond-bool-val")]
+             [bcbv (arg-swap build-cond-bool-val 6 1 "build-cond-bool-val")]
              [build-cond-bool-field ; conditional case - given a boolean value and a field
               (lambda (name
                        FT-defined?
@@ -1953,10 +1977,8 @@
                        FT-defined?
                        list-type
                        list-expr)
-                (tpl-def (if FT-defined?
-                             (tpl-pmtr 'BoolExpr)
-                             (list (tpl-pmtr 'BoolExpr)
-                                   (tpl-pmtr FT-chunk)))
+                (tpl-def (list (tpl-pmtr 'BoolExpr)
+                               (if FT-defined? null (tpl-pmtr FT-chunk)))
                          (r-fcn-def (fcn-dcl name
                                              (tpl-use 'CondBuilder (c (tpl-use Cond-chunk
                                                                                'Initial
@@ -2055,6 +2077,7 @@
              [bcne (arg-swap build-cond-NBE-expr 3 1 "build-cond-NBE-expr")]
              [build-cond-app (lambda (name
                                       end-val
+                                      end-field
                                       end-expr
                                       bool-val
                                       bool-field
@@ -2063,6 +2086,7 @@
                                       NBE-field
                                       NBE-expr)
                                (list (end-val name)
+                                     (end-field name)
                                      (end-expr name)
                                      (bool-val name)
                                      (bool-field name)
@@ -2082,7 +2106,8 @@
                                  (adcr (tpl-use Cond-chunk 'Initial CT-chunk 'Otherwise FT-chunk) 'l)
                                  (cons-asgn 'list_ 'l)
                                  (build-cond-app (bs 'operator (p))
-                                                 (bcev (tpl-use NE-chunk
+                                                 (bcev #true
+                                                       (tpl-use NE-chunk
                                                                 (tpl-pmtr (scope (tpl-use 'ReverseList
                                                                                           (c (tpl-use NS-chunk 'Initial FT-chunk) s))
                                                                                  'Result))
@@ -2093,25 +2118,25 @@
                                                                     FT-chunk)
                                                            (fc 'reverse (fc (tpl-use NS-chunk 'Initial FT-chunk)
                                                                             'd))))
-                                                 (bcee (tpl-use NE-chunk
-                                                                (tpl-pmtr (scope (tpl-use 'ReverseList
-                                                                                          (tpl-pmtr (scope (tpl-use 'Standardize
-                                                                                                                    'Expr
-                                                                                                                    FT-chunk)
-                                                                                                           'StandardType)))
-                                                                                 'Result))
-                                                                FT-chunk)
+                                                 (bcef #true
+                                                       (tpl-pmtr (scope (tpl-use 'ReverseList (c (tpl-use NCF-chunk 'Initial FT-chunk)
+                                                                                                 s))
+                                                                        'Result))
                                                        (fc (tpl-use NE-chunk
-                                                                    (tpl-pmtr (scope (tpl-use 'ReverseList
-                                                                                              (tpl-pmtr (scope (tpl-use 'Standardize 'Expr FT-chunk)
-                                                                                                               'StandardType)))
+                                                                    (tpl-pmtr (scope (tpl-use 'ReverseList 'Field)
                                                                                      'Result))
                                                                     FT-chunk)
-                                                           (fc 'reverse
-                                                               (fc (scope (tpl-use 'Standardize 'Expr FT-chunk)
-                                                                          'standardType)
-                                                                   'e))))
-                                                 (bcbv (tpl-use Cond-chunk
+                                                           (fc 'reverse (fc 'Field 'f))))
+                                                 (bcee #true
+                                                       (tpl-pmtr (scope (tpl-use 'ReverseList 'Expr)
+                                                                        'Result))
+                                                       (fc (tpl-use NE-chunk
+                                                                    (tpl-pmtr (scope (tpl-use 'ReverseList 'Expr)
+                                                                                     'Result))
+                                                                    FT-chunk)
+                                                           (fc 'reverse (mfc 'e 'expr))))
+                                                 (bcbv #true
+                                                       (tpl-use Cond-chunk
                                                                 'Initial
                                                                 (tpl-use Clause-chunk
                                                                          'Initial
@@ -2146,26 +2171,35 @@
                                  (adcr (tpl-use SCond-chunk 'Otherwise) 'l)
                                  (cons-asgn 'list_ 'l)
                                  (build-cond-app (bs 'operator (p))
-                                                 (bcev 'double (mfc (fc 'reverse (fc SFClause-chunk 'd))
-                                                                    'eval))
-                                                 (bcee (tpl-use NE-chunk
-                                                                (tpl-pmtr (scope (scope (tpl-use 'CondBuilder
-                                                                                                 (tpl-pmtr (scope (scope 'List
-                                                                                                                         (tpl-fcn-use 'Convert (tpl-pmtr (scope 'Expr 'field_type))))
-                                                                                                                  'Converted)))
-                                                                                        (tpl-fcn-use 'ReverseList
-                                                                                                     (tpl-pmtr (scope (tpl-use 'Standardize
-                                                                                                                               'Expr
-                                                                                                                               (tpl-pmtr (scope 'Expr 'field_type)))
-                                                                                                                      'StandardType))))
-                                                                                 'Result))
-                                                                (tpl-pmtr (scope 'Expr 'field_type)))
-                                                       (fc (fc (tpl-use 'CondBuilder
-                                                                        (tpl-pmtr (scope (scope 'List (tpl-fcn-use 'Convert (tpl-pmtr (scope 'Expr 'field_type))))
-                                                                                         'Converted)))
-                                                               (mfc 'list_ (tpl-fcn-use 'convert (tpl-pmtr (scope 'Expr 'field_type)))))
+                                                 (bcev #false
+                                                       'double
+                                                       (mfc (fc 'reverse (fc SFClause-chunk 'd))
+                                                            'eval))
+                                                 (let ([FT-arg (tpl-pmtr (scope (tpl-use 'NeboFieldCheck
+                                                                                         (tpl-pmtr (scope FT-chunk 'field_type))
+                                                                                         FT-chunk)
+                                                                                'Result))])
+                                                   (bcef #false
+                                                         (tpl-pmtr (scope (scope (tpl-use 'CondBuilder (tpl-pmtr (scope (scope 'List (tpl-fcn-use 'Convert FT-chunk))
+                                                                                                                        'Converted)))
+                                                                                 (tpl-fcn-use 'ReverseList (c (tpl-use NCF-chunk 'Initial FT-arg)
+                                                                                                              s)))
+                                                                          'Result))
+                                                         (fc (fc (tpl-use 'CondBuilder (tpl-pmtr (scope (scope 'List (tpl-fcn-use 'Convert FT-chunk))
+                                                                                                        'Converted)))
+                                                                 (mfc 'list_ (tpl-fcn-use 'convert FT-chunk)))
+                                                             'f)))
+                                                 (bcee #false
+                                                       (tpl-pmtr (scope (scope (tpl-use 'CondBuilder (tpl-pmtr (scope (scope 'List (tpl-fcn-use 'Convert FT-chunk))
+                                                                                                                      'Converted)))
+                                                                               (tpl-fcn-use 'ReverseList 'Expr))
+                                                                        'Result))
+                                                       (fc (fc (tpl-use 'CondBuilder (tpl-pmtr (scope (scope 'List (tpl-fcn-use 'Convert FT-chunk))
+                                                                                                      'Converted)))
+                                                               (mfc 'list_ (tpl-fcn-use 'convert FT-chunk)))
                                                            'e))
-                                                 (bcbv (tpl-use SCond-chunk 'List)
+                                                 (bcbv #false
+                                                       (tpl-use SCond-chunk 'List)
                                                        null
                                                        (tpl-use SCond-chunk 'List)
                                                        (fc SClause-chunk 'b 'd)
@@ -2197,13 +2231,15 @@
                            (sec-def 'public
                                     (constructor-chunk 'CondBuilder null null)))
               (build-cond-app 'cond
-                              (bcev 'double 'd)
-                              (bcee (tpl-pmtr (scope (tpl-use 'Standardize 'Expr (tpl-pmtr (scope 'Expr 'field_type)))
-                                                     'StandardTerm))
-                                    (fc (scope (tpl-use 'Standardize 'Expr (tpl-pmtr (scope 'Expr 'field_type)))
-                                               'standardTerm)
-                                        'e))
-                              (bcbv (tpl-use SCond-chunk Nil-chunk)
+                              (bcev #false 'double 'd)
+                              (bcef #false
+                                    (tpl-use NCF-chunk 'Initial FT-chunk)
+                                    (fc 'Expression (fc 'Field 'f)))
+                              (bcee #false
+                                    'Expr
+                                    'e)
+                              (bcbv #false
+                                    (tpl-use SCond-chunk Nil-chunk)
                                     null
                                     (tpl-use SCond-chunk Nil-chunk)
                                     (fc SClause-chunk 'b 'd)

@@ -7262,14 +7262,21 @@
              return NeboExpression<typename ReverseList<NeboScalar<Initial, FieldType> >::Result,
                                    FieldType>(reverse(NeboScalar<Initial, FieldType>(d)));
           };
-          template<typename Expr>
-           inline NeboExpression<typename ReverseList<typename Standardize<Expr, FieldType>::
-                                                      StandardType>::Result,
-                                 FieldType> operator ()(Expr const & e) {
+          inline NeboExpression<typename ReverseList<NeboConstField<Initial, FieldType> >::Result,
+                                FieldType> operator ()(FieldType const & f) {
 
-              return NeboExpression<typename ReverseList<typename Standardize<Expr, FieldType>::
-                                                         StandardType>::Result,
-                                    FieldType>(reverse(Standardize<Expr, FieldType>::standardType(e)));
+             NeboConstField<Initial, FieldType> typedef Field;
+
+             NeboExpression<Field, FieldType> typedef Expression;
+
+             return NeboExpression<typename ReverseList<Field>::Result, FieldType>(reverse(Field(f)));
+          };
+          template<typename Expr>
+           inline NeboExpression<typename ReverseList<Expr>::Result, FieldType> operator ()(NeboExpression<Expr,
+                                                                                                           FieldType>
+                                                                                            const &
+                                                                                            e) {
+              return NeboExpression<typename ReverseList<Expr>::Result, FieldType>(reverse(e.expr()));
            };
           inline CondBuilder<NeboCond<Initial,
                                       NeboClause<Initial,
@@ -7458,20 +7465,33 @@
           inline double operator ()(double const d) {
              return reverse(NeboSimpleFinalClause(d)).eval();
           };
-          template<typename Expr>
-           inline NeboExpression<typename CondBuilder<typename List::template Convert<typename Expr::
-                                                                                      field_type>::
-                                                      Converted>::template ReverseList<typename
-                                                                                       Standardize<Expr,
-                                                                                                   typename
-                                                                                                   Expr::
-                                                                                                   field_type>::
-                                                                                       StandardType>::
-                                 Result,
-                                 typename Expr::field_type> operator ()(Expr const & e) {
+          template<typename FieldType>
+           inline NeboExpression<typename CondBuilder<typename List::template Convert<FieldType>::
+                                                      Converted>::template ReverseList<NeboConstField<Initial,
+                                                                                                      typename
+                                                                                                      NeboFieldCheck<typename
+                                                                                                                     FieldType::
+                                                                                                                     field_type,
+                                                                                                                     FieldType>::
+                                                                                                      Result>
+                                 >::Result,
+                                 typename NeboFieldCheck<typename FieldType::field_type, FieldType>::
+                                 Result> operator ()(FieldType const & f) {
 
-              return CondBuilder<typename List::template Convert<typename Expr::field_type>::
-                                 Converted>(list_.template convert<typename Expr::field_type>())(e);
+              NeboConstField<Initial, FieldType> typedef Field;
+
+              NeboExpression<Field, FieldType> typedef Expression;
+
+              return CondBuilder<typename List::template Convert<FieldType>::Converted>(list_.template
+                                                                                              convert<FieldType>())(f);
+           };
+          template<typename Expr, typename FieldType>
+           inline NeboExpression<typename CondBuilder<typename List::template Convert<FieldType>::
+                                                      Converted>::template ReverseList<Expr>::Result,
+                                 FieldType> operator ()(NeboExpression<Expr, FieldType> const & e) {
+
+              return CondBuilder<typename List::template Convert<FieldType>::Converted>(list_.template
+                                                                                              convert<FieldType>())(e);
            };
           inline CondBuilder<NeboSimpleCond<List> > operator ()(bool const b, double const d) {
 
@@ -7622,10 +7642,21 @@
 
       inline double cond(double const d) { return d; };
 
-      template<typename Expr>
-       inline typename Standardize<Expr, typename Expr::field_type>::StandardTerm cond(Expr const &
-                                                                                       e) {
-          return Standardize<Expr, typename Expr::field_type>::standardTerm(e);
+      template<typename FieldType>
+       inline NeboExpression<NeboConstField<Initial, FieldType>,
+                             typename NeboFieldCheck<typename FieldType::field_type, FieldType>::
+                             Result> cond(FieldType const & f) {
+
+          NeboConstField<Initial, FieldType> typedef Field;
+
+          NeboExpression<Field, FieldType> typedef Expression;
+
+          return Expression(Field(f));
+       };
+
+      template<typename Expr, typename FieldType>
+       inline NeboExpression<Expr, FieldType> cond(NeboExpression<Expr, FieldType> const & e) {
+          return e;
        };
 
       inline CondBuilder<NeboSimpleCond<NeboNil> > cond(bool const b, double const d) {
