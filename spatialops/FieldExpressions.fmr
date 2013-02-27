@@ -617,13 +617,19 @@
                           (list 'Scalar
                                 null
                                 type
-                                (adcr 'AtomicType arg)
+                                type
+                                (adcr (tpl-pmtr (scope FT-chunk 'value_type))
+                                      arg)
                                 (fc type arg))))]
        [if-arg-Field (lambda (num)
                        (let ([type (tpl-use NCF-chunk 'Initial FT-chunk)]
                              [arg (l 'arg num)])
                          (list 'Field
                                null
+                               (tpl-use NCF-chunk 'Initial (tpl-pmtr (scope (tpl-use 'NeboFieldCheck
+                                                                                     (tpl-pmtr (scope FT-chunk 'field_type))
+                                                                                     FT-chunk)
+                                                                            'Result)))
                                type
                                (adcr FT-chunk arg)
                                (fc type arg))))]
@@ -634,6 +640,7 @@
                            (list 'SubExpr
                                  (tpl-pmtr type)
                                  type
+                                 type
                                  (adcr input-type arg)
                                  (mfc arg 'expr))))]
        [if-arg-Boolean (lambda (num)
@@ -641,6 +648,7 @@
                                [arg (l 'arg num)])
                            (list 'Boolean
                                  null
+                                 type
                                  type
                                  (adcr 'bool arg)
                                  (fc type arg))))]
@@ -650,6 +658,7 @@
                                     [arg (l 'arg num)])
                                (list 'SubBoolExpr
                                      (tpl-pmtr type)
+                                     type
                                      type
                                      (adcr input-type arg)
                                      (mfc arg 'expr))))]
@@ -668,16 +677,17 @@
                  [description-lst (map first arg-info-lst)]
                  [tpl-arg-lst (map second arg-info-lst)]
                  [result-tpl-arg-lst (map third arg-info-lst)]
-                 [parameter-lst (map fourth arg-info-lst)]
-                 [arg-use-lst (map fifth arg-info-lst)])
+                 [return-tpl-arg-lst (map fourth arg-info-lst)]
+                 [parameter-lst (map fifth arg-info-lst)]
+                 [arg-use-lst (map sixth arg-info-lst)])
             (d (c (add-between description-lst (c s 'X s)))
-               (tpl-def tpl-arg-lst
+               (tpl-def (list tpl-arg-lst (tpl-pmtr FT-chunk))
                         (r-fcn-def (fcn-dcl external-name
                                             (tpl-use result-term
                                                      (tpl-use name 'Initial result-tpl-arg-lst FT-chunk)
                                                      FT-chunk)
                                             parameter-lst)
-                                   (list (typedef (tpl-use name 'Initial result-tpl-arg-lst FT-chunk)
+                                   (list (typedef (tpl-use name 'Initial return-tpl-arg-lst FT-chunk)
                                                   'ReturnType)
                                          (typedef (tpl-use result-term 'ReturnType FT-chunk)
                                                   'ReturnTerm))
@@ -686,65 +696,74 @@
         (lambda (name
                  external-name
                  expression-term
-                 Expr-abs
-                 Val-abs)
-          (smt-list-chunk blank-line-chunk
-                          (build-interface-case name
-                                                external-name
-                                                expression-term
-                                                (list Expr-abs Expr-abs))
-                          (build-interface-case name
-                                                external-name
-                                                expression-term
-                                                (list Expr-abs Val-abs))
-                          (build-interface-case name
-                                                external-name
-                                                expression-term
-                                                (list Val-abs Expr-abs))))]
+                 if-args)
+          (let* ([raw-cross-products (foldl (lambda (arg1 previous)
+                                              (append (foldl (lambda (arg2 previous)
+                                                               (cons (list arg1 arg2)
+                                                                     previous))
+                                                             null
+                                                             if-args)
+                                                      previous))
+                                            null
+                                            if-args)]
+                 ;This removes Scalar X Scalar or Boolean X Boolean
+                 [cross-products (rest (reverse raw-cross-products))])
+            (smt-list-chunk blank-line-chunk
+                            (map (lambda (args) (build-interface-case name
+                                                                      external-name
+                                                                      expression-term
+                                                                      args))
+                                 cross-products))))]
        [build-unary-interface
         (lambda (name
                  external-name
                  expression-term
-                 Expr-abs)
-         (build-interface-case name
-                               external-name
-                               expression-term
-                               (list Expr-abs)))]
+                 if-args)
+          (smt-list-chunk blank-line-chunk
+                          (map (lambda (arg) (build-interface-case name
+                                                                   external-name
+                                                                   expression-term
+                                                                   (list arg)))
+                               if-args)))]
+       [binary-expr-arg-lst (list if-arg-Scalar if-arg-Field if-arg-SubExpr)]
+       [unary-expr-arg-lst (list if-arg-Field if-arg-SubExpr)]
+       [binary-logical-expr-arg-lst (list if-arg-Boolean if-arg-SubBoolExpr)]
+       [unary-logical-expr-arg-lst (list if-arg-SubBoolExpr)]
        [build-binary-function
         (lambda (name internal-name external-name)
           (smt-list-chunk blank-line-chunk
                           (build-binary-function-struct name internal-name)
-                          (build-binary-interface name external-name NE-chunk if-arg-SubExpr if-arg-Scalar)))]
+                          (build-binary-interface name external-name NE-chunk binary-expr-arg-lst)))]
        [build-binary-operator
         (lambda (name internal-name external-name)
           (smt-list-chunk blank-line-chunk
                           (build-binary-operator-struct name internal-name)
-                          (build-binary-interface name external-name NE-chunk if-arg-SubExpr if-arg-Scalar)))]
+                          (build-binary-interface name external-name NE-chunk binary-expr-arg-lst)))]
        [build-unary-function
         (lambda (name internal-name external-name)
           (smt-list-chunk blank-line-chunk
                           (build-unary-function-struct name internal-name)
-                          (build-unary-interface name external-name NE-chunk if-arg-SubExpr)))]
+                          (build-unary-interface name external-name NE-chunk unary-expr-arg-lst)))]
        [build-comparison-operator
         (lambda (name internal-name external-name)
           (smt-list-chunk blank-line-chunk
                           (build-comparison-struct name internal-name)
-                          (build-binary-interface name external-name NBE-chunk if-arg-SubExpr if-arg-Scalar)))]
+                          (build-binary-interface name external-name NBE-chunk binary-expr-arg-lst)))]
        [build-binary-logical-operator
         (lambda (name internal-name external-name)
           (smt-list-chunk blank-line-chunk
                           (build-logical-operator-struct name internal-name)
-                          (build-binary-interface name external-name NBE-chunk if-arg-SubBoolExpr if-arg-Boolean)))]
+                          (build-binary-interface name external-name NBE-chunk binary-logical-expr-arg-lst)))]
        [build-unary-logical-function
         (lambda (name internal-name external-name)
           (smt-list-chunk blank-line-chunk
                           (build-unary-logical-function-struct name internal-name)
-                          (build-unary-interface name external-name NBE-chunk if-arg-SubBoolExpr)))]
+                          (build-unary-interface name external-name NBE-chunk unary-logical-expr-arg-lst)))]
        [build-unary-to-logical-function
         (lambda (name internal-name external-name)
           (smt-list-chunk blank-line-chunk
                           (build-unary-logical-function-struct name internal-name)
-                          (build-unary-interface name external-name NBE-chunk if-arg-SubExpr)))]
+                          (build-unary-interface name external-name NBE-chunk unary-expr-arg-lst)))]
        )
   ; beginnning of file
   (pp-header-file-chunk-with-license
@@ -1198,6 +1217,14 @@
                                             'iter_)
                                         (adc (tpl-pmtr (scope FT-chunk 'iterator))
                                              'end_))))
+      (tpl-srt-dcl 'NeboFieldCheck
+                   (list (tpl-pmtr 'Type1)
+                         (tpl-pmtr 'Type2))
+                   null)
+      (tpl-srt-def 'NeboFieldCheck
+                   (tpl-pmtr 'Type)
+                   (list 'Type 'Type)
+                   (typedef 'Type 'Result))
       (tpl-srt-dcl 'Standardize
                    (list (tpl-pmtr 'Input)
                          (tpl-pmtr FT-chunk))
