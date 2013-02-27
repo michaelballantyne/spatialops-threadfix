@@ -7291,29 +7291,46 @@
 
              return ReturnType(Cond(NewClause(Boolean(b), Scalar(d)), list_));
           };
+          inline CondBuilder<NeboCond<Initial,
+                                      NeboClause<Initial,
+                                                 NeboBoolean<Initial, FieldType>,
+                                                 NeboConstField<Initial, FieldType>,
+                                                 FieldType>,
+                                      List,
+                                      FieldType> > operator ()(bool const b, FieldType const & f) {
+
+             NeboBoolean<Initial, FieldType> typedef Boolean;
+
+             NeboConstField<Initial, FieldType> typedef Field;
+
+             NeboClause<Initial, Boolean, Field, FieldType> typedef Clause;
+
+             NeboCond<Initial, Clause, List, FieldType> typedef Cond;
+
+             CondBuilder<Cond> typedef ReturnType;
+
+             return ReturnType(Cond(Clause(Boolean(b), Field(f)), list_));
+          };
           template<typename Expr>
            inline CondBuilder<NeboCond<Initial,
                                        NeboClause<Initial,
                                                   NeboBoolean<Initial, FieldType>,
-                                                  typename Standardize<Expr, FieldType>::
-                                                  StandardType,
+                                                  Expr,
                                                   FieldType>,
                                        List,
-                                       FieldType> > operator ()(bool const b, Expr const & e) {
+                                       FieldType> > operator ()(bool const b,
+                                                                NeboExpression<Expr, FieldType>
+                                                                const & e) {
 
               NeboBoolean<Initial, FieldType> typedef Boolean;
 
-              NeboClause<Initial,
-                         Boolean,
-                         typename Standardize<Expr, FieldType>::StandardType,
-                         FieldType> typedef Clause;
+              NeboClause<Initial, Boolean, Expr, FieldType> typedef Clause;
 
               NeboCond<Initial, Clause, List, FieldType> typedef Cond;
 
               CondBuilder<Cond> typedef ReturnType;
 
-              return ReturnType(Cond(Clause(Boolean(b), Standardize<Expr, FieldType>::standardType(e)),
-                                     list_));
+              return ReturnType(Cond(Clause(Boolean(b), e.expr()), list_));
            };
           template<typename BoolExpr>
            inline CondBuilder<NeboCond<Initial,
@@ -7449,27 +7466,50 @@
 
              return ReturnType(Cond(NeboSimpleClause(b, d), list_));
           };
-          template<typename Expr>
+          template<typename FieldType>
            inline CondBuilder<NeboCond<Initial,
                                        NeboClause<Initial,
-                                                  NeboBoolean<Initial, typename Expr::field_type>,
-                                                  typename Standardize<Expr,
-                                                                       typename Expr::field_type>::
-                                                  StandardType,
-                                                  typename Expr::field_type>,
-                                       typename List::template Convert<typename Expr::field_type>::
-                                       Converted,
-                                       typename Expr::field_type> > operator ()(bool const b,
-                                                                                Expr const & e) {
-
-              typename Expr::field_type typedef FieldType;
+                                                  NeboBoolean<Initial, FieldType>,
+                                                  NeboConstField<Initial,
+                                                                 typename NeboFieldCheck<typename
+                                                                                         FieldType::
+                                                                                         field_type,
+                                                                                         FieldType>::
+                                                                 Result>,
+                                                  FieldType>,
+                                       typename List::template Convert<FieldType>::Converted,
+                                       FieldType> > operator ()(bool const b, FieldType const & f) {
 
               NeboBoolean<Initial, FieldType> typedef Boolean;
 
-              NeboClause<Initial,
-                         Boolean,
-                         typename Standardize<Expr, FieldType>::StandardType,
-                         FieldType> typedef Clause;
+              NeboConstField<Initial, FieldType> typedef Field;
+
+              NeboClause<Initial, Boolean, Field, FieldType> typedef Clause;
+
+              NeboCond<Initial,
+                       Clause,
+                       typename List::template Convert<FieldType>::Converted,
+                       FieldType> typedef Cond;
+
+              CondBuilder<Cond> typedef ReturnType;
+
+              return ReturnType(Cond(Clause(Boolean(b), Field(f)), list_.template convert<FieldType>()));
+           };
+          template<typename Expr, typename FieldType>
+           inline CondBuilder<NeboCond<Initial,
+                                       NeboClause<Initial,
+                                                  NeboBoolean<Initial, FieldType>,
+                                                  Expr,
+                                                  FieldType>,
+                                       typename List::template Convert<typename Expr::field_type>::
+                                       Converted,
+                                       FieldType> > operator ()(bool const b,
+                                                                NeboExpression<Expr, FieldType>
+                                                                const & e) {
+
+              NeboBoolean<Initial, FieldType> typedef Boolean;
+
+              NeboClause<Initial, Boolean, Expr, FieldType> typedef Clause;
 
               NeboCond<Initial,
                        Clause,
@@ -7478,8 +7518,7 @@
 
               CondBuilder<Cond> typedef ReturnType;
 
-              return ReturnType(Cond(Clause(Boolean(b), Standardize<Expr, FieldType>::standardType(e)),
-                                     list_.template convert<FieldType>()));
+              return ReturnType(Cond(Clause(Boolean(b), e.expr()), list_.template convert<FieldType>()));
            };
           template<typename BoolExpr, typename FieldType>
            inline CondBuilder<NeboCond<Initial,
@@ -7566,31 +7605,52 @@
          return ReturnType(Cond(NeboSimpleClause(b, d), NeboNil()));
       };
 
-      template<typename Expr>
+      template<typename FieldType>
        inline CondBuilder<NeboCond<Initial,
                                    NeboClause<Initial,
-                                              NeboBoolean<Initial, typename Expr::field_type>,
-                                              typename Standardize<Expr, typename Expr::field_type>::
-                                              StandardType,
-                                              typename Expr::field_type>,
+                                              NeboBoolean<Initial, FieldType>,
+                                              NeboConstField<Initial,
+                                                             typename NeboFieldCheck<typename
+                                                                                     FieldType::
+                                                                                     field_type,
+                                                                                     FieldType>::
+                                                             Result>,
+                                              FieldType>,
                                    NeboNil,
-                                   typename Expr::field_type> > cond(bool const b, Expr const & e) {
-
-          typename Expr::field_type typedef FieldType;
+                                   FieldType> > cond(bool const b, FieldType const & f) {
 
           NeboBoolean<Initial, FieldType> typedef Boolean;
 
-          NeboClause<Initial,
-                     Boolean,
-                     typename Standardize<Expr, FieldType>::StandardType,
-                     FieldType> typedef Clause;
+          NeboConstField<Initial, FieldType> typedef Field;
+
+          NeboClause<Initial, Boolean, Field, FieldType> typedef Clause;
 
           NeboCond<Initial, Clause, NeboNil, FieldType> typedef Cond;
 
           CondBuilder<Cond> typedef ReturnType;
 
-          return ReturnType(Cond(Clause(Boolean(b), Standardize<Expr, FieldType>::standardType(e)),
-                                 NeboNil()));
+          return ReturnType(Cond(Clause(Boolean(b), Field(f)), NeboNil()));
+       };
+
+      template<typename Expr, typename FieldType>
+       inline CondBuilder<NeboCond<Initial,
+                                   NeboClause<Initial,
+                                              NeboBoolean<Initial, FieldType>,
+                                              Expr,
+                                              FieldType>,
+                                   NeboNil,
+                                   FieldType> > cond(bool const b,
+                                                     NeboExpression<Expr, FieldType> const & e) {
+
+          NeboBoolean<Initial, FieldType> typedef Boolean;
+
+          NeboClause<Initial, Boolean, Expr, FieldType> typedef Clause;
+
+          NeboCond<Initial, Clause, NeboNil, FieldType> typedef Cond;
+
+          CondBuilder<Cond> typedef ReturnType;
+
+          return ReturnType(Cond(Clause(Boolean(b), e.expr()), NeboNil()));
        };
 
       template<typename BoolExpr, typename FieldType>
