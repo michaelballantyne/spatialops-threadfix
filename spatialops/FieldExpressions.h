@@ -705,55 +705,6 @@
       template<typename Type>
        struct NeboFieldCheck<Type, Type> { Type typedef Result; };
 
-      template<typename Input, typename FieldType>
-       struct Standardize;
-
-      template<typename FieldType>
-       struct Standardize<FieldType, FieldType> {
-
-         NeboConstField<Initial, FieldType> typedef StandardType;
-
-         NeboExpression<StandardType, FieldType> typedef StandardTerm;
-
-         static inline StandardType standardType(FieldType const & given) {
-            return StandardType(given);
-         };
-
-         static inline StandardTerm standardTerm(FieldType const & given) {
-            return StandardTerm(StandardType(given));
-         };
-      };
-
-      template<typename ExprType, typename FieldType>
-       struct Standardize<NeboExpression<ExprType, FieldType>, FieldType> {
-
-         ExprType typedef StandardType;
-
-         NeboExpression<StandardType, FieldType> typedef StandardTerm;
-
-         static inline StandardType standardType(NeboExpression<ExprType, FieldType> const & given) {
-            return given.expr();
-         };
-
-         static inline StandardTerm standardTerm(NeboExpression<ExprType, FieldType> const & given) {
-            return given;
-         };
-      };
-
-      template<typename ExprType, typename FieldType>
-       struct Standardize<NeboBooleanExpression<ExprType, FieldType>, FieldType> {
-
-         ExprType typedef StandardType;
-
-         NeboBooleanExpression<StandardType, FieldType> typedef StandardTerm;
-
-         static inline StandardType standardType(NeboBooleanExpression<ExprType, FieldType> const &
-                                                 given) { return given.expr(); };
-
-         static inline StandardTerm standardTerm(NeboBooleanExpression<ExprType, FieldType> const &
-                                                 given) { return given; };
-      };
-
       template<typename CurrentMode, typename Operand1, typename Operand2, typename FieldType>
        struct SumOp;
 
