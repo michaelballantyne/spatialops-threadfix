@@ -7084,11 +7084,11 @@
 
              typename ConvertingClause::Converted typedef ConvertedClause;
 
-             typename Otherwise::template Convert<FieldType> typedef ConvertingList;
+             typename Otherwise::template Convert<FieldType> typedef ConvertingClauses;
 
-             typename ConvertingList::Converted typedef ConvertedList;
+             typename ConvertingClauses::Converted typedef ConvertedClauses;
 
-             NeboCond<Initial, ConvertedClause, ConvertedList, FieldType> typedef Converted;
+             NeboCond<Initial, ConvertedClause, ConvertedClauses, FieldType> typedef Converted;
 
              static inline Converted convert(NeboSimpleClause const & c, Otherwise const & o) {
                 return Converted(ConvertingClause::convert(c.check(), c.eval()), o.template convert<FieldType>());
@@ -7123,9 +7123,9 @@
 
              typename ConvertingClause::Converted typedef ConvertedClause;
 
-             NeboNil typedef ConvertedList;
+             NeboNil typedef ConvertedClauses;
 
-             NeboCond<Initial, ConvertedClause, ConvertedList, FieldType> typedef Converted;
+             NeboCond<Initial, ConvertedClause, ConvertedClauses, FieldType> typedef Converted;
 
              static inline Converted convert(NeboSimpleClause const & c) {
                 return Converted(ConvertingClause::convert(c.check(), c.eval()), NeboNil());
@@ -7145,20 +7145,20 @@
           NeboSimpleClause const c_;
       };
 
-      template<typename List>
+      template<typename Clauses>
        struct CondBuilder;
 
       template<typename ClauseType, typename Otherwise, typename FieldType>
        struct CondBuilder<NeboCond<Initial, ClauseType, Otherwise, FieldType> > {
 
          public:
-          NeboCond<Initial, ClauseType, Otherwise, FieldType>  typedef List;
+          NeboCond<Initial, ClauseType, Otherwise, FieldType>  typedef Clauses;
 
          private:
           template<typename Remaining, typename PreceedingResult>
-           struct ReverseListRecursive;
+           struct ReverseClausesRecursive;
           template<typename PreceedingResult>
-           struct ReverseListRecursive<NeboNil, PreceedingResult> {
+           struct ReverseClausesRecursive<NeboNil, PreceedingResult> {
 
              PreceedingResult typedef Result;
 
@@ -7167,13 +7167,14 @@
              };
           };
           template<typename Next, typename Field, typename Following, typename PreceedingResult>
-           struct ReverseListRecursive<NeboCond<Initial, Next, Following, Field>, PreceedingResult> {
+           struct ReverseClausesRecursive<NeboCond<Initial, Next, Following, Field>,
+                                          PreceedingResult> {
 
              NeboCond<Initial, Next, Following, Field> typedef Remaining;
 
              NeboCond<Initial, Next, PreceedingResult, Field> typedef NewResult;
 
-             ReverseListRecursive<Following, NewResult> typedef InternalCall;
+             ReverseClausesRecursive<Following, NewResult> typedef InternalCall;
 
              typename InternalCall::Result typedef Result;
 
@@ -7181,60 +7182,60 @@
                 return InternalCall::reverse(l.otherwise(), NewResult(l.clause(), r));
              };
           };
-          List const list_;
+          Clauses const clauses_;
 
          public:
-          CondBuilder(NeboCond<Initial, ClauseType, Otherwise, FieldType> const & l)
-          : list_(l)
+          CondBuilder(NeboCond<Initial, ClauseType, Otherwise, FieldType> const & cs)
+          : clauses_(cs)
           {};
           template<typename Final>
-           struct ReverseList;
+           struct ReverseClauses;
           template<typename Final>
-           struct ReverseList {
+           struct ReverseClauses {
 
-             ReverseListRecursive<List, Final> typedef InternalCall;
+             ReverseClausesRecursive<Clauses, Final> typedef InternalCall;
 
              typename InternalCall::Result typedef Result;
 
-             static inline Result reverse(List const & l, Final const & f) {
-                return InternalCall::reverse(l, f);
+             static inline Result reverse(Clauses const & cs, Final const & f) {
+                return InternalCall::reverse(cs, f);
              };
           };
           template<typename Final>
-           inline typename ReverseList<Final>::Result reverse(Final const & f) {
+           inline typename ReverseClauses<Final>::Result reverse(Final const & f) {
 
-              ReverseList<Final> typedef InternalCall;
+              ReverseClauses<Final> typedef InternalCall;
 
-              return InternalCall::reverse(list_, f);
+              return InternalCall::reverse(clauses_, f);
            };
-          inline NeboExpression<typename ReverseList<NeboScalar<Initial, FieldType> >::Result,
+          inline NeboExpression<typename ReverseClauses<NeboScalar<Initial, FieldType> >::Result,
                                 FieldType> operator ()(double const d) {
 
-             return NeboExpression<typename ReverseList<NeboScalar<Initial, FieldType> >::Result,
+             return NeboExpression<typename ReverseClauses<NeboScalar<Initial, FieldType> >::Result,
                                    FieldType>(reverse(NeboScalar<Initial, FieldType>(d)));
           };
-          inline NeboExpression<typename ReverseList<NeboConstField<Initial, FieldType> >::Result,
+          inline NeboExpression<typename ReverseClauses<NeboConstField<Initial, FieldType> >::Result,
                                 FieldType> operator ()(FieldType const & f) {
 
              NeboConstField<Initial, FieldType> typedef Field;
 
              NeboExpression<Field, FieldType> typedef Expression;
 
-             return NeboExpression<typename ReverseList<Field>::Result, FieldType>(reverse(Field(f)));
+             return NeboExpression<typename ReverseClauses<Field>::Result, FieldType>(reverse(Field(f)));
           };
           template<typename Expr>
-           inline NeboExpression<typename ReverseList<Expr>::Result, FieldType> operator ()(NeboExpression<Expr,
-                                                                                                           FieldType>
-                                                                                            const &
-                                                                                            e) {
-              return NeboExpression<typename ReverseList<Expr>::Result, FieldType>(reverse(e.expr()));
+           inline NeboExpression<typename ReverseClauses<Expr>::Result, FieldType> operator ()(NeboExpression<Expr,
+                                                                                                              FieldType>
+                                                                                               const
+                                                                                               & e) {
+              return NeboExpression<typename ReverseClauses<Expr>::Result, FieldType>(reverse(e.expr()));
            };
           inline CondBuilder<NeboCond<Initial,
                                       NeboClause<Initial,
                                                  NeboBoolean<Initial, FieldType>,
                                                  NeboScalar<Initial, FieldType>,
                                                  FieldType>,
-                                      List,
+                                      Clauses,
                                       FieldType> > operator ()(bool const b, double const d) {
 
              NeboBoolean<Initial, FieldType> typedef Boolean;
@@ -7243,18 +7244,18 @@
 
              NeboClause<Initial, Boolean, Scalar, FieldType> typedef NewClause;
 
-             NeboCond<Initial, NewClause, List, FieldType> typedef Cond;
+             NeboCond<Initial, NewClause, Clauses, FieldType> typedef Cond;
 
              CondBuilder<Cond> typedef ReturnType;
 
-             return ReturnType(Cond(NewClause(Boolean(b), Scalar(d)), list_));
+             return ReturnType(Cond(NewClause(Boolean(b), Scalar(d)), clauses_));
           };
           inline CondBuilder<NeboCond<Initial,
                                       NeboClause<Initial,
                                                  NeboBoolean<Initial, FieldType>,
                                                  NeboConstField<Initial, FieldType>,
                                                  FieldType>,
-                                      List,
+                                      Clauses,
                                       FieldType> > operator ()(bool const b, FieldType const & f) {
 
              NeboBoolean<Initial, FieldType> typedef Boolean;
@@ -7263,11 +7264,11 @@
 
              NeboClause<Initial, Boolean, Field, FieldType> typedef Clause;
 
-             NeboCond<Initial, Clause, List, FieldType> typedef Cond;
+             NeboCond<Initial, Clause, Clauses, FieldType> typedef Cond;
 
              CondBuilder<Cond> typedef ReturnType;
 
-             return ReturnType(Cond(Clause(Boolean(b), Field(f)), list_));
+             return ReturnType(Cond(Clause(Boolean(b), Field(f)), clauses_));
           };
           template<typename Expr>
            inline CondBuilder<NeboCond<Initial,
@@ -7275,7 +7276,7 @@
                                                   NeboBoolean<Initial, FieldType>,
                                                   Expr,
                                                   FieldType>,
-                                       List,
+                                       Clauses,
                                        FieldType> > operator ()(bool const b,
                                                                 NeboExpression<Expr, FieldType>
                                                                 const & e) {
@@ -7284,11 +7285,11 @@
 
               NeboClause<Initial, Boolean, Expr, FieldType> typedef Clause;
 
-              NeboCond<Initial, Clause, List, FieldType> typedef Cond;
+              NeboCond<Initial, Clause, Clauses, FieldType> typedef Cond;
 
               CondBuilder<Cond> typedef ReturnType;
 
-              return ReturnType(Cond(Clause(Boolean(b), e.expr()), list_));
+              return ReturnType(Cond(Clause(Boolean(b), e.expr()), clauses_));
            };
           template<typename BoolExpr>
            inline CondBuilder<NeboCond<Initial,
@@ -7296,7 +7297,7 @@
                                                   BoolExpr,
                                                   NeboScalar<Initial, FieldType>,
                                                   FieldType>,
-                                       List,
+                                       Clauses,
                                        FieldType> > operator ()(NeboBooleanExpression<BoolExpr,
                                                                                       FieldType>
                                                                 const & nb,
@@ -7306,11 +7307,11 @@
 
               NeboClause<Initial, BoolExpr, Scalar, FieldType> typedef Clause;
 
-              NeboCond<Initial, Clause, List, FieldType> typedef Cond;
+              NeboCond<Initial, Clause, Clauses, FieldType> typedef Cond;
 
               CondBuilder<Cond> typedef ReturnType;
 
-              return ReturnType(Cond(Clause(nb.expr(), Scalar(d)), list_));
+              return ReturnType(Cond(Clause(nb.expr(), Scalar(d)), clauses_));
            };
           template<typename BoolExpr>
            inline CondBuilder<NeboCond<Initial,
@@ -7318,7 +7319,7 @@
                                                   BoolExpr,
                                                   NeboConstField<Initial, FieldType>,
                                                   FieldType>,
-                                       List,
+                                       Clauses,
                                        FieldType> > operator ()(NeboBooleanExpression<BoolExpr,
                                                                                       FieldType>
                                                                 const & nb,
@@ -7328,16 +7329,16 @@
 
               NeboClause<Initial, BoolExpr, Field, FieldType> typedef Clause;
 
-              NeboCond<Initial, Clause, List, FieldType> typedef Cond;
+              NeboCond<Initial, Clause, Clauses, FieldType> typedef Cond;
 
               CondBuilder<Cond> typedef ReturnType;
 
-              return ReturnType(Cond(Clause(nb.expr(), Field(f)), list_));
+              return ReturnType(Cond(Clause(nb.expr(), Field(f)), clauses_));
            };
           template<typename BoolExpr, typename Expr>
            inline CondBuilder<NeboCond<Initial,
                                        NeboClause<Initial, BoolExpr, Expr, FieldType>,
-                                       List,
+                                       Clauses,
                                        FieldType> > operator ()(NeboBooleanExpression<BoolExpr,
                                                                                       FieldType>
                                                                 const & nb,
@@ -7346,11 +7347,11 @@
 
               NeboClause<Initial, BoolExpr, Expr, FieldType> typedef Clause;
 
-              NeboCond<Initial, Clause, List, FieldType> typedef Cond;
+              NeboCond<Initial, Clause, Clauses, FieldType> typedef Cond;
 
               CondBuilder<Cond> typedef ReturnType;
 
-              return ReturnType(Cond(Clause(nb.expr(), e.expr()), list_));
+              return ReturnType(Cond(Clause(nb.expr(), e.expr()), clauses_));
            };
       };
 
@@ -7358,13 +7359,13 @@
        struct CondBuilder<NeboSimpleCond<Otherwise> > {
 
          public:
-          NeboSimpleCond<Otherwise>  typedef List;
+          NeboSimpleCond<Otherwise>  typedef Clauses;
 
          private:
           template<typename Remaining, typename PreceedingResult>
-           struct ReverseListRecursive;
+           struct ReverseClausesRecursive;
           template<typename PreceedingResult>
-           struct ReverseListRecursive<NeboNil, PreceedingResult> {
+           struct ReverseClausesRecursive<NeboNil, PreceedingResult> {
 
              PreceedingResult typedef Result;
 
@@ -7373,13 +7374,13 @@
              };
           };
           template<typename Following, typename PreceedingResult>
-           struct ReverseListRecursive<NeboSimpleCond<Following>, PreceedingResult> {
+           struct ReverseClausesRecursive<NeboSimpleCond<Following>, PreceedingResult> {
 
              NeboSimpleCond<Following> typedef Remaining;
 
              NeboSimpleCond<PreceedingResult> typedef NewResult;
 
-             ReverseListRecursive<Following, NewResult> typedef InternalCall;
+             ReverseClausesRecursive<Following, NewResult> typedef InternalCall;
 
              typename InternalCall::Result typedef Result;
 
@@ -7387,44 +7388,44 @@
                 return InternalCall::reverse(l.otherwise(), NewResult(l.clause(), r));
              };
           };
-          List const list_;
+          Clauses const clauses_;
 
          public:
-          CondBuilder(NeboSimpleCond<Otherwise> const & l)
-          : list_(l)
+          CondBuilder(NeboSimpleCond<Otherwise> const & cs)
+          : clauses_(cs)
           {};
           template<typename Final>
-           struct ReverseList;
+           struct ReverseClauses;
           template<typename Final>
-           struct ReverseList {
+           struct ReverseClauses {
 
-             ReverseListRecursive<List, Final> typedef InternalCall;
+             ReverseClausesRecursive<Clauses, Final> typedef InternalCall;
 
              typename InternalCall::Result typedef Result;
 
-             static inline Result reverse(List const & l, Final const & f) {
-                return InternalCall::reverse(l, f);
+             static inline Result reverse(Clauses const & cs, Final const & f) {
+                return InternalCall::reverse(cs, f);
              };
           };
           template<typename Final>
-           inline typename ReverseList<Final>::Result reverse(Final const & f) {
+           inline typename ReverseClauses<Final>::Result reverse(Final const & f) {
 
-              ReverseList<Final> typedef InternalCall;
+              ReverseClauses<Final> typedef InternalCall;
 
-              return InternalCall::reverse(list_, f);
+              return InternalCall::reverse(clauses_, f);
            };
           inline double operator ()(double const d) {
              return reverse(NeboSimpleFinalClause(d)).eval();
           };
           template<typename FieldType>
-           inline NeboExpression<typename CondBuilder<typename List::template Convert<FieldType>::
-                                                      Converted>::template ReverseList<NeboConstField<Initial,
-                                                                                                      typename
-                                                                                                      NeboFieldCheck<typename
-                                                                                                                     FieldType::
-                                                                                                                     field_type,
-                                                                                                                     FieldType>::
-                                                                                                      Result>
+           inline NeboExpression<typename CondBuilder<typename Clauses::template Convert<FieldType>::
+                                                      Converted>::template ReverseClauses<NeboConstField<Initial,
+                                                                                                         typename
+                                                                                                         NeboFieldCheck<typename
+                                                                                                                        FieldType::
+                                                                                                                        field_type,
+                                                                                                                        FieldType>::
+                                                                                                         Result>
                                  >::Result,
                                  typename NeboFieldCheck<typename FieldType::field_type, FieldType>::
                                  Result> operator ()(FieldType const & f) {
@@ -7433,24 +7434,25 @@
 
               NeboExpression<Field, FieldType> typedef Expression;
 
-              return CondBuilder<typename List::template Convert<FieldType>::Converted>(list_.template
-                                                                                              convert<FieldType>())(f);
+              return CondBuilder<typename Clauses::template Convert<FieldType>::Converted>(clauses_.template
+                                                                                                    convert<FieldType>())(f);
            };
           template<typename Expr, typename FieldType>
-           inline NeboExpression<typename CondBuilder<typename List::template Convert<FieldType>::
-                                                      Converted>::template ReverseList<Expr>::Result,
+           inline NeboExpression<typename CondBuilder<typename Clauses::template Convert<FieldType>::
+                                                      Converted>::template ReverseClauses<Expr>::
+                                 Result,
                                  FieldType> operator ()(NeboExpression<Expr, FieldType> const & e) {
 
-              return CondBuilder<typename List::template Convert<FieldType>::Converted>(list_.template
-                                                                                              convert<FieldType>())(e);
+              return CondBuilder<typename Clauses::template Convert<FieldType>::Converted>(clauses_.template
+                                                                                                    convert<FieldType>())(e);
            };
-          inline CondBuilder<NeboSimpleCond<List> > operator ()(bool const b, double const d) {
+          inline CondBuilder<NeboSimpleCond<Clauses> > operator ()(bool const b, double const d) {
 
-             NeboSimpleCond<List> typedef Cond;
+             NeboSimpleCond<Clauses> typedef Cond;
 
              CondBuilder<Cond> typedef ReturnType;
 
-             return ReturnType(Cond(NeboSimpleClause(b, d), list_));
+             return ReturnType(Cond(NeboSimpleClause(b, d), clauses_));
           };
           template<typename FieldType>
            inline CondBuilder<NeboCond<Initial,
@@ -7463,7 +7465,7 @@
                                                                                          FieldType>::
                                                                  Result>,
                                                   FieldType>,
-                                       typename List::template Convert<FieldType>::Converted,
+                                       typename Clauses::template Convert<FieldType>::Converted,
                                        FieldType> > operator ()(bool const b, FieldType const & f) {
 
               NeboBoolean<Initial, FieldType> typedef Boolean;
@@ -7474,12 +7476,12 @@
 
               NeboCond<Initial,
                        Clause,
-                       typename List::template Convert<FieldType>::Converted,
+                       typename Clauses::template Convert<FieldType>::Converted,
                        FieldType> typedef Cond;
 
               CondBuilder<Cond> typedef ReturnType;
 
-              return ReturnType(Cond(Clause(Boolean(b), Field(f)), list_.template convert<FieldType>()));
+              return ReturnType(Cond(Clause(Boolean(b), Field(f)), clauses_.template convert<FieldType>()));
            };
           template<typename Expr, typename FieldType>
            inline CondBuilder<NeboCond<Initial,
@@ -7487,7 +7489,7 @@
                                                   NeboBoolean<Initial, FieldType>,
                                                   Expr,
                                                   FieldType>,
-                                       typename List::template Convert<typename Expr::field_type>::
+                                       typename Clauses::template Convert<typename Expr::field_type>::
                                        Converted,
                                        FieldType> > operator ()(bool const b,
                                                                 NeboExpression<Expr, FieldType>
@@ -7499,12 +7501,12 @@
 
               NeboCond<Initial,
                        Clause,
-                       typename List::template Convert<typename Expr::field_type>::Converted,
+                       typename Clauses::template Convert<typename Expr::field_type>::Converted,
                        FieldType> typedef Cond;
 
               CondBuilder<Cond> typedef ReturnType;
 
-              return ReturnType(Cond(Clause(Boolean(b), e.expr()), list_.template convert<FieldType>()));
+              return ReturnType(Cond(Clause(Boolean(b), e.expr()), clauses_.template convert<FieldType>()));
            };
           template<typename BoolExpr, typename FieldType>
            inline CondBuilder<NeboCond<Initial,
@@ -7512,7 +7514,7 @@
                                                   BoolExpr,
                                                   NeboScalar<Initial, FieldType>,
                                                   FieldType>,
-                                       typename List::template Convert<FieldType>::Converted,
+                                       typename Clauses::template Convert<FieldType>::Converted,
                                        FieldType> > operator ()(NeboBooleanExpression<BoolExpr,
                                                                                       FieldType>
                                                                 const & nb,
@@ -7524,12 +7526,12 @@
 
               NeboCond<Initial,
                        Clause,
-                       typename List::template Convert<FieldType>::Converted,
+                       typename Clauses::template Convert<FieldType>::Converted,
                        FieldType> typedef Cond;
 
               CondBuilder<Cond> typedef ReturnType;
 
-              return ReturnType(Cond(Clause(nb.expr(), Scalar(d)), list_.template convert<FieldType>()));
+              return ReturnType(Cond(Clause(nb.expr(), Scalar(d)), clauses_.template convert<FieldType>()));
            };
           template<typename BoolExpr, typename FieldType>
            inline CondBuilder<NeboCond<Initial,
@@ -7542,7 +7544,7 @@
                                                                                          FieldType>::
                                                                  Result>,
                                                   FieldType>,
-                                       typename List::template Convert<FieldType>::Converted,
+                                       typename Clauses::template Convert<FieldType>::Converted,
                                        FieldType> > operator ()(NeboBooleanExpression<BoolExpr,
                                                                                       FieldType>
                                                                 const & nb,
@@ -7554,17 +7556,17 @@
 
               NeboCond<Initial,
                        Clause,
-                       typename List::template Convert<FieldType>::Converted,
+                       typename Clauses::template Convert<FieldType>::Converted,
                        FieldType> typedef Cond;
 
               CondBuilder<Cond> typedef ReturnType;
 
-              return ReturnType(Cond(Clause(nb.expr(), Field(f)), list_.template convert<FieldType>()));
+              return ReturnType(Cond(Clause(nb.expr(), Field(f)), clauses_.template convert<FieldType>()));
            };
           template<typename BoolExpr, typename Expr, typename FieldType>
            inline CondBuilder<NeboCond<Initial,
                                        NeboClause<Initial, BoolExpr, Expr, FieldType>,
-                                       typename List::template Convert<FieldType>::Converted,
+                                       typename Clauses::template Convert<FieldType>::Converted,
                                        FieldType> > operator ()(NeboBooleanExpression<BoolExpr,
                                                                                       FieldType>
                                                                 const & nb,
@@ -7575,12 +7577,12 @@
 
               NeboCond<Initial,
                        Clause,
-                       typename List::template Convert<FieldType>::Converted,
+                       typename Clauses::template Convert<FieldType>::Converted,
                        FieldType> typedef Cond;
 
               CondBuilder<Cond> typedef ReturnType;
 
-              return ReturnType(Cond(Clause(nb.expr(), e.expr()), list_.template convert<FieldType>()));
+              return ReturnType(Cond(Clause(nb.expr(), e.expr()), clauses_.template convert<FieldType>()));
            };
       };
 
