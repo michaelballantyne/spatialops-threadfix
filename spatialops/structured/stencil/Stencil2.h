@@ -44,7 +44,7 @@ namespace SpatialOps {
     class Stencil2
     {
       const double coefLo_, coefHi_;
-      const NeboStencilCoefList<2> coefList_;
+      const NeboStencilCoefCollection<2> coefCollection_;
 
     public:
 
@@ -61,8 +61,8 @@ namespace SpatialOps {
       typedef typename structured::LessThan<SrcOffset, DestOffset>::result
                           HighStPt;       ///< The high (second) stencil point location
                                           ///  (relative to the destination point)
-      typedef typename BuildTwoPointList<LowStPt, HighStPt>::Result
-                          StPtList;       ///< The list of all stencil points in this stencil
+      typedef typename BuildTwoPointCollection<LowStPt, HighStPt>::Result
+                          StPtCollection;       ///< The collection of all stencil points in this stencil
 
       typedef typename DestFieldType::value_type  AtomicType;  // scalar type
 
@@ -70,14 +70,14 @@ namespace SpatialOps {
       // argument is a Nebo expression
       template<typename Arg>
       struct ResultConstructor {
-          typedef NeboStencil<Initial, StPtList, Arg, DestFieldType> Stencil;
+          typedef NeboStencil<Initial, StPtCollection, Arg, DestFieldType> Stencil;
           typedef NeboExpression<Stencil, DestFieldType> Result;
       };
 
       // Nebo-related internal struct
       // argument is a field
       typedef NeboConstField<Initial, SrcFieldType> FieldArg;
-      typedef NeboStencil<Initial, StPtList, FieldArg, DestFieldType> FieldStencil;
+      typedef NeboStencil<Initial, StPtCollection, FieldArg, DestFieldType> FieldStencil;
       typedef NeboExpression<FieldStencil, DestFieldType> FieldResult;
 
       /**
@@ -111,7 +111,7 @@ namespace SpatialOps {
        */
       inline FieldResult operator ()( const SrcFieldType & src ) const
       {
-          return FieldResult(FieldStencil(FieldArg(src), coefList_));
+          return FieldResult(FieldStencil(FieldArg(src), coefCollection_));
       }
 
       /**
@@ -123,7 +123,7 @@ namespace SpatialOps {
       {
           typedef typename ResultConstructor<Arg>::Stencil Stencil;
           typedef typename ResultConstructor<Arg>::Result Result;
-          return Result(Stencil(src.expr(), coefList_));
+          return Result(Stencil(src.expr(), coefCollection_));
       }
 
       inline double get_minus_coef() const{ return coefLo_; } ///< get the (-) coefficient

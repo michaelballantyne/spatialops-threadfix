@@ -106,8 +106,8 @@
        [CT-chunk 'ClauseType]
        [IntVec (scope 'structured 'IntVec)]
        [NSP 'NeboStencilPoint]
-       [NSPL 'NeboStencilPointList]
-       [NSCL 'NeboStencilCoefList]
+       [NSPC 'NeboStencilPointCollection]
+       [NSCC 'NeboStencilCoefCollection]
        [NSt 'NeboStencil]
        [pp-header-file-chunk-with-license
         (lambda (file-name file-setup . chunks)
@@ -2231,45 +2231,45 @@
                                   (mfc 'arg_ 'eval)
                                   null
                                   (ad 'Arg 'arg_)))
-      (tpl-srt-def NSCL
+      (tpl-srt-def NSCC
                    (bs 'int 'Length)
                    null
                    (sec-def public-chunk
-                            (constructor-chunk NSCL
-                                               (list (adcr (tpl-use NSCL (n- 'Length "1")) 'l)
+                            (constructor-chunk NSCC
+                                               (list (adcr (tpl-use NSCC (n- 'Length "1")) 'o)
                                                      (adc 'double 'c))
-                                               (list (cons-asgn 'list_ 'l)
+                                               (list (cons-asgn 'others_ 'o)
                                                      (cons-asgn 'coef_ 'c))
                                                null)
                             (r-fcn-def (constize (fcn-dcl (bs 'operator (p))
-                                                          (tc (tpl-use NSCL (n+ 'Length "1")))
+                                                          (tc (tpl-use NSCC (n+ 'Length "1")))
                                                           (adc 'double 'c)))
                                        null
-                                       (fc (tpl-use NSCL (n+ 'Length "1"))
+                                       (fc (tpl-use NSCC (n+ 'Length "1"))
                                            '*this
                                            'c))
                             (r-fcn-def (constize (fcn-dcl 'coef (tc 'double)))
                                        null
                                        'coef_)
-                            (r-fcn-def (constize (fcn-dcl 'list (tc (tpl-use NSCL (n- 'Length "1")))))
+                            (r-fcn-def (constize (fcn-dcl 'others (tc (tpl-use NSCC (n- 'Length "1")))))
                                        null
-                                       'list_))
+                                       'others_))
                    (sec-def private-chunk
-                            (adc (tpl-use NSCL (n- 'Length "1")) 'list_)
+                            (adc (tpl-use NSCC (n- 'Length "1")) 'others_)
                             (adc 'double 'coef_)))
-      (tpl-srt-def NSCL
+      (tpl-srt-def NSCC
                    null
                    "1"
                    (sec-def public-chunk
-                            (constructor-chunk NSCL
+                            (constructor-chunk NSCC
                                                (adc 'double 'c)
                                                (cons-asgn 'coef_ 'c)
                                                null)
                             (r-fcn-def (constize (fcn-dcl (bs 'operator (p))
-                                                          (tc (tpl-use NSCL "2"))
+                                                          (tc (tpl-use NSCC "2"))
                                                           (adc 'double 'c)))
                                        null
-                                       (fc (tpl-use NSCL "2")
+                                       (fc (tpl-use NSCC "2")
                                            '*this
                                            'c))
                             (r-fcn-def (constize (fcn-dcl 'coef (tc 'double)))
@@ -2277,46 +2277,46 @@
                                        'coef_))
                    (sec-def private-chunk
                             (adc 'double 'coef_)))
-      (r-fcn-def (fcn-dcl 'build_coef_list
-                          (tc (tpl-use NSCL "1"))
+      (r-fcn-def (fcn-dcl 'build_coef_collection
+                          (tc (tpl-use NSCC "1"))
                           (adc 'double 'c))
                  null
-                 (fc (tpl-use NSCL "1")
+                 (fc (tpl-use NSCC "1")
                      'c))
-      (r-fcn-def (fcn-dcl 'build_two_point_coef_list
-                          (tc (tpl-use NSCL "2"))
+      (r-fcn-def (fcn-dcl 'build_two_point_coef_collection
+                          (tc (tpl-use NSCC "2"))
                           (adc 'double 'c1)
                           (adc 'double 'c2))
                  null
-                 (fc (fc (tpl-use NSCL "1")
+                 (fc (fc (tpl-use NSCC "1")
                          'c1)
                      'c2))
-      (r-fcn-def (fcn-dcl 'build_four_point_coef_list
-                          (tc (tpl-use NSCL "4"))
+      (r-fcn-def (fcn-dcl 'build_four_point_coef_collection
+                          (tc (tpl-use NSCC "4"))
                           (adc 'double 'c1)
                           (adc 'double 'c2)
                           (adc 'double 'c3)
                           (adc 'double 'c4))
                  null
-                 (fc (fc (fc (fc (tpl-use NSCL "1")
+                 (fc (fc (fc (fc (tpl-use NSCC "1")
                                  'c1)
                              'c2)
                          'c3)
                      'c4))
-      (tpl-srt-def NSPL
+      (tpl-srt-def NSPC
                    (list (tpl-pmtr 'PointType)
-                         (tpl-pmtr 'ListType))
+                         (tpl-pmtr 'CollectionType))
                    null
                    (sec-def public-chunk
                             (typedef 'PointType 'Point)
-                            (typedef 'ListType 'List)
-                            (typedef (tpl-use NSPL 'Point 'List)
+                            (typedef 'CollectionType 'Collection)
+                            (typedef (tpl-use NSPC 'Point 'Collection)
                                      'MyType)
-                            (enum (n= 'length (n+ "1" (scope 'List 'length))))
+                            (enum (n= 'length (n+ "1" (scope 'Collection 'length))))
                             (tpl-srt-def 'AddPoint
                                          (tpl-pmtr 'NewPoint)
                                          null
-                                         (typedef (tpl-use NSPL 'NewPoint 'MyType)
+                                         (typedef (tpl-use NSPC 'NewPoint 'MyType)
                                                   'Result))
                             (tpl-srt-def 'PossibleGhost
                                          (tpl-pmtr 'GivenPossibleValidGhost)
@@ -2324,7 +2324,7 @@
                                          (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Invalidate 'GivenPossibleValidGhost 'Point))
                                                                    'result))
                                                   'CurrentPossibleValidGhost)
-                                         (typedef (tpl-pmtr (scope 'List (tpl-fcn-use 'PossibleGhost 'GivenPossibleValidGhost)))
+                                         (typedef (tpl-pmtr (scope 'Collection (tpl-fcn-use 'PossibleGhost 'GivenPossibleValidGhost)))
                                                   'EarlierPointsPossibleGhost)
                                          (typedef (tpl-pmtr (scope 'EarlierPointsPossibleGhost 'Result))
                                                   'EarlierPointsPossibleValidGhost)
@@ -2341,7 +2341,7 @@
                                                   'Arg)
                                          (typedef (tpl-use 'ProdOp 'SeqWalk 'Arg 'Coef 'DestType)
                                                   'MultiplyType)
-                                         (typedef (tpl-pmtr (scope 'List (tpl-fcn-use 'ConstructExpr 'ArgPreSeqWalk 'DestType)))
+                                         (typedef (tpl-pmtr (scope 'Collection (tpl-fcn-use 'ConstructExpr 'ArgPreSeqWalk 'DestType)))
                                                   'EarlierPointsType)
                                          (typedef (tpl-pmtr (scope 'EarlierPointsType
                                                                    'Result))
@@ -2353,7 +2353,7 @@
                                                   (r-fcn-def (s-fcn-dcl 'in_sq_construct
                                                                         (tc 'Result)
                                                                         (adcr 'ArgPreSeqWalk 'arg)
-                                                                        (adcr (tpl-use NSCL 'length) 'coefs))
+                                                                        (adcr (tpl-use NSCC 'length) 'coefs))
                                                              (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
                                                                                        'result))
                                                                       'NewShift)
@@ -2361,7 +2361,7 @@
                                                                  (fc (scope 'EarlierPointsType
                                                                             (tpl-fcn-use 'in_sq_construct VG-chunk SH-chunk))
                                                                      'arg
-                                                                     (mfc 'coefs 'list))
+                                                                     (mfc 'coefs 'others))
                                                                  (fc 'MultiplyType
                                                                      (mfc 'arg (tpl-fcn-use 'init VG-chunk 'NewShift))
                                                                      (fc 'Coef (mfc 'coefs 'coef))))))
@@ -2369,14 +2369,14 @@
                                                   (r-fcn-def (s-fcn-dcl 'rs_sq_construct
                                                                         (tc 'Result)
                                                                         (adcr 'ArgPreSeqWalk 'arg)
-                                                                        (adcr (tpl-use NSCL 'length) 'coefs))
+                                                                        (adcr (tpl-use NSCC 'length) 'coefs))
                                                              (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
                                                                                        'result))
                                                                       'NewShift)
                                                              (fc 'Result
                                                                  (fc (scope 'EarlierPointsType (tpl-fcn-use 'rs_sq_construct SH-chunk))
                                                                      'arg
-                                                                     (mfc 'coefs 'list))
+                                                                     (mfc 'coefs 'others))
                                                                  (fc 'MultiplyType
                                                                      (mfc 'arg (tpl-fcn-use 'init 'NewShift))
                                                                      (fc 'Coef (mfc 'coefs 'coef)))))))
@@ -2391,7 +2391,7 @@
                                                    'Arg)
                                           (typedef (tpl-use 'ProdOp 'GPUWalk 'Arg 'Coef 'DestType)
                                                    'MultiplyType)
-                                          (typedef (tpl-pmtr (scope 'List (tpl-fcn-use 'ConstructExpr 'ArgPreGPUWalk 'DestType)))
+                                          (typedef (tpl-pmtr (scope 'Collection (tpl-fcn-use 'ConstructExpr 'ArgPreGPUWalk 'DestType)))
                                                    'EarlierPointsType)
                                           (typedef (tpl-pmtr (scope 'EarlierPointsType
                                                                     'Result))
@@ -2403,14 +2403,14 @@
                                                    (r-fcn-def (s-fcn-dcl 'in_gpu_construct
                                                                          (tc 'Result)
                                                                          (adcr 'ArgPreGPUWalk 'arg)
-                                                                         (adcr (tpl-use NSCL 'length) 'coefs))
+                                                                         (adcr (tpl-use NSCC 'length) 'coefs))
                                                               (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
                                                                                         'result))
                                                                        'NewShift)
                                                               (fc 'Result
                                                                   (fc (scope 'EarlierPointsType (tpl-fcn-use 'in_sq_construct VG-chunk SH-chunk))
                                                                       'arg
-                                                                      (mfc 'coefs 'list))
+                                                                      (mfc 'coefs 'others))
                                                                   (fc 'MultiplyType
                                                                       (mfc 'arg (tpl-fcn-use 'init VG-chunk 'NewShift))
                                                                       (fc 'Coef (mfc 'coefs 'coef))))))))
@@ -2424,7 +2424,7 @@
                                                   'Arg)
                                          (typedef (tpl-use 'ProdOp 'Reduction 'Arg 'Coef 'DestType)
                                                   'MultiplyType)
-                                         (typedef (tpl-pmtr (scope 'List (tpl-fcn-use 'ConstructReductionExpr 'ArgPreReduction 'DestType)))
+                                         (typedef (tpl-pmtr (scope 'Collection (tpl-fcn-use 'ConstructReductionExpr 'ArgPreReduction 'DestType)))
                                                   'EarlierPointsType)
                                          (typedef (tpl-pmtr (scope 'EarlierPointsType
                                                                    'Result))
@@ -2436,14 +2436,14 @@
                                                   (r-fcn-def (s-fcn-dcl 'in_rd_construct
                                                                         (tc 'Result)
                                                                         (adcr 'ArgPreReduction 'arg)
-                                                                        (adcr (tpl-use NSCL 'length) 'coefs))
+                                                                        (adcr (tpl-use NSCC 'length) 'coefs))
                                                              (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
                                                                                        'result))
                                                                       'NewShift)
                                                              (fc 'Result
                                                                  (fc (scope 'EarlierPointsType (tpl-fcn-use 'in_rd_construct VG-chunk SH-chunk))
                                                                      'arg
-                                                                     (mfc 'coefs 'list))
+                                                                     (mfc 'coefs 'others))
                                                                  (fc 'MultiplyType
                                                                      (mfc 'arg (tpl-fcn-use 'reduce_init VG-chunk 'NewShift))
                                                                      (fc 'Coef (mfc 'coefs 'coef))))))
@@ -2451,30 +2451,30 @@
                                                   (r-fcn-def (s-fcn-dcl 'rs_rd_construct
                                                                         (tc 'Result)
                                                                         (adcr 'ArgPreReduction 'arg)
-                                                                        (adcr (tpl-use NSCL 'length) 'coefs))
+                                                                        (adcr (tpl-use NSCC 'length) 'coefs))
                                                              (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
                                                                                        'result))
                                                                       'NewShift)
                                                              (fc 'Result
                                                                  (fc (scope 'EarlierPointsType (tpl-fcn-use 'rs_rd_construct SH-chunk))
                                                                      'arg
-                                                                     (mfc 'coefs 'list))
+                                                                     (mfc 'coefs 'others))
                                                                  (fc 'MultiplyType
                                                                      (mfc 'arg (tpl-fcn-use 'reduce_init 'NewShift))
                                                                      (fc 'Coef (mfc 'coefs 'coef)))))))))
-      (tpl-srt-def NSPL
+      (tpl-srt-def NSPC
                    (tpl-pmtr 'PointType)
                    (list 'PointType Nil-chunk)
                    (sec-def public-chunk
                             (typedef 'PointType 'Point)
-                            (typedef Nil-chunk 'List)
-                            (typedef (tpl-use NSPL 'Point 'List)
+                            (typedef Nil-chunk 'Collection)
+                            (typedef (tpl-use NSPC 'Point 'Collection)
                                      'MyType)
                             (enum (n= 'length "1"))
                             (tpl-srt-def 'AddPoint
                                          (tpl-pmtr 'NewPoint)
                                          null
-                                         (typedef (tpl-use NSPL 'NewPoint 'MyType)
+                                         (typedef (tpl-use NSPC 'NewPoint 'MyType)
                                                   'Result))
                             (tpl-srt-def 'PossibleGhost
                                          (tpl-pmtr 'GivenPossibleValidGhost)
@@ -2498,7 +2498,7 @@
                                                   (r-fcn-def (s-fcn-dcl 'in_sq_construct
                                                                         (tc 'Result)
                                                                         (adcr 'ArgPreSeqWalk 'arg)
-                                                                        (adcr (tpl-use NSCL "1") 'coefs))
+                                                                        (adcr (tpl-use NSCC "1") 'coefs))
                                                              (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
                                                                                        'result))
                                                                       'NewShift)
@@ -2509,7 +2509,7 @@
                                                   (r-fcn-def (s-fcn-dcl 'rs_sq_construct
                                                                         (tc 'Result)
                                                                         (adcr 'ArgPreSeqWalk 'arg)
-                                                                        (adcr (tpl-use NSCL "1") 'coefs))
+                                                                        (adcr (tpl-use NSCC "1") 'coefs))
                                                              (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
                                                                                        'result))
                                                                       'NewShift)
@@ -2532,7 +2532,7 @@
                                                    (r-fcn-def (s-fcn-dcl 'in_gpu_construct
                                                                          (tc 'Result)
                                                                          (adcr 'ArgPreGPUWalk 'arg)
-                                                                         (adcr (tpl-use NSCL "1") 'coefs))
+                                                                         (adcr (tpl-use NSCC "1") 'coefs))
                                                               (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
                                                                                         'result))
                                                                        'NewShift)
@@ -2554,7 +2554,7 @@
                                                   (r-fcn-def (s-fcn-dcl 'in_rd_construct
                                                                         (tc 'Result)
                                                                         (adcr 'ArgPreReduction 'arg)
-                                                                        (adcr (tpl-use NSCL "1") 'coefs))
+                                                                        (adcr (tpl-use NSCC "1") 'coefs))
                                                              (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
                                                                                        'result))
                                                                       'NewShift)
@@ -2565,51 +2565,51 @@
                                                   (r-fcn-def (s-fcn-dcl 'rs_rd_construct
                                                                         (tc 'Result)
                                                                         (adcr 'ArgPreReduction 'arg)
-                                                                        (adcr (tpl-use NSCL "1") 'coefs))
+                                                                        (adcr (tpl-use NSCC "1") 'coefs))
                                                              (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
                                                                                        'result))
                                                                       'NewShift)
                                                              (fc 'Result
                                                                  (mfc 'arg (tpl-fcn-use 'reduce_init 'NewShift))
                                                                  (fc 'Coef (mfc 'coefs 'coef))))))))
-      (tpl-srt-def 'BuildStencilPointList
+      (tpl-srt-def 'BuildStencilPointCollection
                    (tpl-pmtr 'First)
                    null
-                   (typedef (tpl-use NSPL 'First Nil-chunk)
+                   (typedef (tpl-use NSPC 'First Nil-chunk)
                             'Result))
-      (tpl-srt-def 'BuildTwoPointList
+      (tpl-srt-def 'BuildTwoPointCollection
                    (list (tpl-pmtr 'First)
                          (tpl-pmtr 'Second))
                    null
-                   (typedef (tpl-pmtr (scope (tpl-use 'BuildStencilPointList 'First)
+                   (typedef (tpl-pmtr (scope (tpl-use 'BuildStencilPointCollection 'First)
                                              'Result))
                             'FirstPoint)
                    (typedef (tpl-pmtr (scope (scope 'FirstPoint (tpl-fcn-use 'AddPoint 'Second))
                                              'Result))
                             'Result))
-      (tpl-srt-def 'BuildFourPointList
+      (tpl-srt-def 'BuildFourPointCollection
                    (list (tpl-pmtr 'First)
                          (tpl-pmtr 'Second)
                          (tpl-pmtr 'Third)
                          (tpl-pmtr 'Fourth))
                    null
-                   (typedef (tpl-pmtr (scope (tpl-use 'BuildStencilPointList 'First)
+                   (typedef (tpl-pmtr (scope (tpl-use 'BuildStencilPointCollection 'First)
                                              'Result))
                             'FirstPoint)
                    (typedef (tpl-pmtr (scope (scope 'FirstPoint (tpl-fcn-use 'AddPoint 'Second))
                                              'Result))
-                            'SecondFirstList)
-                   (typedef (tpl-pmtr (scope (scope 'SecondFirstList (tpl-fcn-use 'AddPoint 'Third))
+                            'SecondFirstCollection)
+                   (typedef (tpl-pmtr (scope (scope 'SecondFirstCollection (tpl-fcn-use 'AddPoint 'Third))
                                              'Result))
-                            'ThirdSecondFirstList)
-                   (typedef (tpl-pmtr (scope (scope 'ThirdSecondFirstList (tpl-fcn-use 'AddPoint 'Fourth))
+                            'ThirdSecondFirstCollection)
+                   (typedef (tpl-pmtr (scope (scope 'ThirdSecondFirstCollection (tpl-fcn-use 'AddPoint 'Fourth))
                                              'Result))
                             'Result))
       (build-struct NSt
                     #true
                     (list 'Pts 'Arg)
                     null
-                    (bs-Initial (list (typedef (tpl-use NSCL (scope 'Pts 'length))
+                    (bs-Initial (list (typedef (tpl-use NSCC (scope 'Pts 'length))
                                                'Coefs)
                                       (typedef (tpl-pmtr (scope 'Pts (tpl-fcn-use 'ConstructExpr 'Arg FT-chunk)))
                                                'ConstructExpr)
@@ -2650,7 +2650,7 @@
                                 null
                                 (list (adc 'Arg 'arg_)
                                       (adc 'Coefs 'coefs_)))
-                    (bs-ResizePrep (typedef (tpl-use NSCL (scope 'Pts 'length))
+                    (bs-ResizePrep (typedef (tpl-use NSCC (scope 'Pts 'length))
                                             'Coefs)
                                    (list 'Pts (tpl-pmtr (scope 'Arg 'ResizeType)))
                                    (bm-constructor (list (adcr 'Arg 'arg)
@@ -2663,7 +2663,7 @@
                                    null
                                    (list (adc 'Arg 'arg_)
                                          (adc 'Coefs 'coefs_)))
-                    (bs-Resize (list (typedef (tpl-use NSCL (scope 'Pts 'length))
+                    (bs-Resize (list (typedef (tpl-use NSCC (scope 'Pts 'length))
                                               'Coefs)
                                      (typedef (tpl-pmtr (scope 'Pts (tpl-fcn-use 'ConstructExpr 'Arg FT-chunk)))
                                               'ConstructExpr)

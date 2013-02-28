@@ -38,7 +38,7 @@ namespace SpatialOps{
     template< typename OpT, typename FieldT, typename DirT >
     class FDStencil2{
       const double coefLo_, coefHi_;
-      const NeboStencilCoefList<2> coefList_;
+      const NeboStencilCoefCollection<2> coefCollection_;
 
     public:
       typedef OpT       type;
@@ -47,7 +47,7 @@ namespace SpatialOps{
       typedef typename UnitTriplet<DirT>::type  DirVec;
       typedef typename DirVec::Negate LowStPt;
       typedef DirVec                  HighStPt;
-      typedef typename BuildTwoPointList<LowStPt, HighStPt>::Result StPtList;
+      typedef typename BuildTwoPointCollection<LowStPt, HighStPt>::Result StPtCollection;
 
       typedef typename DestFieldType::value_type AtomicType;  // scalar type
 
@@ -55,14 +55,14 @@ namespace SpatialOps{
       // argument is a Nebo expression
       template<typename Arg>
       struct ResultConstructor {
-          typedef NeboStencil<Initial, StPtList, Arg, DestFieldType> Stencil;
+          typedef NeboStencil<Initial, StPtCollection, Arg, DestFieldType> Stencil;
           typedef NeboExpression<Stencil, DestFieldType> Result;
       };
 
       // Nebo-related internal struct
       // argument is a field
       typedef NeboConstField<Initial, SrcFieldType> FieldArg;
-      typedef NeboStencil<Initial, StPtList, FieldArg, DestFieldType> FieldStencil;
+      typedef NeboStencil<Initial, StPtCollection, FieldArg, DestFieldType> FieldStencil;
       typedef NeboExpression<FieldStencil, DestFieldType> FieldResult;
 
       FDStencil2( const double coefLo, const double coefHi );
@@ -85,7 +85,7 @@ namespace SpatialOps{
        */
       inline FieldResult operator ()( const SrcFieldType & src ) const
       {
-          return FieldResult(FieldStencil(FieldArg(src), coefList_));
+          return FieldResult(FieldStencil(FieldArg(src), coefCollection_));
       }
 
       /**
@@ -97,7 +97,7 @@ namespace SpatialOps{
       {
           typedef typename ResultConstructor<Arg>::Stencil Stencil;
           typedef typename ResultConstructor<Arg>::Result Result;
-          return Result(Stencil(src.expr(), coefList_));
+          return Result(Stencil(src.expr(), coefCollection_));
       }
 
       inline double get_minus_coef() const{ return coefLo_; } ///< get the (-) coefficient

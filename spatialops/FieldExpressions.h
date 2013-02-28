@@ -7887,32 +7887,32 @@
       };
 
       template<int Length>
-       struct NeboStencilCoefList {
+       struct NeboStencilCoefCollection {
 
          public:
-          NeboStencilCoefList(NeboStencilCoefList<Length - 1> const & l, double const c)
-          : list_(l), coef_(c)
+          NeboStencilCoefCollection(NeboStencilCoefCollection<Length - 1> const & o, double const c)
+          : others_(o), coef_(c)
           {};
-          inline NeboStencilCoefList<Length + 1> const operator ()(double const c) const {
-             return NeboStencilCoefList<Length + 1>(*this, c);
+          inline NeboStencilCoefCollection<Length + 1> const operator ()(double const c) const {
+             return NeboStencilCoefCollection<Length + 1>(*this, c);
           };
           inline double const coef(void) const { return coef_; };
-          inline NeboStencilCoefList<Length - 1> const list(void) const { return list_; };
+          inline NeboStencilCoefCollection<Length - 1> const others(void) const { return others_; };
 
          private:
-          NeboStencilCoefList<Length - 1> const list_;
+          NeboStencilCoefCollection<Length - 1> const others_;
           double const coef_;
       };
 
       template<>
-       struct NeboStencilCoefList<1> {
+       struct NeboStencilCoefCollection<1> {
 
          public:
-          NeboStencilCoefList(double const c)
+          NeboStencilCoefCollection(double const c)
           : coef_(c)
           {};
-          inline NeboStencilCoefList<2> const operator ()(double const c) const {
-             return NeboStencilCoefList<2>(*this, c);
+          inline NeboStencilCoefCollection<2> const operator ()(double const c) const {
+             return NeboStencilCoefCollection<2>(*this, c);
           };
           inline double const coef(void) const { return coef_; };
 
@@ -7920,38 +7920,39 @@
           double const coef_;
       };
 
-      inline NeboStencilCoefList<1> const build_coef_list(double const c) {
-         return NeboStencilCoefList<1>(c);
+      inline NeboStencilCoefCollection<1> const build_coef_collection(double const c) {
+         return NeboStencilCoefCollection<1>(c);
       };
 
-      inline NeboStencilCoefList<2> const build_two_point_coef_list(double const c1, double const c2) {
-         return NeboStencilCoefList<1>(c1)(c2);
+      inline NeboStencilCoefCollection<2> const build_two_point_coef_collection(double const c1,
+                                                                                double const c2) {
+         return NeboStencilCoefCollection<1>(c1)(c2);
       };
 
-      inline NeboStencilCoefList<4> const build_four_point_coef_list(double const c1,
-                                                                     double const c2,
-                                                                     double const c3,
-                                                                     double const c4) {
-         return NeboStencilCoefList<1>(c1)(c2)(c3)(c4);
+      inline NeboStencilCoefCollection<4> const build_four_point_coef_collection(double const c1,
+                                                                                 double const c2,
+                                                                                 double const c3,
+                                                                                 double const c4) {
+         return NeboStencilCoefCollection<1>(c1)(c2)(c3)(c4);
       };
 
-      template<typename PointType, typename ListType>
-       struct NeboStencilPointList {
+      template<typename PointType, typename CollectionType>
+       struct NeboStencilPointCollection {
 
          public:
           PointType typedef Point;
-          ListType typedef List;
-          NeboStencilPointList<Point, List> typedef MyType;
-          enum {length = 1 + List::length};
+          CollectionType typedef Collection;
+          NeboStencilPointCollection<Point, Collection> typedef MyType;
+          enum {length = 1 + Collection::length};
           template<typename NewPoint>
-           struct AddPoint { NeboStencilPointList<NewPoint, MyType> typedef Result; };
+           struct AddPoint { NeboStencilPointCollection<NewPoint, MyType> typedef Result; };
           template<typename GivenPossibleValidGhost>
            struct PossibleGhost {
 
              typename structured::Invalidate<GivenPossibleValidGhost, Point>::result typedef
              CurrentPossibleValidGhost;
 
-             typename List::template PossibleGhost<GivenPossibleValidGhost> typedef
+             typename Collection::template PossibleGhost<GivenPossibleValidGhost> typedef
              EarlierPointsPossibleGhost;
 
              typename EarlierPointsPossibleGhost::Result typedef EarlierPointsPossibleValidGhost;
@@ -7968,7 +7969,7 @@
 
              ProdOp<SeqWalk, Arg, Coef, DestType> typedef MultiplyType;
 
-             typename List::template ConstructExpr<ArgPreSeqWalk, DestType> typedef
+             typename Collection::template ConstructExpr<ArgPreSeqWalk, DestType> typedef
              EarlierPointsType;
 
              typename EarlierPointsType::Result typedef EarlierPointsResult;
@@ -7977,22 +7978,24 @@
 
              template<typename ValidGhost, typename Shift>
               static inline Result const in_sq_construct(ArgPreSeqWalk const & arg,
-                                                         NeboStencilCoefList<length> const & coefs) {
+                                                         NeboStencilCoefCollection<length> const &
+                                                         coefs) {
 
                  typename structured::Add<Shift, Point>::result typedef NewShift;
 
                  return Result(EarlierPointsType::template in_sq_construct<ValidGhost, Shift>(arg,
-                                                                                              coefs.list()),
+                                                                                              coefs.others()),
                                MultiplyType(arg.template init<ValidGhost, NewShift>(), Coef(coefs.coef())));
               };
 
              template<typename Shift>
               static inline Result const rs_sq_construct(ArgPreSeqWalk const & arg,
-                                                         NeboStencilCoefList<length> const & coefs) {
+                                                         NeboStencilCoefCollection<length> const &
+                                                         coefs) {
 
                  typename structured::Add<Shift, Point>::result typedef NewShift;
 
-                 return Result(EarlierPointsType::template rs_sq_construct<Shift>(arg, coefs.list()),
+                 return Result(EarlierPointsType::template rs_sq_construct<Shift>(arg, coefs.others()),
                                MultiplyType(arg.template init<NewShift>(), Coef(coefs.coef())));
               };
           };
@@ -8006,7 +8009,7 @@
 
                 ProdOp<GPUWalk, Arg, Coef, DestType> typedef MultiplyType;
 
-                typename List::template ConstructExpr<ArgPreGPUWalk, DestType> typedef
+                typename Collection::template ConstructExpr<ArgPreGPUWalk, DestType> typedef
                 EarlierPointsType;
 
                 typename EarlierPointsType::Result typedef EarlierPointsResult;
@@ -8015,13 +8018,13 @@
 
                 template<typename ValidGhost, typename Shift>
                  static inline Result const in_gpu_construct(ArgPreGPUWalk const & arg,
-                                                             NeboStencilCoefList<length> const &
-                                                             coefs) {
+                                                             NeboStencilCoefCollection<length> const
+                                                             & coefs) {
 
                     typename structured::Add<Shift, Point>::result typedef NewShift;
 
                     return Result(EarlierPointsType::template in_sq_construct<ValidGhost, Shift>(arg,
-                                                                                                 coefs.list()),
+                                                                                                 coefs.others()),
                                   MultiplyType(arg.template init<ValidGhost, NewShift>(), Coef(coefs.coef())));
                  };
              }
@@ -8036,7 +8039,7 @@
 
              ProdOp<Reduction, Arg, Coef, DestType> typedef MultiplyType;
 
-             typename List::template ConstructReductionExpr<ArgPreReduction, DestType> typedef
+             typename Collection::template ConstructReductionExpr<ArgPreReduction, DestType> typedef
              EarlierPointsType;
 
              typename EarlierPointsType::Result typedef EarlierPointsResult;
@@ -8045,37 +8048,39 @@
 
              template<typename ValidGhost, typename Shift>
               static inline Result const in_rd_construct(ArgPreReduction const & arg,
-                                                         NeboStencilCoefList<length> const & coefs) {
+                                                         NeboStencilCoefCollection<length> const &
+                                                         coefs) {
 
                  typename structured::Add<Shift, Point>::result typedef NewShift;
 
                  return Result(EarlierPointsType::template in_rd_construct<ValidGhost, Shift>(arg,
-                                                                                              coefs.list()),
+                                                                                              coefs.others()),
                                MultiplyType(arg.template reduce_init<ValidGhost, NewShift>(), Coef(coefs.coef())));
               };
 
              template<typename Shift>
               static inline Result const rs_rd_construct(ArgPreReduction const & arg,
-                                                         NeboStencilCoefList<length> const & coefs) {
+                                                         NeboStencilCoefCollection<length> const &
+                                                         coefs) {
 
                  typename structured::Add<Shift, Point>::result typedef NewShift;
 
-                 return Result(EarlierPointsType::template rs_rd_construct<Shift>(arg, coefs.list()),
+                 return Result(EarlierPointsType::template rs_rd_construct<Shift>(arg, coefs.others()),
                                MultiplyType(arg.template reduce_init<NewShift>(), Coef(coefs.coef())));
               };
           };
       };
 
       template<typename PointType>
-       struct NeboStencilPointList<PointType, NeboNil> {
+       struct NeboStencilPointCollection<PointType, NeboNil> {
 
          public:
           PointType typedef Point;
-          NeboNil typedef List;
-          NeboStencilPointList<Point, List> typedef MyType;
+          NeboNil typedef Collection;
+          NeboStencilPointCollection<Point, Collection> typedef MyType;
           enum {length = 1};
           template<typename NewPoint>
-           struct AddPoint { NeboStencilPointList<NewPoint, MyType> typedef Result; };
+           struct AddPoint { NeboStencilPointCollection<NewPoint, MyType> typedef Result; };
           template<typename GivenPossibleValidGhost>
            struct PossibleGhost {
              typename structured::Invalidate<GivenPossibleValidGhost, Point>::result typedef Result;
@@ -8091,7 +8096,7 @@
 
              template<typename ValidGhost, typename Shift>
               static inline Result const in_sq_construct(ArgPreSeqWalk const & arg,
-                                                         NeboStencilCoefList<1> const & coefs) {
+                                                         NeboStencilCoefCollection<1> const & coefs) {
 
                  typename structured::Add<Shift, Point>::result typedef NewShift;
 
@@ -8100,7 +8105,7 @@
 
              template<typename Shift>
               static inline Result const rs_sq_construct(ArgPreSeqWalk const & arg,
-                                                         NeboStencilCoefList<1> const & coefs) {
+                                                         NeboStencilCoefCollection<1> const & coefs) {
 
                  typename structured::Add<Shift, Point>::result typedef NewShift;
 
@@ -8119,7 +8124,8 @@
 
                 template<typename ValidGhost, typename Shift>
                  static inline Result const in_gpu_construct(ArgPreGPUWalk const & arg,
-                                                             NeboStencilCoefList<1> const & coefs) {
+                                                             NeboStencilCoefCollection<1> const &
+                                                             coefs) {
 
                     typename structured::Add<Shift, Point>::result typedef NewShift;
 
@@ -8139,7 +8145,7 @@
 
              template<typename ValidGhost, typename Shift>
               static inline Result const in_rd_construct(ArgPreReduction const & arg,
-                                                         NeboStencilCoefList<1> const & coefs) {
+                                                         NeboStencilCoefCollection<1> const & coefs) {
 
                  typename structured::Add<Shift, Point>::result typedef NewShift;
 
@@ -8148,7 +8154,7 @@
 
              template<typename Shift>
               static inline Result const rs_rd_construct(ArgPreReduction const & arg,
-                                                         NeboStencilCoefList<1> const & coefs) {
+                                                         NeboStencilCoefCollection<1> const & coefs) {
 
                  typename structured::Add<Shift, Point>::result typedef NewShift;
 
@@ -8158,26 +8164,29 @@
       };
 
       template<typename First>
-       struct BuildStencilPointList { NeboStencilPointList<First, NeboNil> typedef Result; };
+       struct BuildStencilPointCollection {
+         NeboStencilPointCollection<First, NeboNil> typedef Result;
+      };
 
       template<typename First, typename Second>
-       struct BuildTwoPointList {
+       struct BuildTwoPointCollection {
 
-         typename BuildStencilPointList<First>::Result typedef FirstPoint;
+         typename BuildStencilPointCollection<First>::Result typedef FirstPoint;
 
          typename FirstPoint::template AddPoint<Second>::Result typedef Result;
       };
 
       template<typename First, typename Second, typename Third, typename Fourth>
-       struct BuildFourPointList {
+       struct BuildFourPointCollection {
 
-         typename BuildStencilPointList<First>::Result typedef FirstPoint;
+         typename BuildStencilPointCollection<First>::Result typedef FirstPoint;
 
-         typename FirstPoint::template AddPoint<Second>::Result typedef SecondFirstList;
+         typename FirstPoint::template AddPoint<Second>::Result typedef SecondFirstCollection;
 
-         typename SecondFirstList::template AddPoint<Third>::Result typedef ThirdSecondFirstList;
+         typename SecondFirstCollection::template AddPoint<Third>::Result typedef
+         ThirdSecondFirstCollection;
 
-         typename ThirdSecondFirstList::template AddPoint<Fourth>::Result typedef Result;
+         typename ThirdSecondFirstCollection::template AddPoint<Fourth>::Result typedef Result;
       };
 
       template<typename CurrentMode, typename Pts, typename Arg, typename FieldType>
@@ -8189,7 +8198,7 @@
          public:
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
-          NeboStencilCoefList<Pts::length> typedef Coefs;
+          NeboStencilCoefCollection<Pts::length> typedef Coefs;
           typename Pts::template ConstructExpr<Arg, FieldType> typedef ConstructExpr;
           typename ConstructExpr::Result typedef ArgSeqWalkType;
 #         ifdef __CUDACC__
@@ -8250,7 +8259,7 @@
          public:
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
-          NeboStencilCoefList<Pts::length> typedef Coefs;
+          NeboStencilCoefCollection<Pts::length> typedef Coefs;
           NeboStencil<Resize, Pts, typename Arg::ResizeType, FieldType> typedef ResizeType;
           NeboStencil(Arg const & arg, Coefs const & coefs)
           : arg_(arg), coefs_(coefs)
@@ -8271,7 +8280,7 @@
          public:
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
-          NeboStencilCoefList<Pts::length> typedef Coefs;
+          NeboStencilCoefCollection<Pts::length> typedef Coefs;
           typename Pts::template ConstructExpr<Arg, FieldType> typedef ConstructExpr;
           typename ConstructExpr::Result typedef ArgSeqWalkType;
           NeboStencil<SeqWalk, Pts, ArgSeqWalkType, FieldType> typedef SeqWalkType;

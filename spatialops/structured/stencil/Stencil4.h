@@ -96,8 +96,8 @@ namespace structured{
     typedef typename structured::Add<HiValInFirstDir, HiValInSecondDir>::result
                         StPt4;          ///< Fourth stencil point location
                                         ///  (relative to the destination point)
-    typedef typename BuildFourPointList<StPt1, StPt2, StPt3, StPt4>::Result
-                        StPtList;       ///< The list of all stencil points in this stencil
+    typedef typename BuildFourPointCollection<StPt1, StPt2, StPt3, StPt4>::Result
+                        StPtCollection;       ///< The collection of all stencil points in this stencil
 
     typedef typename DestFieldType::value_type AtomicType;  // scalar type
 
@@ -105,14 +105,14 @@ namespace structured{
     // argument is a Nebo expression
     template<typename Arg>
     struct ResultConstructor {
-        typedef NeboStencil<Initial, StPtList, Arg, DestFieldType> Stencil;
+        typedef NeboStencil<Initial, StPtCollection, Arg, DestFieldType> Stencil;
         typedef NeboExpression<Stencil, DestFieldType> Result;
     };
 
     // Nebo-related internal struct
     // argument is a field
     typedef NeboConstField<Initial, SrcFieldType> FieldArg;
-    typedef NeboStencil<Initial, StPtList, FieldArg, DestFieldType> FieldStencil;
+    typedef NeboStencil<Initial, StPtCollection, FieldArg, DestFieldType> FieldStencil;
     typedef NeboExpression<FieldStencil, DestFieldType> FieldResult;
 
     Stencil4( const double coef1,
@@ -140,7 +140,7 @@ namespace structured{
      */
     inline FieldResult operator ()( const SrcFieldType & src ) const
     {
-        return FieldResult(FieldStencil(FieldArg(src), coefList_));
+        return FieldResult(FieldStencil(FieldArg(src), coefCollection_));
     }
 
     /**
@@ -152,7 +152,7 @@ namespace structured{
     {
         typedef typename ResultConstructor<Arg>::Stencil Stencil;
         typedef typename ResultConstructor<Arg>::Result Result;
-        return Result(Stencil(src.expr(), coefList_));
+        return Result(Stencil(src.expr(), coefCollection_));
     }
 
     inline double get_coef1() const{ return coef1_; } ///< get the first coefficient
@@ -162,7 +162,7 @@ namespace structured{
 
   private:
     const double coef1_, coef2_, coef3_, coef4_;
-    const NeboStencilCoefList<4> coefList_;
+    const NeboStencilCoefCollection<4> coefCollection_;
   };
 
 

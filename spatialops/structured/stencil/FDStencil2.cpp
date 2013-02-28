@@ -32,7 +32,7 @@ template< typename OpT, typename FieldT, typename DirT >
 FDStencil2<OpT,FieldT,DirT>::FDStencil2( const double coefLo, const double coefHi )
 : coefLo_( coefLo ),
   coefHi_( coefHi ),
-  coefList_( build_two_point_coef_list(coefLo, coefHi) )
+  coefCollection_( build_two_point_coef_collection(coefLo, coefHi) )
 {}
 
 template< typename OpT, typename FieldT, typename DirT >
