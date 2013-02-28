@@ -139,10 +139,6 @@
                          (lambda (name) (constructor-chunk name parameters assignments body)))]
        [type-trans (lambda (new-type)
                      (lambda (old-type) (tpl-pmtr (scope old-type new-type))))]
-       [flatten*-to-list (lambda args (let ([flat-args (flatten* args)])
-                                        (if (list? flat-args)
-                                            flat-args
-                                            (list flat-args))))]
        [arg-swap (lambda (proc num1 num2 report)
                    (lambda args1 (if (not (= num1 (length args1)))
                                      (error (string-append report ": first set of arguments does not match expected number"))
@@ -208,28 +204,28 @@
                                                 'SeqWalk
                                                 SW-tpl-irreg-args
                                                 (map (type-trans 'SeqWalkType)
-                                                     (flatten*-to-list tpl-reg-pars))
+                                                     (flatten* tpl-reg-pars))
                                                 FT-chunk)
                                        'SeqWalkType)
                               (typedef (tpl-use name
                                                 'ResizePrep
                                                 RP-tpl-irreg-args
                                                 (map (type-trans 'ResizePrepType)
-                                                     (flatten*-to-list tpl-reg-pars))
+                                                     (flatten* tpl-reg-pars))
                                                 FT-chunk)
                                        'ResizePrepType)
                               (gpu-only (typedef (tpl-use name
                                                           'GPUWalk
                                                           GPU-tpl-irreg-args
                                                           (map (type-trans 'GPUWalkType)
-                                                               (flatten*-to-list tpl-reg-pars))
+                                                               (flatten* tpl-reg-pars))
                                                           FT-chunk)
                                                  'GPUWalkType))
                               (typedef (tpl-use name
                                                 'Reduction
                                                 RD-tpl-irreg-args
                                                 (map (type-trans 'ReductionType)
-                                                     (flatten*-to-list tpl-reg-pars))
+                                                     (flatten* tpl-reg-pars))
                                                 FT-chunk)
                                        'ReductionType)
                               (typedef VG-type report-VG-chunk))
@@ -275,7 +271,7 @@
                                               'Resize
                                               tpl-irreg-args
                                               (map (type-trans 'ResizeType)
-                                                   (flatten*-to-list tpl-reg-pars))
+                                                   (flatten* tpl-reg-pars))
                                               FT-chunk)
                                      'ResizeType))
                       constructor
@@ -307,7 +303,7 @@
                                                 'SeqWalk
                                                 tpl-irreg-args
                                                 (map (type-trans 'SeqWalkType)
-                                                     (flatten*-to-list tpl-reg-pars))
+                                                     (flatten* tpl-reg-pars))
                                                 FT-chunk)
                                        'SeqWalkType))
                         constructor
