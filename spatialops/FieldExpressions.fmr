@@ -145,18 +145,38 @@
                                      (lambda args2 (if (not (= num2 (length args2)))
                                                        (error (string-append report ": second set of arguments does not match expected number"))
                                                        (apply proc (append args2 args1)))))))]
-       [combine-args (lambda (final-proc combine-proc numbers report)
-                       (let* ([skip-num (first numbers)]
-                              [combine-num (second numbers)]
-                              [final-num (third numbers)]
-                              [total-num (+ skip-num combine-num final-num)])
-                         (lambda args (if (not (= total-num (length args)))
-                                          (error (string-append report ": arguments do not match expected number"))
-                                          (apply final-proc
-                                                 (append (take args skip-num)
-                                                         (list (apply combine-proc (take (drop args skip-num)
-                                                                                         combine-num)))
-                                                         (drop args (+ skip-num combine-num))))))))]
+       [combine-args (lambda (final-proc combine-procs numbers report)
+                       (let* ([combine-procs-lst (if (list? combine-procs)
+                                                     combine-procs
+                                                     (list combine-procs))]
+                              [combine-procs-count (length combine-procs-lst)]
+                              [combine-count (- (length numbers) 2)]
+                              [skip-num (first numbers)]
+                              [combine-nums (take (rest numbers) combine-count)]
+                              [final-num (last numbers)]
+                              [total-num (apply + numbers)])
+                         (if (not (= combine-procs-count combine-count))
+                             (error (string-append report " : number of procedures does not match number of argument counts"))
+                             (lambda args (if (not (= total-num (length args)))
+                                              (error (string-append report " : arguments do not match expected number"))
+                                              (let* ([first-args (take args skip-num)]
+                                                     [combine-args (take (drop args skip-num)
+                                                                         (apply + combine-nums))]
+                                                     [last-args (drop args (apply + skip-num combine-nums))]
+                                                     [combine-args-lst (reverse (first (foldl (lambda (count result)
+                                                                                                (let ([answer (first result)]
+                                                                                                      [args (second result)])
+                                                                                                  (list (cons (take args count)
+                                                                                                              answer)
+                                                                                                        (drop args count))))
+                                                                                              (list null combine-args)
+                                                                                              combine-nums)))]
+                                                     [combine-results (map (lambda (proc args) (apply proc args))
+                                                                           combine-procs-lst
+                                                                           combine-args-lst)])
+                                                (apply final-proc (append first-args
+                                                                          combine-results
+                                                                          last-args))))))))]
        [build-mode
         (lambda (name
                  mode
@@ -177,19 +197,14 @@
                                 (constructor name)
                                 publics)
                        (sec-def private-chunk privates)))]
-       [build-Initial
+       [build-Initial-general
         (lambda (name
-                 add-const
                  tpl-irreg-pars
                  tpl-reg-pars
                  typedefs
                  tpl-irreg-args
                  VG-type
                  constructor
-                 SW-cons-args
-                 RP-cons-args
-                 GPU-cons-args
-                 RD-cons-args
                  publics
                  privates)
           (let ([SW-tpl-irreg-args (if (null? tpl-irreg-args) null (first tpl-irreg-args))]
@@ -230,28 +245,66 @@
                                        'ReductionType)
                               (typedef VG-type report-VG-chunk))
                         constructor
-                        (list (tpl-def (list (tpl-pmtr VG-chunk)
-                                             (tpl-pmtr SH-chunk))
-                                       (r-fcn-def (add-const (fcn-dcl 'init 'SeqWalkType))
-                                                  null
-                                                  (fc 'SeqWalkType SW-cons-args)))
-                              (tpl-def (list (tpl-pmtr VG-chunk))
-                                       (r-fcn-def (add-const (fcn-dcl 'resize_prep 'ResizePrepType))
-                                                  null
-                                                  (fc 'ResizePrepType RP-cons-args)))
-                              (gpu-only (tpl-def (list (tpl-pmtr VG-chunk)
-                                                       (tpl-pmtr SH-chunk))
-                                                 (r-fcn-def (add-const (fcn-dcl 'gpu_init 'GPUWalkType))
-                                                            null
-                                                            (fc 'GPUWalkType GPU-cons-args))))
-                              (tpl-def (list (tpl-pmtr VG-chunk)
-                                             (tpl-pmtr SH-chunk))
-                                       (r-fcn-def (add-const (fcn-dcl 'reduce_init 'ReductionType))
-                                                  null
-                                                  (fc 'ReductionType RD-cons-args)))
-                              publics)
+                        publics
                         privates)))]
-       [bs-Initial (arg-swap build-Initial 10 4 "bs-Initial")]
+       [build-Initial-rhs (combine-args build-Initial-general
+                                        (lambda (SW-cons-args
+                                                 RP-cons-args
+                                                 GPU-cons-args
+                                                 RD-cons-args
+                                                 publics)
+                                          (list (tpl-def (list (tpl-pmtr VG-chunk)
+                                                               (tpl-pmtr SH-chunk))
+                                                         (r-fcn-def (constize (fcn-dcl 'init 'SeqWalkType))
+                                                                    null
+                                                                    (fc 'SeqWalkType SW-cons-args)))
+                                                (tpl-def (list (tpl-pmtr VG-chunk))
+                                                         (r-fcn-def (constize (fcn-dcl 'resize_prep 'ResizePrepType))
+                                                                    null
+                                                                    (fc 'ResizePrepType RP-cons-args)))
+                                                (gpu-only (tpl-def (list (tpl-pmtr VG-chunk)
+                                                                         (tpl-pmtr SH-chunk))
+                                                                   (r-fcn-def (constize (fcn-dcl 'gpu_init 'GPUWalkType))
+                                                                              null
+                                                                              (fc 'GPUWalkType GPU-cons-args))))
+                                                (tpl-def (list (tpl-pmtr VG-chunk)
+                                                               (tpl-pmtr SH-chunk))
+                                                         (r-fcn-def (constize (fcn-dcl 'reduce_init 'ReductionType))
+                                                                    null
+                                                                    (fc 'ReductionType RD-cons-args)))
+                                                publics))
+                                        (list 7 5 1)
+                                        "build-Initial-rhs")]
+       [bs-Initial-rhs (arg-swap build-Initial-rhs 10 3 "bs-Initial-rhs")]
+       [build-Initial-lhs (combine-args build-Initial-general
+                                        (lambda (SW-cons-args
+                                                 RP-cons-args
+                                                 GPU-cons-args
+                                                 RD-cons-args
+                                                 publics)
+                                          (list (tpl-def (list (tpl-pmtr VG-chunk)
+                                                               (tpl-pmtr SH-chunk))
+                                                         (r-fcn-def (fcn-dcl 'init 'SeqWalkType)
+                                                                    null
+                                                                    (fc 'SeqWalkType SW-cons-args)))
+                                                (tpl-def (list (tpl-pmtr VG-chunk))
+                                                         (r-fcn-def (fcn-dcl 'resize_prep 'ResizePrepType)
+                                                                    null
+                                                                    (fc 'ResizePrepType RP-cons-args)))
+                                                (gpu-only (tpl-def (list (tpl-pmtr VG-chunk)
+                                                                         (tpl-pmtr SH-chunk))
+                                                                   (r-fcn-def (fcn-dcl 'gpu_init 'GPUWalkType)
+                                                                              null
+                                                                              (fc 'GPUWalkType GPU-cons-args))))
+                                                (tpl-def (list (tpl-pmtr VG-chunk)
+                                                               (tpl-pmtr SH-chunk))
+                                                         (r-fcn-def (fcn-dcl 'reduce_init 'ReductionType)
+                                                                    null
+                                                                    (fc 'ReductionType RD-cons-args)))
+                                                publics))
+                                        (list 7 5 1)
+                                        "build-Initial-lhs")]
+       [bs-Initial-lhs (arg-swap build-Initial-lhs 10 3 "bs-Initial-lhs")]
        [build-ResizePrep
         (lambda (name
                  add-const
@@ -380,30 +433,30 @@
                                                     next-body))
                              publics)
                        privates)))]
-       [build-GPU-const (combine-args build-GPU-general
-                                      (lambda (eval-result publics)
-                                        (list (device-use (r-fcn-def (fcn-dcl 'eval 'AtomicType)
-                                                                     null
-                                                                     eval-result))
-                                              publics))
-                                      (list 6 2 1)
-                                      "build-GPU-const")]
-       [bs-GPU-const (arg-swap build-GPU-const 7 2 "bs-GPU-const")]
-       [build-GPU-nonconst (combine-args build-GPU-general
-                                         (lambda (valid-result at-end-result ref-result publics)
-                                           (list (device-use (r-fcn-def (fcn-dcl 'valid 'bool)
-                                                                        null
-                                                                        valid-result))
-                                                 (device-use (r-fcn-def (fcn-dcl 'at_end 'bool)
-                                                                        null
-                                                                        at-end-result))
-                                                 (device-use (r-fcn-def (fcn-dcl 'ref (ref 'AtomicType))
-                                                                        null
-                                                                        ref-result))
-                                                 publics))
-                                         (list 6 4 1)
-                                         "build-GPU-nonconst")]
-       [bs-GPU-nonconst (arg-swap build-GPU-nonconst 9 2 "bs-GPU-nonconst")]
+       [build-GPU-rhs (combine-args build-GPU-general
+                                    (lambda (eval-result publics)
+                                      (list (device-use (r-fcn-def (fcn-dcl 'eval 'AtomicType)
+                                                                   null
+                                                                   eval-result))
+                                            publics))
+                                    (list 6 2 1)
+                                    "build-GPU-rhs")]
+       [bs-GPU-rhs (arg-swap build-GPU-rhs 7 2 "bs-GPU-rhs")]
+       [build-GPU-lhs (combine-args build-GPU-general
+                                    (lambda (valid-result at-end-result ref-result publics)
+                                      (list (device-use (r-fcn-def (fcn-dcl 'valid 'bool)
+                                                                   null
+                                                                   valid-result))
+                                            (device-use (r-fcn-def (fcn-dcl 'at_end 'bool)
+                                                                   null
+                                                                   at-end-result))
+                                            (device-use (r-fcn-def (fcn-dcl 'ref (ref 'AtomicType))
+                                                                   null
+                                                                   ref-result))
+                                            publics))
+                                    (list 6 4 1)
+                                    "build-GPU-lhs")]
+       [bs-GPU-lhs (arg-swap build-GPU-lhs 9 2 "bs-GPU-lhs")]
        [build-Reduction
         (lambda (name
                  tpl-pars
@@ -450,7 +503,7 @@
             (i (tpl-srt-dcl name
                             (map tpl-pmtr (flatten* 'CurrentMode tpl-irreg-pars tpl-reg-pars FT-chunk))
                             null)
-               (Initial name add-const tpl-irreg-pars tpl-reg-pars)
+               (Initial name tpl-irreg-pars tpl-reg-pars)
                (ResizePrep name add-const tpl-irreg-pars tpl-reg-pars)
                (Resize name add-const tpl-irreg-pars tpl-reg-pars)
                (SeqWalk name tpl-pars)
@@ -504,21 +557,21 @@
                            #true
                            null
                            Op-lst
-                           (bs-Initial null
-                                       null
-                                       (build-VG (mapper (lambda (Op) (tpl-pmtr (scope Op report-VG-chunk)))
-                                                         Op-lst))
-                                       gen-constructor
-                                       (mapper (lambda (op_) (mfc op_ (tpl-fcn-use 'init VG-chunk SH-chunk)))
-                                               op_-lst)
-                                       (mapper (lambda (op_) (mfc op_ (tpl-fcn-use 'resize_prep VG-chunk)))
-                                               op_-lst)
-                                       (mapper (lambda (op_) (mfc op_ (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)))
-                                               op_-lst)
-                                       (mapper (lambda (op_) (mfc op_ (tpl-fcn-use 'reduce_init VG-chunk SH-chunk)))
-                                               op_-lst)
-                                       null
-                                       gen-data-mems)
+                           (bs-Initial-rhs null
+                                           null
+                                           (build-VG (mapper (lambda (Op) (tpl-pmtr (scope Op report-VG-chunk)))
+                                                             Op-lst))
+                                           gen-constructor
+                                           (mapper (lambda (op_) (mfc op_ (tpl-fcn-use 'init VG-chunk SH-chunk)))
+                                                   op_-lst)
+                                           (mapper (lambda (op_) (mfc op_ (tpl-fcn-use 'resize_prep VG-chunk)))
+                                                   op_-lst)
+                                           (mapper (lambda (op_) (mfc op_ (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)))
+                                                   op_-lst)
+                                           (mapper (lambda (op_) (mfc op_ (tpl-fcn-use 'reduce_init VG-chunk SH-chunk)))
+                                                   op_-lst)
+                                           null
+                                           gen-data-mems)
                            (bs-ResizePrep null
                                           null
                                           gen-constructor
@@ -540,15 +593,15 @@
                                            internal-use
                                            null
                                            exec-data-mems)
-                           (bs-GPU-const null
-                                         gen-constructor
-                                         (mapper (lambda (op_) (mfc op_ 'start 'x 'y))
-                                                 op_-lst)
-                                         (mapper (lambda (op_) (mfc op_ 'next))
-                                                 op_-lst)
-                                         internal-use
-                                         null
-                                         exec-data-mems)
+                           (bs-GPU-rhs null
+                                       gen-constructor
+                                       (mapper (lambda (op_) (mfc op_ 'start 'x 'y))
+                                               op_-lst)
+                                       (mapper (lambda (op_) (mfc op_ 'next))
+                                               op_-lst)
+                                       internal-use
+                                       null
+                                       exec-data-mems)
                            (bs-Reduction (typedef eval-return-type 'EvalReturnType)
                                          gen-constructor
                                          (exec-fcn semi-colon-chunk s 'next)
@@ -849,20 +902,20 @@
                     #true
                     null
                     null
-                    (bs-Initial (typedef (scope (tpl-pmtr FT-chunk)
-                                                'value_type)
-                                         'AtomicType)
-                                null
-                                (scope 'structured 'InfiniteGhostData)
-                                (bm-constructor (adc 'AtomicType 'v)
-                                                (cons-asgn 'value_ 'v)
-                                                null)
-                                'value_
-                                'value_
-                                'value_
-                                'value_
-                                null
-                                (adc 'AtomicType 'value_))
+                    (bs-Initial-rhs (typedef (scope (tpl-pmtr FT-chunk)
+                                                    'value_type)
+                                             'AtomicType)
+                                    null
+                                    (scope 'structured 'InfiniteGhostData)
+                                    (bm-constructor (adc 'AtomicType 'v)
+                                                    (cons-asgn 'value_ 'v)
+                                                    null)
+                                    'value_
+                                    'value_
+                                    'value_
+                                    'value_
+                                    null
+                                    (adc 'AtomicType 'value_))
                     (bs-ResizePrep (typedef (scope (tpl-pmtr FT-chunk)
                                                    'value_type)
                                             'AtomicType)
@@ -894,15 +947,15 @@
                                     'value_
                                     null
                                     (adc 'AtomicType 'value_))
-                    (bs-GPU-const null
-                                  (bm-constructor (adc 'AtomicType 'value)
-                                                  (cons-asgn 'value_ 'value)
-                                                  null)
-                                  null
-                                  null
-                                  'value_
-                                  null
-                                  (adc 'AtomicType 'value_))
+                    (bs-GPU-rhs null
+                                (bm-constructor (adc 'AtomicType 'value)
+                                                (cons-asgn 'value_ 'value)
+                                                null)
+                                null
+                                null
+                                'value_
+                                null
+                                (adc 'AtomicType 'value_))
                     (bs-Reduction (typedef (scope (tpl-pmtr FT-chunk)
                                                   'value_type)
                                            'AtomicType)
@@ -920,18 +973,18 @@
                     #true
                     null
                     null
-                    (bs-Initial null
-                                null
-                                (scope 'structured 'InfiniteGhostData)
-                                (bm-constructor (adc 'bool 'v)
-                                                (cons-asgn 'value_ 'v)
-                                                null)
-                                'value_
-                                'value_
-                                'value_
-                                'value_
-                                null
-                                (adc 'bool 'value_))
+                    (bs-Initial-rhs null
+                                    null
+                                    (scope 'structured 'InfiniteGhostData)
+                                    (bm-constructor (adc 'bool 'v)
+                                                    (cons-asgn 'value_ 'v)
+                                                    null)
+                                    'value_
+                                    'value_
+                                    'value_
+                                    'value_
+                                    null
+                                    (adc 'bool 'value_))
                     (bs-ResizePrep null
                                    null
                                    (bm-constructor (adc 'bool 'value)
@@ -957,15 +1010,15 @@
                                     'value_
                                     null
                                     (adc 'bool 'value_))
-                    (bs-GPU-const null
-                                  (bm-constructor (adc 'bool 'value)
-                                                  (cons-asgn 'value_ 'value)
-                                                  null)
-                                  null
-                                  null
-                                  'value_
-                                  null
-                                  (adc 'bool 'value_))
+                    (bs-GPU-rhs null
+                                (bm-constructor (adc 'bool 'value)
+                                                (cons-asgn 'value_ 'value)
+                                                null)
+                                null
+                                null
+                                'value_
+                                null
+                                (adc 'bool 'value_))
                     (bs-Reduction null
                                   (bm-constructor (adc 'bool 'value)
                                                   (cons-asgn 'value_ 'value)
@@ -981,21 +1034,21 @@
                     #true
                     null
                     null
-                    (bs-Initial null
-                                null
-                                (tpl-pmtr (scope (scope 'structured (tpl-use 'GhostFromField FT-chunk))
-                                                 'result))
-                                (bm-constructor (adcr FT-chunk 'f)
-                                                (cons-asgn 'field_ 'f)
-                                                null)
-                                (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift VG-chunk SH-chunk))
-                                (mfc 'field_ (tpl-fcn-use 'resize_ghost VG-chunk))
-                                (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift VG-chunk SH-chunk))
-                                (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift VG-chunk SH-chunk))
-                                (r-fcn-def (constize (fcn-dcl 'field (cref FT-chunk)))
-                                           null
-                                           'field_)
-                                (adc FT-chunk 'field_))
+                    (bs-Initial-rhs null
+                                    null
+                                    (tpl-pmtr (scope (scope 'structured (tpl-use 'GhostFromField FT-chunk))
+                                                     'result))
+                                    (bm-constructor (adcr FT-chunk 'f)
+                                                    (cons-asgn 'field_ 'f)
+                                                    null)
+                                    (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift VG-chunk SH-chunk))
+                                    (mfc 'field_ (tpl-fcn-use 'resize_ghost VG-chunk))
+                                    (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift VG-chunk SH-chunk))
+                                    (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift VG-chunk SH-chunk))
+                                    (r-fcn-def (constize (fcn-dcl 'field (cref FT-chunk)))
+                                               null
+                                               'field_)
+                                    (adc FT-chunk 'field_))
                     (bs-ResizePrep null
                                    null
                                    (bm-constructor (adcr FT-chunk 'f)
@@ -1030,41 +1083,41 @@
                                     null
                                     (ad (tpl-pmtr (scope FT-chunk 'const_iterator))
                                         'iter_))
-                    (bs-GPU-const null
-                                  (bm-constructor
-                                   (adcr FT-chunk 'f)
-                                   (list (cons-asgn 'current_ (n+ (mfc 'f 'field_values 'EXTERNAL_CUDA_GPU (mfc 'f 'device_index))
-                                                                  (n+ (mfc (mfc 'f 'window_with_ghost)
-                                                                           'offset
-                                                                           "0")
-                                                                      (n* (mfc (mfc 'f 'window_with_ghost)
-                                                                               'glob_dim
-                                                                               "0")
-                                                                          (par (n+ (mfc (mfc 'f 'window_with_ghost)
-                                                                                        'offset
-                                                                                        "1")
-                                                                                   (par (n* (mfc (mfc 'f 'window_with_ghost)
-                                                                                                 'glob_dim
-                                                                                                 "1")
-                                                                                            (mfc (mfc 'f 'window_with_ghost)
-                                                                                                 'offset
-                                                                                                 "2")))))))))
-                                         (cons-asgn 'xLength_ (mfc (mfc 'f
-                                                                        'window_with_ghost)
-                                                                   'glob_dim
-                                                                   "0"))
-                                         (cons-asgn 'step_ (n* 'xLength_ (mfc (mfc 'f
-                                                                                   'window_with_ghost)
-                                                                              'glob_dim
-                                                                              "1"))))
-                                   null)
-                                  (n+= 'current_ (n+ 'x (n* 'y 'xLength_)))
-                                  (n+= 'current_ 'step_)
-                                  (c '* 'current_)
-                                  null
-                                  (list (adcp 'AtomicType 'current_)
-                                        (adc 'int 'xLength_)
-                                        (adc 'int 'step_)))
+                    (bs-GPU-rhs null
+                                (bm-constructor
+                                 (adcr FT-chunk 'f)
+                                 (list (cons-asgn 'current_ (n+ (mfc 'f 'field_values 'EXTERNAL_CUDA_GPU (mfc 'f 'device_index))
+                                                                (n+ (mfc (mfc 'f 'window_with_ghost)
+                                                                         'offset
+                                                                         "0")
+                                                                    (n* (mfc (mfc 'f 'window_with_ghost)
+                                                                             'glob_dim
+                                                                             "0")
+                                                                        (par (n+ (mfc (mfc 'f 'window_with_ghost)
+                                                                                      'offset
+                                                                                      "1")
+                                                                                 (par (n* (mfc (mfc 'f 'window_with_ghost)
+                                                                                               'glob_dim
+                                                                                               "1")
+                                                                                          (mfc (mfc 'f 'window_with_ghost)
+                                                                                               'offset
+                                                                                               "2")))))))))
+                                       (cons-asgn 'xLength_ (mfc (mfc 'f
+                                                                      'window_with_ghost)
+                                                                 'glob_dim
+                                                                 "0"))
+                                       (cons-asgn 'step_ (n* 'xLength_ (mfc (mfc 'f
+                                                                                 'window_with_ghost)
+                                                                            'glob_dim
+                                                                            "1"))))
+                                 null)
+                                (n+= 'current_ (n+ 'x (n* 'y 'xLength_)))
+                                (n+= 'current_ 'step_)
+                                (c '* 'current_)
+                                null
+                                (list (adcp 'AtomicType 'current_)
+                                      (adc 'int 'xLength_)
+                                      (adc 'int 'step_)))
                     (bs-Reduction (typedef (scope (tpl-pmtr FT-chunk)
                                                   'value_type)
                                            'AtomicType)
@@ -1086,20 +1139,20 @@
                     #false
                     null
                     null
-                    (bs-Initial null
-                                null
-                                (tpl-pmtr (scope (scope 'structured
-                                                        (tpl-use 'GhostFromField FT-chunk))
-                                                 'result))
-                                (bm-constructor (ad FT-chunk 'f)
-                                                (cons-asgn 'field_ 'f)
-                                                null)
-                                (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift_and_maintain_interior VG-chunk SH-chunk))
-                                (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_maintain_interior VG-chunk))
-                                (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift_and_maintain_interior VG-chunk SH-chunk))
-                                (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift_and_maintain_interior VG-chunk SH-chunk))
-                                null
-                                (ad FT-chunk 'field_))
+                    (bs-Initial-lhs null
+                                    null
+                                    (tpl-pmtr (scope (scope 'structured
+                                                            (tpl-use 'GhostFromField FT-chunk))
+                                                     'result))
+                                    (bm-constructor (ad FT-chunk 'f)
+                                                    (cons-asgn 'field_ 'f)
+                                                    null)
+                                    (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift_and_maintain_interior VG-chunk SH-chunk))
+                                    (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_maintain_interior VG-chunk))
+                                    (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift_and_maintain_interior VG-chunk SH-chunk))
+                                    (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift_and_maintain_interior VG-chunk SH-chunk))
+                                    null
+                                    (ad FT-chunk 'field_))
                     (bs-ResizePrep null
                                    null
                                    (bm-constructor (ad FT-chunk 'f)
@@ -1138,64 +1191,64 @@
                                               'iter_)
                                           (adc (tpl-pmtr (scope FT-chunk 'iterator))
                                                'end_)))
-                    (bs-GPU-nonconst  null
-                                      (bm-constructor
-                                       (ad FT-chunk 'f)
-                                       (list (cons-asgn 'current_ (bs (n+ (mfc 'f 'field_values 'EXTERNAL_CUDA_GPU (mfc 'f 'device_index))
-                                                                          (n+ (mfc (mfc 'f 'window_with_ghost)
-                                                                                   'offset
-                                                                                   "0")
-                                                                              (n* (mfc (mfc 'f 'window_with_ghost)
-                                                                                       'glob_dim
-                                                                                       "0")
-                                                                                  (par (n+ (mfc (mfc 'f 'window_with_ghost)
-                                                                                                'offset
-                                                                                                "1")
-                                                                                           (par (n* (mfc (mfc 'f 'window_with_ghost)
-                                                                                                         'glob_dim
-                                                                                                         "1")
-                                                                                                    (mfc (mfc 'f 'window_with_ghost)
-                                                                                                         'offset
-                                                                                                         "2"))))))))))
-                                             (cons-asgn 'location_ "0")
-                                             (cons-asgn 'valid_ 'false)
-                                             (cons-asgn 'xLength_ (mfc (mfc 'f 'window_with_ghost)
-                                                                       'glob_dim
-                                                                       "0"))
-                                             (cons-asgn 'xExtent_ (mfc (mfc 'f 'window_with_ghost)
-                                                                       'extent
-                                                                       "0"))
-                                             (cons-asgn 'yExtent_ (mfc (mfc 'f 'window_with_ghost)
-                                                                       'extent
-                                                                       "1"))
-                                             (cons-asgn 'zExtent_ (mfc (mfc 'f 'window_with_ghost)
-                                                                       'extent
-                                                                       "2"))
-                                             (cons-asgn 'step_ (n* 'xLength_ (mfc (mfc 'f 'window_with_ghost)
+                    (bs-GPU-lhs  null
+                                 (bm-constructor
+                                  (ad FT-chunk 'f)
+                                  (list (cons-asgn 'current_ (bs (n+ (mfc 'f 'field_values 'EXTERNAL_CUDA_GPU (mfc 'f 'device_index))
+                                                                     (n+ (mfc (mfc 'f 'window_with_ghost)
+                                                                              'offset
+                                                                              "0")
+                                                                         (n* (mfc (mfc 'f 'window_with_ghost)
                                                                                   'glob_dim
-                                                                                  "1"))))
-                                       null)
-                                      (list (n= 'valid_ (par (n< 'x 'xExtent_) '&&
-                                                             (n>= 'x "0") '&&
-                                                             (n< 'y 'yExtent_) '&&
-                                                             (n>= 'y "0")))
-                                            (bs (fc 'if (fc 'valid))
-                                                (body-chunk (n= 'location_ "0")
-                                                            (n+= 'current_ (n+ 'x (n* 'y 'xLength_))))))
-                                      (list (n+= 'current_ 'step_)
-                                            (n++ 'location_))
-                                      'valid_
-                                      (n>= 'location_ 'zExtent_)
-                                      (c '* 'current_)
-                                      null
-                                      (list (adp 'AtomicType 'current_)
-                                            (ad 'int 'location_)
-                                            (ad 'int 'valid_)
-                                            (adc 'int 'xLength_)
-                                            (adc 'int 'xExtent_)
-                                            (adc 'int 'yExtent_)
-                                            (adc 'int 'zExtent_)
-                                            (adc 'int 'step_)))
+                                                                                  "0")
+                                                                             (par (n+ (mfc (mfc 'f 'window_with_ghost)
+                                                                                           'offset
+                                                                                           "1")
+                                                                                      (par (n* (mfc (mfc 'f 'window_with_ghost)
+                                                                                                    'glob_dim
+                                                                                                    "1")
+                                                                                               (mfc (mfc 'f 'window_with_ghost)
+                                                                                                    'offset
+                                                                                                    "2"))))))))))
+                                        (cons-asgn 'location_ "0")
+                                        (cons-asgn 'valid_ 'false)
+                                        (cons-asgn 'xLength_ (mfc (mfc 'f 'window_with_ghost)
+                                                                  'glob_dim
+                                                                  "0"))
+                                        (cons-asgn 'xExtent_ (mfc (mfc 'f 'window_with_ghost)
+                                                                  'extent
+                                                                  "0"))
+                                        (cons-asgn 'yExtent_ (mfc (mfc 'f 'window_with_ghost)
+                                                                  'extent
+                                                                  "1"))
+                                        (cons-asgn 'zExtent_ (mfc (mfc 'f 'window_with_ghost)
+                                                                  'extent
+                                                                  "2"))
+                                        (cons-asgn 'step_ (n* 'xLength_ (mfc (mfc 'f 'window_with_ghost)
+                                                                             'glob_dim
+                                                                             "1"))))
+                                  null)
+                                 (list (n= 'valid_ (par (n< 'x 'xExtent_) '&&
+                                                        (n>= 'x "0") '&&
+                                                        (n< 'y 'yExtent_) '&&
+                                                        (n>= 'y "0")))
+                                       (bs (fc 'if (fc 'valid))
+                                           (body-chunk (n= 'location_ "0")
+                                                       (n+= 'current_ (n+ 'x (n* 'y 'xLength_))))))
+                                 (list (n+= 'current_ 'step_)
+                                       (n++ 'location_))
+                                 'valid_
+                                 (n>= 'location_ 'zExtent_)
+                                 (c '* 'current_)
+                                 null
+                                 (list (adp 'AtomicType 'current_)
+                                       (ad 'int 'location_)
+                                       (ad 'int 'valid_)
+                                       (adc 'int 'xLength_)
+                                       (adc 'int 'xExtent_)
+                                       (adc 'int 'yExtent_)
+                                       (adc 'int 'zExtent_)
+                                       (adc 'int 'step_)))
                     (bs-Reduction (typedef (scope (tpl-pmtr FT-chunk)
                                                   'value_type)
                                            'AtomicType)
@@ -1279,29 +1332,29 @@
                     #true
                     null
                     (list 'Test 'Expr)
-                    (bs-Initial null
-                                null
-                                (tpl-pmtr (scope (scope 'structured
-                                                        (tpl-use 'Minimum 
-                                                                 (tpl-pmtr (scope 'Test report-VG-chunk))
-                                                                 (tpl-pmtr (scope 'Expr report-VG-chunk))))
-                                                 'result))
-                                (bm-constructor (list (adcr 'Test 't)
-                                                      (adcr 'Expr 'e))
-                                                (list (cons-asgn 'test_ 't)
-                                                      (cons-asgn 'expr_ 'e))
-                                                null)
-                                (list (mfc 'test_ (tpl-fcn-use 'init VG-chunk SH-chunk))
-                                      (mfc 'expr_ (tpl-fcn-use 'init VG-chunk SH-chunk)))
-                                (list (mfc 'test_ (tpl-fcn-use 'resize_prep VG-chunk))
-                                      (mfc 'expr_ (tpl-fcn-use 'resize_prep VG-chunk)))
-                                (list (mfc 'test_ (tpl-fcn-use 'gpu_init VG-chunk SH-chunk))
-                                      (mfc 'expr_ (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)))
-                                (list (mfc 'test_ (tpl-fcn-use 'reduce_init VG-chunk SH-chunk))
-                                      (mfc 'expr_ (tpl-fcn-use 'reduce_init VG-chunk SH-chunk)))
-                                null
-                                (list (adc 'Test 'test_)
-                                      (adc 'Expr 'expr_)))
+                    (bs-Initial-rhs null
+                                    null
+                                    (tpl-pmtr (scope (scope 'structured
+                                                            (tpl-use 'Minimum 
+                                                                     (tpl-pmtr (scope 'Test report-VG-chunk))
+                                                                     (tpl-pmtr (scope 'Expr report-VG-chunk))))
+                                                     'result))
+                                    (bm-constructor (list (adcr 'Test 't)
+                                                          (adcr 'Expr 'e))
+                                                    (list (cons-asgn 'test_ 't)
+                                                          (cons-asgn 'expr_ 'e))
+                                                    null)
+                                    (list (mfc 'test_ (tpl-fcn-use 'init VG-chunk SH-chunk))
+                                          (mfc 'expr_ (tpl-fcn-use 'init VG-chunk SH-chunk)))
+                                    (list (mfc 'test_ (tpl-fcn-use 'resize_prep VG-chunk))
+                                          (mfc 'expr_ (tpl-fcn-use 'resize_prep VG-chunk)))
+                                    (list (mfc 'test_ (tpl-fcn-use 'gpu_init VG-chunk SH-chunk))
+                                          (mfc 'expr_ (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)))
+                                    (list (mfc 'test_ (tpl-fcn-use 'reduce_init VG-chunk SH-chunk))
+                                          (mfc 'expr_ (tpl-fcn-use 'reduce_init VG-chunk SH-chunk)))
+                                    null
+                                    (list (adc 'Test 'test_)
+                                          (adc 'Expr 'expr_)))
                     (bs-ResizePrep null
                                    null
                                    (bm-constructor (list (adcr 'Test 'test)
@@ -1344,24 +1397,24 @@
                                                (mfc 'test_ 'eval))
                                     (list (ad 'Test 'test_)
                                           (ad 'Expr 'expr_)))
-                    (bs-GPU-const null
-                                  (bm-constructor (list (adcr 'Test 'test)
-                                                        (adcr 'Expr 'expr))
-                                                  (list (cons-asgn 'test_ 'test)
-                                                        (cons-asgn 'expr_ 'expr))
-                                                  null)
-                                  (c (mfc 'test_ 'start 'x 'y)
-                                     semi-colon-chunk s
-                                     (mfc 'expr_ 'start 'x 'y))
-                                  (c (mfc 'test_ 'next)
-                                     semi-colon-chunk s
-                                     (mfc 'expr_ 'next))
-                                  (mfc 'expr_ 'eval)
-                                  (r-fcn-def (constize (fcn-dcl 'check (tc 'bool)))
-                                             null
-                                             (mfc 'test_ 'eval))
-                                  (list (ad 'Test 'test_)
-                                        (ad 'Expr 'expr_)))
+                    (bs-GPU-rhs null
+                                (bm-constructor (list (adcr 'Test 'test)
+                                                      (adcr 'Expr 'expr))
+                                                (list (cons-asgn 'test_ 'test)
+                                                      (cons-asgn 'expr_ 'expr))
+                                                null)
+                                (c (mfc 'test_ 'start 'x 'y)
+                                   semi-colon-chunk s
+                                   (mfc 'expr_ 'start 'x 'y))
+                                (c (mfc 'test_ 'next)
+                                   semi-colon-chunk s
+                                   (mfc 'expr_ 'next))
+                                (mfc 'expr_ 'eval)
+                                (r-fcn-def (constize (fcn-dcl 'check (tc 'bool)))
+                                           null
+                                           (mfc 'test_ 'eval))
+                                (list (ad 'Test 'test_)
+                                      (ad 'Expr 'expr_)))
                     (bs-Reduction (typedef (scope (tpl-pmtr FT-chunk)
                                                   'value_type)
                                            'AtomicType)
@@ -1390,33 +1443,33 @@
                     #true
                     null
                     (list CT-chunk 'Otherwise)
-                    (bs-Initial null
-                                null
-                                (tpl-pmtr (scope (scope 'structured (tpl-use 'Minimum
-                                                                             (tpl-pmtr (scope CT-chunk report-VG-chunk))
-                                                                             (tpl-pmtr (scope 'Otherwise report-VG-chunk))))
-                                                 'result))
-                                (bm-constructor (list (adcr CT-chunk 'c)
-                                                      (adcr 'Otherwise 'e))
-                                                (list (cons-asgn 'clause_ 'c)
-                                                      (cons-asgn 'otherwise_ 'e))
-                                                null)
-                                (list (mfc 'clause_ (tpl-fcn-use 'init VG-chunk SH-chunk))
-                                      (mfc 'otherwise_ (tpl-fcn-use 'init VG-chunk SH-chunk)))
-                                (list (mfc 'clause_ (tpl-fcn-use 'resize_prep VG-chunk))
-                                      (mfc 'otherwise_ (tpl-fcn-use 'resize_prep VG-chunk)))
-                                (list (mfc 'clause_ (tpl-fcn-use 'gpu_init VG-chunk SH-chunk))
-                                      (mfc 'otherwise_ (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)))
-                                (list (mfc 'clause_ (tpl-fcn-use 'reduce_init VG-chunk SH-chunk))
-                                      (mfc 'otherwise_ (tpl-fcn-use 'reduce_init VG-chunk SH-chunk)))
-                                (list (r-fcn-def (constize (fcn-dcl 'clause (cref CT-chunk)))
-                                                 null
-                                                 'clause_)
-                                      (r-fcn-def (constize (fcn-dcl 'otherwise (cref 'Otherwise)))
-                                                 null
-                                                 'otherwise_))
-                                (list (adc CT-chunk 'clause_)
-                                      (adc 'Otherwise 'otherwise_)))
+                    (bs-Initial-rhs null
+                                    null
+                                    (tpl-pmtr (scope (scope 'structured (tpl-use 'Minimum
+                                                                                 (tpl-pmtr (scope CT-chunk report-VG-chunk))
+                                                                                 (tpl-pmtr (scope 'Otherwise report-VG-chunk))))
+                                                     'result))
+                                    (bm-constructor (list (adcr CT-chunk 'c)
+                                                          (adcr 'Otherwise 'e))
+                                                    (list (cons-asgn 'clause_ 'c)
+                                                          (cons-asgn 'otherwise_ 'e))
+                                                    null)
+                                    (list (mfc 'clause_ (tpl-fcn-use 'init VG-chunk SH-chunk))
+                                          (mfc 'otherwise_ (tpl-fcn-use 'init VG-chunk SH-chunk)))
+                                    (list (mfc 'clause_ (tpl-fcn-use 'resize_prep VG-chunk))
+                                          (mfc 'otherwise_ (tpl-fcn-use 'resize_prep VG-chunk)))
+                                    (list (mfc 'clause_ (tpl-fcn-use 'gpu_init VG-chunk SH-chunk))
+                                          (mfc 'otherwise_ (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)))
+                                    (list (mfc 'clause_ (tpl-fcn-use 'reduce_init VG-chunk SH-chunk))
+                                          (mfc 'otherwise_ (tpl-fcn-use 'reduce_init VG-chunk SH-chunk)))
+                                    (list (r-fcn-def (constize (fcn-dcl 'clause (cref CT-chunk)))
+                                                     null
+                                                     'clause_)
+                                          (r-fcn-def (constize (fcn-dcl 'otherwise (cref 'Otherwise)))
+                                                     null
+                                                     'otherwise_))
+                                    (list (adc CT-chunk 'clause_)
+                                          (adc 'Otherwise 'otherwise_)))
                     (bs-ResizePrep null
                                    null
                                    (bm-constructor (list (adcr CT-chunk 'clause)
@@ -1459,24 +1512,24 @@
                                     null
                                     (list (ad CT-chunk 'clause_)
                                           (ad 'Otherwise 'otherwise_)))
-                    (bs-GPU-const null
-                                  (bm-constructor (list (adcr CT-chunk 'clause)
-                                                        (adcr 'Otherwise 'otherwise))
-                                                  (list (cons-asgn 'clause_ 'clause)
-                                                        (cons-asgn 'otherwise_ 'otherwise))
-                                                  null)
-                                  (c (mfc 'clause_ 'start 'x 'y)
-                                     semi-colon-chunk s
-                                     (mfc 'otherwise_ 'start 'x 'y))
-                                  (c (mfc 'clause_ 'next)
-                                     semi-colon-chunk s
-                                     (mfc 'otherwise_ 'next))
-                                  (ter-cond (mfc 'clause_ 'check)
-                                            (mfc 'clause_ 'eval)
-                                            (mfc 'otherwise_ 'eval))
-                                  null
-                                  (list (ad CT-chunk 'clause_)
-                                        (ad 'Otherwise 'otherwise_)))
+                    (bs-GPU-rhs null
+                                (bm-constructor (list (adcr CT-chunk 'clause)
+                                                      (adcr 'Otherwise 'otherwise))
+                                                (list (cons-asgn 'clause_ 'clause)
+                                                      (cons-asgn 'otherwise_ 'otherwise))
+                                                null)
+                                (c (mfc 'clause_ 'start 'x 'y)
+                                   semi-colon-chunk s
+                                   (mfc 'otherwise_ 'start 'x 'y))
+                                (c (mfc 'clause_ 'next)
+                                   semi-colon-chunk s
+                                   (mfc 'otherwise_ 'next))
+                                (ter-cond (mfc 'clause_ 'check)
+                                          (mfc 'clause_ 'eval)
+                                          (mfc 'otherwise_ 'eval))
+                                null
+                                (list (ad CT-chunk 'clause_)
+                                      (ad 'Otherwise 'otherwise_)))
                     (bs-Reduction (typedef (scope (tpl-pmtr FT-chunk)
                                                   'value_type)
                                            'AtomicType)
@@ -2162,25 +2215,25 @@
                     #true
                     'Point
                     'Arg
-                    (bs-Initial null
-                                (list 'Point 'Point 'Point 'Point)
-                                (tpl-pmtr (scope (scope 'structured
-                                                        (tpl-use 'Invalidate
-                                                                 (tpl-pmtr (scope 'Arg report-VG-chunk))
-                                                                 'Point))
-                                                 'result))
-                                (bm-constructor (adcr 'Arg 'a)
-                                                (cons-asgn 'arg_ 'a)
-                                                null)
-                                (mfc 'arg_ (tpl-fcn-use 'init VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
-                                                                                        'result))))
-                                (mfc 'arg_ (tpl-fcn-use 'resize_prep VG-chunk))
-                                (mfc 'arg_ (tpl-fcn-use 'gpu_init VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
-                                                                                      'result))))
-                                (mfc 'arg_ (tpl-fcn-use 'reduce_init VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
-                                                                                               'result))))
-                                null
-                                (adc 'Arg 'arg_))
+                    (bs-Initial-rhs null
+                                    (list 'Point 'Point 'Point 'Point)
+                                    (tpl-pmtr (scope (scope 'structured
+                                                            (tpl-use 'Invalidate
+                                                                     (tpl-pmtr (scope 'Arg report-VG-chunk))
+                                                                     'Point))
+                                                     'result))
+                                    (bm-constructor (adcr 'Arg 'a)
+                                                    (cons-asgn 'arg_ 'a)
+                                                    null)
+                                    (mfc 'arg_ (tpl-fcn-use 'init VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
+                                                                                            'result))))
+                                    (mfc 'arg_ (tpl-fcn-use 'resize_prep VG-chunk))
+                                    (mfc 'arg_ (tpl-fcn-use 'gpu_init VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
+                                                                                                'result))))
+                                    (mfc 'arg_ (tpl-fcn-use 'reduce_init VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
+                                                                                                   'result))))
+                                    null
+                                    (adc 'Arg 'arg_))
                     (bs-ResizePrep null
                                    'Point
                                    (bm-constructor (adcr 'Arg 'a)
@@ -2209,15 +2262,15 @@
                                     (mfc 'arg_ 'eval)
                                     null
                                     (ad 'Arg 'arg_))
-                    (bs-GPU-const null
-                                  (bm-constructor (adcr 'Arg 'a)
-                                                  (cons-asgn 'arg_ 'a)
-                                                  null)
-                                  (mfc 'arg_ 'start 'x 'y)
-                                  (mfc 'arg_ 'next)
-                                  (mfc 'arg_ 'eval)
-                                  null
-                                  (ad 'Arg 'arg_))
+                    (bs-GPU-rhs null
+                                (bm-constructor (adcr 'Arg 'a)
+                                                (cons-asgn 'arg_ 'a)
+                                                null)
+                                (mfc 'arg_ 'start 'x 'y)
+                                (mfc 'arg_ 'next)
+                                (mfc 'arg_ 'eval)
+                                null
+                                (ad 'Arg 'arg_))
                     (bs-Reduction (typedef (scope (tpl-pmtr FT-chunk)
                                                   'value_type)
                                            'AtomicType)
@@ -2609,47 +2662,47 @@
                     #true
                     (list 'Pts 'Arg)
                     null
-                    (bs-Initial (list (typedef (tpl-use NSCC (scope 'Pts 'length))
-                                               'Coefs)
-                                      (typedef (tpl-pmtr (scope 'Pts (tpl-fcn-use 'ConstructExpr 'Arg FT-chunk)))
-                                               'ConstructExpr)
-                                      (typedef (tpl-pmtr (scope 'ConstructExpr
-                                                                'Result))
-                                               'ArgSeqWalkType)
-                                      (gpu-only (smt-list-chunk new-line-chunk
-                                                                (typedef (tpl-pmtr (scope 'Pts (tpl-fcn-use 'ConstructGPUExpr 'Arg FT-chunk)))
-                                                                         'ConstructGPUExpr)
-                                                                (typedef (tpl-pmtr (scope 'ConstructGPUExpr 'Result))
-                                                                         'ArgGPUWalkType)))
-                                      (typedef (tpl-pmtr (scope 'Pts (tpl-fcn-use 'ConstructReductionExpr 'Arg FT-chunk)))
-                                               'ConstructReductionExpr)
-                                      (typedef (tpl-pmtr (scope 'ConstructReductionExpr 'Result))
-                                               'ArgReductionType))
-                                (list (list 'Pts 'ArgSeqWalkType)
-                                      (list 'Pts (tpl-pmtr (scope 'Arg 'ResizePrepType)))
-                                      (list 'Pts 'ArgGPUWalkType)
-                                      (list 'Pts 'ArgReductionType))
-                                (tpl-pmtr (scope (scope 'Pts (tpl-fcn-use 'PossibleGhost (tpl-pmtr (scope 'Arg report-VG-chunk))))
-                                                 'Result))
-                                (bm-constructor (list (adcr 'Arg 'a)
-                                                      (adcr 'Coefs 'coefs))
-                                                (list (cons-asgn 'arg_ 'a)
-                                                      (cons-asgn 'coefs_ 'coefs))
-                                                null)
-                                (fc (scope 'ConstructExpr (tpl-fcn-use 'in_sq_construct VG-chunk SH-chunk))
-                                    'arg_
-                                    'coefs_)
-                                (list (mfc 'arg_ (tpl-fcn-use 'resize_prep VG-chunk))
-                                      'coefs_)
-                                (fc (scope 'ConstructGPUExpr (tpl-fcn-use 'in_gpu_construct VG-chunk SH-chunk))
-                                    'arg_
-                                    'coefs_)
-                                (fc (scope 'ConstructExpr (tpl-fcn-use 'in_reduce_construct VG-chunk SH-chunk))
-                                    'arg_
-                                    'coefs_)
-                                null
-                                (list (adc 'Arg 'arg_)
-                                      (adc 'Coefs 'coefs_)))
+                    (bs-Initial-rhs (list (typedef (tpl-use NSCC (scope 'Pts 'length))
+                                                   'Coefs)
+                                          (typedef (tpl-pmtr (scope 'Pts (tpl-fcn-use 'ConstructExpr 'Arg FT-chunk)))
+                                                   'ConstructExpr)
+                                          (typedef (tpl-pmtr (scope 'ConstructExpr
+                                                                    'Result))
+                                                   'ArgSeqWalkType)
+                                          (gpu-only (smt-list-chunk new-line-chunk
+                                                                    (typedef (tpl-pmtr (scope 'Pts (tpl-fcn-use 'ConstructGPUExpr 'Arg FT-chunk)))
+                                                                             'ConstructGPUExpr)
+                                                                    (typedef (tpl-pmtr (scope 'ConstructGPUExpr 'Result))
+                                                                             'ArgGPUWalkType)))
+                                          (typedef (tpl-pmtr (scope 'Pts (tpl-fcn-use 'ConstructReductionExpr 'Arg FT-chunk)))
+                                                   'ConstructReductionExpr)
+                                          (typedef (tpl-pmtr (scope 'ConstructReductionExpr 'Result))
+                                                   'ArgReductionType))
+                                    (list (list 'Pts 'ArgSeqWalkType)
+                                          (list 'Pts (tpl-pmtr (scope 'Arg 'ResizePrepType)))
+                                          (list 'Pts 'ArgGPUWalkType)
+                                          (list 'Pts 'ArgReductionType))
+                                    (tpl-pmtr (scope (scope 'Pts (tpl-fcn-use 'PossibleGhost (tpl-pmtr (scope 'Arg report-VG-chunk))))
+                                                     'Result))
+                                    (bm-constructor (list (adcr 'Arg 'a)
+                                                          (adcr 'Coefs 'coefs))
+                                                    (list (cons-asgn 'arg_ 'a)
+                                                          (cons-asgn 'coefs_ 'coefs))
+                                                    null)
+                                    (fc (scope 'ConstructExpr (tpl-fcn-use 'in_sq_construct VG-chunk SH-chunk))
+                                        'arg_
+                                        'coefs_)
+                                    (list (mfc 'arg_ (tpl-fcn-use 'resize_prep VG-chunk))
+                                          'coefs_)
+                                    (fc (scope 'ConstructGPUExpr (tpl-fcn-use 'in_gpu_construct VG-chunk SH-chunk))
+                                        'arg_
+                                        'coefs_)
+                                    (fc (scope 'ConstructExpr (tpl-fcn-use 'in_reduce_construct VG-chunk SH-chunk))
+                                        'arg_
+                                        'coefs_)
+                                    null
+                                    (list (adc 'Arg 'arg_)
+                                          (adc 'Coefs 'coefs_)))
                     (bs-ResizePrep (typedef (tpl-use NSCC (scope 'Pts 'length))
                                             'Coefs)
                                    (list 'Pts (tpl-pmtr (scope 'Arg 'ResizeType)))
@@ -2693,15 +2746,15 @@
                                     (mfc 'arg_ 'eval)
                                     null
                                     (ad 'Arg 'arg_))
-                    (bs-GPU-const null
-                                  (bm-constructor (adcr 'Arg 'a)
-                                                  (cons-asgn 'arg_ 'a)
-                                                  null)
-                                  (mfc 'arg_ 'start 'x 'y)
-                                  (mfc 'arg_ 'next)
-                                  (mfc 'arg_ 'eval)
-                                  null
-                                  (ad 'Arg 'arg_))
+                    (bs-GPU-rhs null
+                                (bm-constructor (adcr 'Arg 'a)
+                                                (cons-asgn 'arg_ 'a)
+                                                null)
+                                (mfc 'arg_ 'start 'x 'y)
+                                (mfc 'arg_ 'next)
+                                (mfc 'arg_ 'eval)
+                                null
+                                (ad 'Arg 'arg_))
                     (bs-Reduction (typedef (scope (tpl-pmtr FT-chunk)
                                                   'value_type)
                                            'AtomicType)
