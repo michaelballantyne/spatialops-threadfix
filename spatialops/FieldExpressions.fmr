@@ -29,7 +29,10 @@
        [p paren-list-chunk]
        [m macro-define-chunk]
        [s space-chunk]
+       [cs (lambda chunks (c chunks s))]
+       [scs (lambda chunks (c s chunks s))]
        [bs (lambda chunks (apply b s chunks))]
+       [bl-smts (lambda chunks (smt-list-chunk blank-line-chunk chunks))]
        [typedef typedef-smt-chunk]
        [fc function-call-chunk]
        [mfc member-function-call-chunk]
@@ -75,7 +78,7 @@
        [n* (lambda (lhs . rhs) (op-asgn '* lhs rhs))]
        [n/ (lambda (lhs . rhs) (op-asgn '/ lhs rhs))]
        [n% (lambda (lhs . rhs) (op-asgn '% lhs rhs))]
-       [n++ (lambda (chunk) (c chunk '++))]
+       [n++ (lambda (chunk) (l chunk '++))]
        [tc (lambda chunks (bs chunks const-chunk))]
        [ref (lambda chunks (bs chunks '&))]
        [cref (lambda chunks (ref (tc chunks)))]
@@ -135,48 +138,56 @@
                 " */")
              blank-line-chunk
              (pp-header-file-chunk file-name file-setup chunks)))]
-       [bm-constructor (lambda (parameters assignments body)
-                         (lambda (name) (constructor-chunk name parameters assignments body)))]
-       [type-trans (lambda (new-type)
-                     (lambda (old-type) (tpl-pmtr (scope old-type new-type))))]
-       [arg-swap (lambda (proc num1 num2 report)
-                   (lambda args1 (if (not (= num1 (length args1)))
-                                     (error (string-append report ": first set of arguments does not match expected number"))
-                                     (lambda args2 (if (not (= num2 (length args2)))
-                                                       (error (string-append report ": second set of arguments does not match expected number"))
-                                                       (apply proc (append args2 args1)))))))]
-       [combine-args (lambda (final-proc combine-procs numbers report)
-                       (let* ([combine-procs-lst (if (list? combine-procs)
-                                                     combine-procs
-                                                     (list combine-procs))]
-                              [combine-procs-count (length combine-procs-lst)]
-                              [combine-count (- (length numbers) 2)]
-                              [skip-num (first numbers)]
-                              [combine-nums (take (rest numbers) combine-count)]
-                              [final-num (last numbers)]
-                              [total-num (apply + numbers)])
-                         (if (not (= combine-procs-count combine-count))
-                             (error (string-append report " : number of procedures does not match number of argument counts"))
-                             (lambda args (if (not (= total-num (length args)))
-                                              (error (string-append report " : arguments do not match expected number"))
-                                              (let* ([first-args (take args skip-num)]
-                                                     [combine-args (take (drop args skip-num)
-                                                                         (apply + combine-nums))]
-                                                     [last-args (drop args (apply + skip-num combine-nums))]
-                                                     [combine-args-lst (reverse (first (foldl (lambda (count result)
-                                                                                                (let ([answer (first result)]
-                                                                                                      [args (second result)])
-                                                                                                  (list (cons (take args count)
-                                                                                                              answer)
-                                                                                                        (drop args count))))
-                                                                                              (list null combine-args)
-                                                                                              combine-nums)))]
-                                                     [combine-results (map (lambda (proc args) (apply proc args))
-                                                                           combine-procs-lst
-                                                                           combine-args-lst)])
-                                                (apply final-proc (append first-args
-                                                                          combine-results
-                                                                          last-args))))))))]
+       [type-trans
+        (lambda (new-type)
+          (lambda (old-type) (tpl-pmtr (scope old-type new-type))))]
+       [arg-swap
+        (lambda (proc num1 num2 report)
+          (lambda args1 (if (not (= num1 (length args1)))
+                            (error (string-append report ": first set of arguments does not match expected number"))
+                            (lambda args2 (if (not (= num2 (length args2)))
+                                              (error (string-append report ": second set of arguments does not match expected number"))
+                                              (apply proc (append args2 args1)))))))]
+       [bm-constructor (arg-swap constructor-chunk 3 1 "bm-constructor")]
+       [combine-args
+        (lambda (final-proc combine-procs numbers report)
+          (let* ([combine-procs-lst (if (list? combine-procs)
+                                        combine-procs
+                                        (list combine-procs))]
+                 [combine-procs-count (length combine-procs-lst)]
+                 [combine-count (- (length numbers) 2)]
+                 [skip-num (first numbers)]
+                 [combine-nums (take (rest numbers) combine-count)]
+                 [final-num (last numbers)]
+                 [total-num (apply + numbers)])
+            (if (not (= combine-procs-count combine-count))
+                (error (string-append report " : number of procedures does not match number of argument counts"))
+                (lambda args (if (not (= total-num (length args)))
+                                 (error (string-append report " : arguments do not match expected number"))
+                                 (let* ([first-args (take args skip-num)]
+                                        [combine-args (take (drop args skip-num)
+                                                            (apply + combine-nums))]
+                                        [last-args (drop args (apply + skip-num combine-nums))]
+                                        [combine-args-lst (reverse (first (foldl (lambda (count result)
+                                                                                   (let ([answer (first result)]
+                                                                                         [args (second result)])
+                                                                                     (list (cons (take args count)
+                                                                                                 answer)
+                                                                                           (drop args count))))
+                                                                                 (list null combine-args)
+                                                                                 combine-nums)))]
+                                        [combine-results (map (lambda (proc args) (apply proc args))
+                                                              combine-procs-lst
+                                                              combine-args-lst)])
+                                   (apply final-proc (append first-args
+                                                             combine-results
+                                                             last-args))))))))]
+       [map*
+        (lambda (proc . lsts)
+          (apply map proc (map (lambda (lst) (if (list? lst)
+                                                 (flatten* lst)
+                                                 (list lst)))
+                               lsts)))]
        [build-mode
         (lambda (name
                  mode
@@ -210,7 +221,9 @@
           (let ([SW-tpl-irreg-args (if (null? tpl-irreg-args) null (first tpl-irreg-args))]
                 [RP-tpl-irreg-args (if (null? tpl-irreg-args) null (second tpl-irreg-args))]
                 [GPU-tpl-irreg-args (if (null? tpl-irreg-args) null (third tpl-irreg-args))]
-                [RD-tpl-irreg-args (if (null? tpl-irreg-args) null (fourth tpl-irreg-args))])
+                [RD-tpl-irreg-args (if (null? tpl-irreg-args) null (fourth tpl-irreg-args))]
+                [tpl-reg-args (lambda (type) (map* (type-trans type)
+                                                   tpl-reg-pars))])
             (build-mode name
                         'Initial
                         (list tpl-irreg-pars tpl-reg-pars)
@@ -218,29 +231,25 @@
                               (typedef (tpl-use name
                                                 'SeqWalk
                                                 SW-tpl-irreg-args
-                                                (map (type-trans 'SeqWalkType)
-                                                     (flatten* tpl-reg-pars))
+                                                (tpl-reg-args 'SeqWalkType)
                                                 FT-chunk)
                                        'SeqWalkType)
                               (typedef (tpl-use name
                                                 'ResizePrep
                                                 RP-tpl-irreg-args
-                                                (map (type-trans 'ResizePrepType)
-                                                     (flatten* tpl-reg-pars))
+                                                (tpl-reg-args 'ResizePrepType)
                                                 FT-chunk)
                                        'ResizePrepType)
                               (gpu-only (typedef (tpl-use name
                                                           'GPUWalk
                                                           GPU-tpl-irreg-args
-                                                          (map (type-trans 'GPUWalkType)
-                                                               (flatten* tpl-reg-pars))
+                                                          (tpl-reg-args 'GPUWalkType)
                                                           FT-chunk)
                                                  'GPUWalkType))
                               (typedef (tpl-use name
                                                 'Reduction
                                                 RD-tpl-irreg-args
-                                                (map (type-trans 'ReductionType)
-                                                     (flatten* tpl-reg-pars))
+                                                (tpl-reg-args 'ReductionType)
                                                 FT-chunk)
                                        'ReductionType)
                               (typedef VG-type report-VG-chunk))
@@ -258,7 +267,7 @@
                                                          (r-fcn-def (constize (fcn-dcl 'init 'SeqWalkType))
                                                                     null
                                                                     (fc 'SeqWalkType SW-cons-args)))
-                                                (tpl-def (list (tpl-pmtr VG-chunk))
+                                                (tpl-def (tpl-pmtr VG-chunk)
                                                          (r-fcn-def (constize (fcn-dcl 'resize_prep 'ResizePrepType))
                                                                     null
                                                                     (fc 'ResizePrepType RP-cons-args)))
@@ -287,7 +296,7 @@
                                                          (r-fcn-def (fcn-dcl 'init 'SeqWalkType)
                                                                     null
                                                                     (fc 'SeqWalkType SW-cons-args)))
-                                                (tpl-def (list (tpl-pmtr VG-chunk))
+                                                (tpl-def (tpl-pmtr VG-chunk)
                                                          (r-fcn-def (fcn-dcl 'resize_prep 'ResizePrepType)
                                                                     null
                                                                     (fc 'ResizePrepType RP-cons-args)))
@@ -323,8 +332,8 @@
                             (typedef (tpl-use name
                                               'Resize
                                               tpl-irreg-args
-                                              (map (type-trans 'ResizeType)
-                                                   (flatten* tpl-reg-pars))
+                                              (map* (type-trans 'ResizeType)
+                                                    tpl-reg-pars)
                                               FT-chunk)
                                      'ResizeType))
                       constructor
@@ -355,8 +364,8 @@
                               (typedef (tpl-use name
                                                 'SeqWalk
                                                 tpl-irreg-args
-                                                (map (type-trans 'SeqWalkType)
-                                                     (flatten* tpl-reg-pars))
+                                                (map* (type-trans 'SeqWalkType)
+                                                      tpl-reg-pars)
                                                 FT-chunk)
                                        'SeqWalkType))
                         constructor
@@ -514,10 +523,10 @@
           (let* ([num-lst (if (>= 1 number)
                                '("")
                                (map number->string (sequence->list (in-range 1 (+ 1 number)))))]
-                 [IN-op-lst (map (lambda (str) (c 'op str)) num-lst)]
-                 [op-lst (map (lambda (str) (c 'operand str)) num-lst)]
-                 [Op-lst (map (lambda (str) (c 'Operand str)) num-lst)]
-                 [op_-lst (map (lambda (op) (c op '_)) op-lst)]
+                 [IN-op-lst (map (lambda (str) (l 'op str)) num-lst)]
+                 [op-lst (map (lambda (str) (l 'operand str)) num-lst)]
+                 [Op-lst (map (lambda (str) (l 'Operand str)) num-lst)]
+                 [op_-lst (map (lambda (op) (l op '_)) op-lst)]
                  [mapper (lambda (proc . lsts) (apply map proc lsts))]
                  [IN-typedef (lambda (type)
                                (lambda (Op) (tpl-pmtr (scope Op type))))]
@@ -547,70 +556,69 @@
                                                    op_-lst)))]
                  [exec-check (lambda (fcn)
                                (par (exec-fcn empty-chunk
-                                              (c s "||" s)
+                                              (scs "||")
                                               fcn)))]
                  [exec-data-mems (mapper (lambda (Op op_) (bs Op op_))
                                          Op-lst
                                          op_-lst)])
-            (list
-             (build-struct name
-                           #true
-                           null
-                           Op-lst
-                           (bs-Initial-rhs null
-                                           null
-                                           (build-VG (mapper (lambda (Op) (tpl-pmtr (scope Op report-VG-chunk)))
-                                                             Op-lst))
-                                           gen-constructor
-                                           (mapper (lambda (op_) (mfc op_ (tpl-fcn-use 'init VG-chunk SH-chunk)))
-                                                   op_-lst)
-                                           (mapper (lambda (op_) (mfc op_ (tpl-fcn-use 'resize_prep VG-chunk)))
-                                                   op_-lst)
-                                           (mapper (lambda (op_) (mfc op_ (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)))
-                                                   op_-lst)
-                                           (mapper (lambda (op_) (mfc op_ (tpl-fcn-use 'reduce_init VG-chunk SH-chunk)))
-                                                   op_-lst)
-                                           null
-                                           gen-data-mems)
-                           (bs-ResizePrep null
+            (build-struct name
+                          #true
+                          null
+                          Op-lst
+                          (bs-Initial-rhs null
                                           null
+                                          (build-VG (mapper (lambda (Op) (tpl-pmtr (scope Op report-VG-chunk)))
+                                                            Op-lst))
                                           gen-constructor
-                                          (mapper (lambda (op_) (mfc op_ 'resize 'split 'location))
+                                          (mapper (lambda (op_) (mfc op_ (tpl-fcn-use 'init VG-chunk SH-chunk)))
+                                                  op_-lst)
+                                          (mapper (lambda (op_) (mfc op_ (tpl-fcn-use 'resize_prep VG-chunk)))
+                                                  op_-lst)
+                                          (mapper (lambda (op_) (mfc op_ (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)))
+                                                  op_-lst)
+                                          (mapper (lambda (op_) (mfc op_ (tpl-fcn-use 'reduce_init VG-chunk SH-chunk)))
                                                   op_-lst)
                                           null
                                           gen-data-mems)
-                           (bs-Resize null
-                                      null
-                                      gen-constructor
-                                      (mapper (lambda (op_) (mfc op_ (tpl-fcn-use 'init SH-chunk)))
-                                              op_-lst)
-                                      null
-                                      gen-data-mems)
-                           (bs-SeqWalk-rhs (typedef eval-return-type 'EvalReturnType)
-                                           gen-constructor
-                                           (exec-fcn semi-colon-chunk s 'next)
-                                           'EvalReturnType
-                                           internal-use
-                                           null
-                                           exec-data-mems)
-                           (bs-GPU-rhs null
-                                       gen-constructor
-                                       (mapper (lambda (op_) (mfc op_ 'start 'x 'y))
-                                               op_-lst)
-                                       (mapper (lambda (op_) (mfc op_ 'next))
-                                               op_-lst)
-                                       internal-use
-                                       null
-                                       exec-data-mems)
-                           (bs-Reduction (typedef eval-return-type 'EvalReturnType)
-                                         gen-constructor
-                                         (exec-fcn semi-colon-chunk s 'next)
-                                         (exec-check 'at_end)
-                                         (exec-check 'has_length)
-                                         'EvalReturnType
-                                         internal-use
+                          (bs-ResizePrep null
                                          null
-                                         exec-data-mems)))))]
+                                         gen-constructor
+                                         (mapper (lambda (op_) (mfc op_ 'resize 'split 'location))
+                                                 op_-lst)
+                                         null
+                                         gen-data-mems)
+                          (bs-Resize null
+                                     null
+                                     gen-constructor
+                                     (mapper (lambda (op_) (mfc op_ (tpl-fcn-use 'init SH-chunk)))
+                                             op_-lst)
+                                     null
+                                     gen-data-mems)
+                          (bs-SeqWalk-rhs (typedef eval-return-type 'EvalReturnType)
+                                          gen-constructor
+                                          (exec-fcn semi-colon-chunk s 'next)
+                                          'EvalReturnType
+                                          internal-use
+                                          null
+                                          exec-data-mems)
+                          (bs-GPU-rhs null
+                                      gen-constructor
+                                      (mapper (lambda (op_) (mfc op_ 'start 'x 'y))
+                                              op_-lst)
+                                      (mapper (lambda (op_) (mfc op_ 'next))
+                                              op_-lst)
+                                      internal-use
+                                      null
+                                      exec-data-mems)
+                          (bs-Reduction (typedef eval-return-type 'EvalReturnType)
+                                        gen-constructor
+                                        (exec-fcn semi-colon-chunk s 'next)
+                                        (exec-check 'at_end)
+                                        (exec-check 'has_length)
+                                        'EvalReturnType
+                                        internal-use
+                                        null
+                                        exec-data-mems))))]
        [build-binary-function-struct
         (lambda (name internal-name)
           (build-Nary-struct name
@@ -687,7 +695,7 @@
                                 [input-type (tpl-use NE-chunk type FT-chunk)]
                                 [arg (l 'arg num)])
                            (list 'SubExpr
-                                 (tpl-pmtr type)
+                                 type
                                  type
                                  type
                                  (adcr input-type arg)
@@ -706,7 +714,7 @@
                                     [input-type (tpl-use NBE-chunk type FT-chunk)]
                                     [arg (l 'arg num)])
                                (list 'SubBoolExpr
-                                     (tpl-pmtr type)
+                                     type
                                      type
                                      type
                                      (adcr input-type arg)
@@ -729,8 +737,8 @@
                  [return-tpl-arg-lst (map fourth arg-info-lst)]
                  [parameter-lst (map fifth arg-info-lst)]
                  [arg-use-lst (map sixth arg-info-lst)])
-            (d (c (add-between description-lst (c s 'X s)))
-               (tpl-def (list tpl-arg-lst (tpl-pmtr FT-chunk))
+            (d (c (add-between description-lst (scs 'X)))
+               (tpl-def (map tpl-pmtr (flatten* tpl-arg-lst FT-chunk))
                         (r-fcn-def (fcn-dcl external-name
                                             (tpl-use result-term
                                                      (tpl-use name 'Initial result-tpl-arg-lst FT-chunk)
@@ -757,62 +765,53 @@
                                             if-args)]
                  ;This removes Scalar X Scalar or Boolean X Boolean
                  [cross-products (rest (reverse raw-cross-products))])
-            (smt-list-chunk blank-line-chunk
-                            (map (lambda (args) (build-interface-case name
-                                                                      external-name
-                                                                      expression-term
-                                                                      args))
-                                 cross-products))))]
+            (bl-smts (map (lambda (args) (build-interface-case name
+                                                               external-name
+                                                               expression-term
+                                                               args))
+                          cross-products))))]
        [build-unary-interface
         (lambda (name
                  external-name
                  expression-term
                  if-args)
-          (smt-list-chunk blank-line-chunk
-                          (map (lambda (arg) (build-interface-case name
-                                                                   external-name
-                                                                   expression-term
-                                                                   (list arg)))
-                               if-args)))]
+          (bl-smts (map (lambda (arg) (build-interface-case name
+                                                            external-name
+                                                            expression-term
+                                                            (list arg)))
+                        if-args)))]
        [binary-expr-arg-lst (list if-arg-Scalar if-arg-Field if-arg-SubExpr)]
        [unary-expr-arg-lst (list if-arg-Field if-arg-SubExpr)]
        [binary-logical-expr-arg-lst (list if-arg-Boolean if-arg-SubBoolExpr)]
        [unary-logical-expr-arg-lst (list if-arg-SubBoolExpr)]
        [build-binary-function
         (lambda (name internal-name external-name)
-          (smt-list-chunk blank-line-chunk
-                          (build-binary-function-struct name internal-name)
-                          (build-binary-interface name external-name NE-chunk binary-expr-arg-lst)))]
+          (bl-smts (build-binary-function-struct name internal-name)
+                   (build-binary-interface name external-name NE-chunk binary-expr-arg-lst)))]
        [build-binary-operator
         (lambda (name internal-name external-name)
-          (smt-list-chunk blank-line-chunk
-                          (build-binary-operator-struct name internal-name)
-                          (build-binary-interface name external-name NE-chunk binary-expr-arg-lst)))]
+          (bl-smts (build-binary-operator-struct name internal-name)
+                   (build-binary-interface name external-name NE-chunk binary-expr-arg-lst)))]
        [build-unary-function
         (lambda (name internal-name external-name)
-          (smt-list-chunk blank-line-chunk
-                          (build-unary-function-struct name internal-name)
-                          (build-unary-interface name external-name NE-chunk unary-expr-arg-lst)))]
+          (bl-smts (build-unary-function-struct name internal-name)
+                   (build-unary-interface name external-name NE-chunk unary-expr-arg-lst)))]
        [build-comparison-operator
         (lambda (name internal-name external-name)
-          (smt-list-chunk blank-line-chunk
-                          (build-comparison-struct name internal-name)
-                          (build-binary-interface name external-name NBE-chunk binary-expr-arg-lst)))]
+          (bl-smts (build-comparison-struct name internal-name)
+                   (build-binary-interface name external-name NBE-chunk binary-expr-arg-lst)))]
        [build-binary-logical-operator
         (lambda (name internal-name external-name)
-          (smt-list-chunk blank-line-chunk
-                          (build-logical-operator-struct name internal-name)
-                          (build-binary-interface name external-name NBE-chunk binary-logical-expr-arg-lst)))]
+          (bl-smts (build-logical-operator-struct name internal-name)
+                   (build-binary-interface name external-name NBE-chunk binary-logical-expr-arg-lst)))]
        [build-unary-logical-function
         (lambda (name internal-name external-name)
-          (smt-list-chunk blank-line-chunk
-                          (build-unary-logical-function-struct name internal-name)
-                          (build-unary-interface name external-name NBE-chunk unary-logical-expr-arg-lst)))]
+          (bl-smts (build-unary-logical-function-struct name internal-name)
+                   (build-unary-interface name external-name NBE-chunk unary-logical-expr-arg-lst)))]
        [build-unary-to-logical-function
         (lambda (name internal-name external-name)
-          (smt-list-chunk blank-line-chunk
-                          (build-unary-logical-function-struct name internal-name)
-                          (build-unary-interface name external-name NBE-chunk unary-expr-arg-lst)))]
+          (bl-smts (build-unary-logical-function-struct name internal-name)
+                   (build-unary-interface name external-name NBE-chunk unary-expr-arg-lst)))]
        )
   ; beginnning of file
   (pp-header-file-chunk-with-license
@@ -1079,7 +1078,7 @@
                                                     null)
                                     (n++ 'iter_)
                                     'AtomicType
-                                    (c '* 'iter_)
+                                    (l '* 'iter_)
                                     null
                                     (ad (tpl-pmtr (scope FT-chunk 'const_iterator))
                                         'iter_))
@@ -1113,7 +1112,7 @@
                                  null)
                                 (n+= 'current_ (n+ 'x (n* 'y 'xLength_)))
                                 (n+= 'current_ 'step_)
-                                (c '* 'current_)
+                                (l '* 'current_)
                                 null
                                 (list (adcp 'AtomicType 'current_)
                                       (adc 'int 'xLength_)
@@ -1129,7 +1128,7 @@
                                   (n== 'iter_ 'end_)
                                   'true
                                   'AtomicType
-                                  (c '* 'iter_)
+                                  (l '* 'iter_)
                                   null
                                   (list (ad (tpl-pmtr (scope FT-chunk 'const_iterator))
                                             'iter_)
@@ -1185,7 +1184,7 @@
                                     (n++ 'iter_)
                                     (n== 'iter_ 'end_)
                                     'true
-                                    (c '* 'iter_)
+                                    (l '* 'iter_)
                                     null
                                     (list (ad (tpl-pmtr (scope FT-chunk 'iterator))
                                               'iter_)
@@ -1239,7 +1238,7 @@
                                        (n++ 'location_))
                                  'valid_
                                  (n>= 'location_ 'zExtent_)
-                                 (c '* 'current_)
+                                 (l '* 'current_)
                                  null
                                  (list (adp 'AtomicType 'current_)
                                        (ad 'int 'location_)
@@ -1260,7 +1259,7 @@
                                   (n== 'iter_ 'end_)
                                   'true
                                   (ref 'AtomicType)
-                                  (c '* 'iter_)
+                                  (l '* 'iter_)
                                   null
                                   (list (ad (tpl-pmtr (scope FT-chunk 'iterator))
                                             'iter_)
@@ -1802,10 +1801,7 @@
                        construct-asgns
                        public)
                 (tpl-srt-def 'CondBuilder
-                             (let ([tpl-pmtrs (flatten* tpl-pmtrs)])
-                               (cond [(null? tpl-pmtrs) null]
-                                     [(pair? tpl-pmtrs) (map tpl-pmtr tpl-pmtrs)]
-                                     [else (tpl-pmtr tpl-pmtrs)]))
+                             (map* tpl-pmtr tpl-pmtrs)
                              tpl-arg
                              (sec-def 'public
                                       (typedef tpl-arg
@@ -1871,7 +1867,7 @@
                        clause-expr
                        clauses-expr)
                 (r-fcn-def (fcn-dcl name
-                                    (tpl-use 'CondBuilder (c return-type s))
+                                    (tpl-use 'CondBuilder (cs return-type))
                                     (list (adc 'bool 'b)
                                           (adc 'double 'd)))
                            (list internals
@@ -1890,16 +1886,15 @@
                        clauses-expr)
                 (tpl-FT-def-proc FT-defined?
                                  (r-fcn-def (fcn-dcl name
-                                                     (tpl-use 'CondBuilder (c (tpl-use Cond-chunk
-                                                                                       'Initial
-                                                                                       (tpl-use Clause-chunk
-                                                                                                'Initial
-                                                                                                (tpl-use NB-chunk 'Initial FT-chunk)
-                                                                                                (tpl-use NCF-chunk 'Initial (FT-arg FT-defined?))
-                                                                                                FT-chunk)
-                                                                                       clauses-type
-                                                                                       FT-chunk)
-                                                                              s))
+                                                     (tpl-use 'CondBuilder (cs (tpl-use Cond-chunk
+                                                                                        'Initial
+                                                                                        (tpl-use Clause-chunk
+                                                                                                 'Initial
+                                                                                                 (tpl-use NB-chunk 'Initial FT-chunk)
+                                                                                                 (tpl-use NCF-chunk 'Initial (FT-arg FT-defined?))
+                                                                                                 FT-chunk)
+                                                                                        clauses-type
+                                                                                        FT-chunk)))
                                                      (list (adc 'bool 'b)
                                                            (adcr FT-chunk 'f)))
                                             (list (typedef (tpl-use NB-chunk 'Initial FT-chunk)
@@ -1927,16 +1922,15 @@
                 (tpl-def (list (tpl-pmtr 'Expr)
                                (if FT-defined? null (tpl-pmtr FT-chunk)))
                          (r-fcn-def (fcn-dcl name
-                                             (tpl-use 'CondBuilder (c (tpl-use Cond-chunk
-                                                                               'Initial
-                                                                               (tpl-use Clause-chunk
-                                                                                        'Initial
-                                                                                        (tpl-use NB-chunk 'Initial FT-chunk)
-                                                                                        'Expr
-                                                                                        FT-chunk)
-                                                                               clauses-type
-                                                                               FT-chunk)
-                                                                      s))
+                                             (tpl-use 'CondBuilder (cs (tpl-use Cond-chunk
+                                                                                'Initial
+                                                                                (tpl-use Clause-chunk
+                                                                                         'Initial
+                                                                                         (tpl-use NB-chunk 'Initial FT-chunk)
+                                                                                         'Expr
+                                                                                         FT-chunk)
+                                                                                clauses-type
+                                                                                FT-chunk)))
                                              (list (adc 'bool 'b)
                                                    (adcr (tpl-use NE-chunk 'Expr FT-chunk) 'e)))
                                     (list (typedef (tpl-use NB-chunk 'Initial FT-chunk)
@@ -1962,15 +1956,15 @@
                 (tpl-def (list (tpl-pmtr 'BoolExpr)
                                (if FT-defined? null (tpl-pmtr FT-chunk)))
                          (r-fcn-def (fcn-dcl name
-                                             (tpl-use 'CondBuilder (c (tpl-use Cond-chunk
-                                                                               'Initial
-                                                                               (tpl-use Clause-chunk
-                                                                                        'Initial
-                                                                                        'BoolExpr
-                                                                                        (tpl-use NS-chunk 'Initial FT-chunk)
-                                                                                        FT-chunk)
-                                                                               clauses-type
-                                                                               FT-chunk) s))
+                                             (tpl-use 'CondBuilder (cs (tpl-use Cond-chunk
+                                                                                'Initial
+                                                                                (tpl-use Clause-chunk
+                                                                                         'Initial
+                                                                                         'BoolExpr
+                                                                                         (tpl-use NS-chunk 'Initial FT-chunk)
+                                                                                         FT-chunk)
+                                                                                clauses-type
+                                                                                FT-chunk)))
                                              (list (adcr (tpl-use NBE-chunk 'BoolExpr FT-chunk) 'nb)
                                                    (adc 'double 'd)))
                                     (list (typedef (tpl-use NS-chunk 'Initial FT-chunk)
@@ -1996,16 +1990,15 @@
                 (tpl-def (list (tpl-pmtr 'BoolExpr)
                                (if FT-defined? null (tpl-pmtr FT-chunk)))
                          (r-fcn-def (fcn-dcl name
-                                             (tpl-use 'CondBuilder (c (tpl-use Cond-chunk
-                                                                               'Initial
-                                                                               (tpl-use Clause-chunk
-                                                                                        'Initial
-                                                                                        'BoolExpr
-                                                                                        (tpl-use NCF-chunk 'Initial (FT-arg FT-defined?))
-                                                                                        FT-chunk)
-                                                                               clauses-type
-                                                                               FT-chunk)
-                                                                      s))
+                                             (tpl-use 'CondBuilder (cs (tpl-use Cond-chunk
+                                                                                'Initial
+                                                                                (tpl-use Clause-chunk
+                                                                                         'Initial
+                                                                                         'BoolExpr
+                                                                                         (tpl-use NCF-chunk 'Initial (FT-arg FT-defined?))
+                                                                                         FT-chunk)
+                                                                                clauses-type
+                                                                                FT-chunk)))
                                              (list (adcr (tpl-use NBE-chunk 'BoolExpr FT-chunk) 'nb)
                                                    (adcr FT-chunk 'f)))
                                     (list (typedef (tpl-use NCF-chunk 'Initial FT-chunk)
@@ -2032,12 +2025,11 @@
                                (tpl-pmtr 'Expr)
                                (if FT-defined? null (tpl-pmtr FT-chunk)))
                          (r-fcn-def (fcn-dcl name
-                                             (tpl-use 'CondBuilder (c (tpl-use Cond-chunk
-                                                                               'Initial
-                                                                               (tpl-use Clause-chunk 'Initial 'BoolExpr 'Expr FT-chunk)
-                                                                               clauses-type
-                                                                               FT-chunk)
-                                                                      s))
+                                             (tpl-use 'CondBuilder (cs (tpl-use Cond-chunk
+                                                                                'Initial
+                                                                                (tpl-use Clause-chunk 'Initial 'BoolExpr 'Expr FT-chunk)
+                                                                                clauses-type
+                                                                                FT-chunk)))
                                              (list (adcr (tpl-use NBE-chunk 'BoolExpr FT-chunk) 'nb)
                                                    (adcr (tpl-use NE-chunk 'Expr FT-chunk) 'e)))
                                     (list (typedef (tpl-use Clause-chunk 'Initial 'BoolExpr 'Expr FT-chunk)
@@ -2081,7 +2073,7 @@
                                  (tpl-use Cond-chunk 'Initial 'Next 'Following 'Field)
                                  (tpl-use Cond-chunk 'Initial 'Next 'PreceedingResult 'Field)
                                  (list CT-chunk 'Otherwise FT-chunk)
-                                 (c (tpl-use Cond-chunk 'Initial CT-chunk 'Otherwise FT-chunk) s)
+                                 (cs (tpl-use Cond-chunk 'Initial CT-chunk 'Otherwise FT-chunk))
                                  (adc 'Clauses 'clauses_)
                                  (adcr (tpl-use Cond-chunk 'Initial CT-chunk 'Otherwise FT-chunk) 'cs)
                                  (cons-asgn 'clauses_ 'cs)
@@ -2089,17 +2081,16 @@
                                                  #true
                                                  (bcev (tpl-use NE-chunk
                                                                 (tpl-pmtr (scope (tpl-use 'ReverseClauses
-                                                                                          (c (tpl-use NS-chunk 'Initial FT-chunk) s))
+                                                                                          (cs (tpl-use NS-chunk 'Initial FT-chunk)))
                                                                                  'Result))
                                                                 FT-chunk)
                                                        (fc (tpl-use NE-chunk (tpl-pmtr (scope (tpl-use 'ReverseClauses
-                                                                                                       (c (tpl-use NS-chunk 'Initial FT-chunk) s))
+                                                                                                       (cs (tpl-use NS-chunk 'Initial FT-chunk)))
                                                                                               'Result))
                                                                     FT-chunk)
                                                            (fc 'reverse (fc (tpl-use NS-chunk 'Initial FT-chunk)
                                                                             'd))))
-                                                 (bcef (tpl-pmtr (scope (tpl-use 'ReverseClauses (c (tpl-use NCF-chunk 'Initial FT-chunk)
-                                                                                                 s))
+                                                 (bcef (tpl-pmtr (scope (tpl-use 'ReverseClauses (cs (tpl-use NCF-chunk 'Initial FT-chunk)))
                                                                         'Result))
                                                        (fc (tpl-use NE-chunk
                                                                     (tpl-pmtr (scope (tpl-use 'ReverseClauses 'Field)
@@ -2143,7 +2134,7 @@
                                  (tpl-use SCond-chunk 'Following)
                                  (tpl-use SCond-chunk 'PreceedingResult)
                                  'Otherwise
-                                 (c (tpl-use SCond-chunk 'Otherwise) s)
+                                 (cs (tpl-use SCond-chunk 'Otherwise))
                                  (adc 'Clauses 'clauses_)
                                  (adcr (tpl-use SCond-chunk 'Otherwise) 'cs)
                                  (cons-asgn 'clauses_ 'cs)
@@ -2153,8 +2144,7 @@
                                                                     'eval))
                                                  (bcef (tpl-pmtr (scope (scope (tpl-use 'CondBuilder (tpl-pmtr (scope (scope 'Clauses (tpl-fcn-use 'Convert FT-chunk))
                                                                                                                       'Converted)))
-                                                                               (tpl-fcn-use 'ReverseClauses (c (tpl-use NCF-chunk 'Initial (FT-arg #false))
-                                                                                                            s)))
+                                                                               (tpl-fcn-use 'ReverseClauses (cs (tpl-use NCF-chunk 'Initial (FT-arg #false)))))
                                                                         'Result))
                                                        (fc (fc (tpl-use 'CondBuilder (tpl-pmtr (scope (scope 'Clauses (tpl-fcn-use 'Convert FT-chunk))
                                                                                                       'Converted)))
@@ -2210,7 +2200,7 @@
                               (bcnv Nil-chunk (fc Nil-chunk))
                               (bcnf Nil-chunk (fc Nil-chunk))
                               (bcne Nil-chunk (fc Nil-chunk)))))
-      (m 'nebo_cond null (c 'cond '//))
+      (m 'nebo_cond null (l 'cond '//))
       (build-struct NSP
                     #true
                     'Point
@@ -2841,26 +2831,27 @@
                                                  (map (lambda (sym) (nt= 'int sym "1"))
                                                       (list 'x 'y 'z)))
                                  (b new-line-chunk
-                                    (bs (fc 'if (n<= 'number_of_partitions (c 'extent "[2]")))
+                                    (bs (fc 'if (n<= 'number_of_partitions (l 'extent "[2]")))
                                         (body-chunk (n= 'z 'number_of_partitions)))
                                     (bs 'else
-                                        (fc 'if (n<= 'number_of_partitions (c 'extent "[1]")))
+                                        (fc 'if (n<= 'number_of_partitions (l 'extent "[1]")))
                                         (body-chunk (n= 'y 'number_of_partitions)))
                                     (bs 'else
-                                        (fc 'if (n<= 'number_of_partitions (c 'extent "[0]")))
+                                        (fc 'if (n<= 'number_of_partitions (l 'extent "[0]")))
                                         (body-chunk (n= 'x 'number_of_partitions))))
                                  (nt= IntVec 'split (fc IntVec 'x 'y 'z))
                                  (bs (scope 'BI 'interprocess_semaphore)
                                      (fc 'semaphore "0"))
-                                 (nt= 'int 'max (ter-cond (b (c s '&& s) 
+                                 (nt= 'int 'max (ter-cond (b (scs '&&)
                                                              (map (lambda (sym) (bs sym '== "1"))
                                                                   (list 'x 'y 'z)))
                                                           "1"
                                                           'number_of_partitions))
-                                 (bs (c 'for (par (b (c semi-colon-chunk s)
-                                                     (nt= 'int 'count "0")
-                                                     (n< 'count 'max)
-                                                     (n++ 'count))))
+                                 (bs (fc 'for (bs (c (nt= 'int 'count "0")
+                                                     semi-colon-chunk)
+                                                  (c (n< 'count 'max)
+                                                     semi-colon-chunk)
+                                                  (n++ 'count)))
                                      (body-chunk (let ([option (lambda (arg) (ter-cond (par (n== arg "1"))
                                                                                        "0"
                                                                                        'count))])
@@ -2938,27 +2929,26 @@
                                                             (adcr rhs-type 'rhs))
                                                    body
                                                    return-expr)))])
-                 (smt-list-chunk blank-line-chunk
-                                 (assign name
-                                         null
-                                         (scope (tpl-pmtr FT-chunk)
-                                                'value_type)
-                                         (typedef (tpl-use NS-chunk 'Initial FT-chunk)
-                                                  'ExprType)
-                                         rec-call)
-                                 (assign name
-                                         null
-                                                 FT-chunk
-                                                 (typedef (tpl-use NCF-chunk 'Initial FT-chunk)
-                                                          'ExprType)
-                                                 rec-call)
-                                 (assign name
-                                         (tpl-pmtr 'ExprType)
-                                         (tpl-use NE-chunk 'ExprType FT-chunk)
-                                         null
-                                         (fc (tpl-use 'nebo_assignment_general_execute iterator 'ExprType FT-chunk)
-                                             'lhs
-                                             'rhs)))))])
+                 (bl-smts (assign name
+                                  null
+                                  (scope (tpl-pmtr FT-chunk)
+                                         'value_type)
+                                  (typedef (tpl-use NS-chunk 'Initial FT-chunk)
+                                           'ExprType)
+                                  rec-call)
+                          (assign name
+                                  null
+                                  FT-chunk
+                                  (typedef (tpl-use NCF-chunk 'Initial FT-chunk)
+                                           'ExprType)
+                                  rec-call)
+                          (assign name
+                                  (tpl-pmtr 'ExprType)
+                                  (tpl-use NE-chunk 'ExprType FT-chunk)
+                                  null
+                                  (fc (tpl-use 'nebo_assignment_general_execute iterator 'ExprType FT-chunk)
+                                      'lhs
+                                      'rhs)))))])
         (list (assigns (bs 'operator '<<=)
                        (par 'lhs
                             '<<=
