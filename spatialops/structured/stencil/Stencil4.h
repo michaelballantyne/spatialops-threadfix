@@ -47,6 +47,17 @@ namespace structured{
   template< typename OpT, typename SrcFieldT, typename DestFieldT >
   struct Stencil4
   {
+    template<bool Boolean, typename FirstType, typename SecondType>
+     struct TemplateIf;
+
+    /* true */
+    template<typename TrueResult, typename FalseResult>
+    struct TemplateIf<true, TrueResult, FalseResult> { TrueResult typedef result; };
+
+    /* false */
+    template<typename TrueResult, typename FalseResult>
+    struct TemplateIf<false, TrueResult, FalseResult> { FalseResult typedef result; };
+
     typedef OpT         type;           ///< The operator type (Interpolant, Gradient, Divergence)
     typedef SrcFieldT   SrcFieldType;   ///< The source field type
     typedef DestFieldT  DestFieldType;  ///< The destination field type

@@ -47,32 +47,60 @@
    namespace SpatialOps {
 
       /* Meta-programming compiler flags */
-      struct UseWholeIterator;
-      struct UseInteriorIterator;
+      struct All;
+      struct InteriorOnly;
 
-      template<typename IteratorType, typename FirstType, typename SecondType>
-       struct IteratorStyle;
+      template<typename IteratorType, typename ExprType, typename FieldType>
+       struct CalculateValidGhost;
 
-      /* UseWholeIterator */
-      template<typename FirstType, typename SecondType>
-       struct IteratorStyle<UseWholeIterator, FirstType, SecondType> { FirstType typedef result; };
+      /* All */
+      template<typename ExprType, typename FieldType>
+       struct CalculateValidGhost<All, ExprType, FieldType> {
 
-      /* UseInteriorIterator */
-      template<typename FirstType, typename SecondType>
-       struct IteratorStyle<UseInteriorIterator, FirstType, SecondType> {
-         SecondType typedef result;
+         typename structured::Minimum<typename ExprType::PossibleValidGhost,
+                                      typename structured::GhostFromField<FieldType>::result>::
+         result typedef Result;
       };
 
-      template<bool Boolean, typename FirstType, typename SecondType>
-       struct TemplateIf;
+      /* InteriorOnly */
+      template<typename ExprType, typename FieldType>
+       struct CalculateValidGhost<InteriorOnly, ExprType, FieldType> {
+         typename structured::MinimumGhostFromField<FieldType>::result typedef Result;
+      };
 
-      /* true */
-      template<typename TrueResult, typename FalseResult>
-       struct TemplateIf<true, TrueResult, FalseResult> { TrueResult typedef result; };
+      inline structured::IntVec nebo_find_partition(structured::IntVec const & extent,
+                                                    int const thread_count) {
 
-      /* false */
-      template<typename TrueResult, typename FalseResult>
-       struct TemplateIf<false, TrueResult, FalseResult> { FalseResult typedef result; };
+         int x = 1;
+         int y = 1;
+         int z = 1;
+
+         if(thread_count <= extent[2]) { z = thread_count; }
+         else if(thread_count <= extent[1]) { y = thread_count; }
+         else if(thread_count <= extent[0]) { x = thread_count; };
+
+         return structured::IntVec(x, y, z);
+      };
+
+      inline int nebo_partition_count(structured::IntVec const & split) {
+         return split[0] * split[1] * split[2];
+      };
+
+      inline structured::IntVec nebo_next_partition(structured::IntVec const & current,
+                                                    structured::IntVec const & split) {
+
+         structured::IntVec result;
+
+         if(current[2] < split[2] - 1) {
+            result = structured::IntVec(current[0], current[1], 1 + current[2]);
+         }
+         else if(current[1] < split[1] - 1) {
+            result = structured::IntVec(current[0], 1 + current[1], 0);
+         }
+         else { result = structured::IntVec(1 + current[0], 0, 0); };
+
+         return result;
+      };
 
       template<typename Operand, typename FieldType>
        struct NeboExpression {
@@ -544,16 +572,7 @@
           NeboField(FieldType f)
           : field_(f)
           {};
-          template<typename ValidGhost, typename Shift>
-           inline SeqWalkType init(void) {
-
-              return SeqWalkType(field_.template resize_ghost_and_shift_and_maintain_interior<ValidGhost,
-                                                                                              Shift>());
-           };
-          template<typename ValidGhost>
-           inline ResizePrepType resize_prep(void) {
-              return ResizePrepType(field_.template resize_ghost_and_maintain_interior<ValidGhost>());
-           };
+          structured::IndexTriplet<0, 0, 0> typedef Shift;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) {
@@ -569,8 +588,76 @@
               return ReductionType(field_.template resize_ghost_and_shift_and_maintain_interior<ValidGhost,
                                                                                                 Shift>());
            };
+          template<typename Iterator, typename RhsType>
+           inline void assign(RhsType rhs) {
+
+#             ifdef FIELD_EXPRESSION_THREADS
+                 if(is_thread_parallel()) {
+                    thread_parallel_assign<Iterator, RhsType>(rhs, get_soft_thread_count());
+                 }
+                 else { sequential_assign<Iterator, RhsType>(rhs); }
+#             else
+                 sequential_assign<Iterator, RhsType>(rhs)
+#             endif
+              /* FIELD_EXPRESSION_THREADS */
+              ;
+           };
 
          private:
+          template<typename Iterator, typename RhsType>
+           inline void sequential_assign(RhsType rhs) {
+
+              typename CalculateValidGhost<Iterator, RhsType, FieldType>::Result typedef Ghost;
+
+              init<Ghost, Shift>().assign(rhs.template init<Ghost, Shift>());
+           };
+#         ifdef FIELD_EXPRESSION_THREADS
+             template<typename Iterator, typename RhsType>
+              inline void thread_parallel_assign(RhsType rhs, int const thread_count) {
+
+                 BI::interprocess_semaphore semaphore(0);
+
+                 typename CalculateValidGhost<Iterator, RhsType, FieldType>::Result typedef Ghost;
+
+                 typename RhsType::ResizePrepType typedef RhsResizePrepType;
+
+                 const structured::IntVec split = nebo_find_partition(field_.template resize_ghost<Ghost>().window_with_ghost().extent(),
+                                                                      thread_count);
+
+                 const int max = nebo_partition_count(split);
+
+                 ResizePrepType new_lhs = resize_prep<Ghost>();
+
+                 RhsResizePrepType new_rhs = rhs.template resize_prep<Ghost>();
+
+                 structured::IntVec location = structured::IntVec(0, 0, 0);
+
+                 for(int count = 0; count < max; count++) {
+
+                    ThreadPoolFIFO::self().schedule(boost::bind(&ResizePrepType::template assign<RhsResizePrepType>,
+                                                                new_lhs,
+                                                                new_rhs,
+                                                                split,
+                                                                location,
+                                                                &semaphore));
+
+                    location = nebo_next_partition(location, split);
+                 };
+
+                 for(int ii = 0; ii < max; ii++) { semaphore.wait(); };
+              }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
+          template<typename ValidGhost, typename Shift>
+           inline SeqWalkType init(void) {
+
+              return SeqWalkType(field_.template resize_ghost_and_shift_and_maintain_interior<ValidGhost,
+                                                                                              Shift>());
+           };
+          template<typename ValidGhost>
+           inline ResizePrepType resize_prep(void) {
+              return ResizePrepType(field_.template resize_ghost_and_maintain_interior<ValidGhost>());
+           };
           FieldType field_;
       };
 
@@ -584,6 +671,23 @@
           NeboField(FieldType f)
           : field_(f)
           {};
+          structured::IndexTriplet<0, 0, 0> typedef Shift;
+#         ifdef FIELD_EXPRESSION_THREADS
+             template<typename RhsType>
+              inline void assign(RhsType const & rhs,
+                                 structured::IntVec const & split,
+                                 structured::IntVec const & location,
+                                 BI::interprocess_semaphore * semaphore) {
+
+                 resize(split, location).template init<Shift>().assign(rhs.resize(split, location).template
+                                                                                                   init<Shift>());
+
+                 semaphore->post();
+              }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
+
+         private:
           inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) {
 
@@ -591,8 +695,6 @@
                                          field_.field_values(),
                                          structured::ExternalStorage));
           };
-
-         private:
           FieldType field_;
       };
 
@@ -625,12 +727,16 @@
           NeboField(FieldType f)
           : iter_(f.begin()), end_(f.end())
           {};
+          template<typename RhsType>
+           inline void assign(RhsType rhs) {
+              while(!at_end()) { ref() = rhs.eval(); next(); rhs.next(); };
+           };
+
+         private:
           inline void next(void) { iter_++; };
           inline bool at_end(void) const { return iter_ == end_; };
           inline bool has_length(void) const { return true; };
           inline AtomicType & ref(void) { return *iter_; };
-
-         private:
           typename FieldType::iterator iter_;
           typename FieldType::iterator const end_;
       };
@@ -8356,139 +8462,6 @@
           Arg arg_;
       };
 
-      template<typename LhsType, typename RhsType>
-       inline void nebo_assignment_sequential_execute_internal(LhsType lhs, RhsType rhs) {
-          while(!lhs.at_end()) { lhs.ref() = rhs.eval(); lhs.next(); rhs.next(); };
-       };
-
-      template<typename ValidGhost, typename InitialShift, typename ExprType, typename FieldType>
-       inline FieldType const & nebo_assignment_sequential_execute(FieldType & initial_lhs,
-                                                                   NeboExpression<ExprType,
-                                                                                  FieldType> const &
-                                                                   initial_rhs) {
-
-          nebo_assignment_sequential_execute_internal(NeboField<Initial, FieldType>(initial_lhs).template
-                                                                                                 init<ValidGhost,
-                                                                                                      InitialShift>(),
-                                                      initial_rhs.expr().template init<ValidGhost,
-                                                                                       InitialShift>());
-
-          return initial_lhs;
-       };
-
-#     ifdef FIELD_EXPRESSION_THREADS
-         template<typename InitialShift,
-                  typename ResizeLhsType,
-                  typename ResizeRhsType,
-                  typename FieldType>
-          inline void nebo_assignment_thread_parallel_execute_internal(ResizeLhsType & lhs,
-                                                                       ResizeRhsType const & rhs,
-                                                                       structured::IntVec const &
-                                                                       split,
-                                                                       structured::IntVec const &
-                                                                       location,
-                                                                       BI::interprocess_semaphore *
-                                                                       semaphore) {
-
-             nebo_assignment_sequential_execute_internal(lhs.resize(split, location).template init<InitialShift>(),
-                                                         rhs.resize(split, location).template init<InitialShift>());
-
-             semaphore->post();
-          }
-#     endif
-      /* FIELD_EXPRESSION_THREADS */;
-
-#     ifdef FIELD_EXPRESSION_THREADS
-         template<typename ValidGhost, typename InitialShift, typename ExprType, typename FieldType>
-          inline FieldType const & nebo_assignment_thread_parallel_execute(FieldType & initial_lhs,
-                                                                           NeboExpression<ExprType,
-                                                                                          FieldType>
-                                                                           const & initial_rhs,
-                                                                           int const
-                                                                           number_of_partitions) {
-
-             typename NeboField<Initial, FieldType>::ResizePrepType typedef LhsType;
-
-             typename ExprType::ResizePrepType typedef RhsType;
-
-             typename FieldType::memory_window typedef MemoryWindow;
-
-             structured::IntVec extent = initial_lhs.template resize_ghost<ValidGhost>().window_with_ghost().extent();
-
-             int x = 1;
-             int y = 1;
-             int z = 1;
-
-             if(number_of_partitions <= extent[2]) { z = number_of_partitions; }
-             else if(number_of_partitions <= extent[1]) { y = number_of_partitions; }
-             else if(number_of_partitions <= extent[0]) { x = number_of_partitions; };
-
-             structured::IntVec split = structured::IntVec(x, y, z);
-
-             BI::interprocess_semaphore semaphore(0);
-
-             int max = (x == 1 && y == 1 && z == 1 ? 1 : number_of_partitions);
-
-             for(int count = 0; count < max; count++) {
-
-                structured::IntVec location = structured::IntVec(((x == 1) ? 0 : count),
-                                                                 ((y == 1) ? 0 : count),
-                                                                 ((z == 1) ? 0 : count));
-
-                ThreadPoolFIFO::self().schedule(boost::bind(&
-                                                            nebo_assignment_thread_parallel_execute_internal<InitialShift,
-                                                                                                             LhsType,
-                                                                                                             RhsType,
-                                                                                                             FieldType>,
-                                                            NeboField<Initial, FieldType>(initial_lhs).template
-                                                                                                       resize_prep<ValidGhost>(),
-                                                            initial_rhs.expr().template resize_prep<ValidGhost>(),
-                                                            split,
-                                                            location,
-                                                            &semaphore));
-             };
-
-             for(int ii = 0; ii < number_of_partitions; ii++) { semaphore.wait(); };
-
-             return initial_lhs;
-          }
-#     endif
-      /* FIELD_EXPRESSION_THREADS */;
-
-      template<typename CallStyle, typename ExprType, typename FieldType>
-       inline FieldType const & nebo_assignment_general_execute(FieldType & initial_lhs,
-                                                                NeboExpression<ExprType, FieldType>
-                                                                const & initial_rhs) {
-
-          typename IteratorStyle<CallStyle,
-                                 typename structured::Minimum<typename ExprType::PossibleValidGhost,
-                                                              typename structured::GhostFromField<FieldType>::
-                                                              result>::result,
-                                 typename structured::MinimumGhostFromField<FieldType>::result>::
-          result typedef ValidGhost;
-
-          structured::IndexTriplet<0, 0, 0> typedef InitialShift;
-
-          return
-#                ifdef FIELD_EXPRESSION_THREADS
-                    (is_thread_parallel() ? nebo_assignment_thread_parallel_execute<ValidGhost,
-                                                                                    InitialShift,
-                                                                                    ExprType,
-                                                                                    FieldType>(initial_lhs,
-                                                                                               initial_rhs,
-                                                                                               get_soft_thread_count())
-                     : nebo_assignment_sequential_execute<ValidGhost,
-                                                          InitialShift,
-                                                          ExprType,
-                                                          FieldType>(initial_lhs, initial_rhs))
-#                else
-                    nebo_assignment_sequential_execute<ValidGhost, InitialShift, ExprType, FieldType>(initial_lhs,
-                                                                                                      initial_rhs)
-#                endif
-                 /* FIELD_EXPRESSION_THREADS */
-          ;
-       };
-
       template<typename FieldType>
        inline FieldType const & operator <<=(FieldType & lhs,
                                              typename FieldType::value_type const & rhs) {
@@ -8506,10 +8479,19 @@
           return (lhs <<= NeboExpression<ExprType, FieldType>(ExprType(rhs)));
        };
 
-      template<typename ExprType, typename FieldType>
+      template<typename RhsType, typename FieldType>
        inline FieldType const & operator <<=(FieldType & lhs,
-                                             NeboExpression<ExprType, FieldType> const & rhs) {
-          return nebo_assignment_general_execute<UseWholeIterator, ExprType, FieldType>(lhs, rhs);
+                                             NeboExpression<RhsType, FieldType> const & rhs) {
+
+          NeboField<Initial, FieldType> typedef LhsType;
+
+          LhsType new_lhs = LhsType(lhs);
+
+          RhsType new_rhs = rhs.expr();
+
+          new_lhs.template assign<All, RhsType>(new_rhs);
+
+          return lhs;
        };
 
       template<typename FieldType>
@@ -8529,10 +8511,19 @@
           return interior_assign(lhs, NeboExpression<ExprType, FieldType>(ExprType(rhs)));
        };
 
-      template<typename ExprType, typename FieldType>
+      template<typename RhsType, typename FieldType>
        inline FieldType const & interior_assign(FieldType & lhs,
-                                                NeboExpression<ExprType, FieldType> const & rhs) {
-          return nebo_assignment_general_execute<UseInteriorIterator, ExprType, FieldType>(lhs, rhs);
+                                                NeboExpression<RhsType, FieldType> const & rhs) {
+
+          NeboField<Initial, FieldType> typedef LhsType;
+
+          LhsType new_lhs = LhsType(lhs);
+
+          RhsType new_rhs = rhs.expr();
+
+          new_lhs.template assign<InteriorOnly, RhsType>(new_rhs);
+
+          return lhs;
        };
 
 #     ifdef __CUDACC__
