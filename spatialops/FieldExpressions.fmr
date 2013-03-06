@@ -173,6 +173,7 @@
                 " */")
              blank-line-chunk
              (pp-header-file-chunk file-name file-setup chunks)))]
+       [ignore (lambda given null)]
        [type-trans
         (lambda (new-type)
           (lambda (old-type) (tpl-pmtr (scope old-type new-type))))]
@@ -322,7 +323,6 @@
        [bs-Initial-rhs (arg-swap build-Initial-rhs 10 3 "bs-Initial-rhs")]
        [build-Initial-lhs (combine-args build-Initial-general
                                         (list (lambda (GPU-cons-args
-                                                       RD-cons-args
                                                        assign-body
                                                        publics)
                                                 (list (typedef (scope 'structured (tpl-use 'IndexTriplet "0" "0" "0"))
@@ -332,11 +332,6 @@
                                                                          (r-fcn-def (fcn-dcl 'gpu_init 'GPUWalkType)
                                                                                     null
                                                                                     (fc 'GPUWalkType GPU-cons-args))))
-                                                      (tpl-def (list (tpl-pmtr VG-chunk)
-                                                                     (tpl-pmtr SH-chunk))
-                                                               (r-fcn-def (fcn-dcl 'reduce_init 'ReductionType)
-                                                                          null
-                                                                          (fc 'ReductionType RD-cons-args)))
                                                       (tpl-def (list (tpl-pmtr 'Iterator)
                                                                      (tpl-pmtr 'RhsType))
                                                                (v-fcn-def 'assign
@@ -376,9 +371,9 @@
                                                                           null
                                                                           (fc 'ResizeType RS-cons-args)))
                                                       privates)))
-                                        (list 7 4 5 0)
+                                        (list 7 3 5 0)
                                         "build-Initial-lhs")]
-       [bs-Initial-lhs (arg-swap build-Initial-lhs 13 3 "bs-Initial-lhs")]
+       [bs-Initial-lhs (arg-swap build-Initial-lhs 12 3 "bs-Initial-lhs")]
        [build-Resize-general
         (lambda (name
                  tpl-irreg-pars
@@ -446,14 +441,15 @@
        [bs-Resize-lhs (arg-swap build-Resize-lhs 7 3 "bs-Resize-lhs")]
        [build-SeqWalk-general
         (lambda (name
-                 tpl-pars
+                 tpl-irreg-pars
+                 tpl-reg-pars
                  typedefs
                  constructor
                  publics
                  privates)
           (build-mode name
                       'SeqWalk
-                      tpl-pars
+                      (list tpl-irreg-pars tpl-reg-pars)
                       typedefs
                       constructor
                       publics
@@ -468,9 +464,9 @@
                                                            null
                                                            eval-result)
                                                 publics))
-                                        (list 4 4 1)
+                                        (list 5 4 1)
                                         "build-SeqWalk-rhs")]
-       [bs-SeqWalk-rhs (arg-swap build-SeqWalk-rhs 7 2 "bs-SeqWalk-rhs")]
+       [bs-SeqWalk-rhs (arg-swap build-SeqWalk-rhs 7 3 "bs-SeqWalk-rhs")]
        [build-SeqWalk-lhs (combine-args build-SeqWalk-general
                                         (list (lambda (assign-body
                                                        publics)
@@ -495,12 +491,13 @@
                                                                  null
                                                                  ref-result)
                                                       privates)))
-                                        (list 4 2 5 0)
+                                        (list 5 2 5 0)
                                         "build-SeqWalk-lhs")]
-       [bs-SeqWalk-lhs (arg-swap build-SeqWalk-lhs 9 2 "bs-SeqWalk-lhs")]
+       [bs-SeqWalk-lhs (arg-swap build-SeqWalk-lhs 9 3 "bs-SeqWalk-lhs")]
        [build-GPU-general
         (lambda (name
-                 tpl-pars
+                 tpl-irreg-pars
+                 tpl-reg-pars
                  typedefs
                  constructor
                  start-body
@@ -510,7 +507,7 @@
           (gpu-only
            (build-mode name
                        'GPUWalk
-                       tpl-pars
+                       (list tpl-irreg-pars tpl-reg-pars)
                        (list (typedef (tpl-pmtr (scope 'field_type 'value_type))
                                       'AtomicType)
                              typedefs)
@@ -530,9 +527,9 @@
                                                                    null
                                                                    eval-result))
                                             publics))
-                                    (list 6 2 1)
+                                    (list 7 2 1)
                                     "build-GPU-rhs")]
-       [bs-GPU-rhs (arg-swap build-GPU-rhs 7 2 "bs-GPU-rhs")]
+       [bs-GPU-rhs (arg-swap build-GPU-rhs 7 3 "bs-GPU-rhs")]
        [build-GPU-lhs (combine-args build-GPU-general
                                     (lambda (valid-result at-end-result ref-result publics)
                                       (list (device-use (r-fcn-def (fcn-dcl 'valid 'bool)
@@ -545,12 +542,13 @@
                                                                    null
                                                                    ref-result))
                                             publics))
-                                    (list 6 4 1)
+                                    (list 7 4 1)
                                     "build-GPU-lhs")]
-       [bs-GPU-lhs (arg-swap build-GPU-lhs 9 2 "bs-GPU-lhs")]
+       [bs-GPU-lhs (arg-swap build-GPU-lhs 9 3 "bs-GPU-lhs")]
        [build-Reduction
         (lambda (name
-                 tpl-pars
+                 tpl-irreg-pars
+                 tpl-reg-pars
                  typedefs
                  constructor
                  next
@@ -562,7 +560,7 @@
                  privates)
           (build-mode name
                       'Reduction
-                      tpl-pars
+                      (list tpl-irreg-pars tpl-reg-pars)
                       typedefs
                       constructor
                       (list (v-fcn-def 'next null next)
@@ -577,10 +575,9 @@
                                        eval-result)
                             publics)
                       privates))]
-       [bs-Reduction (arg-swap build-Reduction 9 2 "bs-Reduction")]
+       [bs-Reduction (arg-swap build-Reduction 9 3 "bs-Reduction")]
        [build-struct
         (lambda (name
-                 const?
                  tpl-irreg-pars
                  tpl-reg-pars
                  Initial
@@ -588,16 +585,13 @@
                  SeqWalk
                  GPUWalk
                  Reduction)
-          (let ([add-const (if const? constize-chunk id)]
-                [tpl-pars (list tpl-irreg-pars tpl-reg-pars)])
+          (let ([tpl-pars (list tpl-irreg-pars tpl-reg-pars)])
             (i (tpl-srt-dcl name
                             (map tpl-pmtr (flatten* 'CurrentMode tpl-irreg-pars tpl-reg-pars FT-chunk))
                             null)
-               (Initial name tpl-irreg-pars tpl-reg-pars)
-               (Resize name tpl-irreg-pars tpl-reg-pars)
-               (SeqWalk name tpl-pars)
-               (GPUWalk name tpl-pars)
-               (Reduction name tpl-pars))))]
+               (map (lambda (mode)
+                      (mode name tpl-irreg-pars tpl-reg-pars))
+                    (list Initial Resize SeqWalk GPUWalk Reduction)))))]
        [build-Nary-struct
         (lambda (name number eval-return-type internal-use)
           (let* ([num-lst (if (>= 1 number)
@@ -642,7 +636,6 @@
                                          Op-lst
                                          op_-lst)])
             (build-struct name
-                          #true
                           null
                           Op-lst
                           (bs-Initial-rhs null
@@ -940,6 +933,14 @@
                (tpl-pmtr (scope (scope 'structured
                                        (tpl-use 'MinimumGhostFromField FT-chunk))
                                 'result)))))
+      (tpl-srt-dcl 'NeboFieldCheck
+                   (list (tpl-pmtr 'Type1)
+                         (tpl-pmtr 'Type2))
+                   null)
+      (tpl-srt-def 'NeboFieldCheck
+                   (tpl-pmtr 'Type)
+                   (list 'Type 'Type)
+                   (typedef 'Type 'Result))
       (r-fcn-def (fcn-dcl 'nebo_find_partition
                           IntVec
                           (list (adcr IntVec 'extent)
@@ -1015,7 +1016,6 @@
            (gpu-only (build-mode-def 'GPUWalk))
            (build-mode-def 'Reduction)))
       (build-struct NS-chunk
-                    #true
                     null
                     null
                     (bs-Initial-rhs (typedef (scope (tpl-pmtr FT-chunk)
@@ -1076,7 +1076,6 @@
                                   null
                                   (adc 'AtomicType 'value_)))
       (build-struct NB-chunk
-                    #true
                     null
                     null
                     (bs-Initial-rhs null
@@ -1129,7 +1128,6 @@
                                   null
                                   (adc 'bool 'value_)))
       (build-struct NCF-chunk
-                    #true
                     null
                     null
                     (bs-Initial-rhs null
@@ -1227,7 +1225,6 @@
                                         (adc (tpl-pmtr (scope FT-chunk 'const_iterator))
                                              'end_))))
       (build-struct NF-chunk
-                    #false
                     null
                     null
                     (let ([typedef-Ghost (typedef (tpl-pmtr (scope (tpl-use 'CalculateValidGhost
@@ -1244,7 +1241,6 @@
                                       (bm-constructor (ad FT-chunk 'f)
                                                       (cons-asgn 'field_ 'f)
                                                       null)
-                                      (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift_and_maintain_interior VG-chunk SH-chunk))
                                       (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift_and_maintain_interior VG-chunk SH-chunk))
                                       (let* ([call (lambda (name . args) (fc (tpl-use name 'Iterator 'RhsType)
                                                                              'rhs
@@ -1392,31 +1388,7 @@
                                        (adc 'int 'yExtent_)
                                        (adc 'int 'zExtent_)
                                        (adc 'int 'step_)))
-                    (bs-Reduction (typedef (scope (tpl-pmtr FT-chunk)
-                                                  'value_type)
-                                           'AtomicType)
-                                  (bm-constructor (ad FT-chunk 'f)
-                                                  (list (cons-asgn 'iter_ (mfc 'f 'begin))
-                                                      (cons-asgn 'end_ (mfc 'f 'end)))
-                                                  null)
-                                  (n++ 'iter_)
-                                  (n== 'iter_ 'end_)
-                                  'true
-                                  (ref 'AtomicType)
-                                  (l '* 'iter_)
-                                  null
-                                  (list (ad (tpl-pmtr (scope FT-chunk 'iterator))
-                                            'iter_)
-                                        (adc (tpl-pmtr (scope FT-chunk 'iterator))
-                                             'end_))))
-      (tpl-srt-dcl 'NeboFieldCheck
-                   (list (tpl-pmtr 'Type1)
-                         (tpl-pmtr 'Type2))
-                   null)
-      (tpl-srt-def 'NeboFieldCheck
-                   (tpl-pmtr 'Type)
-                   (list 'Type 'Type)
-                   (typedef 'Type 'Result))
+                    ignore)
       (build-binary-operator 'SumOp '+ (bs 'operator '+))
       (build-binary-operator 'DiffOp '- (bs 'operator '-))
       (build-binary-operator 'ProdOp '* (bs 'operator '*))
@@ -1472,7 +1444,6 @@
                                   null
                                   null))
       (build-struct Clause-chunk
-                    #true
                     null
                     (list 'Test 'Expr)
                     (bs-Initial-rhs null
@@ -1573,7 +1544,6 @@
                                   (list (ad 'Test 'test_)
                                         (ad 'Expr 'expr_))))
       (build-struct Cond-chunk
-                    #true
                     null
                     (list CT-chunk 'Otherwise)
                     (bs-Initial-rhs null
@@ -2326,7 +2296,6 @@
                               (bcne Nil-chunk (fc Nil-chunk)))))
       (m 'nebo_cond null (l 'cond '//))
       (build-struct NSP
-                    #true
                     'Point
                     'Arg
                     (bs-Initial-rhs null
@@ -2780,7 +2749,6 @@
                                              'Result))
                             'Result))
       (build-struct NSt
-                    #true
                     (list 'Pts 'Arg)
                     null
                     (bs-Initial-rhs (list (typedef (tpl-use NSCC (scope 'Pts 'length))
@@ -2878,53 +2846,40 @@
                                   (mfc 'arg_ 'eval)
                                   null
                                   (ad 'Arg 'arg_)))
-      (let ([assigns
-             (lambda (name rec-call iterator)
-               (let ([assign (lambda (name tpl-pmtrs rhs-type body return-expr)
-                               (tpl-def (list tpl-pmtrs
-                                              (tpl-pmtr FT-chunk))
-                                        (r-fcn-def (fcn-dcl name
-                                                            (cref FT-chunk)
-                                                            (adr FT-chunk 'lhs)
-                                                            (adcr rhs-type 'rhs))
-                                                   body
-                                                   return-expr)))])
-                 (bl-smts (assign name
-                                  null
-                                  (scope (tpl-pmtr FT-chunk)
-                                         'value_type)
-                                  (typedef (tpl-use NS-chunk 'Initial FT-chunk)
-                                           'ExprType)
-                                  rec-call)
-                          (assign name
-                                  null
-                                  FT-chunk
-                                  (typedef (tpl-use NCF-chunk 'Initial FT-chunk)
-                                           'ExprType)
-                                  rec-call)
-                          (assign name
-                                  (tpl-pmtr 'RhsType)
-                                  (tpl-use NE-chunk 'RhsType FT-chunk)
-                                  (list (typedef (tpl-use NF-chunk 'Initial FT-chunk)
-                                                 'LhsType)
-                                        (nt= 'LhsType 'new_lhs (fc 'LhsType 'lhs))
-                                        (nt= 'RhsType 'new_rhs (mfc 'rhs 'expr))
-                                        (mfc 'new_lhs
-                                             (tpl-fcn-use 'assign iterator 'RhsType)
-                                             'new_rhs))
-                                  'lhs))))])
-        (list (assigns (bs 'operator '<<=)
-                       (par 'lhs
-                            '<<=
-                            (fc (tpl-use NE-chunk 'ExprType FT-chunk)
-                                (fc 'ExprType 'rhs)))
-                       'All)
-              (assigns 'interior_assign
-                       (fc 'interior_assign
-                           'lhs
-                           (fc (tpl-use NE-chunk 'ExprType FT-chunk)
-                               (fc 'ExprType 'rhs)))
-                       'InteriorOnly)))
+      (let ([assign (lambda (name iterator)
+                      (let ([def (lambda (tpl-pmtrs
+                                          rhs-input-type
+                                          rhs-type
+                                          rhs-expr)
+                                   (tpl-def (map tpl-pmtr (flatten* tpl-pmtrs FT-chunk))
+                                            (r-fcn-def (fcn-dcl name
+                                                                (cref FT-chunk)
+                                                                (adr FT-chunk 'lhs)
+                                                                (adcr rhs-input-type 'rhs))
+                                                       (list (if rhs-type
+                                                                 (typedef rhs-type 'RhsType)
+                                                                 null)
+                                                             (mfc (fc (tpl-use NF-chunk 'Initial FT-chunk)
+                                                                      'lhs)
+                                                                  (tpl-fcn-use 'assign iterator 'RhsType)
+                                                                  rhs-expr))
+                                                       'lhs)))])
+                        (bl-smts (def null
+                                      (tpl-pmtr (scope FT-chunk 'value_type))
+                                      (tpl-use NS-chunk 'Initial FT-chunk)
+                                      (fc 'RhsType 'rhs))
+                                 (def null
+                                      FT-chunk
+                                      (tpl-use NCF-chunk 'Initial FT-chunk)
+                                      (fc 'RhsType 'rhs))
+                                 (def 'RhsType
+                                      (tpl-use NE-chunk 'RhsType FT-chunk)
+                                      #false
+                                      (mfc 'rhs 'expr)))))])
+        (list (assign (bs 'operator '<<=)
+                      'All)
+              (assign 'interior_assign
+                      'InteriorOnly)))
       (gpu-only
        (tpl-def (list (tpl-pmtr 'Dest)
                       (tpl-pmtr 'Src))

@@ -68,6 +68,12 @@
          typename structured::MinimumGhostFromField<FieldType>::result typedef Result;
       };
 
+      template<typename Type1, typename Type2>
+       struct NeboFieldCheck;
+
+      template<typename Type>
+       struct NeboFieldCheck<Type, Type> { Type typedef Result; };
+
       inline structured::IntVec nebo_find_partition(structured::IntVec const & extent,
                                                     int const thread_count) {
 
@@ -530,12 +536,6 @@
               }
 #         endif
           /* __CUDACC__ */;
-          template<typename ValidGhost, typename Shift>
-           inline ReductionType reduce_init(void) {
-
-              return ReductionType(field_.template resize_ghost_and_shift_and_maintain_interior<ValidGhost,
-                                                                                                Shift>());
-           };
           template<typename Iterator, typename RhsType>
            inline void assign(RhsType rhs) {
 
@@ -715,32 +715,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-
-      template<typename FieldType>
-       struct NeboField<Reduction, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
-          typename FieldType::value_type typedef AtomicType;
-          NeboField(FieldType f)
-          : iter_(f.begin()), end_(f.end())
-          {};
-          inline void next(void) { iter_++; };
-          inline bool at_end(void) const { return iter_ == end_; };
-          inline bool has_length(void) const { return true; };
-          inline AtomicType & eval(void) const { return *iter_; };
-
-         private:
-          typename FieldType::iterator iter_;
-          typename FieldType::iterator const end_;
-      };
-
-      template<typename Type1, typename Type2>
-       struct NeboFieldCheck;
-
-      template<typename Type>
-       struct NeboFieldCheck<Type, Type> { Type typedef Result; };
 
       template<typename CurrentMode, typename Operand1, typename Operand2, typename FieldType>
        struct SumOp;
@@ -7860,30 +7834,28 @@
        inline FieldType const & operator <<=(FieldType & lhs,
                                              typename FieldType::value_type const & rhs) {
 
-          NeboScalar<Initial, FieldType> typedef ExprType;
+          NeboScalar<Initial, FieldType> typedef RhsType;
 
-          return (lhs <<= NeboExpression<ExprType, FieldType>(ExprType(rhs)));
+          NeboField<Initial, FieldType>(lhs).template assign<All, RhsType>(RhsType(rhs));
+
+          return lhs;
        };
 
       template<typename FieldType>
        inline FieldType const & operator <<=(FieldType & lhs, FieldType const & rhs) {
 
-          NeboConstField<Initial, FieldType> typedef ExprType;
+          NeboConstField<Initial, FieldType> typedef RhsType;
 
-          return (lhs <<= NeboExpression<ExprType, FieldType>(ExprType(rhs)));
+          NeboField<Initial, FieldType>(lhs).template assign<All, RhsType>(RhsType(rhs));
+
+          return lhs;
        };
 
       template<typename RhsType, typename FieldType>
        inline FieldType const & operator <<=(FieldType & lhs,
                                              NeboExpression<RhsType, FieldType> const & rhs) {
 
-          NeboField<Initial, FieldType> typedef LhsType;
-
-          LhsType new_lhs = LhsType(lhs);
-
-          RhsType new_rhs = rhs.expr();
-
-          new_lhs.template assign<All, RhsType>(new_rhs);
+          NeboField<Initial, FieldType>(lhs).template assign<All, RhsType>(rhs.expr());
 
           return lhs;
        };
@@ -7892,30 +7864,28 @@
        inline FieldType const & interior_assign(FieldType & lhs,
                                                 typename FieldType::value_type const & rhs) {
 
-          NeboScalar<Initial, FieldType> typedef ExprType;
+          NeboScalar<Initial, FieldType> typedef RhsType;
 
-          return interior_assign(lhs, NeboExpression<ExprType, FieldType>(ExprType(rhs)));
+          NeboField<Initial, FieldType>(lhs).template assign<InteriorOnly, RhsType>(RhsType(rhs));
+
+          return lhs;
        };
 
       template<typename FieldType>
        inline FieldType const & interior_assign(FieldType & lhs, FieldType const & rhs) {
 
-          NeboConstField<Initial, FieldType> typedef ExprType;
+          NeboConstField<Initial, FieldType> typedef RhsType;
 
-          return interior_assign(lhs, NeboExpression<ExprType, FieldType>(ExprType(rhs)));
+          NeboField<Initial, FieldType>(lhs).template assign<InteriorOnly, RhsType>(RhsType(rhs));
+
+          return lhs;
        };
 
       template<typename RhsType, typename FieldType>
        inline FieldType const & interior_assign(FieldType & lhs,
                                                 NeboExpression<RhsType, FieldType> const & rhs) {
 
-          NeboField<Initial, FieldType> typedef LhsType;
-
-          LhsType new_lhs = LhsType(lhs);
-
-          RhsType new_rhs = rhs.expr();
-
-          new_lhs.template assign<InteriorOnly, RhsType>(new_rhs);
+          NeboField<Initial, FieldType>(lhs).template assign<InteriorOnly, RhsType>(rhs.expr());
 
           return lhs;
        };
