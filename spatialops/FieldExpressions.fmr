@@ -270,12 +270,12 @@
                                                 (tpl-reg-args 'SeqWalkType)
                                                 FT-chunk)
                                        'SeqWalkType)
-                              (typedef (tpl-use name
-                                                'Resize
-                                                RS-tpl-irreg-args
-                                                (tpl-reg-args 'ResizeType)
-                                                FT-chunk)
-                                       'ResizeType)
+                              (threads-only (typedef (tpl-use name
+                                                              'Resize
+                                                              RS-tpl-irreg-args
+                                                              (tpl-reg-args 'ResizeType)
+                                                              FT-chunk)
+                                                     'ResizeType))
                               (gpu-only (typedef (tpl-use name
                                                           'GPUWalk
                                                           GPU-tpl-irreg-args
@@ -303,10 +303,10 @@
                                                          (r-fcn-def (constize (fcn-dcl 'init 'SeqWalkType))
                                                                     null
                                                                     (fc 'SeqWalkType SW-cons-args)))
-                                                (tpl-def (tpl-pmtr VG-chunk)
-                                                         (r-fcn-def (constize (fcn-dcl 'resize 'ResizeType))
-                                                                    null
-                                                                    (fc 'ResizeType RS-cons-args)))
+                                                (threads-only (tpl-def (tpl-pmtr VG-chunk)
+                                                                       (r-fcn-def (constize (fcn-dcl 'resize 'ResizeType))
+                                                                                  null
+                                                                                  (fc 'ResizeType RS-cons-args))))
                                                 (gpu-only (tpl-def (list (tpl-pmtr VG-chunk)
                                                                          (tpl-pmtr SH-chunk))
                                                                    (r-fcn-def (constize (fcn-dcl 'gpu_init 'GPUWalkType))
@@ -366,10 +366,10 @@
                                                                (r-fcn-def (fcn-dcl 'init 'SeqWalkType)
                                                                           null
                                                                           (fc 'SeqWalkType SW-cons-args)))
-                                                      (tpl-def (tpl-pmtr VG-chunk)
-                                                               (r-fcn-def (fcn-dcl 'resize 'ResizeType)
-                                                                          null
-                                                                          (fc 'ResizeType RS-cons-args)))
+                                                      (threads-only (tpl-def (tpl-pmtr VG-chunk)
+                                                                             (r-fcn-def (fcn-dcl 'resize 'ResizeType)
+                                                                                        null
+                                                                                        (fc 'ResizeType RS-cons-args))))
                                                       privates)))
                                         (list 7 3 5 0)
                                         "build-Initial-lhs")]
@@ -383,20 +383,20 @@
                  constructor
                  publics
                  privates)
-          (build-mode name
-                      'Resize
-                      (list tpl-irreg-pars tpl-reg-pars)
-                      (list typedefs
-                            (typedef (tpl-use name
-                                              'SeqWalk
-                                              tpl-irreg-args
-                                              (map* (type-trans 'SeqWalkType)
+          (threads-only (build-mode name
+                                    'Resize
+                                    (list tpl-irreg-pars tpl-reg-pars)
+                                    (list typedefs
+                                          (typedef (tpl-use name
+                                                            'SeqWalk
+                                                            tpl-irreg-args
+                                                            (map* (type-trans 'SeqWalkType)
                                                     tpl-reg-pars)
-                                              FT-chunk)
-                                     'SeqWalkType))
-                      constructor
-                      publics
-                      privates))]
+                                                            FT-chunk)
+                                                   'SeqWalkType))
+                                    constructor
+                                    publics
+                                    privates)))]
        [build-Resize-rhs (combine-args build-Resize-general
                                        (lambda (SW-cons-args
                                                 publics)
@@ -1011,7 +1011,7 @@
       (let ([build-mode-def (lambda (name) (struct-declare-chunk name))])
         (d 'Modes:
            (build-mode-def 'Initial)
-           (build-mode-def 'Resize)
+           (threads-only (build-mode-def 'Resize))
            (build-mode-def 'SeqWalk)
            (gpu-only (build-mode-def 'GPUWalk))
            (build-mode-def 'Reduction)))
@@ -1435,7 +1435,7 @@
 ;                                       (scope 'std 'isnan)
 ;                                       'isnan)
       (srt-def (srt-dcl Nil-chunk)
-               (typedef Nil-chunk 'ResizeType)
+               (threads-only (typedef Nil-chunk 'ResizeType))
                (typedef Nil-chunk 'SeqWalkType)
                (gpu-only (typedef Nil-chunk 'GPUWalkType))
                (typedef Nil-chunk 'ReductionType)

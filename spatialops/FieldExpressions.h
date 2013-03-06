@@ -140,7 +140,10 @@
 
       /* Modes: */
       struct Initial;
-      struct Resize;
+#     ifdef FIELD_EXPRESSION_THREADS
+         struct Resize
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
       struct SeqWalk;
 #     ifdef __CUDACC__
          struct GPUWalk
@@ -159,7 +162,10 @@
           typename field_type::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef AtomicType;
           NeboScalar<SeqWalk, FieldType> typedef SeqWalkType;
-          NeboScalar<Resize, FieldType> typedef ResizeType;
+#         ifdef FIELD_EXPRESSION_THREADS
+             NeboScalar<Resize, FieldType> typedef ResizeType
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              NeboScalar<GPUWalk, FieldType> typedef GPUWalkType
 #         endif
@@ -171,8 +177,11 @@
           {};
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const { return SeqWalkType(value_); };
-          template<typename ValidGhost>
-           inline ResizeType resize(void) const { return ResizeType(value_); };
+#         ifdef FIELD_EXPRESSION_THREADS
+             template<typename ValidGhost>
+              inline ResizeType resize(void) const { return ResizeType(value_); }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const { return GPUWalkType(value_); }
@@ -185,26 +194,29 @@
           AtomicType const value_;
       };
 
-      template<typename FieldType>
-       struct NeboScalar<Resize, FieldType> {
+#     ifdef FIELD_EXPRESSION_THREADS
+         template<typename FieldType>
+          struct NeboScalar<Resize, FieldType> {
 
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
-          typename FieldType::value_type typedef AtomicType;
-          NeboScalar<SeqWalk, FieldType> typedef SeqWalkType;
-          NeboScalar(AtomicType const value)
-          : value_(value)
-          {};
-          template<typename Shift>
-           inline SeqWalkType init(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-              return SeqWalkType(value_);
-           };
+            public:
+             FieldType typedef field_type;
+             typename field_type::memory_window typedef MemoryWindow;
+             typename FieldType::value_type typedef AtomicType;
+             NeboScalar<SeqWalk, FieldType> typedef SeqWalkType;
+             NeboScalar(AtomicType const value)
+             : value_(value)
+             {};
+             template<typename Shift>
+              inline SeqWalkType init(structured::IntVec const & split,
+                                      structured::IntVec const & location) const {
+                 return SeqWalkType(value_);
+              };
 
-         private:
-          AtomicType const value_;
-      };
+            private:
+             AtomicType const value_;
+         }
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
 
       template<typename FieldType>
        struct NeboScalar<SeqWalk, FieldType> {
@@ -273,7 +285,10 @@
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
           NeboBoolean<SeqWalk, FieldType> typedef SeqWalkType;
-          NeboBoolean<Resize, FieldType> typedef ResizeType;
+#         ifdef FIELD_EXPRESSION_THREADS
+             NeboBoolean<Resize, FieldType> typedef ResizeType
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              NeboBoolean<GPUWalk, FieldType> typedef GPUWalkType
 #         endif
@@ -285,8 +300,11 @@
           {};
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const { return SeqWalkType(value_); };
-          template<typename ValidGhost>
-           inline ResizeType resize(void) const { return ResizeType(value_); };
+#         ifdef FIELD_EXPRESSION_THREADS
+             template<typename ValidGhost>
+              inline ResizeType resize(void) const { return ResizeType(value_); }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const { return GPUWalkType(value_); }
@@ -299,25 +317,28 @@
           bool const value_;
       };
 
-      template<typename FieldType>
-       struct NeboBoolean<Resize, FieldType> {
+#     ifdef FIELD_EXPRESSION_THREADS
+         template<typename FieldType>
+          struct NeboBoolean<Resize, FieldType> {
 
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
-          NeboBoolean<SeqWalk, FieldType> typedef SeqWalkType;
-          NeboBoolean(bool const value)
-          : value_(value)
-          {};
-          template<typename Shift>
-           inline SeqWalkType init(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-              return SeqWalkType(value_);
-           };
+            public:
+             FieldType typedef field_type;
+             typename field_type::memory_window typedef MemoryWindow;
+             NeboBoolean<SeqWalk, FieldType> typedef SeqWalkType;
+             NeboBoolean(bool const value)
+             : value_(value)
+             {};
+             template<typename Shift>
+              inline SeqWalkType init(structured::IntVec const & split,
+                                      structured::IntVec const & location) const {
+                 return SeqWalkType(value_);
+              };
 
-         private:
-          bool const value_;
-      };
+            private:
+             bool const value_;
+         }
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
 
       template<typename FieldType>
        struct NeboBoolean<SeqWalk, FieldType> {
@@ -384,7 +405,10 @@
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
           NeboConstField<SeqWalk, FieldType> typedef SeqWalkType;
-          NeboConstField<Resize, FieldType> typedef ResizeType;
+#         ifdef FIELD_EXPRESSION_THREADS
+             NeboConstField<Resize, FieldType> typedef ResizeType
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              NeboConstField<GPUWalk, FieldType> typedef GPUWalkType
 #         endif
@@ -398,10 +422,13 @@
            inline SeqWalkType init(void) const {
               return SeqWalkType(field_.template resize_ghost_and_shift<ValidGhost, Shift>());
            };
-          template<typename ValidGhost>
-           inline ResizeType resize(void) const {
-              return ResizeType(field_.template resize_ghost<ValidGhost>());
-           };
+#         ifdef FIELD_EXPRESSION_THREADS
+             template<typename ValidGhost>
+              inline ResizeType resize(void) const {
+                 return ResizeType(field_.template resize_ghost<ValidGhost>());
+              }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
@@ -419,28 +446,31 @@
           FieldType const field_;
       };
 
-      template<typename FieldType>
-       struct NeboConstField<Resize, FieldType> {
+#     ifdef FIELD_EXPRESSION_THREADS
+         template<typename FieldType>
+          struct NeboConstField<Resize, FieldType> {
 
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
-          NeboConstField<SeqWalk, FieldType> typedef SeqWalkType;
-          NeboConstField(FieldType const & f)
-          : field_(f)
-          {};
-          template<typename Shift>
-           inline SeqWalkType init(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
+            public:
+             FieldType typedef field_type;
+             typename field_type::memory_window typedef MemoryWindow;
+             NeboConstField<SeqWalk, FieldType> typedef SeqWalkType;
+             NeboConstField(FieldType const & f)
+             : field_(f)
+             {};
+             template<typename Shift>
+              inline SeqWalkType init(structured::IntVec const & split,
+                                      structured::IntVec const & location) const {
 
-              return SeqWalkType(FieldType(field_.window_with_ghost().refine(split, location),
-                                           field_.field_values(),
-                                           structured::ExternalStorage).template shift<Shift>());
-           };
+                 return SeqWalkType(FieldType(field_.window_with_ghost().refine(split, location),
+                                              field_.field_values(),
+                                              structured::ExternalStorage).template shift<Shift>());
+              };
 
-         private:
-          FieldType const field_;
-      };
+            private:
+             FieldType const field_;
+         }
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
 
       template<typename FieldType>
        struct NeboConstField<SeqWalk, FieldType> {
@@ -516,7 +546,10 @@
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
           NeboField<SeqWalk, FieldType> typedef SeqWalkType;
-          NeboField<Resize, FieldType> typedef ResizeType;
+#         ifdef FIELD_EXPRESSION_THREADS
+             NeboField<Resize, FieldType> typedef ResizeType
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              NeboField<GPUWalk, FieldType> typedef GPUWalkType
 #         endif
@@ -603,50 +636,56 @@
               return SeqWalkType(field_.template resize_ghost_and_shift_and_maintain_interior<ValidGhost,
                                                                                               Shift>());
            };
-          template<typename ValidGhost>
-           inline ResizeType resize(void) {
-              return ResizeType(field_.template resize_ghost_and_maintain_interior<ValidGhost>());
-           };
-          FieldType field_;
-      };
-
-      template<typename FieldType>
-       struct NeboField<Resize, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
-          NeboField<SeqWalk, FieldType> typedef SeqWalkType;
-          NeboField(FieldType f)
-          : field_(f)
-          {};
-          structured::IndexTriplet<0, 0, 0> typedef Shift;
 #         ifdef FIELD_EXPRESSION_THREADS
-             template<typename RhsType>
-              inline void assign(RhsType const & rhs,
-                                 structured::IntVec const & split,
-                                 structured::IntVec const & location,
-                                 BI::interprocess_semaphore * semaphore) {
-
-                 init<Shift>(split, location).assign(rhs.template init<Shift>(split, location));
-
-                 semaphore->post();
+             template<typename ValidGhost>
+              inline ResizeType resize(void) {
+                 return ResizeType(field_.template resize_ghost_and_maintain_interior<ValidGhost>());
               }
 #         endif
           /* FIELD_EXPRESSION_THREADS */;
-
-         private:
-          template<typename Shift>
-           inline SeqWalkType init(structured::IntVec const & split,
-                                   structured::IntVec const & location) {
-
-              return SeqWalkType(FieldType(field_.window_with_ghost().refine(split, location),
-                                           field_.field_values(),
-                                           structured::ExternalStorage).template
-                                                                        shift_and_maintain_interior<Shift>());
-           };
           FieldType field_;
       };
+
+#     ifdef FIELD_EXPRESSION_THREADS
+         template<typename FieldType>
+          struct NeboField<Resize, FieldType> {
+
+            public:
+             FieldType typedef field_type;
+             typename field_type::memory_window typedef MemoryWindow;
+             NeboField<SeqWalk, FieldType> typedef SeqWalkType;
+             NeboField(FieldType f)
+             : field_(f)
+             {};
+             structured::IndexTriplet<0, 0, 0> typedef Shift;
+#            ifdef FIELD_EXPRESSION_THREADS
+                template<typename RhsType>
+                 inline void assign(RhsType const & rhs,
+                                    structured::IntVec const & split,
+                                    structured::IntVec const & location,
+                                    BI::interprocess_semaphore * semaphore) {
+
+                    init<Shift>(split, location).assign(rhs.template init<Shift>(split, location));
+
+                    semaphore->post();
+                 }
+#            endif
+             /* FIELD_EXPRESSION_THREADS */;
+
+            private:
+             template<typename Shift>
+              inline SeqWalkType init(structured::IntVec const & split,
+                                      structured::IntVec const & location) {
+
+                 return SeqWalkType(FieldType(field_.window_with_ghost().refine(split, location),
+                                              field_.field_values(),
+                                              structured::ExternalStorage).template
+                                                                           shift_and_maintain_interior<Shift>());
+              };
+             FieldType field_;
+         }
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
 
       template<typename FieldType>
        struct NeboField<SeqWalk, FieldType> {
@@ -727,8 +766,11 @@
           typename field_type::memory_window typedef MemoryWindow;
           SumOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
           typedef SeqWalkType;
-          SumOp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
-          typedef ResizeType;
+#         ifdef FIELD_EXPRESSION_THREADS
+             SumOp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
+             typedef ResizeType
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              SumOp<GPUWalk,
                    typename Operand1::GPUWalkType,
@@ -752,10 +794,15 @@
               return SeqWalkType(operand1_.template init<ValidGhost, Shift>(),
                                  operand2_.template init<ValidGhost, Shift>());
            };
-          template<typename ValidGhost>
-           inline ResizeType resize(void) const {
-              return ResizeType(operand1_.template resize<ValidGhost>(), operand2_.template resize<ValidGhost>());
-           };
+#         ifdef FIELD_EXPRESSION_THREADS
+             template<typename ValidGhost>
+              inline ResizeType resize(void) const {
+
+                 return ResizeType(operand1_.template resize<ValidGhost>(),
+                                   operand2_.template resize<ValidGhost>());
+              }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
@@ -777,29 +824,34 @@
           Operand2 const operand2_;
       };
 
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct SumOp<Resize, Operand1, Operand2, FieldType> {
+#     ifdef FIELD_EXPRESSION_THREADS
+         template<typename Operand1, typename Operand2, typename FieldType>
+          struct SumOp<Resize, Operand1, Operand2, FieldType> {
 
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
-          SumOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
-          typedef SeqWalkType;
-          SumOp(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {};
-          template<typename Shift>
-           inline SeqWalkType init(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
+            public:
+             FieldType typedef field_type;
+             typename field_type::memory_window typedef MemoryWindow;
+             SumOp<SeqWalk,
+                   typename Operand1::SeqWalkType,
+                   typename Operand2::SeqWalkType,
+                   FieldType> typedef SeqWalkType;
+             SumOp(Operand1 const & operand1, Operand2 const & operand2)
+             : operand1_(operand1), operand2_(operand2)
+             {};
+             template<typename Shift>
+              inline SeqWalkType init(structured::IntVec const & split,
+                                      structured::IntVec const & location) const {
 
-              return SeqWalkType(operand1_.template init<Shift>(split, location),
-                                 operand2_.template init<Shift>(split, location));
-           };
+                 return SeqWalkType(operand1_.template init<Shift>(split, location),
+                                    operand2_.template init<Shift>(split, location));
+              };
 
-         private:
-          Operand1 const operand1_;
-          Operand2 const operand2_;
-      };
+            private:
+             Operand1 const operand1_;
+             Operand2 const operand2_;
+         }
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
 
       template<typename Operand1, typename Operand2, typename FieldType>
        struct SumOp<SeqWalk, Operand1, Operand2, FieldType> {
@@ -1036,8 +1088,11 @@
           typename field_type::memory_window typedef MemoryWindow;
           DiffOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
           typedef SeqWalkType;
-          DiffOp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
-          typedef ResizeType;
+#         ifdef FIELD_EXPRESSION_THREADS
+             DiffOp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
+             typedef ResizeType
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              DiffOp<GPUWalk,
                     typename Operand1::GPUWalkType,
@@ -1061,10 +1116,15 @@
               return SeqWalkType(operand1_.template init<ValidGhost, Shift>(),
                                  operand2_.template init<ValidGhost, Shift>());
            };
-          template<typename ValidGhost>
-           inline ResizeType resize(void) const {
-              return ResizeType(operand1_.template resize<ValidGhost>(), operand2_.template resize<ValidGhost>());
-           };
+#         ifdef FIELD_EXPRESSION_THREADS
+             template<typename ValidGhost>
+              inline ResizeType resize(void) const {
+
+                 return ResizeType(operand1_.template resize<ValidGhost>(),
+                                   operand2_.template resize<ValidGhost>());
+              }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
@@ -1086,29 +1146,34 @@
           Operand2 const operand2_;
       };
 
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct DiffOp<Resize, Operand1, Operand2, FieldType> {
+#     ifdef FIELD_EXPRESSION_THREADS
+         template<typename Operand1, typename Operand2, typename FieldType>
+          struct DiffOp<Resize, Operand1, Operand2, FieldType> {
 
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
-          DiffOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
-          typedef SeqWalkType;
-          DiffOp(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {};
-          template<typename Shift>
-           inline SeqWalkType init(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
+            public:
+             FieldType typedef field_type;
+             typename field_type::memory_window typedef MemoryWindow;
+             DiffOp<SeqWalk,
+                    typename Operand1::SeqWalkType,
+                    typename Operand2::SeqWalkType,
+                    FieldType> typedef SeqWalkType;
+             DiffOp(Operand1 const & operand1, Operand2 const & operand2)
+             : operand1_(operand1), operand2_(operand2)
+             {};
+             template<typename Shift>
+              inline SeqWalkType init(structured::IntVec const & split,
+                                      structured::IntVec const & location) const {
 
-              return SeqWalkType(operand1_.template init<Shift>(split, location),
-                                 operand2_.template init<Shift>(split, location));
-           };
+                 return SeqWalkType(operand1_.template init<Shift>(split, location),
+                                    operand2_.template init<Shift>(split, location));
+              };
 
-         private:
-          Operand1 const operand1_;
-          Operand2 const operand2_;
-      };
+            private:
+             Operand1 const operand1_;
+             Operand2 const operand2_;
+         }
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
 
       template<typename Operand1, typename Operand2, typename FieldType>
        struct DiffOp<SeqWalk, Operand1, Operand2, FieldType> {
@@ -1347,8 +1412,11 @@
           typename field_type::memory_window typedef MemoryWindow;
           ProdOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
           typedef SeqWalkType;
-          ProdOp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
-          typedef ResizeType;
+#         ifdef FIELD_EXPRESSION_THREADS
+             ProdOp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
+             typedef ResizeType
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              ProdOp<GPUWalk,
                     typename Operand1::GPUWalkType,
@@ -1372,10 +1440,15 @@
               return SeqWalkType(operand1_.template init<ValidGhost, Shift>(),
                                  operand2_.template init<ValidGhost, Shift>());
            };
-          template<typename ValidGhost>
-           inline ResizeType resize(void) const {
-              return ResizeType(operand1_.template resize<ValidGhost>(), operand2_.template resize<ValidGhost>());
-           };
+#         ifdef FIELD_EXPRESSION_THREADS
+             template<typename ValidGhost>
+              inline ResizeType resize(void) const {
+
+                 return ResizeType(operand1_.template resize<ValidGhost>(),
+                                   operand2_.template resize<ValidGhost>());
+              }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
@@ -1397,29 +1470,34 @@
           Operand2 const operand2_;
       };
 
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct ProdOp<Resize, Operand1, Operand2, FieldType> {
+#     ifdef FIELD_EXPRESSION_THREADS
+         template<typename Operand1, typename Operand2, typename FieldType>
+          struct ProdOp<Resize, Operand1, Operand2, FieldType> {
 
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
-          ProdOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
-          typedef SeqWalkType;
-          ProdOp(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {};
-          template<typename Shift>
-           inline SeqWalkType init(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
+            public:
+             FieldType typedef field_type;
+             typename field_type::memory_window typedef MemoryWindow;
+             ProdOp<SeqWalk,
+                    typename Operand1::SeqWalkType,
+                    typename Operand2::SeqWalkType,
+                    FieldType> typedef SeqWalkType;
+             ProdOp(Operand1 const & operand1, Operand2 const & operand2)
+             : operand1_(operand1), operand2_(operand2)
+             {};
+             template<typename Shift>
+              inline SeqWalkType init(structured::IntVec const & split,
+                                      structured::IntVec const & location) const {
 
-              return SeqWalkType(operand1_.template init<Shift>(split, location),
-                                 operand2_.template init<Shift>(split, location));
-           };
+                 return SeqWalkType(operand1_.template init<Shift>(split, location),
+                                    operand2_.template init<Shift>(split, location));
+              };
 
-         private:
-          Operand1 const operand1_;
-          Operand2 const operand2_;
-      };
+            private:
+             Operand1 const operand1_;
+             Operand2 const operand2_;
+         }
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
 
       template<typename Operand1, typename Operand2, typename FieldType>
        struct ProdOp<SeqWalk, Operand1, Operand2, FieldType> {
@@ -1658,8 +1736,11 @@
           typename field_type::memory_window typedef MemoryWindow;
           DivOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
           typedef SeqWalkType;
-          DivOp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
-          typedef ResizeType;
+#         ifdef FIELD_EXPRESSION_THREADS
+             DivOp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
+             typedef ResizeType
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              DivOp<GPUWalk,
                    typename Operand1::GPUWalkType,
@@ -1683,10 +1764,15 @@
               return SeqWalkType(operand1_.template init<ValidGhost, Shift>(),
                                  operand2_.template init<ValidGhost, Shift>());
            };
-          template<typename ValidGhost>
-           inline ResizeType resize(void) const {
-              return ResizeType(operand1_.template resize<ValidGhost>(), operand2_.template resize<ValidGhost>());
-           };
+#         ifdef FIELD_EXPRESSION_THREADS
+             template<typename ValidGhost>
+              inline ResizeType resize(void) const {
+
+                 return ResizeType(operand1_.template resize<ValidGhost>(),
+                                   operand2_.template resize<ValidGhost>());
+              }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
@@ -1708,29 +1794,34 @@
           Operand2 const operand2_;
       };
 
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct DivOp<Resize, Operand1, Operand2, FieldType> {
+#     ifdef FIELD_EXPRESSION_THREADS
+         template<typename Operand1, typename Operand2, typename FieldType>
+          struct DivOp<Resize, Operand1, Operand2, FieldType> {
 
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
-          DivOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
-          typedef SeqWalkType;
-          DivOp(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {};
-          template<typename Shift>
-           inline SeqWalkType init(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
+            public:
+             FieldType typedef field_type;
+             typename field_type::memory_window typedef MemoryWindow;
+             DivOp<SeqWalk,
+                   typename Operand1::SeqWalkType,
+                   typename Operand2::SeqWalkType,
+                   FieldType> typedef SeqWalkType;
+             DivOp(Operand1 const & operand1, Operand2 const & operand2)
+             : operand1_(operand1), operand2_(operand2)
+             {};
+             template<typename Shift>
+              inline SeqWalkType init(structured::IntVec const & split,
+                                      structured::IntVec const & location) const {
 
-              return SeqWalkType(operand1_.template init<Shift>(split, location),
-                                 operand2_.template init<Shift>(split, location));
-           };
+                 return SeqWalkType(operand1_.template init<Shift>(split, location),
+                                    operand2_.template init<Shift>(split, location));
+              };
 
-         private:
-          Operand1 const operand1_;
-          Operand2 const operand2_;
-      };
+            private:
+             Operand1 const operand1_;
+             Operand2 const operand2_;
+         }
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
 
       template<typename Operand1, typename Operand2, typename FieldType>
        struct DivOp<SeqWalk, Operand1, Operand2, FieldType> {
@@ -1966,7 +2057,10 @@
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
           SinFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
-          SinFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
+#         ifdef FIELD_EXPRESSION_THREADS
+             SinFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              SinFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
@@ -1980,10 +2074,13 @@
            inline SeqWalkType init(void) const {
               return SeqWalkType(operand_.template init<ValidGhost, Shift>());
            };
-          template<typename ValidGhost>
-           inline ResizeType resize(void) const {
-              return ResizeType(operand_.template resize<ValidGhost>());
-           };
+#         ifdef FIELD_EXPRESSION_THREADS
+             template<typename ValidGhost>
+              inline ResizeType resize(void) const {
+                 return ResizeType(operand_.template resize<ValidGhost>());
+              }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
@@ -2000,25 +2097,28 @@
           Operand const operand_;
       };
 
-      template<typename Operand, typename FieldType>
-       struct SinFcn<Resize, Operand, FieldType> {
+#     ifdef FIELD_EXPRESSION_THREADS
+         template<typename Operand, typename FieldType>
+          struct SinFcn<Resize, Operand, FieldType> {
 
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
-          SinFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
-          SinFcn(Operand const & operand)
-          : operand_(operand)
-          {};
-          template<typename Shift>
-           inline SeqWalkType init(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-              return SeqWalkType(operand_.template init<Shift>(split, location));
-           };
+            public:
+             FieldType typedef field_type;
+             typename field_type::memory_window typedef MemoryWindow;
+             SinFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
+             SinFcn(Operand const & operand)
+             : operand_(operand)
+             {};
+             template<typename Shift>
+              inline SeqWalkType init(structured::IntVec const & split,
+                                      structured::IntVec const & location) const {
+                 return SeqWalkType(operand_.template init<Shift>(split, location));
+              };
 
-         private:
-          Operand const operand_;
-      };
+            private:
+             Operand const operand_;
+         }
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
 
       template<typename Operand, typename FieldType>
        struct SinFcn<SeqWalk, Operand, FieldType> {
@@ -2117,7 +2217,10 @@
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
           CosFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
-          CosFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
+#         ifdef FIELD_EXPRESSION_THREADS
+             CosFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              CosFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
@@ -2131,10 +2234,13 @@
            inline SeqWalkType init(void) const {
               return SeqWalkType(operand_.template init<ValidGhost, Shift>());
            };
-          template<typename ValidGhost>
-           inline ResizeType resize(void) const {
-              return ResizeType(operand_.template resize<ValidGhost>());
-           };
+#         ifdef FIELD_EXPRESSION_THREADS
+             template<typename ValidGhost>
+              inline ResizeType resize(void) const {
+                 return ResizeType(operand_.template resize<ValidGhost>());
+              }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
@@ -2151,25 +2257,28 @@
           Operand const operand_;
       };
 
-      template<typename Operand, typename FieldType>
-       struct CosFcn<Resize, Operand, FieldType> {
+#     ifdef FIELD_EXPRESSION_THREADS
+         template<typename Operand, typename FieldType>
+          struct CosFcn<Resize, Operand, FieldType> {
 
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
-          CosFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
-          CosFcn(Operand const & operand)
-          : operand_(operand)
-          {};
-          template<typename Shift>
-           inline SeqWalkType init(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-              return SeqWalkType(operand_.template init<Shift>(split, location));
-           };
+            public:
+             FieldType typedef field_type;
+             typename field_type::memory_window typedef MemoryWindow;
+             CosFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
+             CosFcn(Operand const & operand)
+             : operand_(operand)
+             {};
+             template<typename Shift>
+              inline SeqWalkType init(structured::IntVec const & split,
+                                      structured::IntVec const & location) const {
+                 return SeqWalkType(operand_.template init<Shift>(split, location));
+              };
 
-         private:
-          Operand const operand_;
-      };
+            private:
+             Operand const operand_;
+         }
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
 
       template<typename Operand, typename FieldType>
        struct CosFcn<SeqWalk, Operand, FieldType> {
@@ -2268,7 +2377,10 @@
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
           TanFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
-          TanFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
+#         ifdef FIELD_EXPRESSION_THREADS
+             TanFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              TanFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
@@ -2282,10 +2394,13 @@
            inline SeqWalkType init(void) const {
               return SeqWalkType(operand_.template init<ValidGhost, Shift>());
            };
-          template<typename ValidGhost>
-           inline ResizeType resize(void) const {
-              return ResizeType(operand_.template resize<ValidGhost>());
-           };
+#         ifdef FIELD_EXPRESSION_THREADS
+             template<typename ValidGhost>
+              inline ResizeType resize(void) const {
+                 return ResizeType(operand_.template resize<ValidGhost>());
+              }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
@@ -2302,25 +2417,28 @@
           Operand const operand_;
       };
 
-      template<typename Operand, typename FieldType>
-       struct TanFcn<Resize, Operand, FieldType> {
+#     ifdef FIELD_EXPRESSION_THREADS
+         template<typename Operand, typename FieldType>
+          struct TanFcn<Resize, Operand, FieldType> {
 
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
-          TanFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
-          TanFcn(Operand const & operand)
-          : operand_(operand)
-          {};
-          template<typename Shift>
-           inline SeqWalkType init(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-              return SeqWalkType(operand_.template init<Shift>(split, location));
-           };
+            public:
+             FieldType typedef field_type;
+             typename field_type::memory_window typedef MemoryWindow;
+             TanFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
+             TanFcn(Operand const & operand)
+             : operand_(operand)
+             {};
+             template<typename Shift>
+              inline SeqWalkType init(structured::IntVec const & split,
+                                      structured::IntVec const & location) const {
+                 return SeqWalkType(operand_.template init<Shift>(split, location));
+              };
 
-         private:
-          Operand const operand_;
-      };
+            private:
+             Operand const operand_;
+         }
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
 
       template<typename Operand, typename FieldType>
        struct TanFcn<SeqWalk, Operand, FieldType> {
@@ -2419,7 +2537,10 @@
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
           ExpFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
-          ExpFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
+#         ifdef FIELD_EXPRESSION_THREADS
+             ExpFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              ExpFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
@@ -2433,10 +2554,13 @@
            inline SeqWalkType init(void) const {
               return SeqWalkType(operand_.template init<ValidGhost, Shift>());
            };
-          template<typename ValidGhost>
-           inline ResizeType resize(void) const {
-              return ResizeType(operand_.template resize<ValidGhost>());
-           };
+#         ifdef FIELD_EXPRESSION_THREADS
+             template<typename ValidGhost>
+              inline ResizeType resize(void) const {
+                 return ResizeType(operand_.template resize<ValidGhost>());
+              }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
@@ -2453,25 +2577,28 @@
           Operand const operand_;
       };
 
-      template<typename Operand, typename FieldType>
-       struct ExpFcn<Resize, Operand, FieldType> {
+#     ifdef FIELD_EXPRESSION_THREADS
+         template<typename Operand, typename FieldType>
+          struct ExpFcn<Resize, Operand, FieldType> {
 
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
-          ExpFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
-          ExpFcn(Operand const & operand)
-          : operand_(operand)
-          {};
-          template<typename Shift>
-           inline SeqWalkType init(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-              return SeqWalkType(operand_.template init<Shift>(split, location));
-           };
+            public:
+             FieldType typedef field_type;
+             typename field_type::memory_window typedef MemoryWindow;
+             ExpFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
+             ExpFcn(Operand const & operand)
+             : operand_(operand)
+             {};
+             template<typename Shift>
+              inline SeqWalkType init(structured::IntVec const & split,
+                                      structured::IntVec const & location) const {
+                 return SeqWalkType(operand_.template init<Shift>(split, location));
+              };
 
-         private:
-          Operand const operand_;
-      };
+            private:
+             Operand const operand_;
+         }
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
 
       template<typename Operand, typename FieldType>
        struct ExpFcn<SeqWalk, Operand, FieldType> {
@@ -2570,7 +2697,10 @@
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
           TanhFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
-          TanhFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
+#         ifdef FIELD_EXPRESSION_THREADS
+             TanhFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              TanhFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
@@ -2584,10 +2714,13 @@
            inline SeqWalkType init(void) const {
               return SeqWalkType(operand_.template init<ValidGhost, Shift>());
            };
-          template<typename ValidGhost>
-           inline ResizeType resize(void) const {
-              return ResizeType(operand_.template resize<ValidGhost>());
-           };
+#         ifdef FIELD_EXPRESSION_THREADS
+             template<typename ValidGhost>
+              inline ResizeType resize(void) const {
+                 return ResizeType(operand_.template resize<ValidGhost>());
+              }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
@@ -2604,25 +2737,28 @@
           Operand const operand_;
       };
 
-      template<typename Operand, typename FieldType>
-       struct TanhFcn<Resize, Operand, FieldType> {
+#     ifdef FIELD_EXPRESSION_THREADS
+         template<typename Operand, typename FieldType>
+          struct TanhFcn<Resize, Operand, FieldType> {
 
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
-          TanhFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
-          TanhFcn(Operand const & operand)
-          : operand_(operand)
-          {};
-          template<typename Shift>
-           inline SeqWalkType init(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-              return SeqWalkType(operand_.template init<Shift>(split, location));
-           };
+            public:
+             FieldType typedef field_type;
+             typename field_type::memory_window typedef MemoryWindow;
+             TanhFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
+             TanhFcn(Operand const & operand)
+             : operand_(operand)
+             {};
+             template<typename Shift>
+              inline SeqWalkType init(structured::IntVec const & split,
+                                      structured::IntVec const & location) const {
+                 return SeqWalkType(operand_.template init<Shift>(split, location));
+              };
 
-         private:
-          Operand const operand_;
-      };
+            private:
+             Operand const operand_;
+         }
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
 
       template<typename Operand, typename FieldType>
        struct TanhFcn<SeqWalk, Operand, FieldType> {
@@ -2721,7 +2857,10 @@
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
           AbsFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
-          AbsFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
+#         ifdef FIELD_EXPRESSION_THREADS
+             AbsFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              AbsFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
@@ -2735,10 +2874,13 @@
            inline SeqWalkType init(void) const {
               return SeqWalkType(operand_.template init<ValidGhost, Shift>());
            };
-          template<typename ValidGhost>
-           inline ResizeType resize(void) const {
-              return ResizeType(operand_.template resize<ValidGhost>());
-           };
+#         ifdef FIELD_EXPRESSION_THREADS
+             template<typename ValidGhost>
+              inline ResizeType resize(void) const {
+                 return ResizeType(operand_.template resize<ValidGhost>());
+              }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
@@ -2755,25 +2897,28 @@
           Operand const operand_;
       };
 
-      template<typename Operand, typename FieldType>
-       struct AbsFcn<Resize, Operand, FieldType> {
+#     ifdef FIELD_EXPRESSION_THREADS
+         template<typename Operand, typename FieldType>
+          struct AbsFcn<Resize, Operand, FieldType> {
 
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
-          AbsFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
-          AbsFcn(Operand const & operand)
-          : operand_(operand)
-          {};
-          template<typename Shift>
-           inline SeqWalkType init(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-              return SeqWalkType(operand_.template init<Shift>(split, location));
-           };
+            public:
+             FieldType typedef field_type;
+             typename field_type::memory_window typedef MemoryWindow;
+             AbsFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
+             AbsFcn(Operand const & operand)
+             : operand_(operand)
+             {};
+             template<typename Shift>
+              inline SeqWalkType init(structured::IntVec const & split,
+                                      structured::IntVec const & location) const {
+                 return SeqWalkType(operand_.template init<Shift>(split, location));
+              };
 
-         private:
-          Operand const operand_;
-      };
+            private:
+             Operand const operand_;
+         }
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
 
       template<typename Operand, typename FieldType>
        struct AbsFcn<SeqWalk, Operand, FieldType> {
@@ -2872,7 +3017,10 @@
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
           NegFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
-          NegFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
+#         ifdef FIELD_EXPRESSION_THREADS
+             NegFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              NegFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
@@ -2886,10 +3034,13 @@
            inline SeqWalkType init(void) const {
               return SeqWalkType(operand_.template init<ValidGhost, Shift>());
            };
-          template<typename ValidGhost>
-           inline ResizeType resize(void) const {
-              return ResizeType(operand_.template resize<ValidGhost>());
-           };
+#         ifdef FIELD_EXPRESSION_THREADS
+             template<typename ValidGhost>
+              inline ResizeType resize(void) const {
+                 return ResizeType(operand_.template resize<ValidGhost>());
+              }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
@@ -2906,25 +3057,28 @@
           Operand const operand_;
       };
 
-      template<typename Operand, typename FieldType>
-       struct NegFcn<Resize, Operand, FieldType> {
+#     ifdef FIELD_EXPRESSION_THREADS
+         template<typename Operand, typename FieldType>
+          struct NegFcn<Resize, Operand, FieldType> {
 
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
-          NegFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
-          NegFcn(Operand const & operand)
-          : operand_(operand)
-          {};
-          template<typename Shift>
-           inline SeqWalkType init(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-              return SeqWalkType(operand_.template init<Shift>(split, location));
-           };
+            public:
+             FieldType typedef field_type;
+             typename field_type::memory_window typedef MemoryWindow;
+             NegFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
+             NegFcn(Operand const & operand)
+             : operand_(operand)
+             {};
+             template<typename Shift>
+              inline SeqWalkType init(structured::IntVec const & split,
+                                      structured::IntVec const & location) const {
+                 return SeqWalkType(operand_.template init<Shift>(split, location));
+              };
 
-         private:
-          Operand const operand_;
-      };
+            private:
+             Operand const operand_;
+         }
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
 
       template<typename Operand, typename FieldType>
        struct NegFcn<SeqWalk, Operand, FieldType> {
@@ -3024,8 +3178,11 @@
           typename field_type::memory_window typedef MemoryWindow;
           PowFcn<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
           typedef SeqWalkType;
-          PowFcn<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
-          typedef ResizeType;
+#         ifdef FIELD_EXPRESSION_THREADS
+             PowFcn<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
+             typedef ResizeType
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              PowFcn<GPUWalk,
                     typename Operand1::GPUWalkType,
@@ -3049,10 +3206,15 @@
               return SeqWalkType(operand1_.template init<ValidGhost, Shift>(),
                                  operand2_.template init<ValidGhost, Shift>());
            };
-          template<typename ValidGhost>
-           inline ResizeType resize(void) const {
-              return ResizeType(operand1_.template resize<ValidGhost>(), operand2_.template resize<ValidGhost>());
-           };
+#         ifdef FIELD_EXPRESSION_THREADS
+             template<typename ValidGhost>
+              inline ResizeType resize(void) const {
+
+                 return ResizeType(operand1_.template resize<ValidGhost>(),
+                                   operand2_.template resize<ValidGhost>());
+              }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
@@ -3074,29 +3236,34 @@
           Operand2 const operand2_;
       };
 
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct PowFcn<Resize, Operand1, Operand2, FieldType> {
+#     ifdef FIELD_EXPRESSION_THREADS
+         template<typename Operand1, typename Operand2, typename FieldType>
+          struct PowFcn<Resize, Operand1, Operand2, FieldType> {
 
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
-          PowFcn<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
-          typedef SeqWalkType;
-          PowFcn(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {};
-          template<typename Shift>
-           inline SeqWalkType init(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
+            public:
+             FieldType typedef field_type;
+             typename field_type::memory_window typedef MemoryWindow;
+             PowFcn<SeqWalk,
+                    typename Operand1::SeqWalkType,
+                    typename Operand2::SeqWalkType,
+                    FieldType> typedef SeqWalkType;
+             PowFcn(Operand1 const & operand1, Operand2 const & operand2)
+             : operand1_(operand1), operand2_(operand2)
+             {};
+             template<typename Shift>
+              inline SeqWalkType init(structured::IntVec const & split,
+                                      structured::IntVec const & location) const {
 
-              return SeqWalkType(operand1_.template init<Shift>(split, location),
-                                 operand2_.template init<Shift>(split, location));
-           };
+                 return SeqWalkType(operand1_.template init<Shift>(split, location),
+                                    operand2_.template init<Shift>(split, location));
+              };
 
-         private:
-          Operand1 const operand1_;
-          Operand2 const operand2_;
-      };
+            private:
+             Operand1 const operand1_;
+             Operand2 const operand2_;
+         }
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
 
       template<typename Operand1, typename Operand2, typename FieldType>
        struct PowFcn<SeqWalk, Operand1, Operand2, FieldType> {
@@ -3336,7 +3503,10 @@
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
           SqrtFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
-          SqrtFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
+#         ifdef FIELD_EXPRESSION_THREADS
+             SqrtFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              SqrtFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
@@ -3350,10 +3520,13 @@
            inline SeqWalkType init(void) const {
               return SeqWalkType(operand_.template init<ValidGhost, Shift>());
            };
-          template<typename ValidGhost>
-           inline ResizeType resize(void) const {
-              return ResizeType(operand_.template resize<ValidGhost>());
-           };
+#         ifdef FIELD_EXPRESSION_THREADS
+             template<typename ValidGhost>
+              inline ResizeType resize(void) const {
+                 return ResizeType(operand_.template resize<ValidGhost>());
+              }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
@@ -3370,25 +3543,28 @@
           Operand const operand_;
       };
 
-      template<typename Operand, typename FieldType>
-       struct SqrtFcn<Resize, Operand, FieldType> {
+#     ifdef FIELD_EXPRESSION_THREADS
+         template<typename Operand, typename FieldType>
+          struct SqrtFcn<Resize, Operand, FieldType> {
 
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
-          SqrtFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
-          SqrtFcn(Operand const & operand)
-          : operand_(operand)
-          {};
-          template<typename Shift>
-           inline SeqWalkType init(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-              return SeqWalkType(operand_.template init<Shift>(split, location));
-           };
+            public:
+             FieldType typedef field_type;
+             typename field_type::memory_window typedef MemoryWindow;
+             SqrtFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
+             SqrtFcn(Operand const & operand)
+             : operand_(operand)
+             {};
+             template<typename Shift>
+              inline SeqWalkType init(structured::IntVec const & split,
+                                      structured::IntVec const & location) const {
+                 return SeqWalkType(operand_.template init<Shift>(split, location));
+              };
 
-         private:
-          Operand const operand_;
-      };
+            private:
+             Operand const operand_;
+         }
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
 
       template<typename Operand, typename FieldType>
        struct SqrtFcn<SeqWalk, Operand, FieldType> {
@@ -3487,7 +3663,10 @@
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
           LogFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
-          LogFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
+#         ifdef FIELD_EXPRESSION_THREADS
+             LogFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              LogFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
@@ -3501,10 +3680,13 @@
            inline SeqWalkType init(void) const {
               return SeqWalkType(operand_.template init<ValidGhost, Shift>());
            };
-          template<typename ValidGhost>
-           inline ResizeType resize(void) const {
-              return ResizeType(operand_.template resize<ValidGhost>());
-           };
+#         ifdef FIELD_EXPRESSION_THREADS
+             template<typename ValidGhost>
+              inline ResizeType resize(void) const {
+                 return ResizeType(operand_.template resize<ValidGhost>());
+              }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
@@ -3521,25 +3703,28 @@
           Operand const operand_;
       };
 
-      template<typename Operand, typename FieldType>
-       struct LogFcn<Resize, Operand, FieldType> {
+#     ifdef FIELD_EXPRESSION_THREADS
+         template<typename Operand, typename FieldType>
+          struct LogFcn<Resize, Operand, FieldType> {
 
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
-          LogFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
-          LogFcn(Operand const & operand)
-          : operand_(operand)
-          {};
-          template<typename Shift>
-           inline SeqWalkType init(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-              return SeqWalkType(operand_.template init<Shift>(split, location));
-           };
+            public:
+             FieldType typedef field_type;
+             typename field_type::memory_window typedef MemoryWindow;
+             LogFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
+             LogFcn(Operand const & operand)
+             : operand_(operand)
+             {};
+             template<typename Shift>
+              inline SeqWalkType init(structured::IntVec const & split,
+                                      structured::IntVec const & location) const {
+                 return SeqWalkType(operand_.template init<Shift>(split, location));
+              };
 
-         private:
-          Operand const operand_;
-      };
+            private:
+             Operand const operand_;
+         }
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
 
       template<typename Operand, typename FieldType>
        struct LogFcn<SeqWalk, Operand, FieldType> {
@@ -3641,8 +3826,13 @@
                    typename Operand1::SeqWalkType,
                    typename Operand2::SeqWalkType,
                    FieldType> typedef SeqWalkType;
-          EqualCmp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
-          typedef ResizeType;
+#         ifdef FIELD_EXPRESSION_THREADS
+             EqualCmp<Resize,
+                      typename Operand1::ResizeType,
+                      typename Operand2::ResizeType,
+                      FieldType> typedef ResizeType
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              EqualCmp<GPUWalk,
                       typename Operand1::GPUWalkType,
@@ -3666,10 +3856,15 @@
               return SeqWalkType(operand1_.template init<ValidGhost, Shift>(),
                                  operand2_.template init<ValidGhost, Shift>());
            };
-          template<typename ValidGhost>
-           inline ResizeType resize(void) const {
-              return ResizeType(operand1_.template resize<ValidGhost>(), operand2_.template resize<ValidGhost>());
-           };
+#         ifdef FIELD_EXPRESSION_THREADS
+             template<typename ValidGhost>
+              inline ResizeType resize(void) const {
+
+                 return ResizeType(operand1_.template resize<ValidGhost>(),
+                                   operand2_.template resize<ValidGhost>());
+              }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
@@ -3691,31 +3886,34 @@
           Operand2 const operand2_;
       };
 
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct EqualCmp<Resize, Operand1, Operand2, FieldType> {
+#     ifdef FIELD_EXPRESSION_THREADS
+         template<typename Operand1, typename Operand2, typename FieldType>
+          struct EqualCmp<Resize, Operand1, Operand2, FieldType> {
 
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
-          EqualCmp<SeqWalk,
-                   typename Operand1::SeqWalkType,
-                   typename Operand2::SeqWalkType,
-                   FieldType> typedef SeqWalkType;
-          EqualCmp(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {};
-          template<typename Shift>
-           inline SeqWalkType init(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
+            public:
+             FieldType typedef field_type;
+             typename field_type::memory_window typedef MemoryWindow;
+             EqualCmp<SeqWalk,
+                      typename Operand1::SeqWalkType,
+                      typename Operand2::SeqWalkType,
+                      FieldType> typedef SeqWalkType;
+             EqualCmp(Operand1 const & operand1, Operand2 const & operand2)
+             : operand1_(operand1), operand2_(operand2)
+             {};
+             template<typename Shift>
+              inline SeqWalkType init(structured::IntVec const & split,
+                                      structured::IntVec const & location) const {
 
-              return SeqWalkType(operand1_.template init<Shift>(split, location),
-                                 operand2_.template init<Shift>(split, location));
-           };
+                 return SeqWalkType(operand1_.template init<Shift>(split, location),
+                                    operand2_.template init<Shift>(split, location));
+              };
 
-         private:
-          Operand1 const operand1_;
-          Operand2 const operand2_;
-      };
+            private:
+             Operand1 const operand1_;
+             Operand2 const operand2_;
+         }
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
 
       template<typename Operand1, typename Operand2, typename FieldType>
        struct EqualCmp<SeqWalk, Operand1, Operand2, FieldType> {
@@ -3976,8 +4174,13 @@
                      typename Operand1::SeqWalkType,
                      typename Operand2::SeqWalkType,
                      FieldType> typedef SeqWalkType;
-          InequalCmp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
-          typedef ResizeType;
+#         ifdef FIELD_EXPRESSION_THREADS
+             InequalCmp<Resize,
+                        typename Operand1::ResizeType,
+                        typename Operand2::ResizeType,
+                        FieldType> typedef ResizeType
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              InequalCmp<GPUWalk,
                         typename Operand1::GPUWalkType,
@@ -4001,10 +4204,15 @@
               return SeqWalkType(operand1_.template init<ValidGhost, Shift>(),
                                  operand2_.template init<ValidGhost, Shift>());
            };
-          template<typename ValidGhost>
-           inline ResizeType resize(void) const {
-              return ResizeType(operand1_.template resize<ValidGhost>(), operand2_.template resize<ValidGhost>());
-           };
+#         ifdef FIELD_EXPRESSION_THREADS
+             template<typename ValidGhost>
+              inline ResizeType resize(void) const {
+
+                 return ResizeType(operand1_.template resize<ValidGhost>(),
+                                   operand2_.template resize<ValidGhost>());
+              }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
@@ -4026,31 +4234,34 @@
           Operand2 const operand2_;
       };
 
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct InequalCmp<Resize, Operand1, Operand2, FieldType> {
+#     ifdef FIELD_EXPRESSION_THREADS
+         template<typename Operand1, typename Operand2, typename FieldType>
+          struct InequalCmp<Resize, Operand1, Operand2, FieldType> {
 
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
-          InequalCmp<SeqWalk,
-                     typename Operand1::SeqWalkType,
-                     typename Operand2::SeqWalkType,
-                     FieldType> typedef SeqWalkType;
-          InequalCmp(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {};
-          template<typename Shift>
-           inline SeqWalkType init(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
+            public:
+             FieldType typedef field_type;
+             typename field_type::memory_window typedef MemoryWindow;
+             InequalCmp<SeqWalk,
+                        typename Operand1::SeqWalkType,
+                        typename Operand2::SeqWalkType,
+                        FieldType> typedef SeqWalkType;
+             InequalCmp(Operand1 const & operand1, Operand2 const & operand2)
+             : operand1_(operand1), operand2_(operand2)
+             {};
+             template<typename Shift>
+              inline SeqWalkType init(structured::IntVec const & split,
+                                      structured::IntVec const & location) const {
 
-              return SeqWalkType(operand1_.template init<Shift>(split, location),
-                                 operand2_.template init<Shift>(split, location));
-           };
+                 return SeqWalkType(operand1_.template init<Shift>(split, location),
+                                    operand2_.template init<Shift>(split, location));
+              };
 
-         private:
-          Operand1 const operand1_;
-          Operand2 const operand2_;
-      };
+            private:
+             Operand1 const operand1_;
+             Operand2 const operand2_;
+         }
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
 
       template<typename Operand1, typename Operand2, typename FieldType>
        struct InequalCmp<SeqWalk, Operand1, Operand2, FieldType> {
@@ -4313,10 +4524,13 @@
                       typename Operand1::SeqWalkType,
                       typename Operand2::SeqWalkType,
                       FieldType> typedef SeqWalkType;
-          LessThanCmp<Resize,
-                      typename Operand1::ResizeType,
-                      typename Operand2::ResizeType,
-                      FieldType> typedef ResizeType;
+#         ifdef FIELD_EXPRESSION_THREADS
+             LessThanCmp<Resize,
+                         typename Operand1::ResizeType,
+                         typename Operand2::ResizeType,
+                         FieldType> typedef ResizeType
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              LessThanCmp<GPUWalk,
                          typename Operand1::GPUWalkType,
@@ -4340,10 +4554,15 @@
               return SeqWalkType(operand1_.template init<ValidGhost, Shift>(),
                                  operand2_.template init<ValidGhost, Shift>());
            };
-          template<typename ValidGhost>
-           inline ResizeType resize(void) const {
-              return ResizeType(operand1_.template resize<ValidGhost>(), operand2_.template resize<ValidGhost>());
-           };
+#         ifdef FIELD_EXPRESSION_THREADS
+             template<typename ValidGhost>
+              inline ResizeType resize(void) const {
+
+                 return ResizeType(operand1_.template resize<ValidGhost>(),
+                                   operand2_.template resize<ValidGhost>());
+              }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
@@ -4365,31 +4584,34 @@
           Operand2 const operand2_;
       };
 
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct LessThanCmp<Resize, Operand1, Operand2, FieldType> {
+#     ifdef FIELD_EXPRESSION_THREADS
+         template<typename Operand1, typename Operand2, typename FieldType>
+          struct LessThanCmp<Resize, Operand1, Operand2, FieldType> {
 
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
-          LessThanCmp<SeqWalk,
-                      typename Operand1::SeqWalkType,
-                      typename Operand2::SeqWalkType,
-                      FieldType> typedef SeqWalkType;
-          LessThanCmp(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {};
-          template<typename Shift>
-           inline SeqWalkType init(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
+            public:
+             FieldType typedef field_type;
+             typename field_type::memory_window typedef MemoryWindow;
+             LessThanCmp<SeqWalk,
+                         typename Operand1::SeqWalkType,
+                         typename Operand2::SeqWalkType,
+                         FieldType> typedef SeqWalkType;
+             LessThanCmp(Operand1 const & operand1, Operand2 const & operand2)
+             : operand1_(operand1), operand2_(operand2)
+             {};
+             template<typename Shift>
+              inline SeqWalkType init(structured::IntVec const & split,
+                                      structured::IntVec const & location) const {
 
-              return SeqWalkType(operand1_.template init<Shift>(split, location),
-                                 operand2_.template init<Shift>(split, location));
-           };
+                 return SeqWalkType(operand1_.template init<Shift>(split, location),
+                                    operand2_.template init<Shift>(split, location));
+              };
 
-         private:
-          Operand1 const operand1_;
-          Operand2 const operand2_;
-      };
+            private:
+             Operand1 const operand1_;
+             Operand2 const operand2_;
+         }
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
 
       template<typename Operand1, typename Operand2, typename FieldType>
        struct LessThanCmp<SeqWalk, Operand1, Operand2, FieldType> {
@@ -4652,10 +4874,13 @@
                            typename Operand1::SeqWalkType,
                            typename Operand2::SeqWalkType,
                            FieldType> typedef SeqWalkType;
-          LessThanEqualCmp<Resize,
-                           typename Operand1::ResizeType,
-                           typename Operand2::ResizeType,
-                           FieldType> typedef ResizeType;
+#         ifdef FIELD_EXPRESSION_THREADS
+             LessThanEqualCmp<Resize,
+                              typename Operand1::ResizeType,
+                              typename Operand2::ResizeType,
+                              FieldType> typedef ResizeType
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              LessThanEqualCmp<GPUWalk,
                               typename Operand1::GPUWalkType,
@@ -4679,10 +4904,15 @@
               return SeqWalkType(operand1_.template init<ValidGhost, Shift>(),
                                  operand2_.template init<ValidGhost, Shift>());
            };
-          template<typename ValidGhost>
-           inline ResizeType resize(void) const {
-              return ResizeType(operand1_.template resize<ValidGhost>(), operand2_.template resize<ValidGhost>());
-           };
+#         ifdef FIELD_EXPRESSION_THREADS
+             template<typename ValidGhost>
+              inline ResizeType resize(void) const {
+
+                 return ResizeType(operand1_.template resize<ValidGhost>(),
+                                   operand2_.template resize<ValidGhost>());
+              }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
@@ -4704,31 +4934,34 @@
           Operand2 const operand2_;
       };
 
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct LessThanEqualCmp<Resize, Operand1, Operand2, FieldType> {
+#     ifdef FIELD_EXPRESSION_THREADS
+         template<typename Operand1, typename Operand2, typename FieldType>
+          struct LessThanEqualCmp<Resize, Operand1, Operand2, FieldType> {
 
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
-          LessThanEqualCmp<SeqWalk,
-                           typename Operand1::SeqWalkType,
-                           typename Operand2::SeqWalkType,
-                           FieldType> typedef SeqWalkType;
-          LessThanEqualCmp(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {};
-          template<typename Shift>
-           inline SeqWalkType init(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
+            public:
+             FieldType typedef field_type;
+             typename field_type::memory_window typedef MemoryWindow;
+             LessThanEqualCmp<SeqWalk,
+                              typename Operand1::SeqWalkType,
+                              typename Operand2::SeqWalkType,
+                              FieldType> typedef SeqWalkType;
+             LessThanEqualCmp(Operand1 const & operand1, Operand2 const & operand2)
+             : operand1_(operand1), operand2_(operand2)
+             {};
+             template<typename Shift>
+              inline SeqWalkType init(structured::IntVec const & split,
+                                      structured::IntVec const & location) const {
 
-              return SeqWalkType(operand1_.template init<Shift>(split, location),
-                                 operand2_.template init<Shift>(split, location));
-           };
+                 return SeqWalkType(operand1_.template init<Shift>(split, location),
+                                    operand2_.template init<Shift>(split, location));
+              };
 
-         private:
-          Operand1 const operand1_;
-          Operand2 const operand2_;
-      };
+            private:
+             Operand1 const operand1_;
+             Operand2 const operand2_;
+         }
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
 
       template<typename Operand1, typename Operand2, typename FieldType>
        struct LessThanEqualCmp<SeqWalk, Operand1, Operand2, FieldType> {
@@ -4993,10 +5226,13 @@
                          typename Operand1::SeqWalkType,
                          typename Operand2::SeqWalkType,
                          FieldType> typedef SeqWalkType;
-          GreaterThanCmp<Resize,
-                         typename Operand1::ResizeType,
-                         typename Operand2::ResizeType,
-                         FieldType> typedef ResizeType;
+#         ifdef FIELD_EXPRESSION_THREADS
+             GreaterThanCmp<Resize,
+                            typename Operand1::ResizeType,
+                            typename Operand2::ResizeType,
+                            FieldType> typedef ResizeType
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              GreaterThanCmp<GPUWalk,
                             typename Operand1::GPUWalkType,
@@ -5020,10 +5256,15 @@
               return SeqWalkType(operand1_.template init<ValidGhost, Shift>(),
                                  operand2_.template init<ValidGhost, Shift>());
            };
-          template<typename ValidGhost>
-           inline ResizeType resize(void) const {
-              return ResizeType(operand1_.template resize<ValidGhost>(), operand2_.template resize<ValidGhost>());
-           };
+#         ifdef FIELD_EXPRESSION_THREADS
+             template<typename ValidGhost>
+              inline ResizeType resize(void) const {
+
+                 return ResizeType(operand1_.template resize<ValidGhost>(),
+                                   operand2_.template resize<ValidGhost>());
+              }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
@@ -5045,31 +5286,34 @@
           Operand2 const operand2_;
       };
 
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct GreaterThanCmp<Resize, Operand1, Operand2, FieldType> {
+#     ifdef FIELD_EXPRESSION_THREADS
+         template<typename Operand1, typename Operand2, typename FieldType>
+          struct GreaterThanCmp<Resize, Operand1, Operand2, FieldType> {
 
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
-          GreaterThanCmp<SeqWalk,
-                         typename Operand1::SeqWalkType,
-                         typename Operand2::SeqWalkType,
-                         FieldType> typedef SeqWalkType;
-          GreaterThanCmp(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {};
-          template<typename Shift>
-           inline SeqWalkType init(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
+            public:
+             FieldType typedef field_type;
+             typename field_type::memory_window typedef MemoryWindow;
+             GreaterThanCmp<SeqWalk,
+                            typename Operand1::SeqWalkType,
+                            typename Operand2::SeqWalkType,
+                            FieldType> typedef SeqWalkType;
+             GreaterThanCmp(Operand1 const & operand1, Operand2 const & operand2)
+             : operand1_(operand1), operand2_(operand2)
+             {};
+             template<typename Shift>
+              inline SeqWalkType init(structured::IntVec const & split,
+                                      structured::IntVec const & location) const {
 
-              return SeqWalkType(operand1_.template init<Shift>(split, location),
-                                 operand2_.template init<Shift>(split, location));
-           };
+                 return SeqWalkType(operand1_.template init<Shift>(split, location),
+                                    operand2_.template init<Shift>(split, location));
+              };
 
-         private:
-          Operand1 const operand1_;
-          Operand2 const operand2_;
-      };
+            private:
+             Operand1 const operand1_;
+             Operand2 const operand2_;
+         }
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
 
       template<typename Operand1, typename Operand2, typename FieldType>
        struct GreaterThanCmp<SeqWalk, Operand1, Operand2, FieldType> {
@@ -5334,10 +5578,13 @@
                               typename Operand1::SeqWalkType,
                               typename Operand2::SeqWalkType,
                               FieldType> typedef SeqWalkType;
-          GreaterThanEqualCmp<Resize,
-                              typename Operand1::ResizeType,
-                              typename Operand2::ResizeType,
-                              FieldType> typedef ResizeType;
+#         ifdef FIELD_EXPRESSION_THREADS
+             GreaterThanEqualCmp<Resize,
+                                 typename Operand1::ResizeType,
+                                 typename Operand2::ResizeType,
+                                 FieldType> typedef ResizeType
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              GreaterThanEqualCmp<GPUWalk,
                                  typename Operand1::GPUWalkType,
@@ -5361,10 +5608,15 @@
               return SeqWalkType(operand1_.template init<ValidGhost, Shift>(),
                                  operand2_.template init<ValidGhost, Shift>());
            };
-          template<typename ValidGhost>
-           inline ResizeType resize(void) const {
-              return ResizeType(operand1_.template resize<ValidGhost>(), operand2_.template resize<ValidGhost>());
-           };
+#         ifdef FIELD_EXPRESSION_THREADS
+             template<typename ValidGhost>
+              inline ResizeType resize(void) const {
+
+                 return ResizeType(operand1_.template resize<ValidGhost>(),
+                                   operand2_.template resize<ValidGhost>());
+              }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
@@ -5386,31 +5638,34 @@
           Operand2 const operand2_;
       };
 
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct GreaterThanEqualCmp<Resize, Operand1, Operand2, FieldType> {
+#     ifdef FIELD_EXPRESSION_THREADS
+         template<typename Operand1, typename Operand2, typename FieldType>
+          struct GreaterThanEqualCmp<Resize, Operand1, Operand2, FieldType> {
 
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
-          GreaterThanEqualCmp<SeqWalk,
-                              typename Operand1::SeqWalkType,
-                              typename Operand2::SeqWalkType,
-                              FieldType> typedef SeqWalkType;
-          GreaterThanEqualCmp(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {};
-          template<typename Shift>
-           inline SeqWalkType init(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
+            public:
+             FieldType typedef field_type;
+             typename field_type::memory_window typedef MemoryWindow;
+             GreaterThanEqualCmp<SeqWalk,
+                                 typename Operand1::SeqWalkType,
+                                 typename Operand2::SeqWalkType,
+                                 FieldType> typedef SeqWalkType;
+             GreaterThanEqualCmp(Operand1 const & operand1, Operand2 const & operand2)
+             : operand1_(operand1), operand2_(operand2)
+             {};
+             template<typename Shift>
+              inline SeqWalkType init(structured::IntVec const & split,
+                                      structured::IntVec const & location) const {
 
-              return SeqWalkType(operand1_.template init<Shift>(split, location),
-                                 operand2_.template init<Shift>(split, location));
-           };
+                 return SeqWalkType(operand1_.template init<Shift>(split, location),
+                                    operand2_.template init<Shift>(split, location));
+              };
 
-         private:
-          Operand1 const operand1_;
-          Operand2 const operand2_;
-      };
+            private:
+             Operand1 const operand1_;
+             Operand2 const operand2_;
+         }
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
 
       template<typename Operand1, typename Operand2, typename FieldType>
        struct GreaterThanEqualCmp<SeqWalk, Operand1, Operand2, FieldType> {
@@ -5673,8 +5928,11 @@
           typename field_type::memory_window typedef MemoryWindow;
           AndOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
           typedef SeqWalkType;
-          AndOp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
-          typedef ResizeType;
+#         ifdef FIELD_EXPRESSION_THREADS
+             AndOp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
+             typedef ResizeType
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              AndOp<GPUWalk,
                    typename Operand1::GPUWalkType,
@@ -5698,10 +5956,15 @@
               return SeqWalkType(operand1_.template init<ValidGhost, Shift>(),
                                  operand2_.template init<ValidGhost, Shift>());
            };
-          template<typename ValidGhost>
-           inline ResizeType resize(void) const {
-              return ResizeType(operand1_.template resize<ValidGhost>(), operand2_.template resize<ValidGhost>());
-           };
+#         ifdef FIELD_EXPRESSION_THREADS
+             template<typename ValidGhost>
+              inline ResizeType resize(void) const {
+
+                 return ResizeType(operand1_.template resize<ValidGhost>(),
+                                   operand2_.template resize<ValidGhost>());
+              }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
@@ -5723,29 +5986,34 @@
           Operand2 const operand2_;
       };
 
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct AndOp<Resize, Operand1, Operand2, FieldType> {
+#     ifdef FIELD_EXPRESSION_THREADS
+         template<typename Operand1, typename Operand2, typename FieldType>
+          struct AndOp<Resize, Operand1, Operand2, FieldType> {
 
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
-          AndOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
-          typedef SeqWalkType;
-          AndOp(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {};
-          template<typename Shift>
-           inline SeqWalkType init(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
+            public:
+             FieldType typedef field_type;
+             typename field_type::memory_window typedef MemoryWindow;
+             AndOp<SeqWalk,
+                   typename Operand1::SeqWalkType,
+                   typename Operand2::SeqWalkType,
+                   FieldType> typedef SeqWalkType;
+             AndOp(Operand1 const & operand1, Operand2 const & operand2)
+             : operand1_(operand1), operand2_(operand2)
+             {};
+             template<typename Shift>
+              inline SeqWalkType init(structured::IntVec const & split,
+                                      structured::IntVec const & location) const {
 
-              return SeqWalkType(operand1_.template init<Shift>(split, location),
-                                 operand2_.template init<Shift>(split, location));
-           };
+                 return SeqWalkType(operand1_.template init<Shift>(split, location),
+                                    operand2_.template init<Shift>(split, location));
+              };
 
-         private:
-          Operand1 const operand1_;
-          Operand2 const operand2_;
-      };
+            private:
+             Operand1 const operand1_;
+             Operand2 const operand2_;
+         }
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
 
       template<typename Operand1, typename Operand2, typename FieldType>
        struct AndOp<SeqWalk, Operand1, Operand2, FieldType> {
@@ -5878,8 +6146,11 @@
           typename field_type::memory_window typedef MemoryWindow;
           OrOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
           typedef SeqWalkType;
-          OrOp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
-          typedef ResizeType;
+#         ifdef FIELD_EXPRESSION_THREADS
+             OrOp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
+             typedef ResizeType
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              OrOp<GPUWalk, typename Operand1::GPUWalkType, typename Operand2::GPUWalkType, FieldType>
              typedef GPUWalkType
@@ -5901,10 +6172,15 @@
               return SeqWalkType(operand1_.template init<ValidGhost, Shift>(),
                                  operand2_.template init<ValidGhost, Shift>());
            };
-          template<typename ValidGhost>
-           inline ResizeType resize(void) const {
-              return ResizeType(operand1_.template resize<ValidGhost>(), operand2_.template resize<ValidGhost>());
-           };
+#         ifdef FIELD_EXPRESSION_THREADS
+             template<typename ValidGhost>
+              inline ResizeType resize(void) const {
+
+                 return ResizeType(operand1_.template resize<ValidGhost>(),
+                                   operand2_.template resize<ValidGhost>());
+              }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
@@ -5926,29 +6202,32 @@
           Operand2 const operand2_;
       };
 
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct OrOp<Resize, Operand1, Operand2, FieldType> {
+#     ifdef FIELD_EXPRESSION_THREADS
+         template<typename Operand1, typename Operand2, typename FieldType>
+          struct OrOp<Resize, Operand1, Operand2, FieldType> {
 
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
-          OrOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
-          typedef SeqWalkType;
-          OrOp(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {};
-          template<typename Shift>
-           inline SeqWalkType init(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
+            public:
+             FieldType typedef field_type;
+             typename field_type::memory_window typedef MemoryWindow;
+             OrOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
+             typedef SeqWalkType;
+             OrOp(Operand1 const & operand1, Operand2 const & operand2)
+             : operand1_(operand1), operand2_(operand2)
+             {};
+             template<typename Shift>
+              inline SeqWalkType init(structured::IntVec const & split,
+                                      structured::IntVec const & location) const {
 
-              return SeqWalkType(operand1_.template init<Shift>(split, location),
-                                 operand2_.template init<Shift>(split, location));
-           };
+                 return SeqWalkType(operand1_.template init<Shift>(split, location),
+                                    operand2_.template init<Shift>(split, location));
+              };
 
-         private:
-          Operand1 const operand1_;
-          Operand2 const operand2_;
-      };
+            private:
+             Operand1 const operand1_;
+             Operand2 const operand2_;
+         }
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
 
       template<typename Operand1, typename Operand2, typename FieldType>
        struct OrOp<SeqWalk, Operand1, Operand2, FieldType> {
@@ -6078,7 +6357,10 @@
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
           NotOp<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
-          NotOp<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
+#         ifdef FIELD_EXPRESSION_THREADS
+             NotOp<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              NotOp<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
@@ -6092,10 +6374,13 @@
            inline SeqWalkType init(void) const {
               return SeqWalkType(operand_.template init<ValidGhost, Shift>());
            };
-          template<typename ValidGhost>
-           inline ResizeType resize(void) const {
-              return ResizeType(operand_.template resize<ValidGhost>());
-           };
+#         ifdef FIELD_EXPRESSION_THREADS
+             template<typename ValidGhost>
+              inline ResizeType resize(void) const {
+                 return ResizeType(operand_.template resize<ValidGhost>());
+              }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
@@ -6112,25 +6397,28 @@
           Operand const operand_;
       };
 
-      template<typename Operand, typename FieldType>
-       struct NotOp<Resize, Operand, FieldType> {
+#     ifdef FIELD_EXPRESSION_THREADS
+         template<typename Operand, typename FieldType>
+          struct NotOp<Resize, Operand, FieldType> {
 
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
-          NotOp<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
-          NotOp(Operand const & operand)
-          : operand_(operand)
-          {};
-          template<typename Shift>
-           inline SeqWalkType init(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-              return SeqWalkType(operand_.template init<Shift>(split, location));
-           };
+            public:
+             FieldType typedef field_type;
+             typename field_type::memory_window typedef MemoryWindow;
+             NotOp<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
+             NotOp(Operand const & operand)
+             : operand_(operand)
+             {};
+             template<typename Shift>
+              inline SeqWalkType init(structured::IntVec const & split,
+                                      structured::IntVec const & location) const {
+                 return SeqWalkType(operand_.template init<Shift>(split, location));
+              };
 
-         private:
-          Operand const operand_;
-      };
+            private:
+             Operand const operand_;
+         }
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
 
       template<typename Operand, typename FieldType>
        struct NotOp<SeqWalk, Operand, FieldType> {
@@ -6206,7 +6494,10 @@
 
       struct NeboNil {
 
-         NeboNil typedef ResizeType;
+#        ifdef FIELD_EXPRESSION_THREADS
+            NeboNil typedef ResizeType
+#        endif
+         /* FIELD_EXPRESSION_THREADS */;
 
          NeboNil typedef SeqWalkType;
 
@@ -6233,8 +6524,11 @@
           typename field_type::memory_window typedef MemoryWindow;
           NeboClause<SeqWalk, typename Test::SeqWalkType, typename Expr::SeqWalkType, FieldType>
           typedef SeqWalkType;
-          NeboClause<Resize, typename Test::ResizeType, typename Expr::ResizeType, FieldType>
-          typedef ResizeType;
+#         ifdef FIELD_EXPRESSION_THREADS
+             NeboClause<Resize, typename Test::ResizeType, typename Expr::ResizeType, FieldType>
+             typedef ResizeType
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              NeboClause<GPUWalk, typename Test::GPUWalkType, typename Expr::GPUWalkType, FieldType>
              typedef GPUWalkType
@@ -6256,10 +6550,13 @@
               return SeqWalkType(test_.template init<ValidGhost, Shift>(),
                                  expr_.template init<ValidGhost, Shift>());
            };
-          template<typename ValidGhost>
-           inline ResizeType resize(void) const {
-              return ResizeType(test_.template resize<ValidGhost>(), expr_.template resize<ValidGhost>());
-           };
+#         ifdef FIELD_EXPRESSION_THREADS
+             template<typename ValidGhost>
+              inline ResizeType resize(void) const {
+                 return ResizeType(test_.template resize<ValidGhost>(), expr_.template resize<ValidGhost>());
+              }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
@@ -6281,29 +6578,32 @@
           Expr const expr_;
       };
 
-      template<typename Test, typename Expr, typename FieldType>
-       struct NeboClause<Resize, Test, Expr, FieldType> {
+#     ifdef FIELD_EXPRESSION_THREADS
+         template<typename Test, typename Expr, typename FieldType>
+          struct NeboClause<Resize, Test, Expr, FieldType> {
 
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
-          NeboClause<SeqWalk, typename Test::SeqWalkType, typename Expr::SeqWalkType, FieldType>
-          typedef SeqWalkType;
-          NeboClause(Test const & test, Expr const & expr)
-          : test_(test), expr_(expr)
-          {};
-          template<typename Shift>
-           inline SeqWalkType init(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
+            public:
+             FieldType typedef field_type;
+             typename field_type::memory_window typedef MemoryWindow;
+             NeboClause<SeqWalk, typename Test::SeqWalkType, typename Expr::SeqWalkType, FieldType>
+             typedef SeqWalkType;
+             NeboClause(Test const & test, Expr const & expr)
+             : test_(test), expr_(expr)
+             {};
+             template<typename Shift>
+              inline SeqWalkType init(structured::IntVec const & split,
+                                      structured::IntVec const & location) const {
 
-              return SeqWalkType(test_.template init<Shift>(split, location),
-                                 expr_.template init<Shift>(split, location));
-           };
+                 return SeqWalkType(test_.template init<Shift>(split, location),
+                                    expr_.template init<Shift>(split, location));
+              };
 
-         private:
-          Test const test_;
-          Expr const expr_;
-      };
+            private:
+             Test const test_;
+             Expr const expr_;
+         }
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
 
       template<typename Test, typename Expr, typename FieldType>
        struct NeboClause<SeqWalk, Test, Expr, FieldType> {
@@ -6381,10 +6681,13 @@
                    typename ClauseType::SeqWalkType,
                    typename Otherwise::SeqWalkType,
                    FieldType> typedef SeqWalkType;
-          NeboCond<Resize,
-                   typename ClauseType::ResizeType,
-                   typename Otherwise::ResizeType,
-                   FieldType> typedef ResizeType;
+#         ifdef FIELD_EXPRESSION_THREADS
+             NeboCond<Resize,
+                      typename ClauseType::ResizeType,
+                      typename Otherwise::ResizeType,
+                      FieldType> typedef ResizeType
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              NeboCond<GPUWalk,
                       typename ClauseType::GPUWalkType,
@@ -6408,10 +6711,13 @@
               return SeqWalkType(clause_.template init<ValidGhost, Shift>(),
                                  otherwise_.template init<ValidGhost, Shift>());
            };
-          template<typename ValidGhost>
-           inline ResizeType resize(void) const {
-              return ResizeType(clause_.template resize<ValidGhost>(), otherwise_.template resize<ValidGhost>());
-           };
+#         ifdef FIELD_EXPRESSION_THREADS
+             template<typename ValidGhost>
+              inline ResizeType resize(void) const {
+                 return ResizeType(clause_.template resize<ValidGhost>(), otherwise_.template resize<ValidGhost>());
+              }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
@@ -6435,31 +6741,34 @@
           Otherwise const otherwise_;
       };
 
-      template<typename ClauseType, typename Otherwise, typename FieldType>
-       struct NeboCond<Resize, ClauseType, Otherwise, FieldType> {
+#     ifdef FIELD_EXPRESSION_THREADS
+         template<typename ClauseType, typename Otherwise, typename FieldType>
+          struct NeboCond<Resize, ClauseType, Otherwise, FieldType> {
 
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
-          NeboCond<SeqWalk,
-                   typename ClauseType::SeqWalkType,
-                   typename Otherwise::SeqWalkType,
-                   FieldType> typedef SeqWalkType;
-          NeboCond(ClauseType const & clause, Otherwise const & otherwise)
-          : clause_(clause), otherwise_(otherwise)
-          {};
-          template<typename Shift>
-           inline SeqWalkType init(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
+            public:
+             FieldType typedef field_type;
+             typename field_type::memory_window typedef MemoryWindow;
+             NeboCond<SeqWalk,
+                      typename ClauseType::SeqWalkType,
+                      typename Otherwise::SeqWalkType,
+                      FieldType> typedef SeqWalkType;
+             NeboCond(ClauseType const & clause, Otherwise const & otherwise)
+             : clause_(clause), otherwise_(otherwise)
+             {};
+             template<typename Shift>
+              inline SeqWalkType init(structured::IntVec const & split,
+                                      structured::IntVec const & location) const {
 
-              return SeqWalkType(clause_.template init<Shift>(split, location),
-                                 otherwise_.template init<Shift>(split, location));
-           };
+                 return SeqWalkType(clause_.template init<Shift>(split, location),
+                                    otherwise_.template init<Shift>(split, location));
+              };
 
-         private:
-          ClauseType const clause_;
-          Otherwise const otherwise_;
-      };
+            private:
+             ClauseType const clause_;
+             Otherwise const otherwise_;
+         }
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
 
       template<typename ClauseType, typename Otherwise, typename FieldType>
        struct NeboCond<SeqWalk, ClauseType, Otherwise, FieldType> {
@@ -7248,7 +7557,10 @@
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
           NeboStencilPoint<SeqWalk, Point, typename Arg::SeqWalkType, FieldType> typedef SeqWalkType;
-          NeboStencilPoint<Resize, Point, typename Arg::ResizeType, FieldType> typedef ResizeType;
+#         ifdef FIELD_EXPRESSION_THREADS
+             NeboStencilPoint<Resize, Point, typename Arg::ResizeType, FieldType> typedef ResizeType
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              NeboStencilPoint<GPUWalk, Point, typename Arg::GPUWalkType, FieldType> typedef
              GPUWalkType
@@ -7267,10 +7579,13 @@
               return SeqWalkType(arg_.template init<ValidGhost,
                                                     typename structured::Add<Shift, Point>::result>());
            };
-          template<typename ValidGhost>
-           inline ResizeType resize(void) const {
-              return ResizeType(arg_.template resize<ValidGhost>());
-           };
+#         ifdef FIELD_EXPRESSION_THREADS
+             template<typename ValidGhost>
+              inline ResizeType resize(void) const {
+                 return ResizeType(arg_.template resize<ValidGhost>());
+              }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
@@ -7293,27 +7608,31 @@
           Arg const arg_;
       };
 
-      template<typename Point, typename Arg, typename FieldType>
-       struct NeboStencilPoint<Resize, Point, Arg, FieldType> {
+#     ifdef FIELD_EXPRESSION_THREADS
+         template<typename Point, typename Arg, typename FieldType>
+          struct NeboStencilPoint<Resize, Point, Arg, FieldType> {
 
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
-          NeboStencilPoint<SeqWalk, Point, typename Arg::SeqWalkType, FieldType> typedef SeqWalkType;
-          NeboStencilPoint(Arg const & a)
-          : arg_(a)
-          {};
-          template<typename Shift>
-           inline SeqWalkType init(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
+            public:
+             FieldType typedef field_type;
+             typename field_type::memory_window typedef MemoryWindow;
+             NeboStencilPoint<SeqWalk, Point, typename Arg::SeqWalkType, FieldType> typedef
+             SeqWalkType;
+             NeboStencilPoint(Arg const & a)
+             : arg_(a)
+             {};
+             template<typename Shift>
+              inline SeqWalkType init(structured::IntVec const & split,
+                                      structured::IntVec const & location) const {
 
-              return SeqWalkType(arg_.template init<typename structured::Add<Shift, Point>::result>(split,
-                                                                                                    location));
-           };
+                 return SeqWalkType(arg_.template init<typename structured::Add<Shift, Point>::
+                                                       result>(split, location));
+              };
 
-         private:
-          Arg const arg_;
-      };
+            private:
+             Arg const arg_;
+         }
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
 
       template<typename Point, typename Arg, typename FieldType>
        struct NeboStencilPoint<SeqWalk, Point, Arg, FieldType> {
@@ -7703,7 +8022,10 @@
           ConstructReductionExpr;
           typename ConstructReductionExpr::Result typedef ArgReductionType;
           NeboStencil<SeqWalk, Pts, ArgSeqWalkType, FieldType> typedef SeqWalkType;
-          NeboStencil<Resize, Pts, typename Arg::ResizeType, FieldType> typedef ResizeType;
+#         ifdef FIELD_EXPRESSION_THREADS
+             NeboStencil<Resize, Pts, typename Arg::ResizeType, FieldType> typedef ResizeType
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              NeboStencil<GPUWalk, Pts, ArgGPUWalkType, FieldType> typedef GPUWalkType
 #         endif
@@ -7720,10 +8042,13 @@
               return SeqWalkType(ConstructExpr::template in_sq_construct<ValidGhost, Shift>(arg_,
                                                                                             coefs_));
            };
-          template<typename ValidGhost>
-           inline ResizeType resize(void) const {
-              return ResizeType(arg_.template resize<ValidGhost>(), coefs_);
-           };
+#         ifdef FIELD_EXPRESSION_THREADS
+             template<typename ValidGhost>
+              inline ResizeType resize(void) const {
+                 return ResizeType(arg_.template resize<ValidGhost>(), coefs_);
+              }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const {
@@ -7745,33 +8070,36 @@
           Coefs const coefs_;
       };
 
-      template<typename Pts, typename Arg, typename FieldType>
-       struct NeboStencil<Resize, Pts, Arg, FieldType> {
+#     ifdef FIELD_EXPRESSION_THREADS
+         template<typename Pts, typename Arg, typename FieldType>
+          struct NeboStencil<Resize, Pts, Arg, FieldType> {
 
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
-          NeboStencilCoefCollection<Pts::length> typedef Coefs;
-          typename Pts::template ConstructExpr<Arg, FieldType> typedef ConstructExpr;
-          typename ConstructExpr::Result typedef ArgSeqWalkType;
-          NeboStencil<SeqWalk, Pts, ArgSeqWalkType, FieldType> typedef SeqWalkType;
-          NeboStencil(Arg const & arg, Coefs const & coefs)
-          : arg_(arg), coefs_(coefs)
-          {};
-          template<typename Shift>
-           inline SeqWalkType init(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
+            public:
+             FieldType typedef field_type;
+             typename field_type::memory_window typedef MemoryWindow;
+             NeboStencilCoefCollection<Pts::length> typedef Coefs;
+             typename Pts::template ConstructExpr<Arg, FieldType> typedef ConstructExpr;
+             typename ConstructExpr::Result typedef ArgSeqWalkType;
+             NeboStencil<SeqWalk, Pts, ArgSeqWalkType, FieldType> typedef SeqWalkType;
+             NeboStencil(Arg const & arg, Coefs const & coefs)
+             : arg_(arg), coefs_(coefs)
+             {};
+             template<typename Shift>
+              inline SeqWalkType init(structured::IntVec const & split,
+                                      structured::IntVec const & location) const {
 
-              return SeqWalkType(ConstructExpr::template rs_sq_construct<Shift>(arg_,
-                                                                                coefs_,
-                                                                                split,
-                                                                                location));
-           };
+                 return SeqWalkType(ConstructExpr::template rs_sq_construct<Shift>(arg_,
+                                                                                   coefs_,
+                                                                                   split,
+                                                                                   location));
+              };
 
-         private:
-          Arg const arg_;
-          Coefs const coefs_;
-      };
+            private:
+             Arg const arg_;
+             Coefs const coefs_;
+         }
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
 
       template<typename Pts, typename Arg, typename FieldType>
        struct NeboStencil<SeqWalk, Pts, Arg, FieldType> {
