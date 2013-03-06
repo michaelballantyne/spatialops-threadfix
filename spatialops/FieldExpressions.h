@@ -134,7 +134,7 @@
 
       /* Modes: */
       struct Initial;
-      struct ResizePrep;
+      struct Resize;
       struct SeqWalk;
 #     ifdef __CUDACC__
          struct GPUWalk
@@ -153,7 +153,7 @@
           typename field_type::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef AtomicType;
           NeboScalar<SeqWalk, FieldType> typedef SeqWalkType;
-          NeboScalar<ResizePrep, FieldType> typedef ResizePrepType;
+          NeboScalar<Resize, FieldType> typedef ResizeType;
 #         ifdef __CUDACC__
              NeboScalar<GPUWalk, FieldType> typedef GPUWalkType
 #         endif
@@ -166,7 +166,7 @@
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const { return SeqWalkType(value_); };
           template<typename ValidGhost>
-           inline ResizePrepType resize_prep(void) const { return ResizePrepType(value_); };
+           inline ResizeType resize(void) const { return ResizeType(value_); };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const { return GPUWalkType(value_); }
@@ -180,7 +180,7 @@
       };
 
       template<typename FieldType>
-       struct NeboScalar<ResizePrep, FieldType> {
+       struct NeboScalar<Resize, FieldType> {
 
          public:
           FieldType typedef field_type;
@@ -267,7 +267,7 @@
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
           NeboBoolean<SeqWalk, FieldType> typedef SeqWalkType;
-          NeboBoolean<ResizePrep, FieldType> typedef ResizePrepType;
+          NeboBoolean<Resize, FieldType> typedef ResizeType;
 #         ifdef __CUDACC__
              NeboBoolean<GPUWalk, FieldType> typedef GPUWalkType
 #         endif
@@ -280,7 +280,7 @@
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const { return SeqWalkType(value_); };
           template<typename ValidGhost>
-           inline ResizePrepType resize_prep(void) const { return ResizePrepType(value_); };
+           inline ResizeType resize(void) const { return ResizeType(value_); };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) const { return GPUWalkType(value_); }
@@ -294,7 +294,7 @@
       };
 
       template<typename FieldType>
-       struct NeboBoolean<ResizePrep, FieldType> {
+       struct NeboBoolean<Resize, FieldType> {
 
          public:
           FieldType typedef field_type;
@@ -378,7 +378,7 @@
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
           NeboConstField<SeqWalk, FieldType> typedef SeqWalkType;
-          NeboConstField<ResizePrep, FieldType> typedef ResizePrepType;
+          NeboConstField<Resize, FieldType> typedef ResizeType;
 #         ifdef __CUDACC__
              NeboConstField<GPUWalk, FieldType> typedef GPUWalkType
 #         endif
@@ -393,8 +393,8 @@
               return SeqWalkType(field_.template resize_ghost_and_shift<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
-           inline ResizePrepType resize_prep(void) const {
-              return ResizePrepType(field_.template resize_ghost<ValidGhost>());
+           inline ResizeType resize(void) const {
+              return ResizeType(field_.template resize_ghost<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
@@ -414,7 +414,7 @@
       };
 
       template<typename FieldType>
-       struct NeboConstField<ResizePrep, FieldType> {
+       struct NeboConstField<Resize, FieldType> {
 
          public:
           FieldType typedef field_type;
@@ -510,7 +510,7 @@
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
           NeboField<SeqWalk, FieldType> typedef SeqWalkType;
-          NeboField<ResizePrep, FieldType> typedef ResizePrepType;
+          NeboField<Resize, FieldType> typedef ResizeType;
 #         ifdef __CUDACC__
              NeboField<GPUWalk, FieldType> typedef GPUWalkType
 #         endif
@@ -555,9 +555,9 @@
           template<typename Iterator, typename RhsType>
            inline void sequential_assign(RhsType rhs) {
 
-              typename CalculateValidGhost<Iterator, RhsType, FieldType>::Result typedef Ghost;
+              typename CalculateValidGhost<Iterator, RhsType, FieldType>::Result typedef ValidGhost;
 
-              init<Ghost, Shift>().assign(rhs.template init<Ghost, Shift>());
+              init<ValidGhost, Shift>().assign(rhs.template init<ValidGhost, Shift>());
            };
 #         ifdef FIELD_EXPRESSION_THREADS
              template<typename Iterator, typename RhsType>
@@ -565,24 +565,25 @@
 
                  BI::interprocess_semaphore semaphore(0);
 
-                 typename CalculateValidGhost<Iterator, RhsType, FieldType>::Result typedef Ghost;
+                 typename CalculateValidGhost<Iterator, RhsType, FieldType>::Result typedef
+                 ValidGhost;
 
-                 typename RhsType::ResizePrepType typedef RhsResizePrepType;
+                 typename RhsType::ResizeType typedef RhsResizeType;
 
-                 const structured::IntVec split = nebo_find_partition(field_.template resize_ghost<Ghost>().window_with_ghost().extent(),
+                 const structured::IntVec split = nebo_find_partition(field_.template resize_ghost<ValidGhost>().window_with_ghost().extent(),
                                                                       thread_count);
 
                  const int max = nebo_partition_count(split);
 
-                 ResizePrepType new_lhs = resize_prep<Ghost>();
+                 ResizeType new_lhs = resize<ValidGhost>();
 
-                 RhsResizePrepType new_rhs = rhs.template resize_prep<Ghost>();
+                 RhsResizeType new_rhs = rhs.template resize<ValidGhost>();
 
                  structured::IntVec location = structured::IntVec(0, 0, 0);
 
                  for(int count = 0; count < max; count++) {
 
-                    ThreadPoolFIFO::self().schedule(boost::bind(&ResizePrepType::template assign<RhsResizePrepType>,
+                    ThreadPoolFIFO::self().schedule(boost::bind(&ResizeType::template assign<RhsResizeType>,
                                                                 new_lhs,
                                                                 new_rhs,
                                                                 split,
@@ -603,14 +604,14 @@
                                                                                               Shift>());
            };
           template<typename ValidGhost>
-           inline ResizePrepType resize_prep(void) {
-              return ResizePrepType(field_.template resize_ghost_and_maintain_interior<ValidGhost>());
+           inline ResizeType resize(void) {
+              return ResizeType(field_.template resize_ghost_and_maintain_interior<ValidGhost>());
            };
           FieldType field_;
       };
 
       template<typename FieldType>
-       struct NeboField<ResizePrep, FieldType> {
+       struct NeboField<Resize, FieldType> {
 
          public:
           FieldType typedef field_type;
@@ -752,10 +753,8 @@
           typename field_type::memory_window typedef MemoryWindow;
           SumOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
           typedef SeqWalkType;
-          SumOp<ResizePrep,
-                typename Operand1::ResizePrepType,
-                typename Operand2::ResizePrepType,
-                FieldType> typedef ResizePrepType;
+          SumOp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
+          typedef ResizeType;
 #         ifdef __CUDACC__
              SumOp<GPUWalk,
                    typename Operand1::GPUWalkType,
@@ -780,10 +779,8 @@
                                  operand2_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
-           inline ResizePrepType resize_prep(void) const {
-
-              return ResizePrepType(operand1_.template resize_prep<ValidGhost>(),
-                                    operand2_.template resize_prep<ValidGhost>());
+           inline ResizeType resize(void) const {
+              return ResizeType(operand1_.template resize<ValidGhost>(), operand2_.template resize<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
@@ -807,7 +804,7 @@
       };
 
       template<typename Operand1, typename Operand2, typename FieldType>
-       struct SumOp<ResizePrep, Operand1, Operand2, FieldType> {
+       struct SumOp<Resize, Operand1, Operand2, FieldType> {
 
          public:
           FieldType typedef field_type;
@@ -1065,10 +1062,8 @@
           typename field_type::memory_window typedef MemoryWindow;
           DiffOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
           typedef SeqWalkType;
-          DiffOp<ResizePrep,
-                 typename Operand1::ResizePrepType,
-                 typename Operand2::ResizePrepType,
-                 FieldType> typedef ResizePrepType;
+          DiffOp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
+          typedef ResizeType;
 #         ifdef __CUDACC__
              DiffOp<GPUWalk,
                     typename Operand1::GPUWalkType,
@@ -1093,10 +1088,8 @@
                                  operand2_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
-           inline ResizePrepType resize_prep(void) const {
-
-              return ResizePrepType(operand1_.template resize_prep<ValidGhost>(),
-                                    operand2_.template resize_prep<ValidGhost>());
+           inline ResizeType resize(void) const {
+              return ResizeType(operand1_.template resize<ValidGhost>(), operand2_.template resize<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
@@ -1120,7 +1113,7 @@
       };
 
       template<typename Operand1, typename Operand2, typename FieldType>
-       struct DiffOp<ResizePrep, Operand1, Operand2, FieldType> {
+       struct DiffOp<Resize, Operand1, Operand2, FieldType> {
 
          public:
           FieldType typedef field_type;
@@ -1380,10 +1373,8 @@
           typename field_type::memory_window typedef MemoryWindow;
           ProdOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
           typedef SeqWalkType;
-          ProdOp<ResizePrep,
-                 typename Operand1::ResizePrepType,
-                 typename Operand2::ResizePrepType,
-                 FieldType> typedef ResizePrepType;
+          ProdOp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
+          typedef ResizeType;
 #         ifdef __CUDACC__
              ProdOp<GPUWalk,
                     typename Operand1::GPUWalkType,
@@ -1408,10 +1399,8 @@
                                  operand2_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
-           inline ResizePrepType resize_prep(void) const {
-
-              return ResizePrepType(operand1_.template resize_prep<ValidGhost>(),
-                                    operand2_.template resize_prep<ValidGhost>());
+           inline ResizeType resize(void) const {
+              return ResizeType(operand1_.template resize<ValidGhost>(), operand2_.template resize<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
@@ -1435,7 +1424,7 @@
       };
 
       template<typename Operand1, typename Operand2, typename FieldType>
-       struct ProdOp<ResizePrep, Operand1, Operand2, FieldType> {
+       struct ProdOp<Resize, Operand1, Operand2, FieldType> {
 
          public:
           FieldType typedef field_type;
@@ -1695,10 +1684,8 @@
           typename field_type::memory_window typedef MemoryWindow;
           DivOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
           typedef SeqWalkType;
-          DivOp<ResizePrep,
-                typename Operand1::ResizePrepType,
-                typename Operand2::ResizePrepType,
-                FieldType> typedef ResizePrepType;
+          DivOp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
+          typedef ResizeType;
 #         ifdef __CUDACC__
              DivOp<GPUWalk,
                    typename Operand1::GPUWalkType,
@@ -1723,10 +1710,8 @@
                                  operand2_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
-           inline ResizePrepType resize_prep(void) const {
-
-              return ResizePrepType(operand1_.template resize_prep<ValidGhost>(),
-                                    operand2_.template resize_prep<ValidGhost>());
+           inline ResizeType resize(void) const {
+              return ResizeType(operand1_.template resize<ValidGhost>(), operand2_.template resize<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
@@ -1750,7 +1735,7 @@
       };
 
       template<typename Operand1, typename Operand2, typename FieldType>
-       struct DivOp<ResizePrep, Operand1, Operand2, FieldType> {
+       struct DivOp<Resize, Operand1, Operand2, FieldType> {
 
          public:
           FieldType typedef field_type;
@@ -2007,7 +1992,7 @@
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
           SinFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
-          SinFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
+          SinFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
 #         ifdef __CUDACC__
              SinFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
@@ -2022,8 +2007,8 @@
               return SeqWalkType(operand_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
-           inline ResizePrepType resize_prep(void) const {
-              return ResizePrepType(operand_.template resize_prep<ValidGhost>());
+           inline ResizeType resize(void) const {
+              return ResizeType(operand_.template resize<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
@@ -2042,7 +2027,7 @@
       };
 
       template<typename Operand, typename FieldType>
-       struct SinFcn<ResizePrep, Operand, FieldType> {
+       struct SinFcn<Resize, Operand, FieldType> {
 
          public:
           FieldType typedef field_type;
@@ -2158,7 +2143,7 @@
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
           CosFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
-          CosFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
+          CosFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
 #         ifdef __CUDACC__
              CosFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
@@ -2173,8 +2158,8 @@
               return SeqWalkType(operand_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
-           inline ResizePrepType resize_prep(void) const {
-              return ResizePrepType(operand_.template resize_prep<ValidGhost>());
+           inline ResizeType resize(void) const {
+              return ResizeType(operand_.template resize<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
@@ -2193,7 +2178,7 @@
       };
 
       template<typename Operand, typename FieldType>
-       struct CosFcn<ResizePrep, Operand, FieldType> {
+       struct CosFcn<Resize, Operand, FieldType> {
 
          public:
           FieldType typedef field_type;
@@ -2309,7 +2294,7 @@
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
           TanFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
-          TanFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
+          TanFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
 #         ifdef __CUDACC__
              TanFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
@@ -2324,8 +2309,8 @@
               return SeqWalkType(operand_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
-           inline ResizePrepType resize_prep(void) const {
-              return ResizePrepType(operand_.template resize_prep<ValidGhost>());
+           inline ResizeType resize(void) const {
+              return ResizeType(operand_.template resize<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
@@ -2344,7 +2329,7 @@
       };
 
       template<typename Operand, typename FieldType>
-       struct TanFcn<ResizePrep, Operand, FieldType> {
+       struct TanFcn<Resize, Operand, FieldType> {
 
          public:
           FieldType typedef field_type;
@@ -2460,7 +2445,7 @@
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
           ExpFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
-          ExpFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
+          ExpFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
 #         ifdef __CUDACC__
              ExpFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
@@ -2475,8 +2460,8 @@
               return SeqWalkType(operand_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
-           inline ResizePrepType resize_prep(void) const {
-              return ResizePrepType(operand_.template resize_prep<ValidGhost>());
+           inline ResizeType resize(void) const {
+              return ResizeType(operand_.template resize<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
@@ -2495,7 +2480,7 @@
       };
 
       template<typename Operand, typename FieldType>
-       struct ExpFcn<ResizePrep, Operand, FieldType> {
+       struct ExpFcn<Resize, Operand, FieldType> {
 
          public:
           FieldType typedef field_type;
@@ -2611,7 +2596,7 @@
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
           TanhFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
-          TanhFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
+          TanhFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
 #         ifdef __CUDACC__
              TanhFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
@@ -2626,8 +2611,8 @@
               return SeqWalkType(operand_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
-           inline ResizePrepType resize_prep(void) const {
-              return ResizePrepType(operand_.template resize_prep<ValidGhost>());
+           inline ResizeType resize(void) const {
+              return ResizeType(operand_.template resize<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
@@ -2646,7 +2631,7 @@
       };
 
       template<typename Operand, typename FieldType>
-       struct TanhFcn<ResizePrep, Operand, FieldType> {
+       struct TanhFcn<Resize, Operand, FieldType> {
 
          public:
           FieldType typedef field_type;
@@ -2762,7 +2747,7 @@
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
           AbsFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
-          AbsFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
+          AbsFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
 #         ifdef __CUDACC__
              AbsFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
@@ -2777,8 +2762,8 @@
               return SeqWalkType(operand_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
-           inline ResizePrepType resize_prep(void) const {
-              return ResizePrepType(operand_.template resize_prep<ValidGhost>());
+           inline ResizeType resize(void) const {
+              return ResizeType(operand_.template resize<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
@@ -2797,7 +2782,7 @@
       };
 
       template<typename Operand, typename FieldType>
-       struct AbsFcn<ResizePrep, Operand, FieldType> {
+       struct AbsFcn<Resize, Operand, FieldType> {
 
          public:
           FieldType typedef field_type;
@@ -2913,7 +2898,7 @@
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
           NegFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
-          NegFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
+          NegFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
 #         ifdef __CUDACC__
              NegFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
@@ -2928,8 +2913,8 @@
               return SeqWalkType(operand_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
-           inline ResizePrepType resize_prep(void) const {
-              return ResizePrepType(operand_.template resize_prep<ValidGhost>());
+           inline ResizeType resize(void) const {
+              return ResizeType(operand_.template resize<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
@@ -2948,7 +2933,7 @@
       };
 
       template<typename Operand, typename FieldType>
-       struct NegFcn<ResizePrep, Operand, FieldType> {
+       struct NegFcn<Resize, Operand, FieldType> {
 
          public:
           FieldType typedef field_type;
@@ -3065,10 +3050,8 @@
           typename field_type::memory_window typedef MemoryWindow;
           PowFcn<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
           typedef SeqWalkType;
-          PowFcn<ResizePrep,
-                 typename Operand1::ResizePrepType,
-                 typename Operand2::ResizePrepType,
-                 FieldType> typedef ResizePrepType;
+          PowFcn<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
+          typedef ResizeType;
 #         ifdef __CUDACC__
              PowFcn<GPUWalk,
                     typename Operand1::GPUWalkType,
@@ -3093,10 +3076,8 @@
                                  operand2_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
-           inline ResizePrepType resize_prep(void) const {
-
-              return ResizePrepType(operand1_.template resize_prep<ValidGhost>(),
-                                    operand2_.template resize_prep<ValidGhost>());
+           inline ResizeType resize(void) const {
+              return ResizeType(operand1_.template resize<ValidGhost>(), operand2_.template resize<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
@@ -3120,7 +3101,7 @@
       };
 
       template<typename Operand1, typename Operand2, typename FieldType>
-       struct PowFcn<ResizePrep, Operand1, Operand2, FieldType> {
+       struct PowFcn<Resize, Operand1, Operand2, FieldType> {
 
          public:
           FieldType typedef field_type;
@@ -3381,7 +3362,7 @@
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
           SqrtFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
-          SqrtFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
+          SqrtFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
 #         ifdef __CUDACC__
              SqrtFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
@@ -3396,8 +3377,8 @@
               return SeqWalkType(operand_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
-           inline ResizePrepType resize_prep(void) const {
-              return ResizePrepType(operand_.template resize_prep<ValidGhost>());
+           inline ResizeType resize(void) const {
+              return ResizeType(operand_.template resize<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
@@ -3416,7 +3397,7 @@
       };
 
       template<typename Operand, typename FieldType>
-       struct SqrtFcn<ResizePrep, Operand, FieldType> {
+       struct SqrtFcn<Resize, Operand, FieldType> {
 
          public:
           FieldType typedef field_type;
@@ -3532,7 +3513,7 @@
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
           LogFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
-          LogFcn<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
+          LogFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
 #         ifdef __CUDACC__
              LogFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
@@ -3547,8 +3528,8 @@
               return SeqWalkType(operand_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
-           inline ResizePrepType resize_prep(void) const {
-              return ResizePrepType(operand_.template resize_prep<ValidGhost>());
+           inline ResizeType resize(void) const {
+              return ResizeType(operand_.template resize<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
@@ -3567,7 +3548,7 @@
       };
 
       template<typename Operand, typename FieldType>
-       struct LogFcn<ResizePrep, Operand, FieldType> {
+       struct LogFcn<Resize, Operand, FieldType> {
 
          public:
           FieldType typedef field_type;
@@ -3686,10 +3667,8 @@
                    typename Operand1::SeqWalkType,
                    typename Operand2::SeqWalkType,
                    FieldType> typedef SeqWalkType;
-          EqualCmp<ResizePrep,
-                   typename Operand1::ResizePrepType,
-                   typename Operand2::ResizePrepType,
-                   FieldType> typedef ResizePrepType;
+          EqualCmp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
+          typedef ResizeType;
 #         ifdef __CUDACC__
              EqualCmp<GPUWalk,
                       typename Operand1::GPUWalkType,
@@ -3714,10 +3693,8 @@
                                  operand2_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
-           inline ResizePrepType resize_prep(void) const {
-
-              return ResizePrepType(operand1_.template resize_prep<ValidGhost>(),
-                                    operand2_.template resize_prep<ValidGhost>());
+           inline ResizeType resize(void) const {
+              return ResizeType(operand1_.template resize<ValidGhost>(), operand2_.template resize<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
@@ -3741,7 +3718,7 @@
       };
 
       template<typename Operand1, typename Operand2, typename FieldType>
-       struct EqualCmp<ResizePrep, Operand1, Operand2, FieldType> {
+       struct EqualCmp<Resize, Operand1, Operand2, FieldType> {
 
          public:
           FieldType typedef field_type;
@@ -4025,10 +4002,8 @@
                      typename Operand1::SeqWalkType,
                      typename Operand2::SeqWalkType,
                      FieldType> typedef SeqWalkType;
-          InequalCmp<ResizePrep,
-                     typename Operand1::ResizePrepType,
-                     typename Operand2::ResizePrepType,
-                     FieldType> typedef ResizePrepType;
+          InequalCmp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
+          typedef ResizeType;
 #         ifdef __CUDACC__
              InequalCmp<GPUWalk,
                         typename Operand1::GPUWalkType,
@@ -4053,10 +4028,8 @@
                                  operand2_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
-           inline ResizePrepType resize_prep(void) const {
-
-              return ResizePrepType(operand1_.template resize_prep<ValidGhost>(),
-                                    operand2_.template resize_prep<ValidGhost>());
+           inline ResizeType resize(void) const {
+              return ResizeType(operand1_.template resize<ValidGhost>(), operand2_.template resize<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
@@ -4080,7 +4053,7 @@
       };
 
       template<typename Operand1, typename Operand2, typename FieldType>
-       struct InequalCmp<ResizePrep, Operand1, Operand2, FieldType> {
+       struct InequalCmp<Resize, Operand1, Operand2, FieldType> {
 
          public:
           FieldType typedef field_type;
@@ -4366,10 +4339,10 @@
                       typename Operand1::SeqWalkType,
                       typename Operand2::SeqWalkType,
                       FieldType> typedef SeqWalkType;
-          LessThanCmp<ResizePrep,
-                      typename Operand1::ResizePrepType,
-                      typename Operand2::ResizePrepType,
-                      FieldType> typedef ResizePrepType;
+          LessThanCmp<Resize,
+                      typename Operand1::ResizeType,
+                      typename Operand2::ResizeType,
+                      FieldType> typedef ResizeType;
 #         ifdef __CUDACC__
              LessThanCmp<GPUWalk,
                          typename Operand1::GPUWalkType,
@@ -4394,10 +4367,8 @@
                                  operand2_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
-           inline ResizePrepType resize_prep(void) const {
-
-              return ResizePrepType(operand1_.template resize_prep<ValidGhost>(),
-                                    operand2_.template resize_prep<ValidGhost>());
+           inline ResizeType resize(void) const {
+              return ResizeType(operand1_.template resize<ValidGhost>(), operand2_.template resize<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
@@ -4421,7 +4392,7 @@
       };
 
       template<typename Operand1, typename Operand2, typename FieldType>
-       struct LessThanCmp<ResizePrep, Operand1, Operand2, FieldType> {
+       struct LessThanCmp<Resize, Operand1, Operand2, FieldType> {
 
          public:
           FieldType typedef field_type;
@@ -4707,10 +4678,10 @@
                            typename Operand1::SeqWalkType,
                            typename Operand2::SeqWalkType,
                            FieldType> typedef SeqWalkType;
-          LessThanEqualCmp<ResizePrep,
-                           typename Operand1::ResizePrepType,
-                           typename Operand2::ResizePrepType,
-                           FieldType> typedef ResizePrepType;
+          LessThanEqualCmp<Resize,
+                           typename Operand1::ResizeType,
+                           typename Operand2::ResizeType,
+                           FieldType> typedef ResizeType;
 #         ifdef __CUDACC__
              LessThanEqualCmp<GPUWalk,
                               typename Operand1::GPUWalkType,
@@ -4735,10 +4706,8 @@
                                  operand2_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
-           inline ResizePrepType resize_prep(void) const {
-
-              return ResizePrepType(operand1_.template resize_prep<ValidGhost>(),
-                                    operand2_.template resize_prep<ValidGhost>());
+           inline ResizeType resize(void) const {
+              return ResizeType(operand1_.template resize<ValidGhost>(), operand2_.template resize<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
@@ -4762,7 +4731,7 @@
       };
 
       template<typename Operand1, typename Operand2, typename FieldType>
-       struct LessThanEqualCmp<ResizePrep, Operand1, Operand2, FieldType> {
+       struct LessThanEqualCmp<Resize, Operand1, Operand2, FieldType> {
 
          public:
           FieldType typedef field_type;
@@ -5050,10 +5019,10 @@
                          typename Operand1::SeqWalkType,
                          typename Operand2::SeqWalkType,
                          FieldType> typedef SeqWalkType;
-          GreaterThanCmp<ResizePrep,
-                         typename Operand1::ResizePrepType,
-                         typename Operand2::ResizePrepType,
-                         FieldType> typedef ResizePrepType;
+          GreaterThanCmp<Resize,
+                         typename Operand1::ResizeType,
+                         typename Operand2::ResizeType,
+                         FieldType> typedef ResizeType;
 #         ifdef __CUDACC__
              GreaterThanCmp<GPUWalk,
                             typename Operand1::GPUWalkType,
@@ -5078,10 +5047,8 @@
                                  operand2_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
-           inline ResizePrepType resize_prep(void) const {
-
-              return ResizePrepType(operand1_.template resize_prep<ValidGhost>(),
-                                    operand2_.template resize_prep<ValidGhost>());
+           inline ResizeType resize(void) const {
+              return ResizeType(operand1_.template resize<ValidGhost>(), operand2_.template resize<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
@@ -5105,7 +5072,7 @@
       };
 
       template<typename Operand1, typename Operand2, typename FieldType>
-       struct GreaterThanCmp<ResizePrep, Operand1, Operand2, FieldType> {
+       struct GreaterThanCmp<Resize, Operand1, Operand2, FieldType> {
 
          public:
           FieldType typedef field_type;
@@ -5393,10 +5360,10 @@
                               typename Operand1::SeqWalkType,
                               typename Operand2::SeqWalkType,
                               FieldType> typedef SeqWalkType;
-          GreaterThanEqualCmp<ResizePrep,
-                              typename Operand1::ResizePrepType,
-                              typename Operand2::ResizePrepType,
-                              FieldType> typedef ResizePrepType;
+          GreaterThanEqualCmp<Resize,
+                              typename Operand1::ResizeType,
+                              typename Operand2::ResizeType,
+                              FieldType> typedef ResizeType;
 #         ifdef __CUDACC__
              GreaterThanEqualCmp<GPUWalk,
                                  typename Operand1::GPUWalkType,
@@ -5421,10 +5388,8 @@
                                  operand2_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
-           inline ResizePrepType resize_prep(void) const {
-
-              return ResizePrepType(operand1_.template resize_prep<ValidGhost>(),
-                                    operand2_.template resize_prep<ValidGhost>());
+           inline ResizeType resize(void) const {
+              return ResizeType(operand1_.template resize<ValidGhost>(), operand2_.template resize<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
@@ -5448,7 +5413,7 @@
       };
 
       template<typename Operand1, typename Operand2, typename FieldType>
-       struct GreaterThanEqualCmp<ResizePrep, Operand1, Operand2, FieldType> {
+       struct GreaterThanEqualCmp<Resize, Operand1, Operand2, FieldType> {
 
          public:
           FieldType typedef field_type;
@@ -5734,10 +5699,8 @@
           typename field_type::memory_window typedef MemoryWindow;
           AndOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
           typedef SeqWalkType;
-          AndOp<ResizePrep,
-                typename Operand1::ResizePrepType,
-                typename Operand2::ResizePrepType,
-                FieldType> typedef ResizePrepType;
+          AndOp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
+          typedef ResizeType;
 #         ifdef __CUDACC__
              AndOp<GPUWalk,
                    typename Operand1::GPUWalkType,
@@ -5762,10 +5725,8 @@
                                  operand2_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
-           inline ResizePrepType resize_prep(void) const {
-
-              return ResizePrepType(operand1_.template resize_prep<ValidGhost>(),
-                                    operand2_.template resize_prep<ValidGhost>());
+           inline ResizeType resize(void) const {
+              return ResizeType(operand1_.template resize<ValidGhost>(), operand2_.template resize<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
@@ -5789,7 +5750,7 @@
       };
 
       template<typename Operand1, typename Operand2, typename FieldType>
-       struct AndOp<ResizePrep, Operand1, Operand2, FieldType> {
+       struct AndOp<Resize, Operand1, Operand2, FieldType> {
 
          public:
           FieldType typedef field_type;
@@ -5943,10 +5904,8 @@
           typename field_type::memory_window typedef MemoryWindow;
           OrOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
           typedef SeqWalkType;
-          OrOp<ResizePrep,
-               typename Operand1::ResizePrepType,
-               typename Operand2::ResizePrepType,
-               FieldType> typedef ResizePrepType;
+          OrOp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
+          typedef ResizeType;
 #         ifdef __CUDACC__
              OrOp<GPUWalk, typename Operand1::GPUWalkType, typename Operand2::GPUWalkType, FieldType>
              typedef GPUWalkType
@@ -5969,10 +5928,8 @@
                                  operand2_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
-           inline ResizePrepType resize_prep(void) const {
-
-              return ResizePrepType(operand1_.template resize_prep<ValidGhost>(),
-                                    operand2_.template resize_prep<ValidGhost>());
+           inline ResizeType resize(void) const {
+              return ResizeType(operand1_.template resize<ValidGhost>(), operand2_.template resize<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
@@ -5996,7 +5953,7 @@
       };
 
       template<typename Operand1, typename Operand2, typename FieldType>
-       struct OrOp<ResizePrep, Operand1, Operand2, FieldType> {
+       struct OrOp<Resize, Operand1, Operand2, FieldType> {
 
          public:
           FieldType typedef field_type;
@@ -6147,7 +6104,7 @@
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
           NotOp<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
-          NotOp<ResizePrep, typename Operand::ResizePrepType, FieldType> typedef ResizePrepType;
+          NotOp<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
 #         ifdef __CUDACC__
              NotOp<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef GPUWalkType
 #         endif
@@ -6162,8 +6119,8 @@
               return SeqWalkType(operand_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
-           inline ResizePrepType resize_prep(void) const {
-              return ResizePrepType(operand_.template resize_prep<ValidGhost>());
+           inline ResizeType resize(void) const {
+              return ResizeType(operand_.template resize<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
@@ -6182,7 +6139,7 @@
       };
 
       template<typename Operand, typename FieldType>
-       struct NotOp<ResizePrep, Operand, FieldType> {
+       struct NotOp<Resize, Operand, FieldType> {
 
          public:
           FieldType typedef field_type;
@@ -6275,7 +6232,7 @@
 
       struct NeboNil {
 
-         NeboNil typedef ResizePrepType;
+         NeboNil typedef ResizeType;
 
          NeboNil typedef SeqWalkType;
 
@@ -6302,10 +6259,8 @@
           typename field_type::memory_window typedef MemoryWindow;
           NeboClause<SeqWalk, typename Test::SeqWalkType, typename Expr::SeqWalkType, FieldType>
           typedef SeqWalkType;
-          NeboClause<ResizePrep,
-                     typename Test::ResizePrepType,
-                     typename Expr::ResizePrepType,
-                     FieldType> typedef ResizePrepType;
+          NeboClause<Resize, typename Test::ResizeType, typename Expr::ResizeType, FieldType>
+          typedef ResizeType;
 #         ifdef __CUDACC__
              NeboClause<GPUWalk, typename Test::GPUWalkType, typename Expr::GPUWalkType, FieldType>
              typedef GPUWalkType
@@ -6328,10 +6283,8 @@
                                  expr_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
-           inline ResizePrepType resize_prep(void) const {
-
-              return ResizePrepType(test_.template resize_prep<ValidGhost>(),
-                                    expr_.template resize_prep<ValidGhost>());
+           inline ResizeType resize(void) const {
+              return ResizeType(test_.template resize<ValidGhost>(), expr_.template resize<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
@@ -6355,7 +6308,7 @@
       };
 
       template<typename Test, typename Expr, typename FieldType>
-       struct NeboClause<ResizePrep, Test, Expr, FieldType> {
+       struct NeboClause<Resize, Test, Expr, FieldType> {
 
          public:
           FieldType typedef field_type;
@@ -6454,10 +6407,10 @@
                    typename ClauseType::SeqWalkType,
                    typename Otherwise::SeqWalkType,
                    FieldType> typedef SeqWalkType;
-          NeboCond<ResizePrep,
-                   typename ClauseType::ResizePrepType,
-                   typename Otherwise::ResizePrepType,
-                   FieldType> typedef ResizePrepType;
+          NeboCond<Resize,
+                   typename ClauseType::ResizeType,
+                   typename Otherwise::ResizeType,
+                   FieldType> typedef ResizeType;
 #         ifdef __CUDACC__
              NeboCond<GPUWalk,
                       typename ClauseType::GPUWalkType,
@@ -6482,10 +6435,8 @@
                                  otherwise_.template init<ValidGhost, Shift>());
            };
           template<typename ValidGhost>
-           inline ResizePrepType resize_prep(void) const {
-
-              return ResizePrepType(clause_.template resize_prep<ValidGhost>(),
-                                    otherwise_.template resize_prep<ValidGhost>());
+           inline ResizeType resize(void) const {
+              return ResizeType(clause_.template resize<ValidGhost>(), otherwise_.template resize<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
@@ -6511,7 +6462,7 @@
       };
 
       template<typename ClauseType, typename Otherwise, typename FieldType>
-       struct NeboCond<ResizePrep, ClauseType, Otherwise, FieldType> {
+       struct NeboCond<Resize, ClauseType, Otherwise, FieldType> {
 
          public:
           FieldType typedef field_type;
@@ -7323,8 +7274,7 @@
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
           NeboStencilPoint<SeqWalk, Point, typename Arg::SeqWalkType, FieldType> typedef SeqWalkType;
-          NeboStencilPoint<ResizePrep, Point, typename Arg::ResizePrepType, FieldType> typedef
-          ResizePrepType;
+          NeboStencilPoint<Resize, Point, typename Arg::ResizeType, FieldType> typedef ResizeType;
 #         ifdef __CUDACC__
              NeboStencilPoint<GPUWalk, Point, typename Arg::GPUWalkType, FieldType> typedef
              GPUWalkType
@@ -7344,8 +7294,8 @@
                                                     typename structured::Add<Shift, Point>::result>());
            };
           template<typename ValidGhost>
-           inline ResizePrepType resize_prep(void) const {
-              return ResizePrepType(arg_.template resize_prep<ValidGhost>());
+           inline ResizeType resize(void) const {
+              return ResizeType(arg_.template resize<ValidGhost>());
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
@@ -7370,7 +7320,7 @@
       };
 
       template<typename Point, typename Arg, typename FieldType>
-       struct NeboStencilPoint<ResizePrep, Point, Arg, FieldType> {
+       struct NeboStencilPoint<Resize, Point, Arg, FieldType> {
 
          public:
           FieldType typedef field_type;
@@ -7779,8 +7729,7 @@
           ConstructReductionExpr;
           typename ConstructReductionExpr::Result typedef ArgReductionType;
           NeboStencil<SeqWalk, Pts, ArgSeqWalkType, FieldType> typedef SeqWalkType;
-          NeboStencil<ResizePrep, Pts, typename Arg::ResizePrepType, FieldType> typedef
-          ResizePrepType;
+          NeboStencil<Resize, Pts, typename Arg::ResizeType, FieldType> typedef ResizeType;
 #         ifdef __CUDACC__
              NeboStencil<GPUWalk, Pts, ArgGPUWalkType, FieldType> typedef GPUWalkType
 #         endif
@@ -7798,8 +7747,8 @@
                                                                                             coefs_));
            };
           template<typename ValidGhost>
-           inline ResizePrepType resize_prep(void) const {
-              return ResizePrepType(arg_.template resize_prep<ValidGhost>(), coefs_);
+           inline ResizeType resize(void) const {
+              return ResizeType(arg_.template resize<ValidGhost>(), coefs_);
            };
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
@@ -7823,7 +7772,7 @@
       };
 
       template<typename Pts, typename Arg, typename FieldType>
-       struct NeboStencil<ResizePrep, Pts, Arg, FieldType> {
+       struct NeboStencil<Resize, Pts, Arg, FieldType> {
 
          public:
           FieldType typedef field_type;
