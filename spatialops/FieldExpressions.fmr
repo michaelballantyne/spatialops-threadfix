@@ -393,24 +393,25 @@
                       (list tpl-irreg-pars tpl-reg-pars)
                       (list typedefs
                             (typedef (tpl-use name
-                                              'Resize
+                                              'SeqWalk
                                               tpl-irreg-args
-                                              (map* (type-trans 'ResizeType)
+                                              (map* (type-trans 'SeqWalkType)
                                                     tpl-reg-pars)
                                               FT-chunk)
-                                     'ResizeType))
+                                     'SeqWalkType))
                       constructor
                       publics
                       privates))]
        [build-ResizePrep-rhs (combine-args build-ResizePrep-general
-                                           (lambda (RS-cons-args
+                                           (lambda (SW-cons-args
                                                     publics)
-                                             (list (r-fcn-def (constize (fcn-dcl 'resize
-                                                                                 'ResizeType
-                                                                                 (adcr IntVec 'split)
-                                                                                 (adcr IntVec 'location)))
-                                                              null
-                                                              (fc 'ResizeType RS-cons-args))
+                                             (list (tpl-def (tpl-pmtr 'Shift)
+                                                            (r-fcn-def (constize (fcn-dcl 'init
+                                                                                          'SeqWalkType
+                                                                                          (adcr IntVec 'split)
+                                                                                          (adcr IntVec 'location)))
+                                                                       null
+                                                                       (fc 'SeqWalkType SW-cons-args)))
                                                    publics))
                                            (list 6 2 1)
                                            "build-ResizePrep-rhs")]
@@ -430,48 +431,19 @@
                                                                               (list assign-body
                                                                                     (fc (c 'semaphore '-> 'post))))))
                                                          publics))
-                                                 (lambda (RS-cons-args
+                                                 (lambda (SW-cons-args
                                                           privates)
-                                                   (list (r-fcn-def (fcn-dcl 'resize
-                                                                             'ResizeType
-                                                                             (adcr IntVec 'split)
-                                                                             (adcr IntVec 'location))
-                                                                    null
-                                                                    (fc 'ResizeType RS-cons-args))
+                                                   (list (tpl-def (tpl-pmtr 'Shift)
+                                                                  (r-fcn-def (fcn-dcl 'init
+                                                                                      'SeqWalkType
+                                                                                      (adcr IntVec 'split)
+                                                                                      (adcr IntVec 'location))
+                                                                             null
+                                                                             (fc 'SeqWalkType SW-cons-args)))
                                                          privates)))
                                            (list 6 2 2 0)
                                            "build-ResizePrep-lhs")]
        [bs-ResizePrep-lhs (arg-swap build-ResizePrep-lhs 7 3 "bs-ResizePrep-lhs")]
-       [build-Resize
-        (lambda (name
-                 add-const
-                 tpl-irreg-pars
-                 tpl-reg-pars
-                 typedefs
-                 tpl-irreg-args
-                 constructor
-                 SW-cons-args
-                 publics
-                 privates)
-            (build-mode name
-                        'Resize
-                        (list tpl-irreg-pars tpl-reg-pars)
-                        (list typedefs
-                              (typedef (tpl-use name
-                                                'SeqWalk
-                                                tpl-irreg-args
-                                                (map* (type-trans 'SeqWalkType)
-                                                      tpl-reg-pars)
-                                                FT-chunk)
-                                       'SeqWalkType))
-                        constructor
-                        (list (tpl-def (tpl-pmtr SH-chunk)
-                                       (r-fcn-def (add-const (fcn-dcl 'init 'SeqWalkType))
-                                                  null
-                                                  (fc 'SeqWalkType SW-cons-args)))
-                              publics)
-                        privates))]
-       [bs-Resize (arg-swap build-Resize 6 4 "bs-Resize")]
        [build-SeqWalk-general
         (lambda (name
                  tpl-pars
@@ -613,7 +585,6 @@
                  tpl-reg-pars
                  Initial
                  ResizePrep
-                 Resize
                  SeqWalk
                  GPUWalk
                  Reduction)
@@ -624,7 +595,6 @@
                             null)
                (Initial name tpl-irreg-pars tpl-reg-pars)
                (ResizePrep name tpl-irreg-pars tpl-reg-pars)
-               (Resize name add-const tpl-irreg-pars tpl-reg-pars)
                (SeqWalk name tpl-pars)
                (GPUWalk name tpl-pars)
                (Reduction name tpl-pars))))]
@@ -693,17 +663,13 @@
                           (bs-ResizePrep-rhs null
                                              null
                                              gen-constructor
-                                             (mapper (lambda (op_) (mfc op_ 'resize 'split 'location))
+                                             (mapper (lambda (op_) (mfc op_
+                                                                        (tpl-fcn-use 'init 'Shift)
+                                                                        'split
+                                                                        'location))
                                                      op_-lst)
                                              null
                                              gen-data-mems)
-                          (bs-Resize null
-                                     null
-                                     gen-constructor
-                                     (mapper (lambda (op_) (mfc op_ (tpl-fcn-use 'init SH-chunk)))
-                                             op_-lst)
-                                     null
-                                     gen-data-mems)
                           (bs-SeqWalk-rhs (typedef eval-return-type 'EvalReturnType)
                                           gen-constructor
                                           (exec-fcn semi-colon-chunk s 'next)
@@ -1045,7 +1011,6 @@
         (d 'Modes:
            (build-mode-def 'Initial)
            (build-mode-def 'ResizePrep)
-           (build-mode-def 'Resize)
            (build-mode-def 'SeqWalk)
            (gpu-only (build-mode-def 'GPUWalk))
            (build-mode-def 'Reduction)))
@@ -1077,16 +1042,6 @@
                                        'value_
                                        null
                                        (adc 'AtomicType 'value_))
-                    (bs-Resize (typedef (scope (tpl-pmtr FT-chunk)
-                                               'value_type)
-                                        'AtomicType)
-                               null
-                               (bm-constructor (adc 'AtomicType 'value)
-                                               (cons-asgn 'value_ 'value)
-                                               null)
-                               'value_
-                               null
-                               (adc 'AtomicType 'value_))
                     (bs-SeqWalk-rhs (typedef (scope (tpl-pmtr FT-chunk)
                                                     'value_type)
                                              'AtomicType)
@@ -1144,14 +1099,6 @@
                                        'value_
                                        null
                                        (adc 'bool 'value_))
-                    (bs-Resize null
-                               null
-                               (bm-constructor (adc 'bool 'value)
-                                               (cons-asgn 'value_ 'value)
-                                               null)
-                               'value_
-                               null
-                               (adc 'bool 'value_))
                     (bs-SeqWalk-rhs null
                                     (bm-constructor (adc 'bool 'value)
                                                     (cons-asgn 'value_ 'value)
@@ -1205,23 +1152,16 @@
                                        (bm-constructor (adcr FT-chunk 'f)
                                                        (cons-asgn 'field_ 'f)
                                                        null)
-                                       (fc FT-chunk
-                                           (mfc (mfc 'field_ 'window_with_ghost)
-                                                'refine
-                                                'split
-                                                'location)
-                                           (mfc 'field_ 'field_values)
-                                           (scope 'structured 'ExternalStorage))
+                                       (mfc (fc FT-chunk
+                                                (mfc (mfc 'field_ 'window_with_ghost)
+                                                     'refine
+                                                     'split
+                                                     'location)
+                                                (mfc 'field_ 'field_values)
+                                                (scope 'structured 'ExternalStorage))
+                                            (tpl-fcn-use 'shift 'Shift))
                                        null
                                        (adc FT-chunk 'field_))
-                    (bs-Resize null
-                               null
-                               (bm-constructor (adcr FT-chunk 'f)
-                                               (cons-asgn 'field_ 'f)
-                                               null)
-                               (mfc 'field_ (tpl-fcn-use 'shift SH-chunk))
-                               null
-                               (adc FT-chunk 'field_))
                     (bs-SeqWalk-rhs (typedef (scope (tpl-pmtr FT-chunk)
                                                     'value_type)
                                              'AtomicType)
@@ -1355,28 +1295,24 @@
                                        (bm-constructor (ad FT-chunk 'f)
                                                        (cons-asgn 'field_ 'f)
                                                        null)
-                                       (mfc (mfc (fc 'resize 'split 'location)
-                                                 (tpl-fcn-use 'init 'Shift))
-                                            'assign
-                                            (mfc (mfc 'rhs 'resize 'split 'location)
-                                                 (tpl-fcn-use 'init 'Shift)))
-                                       null
-                                       (fc FT-chunk
-                                           (mfc (mfc 'field_ 'window_with_ghost)
-                                                'refine
+                                       (mfc (fc (tpl-use 'init 'Shift)
                                                 'split
                                                 'location)
-                                           (mfc 'field_ 'field_values)
-                                           (scope 'structured 'ExternalStorage))
+                                            'assign
+                                            (mfc 'rhs
+                                                 (tpl-fcn-use 'init 'Shift)
+                                                 'split
+                                                 'location))
+                                       null
+                                       (mfc (fc FT-chunk
+                                                (mfc (mfc 'field_ 'window_with_ghost)
+                                                     'refine
+                                                     'split
+                                                     'location)
+                                                (mfc 'field_ 'field_values)
+                                                (scope 'structured 'ExternalStorage))
+                                            (tpl-fcn-use 'shift_and_maintain_interior 'Shift))
                                        (ad FT-chunk 'field_))
-                    (bs-Resize null
-                               null
-                               (bm-constructor (ad FT-chunk 'f)
-                                               (cons-asgn 'field_ 'f)
-                                               null)
-                               (mfc 'field_ (tpl-fcn-use 'shift_and_maintain_interior SH-chunk))
-                               null
-                               (ad FT-chunk 'field_))
                     (bs-SeqWalk-lhs (typedef (scope (tpl-pmtr FT-chunk)
                                                     'value_type)
                                              'AtomicType)
@@ -1569,23 +1505,17 @@
                                                        (list (cons-asgn 'test_ 'test)
                                                              (cons-asgn 'expr_ 'expr))
                                                        null)
-                                       (list (mfc 'test_ 'resize 'split 'location)
-                                             (mfc 'expr_ 'resize 'split 'location))
+                                       (list (mfc 'test_
+                                                  (tpl-fcn-use 'init 'Shift)
+                                                  'split
+                                                  'location)
+                                             (mfc 'expr_
+                                                  (tpl-fcn-use 'init 'Shift)
+                                                  'split
+                                                  'location))
                                        null
                                        (list (adc 'Test 'test_)
                                              (adc 'Expr 'expr_)))
-                    (bs-Resize null
-                               null
-                               (bm-constructor (list (adcr 'Test 'test)
-                                                     (adcr 'Expr 'expr))
-                                               (list (cons-asgn 'test_ 'test)
-                                                     (cons-asgn 'expr_ 'expr))
-                                               null)
-                               (list (mfc 'test_ (tpl-fcn-use 'init SH-chunk))
-                                     (mfc 'expr_ (tpl-fcn-use 'init SH-chunk)))
-                               null
-                               (list (adc 'Test 'test_)
-                                     (adc 'Expr 'expr_)))
                     (bs-SeqWalk-rhs (typedef (scope (tpl-pmtr FT-chunk)
                                                     'value_type)
                                              'AtomicType)
@@ -1680,23 +1610,17 @@
                                                        (list (cons-asgn 'clause_ 'clause)
                                                              (cons-asgn 'otherwise_ 'otherwise))
                                                        null)
-                                       (list (mfc 'clause_ 'resize 'split 'location)
-                                             (mfc 'otherwise_ 'resize 'split 'location))
+                                       (list (mfc 'clause_
+                                                  (tpl-fcn-use 'init 'Shift)
+                                                  'split
+                                                  'location)
+                                             (mfc 'otherwise_
+                                                  (tpl-fcn-use 'init 'Shift)
+                                                  'split
+                                                  'location))
                                        null
                                        (list (adc CT-chunk 'clause_)
                                              (adc 'Otherwise 'otherwise_)))
-                    (bs-Resize null
-                               null
-                               (bm-constructor (list (adcr CT-chunk 'clause)
-                                                     (adcr 'Otherwise 'otherwise))
-                                               (list (cons-asgn 'clause_ 'clause)
-                                                     (cons-asgn 'otherwise_ 'otherwise))
-                                               null)
-                               (list (mfc 'clause_ (tpl-fcn-use 'init SH-chunk))
-                                     (mfc 'otherwise_ (tpl-fcn-use 'init SH-chunk)))
-                               null
-                               (list (adc CT-chunk 'clause_)
-                                     (adc 'Otherwise 'otherwise_)))
                     (bs-SeqWalk-rhs (typedef (scope (tpl-pmtr FT-chunk)
                                                     'value_type)
                                              'AtomicType)
@@ -2429,18 +2353,13 @@
                                        (bm-constructor (adcr 'Arg 'a)
                                                        (cons-asgn 'arg_ 'a)
                                                        null)
-                                       (mfc 'arg_ 'resize 'split 'location)
+                                       (mfc 'arg_
+                                            (tpl-fcn-use 'init (tpl-pmtr (scope (scope 'structured (tpl-use 'Add 'Shift 'Point))
+                                                                                'result)))
+                                            'split
+                                            'location)
                                        null
                                        (adc 'Arg 'arg_))
-                    (bs-Resize null
-                               'Point
-                               (bm-constructor (adcr 'Arg 'a)
-                                               (cons-asgn 'arg_ 'a)
-                                               null)
-                               (mfc 'arg_ (tpl-fcn-use 'init (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
-                                                                              'result))))
-                               null
-                               (adc 'Arg 'arg_))
                     (bs-SeqWalk-rhs (typedef (scope (tpl-pmtr FT-chunk)
                                                     'value_type)
                                              'AtomicType)
@@ -2612,16 +2531,23 @@
                                                   (r-fcn-def (s-fcn-dcl 'rs_sq_construct
                                                                         (tc 'Result)
                                                                         (adcr 'ArgPreSeqWalk 'arg)
-                                                                        (adcr (tpl-use NSCC 'length) 'coefs))
+                                                                        (adcr (tpl-use NSCC 'length) 'coefs)
+                                                                        (adcr IntVec 'split)
+                                                                        (adcr IntVec 'location))
                                                              (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
                                                                                        'result))
                                                                       'NewShift)
                                                              (fc 'Result
                                                                  (fc (scope 'EarlierPointsType (tpl-fcn-use 'rs_sq_construct SH-chunk))
                                                                      'arg
-                                                                     (mfc 'coefs 'others))
+                                                                     (mfc 'coefs 'others)
+                                                                     'split
+                                                                     'location)
                                                                  (fc 'MultiplyType
-                                                                     (mfc 'arg (tpl-fcn-use 'init 'NewShift))
+                                                                     (mfc 'arg
+                                                                          (tpl-fcn-use 'init 'NewShift)
+                                                                          'split
+                                                                          'location)
                                                                      (fc 'Coef (mfc 'coefs 'coef)))))))
                             (gpu-only
                              (tpl-srt-def 'ConstructGPUExpr
@@ -2752,12 +2678,17 @@
                                                   (r-fcn-def (s-fcn-dcl 'rs_sq_construct
                                                                         (tc 'Result)
                                                                         (adcr 'ArgPreSeqWalk 'arg)
-                                                                        (adcr (tpl-use NSCC "1") 'coefs))
+                                                                        (adcr (tpl-use NSCC "1") 'coefs)
+                                                                        (adcr IntVec 'split)
+                                                                        (adcr IntVec 'location))
                                                              (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
                                                                                        'result))
                                                                       'NewShift)
                                                              (fc 'Result
-                                                                 (mfc 'arg (tpl-fcn-use 'init 'NewShift))
+                                                                 (mfc 'arg
+                                                                      (tpl-fcn-use 'init 'NewShift)
+                                                                      'split
+                                                                      'location)
                                                                  (fc 'Coef (mfc 'coefs 'coef))))))
                             (gpu-only
                              (tpl-srt-def 'ConstructGPUExpr
@@ -2893,38 +2824,27 @@
                                     null
                                     (list (adc 'Arg 'arg_)
                                           (adc 'Coefs 'coefs_)))
-                    (bs-ResizePrep-rhs (typedef (tpl-use NSCC (scope 'Pts 'length))
-                                                'Coefs)
-                                       (list 'Pts (tpl-pmtr (scope 'Arg 'ResizeType)))
+                    (bs-ResizePrep-rhs (list (typedef (tpl-use NSCC (scope 'Pts 'length))
+                                                      'Coefs)
+                                             (typedef (tpl-pmtr (scope 'Pts (tpl-fcn-use 'ConstructExpr 'Arg FT-chunk)))
+                                                      'ConstructExpr)
+                                             (typedef (tpl-pmtr (scope 'ConstructExpr
+                                                                       'Result))
+                                                      'ArgSeqWalkType))
+                                       (list 'Pts 'ArgSeqWalkType)
                                        (bm-constructor (list (adcr 'Arg 'arg)
                                                              (adcr 'Coefs 'coefs))
                                                        (list (cons-asgn 'arg_ 'arg)
                                                              (cons-asgn 'coefs_ 'coefs))
                                                        null)
-                                       (list (mfc 'arg_ 'resize 'split 'location)
-                                             'coefs_)
+                                       (fc (scope 'ConstructExpr (tpl-fcn-use 'rs_sq_construct SH-chunk))
+                                           'arg_
+                                           'coefs_
+                                           'split
+                                           'location)
                                        null
                                        (list (adc 'Arg 'arg_)
                                              (adc 'Coefs 'coefs_)))
-                    (bs-Resize (list (typedef (tpl-use NSCC (scope 'Pts 'length))
-                                              'Coefs)
-                                     (typedef (tpl-pmtr (scope 'Pts (tpl-fcn-use 'ConstructExpr 'Arg FT-chunk)))
-                                              'ConstructExpr)
-                                     (typedef (tpl-pmtr (scope 'ConstructExpr
-                                                               'Result))
-                                              'ArgSeqWalkType))
-                               (list 'Pts 'ArgSeqWalkType)
-                               (bm-constructor (list (adcr 'Arg 'arg)
-                                                     (adcr 'Coefs 'coefs))
-                                               (list (cons-asgn 'arg_ 'arg)
-                                                     (cons-asgn 'coefs_ 'coefs))
-                                               null)
-                               (fc (scope 'ConstructExpr (tpl-fcn-use 'rs_sq_construct SH-chunk))
-                                   'arg_
-                                   'coefs_)
-                               null
-                               (list (adc 'Arg 'arg_)
-                                     (adc 'Coefs 'coefs_)))
                     (bs-SeqWalk-rhs (typedef (scope (tpl-pmtr FT-chunk)
                                                     'value_type)
                                              'AtomicType)

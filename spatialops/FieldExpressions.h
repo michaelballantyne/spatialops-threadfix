@@ -135,7 +135,6 @@
       /* Modes: */
       struct Initial;
       struct ResizePrep;
-      struct Resize;
       struct SeqWalk;
 #     ifdef __CUDACC__
          struct GPUWalk
@@ -187,32 +186,15 @@
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
           typename FieldType::value_type typedef AtomicType;
-          NeboScalar<Resize, FieldType> typedef ResizeType;
-          NeboScalar(AtomicType const value)
-          : value_(value)
-          {};
-          inline ResizeType resize(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-             return ResizeType(value_);
-          };
-
-         private:
-          AtomicType const value_;
-      };
-
-      template<typename FieldType>
-       struct NeboScalar<Resize, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
-          typename FieldType::value_type typedef AtomicType;
           NeboScalar<SeqWalk, FieldType> typedef SeqWalkType;
           NeboScalar(AtomicType const value)
           : value_(value)
           {};
           template<typename Shift>
-           inline SeqWalkType init(void) const { return SeqWalkType(value_); };
+           inline SeqWalkType init(structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+              return SeqWalkType(value_);
+           };
 
          private:
           AtomicType const value_;
@@ -317,31 +299,15 @@
          public:
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
-          NeboBoolean<Resize, FieldType> typedef ResizeType;
-          NeboBoolean(bool const value)
-          : value_(value)
-          {};
-          inline ResizeType resize(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-             return ResizeType(value_);
-          };
-
-         private:
-          bool const value_;
-      };
-
-      template<typename FieldType>
-       struct NeboBoolean<Resize, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
           NeboBoolean<SeqWalk, FieldType> typedef SeqWalkType;
           NeboBoolean(bool const value)
           : value_(value)
           {};
           template<typename Shift>
-           inline SeqWalkType init(void) const { return SeqWalkType(value_); };
+           inline SeqWalkType init(structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+              return SeqWalkType(value_);
+           };
 
          private:
           bool const value_;
@@ -453,35 +419,17 @@
          public:
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
-          NeboConstField<Resize, FieldType> typedef ResizeType;
-          NeboConstField(FieldType const & f)
-          : field_(f)
-          {};
-          inline ResizeType resize(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-
-             return ResizeType(FieldType(field_.window_with_ghost().refine(split, location),
-                                         field_.field_values(),
-                                         structured::ExternalStorage));
-          };
-
-         private:
-          FieldType const field_;
-      };
-
-      template<typename FieldType>
-       struct NeboConstField<Resize, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
           NeboConstField<SeqWalk, FieldType> typedef SeqWalkType;
           NeboConstField(FieldType const & f)
           : field_(f)
           {};
           template<typename Shift>
-           inline SeqWalkType init(void) const {
-              return SeqWalkType(field_.template shift<Shift>());
+           inline SeqWalkType init(structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+
+              return SeqWalkType(FieldType(field_.window_with_ghost().refine(split, location),
+                                           field_.field_values(),
+                                           structured::ExternalStorage).template shift<Shift>());
            };
 
          private:
@@ -667,7 +615,7 @@
          public:
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
-          NeboField<Resize, FieldType> typedef ResizeType;
+          NeboField<SeqWalk, FieldType> typedef SeqWalkType;
           NeboField(FieldType f)
           : field_(f)
           {};
@@ -679,8 +627,7 @@
                                  structured::IntVec const & location,
                                  BI::interprocess_semaphore * semaphore) {
 
-                 resize(split, location).template init<Shift>().assign(rhs.resize(split, location).template
-                                                                                                   init<Shift>());
+                 init<Shift>(split, location).assign(rhs.template init<Shift>(split, location));
 
                  semaphore->post();
               }
@@ -688,32 +635,15 @@
           /* FIELD_EXPRESSION_THREADS */;
 
          private:
-          inline ResizeType resize(structured::IntVec const & split,
+          template<typename Shift>
+           inline SeqWalkType init(structured::IntVec const & split,
                                    structured::IntVec const & location) {
 
-             return ResizeType(FieldType(field_.window_with_ghost().refine(split, location),
-                                         field_.field_values(),
-                                         structured::ExternalStorage));
-          };
-          FieldType field_;
-      };
-
-      template<typename FieldType>
-       struct NeboField<Resize, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
-          NeboField<SeqWalk, FieldType> typedef SeqWalkType;
-          NeboField(FieldType f)
-          : field_(f)
-          {};
-          template<typename Shift>
-           inline SeqWalkType init(void) {
-              return SeqWalkType(field_.template shift_and_maintain_interior<Shift>());
+              return SeqWalkType(FieldType(field_.window_with_ghost().refine(split, location),
+                                           field_.field_values(),
+                                           structured::ExternalStorage).template
+                                                                        shift_and_maintain_interior<Shift>());
            };
-
-         private:
           FieldType field_;
       };
 
@@ -882,35 +812,17 @@
          public:
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
-          SumOp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
-          typedef ResizeType;
-          SumOp(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {};
-          inline ResizeType resize(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-             return ResizeType(operand1_.resize(split, location), operand2_.resize(split, location));
-          };
-
-         private:
-          Operand1 const operand1_;
-          Operand2 const operand2_;
-      };
-
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct SumOp<Resize, Operand1, Operand2, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
           SumOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
           typedef SeqWalkType;
           SumOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
           template<typename Shift>
-           inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1_.template init<Shift>(), operand2_.template init<Shift>());
+           inline SeqWalkType init(structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+
+              return SeqWalkType(operand1_.template init<Shift>(split, location),
+                                 operand2_.template init<Shift>(split, location));
            };
 
          private:
@@ -1213,35 +1125,17 @@
          public:
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
-          DiffOp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
-          typedef ResizeType;
-          DiffOp(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {};
-          inline ResizeType resize(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-             return ResizeType(operand1_.resize(split, location), operand2_.resize(split, location));
-          };
-
-         private:
-          Operand1 const operand1_;
-          Operand2 const operand2_;
-      };
-
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct DiffOp<Resize, Operand1, Operand2, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
           DiffOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
           typedef SeqWalkType;
           DiffOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
           template<typename Shift>
-           inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1_.template init<Shift>(), operand2_.template init<Shift>());
+           inline SeqWalkType init(structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+
+              return SeqWalkType(operand1_.template init<Shift>(split, location),
+                                 operand2_.template init<Shift>(split, location));
            };
 
          private:
@@ -1546,35 +1440,17 @@
          public:
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
-          ProdOp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
-          typedef ResizeType;
-          ProdOp(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {};
-          inline ResizeType resize(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-             return ResizeType(operand1_.resize(split, location), operand2_.resize(split, location));
-          };
-
-         private:
-          Operand1 const operand1_;
-          Operand2 const operand2_;
-      };
-
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct ProdOp<Resize, Operand1, Operand2, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
           ProdOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
           typedef SeqWalkType;
           ProdOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
           template<typename Shift>
-           inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1_.template init<Shift>(), operand2_.template init<Shift>());
+           inline SeqWalkType init(structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+
+              return SeqWalkType(operand1_.template init<Shift>(split, location),
+                                 operand2_.template init<Shift>(split, location));
            };
 
          private:
@@ -1879,35 +1755,17 @@
          public:
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
-          DivOp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
-          typedef ResizeType;
-          DivOp(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {};
-          inline ResizeType resize(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-             return ResizeType(operand1_.resize(split, location), operand2_.resize(split, location));
-          };
-
-         private:
-          Operand1 const operand1_;
-          Operand2 const operand2_;
-      };
-
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct DivOp<Resize, Operand1, Operand2, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
           DivOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
           typedef SeqWalkType;
           DivOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
           template<typename Shift>
-           inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1_.template init<Shift>(), operand2_.template init<Shift>());
+           inline SeqWalkType init(structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+
+              return SeqWalkType(operand1_.template init<Shift>(split, location),
+                                 operand2_.template init<Shift>(split, location));
            };
 
          private:
@@ -2189,32 +2047,14 @@
          public:
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
-          SinFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
-          SinFcn(Operand const & operand)
-          : operand_(operand)
-          {};
-          inline ResizeType resize(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-             return ResizeType(operand_.resize(split, location));
-          };
-
-         private:
-          Operand const operand_;
-      };
-
-      template<typename Operand, typename FieldType>
-       struct SinFcn<Resize, Operand, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
           SinFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
           SinFcn(Operand const & operand)
           : operand_(operand)
           {};
           template<typename Shift>
-           inline SeqWalkType init(void) const {
-              return SeqWalkType(operand_.template init<Shift>());
+           inline SeqWalkType init(structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+              return SeqWalkType(operand_.template init<Shift>(split, location));
            };
 
          private:
@@ -2358,32 +2198,14 @@
          public:
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
-          CosFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
-          CosFcn(Operand const & operand)
-          : operand_(operand)
-          {};
-          inline ResizeType resize(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-             return ResizeType(operand_.resize(split, location));
-          };
-
-         private:
-          Operand const operand_;
-      };
-
-      template<typename Operand, typename FieldType>
-       struct CosFcn<Resize, Operand, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
           CosFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
           CosFcn(Operand const & operand)
           : operand_(operand)
           {};
           template<typename Shift>
-           inline SeqWalkType init(void) const {
-              return SeqWalkType(operand_.template init<Shift>());
+           inline SeqWalkType init(structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+              return SeqWalkType(operand_.template init<Shift>(split, location));
            };
 
          private:
@@ -2527,32 +2349,14 @@
          public:
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
-          TanFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
-          TanFcn(Operand const & operand)
-          : operand_(operand)
-          {};
-          inline ResizeType resize(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-             return ResizeType(operand_.resize(split, location));
-          };
-
-         private:
-          Operand const operand_;
-      };
-
-      template<typename Operand, typename FieldType>
-       struct TanFcn<Resize, Operand, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
           TanFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
           TanFcn(Operand const & operand)
           : operand_(operand)
           {};
           template<typename Shift>
-           inline SeqWalkType init(void) const {
-              return SeqWalkType(operand_.template init<Shift>());
+           inline SeqWalkType init(structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+              return SeqWalkType(operand_.template init<Shift>(split, location));
            };
 
          private:
@@ -2696,32 +2500,14 @@
          public:
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
-          ExpFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
-          ExpFcn(Operand const & operand)
-          : operand_(operand)
-          {};
-          inline ResizeType resize(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-             return ResizeType(operand_.resize(split, location));
-          };
-
-         private:
-          Operand const operand_;
-      };
-
-      template<typename Operand, typename FieldType>
-       struct ExpFcn<Resize, Operand, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
           ExpFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
           ExpFcn(Operand const & operand)
           : operand_(operand)
           {};
           template<typename Shift>
-           inline SeqWalkType init(void) const {
-              return SeqWalkType(operand_.template init<Shift>());
+           inline SeqWalkType init(structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+              return SeqWalkType(operand_.template init<Shift>(split, location));
            };
 
          private:
@@ -2865,32 +2651,14 @@
          public:
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
-          TanhFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
-          TanhFcn(Operand const & operand)
-          : operand_(operand)
-          {};
-          inline ResizeType resize(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-             return ResizeType(operand_.resize(split, location));
-          };
-
-         private:
-          Operand const operand_;
-      };
-
-      template<typename Operand, typename FieldType>
-       struct TanhFcn<Resize, Operand, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
           TanhFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
           TanhFcn(Operand const & operand)
           : operand_(operand)
           {};
           template<typename Shift>
-           inline SeqWalkType init(void) const {
-              return SeqWalkType(operand_.template init<Shift>());
+           inline SeqWalkType init(structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+              return SeqWalkType(operand_.template init<Shift>(split, location));
            };
 
          private:
@@ -3034,32 +2802,14 @@
          public:
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
-          AbsFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
-          AbsFcn(Operand const & operand)
-          : operand_(operand)
-          {};
-          inline ResizeType resize(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-             return ResizeType(operand_.resize(split, location));
-          };
-
-         private:
-          Operand const operand_;
-      };
-
-      template<typename Operand, typename FieldType>
-       struct AbsFcn<Resize, Operand, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
           AbsFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
           AbsFcn(Operand const & operand)
           : operand_(operand)
           {};
           template<typename Shift>
-           inline SeqWalkType init(void) const {
-              return SeqWalkType(operand_.template init<Shift>());
+           inline SeqWalkType init(structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+              return SeqWalkType(operand_.template init<Shift>(split, location));
            };
 
          private:
@@ -3203,32 +2953,14 @@
          public:
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
-          NegFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
-          NegFcn(Operand const & operand)
-          : operand_(operand)
-          {};
-          inline ResizeType resize(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-             return ResizeType(operand_.resize(split, location));
-          };
-
-         private:
-          Operand const operand_;
-      };
-
-      template<typename Operand, typename FieldType>
-       struct NegFcn<Resize, Operand, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
           NegFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
           NegFcn(Operand const & operand)
           : operand_(operand)
           {};
           template<typename Shift>
-           inline SeqWalkType init(void) const {
-              return SeqWalkType(operand_.template init<Shift>());
+           inline SeqWalkType init(structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+              return SeqWalkType(operand_.template init<Shift>(split, location));
            };
 
          private:
@@ -3393,35 +3125,17 @@
          public:
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
-          PowFcn<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
-          typedef ResizeType;
-          PowFcn(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {};
-          inline ResizeType resize(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-             return ResizeType(operand1_.resize(split, location), operand2_.resize(split, location));
-          };
-
-         private:
-          Operand1 const operand1_;
-          Operand2 const operand2_;
-      };
-
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct PowFcn<Resize, Operand1, Operand2, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
           PowFcn<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
           typedef SeqWalkType;
           PowFcn(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
           template<typename Shift>
-           inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1_.template init<Shift>(), operand2_.template init<Shift>());
+           inline SeqWalkType init(structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+
+              return SeqWalkType(operand1_.template init<Shift>(split, location),
+                                 operand2_.template init<Shift>(split, location));
            };
 
          private:
@@ -3707,32 +3421,14 @@
          public:
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
-          SqrtFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
-          SqrtFcn(Operand const & operand)
-          : operand_(operand)
-          {};
-          inline ResizeType resize(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-             return ResizeType(operand_.resize(split, location));
-          };
-
-         private:
-          Operand const operand_;
-      };
-
-      template<typename Operand, typename FieldType>
-       struct SqrtFcn<Resize, Operand, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
           SqrtFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
           SqrtFcn(Operand const & operand)
           : operand_(operand)
           {};
           template<typename Shift>
-           inline SeqWalkType init(void) const {
-              return SeqWalkType(operand_.template init<Shift>());
+           inline SeqWalkType init(structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+              return SeqWalkType(operand_.template init<Shift>(split, location));
            };
 
          private:
@@ -3876,32 +3572,14 @@
          public:
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
-          LogFcn<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
-          LogFcn(Operand const & operand)
-          : operand_(operand)
-          {};
-          inline ResizeType resize(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-             return ResizeType(operand_.resize(split, location));
-          };
-
-         private:
-          Operand const operand_;
-      };
-
-      template<typename Operand, typename FieldType>
-       struct LogFcn<Resize, Operand, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
           LogFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
           LogFcn(Operand const & operand)
           : operand_(operand)
           {};
           template<typename Shift>
-           inline SeqWalkType init(void) const {
-              return SeqWalkType(operand_.template init<Shift>());
+           inline SeqWalkType init(structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+              return SeqWalkType(operand_.template init<Shift>(split, location));
            };
 
          private:
@@ -4068,27 +3746,6 @@
          public:
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
-          EqualCmp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
-          typedef ResizeType;
-          EqualCmp(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {};
-          inline ResizeType resize(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-             return ResizeType(operand1_.resize(split, location), operand2_.resize(split, location));
-          };
-
-         private:
-          Operand1 const operand1_;
-          Operand2 const operand2_;
-      };
-
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct EqualCmp<Resize, Operand1, Operand2, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
           EqualCmp<SeqWalk,
                    typename Operand1::SeqWalkType,
                    typename Operand2::SeqWalkType,
@@ -4097,8 +3754,11 @@
           : operand1_(operand1), operand2_(operand2)
           {};
           template<typename Shift>
-           inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1_.template init<Shift>(), operand2_.template init<Shift>());
+           inline SeqWalkType init(structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+
+              return SeqWalkType(operand1_.template init<Shift>(split, location),
+                                 operand2_.template init<Shift>(split, location));
            };
 
          private:
@@ -4425,27 +4085,6 @@
          public:
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
-          InequalCmp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
-          typedef ResizeType;
-          InequalCmp(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {};
-          inline ResizeType resize(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-             return ResizeType(operand1_.resize(split, location), operand2_.resize(split, location));
-          };
-
-         private:
-          Operand1 const operand1_;
-          Operand2 const operand2_;
-      };
-
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct InequalCmp<Resize, Operand1, Operand2, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
           InequalCmp<SeqWalk,
                      typename Operand1::SeqWalkType,
                      typename Operand2::SeqWalkType,
@@ -4454,8 +4093,11 @@
           : operand1_(operand1), operand2_(operand2)
           {};
           template<typename Shift>
-           inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1_.template init<Shift>(), operand2_.template init<Shift>());
+           inline SeqWalkType init(structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+
+              return SeqWalkType(operand1_.template init<Shift>(split, location),
+                                 operand2_.template init<Shift>(split, location));
            };
 
          private:
@@ -4784,29 +4426,6 @@
          public:
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
-          LessThanCmp<Resize,
-                      typename Operand1::ResizeType,
-                      typename Operand2::ResizeType,
-                      FieldType> typedef ResizeType;
-          LessThanCmp(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {};
-          inline ResizeType resize(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-             return ResizeType(operand1_.resize(split, location), operand2_.resize(split, location));
-          };
-
-         private:
-          Operand1 const operand1_;
-          Operand2 const operand2_;
-      };
-
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct LessThanCmp<Resize, Operand1, Operand2, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
           LessThanCmp<SeqWalk,
                       typename Operand1::SeqWalkType,
                       typename Operand2::SeqWalkType,
@@ -4815,8 +4434,11 @@
           : operand1_(operand1), operand2_(operand2)
           {};
           template<typename Shift>
-           inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1_.template init<Shift>(), operand2_.template init<Shift>());
+           inline SeqWalkType init(structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+
+              return SeqWalkType(operand1_.template init<Shift>(split, location),
+                                 operand2_.template init<Shift>(split, location));
            };
 
          private:
@@ -5145,29 +4767,6 @@
          public:
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
-          LessThanEqualCmp<Resize,
-                           typename Operand1::ResizeType,
-                           typename Operand2::ResizeType,
-                           FieldType> typedef ResizeType;
-          LessThanEqualCmp(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {};
-          inline ResizeType resize(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-             return ResizeType(operand1_.resize(split, location), operand2_.resize(split, location));
-          };
-
-         private:
-          Operand1 const operand1_;
-          Operand2 const operand2_;
-      };
-
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct LessThanEqualCmp<Resize, Operand1, Operand2, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
           LessThanEqualCmp<SeqWalk,
                            typename Operand1::SeqWalkType,
                            typename Operand2::SeqWalkType,
@@ -5176,8 +4775,11 @@
           : operand1_(operand1), operand2_(operand2)
           {};
           template<typename Shift>
-           inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1_.template init<Shift>(), operand2_.template init<Shift>());
+           inline SeqWalkType init(structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+
+              return SeqWalkType(operand1_.template init<Shift>(split, location),
+                                 operand2_.template init<Shift>(split, location));
            };
 
          private:
@@ -5508,29 +5110,6 @@
          public:
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
-          GreaterThanCmp<Resize,
-                         typename Operand1::ResizeType,
-                         typename Operand2::ResizeType,
-                         FieldType> typedef ResizeType;
-          GreaterThanCmp(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {};
-          inline ResizeType resize(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-             return ResizeType(operand1_.resize(split, location), operand2_.resize(split, location));
-          };
-
-         private:
-          Operand1 const operand1_;
-          Operand2 const operand2_;
-      };
-
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct GreaterThanCmp<Resize, Operand1, Operand2, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
           GreaterThanCmp<SeqWalk,
                          typename Operand1::SeqWalkType,
                          typename Operand2::SeqWalkType,
@@ -5539,8 +5118,11 @@
           : operand1_(operand1), operand2_(operand2)
           {};
           template<typename Shift>
-           inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1_.template init<Shift>(), operand2_.template init<Shift>());
+           inline SeqWalkType init(structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+
+              return SeqWalkType(operand1_.template init<Shift>(split, location),
+                                 operand2_.template init<Shift>(split, location));
            };
 
          private:
@@ -5871,29 +5453,6 @@
          public:
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
-          GreaterThanEqualCmp<Resize,
-                              typename Operand1::ResizeType,
-                              typename Operand2::ResizeType,
-                              FieldType> typedef ResizeType;
-          GreaterThanEqualCmp(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {};
-          inline ResizeType resize(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-             return ResizeType(operand1_.resize(split, location), operand2_.resize(split, location));
-          };
-
-         private:
-          Operand1 const operand1_;
-          Operand2 const operand2_;
-      };
-
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct GreaterThanEqualCmp<Resize, Operand1, Operand2, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
           GreaterThanEqualCmp<SeqWalk,
                               typename Operand1::SeqWalkType,
                               typename Operand2::SeqWalkType,
@@ -5902,8 +5461,11 @@
           : operand1_(operand1), operand2_(operand2)
           {};
           template<typename Shift>
-           inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1_.template init<Shift>(), operand2_.template init<Shift>());
+           inline SeqWalkType init(structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+
+              return SeqWalkType(operand1_.template init<Shift>(split, location),
+                                 operand2_.template init<Shift>(split, location));
            };
 
          private:
@@ -6232,35 +5794,17 @@
          public:
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
-          AndOp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
-          typedef ResizeType;
-          AndOp(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {};
-          inline ResizeType resize(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-             return ResizeType(operand1_.resize(split, location), operand2_.resize(split, location));
-          };
-
-         private:
-          Operand1 const operand1_;
-          Operand2 const operand2_;
-      };
-
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct AndOp<Resize, Operand1, Operand2, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
           AndOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
           typedef SeqWalkType;
           AndOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
           template<typename Shift>
-           inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1_.template init<Shift>(), operand2_.template init<Shift>());
+           inline SeqWalkType init(structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+
+              return SeqWalkType(operand1_.template init<Shift>(split, location),
+                                 operand2_.template init<Shift>(split, location));
            };
 
          private:
@@ -6457,35 +6001,17 @@
          public:
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
-          OrOp<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
-          typedef ResizeType;
-          OrOp(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {};
-          inline ResizeType resize(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-             return ResizeType(operand1_.resize(split, location), operand2_.resize(split, location));
-          };
-
-         private:
-          Operand1 const operand1_;
-          Operand2 const operand2_;
-      };
-
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct OrOp<Resize, Operand1, Operand2, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
           OrOp<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
           typedef SeqWalkType;
           OrOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
           template<typename Shift>
-           inline SeqWalkType init(void) const {
-              return SeqWalkType(operand1_.template init<Shift>(), operand2_.template init<Shift>());
+           inline SeqWalkType init(structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+
+              return SeqWalkType(operand1_.template init<Shift>(split, location),
+                                 operand2_.template init<Shift>(split, location));
            };
 
          private:
@@ -6661,32 +6187,14 @@
          public:
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
-          NotOp<Resize, typename Operand::ResizeType, FieldType> typedef ResizeType;
-          NotOp(Operand const & operand)
-          : operand_(operand)
-          {};
-          inline ResizeType resize(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-             return ResizeType(operand_.resize(split, location));
-          };
-
-         private:
-          Operand const operand_;
-      };
-
-      template<typename Operand, typename FieldType>
-       struct NotOp<Resize, Operand, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
           NotOp<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef SeqWalkType;
           NotOp(Operand const & operand)
           : operand_(operand)
           {};
           template<typename Shift>
-           inline SeqWalkType init(void) const {
-              return SeqWalkType(operand_.template init<Shift>());
+           inline SeqWalkType init(structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+              return SeqWalkType(operand_.template init<Shift>(split, location));
            };
 
          private:
@@ -6852,35 +6360,17 @@
          public:
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
-          NeboClause<Resize, typename Test::ResizeType, typename Expr::ResizeType, FieldType>
-          typedef ResizeType;
-          NeboClause(Test const & test, Expr const & expr)
-          : test_(test), expr_(expr)
-          {};
-          inline ResizeType resize(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-             return ResizeType(test_.resize(split, location), expr_.resize(split, location));
-          };
-
-         private:
-          Test const test_;
-          Expr const expr_;
-      };
-
-      template<typename Test, typename Expr, typename FieldType>
-       struct NeboClause<Resize, Test, Expr, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
           NeboClause<SeqWalk, typename Test::SeqWalkType, typename Expr::SeqWalkType, FieldType>
           typedef SeqWalkType;
           NeboClause(Test const & test, Expr const & expr)
           : test_(test), expr_(expr)
           {};
           template<typename Shift>
-           inline SeqWalkType init(void) const {
-              return SeqWalkType(test_.template init<Shift>(), expr_.template init<Shift>());
+           inline SeqWalkType init(structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+
+              return SeqWalkType(test_.template init<Shift>(split, location),
+                                 expr_.template init<Shift>(split, location));
            };
 
          private:
@@ -7026,29 +6516,6 @@
          public:
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
-          NeboCond<Resize,
-                   typename ClauseType::ResizeType,
-                   typename Otherwise::ResizeType,
-                   FieldType> typedef ResizeType;
-          NeboCond(ClauseType const & clause, Otherwise const & otherwise)
-          : clause_(clause), otherwise_(otherwise)
-          {};
-          inline ResizeType resize(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-             return ResizeType(clause_.resize(split, location), otherwise_.resize(split, location));
-          };
-
-         private:
-          ClauseType const clause_;
-          Otherwise const otherwise_;
-      };
-
-      template<typename ClauseType, typename Otherwise, typename FieldType>
-       struct NeboCond<Resize, ClauseType, Otherwise, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
           NeboCond<SeqWalk,
                    typename ClauseType::SeqWalkType,
                    typename Otherwise::SeqWalkType,
@@ -7057,8 +6524,11 @@
           : clause_(clause), otherwise_(otherwise)
           {};
           template<typename Shift>
-           inline SeqWalkType init(void) const {
-              return SeqWalkType(clause_.template init<Shift>(), otherwise_.template init<Shift>());
+           inline SeqWalkType init(structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+
+              return SeqWalkType(clause_.template init<Shift>(split, location),
+                                 otherwise_.template init<Shift>(split, location));
            };
 
          private:
@@ -7905,32 +7375,16 @@
          public:
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
-          NeboStencilPoint<Resize, Point, typename Arg::ResizeType, FieldType> typedef ResizeType;
-          NeboStencilPoint(Arg const & a)
-          : arg_(a)
-          {};
-          inline ResizeType resize(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-             return ResizeType(arg_.resize(split, location));
-          };
-
-         private:
-          Arg const arg_;
-      };
-
-      template<typename Point, typename Arg, typename FieldType>
-       struct NeboStencilPoint<Resize, Point, Arg, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
           NeboStencilPoint<SeqWalk, Point, typename Arg::SeqWalkType, FieldType> typedef SeqWalkType;
           NeboStencilPoint(Arg const & a)
           : arg_(a)
           {};
           template<typename Shift>
-           inline SeqWalkType init(void) const {
-              return SeqWalkType(arg_.template init<typename structured::Add<Shift, Point>::result>());
+           inline SeqWalkType init(structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+
+              return SeqWalkType(arg_.template init<typename structured::Add<Shift, Point>::result>(split,
+                                                                                                    location));
            };
 
          private:
@@ -8099,12 +7553,17 @@
              template<typename Shift>
               static inline Result const rs_sq_construct(ArgPreSeqWalk const & arg,
                                                          NeboStencilCoefCollection<length> const &
-                                                         coefs) {
+                                                         coefs,
+                                                         structured::IntVec const & split,
+                                                         structured::IntVec const & location) {
 
                  typename structured::Add<Shift, Point>::result typedef NewShift;
 
-                 return Result(EarlierPointsType::template rs_sq_construct<Shift>(arg, coefs.others()),
-                               MultiplyType(arg.template init<NewShift>(), Coef(coefs.coef())));
+                 return Result(EarlierPointsType::template rs_sq_construct<Shift>(arg,
+                                                                                  coefs.others(),
+                                                                                  split,
+                                                                                  location),
+                               MultiplyType(arg.template init<NewShift>(split, location), Coef(coefs.coef())));
               };
           };
 #         ifdef __CUDACC__
@@ -8213,11 +7672,13 @@
 
              template<typename Shift>
               static inline Result const rs_sq_construct(ArgPreSeqWalk const & arg,
-                                                         NeboStencilCoefCollection<1> const & coefs) {
+                                                         NeboStencilCoefCollection<1> const & coefs,
+                                                         structured::IntVec const & split,
+                                                         structured::IntVec const & location) {
 
                  typename structured::Add<Shift, Point>::result typedef NewShift;
 
-                 return Result(arg.template init<NewShift>(), Coef(coefs.coef()));
+                 return Result(arg.template init<NewShift>(split, location), Coef(coefs.coef()));
               };
           };
 #         ifdef __CUDACC__
@@ -8368,27 +7829,6 @@
           FieldType typedef field_type;
           typename field_type::memory_window typedef MemoryWindow;
           NeboStencilCoefCollection<Pts::length> typedef Coefs;
-          NeboStencil<Resize, Pts, typename Arg::ResizeType, FieldType> typedef ResizeType;
-          NeboStencil(Arg const & arg, Coefs const & coefs)
-          : arg_(arg), coefs_(coefs)
-          {};
-          inline ResizeType resize(structured::IntVec const & split,
-                                   structured::IntVec const & location) const {
-             return ResizeType(arg_.resize(split, location), coefs_);
-          };
-
-         private:
-          Arg const arg_;
-          Coefs const coefs_;
-      };
-
-      template<typename Pts, typename Arg, typename FieldType>
-       struct NeboStencil<Resize, Pts, Arg, FieldType> {
-
-         public:
-          FieldType typedef field_type;
-          typename field_type::memory_window typedef MemoryWindow;
-          NeboStencilCoefCollection<Pts::length> typedef Coefs;
           typename Pts::template ConstructExpr<Arg, FieldType> typedef ConstructExpr;
           typename ConstructExpr::Result typedef ArgSeqWalkType;
           NeboStencil<SeqWalk, Pts, ArgSeqWalkType, FieldType> typedef SeqWalkType;
@@ -8396,8 +7836,13 @@
           : arg_(arg), coefs_(coefs)
           {};
           template<typename Shift>
-           inline SeqWalkType init(void) const {
-              return SeqWalkType(ConstructExpr::template rs_sq_construct<Shift>(arg_, coefs_));
+           inline SeqWalkType init(structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+
+              return SeqWalkType(ConstructExpr::template rs_sq_construct<Shift>(arg_,
+                                                                                coefs_,
+                                                                                split,
+                                                                                location));
            };
 
          private:
