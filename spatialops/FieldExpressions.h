@@ -7505,8 +7505,7 @@
                                                   NeboBoolean<Initial, FieldType>,
                                                   Expr,
                                                   FieldType>,
-                                       typename Clauses::template Convert<typename Expr::field_type>::
-                                       Converted,
+                                       typename Clauses::template Convert<FieldType>::Converted,
                                        FieldType> > operator ()(bool const b,
                                                                 NeboExpression<Expr, FieldType>
                                                                 const & e) {
@@ -7517,7 +7516,7 @@
 
               NeboCond<Initial,
                        Clause,
-                       typename Clauses::template Convert<typename Expr::field_type>::Converted,
+                       typename Clauses::template Convert<FieldType>::Converted,
                        FieldType> typedef Cond;
 
               CondBuilder<Cond> typedef ReturnType;

@@ -2329,7 +2329,7 @@
                                                  (bcbf (tpl-pmtr (scope (scope 'Clauses (tpl-fcn-use 'Convert FT-chunk))
                                                                         'Converted))
                                                        (mfc 'clauses_ (tpl-fcn-use 'convert FT-chunk)))
-                                                 (bcbe (tpl-pmtr (scope (scope 'Clauses (tpl-fcn-use 'Convert (tpl-pmtr (scope 'Expr 'field_type))))
+                                                 (bcbe (tpl-pmtr (scope (scope 'Clauses (tpl-fcn-use 'Convert FT-chunk))
                                                                         'Converted))
                                                        (mfc 'clauses_ (tpl-fcn-use 'convert FT-chunk)))
                                                  (bcnv (tpl-pmtr (scope (scope 'Clauses (tpl-fcn-use 'Convert FT-chunk))
