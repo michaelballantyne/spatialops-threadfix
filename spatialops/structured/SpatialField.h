@@ -354,6 +354,8 @@ namespace structured{
      */
     void add_consumer(MemoryType consumerMemoryType, const unsigned short int consumerDeviceIndex);
 
+    bool find_consumer(MemoryType consumerMemoryType, const unsigned short int consumerDeviceIndex) const;
+
     const MemoryWindow& window_without_ghost() const {
       return interiorFieldWindow_;
     }
@@ -901,6 +903,77 @@ add_consumer( MemoryType consumerMemoryType,
   default: {
     std::ostringstream msg;
     msg << "Failed call to add_consumer on Spatial Field, unknown destination device type\n";
+    msg << "Ensure that you are compiling spatial ops with the proper end device support\n";
+    msg << "\t - " << __FILE__ << " : " << __LINE__;
+    throw(std::runtime_error(msg.str()));
+  }
+  }
+}
+
+//------------------------------------------------------------------
+
+template<typename Location, typename GhostTraits, typename T>
+bool SpatialField<Location, GhostTraits, T>::
+find_consumer( MemoryType consumerMemoryType,
+              const unsigned short int consumerDeviceIndex ) const
+{
+#ifdef DEBUG_SF_ALL
+  std::cout << "Caught call to Spatial Field find_consumer for field : " << this->field_values() << "\n";
+#endif
+  //Check for local allocation
+  if( consumerMemoryType == memType_ && consumerDeviceIndex == deviceIndex_ ) {
+    return true;
+  }
+#   ifdef ENABLE_THREADS
+  //Make sure adding consumers is per-field atomic
+  ExecMutex lock;
+#   endif
+
+  //Take action based on where the field must be available and where it currently is
+  switch( consumerMemoryType ){
+  case LOCAL_RAM: {
+    switch( memType_ ) {
+#ifdef ENABLE_CUDA
+    case LOCAL_RAM: {
+      std::ostringstream msg;
+      msg << "Failed call to find_consumer on Spatial Field, unknown device index given\n";
+      msg << "This error indicates a serious problem in how this field was originally created\n";
+      msg << "consumerMemoryType = " << consumerMemoryType << "\n";
+      msg << "consumerDeviceIndex = " << consumerDeviceIndex << "\n";
+      msg << "memType_ = " << memType_ << "\n";
+      msg << "deviceIndex_ = " << deviceIndex_ << "\n";
+      msg << "\t - " << __FILE__ << " : " << __LINE__;
+      throw(std::runtime_error(msg.str()));
+    }
+    break;
+
+    case EXTERNAL_CUDA_GPU: { // GPU field that needs to be available on the CPU
+        return fieldValues_ != NULL;
+    }
+    break;
+#endif
+    default:{
+      std::ostringstream msg;
+      msg << "Failed call to find_consumer on Spatial Field, unknown source device type\n";
+      msg << "This error indicates a serious problem in how this field was originally created\n";
+      msg << "\t - " << __FILE__ << " : " << __LINE__;
+      throw(std::runtime_error(msg.str()));
+    }
+    }
+
+  } // LOCAL_RAM
+  break;
+
+#ifdef ENABLE_CUDA
+  case EXTERNAL_CUDA_GPU: {
+        return consumerFieldValues_.find( consumerDeviceIndex ) != consumerFieldValues_.end();
+  } // EXTERNAL_CUDA_GPU
+  break;
+#endif
+
+  default: {
+    std::ostringstream msg;
+    msg << "Failed call to find_consumer on Spatial Field, unknown destination device type\n";
     msg << "Ensure that you are compiling spatial ops with the proper end device support\n";
     msg << "\t - " << __FILE__ << " : " << __LINE__;
     throw(std::runtime_error(msg.str()));
