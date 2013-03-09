@@ -426,11 +426,7 @@ namespace structured{
         BOOST_STATIC_ASSERT(int(NewGhost::pZ) <= int(OldGhost::pZ));
         BOOST_STATIC_ASSERT(int(NewGhost::bZ) <= int(OldGhost::bZ));
 
-        return MyType(window_with_ghost().template resize_ghost<OldGhost, NewGhost>(),
-                      ( (memType_ == LOCAL_RAM) ? fieldValues_ : fieldValuesExtDevice_ ),
-                      ExternalStorage,
-                      memType_,
-                      deviceIndex_);
+        return resize(window_with_ghost().template resize_ghost<OldGhost, NewGhost>());
     }
 
     template<typename NewGhost>
@@ -482,11 +478,7 @@ namespace structured{
         BOOST_STATIC_ASSERT(int(NewGhost::pZ) >= int(Minimum::pZ));
         BOOST_STATIC_ASSERT(int(NewGhost::bZ) >= int(Minimum::bZ));
 
-        return MyType(window_with_ghost().template resize_ghost<OldGhost, NewGhost>(),
-                      ( (memType_ == LOCAL_RAM) ? fieldValues_ : fieldValuesExtDevice_ ),
-                      ExternalStorage,
-                      memType_,
-                      deviceIndex_);
+        return resize(window_with_ghost().template resize_ghost<OldGhost, NewGhost>());
     }
 
     template<typename Shift>
@@ -516,11 +508,7 @@ namespace structured{
         BOOST_STATIC_ASSERT(Shift::Z > 0 ? ((int)(Shift::Z) <= (int)(OldGhost::pZ)) : true);
         BOOST_STATIC_ASSERT(Shift::Z > 0 ? ((int)(Shift::Z) <= (int)(OldGhost::bZ)) : true);
 
-        return MyType(window_with_ghost().template shift<Shift>(),
-                      ( (memType_ == LOCAL_RAM) ? fieldValues_ : fieldValuesExtDevice_ ),
-                      ExternalStorage,
-                      memType_,
-                      deviceIndex_);
+        return resize(window_with_ghost().template shift<Shift>());
     }
 
     template<typename Shift>
@@ -553,6 +541,24 @@ namespace structured{
     inline field_type resize_ghost_and_shift_and_maintain_interior() const {
         return resize_ghost_and_maintain_interior<NewGhost>().template shift_and_maintain_interior<Shift>();
     }
+
+  private:
+    inline field_type resize(MemoryWindow const & new_size) const {
+        field_type newField(new_size,
+                            NULL,
+                            ExternalStorage,
+                            memType_,
+                            deviceIndex_);
+        newField.copy_internals(*this);
+
+        return newField;
+    };
+
+    inline void copy_internals(field_type const & other) {
+        fieldValues_ = other.fieldValues_;
+        fieldValuesExtDevice_ = other.fieldValuesExtDevice_;
+        consumerFieldValues_ = other.consumerFieldValues_;
+    };
   };
 
 //==================================================================
