@@ -2616,11 +2616,11 @@
                                                                                         'result))
                                                                        'NewShift)
                                                               (fc 'Result
-                                                                  (fc (scope 'EarlierPointsType (tpl-fcn-use 'in_sq_construct VG-chunk SH-chunk))
+                                                                  (fc (scope 'EarlierPointsType (tpl-fcn-use 'in_gpu_construct VG-chunk SH-chunk))
                                                                       'arg
                                                                       (mfc 'coefs 'others))
                                                                   (fc 'MultiplyType
-                                                                      (mfc 'arg (tpl-fcn-use 'init VG-chunk 'NewShift))
+                                                                      (mfc 'arg (tpl-fcn-use 'gpu_init VG-chunk 'NewShift))
                                                                       (fc 'Coef (mfc 'coefs 'coef))))))))
                             (tpl-srt-def 'ConstructReductionExpr
                                          (list (tpl-pmtr 'ArgPreReduction)
@@ -2750,7 +2750,7 @@
                                                                                         'result))
                                                                        'NewShift)
                                                               (fc 'Result
-                                                                  (mfc 'arg (tpl-fcn-use 'init VG-chunk 'NewShift))
+                                                                  (mfc 'arg (tpl-fcn-use 'gpu_init VG-chunk 'NewShift))
                                                                   (fc 'Coef (mfc 'coefs 'coef)))))))
                             (tpl-srt-def 'ConstructReductionExpr
                                          (list (tpl-pmtr 'ArgPreReduction)

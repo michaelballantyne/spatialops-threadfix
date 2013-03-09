@@ -8042,9 +8042,9 @@
 
                     typename structured::Add<Shift, Point>::result typedef NewShift;
 
-                    return Result(EarlierPointsType::template in_sq_construct<ValidGhost, Shift>(arg,
-                                                                                                 coefs.others()),
-                                  MultiplyType(arg.template init<ValidGhost, NewShift>(), Coef(coefs.coef())));
+                    return Result(EarlierPointsType::template in_gpu_construct<ValidGhost, Shift>(arg,
+                                                                                                  coefs.others()),
+                                  MultiplyType(arg.template gpu_init<ValidGhost, NewShift>(), Coef(coefs.coef())));
                  };
              }
 #         endif
@@ -8150,7 +8150,7 @@
 
                     typename structured::Add<Shift, Point>::result typedef NewShift;
 
-                    return Result(arg.template init<ValidGhost, NewShift>(), Coef(coefs.coef()));
+                    return Result(arg.template gpu_init<ValidGhost, NewShift>(), Coef(coefs.coef()));
                  };
              }
 #         endif
