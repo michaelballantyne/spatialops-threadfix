@@ -180,10 +180,6 @@
           NeboScalar(AtomicType const v)
           : value_(v)
           {};
-#         ifdef __CUDACC__
-             inline bool gpu_ready(int const deviceIndex) const { return true; }
-#         endif
-          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const { return SeqWalkType(value_); };
 #         ifdef FIELD_EXPRESSION_THREADS
@@ -191,6 +187,10 @@
               inline ResizeType resize(void) const { return ResizeType(value_); }
 #         endif
           /* FIELD_EXPRESSION_THREADS */;
+#         ifdef __CUDACC__
+             inline bool gpu_ready(int const deviceIndex) const { return true; }
+#         endif
+          /* __CUDACC__ */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
@@ -309,10 +309,6 @@
           NeboBoolean(bool const v)
           : value_(v)
           {};
-#         ifdef __CUDACC__
-             inline bool gpu_ready(int const deviceIndex) const { return true; }
-#         endif
-          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const { return SeqWalkType(value_); };
 #         ifdef FIELD_EXPRESSION_THREADS
@@ -320,6 +316,10 @@
               inline ResizeType resize(void) const { return ResizeType(value_); }
 #         endif
           /* FIELD_EXPRESSION_THREADS */;
+#         ifdef __CUDACC__
+             inline bool gpu_ready(int const deviceIndex) const { return true; }
+#         endif
+          /* __CUDACC__ */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
@@ -435,12 +435,6 @@
           NeboConstField(FieldType const & f)
           : field_(f)
           {};
-#         ifdef __CUDACC__
-             inline bool gpu_ready(int const deviceIndex) const {
-                return field_.find_consumer(deviceIndex);
-             }
-#         endif
-          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
               return SeqWalkType(field_.template resize_ghost_and_shift<ValidGhost, Shift>());
@@ -452,6 +446,12 @@
               }
 #         endif
           /* FIELD_EXPRESSION_THREADS */;
+#         ifdef __CUDACC__
+             inline bool gpu_ready(int const deviceIndex) const {
+                return field_.find_consumer(deviceIndex);
+             }
+#         endif
+          /* __CUDACC__ */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
@@ -600,11 +600,28 @@
 
          private:
           template<typename Iterator, typename RhsType>
+           inline void cpu_assign(RhsType rhs) {
+
+#             ifdef FIELD_EXPRESSION_THREADS
+                 if(is_thread_parallel()) { thread_parallel_assign<Iterator, RhsType>(rhs); }
+                 else { sequential_assign<Iterator, RhsType>(rhs); }
+#             else
+                 sequential_assign<Iterator, RhsType>(rhs)
+#             endif
+              /* FIELD_EXPRESSION_THREADS */;
+           };
+          template<typename Iterator, typename RhsType>
            inline void sequential_assign(RhsType rhs) {
 
               typename CalculateValidGhost<Iterator, RhsType, FieldType>::Result typedef ValidGhost;
 
               init<ValidGhost, Shift>().assign(rhs.template init<ValidGhost, Shift>());
+           };
+          template<typename ValidGhost, typename Shift>
+           inline SeqWalkType init(void) {
+
+              return SeqWalkType(field_.template resize_ghost_and_shift_and_maintain_interior<ValidGhost,
+                                                                                              Shift>());
            };
 #         ifdef FIELD_EXPRESSION_THREADS
              template<typename Iterator, typename RhsType>
@@ -646,17 +663,13 @@
               }
 #         endif
           /* FIELD_EXPRESSION_THREADS */;
-          template<typename Iterator, typename RhsType>
-           inline void cpu_assign(RhsType rhs) {
-
-#             ifdef FIELD_EXPRESSION_THREADS
-                 if(is_thread_parallel()) { thread_parallel_assign<Iterator, RhsType>(rhs); }
-                 else { sequential_assign<Iterator, RhsType>(rhs); }
-#             else
-                 sequential_assign<Iterator, RhsType>(rhs)
-#             endif
-              /* FIELD_EXPRESSION_THREADS */;
-           };
+#         ifdef FIELD_EXPRESSION_THREADS
+             template<typename ValidGhost>
+              inline ResizeType resize(void) {
+                 return ResizeType(field_.template resize_ghost_and_maintain_interior<ValidGhost>());
+              }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              template<typename Iterator, typename RhsType>
               inline void gpu_assign(RhsType rhs) {
@@ -697,19 +710,6 @@
              inline int gpu_device_index(void) const { return field_.device_index(); }
 #         endif
           /* __CUDACC__ */;
-          template<typename ValidGhost, typename Shift>
-           inline SeqWalkType init(void) {
-
-              return SeqWalkType(field_.template resize_ghost_and_shift_and_maintain_interior<ValidGhost,
-                                                                                              Shift>());
-           };
-#         ifdef FIELD_EXPRESSION_THREADS
-             template<typename ValidGhost>
-              inline ResizeType resize(void) {
-                 return ResizeType(field_.template resize_ghost_and_maintain_interior<ValidGhost>());
-              }
-#         endif
-          /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) {
@@ -877,12 +877,6 @@
           SumOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-#         ifdef __CUDACC__
-             inline bool gpu_ready(int const deviceIndex) const {
-                return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
-             }
-#         endif
-          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
 
@@ -898,6 +892,12 @@
               }
 #         endif
           /* FIELD_EXPRESSION_THREADS */;
+#         ifdef __CUDACC__
+             inline bool gpu_ready(int const deviceIndex) const {
+                return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
+             }
+#         endif
+          /* __CUDACC__ */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
@@ -1205,12 +1205,6 @@
           DiffOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-#         ifdef __CUDACC__
-             inline bool gpu_ready(int const deviceIndex) const {
-                return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
-             }
-#         endif
-          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
 
@@ -1226,6 +1220,12 @@
               }
 #         endif
           /* FIELD_EXPRESSION_THREADS */;
+#         ifdef __CUDACC__
+             inline bool gpu_ready(int const deviceIndex) const {
+                return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
+             }
+#         endif
+          /* __CUDACC__ */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
@@ -1535,12 +1535,6 @@
           ProdOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-#         ifdef __CUDACC__
-             inline bool gpu_ready(int const deviceIndex) const {
-                return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
-             }
-#         endif
-          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
 
@@ -1556,6 +1550,12 @@
               }
 #         endif
           /* FIELD_EXPRESSION_THREADS */;
+#         ifdef __CUDACC__
+             inline bool gpu_ready(int const deviceIndex) const {
+                return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
+             }
+#         endif
+          /* __CUDACC__ */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
@@ -1865,12 +1865,6 @@
           DivOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-#         ifdef __CUDACC__
-             inline bool gpu_ready(int const deviceIndex) const {
-                return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
-             }
-#         endif
-          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
 
@@ -1886,6 +1880,12 @@
               }
 #         endif
           /* FIELD_EXPRESSION_THREADS */;
+#         ifdef __CUDACC__
+             inline bool gpu_ready(int const deviceIndex) const {
+                return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
+             }
+#         endif
+          /* __CUDACC__ */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
@@ -2183,12 +2183,6 @@
           SinFcn(Operand const & operand)
           : operand_(operand)
           {};
-#         ifdef __CUDACC__
-             inline bool gpu_ready(int const deviceIndex) const {
-                return (operand_.gpu_ready(deviceIndex));
-             }
-#         endif
-          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
               return SeqWalkType(operand_.template init<ValidGhost, Shift>());
@@ -2200,6 +2194,12 @@
               }
 #         endif
           /* FIELD_EXPRESSION_THREADS */;
+#         ifdef __CUDACC__
+             inline bool gpu_ready(int const deviceIndex) const {
+                return (operand_.gpu_ready(deviceIndex));
+             }
+#         endif
+          /* __CUDACC__ */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
@@ -2349,12 +2349,6 @@
           CosFcn(Operand const & operand)
           : operand_(operand)
           {};
-#         ifdef __CUDACC__
-             inline bool gpu_ready(int const deviceIndex) const {
-                return (operand_.gpu_ready(deviceIndex));
-             }
-#         endif
-          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
               return SeqWalkType(operand_.template init<ValidGhost, Shift>());
@@ -2366,6 +2360,12 @@
               }
 #         endif
           /* FIELD_EXPRESSION_THREADS */;
+#         ifdef __CUDACC__
+             inline bool gpu_ready(int const deviceIndex) const {
+                return (operand_.gpu_ready(deviceIndex));
+             }
+#         endif
+          /* __CUDACC__ */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
@@ -2515,12 +2515,6 @@
           TanFcn(Operand const & operand)
           : operand_(operand)
           {};
-#         ifdef __CUDACC__
-             inline bool gpu_ready(int const deviceIndex) const {
-                return (operand_.gpu_ready(deviceIndex));
-             }
-#         endif
-          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
               return SeqWalkType(operand_.template init<ValidGhost, Shift>());
@@ -2532,6 +2526,12 @@
               }
 #         endif
           /* FIELD_EXPRESSION_THREADS */;
+#         ifdef __CUDACC__
+             inline bool gpu_ready(int const deviceIndex) const {
+                return (operand_.gpu_ready(deviceIndex));
+             }
+#         endif
+          /* __CUDACC__ */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
@@ -2681,12 +2681,6 @@
           ExpFcn(Operand const & operand)
           : operand_(operand)
           {};
-#         ifdef __CUDACC__
-             inline bool gpu_ready(int const deviceIndex) const {
-                return (operand_.gpu_ready(deviceIndex));
-             }
-#         endif
-          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
               return SeqWalkType(operand_.template init<ValidGhost, Shift>());
@@ -2698,6 +2692,12 @@
               }
 #         endif
           /* FIELD_EXPRESSION_THREADS */;
+#         ifdef __CUDACC__
+             inline bool gpu_ready(int const deviceIndex) const {
+                return (operand_.gpu_ready(deviceIndex));
+             }
+#         endif
+          /* __CUDACC__ */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
@@ -2847,12 +2847,6 @@
           TanhFcn(Operand const & operand)
           : operand_(operand)
           {};
-#         ifdef __CUDACC__
-             inline bool gpu_ready(int const deviceIndex) const {
-                return (operand_.gpu_ready(deviceIndex));
-             }
-#         endif
-          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
               return SeqWalkType(operand_.template init<ValidGhost, Shift>());
@@ -2864,6 +2858,12 @@
               }
 #         endif
           /* FIELD_EXPRESSION_THREADS */;
+#         ifdef __CUDACC__
+             inline bool gpu_ready(int const deviceIndex) const {
+                return (operand_.gpu_ready(deviceIndex));
+             }
+#         endif
+          /* __CUDACC__ */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
@@ -3013,12 +3013,6 @@
           AbsFcn(Operand const & operand)
           : operand_(operand)
           {};
-#         ifdef __CUDACC__
-             inline bool gpu_ready(int const deviceIndex) const {
-                return (operand_.gpu_ready(deviceIndex));
-             }
-#         endif
-          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
               return SeqWalkType(operand_.template init<ValidGhost, Shift>());
@@ -3030,6 +3024,12 @@
               }
 #         endif
           /* FIELD_EXPRESSION_THREADS */;
+#         ifdef __CUDACC__
+             inline bool gpu_ready(int const deviceIndex) const {
+                return (operand_.gpu_ready(deviceIndex));
+             }
+#         endif
+          /* __CUDACC__ */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
@@ -3179,12 +3179,6 @@
           NegFcn(Operand const & operand)
           : operand_(operand)
           {};
-#         ifdef __CUDACC__
-             inline bool gpu_ready(int const deviceIndex) const {
-                return (operand_.gpu_ready(deviceIndex));
-             }
-#         endif
-          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
               return SeqWalkType(operand_.template init<ValidGhost, Shift>());
@@ -3196,6 +3190,12 @@
               }
 #         endif
           /* FIELD_EXPRESSION_THREADS */;
+#         ifdef __CUDACC__
+             inline bool gpu_ready(int const deviceIndex) const {
+                return (operand_.gpu_ready(deviceIndex));
+             }
+#         endif
+          /* __CUDACC__ */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
@@ -3355,12 +3355,6 @@
           PowFcn(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-#         ifdef __CUDACC__
-             inline bool gpu_ready(int const deviceIndex) const {
-                return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
-             }
-#         endif
-          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
 
@@ -3376,6 +3370,12 @@
               }
 #         endif
           /* FIELD_EXPRESSION_THREADS */;
+#         ifdef __CUDACC__
+             inline bool gpu_ready(int const deviceIndex) const {
+                return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
+             }
+#         endif
+          /* __CUDACC__ */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
@@ -3677,12 +3677,6 @@
           SqrtFcn(Operand const & operand)
           : operand_(operand)
           {};
-#         ifdef __CUDACC__
-             inline bool gpu_ready(int const deviceIndex) const {
-                return (operand_.gpu_ready(deviceIndex));
-             }
-#         endif
-          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
               return SeqWalkType(operand_.template init<ValidGhost, Shift>());
@@ -3694,6 +3688,12 @@
               }
 #         endif
           /* FIELD_EXPRESSION_THREADS */;
+#         ifdef __CUDACC__
+             inline bool gpu_ready(int const deviceIndex) const {
+                return (operand_.gpu_ready(deviceIndex));
+             }
+#         endif
+          /* __CUDACC__ */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
@@ -3843,12 +3843,6 @@
           LogFcn(Operand const & operand)
           : operand_(operand)
           {};
-#         ifdef __CUDACC__
-             inline bool gpu_ready(int const deviceIndex) const {
-                return (operand_.gpu_ready(deviceIndex));
-             }
-#         endif
-          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
               return SeqWalkType(operand_.template init<ValidGhost, Shift>());
@@ -3860,6 +3854,12 @@
               }
 #         endif
           /* FIELD_EXPRESSION_THREADS */;
+#         ifdef __CUDACC__
+             inline bool gpu_ready(int const deviceIndex) const {
+                return (operand_.gpu_ready(deviceIndex));
+             }
+#         endif
+          /* __CUDACC__ */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
@@ -4023,12 +4023,6 @@
           EqualCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-#         ifdef __CUDACC__
-             inline bool gpu_ready(int const deviceIndex) const {
-                return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
-             }
-#         endif
-          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
 
@@ -4044,6 +4038,12 @@
               }
 #         endif
           /* FIELD_EXPRESSION_THREADS */;
+#         ifdef __CUDACC__
+             inline bool gpu_ready(int const deviceIndex) const {
+                return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
+             }
+#         endif
+          /* __CUDACC__ */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
@@ -4377,12 +4377,6 @@
           InequalCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-#         ifdef __CUDACC__
-             inline bool gpu_ready(int const deviceIndex) const {
-                return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
-             }
-#         endif
-          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
 
@@ -4398,6 +4392,12 @@
               }
 #         endif
           /* FIELD_EXPRESSION_THREADS */;
+#         ifdef __CUDACC__
+             inline bool gpu_ready(int const deviceIndex) const {
+                return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
+             }
+#         endif
+          /* __CUDACC__ */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
@@ -4733,12 +4733,6 @@
           LessThanCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-#         ifdef __CUDACC__
-             inline bool gpu_ready(int const deviceIndex) const {
-                return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
-             }
-#         endif
-          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
 
@@ -4754,6 +4748,12 @@
               }
 #         endif
           /* FIELD_EXPRESSION_THREADS */;
+#         ifdef __CUDACC__
+             inline bool gpu_ready(int const deviceIndex) const {
+                return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
+             }
+#         endif
+          /* __CUDACC__ */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
@@ -5089,12 +5089,6 @@
           LessThanEqualCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-#         ifdef __CUDACC__
-             inline bool gpu_ready(int const deviceIndex) const {
-                return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
-             }
-#         endif
-          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
 
@@ -5110,6 +5104,12 @@
               }
 #         endif
           /* FIELD_EXPRESSION_THREADS */;
+#         ifdef __CUDACC__
+             inline bool gpu_ready(int const deviceIndex) const {
+                return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
+             }
+#         endif
+          /* __CUDACC__ */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
@@ -5447,12 +5447,6 @@
           GreaterThanCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-#         ifdef __CUDACC__
-             inline bool gpu_ready(int const deviceIndex) const {
-                return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
-             }
-#         endif
-          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
 
@@ -5468,6 +5462,12 @@
               }
 #         endif
           /* FIELD_EXPRESSION_THREADS */;
+#         ifdef __CUDACC__
+             inline bool gpu_ready(int const deviceIndex) const {
+                return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
+             }
+#         endif
+          /* __CUDACC__ */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
@@ -5805,12 +5805,6 @@
           GreaterThanEqualCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-#         ifdef __CUDACC__
-             inline bool gpu_ready(int const deviceIndex) const {
-                return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
-             }
-#         endif
-          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
 
@@ -5826,6 +5820,12 @@
               }
 #         endif
           /* FIELD_EXPRESSION_THREADS */;
+#         ifdef __CUDACC__
+             inline bool gpu_ready(int const deviceIndex) const {
+                return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
+             }
+#         endif
+          /* __CUDACC__ */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
@@ -6159,12 +6159,6 @@
           AndOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-#         ifdef __CUDACC__
-             inline bool gpu_ready(int const deviceIndex) const {
-                return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
-             }
-#         endif
-          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
 
@@ -6180,6 +6174,12 @@
               }
 #         endif
           /* FIELD_EXPRESSION_THREADS */;
+#         ifdef __CUDACC__
+             inline bool gpu_ready(int const deviceIndex) const {
+                return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
+             }
+#         endif
+          /* __CUDACC__ */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
@@ -6381,12 +6381,6 @@
           OrOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {};
-#         ifdef __CUDACC__
-             inline bool gpu_ready(int const deviceIndex) const {
-                return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
-             }
-#         endif
-          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
 
@@ -6402,6 +6396,12 @@
               }
 #         endif
           /* FIELD_EXPRESSION_THREADS */;
+#         ifdef __CUDACC__
+             inline bool gpu_ready(int const deviceIndex) const {
+                return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
+             }
+#         endif
+          /* __CUDACC__ */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
@@ -6591,12 +6591,6 @@
           NotOp(Operand const & operand)
           : operand_(operand)
           {};
-#         ifdef __CUDACC__
-             inline bool gpu_ready(int const deviceIndex) const {
-                return (operand_.gpu_ready(deviceIndex));
-             }
-#         endif
-          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
               return SeqWalkType(operand_.template init<ValidGhost, Shift>());
@@ -6608,6 +6602,12 @@
               }
 #         endif
           /* FIELD_EXPRESSION_THREADS */;
+#         ifdef __CUDACC__
+             inline bool gpu_ready(int const deviceIndex) const {
+                return (operand_.gpu_ready(deviceIndex));
+             }
+#         endif
+          /* __CUDACC__ */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
@@ -6771,12 +6771,6 @@
           NeboClause(Test const & t, Expr const & e)
           : test_(t), expr_(e)
           {};
-#         ifdef __CUDACC__
-             inline bool gpu_ready(int const deviceIndex) const {
-                return test_.gpu_ready(deviceIndex) && expr_.gpu_ready(deviceIndex);
-             }
-#         endif
-          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
 
@@ -6790,6 +6784,12 @@
               }
 #         endif
           /* FIELD_EXPRESSION_THREADS */;
+#         ifdef __CUDACC__
+             inline bool gpu_ready(int const deviceIndex) const {
+                return test_.gpu_ready(deviceIndex) && expr_.gpu_ready(deviceIndex);
+             }
+#         endif
+          /* __CUDACC__ */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
@@ -6938,12 +6938,6 @@
           NeboCond(ClauseType const & c, Otherwise const & e)
           : clause_(c), otherwise_(e)
           {};
-#         ifdef __CUDACC__
-             inline bool gpu_ready(int const deviceIndex) const {
-                return clause_.gpu_ready(deviceIndex) && otherwise_.gpu_ready(deviceIndex);
-             }
-#         endif
-          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
 
@@ -6957,6 +6951,12 @@
               }
 #         endif
           /* FIELD_EXPRESSION_THREADS */;
+#         ifdef __CUDACC__
+             inline bool gpu_ready(int const deviceIndex) const {
+                return clause_.gpu_ready(deviceIndex) && otherwise_.gpu_ready(deviceIndex);
+             }
+#         endif
+          /* __CUDACC__ */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
@@ -7811,12 +7811,6 @@
           NeboStencilPoint(Arg const & a)
           : arg_(a)
           {};
-#         ifdef __CUDACC__
-             inline bool gpu_ready(int const deviceIndex) const {
-                return arg_.gpu_ready(deviceIndex);
-             }
-#         endif
-          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
 
@@ -7830,6 +7824,12 @@
               }
 #         endif
           /* FIELD_EXPRESSION_THREADS */;
+#         ifdef __CUDACC__
+             inline bool gpu_ready(int const deviceIndex) const {
+                return arg_.gpu_ready(deviceIndex);
+             }
+#         endif
+          /* __CUDACC__ */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
@@ -8284,12 +8284,6 @@
           NeboStencil(Arg const & a, Coefs const & coefs)
           : arg_(a), coefs_(coefs)
           {};
-#         ifdef __CUDACC__
-             inline bool gpu_ready(int const deviceIndex) const {
-                return arg_.gpu_ready(deviceIndex);
-             }
-#         endif
-          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) const {
 
@@ -8303,6 +8297,12 @@
               }
 #         endif
           /* FIELD_EXPRESSION_THREADS */;
+#         ifdef __CUDACC__
+             inline bool gpu_ready(int const deviceIndex) const {
+                return arg_.gpu_ready(deviceIndex);
+             }
+#         endif
+          /* __CUDACC__ */;
 #         ifdef __CUDACC__
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {

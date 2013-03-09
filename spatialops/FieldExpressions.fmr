@@ -297,16 +297,13 @@
                         publics
                         privates)))]
        [build-Initial-rhs (combine-args build-Initial-general
-                                        (lambda (gpu-ready-body
-                                                 SW-cons-args
+                                        (lambda (SW-cons-args
                                                  RS-cons-args
+                                                 gpu-ready-body
                                                  GPU-cons-args
                                                  RD-cons-args
                                                  publics)
-                                          (list (gpu-only (r-fcn-def (constize (fcn-dcl 'gpu_ready 'bool (adc 'int DI-chunk)))
-                                                                     null
-                                                                     gpu-ready-body))
-                                                (tpl-def (list (tpl-pmtr VG-chunk)
+                                          (list (tpl-def (list (tpl-pmtr VG-chunk)
                                                                (tpl-pmtr SH-chunk))
                                                          (r-fcn-def (constize (fcn-dcl 'init 'SeqWalkType))
                                                                     null
@@ -315,6 +312,9 @@
                                                                        (r-fcn-def (constize (fcn-dcl 'resize 'ResizeType))
                                                                                   null
                                                                                   (fc 'ResizeType RS-cons-args))))
+                                                (gpu-only (r-fcn-def (constize (fcn-dcl 'gpu_ready 'bool (adc 'int DI-chunk)))
+                                                                     null
+                                                                     gpu-ready-body))
                                                 (gpu-only (tpl-def (list (tpl-pmtr VG-chunk)
                                                                          (tpl-pmtr SH-chunk))
                                                                    (r-fcn-def (constize (fcn-dcl 'gpu_init 'GPUWalkType (adc 'int DI-chunk)))
@@ -352,15 +352,25 @@
                                                                         (assign-call 'cpu_assign)))
                                                         publics))
                                                 (lambda (sequential-assign-body
+                                                         SW-cons-args
                                                          thread-parallel-assign-body
+                                                         RS-cons-args
                                                          gpu-assign-body
                                                          gpu-ready-body
                                                          gpu-device-index-body
-                                                         SW-cons-args
-                                                         RS-cons-args
                                                          GPU-cons-args
                                                          privates)
-                                                  (list (assign 'sequential_assign sequential-assign-body)
+                                                  (list (assign 'cpu_assign
+                                                                (threads-or (nifelse (fc 'is_thread_parallel)
+                                                                                     (assign-call 'thread_parallel_assign)
+                                                                                     (assign-call 'sequential_assign))
+                                                                            (assign-call 'sequential_assign)))
+                                                        (assign 'sequential_assign sequential-assign-body)
+                                                        (tpl-def (list (tpl-pmtr VG-chunk)
+                                                                       (tpl-pmtr SH-chunk))
+                                                                 (r-fcn-def (fcn-dcl 'init 'SeqWalkType)
+                                                                            null
+                                                                            (fc 'SeqWalkType SW-cons-args)))
                                                         (threads-only
                                                          (assign 'thread_parallel_assign
                                                                  (list (bs (scope 'BI 'interprocess_semaphore)
@@ -371,11 +381,10 @@
                                                                              (n< 'ii 'max)
                                                                              (n++ 'ii)
                                                                              (mfc 'semaphore 'wait)))))
-                                                        (assign 'cpu_assign
-                                                                (threads-or (nifelse (fc 'is_thread_parallel)
-                                                                                     (assign-call 'thread_parallel_assign)
-                                                                                     (assign-call 'sequential_assign))
-                                                                            (assign-call 'sequential_assign)))
+                                                        (threads-only (tpl-def (tpl-pmtr VG-chunk)
+                                                                               (r-fcn-def (fcn-dcl 'resize 'ResizeType)
+                                                                                          null
+                                                                                          (fc 'ResizeType RS-cons-args))))
                                                         (gpu-only (assign 'gpu_assign gpu-assign-body))
                                                         (gpu-only (r-fcn-def (constize (fcn-dcl 'gpu_ready 'bool))
                                                                              null
@@ -383,15 +392,6 @@
                                                         (gpu-only (r-fcn-def (constize (fcn-dcl 'gpu_device_index 'int))
                                                                              null
                                                                              gpu-device-index-body))
-                                                        (tpl-def (list (tpl-pmtr VG-chunk)
-                                                                       (tpl-pmtr SH-chunk))
-                                                                 (r-fcn-def (fcn-dcl 'init 'SeqWalkType)
-                                                                            null
-                                                                            (fc 'SeqWalkType SW-cons-args)))
-                                                        (threads-only (tpl-def (tpl-pmtr VG-chunk)
-                                                                               (r-fcn-def (fcn-dcl 'resize 'ResizeType)
-                                                                                          null
-                                                                                          (fc 'ResizeType RS-cons-args))))
                                                         (gpu-only (tpl-def (list (tpl-pmtr VG-chunk)
                                                                                  (tpl-pmtr SH-chunk))
                                                                            (r-fcn-def (fcn-dcl 'gpu_init 'GPUWalkType)
@@ -695,9 +695,9 @@
                                           (build-VG (mapper (lambda (Op) (tpl-pmtr (scope Op report-VG-chunk)))
                                                             Op-lst))
                                           gen-constructor
-                                          (exec-and-check 'gpu_ready DI-chunk)
                                           (op_-mfc (tpl-fcn-use 'init VG-chunk SH-chunk))
                                           (op_-mfc (tpl-fcn-use 'resize VG-chunk))
+                                          (exec-and-check 'gpu_ready DI-chunk)
                                           (op_-mfc (tpl-fcn-use 'gpu_init VG-chunk SH-chunk) DI-chunk)
                                           (op_-mfc (tpl-fcn-use 'reduce_init VG-chunk SH-chunk))
                                           null
@@ -1072,9 +1072,9 @@
                                     (bm-constructor (adc 'AtomicType 'v)
                                                     (cons-asgn 'value_ 'v)
                                                     null)
+                                    'value_
+                                    'value_
                                     'true
-                                    'value_
-                                    'value_
                                     'value_
                                     'value_
                                     null
@@ -1131,9 +1131,9 @@
                                     (bm-constructor (adc 'bool 'v)
                                                     (cons-asgn 'value_ 'v)
                                                     null)
+                                    'value_
+                                    'value_
                                     'true
-                                    'value_
-                                    'value_
                                     'value_
                                     'value_
                                     null
@@ -1185,9 +1185,9 @@
                                     (bm-constructor (adcr FT-chunk 'f)
                                                     (cons-asgn 'field_ 'f)
                                                     null)
-                                    (mfc 'field_ 'find_consumer DI-chunk)
                                     (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift VG-chunk SH-chunk))
                                     (mfc 'field_ (tpl-fcn-use 'resize_ghost VG-chunk))
+                                    (mfc 'field_ 'find_consumer DI-chunk)
                                     (list DI-chunk
                                           (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift VG-chunk SH-chunk)))
                                     (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift VG-chunk SH-chunk))
@@ -1295,6 +1295,7 @@
                                             (mfc (fc (tpl-use 'init VG-chunk SH-chunk))
                                                  'assign
                                                  (mfc 'rhs (tpl-fcn-use 'init VG-chunk SH-chunk))))
+                                      (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift_and_maintain_interior VG-chunk SH-chunk))
                                       (list typedef-Ghost
                                             (typedef (tpl-pmtr (scope 'RhsType 'ResizeType))
                                                      'RhsResizeType)
@@ -1321,6 +1322,7 @@
                                                            'location
                                                            (c (ref) 'semaphore)))
                                                   (n= 'location (fc 'nebo_next_partition 'location 'split))))
+                                      (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_maintain_interior VG-chunk))
                                       (let ([extent-def (lambda (num)
                                                           (nt= 'int
                                                                (l 'extent num)
@@ -1354,8 +1356,6 @@
                                                 'memory_device_type)
                                            'EXTERNAL_CUDA_GPU)
                                       (mfc 'field_ 'device_index)
-                                      (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift_and_maintain_interior VG-chunk SH-chunk))
-                                      (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_maintain_interior VG-chunk))
                                       (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift_and_maintain_interior VG-chunk SH-chunk))
                                       (ad FT-chunk 'field_)))
                     (bs-Resize-lhs null
@@ -1535,12 +1535,12 @@
                                                     (list (cons-asgn 'test_ 't)
                                                           (cons-asgn 'expr_ 'e))
                                                     null)
-                                    (n-and (mfc 'test_ 'gpu_ready DI-chunk)
-                                           (mfc 'expr_ 'gpu_ready DI-chunk))
                                     (list (mfc 'test_ (tpl-fcn-use 'init VG-chunk SH-chunk))
                                           (mfc 'expr_ (tpl-fcn-use 'init VG-chunk SH-chunk)))
                                     (list (mfc 'test_ (tpl-fcn-use 'resize VG-chunk))
                                           (mfc 'expr_ (tpl-fcn-use 'resize VG-chunk)))
+                                    (n-and (mfc 'test_ 'gpu_ready DI-chunk)
+                                           (mfc 'expr_ 'gpu_ready DI-chunk))
                                     (list (mfc 'test_
                                                (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)
                                                DI-chunk)
@@ -1638,12 +1638,12 @@
                                                     (list (cons-asgn 'clause_ 'c)
                                                           (cons-asgn 'otherwise_ 'e))
                                                     null)
-                                    (n-and (mfc 'clause_ 'gpu_ready DI-chunk)
-                                           (mfc 'otherwise_ 'gpu_ready DI-chunk))
                                     (list (mfc 'clause_ (tpl-fcn-use 'init VG-chunk SH-chunk))
                                           (mfc 'otherwise_ (tpl-fcn-use 'init VG-chunk SH-chunk)))
                                     (list (mfc 'clause_ (tpl-fcn-use 'resize VG-chunk))
                                           (mfc 'otherwise_ (tpl-fcn-use 'resize VG-chunk)))
+                                    (n-and (mfc 'clause_ 'gpu_ready DI-chunk)
+                                           (mfc 'otherwise_ 'gpu_ready DI-chunk))
                                     (list (mfc 'clause_
                                                (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)
                                                DI-chunk)
@@ -2393,10 +2393,10 @@
                                     (bm-constructor (adcr 'Arg 'a)
                                                     (cons-asgn 'arg_ 'a)
                                                     null)
-                                    (mfc 'arg_ 'gpu_ready DI-chunk)
                                     (mfc 'arg_ (tpl-fcn-use 'init VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
                                                                                             'result))))
                                     (mfc 'arg_ (tpl-fcn-use 'resize VG-chunk))
+                                    (mfc 'arg_ 'gpu_ready DI-chunk)
                                     (mfc 'arg_
                                          (tpl-fcn-use 'gpu_init VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
                                                                                           'result)))
@@ -2873,12 +2873,12 @@
                                                     (list (cons-asgn 'arg_ 'a)
                                                           (cons-asgn 'coefs_ 'coefs))
                                                     null)
-                                    (mfc 'arg_ 'gpu_ready DI-chunk)
                                     (fc (scope 'ConstructExpr (tpl-fcn-use 'in_sq_construct VG-chunk SH-chunk))
                                         'arg_
                                         'coefs_)
                                     (list (mfc 'arg_ (tpl-fcn-use 'resize VG-chunk))
                                           'coefs_)
+                                    (mfc 'arg_ 'gpu_ready DI-chunk)
                                     (fc (scope 'ConstructGPUExpr (tpl-fcn-use 'in_gpu_construct VG-chunk SH-chunk))
                                         DI-chunk
                                         'arg_
