@@ -131,6 +131,7 @@
        [report-VG-chunk 'PossibleValidGhost]
        [VG-chunk 'ValidGhost]
        [SH-chunk 'Shift]
+       [DI-chunk 'deviceIndex]
        [NE-chunk 'NeboExpression]
        [NBE-chunk 'NeboBooleanExpression]
        [FT-chunk 'FieldType]
@@ -302,7 +303,7 @@
                                                  GPU-cons-args
                                                  RD-cons-args
                                                  publics)
-                                          (list (gpu-only (r-fcn-def (constize (fcn-dcl 'gpu_ready 'bool))
+                                          (list (gpu-only (r-fcn-def (constize (fcn-dcl 'gpu_ready 'bool (adc 'int DI-chunk)))
                                                                      null
                                                                      gpu-ready-body))
                                                 (tpl-def (list (tpl-pmtr VG-chunk)
@@ -316,7 +317,7 @@
                                                                                   (fc 'ResizeType RS-cons-args))))
                                                 (gpu-only (tpl-def (list (tpl-pmtr VG-chunk)
                                                                          (tpl-pmtr SH-chunk))
-                                                                   (r-fcn-def (constize (fcn-dcl 'gpu_init 'GPUWalkType))
+                                                                   (r-fcn-def (constize (fcn-dcl 'gpu_init 'GPUWalkType (adc 'int DI-chunk)))
                                                                               null
                                                                               (fc 'GPUWalkType GPU-cons-args))))
                                                 (tpl-def (list (tpl-pmtr VG-chunk)
@@ -343,7 +344,9 @@
                                                                  SH-chunk)
                                                         (assign 'assign
                                                                 (gpu-or (nifelse (n-and (fc 'gpu_ready)
-                                                                                        (mfc 'rhs 'gpu_ready))
+                                                                                        (mfc 'rhs
+                                                                                             'gpu_ready
+                                                                                             (fc 'gpu_device_index)))
                                                                                  (assign-call 'gpu_assign)
                                                                                  (assign-call 'cpu_assign))
                                                                         (assign-call 'cpu_assign)))
@@ -352,6 +355,7 @@
                                                          thread-parallel-assign-body
                                                          gpu-assign-body
                                                          gpu-ready-body
+                                                         gpu-device-index-body
                                                          SW-cons-args
                                                          RS-cons-args
                                                          GPU-cons-args
@@ -376,6 +380,9 @@
                                                         (gpu-only (r-fcn-def (constize (fcn-dcl 'gpu_ready 'bool))
                                                                              null
                                                                              gpu-ready-body))
+                                                        (gpu-only (r-fcn-def (constize (fcn-dcl 'gpu_device_index 'int))
+                                                                             null
+                                                                             gpu-device-index-body))
                                                         (tpl-def (list (tpl-pmtr VG-chunk)
                                                                        (tpl-pmtr SH-chunk))
                                                                  (r-fcn-def (fcn-dcl 'init 'SeqWalkType)
@@ -391,9 +398,9 @@
                                                                                       null
                                                                                       (fc 'GPUWalkType GPU-cons-args))))
                                                         privates))))
-                                        (list 7 1 8 0)
+                                        (list 7 1 9 0)
                                         "build-Initial-lhs")]
-       [bs-Initial-lhs (arg-swap build-Initial-lhs 13 3 "bs-Initial-lhs")]
+       [bs-Initial-lhs (arg-swap build-Initial-lhs 14 3 "bs-Initial-lhs")]
        [build-Resize-general
         (lambda (name
                  tpl-irreg-pars
@@ -674,9 +681,9 @@
                                                           op-lst)
                                                   null)]
                  [next (b/a semi-colon-chunk s (op_-mfc 'next))]
-                 [exec-check (lambda (n-logical fcn) (par (n-logical (op_-mfc fcn))))]
+                 [exec-check (lambda (n-logical fcn . args) (par (n-logical (op_-mfc fcn args))))]
                  [exec-or-check (lambda (fcn) (exec-check n-or fcn))]
-                 [exec-and-check (lambda (fcn) (exec-check n-and fcn))]
+                 [exec-and-check (lambda (fcn . args) (exec-check n-and fcn args))]
                  [exec-data-mems (mapper (lambda (Op op_) (ad Op op_))
                                          Op-lst
                                          op_-lst)])
@@ -688,10 +695,10 @@
                                           (build-VG (mapper (lambda (Op) (tpl-pmtr (scope Op report-VG-chunk)))
                                                             Op-lst))
                                           gen-constructor
-                                          (exec-and-check 'gpu_ready)
+                                          (exec-and-check 'gpu_ready DI-chunk)
                                           (op_-mfc (tpl-fcn-use 'init VG-chunk SH-chunk))
                                           (op_-mfc (tpl-fcn-use 'resize VG-chunk))
-                                          (op_-mfc (tpl-fcn-use 'gpu_init VG-chunk SH-chunk))
+                                          (op_-mfc (tpl-fcn-use 'gpu_init VG-chunk SH-chunk) DI-chunk)
                                           (op_-mfc (tpl-fcn-use 'reduce_init VG-chunk SH-chunk))
                                           null
                                           gen-data-mems)
@@ -1178,16 +1185,13 @@
                                     (bm-constructor (adcr FT-chunk 'f)
                                                     (cons-asgn 'field_ 'f)
                                                     null)
-                                    (n== (mfc 'field_
-                                              'memory_device_type)
-                                         'EXTERNAL_CUDA_GPU)
+                                    (mfc 'field_ 'find_consumer DI-chunk)
                                     (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift VG-chunk SH-chunk))
                                     (mfc 'field_ (tpl-fcn-use 'resize_ghost VG-chunk))
+                                    (list DI-chunk
+                                          (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift VG-chunk SH-chunk)))
                                     (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift VG-chunk SH-chunk))
-                                    (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift VG-chunk SH-chunk))
-                                    (r-fcn-def (constize (fcn-dcl 'field (cref FT-chunk)))
-                                               null
-                                               'field_)
+                                    null
                                     (adc FT-chunk 'field_))
                     (bs-Resize-rhs null
                                    null
@@ -1218,8 +1222,9 @@
                                         'iter_))
                     (bs-GPU-rhs null
                                 (bm-constructor
-                                 (adcr FT-chunk 'f)
-                                 (list (cons-asgn 'current_ (n+ (mfc 'f 'field_values 'EXTERNAL_CUDA_GPU (mfc 'f 'device_index))
+                                 (list (adc 'int DI-chunk)
+                                       (adcr FT-chunk 'f))
+                                 (list (cons-asgn 'current_ (n+ (mfc 'f 'field_values 'EXTERNAL_CUDA_GPU DI-chunk)
                                                                 (n+ (mfc (mfc 'f 'window_with_ghost)
                                                                          'offset
                                                                          "0")
@@ -1342,10 +1347,13 @@
                                                    (fc (kernel-use (tpl-use 'gpu_assign_kernel 'GPUWalkType 'RhsGPUWalkType)
                                                                    'dimGrid
                                                                    'dimBlock)
-                                                       (mfc 'rhs (tpl-fcn-use 'gpu_init VG-chunk SH-chunk))))))
+                                                       (mfc 'rhs
+                                                            (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)
+                                                            (fc 'gpu_device_index))))))
                                       (n== (mfc 'field_
                                                 'memory_device_type)
                                            'EXTERNAL_CUDA_GPU)
+                                      (mfc 'field_ 'device_index)
                                       (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift_and_maintain_interior VG-chunk SH-chunk))
                                       (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_maintain_interior VG-chunk))
                                       (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift_and_maintain_interior VG-chunk SH-chunk))
@@ -1527,14 +1535,18 @@
                                                     (list (cons-asgn 'test_ 't)
                                                           (cons-asgn 'expr_ 'e))
                                                     null)
-                                    (n-and (mfc 'test_ 'gpu_ready)
-                                           (mfc 'expr_ 'gpu_ready))
+                                    (n-and (mfc 'test_ 'gpu_ready DI-chunk)
+                                           (mfc 'expr_ 'gpu_ready DI-chunk))
                                     (list (mfc 'test_ (tpl-fcn-use 'init VG-chunk SH-chunk))
                                           (mfc 'expr_ (tpl-fcn-use 'init VG-chunk SH-chunk)))
                                     (list (mfc 'test_ (tpl-fcn-use 'resize VG-chunk))
                                           (mfc 'expr_ (tpl-fcn-use 'resize VG-chunk)))
-                                    (list (mfc 'test_ (tpl-fcn-use 'gpu_init VG-chunk SH-chunk))
-                                          (mfc 'expr_ (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)))
+                                    (list (mfc 'test_
+                                               (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)
+                                               DI-chunk)
+                                          (mfc 'expr_
+                                               (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)
+                                               DI-chunk))
                                     (list (mfc 'test_ (tpl-fcn-use 'reduce_init VG-chunk SH-chunk))
                                           (mfc 'expr_ (tpl-fcn-use 'reduce_init VG-chunk SH-chunk)))
                                     null
@@ -1626,14 +1638,18 @@
                                                     (list (cons-asgn 'clause_ 'c)
                                                           (cons-asgn 'otherwise_ 'e))
                                                     null)
-                                    (n-and (mfc 'clause_ 'gpu_ready)
-                                           (mfc 'otherwise_ 'gpu_ready))
+                                    (n-and (mfc 'clause_ 'gpu_ready DI-chunk)
+                                           (mfc 'otherwise_ 'gpu_ready DI-chunk))
                                     (list (mfc 'clause_ (tpl-fcn-use 'init VG-chunk SH-chunk))
                                           (mfc 'otherwise_ (tpl-fcn-use 'init VG-chunk SH-chunk)))
                                     (list (mfc 'clause_ (tpl-fcn-use 'resize VG-chunk))
                                           (mfc 'otherwise_ (tpl-fcn-use 'resize VG-chunk)))
-                                    (list (mfc 'clause_ (tpl-fcn-use 'gpu_init VG-chunk SH-chunk))
-                                          (mfc 'otherwise_ (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)))
+                                    (list (mfc 'clause_
+                                               (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)
+                                               DI-chunk)
+                                          (mfc 'otherwise_
+                                               (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)
+                                               DI-chunk))
                                     (list (mfc 'clause_ (tpl-fcn-use 'reduce_init VG-chunk SH-chunk))
                                           (mfc 'otherwise_ (tpl-fcn-use 'reduce_init VG-chunk SH-chunk)))
                                     (list (r-fcn-def (constize (fcn-dcl 'clause (cref CT-chunk)))
@@ -2377,12 +2393,14 @@
                                     (bm-constructor (adcr 'Arg 'a)
                                                     (cons-asgn 'arg_ 'a)
                                                     null)
-                                    (mfc 'arg_ 'gpu_ready)
+                                    (mfc 'arg_ 'gpu_ready DI-chunk)
                                     (mfc 'arg_ (tpl-fcn-use 'init VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
                                                                                             'result))))
                                     (mfc 'arg_ (tpl-fcn-use 'resize VG-chunk))
-                                    (mfc 'arg_ (tpl-fcn-use 'gpu_init VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
-                                                                                                'result))))
+                                    (mfc 'arg_
+                                         (tpl-fcn-use 'gpu_init VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
+                                                                                          'result)))
+                                         DI-chunk)
                                     (mfc 'arg_ (tpl-fcn-use 'reduce_init VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
                                                                                                    'result))))
                                     null
@@ -2610,6 +2628,7 @@
                                                          (tpl-pmtr SH-chunk))
                                                    (r-fcn-def (s-fcn-dcl 'in_gpu_construct
                                                                          (tc 'Result)
+                                                                         (adc 'int DI-chunk)
                                                                          (adcr 'ArgPreGPUWalk 'arg)
                                                                          (adcr (tpl-use NSCC 'length) 'coefs))
                                                               (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
@@ -2617,10 +2636,13 @@
                                                                        'NewShift)
                                                               (fc 'Result
                                                                   (fc (scope 'EarlierPointsType (tpl-fcn-use 'in_gpu_construct VG-chunk SH-chunk))
+                                                                      DI-chunk
                                                                       'arg
                                                                       (mfc 'coefs 'others))
                                                                   (fc 'MultiplyType
-                                                                      (mfc 'arg (tpl-fcn-use 'gpu_init VG-chunk 'NewShift))
+                                                                      (mfc 'arg
+                                                                           (tpl-fcn-use 'gpu_init VG-chunk 'NewShift)
+                                                                           DI-chunk)
                                                                       (fc 'Coef (mfc 'coefs 'coef))))))))
                             (tpl-srt-def 'ConstructReductionExpr
                                          (list (tpl-pmtr 'ArgPreReduction)
@@ -2744,13 +2766,16 @@
                                                          (tpl-pmtr SH-chunk))
                                                    (r-fcn-def (s-fcn-dcl 'in_gpu_construct
                                                                          (tc 'Result)
+                                                                         (adc 'int DI-chunk)
                                                                          (adcr 'ArgPreGPUWalk 'arg)
                                                                          (adcr (tpl-use NSCC "1") 'coefs))
                                                               (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
                                                                                         'result))
                                                                        'NewShift)
                                                               (fc 'Result
-                                                                  (mfc 'arg (tpl-fcn-use 'gpu_init VG-chunk 'NewShift))
+                                                                  (mfc 'arg
+                                                                       (tpl-fcn-use 'gpu_init VG-chunk 'NewShift)
+                                                                       DI-chunk)
                                                                   (fc 'Coef (mfc 'coefs 'coef)))))))
                             (tpl-srt-def 'ConstructReductionExpr
                                          (list (tpl-pmtr 'ArgPreReduction)
@@ -2848,13 +2873,14 @@
                                                     (list (cons-asgn 'arg_ 'a)
                                                           (cons-asgn 'coefs_ 'coefs))
                                                     null)
-                                    (mfc 'arg_ 'gpu_ready)
+                                    (mfc 'arg_ 'gpu_ready DI-chunk)
                                     (fc (scope 'ConstructExpr (tpl-fcn-use 'in_sq_construct VG-chunk SH-chunk))
                                         'arg_
                                         'coefs_)
                                     (list (mfc 'arg_ (tpl-fcn-use 'resize VG-chunk))
                                           'coefs_)
                                     (fc (scope 'ConstructGPUExpr (tpl-fcn-use 'in_gpu_construct VG-chunk SH-chunk))
+                                        DI-chunk
                                         'arg_
                                         'coefs_)
                                     (fc (scope 'ConstructExpr (tpl-fcn-use 'in_reduce_construct VG-chunk SH-chunk))
