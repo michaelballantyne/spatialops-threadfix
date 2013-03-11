@@ -14,5 +14,5 @@ using namespace SpatialOps;
 void addsin(Field & result,
             Field const & src1,
             Field const & src2) {
-    result |= src1 + sin(src2);
+    result <<= src1 + sin(src2);
 };
