@@ -49,6 +49,14 @@
 #  endif
    /* __CUDACC__ */
 
+#  ifdef __CUDACC__
+#     ifdef NEBO_GPU_TEST
+#        include <spatialops/structured/ExternalAllocators.h>
+#     endif
+      /* NEBO_GPU_TEST */
+#  endif
+   /* __CUDACC__ */
+
    namespace SpatialOps {
 
       /* Meta-programming compiler flags */
@@ -198,6 +206,13 @@
               }
 #         endif
           /* __CUDACC__ */;
+#         ifdef __CUDACC__
+#            ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const {}
+#            endif
+             /* NEBO_GPU_TEST */
+#         endif
+          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline ReductionType reduce_init(void) const { return ReductionType(value_); };
 
@@ -325,6 +340,13 @@
               inline GPUWalkType gpu_init(int const deviceIndex) const {
                  return GPUWalkType(value_);
               }
+#         endif
+          /* __CUDACC__ */;
+#         ifdef __CUDACC__
+#            ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const {}
+#            endif
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
@@ -461,6 +483,15 @@
               }
 #         endif
           /* __CUDACC__ */;
+#         ifdef __CUDACC__
+#            ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const {
+                   const_cast<FieldType *>(field_)->add_consumer(deviceIndex);
+                }
+#            endif
+             /* NEBO_GPU_TEST */
+#         endif
+          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline ReductionType reduce_init(void) const {
               return ReductionType(field_.template resize_ghost_and_shift<ValidGhost, Shift>());
@@ -588,10 +619,15 @@
            inline void assign(RhsType rhs) {
 
 #             ifdef __CUDACC__
-                 if(gpu_ready() && rhs.gpu_ready(gpu_device_index())) {
-                    gpu_assign<Iterator, RhsType>(rhs);
-                 }
-                 else { cpu_assign<Iterator, RhsType>(rhs); }
+#                ifdef NEBO_GPU_TEST
+                    gpu_test_assign<Iterator, RhsType>(rhs)
+#                else
+                    if(gpu_ready() && rhs.gpu_ready(gpu_device_index())) {
+                       gpu_assign<Iterator, RhsType>(rhs);
+                    }
+                    else { cpu_assign<Iterator, RhsType>(rhs); }
+#                endif
+                 /* NEBO_GPU_TEST */
 #             else
                  cpu_assign<Iterator, RhsType>(rhs)
 #             endif
@@ -717,6 +753,34 @@
                  return GPUWalkType(field_.template resize_ghost_and_shift_and_maintain_interior<ValidGhost,
                                                                                                  Shift>());
               }
+#         endif
+          /* __CUDACC__ */;
+#         ifdef __CUDACC__
+#            ifdef NEBO_GPU_TEST
+                template<typename Iterator, typename RhsType>
+                 inline void gpu_test_assign(RhsType rhs) {
+
+                    rhs.gpu_prep(0);
+
+                    FieldType gpu_field(field_.window_with_ghost(),
+                                        NULL,
+                                        InternalStorage,
+                                        EXTERNAL_CUDA_GPU,
+                                        0);
+
+                    NeboField<Initial, FieldType> gpu_lhs(gpu_field);
+
+                    gpu_lhs.template gpu_assign<ValidGhost, Shift>(rhs);
+
+                    ema::cuda::CUDADeviceInterface & CDI = ema::cuda::CUDADeviceInterface::self();
+
+                    CDI.memcpy_from(field_.fieldValues(),
+                                    gpu_field.fieldValues(EXTERNAL_CUDA_GPU, 0),
+                                    field_.allocated_bytes(),
+                                    0);
+                 }
+#            endif
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */;
           FieldType field_;
@@ -905,6 +969,15 @@
                  return GPUWalkType(operand1_.template gpu_init<ValidGhost, Shift>(deviceIndex),
                                     operand2_.template gpu_init<ValidGhost, Shift>(deviceIndex));
               }
+#         endif
+          /* __CUDACC__ */;
+#         ifdef __CUDACC__
+#            ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const {
+                   operand1_.gpu_prep(deviceIndex); operand2_.gpu_prep(deviceIndex);
+                }
+#            endif
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
@@ -1233,6 +1306,15 @@
                  return GPUWalkType(operand1_.template gpu_init<ValidGhost, Shift>(deviceIndex),
                                     operand2_.template gpu_init<ValidGhost, Shift>(deviceIndex));
               }
+#         endif
+          /* __CUDACC__ */;
+#         ifdef __CUDACC__
+#            ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const {
+                   operand1_.gpu_prep(deviceIndex); operand2_.gpu_prep(deviceIndex);
+                }
+#            endif
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
@@ -1565,6 +1647,15 @@
               }
 #         endif
           /* __CUDACC__ */;
+#         ifdef __CUDACC__
+#            ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const {
+                   operand1_.gpu_prep(deviceIndex); operand2_.gpu_prep(deviceIndex);
+                }
+#            endif
+             /* NEBO_GPU_TEST */
+#         endif
+          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline ReductionType reduce_init(void) const {
 
@@ -1895,6 +1986,15 @@
               }
 #         endif
           /* __CUDACC__ */;
+#         ifdef __CUDACC__
+#            ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const {
+                   operand1_.gpu_prep(deviceIndex); operand2_.gpu_prep(deviceIndex);
+                }
+#            endif
+             /* NEBO_GPU_TEST */
+#         endif
+          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline ReductionType reduce_init(void) const {
 
@@ -2207,6 +2307,13 @@
               }
 #         endif
           /* __CUDACC__ */;
+#         ifdef __CUDACC__
+#            ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const { operand_.gpu_prep(deviceIndex); }
+#            endif
+             /* NEBO_GPU_TEST */
+#         endif
+          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline ReductionType reduce_init(void) const {
               return ReductionType(operand_.template reduce_init<ValidGhost, Shift>());
@@ -2371,6 +2478,13 @@
               inline GPUWalkType gpu_init(int const deviceIndex) const {
                  return GPUWalkType(operand_.template gpu_init<ValidGhost, Shift>(deviceIndex));
               }
+#         endif
+          /* __CUDACC__ */;
+#         ifdef __CUDACC__
+#            ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const { operand_.gpu_prep(deviceIndex); }
+#            endif
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
@@ -2539,6 +2653,13 @@
               }
 #         endif
           /* __CUDACC__ */;
+#         ifdef __CUDACC__
+#            ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const { operand_.gpu_prep(deviceIndex); }
+#            endif
+             /* NEBO_GPU_TEST */
+#         endif
+          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline ReductionType reduce_init(void) const {
               return ReductionType(operand_.template reduce_init<ValidGhost, Shift>());
@@ -2703,6 +2824,13 @@
               inline GPUWalkType gpu_init(int const deviceIndex) const {
                  return GPUWalkType(operand_.template gpu_init<ValidGhost, Shift>(deviceIndex));
               }
+#         endif
+          /* __CUDACC__ */;
+#         ifdef __CUDACC__
+#            ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const { operand_.gpu_prep(deviceIndex); }
+#            endif
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
@@ -2871,6 +2999,13 @@
               }
 #         endif
           /* __CUDACC__ */;
+#         ifdef __CUDACC__
+#            ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const { operand_.gpu_prep(deviceIndex); }
+#            endif
+             /* NEBO_GPU_TEST */
+#         endif
+          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline ReductionType reduce_init(void) const {
               return ReductionType(operand_.template reduce_init<ValidGhost, Shift>());
@@ -3037,6 +3172,13 @@
               }
 #         endif
           /* __CUDACC__ */;
+#         ifdef __CUDACC__
+#            ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const { operand_.gpu_prep(deviceIndex); }
+#            endif
+             /* NEBO_GPU_TEST */
+#         endif
+          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline ReductionType reduce_init(void) const {
               return ReductionType(operand_.template reduce_init<ValidGhost, Shift>());
@@ -3201,6 +3343,13 @@
               inline GPUWalkType gpu_init(int const deviceIndex) const {
                  return GPUWalkType(operand_.template gpu_init<ValidGhost, Shift>(deviceIndex));
               }
+#         endif
+          /* __CUDACC__ */;
+#         ifdef __CUDACC__
+#            ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const { operand_.gpu_prep(deviceIndex); }
+#            endif
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
@@ -3383,6 +3532,15 @@
                  return GPUWalkType(operand1_.template gpu_init<ValidGhost, Shift>(deviceIndex),
                                     operand2_.template gpu_init<ValidGhost, Shift>(deviceIndex));
               }
+#         endif
+          /* __CUDACC__ */;
+#         ifdef __CUDACC__
+#            ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const {
+                   operand1_.gpu_prep(deviceIndex); operand2_.gpu_prep(deviceIndex);
+                }
+#            endif
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
@@ -3701,6 +3859,13 @@
               }
 #         endif
           /* __CUDACC__ */;
+#         ifdef __CUDACC__
+#            ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const { operand_.gpu_prep(deviceIndex); }
+#            endif
+             /* NEBO_GPU_TEST */
+#         endif
+          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline ReductionType reduce_init(void) const {
               return ReductionType(operand_.template reduce_init<ValidGhost, Shift>());
@@ -3865,6 +4030,13 @@
               inline GPUWalkType gpu_init(int const deviceIndex) const {
                  return GPUWalkType(operand_.template gpu_init<ValidGhost, Shift>(deviceIndex));
               }
+#         endif
+          /* __CUDACC__ */;
+#         ifdef __CUDACC__
+#            ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const { operand_.gpu_prep(deviceIndex); }
+#            endif
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
@@ -4051,6 +4223,15 @@
                  return GPUWalkType(operand1_.template gpu_init<ValidGhost, Shift>(deviceIndex),
                                     operand2_.template gpu_init<ValidGhost, Shift>(deviceIndex));
               }
+#         endif
+          /* __CUDACC__ */;
+#         ifdef __CUDACC__
+#            ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const {
+                   operand1_.gpu_prep(deviceIndex); operand2_.gpu_prep(deviceIndex);
+                }
+#            endif
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
@@ -4405,6 +4586,15 @@
                  return GPUWalkType(operand1_.template gpu_init<ValidGhost, Shift>(deviceIndex),
                                     operand2_.template gpu_init<ValidGhost, Shift>(deviceIndex));
               }
+#         endif
+          /* __CUDACC__ */;
+#         ifdef __CUDACC__
+#            ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const {
+                   operand1_.gpu_prep(deviceIndex); operand2_.gpu_prep(deviceIndex);
+                }
+#            endif
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
@@ -4763,6 +4953,15 @@
               }
 #         endif
           /* __CUDACC__ */;
+#         ifdef __CUDACC__
+#            ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const {
+                   operand1_.gpu_prep(deviceIndex); operand2_.gpu_prep(deviceIndex);
+                }
+#            endif
+             /* NEBO_GPU_TEST */
+#         endif
+          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline ReductionType reduce_init(void) const {
 
@@ -5117,6 +5316,15 @@
                  return GPUWalkType(operand1_.template gpu_init<ValidGhost, Shift>(deviceIndex),
                                     operand2_.template gpu_init<ValidGhost, Shift>(deviceIndex));
               }
+#         endif
+          /* __CUDACC__ */;
+#         ifdef __CUDACC__
+#            ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const {
+                   operand1_.gpu_prep(deviceIndex); operand2_.gpu_prep(deviceIndex);
+                }
+#            endif
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
@@ -5477,6 +5685,15 @@
               }
 #         endif
           /* __CUDACC__ */;
+#         ifdef __CUDACC__
+#            ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const {
+                   operand1_.gpu_prep(deviceIndex); operand2_.gpu_prep(deviceIndex);
+                }
+#            endif
+             /* NEBO_GPU_TEST */
+#         endif
+          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline ReductionType reduce_init(void) const {
 
@@ -5835,6 +6052,15 @@
               }
 #         endif
           /* __CUDACC__ */;
+#         ifdef __CUDACC__
+#            ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const {
+                   operand1_.gpu_prep(deviceIndex); operand2_.gpu_prep(deviceIndex);
+                }
+#            endif
+             /* NEBO_GPU_TEST */
+#         endif
+          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline ReductionType reduce_init(void) const {
 
@@ -6189,6 +6415,15 @@
               }
 #         endif
           /* __CUDACC__ */;
+#         ifdef __CUDACC__
+#            ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const {
+                   operand1_.gpu_prep(deviceIndex); operand2_.gpu_prep(deviceIndex);
+                }
+#            endif
+             /* NEBO_GPU_TEST */
+#         endif
+          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline ReductionType reduce_init(void) const {
 
@@ -6411,6 +6646,15 @@
               }
 #         endif
           /* __CUDACC__ */;
+#         ifdef __CUDACC__
+#            ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const {
+                   operand1_.gpu_prep(deviceIndex); operand2_.gpu_prep(deviceIndex);
+                }
+#            endif
+             /* NEBO_GPU_TEST */
+#         endif
+          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline ReductionType reduce_init(void) const {
 
@@ -6615,6 +6859,13 @@
               }
 #         endif
           /* __CUDACC__ */;
+#         ifdef __CUDACC__
+#            ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const { operand_.gpu_prep(deviceIndex); }
+#            endif
+             /* NEBO_GPU_TEST */
+#         endif
+          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline ReductionType reduce_init(void) const {
               return ReductionType(operand_.template reduce_init<ValidGhost, Shift>());
@@ -6799,6 +7050,18 @@
               }
 #         endif
           /* __CUDACC__ */;
+#         ifdef __CUDACC__
+#            ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const {
+
+                   test_.gpu_prep(deviceIndex);
+
+                   expr_.gpu_prep(deviceIndex);
+                }
+#            endif
+             /* NEBO_GPU_TEST */
+#         endif
+          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline ReductionType reduce_init(void) const {
 
@@ -6964,6 +7227,18 @@
                  return GPUWalkType(clause_.template gpu_init<ValidGhost, Shift>(deviceIndex),
                                     otherwise_.template gpu_init<ValidGhost, Shift>(deviceIndex));
               }
+#         endif
+          /* __CUDACC__ */;
+#         ifdef __CUDACC__
+#            ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const {
+
+                   clause_.gpu_prep(deviceIndex);
+
+                   otherwise_.gpu_prep(deviceIndex);
+                }
+#            endif
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
@@ -7840,6 +8115,13 @@
               }
 #         endif
           /* __CUDACC__ */;
+#         ifdef __CUDACC__
+#            ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const { arg_.gpu_prep(deviceIndex); }
+#            endif
+             /* NEBO_GPU_TEST */
+#         endif
+          /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>
            inline ReductionType reduce_init(void) const {
 
@@ -8311,6 +8593,13 @@
                                                                                                    arg_,
                                                                                                    coefs_));
               }
+#         endif
+          /* __CUDACC__ */;
+#         ifdef __CUDACC__
+#            ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const { arg_.gpu_prep(deviceIndex); }
+#            endif
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */;
           template<typename ValidGhost, typename Shift>

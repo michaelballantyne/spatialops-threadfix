@@ -74,6 +74,15 @@
                                                  #false
                                                  (c else))))]
        [gpu-only (lambda chunks (gpu-or chunks #false))]
+       [gpu-test-or (lambda (then else)
+                      (pp-conditional-ifdef-chunk 'NEBO_GPU_TEST
+                                             (c then)
+                                             (if (not else)
+                                                 #false
+                                                 (c else))))]
+       [gpu-test-only (lambda chunks (gpu-test-or chunks #false))]
+       [full-gpu-test-or (lambda (then else) (gpu-only (gpu-test-or then else)))]
+       [full-gpu-test-only (lambda chunks (full-gpu-test-or chunks #false))]
        [par (lambda chunks (p (bs chunks)))]
        [ter-cond (lambda (if then else) (par if '? then colon-chunk else))]
        [op-asgn (lambda (op lhs . rhs) (bs lhs op rhs))]
@@ -260,7 +269,7 @@
                  privates)
           (let ([SW-tpl-irreg-args (if (null? tpl-irreg-args) null (first tpl-irreg-args))]
                 [RS-tpl-irreg-args (if (null? tpl-irreg-args) null (second tpl-irreg-args))]
-                [GPU-tpl-irreg-args (if (null? tpl-irreg-args) null (third tpl-irreg-args))]
+                [gpu-tpl-irreg-args (if (null? tpl-irreg-args) null (third tpl-irreg-args))]
                 [RD-tpl-irreg-args (if (null? tpl-irreg-args) null (fourth tpl-irreg-args))]
                 [tpl-reg-args (lambda (type) (map* (type-trans type)
                                                    tpl-reg-pars))])
@@ -282,7 +291,7 @@
                                                      'ResizeType))
                               (gpu-only (typedef (tpl-use name
                                                           'GPUWalk
-                                                          GPU-tpl-irreg-args
+                                                          gpu-tpl-irreg-args
                                                           (tpl-reg-args 'GPUWalkType)
                                                           FT-chunk)
                                                  'GPUWalkType))
@@ -300,7 +309,8 @@
                                         (lambda (SW-cons-args
                                                  RS-cons-args
                                                  gpu-ready-body
-                                                 GPU-cons-args
+                                                 gpu-cons-args
+                                                 gpu-prep-body
                                                  RD-cons-args
                                                  publics)
                                           (list (tpl-def (list (tpl-pmtr VG-chunk)
@@ -319,16 +329,18 @@
                                                                          (tpl-pmtr SH-chunk))
                                                                    (r-fcn-def (constize (fcn-dcl 'gpu_init 'GPUWalkType (adc 'int DI-chunk)))
                                                                               null
-                                                                              (fc 'GPUWalkType GPU-cons-args))))
+                                                                              (fc 'GPUWalkType gpu-cons-args))))
+                                                (full-gpu-test-only (fcn-def (constize (fcn-dcl 'gpu_prep void-chunk (adc 'int DI-chunk)))
+                                                                             gpu-prep-body))
                                                 (tpl-def (list (tpl-pmtr VG-chunk)
                                                                (tpl-pmtr SH-chunk))
                                                          (r-fcn-def (constize (fcn-dcl 'reduce_init 'ReductionType))
                                                                     null
                                                                     (fc 'ReductionType RD-cons-args)))
                                                 publics))
-                                        (list 7 6 1)
+                                        (list 7 7 1)
                                         "build-Initial-rhs")]
-       [bs-Initial-rhs (arg-swap build-Initial-rhs 11 3 "bs-Initial-rhs")]
+       [bs-Initial-rhs (arg-swap build-Initial-rhs 12 3 "bs-Initial-rhs")]
        [build-Initial-lhs (combine-args build-Initial-general
                                         (let ([assign (lambda (name body)
                                                         (tpl-def (list (tpl-pmtr 'Iterator)
@@ -343,12 +355,13 @@
                                                   (list (typedef (scope 'structured (tpl-use 'IndexTriplet "0" "0" "0"))
                                                                  SH-chunk)
                                                         (assign 'assign
-                                                                (gpu-or (nifelse (n-and (fc 'gpu_ready)
-                                                                                        (mfc 'rhs
-                                                                                             'gpu_ready
-                                                                                             (fc 'gpu_device_index)))
-                                                                                 (assign-call 'gpu_assign)
-                                                                                 (assign-call 'cpu_assign))
+                                                                (gpu-or (gpu-test-or (assign-call 'gpu_test_assign)
+                                                                                     (nifelse (n-and (fc 'gpu_ready)
+                                                                                                     (mfc 'rhs
+                                                                                                          'gpu_ready
+                                                                                                          (fc 'gpu_device_index)))
+                                                                                              (assign-call 'gpu_assign)
+                                                                                              (assign-call 'cpu_assign)))
                                                                         (assign-call 'cpu_assign)))
                                                         publics))
                                                 (lambda (sequential-assign-body
@@ -358,7 +371,8 @@
                                                          gpu-assign-body
                                                          gpu-ready-body
                                                          gpu-device-index-body
-                                                         GPU-cons-args
+                                                         gpu-cons-args
+                                                         gpu-test-assign-body
                                                          privates)
                                                   (list (assign 'cpu_assign
                                                                 (threads-or (nifelse (fc 'is_thread_parallel)
@@ -396,11 +410,12 @@
                                                                                  (tpl-pmtr SH-chunk))
                                                                            (r-fcn-def (fcn-dcl 'gpu_init 'GPUWalkType)
                                                                                       null
-                                                                                      (fc 'GPUWalkType GPU-cons-args))))
+                                                                                      (fc 'GPUWalkType gpu-cons-args))))
+                                                        (full-gpu-test-only (assign 'gpu_test_assign gpu-test-assign-body))
                                                         privates))))
-                                        (list 7 1 9 0)
+                                        (list 7 1 10 0)
                                         "build-Initial-lhs")]
-       [bs-Initial-lhs (arg-swap build-Initial-lhs 14 3 "bs-Initial-lhs")]
+       [bs-Initial-lhs (arg-swap build-Initial-lhs 15 3 "bs-Initial-lhs")]
        [build-Resize-general
         (lambda (name
                  tpl-irreg-pars
@@ -521,7 +536,7 @@
                                         (list 5 2 5 0)
                                         "build-SeqWalk-lhs")]
        [bs-SeqWalk-lhs (arg-swap build-SeqWalk-lhs 9 3 "bs-SeqWalk-lhs")]
-       [build-GPU-general
+       [build-gpu-general
         (lambda (name
                  tpl-irreg-pars
                  tpl-reg-pars
@@ -539,7 +554,7 @@
                        constructor
                        publics
                        privates)))]
-       [build-GPU-rhs (combine-args build-GPU-general
+       [build-gpu-rhs (combine-args build-gpu-general
                                     (lambda (start-body
                                              next-body
                                              eval-result
@@ -556,9 +571,9 @@
                                                                    eval-result))
                                             publics))
                                     (list 5 4 1)
-                                    "build-GPU-rhs")]
-       [bs-GPU-rhs (arg-swap build-GPU-rhs 7 3 "bs-GPU-rhs")]
-       [build-GPU-lhs (combine-args build-GPU-general
+                                    "build-gpu-rhs")]
+       [bs-gpu-rhs (arg-swap build-gpu-rhs 7 3 "bs-gpu-rhs")]
+       [build-gpu-lhs (combine-args build-gpu-general
                                     (list (lambda (assign-kernel-body
                                                    publics)
                                             (list (tpl-def (tpl-pmtr 'RhsType)
@@ -596,8 +611,8 @@
                                                                          ref-result))
                                                   privates)))
                                     (list 5 2 6 0)
-                                    "build-GPU-lhs")]
-       [bs-GPU-lhs (arg-swap build-GPU-lhs 10 3 "bs-GPU-lhs")]
+                                    "build-gpu-lhs")]
+       [bs-gpu-lhs (arg-swap build-gpu-lhs 10 3 "bs-gpu-lhs")]
        [build-Reduction
         (lambda (name
                  tpl-irreg-pars
@@ -699,6 +714,7 @@
                                           (op_-mfc (tpl-fcn-use 'resize VG-chunk))
                                           (exec-and-check 'gpu_ready DI-chunk)
                                           (op_-mfc (tpl-fcn-use 'gpu_init VG-chunk SH-chunk) DI-chunk)
+                                          (b/a semi-colon-chunk s (op_-mfc 'gpu_prep DI-chunk))
                                           (op_-mfc (tpl-fcn-use 'reduce_init VG-chunk SH-chunk))
                                           null
                                           gen-data-mems)
@@ -717,7 +733,7 @@
                                           internal-use
                                           null
                                           exec-data-mems)
-                          (bs-GPU-rhs null
+                          (bs-gpu-rhs null
                                       gen-constructor
                                       (op_-mfc 'start 'x 'y)
                                       (op_-mfc 'next)
@@ -946,7 +962,8 @@
                                           'spatialops/structured/IntVec.h
                                           'boost/interprocess/sync/interprocess_semaphore.hpp)
                        (cc (nt= 'namespace 'BI (scope 'boost 'interprocess)))))
-      (gpu-only (pp-includes-chunk 'spatialops/structured/MemoryTypes.h)))
+      (gpu-only (pp-includes-chunk 'spatialops/structured/MemoryTypes.h))
+      (full-gpu-test-only (pp-includes-chunk 'spatialops/structured/ExternalAllocators.h)))
    (n 'SpatialOps
       (d "Meta-programming compiler flags"
          (struct-declare-chunk 'All)
@@ -1076,6 +1093,7 @@
                                     'value_
                                     'true
                                     'value_
+                                    null
                                     'value_
                                     null
                                     (adc 'AtomicType 'value_))
@@ -1100,7 +1118,7 @@
                                     'value_
                                     null
                                     (adc 'AtomicType 'value_))
-                    (bs-GPU-rhs null
+                    (bs-gpu-rhs null
                                 (bm-constructor (adc 'AtomicType 'value)
                                                 (cons-asgn 'value_ 'value)
                                                 null)
@@ -1135,6 +1153,7 @@
                                     'value_
                                     'true
                                     'value_
+                                    null
                                     'value_
                                     null
                                     (adc 'bool 'value_))
@@ -1155,7 +1174,7 @@
                                     'value_
                                     null
                                     (adc 'bool 'value_))
-                    (bs-GPU-rhs null
+                    (bs-gpu-rhs null
                                 (bm-constructor (adc 'bool 'value)
                                                 (cons-asgn 'value_ 'value)
                                                 null)
@@ -1190,6 +1209,10 @@
                                     (mfc 'field_ 'find_consumer DI-chunk)
                                     (list DI-chunk
                                           (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift VG-chunk SH-chunk)))
+                                    (c (fc (tpl-use 'const_cast (ptr FT-chunk))
+                                           'field_)
+                                       '->
+                                       (fc 'add_consumer DI-chunk))
                                     (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift VG-chunk SH-chunk))
                                     null
                                     (adc FT-chunk 'field_))
@@ -1220,7 +1243,7 @@
                                     null
                                     (ad (tpl-pmtr (scope FT-chunk 'const_iterator))
                                         'iter_))
-                    (bs-GPU-rhs null
+                    (bs-gpu-rhs null
                                 (bm-constructor
                                  (list (adc 'int DI-chunk)
                                        (adcr FT-chunk 'f))
@@ -1357,6 +1380,31 @@
                                            'EXTERNAL_CUDA_GPU)
                                       (mfc 'field_ 'device_index)
                                       (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift_and_maintain_interior VG-chunk SH-chunk))
+                                      (list (mfc 'rhs 'gpu_prep "0")
+                                            (ad FT-chunk
+                                                (fc 'gpu_field
+                                                    (mfc 'field_ 'window_with_ghost)
+                                                    'NULL
+                                                    'InternalStorage
+                                                    'EXTERNAL_CUDA_GPU
+                                                    "0"))
+                                            (ad (tpl-use NF-chunk 'Initial FT-chunk)
+                                                (fc 'gpu_lhs 'gpu_field))
+                                            (mfc 'gpu_lhs
+                                                 (tpl-fcn-use 'gpu_assign VG-chunk SH-chunk)
+                                                 'rhs)
+                                            (let ([CDI (scope (scope 'ema 'cuda)
+                                                              'CUDADeviceInterface)])
+                                              (nt= (ref CDI) 'CDI (fc (scope CDI 'self))))
+                                            (mfc 'CDI
+                                                 'memcpy_from
+                                                 (mfc 'field_ 'fieldValues)
+                                                 (mfc 'gpu_field
+                                                      'fieldValues
+                                                      'EXTERNAL_CUDA_GPU
+                                                      "0")
+                                                 (mfc 'field_ 'allocated_bytes)
+                                                 "0"))
                                       (ad FT-chunk 'field_)))
                     (bs-Resize-lhs null
                                    null
@@ -1402,7 +1450,7 @@
                                               'iter_)
                                           (adc (tpl-pmtr (scope FT-chunk 'iterator))
                                                'end_)))
-                    (bs-GPU-lhs  null
+                    (bs-gpu-lhs  null
                                  (bm-constructor
                                   (ad FT-chunk 'f)
                                   (list (cons-asgn 'current_ (bs (n+ (mfc 'f 'field_values 'EXTERNAL_CUDA_GPU (mfc 'f 'device_index))
@@ -1547,6 +1595,8 @@
                                           (mfc 'expr_
                                                (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)
                                                DI-chunk))
+                                    (list (mfc 'test_ 'gpu_prep DI-chunk)
+                                          (mfc 'expr_ 'gpu_prep DI-chunk))
                                     (list (mfc 'test_ (tpl-fcn-use 'reduce_init VG-chunk SH-chunk))
                                           (mfc 'expr_ (tpl-fcn-use 'reduce_init VG-chunk SH-chunk)))
                                     null
@@ -1587,7 +1637,7 @@
                                                (mfc 'test_ 'eval))
                                     (list (ad 'Test 'test_)
                                           (ad 'Expr 'expr_)))
-                    (bs-GPU-rhs null
+                    (bs-gpu-rhs null
                                 (bm-constructor (list (adcr 'Test 'test)
                                                       (adcr 'Expr 'expr))
                                                 (list (cons-asgn 'test_ 'test)
@@ -1650,6 +1700,8 @@
                                           (mfc 'otherwise_
                                                (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)
                                                DI-chunk))
+                                    (list (mfc 'clause_ 'gpu_prep DI-chunk)
+                                          (mfc 'otherwise_ 'gpu_prep DI-chunk))
                                     (list (mfc 'clause_ (tpl-fcn-use 'reduce_init VG-chunk SH-chunk))
                                           (mfc 'otherwise_ (tpl-fcn-use 'reduce_init VG-chunk SH-chunk)))
                                     (list (r-fcn-def (constize (fcn-dcl 'clause (cref CT-chunk)))
@@ -1695,7 +1747,7 @@
                                     null
                                     (list (ad CT-chunk 'clause_)
                                           (ad 'Otherwise 'otherwise_)))
-                    (bs-GPU-rhs null
+                    (bs-gpu-rhs null
                                 (bm-constructor (list (adcr CT-chunk 'clause)
                                                       (adcr 'Otherwise 'otherwise))
                                                 (list (cons-asgn 'clause_ 'clause)
@@ -2401,6 +2453,7 @@
                                          (tpl-fcn-use 'gpu_init VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
                                                                                           'result)))
                                          DI-chunk)
+                                    (mfc 'arg_ 'gpu_prep DI-chunk)
                                     (mfc 'arg_ (tpl-fcn-use 'reduce_init VG-chunk (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
                                                                                                    'result))))
                                     null
@@ -2428,7 +2481,7 @@
                                     (mfc 'arg_ 'eval)
                                     null
                                     (ad 'Arg 'arg_))
-                    (bs-GPU-rhs null
+                    (bs-gpu-rhs null
                                 (bm-constructor (adcr 'Arg 'a)
                                                 (cons-asgn 'arg_ 'a)
                                                 null)
@@ -2883,6 +2936,7 @@
                                         DI-chunk
                                         'arg_
                                         'coefs_)
+                                    (mfc 'arg_ 'gpu_prep DI-chunk)
                                     (fc (scope 'ConstructExpr (tpl-fcn-use 'in_reduce_construct VG-chunk SH-chunk))
                                         'arg_
                                         'coefs_)
@@ -2921,7 +2975,7 @@
                                     (mfc 'arg_ 'eval)
                                     null
                                     (ad 'Arg 'arg_))
-                    (bs-GPU-rhs null
+                    (bs-gpu-rhs null
                                 (bm-constructor (adcr 'Arg 'a)
                                                 (cons-asgn 'arg_ 'a)
                                                 null)
