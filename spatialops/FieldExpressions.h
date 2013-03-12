@@ -454,7 +454,7 @@
           /* FIELD_EXPRESSION_THREADS */;
 #         ifdef __CUDACC__
              inline bool gpu_ready(int const deviceIndex) const {
-                return field_.find_consumer(deviceIndex);
+                return field_.find_consumer(EXTERNAL_CUDA_GPU, deviceIndex);
              };
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
@@ -568,6 +568,12 @@
           typename FieldType::const_iterator iter_;
           typename FieldType::const_iterator const end_;
       };
+
+#     ifdef __CUDACC__
+         template<typename LhsType, typename RhsType>
+          __global__ inline void gpu_assign_kernel(LhsType lhs, RhsType rhs) { lhs.assign(rhs); }
+#     endif
+      /* __CUDACC__ */;
 
       template<typename CurrentMode, typename FieldType>
        struct NeboField;
@@ -704,10 +710,11 @@
 
                  dim3 dimGrid(gDimX, gDimY);
 
-                 gpu_init<ValidGhost, Shift>().gpu_assign_kernel<GPUWalkType, RhsGPUWalkType><<<dimGrid,
-                                                                                                dimBlock>>>(rhs.template
-                                                                                                                gpu_init<ValidGhost,
-                                                                                                                         Shift>(gpu_device_index()))();
+                 gpu_assign_kernel<GPUWalkType, RhsGPUWalkType><<<dimGrid, dimBlock>>>(gpu_init<ValidGhost,
+                                                                                                Shift>(),
+                                                                                       rhs.template
+                                                                                           gpu_init<ValidGhost,
+                                                                                                    Shift>(gpu_device_index()));
               };
              inline bool gpu_ready(void) const {
                 return field_.memory_device_type() == EXTERNAL_CUDA_GPU;
@@ -835,7 +842,7 @@
                step_(xLength_ * f.window_with_ghost().glob_dim(1))
              {};
              template<typename RhsType>
-              __global__ inline void gpu_assign_kernel(RhsType rhs) {
+              __device__ inline void assign(RhsType rhs) {
 
                  const int ii = blockIdx.x * blockDim.x + threadIdx.x;
 

@@ -574,18 +574,17 @@
                                     "build-gpu-rhs")]
        [bs-gpu-rhs (arg-swap build-gpu-rhs 7 3 "bs-gpu-rhs")]
        [build-gpu-lhs (combine-args build-gpu-general
-                                    (list (lambda (assign-kernel-body
+                                    (list (lambda (assign-body
                                                    publics)
                                             (list (tpl-def (tpl-pmtr 'RhsType)
-                                                           (bs '__global__
-                                                               (v-fcn-def 'gpu_assign_kernel
-                                                                          (ad 'RhsType 'rhs)
-                                                                          (nt=c 'int 'ii (n+ (n* 'blockIdx.x 'blockDim.x) 'threadIdx.x))
-                                                                          (nt=c 'int 'jj (n+ (n* 'blockIdx.y 'blockDim.y) 'threadIdx.y))
-                                                                          (fc 'start 'ii 'jj)
-                                                                          (mfc 'rhs 'start 'ii 'jj)
-                                                                          (nif (fc 'valid)
-                                                                               assign-kernel-body))))
+                                                           (device-use (v-fcn-def 'assign
+                                                                                  (ad 'RhsType 'rhs)
+                                                                                  (nt=c 'int 'ii (n+ (n* 'blockIdx.x 'blockDim.x) 'threadIdx.x))
+                                                                                  (nt=c 'int 'jj (n+ (n* 'blockIdx.y 'blockDim.y) 'threadIdx.y))
+                                                                                  (fc 'start 'ii 'jj)
+                                                                                  (mfc 'rhs 'start 'ii 'jj)
+                                                                                  (nif (fc 'valid)
+                                                                                       assign-body))))
                                                   publics))
                                           (lambda (valid-result
                                                    start-body
@@ -1206,7 +1205,7 @@
                                                     null)
                                     (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift VG-chunk SH-chunk))
                                     (mfc 'field_ (tpl-fcn-use 'resize_ghost VG-chunk))
-                                    (mfc 'field_ 'find_consumer DI-chunk)
+                                    (mfc 'field_ 'find_consumer 'EXTERNAL_CUDA_GPU DI-chunk)
                                     (list DI-chunk
                                           (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift VG-chunk SH-chunk)))
                                     (c (fc (tpl-use 'const_cast (ptr FT-chunk))
@@ -1296,6 +1295,13 @@
                                             'iter_)
                                         (adc (tpl-pmtr (scope FT-chunk 'const_iterator))
                                              'end_))))
+      (gpu-only (tpl-def (list (tpl-pmtr 'LhsType)
+                               (tpl-pmtr 'RhsType))
+                         (bs '__global__ (v-fcn-def 'gpu_assign_kernel
+                                                    (list (ad 'LhsType 'lhs)
+                                                          (ad 'RhsType 'rhs))
+                                                    (mfc 'lhs 'assign 'rhs)
+                                                    ))))
       (build-struct NF-chunk
                     null
                     null
@@ -1368,13 +1374,13 @@
                                               (dim-def 'gDimY 'extent1)
                                               (bs 'dim3 (fc 'dimBlock 'blockDim 'blockDim))
                                               (bs 'dim3 (fc 'dimGrid 'gDimX 'gDimY))
-                                              (mfc (fc (tpl-use 'gpu_init VG-chunk SH-chunk))
-                                                   (fc (kernel-use (tpl-use 'gpu_assign_kernel 'GPUWalkType 'RhsGPUWalkType)
-                                                                   'dimGrid
-                                                                   'dimBlock)
-                                                       (mfc 'rhs
-                                                            (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)
-                                                            (fc 'gpu_device_index))))))
+                                              (fc (kernel-use (tpl-use 'gpu_assign_kernel 'GPUWalkType 'RhsGPUWalkType)
+                                                              'dimGrid
+                                                              'dimBlock)
+                                                  (fc (tpl-use 'gpu_init VG-chunk SH-chunk))
+                                                  (mfc 'rhs
+                                                       (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)
+                                                       (fc 'gpu_device_index)))))
                                       (n== (mfc 'field_
                                                 'memory_device_type)
                                            'EXTERNAL_CUDA_GPU)
