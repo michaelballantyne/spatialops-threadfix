@@ -31,7 +31,10 @@
 #  include <cmath>
 #  include <math.h>
 
-   /*#include <iostream> */
+#  ifdef NEBO_REPORT_BACKEND
+#     include <iostream>
+#  endif
+   /* NEBO_REPORT_BACKEND */
 
 #  ifdef FIELD_EXPRESSION_THREADS
 #     include <spatialops/SpatialOpsTools.h>
@@ -633,9 +636,19 @@
           template<typename Iterator, typename RhsType>
            inline void sequential_assign(RhsType rhs) {
 
+#             ifdef NEBO_REPORT_BACKEND
+                 std::cout << "Starting Nebo sequential" << std::endl
+#             endif
+              /* NEBO_REPORT_BACKEND */;
+
               typename CalculateValidGhost<Iterator, RhsType, FieldType>::Result typedef ValidGhost;
 
               init<ValidGhost, Shift>().assign(rhs.template init<ValidGhost, Shift>());
+
+#             ifdef NEBO_REPORT_BACKEND
+                 std::cout << "Finished Nebo sequential" << std::endl
+#             endif
+              /* NEBO_REPORT_BACKEND */;
            };
           template<typename ValidGhost, typename Shift>
            inline SeqWalkType init(void) {
@@ -646,6 +659,11 @@
 #         ifdef FIELD_EXPRESSION_THREADS
              template<typename Iterator, typename RhsType>
               inline void thread_parallel_assign(RhsType rhs) {
+
+#                ifdef NEBO_REPORT_BACKEND
+                    std::cout << "Starting Nebo thread parallel" << std::endl
+#                endif
+                 /* NEBO_REPORT_BACKEND */;
 
                  BI::interprocess_semaphore semaphore(0);
 
@@ -680,6 +698,11 @@
                  };
 
                  for(int ii = 0; ii < max; ii++) { semaphore.wait(); };
+
+#                ifdef NEBO_REPORT_BACKEND
+                    std::cout << "Finished Nebo thread parallel" << std::endl
+#                endif
+                 /* NEBO_REPORT_BACKEND */;
               };
              template<typename ValidGhost>
               inline ResizeType resize(void) {
@@ -690,6 +713,11 @@
 #         ifdef __CUDACC__
              template<typename Iterator, typename RhsType>
               inline void gpu_assign(RhsType rhs) {
+
+#                ifdef NEBO_REPORT_BACKEND
+                    std::cout << "Starting Nebo CUDA" << std::endl
+#                endif
+                 /* NEBO_REPORT_BACKEND */;
 
                  typename CalculateValidGhost<Iterator, RhsType, FieldType>::Result typedef
                  ValidGhost;
@@ -715,6 +743,11 @@
                                                                                        rhs.template
                                                                                            gpu_init<ValidGhost,
                                                                                                     Shift>(gpu_device_index()));
+
+#                ifdef NEBO_REPORT_BACKEND
+                    std::cout << "Finished Nebo CUDA" << std::endl
+#                endif
+                 /* NEBO_REPORT_BACKEND */;
               };
              inline bool gpu_ready(void) const {
                 return field_.memory_device_type() == EXTERNAL_CUDA_GPU;
@@ -729,6 +762,11 @@
 #            ifdef NEBO_GPU_TEST
                 template<typename Iterator, typename RhsType>
                  inline void gpu_test_assign(RhsType rhs) {
+
+#                   ifdef NEBO_REPORT_BACKEND
+                       std::cout << "Starting Nebo CUDA with Nebo copying" << std::endl
+#                   endif
+                    /* NEBO_REPORT_BACKEND */;
 
                     rhs.gpu_prep(0);
 
@@ -752,6 +790,11 @@
                                        0);
                     }
                     else { template gpu_assign<ValidGhost, Shift>(rhs); };
+
+#                   ifdef NEBO_REPORT_BACKEND
+                       std::cout << "Finished Nebo CUDA with Nebo copying" << std::endl
+#                   endif
+                    /* NEBO_REPORT_BACKEND */;
                  }
 #            endif
              /* NEBO_GPU_TEST */

@@ -9,6 +9,7 @@ set( PATCH_VERSION "0" )
 option( ENABLE_TESTS "Enable building of regression tests (recommended)" ON )
 option( ENABLE_THREADS "Enable multi-threaded support for stencil operations" OFF )
 option( ENABLE_CUDA   "Build Spatial Ops with CUDA support" OFF )
+option( NEBO_REPORT_BACKEND "Require Nebo to report what backend it is using" OFF )
 
 set( NTHREADS 1 CACHE STRING "Number of threads to use if ENABLE_THREADS is ON" )
 

@@ -61,27 +61,30 @@
        [enum (lambda enums (bs 'enum (arg-list-chunk open-crbr-chunk comma-chunk close-crbr-chunk enums)))]
        [kernel-use (lambda (name . args) (tpl-use name (tpl-use null (tpl-use null args))))]
        [device-use (lambda chunks (c '__device__ s chunks))]
-       [threads-or (lambda (then else)
-                     (pp-conditional-ifdef-chunk 'FIELD_EXPRESSION_THREADS
+       [pp-cond-or (lambda (name then else)
+                     (pp-conditional-ifdef-chunk name
                                                  (c then)
                                                  (if (not else)
                                                      #false
                                                      (c else))))]
+       [threads-or (lambda (then else) (pp-cond-or 'FIELD_EXPRESSION_THREADS then else))]
        [threads-only (lambda chunks (threads-or chunks #false))]
-       [gpu-or (lambda (then else)
-                 (pp-conditional-ifdef-chunk '__CUDACC__
-                                             (c then)
-                                             (if (not else)
-                                                 #false
-                                                 (c else))))]
+       [gpu-or (lambda (then else) (pp-cond-or '__CUDACC__ then else))]
        [gpu-only (lambda chunks (gpu-or chunks #false))]
-       [gpu-test-or (lambda (then else)
-                      (pp-conditional-ifdef-chunk 'NEBO_GPU_TEST
-                                             (c then)
-                                             (if (not else)
-                                                 #false
-                                                 (c else))))]
+       [gpu-test-or (lambda (then else) (pp-cond-or 'NEBO_GPU_TEST then else))]
        [gpu-test-only (lambda chunks (gpu-test-or chunks #false))]
+       [report-backend-or (lambda (then else) (pp-cond-or 'NEBO_REPORT_BACKEND then else))]
+       [report-backend-only (lambda chunks (report-backend-or chunks #false))]
+       [report-backend-cout (lambda (type backend-name)
+                              (report-backend-only (bs (scope 'std 'cout)
+                                                       '<<
+                                                       (c "\"" type s 'Nebo s backend-name "\"")
+                                                       '<<
+                                                       (scope 'std 'endl))))]
+       [report-backend-start (lambda (backend-name)
+                               (report-backend-cout 'Starting backend-name))]
+       [report-backend-finish (lambda (backend-name)
+                               (report-backend-cout 'Finished backend-name))]
        [full-gpu-test-or (lambda (then else) (gpu-only (gpu-test-or then else)))]
        [full-gpu-test-only (lambda chunks (full-gpu-test-or chunks #false))]
        [par (lambda chunks (p (bs chunks)))]
@@ -343,12 +346,19 @@
                                         "build-Initial-rhs")]
        [bs-Initial-rhs (arg-swap build-Initial-rhs 12 3 "bs-Initial-rhs")]
        [build-Initial-lhs (combine-args build-Initial-general
-                                        (let ([assign (lambda (name body)
-                                                        (tpl-def (list (tpl-pmtr 'Iterator)
-                                                                       (tpl-pmtr 'RhsType))
-                                                                 (v-fcn-def name
-                                                                            (ad 'RhsType 'rhs)
-                                                                            body)))]
+                                        (let ([assign (lambda (name body . backend)
+                                                        (let* ([report (lambda (fcn) (if (null? backend)
+                                                                                         null
+                                                                                         (fcn backend)))]
+                                                               [report-start (report report-backend-start)]
+                                                               [report-finish (report report-backend-finish)])
+                                                          (tpl-def (list (tpl-pmtr 'Iterator)
+                                                                         (tpl-pmtr 'RhsType))
+                                                                   (v-fcn-def name
+                                                                              (ad 'RhsType 'rhs)
+                                                                              report-start
+                                                                              body
+                                                                              report-finish))))]
                                               [assign-call (lambda (name)
                                                              (fc (tpl-use name 'Iterator 'RhsType)
                                                                  'rhs))])
@@ -380,7 +390,7 @@
                                                                                      (assign-call 'thread_parallel_assign)
                                                                                      (assign-call 'sequential_assign))
                                                                             (assign-call 'sequential_assign)))
-                                                        (assign 'sequential_assign sequential-assign-body)
+                                                        (assign 'sequential_assign sequential-assign-body 'sequential)
                                                         (tpl-def (list (tpl-pmtr VG-chunk)
                                                                        (tpl-pmtr SH-chunk))
                                                                  (r-fcn-def (fcn-dcl 'init 'SeqWalkType)
@@ -394,12 +404,13 @@
                                                                                              (nfor (nt= 'int 'ii "0")
                                                                                                    (n< 'ii 'max)
                                                                                                    (n++ 'ii)
-                                                                                                   (mfc 'semaphore 'wait))))
+                                                                                                   (mfc 'semaphore 'wait)))
+                                                                                       (bs 'thread 'parallel))
                                                                                (tpl-def (tpl-pmtr VG-chunk)
                                                                                         (r-fcn-def (fcn-dcl 'resize 'ResizeType)
                                                                                                    null
                                                                                                    (fc 'ResizeType RS-cons-args)))))
-                                                        (gpu-only (nl-smts (assign 'gpu_assign gpu-assign-body)
+                                                        (gpu-only (nl-smts (assign 'gpu_assign gpu-assign-body 'CUDA)
                                                                            (r-fcn-def (constize (fcn-dcl 'gpu_ready 'bool))
                                                                                       null
                                                                                       gpu-ready-body)
@@ -411,7 +422,9 @@
                                                                                     (r-fcn-def (fcn-dcl 'gpu_init 'GPUWalkType)
                                                                                                null
                                                                                                (fc 'GPUWalkType gpu-cons-args)))
-                                                                           (gpu-test-only (assign 'gpu_test_assign gpu-test-assign-body))))
+                                                                           (gpu-test-only (assign 'gpu_test_assign
+                                                                                                  gpu-test-assign-body
+                                                                                                  (bs 'CUDA 'with 'Nebo 'copying)))))
                                                         privates))))
                                         (list 7 1 10 0)
                                         "build-Initial-lhs")]
@@ -952,7 +965,7 @@
                          'spatialops/structured/SpatialField.h
                          'cmath
                          'math.h)
-      (comment-env-chunk (pp-include-chunk 'iostream))
+      (report-backend-only (pp-include-chunk 'iostream))
       (threads-only (b new-line-chunk
                        (pp-includes-chunk 'spatialops/SpatialOpsTools.h
                                           'vector
