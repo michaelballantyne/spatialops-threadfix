@@ -732,22 +732,26 @@
 
                     rhs.gpu_prep(0);
 
-                    FieldType gpu_field(field_.window_with_ghost(),
-                                        NULL,
-                                        InternalStorage,
-                                        EXTERNAL_CUDA_GPU,
-                                        0);
+                    if(LOCAL_MEM == field_.memory_device_type()) {
 
-                    NeboField<Initial, FieldType> gpu_lhs(gpu_field);
+                       FieldType gpu_field(field_.window_with_ghost(),
+                                           NULL,
+                                           InternalStorage,
+                                           EXTERNAL_CUDA_GPU,
+                                           0);
 
-                    gpu_lhs.template gpu_assign<ValidGhost, Shift>(rhs);
+                       NeboField<Initial, FieldType> gpu_lhs(gpu_field);
 
-                    ema::cuda::CUDADeviceInterface & CDI = ema::cuda::CUDADeviceInterface::self();
+                       gpu_lhs.template gpu_assign<ValidGhost, Shift>(rhs);
 
-                    CDI.memcpy_from(field_.fieldValues(),
-                                    gpu_field.fieldValues(EXTERNAL_CUDA_GPU, 0),
-                                    field_.allocated_bytes(),
-                                    0);
+                       ema::cuda::CUDADeviceInterface & CDI = ema::cuda::CUDADeviceInterface::self();
+
+                       CDI.memcpy_from(field_.fieldValues(),
+                                       gpu_field.fieldValues(EXTERNAL_CUDA_GPU, 0),
+                                       field_.allocated_bytes(),
+                                       0);
+                    }
+                    else { template gpu_assign<ValidGhost, Shift>(rhs); };
                  }
 #            endif
              /* NEBO_GPU_TEST */

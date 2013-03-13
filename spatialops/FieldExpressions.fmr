@@ -1387,30 +1387,34 @@
                                       (mfc 'field_ 'device_index)
                                       (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift_and_maintain_interior VG-chunk SH-chunk))
                                       (list (mfc 'rhs 'gpu_prep "0")
-                                            (ad FT-chunk
-                                                (fc 'gpu_field
-                                                    (mfc 'field_ 'window_with_ghost)
-                                                    'NULL
-                                                    'InternalStorage
-                                                    'EXTERNAL_CUDA_GPU
-                                                    "0"))
-                                            (ad (tpl-use NF-chunk 'Initial FT-chunk)
-                                                (fc 'gpu_lhs 'gpu_field))
-                                            (mfc 'gpu_lhs
-                                                 (tpl-fcn-use 'gpu_assign VG-chunk SH-chunk)
-                                                 'rhs)
-                                            (let ([CDI (scope (scope 'ema 'cuda)
-                                                              'CUDADeviceInterface)])
-                                              (nt= (ref CDI) 'CDI (fc (scope CDI 'self))))
-                                            (mfc 'CDI
-                                                 'memcpy_from
-                                                 (mfc 'field_ 'fieldValues)
-                                                 (mfc 'gpu_field
-                                                      'fieldValues
-                                                      'EXTERNAL_CUDA_GPU
-                                                      "0")
-                                                 (mfc 'field_ 'allocated_bytes)
-                                                 "0"))
+                                            (nifelse (n== 'LOCAL_MEM
+                                                          (mfc 'field_ 'memory_device_type))
+                                                     (list (ad FT-chunk
+                                                               (fc 'gpu_field
+                                                                   (mfc 'field_ 'window_with_ghost)
+                                                                   'NULL
+                                                                   'InternalStorage
+                                                                   'EXTERNAL_CUDA_GPU
+                                                                   "0"))
+                                                           (ad (tpl-use NF-chunk 'Initial FT-chunk)
+                                                               (fc 'gpu_lhs 'gpu_field))
+                                                           (mfc 'gpu_lhs
+                                                                (tpl-fcn-use 'gpu_assign VG-chunk SH-chunk)
+                                                                'rhs)
+                                                           (let ([CDI (scope (scope 'ema 'cuda)
+                                                                             'CUDADeviceInterface)])
+                                                             (nt= (ref CDI) 'CDI (fc (scope CDI 'self))))
+                                                           (mfc 'CDI
+                                                                'memcpy_from
+                                                                (mfc 'field_ 'fieldValues)
+                                                                (mfc 'gpu_field
+                                                                     'fieldValues
+                                                                     'EXTERNAL_CUDA_GPU
+                                                                     "0")
+                                                                (mfc 'field_ 'allocated_bytes)
+                                                                "0"))
+                                                     (fc (tpl-fcn-use 'gpu_assign VG-chunk SH-chunk)
+                                                         'rhs)))
                                       (ad FT-chunk 'field_)))
                     (bs-Resize-lhs null
                                    null
