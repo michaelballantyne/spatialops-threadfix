@@ -37,6 +37,7 @@
 #define NTHREADS 1
 #endif
 #cmakedefine ENABLE_CUDA
+#cmakedefine NEBO_GPU_TEST
 
 #cmakedefine SOPS_BOOST_SERIALIZATION
 
