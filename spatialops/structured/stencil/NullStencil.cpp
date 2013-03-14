@@ -38,12 +38,8 @@ namespace structured{
 #   ifndef NDEBUG
     assert( src.window_with_ghost() == dest.window_with_ghost() );
 #   endif
-    typename SrcT::const_iterator isrc = src.begin();
-    typename DestT::iterator idest = dest.begin();
-    const typename DestT::iterator ideste = dest.end();
-    for( ; idest!=ideste; ++isrc, ++idest ){
-      *idest = *isrc;
-    }
+
+    dest <<= operator()(src);
   }
 
   //==================================================================

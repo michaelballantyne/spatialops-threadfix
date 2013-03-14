@@ -23,6 +23,8 @@
 #ifndef SpatialOps_structured_NullStencil_h
 #define SpatialOps_structured_NullStencil_h
 
+#include <spatialops/FieldExpressions.h>
+
 namespace SpatialOps{
 namespace structured{
 
@@ -46,6 +48,41 @@ namespace structured{
 
     NullStencil();
     void apply_to_field( const SrcFieldT& src, DestFieldT& dest ) const;
+
+    typedef typename DestFieldType::value_type AtomicType;  // scalar type
+
+    /**
+     * \brief Nebo's inline operator for scalar values
+     * \param src the scalar to which the operator is applied
+     */
+    inline AtomicType operator ()( const AtomicType src ) const
+    {
+        return src;
+    }
+
+    // Nebo-related typedefs
+    // argument is a field
+    typedef NeboConstField<Initial, SrcFieldType> FieldArg;
+    typedef NeboExpression<FieldArg, DestFieldType> FieldResult;
+
+    /**
+     * \brief Nebo's inline operator for field values
+     * \param src the field to which the operator is applied
+     */
+    inline FieldResult operator ()( const SrcFieldType & src ) const
+    {
+        return FieldResult(FieldArg(src));
+    }
+
+    /**
+     * \brief Nebo's inline operator for Nebo expressions
+     * \param src the Nebo expression to which the operator is applied
+     */
+    template<typename Arg>
+    inline NeboExpression<Arg, DestFieldType> operator ()( const NeboExpression<Arg, SrcFieldType> & src ) const
+    {
+        return NeboExpression<Arg, DestFieldType>(src.expr());
+    }
   };
 
 } // namespace structured

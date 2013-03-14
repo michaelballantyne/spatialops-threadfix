@@ -26,4 +26,7 @@ target_link_libraries( stencil_chain_test ${libs} )
 add_executable( cond_test cond_test.cpp )
 target_link_libraries( cond_test ${libs} )
 
+add_executable( filter_test FilterTest.cpp )
+target_link_libraries( filter_test ${libs} )
+
 add_subdirectory( heatEqn )

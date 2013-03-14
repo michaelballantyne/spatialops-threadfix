@@ -188,6 +188,11 @@
                                         (list  0  0  1))]
                      [else (error "Undefined direction")])))]
 
+       ;calculate list of points for a Null (1-point) stencil from types
+       ;  dir is ignored, but included for convenience
+       [null-stencil-point-list
+        (lambda (src dest dir)
+          (map point (list (list 0 0 0))))]
        ;calculate faces invalidated by given point
        [point-invalid-faces
         (lambda (point)
@@ -330,6 +335,9 @@
        [build-FDstencil
         (lambda (name src dest dir)
           (build-stencil name fd-stencil-point-list src dest dir))]
+       [build-null-stencil
+        (lambda (name src dest)
+          (build-stencil name null-stencil-point-list src dest null))]
 
        [stencil-list
                       ;1Dstencil
@@ -379,8 +387,6 @@
                       (build-1Dstencil 'Interpolant ZSurfY ZVol)
                       (build-1Dstencil 'Interpolant ZSurfZ ZVol)
 
-                      ;NullStencil not implemented yet for chaining
-
                       ;2Dstencil
                       (build-2Dstencil SVol XSurfY)
                       (build-2Dstencil SVol XSurfZ)
@@ -402,8 +408,6 @@
                       (build-2Dstencil YVol ZVol)
                       (build-2Dstencil ZVol XVol)
                       (build-2Dstencil ZVol YVol)
-
-                      ;BoxFilter not implemented yet for chaining
 
                       ;finite difference stencils
                       (build-FDstencil 'InterpolantX SVol SVol X)
@@ -433,6 +437,22 @@
                       (build-FDstencil 'GradientX    ZVol ZVol X)
                       (build-FDstencil 'GradientY    ZVol ZVol Y)
                       (build-FDstencil 'GradientZ    ZVol ZVol Z)
+
+                      ;NullStencil
+                      (build-null-stencil 'Interpolant SVol SVol)
+                      (build-null-stencil 'Interpolant XVol XVol)
+                      (build-null-stencil 'Interpolant YVol YVol)
+                      (build-null-stencil 'Interpolant ZVol ZVol)
+
+                      (build-null-stencil 'Interpolant XVol SSurfX)
+                      (build-null-stencil 'Interpolant YVol SSurfY)
+                      (build-null-stencil 'Interpolant ZVol SSurfZ)
+
+                      (build-null-stencil 'Interpolant SVol XSurfX)
+                      (build-null-stencil 'Interpolant SVol YSurfY)
+                      (build-null-stencil 'Interpolant SVol ZSurfZ)
+
+                      ;BoxFilter not implemented yet for chaining
                       ))]
        ;stencil short list
        ; this list conatains only stencil with different stencil point lists

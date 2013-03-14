@@ -177,6 +177,8 @@ int main (int iarg, char* carg[]) {
        test_stencil_chain_with_status<Divergence, InterpolantY, SSurfXField, SVolField, SVolField>(status, opdb, npts, bc, "Divergence (SSurfXField->SVolField) -> InterpolantY (SVolField->SVolField)");
       if(npts[0]>1 & npts[2]>1)
        test_stencil_chain_with_status<Divergence, InterpolantZ, SSurfXField, SVolField, SVolField>(status, opdb, npts, bc, "Divergence (SSurfXField->SVolField) -> InterpolantZ (SVolField->SVolField)");
+      if(npts[0]>1)
+       test_stencil_chain_with_status<Divergence, Interpolant, SSurfXField, SVolField, SVolField>(status, opdb, npts, bc, "Divergence (SSurfXField->SVolField) -> Interpolant (SVolField->SVolField)");
 
       /* Test for chains starting with "Divergence (SSurfYField->SVolField)" */
       if(npts[0]>1 & npts[1]>1)
@@ -195,6 +197,8 @@ int main (int iarg, char* carg[]) {
        test_stencil_chain_with_status<Divergence, InterpolantX, SSurfYField, SVolField, SVolField>(status, opdb, npts, bc, "Divergence (SSurfYField->SVolField) -> InterpolantX (SVolField->SVolField)");
       if(npts[1]>1 & npts[2]>1)
        test_stencil_chain_with_status<Divergence, InterpolantZ, SSurfYField, SVolField, SVolField>(status, opdb, npts, bc, "Divergence (SSurfYField->SVolField) -> InterpolantZ (SVolField->SVolField)");
+      if(npts[1]>1)
+       test_stencil_chain_with_status<Divergence, Interpolant, SSurfYField, SVolField, SVolField>(status, opdb, npts, bc, "Divergence (SSurfYField->SVolField) -> Interpolant (SVolField->SVolField)");
 
       /* Test for chains starting with "Divergence (SSurfZField->SVolField)" */
       if(npts[0]>1 & npts[2]>1)
@@ -213,6 +217,8 @@ int main (int iarg, char* carg[]) {
        test_stencil_chain_with_status<Divergence, InterpolantX, SSurfZField, SVolField, SVolField>(status, opdb, npts, bc, "Divergence (SSurfZField->SVolField) -> InterpolantX (SVolField->SVolField)");
       if(npts[1]>1 & npts[2]>1)
        test_stencil_chain_with_status<Divergence, InterpolantY, SSurfZField, SVolField, SVolField>(status, opdb, npts, bc, "Divergence (SSurfZField->SVolField) -> InterpolantY (SVolField->SVolField)");
+      if(npts[2]>1)
+       test_stencil_chain_with_status<Divergence, Interpolant, SSurfZField, SVolField, SVolField>(status, opdb, npts, bc, "Divergence (SSurfZField->SVolField) -> Interpolant (SVolField->SVolField)");
 
       /* Test for chains starting with "Interpolant (SVolField->XSurfYField)" */
       if(npts[0]>1 & npts[1]>1)
@@ -239,6 +245,8 @@ int main (int iarg, char* carg[]) {
        test_stencil_chain_with_status<Interpolant, Interpolant, XSurfYField, SVolField, YSurfZField>(status, opdb, npts, bc, "Interpolant (XSurfYField->SVolField) -> Interpolant (SVolField->YSurfZField)");
       if(npts[0]>1 & npts[1]>1 & npts[2]>1)
        test_stencil_chain_with_status<Interpolant, InterpolantZ, XSurfYField, SVolField, SVolField>(status, opdb, npts, bc, "Interpolant (XSurfYField->SVolField) -> InterpolantZ (SVolField->SVolField)");
+      if(npts[0]>1 & npts[1]>1)
+       test_stencil_chain_with_status<Interpolant, Interpolant, XSurfYField, SVolField, SVolField>(status, opdb, npts, bc, "Interpolant (XSurfYField->SVolField) -> Interpolant (SVolField->SVolField)");
 
       /* Test for chains starting with "Interpolant (XSurfZField->SVolField)" */
       if(npts[0]>1 & npts[1]>1 & npts[2]>1)
@@ -253,6 +261,8 @@ int main (int iarg, char* carg[]) {
        test_stencil_chain_with_status<Interpolant, Interpolant, XSurfZField, SVolField, YSurfZField>(status, opdb, npts, bc, "Interpolant (XSurfZField->SVolField) -> Interpolant (SVolField->YSurfZField)");
       if(npts[0]>1 & npts[1]>1 & npts[2]>1)
        test_stencil_chain_with_status<Interpolant, InterpolantY, XSurfZField, SVolField, SVolField>(status, opdb, npts, bc, "Interpolant (XSurfZField->SVolField) -> InterpolantY (SVolField->SVolField)");
+      if(npts[0]>1 & npts[2]>1)
+       test_stencil_chain_with_status<Interpolant, Interpolant, XSurfZField, SVolField, SVolField>(status, opdb, npts, bc, "Interpolant (XSurfZField->SVolField) -> Interpolant (SVolField->SVolField)");
 
       /* Test for chains starting with "Interpolant (YSurfZField->SVolField)" */
       if(npts[0]>1 & npts[1]>1 & npts[2]>1)
@@ -265,6 +275,8 @@ int main (int iarg, char* carg[]) {
        test_stencil_chain_with_status<Interpolant, Interpolant, YSurfZField, SVolField, YSurfZField>(status, opdb, npts, bc, "Interpolant (YSurfZField->SVolField) -> Interpolant (SVolField->YSurfZField)");
       if(npts[0]>1 & npts[1]>1 & npts[2]>1)
        test_stencil_chain_with_status<Interpolant, InterpolantX, YSurfZField, SVolField, SVolField>(status, opdb, npts, bc, "Interpolant (YSurfZField->SVolField) -> InterpolantX (SVolField->SVolField)");
+      if(npts[1]>1 & npts[2]>1)
+       test_stencil_chain_with_status<Interpolant, Interpolant, YSurfZField, SVolField, SVolField>(status, opdb, npts, bc, "Interpolant (YSurfZField->SVolField) -> Interpolant (SVolField->SVolField)");
 
       /* Test for chains starting with "Interpolant (XVolField->YVolField)" */
       if(npts[0]>1 & npts[1]>1)
@@ -313,6 +325,8 @@ int main (int iarg, char* carg[]) {
        test_stencil_chain_with_status<InterpolantX, InterpolantY, SVolField, SVolField, SVolField>(status, opdb, npts, bc, "InterpolantX (SVolField->SVolField) -> InterpolantY (SVolField->SVolField)");
       if(npts[0]>1 & npts[2]>1)
        test_stencil_chain_with_status<InterpolantX, InterpolantZ, SVolField, SVolField, SVolField>(status, opdb, npts, bc, "InterpolantX (SVolField->SVolField) -> InterpolantZ (SVolField->SVolField)");
+      if(npts[0]>1)
+       test_stencil_chain_with_status<InterpolantX, Interpolant, SVolField, SVolField, SVolField>(status, opdb, npts, bc, "InterpolantX (SVolField->SVolField) -> Interpolant (SVolField->SVolField)");
 
       /* Test for chains starting with "InterpolantY (SVolField->SVolField)" */
       if(npts[0]>1 & npts[1]>1)
@@ -325,6 +339,8 @@ int main (int iarg, char* carg[]) {
        test_stencil_chain_with_status<InterpolantY, InterpolantX, SVolField, SVolField, SVolField>(status, opdb, npts, bc, "InterpolantY (SVolField->SVolField) -> InterpolantX (SVolField->SVolField)");
       if(npts[1]>1 & npts[2]>1)
        test_stencil_chain_with_status<InterpolantY, InterpolantZ, SVolField, SVolField, SVolField>(status, opdb, npts, bc, "InterpolantY (SVolField->SVolField) -> InterpolantZ (SVolField->SVolField)");
+      if(npts[1]>1)
+       test_stencil_chain_with_status<InterpolantY, Interpolant, SVolField, SVolField, SVolField>(status, opdb, npts, bc, "InterpolantY (SVolField->SVolField) -> Interpolant (SVolField->SVolField)");
 
       /* Test for chains starting with "InterpolantZ (SVolField->SVolField)" */
       if(npts[0]>1 & npts[2]>1)
@@ -337,6 +353,29 @@ int main (int iarg, char* carg[]) {
        test_stencil_chain_with_status<InterpolantZ, InterpolantX, SVolField, SVolField, SVolField>(status, opdb, npts, bc, "InterpolantZ (SVolField->SVolField) -> InterpolantX (SVolField->SVolField)");
       if(npts[1]>1 & npts[2]>1)
        test_stencil_chain_with_status<InterpolantZ, InterpolantY, SVolField, SVolField, SVolField>(status, opdb, npts, bc, "InterpolantZ (SVolField->SVolField) -> InterpolantY (SVolField->SVolField)");
+      if(npts[2]>1)
+       test_stencil_chain_with_status<InterpolantZ, Interpolant, SVolField, SVolField, SVolField>(status, opdb, npts, bc, "InterpolantZ (SVolField->SVolField) -> Interpolant (SVolField->SVolField)");
+
+      /* Test for chains starting with "Interpolant (SVolField->SVolField)" */
+      if(npts[0]>1)
+       test_stencil_chain_with_status<Interpolant, Interpolant, SVolField, SVolField, SSurfXField>(status, opdb, npts, bc, "Interpolant (SVolField->SVolField) -> Interpolant (SVolField->SSurfXField)");
+      if(npts[1]>1)
+       test_stencil_chain_with_status<Interpolant, Interpolant, SVolField, SVolField, SSurfYField>(status, opdb, npts, bc, "Interpolant (SVolField->SVolField) -> Interpolant (SVolField->SSurfYField)");
+      if(npts[2]>1)
+       test_stencil_chain_with_status<Interpolant, Interpolant, SVolField, SVolField, SSurfZField>(status, opdb, npts, bc, "Interpolant (SVolField->SVolField) -> Interpolant (SVolField->SSurfZField)");
+      if(npts[0]>1 & npts[1]>1)
+       test_stencil_chain_with_status<Interpolant, Interpolant, SVolField, SVolField, XSurfYField>(status, opdb, npts, bc, "Interpolant (SVolField->SVolField) -> Interpolant (SVolField->XSurfYField)");
+      if(npts[0]>1 & npts[2]>1)
+       test_stencil_chain_with_status<Interpolant, Interpolant, SVolField, SVolField, XSurfZField>(status, opdb, npts, bc, "Interpolant (SVolField->SVolField) -> Interpolant (SVolField->XSurfZField)");
+      if(npts[1]>1 & npts[2]>1)
+       test_stencil_chain_with_status<Interpolant, Interpolant, SVolField, SVolField, YSurfZField>(status, opdb, npts, bc, "Interpolant (SVolField->SVolField) -> Interpolant (SVolField->YSurfZField)");
+      if(npts[0]>1)
+       test_stencil_chain_with_status<Interpolant, InterpolantX, SVolField, SVolField, SVolField>(status, opdb, npts, bc, "Interpolant (SVolField->SVolField) -> InterpolantX (SVolField->SVolField)");
+      if(npts[1]>1)
+       test_stencil_chain_with_status<Interpolant, InterpolantY, SVolField, SVolField, SVolField>(status, opdb, npts, bc, "Interpolant (SVolField->SVolField) -> InterpolantY (SVolField->SVolField)");
+      if(npts[2]>1)
+       test_stencil_chain_with_status<Interpolant, InterpolantZ, SVolField, SVolField, SVolField>(status, opdb, npts, bc, "Interpolant (SVolField->SVolField) -> InterpolantZ (SVolField->SVolField)");
+      test_stencil_chain_with_status<Interpolant, Interpolant, SVolField, SVolField, SVolField>(status, opdb, npts, bc, "Interpolant (SVolField->SVolField) -> Interpolant (SVolField->SVolField)");
    }
    catch(std::runtime_error & e){ cout << e.what() << endl; };
 

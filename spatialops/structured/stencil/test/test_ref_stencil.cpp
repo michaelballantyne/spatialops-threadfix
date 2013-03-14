@@ -149,6 +149,68 @@ bool test_fd_stencil2(IntVec npts,
 
 //--------------------------------------------------------------------
 
+template<typename OpType, typename SrcType, typename DestType>
+bool test_null_stencil(IntVec npts,
+                       OperatorDatabase & opdb,
+                       bool bc[]) {
+    //basic definitions:
+    const MemoryWindow mwSrc  = get_window_with_ghost<SrcType> (npts, bc[0], bc[1], bc[2]);
+    const MemoryWindow mwDest = get_window_with_ghost<DestType>(npts, bc[0], bc[1], bc[2]);
+    SrcType  src (mwSrc,  NULL);
+    DestType ref (mwDest, NULL);
+    DestType test(mwDest, NULL);
+
+    //initialize source field / zero out result fields:
+    initialize_field(src);
+    ref <<= 0.0;
+    test <<= 0.0;
+
+    //get operator:
+    typedef typename SpatialOps::structured::OperatorTypeBuilder<OpType,SrcType,DestType>::type Op;
+    const Op* const op = opdb.retrieve_operator<Op>();
+
+    //run reference:
+    ref_null_stencil_apply_to_field(src, ref);
+
+    //run operator:
+    op->apply_to_field(src, test);
+
+    return (test == ref);
+};
+
+//--------------------------------------------------------------------
+
+template<typename OpType, typename FieldType>
+bool test_box_filter_stencil(IntVec npts,
+                             OperatorDatabase & opdb,
+                             bool bc[]) {
+    //basic definitions:
+    const MemoryWindow mwSrc  = get_window_with_ghost<FieldType> (npts, bc[0], bc[1], bc[2]);
+    const MemoryWindow mwDest = get_window_with_ghost<FieldType>(npts, bc[0], bc[1], bc[2]);
+    FieldType src (mwSrc,  NULL);
+    FieldType ref (mwDest, NULL);
+    FieldType test(mwDest, NULL);
+
+    //initialize source field / zero out result fields:
+    initialize_field(src);
+    ref <<= 0.0;
+    test <<= 0.0;
+
+    //get operator:
+    typedef typename SpatialOps::structured::OperatorTypeBuilder<OpType,FieldType,FieldType>::type Op;
+    const Op* const op = opdb.retrieve_operator<Op>();
+
+    //run reference:
+    ref_box_filter_stencil_apply_to_field(src, ref);
+
+    //run operator:
+    op->apply_to_field(src, test);
+
+    return (test == ref);
+};
+
+//--------------------------------------------------------------------
+
 template<typename VolField>
 inline bool test_basic_stencils(const IntVec npts,
                                 OperatorDatabase & opdb,
@@ -370,9 +432,6 @@ int main( int iarg, char* carg[] )
       if( npts[1]>1 ) status( test_stencil2<Interpolant, ZSurfYField, ZVolField>(npts, opdb, bc), "Interpolant ZSurfYField -> ZVolField (2)" );
       if( npts[2]>1 ) status( test_stencil2<Interpolant, ZSurfZField, ZVolField>(npts, opdb, bc), "Interpolant ZSurfZField -> ZVolField (2)" );
 
-      //NullStencil tests:
-      //Not yet added
-
       //Stencil4 tests:
 
       if( npts[0]>1 & npts[1]>1 ) status( test_stencil4<Interpolant, SVolField, XSurfYField>(npts, opdb, bc), "Interpolant SVolField -> XSurfYField (4)" );
@@ -401,9 +460,6 @@ int main( int iarg, char* carg[] )
 
       if( npts[2]>1 & npts[0]>1 ) status( test_stencil4<Interpolant, ZVolField, XVolField>(npts, opdb, bc), "Interpolant ZVolField -> XVolField (4)" );
       if( npts[2]>1 & npts[1]>1 ) status( test_stencil4<Interpolant, ZVolField, YVolField>(npts, opdb, bc), "Interpolant ZVolField -> YVolField (4)" );
-
-      //Box filter tests:
-      //Not yet added
 
       //Finite Difference (FDStencil2) tests:
 
@@ -438,6 +494,26 @@ int main( int iarg, char* carg[] )
       if( npts[0]>1 ) status( test_fd_stencil2<GradientX, ZVolField>(npts, opdb, bc), "GradientX    ZVolField -> ZVolField (FD 2)" );
       if( npts[1]>1 ) status( test_fd_stencil2<GradientY, ZVolField>(npts, opdb, bc), "GradientY    ZVolField -> ZVolField (FD 2)" );
       if( npts[2]>1 ) status( test_fd_stencil2<GradientZ, ZVolField>(npts, opdb, bc), "GradientZ    ZVolField -> ZVolField (FD 2)" );
+
+      //NullStencil tests:
+      status( test_null_stencil<Interpolant, SVolField, SVolField>(npts, opdb, bc), "Interpolant SVolField -> SVolField (Null)" );
+      status( test_null_stencil<Interpolant, XVolField, XVolField>(npts, opdb, bc), "Interpolant XVolField -> XVolField (Null)" );
+      status( test_null_stencil<Interpolant, YVolField, YVolField>(npts, opdb, bc), "Interpolant YVolField -> YVolField (Null)" );
+      status( test_null_stencil<Interpolant, ZVolField, ZVolField>(npts, opdb, bc), "Interpolant ZVolField -> ZVolField (Null)" );
+
+      status( test_null_stencil<Interpolant, XVolField, SSurfXField>(npts, opdb, bc), "Interpolant XVolField -> SSurfXField (Null)" );
+      status( test_null_stencil<Interpolant, YVolField, SSurfYField>(npts, opdb, bc), "Interpolant YVolField -> SSurfYField (Null)" );
+      status( test_null_stencil<Interpolant, ZVolField, SSurfZField>(npts, opdb, bc), "Interpolant ZVolField -> SSurfZField (Null)" );
+
+      status( test_null_stencil<Interpolant, SVolField, XSurfXField>(npts, opdb, bc), "Interpolant SVolField -> XSurfXField (Null)" );
+      status( test_null_stencil<Interpolant, SVolField, YSurfYField>(npts, opdb, bc), "Interpolant SVolField -> YSurfYField (Null)" );
+      status( test_null_stencil<Interpolant, SVolField, ZSurfZField>(npts, opdb, bc), "Interpolant SVolField -> ZSurfZField (Null)" );
+
+      //Box filter tests:
+      status( test_box_filter_stencil<Filter, SVolField>(npts, opdb, bc), "Filter SVolField -> SVolField (box filter)" );
+      status( test_box_filter_stencil<Filter, XVolField>(npts, opdb, bc), "Filter XVolField -> XVolField (box filter)" );
+      status( test_box_filter_stencil<Filter, YVolField>(npts, opdb, bc), "Filter YVolField -> YVolField (box filter)" );
+      status( test_box_filter_stencil<Filter, ZVolField>(npts, opdb, bc), "Filter ZVolField -> ZVolField (box filter)" );
 
       if( status.ok() ){
           cout << "ALL TESTS PASSED :)" << endl;

@@ -120,6 +120,7 @@ namespace structured{
     //		which is not as general is it likely should be, but GPUs are currently the only external
     //		device we're interested in supporting.
     ConsumerMap consumerFieldValues_;	///< Provides the ability to store and track copies of this field consumed on other devices.
+    ConsumerMap myConsumerFieldValues_;	///< Provides the ability to correctly delete/release copies of this field that this field allocated
 
     unsigned long int allocatedBytes_;	///< Stores entire field size in bytes: sizeof(T) * glob.x * glob.y * glob.z
 
@@ -655,11 +656,12 @@ template<typename Location, typename GhostTraits, typename T>
 SpatialField<Location, GhostTraits, T>::~SpatialField() {
 #ifdef ENABLE_CUDA
 	//Release any fields allocated for consumer use
-	for( typename ConsumerMap::iterator i = consumerFieldValues_.begin(); i != consumerFieldValues_.end(); ++i ){
+	for( typename ConsumerMap::iterator i = myConsumerFieldValues_.begin(); i != myConsumerFieldValues_.end(); ++i ){
 		ema::cuda::CUDADeviceInterface::self().release( (void*)i->second, i->first);
 	}
 
 	consumerFieldValues_.clear();
+	myConsumerFieldValues_.clear();
 #endif
 
   if ( builtField_ ) {
@@ -868,6 +870,7 @@ add_consumer( MemoryType consumerMemoryType,
       if ( consumerFieldValues_.find( consumerDeviceIndex ) == consumerFieldValues_.end() ) {
         //Field doesn't exist, attempt to allocate it
         consumerFieldValues_[consumerDeviceIndex] = (T*)CDI.get_raw_pointer( allocatedBytes_, consumerDeviceIndex );
+        myConsumerFieldValues_[consumerDeviceIndex] = consumerFieldValues_[consumerDeviceIndex];
       }
 
       CDI.memcpy_to( (void*)consumerFieldValues_[consumerDeviceIndex], fieldValues_, allocatedBytes_, consumerDeviceIndex );
@@ -881,6 +884,7 @@ add_consumer( MemoryType consumerMemoryType,
 
       if ( consumerFieldValues_.find( consumerDeviceIndex ) == consumerFieldValues_.end() ) {
         consumerFieldValues_[consumerDeviceIndex] = (T*)CDI.get_raw_pointer( allocatedBytes_, consumerDeviceIndex );
+        myConsumerFieldValues_[consumerDeviceIndex] = consumerFieldValues_[consumerDeviceIndex];
       }
 
       CDI.memcpy_peer( (void*)consumerFieldValues_[consumerDeviceIndex],

@@ -77,6 +77,27 @@ namespace structured {
                                                 const FieldType & src,
                                                       FieldType & dest );
 
+    /**
+     * \brief apply reference (null) stencil on given fields
+     * \tparam SrcType - the type of field the operator is applied to
+     * \tparam DestType - the type of field the operator produces
+     * \param src the field that the operator is applied to
+     * \param dest the resulting field.
+     */
+    template<typename SrcType, typename DestType>
+    inline void ref_null_stencil_apply_to_field( const SrcType  & src,
+                                                       DestType & dest );
+
+    /**
+     * \brief apply reference (box filter) stencil on given fields
+     * \tparam FieldType - the type of field the operator is applied to and the type of field the operator produces
+     * \param src the field that the operator is applied to
+     * \param dest the resulting field.
+     */
+    template<typename FieldType>
+    inline void ref_box_filter_stencil_apply_to_field( const FieldType & src,
+                                                             FieldType & dest );
+
     /*******************************************************************
      *
      * NOTE: all information in the RefStencil2Detail namespace is meant only for
@@ -410,6 +431,94 @@ namespace structured {
         for(; id != ide; ++id, ++is1, ++is2) {
             *id = *is1 * coefLo + *is2 * coefHi;
         };
+    };
+
+    //------------------------------------------------------------------
+
+    template<typename SrcType, typename DestType>
+    inline void ref_null_stencil_apply_to_field( const SrcType  & src,
+                                                       DestType & dest )
+    {
+
+#       ifndef NDEBUG
+            assert( src.window_with_ghost() == dest.window_with_ghost() );
+#       endif
+
+        typename SrcType::const_iterator isrc = src.begin();
+        typename DestType::iterator idest = dest.begin();
+        const typename DestType::iterator ideste = dest.end();
+
+        for( ; idest!=ideste; ++isrc, ++idest ){
+            *idest = *isrc;
+        }
+    };
+
+    //------------------------------------------------------------------
+
+    template<typename FieldType>
+    inline void ref_box_filter_stencil_apply_to_field( const FieldType & src,
+                                                             FieldType & dest )
+    {
+        typedef typename FieldType::const_iterator ConstFieldIter;
+
+        std::vector<FieldType> fields;
+        std::vector<ConstFieldIter> iters;
+
+        const MemoryWindow& w_dest = dest.window_with_ghost();
+        const MemoryWindow& ws = src.window_with_ghost();
+
+        fields.clear();
+        iters.clear();
+        const size_t ihi = ws.glob_dim(0)>1 ? 3 : 1;
+        const size_t jhi = ws.glob_dim(1)>1 ? 3 : 1;
+        const size_t khi = ws.glob_dim(2)>1 ? 3 : 1;
+        const IntVec off( ihi>1 ? 2 : 0, jhi>1 ? 2 : 0, khi>1 ? 2 : 0 );
+        for( size_t k=0; k<khi; ++k ){
+            for( size_t j=0; j<jhi; ++j ){
+                for( size_t i=0; i<ihi; ++i ){
+                    fields.push_back( FieldType( MemoryWindow( ws.glob_dim(),
+                                                               ws.offset()+IntVec(i,j,k),
+                                                               ws.extent()-off,
+                                                               ws.has_bc(0), ws.has_bc(1), ws.has_bc(2) ),
+                                                 src.field_values(),
+                                                 ExternalStorage ) );
+                }
+            }
+        }
+
+        assert( fields.size() == ihi*jhi*khi );
+
+        for( typename std::vector<FieldType>::const_iterator is=fields.begin(); is!=fields.end(); ++is ){
+            iters.push_back( is->begin() );
+        }
+
+        IntVec of, ex;
+        for( int i=0; i<3; ++i ){
+            of[i] = w_dest.glob_dim(i)>1 ? 1 : 0;
+            ex[i] = w_dest.glob_dim(i)>1 ? -2 : 0;
+        }
+
+        // create the destination field memory window
+        FieldType d( MemoryWindow( w_dest.glob_dim(),
+                                   w_dest.offset()+of,
+                                   w_dest.extent()+ex,
+                                   w_dest.has_bc(0), w_dest.has_bc(1), w_dest.has_bc(2) ),
+                     dest.field_values(),
+                     ExternalStorage );
+
+        const double fac = 1.0 / double(fields.size());
+        typename FieldType::iterator id=d.begin();
+        const typename FieldType::iterator ide=d.end();
+        for( ; id!=ide; ++id ){
+            *id = 0.0;
+            typename std::vector<ConstFieldIter>::iterator isi=iters.begin();
+            const typename std::vector<ConstFieldIter>::const_iterator isie=iters.end();
+            for( ; isi!=isie; ++isi ){
+                *id += **isi;
+                ++(*isi);  // increment this source iterator to the next point
+            }
+            *id *= fac;
+        }
     };
 
   }// namespace structured
