@@ -50,7 +50,7 @@
 #  ifdef __CUDACC__
 #     include <spatialops/structured/MemoryTypes.h>
 #     ifdef NEBO_GPU_TEST
-#        include <spatialops/structured/ExternalAllocators.h>
+#        include <spatialops/structured/MemoryTypes.h>
 #     endif
       /* NEBO_GPU_TEST */
 #  endif
@@ -467,7 +467,7 @@
               };
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
-                   const_cast<FieldType *>(field_)->add_consumer(deviceIndex);
+                   const_cast<FieldType *>(&field_)->add_consumer(EXTERNAL_CUDA_GPU, deviceIndex);
                 }
 #            endif
              /* NEBO_GPU_TEST */
@@ -770,26 +770,26 @@
 
                     rhs.gpu_prep(0);
 
-                    if(LOCAL_MEM == field_.memory_device_type()) {
+                    if(LOCAL_RAM == field_.memory_device_type()) {
 
                        FieldType gpu_field(field_.window_with_ghost(),
                                            NULL,
-                                           InternalStorage,
+                                           structured::InternalStorage,
                                            EXTERNAL_CUDA_GPU,
                                            0);
 
                        NeboField<Initial, FieldType> gpu_lhs(gpu_field);
 
-                       gpu_lhs.template gpu_assign<ValidGhost, Shift>(rhs);
+                       gpu_lhs.template gpu_assign<Iterator, RhsType>(rhs);
 
                        ema::cuda::CUDADeviceInterface & CDI = ema::cuda::CUDADeviceInterface::self();
 
-                       CDI.memcpy_from(field_.fieldValues(),
-                                       gpu_field.fieldValues(EXTERNAL_CUDA_GPU, 0),
+                       CDI.memcpy_from(field_.field_values(),
+                                       gpu_field.field_values(EXTERNAL_CUDA_GPU, 0),
                                        field_.allocated_bytes(),
                                        0);
                     }
-                    else { template gpu_assign<ValidGhost, Shift>(rhs); };
+                    else { gpu_assign<Iterator, RhsType>(rhs); };
 
 #                   ifdef NEBO_REPORT_BACKEND
                        std::cout << "Finished Nebo CUDA with Nebo copying" << std::endl

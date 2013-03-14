@@ -120,6 +120,7 @@
        [adcr (lambda (type arg) (bs (cref type) arg))]
        [adp (lambda (type arg) (bs (ptr type) arg))]
        [adcp (lambda (type arg) (bs (cptr type) arg))]
+       [take-ptr (lambda chunks (c '& chunks))]
        [nif (lambda (check . then)
               (bs (fc 'if check)
                   (body-chunk then)))]
@@ -976,7 +977,7 @@
                        (cc (nt= 'namespace 'BI (scope 'boost 'interprocess)))))
       (gpu-only (b new-line-chunk
                    (pp-includes-chunk 'spatialops/structured/MemoryTypes.h)
-                   (gpu-test-only (pp-includes-chunk 'spatialops/structured/ExternalAllocators.h)))))
+                   (gpu-test-only (pp-includes-chunk 'spatialops/structured/MemoryTypes.h)))))
    (n 'SpatialOps
       (d "Meta-programming compiler flags"
          (struct-declare-chunk 'All)
@@ -1222,9 +1223,9 @@
                                     (list DI-chunk
                                           (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift VG-chunk SH-chunk)))
                                     (c (fc (tpl-use 'const_cast (ptr FT-chunk))
-                                           'field_)
+                                           (take-ptr 'field_))
                                        '->
-                                       (fc 'add_consumer DI-chunk))
+                                       (fc 'add_consumer 'EXTERNAL_CUDA_GPU DI-chunk))
                                     (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift VG-chunk SH-chunk))
                                     null
                                     (adc FT-chunk 'field_))
@@ -1357,12 +1358,12 @@
                                                   (mfc (fc (scope 'ThreadPoolFIFO 'self))
                                                        'schedule
                                                        (fc (scope 'boost 'bind)
-                                                           (c (ref) (scope 'ResizeType (tpl-fcn-use 'assign 'RhsResizeType)))
+                                                           (take-ptr (scope 'ResizeType (tpl-fcn-use 'assign 'RhsResizeType)))
                                                            'new_lhs
                                                            'new_rhs
                                                            'split
                                                            'location
-                                                           (c (ref) 'semaphore)))
+                                                           (take-ptr 'semaphore)))
                                                   (n= 'location (fc 'nebo_next_partition 'location 'split))))
                                       (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_maintain_interior VG-chunk))
                                       (let ([extent-def (lambda (num)
@@ -1400,33 +1401,33 @@
                                       (mfc 'field_ 'device_index)
                                       (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift_and_maintain_interior VG-chunk SH-chunk))
                                       (list (mfc 'rhs 'gpu_prep "0")
-                                            (nifelse (n== 'LOCAL_MEM
+                                            (nifelse (n== 'LOCAL_RAM
                                                           (mfc 'field_ 'memory_device_type))
                                                      (list (ad FT-chunk
                                                                (fc 'gpu_field
                                                                    (mfc 'field_ 'window_with_ghost)
                                                                    'NULL
-                                                                   'InternalStorage
+                                                                   (scope 'structured 'InternalStorage)
                                                                    'EXTERNAL_CUDA_GPU
                                                                    "0"))
                                                            (ad (tpl-use NF-chunk 'Initial FT-chunk)
                                                                (fc 'gpu_lhs 'gpu_field))
                                                            (mfc 'gpu_lhs
-                                                                (tpl-fcn-use 'gpu_assign VG-chunk SH-chunk)
+                                                                (tpl-fcn-use 'gpu_assign 'Iterator 'RhsType)
                                                                 'rhs)
                                                            (let ([CDI (scope (scope 'ema 'cuda)
                                                                              'CUDADeviceInterface)])
                                                              (nt= (ref CDI) 'CDI (fc (scope CDI 'self))))
                                                            (mfc 'CDI
                                                                 'memcpy_from
-                                                                (mfc 'field_ 'fieldValues)
+                                                                (mfc 'field_ 'field_values)
                                                                 (mfc 'gpu_field
-                                                                     'fieldValues
+                                                                     'field_values
                                                                      'EXTERNAL_CUDA_GPU
                                                                      "0")
                                                                 (mfc 'field_ 'allocated_bytes)
                                                                 "0"))
-                                                     (fc (tpl-fcn-use 'gpu_assign VG-chunk SH-chunk)
+                                                     (fc (tpl-use 'gpu_assign 'Iterator 'RhsType)
                                                          'rhs)))
                                       (ad FT-chunk 'field_)))
                     (bs-Resize-lhs null
