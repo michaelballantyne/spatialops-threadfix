@@ -145,6 +145,18 @@ if( ENABLE_TESTS )
   enable_testing()
 endif( ENABLE_TESTS )
 
+macro( nebo_add_executable name source )
+  if( ENABLE_CUDA )
+    message( STATUS "ENABLE_CUDA = ON with ${name} ${source}" )
+    file( COPY ${source} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/ )
+    file( RENAME ${CMAKE_CURRENT_BINARY_DIR}/${source} ${CMAKE_CURRENT_BINARY_DIR}/${source}.cu )
+    cuda_add_executable( ${name} ${CMAKE_CURRENT_BINARY_DIR}/${source}.cu )
+  else( ENABLE_CUDA )
+    message( STATUS "ENABLE_CUDA = OFF with ${name} ${source} ${CMAKE_CURRENT_BINARY_DIR}" )
+    add_executable( ${name} ${source} )
+  endif( ENABLE_CUDA )
+endmacro( nebo_add_executable )
+
 add_subdirectory( spatialops )
 
 
