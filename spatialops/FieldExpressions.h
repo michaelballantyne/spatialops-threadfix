@@ -8206,7 +8206,7 @@
 
                 ProdOp<GPUWalk, Arg, Coef, DestType> typedef MultiplyType;
 
-                typename Collection::template ConstructExpr<ArgPreGPUWalk, DestType> typedef
+                typename Collection::template ConstructGPUExpr<ArgPreGPUWalk, DestType> typedef
                 EarlierPointsType;
 
                 typename EarlierPointsType::Result typedef EarlierPointsResult;

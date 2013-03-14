@@ -2694,7 +2694,7 @@
                                                    'Arg)
                                           (typedef (tpl-use 'ProdOp 'GPUWalk 'Arg 'Coef 'DestType)
                                                    'MultiplyType)
-                                          (typedef (tpl-pmtr (scope 'Collection (tpl-fcn-use 'ConstructExpr 'ArgPreGPUWalk 'DestType)))
+                                          (typedef (tpl-pmtr (scope 'Collection (tpl-fcn-use 'ConstructGPUExpr 'ArgPreGPUWalk 'DestType)))
                                                    'EarlierPointsType)
                                           (typedef (tpl-pmtr (scope 'EarlierPointsType
                                                                     'Result))
