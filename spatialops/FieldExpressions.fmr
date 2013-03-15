@@ -580,7 +580,7 @@
                                             (device-use (v-fcn-def 'next
                                                                    null
                                                                    next-body))
-                                            (device-use (r-fcn-def (fcn-dcl 'eval 'AtomicType)
+                                            (device-use (r-fcn-def (constize (fcn-dcl 'eval 'AtomicType))
                                                                    null
                                                                    eval-result))
                                             publics))
@@ -1672,9 +1672,9 @@
                                 (ccs (mfc 'test_ 'next)
                                      (mfc 'expr_ 'next))
                                 (mfc 'expr_ 'eval)
-                                (r-fcn-def (constize (fcn-dcl 'check (tc 'bool)))
-                                           null
-                                           (mfc 'test_ 'eval))
+                                (device-use (r-fcn-def (constize (fcn-dcl 'check (tc 'bool)))
+                                                       null
+                                                       (mfc 'test_ 'eval)))
                                 (list (ad 'Test 'test_)
                                       (ad 'Expr 'expr_)))
                     (bs-Reduction (typedef (scope (tpl-pmtr FT-chunk)
@@ -2068,10 +2068,11 @@
                              (build-CondBuilder-public construct-args
                                                        construct-asgns
                                                        public)))]
-             [FT-arg (lambda (FT-defined?) (if FT-defined? FT-chunk (tpl-pmtr (scope (tpl-use 'NeboFieldCheck
-                                                                                              (tpl-pmtr (scope FT-chunk 'field_type))
-                                                                                              FT-chunk)
-                                                                                     'Result))))]
+             [FT-test (tpl-pmtr (scope (tpl-use 'NeboFieldCheck
+                                                (tpl-pmtr (scope FT-chunk 'field_type))
+                                                FT-chunk)
+                                       'Result))]
+             [FT-arg (lambda (FT-defined?) (if FT-defined? FT-chunk FT-test))]
              [tpl-FT-def-proc (lambda (FT-defined? fcn-def) (if FT-defined? fcn-def (tpl-def (tpl-pmtr FT-chunk)
                                                                                              fcn-def)))]
              [build-cond-end-val ; end case - given scalar value
@@ -2108,7 +2109,7 @@
                 (tpl-def (list (tpl-pmtr 'Expr)
                                (if FT-defined? null (tpl-pmtr FT-chunk)))
                          (r-fcn-def (fcn-dcl name
-                                             (tpl-use NE-chunk return-type FT-chunk)
+                                             (tpl-use NE-chunk return-type (FT-arg FT-defined?))
                                              (adcr (tpl-use NE-chunk 'Expr FT-chunk) 'e))
                                     null
                                     return-expr)))]
@@ -2145,11 +2146,11 @@
                                                                                         'Initial
                                                                                         (tpl-use Clause-chunk
                                                                                                  'Initial
-                                                                                                 (tpl-use NB-chunk 'Initial FT-chunk)
+                                                                                                 (tpl-use NB-chunk 'Initial (FT-arg FT-defined?))
                                                                                                  (tpl-use NCF-chunk 'Initial (FT-arg FT-defined?))
-                                                                                                 FT-chunk)
+                                                                                                 (FT-arg FT-defined?))
                                                                                         clauses-type
-                                                                                        FT-chunk)))
+                                                                                        (FT-arg FT-defined?))))
                                                      (list (adc 'bool 'b)
                                                            (adcr FT-chunk 'f)))
                                             (list (typedef (tpl-use NB-chunk 'Initial FT-chunk)
@@ -2181,11 +2182,11 @@
                                                                                 'Initial
                                                                                 (tpl-use Clause-chunk
                                                                                          'Initial
-                                                                                         (tpl-use NB-chunk 'Initial FT-chunk)
+                                                                                         (tpl-use NB-chunk 'Initial (FT-arg FT-defined?))
                                                                                          'Expr
-                                                                                         FT-chunk)
+                                                                                         (FT-arg FT-defined?))
                                                                                 clauses-type
-                                                                                FT-chunk)))
+                                                                                (FT-arg FT-defined?))))
                                              (list (adc 'bool 'b)
                                                    (adcr (tpl-use NE-chunk 'Expr FT-chunk) 'e)))
                                     (list (typedef (tpl-use NB-chunk 'Initial FT-chunk)
@@ -2216,10 +2217,10 @@
                                                                                 (tpl-use Clause-chunk
                                                                                          'Initial
                                                                                          'BoolExpr
-                                                                                         (tpl-use NS-chunk 'Initial FT-chunk)
-                                                                                         FT-chunk)
+                                                                                         (tpl-use NS-chunk 'Initial (FT-arg FT-defined?))
+                                                                                         (FT-arg FT-defined?))
                                                                                 clauses-type
-                                                                                FT-chunk)))
+                                                                                (FT-arg FT-defined?))))
                                              (list (adcr (tpl-use NBE-chunk 'BoolExpr FT-chunk) 'nb)
                                                    (adc 'double 'd)))
                                     (list (typedef (tpl-use NS-chunk 'Initial FT-chunk)
@@ -2251,9 +2252,9 @@
                                                                                          'Initial
                                                                                          'BoolExpr
                                                                                          (tpl-use NCF-chunk 'Initial (FT-arg FT-defined?))
-                                                                                         FT-chunk)
+                                                                                         (FT-arg FT-defined?))
                                                                                 clauses-type
-                                                                                FT-chunk)))
+                                                                                (FT-arg FT-defined?))))
                                              (list (adcr (tpl-use NBE-chunk 'BoolExpr FT-chunk) 'nb)
                                                    (adcr FT-chunk 'f)))
                                     (list (typedef (tpl-use NCF-chunk 'Initial FT-chunk)
@@ -2282,9 +2283,9 @@
                          (r-fcn-def (fcn-dcl name
                                              (tpl-use 'CondBuilder (cs (tpl-use Cond-chunk
                                                                                 'Initial
-                                                                                (tpl-use Clause-chunk 'Initial 'BoolExpr 'Expr FT-chunk)
+                                                                                (tpl-use Clause-chunk 'Initial 'BoolExpr 'Expr (FT-arg FT-defined?))
                                                                                 clauses-type
-                                                                                FT-chunk)))
+                                                                                (FT-arg FT-defined?))))
                                              (list (adcr (tpl-use NBE-chunk 'BoolExpr FT-chunk) 'nb)
                                                    (adcr (tpl-use NE-chunk 'Expr FT-chunk) 'e)))
                                     (list (typedef (tpl-use Clause-chunk 'Initial 'BoolExpr 'Expr FT-chunk)
@@ -2397,15 +2398,15 @@
                                                  #false
                                                  (bcev 'double (mfc (fc 'reverse (fc SFClause-chunk 'd))
                                                                     'eval))
-                                                 (bcef (tpl-pmtr (scope (scope (tpl-use 'CondBuilder (tpl-pmtr (scope (scope 'Clauses (tpl-fcn-use 'Convert FT-chunk))
+                                                 (bcef (tpl-pmtr (scope (scope (tpl-use 'CondBuilder (tpl-pmtr (scope (scope 'Clauses (tpl-fcn-use 'Convert FT-test))
                                                                                                                       'Converted)))
-                                                                               (tpl-fcn-use 'ReverseClauses (cs (tpl-use NCF-chunk 'Initial (FT-arg #false)))))
+                                                                               (tpl-fcn-use 'ReverseClauses (cs (tpl-use NCF-chunk 'Initial FT-test))))
                                                                         'Result))
                                                        (fc (fc (tpl-use 'CondBuilder (tpl-pmtr (scope (scope 'Clauses (tpl-fcn-use 'Convert FT-chunk))
                                                                                                       'Converted)))
                                                                (mfc 'clauses_ (tpl-fcn-use 'convert FT-chunk)))
                                                            'f))
-                                                 (bcee (tpl-pmtr (scope (scope (tpl-use 'CondBuilder (tpl-pmtr (scope (scope 'Clauses (tpl-fcn-use 'Convert FT-chunk))
+                                                 (bcee (tpl-pmtr (scope (scope (tpl-use 'CondBuilder (tpl-pmtr (scope (scope 'Clauses (tpl-fcn-use 'Convert FT-test))
                                                                                                                       'Converted)))
                                                                                (tpl-fcn-use 'ReverseClauses 'Expr))
                                                                         'Result))
@@ -2418,19 +2419,19 @@
                                                        (tpl-use SCond-chunk 'Clauses)
                                                        (fc SClause-chunk 'b 'd)
                                                        'clauses_)
-                                                 (bcbf (tpl-pmtr (scope (scope 'Clauses (tpl-fcn-use 'Convert FT-chunk))
+                                                 (bcbf (tpl-pmtr (scope (scope 'Clauses (tpl-fcn-use 'Convert FT-test))
                                                                         'Converted))
                                                        (mfc 'clauses_ (tpl-fcn-use 'convert FT-chunk)))
-                                                 (bcbe (tpl-pmtr (scope (scope 'Clauses (tpl-fcn-use 'Convert FT-chunk))
+                                                 (bcbe (tpl-pmtr (scope (scope 'Clauses (tpl-fcn-use 'Convert FT-test))
                                                                         'Converted))
                                                        (mfc 'clauses_ (tpl-fcn-use 'convert FT-chunk)))
-                                                 (bcnv (tpl-pmtr (scope (scope 'Clauses (tpl-fcn-use 'Convert FT-chunk))
+                                                 (bcnv (tpl-pmtr (scope (scope 'Clauses (tpl-fcn-use 'Convert FT-test))
                                                                         'Converted))
                                                        (mfc 'clauses_ (tpl-fcn-use 'convert FT-chunk)))
-                                                 (bcnf (tpl-pmtr (scope (scope 'Clauses (tpl-fcn-use 'Convert FT-chunk))
+                                                 (bcnf (tpl-pmtr (scope (scope 'Clauses (tpl-fcn-use 'Convert FT-test))
                                                                         'Converted))
                                                        (mfc 'clauses_ (tpl-fcn-use 'convert FT-chunk)))
-                                                 (bcne (tpl-pmtr (scope (scope 'Clauses (tpl-fcn-use 'Convert FT-chunk))
+                                                 (bcne (tpl-pmtr (scope (scope 'Clauses (tpl-fcn-use 'Convert FT-test))
                                                                         'Converted))
                                                        (mfc 'clauses_ (tpl-fcn-use 'convert FT-chunk)))))
                                         ; Nil
@@ -2442,7 +2443,7 @@
               (build-cond-app 'cond
                               #false
                               (bcev 'double 'd)
-                              (bcef (tpl-use NCF-chunk 'Initial FT-chunk)
+                              (bcef (tpl-use NCF-chunk 'Initial FT-test)
                                     (fc 'Expression (fc 'Field 'f)))
                               (bcee 'Expr 'e)
                               (bcbv (tpl-use SCond-chunk Nil-chunk)

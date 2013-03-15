@@ -267,7 +267,7 @@
              {};
              __device__ inline void start(int x, int y) {};
              __device__ inline void next(void) {};
-             __device__ inline AtomicType eval(void) { return value_; };
+             __device__ inline AtomicType eval(void) const { return value_; };
 
             private:
              AtomicType const value_;
@@ -395,7 +395,7 @@
              {};
              __device__ inline void start(int x, int y) {};
              __device__ inline void next(void) {};
-             __device__ inline AtomicType eval(void) { return value_; };
+             __device__ inline AtomicType eval(void) const { return value_; };
 
             private:
              bool const value_;
@@ -542,7 +542,7 @@
              {};
              __device__ inline void start(int x, int y) { current_ += x + y * xLength_; };
              __device__ inline void next(void) { current_ += step_; };
-             __device__ inline AtomicType eval(void) { return *current_; };
+             __device__ inline AtomicType eval(void) const { return *current_; };
 
             private:
              AtomicType const * current_;
@@ -1068,7 +1068,7 @@
                 operand2_.start(x, y);
              };
              __device__ inline void next(void) { operand1_.next(); operand2_.next(); };
-             __device__ inline AtomicType eval(void) {
+             __device__ inline AtomicType eval(void) const {
                 return (operand1_.eval() + operand2_.eval());
              };
 
@@ -1399,7 +1399,7 @@
                 operand2_.start(x, y);
              };
              __device__ inline void next(void) { operand1_.next(); operand2_.next(); };
-             __device__ inline AtomicType eval(void) {
+             __device__ inline AtomicType eval(void) const {
                 return (operand1_.eval() - operand2_.eval());
              };
 
@@ -1732,7 +1732,7 @@
                 operand2_.start(x, y);
              };
              __device__ inline void next(void) { operand1_.next(); operand2_.next(); };
-             __device__ inline AtomicType eval(void) {
+             __device__ inline AtomicType eval(void) const {
                 return (operand1_.eval() * operand2_.eval());
              };
 
@@ -2065,7 +2065,7 @@
                 operand2_.start(x, y);
              };
              __device__ inline void next(void) { operand1_.next(); operand2_.next(); };
-             __device__ inline AtomicType eval(void) {
+             __device__ inline AtomicType eval(void) const {
                 return (operand1_.eval() / operand2_.eval());
              };
 
@@ -2363,7 +2363,7 @@
              {};
              __device__ inline void start(int x, int y) { operand_.start(x, y); };
              __device__ inline void next(void) { operand_.next(); };
-             __device__ inline AtomicType eval(void) { return std::sin(operand_.eval()); };
+             __device__ inline AtomicType eval(void) const { return std::sin(operand_.eval()); };
 
             private:
              Operand operand_;
@@ -2530,7 +2530,7 @@
              {};
              __device__ inline void start(int x, int y) { operand_.start(x, y); };
              __device__ inline void next(void) { operand_.next(); };
-             __device__ inline AtomicType eval(void) { return std::cos(operand_.eval()); };
+             __device__ inline AtomicType eval(void) const { return std::cos(operand_.eval()); };
 
             private:
              Operand operand_;
@@ -2697,7 +2697,7 @@
              {};
              __device__ inline void start(int x, int y) { operand_.start(x, y); };
              __device__ inline void next(void) { operand_.next(); };
-             __device__ inline AtomicType eval(void) { return std::tan(operand_.eval()); };
+             __device__ inline AtomicType eval(void) const { return std::tan(operand_.eval()); };
 
             private:
              Operand operand_;
@@ -2864,7 +2864,7 @@
              {};
              __device__ inline void start(int x, int y) { operand_.start(x, y); };
              __device__ inline void next(void) { operand_.next(); };
-             __device__ inline AtomicType eval(void) { return std::exp(operand_.eval()); };
+             __device__ inline AtomicType eval(void) const { return std::exp(operand_.eval()); };
 
             private:
              Operand operand_;
@@ -3031,7 +3031,7 @@
              {};
              __device__ inline void start(int x, int y) { operand_.start(x, y); };
              __device__ inline void next(void) { operand_.next(); };
-             __device__ inline AtomicType eval(void) { return std::tanh(operand_.eval()); };
+             __device__ inline AtomicType eval(void) const { return std::tanh(operand_.eval()); };
 
             private:
              Operand operand_;
@@ -3198,7 +3198,7 @@
              {};
              __device__ inline void start(int x, int y) { operand_.start(x, y); };
              __device__ inline void next(void) { operand_.next(); };
-             __device__ inline AtomicType eval(void) { return std::abs(operand_.eval()); };
+             __device__ inline AtomicType eval(void) const { return std::abs(operand_.eval()); };
 
             private:
              Operand operand_;
@@ -3365,7 +3365,7 @@
              {};
              __device__ inline void start(int x, int y) { operand_.start(x, y); };
              __device__ inline void next(void) { operand_.next(); };
-             __device__ inline AtomicType eval(void) { return -(operand_.eval()); };
+             __device__ inline AtomicType eval(void) const { return -(operand_.eval()); };
 
             private:
              Operand operand_;
@@ -3567,7 +3567,7 @@
                 operand2_.start(x, y);
              };
              __device__ inline void next(void) { operand1_.next(); operand2_.next(); };
-             __device__ inline AtomicType eval(void) {
+             __device__ inline AtomicType eval(void) const {
                 return std::pow(operand1_.eval(), operand2_.eval());
              };
 
@@ -3867,7 +3867,7 @@
              {};
              __device__ inline void start(int x, int y) { operand_.start(x, y); };
              __device__ inline void next(void) { operand_.next(); };
-             __device__ inline AtomicType eval(void) { return std::sqrt(operand_.eval()); };
+             __device__ inline AtomicType eval(void) const { return std::sqrt(operand_.eval()); };
 
             private:
              Operand operand_;
@@ -4034,7 +4034,7 @@
              {};
              __device__ inline void start(int x, int y) { operand_.start(x, y); };
              __device__ inline void next(void) { operand_.next(); };
-             __device__ inline AtomicType eval(void) { return std::log(operand_.eval()); };
+             __device__ inline AtomicType eval(void) const { return std::log(operand_.eval()); };
 
             private:
              Operand operand_;
@@ -4238,7 +4238,7 @@
                 operand2_.start(x, y);
              };
              __device__ inline void next(void) { operand1_.next(); operand2_.next(); };
-             __device__ inline AtomicType eval(void) {
+             __device__ inline AtomicType eval(void) const {
                 return (operand1_.eval() == operand2_.eval());
              };
 
@@ -4595,7 +4595,7 @@
                 operand2_.start(x, y);
              };
              __device__ inline void next(void) { operand1_.next(); operand2_.next(); };
-             __device__ inline AtomicType eval(void) {
+             __device__ inline AtomicType eval(void) const {
                 return (operand1_.eval() != operand2_.eval());
              };
 
@@ -4954,7 +4954,7 @@
                 operand2_.start(x, y);
              };
              __device__ inline void next(void) { operand1_.next(); operand2_.next(); };
-             __device__ inline AtomicType eval(void) {
+             __device__ inline AtomicType eval(void) const {
                 return (operand1_.eval() < operand2_.eval());
              };
 
@@ -5313,7 +5313,7 @@
                 operand2_.start(x, y);
              };
              __device__ inline void next(void) { operand1_.next(); operand2_.next(); };
-             __device__ inline AtomicType eval(void) {
+             __device__ inline AtomicType eval(void) const {
                 return (operand1_.eval() <= operand2_.eval());
              };
 
@@ -5674,7 +5674,7 @@
                 operand2_.start(x, y);
              };
              __device__ inline void next(void) { operand1_.next(); operand2_.next(); };
-             __device__ inline AtomicType eval(void) {
+             __device__ inline AtomicType eval(void) const {
                 return (operand1_.eval() > operand2_.eval());
              };
 
@@ -6035,7 +6035,7 @@
                 operand2_.start(x, y);
              };
              __device__ inline void next(void) { operand1_.next(); operand2_.next(); };
-             __device__ inline AtomicType eval(void) {
+             __device__ inline AtomicType eval(void) const {
                 return (operand1_.eval() >= operand2_.eval());
              };
 
@@ -6392,7 +6392,7 @@
                 operand2_.start(x, y);
              };
              __device__ inline void next(void) { operand1_.next(); operand2_.next(); };
-             __device__ inline AtomicType eval(void) {
+             __device__ inline AtomicType eval(void) const {
                 return (operand1_.eval() && operand2_.eval());
              };
 
@@ -6615,7 +6615,7 @@
                 operand2_.start(x, y);
              };
              __device__ inline void next(void) { operand1_.next(); operand2_.next(); };
-             __device__ inline AtomicType eval(void) {
+             __device__ inline AtomicType eval(void) const {
                 return (operand1_.eval() || operand2_.eval());
              };
 
@@ -6807,7 +6807,7 @@
              {};
              __device__ inline void start(int x, int y) { operand_.start(x, y); };
              __device__ inline void next(void) { operand_.next(); };
-             __device__ inline AtomicType eval(void) { return !(operand_.eval()); };
+             __device__ inline AtomicType eval(void) const { return !(operand_.eval()); };
 
             private:
              Operand operand_;
@@ -7006,8 +7006,8 @@
              {};
              __device__ inline void start(int x, int y) { test_.start(x, y); expr_.start(x, y); };
              __device__ inline void next(void) { test_.next(); expr_.next(); };
-             __device__ inline AtomicType eval(void) { return expr_.eval(); };
-             inline bool const check(void) const { return test_.eval(); };
+             __device__ inline AtomicType eval(void) const { return expr_.eval(); };
+             __device__ inline bool const check(void) const { return test_.eval(); };
 
             private:
              Test test_;
@@ -7186,7 +7186,7 @@
                 clause_.start(x, y); otherwise_.start(x, y);
              };
              __device__ inline void next(void) { clause_.next(); otherwise_.next(); };
-             __device__ inline AtomicType eval(void) {
+             __device__ inline AtomicType eval(void) const {
                 return (clause_.check() ? clause_.eval() : otherwise_.eval());
              };
 
@@ -7609,7 +7609,12 @@
              return reverse(NeboSimpleFinalClause(d)).eval();
           };
           template<typename FieldType>
-           inline NeboExpression<typename CondBuilder<typename Clauses::template Convert<FieldType>::
+           inline NeboExpression<typename CondBuilder<typename Clauses::template Convert<typename
+                                                                                         NeboFieldCheck<typename
+                                                                                                        FieldType::
+                                                                                                        field_type,
+                                                                                                        FieldType>::
+                                                                                         Result>::
                                                       Converted>::template ReverseClauses<NeboConstField<Initial,
                                                                                                          typename
                                                                                                          NeboFieldCheck<typename
@@ -7629,10 +7634,16 @@
                                                                                                     convert<FieldType>())(f);
            };
           template<typename Expr, typename FieldType>
-           inline NeboExpression<typename CondBuilder<typename Clauses::template Convert<FieldType>::
+           inline NeboExpression<typename CondBuilder<typename Clauses::template Convert<typename
+                                                                                         NeboFieldCheck<typename
+                                                                                                        FieldType::
+                                                                                                        field_type,
+                                                                                                        FieldType>::
+                                                                                         Result>::
                                                       Converted>::template ReverseClauses<Expr>::
                                  Result,
-                                 FieldType> operator ()(NeboExpression<Expr, FieldType> const & e) {
+                                 typename NeboFieldCheck<typename FieldType::field_type, FieldType>::
+                                 Result> operator ()(NeboExpression<Expr, FieldType> const & e) {
 
               return CondBuilder<typename Clauses::template Convert<FieldType>::Converted>(clauses_.template
                                                                                                     convert<FieldType>())(e);
@@ -7648,16 +7659,33 @@
           template<typename FieldType>
            inline CondBuilder<NeboCond<Initial,
                                        NeboClause<Initial,
-                                                  NeboBoolean<Initial, FieldType>,
+                                                  NeboBoolean<Initial,
+                                                              typename NeboFieldCheck<typename
+                                                                                      FieldType::
+                                                                                      field_type,
+                                                                                      FieldType>::
+                                                              Result>,
                                                   NeboConstField<Initial,
                                                                  typename NeboFieldCheck<typename
                                                                                          FieldType::
                                                                                          field_type,
                                                                                          FieldType>::
                                                                  Result>,
-                                                  FieldType>,
-                                       typename Clauses::template Convert<FieldType>::Converted,
-                                       FieldType> > operator ()(bool const b, FieldType const & f) {
+                                                  typename NeboFieldCheck<typename FieldType::
+                                                                          field_type,
+                                                                          FieldType>::Result>,
+                                       typename Clauses::template Convert<typename NeboFieldCheck<typename
+                                                                                                  FieldType::
+                                                                                                  field_type,
+                                                                                                  FieldType>::
+                                                                          Result>::Converted,
+                                       typename NeboFieldCheck<typename FieldType::field_type,
+                                                               FieldType>::Result> > operator ()(bool
+                                                                                                 const
+                                                                                                 b,
+                                                                                                 FieldType
+                                                                                                 const
+                                                                                                 & f) {
 
               NeboBoolean<Initial, FieldType> typedef Boolean;
 
@@ -7667,7 +7695,10 @@
 
               NeboCond<Initial,
                        Clause,
-                       typename Clauses::template Convert<FieldType>::Converted,
+                       typename Clauses::template Convert<typename NeboFieldCheck<typename FieldType::
+                                                                                  field_type,
+                                                                                  FieldType>::Result>::
+                       Converted,
                        FieldType> typedef Cond;
 
               CondBuilder<Cond> typedef ReturnType;
@@ -7677,13 +7708,29 @@
           template<typename Expr, typename FieldType>
            inline CondBuilder<NeboCond<Initial,
                                        NeboClause<Initial,
-                                                  NeboBoolean<Initial, FieldType>,
+                                                  NeboBoolean<Initial,
+                                                              typename NeboFieldCheck<typename
+                                                                                      FieldType::
+                                                                                      field_type,
+                                                                                      FieldType>::
+                                                              Result>,
                                                   Expr,
-                                                  FieldType>,
-                                       typename Clauses::template Convert<FieldType>::Converted,
-                                       FieldType> > operator ()(bool const b,
-                                                                NeboExpression<Expr, FieldType>
-                                                                const & e) {
+                                                  typename NeboFieldCheck<typename FieldType::
+                                                                          field_type,
+                                                                          FieldType>::Result>,
+                                       typename Clauses::template Convert<typename NeboFieldCheck<typename
+                                                                                                  FieldType::
+                                                                                                  field_type,
+                                                                                                  FieldType>::
+                                                                          Result>::Converted,
+                                       typename NeboFieldCheck<typename FieldType::field_type,
+                                                               FieldType>::Result> > operator ()(bool
+                                                                                                 const
+                                                                                                 b,
+                                                                                                 NeboExpression<Expr,
+                                                                                                                FieldType>
+                                                                                                 const
+                                                                                                 & e) {
 
               NeboBoolean<Initial, FieldType> typedef Boolean;
 
@@ -7691,7 +7738,10 @@
 
               NeboCond<Initial,
                        Clause,
-                       typename Clauses::template Convert<FieldType>::Converted,
+                       typename Clauses::template Convert<typename NeboFieldCheck<typename FieldType::
+                                                                                  field_type,
+                                                                                  FieldType>::Result>::
+                       Converted,
                        FieldType> typedef Cond;
 
               CondBuilder<Cond> typedef ReturnType;
@@ -7702,13 +7752,29 @@
            inline CondBuilder<NeboCond<Initial,
                                        NeboClause<Initial,
                                                   BoolExpr,
-                                                  NeboScalar<Initial, FieldType>,
-                                                  FieldType>,
-                                       typename Clauses::template Convert<FieldType>::Converted,
-                                       FieldType> > operator ()(NeboBooleanExpression<BoolExpr,
-                                                                                      FieldType>
-                                                                const & nb,
-                                                                double const d) {
+                                                  NeboScalar<Initial,
+                                                             typename NeboFieldCheck<typename
+                                                                                     FieldType::
+                                                                                     field_type,
+                                                                                     FieldType>::
+                                                             Result>,
+                                                  typename NeboFieldCheck<typename FieldType::
+                                                                          field_type,
+                                                                          FieldType>::Result>,
+                                       typename Clauses::template Convert<typename NeboFieldCheck<typename
+                                                                                                  FieldType::
+                                                                                                  field_type,
+                                                                                                  FieldType>::
+                                                                          Result>::Converted,
+                                       typename NeboFieldCheck<typename FieldType::field_type,
+                                                               FieldType>::Result> > operator ()(NeboBooleanExpression<BoolExpr,
+                                                                                                                       FieldType>
+                                                                                                 const
+                                                                                                 &
+                                                                                                 nb,
+                                                                                                 double
+                                                                                                 const
+                                                                                                 d) {
 
               NeboScalar<Initial, FieldType> typedef Scalar;
 
@@ -7716,7 +7782,10 @@
 
               NeboCond<Initial,
                        Clause,
-                       typename Clauses::template Convert<FieldType>::Converted,
+                       typename Clauses::template Convert<typename NeboFieldCheck<typename FieldType::
+                                                                                  field_type,
+                                                                                  FieldType>::Result>::
+                       Converted,
                        FieldType> typedef Cond;
 
               CondBuilder<Cond> typedef ReturnType;
@@ -7733,12 +7802,23 @@
                                                                                          field_type,
                                                                                          FieldType>::
                                                                  Result>,
-                                                  FieldType>,
-                                       typename Clauses::template Convert<FieldType>::Converted,
-                                       FieldType> > operator ()(NeboBooleanExpression<BoolExpr,
-                                                                                      FieldType>
-                                                                const & nb,
-                                                                FieldType const & f) {
+                                                  typename NeboFieldCheck<typename FieldType::
+                                                                          field_type,
+                                                                          FieldType>::Result>,
+                                       typename Clauses::template Convert<typename NeboFieldCheck<typename
+                                                                                                  FieldType::
+                                                                                                  field_type,
+                                                                                                  FieldType>::
+                                                                          Result>::Converted,
+                                       typename NeboFieldCheck<typename FieldType::field_type,
+                                                               FieldType>::Result> > operator ()(NeboBooleanExpression<BoolExpr,
+                                                                                                                       FieldType>
+                                                                                                 const
+                                                                                                 &
+                                                                                                 nb,
+                                                                                                 FieldType
+                                                                                                 const
+                                                                                                 & f) {
 
               NeboConstField<Initial, FieldType> typedef Field;
 
@@ -7746,7 +7826,10 @@
 
               NeboCond<Initial,
                        Clause,
-                       typename Clauses::template Convert<FieldType>::Converted,
+                       typename Clauses::template Convert<typename NeboFieldCheck<typename FieldType::
+                                                                                  field_type,
+                                                                                  FieldType>::Result>::
+                       Converted,
                        FieldType> typedef Cond;
 
               CondBuilder<Cond> typedef ReturnType;
@@ -7755,19 +7838,36 @@
            };
           template<typename BoolExpr, typename Expr, typename FieldType>
            inline CondBuilder<NeboCond<Initial,
-                                       NeboClause<Initial, BoolExpr, Expr, FieldType>,
-                                       typename Clauses::template Convert<FieldType>::Converted,
-                                       FieldType> > operator ()(NeboBooleanExpression<BoolExpr,
-                                                                                      FieldType>
-                                                                const & nb,
-                                                                NeboExpression<Expr, FieldType>
-                                                                const & e) {
+                                       NeboClause<Initial,
+                                                  BoolExpr,
+                                                  Expr,
+                                                  typename NeboFieldCheck<typename FieldType::
+                                                                          field_type,
+                                                                          FieldType>::Result>,
+                                       typename Clauses::template Convert<typename NeboFieldCheck<typename
+                                                                                                  FieldType::
+                                                                                                  field_type,
+                                                                                                  FieldType>::
+                                                                          Result>::Converted,
+                                       typename NeboFieldCheck<typename FieldType::field_type,
+                                                               FieldType>::Result> > operator ()(NeboBooleanExpression<BoolExpr,
+                                                                                                                       FieldType>
+                                                                                                 const
+                                                                                                 &
+                                                                                                 nb,
+                                                                                                 NeboExpression<Expr,
+                                                                                                                FieldType>
+                                                                                                 const
+                                                                                                 & e) {
 
               NeboClause<Initial, BoolExpr, Expr, FieldType> typedef Clause;
 
               NeboCond<Initial,
                        Clause,
-                       typename Clauses::template Convert<FieldType>::Converted,
+                       typename Clauses::template Convert<typename NeboFieldCheck<typename FieldType::
+                                                                                  field_type,
+                                                                                  FieldType>::Result>::
+                       Converted,
                        FieldType> typedef Cond;
 
               CondBuilder<Cond> typedef ReturnType;
@@ -7786,7 +7886,9 @@
       inline double cond(double const d) { return d; };
 
       template<typename FieldType>
-       inline NeboExpression<NeboConstField<Initial, FieldType>,
+       inline NeboExpression<NeboConstField<Initial,
+                                            typename NeboFieldCheck<typename FieldType::field_type,
+                                                                    FieldType>::Result>,
                              typename NeboFieldCheck<typename FieldType::field_type, FieldType>::
                              Result> cond(FieldType const & f) {
 
@@ -7798,9 +7900,9 @@
        };
 
       template<typename Expr, typename FieldType>
-       inline NeboExpression<Expr, FieldType> cond(NeboExpression<Expr, FieldType> const & e) {
-          return e;
-       };
+       inline NeboExpression<Expr,
+                             typename NeboFieldCheck<typename FieldType::field_type, FieldType>::
+                             Result> cond(NeboExpression<Expr, FieldType> const & e) { return e; };
 
       inline CondBuilder<NeboSimpleCond<NeboNil> > cond(bool const b, double const d) {
 
@@ -7814,16 +7916,21 @@
       template<typename FieldType>
        inline CondBuilder<NeboCond<Initial,
                                    NeboClause<Initial,
-                                              NeboBoolean<Initial, FieldType>,
+                                              NeboBoolean<Initial,
+                                                          typename NeboFieldCheck<typename FieldType::
+                                                                                  field_type,
+                                                                                  FieldType>::Result>,
                                               NeboConstField<Initial,
                                                              typename NeboFieldCheck<typename
                                                                                      FieldType::
                                                                                      field_type,
                                                                                      FieldType>::
                                                              Result>,
-                                              FieldType>,
+                                              typename NeboFieldCheck<typename FieldType::field_type,
+                                                                      FieldType>::Result>,
                                    NeboNil,
-                                   FieldType> > cond(bool const b, FieldType const & f) {
+                                   typename NeboFieldCheck<typename FieldType::field_type, FieldType>::
+                                   Result> > cond(bool const b, FieldType const & f) {
 
           NeboBoolean<Initial, FieldType> typedef Boolean;
 
@@ -7841,12 +7948,17 @@
       template<typename Expr, typename FieldType>
        inline CondBuilder<NeboCond<Initial,
                                    NeboClause<Initial,
-                                              NeboBoolean<Initial, FieldType>,
+                                              NeboBoolean<Initial,
+                                                          typename NeboFieldCheck<typename FieldType::
+                                                                                  field_type,
+                                                                                  FieldType>::Result>,
                                               Expr,
-                                              FieldType>,
+                                              typename NeboFieldCheck<typename FieldType::field_type,
+                                                                      FieldType>::Result>,
                                    NeboNil,
-                                   FieldType> > cond(bool const b,
-                                                     NeboExpression<Expr, FieldType> const & e) {
+                                   typename NeboFieldCheck<typename FieldType::field_type, FieldType>::
+                                   Result> > cond(bool const b,
+                                                  NeboExpression<Expr, FieldType> const & e) {
 
           NeboBoolean<Initial, FieldType> typedef Boolean;
 
@@ -7863,12 +7975,17 @@
        inline CondBuilder<NeboCond<Initial,
                                    NeboClause<Initial,
                                               BoolExpr,
-                                              NeboScalar<Initial, FieldType>,
-                                              FieldType>,
+                                              NeboScalar<Initial,
+                                                         typename NeboFieldCheck<typename FieldType::
+                                                                                 field_type,
+                                                                                 FieldType>::Result>,
+                                              typename NeboFieldCheck<typename FieldType::field_type,
+                                                                      FieldType>::Result>,
                                    NeboNil,
-                                   FieldType> > cond(NeboBooleanExpression<BoolExpr, FieldType>
-                                                     const & nb,
-                                                     double const d) {
+                                   typename NeboFieldCheck<typename FieldType::field_type, FieldType>::
+                                   Result> > cond(NeboBooleanExpression<BoolExpr, FieldType> const &
+                                                  nb,
+                                                  double const d) {
 
           NeboScalar<Initial, FieldType> typedef Scalar;
 
@@ -7891,11 +8008,13 @@
                                                                                      field_type,
                                                                                      FieldType>::
                                                              Result>,
-                                              FieldType>,
+                                              typename NeboFieldCheck<typename FieldType::field_type,
+                                                                      FieldType>::Result>,
                                    NeboNil,
-                                   FieldType> > cond(NeboBooleanExpression<BoolExpr, FieldType>
-                                                     const & nb,
-                                                     FieldType const & f) {
+                                   typename NeboFieldCheck<typename FieldType::field_type, FieldType>::
+                                   Result> > cond(NeboBooleanExpression<BoolExpr, FieldType> const &
+                                                  nb,
+                                                  FieldType const & f) {
 
           NeboConstField<Initial, FieldType> typedef Field;
 
@@ -7910,11 +8029,16 @@
 
       template<typename BoolExpr, typename Expr, typename FieldType>
        inline CondBuilder<NeboCond<Initial,
-                                   NeboClause<Initial, BoolExpr, Expr, FieldType>,
+                                   NeboClause<Initial,
+                                              BoolExpr,
+                                              Expr,
+                                              typename NeboFieldCheck<typename FieldType::field_type,
+                                                                      FieldType>::Result>,
                                    NeboNil,
-                                   FieldType> > cond(NeboBooleanExpression<BoolExpr, FieldType>
-                                                     const & nb,
-                                                     NeboExpression<Expr, FieldType> const & e) {
+                                   typename NeboFieldCheck<typename FieldType::field_type, FieldType>::
+                                   Result> > cond(NeboBooleanExpression<BoolExpr, FieldType> const &
+                                                  nb,
+                                                  NeboExpression<Expr, FieldType> const & e) {
 
           NeboClause<Initial, BoolExpr, Expr, FieldType> typedef Clause;
 
@@ -8051,7 +8175,7 @@
              {};
              __device__ inline void start(int x, int y) { arg_.start(x, y); };
              __device__ inline void next(void) { arg_.next(); };
-             __device__ inline AtomicType eval(void) { return arg_.eval(); };
+             __device__ inline AtomicType eval(void) const { return arg_.eval(); };
 
             private:
              Arg arg_;
@@ -8530,7 +8654,7 @@
              {};
              __device__ inline void start(int x, int y) { arg_.start(x, y); };
              __device__ inline void next(void) { arg_.next(); };
-             __device__ inline AtomicType eval(void) { return arg_.eval(); };
+             __device__ inline AtomicType eval(void) const { return arg_.eval(); };
 
             private:
              Arg arg_;
