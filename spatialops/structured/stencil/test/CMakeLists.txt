@@ -20,12 +20,7 @@ add_test( ref_stencil_no_bc2  test_ref_stencil --nx 8 --ny 11 --nz 12 )
 add_test( ref_stencil_no_bc3  test_ref_stencil --nx 11 --ny 8 --nz 9 )
 
 if( CUDA_CUDA_LIBRARY)
-  #	include_dircetories( ${CUDA_INCLUDE_DIRS} )
-  #cuda_add_library( cudaVecLib STATIC CudaVecLib.cu )
-  #target_link_libraries( cudaVecLib ${CUDA_LIBRARIES} )
 
-
-#if (ENABLE_CUDA)
 add_executable( CUDA_test_stencil2 test_stencil2.cpp )
 target_link_libraries( CUDA_test_stencil2 ${libs} )
 add_test( CUDA_stencil2_x_nobc  test_stencil2  --ny=1 --nz=1 ) 
@@ -90,9 +85,6 @@ add_test( stencil4_bcyz test_stencil4 --bcy --bcz )
 add_test( stencil4_bczx test_stencil4 --bcz --bcx )
 add_test( stencil4_3xyz test_stencil4 --nx=6 --ny=8 --nz=10 --bcx --bcy --bcz )
 add_test( stencil4_3    test_stencil4 --nx=7 --ny=9 --nz=11 )
-
-#endif(ENABLE_CUDA)
-
 
 add_executable( test_bc_stencil testOpBC.cpp )
 target_link_libraries( test_bc_stencil ${libs} )

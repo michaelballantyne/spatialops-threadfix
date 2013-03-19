@@ -1,35 +1,25 @@
-get_filename_component( dir ${CMAKE_CURRENT_LIST_FILE} PATH )
-
 set( src
-  ${dir}/BoxFilter.cpp
-  ${dir}/FDStencil2.cpp
-  ${dir}/NullStencil.cpp
-  ${dir}/Stencil2.cpp
-  ${dir}/Stencil4.cpp
-  ${dir}/StencilBuilder.cpp
-  )
+     BoxFilter.cpp
+     FDStencil2.cpp
+     NullStencil.cpp
+     Stencil2.cpp
+     Stencil4.cpp
+     StencilBuilder.cpp
+    )
 
-##Stencil2.(cpp/cu) && Stencil4.(cpp/cu)switch
 if( ENABLE_CUDA )
-    set(src ${src} ${dir}/CudaStencil2.cu ${src} ${dir}/CudaStencil4.cu)
-    cuda_add_library(
-        spatialops-stencil
-        STATIC
-        ${src}
-    )
+    set( src ${src}
+         CudaStencil2.cu
+         CudaStencil4.cu
+        )
+    cuda_add_library( spatialops-stencil STATIC ${src} )
 else( ENABLE_CUDA )
-    add_library(
-        spatialops-stencil
-        STATIC
-        ${src}
-    )
+    add_library( spatialops-stencil STATIC ${src} )
 endif( ENABLE_CUDA )
 
 if( ENABLE_TESTS )
   add_subdirectory( test )
 endif( ENABLE_TESTS )
-
-set( SO_SRC ${SO_SRC} ${src} PARENT_SCOPE )
 
 install( FILES
   BoxFilter.h
@@ -55,9 +45,8 @@ install( FILES
   PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
   )
 
-install( TARGETS
-  spatialops-stencil
-  EXPORT SpatialOps
-  DESTINATION lib/spatialops/
-  PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
-  )
+install( TARGETS spatialops-stencil
+         EXPORT SpatialOps
+         DESTINATION lib/spatialops/
+         PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+        )
