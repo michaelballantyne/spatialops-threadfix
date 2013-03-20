@@ -1,8 +1,10 @@
+nebo_cuda_prep_dir()
+
 set( libs spatialops-structured spatialops ${TPL_LIBRARIES} )
 
 include_directories( ${spatialops_SOURCE_DIR}/include . )
 
-add_executable( test_field testField.cpp )
+nebo_add_executable( test_field testField.cpp )
 target_link_libraries( test_field ${libs} )
 add_test( test_field test_field )
 

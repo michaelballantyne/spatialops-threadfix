@@ -1,6 +1,5 @@
-add_executable( heateqn main.cpp )
-set( libs ${TPL_LIBRARIES} spatialops )
+nebo_cuda_prep_dir()
 
-target_link_libraries( heateqn ${libs} )
-
+nebo_add_executable( heateqn main.cpp )
+target_link_libraries( heateqn ${TPL_LIBRARIES} spatialops )
 add_test( heateqn heateqn )

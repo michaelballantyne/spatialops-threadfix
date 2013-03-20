@@ -8,10 +8,9 @@ if( ENABLE_CUDA )
          CudaMemoryAllocator.cu
          GPUtest.cu
         )
-    cuda_add_library( spatialops-structured STATIC ${src} )
-else( ENABLE_CUDA )
-    add_library( spatialops-structured STATIC ${src} )
 endif( ENABLE_CUDA )
+
+nebo_add_library( spatialops-structured src )
 
 if( ENABLE_TESTS )
     add_subdirectory( test )

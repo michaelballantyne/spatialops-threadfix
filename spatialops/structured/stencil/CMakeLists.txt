@@ -1,21 +1,23 @@
+nebo_cuda_prep_dir()
+
 set( src
      BoxFilter.cpp
-     FDStencil2.cpp
-     NullStencil.cpp
-     Stencil2.cpp
-     Stencil4.cpp
      StencilBuilder.cpp
     )
+
+nebo_set_add_file( src FDStencil2.cpp )
+nebo_set_add_file( src NullStencil.cpp )
+nebo_set_add_file( src Stencil2.cpp )
+nebo_set_add_file( src Stencil4.cpp )
 
 if( ENABLE_CUDA )
     set( src ${src}
          CudaStencil2.cu
          CudaStencil4.cu
         )
-    cuda_add_library( spatialops-stencil STATIC ${src} )
-else( ENABLE_CUDA )
-    add_library( spatialops-stencil STATIC ${src} )
 endif( ENABLE_CUDA )
+
+nebo_add_library( spatialops-stencil src )
 
 if( ENABLE_TESTS )
   add_subdirectory( test )

@@ -1,6 +1,8 @@
+nebo_cuda_prep_dir()
+
 set( libs spatialops spatialops-stencil spatialops-structured ${TPL_LIBRARIES} )
 
-add_executable( test_ref_stencil test_ref_stencil.cpp )
+nebo_add_executable( test_ref_stencil test_ref_stencil.cpp )
 target_link_libraries( test_ref_stencil ${libs} )
 add_test( ref_stencil_x_nobc  test_ref_stencil --ny=1 --nz=1 )
 add_test( ref_stencil_x_bc    test_ref_stencil --ny=1 --nz=1 --bcx )
@@ -86,7 +88,7 @@ add_test( stencil4_bczx test_stencil4 --bcz --bcx )
 add_test( stencil4_3xyz test_stencil4 --nx=6 --ny=8 --nz=10 --bcx --bcy --bcz )
 add_test( stencil4_3    test_stencil4 --nx=7 --ny=9 --nz=11 )
 
-add_executable( test_bc_stencil testOpBC.cpp )
+nebo_add_executable( test_bc_stencil testOpBC.cpp )
 target_link_libraries( test_bc_stencil ${libs} )
 add_test( test_bc_op_stencil test_bc_stencil )
 
@@ -94,7 +96,7 @@ add_executable( test_filter test_filter.cpp )
 target_link_libraries( test_filter ${libs} )
 add_test( test_filter test_filter )
 
-add_executable( test_chain_stencil test_chain_stencil.cpp )
+nebo_add_executable( test_chain_stencil test_chain_stencil.cpp )
 target_link_libraries( test_chain_stencil ${libs} )
 add_test( chain_stencil_x_nobc  test_chain_stencil --ny=1 --nz=1 )
 add_test( chain_stencil_x_bc    test_chain_stencil --ny=1 --nz=1 --bcx )
