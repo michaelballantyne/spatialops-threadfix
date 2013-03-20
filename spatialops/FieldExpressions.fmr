@@ -1598,7 +1598,7 @@
                     (bs-Initial-rhs null
                                     null
                                     (tpl-pmtr (scope (scope 'structured
-                                                            (tpl-use 'Minimum 
+                                                            (tpl-use 'Minimum
                                                                      (tpl-pmtr (scope 'Test report-VG-chunk))
                                                                      (tpl-pmtr (scope 'Expr report-VG-chunk))))
                                                      'result))
