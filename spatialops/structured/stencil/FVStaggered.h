@@ -35,7 +35,7 @@
 
 #include <spatialops/structured/SpatialFieldStore.h>
 
-#include <spatialops/FieldExpressionsExtended.h>
+#include <spatialops/FieldExpressions.h>
 #include <spatialops/FieldReductions.h>
 
 namespace SpatialOps{
