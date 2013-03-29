@@ -742,7 +742,7 @@ field_values( const MemoryType consumerMemoryType,
   case LOCAL_RAM:{
     if( fieldValues_ == NULL ){
       std::ostringstream msg;
-      msg << "Request for consumer field pointer on a device for which it has not been allocated\n";
+      msg << "Request for consumer field pointer on a device (Local RAM) for which it has not been allocated\n";
       msg << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
       throw(std::runtime_error(msg.str()));
     }
@@ -762,7 +762,7 @@ field_values( const MemoryType consumerMemoryType,
     }
 
     std::ostringstream msg;
-    msg << "Request for consumer field pointer on a device for which it has not been allocated\n";
+    msg << "Request for consumer field pointer on a device (GPU) for which it has not been allocated\n";
     msg << "\t - " << __FILE__ << " : " << __LINE__;
     throw( std::runtime_error(msg.str()) );
 
