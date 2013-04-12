@@ -744,6 +744,8 @@
                                                                                            gpu_init<ValidGhost,
                                                                                                     Shift>(gpu_device_index()));
 
+                 cudaDeviceSynchronize();
+
 #                ifdef NEBO_REPORT_BACKEND
                     std::cout << "Finished Nebo CUDA" << std::endl
 #                endif

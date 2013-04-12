@@ -1394,7 +1394,8 @@
                                                   (fc (tpl-use 'gpu_init VG-chunk SH-chunk))
                                                   (mfc 'rhs
                                                        (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)
-                                                       (fc 'gpu_device_index)))))
+                                                       (fc 'gpu_device_index)))
+                                              (fc 'cudaDeviceSynchronize)))
                                       (n== (mfc 'field_
                                                 'memory_device_type)
                                            'EXTERNAL_CUDA_GPU)
