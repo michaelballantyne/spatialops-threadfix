@@ -56,6 +56,10 @@
 #include <boost/interprocess/sync/scoped_lock.hpp>
 #endif
 
+#ifdef ENABLE_CUDA
+#include <cuda_runtime.h>
+#endif
+
 class RHS;
 
 namespace SpatialOps{
@@ -380,6 +384,12 @@ namespace structured{
     unsigned short int device_index() const {
       return deviceIndex_;
     }
+
+#   ifdef ENABLE_CUDA
+    void set_stream( const cudaStream_t& stream ) const{
+      // Chris: implement this...
+    }
+#   endif
 
     /**
      * Field values will return a pointer to the field type, which is valid on the device and context supplied to
