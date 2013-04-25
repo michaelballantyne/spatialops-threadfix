@@ -57,6 +57,10 @@ namespace structured{
   template struct NullStencil< Interpolant, SVolField, XSurfXField >;  // viscosity on x-x-face
   template struct NullStencil< Interpolant, SVolField, YSurfYField >;  // viscosity on y-y-face
   template struct NullStencil< Interpolant, SVolField, ZSurfZField >;  // viscosity on z-z-face
+  
+  template struct NullStencil< Interpolant, XSurfXField, SVolField >;  // tau_xx to SVol
+  template struct NullStencil< Interpolant, YSurfYField, SVolField >;  // tau_yy to SVol
+  template struct NullStencil< Interpolant, ZSurfZField, SVolField >;  // tau_zz to SVol
   //
   //==================================================================
 

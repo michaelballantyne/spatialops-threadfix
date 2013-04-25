@@ -124,6 +124,10 @@ namespace structured{
     opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,SVolField,YSurfYField>::type() );
     opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,SVolField,ZSurfZField>::type() );
 
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,XSurfXField,SVolField>::type() );
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,YSurfYField,SVolField>::type() );
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,ZSurfZField,SVolField>::type() );
+
     //___________________________________________________________________
     // stencil4:
     //
