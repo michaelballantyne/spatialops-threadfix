@@ -307,8 +307,8 @@ namespace structured {
 #       endif
 
               DestType d(wd, dest.field_values(), ExternalStorage);
-        const SrcType s1(ws1, src.field_values(), ExternalStorage);
-        const SrcType s2(ws2, src.field_values(), ExternalStorage);
+        const SrcType s1(ws1, src);
+        const SrcType s2(ws2, src);
 
         typename DestType::iterator id = d.begin();
         typename DestType::iterator ide = d.end();
@@ -371,10 +371,10 @@ namespace structured {
 #       endif
 
         DestType d(wd, dest.field_values(), ExternalStorage);
-        SrcType s1(ws1, src.field_values(), ExternalStorage);
-        SrcType s2(ws2, src.field_values(), ExternalStorage);
-        SrcType s3(ws3, src.field_values(), ExternalStorage);
-        SrcType s4(ws4, src.field_values(), ExternalStorage);
+        SrcType s1(ws1, src);
+        SrcType s2(ws2, src);
+        SrcType s3(ws3, src);
+        SrcType s4(ws4, src);
 
         typename DestType::iterator id = d.begin();
         typename DestType::iterator ide = d.end();
@@ -420,8 +420,8 @@ namespace structured {
                                w.has_bc(2));
 
         FieldType d(wd, dest.field_values(), ExternalStorage);
-        FieldType s1(ws1, src.field_values(), ExternalStorage);
-        FieldType s2(ws2, src.field_values(), ExternalStorage);
+        FieldType s1(ws1, src);
+        FieldType s2(ws2, src);
 
         typename FieldType::iterator id = d.begin();
         typename FieldType::iterator ide = d.end();
@@ -480,8 +480,7 @@ namespace structured {
                                                                ws.offset()+IntVec(i,j,k),
                                                                ws.extent()-off,
                                                                ws.has_bc(0), ws.has_bc(1), ws.has_bc(2) ),
-                                                 src.field_values(),
-                                                 ExternalStorage ) );
+						 src) );
                 }
             }
         }

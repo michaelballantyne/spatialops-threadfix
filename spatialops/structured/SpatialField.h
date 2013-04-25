@@ -112,6 +112,7 @@ namespace structured{
     T* fieldValues_;			///< Values associated with this field in the context of LOCAL_RAM
     T* fieldValuesExtDevice_;           ///< External field pointer ( This pointer will only be valid on the device it was created )
     const bool builtField_;		///< Indicates whether or not we created this field ( we could just be wrapping memory )
+    bool hasConsumer_;                  ///< Indicates whether a field has consumers or not
 
     MemoryType memType_; 		///< Indicates the type of device on which this field is allocated
     unsigned short deviceIndex_;        ///< Indicates which device is this field stored on
@@ -229,6 +230,12 @@ namespace structured{
      */
     SpatialField(const SpatialField& other);
 
+    /**
+     *  \brief Shallow copy constructor with new window.
+     */
+    SpatialField(const MemoryWindow window,
+                 const SpatialField& other);
+
     virtual ~SpatialField();
 
     /**
@@ -294,7 +301,15 @@ namespace structured{
         std::ostringstream msg;
         msg << "Field type ( "
             << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
-            << " does not support non-const iteration.\n";
+            << " does not support direct iteration, and has no local consumer field allocated.\n";
+        msg << "\t - " << __FILE__ << " : " << __LINE__;
+        throw(std::runtime_error(msg.str()));
+      }
+      else if (hasConsumer_) {
+	std::ostringstream msg;
+        msg << "Field type ( "
+	<< DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
+	<< " has consumers, so it cannot support non-const iteration.\n";
         msg << "\t - " << __FILE__ << " : " << __LINE__;
         throw(std::runtime_error(msg.str()));
       }
@@ -322,6 +337,14 @@ namespace structured{
         msg << "Field type ( "
             << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
             << " does not support non-const iteration.\n";
+        msg << "\t - " << __FILE__ << " : " << __LINE__;
+        throw(std::runtime_error(msg.str()));
+      }
+      else if (hasConsumer_) {
+	std::ostringstream msg;
+        msg << "Field type ( "
+	<< DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
+	<< " has consumers, so it cannot support non-const iteration.\n";
         msg << "\t - " << __FILE__ << " : " << __LINE__;
         throw(std::runtime_error(msg.str()));
       }
@@ -390,7 +413,8 @@ namespace structured{
      * @param deviceIndex -- Index of the device
      * @return
      */
-    T* field_values(const MemoryType consumerMemoryType = LOCAL_RAM, const unsigned short int consumerDeviceIndex = 0) const;
+    T* field_values(const MemoryType consumerMemoryType = LOCAL_RAM, const unsigned short int consumerDeviceIndex = 0);
+    const T* field_values(const MemoryType consumerMemoryType = LOCAL_RAM, const unsigned short int consumerDeviceIndex = 0) const;
 
     unsigned int allocated_bytes() const {
     	return allocatedBytes_;
@@ -428,8 +452,7 @@ namespace structured{
         BOOST_STATIC_ASSERT(int(NewGhost::bZ) <= int(OldGhost::bZ));
 
         return MyType(window_with_ghost().template resize_ghost<OldGhost, NewGhost>(),
-                      field_values(),
-                      ExternalStorage);
+		      *this);
     }
 
     template<typename NewGhost>
@@ -482,8 +505,7 @@ namespace structured{
         BOOST_STATIC_ASSERT(int(NewGhost::bZ) >= int(Minimum::bZ));
 
         return MyType(window_with_ghost().template resize_ghost<OldGhost, NewGhost>(),
-                      field_values(),
-                      ExternalStorage);
+		      *this);
     }
 
     template<typename Shift>
@@ -514,8 +536,7 @@ namespace structured{
         BOOST_STATIC_ASSERT(Shift::Z > 0 ? ((int)(Shift::Z) <= (int)(OldGhost::bZ)) : true);
 
         return MyType(window_with_ghost().template shift<Shift>(),
-                      field_values(),
-                      ExternalStorage);
+		      *this);
     }
 
     template<typename Shift>
@@ -575,6 +596,7 @@ SpatialField( const MemoryWindow window,
       builtField_( mode == InternalStorage ),
       memType_( mtype ),
       deviceIndex_( devIdx ),
+      hasConsumer_( false ),
       allocatedBytes_( 0 )
 { //InteriorStorage => we build a new field
   //Exterior storage => we wrap T*
@@ -633,10 +655,28 @@ SpatialField<Location, GhostTraits, T>::SpatialField(const SpatialField& other)
   memType_(other.memType_),
   deviceIndex_(other.deviceIndex_),
   consumerFieldValues_(other.consumerFieldValues_),
+  hasConsumer_( other.hasConsumer_ ),
   allocatedBytes_( other.allocatedBytes_ )
 {}
 
 //------------------------------------------------------------------
+
+  template<typename Location, typename GhostTraits, typename T>
+    SpatialField<Location, GhostTraits, T>::SpatialField(const MemoryWindow window,
+                                                         const SpatialField& other)
+    : fieldWindow_(window),
+    interiorFieldWindow_(other.interiorFieldWindow_), // This should not be used!
+    fieldValues_(other.fieldValues_),
+    fieldValuesExtDevice_(other.fieldValuesExtDevice_),
+    builtField_(false),
+    memType_(other.memType_),
+    deviceIndex_(other.deviceIndex_),
+    consumerFieldValues_(other.consumerFieldValues_),
+    hasConsumer_( other.hasConsumer_ ),
+    allocatedBytes_( other.allocatedBytes_ )
+      {}
+
+  //------------------------------------------------------------------
 
 template<typename Location, typename GhostTraits, typename T>
 SpatialField<Location, GhostTraits, T>::~SpatialField() {
@@ -728,17 +768,18 @@ reset_values( const T* values )
 template<typename Location, typename GhostTraits, typename T>
 T* SpatialField<Location, GhostTraits, T>::
 field_values( const MemoryType consumerMemoryType,
-              const unsigned short int consumerDeviceIndex ) const
+              const unsigned short int consumerDeviceIndex )
 {
-#ifdef DEBUG_SF_ALL
-  std::cout << "Caught call to field_values for field : " << this->field_values() << "\n";
-  std::cout << "\t -- mtype:        " << DeviceTypeTools::get_memory_type_description( consumerMemoryType ) << std::endl
-      << "\t -- Device index: " << consumerDeviceIndex << std::endl
-      << "\t -- Value:        " << consumerFieldValues_.find(consumerDeviceIndex)->first
-      << " " <<consumerFieldValues_.find(consumerDeviceIndex)->second << std::endl;
-#endif
-
-  switch( consumerMemoryType ){
+  if ( hasConsumer_ ) {
+    std::ostringstream msg;
+        msg << "Field type ( "
+            << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
+            << " does not support 'non-const' access to field values.\n";
+        msg << "\t - " << __FILE__ << " : " << __LINE__;
+        throw(std::runtime_error(msg.str()));
+  }
+  
+    switch( consumerMemoryType ){
   case LOCAL_RAM:{
     if( fieldValues_ == NULL ){
       std::ostringstream msg;
@@ -781,10 +822,57 @@ field_values( const MemoryType consumerMemoryType,
 //------------------------------------------------------------------
 
 template<typename Location, typename GhostTraits, typename T>
+  const T* SpatialField<Location, GhostTraits, T>::
+  field_values( const MemoryType consumerMemoryType,
+		const unsigned short int consumerDeviceIndex ) const
+{
+  switch( consumerMemoryType ){
+  case LOCAL_RAM:{
+    if( fieldValues_ == NULL ){
+      std::ostringstream msg;
+      msg << "Request for consumer field pointer on a device (Local RAM) for which it has not been allocated\n";
+      msg << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
+      throw(std::runtime_error(msg.str()));
+    }
+    return fieldValues_;
+  }
+
+#ifdef ENABLE_CUDA
+  case EXTERNAL_CUDA_GPU: {
+    //Check local allocations first
+    if( consumerMemoryType == memType_  &&  consumerDeviceIndex == deviceIndex_  ) {
+      return fieldValuesExtDevice_;
+    }
+
+    typename ConsumerMap::const_iterator citer = consumerFieldValues_.find( consumerDeviceIndex );
+    if( citer != consumerFieldValues_.end() ) {
+      return ( citer->second );
+    }
+
+    std::ostringstream msg;
+    msg << "Request for consumer field pointer on a device (GPU) for which it has not been allocated\n";
+    msg << "\t - " << __FILE__ << " : " << __LINE__;
+    throw( std::runtime_error(msg.str()) );
+
+  }
+#endif
+  default:{
+    std::ostringstream msg;
+    msg << "Request for consumer field pointer to unknown or unsupported device\n";
+    msg << "\t - " << __FILE__ << " : " << __LINE__;
+    throw(std::runtime_error(msg.str()));
+  }
+  }
+}
+
+//------------------------------------------------------------------
+
+template<typename Location, typename GhostTraits, typename T>
 void SpatialField<Location, GhostTraits, T>::
 add_consumer( MemoryType consumerMemoryType,
               const unsigned short int consumerDeviceIndex )
 {
+  hasConsumer_ = true;
 #ifdef DEBUG_SF_ALL
   std::cout << "Caught call to Spatial Field add_consumer for field : " << this->field_values() << "\n";
 #endif

@@ -48,8 +48,7 @@ using namespace structured;
                             f.window_without_ghost().has_bc(0),         \
                             f.window_without_ghost().has_bc(1),         \
                             f.window_without_ghost().has_bc(2)),        \
-               f.field_values(),                                        \
-               structured::ExternalStorage))
+	       f) )
 
 inline double till(double given) {
     for(int ii = 0; ii < TILL_MAX_COUNT; ii++)
