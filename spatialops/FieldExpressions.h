@@ -319,8 +319,8 @@
                                    structured::IntVec const & location) const {
 
              return ResizeType(FieldType(field().window_with_ghost().refine(split, location),
-                                         field().field_values(),
-                                         structured::ExternalStorage));
+					 field() ) );
+
           };
           inline FieldType const & field(void) const { return field_; };
 
