@@ -112,7 +112,6 @@ namespace structured{
     T* fieldValues_;			///< Values associated with this field in the context of LOCAL_RAM
     T* fieldValuesExtDevice_;           ///< External field pointer ( This pointer will only be valid on the device it was created )
     const bool builtField_;		///< Indicates whether or not we created this field ( we could just be wrapping memory )
-    bool hasConsumer_;                  ///< Indicates whether a field has consumers or not
 
     MemoryType memType_; 		///< Indicates the type of device on which this field is allocated
     unsigned short deviceIndex_;        ///< Indicates which device is this field stored on
@@ -121,6 +120,7 @@ namespace structured{
     //		which is not as general is it likely should be, but GPUs are currently the only external
     //		device we're interested in supporting.
     ConsumerMap consumerFieldValues_;	///< Provides the ability to store and track copies of this field consumed on other devices.
+    bool hasConsumer_;                  ///< Indicates whether a field has consumers or not
     ConsumerMap myConsumerFieldValues_;	///< Provides the ability to correctly delete/release copies of this field that this field allocated
 
     unsigned long int allocatedBytes_;	///< Stores entire field size in bytes: sizeof(T) * glob.x * glob.y * glob.z
