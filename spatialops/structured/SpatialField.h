@@ -1050,7 +1050,7 @@ typename SpatialField<Location, GhostTraits, T>::const_interior_iterator
 SpatialField<Location,GhostTraits,T>::interior_end() const
 {
   if( memType_ == LOCAL_RAM || fieldValues_ != NULL ) {
-    int extent = interiorFieldWindow_.extent(0) * interiorFieldWindow_.extent(1) * interiorFieldWindow_.extent(2);
+    const size_t extent = interiorFieldWindow_.extent(0) * interiorFieldWindow_.extent(1) * interiorFieldWindow_.extent(2);
     const_interior_iterator i(fieldValues_, interiorFieldWindow_);
     return i + extent;
   } else {
@@ -1070,7 +1070,7 @@ SpatialField<Location,GhostTraits,T>::interior_end()
 {
   switch (memType_) {
   case LOCAL_RAM: {
-    int extent = interiorFieldWindow_.extent(0) * interiorFieldWindow_.extent(1) * interiorFieldWindow_.extent(2);
+    const size_t extent = interiorFieldWindow_.extent(0) * interiorFieldWindow_.extent(1) * interiorFieldWindow_.extent(2);
     interior_iterator i(fieldValues_, interiorFieldWindow_);
     return i + extent;
   }
