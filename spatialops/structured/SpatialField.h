@@ -681,7 +681,7 @@ SpatialField( const MemoryWindow& window, const SpatialField& other )
 
   const MemoryWindow& pWindow = other.window_with_ghost();
   for( size_t i=0; i<3; ++i ){
-    assert( window.offset(i) + window.extent(i) <= pWindow.glob_dim(i) );
+    assert( window.extent(i) - window.offset(i) <= pWindow.glob_dim(i) );
     assert( window.offset(i) < pWindow.glob_dim(i) );
   }
 # endif
