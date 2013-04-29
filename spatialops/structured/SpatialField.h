@@ -605,7 +605,7 @@ SpatialField( const MemoryWindow& window,
 
   for (size_t i = 0; i < 3; ++i) {
     if (ext[i] > 1) {
-      ext[i] -= Ghost::NGhostMinus::int_vec()[i] + Ghost::NGhostPlus::int_vec()[i];
+      ext[i] = std::max( 0, ext[i]-Ghost::NGhostMinus::int_vec()[i] + Ghost::NGhostPlus::int_vec()[i] );
       ofs[i] += Ghost::NGhostMinus::int_vec()[i];
     }
   }
