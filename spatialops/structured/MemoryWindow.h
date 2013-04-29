@@ -357,6 +357,11 @@ namespace structured{
       return s.str();
     }
 
+    /**
+     * \brief performs basic sanity checks to see if there is anything obviously wrong with this window.
+     */
+    bool sanity_check() const;
+
   };
 
   template<typename FieldType>
