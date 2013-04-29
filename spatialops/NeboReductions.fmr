@@ -1,0 +1,208 @@
+ ; Copyright (c) 2013 The University of Utah
+ ;
+ ; Permission is hereby granted, free of charge, to any person obtaining a copy
+ ; of this software and associated documentation files (the "Software"), to
+ ; deal in the Software without restriction, including without limitation the
+ ; rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ ; sell copies of the Software, and to permit persons to whom the Software is
+ ; furnished to do so, subject to the following conditions:
+ ;
+ ; The above copyright notice and this permission notice shall be included in
+ ; all copies or substantial portions of the Software.
+ ;
+ ; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ ; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ ; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ ; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ ; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ ; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ ; IN THE SOFTWARE.
+
+(include "spatialops/FulmarAbbreviations.fmr")
+(include "spatialops/NeboCore.fmr")
+
+(define (build-catamorphism-with-field name
+                                       tpl-pmtrs
+                                       return-type
+                                       pmtrs
+                                       args
+                                       body
+                                       return-expr)
+  (define (build-simple-catamorphism name
+                                     tpl-pmtrs
+                                     return-type
+                                     args
+                                     body
+                                     return-expr)
+    (tpl-def (list tpl-pmtrs (tpl-pmtr FT-chunk))
+             (r-fcn-def (fcn-dcl name return-type args)
+                        body
+                        return-expr)))
+  (list (build-simple-catamorphism name
+                                   (list tpl-pmtrs (tpl-pmtr 'ExprType))
+                                   return-type
+                                   (list pmtrs
+                                         (adcr (tpl-use NE-chunk 'ExprType FT-chunk)
+                                               'fexpr))
+                                   body
+                                   return-expr)
+        (build-simple-catamorphism name
+                                   tpl-pmtrs
+                                   return-type
+                                   (list pmtrs
+                                         (adcr FT-chunk 'field))
+                                   (typedef (tpl-use NCF-chunk 'Initial FT-chunk)
+                                            'ExprType)
+                                   (fc name
+                                       args
+                                       (fc (tpl-use NE-chunk 'ExprType FT-chunk)
+                                           (fc 'ExprType
+                                               'field))))))
+
+(define (build-catamorphism name
+                            tpl-pmtrs
+                            return-type
+                            pmtrs
+                            args
+                            body
+                            return-expr)
+  (list (build-catamorphism-with-field name
+                                       tpl-pmtrs
+                                       return-type
+                                       pmtrs
+                                       args
+                                       (list (typedef (tpl-pmtr (scope 'ExprType report-VG-chunk))
+                                                      VG-chunk)
+                                             (typedef (scope 'structured (tpl-use 'IndexTriplet "0" "0" "0"))
+                                                      SH-chunk)
+                                             body)
+                                       return-expr)
+        (build-catamorphism-with-field (c name '_interior)
+                                       tpl-pmtrs
+                                       return-type
+                                       pmtrs
+                                       args
+                                       (list (typedef (scope 'structured (tpl-use 'GhostData
+                                                                                  "0" "0" "0"
+                                                                                  "0" "0" "0"
+                                                                                  "0" "0" "0"))
+                                                      VG-chunk)
+                                             (typedef (scope 'structured (tpl-use 'IndexTriplet "0" "0" "0"))
+                                                      SH-chunk)
+                                             body)
+                                       return-expr)))
+
+(define (build-applied-catamorphism name body proc)
+  (list (build-catamorphism-with-field name
+                                       null
+                                       (tpl-pmtr (scope FT-chunk 'value_type))
+                                       null
+                                       null
+                                       body
+                                       (fc 'nebo_reduce proc 'fexpr))
+        (build-catamorphism-with-field (c name '_interior)
+                                       null
+                                       (tpl-pmtr (scope FT-chunk 'value_type))
+                                       null
+                                       null
+                                       body
+                                       (fc 'nebo_reduce_interior proc 'fexpr))))
+
+(define (build-used-catamorphism name return-expr)
+  (list (build-catamorphism-with-field name
+                                       null
+                                       (tpl-pmtr (scope FT-chunk 'value_type))
+                                       null
+                                       null
+                                       null
+                                       (return-expr empty-chunk))
+        (build-catamorphism-with-field (c name '_interior)
+                                       null
+                                       (tpl-pmtr (scope FT-chunk 'value_type))
+                                       null
+                                       null
+                                       null
+                                       (return-expr '_interior))))
+
+(define proc (p (c "*" 'proc)))
+
+                                        ; beginnning of file
+(map (lambda (name)
+       (list (m (c 'field_ name)
+                null
+                (c 'nebo_ name))
+             (m (c 'field_ name '_interior)
+                null
+                (c 'nebo_ name '_interior))))
+     (list 'fold
+           'reduce
+           'max
+           'min
+           'sum
+           'norm))
+
+(n 'SpatialOps
+   (build-catamorphism 'nebo_fold
+                       (tpl-pmtr 'ResultType)
+                       'ResultType
+                       (list (gen-fcn-dcl proc
+                                          (cref 'ResultType)
+                                          (cref 'ResultType)
+                                          (cref (tpl-pmtr (scope FT-chunk 'value_type))))
+                             (adcr 'ResultType 'initialValue))
+                       (list 'proc 'initialValue)
+                       (list (nt= 'ResultType 'result 'initialValue)
+                             (nt= (tpl-pmtr (scope 'ExprType 'ReductionType))
+                                  'expr
+                                  (mfc (mfc 'fexpr 'expr)
+                                       (tpl-fcn-use 'reduce_init VG-chunk SH-chunk)))
+                             (nwhile (n-not (mfc 'expr 'at_end))
+                                     (n= 'result (fc 'proc 'result (mfc 'expr 'eval)))
+                                     (mfc 'expr 'next)))
+                       'result)
+   (let ([build-reduce
+          (lambda (return-qual)
+            (define AtomicType (tpl-pmtr (scope FT-chunk 'value_type)))
+            (build-catamorphism 'nebo_reduce
+                                null
+                                AtomicType
+                                (gen-fcn-dcl proc
+                                             (return-qual AtomicType)
+                                             (cref AtomicType)
+                                             (cref AtomicType))
+                                'proc
+                                (list (nt= (tpl-pmtr (scope 'ExprType 'ReductionType))
+                                           'expr
+                                           (mfc (mfc 'fexpr 'expr)
+                                                (tpl-fcn-use 'reduce_init VG-chunk SH-chunk)))
+                                      (nt= AtomicType 'result (mfc 'expr 'eval))
+                                      (mfc 'expr 'next)
+                                      (nwhile (n-not (mfc 'expr 'at_end))
+                                              (n= 'result (fc 'proc 'result (mfc 'expr 'eval)))
+                                              (mfc 'expr 'next)))
+                                'result))])
+     (list (build-reduce cref)
+           (build-reduce identity)))
+   (build-applied-catamorphism 'nebo_max
+                               null
+                               (scope 'std 'max))
+   (build-applied-catamorphism 'nebo_min
+                               null
+                               (scope 'std 'min))
+   (tpl-def (tpl-pmtr 'AtomicType)
+            (r-fcn-def (fcn-dcl 'sum
+                                'AtomicType
+                                (b s 'AtomicType const-chunk "&" 'a)
+                                (b s 'AtomicType const-chunk "&" 'b))
+                       null
+                       (b s 'a "+" 'b)))
+   (build-applied-catamorphism 'nebo_sum
+                               (typedef (tpl-pmtr (scope FT-chunk 'value_type))
+                                        'AtomicType)
+                               (tpl-use 'sum 'AtomicType))
+   (build-used-catamorphism 'nebo_norm
+                            (lambda (ext)
+                              (fc (scope 'std 'sqrt)
+                                  (fc (c 'nebo_sum ext)
+                                      (fc 'pow 'fexpr "2")))))
+   )

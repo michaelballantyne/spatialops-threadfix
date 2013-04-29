@@ -2,7 +2,7 @@
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/Grid.h>
-#include <spatialops/FieldExpressions.h>
+#include <spatialops/Nebo.h>
 
 #include <test/TestHelper.h>
 

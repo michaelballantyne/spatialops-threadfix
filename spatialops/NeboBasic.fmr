@@ -1,0 +1,163 @@
+ ; Copyright (c) 2013 The University of Utah
+ ;
+ ; Permission is hereby granted, free of charge, to any person obtaining a copy
+ ; of this software and associated documentation files (the "Software"), to
+ ; deal in the Software without restriction, including without limitation the
+ ; rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ ; sell copies of the Software, and to permit persons to whom the Software is
+ ; furnished to do so, subject to the following conditions:
+ ;
+ ; The above copyright notice and this permission notice shall be included in
+ ; all copies or substantial portions of the Software.
+ ;
+ ; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ ; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ ; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ ; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ ; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ ; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ ; IN THE SOFTWARE.
+
+(include "spatialops/FulmarAbbreviations.fmr")
+(include "spatialops/NeboCore.fmr")
+
+(pp-includes-chunk 'spatialops/SpatialOpsConfigure.h
+                   'spatialops/structured/IndexTriplet.h
+                   'spatialops/structured/GhostData.h
+                   'spatialops/structured/SpatialField.h
+                   'cmath
+                   'math.h)
+
+(report-backend-only (pp-include-chunk 'iostream))
+
+(threads-only (b new-line-chunk
+                 (pp-includes-chunk 'spatialops/SpatialOpsTools.h
+                                    'vector
+                                    'boost/bind.hpp
+                                    'spatialops/ThreadPool.h
+                                    'spatialops/structured/IntVec.h
+                                    'boost/interprocess/sync/interprocess_semaphore.hpp)
+                 (cc (nt= 'namespace 'BI (scope 'boost 'interprocess)))))
+
+(gpu-only (pp-includes-chunk 'spatialops/structured/MemoryTypes.h))
+
+(n
+ 'SpatialOps
+ (d "Meta-programming compiler flags"
+    (struct-declare-chunk 'All)
+    (struct-declare-chunk 'InteriorOnly))
+ (let ([CalculateValidGhost
+        (lambda (iterator result-type)
+          (d iterator
+             (tpl-srt-def 'CalculateValidGhost
+                          (list (tpl-pmtr 'ExprType)
+                                (tpl-pmtr FT-chunk))
+                          (list iterator 'ExprType FT-chunk)
+                          (s-typedef result-type 'Result))))])
+   (list (tpl-srt-dcl 'CalculateValidGhost
+                      (list (tpl-pmtr 'IteratorType)
+                            (tpl-pmtr 'ExprType)
+                            (tpl-pmtr FT-chunk))
+                      null)
+         (CalculateValidGhost
+          'All
+          (tpl-pmtr (scope (scope 'structured
+                                  (tpl-use 'Minimum
+                                           (tpl-pmtr (scope 'ExprType
+                                                            report-VG-chunk))
+                                           (tpl-pmtr (scope (scope 'structured
+                                                                   (tpl-use 'GhostFromField FT-chunk))
+                                                            'result))))
+                           'result)))
+         (CalculateValidGhost
+          'InteriorOnly
+          (tpl-pmtr (scope (scope 'structured
+                                  (tpl-use 'MinimumGhostFromField FT-chunk))
+                           'result)))))
+
+ (tpl-srt-dcl 'NeboFieldCheck
+              (list (tpl-pmtr 'Type1)
+                    (tpl-pmtr 'Type2))
+              null)
+
+ (tpl-srt-def 'NeboFieldCheck
+              (tpl-pmtr 'Type)
+              (list 'Type 'Type)
+              (s-typedef 'Type 'Result))
+
+ (r-fcn-def (fcn-dcl 'nebo_find_partition
+                     IntVec
+                     (list (adcr IntVec 'extent)
+                           (adc 'int 'thread_count)))
+            (list (internal-smt-list-chunk new-line-chunk
+                                           (map (lambda (sym) (nt= 'int sym "1"))
+                                                (list 'x 'y 'z)))
+                  (b new-line-chunk
+                     (nifelseif (n<= 'thread_count (l 'extent "[2]"))
+                                (n= 'z 'thread_count)
+                                (n<= 'thread_count (l 'extent "[1]"))
+                                (n= 'y 'thread_count))
+                     (nelseif (n<= 'thread_count (l 'extent "[0]"))
+                              (n= 'x 'thread_count))))
+            (fc IntVec 'x 'y 'z))
+
+ (r-fcn-def (fcn-dcl 'nebo_partition_count
+                     'int
+                     (adcr IntVec 'split))
+            null
+            (n* (l 'split "[0]")
+                (n* (l 'split "[1]")
+                    (l 'split "[2]"))))
+
+ (r-fcn-def (fcn-dcl 'nebo_next_partition
+                     IntVec
+                     (list (adcr IntVec 'current)
+                           (adcr IntVec 'split)))
+            (list (bs IntVec 'result)
+                  (b new-line-chunk
+                     (nifelseif (n< (l 'current "[2]")
+                                    (n- (l 'split "[2]")
+                                        "1"))
+                                (n= 'result (fc IntVec
+                                                (l 'current "[0]")
+                                                (l 'current "[1]")
+                                                (n+ "1" (l 'current "[2]"))))
+                                (n< (l 'current "[1]")
+                                    (n- (l 'split "[1]")
+                                        "1"))
+                                (n= 'result (fc IntVec
+                                                (l 'current "[0]")
+                                                (n+ "1" (l 'current "[1]"))
+                                                "0")))
+                     (nelse (n= 'result (fc IntVec
+                                            (n+ "1" (l 'current "[0]"))
+                                            "0"
+                                            "0")))))
+            'result)
+
+ (let ([build-expression-type
+        (lambda (name)
+          (tpl-srt-def name
+                       (list (tpl-pmtr 'Operand)
+                             (tpl-pmtr FT-chunk))
+                       null
+                       (pub-sec (s-typedef FT-chunk 'field_type)
+                                (s-typedef 'Operand 'Expression)
+                                (constructor-chunk name
+                                                   (adcr 'Operand 'given)
+                                                   (cons-asgn 'expr_ 'given))
+                                (r-fcn-def (constize (fcn-dcl 'expr
+                                                              (cref 'Operand)))
+                                           null
+                                           'expr_))
+                       (priv-sec (sbs 'Operand 'expr_))))])
+   (list (build-expression-type NE-chunk)
+         (build-expression-type NBE-chunk)))
+
+ (let ([build-mode-def (lambda (name) (struct-declare-chunk name))])
+   (d 'Modes:
+      (build-mode-def 'Initial)
+      (threads-only (build-mode-def 'Resize))
+      (build-mode-def 'SeqWalk)
+      (gpu-only (build-mode-def 'GPUWalk))
+      (build-mode-def 'Reduction))))

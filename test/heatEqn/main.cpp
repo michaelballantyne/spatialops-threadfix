@@ -7,7 +7,7 @@ using std::endl;
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/FieldExpressions.h>
+#include <spatialops/Nebo.h>
 #include <spatialops/structured/Grid.h>
 
 #include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>

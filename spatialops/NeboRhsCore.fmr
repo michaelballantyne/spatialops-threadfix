@@ -1,0 +1,139 @@
+ ; Copyright (c) 2013 The University of Utah
+ ;
+ ; Permission is hereby granted, free of charge, to any person obtaining a copy
+ ; of this software and associated documentation files (the "Software"), to
+ ; deal in the Software without restriction, including without limitation the
+ ; rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ ; sell copies of the Software, and to permit persons to whom the Software is
+ ; furnished to do so, subject to the following conditions:
+ ;
+ ; The above copyright notice and this permission notice shall be included in
+ ; all copies or substantial portions of the Software.
+ ;
+ ; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ ; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ ; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ ; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ ; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ ; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ ; IN THE SOFTWARE.
+
+(include "FulmarAbbreviations.fmr")
+(include "NeboCore.fmr")
+
+(define build-Initial-rhs
+  (combine-args build-Initial-general
+                (lambda (SW-cons-args
+                         RS-cons-args
+                         gpu-ready-body
+                         gpu-cons-args
+                         gpu-prep-body
+                         RD-cons-args
+                         publics)
+                  (list (tpl-def (list (tpl-pmtr VG-chunk)
+                                       (tpl-pmtr SH-chunk))
+                                 (r-fcn-def (constize (fcn-dcl 'init 'SeqWalkType))
+                                            null
+                                            (fc 'SeqWalkType SW-cons-args)))
+                        (threads-only (tpl-def (tpl-pmtr VG-chunk)
+                                               (r-fcn-def (constize (fcn-dcl 'resize 'ResizeType))
+                                                          null
+                                                          (fc 'ResizeType RS-cons-args))))
+                        (gpu-only (nl-smts  (r-fcn-def (constize (fcn-dcl 'gpu_ready 'bool (adc 'int DI-chunk)))
+                                                       null
+                                                       gpu-ready-body)
+                                            (tpl-def (list (tpl-pmtr VG-chunk)
+                                                           (tpl-pmtr SH-chunk))
+                                                     (r-fcn-def (constize (fcn-dcl 'gpu_init 'GPUWalkType (adc 'int DI-chunk)))
+                                                                null
+                                                                (fc 'GPUWalkType gpu-cons-args)))
+                                            (gpu-test-only (fcn-def (constize (fcn-dcl 'gpu_prep void-chunk (adc 'int DI-chunk)))
+                                                                    gpu-prep-body))))
+                        (tpl-def (list (tpl-pmtr VG-chunk)
+                                       (tpl-pmtr SH-chunk))
+                                 (r-fcn-def (constize (fcn-dcl 'reduce_init 'ReductionType))
+                                            null
+                                            (fc 'ReductionType RD-cons-args)))
+                        publics))
+                (list 7 7 1)
+                "build-Initial-rhs"))
+(define bs-Initial-rhs (arg-swap build-Initial-rhs 12 3 "bs-Initial-rhs"))
+(define build-Resize-rhs
+  (combine-args build-Resize-general
+                (lambda (SW-cons-args
+                         publics)
+                  (list (tpl-def (tpl-pmtr SH-chunk)
+                                 (r-fcn-def (constize (fcn-dcl 'init
+                                                               'SeqWalkType
+                                                               (adcr IntVec 'split)
+                                                               (adcr IntVec 'location)))
+                                            null
+                                            (fc 'SeqWalkType SW-cons-args)))
+                        publics))
+                (list 6 2 1)
+                "build-Resize-rhs"))
+(define bs-Resize-rhs (arg-swap build-Resize-rhs 6 3 "bs-Resize-rhs"))
+(define build-SeqWalk-rhs
+  (combine-args build-SeqWalk-general
+                (lambda (next-body
+                         eval-type
+                         eval-result
+                         publics)
+                  (list (v-fcn-def 'next null next-body)
+                        (r-fcn-def (constize (fcn-dcl 'eval eval-type))
+                                   null
+                                   eval-result)
+                        publics))
+                (list 5 4 1)
+                "build-SeqWalk-rhs"))
+(define bs-SeqWalk-rhs (arg-swap build-SeqWalk-rhs 7 3 "bs-SeqWalk-rhs"))
+(define build-gpu-rhs
+  (combine-args build-gpu-general
+                (lambda (start-body
+                         next-body
+                         eval-result
+                         publics)
+                  (list (device-use (v-fcn-def 'start
+                                               (list (bs 'int 'x)
+                                                     (bs 'int 'y))
+                                               start-body))
+                        (device-use (v-fcn-def 'next
+                                               null
+                                               next-body))
+                        (device-use (r-fcn-def (constize (fcn-dcl 'eval 'AtomicType))
+                                               null
+                                               eval-result))
+                        publics))
+                (list 5 4 1)
+                "build-gpu-rhs"))
+(define bs-gpu-rhs (arg-swap build-gpu-rhs 7 3 "bs-gpu-rhs"))
+(define (build-Reduction name 
+                         tpl-irreg-pars
+                         tpl-reg-pars
+                         typedefs
+                         constructor
+                         next
+                         at-end
+                         has-length
+                         eval-type
+                         eval-result
+                         publics
+                         privates)
+  (build-mode name
+              'Reduction
+              (list tpl-irreg-pars tpl-reg-pars)
+              typedefs
+              constructor
+              (list (v-fcn-def 'next null next)
+                    (r-fcn-def (constize (fcn-dcl 'at_end 'bool))
+                               null
+                               at-end)
+                    (r-fcn-def (constize (fcn-dcl 'has_length 'bool))
+                               null
+                               has-length)
+                    (r-fcn-def (constize (fcn-dcl 'eval eval-type))
+                               null
+                               eval-result)
+                    publics)
+              privates))
+(define bs-Reduction (arg-swap build-Reduction 9 3 "bs-Reduction"))

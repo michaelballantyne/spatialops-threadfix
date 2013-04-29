@@ -5,6 +5,15 @@ add_subdirectory( pointfield )
 set( SO_HEADERS
   FieldExpressions.h
   FieldReductions.h
+  Nebo.h
+  NeboBasic.h
+  NeboRhs.h
+  NeboOperators.h
+  NeboCond.h
+  NeboStencils.h
+  NeboLhs.h
+  NeboAssignment.h
+  NeboReductions.h
   FieldFunctions.h
   OperatorDatabase.h
   SpatialOpsDefs.h

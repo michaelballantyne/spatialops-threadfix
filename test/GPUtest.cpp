@@ -5,7 +5,7 @@
 #include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/FieldExpressions.h>
+#include <spatialops/Nebo.h>
 
 #include <spatialops/structured/GPUtest.h>
 

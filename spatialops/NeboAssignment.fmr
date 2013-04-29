@@ -1,0 +1,64 @@
+ ; Copyright (c) 2013 The University of Utah
+ ;
+ ; Permission is hereby granted, free of charge, to any person obtaining a copy
+ ; of this software and associated documentation files (the "Software"), to
+ ; deal in the Software without restriction, including without limitation the
+ ; rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ ; sell copies of the Software, and to permit persons to whom the Software is
+ ; furnished to do so, subject to the following conditions:
+ ;
+ ; The above copyright notice and this permission notice shall be included in
+ ; all copies or substantial portions of the Software.
+ ;
+ ; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ ; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ ; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ ; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ ; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ ; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ ; IN THE SOFTWARE.
+
+(include "spatialops/FulmarAbbreviations.fmr")
+(include "spatialops/NeboCore.fmr")
+
+(define (single-assign name iterator tpl-pmtrs rhs-input-type rhs-type rhs-expr)
+  (tpl-def (map tpl-pmtr (flatten* tpl-pmtrs FT-chunk))
+           (r-fcn-def (fcn-dcl name
+                               (cref FT-chunk)
+                               (adr FT-chunk 'lhs)
+                               (adcr rhs-input-type 'rhs))
+                      (list (if rhs-type
+                                (typedef rhs-type 'RhsType)
+                                null)
+                            (mfc (fc (tpl-use NF-chunk 'Initial FT-chunk)
+                                     'lhs)
+                                 (tpl-fcn-use 'assign iterator 'RhsType)
+                                 rhs-expr))
+                      'lhs)))
+(define (assigns name iterator)
+  (internal-smt-list-chunk
+   blank-line-chunk
+   (single-assign name
+                  iterator
+                  null
+                  (tpl-pmtr (scope FT-chunk 'value_type))
+                  (tpl-use NS-chunk 'Initial FT-chunk)
+                  (fc 'RhsType 'rhs))
+   (single-assign name
+                  iterator
+                  null
+                  FT-chunk
+                  (tpl-use NCF-chunk 'Initial FT-chunk)
+                  (fc 'RhsType 'rhs))
+   (single-assign name
+                  iterator
+                  'RhsType
+                  (tpl-use NE-chunk 'RhsType FT-chunk)
+                  #false
+                  (mfc 'rhs 'expr))))
+
+(n 'SpatialOps
+   (assigns (bs 'operator '<<=)
+            'All)
+   (assigns 'interior_assign
+            'InteriorOnly))

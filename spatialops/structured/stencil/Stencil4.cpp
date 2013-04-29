@@ -31,7 +31,7 @@
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/MemoryTypes.h>
-#include <spatialops/FieldExpressions.h>
+#include <spatialops/Nebo.h>
 
 namespace SpatialOps{
 namespace structured{

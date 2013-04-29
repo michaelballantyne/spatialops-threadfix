@@ -3,7 +3,7 @@
 #define SpatialOps_test_stencil_helper_h
 
 #include <spatialops/SpatialOpsTools.h>
-#include <spatialops/FieldReductions.h>
+#include <spatialops/Nebo.h>
 #include <spatialops/OperatorDatabase.h>
 
 #include <spatialops/structured/ExternalAllocators.h>

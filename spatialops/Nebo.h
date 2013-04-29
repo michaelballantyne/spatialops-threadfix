@@ -20,10 +20,17 @@
  * IN THE SOFTWARE.
  */
 
-/*
- * Use of FieldReductions.h is deprecated.
- * Please use Nebo.h instead.
- */
-#include <spatialops/Nebo.h>
+#ifndef NEBO_H
+#define NEBO_H
 
+#include <spatialops/NeboBasic.h>
+#include <spatialops/NeboRhs.h>
+#include <spatialops/NeboOperators.h>
+#include <spatialops/NeboCond.h>
+#include <spatialops/NeboStencils.h>
+#include <spatialops/NeboLhs.h>
+#include <spatialops/NeboAssignment.h>
+#include <spatialops/NeboReductions.h>
+
+#endif
 

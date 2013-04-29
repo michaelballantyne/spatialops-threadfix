@@ -23,7 +23,7 @@
 #ifndef SpatialOps_structured_NullStencil_h
 #define SpatialOps_structured_NullStencil_h
 
-#include <spatialops/FieldExpressions.h>
+#include <spatialops/Nebo.h>
 
 namespace SpatialOps{
 namespace structured{

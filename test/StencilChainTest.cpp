@@ -9,7 +9,7 @@
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/stencil/StencilBuilder.h>
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/FieldExpressions.h>
+#include <spatialops/Nebo.h>
 
 //-- boost includes ---//
 #include <boost/program_options.hpp>

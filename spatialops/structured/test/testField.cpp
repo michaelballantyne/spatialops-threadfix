@@ -1,7 +1,7 @@
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/SpatialFieldStore.h>
-#include <spatialops/FieldExpressions.h>
+#include <spatialops/Nebo.h>
 #include <test/TestHelper.h>
 
 #ifdef ENABLE_THREADS

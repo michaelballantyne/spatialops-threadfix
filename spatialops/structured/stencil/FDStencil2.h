@@ -24,7 +24,7 @@
 #define FDSTENCIL2_H_
 
 #include <spatialops/structured/IndexTriplet.h>
-#include <spatialops/FieldExpressions.h>
+#include <spatialops/Nebo.h>
 
 namespace SpatialOps{
   namespace structured{

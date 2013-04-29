@@ -10,7 +10,7 @@
 #include "ReferenceStencil.h"
 #include <test/TestHelper.h>
 
-#include <spatialops/FieldExpressions.h>
+#include <spatialops/Nebo.h>
 
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;

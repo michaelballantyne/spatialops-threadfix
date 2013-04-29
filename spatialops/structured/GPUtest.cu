@@ -4,7 +4,7 @@
 //--- SpatialOps includes ---//
 #include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/structured/FVTools.h>
-#include <spatialops/FieldExpressions.h>
+#include <spatialops/Nebo.h>
 
 #include <test/FieldHelper.h>
 #include <spatialops/structured/GPUtest.h>

@@ -1,0 +1,245 @@
+ ; Copyright (c) 2013 The University of Utah
+ ;
+ ; Permission is hereby granted, free of charge, to any person obtaining a copy
+ ; of this software and associated documentation files (the "Software"), to
+ ; deal in the Software without restriction, including without limitation the
+ ; rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ ; sell copies of the Software, and to permit persons to whom the Software is
+ ; furnished to do so, subject to the following conditions:
+ ;
+ ; The above copyright notice and this permission notice shall be included in
+ ; all copies or substantial portions of the Software.
+ ;
+ ; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ ; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ ; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ ; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ ; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ ; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ ; IN THE SOFTWARE.
+
+(include "spatialops/FulmarAbbreviations.fmr")
+(include "spatialops/NeboCore.fmr")
+(include "spatialops/NeboRhsCore.fmr")
+
+(n 'SpatialOps
+   (build-struct NS-chunk
+                 null
+                 null
+                 (bs-Initial-rhs (s-typedef (scope (tpl-pmtr FT-chunk)
+                                                   'value_type)
+                                            'AtomicType)
+                                 null
+                                 (scope 'structured 'InfiniteGhostData)
+                                 (bm-constructor (adc 'AtomicType 'v)
+                                                 (cons-asgn 'value_ 'v)
+                                                 null)
+                                 'value_
+                                 'value_
+                                 'true
+                                 'value_
+                                 null
+                                 'value_
+                                 null
+                                 (sadc 'AtomicType 'value_))
+                 (bs-Resize-rhs (s-typedef (scope (tpl-pmtr FT-chunk)
+                                                  'value_type)
+                                           'AtomicType)
+                                null
+                                (bm-constructor (adc 'AtomicType 'value)
+                                                (cons-asgn 'value_ 'value)
+                                                null)
+                                'value_
+                                null
+                                (sadc 'AtomicType 'value_))
+                 (bs-SeqWalk-rhs (s-typedef (scope (tpl-pmtr FT-chunk)
+                                                   'value_type)
+                                            'AtomicType)
+                                 (bm-constructor (adc 'AtomicType 'value)
+                                                 (cons-asgn 'value_ 'value)
+                                                 null)
+                                 null
+                                 'AtomicType
+                                 'value_
+                                 null
+                                 (sadc 'AtomicType 'value_))
+                 (bs-gpu-rhs null
+                             (bm-constructor (adc 'AtomicType 'value)
+                                             (cons-asgn 'value_ 'value)
+                                             null)
+                             null
+                             null
+                             'value_
+                             null
+                             (sadc 'AtomicType 'value_))
+                 (bs-Reduction (s-typedef (scope (tpl-pmtr FT-chunk)
+                                                 'value_type)
+                                          'AtomicType)
+                               (bm-constructor (adc 'AtomicType 'value)
+                                               (cons-asgn 'value_ 'value)
+                                               null)
+                               null
+                               'false
+                               'false
+                               'AtomicType
+                               'value_
+                               null
+                               (sadc 'AtomicType 'value_)))
+
+   (build-struct NB-chunk
+                 null
+                 null
+                 (bs-Initial-rhs null
+                                 null
+                                 (scope 'structured 'InfiniteGhostData)
+                                 (bm-constructor (adc 'bool 'v)
+                                                 (cons-asgn 'value_ 'v)
+                                                 null)
+                                 'value_
+                                 'value_
+                                 'true
+                                 'value_
+                                 null
+                                 'value_
+                                 null
+                                 (sadc 'bool 'value_))
+                 (bs-Resize-rhs null
+                                null
+                                (bm-constructor (adc 'bool 'value)
+                                                (cons-asgn 'value_ 'value)
+                                                null)
+                                'value_
+                                null
+                                (sadc 'bool 'value_))
+                 (bs-SeqWalk-rhs null
+                                 (bm-constructor (adc 'bool 'value)
+                                                 (cons-asgn 'value_ 'value)
+                                                 null)
+                                 null
+                                 'bool
+                                 'value_
+                                 null
+                                 (sadc 'bool 'value_))
+                 (bs-gpu-rhs null
+                             (bm-constructor (adc 'bool 'value)
+                                             (cons-asgn 'value_ 'value)
+                                             null)
+                             null
+                             null
+                             'value_
+                             null
+                             (sadc 'bool 'value_))
+                 (bs-Reduction null
+                               (bm-constructor (adc 'bool 'value)
+                                               (cons-asgn 'value_ 'value)
+                                               null)
+                               null
+                               'false
+                               'false
+                               'bool
+                               'value_
+                               null
+                               (sadc 'bool 'value_)))
+
+   (build-struct NCF-chunk
+                 null
+                 null
+                 (bs-Initial-rhs null
+                                 null
+                                 (tpl-pmtr (scope (scope 'structured (tpl-use 'GhostFromField FT-chunk))
+                                                  'result))
+                                 (bm-constructor (adcr FT-chunk 'f)
+                                                 (cons-asgn 'field_ 'f)
+                                                 null)
+                                 (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift VG-chunk SH-chunk))
+                                 (mfc 'field_ (tpl-fcn-use 'resize_ghost VG-chunk))
+                                 (mfc 'field_ 'find_consumer 'EXTERNAL_CUDA_GPU DI-chunk)
+                                 (list DI-chunk
+                                       (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift VG-chunk SH-chunk)))
+                                 (c (fc (tpl-use 'const_cast (ptr FT-chunk))
+                                        (take-ptr 'field_))
+                                    '->
+                                    (fc 'add_consumer 'EXTERNAL_CUDA_GPU DI-chunk))
+                                 (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift VG-chunk SH-chunk))
+                                 null
+                                 (sadc FT-chunk 'field_))
+                 (bs-Resize-rhs null
+                                null
+                                (bm-constructor (adcr FT-chunk 'f)
+                                                (cons-asgn 'field_ 'f)
+                                                null)
+                                (mfc (fc FT-chunk
+                                         (mfc (mfc 'field_ 'window_with_ghost)
+                                              'refine
+                                              'split
+                                              'location)
+                                         (mfc 'field_ 'field_values)
+                                         (scope 'structured 'ExternalStorage))
+                                     (tpl-fcn-use 'shift SH-chunk))
+                                null
+                                (sadc FT-chunk 'field_))
+                 (bs-SeqWalk-rhs (s-typedef (scope (tpl-pmtr FT-chunk)
+                                                   'value_type)
+                                            'AtomicType)
+                                 (bm-constructor (adcr FT-chunk 'f)
+                                                 (cons-asgn 'iter_ (mfc 'f 'begin))
+                                                 null)
+                                 (n++ 'iter_)
+                                 'AtomicType
+                                 (l '* 'iter_)
+                                 null
+                                 (sad (tpl-pmtr (scope FT-chunk 'const_iterator))
+                                      'iter_))
+                 (bs-gpu-rhs null
+                             (bm-constructor
+                              (list (adc 'int DI-chunk)
+                                    (adcr FT-chunk 'f))
+                              (list (cons-asgn 'current_ (n+ (mfc 'f 'field_values 'EXTERNAL_CUDA_GPU DI-chunk)
+                                                             (n+ (mfc (mfc 'f 'window_with_ghost)
+                                                                      'offset
+                                                                      "0")
+                                                                 (n* (mfc (mfc 'f 'window_with_ghost)
+                                                                          'glob_dim
+                                                                          "0")
+                                                                     (par (n+ (mfc (mfc 'f 'window_with_ghost)
+                                                                                   'offset
+                                                                                   "1")
+                                                                              (par (n* (mfc (mfc 'f 'window_with_ghost)
+                                                                                            'glob_dim
+                                                                                            "1")
+                                                                                       (mfc (mfc 'f 'window_with_ghost)
+                                                                                            'offset
+                                                                                            "2")))))))))
+                                    (cons-asgn 'xLength_ (mfc (mfc 'f
+                                                                   'window_with_ghost)
+                                                              'glob_dim
+                                                              "0"))
+                                    (cons-asgn 'step_ (n* 'xLength_ (mfc (mfc 'f
+                                                                              'window_with_ghost)
+                                                                         'glob_dim
+                                                                         "1"))))
+                              null)
+                             (n+= 'current_ (n+ 'x (n* 'y 'xLength_)))
+                             (n+= 'current_ 'step_)
+                             (l '* 'current_)
+                             null
+                             (list (sadcp 'AtomicType 'current_)
+                                   (sadc 'int 'xLength_)
+                                   (sadc 'int 'step_)))
+                 (bs-Reduction (s-typedef (scope (tpl-pmtr FT-chunk)
+                                                 'value_type)
+                                          'AtomicType)
+                               (bm-constructor (adcr FT-chunk 'f)
+                                               (list (cons-asgn 'iter_ (mfc 'f 'begin))
+                                                     (cons-asgn 'end_ (mfc 'f 'end)))
+                                               null)
+                               (n++ 'iter_)
+                               (n== 'iter_ 'end_)
+                               'true
+                               'AtomicType
+                               (l '* 'iter_)
+                               null
+                               (list (sad (tpl-pmtr (scope FT-chunk 'const_iterator))
+                                          'iter_)
+                                     (sadc (tpl-pmtr (scope FT-chunk 'const_iterator))
+                                           'end_)))))

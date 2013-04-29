@@ -2,7 +2,7 @@
 #define heateqn_tools_h
 
 #include <spatialops/structured/SpatialFieldStore.h>
-#include <spatialops/FieldExpressions.h>
+#include <spatialops/Nebo.h>
 
 
 //--------------------------------------------------------------------

@@ -1,5 +1,5 @@
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/FieldExpressions.h>
+#include <spatialops/Nebo.h>
 
 typedef SpatialOps::structured::SVolField Field;
 

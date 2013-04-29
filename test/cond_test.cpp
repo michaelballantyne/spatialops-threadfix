@@ -1,8 +1,7 @@
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/structured/FVTools.h>
 
-#include <spatialops/FieldExpressions.h>
-#include <spatialops/FieldReductions.h>
+#include <spatialops/Nebo.h>
 
 #include <iostream>
 #include <vector>

@@ -23,7 +23,7 @@
 #define ParticleOperators_h
 
 #include <spatialops/particles/ParticleFieldTypes.h>
-#include <spatialops/FieldExpressions.h>
+#include <spatialops/Nebo.h>
 
 #include <stdexcept>
 #include <cmath>

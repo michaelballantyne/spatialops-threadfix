@@ -1,4 +1,4 @@
-#include <spatialops/FieldReductions.h>
+#include <spatialops/Nebo.h>
 
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/structured/FVTools.h>

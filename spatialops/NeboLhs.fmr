@@ -1,0 +1,437 @@
+ ; Copyright (c) 2013 The University of Utah
+ ;
+ ; Permission is hereby granted, free of charge, to any person obtaining a copy
+ ; of this software and associated documentation files (the "Software"), to
+ ; deal in the Software without restriction, including without limitation the
+ ; rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ ; sell copies of the Software, and to permit persons to whom the Software is
+ ; furnished to do so, subject to the following conditions:
+ ;
+ ; The above copyright notice and this permission notice shall be included in
+ ; all copies or substantial portions of the Software.
+ ;
+ ; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ ; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ ; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ ; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ ; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ ; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ ; IN THE SOFTWARE.
+
+(include "spatialops/FulmarAbbreviations.fmr")
+(include "spatialops/NeboCore.fmr")
+
+(define build-Initial-lhs
+  (combine-args build-Initial-general
+                (let ([assign (lambda (name body . backend)
+                                (let* ([report (lambda (fcn) (if (null? backend)
+                                                                 null
+                                                                 (fcn backend)))]
+                                       [report-start (report report-backend-start)]
+                                       [report-finish (report report-backend-finish)])
+                                  (tpl-def (list (tpl-pmtr 'Iterator)
+                                                 (tpl-pmtr 'RhsType))
+                                           (v-fcn-def name
+                                                      (ad 'RhsType 'rhs)
+                                                      report-start
+                                                      body
+                                                      report-finish))))]
+                      [assign-call (lambda (name)
+                                     (fc (tpl-use name 'Iterator 'RhsType)
+                                         'rhs))])
+                  (list (lambda (publics)
+                          (list (s-typedef (scope 'structured (tpl-use 'IndexTriplet "0" "0" "0"))
+                                           SH-chunk)
+                                (assign 'assign
+                                        (gpu-or (gpu-test-or (assign-call 'gpu_test_assign)
+                                                             (nifelse (n-and (fc 'gpu_ready)
+                                                                             (mfc 'rhs
+                                                                                  'gpu_ready
+                                                                                  (fc 'gpu_device_index)))
+                                                                      (assign-call 'gpu_assign)
+                                                                      (assign-call 'cpu_assign)))
+                                                (assign-call 'cpu_assign)))
+                                publics))
+                        (lambda (sequential-assign-body
+                                 SW-cons-args
+                                 thread-parallel-assign-body
+                                 RS-cons-args
+                                 gpu-assign-body
+                                 gpu-ready-body
+                                 gpu-device-index-body
+                                 gpu-cons-args
+                                 gpu-test-assign-body
+                                 privates)
+                          (list (assign 'cpu_assign
+                                        (threads-or (nifelse (fc 'is_thread_parallel)
+                                                             (assign-call 'thread_parallel_assign)
+                                                             (assign-call 'sequential_assign))
+                                                    (assign-call 'sequential_assign)))
+                                (assign 'sequential_assign sequential-assign-body 'sequential)
+                                (tpl-def (list (tpl-pmtr VG-chunk)
+                                               (tpl-pmtr SH-chunk))
+                                         (r-fcn-def (fcn-dcl 'init 'SeqWalkType)
+                                                    null
+                                                    (fc 'SeqWalkType SW-cons-args)))
+                                (threads-only (nl-smts (assign 'thread_parallel_assign
+                                                               (list (bs (scope 'BI 'interprocess_semaphore)
+                                                                         (fc 'semaphore "0"))
+                                                                     (nt=c 'int 'thread_count (fc 'get_soft_thread_count))
+                                                                     thread-parallel-assign-body
+                                                                     (nfor (nt= 'int 'ii "0")
+                                                                           (n< 'ii 'max)
+                                                                           (n++ 'ii)
+                                                                           (mfc 'semaphore 'wait)))
+                                                               (bs 'thread 'parallel))
+                                                       (tpl-def (tpl-pmtr VG-chunk)
+                                                                (r-fcn-def (fcn-dcl 'resize 'ResizeType)
+                                                                           null
+                                                                           (fc 'ResizeType RS-cons-args)))))
+                                (gpu-only (nl-smts (assign 'gpu_assign gpu-assign-body 'CUDA)
+                                                   (r-fcn-def (constize (fcn-dcl 'gpu_ready 'bool))
+                                                              null
+                                                              gpu-ready-body)
+                                                   (r-fcn-def (constize (fcn-dcl 'gpu_device_index 'int))
+                                                              null
+                                                              gpu-device-index-body)
+                                                   (tpl-def (list (tpl-pmtr VG-chunk)
+                                                                  (tpl-pmtr SH-chunk))
+                                                            (r-fcn-def (fcn-dcl 'gpu_init 'GPUWalkType)
+                                                                       null
+                                                                       (fc 'GPUWalkType gpu-cons-args)))
+                                                   (gpu-test-only (assign 'gpu_test_assign
+                                                                          gpu-test-assign-body
+                                                                          (bs 'CUDA 'with 'Nebo 'copying)))))
+                                privates))))
+                (list 7 1 10 0)
+                "build-Initial-lhs"))
+(define bs-Initial-lhs (arg-swap build-Initial-lhs 15 3 "bs-Initial-lhs"))
+(define build-Resize-lhs
+  (combine-args build-Resize-general
+                (list (lambda (assign-body
+                               publics)
+                        (list (s-typedef (scope 'structured (tpl-use 'IndexTriplet "0" "0" "0"))
+                                         SH-chunk)
+                              (threads-only
+                               (tpl-def (tpl-pmtr 'RhsType)
+                                        (v-fcn-def 'assign
+                                                   (list (adcr 'RhsType 'rhs)
+                                                         (adcr IntVec 'split)
+                                                         (adcr IntVec 'location)
+                                                         (adp (scope 'BI 'interprocess_semaphore) 'semaphore))
+                                                   (list assign-body
+                                                         (fc (c 'semaphore '-> 'post))))))
+                              publics))
+                      (lambda (SW-cons-args
+                               privates)
+                        (list (tpl-def (tpl-pmtr SH-chunk)
+                                       (r-fcn-def (fcn-dcl 'init
+                                                           'SeqWalkType
+                                                           (adcr IntVec 'split)
+                                                           (adcr IntVec 'location))
+                                                  null
+                                                  (fc 'SeqWalkType SW-cons-args)))
+                              privates)))
+                (list 6 2 2 0)
+                "build-Resize-lhs"))
+(define bs-Resize-lhs (arg-swap build-Resize-lhs 7 3 "bs-Resize-lhs"))
+(define build-SeqWalk-lhs
+  (combine-args build-SeqWalk-general
+                (list (lambda (assign-body
+                               publics)
+                        (list (tpl-def (tpl-pmtr 'RhsType)
+                                       (v-fcn-def 'assign
+                                                  (ad 'RhsType 'rhs)
+                                                  assign-body))
+                              publics))
+                      (lambda (next-body
+                               at-end-body
+                               has-length-body
+                               ref-result
+                               privates)
+                        (list (v-fcn-def 'next null next-body)
+                              (r-fcn-def (constize (fcn-dcl 'at_end 'bool))
+                                         null
+                                         at-end-body)
+                              (r-fcn-def (constize (fcn-dcl 'has_length 'bool))
+                                         null
+                                         has-length-body)
+                              (r-fcn-def (fcn-dcl 'ref (ref 'AtomicType))
+                                         null
+                                         ref-result)
+                              privates)))
+                (list 5 2 5 0)
+                "build-SeqWalk-lhs"))
+(define bs-SeqWalk-lhs (arg-swap build-SeqWalk-lhs 9 3 "bs-SeqWalk-lhs"))
+(define build-gpu-lhs
+  (combine-args build-gpu-general
+                (list (lambda (assign-body
+                               publics)
+                        (list (tpl-def (tpl-pmtr 'RhsType)
+                                       (device-use (v-fcn-def 'assign
+                                                              (ad 'RhsType 'rhs)
+                                                              (nt=c 'int 'ii (n+ (n* 'blockIdx.x 'blockDim.x) 'threadIdx.x))
+                                                              (nt=c 'int 'jj (n+ (n* 'blockIdx.y 'blockDim.y) 'threadIdx.y))
+                                                              (fc 'start 'ii 'jj)
+                                                              (mfc 'rhs 'start 'ii 'jj)
+                                                              (nif (fc 'valid)
+                                                                   assign-body))))
+                              publics))
+                      (lambda (valid-result
+                               start-body
+                               next-body
+                               at-end-result
+                               ref-result
+                               privates)
+                        (list (device-use (r-fcn-def (fcn-dcl 'valid 'bool)
+                                                     null
+                                                     valid-result))
+                              (device-use (v-fcn-def 'start
+                                                     (list (bs 'int 'x)
+                                                           (bs 'int 'y))
+                                                     start-body))
+                              (device-use (v-fcn-def 'next
+                                                     null
+                                                     next-body))
+                              (device-use (r-fcn-def (fcn-dcl 'at_end 'bool)
+                                                     null
+                                                     at-end-result))
+                              (device-use (r-fcn-def (fcn-dcl 'ref (ref 'AtomicType))
+                                                     null
+                                                     ref-result))
+                              privates)))
+                (list 5 2 6 0)
+                "build-gpu-lhs"))
+(define bs-gpu-lhs (arg-swap build-gpu-lhs 10 3 "bs-gpu-lhs"))
+
+                                        ; beginnning of file
+(n 'SpatialOps
+   (gpu-only (tpl-def (list (tpl-pmtr 'LhsType)
+                            (tpl-pmtr 'RhsType))
+                      (bs '__global__ (v-fcn-def 'gpu_assign_kernel
+                                                 (list (ad 'LhsType 'lhs)
+                                                       (ad 'RhsType 'rhs))
+                                                 (mfc 'lhs 'assign 'rhs)))))
+
+   (build-struct NF-chunk
+                 null
+                 null
+                 (let ([typedef-Ghost (typedef (tpl-pmtr (scope (tpl-use 'CalculateValidGhost
+                                                                         'Iterator
+                                                                         'RhsType
+                                                                         FT-chunk)
+                                                                'Result))
+                                               VG-chunk)])
+                   (bs-Initial-lhs null
+                                   null
+                                   (tpl-pmtr (scope (scope 'structured
+                                                           (tpl-use 'GhostFromField FT-chunk))
+                                                    'result))
+                                   (bm-constructor (ad FT-chunk 'f)
+                                                   (cons-asgn 'field_ 'f)
+                                                   null)
+                                   null
+                                   (list typedef-Ghost
+                                         (mfc (fc (tpl-use 'init VG-chunk SH-chunk))
+                                              'assign
+                                              (mfc 'rhs (tpl-fcn-use 'init VG-chunk SH-chunk))))
+                                   (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift_and_maintain_interior VG-chunk SH-chunk))
+                                   (list typedef-Ghost
+                                         (typedef (tpl-pmtr (scope 'RhsType 'ResizeType))
+                                                  'RhsResizeType)
+                                         (nt=c IntVec 'split (fc 'nebo_find_partition
+                                                                 (mfc (mfc (mfc 'field_
+                                                                                (tpl-fcn-use 'resize_ghost VG-chunk))
+                                                                           'window_with_ghost)
+                                                                      'extent)
+                                                                 'thread_count))
+                                         (nt=c 'int 'max (fc 'nebo_partition_count 'split))
+                                         (nt= 'ResizeType 'new_lhs (fc (tpl-use 'resize VG-chunk)))
+                                         (nt= 'RhsResizeType 'new_rhs (mfc 'rhs (tpl-fcn-use 'resize VG-chunk)))
+                                         (nt= IntVec 'location (fc IntVec "0" "0" "0"))
+                                         (nfor (nt= 'int 'count "0")
+                                               (n< 'count 'max)
+                                               (n++ 'count)
+                                               (mfc (fc (scope 'ThreadPoolFIFO 'self))
+                                                    'schedule
+                                                    (fc (scope 'boost 'bind)
+                                                        (take-ptr (scope 'ResizeType (tpl-fcn-use 'assign 'RhsResizeType)))
+                                                        'new_lhs
+                                                        'new_rhs
+                                                        'split
+                                                        'location
+                                                        (take-ptr 'semaphore)))
+                                               (n= 'location (fc 'nebo_next_partition 'location 'split))))
+                                   (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_maintain_interior VG-chunk))
+                                   (let ([extent-def (lambda (num)
+                                                       (nt= 'int
+                                                            (l 'extent num)
+                                                            (mfc (mfc 'field_ 'window_with_ghost)
+                                                                 'extent
+                                                                 num)))]
+                                         [dim-def (lambda (name extent)
+                                                    (nt= 'int name (n+ (n/ extent 'blockDim)
+                                                                       (ter-cond (n> (par (n% extent 'blockDim))
+                                                                                     "0")
+                                                                                 "1"
+                                                                                 "0"))))])
+                                     (list typedef-Ghost
+                                           (typedef (tpl-pmtr (scope 'RhsType 'GPUWalkType))
+                                                    'RhsGPUWalkType)
+                                           (extent-def "0")
+                                           (extent-def "1")
+                                           (nt= 'int 'blockDim "16")
+                                           (dim-def 'gDimX 'extent0)
+                                           (dim-def 'gDimY 'extent1)
+                                           (bs 'dim3 (fc 'dimBlock 'blockDim 'blockDim))
+                                           (bs 'dim3 (fc 'dimGrid 'gDimX 'gDimY))
+                                           (fc (kernel-use (tpl-use 'gpu_assign_kernel 'GPUWalkType 'RhsGPUWalkType)
+                                                           'dimGrid
+                                                           'dimBlock)
+                                               (fc (tpl-use 'gpu_init VG-chunk SH-chunk))
+                                               (mfc 'rhs
+                                                    (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)
+                                                    (fc 'gpu_device_index)))))
+                                   (n== (mfc 'field_
+                                             'memory_device_type)
+                                        'EXTERNAL_CUDA_GPU)
+                                   (mfc 'field_ 'device_index)
+                                   (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift_and_maintain_interior VG-chunk SH-chunk))
+                                   (list (mfc 'rhs 'gpu_prep "0")
+                                         (nifelse (n== 'LOCAL_RAM
+                                                       (mfc 'field_ 'memory_device_type))
+                                                  (list (ad FT-chunk
+                                                            (fc 'gpu_field
+                                                                (mfc 'field_ 'window_with_ghost)
+                                                                'NULL
+                                                                (scope 'structured 'InternalStorage)
+                                                                'EXTERNAL_CUDA_GPU
+                                                                "0"))
+                                                        (ad (tpl-use NF-chunk 'Initial FT-chunk)
+                                                            (fc 'gpu_lhs 'gpu_field))
+                                                        (mfc 'gpu_lhs
+                                                             (tpl-fcn-use 'gpu_assign 'Iterator 'RhsType)
+                                                             'rhs)
+                                                        (let ([CDI (scope (scope 'ema 'cuda)
+                                                                          'CUDADeviceInterface)])
+                                                          (nt= (ref CDI) 'CDI (fc (scope CDI 'self))))
+                                                        (mfc 'CDI
+                                                             'memcpy_from
+                                                             (mfc 'field_ 'field_values)
+                                                             (mfc 'gpu_field
+                                                                  'field_values
+                                                                  'EXTERNAL_CUDA_GPU
+                                                                  "0")
+                                                             (mfc 'field_ 'allocated_bytes)
+                                                             "0"))
+                                                  (fc (tpl-use 'gpu_assign 'Iterator 'RhsType)
+                                                      'rhs)))
+                                   (sad FT-chunk 'field_)))
+                 (bs-Resize-lhs null
+                                null
+                                (bm-constructor (ad FT-chunk 'f)
+                                                (cons-asgn 'field_ 'f)
+                                                null)
+                                (mfc (fc (tpl-use 'init SH-chunk)
+                                         'split
+                                         'location)
+                                     'assign
+                                     (mfc 'rhs
+                                          (tpl-fcn-use 'init SH-chunk)
+                                          'split
+                                          'location))
+                                null
+                                (mfc (fc FT-chunk
+                                         (mfc (mfc 'field_ 'window_with_ghost)
+                                              'refine
+                                              'split
+                                              'location)
+                                         (mfc 'field_ 'field_values)
+                                         (scope 'structured 'ExternalStorage))
+                                     (tpl-fcn-use 'shift_and_maintain_interior SH-chunk))
+                                (sad FT-chunk 'field_))
+                 (bs-SeqWalk-lhs (s-typedef (scope (tpl-pmtr FT-chunk)
+                                                   'value_type)
+                                            'AtomicType)
+                                 (bm-constructor (ad FT-chunk 'f)
+                                                 (list (cons-asgn 'iter_ (mfc 'f 'begin))
+                                                       (cons-asgn 'end_ (mfc 'f 'end)))
+                                                 null)
+                                 (nwhile (c '! (fc 'at_end))
+                                         (n= (fc 'ref)
+                                             (mfc 'rhs 'eval))
+                                         (fc 'next)
+                                         (mfc 'rhs 'next))
+                                 null
+                                 (n++ 'iter_)
+                                 (n== 'iter_ 'end_)
+                                 'true
+                                 (l '* 'iter_)
+                                 (list (sad (tpl-pmtr (scope FT-chunk 'iterator))
+                                            'iter_)
+                                       (sadc (tpl-pmtr (scope FT-chunk 'iterator))
+                                             'end_)))
+                 (bs-gpu-lhs  null
+                              (bm-constructor
+                               (ad FT-chunk 'f)
+                               (list (cons-asgn 'current_ (bs (n+ (mfc 'f 'field_values 'EXTERNAL_CUDA_GPU (mfc 'f 'device_index))
+                                                                  (n+ (mfc (mfc 'f 'window_with_ghost)
+                                                                           'offset
+                                                                           "0")
+                                                                      (n* (mfc (mfc 'f 'window_with_ghost)
+                                                                               'glob_dim
+                                                                               "0")
+                                                                          (par (n+ (mfc (mfc 'f 'window_with_ghost)
+                                                                                        'offset
+                                                                                        "1")
+                                                                                   (par (n* (mfc (mfc 'f 'window_with_ghost)
+                                                                                                 'glob_dim
+                                                                                                 "1")
+                                                                                            (mfc (mfc 'f 'window_with_ghost)
+                                                                                                 'offset
+                                                                                                 "2"))))))))))
+                                     (cons-asgn 'location_ "0")
+                                     (cons-asgn 'valid_ 'false)
+                                     (cons-asgn 'xLength_ (mfc (mfc 'f 'window_with_ghost)
+                                                               'glob_dim
+                                                               "0"))
+                                     (cons-asgn 'xExtent_ (mfc (mfc 'f 'window_with_ghost)
+                                                               'extent
+                                                               "0"))
+                                     (cons-asgn 'yExtent_ (mfc (mfc 'f 'window_with_ghost)
+                                                               'extent
+                                                               "1"))
+                                     (cons-asgn 'zExtent_ (mfc (mfc 'f 'window_with_ghost)
+                                                               'extent
+                                                               "2"))
+                                     (cons-asgn 'step_ (n* 'xLength_ (mfc (mfc 'f 'window_with_ghost)
+                                                                          'glob_dim
+                                                                          "1"))))
+                               null)
+                              (nwhile (c '! (fc 'at_end))
+                                      (n= (fc 'ref)
+                                          (mfc 'rhs 'eval))
+                                      (fc 'next)
+                                      (mfc 'rhs 'next))
+                              null
+                              'valid_
+                              (list (n= 'valid_ (par (n-and (n< 'x 'xExtent_)
+                                                            (n>= 'x "0")
+                                                            (n< 'y 'yExtent_)
+                                                            (n>= 'y "0"))))
+                                    (nif (fc 'valid)
+                                         (n= 'location_ "0")
+                                         (n+= 'current_ (n+ 'x (n* 'y 'xLength_)))))
+                              (list (n+= 'current_ 'step_)
+                                    (n++ 'location_))
+                              (n>= 'location_ 'zExtent_)
+                              (l '* 'current_)
+                              (list (sadp 'AtomicType 'current_)
+                                    (sad 'int 'location_)
+                                    (sad 'int 'valid_)
+                                    (sadc 'int 'xLength_)
+                                    (sadc 'int 'xExtent_)
+                                    (sadc 'int 'yExtent_)
+                                    (sadc 'int 'zExtent_)
+                                    (sadc 'int 'step_)))
+                 ignore))

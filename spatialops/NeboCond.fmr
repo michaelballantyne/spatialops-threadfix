@@ -1,0 +1,910 @@
+ ; Copyright (c) 2013 The University of Utah
+ ;
+ ; Permission is hereby granted, free of charge, to any person obtaining a copy
+ ; of this software and associated documentation files (the "Software"), to
+ ; deal in the Software without restriction, including without limitation the
+ ; rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ ; sell copies of the Software, and to permit persons to whom the Software is
+ ; furnished to do so, subject to the following conditions:
+ ;
+ ; The above copyright notice and this permission notice shall be included in
+ ; all copies or substantial portions of the Software.
+ ;
+ ; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ ; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ ; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ ; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ ; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ ; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ ; IN THE SOFTWARE.
+
+(include "spatialops/FulmarAbbreviations.fmr")
+(include "spatialops/NeboCore.fmr")
+(include "spatialops/NeboRhsCore.fmr")
+
+(define (build-CondBuilder-private extra-tpl-pmtrs
+                                   remaining-type
+                                   new-result-type
+                                   private)
+  (priv-sec (s-tpl-srt-dcl 'ReverseClausesRecursive
+                           (list (tpl-pmtr 'Remaining)
+                                 (tpl-pmtr 'PreceedingResult)))
+            (s-tpl-srt-def 'ReverseClausesRecursive
+                           (tpl-pmtr 'PreceedingResult)
+                           (list Nil-chunk 'PreceedingResult)
+                           (s-typedef 'PreceedingResult
+                                      'Result)
+                           (r-fcn-def (s-fcn-dcl 'reverse
+                                                 'Result
+                                                 (adcr Nil-chunk 'nil)
+                                                 (adcr 'PreceedingResult 'r))
+                                      null
+                                      'r))
+            (s-tpl-srt-def 'ReverseClausesRecursive
+                           (list extra-tpl-pmtrs
+                                 (tpl-pmtr 'Following)
+                                 (tpl-pmtr 'PreceedingResult))
+                           (list remaining-type
+                                 'PreceedingResult)
+                           (s-typedef remaining-type 'Remaining)
+                           (s-typedef new-result-type 'NewResult)
+                           (s-typedef (tpl-use 'ReverseClausesRecursive 'Following 'NewResult)
+                                      'InternalCall)
+                           (s-typedef (tpl-pmtr (scope 'InternalCall 'Result))
+                                      'Result)
+                           (r-fcn-def (s-fcn-dcl 'reverse
+                                                 'Result
+                                                 (adcr 'Remaining 'l)
+                                                 (adcr 'PreceedingResult 'r))
+                                      null
+                                      (fc (scope 'InternalCall 'reverse)
+                                          (mfc 'l 'otherwise)
+                                          (fc 'NewResult
+                                              (mfc 'l 'clause)
+                                              'r))))
+            private))
+
+(define (build-CondBuilder-public construct-args
+                                  construct-asgns
+                                  public)
+  (pub-sec (constructor-chunk 'CondBuilder
+                              construct-args
+                              construct-asgns)
+           (s-tpl-srt-dcl 'ReverseClauses
+                          (tpl-pmtr 'Final))
+           (s-tpl-srt-def 'ReverseClauses
+                          (tpl-pmtr 'Final)
+                          null
+                          (s-typedef  (tpl-use 'ReverseClausesRecursive 'Clauses 'Final)
+                                      'InternalCall)
+                          (s-typedef  (tpl-pmtr (scope 'InternalCall 'Result))
+                                      'Result)
+                          (r-fcn-def (s-fcn-dcl 'reverse
+                                                'Result
+                                                (adcr 'Clauses 'cs)
+                                                (adcr 'Final 'f))
+                                     null
+                                     (fc (scope 'InternalCall 'reverse)
+                                         'cs
+                                         'f)))
+           (tpl-def (tpl-pmtr 'Final)
+                    (r-fcn-def (fcn-dcl 'reverse
+                                        (tpl-pmtr (scope (tpl-use 'ReverseClauses 'Final)
+                                                         'Result))
+                                        (adcr 'Final 'f))
+                               (typedef (tpl-use 'ReverseClauses 'Final)
+                                        'InternalCall)
+                               (fc (scope 'InternalCall 'reverse)
+                                   'clauses_
+                                   'f)))
+           public))
+
+(define (build-CondBuilder extra-tpl-pmtrs
+                           remaining-type
+                           new-result-type
+                           tpl-pmtrs
+                           tpl-arg
+                           private
+                           construct-args
+                           construct-asgns
+                           public)
+  (tpl-srt-def 'CondBuilder
+               (map* tpl-pmtr tpl-pmtrs)
+               tpl-arg
+               (pub-sec (s-typedef tpl-arg 'Clauses))
+               (build-CondBuilder-private extra-tpl-pmtrs
+                                          remaining-type
+                                          new-result-type
+                                          private)
+               (build-CondBuilder-public construct-args
+                                         construct-asgns
+                                         public)))
+
+(define FT-test (tpl-pmtr (scope (tpl-use 'NeboFieldCheck
+                                          (tpl-pmtr (scope FT-chunk 'field_type))
+                                          FT-chunk)
+                                 'Result)))
+(define (FT-arg FT-defined?)
+  (if FT-defined? FT-chunk FT-test))
+(define (tpl-FT-def-proc FT-defined? fcn-def)
+  (if FT-defined? fcn-def (tpl-def (tpl-pmtr FT-chunk)
+                                   fcn-def)))
+
+                                        ; end case - given scalar value
+(define (build-cond-end-val name
+                            FT-defined?
+                            return-type
+                            return-expr)
+  (r-fcn-def (fcn-dcl name
+                      return-type
+                      (adc 'double 'd))
+             null
+             return-expr))
+(define bcev (arg-swap build-cond-end-val 2 2 "build-cond-end-val"))
+
+                                        ; end case - given field
+(define (build-cond-end-field name
+                              FT-defined?
+                              return-type
+                              return-expr)
+  (tpl-FT-def-proc FT-defined?
+                   (r-fcn-def (fcn-dcl name
+                                       (tpl-use NE-chunk return-type (FT-arg FT-defined?))
+                                       (adcr FT-chunk 'f))
+                              (list (typedef (tpl-use NCF-chunk 'Initial FT-chunk)
+                                             'Field)
+                                    (typedef (tpl-use NE-chunk 'Field FT-chunk)
+                                             'Expression))
+                              return-expr)))
+(define bcef (arg-swap build-cond-end-field 2 2 "build-cond-end-field"))
+
+                                        ; end case - given expression
+(define (build-cond-end-expr name
+                             FT-defined?
+                             return-type
+                             return-expr)
+  (tpl-def (list (tpl-pmtr 'Expr)
+                 (if FT-defined? null (tpl-pmtr FT-chunk)))
+           (r-fcn-def (fcn-dcl name
+                               (tpl-use NE-chunk return-type (FT-arg FT-defined?))
+                               (adcr (tpl-use NE-chunk 'Expr FT-chunk) 'e))
+                      null
+                      return-expr)))
+(define bcee (arg-swap build-cond-end-expr 2 2 "build-cond-end-expr"))
+
+                                        ; conditional case - given a boolean value and a scalar value
+(define (build-cond-bool-val name
+                             FT-defined?
+                             return-type
+                             internals
+                             cond-type
+                             clause-expr
+                             clauses-expr)
+  (r-fcn-def (fcn-dcl name
+                      (tpl-use 'CondBuilder (cs return-type))
+                      (list (adc 'bool 'b)
+                            (adc 'double 'd)))
+             (list internals
+                   (typedef cond-type 'Cond)
+                   (typedef (tpl-use 'CondBuilder 'Cond)
+                            'ReturnType))
+             (fc 'ReturnType
+                 (fc 'Cond
+                     clause-expr
+                     clauses-expr))))
+(define bcbv (arg-swap build-cond-bool-val 5 2 "build-cond-bool-val"))
+
+                                        ; conditional case - given a boolean value and a field
+(define (build-cond-bool-field name
+                               FT-defined?
+                               clauses-type
+                               clauses-expr)
+  (tpl-FT-def-proc FT-defined?
+                   (r-fcn-def (fcn-dcl name
+                                       (tpl-use 'CondBuilder (cs (tpl-use Cond-chunk
+                                                                          'Initial
+                                                                          (tpl-use Clause-chunk
+                                                                                   'Initial
+                                                                                   (tpl-use NB-chunk 'Initial (FT-arg FT-defined?))
+                                                                                   (tpl-use NCF-chunk 'Initial (FT-arg FT-defined?))
+                                                                                   (FT-arg FT-defined?))
+                                                                          clauses-type
+                                                                          (FT-arg FT-defined?))))
+                                       (list (adc 'bool 'b)
+                                             (adcr FT-chunk 'f)))
+                              (list (typedef (tpl-use NB-chunk 'Initial FT-chunk)
+                                             'Boolean)
+                                    (typedef (tpl-use NCF-chunk 'Initial FT-chunk)
+                                             'Field)
+                                    (typedef (tpl-use Clause-chunk 'Initial 'Boolean 'Field FT-chunk)
+                                             'Clause)
+                                    (typedef (tpl-use Cond-chunk 'Initial 'Clause clauses-type FT-chunk)
+                                             'Cond)
+                                    (typedef (tpl-use 'CondBuilder 'Cond)
+                                             'ReturnType))
+                              (fc 'ReturnType
+                                  (fc 'Cond
+                                      (fc 'Clause
+                                          (fc 'Boolean 'b)
+                                          (fc 'Field 'f))
+                                      clauses-expr)))))
+(define bcbf (arg-swap build-cond-bool-field 2 2 "build-cond-bool-field"))
+
+                                        ; conditional case - given a boolean value and an expression
+(define (build-cond-bool-expr name
+                              FT-defined?
+                              clauses-type
+                              clauses-expr)
+  (tpl-def (list (tpl-pmtr 'Expr)
+                 (if FT-defined? null (tpl-pmtr FT-chunk)))
+           (r-fcn-def (fcn-dcl name
+                               (tpl-use 'CondBuilder (cs (tpl-use Cond-chunk
+                                                                  'Initial
+                                                                  (tpl-use Clause-chunk
+                                                                           'Initial
+                                                                           (tpl-use NB-chunk 'Initial (FT-arg FT-defined?))
+                                                                           'Expr
+                                                                           (FT-arg FT-defined?))
+                                                                  clauses-type
+                                                                  (FT-arg FT-defined?))))
+                               (list (adc 'bool 'b)
+                                     (adcr (tpl-use NE-chunk 'Expr FT-chunk) 'e)))
+                      (list (typedef (tpl-use NB-chunk 'Initial FT-chunk)
+                                     'Boolean)
+                            (typedef (tpl-use Clause-chunk 'Initial 'Boolean 'Expr FT-chunk)
+                                     'Clause)
+                            (typedef (tpl-use Cond-chunk 'Initial 'Clause clauses-type FT-chunk)
+                                     'Cond)
+                            (typedef (tpl-use 'CondBuilder 'Cond)
+                                     'ReturnType))
+                      (fc 'ReturnType
+                          (fc 'Cond
+                              (fc 'Clause
+                                  (fc 'Boolean 'b)
+                                  (mfc 'e 'expr))
+                              clauses-expr)))))
+(define bcbe (arg-swap build-cond-bool-expr 2 2 "build-cond-bool-expr"))
+
+                                        ; conditional case - given a boolean expression and a scalar value
+(define (build-cond-NBE-val name
+                            FT-defined?
+                            clauses-type
+                            clauses-expr)
+  (tpl-def (list (tpl-pmtr 'BoolExpr)
+                 (if FT-defined? null (tpl-pmtr FT-chunk)))
+           (r-fcn-def (fcn-dcl name
+                               (tpl-use 'CondBuilder (cs (tpl-use Cond-chunk
+                                                                  'Initial
+                                                                  (tpl-use Clause-chunk
+                                                                           'Initial
+                                                                           'BoolExpr
+                                                                           (tpl-use NS-chunk 'Initial (FT-arg FT-defined?))
+                                                                           (FT-arg FT-defined?))
+                                                                  clauses-type
+                                                                  (FT-arg FT-defined?))))
+                               (list (adcr (tpl-use NBE-chunk 'BoolExpr FT-chunk) 'nb)
+                                     (adc 'double 'd)))
+                      (list (typedef (tpl-use NS-chunk 'Initial FT-chunk)
+                                     'Scalar)
+                            (typedef (tpl-use Clause-chunk 'Initial 'BoolExpr 'Scalar FT-chunk)
+                                     'Clause)
+                            (typedef (tpl-use Cond-chunk 'Initial 'Clause clauses-type FT-chunk)
+                                     'Cond)
+                            (typedef (tpl-use 'CondBuilder 'Cond)
+                                     'ReturnType))
+                      (fc 'ReturnType
+                          (fc 'Cond
+                              (fc 'Clause
+                                  (mfc 'nb 'expr)
+                                  (fc 'Scalar 'd))
+                              clauses-expr)))))
+(define bcnv (arg-swap build-cond-NBE-val 2 2 "build-cond-NBE-val"))
+
+                                        ; conditional case - given a boolean expression and a field
+(define (build-cond-NBE-field name
+                              FT-defined?
+                              clauses-type
+                              clauses-expr)
+  (tpl-def (list (tpl-pmtr 'BoolExpr)
+                 (if FT-defined? null (tpl-pmtr FT-chunk)))
+           (r-fcn-def (fcn-dcl name
+                               (tpl-use 'CondBuilder (cs (tpl-use Cond-chunk
+                                                                  'Initial
+                                                                  (tpl-use Clause-chunk
+                                                                           'Initial
+                                                                           'BoolExpr
+                                                                           (tpl-use NCF-chunk 'Initial (FT-arg FT-defined?))
+                                                                           (FT-arg FT-defined?))
+                                                                  clauses-type
+                                                                  (FT-arg FT-defined?))))
+                               (list (adcr (tpl-use NBE-chunk 'BoolExpr FT-chunk) 'nb)
+                                     (adcr FT-chunk 'f)))
+                      (list (typedef (tpl-use NCF-chunk 'Initial FT-chunk)
+                                     'Field)
+                            (typedef (tpl-use Clause-chunk 'Initial 'BoolExpr 'Field FT-chunk)
+                                     'Clause)
+                            (typedef (tpl-use Cond-chunk 'Initial 'Clause clauses-type FT-chunk)
+                                     'Cond)
+                            (typedef (tpl-use 'CondBuilder 'Cond)
+                                     'ReturnType))
+                      (fc 'ReturnType
+                          (fc 'Cond
+                              (fc 'Clause
+                                  (mfc 'nb 'expr)
+                                  (fc 'Field 'f))
+                              clauses-expr)))))
+(define bcnf (arg-swap build-cond-NBE-field 2 2 "build-cond-NBE-field"))
+
+                                        ; conditional case - given a boolean expression and an expression
+(define (build-cond-NBE-expr name
+                             FT-defined?
+                             clauses-type
+                             clauses-expr)
+  (tpl-def (list (tpl-pmtr 'BoolExpr)
+                 (tpl-pmtr 'Expr)
+                 (if FT-defined? null (tpl-pmtr FT-chunk)))
+           (r-fcn-def (fcn-dcl name
+                               (tpl-use 'CondBuilder (cs (tpl-use Cond-chunk
+                                                                  'Initial
+                                                                  (tpl-use Clause-chunk 'Initial 'BoolExpr 'Expr (FT-arg FT-defined?))
+                                                                  clauses-type
+                                                                  (FT-arg FT-defined?))))
+                               (list (adcr (tpl-use NBE-chunk 'BoolExpr FT-chunk) 'nb)
+                                     (adcr (tpl-use NE-chunk 'Expr FT-chunk) 'e)))
+                      (list (typedef (tpl-use Clause-chunk 'Initial 'BoolExpr 'Expr FT-chunk)
+                                     'Clause)
+                            (typedef (tpl-use Cond-chunk 'Initial 'Clause clauses-type FT-chunk)
+                                     'Cond)
+                            (typedef (tpl-use 'CondBuilder 'Cond)
+                                     'ReturnType))
+                      (fc 'ReturnType
+                          (fc 'Cond
+                              (fc 'Clause
+                                  (mfc 'nb 'expr)
+                                  (mfc 'e 'expr))
+                              clauses-expr)))))
+(define bcne (arg-swap build-cond-NBE-expr 2 2 "build-cond-NBE-expr"))
+
+(define (build-cond-app name
+                        FT-defined?
+                        end-val
+                        end-field
+                        end-expr
+                        bool-val
+                        bool-field
+                        bool-expr
+                        NBE-val
+                        NBE-field
+                        NBE-expr)
+  (map (lambda (given) (given name FT-defined?))
+       (list end-val
+             end-field
+             end-expr
+             bool-val
+             bool-field
+             bool-expr
+             NBE-val
+             NBE-field
+             NBE-expr)))
+
+                                        ; beginnning of file
+(n 'SpatialOps
+   (srt-def (srt-dcl Nil-chunk)
+            (threads-only (s-typedef Nil-chunk 'ResizeType))
+            (s-typedef Nil-chunk 'SeqWalkType)
+            (gpu-only (s-typedef Nil-chunk 'GPUWalkType))
+            (s-typedef Nil-chunk 'ReductionType)
+            (s-typedef (scope 'structured 'InfiniteGhostData) report-VG-chunk)
+            (constructor-chunk Nil-chunk
+                               null
+                               null))
+
+   (build-struct Clause-chunk
+                 null
+                 (list 'Test 'Expr)
+                 (bs-Initial-rhs null
+                                 null
+                                 (tpl-pmtr (scope (scope 'structured
+                                                         (tpl-use 'Minimum
+                                                                  (tpl-pmtr (scope 'Test report-VG-chunk))
+                                                                  (tpl-pmtr (scope 'Expr report-VG-chunk))))
+                                                  'result))
+                                 (bm-constructor (list (adcr 'Test 't)
+                                                       (adcr 'Expr 'e))
+                                                 (list (cons-asgn 'test_ 't)
+                                                       (cons-asgn 'expr_ 'e))
+                                                 null)
+                                 (list (mfc 'test_ (tpl-fcn-use 'init VG-chunk SH-chunk))
+                                       (mfc 'expr_ (tpl-fcn-use 'init VG-chunk SH-chunk)))
+                                 (list (mfc 'test_ (tpl-fcn-use 'resize VG-chunk))
+                                       (mfc 'expr_ (tpl-fcn-use 'resize VG-chunk)))
+                                 (n-and (mfc 'test_ 'gpu_ready DI-chunk)
+                                        (mfc 'expr_ 'gpu_ready DI-chunk))
+                                 (list (mfc 'test_
+                                            (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)
+                                            DI-chunk)
+                                       (mfc 'expr_
+                                            (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)
+                                            DI-chunk))
+                                 (list (mfc 'test_ 'gpu_prep DI-chunk)
+                                       (mfc 'expr_ 'gpu_prep DI-chunk))
+                                 (list (mfc 'test_ (tpl-fcn-use 'reduce_init VG-chunk SH-chunk))
+                                       (mfc 'expr_ (tpl-fcn-use 'reduce_init VG-chunk SH-chunk)))
+                                 null
+                                 (list (sadc 'Test 'test_)
+                                       (sadc 'Expr 'expr_)))
+                 (bs-Resize-rhs null
+                                null
+                                (bm-constructor (list (adcr 'Test 'test)
+                                                      (adcr 'Expr 'expr))
+                                                (list (cons-asgn 'test_ 'test)
+                                                      (cons-asgn 'expr_ 'expr))
+                                                null)
+                                (list (mfc 'test_
+                                           (tpl-fcn-use 'init SH-chunk)
+                                           'split
+                                           'location)
+                                      (mfc 'expr_
+                                           (tpl-fcn-use 'init SH-chunk)
+                                           'split
+                                           'location))
+                                null
+                                (list (sadc 'Test 'test_)
+                                      (sadc 'Expr 'expr_)))
+                 (bs-SeqWalk-rhs (s-typedef (scope (tpl-pmtr FT-chunk)
+                                                   'value_type)
+                                            'AtomicType)
+                                 (bm-constructor (list (adcr 'Test 'test)
+                                                       (adcr 'Expr 'expr))
+                                                 (list (cons-asgn 'test_ 'test)
+                                                       (cons-asgn 'expr_ 'expr))
+                                                 null)
+                                 (ccs (mfc 'test_ 'next)
+                                      (mfc 'expr_ 'next))
+                                 'AtomicType
+                                 (mfc 'expr_ 'eval)
+                                 (r-fcn-def (constize (fcn-dcl 'check (tc 'bool)))
+                                            null
+                                            (mfc 'test_ 'eval))
+                                 (list (sad 'Test 'test_)
+                                       (sad 'Expr 'expr_)))
+                 (bs-gpu-rhs null
+                             (bm-constructor (list (adcr 'Test 'test)
+                                                   (adcr 'Expr 'expr))
+                                             (list (cons-asgn 'test_ 'test)
+                                                   (cons-asgn 'expr_ 'expr))
+                                             null)
+                             (ccs (mfc 'test_ 'start 'x 'y)
+                                  (mfc 'expr_ 'start 'x 'y))
+                             (ccs (mfc 'test_ 'next)
+                                  (mfc 'expr_ 'next))
+                             (mfc 'expr_ 'eval)
+                             (device-use (r-fcn-def (constize (fcn-dcl 'check (tc 'bool)))
+                                                    null
+                                                    (mfc 'test_ 'eval)))
+                             (list (sad 'Test 'test_)
+                                   (sad 'Expr 'expr_)))
+                 (bs-Reduction (s-typedef (scope (tpl-pmtr FT-chunk)
+                                                 'value_type)
+                                          'AtomicType)
+                               (bm-constructor (list (adcr 'Test 'test)
+                                                     (adcr 'Expr 'expr))
+                                               (list (cons-asgn 'test_ 'test)
+                                                     (cons-asgn 'expr_ 'expr))
+                                               null)
+                               (ccs (mfc 'test_ 'next)
+                                    (mfc 'expr_ 'next))
+                               (par (n-or (mfc 'test_ 'at_end)
+                                          (mfc 'expr_ 'at_end)))
+                               (par (n-or (mfc 'test_ 'has_length)
+                                          (mfc 'expr_ 'has_length)))
+                               'AtomicType
+                               (mfc 'expr_ 'eval)
+                               (r-fcn-def (constize (fcn-dcl 'check (tc 'bool)))
+                                          null
+                                          (mfc 'test_ 'eval))
+                               (list (sad 'Test 'test_)
+                                     (sad 'Expr 'expr_))))
+
+   (build-struct Cond-chunk
+                 null
+                 (list CT-chunk 'Otherwise)
+                 (bs-Initial-rhs null
+                                 null
+                                 (tpl-pmtr (scope (scope 'structured (tpl-use 'Minimum
+                                                                              (tpl-pmtr (scope CT-chunk report-VG-chunk))
+                                                                              (tpl-pmtr (scope 'Otherwise report-VG-chunk))))
+                                                  'result))
+                                 (bm-constructor (list (adcr CT-chunk 'c)
+                                                       (adcr 'Otherwise 'e))
+                                                 (list (cons-asgn 'clause_ 'c)
+                                                       (cons-asgn 'otherwise_ 'e))
+                                                 null)
+                                 (list (mfc 'clause_ (tpl-fcn-use 'init VG-chunk SH-chunk))
+                                       (mfc 'otherwise_ (tpl-fcn-use 'init VG-chunk SH-chunk)))
+                                 (list (mfc 'clause_ (tpl-fcn-use 'resize VG-chunk))
+                                       (mfc 'otherwise_ (tpl-fcn-use 'resize VG-chunk)))
+                                 (n-and (mfc 'clause_ 'gpu_ready DI-chunk)
+                                        (mfc 'otherwise_ 'gpu_ready DI-chunk))
+                                 (list (mfc 'clause_
+                                            (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)
+                                            DI-chunk)
+                                       (mfc 'otherwise_
+                                            (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)
+                                            DI-chunk))
+                                 (list (mfc 'clause_ 'gpu_prep DI-chunk)
+                                       (mfc 'otherwise_ 'gpu_prep DI-chunk))
+                                 (list (mfc 'clause_ (tpl-fcn-use 'reduce_init VG-chunk SH-chunk))
+                                       (mfc 'otherwise_ (tpl-fcn-use 'reduce_init VG-chunk SH-chunk)))
+                                 (list (r-fcn-def (constize (fcn-dcl 'clause (cref CT-chunk)))
+                                                  null
+                                                  'clause_)
+                                       (r-fcn-def (constize (fcn-dcl 'otherwise (cref 'Otherwise)))
+                                                  null
+                                                  'otherwise_))
+                                 (list (sadc CT-chunk 'clause_)
+                                       (sadc 'Otherwise 'otherwise_)))
+                 (bs-Resize-rhs null
+                                null
+                                (bm-constructor (list (adcr CT-chunk 'clause)
+                                                      (adcr 'Otherwise 'otherwise))
+                                                (list (cons-asgn 'clause_ 'clause)
+                                                      (cons-asgn 'otherwise_ 'otherwise))
+                                                null)
+                                (list (mfc 'clause_
+                                           (tpl-fcn-use 'init SH-chunk)
+                                           'split
+                                           'location)
+                                      (mfc 'otherwise_
+                                           (tpl-fcn-use 'init SH-chunk)
+                                           'split
+                                           'location))
+                                null
+                                (list (sadc CT-chunk 'clause_)
+                                      (sadc 'Otherwise 'otherwise_)))
+                 (bs-SeqWalk-rhs (s-typedef (scope (tpl-pmtr FT-chunk)
+                                                   'value_type)
+                                            'AtomicType)
+                                 (bm-constructor (list (adcr CT-chunk 'clause)
+                                                       (adcr 'Otherwise 'otherwise))
+                                                 (list (cons-asgn 'clause_ 'clause)
+                                                       (cons-asgn 'otherwise_ 'otherwise))
+                                                 null)
+                                 (ccs (mfc 'clause_ 'next)
+                                      (mfc 'otherwise_ 'next))
+                                 'AtomicType
+                                 (ter-cond (mfc 'clause_ 'check)
+                                           (mfc 'clause_ 'eval)
+                                           (mfc 'otherwise_ 'eval))
+                                 null
+                                 (list (sad CT-chunk 'clause_)
+                                       (sad 'Otherwise 'otherwise_)))
+                 (bs-gpu-rhs null
+                             (bm-constructor (list (adcr CT-chunk 'clause)
+                                                   (adcr 'Otherwise 'otherwise))
+                                             (list (cons-asgn 'clause_ 'clause)
+                                                   (cons-asgn 'otherwise_ 'otherwise))
+                                             null)
+                             (ccs (mfc 'clause_ 'start 'x 'y)
+                                  (mfc 'otherwise_ 'start 'x 'y))
+                             (ccs (mfc 'clause_ 'next)
+                                  (mfc 'otherwise_ 'next))
+                             (ter-cond (mfc 'clause_ 'check)
+                                       (mfc 'clause_ 'eval)
+                                       (mfc 'otherwise_ 'eval))
+                             null
+                             (list (sad CT-chunk 'clause_)
+                                   (sad 'Otherwise 'otherwise_)))
+                 (bs-Reduction (s-typedef (scope (tpl-pmtr FT-chunk)
+                                                 'value_type)
+                                          'AtomicType)
+                               (bm-constructor (list (adcr CT-chunk 'clause)
+                                                     (adcr 'Otherwise 'otherwise))
+                                               (list (cons-asgn 'clause_ 'clause)
+                                                     (cons-asgn 'otherwise_ 'otherwise))
+                                               null)
+                               (ccs (mfc 'clause_ 'next)
+                                    (mfc 'otherwise_ 'next))
+                               (par (n-or (mfc 'clause_ 'at_end)
+                                          (mfc 'otherwise_ 'at_end)))
+                               (par (n-or (mfc 'clause_ 'has_length)
+                                          (mfc 'otherwise_ 'has_length)))
+                               'AtomicType
+                               (ter-cond (mfc 'clause_ 'check)
+                                         (mfc 'clause_ 'eval)
+                                         (mfc 'otherwise_ 'eval))
+                               null
+                               (list (sad CT-chunk 'clause_)
+                                     (sad 'Otherwise 'otherwise_))))
+
+   (srt-def (srt-dcl SClause-chunk)
+            (pub-sec (constructor-chunk SClause-chunk
+                                        (list (adcr 'bool 'b)
+                                              (adcr 'double 'd))
+                                        (list (cons-asgn 'b_ 'b)
+                                              (cons-asgn 'd_ 'd)))
+                     (r-fcn-def (constize (fcn-dcl 'check
+                                                   'bool))
+                                null
+                                'b_)
+                     (r-fcn-def (constize (fcn-dcl 'eval
+                                                   'double))
+                                null
+                                'd_)
+                     (s-tpl-srt-def 'Convert
+                                    (tpl-pmtr FT-chunk)
+                                    null
+                                    (s-typedef (tpl-use NB-chunk 'Initial FT-chunk)
+                                               'Boolean)
+                                    (s-typedef (tpl-use NS-chunk 'Initial FT-chunk)
+                                               'Scalar)
+                                    (s-typedef (tpl-use Clause-chunk 'Initial 'Boolean 'Scalar FT-chunk)
+                                               'Converted)
+                                    (r-fcn-def (s-fcn-dcl 'convert
+                                                          'Converted
+                                                          (list (adc 'bool 'b)
+                                                                (adc 'double 'd)))
+                                               null
+                                               (fc 'Converted
+                                                   (fc 'Boolean 'b)
+                                                   (fc 'Scalar 'd)))))
+            (priv-sec (sadc 'bool 'b_)
+                      (sadc 'double 'd_)))
+
+   (srt-def (srt-dcl SFClause-chunk)
+            (pub-sec (constructor-chunk SFClause-chunk
+                                        (adc 'double 'd)
+                                        (cons-asgn 'd_ 'd))
+                     (r-fcn-def (constize (fcn-dcl 'eval
+                                                   'double))
+                                null
+                                'd_))
+            (priv-sec (sadc 'double 'd_)))
+
+   (tpl-srt-def SCond-chunk
+                (tpl-pmtr 'Otherwise)
+                null
+                (pub-sec (constructor-chunk SCond-chunk
+                                            (list (adcr SClause-chunk 'c)
+                                                  (adcr 'Otherwise 'otherwise))
+                                            (list (cons-asgn 'c_ 'c)
+                                                  (cons-asgn 'otherwise_ 'otherwise)))
+                         (r-fcn-def (constize (fcn-dcl 'eval
+                                                       'double
+                                                       null))
+                                    null
+                                    (ter-cond (mfc 'c_ 'check)
+                                              (mfc 'c_ 'eval)
+                                              (mfc 'otherwise_ 'eval)))
+                         (s-tpl-srt-def 'Convert
+                                        (tpl-pmtr FT-chunk)
+                                        null
+                                        (s-typedef (scope SClause-chunk
+                                                          (tpl-fcn-use 'Convert FT-chunk))
+                                                   'ConvertingClause)
+                                        (s-typedef (tpl-pmtr (scope 'ConvertingClause
+                                                                    'Converted))
+                                                   'ConvertedClause)
+                                        (s-typedef (tpl-pmtr (scope 'Otherwise
+                                                                    (tpl-fcn-use 'Convert FT-chunk)))
+                                                   'ConvertingClauses)
+                                        (s-typedef (tpl-pmtr (scope 'ConvertingClauses 'Converted))
+                                                   'ConvertedClauses)
+                                        (s-typedef (tpl-use Cond-chunk 'Initial 'ConvertedClause 'ConvertedClauses FT-chunk)
+                                                   'Converted)
+                                        (r-fcn-def (s-fcn-dcl 'convert
+                                                              'Converted
+                                                              (list (adcr SClause-chunk 'c)
+                                                                    (adcr 'Otherwise 'o)))
+                                                   null
+                                                   (fc 'Converted
+                                                       (fc (scope 'ConvertingClause 'convert)
+                                                           (mfc 'c 'check)
+                                                           (mfc 'c 'eval))
+                                                       (mfc 'o (tpl-fcn-use 'convert FT-chunk)))))
+                         (tpl-def (tpl-pmtr FT-chunk)
+                                  (r-fcn-def (constize (fcn-dcl 'convert
+                                                                (tpl-pmtr (scope (tpl-use 'Convert FT-chunk)
+                                                                                 'Converted))))
+                                             (typedef (tpl-use 'Convert FT-chunk)
+                                                      'Convert)
+                                             (fc (scope 'Convert 'convert)
+                                                 (fc 'clause)
+                                                 (fc 'otherwise))))
+                         (r-fcn-def (constize (fcn-dcl 'clause (cref SClause-chunk)))
+                                    null
+                                    'c_)
+                         (r-fcn-def (constize (fcn-dcl 'otherwise (cref 'Otherwise)))
+                                    null
+                                    'otherwise_))
+                (priv-sec (sadc SClause-chunk 'c_)
+                          (sadc 'Otherwise 'otherwise_)))
+
+   (tpl-srt-def SCond-chunk
+                null
+                Nil-chunk
+                (pub-sec (constructor-chunk SCond-chunk
+                                            (list (adcr SClause-chunk 'c)
+                                                  (adcr Nil-chunk 'nil))
+                                            (cons-asgn 'c_ 'c))
+                         (s-tpl-srt-def 'Convert
+                                        (tpl-pmtr FT-chunk)
+                                        null
+                                        (s-typedef (scope SClause-chunk
+                                                          (tpl-fcn-use 'Convert FT-chunk))
+                                                   'ConvertingClause)
+                                        (s-typedef (tpl-pmtr (scope 'ConvertingClause 'Converted))
+                                                   'ConvertedClause)
+                                        (s-typedef Nil-chunk
+                                                   'ConvertedClauses)
+                                        (s-typedef (tpl-use Cond-chunk
+                                                            'Initial
+                                                            'ConvertedClause
+                                                            'ConvertedClauses
+                                                            FT-chunk)
+                                                   'Converted)
+                                        (r-fcn-def (s-fcn-dcl 'convert
+                                                              'Converted
+                                                              (adcr SClause-chunk 'c))
+                                                   null
+                                                   (fc 'Converted
+                                                       (fc (scope 'ConvertingClause 'convert)
+                                                           (mfc 'c 'check)
+                                                           (mfc 'c 'eval))
+                                                       (fc Nil-chunk))))
+                         (tpl-def (tpl-pmtr FT-chunk)
+                                  (r-fcn-def (constize (fcn-dcl 'convert
+                                                                (tpl-pmtr (scope (tpl-use 'Convert FT-chunk)
+                                                                                 'Converted))))
+                                             (typedef (tpl-use 'Convert FT-chunk)
+                                                      'Convert)
+                                             (fc (scope 'Convert 'convert)
+                                                 (fc 'clause))))
+                         (r-fcn-def (constize (fcn-dcl 'clause (cref SClause-chunk)))
+                                    null
+                                    'c_)
+                         (r-fcn-def (constize (fcn-dcl 'otherwise Nil-chunk))
+                                    null
+                                    (fc Nil-chunk)))
+                (priv-sec (sadc SClause-chunk 'c_)))
+
+                                        ;CondBuilder
+   (tpl-srt-dcl 'CondBuilder
+                (tpl-pmtr 'Clauses))
+
+                                        ; FT
+   (build-CondBuilder (list (tpl-pmtr 'Next) (tpl-pmtr 'Field))
+                      (tpl-use Cond-chunk 'Initial 'Next 'Following 'Field)
+                      (tpl-use Cond-chunk 'Initial 'Next 'PreceedingResult 'Field)
+                      (list CT-chunk 'Otherwise FT-chunk)
+                      (cs (tpl-use Cond-chunk 'Initial CT-chunk 'Otherwise FT-chunk))
+                      (sadc 'Clauses 'clauses_)
+                      (adcr (tpl-use Cond-chunk 'Initial CT-chunk 'Otherwise FT-chunk) 'cs)
+                      (cons-asgn 'clauses_ 'cs)
+                      (build-cond-app (bs 'operator (p))
+                                      #true
+                                      (bcev (tpl-use NE-chunk
+                                                     (tpl-pmtr (scope (tpl-use 'ReverseClauses
+                                                                               (cs (tpl-use NS-chunk 'Initial FT-chunk)))
+                                                                      'Result))
+                                                     FT-chunk)
+                                            (fc (tpl-use NE-chunk (tpl-pmtr (scope (tpl-use 'ReverseClauses
+                                                                                            (cs (tpl-use NS-chunk 'Initial FT-chunk)))
+                                                                                   'Result))
+                                                         FT-chunk)
+                                                (fc 'reverse (fc (tpl-use NS-chunk 'Initial FT-chunk)
+                                                                 'd))))
+                                      (bcef (tpl-pmtr (scope (tpl-use 'ReverseClauses (cs (tpl-use NCF-chunk 'Initial FT-chunk)))
+                                                             'Result))
+                                            (fc (tpl-use NE-chunk
+                                                         (tpl-pmtr (scope (tpl-use 'ReverseClauses 'Field)
+                                                                          'Result))
+                                                         FT-chunk)
+                                                (fc 'reverse (fc 'Field 'f))))
+                                      (bcee (tpl-pmtr (scope (tpl-use 'ReverseClauses 'Expr)
+                                                             'Result))
+                                            (fc (tpl-use NE-chunk
+                                                         (tpl-pmtr (scope (tpl-use 'ReverseClauses 'Expr)
+                                                                          'Result))
+                                                         FT-chunk)
+                                                (fc 'reverse (mfc 'e 'expr))))
+                                      (bcbv (tpl-use Cond-chunk
+                                                     'Initial
+                                                     (tpl-use Clause-chunk
+                                                              'Initial
+                                                              (tpl-use NB-chunk 'Initial FT-chunk)
+                                                              (tpl-use NS-chunk 'Initial FT-chunk)
+                                                              FT-chunk)
+                                                     'Clauses
+                                                     FT-chunk)
+                                            (list (typedef (tpl-use NB-chunk 'Initial FT-chunk)
+                                                           'Boolean)
+                                                  (typedef (tpl-use NS-chunk 'Initial FT-chunk)
+                                                           'Scalar)
+                                                  (typedef (tpl-use Clause-chunk 'Initial 'Boolean 'Scalar FT-chunk)
+                                                           'NewClause))
+                                            (tpl-use Cond-chunk 'Initial 'NewClause 'Clauses FT-chunk)
+                                            (fc 'NewClause
+                                                (fc 'Boolean 'b)
+                                                (fc 'Scalar 'd))
+                                            'clauses_)
+                                      (bcbf 'Clauses 'clauses_)
+                                      (bcbe 'Clauses 'clauses_)
+                                      (bcnv 'Clauses 'clauses_)
+                                      (bcnf 'Clauses 'clauses_)
+                                      (bcne 'Clauses 'clauses_)))
+
+                                        ; no FT
+   (build-CondBuilder null
+                      (tpl-use SCond-chunk 'Following)
+                      (tpl-use SCond-chunk 'PreceedingResult)
+                      'Otherwise
+                      (cs (tpl-use SCond-chunk 'Otherwise))
+                      (sadc 'Clauses 'clauses_)
+                      (adcr (tpl-use SCond-chunk 'Otherwise) 'cs)
+                      (cons-asgn 'clauses_ 'cs)
+                      (build-cond-app (bs 'operator (p))
+                                      #false
+                                      (bcev 'double (mfc (fc 'reverse (fc SFClause-chunk 'd))
+                                                         'eval))
+                                      (bcef (tpl-pmtr (scope (scope (tpl-use 'CondBuilder (tpl-pmtr (scope (scope 'Clauses (tpl-fcn-use 'Convert FT-test))
+                                                                                                           'Converted)))
+                                                                    (tpl-fcn-use 'ReverseClauses (cs (tpl-use NCF-chunk 'Initial FT-test))))
+                                                             'Result))
+                                            (fc (fc (tpl-use 'CondBuilder (tpl-pmtr (scope (scope 'Clauses (tpl-fcn-use 'Convert FT-chunk))
+                                                                                           'Converted)))
+                                                    (mfc 'clauses_ (tpl-fcn-use 'convert FT-chunk)))
+                                                'f))
+                                      (bcee (tpl-pmtr (scope (scope (tpl-use 'CondBuilder (tpl-pmtr (scope (scope 'Clauses (tpl-fcn-use 'Convert FT-test))
+                                                                                                           'Converted)))
+                                                                    (tpl-fcn-use 'ReverseClauses 'Expr))
+                                                             'Result))
+                                            (fc (fc (tpl-use 'CondBuilder (tpl-pmtr (scope (scope 'Clauses (tpl-fcn-use 'Convert FT-chunk))
+                                                                                           'Converted)))
+                                                    (mfc 'clauses_ (tpl-fcn-use 'convert FT-chunk)))
+                                                'e))
+                                      (bcbv (tpl-use SCond-chunk 'Clauses)
+                                            null
+                                            (tpl-use SCond-chunk 'Clauses)
+                                            (fc SClause-chunk 'b 'd)
+                                            'clauses_)
+                                      (bcbf (tpl-pmtr (scope (scope 'Clauses (tpl-fcn-use 'Convert FT-test))
+                                                             'Converted))
+                                            (mfc 'clauses_ (tpl-fcn-use 'convert FT-chunk)))
+                                      (bcbe (tpl-pmtr (scope (scope 'Clauses (tpl-fcn-use 'Convert FT-test))
+                                                             'Converted))
+                                            (mfc 'clauses_ (tpl-fcn-use 'convert FT-chunk)))
+                                      (bcnv (tpl-pmtr (scope (scope 'Clauses (tpl-fcn-use 'Convert FT-test))
+                                                             'Converted))
+                                            (mfc 'clauses_ (tpl-fcn-use 'convert FT-chunk)))
+                                      (bcnf (tpl-pmtr (scope (scope 'Clauses (tpl-fcn-use 'Convert FT-test))
+                                                             'Converted))
+                                            (mfc 'clauses_ (tpl-fcn-use 'convert FT-chunk)))
+                                      (bcne (tpl-pmtr (scope (scope 'Clauses (tpl-fcn-use 'Convert FT-test))
+                                                             'Converted))
+                                            (mfc 'clauses_ (tpl-fcn-use 'convert FT-chunk)))))
+
+                                        ; Nil
+   (tpl-srt-def 'CondBuilder
+                null
+                Nil-chunk
+                (pub-sec (constructor-chunk 'CondBuilder null null)))
+
+   (build-cond-app 'cond
+                   #false
+                   (bcev 'double 'd)
+                   (bcef (tpl-use NCF-chunk 'Initial FT-test)
+                         (fc 'Expression (fc 'Field 'f)))
+                   (bcee 'Expr 'e)
+                   (bcbv (tpl-use SCond-chunk Nil-chunk)
+                         null
+                         (tpl-use SCond-chunk Nil-chunk)
+                         (fc SClause-chunk 'b 'd)
+                         (fc Nil-chunk))
+                   (bcbf Nil-chunk (fc Nil-chunk))
+                   (bcbe Nil-chunk (fc Nil-chunk))
+                   (bcnv Nil-chunk (fc Nil-chunk))
+                   (bcnf Nil-chunk (fc Nil-chunk))
+                   (bcne Nil-chunk (fc Nil-chunk)))
+
+   (m 'nebo_cond null (l 'cond '//)))

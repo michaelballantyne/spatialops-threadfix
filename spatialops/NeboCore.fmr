@@ -1,0 +1,225 @@
+ ; Copyright (c) 2013 The University of Utah
+ ;
+ ; Permission is hereby granted, free of charge, to any person obtaining a copy
+ ; of this software and associated documentation files (the "Software"), to
+ ; deal in the Software without restriction, including without limitation the
+ ; rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ ; sell copies of the Software, and to permit persons to whom the Software is
+ ; furnished to do so, subject to the following conditions:
+ ;
+ ; The above copyright notice and this permission notice shall be included in
+ ; all copies or substantial portions of the Software.
+ ;
+ ; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ ; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ ; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ ; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ ; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ ; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ ; IN THE SOFTWARE.
+
+(define report-VG-chunk 'PossibleValidGhost)
+(define VG-chunk 'ValidGhost)
+(define SH-chunk 'Shift)
+(define DI-chunk 'deviceIndex)
+(define NE-chunk 'NeboExpression)
+(define NBE-chunk 'NeboBooleanExpression)
+(define FT-chunk 'FieldType)
+(define NS-chunk 'NeboScalar)
+(define NB-chunk 'NeboBoolean)
+(define NCF-chunk 'NeboConstField)
+(define NF-chunk 'NeboField)
+(define Nil-chunk 'NeboNil)
+(define SClause-chunk 'NeboSimpleClause)
+(define SFClause-chunk 'NeboSimpleFinalClause)
+(define SCond-chunk 'NeboSimpleCond)
+(define Clause-chunk 'NeboClause)
+(define Cond-chunk 'NeboCond)
+(define CT-chunk 'ClauseType)
+(define IntVec (scope 'structured 'IntVec))
+(define NSP 'NeboStencilPoint)
+(define NSPC 'NeboStencilPointCollection)
+(define NSCC 'NeboStencilCoefCollection)
+(define NSt 'NeboStencil)
+(define (ignore . given)
+  null)
+(define (type-trans new-type)
+  (lambda (old-type)
+    (tpl-pmtr (scope old-type new-type))))
+(define (arg-swap proc num1 num2 report)
+  (lambda args1 (if (not (= num1 (length args1)))
+                    (error (string-append report ": first set of arguments does not match expected number"))
+                    (lambda args2 (if (not (= num2 (length args2)))
+                                      (error (string-append report ": second set of arguments does not match expected number"))
+                                      (apply proc (append args2 args1)))))))
+(define bm-constructor (arg-swap constructor-chunk 3 1 "bm-constructor"))
+(define (combine-args final-proc combine-procs numbers report)
+  (define combine-procs-lst (if (list? combine-procs)
+                                combine-procs
+                                (list combine-procs)))
+  (define combine-procs-count (length combine-procs-lst))
+  (define combine-count (- (length numbers) 2))
+  (define skip-num (first numbers))
+  (define combine-nums (take (rest numbers) combine-count))
+  (define final-num (last numbers))
+  (define total-num (apply + numbers))
+  (if (not (= combine-procs-count combine-count))
+      (error (string-append report " : number of procedures does not match number of argument counts"))
+      (lambda args (if (not (= total-num (length args)))
+                       (error (string-append report " : arguments do not match expected number"))
+                       (let* ([first-args (take args skip-num)]
+                              [combine-args (take (drop args skip-num)
+                                                  (apply + combine-nums))]
+                              [last-args (drop args (apply + skip-num combine-nums))]
+                              [combine-args-lst (reverse (first (foldl (lambda (count result)
+                                                                         (let ([answer (first result)]
+                                                                               [args (second result)])
+                                                                           (list (cons (take args count)
+                                                                                       answer)
+                                                                                 (drop args count))))
+                                                                       (list null combine-args)
+                                                                       combine-nums)))]
+                              [combine-results (map (lambda (proc args) (apply proc args))
+                                                    combine-procs-lst
+                                                    combine-args-lst)])
+                         (apply final-proc (append first-args
+                                                   combine-results
+                                                   last-args)))))))
+(define (map* proc . lsts)
+  (apply map proc (map (lambda (lst) (if (list? lst)
+                                         (flatten* lst)
+                                         (list lst)))
+                       lsts)))
+(define (build-mode name
+                    mode
+                    tpl-pars
+                    typedefs
+                    constructor
+                    publics
+                    privates)
+  (tpl-srt-def name
+               (map tpl-pmtr (flatten* tpl-pars FT-chunk))
+               (list mode tpl-pars FT-chunk)
+               (pub-sec (s-typedef FT-chunk 'field_type)
+                        (s-typedef (scope (tpl-pmtr 'field_type)
+                                          'memory_window)
+                                   'MemoryWindow)
+                        typedefs
+                        (constructor name)
+                        publics)
+               (priv-sec privates)))
+(define (build-Initial-general name
+                               tpl-irreg-pars
+                               tpl-reg-pars
+                               typedefs
+                               tpl-irreg-args
+                               VG-type
+                               constructor
+                               publics
+                               privates)
+  (define SW-tpl-irreg-args (if (null? tpl-irreg-args) null (first tpl-irreg-args)))
+  (define RS-tpl-irreg-args (if (null? tpl-irreg-args) null (second tpl-irreg-args)))
+  (define gpu-tpl-irreg-args (if (null? tpl-irreg-args) null (third tpl-irreg-args)))
+  (define RD-tpl-irreg-args (if (null? tpl-irreg-args) null (fourth tpl-irreg-args)))
+  (define (tpl-reg-args type)
+    (map* (type-trans type)
+          tpl-reg-pars))
+  (build-mode name
+              'Initial
+              (list tpl-irreg-pars tpl-reg-pars)
+              (list typedefs
+                    (s-typedef (tpl-use name
+                                        'SeqWalk
+                                        SW-tpl-irreg-args
+                                        (tpl-reg-args 'SeqWalkType)
+                                        FT-chunk)
+                               'SeqWalkType)
+                    (threads-only (s-typedef (tpl-use name
+                                                      'Resize
+                                                      RS-tpl-irreg-args
+                                                      (tpl-reg-args 'ResizeType)
+                                                      FT-chunk)
+                                             'ResizeType))
+                    (gpu-only (s-typedef (tpl-use name
+                                                  'GPUWalk
+                                                  gpu-tpl-irreg-args
+                                                  (tpl-reg-args 'GPUWalkType)
+                                                  FT-chunk)
+                                         'GPUWalkType))
+                    (s-typedef (tpl-use name
+                                        'Reduction
+                                        RD-tpl-irreg-args
+                                        (tpl-reg-args 'ReductionType)
+                                        FT-chunk)
+                               'ReductionType)
+                    (s-typedef VG-type report-VG-chunk))
+              constructor
+              publics
+              privates))
+(define (build-Resize-general name
+                              tpl-irreg-pars
+                              tpl-reg-pars
+                              typedefs
+                              tpl-irreg-args
+                              constructor
+                              publics
+                              privates)
+  (threads-only (build-mode name
+                            'Resize
+                            (list tpl-irreg-pars tpl-reg-pars)
+                            (list typedefs
+                                  (s-typedef (tpl-use name
+                                                      'SeqWalk
+                                                      tpl-irreg-args
+                                                      (map* (type-trans 'SeqWalkType)
+                                                            tpl-reg-pars)
+                                                      FT-chunk)
+                                             'SeqWalkType))
+                            constructor
+                            publics
+                            privates)))
+(define (build-SeqWalk-general name
+                               tpl-irreg-pars
+                               tpl-reg-pars
+                               typedefs
+                               constructor
+                               publics
+                               privates)
+  (build-mode name
+              'SeqWalk
+              (list tpl-irreg-pars tpl-reg-pars)
+              typedefs
+              constructor
+              publics
+              privates))
+(define (build-gpu-general name
+                           tpl-irreg-pars
+                           tpl-reg-pars
+                           typedefs
+                           constructor
+                           publics
+                           privates)
+  (gpu-only
+   (build-mode name
+               'GPUWalk
+               (list tpl-irreg-pars tpl-reg-pars)
+               (list (s-typedef (tpl-pmtr (scope 'field_type 'value_type))
+                                'AtomicType)
+                     typedefs)
+               constructor
+               publics
+               privates)))
+(define (build-struct name
+                      tpl-irreg-pars
+                      tpl-reg-pars
+                      Initial
+                      Resize
+                      SeqWalk
+                      GPUWalk
+                      Reduction)
+  (internal-smt-list-chunk new-line-chunk
+                           (tpl-srt-dcl name
+                                        (map tpl-pmtr (flatten* 'CurrentMode tpl-irreg-pars tpl-reg-pars FT-chunk))
+                                        null)
+                           (map (lambda (mode) (mode name tpl-irreg-pars tpl-reg-pars))
+                                (list Initial Resize SeqWalk GPUWalk Reduction))))
