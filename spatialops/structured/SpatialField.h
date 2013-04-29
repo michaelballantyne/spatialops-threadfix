@@ -218,7 +218,7 @@ namespace structured{
      *         protects against memory corruption and inadvertent
      *         deletion of the field's underlying memory.
      */
-    SpatialField( const MemoryWindow window,
+    SpatialField( const MemoryWindow& window,
                   T* const fieldValues,
                   const StorageMode mode = InternalStorage,
                   const MemoryType consumerMemoryType = LOCAL_RAM,
@@ -233,7 +233,7 @@ namespace structured{
     /**
      *  \brief Shallow copy constructor with new window.
      */
-    SpatialField(const MemoryWindow window,
+    SpatialField(const MemoryWindow& window,
                  const SpatialField& other);
 
     virtual ~SpatialField();
@@ -579,7 +579,7 @@ namespace structured{
 
 template<typename Location, typename GhostTraits, typename T>
 SpatialField<Location, GhostTraits, T>::
-SpatialField( const MemoryWindow window,
+SpatialField( const MemoryWindow& window,
               T* const fieldValues,
               const StorageMode mode,
               const MemoryType mtype,
@@ -646,7 +646,7 @@ SpatialField( const MemoryWindow window,
 //------------------------------------------------------------------
 
 template<typename Location, typename GhostTraits, typename T>
-SpatialField<Location, GhostTraits, T>::SpatialField(const SpatialField& other)
+SpatialField<Location, GhostTraits, T>::SpatialField( const SpatialField& other )
 : fieldWindow_(other.fieldWindow_),
   interiorFieldWindow_(other.interiorFieldWindow_),
   fieldValues_(other.fieldValues_),
@@ -661,20 +661,31 @@ SpatialField<Location, GhostTraits, T>::SpatialField(const SpatialField& other)
 
 //------------------------------------------------------------------
 
-  template<typename Location, typename GhostTraits, typename T>
-    SpatialField<Location, GhostTraits, T>::SpatialField(const MemoryWindow window,
-                                                         const SpatialField& other)
-    : fieldWindow_(window),
-    interiorFieldWindow_(other.interiorFieldWindow_), // This should not be used!
-    fieldValues_(other.fieldValues_),
-    fieldValuesExtDevice_(other.fieldValuesExtDevice_),
-    builtField_(false),
-    memType_(other.memType_),
-    deviceIndex_(other.deviceIndex_),
-    consumerFieldValues_(other.consumerFieldValues_),
-    hasConsumer_( other.hasConsumer_ ),
-    allocatedBytes_( other.allocatedBytes_ )
-      {}
+template<typename Location, typename GhostTraits, typename T>
+SpatialField<Location, GhostTraits, T>::
+SpatialField( const MemoryWindow& window, const SpatialField& other )
+: fieldWindow_(window),
+  interiorFieldWindow_( other.interiorFieldWindow_ ), // This should not be used!
+  fieldValues_(other.fieldValues_),
+  fieldValuesExtDevice_(other.fieldValuesExtDevice_),
+  builtField_(false),
+  memType_(other.memType_),
+  deviceIndex_(other.deviceIndex_),
+  consumerFieldValues_(other.consumerFieldValues_),
+  hasConsumer_( other.hasConsumer_ ),
+  allocatedBytes_( other.allocatedBytes_ )
+{
+  // ensure that we are doing sane operations with the new window:
+# ifndef NDEBUG
+  assert( window.sanity_check() );
+
+  const MemoryWindow& pWindow = other.window_with_ghost();
+  for( size_t i=0; i<3; ++i ){
+    assert( window.offset(i) + window.extent(i) <= pWindow.glob_dim(i) );
+    assert( window.offset(i) < pWindow.glob_dim(i) );
+  }
+# endif
+}
 
   //------------------------------------------------------------------
 

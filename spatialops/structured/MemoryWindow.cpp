@@ -31,16 +31,6 @@ namespace SpatialOps{
     inline bool check_positive( const IntVec& v ){ return (v[0]> 0) & (v[1]> 0) & (v[2]> 0); }
     inline bool check_ge_zero ( const IntVec& v ){ return (v[0]>=0) & (v[1]>=0) & (v[2]>=0); }
 
-#ifndef NDEBUG
-    bool sanity_check( const IntVec& nglob, const IntVec& offset, const IntVec& extent ){
-      return check_positive( nglob  ) &&
-             check_ge_zero ( offset ) &&
-             check_positive( extent ) &&
-             extent[0] <= nglob[0]    &&
-             extent[1] <= nglob[1]    &&
-             extent[2] <= nglob[2];
-    }
-#endif
 
     MemoryWindow::MemoryWindow( const int npts[3],
                                 const int offset[3],
@@ -54,7 +44,7 @@ namespace SpatialOps{
       bc_( bcx, bcy, bcz )
     {
 #   ifndef NDEBUG
-      assert( sanity_check( nptsGlob_, offset_, extent_ ) );
+      assert( sanity_check() );
 #   endif
     }
 
@@ -70,7 +60,7 @@ namespace SpatialOps{
       bc_( bcx, bcy, bcz )
     {
 #   ifndef NDEBUG
-      assert( sanity_check( nptsGlob_, offset_, extent_ ) );
+      assert( sanity_check() );
 #   endif
     }
 
@@ -82,7 +72,7 @@ namespace SpatialOps{
       bc_( bcx, bcy, bcz )
     {
 #   ifndef NDEBUG
-      assert( sanity_check( nptsGlob_, offset_, extent_ ) );
+      assert( sanity_check() );
 #   endif
     }
 
@@ -94,7 +84,7 @@ namespace SpatialOps{
       bc_( bcx, bcy, bcz )
     {
 #   ifndef NDEBUG
-      assert( sanity_check( nptsGlob_, offset_, extent_ ) );
+      assert( sanity_check() );
 #   endif
     }
 
@@ -184,6 +174,15 @@ namespace SpatialOps{
     ostream& operator<<(ostream& os, const MemoryWindow& w ){
       os << w.nptsGlob_ << w.offset_ << w.extent_ << w.bc_;
       return os;
+    }
+
+    bool
+    MemoryWindow::sanity_check() const
+    {
+      return check_positive( nptsGlob_ ) &&
+             check_ge_zero ( offset_   ) &&
+             check_positive( extent_   ) &&
+             check_ge_zero ( nptsGlob_ - extent_ );
     }
 
   } // namespace structured
