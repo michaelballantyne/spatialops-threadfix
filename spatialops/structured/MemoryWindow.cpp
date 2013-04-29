@@ -28,12 +28,13 @@ using namespace std;
 namespace SpatialOps{
   namespace structured{
 
-    inline bool check_positive( const IntVec& v ){ return (v[0]>=0) & (v[1]>=0) & (v[2]>=0); }
+    inline bool check_positive( const IntVec& v ){ return (v[0]> 0) & (v[1]> 0) & (v[2]> 0); }
+    inline bool check_ge_zero ( const IntVec& v ){ return (v[0]>=0) & (v[1]>=0) & (v[2]>=0); }
 
 #ifndef NDEBUG
     bool sanity_check( const IntVec& nglob, const IntVec& offset, const IntVec& extent ){
       return check_positive( nglob  ) &&
-             check_positive( offset ) &&
+             check_ge_zero ( offset ) &&
              check_positive( extent ) &&
              extent[0] <= nglob[0]    &&
              extent[1] <= nglob[1]    &&
