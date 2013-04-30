@@ -46,8 +46,7 @@ using namespace structured;
                             f.window_without_ghost().has_bc(0),         \
                             f.window_without_ghost().has_bc(1),         \
                             f.window_without_ghost().has_bc(2)),        \
-               f.field_values(),                                        \
-               structured::ExternalStorage))
+	       f) )
 
 template<typename FieldType>
 inline void evaluate_serial_example(FieldType & result,

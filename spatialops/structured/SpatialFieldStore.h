@@ -658,7 +658,8 @@ void SpatialFieldStore::restore_field( FieldT& field )
   boost::mutex::scoped_lock lock( get_mutex() );
 # endif
   typedef typename ValTypeSelector<FieldT,typename boost::is_pod<FieldT>::type>::type AtomicT;
-  Pool<AtomicT>::self().put( field.field_values() );
+  AtomicT * values = const_cast<AtomicT *>((const_cast<FieldT const &>(field)).field_values());
+  Pool<AtomicT>::self().put( values );
 }
 
 //------------------------------------------------------------------

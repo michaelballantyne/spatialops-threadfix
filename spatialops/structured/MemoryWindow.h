@@ -225,8 +225,8 @@ namespace structured{
     /**
      *  \brief Resizes/reduces the MemoryWindow to given number of ghost cells.
      *
-     *  \param oldGhost is a GhostData that specifices how many ghost cells are currently on each face
-     *  \param newGhost is a GhostData that specifices how many ghost cells are to be on each face
+     *  \param oldGhost is a GhostData that specifies how many ghost cells are currently on each face
+     *  \param newGhost is a GhostData that specifies how many ghost cells are to be on each face
      *
      *  \return new MemoryWindow reduced from having oldNeg/oldPos ghost cells (and extra cells along boundary conditions) to having newNeg/newPos ghost cells on each face.
      */
@@ -356,6 +356,11 @@ namespace structured{
         << "BC :    " << bc_     << std::endl;
       return s.str();
     }
+
+    /**
+     * \brief performs basic sanity checks to see if there is anything obviously wrong with this window.
+     */
+    bool sanity_check() const;
 
   };
 

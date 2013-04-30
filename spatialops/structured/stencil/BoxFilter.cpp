@@ -49,8 +49,7 @@ namespace structured{
                                                   ws.offset()+IntVec(i,j,k),
                                                   ws.extent()-of,
                                                   ws.has_bc(0), ws.has_bc(1), ws.has_bc(2) ),
-                                    src.field_values(),
-                                    ExternalStorage ) );
+				    src) );
         }
       }
     }

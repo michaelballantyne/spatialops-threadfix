@@ -2,7 +2,6 @@
 #define Test_Functions_h
 
 #include <spatialops/FieldFunctions.h>
-#include <spatialops/FieldExpressionsExtended.h>
 
 //====================================================================
 

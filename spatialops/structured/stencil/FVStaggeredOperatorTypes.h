@@ -192,6 +192,9 @@ namespace structured{
   OP_BUILDER( NullStencil, Interpolant, SVolField, YSurfYField )
   OP_BUILDER( NullStencil, Interpolant, SVolField, ZSurfZField )
 
+  OP_BUILDER( NullStencil, Interpolant, XSurfXField, SVolField )
+  OP_BUILDER( NullStencil, Interpolant, YSurfYField, SVolField )
+  OP_BUILDER( NullStencil, Interpolant, ZSurfZField, SVolField )
 
   OP_BUILDER( Stencil4, Interpolant, SVolField, XSurfYField )
   OP_BUILDER( Stencil4, Interpolant, SVolField, XSurfZField )

@@ -25,5 +25,3 @@
  * Please use Nebo.h instead.
  */
 #include <spatialops/Nebo.h>
-
-

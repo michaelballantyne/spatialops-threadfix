@@ -28,7 +28,7 @@
 #include <boost/static_assert.hpp>
 
 #include <spatialops/SpatialOpsTools.h>
-#include <spatialops/FieldExpressionsExtended.h>
+#include <spatialops/FieldExpressions.h>
 
 #include<cmath>
 
