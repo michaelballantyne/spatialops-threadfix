@@ -181,7 +181,7 @@ namespace SpatialOps{
     {
       return check_positive( nptsGlob_ ) &&
              check_ge_zero ( offset_   ) &&
-             check_positive( extent_   ) &&
+             check_ge_zero ( extent_   ) &&
              check_ge_zero ( nptsGlob_ - extent_ );
     }
 
