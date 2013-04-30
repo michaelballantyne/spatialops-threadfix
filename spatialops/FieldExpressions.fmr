@@ -921,9 +921,7 @@
                                             'refine
                                             'split
                                             'location)
-                                       (mfc (fc 'field)
-                                            'field_values)
-                                       (scope 'structured 'ExternalStorage))
+                                       (fc 'field))
                                    (r-fcn-def (constize (fcn-dcl 'field
                                                                  (b s FT-chunk const-chunk "&")))
                                               null

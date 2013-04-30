@@ -317,10 +317,7 @@
           {};
           inline ResizeType resize(structured::IntVec const & split,
                                    structured::IntVec const & location) const {
-
-             return ResizeType(FieldType(field().window_with_ghost().refine(split, location),
-					 field() ) );
-
+             return ResizeType(FieldType(field().window_with_ghost().refine(split, location), field()));
           };
           inline FieldType const & field(void) const { return field_; };
 
