@@ -174,8 +174,7 @@
                                                               (nt=c 'int 'jj (n+ (n* 'blockIdx.y 'blockDim.y) 'threadIdx.y))
                                                               (fc 'start 'ii 'jj)
                                                               (mfc 'rhs 'start 'ii 'jj)
-                                                              (nif (fc 'valid)
-                                                                   assign-body))))
+                                                              assign-body)))
                               publics))
                       (lambda (valid-result
                                start-body
@@ -411,10 +410,11 @@
                                                                           "1"))))
                                null)
                               (nwhile (c '! (fc 'at_end))
-                                      (n= (fc 'ref)
-                                          (mfc 'rhs 'eval))
-                                      (fc 'next)
-                                      (mfc 'rhs 'next))
+                                      (nif (fc 'valid)
+                                           (n= (fc 'ref)
+                                               (mfc 'rhs 'eval))
+                                           (fc 'next)
+                                           (mfc 'rhs 'next)))
                               null
                               'valid_
                               (list (n= 'valid_ (par (n-and (n< 'x 'xExtent_)
