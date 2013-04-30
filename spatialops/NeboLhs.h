@@ -210,11 +210,13 @@
                  dim3 dimGrid(gDimX, gDimY);
 
                  gpu_assign_kernel<GPUWalkType, RhsGPUWalkType><<<dimGrid,
-                                                                  dimBlock>>>(gpu_init<ValidGhost,
-                                                                                       Shift>(),
-                                                                              rhs.template
-                                                                                  gpu_init<ValidGhost,
-                                                                                           Shift>(gpu_device_index()));
+                                                                  dimBlock,
+                                                                  0,
+                                                                  field_.get_stream()>>>(gpu_init<ValidGhost,
+                                                                                                  Shift>(),
+                                                                                         rhs.template
+                                                                                             gpu_init<ValidGhost,
+                                                                                                      Shift>(gpu_device_index()));
 
 #                ifdef NEBO_REPORT_BACKEND
                     std::cout << "Finished Nebo CUDA" << std::endl

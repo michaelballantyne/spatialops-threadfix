@@ -287,7 +287,9 @@
                                            (bs 'dim3 (fc 'dimGrid 'gDimX 'gDimY))
                                            (fc (kernel-use (tpl-use 'gpu_assign_kernel 'GPUWalkType 'RhsGPUWalkType)
                                                            'dimGrid
-                                                           'dimBlock)
+                                                           'dimBlock
+                                                           "0"
+                                                           (mfc 'field_ 'get_stream))
                                                (fc (tpl-use 'gpu_init VG-chunk SH-chunk))
                                                (mfc 'rhs
                                                     (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)

@@ -128,6 +128,10 @@ namespace structured{
 
     unsigned long int allocatedBytes_;	///< Stores entire field size in bytes: sizeof(T) * glob.x * glob.y * glob.z
 
+#   ifdef ENABLE_CUDA
+    cudaStream_t cudaStream_;
+#   endif
+
     inline void reset_values(const T* values);
 
 #ifdef SOPS_BOOST_SERIALIZATION
@@ -386,9 +390,9 @@ namespace structured{
     }
 
 #   ifdef ENABLE_CUDA
-    void set_stream( const cudaStream_t& stream ) const{
-      // Chris: implement this...
-    }
+    void set_stream( const cudaStream_t& stream ) { cudaStream_ = stream; }
+
+    cudaStream_t const & get_stream() const { return cudaStream_; }
 #   endif
 
     /**
@@ -600,6 +604,9 @@ SpatialField( const MemoryWindow window,
       memType_( mtype ),
       deviceIndex_( devIdx ),
       allocatedBytes_( 0 )
+#     ifdef ENABLE_CUDA
+      , cudaStream_( 0 )
+#     endif
 { //InteriorStorage => we build a new field
   //Exterior storage => we wrap T*
   IntVec ext = window.extent();
@@ -658,6 +665,9 @@ SpatialField<Location, GhostTraits, T>::SpatialField(const SpatialField& other)
   deviceIndex_(other.deviceIndex_),
   consumerFieldValues_(other.consumerFieldValues_),
   allocatedBytes_( other.allocatedBytes_ )
+# ifdef ENABLE_CUDA
+  , cudaStream_( other.cudaStream_ )
+# endif
 {}
 
 //------------------------------------------------------------------
