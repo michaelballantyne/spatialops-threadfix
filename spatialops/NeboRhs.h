@@ -67,15 +67,17 @@
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
-             inline bool gpu_ready(int const deviceIndex) const { return true; };
+             inline bool gpu_ready(int const deviceIndex) const { return true; }
+
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
                  return GPUWalkType(value_);
-              };
+              }
+
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {}
 #            endif
-             /* NEBO_GPU_TEST */;
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
 
@@ -223,15 +225,17 @@
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
-             inline bool gpu_ready(int const deviceIndex) const { return true; };
+             inline bool gpu_ready(int const deviceIndex) const { return true; }
+
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
                  return GPUWalkType(value_);
-              };
+              }
+
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {}
 #            endif
-             /* NEBO_GPU_TEST */;
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
 
@@ -381,20 +385,22 @@
 #         ifdef __CUDACC__
              inline bool gpu_ready(int const deviceIndex) const {
                 return field_.find_consumer(EXTERNAL_CUDA_GPU, deviceIndex);
-             };
+             }
+
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
                  return GPUWalkType(deviceIndex,
                                     field_.template resize_ghost_and_shift<ValidGhost,
                                                                            Shift>());
-              };
+              }
+
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
                    const_cast<FieldType *>(&field_)->add_consumer(EXTERNAL_CUDA_GPU,
                                                                   deviceIndex);
                 }
 #            endif
-             /* NEBO_GPU_TEST */;
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
 

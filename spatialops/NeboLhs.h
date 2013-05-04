@@ -28,7 +28,7 @@
    namespace SpatialOps {
 #     ifdef __CUDACC__
          template<typename LhsType, typename RhsType>
-          __global__ inline void gpu_assign_kernel(LhsType lhs, RhsType rhs) {
+          __global__ void gpu_assign_kernel(LhsType lhs, RhsType rhs) {
              lhs.assign(rhs);
           }
 #     endif
@@ -171,12 +171,13 @@
                     std::cout << "Finished Nebo thread parallel" << std::endl
 #                endif
                  /* NEBO_REPORT_BACKEND */;
-              };
+              }
+
              template<typename ValidGhost>
               inline ResizeType resize(void) {
                  return ResizeType(field_.template
                                           resize_ghost_and_maintain_interior<ValidGhost>());
-              };
+              }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
@@ -222,19 +223,23 @@
                     std::cout << "Finished Nebo CUDA" << std::endl
 #                endif
                  /* NEBO_REPORT_BACKEND */;
-              };
+              }
+
              inline bool gpu_ready(void) const {
                 return field_.memory_device_type() == EXTERNAL_CUDA_GPU;
-             };
+             }
+
              inline int gpu_device_index(void) const {
                 return field_.device_index();
-             };
+             }
+
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(void) {
                  return GPUWalkType(field_.template
                                            resize_ghost_and_shift_and_maintain_interior<ValidGhost,
                                                                                         Shift>());
-              };
+              }
+
 #            ifdef NEBO_GPU_TEST
                 template<typename Iterator, typename RhsType>
                  inline void gpu_test_assign(RhsType rhs) {
@@ -275,7 +280,7 @@
                     /* NEBO_REPORT_BACKEND */;
                  }
 #            endif
-             /* NEBO_GPU_TEST */;
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
 

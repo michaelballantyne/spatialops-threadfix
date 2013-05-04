@@ -40,7 +40,7 @@
              return NeboStencilCoefCollection<Length + 1>(*this, c);
           }
 
-          inline double const coef(void) const { return coef_; }
+          inline double coef(void) const { return coef_; }
 
           inline NeboStencilCoefCollection<Length - 1> const others(void) const {
              return others_;
@@ -63,7 +63,7 @@
              return NeboStencilCoefCollection<2>(*this, c);
           }
 
-          inline double const coef(void) const { return coef_; }
+          inline double coef(void) const { return coef_; }
 
          private:
           double const coef_;
@@ -482,20 +482,22 @@
 #         ifdef __CUDACC__
              inline bool gpu_ready(int const deviceIndex) const {
                 return arg_.gpu_ready(deviceIndex);
-             };
+             }
+
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
                  return GPUWalkType(ConstructGPUExpr::template in_gpu_construct<ValidGhost,
                                                                                 Shift>(deviceIndex,
                                                                                        arg_,
                                                                                        coefs_));
-              };
+              }
+
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
                    arg_.gpu_prep(deviceIndex);
                 }
 #            endif
-             /* NEBO_GPU_TEST */;
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
 

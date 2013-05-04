@@ -463,7 +463,7 @@
                                       (mfc 'expr_ 'next))
                                  'AtomicType
                                  (mfc 'expr_ 'eval)
-                                 (r-fcn-def (constize (fcn-dcl 'check (tc 'bool)))
+                                 (r-fcn-def (constize (fcn-dcl 'check 'bool))
                                             null
                                             (mfc 'test_ 'eval))
                                  (list (sad 'Test 'test_)
@@ -479,7 +479,7 @@
                              (ccs (mfc 'test_ 'next)
                                   (mfc 'expr_ 'next))
                              (mfc 'expr_ 'eval)
-                             (device-use (r-fcn-def (constize (fcn-dcl 'check (tc 'bool)))
+                             (device-use (r-fcn-def (constize (fcn-dcl 'check 'bool))
                                                     null
                                                     (mfc 'test_ 'eval)))
                              (list (sad 'Test 'test_)
@@ -500,7 +500,7 @@
                                           (mfc 'expr_ 'has_length)))
                                'AtomicType
                                (mfc 'expr_ 'eval)
-                               (r-fcn-def (constize (fcn-dcl 'check (tc 'bool)))
+                               (r-fcn-def (constize (fcn-dcl 'check 'bool))
                                           null
                                           (mfc 'test_ 'eval))
                                (list (sad 'Test 'test_)
@@ -623,12 +623,10 @@
                                               (adcr 'double 'd))
                                         (list (cons-asgn 'b_ 'b)
                                               (cons-asgn 'd_ 'd)))
-                     (r-fcn-def (constize (fcn-dcl 'check
-                                                   'bool))
+                     (r-fcn-def (constize (fcn-dcl 'check 'bool))
                                 null
                                 'b_)
-                     (r-fcn-def (constize (fcn-dcl 'eval
-                                                   'double))
+                     (r-fcn-def (constize (fcn-dcl 'eval 'double))
                                 null
                                 'd_)
                      (s-tpl-srt-def 'Convert
@@ -655,8 +653,7 @@
             (pub-sec (constructor-chunk SFClause-chunk
                                         (adc 'double 'd)
                                         (cons-asgn 'd_ 'd))
-                     (r-fcn-def (constize (fcn-dcl 'eval
-                                                   'double))
+                     (r-fcn-def (constize (fcn-dcl 'eval 'double))
                                 null
                                 'd_))
             (priv-sec (sadc 'double 'd_)))
@@ -669,9 +666,7 @@
                                                   (adcr 'Otherwise 'otherwise))
                                             (list (cons-asgn 'c_ 'c)
                                                   (cons-asgn 'otherwise_ 'otherwise)))
-                         (r-fcn-def (constize (fcn-dcl 'eval
-                                                       'double
-                                                       null))
+                         (r-fcn-def (constize (fcn-dcl 'eval 'double null))
                                     null
                                     (ter-cond (mfc 'c_ 'check)
                                               (mfc 'c_ 'eval)

@@ -279,21 +279,21 @@
                                     if-args)]
                                         ;This removes Scalar X Scalar or Boolean X Boolean
          [cross-products (rest (reverse raw-cross-products))])
-    (bl-smts (map (lambda (args) (build-interface-case name
-                                                       external-name
-                                                       expression-term
-                                                       args))
-                  cross-products))))
+    (bb (map (lambda (args) (build-interface-case name
+                                                  external-name
+                                                  expression-term
+                                                  args))
+             cross-products))))
 
 (define (build-unary-interface name
                                external-name
                                expression-term
                                if-args)
-  (bl-smts (map (lambda (arg) (build-interface-case name
-                                                    external-name
-                                                    expression-term
-                                                    (list arg)))
-                if-args)))
+  (bb (map (lambda (arg) (build-interface-case name
+                                               external-name
+                                               expression-term
+                                               (list arg)))
+           if-args)))
 
 (define binary-expr-arg-lst (list if-arg-Scalar if-arg-Field if-arg-SubExpr))
 (define unary-expr-arg-lst (list if-arg-Field if-arg-SubExpr))

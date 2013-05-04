@@ -39,7 +39,7 @@
                                     (fc (tpl-use NSCC (n+ 'Length "1"))
                                         '*this
                                         'c))
-                         (r-fcn-def (constize (fcn-dcl 'coef (tc 'double)))
+                         (r-fcn-def (constize (fcn-dcl 'coef 'double))
                                     null
                                     'coef_)
                          (r-fcn-def (constize (fcn-dcl 'others (tc (tpl-use NSCC (n- 'Length "1")))))
@@ -62,7 +62,7 @@
                                     (fc (tpl-use NSCC "2")
                                         '*this
                                         'c))
-                         (r-fcn-def (constize (fcn-dcl 'coef (tc 'double)))
+                         (r-fcn-def (constize (fcn-dcl 'coef 'double))
                                     null
                                     'coef_))
                 (priv-sec (sadc 'double 'coef_)))

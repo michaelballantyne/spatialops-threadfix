@@ -110,12 +110,14 @@
 #         ifdef __CUDACC__
              inline bool gpu_ready(int const deviceIndex) const {
                 return test_.gpu_ready(deviceIndex) && expr_.gpu_ready(deviceIndex);
-             };
+             }
+
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
                  return GPUWalkType(test_.template gpu_init<ValidGhost, Shift>(deviceIndex),
                                     expr_.template gpu_init<ValidGhost, Shift>(deviceIndex));
-              };
+              }
+
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
                    test_.gpu_prep(deviceIndex);
@@ -123,7 +125,7 @@
                    expr_.gpu_prep(deviceIndex);
                 }
 #            endif
-             /* NEBO_GPU_TEST */;
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
 
@@ -186,7 +188,7 @@
 
           inline AtomicType eval(void) const { return expr_.eval(); }
 
-          inline bool const check(void) const { return test_.eval(); }
+          inline bool check(void) const { return test_.eval(); }
 
          private:
           Test test_;
@@ -217,9 +219,7 @@
                 return expr_.eval();
              }
 
-             __device__ inline bool const check(void) const {
-                return test_.eval();
-             }
+             __device__ inline bool check(void) const { return test_.eval(); }
 
             private:
              Test test_;
@@ -253,7 +253,7 @@
 
           inline AtomicType eval(void) const { return expr_.eval(); }
 
-          inline bool const check(void) const { return test_.eval(); }
+          inline bool check(void) const { return test_.eval(); }
 
          private:
           Test test_;
@@ -325,13 +325,15 @@
 #         ifdef __CUDACC__
              inline bool gpu_ready(int const deviceIndex) const {
                 return clause_.gpu_ready(deviceIndex) && otherwise_.gpu_ready(deviceIndex);
-             };
+             }
+
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
                  return GPUWalkType(clause_.template gpu_init<ValidGhost, Shift>(deviceIndex),
                                     otherwise_.template gpu_init<ValidGhost,
                                                                  Shift>(deviceIndex));
-              };
+              }
+
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
                    clause_.gpu_prep(deviceIndex);
@@ -339,7 +341,7 @@
                    otherwise_.gpu_prep(deviceIndex);
                 }
 #            endif
-             /* NEBO_GPU_TEST */;
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
 

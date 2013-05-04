@@ -73,35 +73,35 @@
                                          (r-fcn-def (fcn-dcl 'init 'SeqWalkType)
                                                     null
                                                     (fc 'SeqWalkType SW-cons-args)))
-                                (threads-only (nl-smts (assign 'thread_parallel_assign
-                                                               (list (bs (scope 'BI 'interprocess_semaphore)
-                                                                         (fc 'semaphore "0"))
-                                                                     (nt=c 'int 'thread_count (fc 'get_soft_thread_count))
-                                                                     thread-parallel-assign-body
-                                                                     (nfor (nt= 'int 'ii "0")
-                                                                           (n< 'ii 'max)
-                                                                           (n++ 'ii)
-                                                                           (mfc 'semaphore 'wait)))
-                                                               (bs 'thread 'parallel))
-                                                       (tpl-def (tpl-pmtr VG-chunk)
-                                                                (r-fcn-def (fcn-dcl 'resize 'ResizeType)
-                                                                           null
-                                                                           (fc 'ResizeType RS-cons-args)))))
-                                (gpu-only (nl-smts (assign 'gpu_assign gpu-assign-body 'CUDA)
-                                                   (r-fcn-def (constize (fcn-dcl 'gpu_ready 'bool))
-                                                              null
-                                                              gpu-ready-body)
-                                                   (r-fcn-def (constize (fcn-dcl 'gpu_device_index 'int))
-                                                              null
-                                                              gpu-device-index-body)
-                                                   (tpl-def (list (tpl-pmtr VG-chunk)
-                                                                  (tpl-pmtr SH-chunk))
-                                                            (r-fcn-def (fcn-dcl 'gpu_init 'GPUWalkType)
-                                                                       null
-                                                                       (fc 'GPUWalkType gpu-cons-args)))
-                                                   (gpu-test-only (assign 'gpu_test_assign
-                                                                          gpu-test-assign-body
-                                                                          (bs 'CUDA 'with 'Nebo 'copying)))))
+                                (threads-only (bb (assign 'thread_parallel_assign
+                                                          (list (bs (scope 'BI 'interprocess_semaphore)
+                                                                    (fc 'semaphore "0"))
+                                                                (nt=c 'int 'thread_count (fc 'get_soft_thread_count))
+                                                                thread-parallel-assign-body
+                                                                (nfor (nt= 'int 'ii "0")
+                                                                      (n< 'ii 'max)
+                                                                      (n++ 'ii)
+                                                                      (mfc 'semaphore 'wait)))
+                                                          (bs 'thread 'parallel))
+                                                  (tpl-def (tpl-pmtr VG-chunk)
+                                                           (r-fcn-def (fcn-dcl 'resize 'ResizeType)
+                                                                      null
+                                                                      (fc 'ResizeType RS-cons-args)))))
+                                (gpu-only (bb (assign 'gpu_assign gpu-assign-body 'CUDA)
+                                              (r-fcn-def (constize (fcn-dcl 'gpu_ready 'bool))
+                                                         null
+                                                         gpu-ready-body)
+                                              (r-fcn-def (constize (fcn-dcl 'gpu_device_index 'int))
+                                                         null
+                                                         gpu-device-index-body)
+                                              (tpl-def (list (tpl-pmtr VG-chunk)
+                                                             (tpl-pmtr SH-chunk))
+                                                       (r-fcn-def (fcn-dcl 'gpu_init 'GPUWalkType)
+                                                                  null
+                                                                  (fc 'GPUWalkType gpu-cons-args)))
+                                              (gpu-test-only (assign 'gpu_test_assign
+                                                                     gpu-test-assign-body
+                                                                     (bs 'CUDA 'with 'Nebo 'copying)))))
                                 privates))))
                 (list 7 1 10 0)
                 "build-Initial-lhs"))
@@ -207,10 +207,10 @@
 (n 'SpatialOps
    (gpu-only (tpl-def (list (tpl-pmtr 'LhsType)
                             (tpl-pmtr 'RhsType))
-                      (bs '__global__ (v-fcn-def 'gpu_assign_kernel
-                                                 (list (ad 'LhsType 'lhs)
-                                                       (ad 'RhsType 'rhs))
-                                                 (mfc 'lhs 'assign 'rhs)))))
+                      (fcn-def (gbl-fcn-dcl 'gpu_assign_kernel
+                                            (ad 'LhsType 'lhs)
+                                            (ad 'RhsType 'rhs))
+                               (mfc 'lhs 'assign 'rhs))))
 
    (build-struct NF-chunk
                  null

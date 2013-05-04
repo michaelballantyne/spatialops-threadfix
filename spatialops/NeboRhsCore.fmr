@@ -39,16 +39,16 @@
                                                (r-fcn-def (constize (fcn-dcl 'resize 'ResizeType))
                                                           null
                                                           (fc 'ResizeType RS-cons-args))))
-                        (gpu-only (nl-smts  (r-fcn-def (constize (fcn-dcl 'gpu_ready 'bool (adc 'int DI-chunk)))
-                                                       null
-                                                       gpu-ready-body)
-                                            (tpl-def (list (tpl-pmtr VG-chunk)
-                                                           (tpl-pmtr SH-chunk))
-                                                     (r-fcn-def (constize (fcn-dcl 'gpu_init 'GPUWalkType (adc 'int DI-chunk)))
-                                                                null
-                                                                (fc 'GPUWalkType gpu-cons-args)))
-                                            (gpu-test-only (fcn-def (constize (fcn-dcl 'gpu_prep void-chunk (adc 'int DI-chunk)))
-                                                                    gpu-prep-body))))
+                        (gpu-only (bb (r-fcn-def (constize (fcn-dcl 'gpu_ready 'bool (adc 'int DI-chunk)))
+                                                 null
+                                                 gpu-ready-body)
+                                      (tpl-def (list (tpl-pmtr VG-chunk)
+                                                     (tpl-pmtr SH-chunk))
+                                               (r-fcn-def (constize (fcn-dcl 'gpu_init 'GPUWalkType (adc 'int DI-chunk)))
+                                                          null
+                                                          (fc 'GPUWalkType gpu-cons-args)))
+                                      (gpu-test-only (fcn-def (constize (fcn-dcl 'gpu_prep void-chunk (adc 'int DI-chunk)))
+                                                              gpu-prep-body))))
                         (tpl-def (list (tpl-pmtr VG-chunk)
                                        (tpl-pmtr SH-chunk))
                                  (r-fcn-def (constize (fcn-dcl 'reduce_init 'ReductionType))

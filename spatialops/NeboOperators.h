@@ -90,20 +90,22 @@
 #         ifdef __CUDACC__
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
-             };
+             }
+
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
                  return GPUWalkType(operand1_.template gpu_init<ValidGhost,
                                                                 Shift>(deviceIndex),
                                     operand2_.template gpu_init<ValidGhost,
                                                                 Shift>(deviceIndex));
-              };
+              }
+
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
                    operand1_.gpu_prep(deviceIndex); operand2_.gpu_prep(deviceIndex);
                 }
 #            endif
-             /* NEBO_GPU_TEST */;
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
 
@@ -270,7 +272,7 @@
 
           return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
                                        NeboConstField<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* Scalar X SubExpr */
       template<typename SubExpr2, typename FieldType>
@@ -290,7 +292,7 @@
 
           return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
                                        arg2.expr()));
-       };
+       }
 
       /* Field X Scalar */
       template<typename FieldType>
@@ -315,7 +317,7 @@
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
                                        NeboScalar<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* Field X Field */
       template<typename FieldType>
@@ -344,7 +346,7 @@
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
                                        NeboConstField<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* Field X SubExpr */
       template<typename SubExpr2, typename FieldType>
@@ -368,7 +370,7 @@
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
                                        arg2.expr()));
-       };
+       }
 
       /* SubExpr X Scalar */
       template<typename SubExpr1, typename FieldType>
@@ -388,7 +390,7 @@
 
           return ReturnTerm(ReturnType(arg1.expr(),
                                        NeboScalar<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* SubExpr X Field */
       template<typename SubExpr1, typename FieldType>
@@ -412,7 +414,7 @@
 
           return ReturnTerm(ReturnType(arg1.expr(),
                                        NeboConstField<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2, typename FieldType>
@@ -494,20 +496,22 @@
 #         ifdef __CUDACC__
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
-             };
+             }
+
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
                  return GPUWalkType(operand1_.template gpu_init<ValidGhost,
                                                                 Shift>(deviceIndex),
                                     operand2_.template gpu_init<ValidGhost,
                                                                 Shift>(deviceIndex));
-              };
+              }
+
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
                    operand1_.gpu_prep(deviceIndex); operand2_.gpu_prep(deviceIndex);
                 }
 #            endif
-             /* NEBO_GPU_TEST */;
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
 
@@ -674,7 +678,7 @@
 
           return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
                                        NeboConstField<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* Scalar X SubExpr */
       template<typename SubExpr2, typename FieldType>
@@ -694,7 +698,7 @@
 
           return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
                                        arg2.expr()));
-       };
+       }
 
       /* Field X Scalar */
       template<typename FieldType>
@@ -719,7 +723,7 @@
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
                                        NeboScalar<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* Field X Field */
       template<typename FieldType>
@@ -748,7 +752,7 @@
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
                                        NeboConstField<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* Field X SubExpr */
       template<typename SubExpr2, typename FieldType>
@@ -774,7 +778,7 @@
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
                                        arg2.expr()));
-       };
+       }
 
       /* SubExpr X Scalar */
       template<typename SubExpr1, typename FieldType>
@@ -794,7 +798,7 @@
 
           return ReturnTerm(ReturnType(arg1.expr(),
                                        NeboScalar<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* SubExpr X Field */
       template<typename SubExpr1, typename FieldType>
@@ -820,7 +824,7 @@
 
           return ReturnTerm(ReturnType(arg1.expr(),
                                        NeboConstField<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2, typename FieldType>
@@ -902,20 +906,22 @@
 #         ifdef __CUDACC__
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
-             };
+             }
+
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
                  return GPUWalkType(operand1_.template gpu_init<ValidGhost,
                                                                 Shift>(deviceIndex),
                                     operand2_.template gpu_init<ValidGhost,
                                                                 Shift>(deviceIndex));
-              };
+              }
+
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
                    operand1_.gpu_prep(deviceIndex); operand2_.gpu_prep(deviceIndex);
                 }
 #            endif
-             /* NEBO_GPU_TEST */;
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
 
@@ -1082,7 +1088,7 @@
 
           return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
                                        NeboConstField<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* Scalar X SubExpr */
       template<typename SubExpr2, typename FieldType>
@@ -1102,7 +1108,7 @@
 
           return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
                                        arg2.expr()));
-       };
+       }
 
       /* Field X Scalar */
       template<typename FieldType>
@@ -1127,7 +1133,7 @@
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
                                        NeboScalar<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* Field X Field */
       template<typename FieldType>
@@ -1156,7 +1162,7 @@
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
                                        NeboConstField<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* Field X SubExpr */
       template<typename SubExpr2, typename FieldType>
@@ -1182,7 +1188,7 @@
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
                                        arg2.expr()));
-       };
+       }
 
       /* SubExpr X Scalar */
       template<typename SubExpr1, typename FieldType>
@@ -1202,7 +1208,7 @@
 
           return ReturnTerm(ReturnType(arg1.expr(),
                                        NeboScalar<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* SubExpr X Field */
       template<typename SubExpr1, typename FieldType>
@@ -1228,7 +1234,7 @@
 
           return ReturnTerm(ReturnType(arg1.expr(),
                                        NeboConstField<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2, typename FieldType>
@@ -1310,20 +1316,22 @@
 #         ifdef __CUDACC__
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
-             };
+             }
+
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
                  return GPUWalkType(operand1_.template gpu_init<ValidGhost,
                                                                 Shift>(deviceIndex),
                                     operand2_.template gpu_init<ValidGhost,
                                                                 Shift>(deviceIndex));
-              };
+              }
+
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
                    operand1_.gpu_prep(deviceIndex); operand2_.gpu_prep(deviceIndex);
                 }
 #            endif
-             /* NEBO_GPU_TEST */;
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
 
@@ -1490,7 +1498,7 @@
 
           return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
                                        NeboConstField<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* Scalar X SubExpr */
       template<typename SubExpr2, typename FieldType>
@@ -1510,7 +1518,7 @@
 
           return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
                                        arg2.expr()));
-       };
+       }
 
       /* Field X Scalar */
       template<typename FieldType>
@@ -1535,7 +1543,7 @@
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
                                        NeboScalar<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* Field X Field */
       template<typename FieldType>
@@ -1564,7 +1572,7 @@
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
                                        NeboConstField<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* Field X SubExpr */
       template<typename SubExpr2, typename FieldType>
@@ -1588,7 +1596,7 @@
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
                                        arg2.expr()));
-       };
+       }
 
       /* SubExpr X Scalar */
       template<typename SubExpr1, typename FieldType>
@@ -1608,7 +1616,7 @@
 
           return ReturnTerm(ReturnType(arg1.expr(),
                                        NeboScalar<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* SubExpr X Field */
       template<typename SubExpr1, typename FieldType>
@@ -1632,7 +1640,7 @@
 
           return ReturnTerm(ReturnType(arg1.expr(),
                                        NeboConstField<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2, typename FieldType>
@@ -1699,17 +1707,19 @@
 #         ifdef __CUDACC__
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand_.gpu_ready(deviceIndex));
-             };
+             }
+
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
                  return GPUWalkType(operand_.template gpu_init<ValidGhost, Shift>(deviceIndex));
-              };
+              }
+
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
                    operand_.gpu_prep(deviceIndex);
                 }
 #            endif
-             /* NEBO_GPU_TEST */;
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
 
@@ -1842,7 +1852,7 @@
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg)));
-       };
+       }
 
       /* SubExpr */
       template<typename SubExpr, typename FieldType>
@@ -1907,17 +1917,19 @@
 #         ifdef __CUDACC__
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand_.gpu_ready(deviceIndex));
-             };
+             }
+
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
                  return GPUWalkType(operand_.template gpu_init<ValidGhost, Shift>(deviceIndex));
-              };
+              }
+
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
                    operand_.gpu_prep(deviceIndex);
                 }
 #            endif
-             /* NEBO_GPU_TEST */;
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
 
@@ -2050,7 +2062,7 @@
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg)));
-       };
+       }
 
       /* SubExpr */
       template<typename SubExpr, typename FieldType>
@@ -2115,17 +2127,19 @@
 #         ifdef __CUDACC__
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand_.gpu_ready(deviceIndex));
-             };
+             }
+
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
                  return GPUWalkType(operand_.template gpu_init<ValidGhost, Shift>(deviceIndex));
-              };
+              }
+
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
                    operand_.gpu_prep(deviceIndex);
                 }
 #            endif
-             /* NEBO_GPU_TEST */;
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
 
@@ -2258,7 +2272,7 @@
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg)));
-       };
+       }
 
       /* SubExpr */
       template<typename SubExpr, typename FieldType>
@@ -2323,17 +2337,19 @@
 #         ifdef __CUDACC__
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand_.gpu_ready(deviceIndex));
-             };
+             }
+
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
                  return GPUWalkType(operand_.template gpu_init<ValidGhost, Shift>(deviceIndex));
-              };
+              }
+
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
                    operand_.gpu_prep(deviceIndex);
                 }
 #            endif
-             /* NEBO_GPU_TEST */;
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
 
@@ -2466,7 +2482,7 @@
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg)));
-       };
+       }
 
       /* SubExpr */
       template<typename SubExpr, typename FieldType>
@@ -2531,17 +2547,19 @@
 #         ifdef __CUDACC__
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand_.gpu_ready(deviceIndex));
-             };
+             }
+
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
                  return GPUWalkType(operand_.template gpu_init<ValidGhost, Shift>(deviceIndex));
-              };
+              }
+
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
                    operand_.gpu_prep(deviceIndex);
                 }
 #            endif
-             /* NEBO_GPU_TEST */;
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
 
@@ -2674,7 +2692,7 @@
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg)));
-       };
+       }
 
       /* SubExpr */
       template<typename SubExpr, typename FieldType>
@@ -2736,17 +2754,19 @@
 #         ifdef __CUDACC__
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand_.gpu_ready(deviceIndex));
-             };
+             }
+
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
                  return GPUWalkType(operand_.template gpu_init<ValidGhost, Shift>(deviceIndex));
-              };
+              }
+
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
                    operand_.gpu_prep(deviceIndex);
                 }
 #            endif
-             /* NEBO_GPU_TEST */;
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
 
@@ -2879,7 +2899,7 @@
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg)));
-       };
+       }
 
       /* SubExpr */
       template<typename SubExpr, typename FieldType>
@@ -2944,17 +2964,19 @@
 #         ifdef __CUDACC__
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand_.gpu_ready(deviceIndex));
-             };
+             }
+
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
                  return GPUWalkType(operand_.template gpu_init<ValidGhost, Shift>(deviceIndex));
-              };
+              }
+
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
                    operand_.gpu_prep(deviceIndex);
                 }
 #            endif
-             /* NEBO_GPU_TEST */;
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
 
@@ -3083,7 +3105,7 @@
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg)));
-       };
+       }
 
       /* SubExpr */
       template<typename SubExpr, typename FieldType>
@@ -3160,20 +3182,22 @@
 #         ifdef __CUDACC__
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
-             };
+             }
+
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
                  return GPUWalkType(operand1_.template gpu_init<ValidGhost,
                                                                 Shift>(deviceIndex),
                                     operand2_.template gpu_init<ValidGhost,
                                                                 Shift>(deviceIndex));
-              };
+              }
+
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
                    operand1_.gpu_prep(deviceIndex); operand2_.gpu_prep(deviceIndex);
                 }
 #            endif
-             /* NEBO_GPU_TEST */;
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
 
@@ -3340,7 +3364,7 @@
 
           return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
                                        NeboConstField<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* Scalar X SubExpr */
       template<typename SubExpr2, typename FieldType>
@@ -3359,7 +3383,7 @@
 
           return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
                                        arg2.expr()));
-       };
+       }
 
       /* Field X Scalar */
       template<typename FieldType>
@@ -3384,7 +3408,7 @@
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
                                        NeboScalar<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* Field X Field */
       template<typename FieldType>
@@ -3413,7 +3437,7 @@
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
                                        NeboConstField<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* Field X SubExpr */
       template<typename SubExpr2, typename FieldType>
@@ -3438,7 +3462,7 @@
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
                                        arg2.expr()));
-       };
+       }
 
       /* SubExpr X Scalar */
       template<typename SubExpr1, typename FieldType>
@@ -3457,7 +3481,7 @@
 
           return ReturnTerm(ReturnType(arg1.expr(),
                                        NeboScalar<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* SubExpr X Field */
       template<typename SubExpr1, typename FieldType>
@@ -3482,7 +3506,7 @@
 
           return ReturnTerm(ReturnType(arg1.expr(),
                                        NeboConstField<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2, typename FieldType>
@@ -3547,17 +3571,19 @@
 #         ifdef __CUDACC__
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand_.gpu_ready(deviceIndex));
-             };
+             }
+
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
                  return GPUWalkType(operand_.template gpu_init<ValidGhost, Shift>(deviceIndex));
-              };
+              }
+
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
                    operand_.gpu_prep(deviceIndex);
                 }
 #            endif
-             /* NEBO_GPU_TEST */;
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
 
@@ -3690,7 +3716,7 @@
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg)));
-       };
+       }
 
       /* SubExpr */
       template<typename SubExpr, typename FieldType>
@@ -3752,17 +3778,19 @@
 #         ifdef __CUDACC__
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand_.gpu_ready(deviceIndex));
-             };
+             }
+
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
                  return GPUWalkType(operand_.template gpu_init<ValidGhost, Shift>(deviceIndex));
-              };
+              }
+
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
                    operand_.gpu_prep(deviceIndex);
                 }
 #            endif
-             /* NEBO_GPU_TEST */;
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
 
@@ -3895,7 +3923,7 @@
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg)));
-       };
+       }
 
       /* SubExpr */
       template<typename SubExpr, typename FieldType>
@@ -3975,20 +4003,22 @@
 #         ifdef __CUDACC__
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
-             };
+             }
+
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
                  return GPUWalkType(operand1_.template gpu_init<ValidGhost,
                                                                 Shift>(deviceIndex),
                                     operand2_.template gpu_init<ValidGhost,
                                                                 Shift>(deviceIndex));
-              };
+              }
+
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
                    operand1_.gpu_prep(deviceIndex); operand2_.gpu_prep(deviceIndex);
                 }
 #            endif
-             /* NEBO_GPU_TEST */;
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
 
@@ -4158,7 +4188,7 @@
 
           return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
                                        NeboConstField<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* Scalar X SubExpr */
       template<typename SubExpr2, typename FieldType>
@@ -4179,7 +4209,7 @@
 
           return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
                                        arg2.expr()));
-       };
+       }
 
       /* Field X Scalar */
       template<typename FieldType>
@@ -4207,7 +4237,7 @@
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
                                        NeboScalar<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* Field X Field */
       template<typename FieldType>
@@ -4240,7 +4270,7 @@
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
                                        NeboConstField<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* Field X SubExpr */
       template<typename SubExpr2, typename FieldType>
@@ -4268,7 +4298,7 @@
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
                                        arg2.expr()));
-       };
+       }
 
       /* SubExpr X Scalar */
       template<typename SubExpr1, typename FieldType>
@@ -4289,7 +4319,7 @@
 
           return ReturnTerm(ReturnType(arg1.expr(),
                                        NeboScalar<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* SubExpr X Field */
       template<typename SubExpr1, typename FieldType>
@@ -4317,7 +4347,7 @@
 
           return ReturnTerm(ReturnType(arg1.expr(),
                                        NeboConstField<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2, typename FieldType>
@@ -4402,20 +4432,22 @@
 #         ifdef __CUDACC__
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
-             };
+             }
+
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
                  return GPUWalkType(operand1_.template gpu_init<ValidGhost,
                                                                 Shift>(deviceIndex),
                                     operand2_.template gpu_init<ValidGhost,
                                                                 Shift>(deviceIndex));
-              };
+              }
+
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
                    operand1_.gpu_prep(deviceIndex); operand2_.gpu_prep(deviceIndex);
                 }
 #            endif
-             /* NEBO_GPU_TEST */;
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
 
@@ -4585,7 +4617,7 @@
 
           return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
                                        NeboConstField<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* Scalar X SubExpr */
       template<typename SubExpr2, typename FieldType>
@@ -4608,7 +4640,7 @@
 
           return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
                                        arg2.expr()));
-       };
+       }
 
       /* Field X Scalar */
       template<typename FieldType>
@@ -4636,7 +4668,7 @@
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
                                        NeboScalar<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* Field X Field */
       template<typename FieldType>
@@ -4669,7 +4701,7 @@
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
                                        NeboConstField<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* Field X SubExpr */
       template<typename SubExpr2, typename FieldType>
@@ -4697,7 +4729,7 @@
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
                                        arg2.expr()));
-       };
+       }
 
       /* SubExpr X Scalar */
       template<typename SubExpr1, typename FieldType>
@@ -4720,7 +4752,7 @@
 
           return ReturnTerm(ReturnType(arg1.expr(),
                                        NeboScalar<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* SubExpr X Field */
       template<typename SubExpr1, typename FieldType>
@@ -4748,7 +4780,7 @@
 
           return ReturnTerm(ReturnType(arg1.expr(),
                                        NeboConstField<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2, typename FieldType>
@@ -4833,20 +4865,22 @@
 #         ifdef __CUDACC__
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
-             };
+             }
+
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
                  return GPUWalkType(operand1_.template gpu_init<ValidGhost,
                                                                 Shift>(deviceIndex),
                                     operand2_.template gpu_init<ValidGhost,
                                                                 Shift>(deviceIndex));
-              };
+              }
+
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
                    operand1_.gpu_prep(deviceIndex); operand2_.gpu_prep(deviceIndex);
                 }
 #            endif
-             /* NEBO_GPU_TEST */;
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
 
@@ -5015,7 +5049,7 @@
 
           return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
                                        NeboConstField<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* Scalar X SubExpr */
       template<typename SubExpr2, typename FieldType>
@@ -5038,7 +5072,7 @@
 
           return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
                                        arg2.expr()));
-       };
+       }
 
       /* Field X Scalar */
       template<typename FieldType>
@@ -5065,7 +5099,7 @@
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
                                        NeboScalar<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* Field X Field */
       template<typename FieldType>
@@ -5096,7 +5130,7 @@
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
                                        NeboConstField<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* Field X SubExpr */
       template<typename SubExpr2, typename FieldType>
@@ -5123,7 +5157,7 @@
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
                                        arg2.expr()));
-       };
+       }
 
       /* SubExpr X Scalar */
       template<typename SubExpr1, typename FieldType>
@@ -5146,7 +5180,7 @@
 
           return ReturnTerm(ReturnType(arg1.expr(),
                                        NeboScalar<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* SubExpr X Field */
       template<typename SubExpr1, typename FieldType>
@@ -5173,7 +5207,7 @@
 
           return ReturnTerm(ReturnType(arg1.expr(),
                                        NeboConstField<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2, typename FieldType>
@@ -5258,20 +5292,22 @@
 #         ifdef __CUDACC__
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
-             };
+             }
+
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
                  return GPUWalkType(operand1_.template gpu_init<ValidGhost,
                                                                 Shift>(deviceIndex),
                                     operand2_.template gpu_init<ValidGhost,
                                                                 Shift>(deviceIndex));
-              };
+              }
+
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
                    operand1_.gpu_prep(deviceIndex); operand2_.gpu_prep(deviceIndex);
                 }
 #            endif
-             /* NEBO_GPU_TEST */;
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
 
@@ -5444,7 +5480,7 @@
 
           return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
                                        NeboConstField<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* Scalar X SubExpr */
       template<typename SubExpr2, typename FieldType>
@@ -5468,7 +5504,7 @@
 
           return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
                                        arg2.expr()));
-       };
+       }
 
       /* Field X Scalar */
       template<typename FieldType>
@@ -5497,7 +5533,7 @@
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
                                        NeboScalar<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* Field X Field */
       template<typename FieldType>
@@ -5530,7 +5566,7 @@
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
                                        NeboConstField<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* Field X SubExpr */
       template<typename SubExpr2, typename FieldType>
@@ -5558,7 +5594,7 @@
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
                                        arg2.expr()));
-       };
+       }
 
       /* SubExpr X Scalar */
       template<typename SubExpr1, typename FieldType>
@@ -5582,7 +5618,7 @@
 
           return ReturnTerm(ReturnType(arg1.expr(),
                                        NeboScalar<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* SubExpr X Field */
       template<typename SubExpr1, typename FieldType>
@@ -5610,7 +5646,7 @@
 
           return ReturnTerm(ReturnType(arg1.expr(),
                                        NeboConstField<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2, typename FieldType>
@@ -5696,20 +5732,22 @@
 #         ifdef __CUDACC__
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
-             };
+             }
+
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
                  return GPUWalkType(operand1_.template gpu_init<ValidGhost,
                                                                 Shift>(deviceIndex),
                                     operand2_.template gpu_init<ValidGhost,
                                                                 Shift>(deviceIndex));
-              };
+              }
+
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
                    operand1_.gpu_prep(deviceIndex); operand2_.gpu_prep(deviceIndex);
                 }
 #            endif
-             /* NEBO_GPU_TEST */;
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
 
@@ -5878,7 +5916,7 @@
 
           return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
                                        NeboConstField<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* Scalar X SubExpr */
       template<typename SubExpr2, typename FieldType>
@@ -5901,7 +5939,7 @@
 
           return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
                                        arg2.expr()));
-       };
+       }
 
       /* Field X Scalar */
       template<typename FieldType>
@@ -5928,7 +5966,7 @@
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
                                        NeboScalar<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* Field X Field */
       template<typename FieldType>
@@ -5959,7 +5997,7 @@
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
                                        NeboConstField<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* Field X SubExpr */
       template<typename SubExpr2, typename FieldType>
@@ -5986,7 +6024,7 @@
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
                                        arg2.expr()));
-       };
+       }
 
       /* SubExpr X Scalar */
       template<typename SubExpr1, typename FieldType>
@@ -6009,7 +6047,7 @@
 
           return ReturnTerm(ReturnType(arg1.expr(),
                                        NeboScalar<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* SubExpr X Field */
       template<typename SubExpr1, typename FieldType>
@@ -6036,7 +6074,7 @@
 
           return ReturnTerm(ReturnType(arg1.expr(),
                                        NeboConstField<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2, typename FieldType>
@@ -6123,20 +6161,22 @@
 #         ifdef __CUDACC__
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
-             };
+             }
+
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
                  return GPUWalkType(operand1_.template gpu_init<ValidGhost,
                                                                 Shift>(deviceIndex),
                                     operand2_.template gpu_init<ValidGhost,
                                                                 Shift>(deviceIndex));
-              };
+              }
+
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
                    operand1_.gpu_prep(deviceIndex); operand2_.gpu_prep(deviceIndex);
                 }
 #            endif
-             /* NEBO_GPU_TEST */;
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
 
@@ -6311,7 +6351,7 @@
 
           return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
                                        NeboConstField<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* Scalar X SubExpr */
       template<typename SubExpr2, typename FieldType>
@@ -6335,7 +6375,7 @@
 
           return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
                                        arg2.expr()));
-       };
+       }
 
       /* Field X Scalar */
       template<typename FieldType>
@@ -6364,7 +6404,7 @@
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
                                        NeboScalar<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* Field X Field */
       template<typename FieldType>
@@ -6397,7 +6437,7 @@
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
                                        NeboConstField<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* Field X SubExpr */
       template<typename SubExpr2, typename FieldType>
@@ -6425,7 +6465,7 @@
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
                                        arg2.expr()));
-       };
+       }
 
       /* SubExpr X Scalar */
       template<typename SubExpr1, typename FieldType>
@@ -6449,7 +6489,7 @@
 
           return ReturnTerm(ReturnType(arg1.expr(),
                                        NeboScalar<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* SubExpr X Field */
       template<typename SubExpr1, typename FieldType>
@@ -6477,7 +6517,7 @@
 
           return ReturnTerm(ReturnType(arg1.expr(),
                                        NeboConstField<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2, typename FieldType>
@@ -6563,20 +6603,22 @@
 #         ifdef __CUDACC__
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
-             };
+             }
+
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
                  return GPUWalkType(operand1_.template gpu_init<ValidGhost,
                                                                 Shift>(deviceIndex),
                                     operand2_.template gpu_init<ValidGhost,
                                                                 Shift>(deviceIndex));
-              };
+              }
+
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
                    operand1_.gpu_prep(deviceIndex); operand2_.gpu_prep(deviceIndex);
                 }
 #            endif
-             /* NEBO_GPU_TEST */;
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
 
@@ -6739,7 +6781,7 @@
 
           return ReturnTerm(ReturnType(NeboBoolean<Initial, FieldType>(arg1),
                                        arg2.expr()));
-       };
+       }
 
       /* SubBoolExpr X Boolean */
       template<typename SubBoolExpr1, typename FieldType>
@@ -6760,7 +6802,7 @@
 
           return ReturnTerm(ReturnType(arg1.expr(),
                                        NeboBoolean<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* SubBoolExpr X SubBoolExpr */
       template<typename SubBoolExpr1, typename SubBoolExpr2, typename FieldType>
@@ -6846,20 +6888,22 @@
 #         ifdef __CUDACC__
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
-             };
+             }
+
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
                  return GPUWalkType(operand1_.template gpu_init<ValidGhost,
                                                                 Shift>(deviceIndex),
                                     operand2_.template gpu_init<ValidGhost,
                                                                 Shift>(deviceIndex));
-              };
+              }
+
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
                    operand1_.gpu_prep(deviceIndex); operand2_.gpu_prep(deviceIndex);
                 }
 #            endif
-             /* NEBO_GPU_TEST */;
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
 
@@ -7020,7 +7064,7 @@
 
           return ReturnTerm(ReturnType(NeboBoolean<Initial, FieldType>(arg1),
                                        arg2.expr()));
-       };
+       }
 
       /* SubBoolExpr X Boolean */
       template<typename SubBoolExpr1, typename FieldType>
@@ -7039,7 +7083,7 @@
 
           return ReturnTerm(ReturnType(arg1.expr(),
                                        NeboBoolean<Initial, FieldType>(arg2)));
-       };
+       }
 
       /* SubBoolExpr X SubBoolExpr */
       template<typename SubBoolExpr1, typename SubBoolExpr2, typename FieldType>
@@ -7110,17 +7154,19 @@
 #         ifdef __CUDACC__
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand_.gpu_ready(deviceIndex));
-             };
+             }
+
              template<typename ValidGhost, typename Shift>
               inline GPUWalkType gpu_init(int const deviceIndex) const {
                  return GPUWalkType(operand_.template gpu_init<ValidGhost, Shift>(deviceIndex));
-              };
+              }
+
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
                    operand_.gpu_prep(deviceIndex);
                 }
 #            endif
-             /* NEBO_GPU_TEST */;
+             /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
 

@@ -1045,41 +1045,25 @@ find_consumer( MemoryType consumerMemoryType,
   case LOCAL_RAM: {
     switch( memType_ ) {
 #ifdef ENABLE_CUDA
-    case LOCAL_RAM: {
-      std::ostringstream msg;
-      msg << "Failed call to find_consumer on Spatial Field, unknown device index given\n";
-      msg << "This error indicates a serious problem in how this field was originally created\n";
-      msg << "consumerMemoryType = " << consumerMemoryType << "\n";
-      msg << "consumerDeviceIndex = " << consumerDeviceIndex << "\n";
-      msg << "memType_ = " << memType_ << "\n";
-      msg << "deviceIndex_ = " << deviceIndex_ << "\n";
-      msg << "\t - " << __FILE__ << " : " << __LINE__;
-      throw(std::runtime_error(msg.str()));
-    }
-    break;
-
     case EXTERNAL_CUDA_GPU: { // GPU field that needs to be available on the CPU
         return fieldValues_ != NULL;
     }
-    break;
 #endif
     default:{
-      std::ostringstream msg;
-      msg << "Failed call to find_consumer on Spatial Field, unknown source device type\n";
-      msg << "This error indicates a serious problem in how this field was originally created\n";
-      msg << "\t - " << __FILE__ << " : " << __LINE__;
-      throw(std::runtime_error(msg.str()));
+        std::ostringstream msg;
+        msg << "Failed call to find_consumer on Spatial Field, unknown source device type\n";
+        msg << "This error indicates a serious problem in how this field was originally created\n";
+        msg << "\t - " << __FILE__ << " : " << __LINE__;
+        throw(std::runtime_error(msg.str()));
     }
     }
 
   } // LOCAL_RAM
-  break;
 
 #ifdef ENABLE_CUDA
   case EXTERNAL_CUDA_GPU: {
         return consumerFieldValues_.find( consumerDeviceIndex ) != consumerFieldValues_.end();
   } // EXTERNAL_CUDA_GPU
-  break;
 #endif
 
   default: {
