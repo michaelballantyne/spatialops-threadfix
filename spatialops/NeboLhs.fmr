@@ -412,9 +412,9 @@
                               (nwhile (c '! (fc 'at_end))
                                       (nif (fc 'valid)
                                            (n= (fc 'ref)
-                                               (mfc 'rhs 'eval))
-                                           (fc 'next)
-                                           (mfc 'rhs 'next)))
+                                               (mfc 'rhs 'eval)))
+                                      (fc 'next)
+                                      (mfc 'rhs 'next))
                               null
                               'valid_
                               (list (n= 'valid_ (par (n-and (n< 'x 'xExtent_)

@@ -392,7 +392,11 @@
                  rhs.start(ii, jj);
 
                  while(!at_end()) {
-                    if(valid()) { ref() = rhs.eval(); next(); rhs.next(); };
+                    if(valid()) { ref() = rhs.eval(); };
+
+                    next();
+
+                    rhs.next();
                  };
               }
 
