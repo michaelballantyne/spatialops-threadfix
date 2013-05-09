@@ -347,8 +347,7 @@
                                               'refine
                                               'split
                                               'location)
-                                         (mfc 'field_ 'field_values)
-                                         (scope 'structured 'ExternalStorage))
+                                         'field_)
                                      (tpl-fcn-use 'shift_and_maintain_interior SH-chunk))
                                 (sad FT-chunk 'field_))
                  (bs-SeqWalk-lhs (s-typedef (scope (tpl-pmtr FT-chunk)

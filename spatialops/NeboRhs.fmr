@@ -173,8 +173,7 @@
                                               'refine
                                               'split
                                               'location)
-                                         (mfc 'field_ 'field_values)
-                                         (scope 'structured 'ExternalStorage))
+                                         'field_)
                                      (tpl-fcn-use 'shift SH-chunk))
                                 null
                                 (sadc FT-chunk 'field_))

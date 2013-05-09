@@ -322,9 +322,8 @@
                                       structured::IntVec const & location) {
                  return SeqWalkType(FieldType(field_.window_with_ghost().refine(split,
                                                                                 location),
-                                              field_.field_values(),
-                                              structured::ExternalStorage).template
-                                                                           shift_and_maintain_interior<Shift>());
+                                              field_).template
+                                                      shift_and_maintain_interior<Shift>());
               }
 
              FieldType field_;
