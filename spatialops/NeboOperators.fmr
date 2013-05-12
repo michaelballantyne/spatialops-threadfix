@@ -178,6 +178,17 @@
                           internal-name
                           (mfc 'operand2_ 'eval))))
 
+(define (build-extremum-function-struct name comparison)
+  (build-Nary-struct name
+                     2
+                     (scope (tpl-pmtr FT-chunk)
+                            'value_type)
+                     (ter-cond (par (mfc 'operand1_ 'eval)
+                                    comparison
+                                    (mfc 'operand2_ 'eval))
+                               (mfc 'operand1_ 'eval)
+                               (mfc 'operand2_ 'eval))))
+
 (define (if-arg-Scalar num)
   (let ([type (tpl-use NS-chunk 'Initial FT-chunk)]
         [arg (l 'arg num)])
@@ -320,6 +331,9 @@
 (define (build-unary-to-logical-function name internal-name external-name)
   (bl-smts (build-unary-logical-function-struct name internal-name)
            (build-unary-interface name external-name NBE-chunk unary-expr-arg-lst)))
+(define (build-extremum-function name comparison external-name)
+  (bl-smts (build-extremum-function-struct name comparison)
+           (build-binary-interface name external-name NE-chunk binary-expr-arg-lst)))
 
                                         ; beginnning of file
 (n 'SpatialOps
@@ -364,6 +378,8 @@
    (build-binary-logical-operator 'AndOp '&& (bs 'operator '&&))
    (build-binary-logical-operator 'OrOp "||" (bs 'operator "||"))
    (build-unary-logical-function 'NotOp '! (bs 'operator '!))
+   (build-extremum-function 'MaxFcn '> 'max)
+   (build-extremum-function 'MinFcn '< 'min)
                                         ; commented out isnan because nvcc has some weird problem with it
                                         ;   (build-unary-to-logical-function 'IsNanFcn
                                         ;                                    (scope 'std 'isnan)

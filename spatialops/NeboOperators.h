@@ -7290,6 +7290,820 @@
 
           return ReturnTerm(ReturnType(arg.expr()));
        };
+
+      template<typename CurrentMode,
+               typename Operand1,
+               typename Operand2,
+               typename FieldType>
+       struct MaxFcn;
+      template<typename Operand1, typename Operand2, typename FieldType>
+       struct MaxFcn<Initial, Operand1, Operand2, FieldType> {
+         public:
+          FieldType typedef field_type;
+
+          typename field_type::memory_window typedef MemoryWindow;
+
+          MaxFcn<SeqWalk,
+                 typename Operand1::SeqWalkType,
+                 typename Operand2::SeqWalkType,
+                 FieldType> typedef SeqWalkType;
+
+#         ifdef FIELD_EXPRESSION_THREADS
+             MaxFcn<Resize,
+                    typename Operand1::ResizeType,
+                    typename Operand2::ResizeType,
+                    FieldType> typedef ResizeType;
+#         endif
+          /* FIELD_EXPRESSION_THREADS */
+
+#         ifdef __CUDACC__
+             MaxFcn<GPUWalk,
+                    typename Operand1::GPUWalkType,
+                    typename Operand2::GPUWalkType,
+                    FieldType> typedef GPUWalkType;
+#         endif
+          /* __CUDACC__ */
+
+          MaxFcn<Reduction,
+                 typename Operand1::ReductionType,
+                 typename Operand2::ReductionType,
+                 FieldType> typedef ReductionType;
+
+          typename structured::Minimum<typename Operand1::PossibleValidGhost,
+                                       typename Operand2::PossibleValidGhost>::
+          result typedef PossibleValidGhost;
+
+          MaxFcn(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
+          {}
+
+          template<typename ValidGhost, typename Shift>
+           inline SeqWalkType init(void) const {
+              return SeqWalkType(operand1_.template init<ValidGhost, Shift>(),
+                                 operand2_.template init<ValidGhost, Shift>());
+           }
+
+#         ifdef FIELD_EXPRESSION_THREADS
+             template<typename ValidGhost>
+              inline ResizeType resize(void) const {
+                 return ResizeType(operand1_.template resize<ValidGhost>(),
+                                   operand2_.template resize<ValidGhost>());
+              }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */
+
+#         ifdef __CUDACC__
+             inline bool gpu_ready(int const deviceIndex) const {
+                return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
+             }
+
+             template<typename ValidGhost, typename Shift>
+              inline GPUWalkType gpu_init(int const deviceIndex) const {
+                 return GPUWalkType(operand1_.template gpu_init<ValidGhost,
+                                                                Shift>(deviceIndex),
+                                    operand2_.template gpu_init<ValidGhost,
+                                                                Shift>(deviceIndex));
+              }
+
+#            ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const {
+                   operand1_.gpu_prep(deviceIndex); operand2_.gpu_prep(deviceIndex);
+                }
+#            endif
+             /* NEBO_GPU_TEST */
+#         endif
+          /* __CUDACC__ */
+
+          template<typename ValidGhost, typename Shift>
+           inline ReductionType reduce_init(void) const {
+              return ReductionType(operand1_.template reduce_init<ValidGhost,
+                                                                  Shift>(),
+                                   operand2_.template reduce_init<ValidGhost,
+                                                                  Shift>());
+           }
+
+         private:
+          Operand1 const operand1_;
+
+          Operand2 const operand2_;
+      };
+#     ifdef FIELD_EXPRESSION_THREADS
+         template<typename Operand1, typename Operand2, typename FieldType>
+          struct MaxFcn<Resize, Operand1, Operand2, FieldType> {
+            public:
+             FieldType typedef field_type;
+
+             typename field_type::memory_window typedef MemoryWindow;
+
+             MaxFcn<SeqWalk,
+                    typename Operand1::SeqWalkType,
+                    typename Operand2::SeqWalkType,
+                    FieldType> typedef SeqWalkType;
+
+             MaxFcn(Operand1 const & operand1, Operand2 const & operand2)
+             : operand1_(operand1), operand2_(operand2)
+             {}
+
+             template<typename Shift>
+              inline SeqWalkType init(structured::IntVec const & split,
+                                      structured::IntVec const & location) const {
+                 return SeqWalkType(operand1_.template init<Shift>(split,
+                                                                   location),
+                                    operand2_.template init<Shift>(split,
+                                                                   location));
+              }
+
+            private:
+             Operand1 const operand1_;
+
+             Operand2 const operand2_;
+         }
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
+      template<typename Operand1, typename Operand2, typename FieldType>
+       struct MaxFcn<SeqWalk, Operand1, Operand2, FieldType> {
+         public:
+          FieldType typedef field_type;
+
+          typename field_type::memory_window typedef MemoryWindow;
+
+          typename FieldType::value_type typedef EvalReturnType;
+
+          MaxFcn(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
+          {}
+
+          inline void next(void) { operand1_.next(); operand2_.next(); }
+
+          inline EvalReturnType eval(void) const {
+             return ((operand1_.eval() > operand2_.eval()) ? operand1_.eval() :
+                     operand2_.eval());
+          }
+
+         private:
+          Operand1 operand1_;
+
+          Operand2 operand2_;
+      };
+#     ifdef __CUDACC__
+         template<typename Operand1, typename Operand2, typename FieldType>
+          struct MaxFcn<GPUWalk, Operand1, Operand2, FieldType> {
+            public:
+             FieldType typedef field_type;
+
+             typename field_type::memory_window typedef MemoryWindow;
+
+             typename field_type::value_type typedef AtomicType;
+
+             MaxFcn(Operand1 const & operand1, Operand2 const & operand2)
+             : operand1_(operand1), operand2_(operand2)
+             {}
+
+             __device__ inline void start(int x, int y) {
+                operand1_.start(x, y);
+
+                operand2_.start(x, y);
+             }
+
+             __device__ inline void next(void) {
+                operand1_.next();
+
+                operand2_.next();
+             }
+
+             __device__ inline AtomicType eval(void) const {
+                return ((operand1_.eval() > operand2_.eval()) ? operand1_.eval()
+                        : operand2_.eval());
+             }
+
+            private:
+             Operand1 operand1_;
+
+             Operand2 operand2_;
+         }
+#     endif
+      /* __CUDACC__ */;
+      template<typename Operand1, typename Operand2, typename FieldType>
+       struct MaxFcn<Reduction, Operand1, Operand2, FieldType> {
+         public:
+          FieldType typedef field_type;
+
+          typename field_type::memory_window typedef MemoryWindow;
+
+          typename FieldType::value_type typedef EvalReturnType;
+
+          MaxFcn(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
+          {}
+
+          inline void next(void) { operand1_.next(); operand2_.next(); }
+
+          inline bool at_end(void) const {
+             return (operand1_.at_end() || operand2_.at_end());
+          }
+
+          inline bool has_length(void) const {
+             return (operand1_.has_length() || operand2_.has_length());
+          }
+
+          inline EvalReturnType eval(void) const {
+             return ((operand1_.eval() > operand2_.eval()) ? operand1_.eval() :
+                     operand2_.eval());
+          }
+
+         private:
+          Operand1 operand1_;
+
+          Operand2 operand2_;
+      };
+
+      /* Scalar X Field */
+      template<typename FieldType>
+       inline NeboExpression<MaxFcn<Initial,
+                                    NeboScalar<Initial, FieldType>,
+                                    NeboConstField<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result>,
+                                    FieldType>,
+                             FieldType> max(typename FieldType::value_type const
+                                            & arg1,
+                                            FieldType const & arg2) {
+          MaxFcn<Initial,
+                 NeboScalar<Initial, FieldType>,
+                 NeboConstField<Initial, FieldType>,
+                 FieldType> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
+                                       NeboConstField<Initial, FieldType>(arg2)));
+       }
+
+      /* Scalar X SubExpr */
+      template<typename SubExpr2, typename FieldType>
+       inline NeboExpression<MaxFcn<Initial,
+                                    NeboScalar<Initial, FieldType>,
+                                    SubExpr2,
+                                    FieldType>,
+                             FieldType> max(typename FieldType::value_type const
+                                            & arg1,
+                                            NeboExpression<SubExpr2, FieldType>
+                                            const & arg2) {
+          MaxFcn<Initial, NeboScalar<Initial, FieldType>, SubExpr2, FieldType>
+          typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* Field X Scalar */
+      template<typename FieldType>
+       inline NeboExpression<MaxFcn<Initial,
+                                    NeboConstField<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result>,
+                                    NeboScalar<Initial, FieldType>,
+                                    FieldType>,
+                             FieldType> max(FieldType const & arg1,
+                                            typename FieldType::value_type const
+                                            & arg2) {
+          MaxFcn<Initial,
+                 NeboConstField<Initial, FieldType>,
+                 NeboScalar<Initial, FieldType>,
+                 FieldType> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
+                                       NeboScalar<Initial, FieldType>(arg2)));
+       }
+
+      /* Field X Field */
+      template<typename FieldType>
+       inline NeboExpression<MaxFcn<Initial,
+                                    NeboConstField<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result>,
+                                    NeboConstField<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result>,
+                                    FieldType>,
+                             FieldType> max(FieldType const & arg1,
+                                            FieldType const & arg2) {
+          MaxFcn<Initial,
+                 NeboConstField<Initial, FieldType>,
+                 NeboConstField<Initial, FieldType>,
+                 FieldType> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
+                                       NeboConstField<Initial, FieldType>(arg2)));
+       }
+
+      /* Field X SubExpr */
+      template<typename SubExpr2, typename FieldType>
+       inline NeboExpression<MaxFcn<Initial,
+                                    NeboConstField<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result>,
+                                    SubExpr2,
+                                    FieldType>,
+                             FieldType> max(FieldType const & arg1,
+                                            NeboExpression<SubExpr2, FieldType>
+                                            const & arg2) {
+          MaxFcn<Initial,
+                 NeboConstField<Initial, FieldType>,
+                 SubExpr2,
+                 FieldType> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* SubExpr X Scalar */
+      template<typename SubExpr1, typename FieldType>
+       inline NeboExpression<MaxFcn<Initial,
+                                    SubExpr1,
+                                    NeboScalar<Initial, FieldType>,
+                                    FieldType>,
+                             FieldType> max(NeboExpression<SubExpr1, FieldType>
+                                            const & arg1,
+                                            typename FieldType::value_type const
+                                            & arg2) {
+          MaxFcn<Initial, SubExpr1, NeboScalar<Initial, FieldType>, FieldType>
+          typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboScalar<Initial, FieldType>(arg2)));
+       }
+
+      /* SubExpr X Field */
+      template<typename SubExpr1, typename FieldType>
+       inline NeboExpression<MaxFcn<Initial,
+                                    SubExpr1,
+                                    NeboConstField<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result>,
+                                    FieldType>,
+                             FieldType> max(NeboExpression<SubExpr1, FieldType>
+                                            const & arg1,
+                                            FieldType const & arg2) {
+          MaxFcn<Initial,
+                 SubExpr1,
+                 NeboConstField<Initial, FieldType>,
+                 FieldType> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstField<Initial, FieldType>(arg2)));
+       }
+
+      /* SubExpr X SubExpr */
+      template<typename SubExpr1, typename SubExpr2, typename FieldType>
+       inline NeboExpression<MaxFcn<Initial, SubExpr1, SubExpr2, FieldType>,
+                             FieldType> max(NeboExpression<SubExpr1, FieldType>
+                                            const & arg1,
+                                            NeboExpression<SubExpr2, FieldType>
+                                            const & arg2) {
+          MaxFcn<Initial, SubExpr1, SubExpr2, FieldType> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       };
+
+      template<typename CurrentMode,
+               typename Operand1,
+               typename Operand2,
+               typename FieldType>
+       struct MinFcn;
+      template<typename Operand1, typename Operand2, typename FieldType>
+       struct MinFcn<Initial, Operand1, Operand2, FieldType> {
+         public:
+          FieldType typedef field_type;
+
+          typename field_type::memory_window typedef MemoryWindow;
+
+          MinFcn<SeqWalk,
+                 typename Operand1::SeqWalkType,
+                 typename Operand2::SeqWalkType,
+                 FieldType> typedef SeqWalkType;
+
+#         ifdef FIELD_EXPRESSION_THREADS
+             MinFcn<Resize,
+                    typename Operand1::ResizeType,
+                    typename Operand2::ResizeType,
+                    FieldType> typedef ResizeType;
+#         endif
+          /* FIELD_EXPRESSION_THREADS */
+
+#         ifdef __CUDACC__
+             MinFcn<GPUWalk,
+                    typename Operand1::GPUWalkType,
+                    typename Operand2::GPUWalkType,
+                    FieldType> typedef GPUWalkType;
+#         endif
+          /* __CUDACC__ */
+
+          MinFcn<Reduction,
+                 typename Operand1::ReductionType,
+                 typename Operand2::ReductionType,
+                 FieldType> typedef ReductionType;
+
+          typename structured::Minimum<typename Operand1::PossibleValidGhost,
+                                       typename Operand2::PossibleValidGhost>::
+          result typedef PossibleValidGhost;
+
+          MinFcn(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
+          {}
+
+          template<typename ValidGhost, typename Shift>
+           inline SeqWalkType init(void) const {
+              return SeqWalkType(operand1_.template init<ValidGhost, Shift>(),
+                                 operand2_.template init<ValidGhost, Shift>());
+           }
+
+#         ifdef FIELD_EXPRESSION_THREADS
+             template<typename ValidGhost>
+              inline ResizeType resize(void) const {
+                 return ResizeType(operand1_.template resize<ValidGhost>(),
+                                   operand2_.template resize<ValidGhost>());
+              }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */
+
+#         ifdef __CUDACC__
+             inline bool gpu_ready(int const deviceIndex) const {
+                return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
+             }
+
+             template<typename ValidGhost, typename Shift>
+              inline GPUWalkType gpu_init(int const deviceIndex) const {
+                 return GPUWalkType(operand1_.template gpu_init<ValidGhost,
+                                                                Shift>(deviceIndex),
+                                    operand2_.template gpu_init<ValidGhost,
+                                                                Shift>(deviceIndex));
+              }
+
+#            ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const {
+                   operand1_.gpu_prep(deviceIndex); operand2_.gpu_prep(deviceIndex);
+                }
+#            endif
+             /* NEBO_GPU_TEST */
+#         endif
+          /* __CUDACC__ */
+
+          template<typename ValidGhost, typename Shift>
+           inline ReductionType reduce_init(void) const {
+              return ReductionType(operand1_.template reduce_init<ValidGhost,
+                                                                  Shift>(),
+                                   operand2_.template reduce_init<ValidGhost,
+                                                                  Shift>());
+           }
+
+         private:
+          Operand1 const operand1_;
+
+          Operand2 const operand2_;
+      };
+#     ifdef FIELD_EXPRESSION_THREADS
+         template<typename Operand1, typename Operand2, typename FieldType>
+          struct MinFcn<Resize, Operand1, Operand2, FieldType> {
+            public:
+             FieldType typedef field_type;
+
+             typename field_type::memory_window typedef MemoryWindow;
+
+             MinFcn<SeqWalk,
+                    typename Operand1::SeqWalkType,
+                    typename Operand2::SeqWalkType,
+                    FieldType> typedef SeqWalkType;
+
+             MinFcn(Operand1 const & operand1, Operand2 const & operand2)
+             : operand1_(operand1), operand2_(operand2)
+             {}
+
+             template<typename Shift>
+              inline SeqWalkType init(structured::IntVec const & split,
+                                      structured::IntVec const & location) const {
+                 return SeqWalkType(operand1_.template init<Shift>(split,
+                                                                   location),
+                                    operand2_.template init<Shift>(split,
+                                                                   location));
+              }
+
+            private:
+             Operand1 const operand1_;
+
+             Operand2 const operand2_;
+         }
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
+      template<typename Operand1, typename Operand2, typename FieldType>
+       struct MinFcn<SeqWalk, Operand1, Operand2, FieldType> {
+         public:
+          FieldType typedef field_type;
+
+          typename field_type::memory_window typedef MemoryWindow;
+
+          typename FieldType::value_type typedef EvalReturnType;
+
+          MinFcn(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
+          {}
+
+          inline void next(void) { operand1_.next(); operand2_.next(); }
+
+          inline EvalReturnType eval(void) const {
+             return ((operand1_.eval() < operand2_.eval()) ? operand1_.eval() :
+                     operand2_.eval());
+          }
+
+         private:
+          Operand1 operand1_;
+
+          Operand2 operand2_;
+      };
+#     ifdef __CUDACC__
+         template<typename Operand1, typename Operand2, typename FieldType>
+          struct MinFcn<GPUWalk, Operand1, Operand2, FieldType> {
+            public:
+             FieldType typedef field_type;
+
+             typename field_type::memory_window typedef MemoryWindow;
+
+             typename field_type::value_type typedef AtomicType;
+
+             MinFcn(Operand1 const & operand1, Operand2 const & operand2)
+             : operand1_(operand1), operand2_(operand2)
+             {}
+
+             __device__ inline void start(int x, int y) {
+                operand1_.start(x, y);
+
+                operand2_.start(x, y);
+             }
+
+             __device__ inline void next(void) {
+                operand1_.next();
+
+                operand2_.next();
+             }
+
+             __device__ inline AtomicType eval(void) const {
+                return ((operand1_.eval() < operand2_.eval()) ? operand1_.eval()
+                        : operand2_.eval());
+             }
+
+            private:
+             Operand1 operand1_;
+
+             Operand2 operand2_;
+         }
+#     endif
+      /* __CUDACC__ */;
+      template<typename Operand1, typename Operand2, typename FieldType>
+       struct MinFcn<Reduction, Operand1, Operand2, FieldType> {
+         public:
+          FieldType typedef field_type;
+
+          typename field_type::memory_window typedef MemoryWindow;
+
+          typename FieldType::value_type typedef EvalReturnType;
+
+          MinFcn(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
+          {}
+
+          inline void next(void) { operand1_.next(); operand2_.next(); }
+
+          inline bool at_end(void) const {
+             return (operand1_.at_end() || operand2_.at_end());
+          }
+
+          inline bool has_length(void) const {
+             return (operand1_.has_length() || operand2_.has_length());
+          }
+
+          inline EvalReturnType eval(void) const {
+             return ((operand1_.eval() < operand2_.eval()) ? operand1_.eval() :
+                     operand2_.eval());
+          }
+
+         private:
+          Operand1 operand1_;
+
+          Operand2 operand2_;
+      };
+
+      /* Scalar X Field */
+      template<typename FieldType>
+       inline NeboExpression<MinFcn<Initial,
+                                    NeboScalar<Initial, FieldType>,
+                                    NeboConstField<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result>,
+                                    FieldType>,
+                             FieldType> min(typename FieldType::value_type const
+                                            & arg1,
+                                            FieldType const & arg2) {
+          MinFcn<Initial,
+                 NeboScalar<Initial, FieldType>,
+                 NeboConstField<Initial, FieldType>,
+                 FieldType> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
+                                       NeboConstField<Initial, FieldType>(arg2)));
+       }
+
+      /* Scalar X SubExpr */
+      template<typename SubExpr2, typename FieldType>
+       inline NeboExpression<MinFcn<Initial,
+                                    NeboScalar<Initial, FieldType>,
+                                    SubExpr2,
+                                    FieldType>,
+                             FieldType> min(typename FieldType::value_type const
+                                            & arg1,
+                                            NeboExpression<SubExpr2, FieldType>
+                                            const & arg2) {
+          MinFcn<Initial, NeboScalar<Initial, FieldType>, SubExpr2, FieldType>
+          typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* Field X Scalar */
+      template<typename FieldType>
+       inline NeboExpression<MinFcn<Initial,
+                                    NeboConstField<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result>,
+                                    NeboScalar<Initial, FieldType>,
+                                    FieldType>,
+                             FieldType> min(FieldType const & arg1,
+                                            typename FieldType::value_type const
+                                            & arg2) {
+          MinFcn<Initial,
+                 NeboConstField<Initial, FieldType>,
+                 NeboScalar<Initial, FieldType>,
+                 FieldType> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
+                                       NeboScalar<Initial, FieldType>(arg2)));
+       }
+
+      /* Field X Field */
+      template<typename FieldType>
+       inline NeboExpression<MinFcn<Initial,
+                                    NeboConstField<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result>,
+                                    NeboConstField<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result>,
+                                    FieldType>,
+                             FieldType> min(FieldType const & arg1,
+                                            FieldType const & arg2) {
+          MinFcn<Initial,
+                 NeboConstField<Initial, FieldType>,
+                 NeboConstField<Initial, FieldType>,
+                 FieldType> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
+                                       NeboConstField<Initial, FieldType>(arg2)));
+       }
+
+      /* Field X SubExpr */
+      template<typename SubExpr2, typename FieldType>
+       inline NeboExpression<MinFcn<Initial,
+                                    NeboConstField<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result>,
+                                    SubExpr2,
+                                    FieldType>,
+                             FieldType> min(FieldType const & arg1,
+                                            NeboExpression<SubExpr2, FieldType>
+                                            const & arg2) {
+          MinFcn<Initial,
+                 NeboConstField<Initial, FieldType>,
+                 SubExpr2,
+                 FieldType> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* SubExpr X Scalar */
+      template<typename SubExpr1, typename FieldType>
+       inline NeboExpression<MinFcn<Initial,
+                                    SubExpr1,
+                                    NeboScalar<Initial, FieldType>,
+                                    FieldType>,
+                             FieldType> min(NeboExpression<SubExpr1, FieldType>
+                                            const & arg1,
+                                            typename FieldType::value_type const
+                                            & arg2) {
+          MinFcn<Initial, SubExpr1, NeboScalar<Initial, FieldType>, FieldType>
+          typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboScalar<Initial, FieldType>(arg2)));
+       }
+
+      /* SubExpr X Field */
+      template<typename SubExpr1, typename FieldType>
+       inline NeboExpression<MinFcn<Initial,
+                                    SubExpr1,
+                                    NeboConstField<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result>,
+                                    FieldType>,
+                             FieldType> min(NeboExpression<SubExpr1, FieldType>
+                                            const & arg1,
+                                            FieldType const & arg2) {
+          MinFcn<Initial,
+                 SubExpr1,
+                 NeboConstField<Initial, FieldType>,
+                 FieldType> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstField<Initial, FieldType>(arg2)));
+       }
+
+      /* SubExpr X SubExpr */
+      template<typename SubExpr1, typename SubExpr2, typename FieldType>
+       inline NeboExpression<MinFcn<Initial, SubExpr1, SubExpr2, FieldType>,
+                             FieldType> min(NeboExpression<SubExpr1, FieldType>
+                                            const & arg1,
+                                            NeboExpression<SubExpr2, FieldType>
+                                            const & arg2) {
+          MinFcn<Initial, SubExpr1, SubExpr2, FieldType> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       };
    } /* SpatialOps */
 
 #endif
