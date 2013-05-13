@@ -497,6 +497,21 @@
                                    (mfc 'operand1_ 'eval)
                                    internal-name
                                    (mfc 'operand2_ 'eval)))))]
+       [build-extremum-function-struct
+        (lambda (name comparison)
+          (build-Nary-struct name
+                             2
+                             (scope (tpl-pmtr FT-chunk)
+                                    'value_type)
+                             (b s
+                                (p (b s
+                                      (mfc 'operand1_ 'eval)
+                                      comparison
+                                      (mfc 'operand2_ 'eval)))
+                                "?"
+                                (mfc 'operand1_ 'eval)
+                                colon-chunk
+                                (mfc 'operand2_ 'eval))))]
        [abs-SubExpr (lambda (str)
                       (let* ([SE (string-append "SubExpr" str)]
                              [arg (string-append "arg" str)]
@@ -672,6 +687,11 @@
           (internal-smt-list-chunk blank-line-chunk
                                    (build-unary-logical-function-struct name internal-name)
                                    (build-unary-interface name external-name NBE-chunk abs-SubExpr 'SubExpr)))]
+       [build-extremum-function
+        (lambda (name comparison external-name)
+          (internal-smt-list-chunk blank-line-chunk
+                                   (build-extremum-function-struct name comparison)
+                                   (build-binary-interface name external-name NE-chunk abs-SubExpr 'SubExpr abs-Scalar 'Scalar)))]
        [build-assignment
         (lambda (name tpl-pmtrs rhs-type body return-expr)
           (tpl-def (list tpl-pmtrs
@@ -1138,6 +1158,12 @@
       (build-unary-to-logical-function 'IsNanFcn
                                        (scope 'std 'isnan)
                                        'isnan)
+      (build-extremum-function 'MaxFcn
+                               ">"
+                               'max)
+      (build-extremum-function 'MinFcn
+                               "<"
+                               'min)
       (m 'BUILD_BINARY_FUNCTION
          (list 'OBJECT_NAME
                'INTERNAL_NAME

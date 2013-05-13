@@ -4749,6 +4749,424 @@
           return ReturnTerm(ReturnType(Type(Standardize<SubExpr, FieldType>::standardType(arg))));
        };
 
+      template<typename CurrentMode, typename Operand1, typename Operand2, typename FieldType>
+       struct MaxFcn;
+
+      template<typename Operand1, typename Operand2, typename FieldType>
+       struct MaxFcn<Initial, Operand1, Operand2, FieldType> {
+         public:
+          FieldType typedef field_type;
+
+          typename FieldType::memory_window typedef MemoryWindow;
+
+          MaxFcn<ResizePrep,
+                 typename Operand1::ResizePrepType,
+                 typename Operand2::ResizePrepType,
+                 FieldType> typedef ResizePrepType;
+
+          MaxFcn<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
+          typedef SeqWalkType;
+
+          typename structured::Minimum<typename Operand1::PossibleValidGhost,
+                                       typename Operand2::PossibleValidGhost>::result typedef
+          PossibleValidGhost;
+
+          MaxFcn(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
+          {}
+
+          template<typename ValidGhost, typename Shift>
+           inline SeqWalkType init(void) const {
+              return SeqWalkType(operand1().template init<ValidGhost, Shift>(),
+                                 operand2().template init<ValidGhost, Shift>());
+           }
+
+          template<typename ValidGhost>
+           inline ResizePrepType resize_prep(void) const {
+              return ResizePrepType(operand1().template resize_prep<ValidGhost>(),
+                                    operand2().template resize_prep<ValidGhost>());
+           }
+
+          inline Operand1 const & operand1(void) const { return operand1_; }
+
+          inline Operand2 const & operand2(void) const { return operand2_; }
+
+         private:
+          Operand1 const operand1_;
+
+          Operand2 const operand2_;
+      };
+
+      template<typename Operand1, typename Operand2, typename FieldType>
+       struct MaxFcn<ResizePrep, Operand1, Operand2, FieldType> {
+         public:
+          FieldType typedef field_type;
+
+          typename FieldType::memory_window typedef MemoryWindow;
+
+          MaxFcn<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
+          typedef ResizeType;
+
+          MaxFcn(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
+          {}
+
+          inline ResizeType resize(structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+             return ResizeType(operand1().resize(split, location), operand2().resize(split, location));
+          }
+
+          inline Operand1 const & operand1(void) const { return operand1_; }
+
+          inline Operand2 const & operand2(void) const { return operand2_; }
+
+         private:
+          Operand1 const operand1_;
+
+          Operand2 const operand2_;
+      };
+
+      template<typename Operand1, typename Operand2, typename FieldType>
+       struct MaxFcn<Resize, Operand1, Operand2, FieldType> {
+         public:
+          FieldType typedef field_type;
+
+          typename FieldType::memory_window typedef MemoryWindow;
+
+          MaxFcn<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
+          typedef SeqWalkType;
+
+          MaxFcn(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
+          {}
+
+          template<typename Shift>
+           inline SeqWalkType init(void) const {
+              return SeqWalkType(operand1().template init<Shift>(), operand2().template init<Shift>());
+           }
+
+          inline Operand1 const & operand1(void) const { return operand1_; }
+
+          inline Operand2 const & operand2(void) const { return operand2_; }
+
+         private:
+          Operand1 const operand1_;
+
+          Operand2 const operand2_;
+      };
+
+      template<typename Operand1, typename Operand2, typename FieldType>
+       struct MaxFcn<SeqWalk, Operand1, Operand2, FieldType> {
+         public:
+          FieldType typedef field_type;
+
+          typename FieldType::memory_window typedef MemoryWindow;
+
+          typename FieldType::value_type typedef EvalReturnType;
+
+          MaxFcn(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
+          {}
+
+          inline void next(void) { operand1_.next(); operand2_.next(); }
+
+          inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); }
+
+          inline bool has_length(void) const {
+             return (operand1_.has_length() || operand2_.has_length());
+          }
+
+          inline EvalReturnType eval(void) const {
+             return (operand1_.eval() > operand2_.eval()) ? operand1_.eval() : operand2_.eval();
+          }
+
+         private:
+          Operand1 operand1_;
+
+          Operand2 operand2_;
+      };
+
+      /* SubExpr X SubExpr */
+      template<typename SubExpr1, typename SubExpr2>
+       inline NeboExpression<MaxFcn<Initial,
+                                    typename Standardize<SubExpr1, typename SubExpr1::field_type>::
+                                    StandardType,
+                                    typename Standardize<SubExpr2, typename SubExpr1::field_type>::
+                                    StandardType,
+                                    typename SubExpr1::field_type>,
+                             typename SubExpr1::field_type> max(SubExpr1 const & arg1,
+                                                                SubExpr2 const & arg2) {
+          typename SubExpr1::field_type typedef FieldType;
+
+          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+
+          typename Standardize<SubExpr2, typename SubExpr1::field_type>::StandardType typedef Type2;
+
+          MaxFcn<Initial, Type1, Type2, FieldType> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
+                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+       };
+
+      /* SubExpr X Scalar */
+      template<typename SubExpr1>
+       inline NeboExpression<MaxFcn<Initial,
+                                    typename Standardize<SubExpr1, typename SubExpr1::field_type>::
+                                    StandardType,
+                                    NeboScalar<Initial, typename SubExpr1::field_type>,
+                                    typename SubExpr1::field_type>,
+                             typename SubExpr1::field_type> max(SubExpr1 const & arg1,
+                                                                typename SubExpr1::field_type::
+                                                                value_type const & arg2) {
+          typename SubExpr1::field_type typedef FieldType;
+
+          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+
+          NeboScalar<Initial, typename SubExpr1::field_type> typedef Type2;
+
+          MaxFcn<Initial, Type1, Type2, FieldType> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
+                                       Type2(Type2(arg2))));
+       };
+
+      /* Scalar X SubExpr */
+      template<typename SubExpr2>
+       inline NeboExpression<MaxFcn<Initial,
+                                    NeboScalar<Initial, typename SubExpr2::field_type>,
+                                    typename Standardize<SubExpr2, typename SubExpr2::field_type>::
+                                    StandardType,
+                                    typename SubExpr2::field_type>,
+                             typename SubExpr2::field_type> max(typename SubExpr2::field_type::
+                                                                value_type const & arg1,
+                                                                SubExpr2 const & arg2) {
+          typename SubExpr2::field_type typedef FieldType;
+
+          NeboScalar<Initial, typename SubExpr2::field_type> typedef Type1;
+
+          typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType typedef Type2;
+
+          MaxFcn<Initial, Type1, Type2, FieldType> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(Type1(Type1(arg1)),
+                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+       };
+
+      template<typename CurrentMode, typename Operand1, typename Operand2, typename FieldType>
+       struct MinFcn;
+
+      template<typename Operand1, typename Operand2, typename FieldType>
+       struct MinFcn<Initial, Operand1, Operand2, FieldType> {
+         public:
+          FieldType typedef field_type;
+
+          typename FieldType::memory_window typedef MemoryWindow;
+
+          MinFcn<ResizePrep,
+                 typename Operand1::ResizePrepType,
+                 typename Operand2::ResizePrepType,
+                 FieldType> typedef ResizePrepType;
+
+          MinFcn<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
+          typedef SeqWalkType;
+
+          typename structured::Minimum<typename Operand1::PossibleValidGhost,
+                                       typename Operand2::PossibleValidGhost>::result typedef
+          PossibleValidGhost;
+
+          MinFcn(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
+          {}
+
+          template<typename ValidGhost, typename Shift>
+           inline SeqWalkType init(void) const {
+              return SeqWalkType(operand1().template init<ValidGhost, Shift>(),
+                                 operand2().template init<ValidGhost, Shift>());
+           }
+
+          template<typename ValidGhost>
+           inline ResizePrepType resize_prep(void) const {
+              return ResizePrepType(operand1().template resize_prep<ValidGhost>(),
+                                    operand2().template resize_prep<ValidGhost>());
+           }
+
+          inline Operand1 const & operand1(void) const { return operand1_; }
+
+          inline Operand2 const & operand2(void) const { return operand2_; }
+
+         private:
+          Operand1 const operand1_;
+
+          Operand2 const operand2_;
+      };
+
+      template<typename Operand1, typename Operand2, typename FieldType>
+       struct MinFcn<ResizePrep, Operand1, Operand2, FieldType> {
+         public:
+          FieldType typedef field_type;
+
+          typename FieldType::memory_window typedef MemoryWindow;
+
+          MinFcn<Resize, typename Operand1::ResizeType, typename Operand2::ResizeType, FieldType>
+          typedef ResizeType;
+
+          MinFcn(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
+          {}
+
+          inline ResizeType resize(structured::IntVec const & split,
+                                   structured::IntVec const & location) const {
+             return ResizeType(operand1().resize(split, location), operand2().resize(split, location));
+          }
+
+          inline Operand1 const & operand1(void) const { return operand1_; }
+
+          inline Operand2 const & operand2(void) const { return operand2_; }
+
+         private:
+          Operand1 const operand1_;
+
+          Operand2 const operand2_;
+      };
+
+      template<typename Operand1, typename Operand2, typename FieldType>
+       struct MinFcn<Resize, Operand1, Operand2, FieldType> {
+         public:
+          FieldType typedef field_type;
+
+          typename FieldType::memory_window typedef MemoryWindow;
+
+          MinFcn<SeqWalk, typename Operand1::SeqWalkType, typename Operand2::SeqWalkType, FieldType>
+          typedef SeqWalkType;
+
+          MinFcn(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
+          {}
+
+          template<typename Shift>
+           inline SeqWalkType init(void) const {
+              return SeqWalkType(operand1().template init<Shift>(), operand2().template init<Shift>());
+           }
+
+          inline Operand1 const & operand1(void) const { return operand1_; }
+
+          inline Operand2 const & operand2(void) const { return operand2_; }
+
+         private:
+          Operand1 const operand1_;
+
+          Operand2 const operand2_;
+      };
+
+      template<typename Operand1, typename Operand2, typename FieldType>
+       struct MinFcn<SeqWalk, Operand1, Operand2, FieldType> {
+         public:
+          FieldType typedef field_type;
+
+          typename FieldType::memory_window typedef MemoryWindow;
+
+          typename FieldType::value_type typedef EvalReturnType;
+
+          MinFcn(Operand1 const & operand1, Operand2 const & operand2)
+          : operand1_(operand1), operand2_(operand2)
+          {}
+
+          inline void next(void) { operand1_.next(); operand2_.next(); }
+
+          inline bool at_end(void) const { return (operand1_.at_end() || operand2_.at_end()); }
+
+          inline bool has_length(void) const {
+             return (operand1_.has_length() || operand2_.has_length());
+          }
+
+          inline EvalReturnType eval(void) const {
+             return (operand1_.eval() < operand2_.eval()) ? operand1_.eval() : operand2_.eval();
+          }
+
+         private:
+          Operand1 operand1_;
+
+          Operand2 operand2_;
+      };
+
+      /* SubExpr X SubExpr */
+      template<typename SubExpr1, typename SubExpr2>
+       inline NeboExpression<MinFcn<Initial,
+                                    typename Standardize<SubExpr1, typename SubExpr1::field_type>::
+                                    StandardType,
+                                    typename Standardize<SubExpr2, typename SubExpr1::field_type>::
+                                    StandardType,
+                                    typename SubExpr1::field_type>,
+                             typename SubExpr1::field_type> min(SubExpr1 const & arg1,
+                                                                SubExpr2 const & arg2) {
+          typename SubExpr1::field_type typedef FieldType;
+
+          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+
+          typename Standardize<SubExpr2, typename SubExpr1::field_type>::StandardType typedef Type2;
+
+          MinFcn<Initial, Type1, Type2, FieldType> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
+                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+       };
+
+      /* SubExpr X Scalar */
+      template<typename SubExpr1>
+       inline NeboExpression<MinFcn<Initial,
+                                    typename Standardize<SubExpr1, typename SubExpr1::field_type>::
+                                    StandardType,
+                                    NeboScalar<Initial, typename SubExpr1::field_type>,
+                                    typename SubExpr1::field_type>,
+                             typename SubExpr1::field_type> min(SubExpr1 const & arg1,
+                                                                typename SubExpr1::field_type::
+                                                                value_type const & arg2) {
+          typename SubExpr1::field_type typedef FieldType;
+
+          typename Standardize<SubExpr1, typename SubExpr1::field_type>::StandardType typedef Type1;
+
+          NeboScalar<Initial, typename SubExpr1::field_type> typedef Type2;
+
+          MinFcn<Initial, Type1, Type2, FieldType> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(Type1(Standardize<SubExpr1, FieldType>::standardType(arg1)),
+                                       Type2(Type2(arg2))));
+       };
+
+      /* Scalar X SubExpr */
+      template<typename SubExpr2>
+       inline NeboExpression<MinFcn<Initial,
+                                    NeboScalar<Initial, typename SubExpr2::field_type>,
+                                    typename Standardize<SubExpr2, typename SubExpr2::field_type>::
+                                    StandardType,
+                                    typename SubExpr2::field_type>,
+                             typename SubExpr2::field_type> min(typename SubExpr2::field_type::
+                                                                value_type const & arg1,
+                                                                SubExpr2 const & arg2) {
+          typename SubExpr2::field_type typedef FieldType;
+
+          NeboScalar<Initial, typename SubExpr2::field_type> typedef Type1;
+
+          typename Standardize<SubExpr2, typename SubExpr2::field_type>::StandardType typedef Type2;
+
+          MinFcn<Initial, Type1, Type2, FieldType> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(Type1(Type1(arg1)),
+                                       Type2(Standardize<SubExpr2, FieldType>::standardType(arg2))));
+       };
+
 #     define BUILD_BINARY_FUNCTION(OBJECT_NAME, INTERNAL_NAME, EXTERNAL_NAME)                      \
          template<typename CurrentMode, typename Operand1, typename Operand2, typename FieldType>  \
           struct OBJECT_NAME;                                                                      \
