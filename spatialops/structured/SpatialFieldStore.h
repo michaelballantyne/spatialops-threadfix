@@ -28,6 +28,7 @@
 #include <spatialops/structured/SpatialField.h>
 #include <spatialops/structured/ExternalAllocators.h>
 #include <spatialops/structured/IndexTriplet.h>
+#include <spatialops/structured/MemoryPool.h>
 
 #include <stack>
 #include <map>
@@ -39,9 +40,6 @@
 #endif
 
 namespace SpatialOps {
-
-// forward declaration
-class SpatialFieldStore;
 
 /**
  *  @class  SpatFldPtr
@@ -210,28 +208,6 @@ private:
  */
 class SpatialFieldStore {
 
-  template<typename T>
-  class Pool{
-    typedef std::stack<T*> FieldQueue;
-    typedef std::map<size_t,FieldQueue> FQSizeMap;
-    typedef std::map<double*,size_t> FieldSizeMap;
-
-    FQSizeMap fqm_;
-    FieldSizeMap fsm_;
-    size_t pad_;
-    size_t highWater_;
-
-    Pool();
-    ~Pool();
-
-  public:
-    static Pool& self();
-    inline T* get( const size_t n );
-    inline void put( T* );
-    inline size_t active() const;
-    inline size_t total() const{ return highWater_; }
-  };
-
   template<typename FT, typename IsPODT> struct ValTypeSelector;
   template<typename FT> struct ValTypeSelector<FT, boost::true_type> {
     typedef FT type;
@@ -292,7 +268,7 @@ public:
    *  objects.  Calling it anywhere else can result in memory corruption.
    */
   template<typename FieldT>
-  inline static void restore_field(FieldT& f);
+    inline static void restore_field(const MemoryType mtype, FieldT& f);
 
 //  inline static size_t active(){ return Pool<double>::self().active(); }
 //  inline static size_t total() { return Pool<double>::self().total(); }
@@ -429,19 +405,7 @@ SpatFldPtr<FieldT>::operator=(const SpatFldPtr& p)
     // kill the old one if needed
     if (*count_ == 0) {
       if (builtFromStore_) {
-        switch (memType_) {
-        case LOCAL_RAM: {
-          SpatialFieldStore::restore_field(*f_);
-        }
-        break;
-
-        case EXTERNAL_CUDA_GPU:
-          //Do nothing, we don't store cuda memory here
-          break;
-
-        default:
-          throw(std::runtime_error("Attempt to detach an unknown field type."));
-        }
+	SpatialFieldStore::restore_field(memType_, *f_);
       }
       delete f_;
       delete count_;
@@ -471,18 +435,7 @@ SpatFldPtr<FieldT>::operator=(FieldT* const f) {
     // kill the old one if needed
     if (*count_ == 0) {
       if (builtFromStore_) {
-        switch (memType_) {
-        case LOCAL_RAM: {
-          SpatialFieldStore::restore_field(*f_);
-        }
-        break;
-
-        case EXTERNAL_CUDA_GPU:
-          break;
-
-        default:
-          throw(std::runtime_error("Attempt to detach an unknown field type."));
-        }
+	SpatialFieldStore::restore_field(memType_, *f_);
       }
 
       delete f_;
@@ -513,21 +466,11 @@ void SpatFldPtr<FieldT>::detach() {
     if (*count_ == 0) {
       // kill the old one if needed
       if (builtFromStore_) {
-        switch (memType_) {
-        case LOCAL_RAM:
-          SpatialFieldStore::restore_field(*f_);
-          break;
-        case EXTERNAL_CUDA_GPU:
-          //Currently GPU fields are never built from the store
-          break;
-        default:
-          throw(std::runtime_error("Attempt to detach an unknown field type."));
-        }
+	SpatialFieldStore::restore_field(memType_, *f_);
       }
       delete count_;
       count_ = NULL;
       delete f_;
-      count_ = NULL;
       f_ = NULL;
     }
   }
@@ -580,7 +523,7 @@ inline SpatFldPtr<double>::SpatFldPtr(double* const f)
 template<>
 inline
 void
-SpatialFieldStore::restore_field<double>( double& d )
+  SpatialFieldStore::restore_field<double>( const MemoryType mtype, double& d )
 {}
 
 template<>
@@ -613,14 +556,15 @@ get_from_window( const structured::MemoryWindow& window,
 #ifdef ENABLE_THREADS
   boost::mutex::scoped_lock lock( get_mutex() );
 #endif
-  switch (mtype) {
-  case LOCAL_RAM: { // Allocate from a store
     const structured::MemoryWindow mw( window.extent(),
                                        structured::IntVec(0,0,0),
                                        window.extent(),
                                        window.has_bc(0), window.has_bc(1), window.has_bc(2) );
     const size_t npts = mw.glob_npts();
-    AtomicT* fnew = Pool<AtomicT>::self().get(npts);
+
+  switch (mtype) {
+  case LOCAL_RAM: { // Allocate from a store
+    AtomicT* fnew = structured::Pool<AtomicT>::self().get(mtype,npts);
 #   ifndef NDEBUG  // only zero the field for debug runs.
     AtomicT* iftmp = fnew;
     for( size_t i=0; i<npts; ++i, ++iftmp )  *iftmp = 0.0;
@@ -628,12 +572,9 @@ get_from_window( const structured::MemoryWindow& window,
     return SpatFldPtr<FieldT>( new FieldT(mw,fnew,structured::ExternalStorage), true );
   }
 #ifdef ENABLE_CUDA
-  //Dvn: I'm not having the store hold GPU memory right now, as I'm not sure it would be entirely stable
-  // for single GPU systems ( we could end up holding all the memory and break the display functionality )
-  // So they're all allocated as internal storage, but wrapped in a SpatFldPtr
   case EXTERNAL_CUDA_GPU: {
-    return SpatFldPtr<FieldT>(
-        new FieldT(window, NULL, structured::InternalStorage, mtype,
+    AtomicT* fnew = structured::Pool<AtomicT>::self().get(mtype, npts);
+    return SpatFldPtr<FieldT>( new FieldT(window, fnew, structured::ExternalStorage, mtype,
             deviceIndex ), true );
   }
 #endif
@@ -652,89 +593,14 @@ get_from_window( const structured::MemoryWindow& window,
 
 template<typename FieldT>
 inline
-void SpatialFieldStore::restore_field( FieldT& field )
+  void SpatialFieldStore::restore_field( const MemoryType mtype, FieldT& field )
 {
 # ifdef ENABLE_THREADS
   boost::mutex::scoped_lock lock( get_mutex() );
 # endif
   typedef typename ValTypeSelector<FieldT,typename boost::is_pod<FieldT>::type>::type AtomicT;
-  AtomicT * values = const_cast<AtomicT *>((const_cast<FieldT const &>(field)).field_values());
-  Pool<AtomicT>::self().put( values );
-}
-
-//------------------------------------------------------------------
-
-template< typename T >
-SpatialFieldStore::Pool<T>::Pool()
-{
-  pad_ = 0;
-  highWater_ = 0;
-}
-
-template< typename T >
-SpatialFieldStore::Pool<T>::~Pool()
-{
-  for( typename FQSizeMap::iterator i=fqm_.begin(); i!=fqm_.end(); ++i ){
-    FieldQueue& fq = i->second;
-    while( !fq.empty() ){
-      delete [] fq.top();
-      fq.pop();
-    }
-  }
-}
-
-template< typename T >
-SpatialFieldStore::Pool<T>&
-SpatialFieldStore::Pool<T>::self()
-{
-  static Pool p;
-  return p;
-}
-
-template< typename T >
-T*
-SpatialFieldStore::Pool<T>::get( const size_t _n )
-{
-  if( pad_==0 ) pad_ = _n/10;
-  size_t n = _n+pad_;
-  typename FQSizeMap::iterator ifq = fqm_.lower_bound( n );
-  if( ifq == fqm_.end() ){
-    ifq = fqm_.insert( ifq, make_pair(n,FieldQueue()) );
-  }
-  else{
-    n = ifq->first;
-  }
-  T* field = NULL;
-  FieldQueue& fq = ifq->second;
-  if( fq.empty() ){
-    ++highWater_;
-    field = new T[n];
-    fsm_[field] = n;
-  }
-  else{
-    field = fq.top(); fq.pop();
-  }
-  return field;
-}
-
-template< typename T >
-void
-SpatialFieldStore::Pool<T>::put( T* t )
-{
-  const size_t n = fsm_[t];
-  const typename FQSizeMap::iterator ifq = fqm_.lower_bound( n );
-  assert( ifq != fqm_.end() );
-  ifq->second.push(t);
-}
-
-template<typename T>
-size_t
-SpatialFieldStore::Pool<T>::active() const{
-  size_t n=0;
-  for( typename FQSizeMap::const_iterator ifq=fqm_.begin(); ifq!=fqm_.end(); ++ifq ){
-    n += ifq->second.size();
-  }
-  return highWater_-n;
+  AtomicT * values = const_cast<AtomicT *>((const_cast<FieldT const &>(field)).field_values(field.memory_device_type(), field.device_index()));
+  structured::Pool<AtomicT>::self().put( mtype, values );
 }
 
 } // namespace SpatialOps
