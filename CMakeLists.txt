@@ -64,7 +64,7 @@ if( DEFINED Boost_DIR )
   set( ENV{Boost_DIR}  ${Boost_DIR} )
 endif( DEFINED Boost_DIR )
 
-set(BOOST_MIN_VERSION "1.44.0" )
+set(BOOST_MIN_VERSION "1.49.0" )
 find_package( Boost ${BOOST_MIN_VERSION} REQUIRED COMPONENTS ${boost_comps} )
 mark_as_advanced( FORCE Boost_DIR )
 if( NOT Boost_FOUND )
