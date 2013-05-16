@@ -43,6 +43,7 @@
 #include <spatialops/structured/MemoryTypes.h>
 #include <spatialops/structured/MemoryWindow.h>
 #include <spatialops/structured/GhostData.h>
+#include <spatialops/structured/MemoryPool.h>
 #include <boost/static_assert.hpp>
 
 #ifdef SOPS_BOOST_SERIALIZATION
@@ -64,6 +65,10 @@ class RHS;
 
 namespace SpatialOps{
 namespace structured{
+
+  //Forward Declaration
+  template <typename T>
+    class Pool;
 
   enum StorageMode
   {
@@ -602,8 +607,7 @@ SpatialField( const MemoryWindow& window,
               const unsigned short int devIdx )
     : fieldWindow_(window), interiorFieldWindow_(window), // reset with correct info later
       fieldValues_( ( mtype == LOCAL_RAM ) ?
-                    ( ( mode == ExternalStorage) ? fieldValues
-                      : new T[window.glob_dim(0) * window.glob_dim(1)  * window.glob_dim(2)] )
+                    ( ( mode == ExternalStorage) ? fieldValues : (NULL) )
                     : ( NULL ) ),
       fieldValuesExtDevice_( (mtype == EXTERNAL_CUDA_GPU ) ?
     		  	  	  	  	 // Note: this assumes fieldValues is on the proper GPU....
@@ -635,7 +639,16 @@ SpatialField( const MemoryWindow& window,
   interiorFieldWindow_ = MemoryWindow( window.glob_dim(), ofs, ext, window.has_bc(0), window.has_bc(1), window.has_bc(2) );
   switch ( mtype ) {
       case LOCAL_RAM:
-      //Default case, no action required.
+	if( mode == InternalStorage ){
+	  try {
+	    fieldValues_ = new T[window.glob_dim(0) * window.glob_dim(1) * window.glob_dim(2)];
+	  }
+	  catch(std::runtime_error& e){
+	    std::cout << "Error occurred while allocating memory on LOCAL_RAM" << std::endl;
+	    std::cout << e.what() << std::endl;
+	    std::cout << __FILE__ << " : " << __LINE__ << std::endl;
+	  }
+	}
       break;
 #ifdef ENABLE_CUDA
       case EXTERNAL_CUDA_GPU: {
@@ -716,7 +729,7 @@ SpatialField<Location, GhostTraits, T>::~SpatialField() {
 #ifdef ENABLE_CUDA
 	//Release any fields allocated for consumer use
 	for( typename ConsumerMap::iterator i = myConsumerFieldValues_.begin(); i != myConsumerFieldValues_.end(); ++i ){
-		ema::cuda::CUDADeviceInterface::self().release( (void*)i->second, i->first);
+	  Pool<T>::self().put( EXTERNAL_CUDA_GPU, i->second );
 	}
 
 	consumerFieldValues_.clear();
@@ -940,7 +953,7 @@ add_consumer( MemoryType consumerMemoryType,
 #ifdef DEBUG_SF_ALL
         std::cout << "Consumer field does not exist, allocating...\n\n";
 #endif
-        fieldValues_ = new T[allocatedBytes_/sizeof(T)];
+	fieldValues_ = Pool<T>::self().get( consumerMemoryType, ( allocatedBytes_/sizeof(T) ) );
 #ifdef DEBUG_SF_ALL
         std::cout << "fieldValues_ == " << fieldValues_ << std::endl;
 #endif
@@ -976,7 +989,7 @@ add_consumer( MemoryType consumerMemoryType,
       //Check to see if field memory exists
       if ( consumerFieldValues_.find( consumerDeviceIndex ) == consumerFieldValues_.end() ) {
         //Field doesn't exist, attempt to allocate it
-        consumerFieldValues_[consumerDeviceIndex] = (T*)CDI.get_raw_pointer( allocatedBytes_, consumerDeviceIndex );
+        consumerFieldValues_[consumerDeviceIndex] = Pool<T>::self().get( consumerMemoryType, ( allocatedBytes_/sizeof(T) ) );
         myConsumerFieldValues_[consumerDeviceIndex] = consumerFieldValues_[consumerDeviceIndex];
       }
 
@@ -990,7 +1003,7 @@ add_consumer( MemoryType consumerMemoryType,
       ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
 
       if ( consumerFieldValues_.find( consumerDeviceIndex ) == consumerFieldValues_.end() ) {
-        consumerFieldValues_[consumerDeviceIndex] = (T*)CDI.get_raw_pointer( allocatedBytes_, consumerDeviceIndex );
+        consumerFieldValues_[consumerDeviceIndex] = Pool<T>::self().get( consumerMemoryType, ( allocatedBytes_/sizeof(T) ) );
         myConsumerFieldValues_[consumerDeviceIndex] = consumerFieldValues_[consumerDeviceIndex];
       }
 
