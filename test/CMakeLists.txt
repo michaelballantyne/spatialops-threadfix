@@ -31,7 +31,7 @@ target_link_libraries( cond_test ${libs} )
 add_executable( filter_test FilterTest.cpp )
 target_link_libraries( filter_test ${libs} )
 
-add_executable( test_nebo NeboTest.cpp )
+nebo_add_executable( test_nebo NeboTest.cpp )
 target_link_libraries( test_nebo ${libs} )
 add_test( test_nebo test_nebo )
 

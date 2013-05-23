@@ -27,10 +27,39 @@ using namespace structured;
             };                                                  \
         };                                                      \
     }
+#define RUNTEST(NEBOEXPR, EXPR, MESSAGE)                        \
+    {                                                           \
+        test <<= NEBOEXPR;                                      \
+        MANUAL(EXPR);                                           \
+        status(ref == test, MESSAGE);                           \
+    }                                                           \
 
+#define RUNTESTIGNORENAN(NEBOEXPR, EXPR, MESSAGE)               \
+    {                                                           \
+        test <<= cond(NEBOEXPR != NEBOEXPR, 0.0)(NEBOEXPR);\
+        MANUAL(EXPR != EXPR ? 0.0 : EXPR);                      \
+        status(ref == test, MESSAGE);                           \
+    }                                                           \
+
+#define RUN_BINARY_OP_TEST(OP, TESTTYPE)                                                                            \
+    {                                                                                                               \
+        RUNTEST(50.3 OP 4.7, 50.3 OP 4.7, TESTTYPE" (Scalar x Scalar) test");                                       \
+        RUNTEST(input1 OP 4.7, INPUT1 OP 4.7, TESTTYPE" (Field x Scalar) test");                                    \
+        RUNTEST(50.3 OP input2, 50.3 OP INPUT2, TESTTYPE" (Scalar x Field) test");                                  \
+        RUNTEST(input1 OP input2, INPUT1 OP INPUT2, TESTTYPE" (Field x Field) test");                               \
+        RUNTEST(input1 OP (input2 OP input3), INPUT1 OP (INPUT2 OP INPUT3), TESTTYPE" (Field x SubExpr) test");     \
+        RUNTEST((input1 OP input2) OP input3, (INPUT1 OP INPUT2) OP INPUT3, TESTTYPE" (SubExpr x Field) test");     \
+        RUNTEST((input1 OP input2) OP (input3 OP input4),                                                           \
+                (INPUT1 OP INPUT2) OP (INPUT3 OP INPUT4),                                                           \
+                TESTTYPE" (SubExpr x SubExpr) test");                                                               \
+        RUNTEST(50.3 OP (input2 OP input3), 50.3 OP (INPUT2 OP INPUT3), TESTTYPE" (Scalar x SubExpr) test");        \
+        RUNTEST((input1 OP input2) OP 4.7, (INPUT1 OP INPUT2) OP 4.7, TESTTYPE" (SubExpr x Scalar) test");          \
+    }                                                                                                               \
+                                                                
 #define INPUT1 input1(ii, jj, kk)
 #define INPUT2 input2(ii, jj, kk)
 #define INPUT3 input3(ii, jj, kk)
+#define INPUT4 input4(ii, jj, kk)
 
 int main( int iarg, char* carg[] )
 {
@@ -72,28 +101,55 @@ int main( int iarg, char* carg[] )
     Field input1( window, NULL );
     Field input2( window, NULL );
     Field input3( window, NULL );
+    Field input4( window, NULL );
     Field test( window, NULL );
     Field ref( window, NULL );
 
     const int total = nx * ny * nz;
 
     initialize_field(input1, 0.0);
-    initialize_field(input1, total);
-    initialize_field(input1, 2 * total);
+    initialize_field(input2, total);
+    initialize_field(input3, 2 * total);
+    initialize_field(input4, 3 * total);
 
     TestHelper status(true);
 
-    test <<= 0.0;
-    MANUAL(0.0);
-    status( ref == test, "scalar assignment test" );
+    RUNTEST(0.0, 0.0, "scalar assignment test"); printf("\n");
 
-    test <<= max(input1, 0.0);
-    MANUAL(std::max(INPUT1, 0.0));
-    status( ref == test, "max test" );
+    RUN_BINARY_OP_TEST(+, "summation"); printf("\n");
+    RUN_BINARY_OP_TEST(-, "difference"); printf("\n");
+    RUN_BINARY_OP_TEST(/, "product"); printf("\n");
+    RUN_BINARY_OP_TEST(*, "division"); printf("\n");
 
-    test <<= min(input1, 0.0);
-    MANUAL(std::min(INPUT1, 0.0));
-    status( ref == test, "min test" );
+    RUNTEST(sin(input1), std::sin(INPUT1), "sin test");
+    //display_fields_compare(ref, test, true, true);
+    RUNTEST(cos(input1), std::cos(INPUT1), "cos test");
+    RUNTEST(tan(input1), std::tan(INPUT1), "tan test");
+    RUNTEST(exp(input1), std::exp(INPUT1), "exp test");
+    RUNTEST(tanh(input1), std::tanh(INPUT1), "tanh test");
+    RUNTEST(abs(input1), std::abs(INPUT1), "abs test");
+    RUNTEST(-input1, -INPUT1, "negation test");
+    RUNTESTIGNORENAN(pow(input1, input2), std::pow(INPUT1, INPUT2), "power test");
+    RUNTESTIGNORENAN(sqrt(input1), std::sqrt(INPUT1), "square root test");
+    RUNTESTIGNORENAN(log(input1), std::log(INPUT1), "log test");
+
+    //These tests should fail when == is replaced in SpatialField
+    RUNTEST(input1 == input2, INPUT1 == INPUT2, "equivalence test");
+    RUNTEST(input1 != input2, INPUT1 != INPUT2, "non-equivalence test");
+
+    RUNTEST(cond(input1 < input2, true)(false), INPUT1 < INPUT2, "less than test");
+    RUNTEST(cond(input1 <= input2, true)(false), INPUT1 <= INPUT2, "less than or equal test");
+    RUNTEST(cond(input1 > input2, true)(false), INPUT1 > INPUT2, "greater than test");
+    RUNTEST(cond(input1 >= input2, true)(false), INPUT1 >= INPUT2, "greater than or equal test");
+
+    //these tests are dependent on
+    //nebo less than working
+    RUNTEST(cond(input1 < input2 && input3 < input4, true)(false), INPUT1 < INPUT2 && INPUT3 < INPUT4, "boolean and test");
+    RUNTEST(cond(input1 < input2 || input3 < input4, true)(false), INPUT1 < INPUT2 || INPUT3 < INPUT4, "boolean or test");
+    RUNTEST(cond(!(input1 < input2), true)(false), !(INPUT1 < INPUT2), "boolean not test");
+    
+    RUNTEST(max(input1, 0.0), std::max(INPUT1, 0.0), "max test");
+    RUNTEST(min(input1, 0.0), std::min(INPUT1, 0.0), "min test");
 
     if( status.ok() ) {
       cout << "ALL TESTS PASSED :)" << endl;
