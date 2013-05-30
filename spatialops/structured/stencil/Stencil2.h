@@ -61,6 +61,8 @@ namespace SpatialOps {
       typedef typename structured::LessThan<SrcOffset, DestOffset>::result
                           HighStPt;       ///< The high (second) stencil point location
                                           ///  (relative to the destination point)
+      typedef typename structured::GetNonzeroDir< typename structured::Subtract<HighStPt,LowStPt>::result >::DirT
+                          Dir;            ///< The direction that this operator acts in
       typedef typename BuildTwoPointList<LowStPt, HighStPt>::Result
                           StPtList;       ///< The list of all stencil points in this stencil
 
