@@ -35,6 +35,7 @@
 #include <sstream>
 #include <map>
 #include <algorithm>
+#include <cmath>
 #include <string.h> // for memcmp below...
 
 #include <spatialops/SpatialOpsConfigure.h>
@@ -324,7 +325,7 @@ namespace structured{
      * WARNING: Slow in general and comparison with external fields will incur copy penalties.
      */
     bool operator!=(const MyType&) const;
-    bool operator==(const MyType&) const;
+    bool field_equal(const MyType&, double) const;
 
     /**
      * @brief Make this field available on another device type, index pair. Adding consumer fields
@@ -1371,124 +1372,103 @@ SpatialField<Location, GhostTraits, T>::operator=(const MyType& other)
 
 template<typename Location, typename GhostTraits, typename T>
 bool SpatialField<Location, GhostTraits, T>::operator!=(const MyType& other) const {
-  return !(*this == other);
+  return !(this->field_equal(other, 0.0));
 }
 
 //------------------------------------------------------------------
 
 template<typename Location, typename GhostTraits, typename T>
-bool SpatialField<Location, GhostTraits, T>::operator==(const MyType& other) const
+bool SpatialField<Location, GhostTraits, T>::field_equal(const MyType& other, double error=0.0) const
 {
-  switch (memType_) {
-  case LOCAL_RAM: {
-    switch (other.memory_device_type()) {
-    case LOCAL_RAM: {
-      const_iterator iother = other.begin();
-      const_iterator iend = this->end();
-      for (const_iterator ifld = this->begin(); ifld != iend; ++ifld, ++iother) {
-        if (*ifld != *iother) return false;
-      }
-      return true;
-    }
-#ifdef ENABLE_CUDA
-    case EXTERNAL_CUDA_GPU: {
-      // Comparing LOCAL_RAM == EXTERNAL_CUDA_GPU
-      // Note: This will incur a full copy penalty from the GPU and should not be used in a time sensitive context.
-      if( allocatedBytes_ != other.allocatedBytes_ ) {
-        throw( std::runtime_error( "Attempted comparison between fields of unequal size." ) );
-      }
+  bool exact_comparison = error == 0.0;
+  error = std::abs(error);
 
-      void* temp = (void*)malloc(allocatedBytes_);
-      ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-      CDI.memcpy_from( temp, other.fieldValuesExtDevice_, allocatedBytes_, other.deviceIndex_ );
-
-      if( memcmp(temp, fieldValues_, allocatedBytes_) ) {
-        free(temp);
-        return false;
-      }
-      free(temp);
-      return true;
-    }
-#endif
-    default:{
-      std::ostringstream msg;
-      msg << "Attempted unsupported compare operation, at \n\t"
-          << __FILE__ << " : " << __LINE__ << std::endl
-          << "\t - "
-          << DeviceTypeTools::get_memory_type_description(memType_) << " = "
-          << DeviceTypeTools::get_memory_type_description(
-              other.memory_device_type()) << std::endl;
-      throw(std::runtime_error(msg.str()));
-    }
-    } // switch( other.memory_device_type() )
-  } // case LOCAL_RAM
-#ifdef ENABLE_CUDA
-  case EXTERNAL_CUDA_GPU: {
-    switch( other.memory_device_type() ) {
-    case LOCAL_RAM: {
-      // Comparing EXTERNAL_CUDA_GPU == LOCAL_RAM
-      // WARNING: This will incur a full copy penalty from the GPU and should not be used in a time sensitive context.
-      if( allocatedBytes_ != other.allocatedBytes_ ) {
-        throw( std::runtime_error( "Attempted comparison between fields of unequal size." ) );
-      }
-
-      void* temp = (void*)malloc(allocatedBytes_);
-      ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-      CDI.memcpy_from( temp, fieldValuesExtDevice_, allocatedBytes_, deviceIndex_ );
-
-      if( memcmp(temp, other.fieldValues_, allocatedBytes_) ) {
-        free(temp);
-        return false;
-      }
-
-      free(temp);
-      return true;
-    }
-
-    case EXTERNAL_CUDA_GPU: {
-      // Comparing EXTERNAL_CUDA_GPU == EXTERNAL_CUDA_GPU
-      // WARNING: This will incur a full copy penalty from the GPU and should not be used in a time sensitive context.
-      if( allocatedBytes_ != other.allocatedBytes_ ) {
-        throw( std::runtime_error( "Attempted comparison between fields of unequal size." ) );
-      }
-      void* tempLHS = (void*)malloc(allocatedBytes_);
-      void* tempRHS = (void*)malloc(allocatedBytes_);
-
-      ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-      CDI.memcpy_from( tempLHS, fieldValuesExtDevice_, allocatedBytes_, deviceIndex_ );
-      CDI.memcpy_from( tempRHS, other.fieldValuesExtDevice_, allocatedBytes_, other.deviceIndex_ );
-
-      free(tempLHS);
-      free(tempRHS);
-
-      if( memcmp(tempLHS, tempRHS, allocatedBytes_) ) {
-        return false;
-      }
-
-      return true;
-    }
-
-    default: {
-      std::ostringstream msg;
-      msg << "Attempted unsupported compare operation, at \n\t"
-          << __FILE__ << " : " << __LINE__ << std::endl
-          << "\t - "
-          << DeviceTypeTools::get_memory_type_description(memType_) << " = "
-          << DeviceTypeTools::get_memory_type_description( other.memory_device_type() ) << std::endl;
-      throw(std::runtime_error(msg.str()));
-    }
-    }
+  if( allocatedBytes_ != other.allocatedBytes_ ) {
+    throw( std::runtime_error( "Attempted comparison between fields of unequal size." ) );
   }
-#endif
-  default:
+
+  void *temp1 = 0;
+  void *temp2 = 0;
+  const_iterator *ifld = 0;
+  const_iterator *iend = 0;
+  const_iterator *iother = 0;
+
+  //initialize ifld and iend
+  if(memType_ == LOCAL_RAM) {
+    ifld = new const_iterator(const_cast<const MyType*>(this)->begin());
+    iend = new const_iterator(const_cast<const MyType*>(this)->end());
+  }
+  else if (memType_ == EXTERNAL_CUDA_GPU) {
+    temp1 = (void*)malloc(allocatedBytes_);
+    ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
+    CDI.memcpy_from( temp1, fieldValuesExtDevice_, allocatedBytes_, deviceIndex_ );
+
+    ifld = new const_iterator((T*)temp1, fieldWindow_);
+
+    int extent = fieldWindow_.extent(0) * fieldWindow_.extent(1) * fieldWindow_.extent(2);
+    iend = new const_iterator((T*)temp1, fieldWindow_);
+    *iend += extent;
+  }
+  else {
     std::ostringstream msg;
-    msg << "Attempted unsupported compare operation, at \n\t"
-        << __FILE__ << " : " << __LINE__ << std::endl
-        << "\t - " << DeviceTypeTools::get_memory_type_description(memType_)
-        << " = "
-        << DeviceTypeTools::get_memory_type_description( other.memory_device_type()) << std::endl;
+    msg << "Attempted unsupported compare operation, at " << __FILE__
+      << " : " << __LINE__ << std::endl;
+    msg << "\t - "
+      << DeviceTypeTools::get_memory_type_description(memType_) << " = "
+      << DeviceTypeTools::get_memory_type_description(
+          other.memory_device_type());
     throw(std::runtime_error(msg.str()));
   }
+
+  //initialize iother
+  if(other.memory_device_type() == LOCAL_RAM) {
+    iother = new const_iterator(other.begin());
+  }
+  else if (other.memory_device_type() == EXTERNAL_CUDA_GPU) {
+      temp2 = (void*)malloc(allocatedBytes_);
+      ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
+      CDI.memcpy_from( temp2, other.fieldValuesExtDevice_, allocatedBytes_, other.deviceIndex_ );
+      MemoryWindow temp_window = fieldWindow_;
+      iother = new const_iterator((T*)temp2, temp_window);
+  }
+  else {
+    std::ostringstream msg;
+    msg << "Attempted unsupported compare operation, at " << __FILE__
+      << " : " << __LINE__ << std::endl;
+    msg << "\t - "
+      << DeviceTypeTools::get_memory_type_description(memType_) << " = "
+      << DeviceTypeTools::get_memory_type_description(
+          other.memory_device_type());
+    if(temp1) free(temp1);
+    delete ifld;
+    delete iend;
+    throw(std::runtime_error(msg.str()));
+  }
+
+
+  bool result = true;
+  for (; *ifld != *iend; ++(*ifld), ++(*iother)) {
+    if(exact_comparison) {
+      if (**ifld != **iother) {
+        result = false;
+        break;
+      }
+    }
+    else {
+      if (std::abs(**ifld - **iother)/(double)std::abs(**ifld) > error) {
+        result =  false;
+        break;
+      }
+    }
+  }
+
+  if(temp1) free(temp1);
+  if(temp2) free(temp2);
+  delete ifld;
+  delete iend;
+  delete iother;
+
+  return result;
 }
 
 //------------------------------------------------------------------

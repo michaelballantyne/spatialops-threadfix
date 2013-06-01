@@ -3,12 +3,14 @@
 #include <spatialops/structured/SpatialFieldStore.h>
 #include <spatialops/Nebo.h>
 #include <test/TestHelper.h>
+#include <test/FieldHelper.h>
 
 #ifdef ENABLE_THREADS
 #include <spatialops/ThreadPool.h>
 #include <boost/thread/barrier.hpp>
 #endif
 
+#include <cmath>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <sstream>
@@ -24,6 +26,124 @@ void jcs_pause()
   std::cout << "Press <ENTER> to continue...";
   std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 }
+
+//--------------------------------------------------------------------
+#define COMPAREFIELDS( F1MEMTYPE, F1VAL, F2MEMTYPE, F2VAL, ERROR, MESSAGE)  \
+{                                                                           \
+    FieldT F1(window, NULL, InternalStorage, F1MEMTYPE);                    \
+    FieldT F2(window, NULL, InternalStorage, F2MEMTYPE);                    \
+    F1 <<= F1VAL;                                                           \
+    F2 <<= F2VAL;                                                           \
+    status(manual_compare(F1, F2, ERROR, verboseOutput), MESSAGE);          \
+}
+
+
+template<typename FieldT>
+bool manual_compare(FieldT& f1,
+                    FieldT& f2,
+                    const double error,
+                    const bool verboseOutput)
+{
+  //copy the fields to local ram if applicable
+  if(f1.memory_device_type() == EXTERNAL_CUDA_GPU) {
+    f1.add_consumer(LOCAL_RAM, 0);
+  }
+  if(f2.memory_device_type() == EXTERNAL_CUDA_GPU) {
+    f2.add_consumer(LOCAL_RAM, 0);
+  }
+
+  //iterate through fields.
+  typename FieldT::const_iterator if1 = const_cast<const FieldT&>(f1).begin();
+  typename FieldT::const_iterator if1e = const_cast<const FieldT&>(f1).end();
+  typename FieldT::const_iterator if2 = const_cast<const FieldT&>(f2).begin();
+
+  //manually compare equality
+  bool man_equal = true;
+  for(; if1 != if1e; ++if1, ++if2) {
+    if( std::abs(*if1 - *if2)/(double)std::abs(*if1) > error ) {
+      man_equal = false;
+      break;
+    }
+  }
+
+  return man_equal == f1.field_equal(f2, error);
+}
+
+template<typename FieldT>
+bool test_field_equal( const IntVec npts,
+                       const MemoryType memType1,
+                       const MemoryType memType2,
+                       const bool verboseOutput)
+{
+  TestHelper status(verboseOutput);
+  const MemoryWindow window(npts);
+  const int total = npts[0] * npts[1] * npts[2];
+
+  FieldT* f1;
+  FieldT* f2;
+
+  //local fields
+  FieldT lf1(window, NULL, InternalStorage); initialize_field(lf1, 0);
+  FieldT lf2(window, NULL, InternalStorage); initialize_field(lf2, 0); 
+  FieldT lf3(window, NULL, InternalStorage); initialize_field(lf3, total); 
+#ifdef __CUDACC__
+  //gpu fields
+  FieldT gf1(window, NULL, InternalStorage, EXTERNAL_CUDA_GPU, 0);
+  FieldT gf2(window, NULL, InternalStorage, EXTERNAL_CUDA_GPU, 0);
+  FieldT gf3(window, NULL, InternalStorage, EXTERNAL_CUDA_GPU, 0);
+  
+  //move local initialized fields to gpu if necessary
+  if(memType1 == EXTERNAL_CUDA_GPU) {
+    lf1.add_consumer(EXTERNAL_CUDA_GPU, 0); 
+    gf1 <<= lf1; 
+    f1 = &gf1;
+  } 
+  else {
+    f1 = &lf1;
+  }
+
+  if(memType2 == EXTERNAL_CUDA_GPU) {
+    lf2.add_consumer(EXTERNAL_CUDA_GPU, 0); 
+    gf2 <<= lf2;
+    f2 = &gf2;
+  } 
+  else {
+    f2 = &lf2;
+  }
+#else
+  f1 = &lf1;
+  f2 = &lf2;
+#endif
+
+  //two duplicate fields exactly equal
+  status(manual_compare(*f1, *f2, 0.0, verboseOutput), "Duplicate Fields Equal");
+
+  //change second field and compare not equal
+#ifdef __CUDACC__
+  if(memType2 == EXTERNAL_CUDA_GPU) {
+    lf3.add_consumer(EXTERNAL_CUDA_GPU, 0); 
+    gf3 <<= lf3;
+    f2 = &gf2;
+  } 
+  else {
+    f2 = &lf3;
+  }
+#endif
+  status(manual_compare(*f1, *f2, 0.0, verboseOutput), "Non-Duplicate Fields Not Equal");
+
+
+  //relative error test
+  COMPAREFIELDS(memType1, 3.0, memType2, 7.49, 1.5, "Off By 150% (Equal)");
+  COMPAREFIELDS(memType1, 3.0, memType2, 7.51, 1.5, "Off By 150% (Not Equal)");
+  COMPAREFIELDS(memType1, 3.0, memType2, 3.98, 1.5, "Off By 33% (Equal)");
+  COMPAREFIELDS(memType1, 3.0, memType2, 4.10, 1.5, "Off By 33% (Not Equal)");
+  COMPAREFIELDS(memType1, 3.0, memType2, 2.97, 1.5, "Off By 1% (Equal)");
+  COMPAREFIELDS(memType1, 3.0, memType2, 2.96, 1.5, "Off By 1% (Not Equal)");
+
+  return status.ok();
+}
+
+//--------------------------------------------------------------------
 
 template<typename FieldT>
 bool test_iterator( const IntVec npts,
@@ -457,11 +577,19 @@ int main()
     {
       SpatFldPtr<SVolField> sv3 = SpatialFieldStore::get<SVolField>( svol1 );
       *sv3 = svol1;
-      status( *sv3 == svol1, "spatial field pointer from store" );
+      status( sv3->field_equal(svol1, 0.0), "spatial field pointer from store" );
     }
 
     overall( status.ok(), "field operations" );
   }
+
+  //test field_equal
+  overall(test_field_equal<SVolField>(IntVec(10, 11, 12), LOCAL_RAM, LOCAL_RAM, false), "LOCAL_RAM x LOCAL_RAM Equal Test");
+#ifdef __CUDACC__
+  overall(test_field_equal<SVolField>(IntVec(10, 11, 12), LOCAL_RAM, EXTERNAL_CUDA_GPU, false), "LOCAL_RAM x EXTERNAL_CUDA_GPU Equal Test");
+  overall(test_field_equal<SVolField>(IntVec(10, 11, 12), EXTERNAL_CUDA_GPU, LOCAL_RAM, false), "EXTERNAL_CUDA_GPU x LOCAL_RAM Equal Test");
+  overall(test_field_equal<SVolField>(IntVec(10, 11, 12), EXTERNAL_CUDA_GPU, EXTERNAL_CUDA_GPU, false), "EXTERNAL_CUDA_GPU x EXTERNAL_CUDA_GPU Equal Test");
+#endif
 
   if( overall.isfailed() ){
     std::cout << "FAIL!" << std::endl;

@@ -75,7 +75,7 @@ bool test_stencil2(IntVec npts,
     //run operator:
     op->apply_to_field(src, test);
 
-    return (test == ref);
+    return (test.field_equal(ref, 0.0));
 };
 
 //--------------------------------------------------------------------
@@ -111,7 +111,7 @@ bool test_stencil4(IntVec npts,
     //run operator:
     op->apply_to_field(src, test);
 
-    return (test == ref);
+    return (test.field_equal(ref, 0.0));
 };
 
 //--------------------------------------------------------------------
@@ -144,7 +144,7 @@ bool test_fd_stencil2(IntVec npts,
     //run operator:
     op->apply_to_field(src, test);
 
-    return (test == ref);
+    return (test.field_equal(ref, 0.0));
 };
 
 //--------------------------------------------------------------------
@@ -175,7 +175,7 @@ bool test_null_stencil(IntVec npts,
     //run operator:
     op->apply_to_field(src, test);
 
-    return (test == ref);
+    return (test.field_equal(ref, 0.0));
 };
 
 //--------------------------------------------------------------------
@@ -206,7 +206,7 @@ bool test_box_filter_stencil(IntVec npts,
     //run operator:
     op->apply_to_field(src, test);
 
-    return (test == ref);
+    return (test.field_equal(ref, 0.0));
 };
 
 //--------------------------------------------------------------------

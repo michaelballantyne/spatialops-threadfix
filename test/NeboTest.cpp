@@ -31,14 +31,14 @@ using namespace structured;
     {                                                           \
         test <<= NEBOEXPR;                                      \
         MANUAL(EXPR);                                           \
-        status(ref == test, MESSAGE);                           \
+        status(ref.field_equal(test, 0.0), MESSAGE);            \
     }                                                           \
 
 #define RUNTESTIGNORENAN(NEBOEXPR, EXPR, MESSAGE)               \
     {                                                           \
-        test <<= cond(NEBOEXPR != NEBOEXPR, 0.0)(NEBOEXPR);\
+        test <<= cond(NEBOEXPR != NEBOEXPR, 0.0)(NEBOEXPR);     \
         MANUAL(EXPR != EXPR ? 0.0 : EXPR);                      \
-        status(ref == test, MESSAGE);                           \
+        status(ref.field_equal(test, 0.0), MESSAGE);            \
     }                                                           \
 
 #define RUN_BINARY_OP_TEST(OP, TESTTYPE)                                                                            \
@@ -134,7 +134,7 @@ int main( int iarg, char* carg[] )
     RUNTESTIGNORENAN(log(input1), std::log(INPUT1), "log test");
 
     //These tests should fail when == is replaced in SpatialField
-    RUNTEST(input1 == input2, INPUT1 == INPUT2, "equivalence test");
+    RUNTEST(cond(input1 == input2, true)(false), INPUT1 == INPUT2, "equivalence test");
     RUNTEST(input1 != input2, INPUT1 != INPUT2, "non-equivalence test");
 
     RUNTEST(cond(input1 < input2, true)(false), INPUT1 < INPUT2, "less than test");
