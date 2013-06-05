@@ -26,6 +26,7 @@
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/IndexTriplet.h>
 #include <spatialops/structured/MemoryWindow.h>
+#include <spatialops/FieldExpressions.h>
 
 namespace SpatialOps{
 namespace structured{
@@ -39,7 +40,8 @@ namespace structured{
    */
   enum BCSide{
     MINUS_SIDE,  ///< Minus side
-    PLUS_SIDE    ///< Plus side
+    PLUS_SIDE,   ///< Plus side
+    NO_SIDE      ///< for wide stencils where we set on a point rather than a face
   };
 
   namespace detail{
@@ -71,27 +73,8 @@ namespace structured{
   {
     typedef typename OpT::SrcFieldType    SrcFieldT;
     typedef typename OpT::DestFieldType   DestFieldT;
-
-    typedef typename  SrcFieldT::Location::Offset  SO;
-    typedef typename DestFieldT::Location::Offset  DO;
-
-    typedef typename Subtract<SO,DO>::result SOMinusDO;
-    typedef typename Subtract<DO,SO>::result DOMinusSO;
-
-    typedef typename detail::OpDirHelper< typename OpT::type, GetNonzeroDir<SOMinusDO> > DirHelper;
-    typedef typename UnitTriplet< typename DirHelper::type >::type  UnitVec;
-
-    typedef typename Add<
-        typename DirHelper::S1Extra,
-        typename Multiply< UnitVec,
-                           typename Multiply< DO, typename DOMinusSO::Abs >::result
-                           >::result
-        >::result  S1Shift;
-
-    typedef typename Add<
-        typename DirHelper::S2Extra,
-        typename Add< S1Shift, UnitVec >::result
-        >::result  S2Shift;
+    typedef typename OpT:: LowStPt        S1Shift;
+    typedef typename OpT::HighStPt        S2Shift;
 
     const BCEval bcEval_;  ///< functor to set the value of the BC
     const IntVec apoint_;  ///< the index for the value in the source field we will set
@@ -186,8 +169,8 @@ namespace structured{
                        const BCEval bceval,
                        const OperatorDatabase& soDatabase )
       : bcEval_( bceval ),
-        apoint_( destPoint + ( (side==MINUS_SIDE) ? S1Shift::int_vec() : S2Shift::int_vec() ) ),
-        bpoint_( destPoint + ( (side==MINUS_SIDE) ? S2Shift::int_vec() : S1Shift::int_vec() ) ),
+        apoint_( destPoint + ( (side==MINUS_SIDE || side==NO_SIDE) ? S1Shift::int_vec() : S2Shift::int_vec() ) ),
+        bpoint_( destPoint + ( (side==MINUS_SIDE || side==NO_SIDE) ? S2Shift::int_vec() : S1Shift::int_vec() ) ),
         singlePointBC_(true)
   {
     // let phi_a be the ghost value, phi_b be the internal value, and phi_bc be the boundary condition,
@@ -196,8 +179,8 @@ namespace structured{
     //   phi_a = (phi_bc - b*phi_b) / a
     //
     const OpT* const op = soDatabase.retrieve_operator<OpT>();
-    ca_ = (side==MINUS_SIDE ? op->get_minus_coef() : op->get_plus_coef()  );
-    cb_ = (side==MINUS_SIDE ? op->get_plus_coef()  : op->get_minus_coef() );
+    ca_ = (side==MINUS_SIDE || side==NO_SIDE ? op->get_minus_coef() : op->get_plus_coef()  );
+    cb_ = (side==MINUS_SIDE || side==NO_SIDE ? op->get_plus_coef()  : op->get_minus_coef() );
   }
 
   //------------------------------------------------------------------
@@ -235,21 +218,29 @@ namespace structured{
   BoundaryConditionOp<OpT,BCEval>::
   operator()( SrcFieldT& f ) const
   {
-    // jcs: this is not very efficient (indexing slowness) but I
-    //      am not sure that we can do any better at this point.
+    // jcs: this is not very efficient, but I am not sure that we can do any better at this point.
+
+    const MemoryWindow& w = f.window_without_ghost();
+
     if (singlePointBC_) {
-      const unsigned int ia = f.window_without_ghost().flat_index(apoint_);
-      const unsigned int ib = f.window_without_ghost().flat_index(bpoint_);
-      f[ia] = ( bcEval_() - cb_*f[ib] ) / ca_;      
+      const MemoryWindow wa( w.glob_dim(), w.offset()+apoint_, IntVec(1,1,1), w.has_bc(0), w.has_bc(1), w.has_bc(2) );
+      const MemoryWindow wb( w.glob_dim(), w.offset()+bpoint_, IntVec(1,1,1), w.has_bc(0), w.has_bc(1), w.has_bc(2) );
+      SrcFieldT fa( wa, f );
+      SrcFieldT fb( wb, f );
+      fa <<= ( bcEval_() - cb_ * fb ) / ca_;
     }
     else {
+      // jcs note that we could speed this up a bit by saving off the index triplets rather than the flat indices (which require us to convert back here).
       std::vector<int>::const_iterator ia = flatGhostPoints_.begin(); // ia is the ghost flat index
       std::vector<int>::const_iterator ib = flatInteriorPoints_.begin(); // ib is the interior flat index
       for( ; ia != flatGhostPoints_.end(); ++ia, ++ib ){
-        f[*ia] = ( bcEval_() - cb_*f[*ib] ) / ca_;
+        const MemoryWindow wa( w.glob_dim(), w.offset()+w.ijk_index_from_local(*ia), IntVec(1,1,1), w.has_bc(0), w.has_bc(1), w.has_bc(2) );
+        const MemoryWindow wb( w.glob_dim(), w.offset()+w.ijk_index_from_local(*ib), IntVec(1,1,1), w.has_bc(0), w.has_bc(1), w.has_bc(2) );
+        SrcFieldT fa( wa, f );
+        SrcFieldT fb( wb, f );
+        fa <<= ( bcEval_() - cb_ * fb ) / ca_;
       }
     }
-
   }
 
   //------------------------------------------------------------------

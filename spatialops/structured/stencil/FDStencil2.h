@@ -41,12 +41,16 @@ namespace SpatialOps{
       const NeboStencilCoefCollection<2> coefCollection_;
 
     public:
-      typedef OpT       type;
-      typedef FieldT    SrcFieldType;
-      typedef FieldT    DestFieldType;
-      typedef typename UnitTriplet<DirT>::type  DirVec;
-      typedef typename DirVec::Negate LowStPt;
-      typedef DirVec                  HighStPt;
+      typedef OpT       type;           ///< Operation achieved by this operator (e.g. grad, interp, etc.)
+      typedef FieldT    SrcFieldType;   ///< Type of the source field
+      typedef FieldT    DestFieldType;  ///< Type of the destination field
+      typedef DirT      Dir;            ///< Direction that this operator acts in
+
+      typedef typename UnitTriplet<DirT>::type  DirUnitVec;
+
+      typedef typename DirUnitVec::Negate LowStPt;  ///< The offset for the low point
+      typedef DirUnitVec                  HighStPt; ///< The offset for the high point
+
       typedef typename BuildTwoPointCollection<LowStPt, HighStPt>::Result StPtCollection;
 
       typedef typename DestFieldType::value_type AtomicType;  // scalar type

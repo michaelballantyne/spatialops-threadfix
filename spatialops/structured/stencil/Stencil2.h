@@ -61,8 +61,10 @@ namespace SpatialOps {
       typedef typename structured::LessThan<SrcOffset, DestOffset>::result
                           HighStPt;       ///< The high (second) stencil point location
                                           ///  (relative to the destination point)
+      typedef typename structured::GetNonzeroDir< typename structured::Subtract<HighStPt,LowStPt>::result >::DirT
+                          Dir;            ///< The direction that this operator acts in
       typedef typename BuildTwoPointCollection<LowStPt, HighStPt>::Result
-                          StPtCollection;       ///< The collection of all stencil points in this stencil
+                          StPtCollection; ///< The collection of all stencil points in this stencil
 
       typedef typename DestFieldType::value_type  AtomicType;  // scalar type
 
