@@ -28,6 +28,7 @@
 #include <spatialops/NeboOperators.h>
 #include <spatialops/NeboCond.h>
 #include <spatialops/NeboStencils.h>
+#include <spatialops/NeboStencilBuilder.h>
 #include <spatialops/NeboLhs.h>
 #include <spatialops/NeboAssignment.h>
 #include <spatialops/NeboReductions.h>

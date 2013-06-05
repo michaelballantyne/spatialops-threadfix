@@ -11,6 +11,7 @@ set( SO_HEADERS
   NeboOperators.h
   NeboCond.h
   NeboStencils.h
+  NeboStencilBuilder.h
   NeboLhs.h
   NeboAssignment.h
   NeboReductions.h
