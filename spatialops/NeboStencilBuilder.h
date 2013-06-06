@@ -54,9 +54,9 @@ namespace SpatialOps {
          */
         NeboStencilBuilder(const CoefCollection & coefs)
          : coefCollection_(coefs)
-        {};
+        {}
 
-        ~NeboStencilBuilder() {};
+        ~NeboStencilBuilder() {}
 
         /**
          * \brief Return coefficient collection
@@ -70,7 +70,7 @@ namespace SpatialOps {
          */
         void apply_to_field( const SrcFieldType & src, DestFieldType & dest ) const {
             dest <<= operator()(src);
-        };
+        }
 
         /**
          * \brief Nebo's inline operator for field values
@@ -78,7 +78,7 @@ namespace SpatialOps {
          */
         inline FieldResult operator ()( const SrcFieldType & src ) const {
             return FieldResult(FieldStencil(FieldArg(src), coefs()));
-        };
+        }
 
         /**
          * \brief Nebo's inline operator for Nebo expressions
@@ -90,7 +90,7 @@ namespace SpatialOps {
             typedef typename WithArg<Arg>::Stencil Stencil;
             typedef typename WithArg<Arg>::Result Result;
             return Result(Stencil(src.expr(), coefs()));
-        };
+        }
 
     private:
         const CoefCollection coefCollection_;
