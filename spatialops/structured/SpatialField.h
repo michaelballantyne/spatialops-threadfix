@@ -36,6 +36,8 @@
 #include <map>
 #include <algorithm>
 #include <cmath>
+#include <limits>
+#include <boost/math/special_functions/next.hpp>
 #include <string.h> // for memcmp below...
 
 #include <spatialops/SpatialOpsConfigure.h>
@@ -326,6 +328,8 @@ namespace structured{
      */
     bool operator!=(const MyType&) const;
     bool field_equal(const MyType&, double) const;
+    bool field_equal_abs(const MyType&, double) const;
+    bool field_equal_ulp(const MyType&, const unsigned int) const;
 
     /**
      * @brief Make this field available on another device type, index pair. Adding consumer fields
@@ -1380,15 +1384,15 @@ bool SpatialField<Location, GhostTraits, T>::operator!=(const MyType& other) con
 template<typename Location, typename GhostTraits, typename T>
 bool SpatialField<Location, GhostTraits, T>::field_equal(const MyType& other, double error=0.0) const
 {
-  bool exact_comparison = error == 0.0;
-  error = std::abs(error);
-
-  if( allocatedBytes_ != other.allocatedBytes_ ) {
+  if(fieldWindow_ != other.fieldWindow_) {
     throw( std::runtime_error( "Attempted comparison between fields of unequal size." ) );
   }
 
-  void *temp1 = 0;
-  void *temp2 = 0;
+  error = std::abs(error);
+  bool exact_comparison = error == 0.0;
+  const std::numeric_limits<T> nl;
+  MyType *temp1 = 0;
+  MyType *temp2 = 0;
   const_iterator *ifld = 0;
   const_iterator *iend = 0;
   const_iterator *iother = 0;
@@ -1399,15 +1403,11 @@ bool SpatialField<Location, GhostTraits, T>::field_equal(const MyType& other, do
     iend = new const_iterator(const_cast<const MyType*>(this)->end());
   }
   else if (memType_ == EXTERNAL_CUDA_GPU) {
-    temp1 = (void*)malloc(allocatedBytes_);
-    ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-    CDI.memcpy_from( temp1, fieldValuesExtDevice_, allocatedBytes_, deviceIndex_ );
+    temp1 = new MyType(fieldWindow_, NULL, InternalStorage);
+    *temp1 = *this;
 
-    ifld = new const_iterator((T*)temp1, fieldWindow_);
-
-    int extent = fieldWindow_.extent(0) * fieldWindow_.extent(1) * fieldWindow_.extent(2);
-    iend = new const_iterator((T*)temp1, fieldWindow_);
-    *iend += extent;
+    ifld = new const_iterator(const_cast<const MyType*>(temp1)->begin());
+    iend = new const_iterator(const_cast<const MyType*>(temp1)->end());
   }
   else {
     std::ostringstream msg;
@@ -1422,14 +1422,13 @@ bool SpatialField<Location, GhostTraits, T>::field_equal(const MyType& other, do
 
   //initialize iother
   if(other.memory_device_type() == LOCAL_RAM) {
-    iother = new const_iterator(other.begin());
+    iother = new const_iterator(const_cast<const MyType&>(other).begin());
   }
   else if (other.memory_device_type() == EXTERNAL_CUDA_GPU) {
-      temp2 = (void*)malloc(allocatedBytes_);
-      ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-      CDI.memcpy_from( temp2, other.fieldValuesExtDevice_, allocatedBytes_, other.deviceIndex_ );
-      MemoryWindow temp_window = fieldWindow_;
-      iother = new const_iterator((T*)temp2, temp_window);
+      temp2 = new MyType(fieldWindow_, NULL, InternalStorage);
+      *temp2 = other;
+
+      iother = new const_iterator(const_cast<const MyType*>(temp2)->begin());
   }
   else {
     std::ostringstream msg;
@@ -1439,13 +1438,13 @@ bool SpatialField<Location, GhostTraits, T>::field_equal(const MyType& other, do
       << DeviceTypeTools::get_memory_type_description(memType_) << " = "
       << DeviceTypeTools::get_memory_type_description(
           other.memory_device_type());
-    if(temp1) free(temp1);
+    if(temp1) delete temp1;
     delete ifld;
     delete iend;
     throw(std::runtime_error(msg.str()));
   }
 
-
+  //do comparison
   bool result = true;
   for (; *ifld != *iend; ++(*ifld), ++(*iother)) {
     if(exact_comparison) {
@@ -1455,15 +1454,191 @@ bool SpatialField<Location, GhostTraits, T>::field_equal(const MyType& other, do
       }
     }
     else {
-      if (std::abs(**ifld - **iother)/(double)std::abs(**ifld) > error) {
+      if (std::abs(**ifld - **iother)/(double)(**ifld == 0 ? nl.min() : std::abs(**ifld)) > error) {
         result =  false;
         break;
       }
     }
   }
 
-  if(temp1) free(temp1);
-  if(temp2) free(temp2);
+  if(temp1) delete temp1;
+  if(temp2) delete temp2;
+  delete ifld;
+  delete iend;
+  delete iother;
+
+  return result;
+}
+
+template<typename Location, typename GhostTraits, typename T>
+bool SpatialField<Location, GhostTraits, T>::field_equal_abs(const MyType& other, double error=0.0) const
+{
+  if(fieldWindow_ != other.fieldWindow_) {
+    throw( std::runtime_error( "Attempted comparison between fields of unequal size." ) );
+  }
+
+  error = std::abs(error);
+  bool exact_comparison = error == 0.0;
+  MyType *temp1 = 0;
+  MyType *temp2 = 0;
+  const_iterator *ifld = 0;
+  const_iterator *iend = 0;
+  const_iterator *iother = 0;
+
+  //initialize ifld and iend
+  if(memType_ == LOCAL_RAM) {
+    ifld = new const_iterator(const_cast<const MyType*>(this)->begin());
+    iend = new const_iterator(const_cast<const MyType*>(this)->end());
+  }
+  else if (memType_ == EXTERNAL_CUDA_GPU) {
+    temp1 = new MyType(fieldWindow_, NULL, InternalStorage);
+    *temp1 = *this;
+
+    ifld = new const_iterator(const_cast<const MyType*>(temp1)->begin());
+    iend = new const_iterator(const_cast<const MyType*>(temp1)->end());
+  }
+  else {
+    std::ostringstream msg;
+    msg << "Attempted unsupported compare operation, at " << __FILE__
+      << " : " << __LINE__ << std::endl;
+    msg << "\t - "
+      << DeviceTypeTools::get_memory_type_description(memType_) << " = "
+      << DeviceTypeTools::get_memory_type_description(
+          other.memory_device_type());
+    throw(std::runtime_error(msg.str()));
+  }
+
+  //initialize iother
+  if(other.memory_device_type() == LOCAL_RAM) {
+    iother = new const_iterator(const_cast<const MyType&>(other).begin());
+  }
+  else if (other.memory_device_type() == EXTERNAL_CUDA_GPU) {
+      temp2 = new MyType(fieldWindow_, NULL, InternalStorage);
+      *temp2 = other;
+
+      iother = new const_iterator(const_cast<const MyType*>(temp2)->begin());
+  }
+  else {
+    std::ostringstream msg;
+    msg << "Attempted unsupported compare operation, at " << __FILE__
+      << " : " << __LINE__ << std::endl;
+    msg << "\t - "
+      << DeviceTypeTools::get_memory_type_description(memType_) << " = "
+      << DeviceTypeTools::get_memory_type_description(
+          other.memory_device_type());
+    if(temp1) delete temp1;
+    delete ifld;
+    delete iend;
+    throw(std::runtime_error(msg.str()));
+  }
+
+
+  //do comparison
+  bool result = true;
+  for (; *ifld != *iend; ++(*ifld), ++(*iother)) {
+    if(exact_comparison) {
+      if (**ifld != **iother) {
+        result = false;
+        break;
+      }
+    }
+    else {
+      if (std::abs(**ifld - **iother) > error) {
+        result =  false;
+        break;
+      }
+    }
+  }
+
+  if(temp1) delete temp1;
+  if(temp2) delete temp2;
+  delete ifld;
+  delete iend;
+  delete iother;
+
+  return result;
+}
+
+template<typename Location, typename GhostTraits, typename T>
+bool SpatialField<Location, GhostTraits, T>::field_equal_ulp(const MyType& other, const unsigned int ulps) const
+{
+  if(fieldWindow_ != other.fieldWindow_) {
+    throw( std::runtime_error( "Attempted comparison between fields of unequal size." ) );
+  }
+
+  bool exact_comparison = ulps == 0;
+  MyType *temp1 = 0;
+  MyType *temp2 = 0;
+  const_iterator *ifld = 0;
+  const_iterator *iend = 0;
+  const_iterator *iother = 0;
+
+  //initialize ifld and iend
+  if(memType_ == LOCAL_RAM) {
+    ifld = new const_iterator(const_cast<const MyType*>(this)->begin());
+    iend = new const_iterator(const_cast<const MyType*>(this)->end());
+  }
+  else if (memType_ == EXTERNAL_CUDA_GPU) {
+    temp1 = new MyType(fieldWindow_, NULL, InternalStorage);
+    *temp1 = *this;
+
+    ifld = new const_iterator(const_cast<const MyType*>(temp1)->begin());
+    iend = new const_iterator(const_cast<const MyType*>(temp1)->end());
+  }
+  else {
+    std::ostringstream msg;
+    msg << "Attempted unsupported compare operation, at " << __FILE__
+      << " : " << __LINE__ << std::endl;
+    msg << "\t - "
+      << DeviceTypeTools::get_memory_type_description(memType_) << " = "
+      << DeviceTypeTools::get_memory_type_description(
+          other.memory_device_type());
+    throw(std::runtime_error(msg.str()));
+  }
+
+  //initialize iother
+  if(other.memory_device_type() == LOCAL_RAM) {
+    iother = new const_iterator(const_cast<const MyType&>(other).begin());
+  }
+  else if (other.memory_device_type() == EXTERNAL_CUDA_GPU) {
+      temp2 = new MyType(fieldWindow_, NULL, InternalStorage);
+      *temp2 = other;
+
+      iother = new const_iterator(const_cast<const MyType*>(temp2)->begin());
+  }
+  else {
+    std::ostringstream msg;
+    msg << "Attempted unsupported compare operation, at " << __FILE__
+      << " : " << __LINE__ << std::endl;
+    msg << "\t - "
+      << DeviceTypeTools::get_memory_type_description(memType_) << " = "
+      << DeviceTypeTools::get_memory_type_description(
+          other.memory_device_type());
+    if(temp1) delete temp1;
+    delete ifld;
+    delete iend;
+    throw(std::runtime_error(msg.str()));
+  }
+
+  //do comparison
+  bool result = true;
+  for (; *ifld != *iend; ++(*ifld), ++(*iother)) {
+    if(exact_comparison) {
+      if (boost::math::float_distance(**ifld, **iother) != 0) {
+        result = false;
+        break;
+      }
+    }
+    else {
+      if (std::abs(boost::math::float_distance(**ifld, **iother)) > ulps) {
+        result =  false;
+        break;
+      }
+    }
+  }
+
+  if(temp1) delete temp1;
+  if(temp2) delete temp2;
   delete ifld;
   delete iend;
   delete iother;
