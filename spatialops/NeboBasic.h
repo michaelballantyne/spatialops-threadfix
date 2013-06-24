@@ -49,6 +49,7 @@
    /* FIELD_EXPRESSION_THREADS */
 
 #  ifdef __CUDACC__
+#     include <sstream>
 #     include <spatialops/structured/MemoryTypes.h>
 #  endif
    /* __CUDACC__ */

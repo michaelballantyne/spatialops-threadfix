@@ -72,10 +72,48 @@
 #                ifdef NEBO_GPU_TEST
                     gpu_test_assign<Iterator, RhsType>(rhs)
 #                else
-                    if(gpu_ready() && rhs.gpu_ready(gpu_device_index())) {
-                       gpu_assign<Iterator, RhsType>(rhs);
+                    if(gpu_ready()) {
+                       if(rhs.gpu_ready(gpu_device_index())) {
+                          gpu_assign<Iterator, RhsType>(rhs);
+                       }
+                       else {
+                          std::ostringstream msg;
+                          msg << "Nebo error in " << "Nebo Assignment" << ":\n";
+                          msg << "Left-hand side of assignment allocated on ";
+                          msg << "GPU but right-hand side is not (completely) ";
+                          msg << "accessible on the same GPU";
+                          msg << "\n";
+                          msg << "\t - " << __FILE__ << " : " << __LINE__;
+                          throw(std::runtime_error(msg.str()));;
+                       };
                     }
-                    else { cpu_assign<Iterator, RhsType>(rhs); }
+                    else {
+                       if(cpu_ready()) {
+                          if(rhs.cpu_ready()) {
+                             cpu_assign<Iterator, RhsType>(rhs);
+                          }
+                          else {
+                             std::ostringstream msg;
+                             msg << "Nebo error in " << "Nebo Assignment" <<
+                             ":\n";
+                             msg << "Left-hand side of assignment allocated on ";
+                             msg << "CPU but right-hand side is not ";
+                             msg << "(completely) accessible on CPU";
+                             msg << "\n";
+                             msg << "\t - " << __FILE__ << " : " << __LINE__;
+                             throw(std::runtime_error(msg.str()));;
+                          };
+                       }
+                       else {
+                          std::ostringstream msg;
+                          msg << "Nebo error in " << "Nebo Assignment" << ":\n";
+                          msg << "Left-hand side of assignment allocated on ";
+                          msg << "unknown device - not on CPU or GPU";
+                          msg << "\n";
+                          msg << "\t - " << __FILE__ << " : " << __LINE__;
+                          throw(std::runtime_error(msg.str()));;
+                       };
+                    }
 #                endif
                  /* NEBO_GPU_TEST */
 #             else
@@ -224,6 +262,10 @@
 #                endif
                  /* NEBO_REPORT_BACKEND */;
               }
+
+             inline bool cpu_ready(void) const {
+                return field_.memory_device_type() == LOCAL_RAM;
+             }
 
              inline bool gpu_ready(void) const {
                 return field_.memory_device_type() == EXTERNAL_CUDA_GPU;

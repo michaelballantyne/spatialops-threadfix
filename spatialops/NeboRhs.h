@@ -67,6 +67,8 @@
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
+             inline bool cpu_ready(void) const { return true; }
+
              inline bool gpu_ready(int const deviceIndex) const { return true; }
 
              template<typename ValidGhost, typename Shift>
@@ -225,6 +227,8 @@
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
+             inline bool cpu_ready(void) const { return true; }
+
              inline bool gpu_ready(int const deviceIndex) const { return true; }
 
              template<typename ValidGhost, typename Shift>
@@ -383,6 +387,10 @@
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
+             inline bool cpu_ready(void) const {
+                return field_.find_consumer(LOCAL_RAM, 0);
+             }
+
              inline bool gpu_ready(int const deviceIndex) const {
                 return field_.find_consumer(EXTERNAL_CUDA_GPU, deviceIndex);
              }

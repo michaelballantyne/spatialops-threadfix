@@ -37,6 +37,7 @@
                                  'value_
                                  'value_
                                  'true
+                                 'true
                                  'value_
                                  null
                                  'value_
@@ -98,6 +99,7 @@
                                  'value_
                                  'value_
                                  'true
+                                 'true
                                  'value_
                                  null
                                  'value_
@@ -153,6 +155,7 @@
                                                  null)
                                  (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift VG-chunk SH-chunk))
                                  (mfc 'field_ (tpl-fcn-use 'resize_ghost VG-chunk))
+                                 (mfc 'field_ 'find_consumer 'LOCAL_RAM "0")
                                  (mfc 'field_ 'find_consumer 'EXTERNAL_CUDA_GPU DI-chunk)
                                  (list DI-chunk
                                        (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift VG-chunk SH-chunk)))

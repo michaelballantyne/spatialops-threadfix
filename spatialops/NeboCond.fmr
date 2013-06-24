@@ -418,6 +418,8 @@
                                        (mfc 'expr_ (tpl-fcn-use 'init VG-chunk SH-chunk)))
                                  (list (mfc 'test_ (tpl-fcn-use 'resize VG-chunk))
                                        (mfc 'expr_ (tpl-fcn-use 'resize VG-chunk)))
+                                 (n-and (mfc 'test_ 'cpu_ready)
+                                        (mfc 'expr_ 'cpu_ready))
                                  (n-and (mfc 'test_ 'gpu_ready DI-chunk)
                                         (mfc 'expr_ 'gpu_ready DI-chunk))
                                  (list (mfc 'test_
@@ -524,6 +526,8 @@
                                        (mfc 'otherwise_ (tpl-fcn-use 'init VG-chunk SH-chunk)))
                                  (list (mfc 'clause_ (tpl-fcn-use 'resize VG-chunk))
                                        (mfc 'otherwise_ (tpl-fcn-use 'resize VG-chunk)))
+                                 (n-and (mfc 'clause_ 'cpu_ready)
+                                        (mfc 'otherwise_ 'cpu_ready))
                                  (n-and (mfc 'clause_ 'gpu_ready DI-chunk)
                                         (mfc 'otherwise_ 'gpu_ready DI-chunk))
                                  (list (mfc 'clause_

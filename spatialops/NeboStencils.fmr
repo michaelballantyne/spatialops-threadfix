@@ -454,6 +454,7 @@
                                      'coefs_)
                                  (list (mfc 'arg_ (tpl-fcn-use 'resize VG-chunk))
                                        'coefs_)
+                                 (mfc 'arg_ 'cpu_ready)
                                  (mfc 'arg_ 'gpu_ready DI-chunk)
                                  (fc (scope 'ConstructGPUExpr (tpl-fcn-use 'in_gpu_construct VG-chunk SH-chunk))
                                      DI-chunk

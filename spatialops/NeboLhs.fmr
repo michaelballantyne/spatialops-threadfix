@@ -40,16 +40,37 @@
                                      (fc (tpl-use name 'Iterator 'RhsType)
                                          'rhs))])
                   (list (lambda (publics)
+                          (define (assign-error . message)
+                            (build-error (list 'Nebo 'Assignment)
+                                         message))
+                          (define (ic . chunks)  (immediate-chunk (c chunks)))
+                          (define end-line (list (ic "\""
+                                                     semi-colon-chunk
+                                                     new-line-chunk
+                                                     'msg)
+                                                 '<<))
+                          (define (new-line chunk) (ic "\"" chunk))
+                          (define (break chunk . chunks) (list end-line
+                                                               (new-line chunk)
+                                                               chunks))
                           (list (s-typedef (scope 'structured (tpl-use 'IndexTriplet "0" "0" "0"))
                                            SH-chunk)
                                 (assign 'assign
                                         (gpu-or (gpu-test-or (assign-call 'gpu_test_assign)
-                                                             (nifelse (n-and (fc 'gpu_ready)
-                                                                             (mfc 'rhs
-                                                                                  'gpu_ready
-                                                                                  (fc 'gpu_device_index)))
-                                                                      (assign-call 'gpu_assign)
-                                                                      (assign-call 'cpu_assign)))
+                                                             (nifelse (fc 'gpu_ready)
+                                                                      (nifelse (mfc 'rhs 'gpu_ready (fc 'gpu_device_index))
+                                                                               (assign-call 'gpu_assign)
+                                                                               (assign-error (list '(Left-hand side of assignment allocated on)
+                                                                                                   (break 'GPU '(but right-hand side is not \(completely\)))
+                                                                                                   (break 'accessible '(on the same GPU)))))
+                                                                      (nifelse (fc 'cpu_ready)
+                                                                               (nifelse (mfc 'rhs 'cpu_ready)
+                                                                                        (assign-call 'cpu_assign)
+                                                                                        (assign-error (list '(Left-hand side of assignment allocated on)
+                                                                                                            (break 'CPU '(but right-hand side is not))
+                                                                                                            (break '(\(completely\)) '(accessible on CPU)))))
+                                                                               (assign-error (list '(Left-hand side of assignment allocated on)
+                                                                                                   (break 'unknown '(device - not on CPU or GPU)))))))
                                                 (assign-call 'cpu_assign)))
                                 publics))
                         (lambda (sequential-assign-body
@@ -57,6 +78,7 @@
                                  thread-parallel-assign-body
                                  RS-cons-args
                                  gpu-assign-body
+                                 cpu-ready-body
                                  gpu-ready-body
                                  gpu-device-index-body
                                  gpu-cons-args
@@ -88,6 +110,9 @@
                                                                       null
                                                                       (fc 'ResizeType RS-cons-args)))))
                                 (gpu-only (bb (assign 'gpu_assign gpu-assign-body 'CUDA)
+                                              (r-fcn-def (constize (fcn-dcl 'cpu_ready 'bool))
+                                                         null
+                                                         cpu-ready-body)
                                               (r-fcn-def (constize (fcn-dcl 'gpu_ready 'bool))
                                                          null
                                                          gpu-ready-body)
@@ -103,9 +128,9 @@
                                                                      gpu-test-assign-body
                                                                      (bs 'CUDA 'with 'Nebo 'copying)))))
                                 privates))))
-                (list 7 1 10 0)
+                (list 7 1 11 0)
                 "build-Initial-lhs"))
-(define bs-Initial-lhs (arg-swap build-Initial-lhs 15 3 "bs-Initial-lhs"))
+(define bs-Initial-lhs (arg-swap build-Initial-lhs 16 3 "bs-Initial-lhs"))
 (define build-Resize-lhs
   (combine-args build-Resize-general
                 (list (lambda (assign-body
@@ -293,6 +318,9 @@
                                                (mfc 'rhs
                                                     (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)
                                                     (fc 'gpu_device_index)))))
+                                   (n== (mfc 'field_
+                                             'memory_device_type)
+                                        'LOCAL_RAM)
                                    (n== (mfc 'field_
                                              'memory_device_type)
                                         'EXTERNAL_CUDA_GPU)

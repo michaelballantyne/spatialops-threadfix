@@ -91,6 +91,7 @@
                                 gen-constructor
                                 (op_-mfc (tpl-fcn-use 'init VG-chunk SH-chunk))
                                 (op_-mfc (tpl-fcn-use 'resize VG-chunk))
+                                (exec-and-check 'cpu_ready)
                                 (exec-and-check 'gpu_ready DI-chunk)
                                 (op_-mfc (tpl-fcn-use 'gpu_init VG-chunk SH-chunk) DI-chunk)
                                 (b/a semi-colon-chunk s (op_-mfc 'gpu_prep DI-chunk))

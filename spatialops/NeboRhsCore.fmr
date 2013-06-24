@@ -25,6 +25,7 @@
   (combine-args build-Initial-general
                 (lambda (SW-cons-args
                          RS-cons-args
+                         cpu-ready-body
                          gpu-ready-body
                          gpu-cons-args
                          gpu-prep-body
@@ -39,7 +40,10 @@
                                                (r-fcn-def (constize (fcn-dcl 'resize 'ResizeType))
                                                           null
                                                           (fc 'ResizeType RS-cons-args))))
-                        (gpu-only (bb (r-fcn-def (constize (fcn-dcl 'gpu_ready 'bool (adc 'int DI-chunk)))
+                        (gpu-only (bb (r-fcn-def (constize (fcn-dcl 'cpu_ready 'bool))
+                                                 null
+                                                 cpu-ready-body)
+                                      (r-fcn-def (constize (fcn-dcl 'gpu_ready 'bool (adc 'int DI-chunk)))
                                                  null
                                                  gpu-ready-body)
                                       (tpl-def (list (tpl-pmtr VG-chunk)
@@ -55,9 +59,9 @@
                                             null
                                             (fc 'ReductionType RD-cons-args)))
                         publics))
-                (list 7 7 1)
+                (list 7 8 1)
                 "build-Initial-rhs"))
-(define bs-Initial-rhs (arg-swap build-Initial-rhs 12 3 "bs-Initial-rhs"))
+(define bs-Initial-rhs (arg-swap build-Initial-rhs 13 3 "bs-Initial-rhs"))
 (define build-Resize-rhs
   (combine-args build-Resize-general
                 (lambda (SW-cons-args

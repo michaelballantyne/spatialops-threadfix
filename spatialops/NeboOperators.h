@@ -88,6 +88,10 @@
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
+             inline bool cpu_ready(void) const {
+                return (operand1_.cpu_ready() && operand2_.cpu_ready());
+             }
+
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
@@ -494,6 +498,10 @@
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
+             inline bool cpu_ready(void) const {
+                return (operand1_.cpu_ready() && operand2_.cpu_ready());
+             }
+
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
@@ -904,6 +912,10 @@
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
+             inline bool cpu_ready(void) const {
+                return (operand1_.cpu_ready() && operand2_.cpu_ready());
+             }
+
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
@@ -1314,6 +1326,10 @@
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
+             inline bool cpu_ready(void) const {
+                return (operand1_.cpu_ready() && operand2_.cpu_ready());
+             }
+
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
@@ -1705,6 +1721,8 @@
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
+             inline bool cpu_ready(void) const { return (operand_.cpu_ready()); }
+
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand_.gpu_ready(deviceIndex));
              }
@@ -1915,6 +1933,8 @@
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
+             inline bool cpu_ready(void) const { return (operand_.cpu_ready()); }
+
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand_.gpu_ready(deviceIndex));
              }
@@ -2125,6 +2145,8 @@
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
+             inline bool cpu_ready(void) const { return (operand_.cpu_ready()); }
+
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand_.gpu_ready(deviceIndex));
              }
@@ -2335,6 +2357,8 @@
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
+             inline bool cpu_ready(void) const { return (operand_.cpu_ready()); }
+
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand_.gpu_ready(deviceIndex));
              }
@@ -2545,6 +2569,8 @@
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
+             inline bool cpu_ready(void) const { return (operand_.cpu_ready()); }
+
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand_.gpu_ready(deviceIndex));
              }
@@ -2752,6 +2778,8 @@
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
+             inline bool cpu_ready(void) const { return (operand_.cpu_ready()); }
+
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand_.gpu_ready(deviceIndex));
              }
@@ -2962,6 +2990,8 @@
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
+             inline bool cpu_ready(void) const { return (operand_.cpu_ready()); }
+
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand_.gpu_ready(deviceIndex));
              }
@@ -3180,6 +3210,10 @@
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
+             inline bool cpu_ready(void) const {
+                return (operand1_.cpu_ready() && operand2_.cpu_ready());
+             }
+
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
@@ -3569,6 +3603,8 @@
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
+             inline bool cpu_ready(void) const { return (operand_.cpu_ready()); }
+
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand_.gpu_ready(deviceIndex));
              }
@@ -3776,6 +3812,8 @@
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
+             inline bool cpu_ready(void) const { return (operand_.cpu_ready()); }
+
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand_.gpu_ready(deviceIndex));
              }
@@ -4001,6 +4039,10 @@
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
+             inline bool cpu_ready(void) const {
+                return (operand1_.cpu_ready() && operand2_.cpu_ready());
+             }
+
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
@@ -4430,6 +4472,10 @@
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
+             inline bool cpu_ready(void) const {
+                return (operand1_.cpu_ready() && operand2_.cpu_ready());
+             }
+
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
@@ -4863,6 +4909,10 @@
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
+             inline bool cpu_ready(void) const {
+                return (operand1_.cpu_ready() && operand2_.cpu_ready());
+             }
+
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
@@ -5290,6 +5340,10 @@
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
+             inline bool cpu_ready(void) const {
+                return (operand1_.cpu_ready() && operand2_.cpu_ready());
+             }
+
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
@@ -5730,6 +5784,10 @@
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
+             inline bool cpu_ready(void) const {
+                return (operand1_.cpu_ready() && operand2_.cpu_ready());
+             }
+
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
@@ -6159,6 +6217,10 @@
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
+             inline bool cpu_ready(void) const {
+                return (operand1_.cpu_ready() && operand2_.cpu_ready());
+             }
+
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
@@ -6601,6 +6663,10 @@
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
+             inline bool cpu_ready(void) const {
+                return (operand1_.cpu_ready() && operand2_.cpu_ready());
+             }
+
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
@@ -6886,6 +6952,10 @@
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
+             inline bool cpu_ready(void) const {
+                return (operand1_.cpu_ready() && operand2_.cpu_ready());
+             }
+
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
@@ -7152,6 +7222,8 @@
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
+             inline bool cpu_ready(void) const { return (operand_.cpu_ready()); }
+
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand_.gpu_ready(deviceIndex));
              }
@@ -7353,6 +7425,10 @@
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
+             inline bool cpu_ready(void) const {
+                return (operand1_.cpu_ready() && operand2_.cpu_ready());
+             }
+
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
@@ -7760,6 +7836,10 @@
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
+             inline bool cpu_ready(void) const {
+                return (operand1_.cpu_ready() && operand2_.cpu_ready());
+             }
+
              inline bool gpu_ready(int const deviceIndex) const {
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }

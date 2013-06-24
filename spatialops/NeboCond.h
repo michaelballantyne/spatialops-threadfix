@@ -108,6 +108,10 @@
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
+             inline bool cpu_ready(void) const {
+                return test_.cpu_ready() && expr_.cpu_ready();
+             }
+
              inline bool gpu_ready(int const deviceIndex) const {
                 return test_.gpu_ready(deviceIndex) && expr_.gpu_ready(deviceIndex);
              }
@@ -323,6 +327,10 @@
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
+             inline bool cpu_ready(void) const {
+                return clause_.cpu_ready() && otherwise_.cpu_ready();
+             }
+
              inline bool gpu_ready(int const deviceIndex) const {
                 return clause_.gpu_ready(deviceIndex) && otherwise_.gpu_ready(deviceIndex);
              }

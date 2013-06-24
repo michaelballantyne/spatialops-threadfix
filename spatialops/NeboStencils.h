@@ -480,6 +480,8 @@
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
+             inline bool cpu_ready(void) const { return arg_.cpu_ready(); }
+
              inline bool gpu_ready(int const deviceIndex) const {
                 return arg_.gpu_ready(deviceIndex);
              }
