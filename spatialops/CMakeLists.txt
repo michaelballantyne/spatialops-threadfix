@@ -3,8 +3,6 @@ add_subdirectory( particles  )
 add_subdirectory( pointfield )
 
 set( SO_HEADERS
-  FieldExpressions.h
-  FieldReductions.h
   Nebo.h
   NeboBasic.h
   NeboRhs.h
