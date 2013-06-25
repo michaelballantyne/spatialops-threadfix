@@ -328,6 +328,7 @@ namespace structured{
      */
     bool operator!=(const MyType&) const;
     bool field_equal(const MyType&, double) const;
+    bool field_equal(const MyType&, double, const double) const;
     bool field_equal_abs(const MyType&, double) const;
     bool field_equal_ulp(const MyType&, const unsigned int) const;
 
@@ -1380,9 +1381,15 @@ bool SpatialField<Location, GhostTraits, T>::operator!=(const MyType& other) con
 }
 
 //------------------------------------------------------------------
-
 template<typename Location, typename GhostTraits, typename T>
 bool SpatialField<Location, GhostTraits, T>::field_equal(const MyType& other, double error=0.0) const
+{
+  //4 is an empirically found constant
+  return field_equal(other, error, nebo_norm(*this) * error * 4);
+}
+
+template<typename Location, typename GhostTraits, typename T>
+bool SpatialField<Location, GhostTraits, T>::field_equal(const MyType& other, double error, const double error_abs) const
 {
   if(fieldWindow_ != other.fieldWindow_) {
     throw( std::runtime_error( "Attempted comparison between fields of unequal size." ) );
@@ -1390,7 +1397,6 @@ bool SpatialField<Location, GhostTraits, T>::field_equal(const MyType& other, do
 
   error = std::abs(error);
   bool exact_comparison = error == 0.0;
-  const std::numeric_limits<T> nl;
   MyType *temp1 = 0;
   MyType *temp2 = 0;
   const_iterator *ifld = 0;
@@ -1454,7 +1460,15 @@ bool SpatialField<Location, GhostTraits, T>::field_equal(const MyType& other, do
       }
     }
     else {
-      if (std::abs(**ifld - **iother)/(double)(**ifld == 0 ? nl.min() : std::abs(**ifld)) > error) {
+      double denom;
+      if(**ifld != 0) {
+        denom = std::abs(**ifld);
+      }
+      else {
+        denom = error_abs;
+      }
+
+      if (std::abs(**ifld - **iother)/denom > error) {
         result =  false;
         break;
       }

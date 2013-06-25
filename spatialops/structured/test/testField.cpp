@@ -30,6 +30,53 @@ void jcs_pause()
 }
 
 //--------------------------------------------------------------------
+#define COMPARE_SPRNKLE_FIELDS( F1RANGE, F1SPVAL, F1AMOUNT,                       \
+                                F2RANGE, F2SPVAL, F2AMOUNT,                       \
+                                EXTREMEVAL, EXTREMEAMOUNT,                        \
+                                ERRORMODE, ERROR, MESSAGE, EXPECTED)              \
+{                                                                                 \
+  FieldT sf1(window, NULL, InternalStorage, memType1);                            \
+  FieldT sf2(window, NULL, InternalStorage, memType2);                            \
+                                                                                  \
+  /*Intialize Field 1*/                                                           \
+  fill_field_range(&sf1, 0, F1RANGE);                                             \
+  double values1[F1AMOUNT+EXTREMEAMOUNT];                                         \
+  size_t inc = F1AMOUNT/(EXTREMEAMOUNT + 1);                                      \
+  int i = 0;                                                                      \
+  for(int j = 0; j < EXTREMEAMOUNT; j++) {                                        \
+    for(int k = 0; k < inc; k++) {                                                \
+      values1[i] = F1SPVAL;                                                       \
+      i++;                                                                        \
+    }                                                                             \
+    values1[i] = EXTREMEVAL;                                                      \
+    i++;                                                                          \
+  }                                                                               \
+  for(; i < F1AMOUNT+EXTREMEAMOUNT; i++) {                                        \
+    values1[i] = F1SPVAL;                                                         \
+  }                                                                               \
+  sprinkle_in_field(&sf1, values1, F1AMOUNT+EXTREMEAMOUNT);                       \
+                                                                                  \
+  /*Intialize Field 2*/                                                           \
+  fill_field_range(&sf2, 0, F2RANGE);                                             \
+  double values2[F2AMOUNT+EXTREMEAMOUNT];                                         \
+  inc = F2AMOUNT/(EXTREMEAMOUNT + 1);                                             \
+  i = 0;                                                                          \
+  for(int j = 0; j < EXTREMEAMOUNT; j++) {                                        \
+    for(int k = 0; k < inc; k++) {                                                \
+      values2[i] = F2SPVAL;                                                       \
+      i++;                                                                        \
+    }                                                                             \
+    values2[i] = EXTREMEVAL;                                                      \
+    i++;                                                                          \
+  }                                                                               \
+  for(; i < F2AMOUNT+EXTREMEAMOUNT; i++) {                                        \
+    values2[i] = F2SPVAL;                                                         \
+  }                                                                               \
+  sprinkle_in_field(&sf2, values2, F2AMOUNT+EXTREMEAMOUNT);                       \
+                                                                                  \
+  COMPAREFIELDS(sf1, sf2, ERRORMODE, ERROR, MESSAGE, EXPECTED);                   \
+}                                                                  
+
 #define COMPAREFIELDS( F1VAL, F2VAL, ERRORMODE, ERROR, MESSAGE, EXPECTED)                     \
 {                                                                                             \
   FieldT F1(window, NULL, InternalStorage, memType1);                                         \
@@ -68,6 +115,89 @@ void jcs_pause()
 }
   
 
+/**
+ * Function fill_field_range
+ *
+ * Parameters:
+ *     f1 = Field to fill
+ *     start = start of sin period
+ *     range = range filled values
+ *
+ * Return:
+ *     void
+ *
+ * Use initialize_field with specified start and multiply each value by range.
+ * This has the effect of creating a 'psuedo' random field of values between
+ * [-range, range].
+ */
+template<typename FieldT>
+void fill_field_range(FieldT * f1, double start, double range)
+{
+  FieldT * f;
+  bool created_field = false;
+  if(f1->memory_device_type() == EXTERNAL_CUDA_GPU) {
+    created_field = true;
+    f = new FieldT(f1->window_with_ghost(), NULL, InternalStorage);
+  }
+  else {
+    f = f1;
+  }
+
+  initialize_field(*f, start);
+  *f <<= *f * range;
+
+  if(created_field) {
+    *f1 = *f;
+    delete f;
+  }
+}
+
+/**
+ * Function sprinkle_in_field
+ *
+ * Parameters:
+ *     f1 = field to fill
+ *     vals = array contianing values to insert into field
+ *     size = size of vals array
+ *
+ * Return:
+ *     void
+ *
+ * Evenly space the values in vals array within the field.
+ */
+template<typename FieldT>
+void sprinkle_in_field(FieldT * f1, typename FieldT::AtomicT* vals, size_t size)
+{
+  size_t cells = f1->window_with_ghost().local_npts();
+  if(size > cells) {
+    throw(std::runtime_error("Too many values to sprinkle"));
+  }
+
+  FieldT * f;
+  bool created_field = false;
+  if(f1->memory_device_type() == EXTERNAL_CUDA_GPU) {
+    created_field = true;
+    f = new FieldT(f1->window_with_ghost(), NULL, InternalStorage);
+    *f = *f1;
+  }
+  else {
+    f = f1;
+  }
+
+  typename FieldT::iterator ifd = f->begin();
+  size_t inc = cells/size;
+  for(size_t i = 0; i < size; i++) {
+    ifd[i*inc] = vals[i];
+  }
+
+
+  if(created_field) {
+    *f1 = *f;
+    delete f;
+  }
+}
+
+
 
 enum ErrorType {RELATIVE, ABSOLUTE, ULP};
 template<typename FieldT>
@@ -98,7 +228,22 @@ bool manual_error_compare(FieldT& f1,
     double diff = *if1 - *if2;
     switch(et) {
       case RELATIVE:
-        if( std::abs(diff)/(double)(*if1 == 0 ? nl.min() : std::abs(*if1)) > error ) {
+        double denom;
+        if(*if1) {
+          denom = std::abs(*if1);
+        }
+        else {
+          denom = nebo_norm(f1) * error*4;
+          cout << "Nebo Norm: " << denom << endl;  //remove me
+        }
+        //remove me
+        if(*if1 == 0 || *if2 == 0) {
+          cout << "F1: " << *if1 << endl;
+          cout << "F2: " << *if2 << endl;
+          cout << "Error: " << std::abs(diff)/denom << endl;
+        }
+
+        if( std::abs(diff)/denom > error ) {
           man_equal = false;
         }
         break;
@@ -146,10 +291,10 @@ bool manual_error_compare(FieldT& f1,
 
 template<typename FieldT>
 bool test_field_equal( const IntVec npts,
-    const MemoryType memType1,
-    const MemoryType memType2,
-    const ErrorType et,
-    const bool verboseOutput)
+                       const MemoryType memType1,
+                       const MemoryType memType2,
+                       const ErrorType et,
+                       const bool verboseOutput)
 {
   TestHelper status(verboseOutput);
   const std::numeric_limits<double> nl;
@@ -220,10 +365,16 @@ bool test_field_equal( const IntVec npts,
       COMPAREFIELDS(3.0, 2.96, RELATIVE, .01, "Off By 1% (Not Equal)", false);
 
       //near zero value tests
-      COMPAREFIELDS(0.0, nl.min(), RELATIVE, 1.0, "Near Zero Off By 100% (Equal)", true);
-      COMPAREFIELDS(0.0, 2*nl.min(), RELATIVE, 1.0, "Near Zero Off By 100% (Not Equal)", false);
-      COMPAREFIELDS(nl.min(), 0.0, RELATIVE, 1.0, "Near Zero Reversed Off By 100% (Equal)", true);
-      COMPAREFIELDS(nl.min(), 0.0, RELATIVE, .5, "Near Zero Reversed Off By 50% (Not Equal)", false);
+      COMPARE_SPRNKLE_FIELDS(1, 0, 8, 1, .01, 8, 0, 0, RELATIVE, .01, "Near Zero Field Range [-1, 1] Off By 1% (Equal)", true);
+      COMPARE_SPRNKLE_FIELDS(1, 0, 8, 1, .1, 8, 0, 0, RELATIVE, .01, "Near Zero Field Range [-1, 1] Off By 1% (Not Equal)", false);
+      COMPARE_SPRNKLE_FIELDS(10, 0, 8, 10, 1e-1, 8, 0, 0, RELATIVE, .01, "Near Zero Field Range [-10, 10] Off By 1% (Equal)", true);
+      COMPARE_SPRNKLE_FIELDS(10, 0, 8, 10, 1, 8, 0, 0, RELATIVE, .01, "Near Zero Field Range [-10, 10] Off By 1% (Not Equal)", false);
+      COMPARE_SPRNKLE_FIELDS(100000, 0, 8, 100000, 1e3, 8, 0, 0, RELATIVE, .01, "Near Zero Field Range [-100000, 100000] Off By 1% (Equal)", true);
+      COMPARE_SPRNKLE_FIELDS(100000, 0, 8, 100000, 1e4, 8, 0, 0, RELATIVE, .01, "Near Zero Field Range [-100000, 100000] Off By 1% (Not Equal)", false);
+      COMPARE_SPRNKLE_FIELDS(1, 0, 8, 1, .1, 8, 1000, 1, RELATIVE, .01, "Outlier Near Zero Field Range [-1, 1] Off By 1% (Equal)", true);
+      COMPARE_SPRNKLE_FIELDS(1, 0, 8, 1, 1, 8, 1000, 1, RELATIVE, .01, "Outlier Near Zero Field Range [-1, 1] Off By 1% (Not Equal)", false);
+      COMPARE_SPRNKLE_FIELDS(1, 0, 8, 1, .1, 8, 1000, 5, RELATIVE, .01, "Five Outlier Near Zero Field Range [-1, 1] Off By 1% (Equal)", true);
+      COMPARE_SPRNKLE_FIELDS(1, 0, 8, 1, 1, 8, 1000, 5, RELATIVE, .01, "Five Outlier Near Zero Field Range [-1, 1] Off By 1% (Not Equal)", false);
       break;
     case ABSOLUTE:
       //absolute error test
@@ -736,28 +887,29 @@ int main()
     overall( status.ok(), "field operations" );
   }
 
+  IntVec win_size(10, 11, 12);
   //test field_equal
-  overall(test_field_equal<SVolField>(IntVec(10, 11, 12), LOCAL_RAM, LOCAL_RAM, RELATIVE, false), "LOCAL_RAM x LOCAL_RAM Relative Equal Test");
+  overall(test_field_equal<SVolField>(win_size, LOCAL_RAM, LOCAL_RAM, RELATIVE, false), "LOCAL_RAM x LOCAL_RAM Relative Equal Test");
 #ifdef __CUDACC__
-  overall(test_field_equal<SVolField>(IntVec(10, 11, 12), LOCAL_RAM, EXTERNAL_CUDA_GPU, RELATIVE, false), "LOCAL_RAM x EXTERNAL_CUDA_GPU Relative Equal Test");
-  overall(test_field_equal<SVolField>(IntVec(10, 11, 12), EXTERNAL_CUDA_GPU, LOCAL_RAM, RELATIVE, false), "EXTERNAL_CUDA_GPU x LOCAL_RAM Relative Equal Test");
-  overall(test_field_equal<SVolField>(IntVec(10, 11, 12), EXTERNAL_CUDA_GPU, EXTERNAL_CUDA_GPU, RELATIVE, false), "EXTERNAL_CUDA_GPU x EXTERNAL_CUDA_GPU Relative Equal Test");
+  overall(test_field_equal<SVolField>(win_size, LOCAL_RAM, EXTERNAL_CUDA_GPU, RELATIVE, false), "LOCAL_RAM x EXTERNAL_CUDA_GPU Relative Equal Test");
+  overall(test_field_equal<SVolField>(win_size, EXTERNAL_CUDA_GPU, LOCAL_RAM, RELATIVE, false), "EXTERNAL_CUDA_GPU x LOCAL_RAM Relative Equal Test");
+  overall(test_field_equal<SVolField>(win_size, EXTERNAL_CUDA_GPU, EXTERNAL_CUDA_GPU, RELATIVE, false), "EXTERNAL_CUDA_GPU x EXTERNAL_CUDA_GPU Relative Equal Test");
 #endif
 
   //test field_equal_abs
-  overall(test_field_equal<SVolField>(IntVec(10, 11, 12), LOCAL_RAM, LOCAL_RAM, ABSOLUTE, false), "LOCAL_RAM x LOCAL_RAM Absolute Error Equal Test");
+  overall(test_field_equal<SVolField>(win_size, LOCAL_RAM, LOCAL_RAM, ABSOLUTE, false), "LOCAL_RAM x LOCAL_RAM Absolute Error Equal Test");
 #ifdef __CUDACC__
-  overall(test_field_equal<SVolField>(IntVec(10, 11, 12), LOCAL_RAM, EXTERNAL_CUDA_GPU, ABSOLUTE, false), "LOCAL_RAM x EXTERNAL_CUDA_GPU Absolute Error Equal Test");
-  overall(test_field_equal<SVolField>(IntVec(10, 11, 12), EXTERNAL_CUDA_GPU, LOCAL_RAM, ABSOLUTE, false), "EXTERNAL_CUDA_GPU x LOCAL_RAM Absolute Error Equal Test");
-  overall(test_field_equal<SVolField>(IntVec(10, 11, 12), EXTERNAL_CUDA_GPU, EXTERNAL_CUDA_GPU, ABSOLUTE, false), "EXTERNAL_CUDA_GPU x EXTERNAL_CUDA_GPU Absolute Error Equal Test");
+  overall(test_field_equal<SVolField>(win_size, LOCAL_RAM, EXTERNAL_CUDA_GPU, ABSOLUTE, false), "LOCAL_RAM x EXTERNAL_CUDA_GPU Absolute Error Equal Test");
+  overall(test_field_equal<SVolField>(win_size, EXTERNAL_CUDA_GPU, LOCAL_RAM, ABSOLUTE, false), "EXTERNAL_CUDA_GPU x LOCAL_RAM Absolute Error Equal Test");
+  overall(test_field_equal<SVolField>(win_size, EXTERNAL_CUDA_GPU, EXTERNAL_CUDA_GPU, ABSOLUTE, false), "EXTERNAL_CUDA_GPU x EXTERNAL_CUDA_GPU Absolute Error Equal Test");
 #endif
 
   //test field_equal_ulp
-  overall(test_field_equal<SVolField>(IntVec(10, 11, 12), LOCAL_RAM, LOCAL_RAM, ULP, false), "LOCAL_RAM x LOCAL_RAM Ulps Equal Test");
+  overall(test_field_equal<SVolField>(win_size, LOCAL_RAM, LOCAL_RAM, ULP, false), "LOCAL_RAM x LOCAL_RAM Ulps Equal Test");
 #ifdef __CUDACC__
-  overall(test_field_equal<SVolField>(IntVec(10, 11, 12), LOCAL_RAM, EXTERNAL_CUDA_GPU, ULP, false), "LOCAL_RAM x EXTERNAL_CUDA_GPU Ulps Equal Test");
-  overall(test_field_equal<SVolField>(IntVec(10, 11, 12), EXTERNAL_CUDA_GPU, LOCAL_RAM, ULP, false), "EXTERNAL_CUDA_GPU x LOCAL_RAM Ulps Equal Test");
-  overall(test_field_equal<SVolField>(IntVec(10, 11, 12), EXTERNAL_CUDA_GPU, EXTERNAL_CUDA_GPU, ULP, false), "EXTERNAL_CUDA_GPU x EXTERNAL_CUDA_GPU Ulps Equal Test");
+  overall(test_field_equal<SVolField>(win_size, LOCAL_RAM, EXTERNAL_CUDA_GPU, ULP, false), "LOCAL_RAM x EXTERNAL_CUDA_GPU Ulps Equal Test");
+  overall(test_field_equal<SVolField>(win_size, EXTERNAL_CUDA_GPU, LOCAL_RAM, ULP, false), "EXTERNAL_CUDA_GPU x LOCAL_RAM Ulps Equal Test");
+  overall(test_field_equal<SVolField>(win_size, EXTERNAL_CUDA_GPU, EXTERNAL_CUDA_GPU, ULP, false), "EXTERNAL_CUDA_GPU x EXTERNAL_CUDA_GPU Ulps Equal Test");
 #endif
 
 
