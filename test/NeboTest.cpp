@@ -34,11 +34,18 @@ using namespace structured;
         status(ref.field_equal(test, 0.0), MESSAGE);            \
     }                                                           \
 
-#define RUNTESTIGNORENAN(NEBOEXPR, EXPR, MESSAGE)               \
+#define RUNTESTULP(NEBOEXPR, EXPR, MESSAGE, ULPS)               \
+    {                                                           \
+        test <<= NEBOEXPR;                                      \
+        MANUAL(EXPR);                                           \
+        status(ref.field_equal_ulp(test, ULPS), MESSAGE);       \
+    }                                                           \
+
+#define RUNTESTIGNORENANULP(NEBOEXPR, EXPR, MESSAGE, ULPS)      \
     {                                                           \
         test <<= cond(NEBOEXPR != NEBOEXPR, 0.0)(NEBOEXPR);     \
         MANUAL(EXPR != EXPR ? 0.0 : EXPR);                      \
-        status(ref.field_equal(test, 0.0), MESSAGE);            \
+        status(ref.field_equal_ulp(test, ULPS), MESSAGE);       \
     }                                                           \
 
 #define RUN_BINARY_OP_TEST(OP, TESTTYPE)                                                                            \
@@ -114,28 +121,28 @@ int main( int iarg, char* carg[] )
 
     TestHelper status(true);
 
-    RUNTEST(0.0, 0.0, "scalar assignment test"); printf("\n");
+    RUNTEST(0.0, 0.0, "scalar assignment test"); cout << "\n";
 
-    RUN_BINARY_OP_TEST(+, "summation"); printf("\n");
-    RUN_BINARY_OP_TEST(-, "difference"); printf("\n");
-    RUN_BINARY_OP_TEST(/, "product"); printf("\n");
-    RUN_BINARY_OP_TEST(*, "division"); printf("\n");
+    RUN_BINARY_OP_TEST(+, "summation"); cout << "\n";
+    RUN_BINARY_OP_TEST(-, "difference"); cout << "\n";
+    RUN_BINARY_OP_TEST(/, "product"); cout << "\n";
+    RUN_BINARY_OP_TEST(*, "division"); cout << "\n";
 
-    RUNTEST(sin(input1), std::sin(INPUT1), "sin test");
+    RUNTESTULP(sin(input1), std::sin(INPUT1), "sin test", 1);
+    RUNTESTULP(cos(input1), std::cos(INPUT1), "cos test", 1);
+    RUNTESTULP(tan(input1), std::tan(INPUT1), "tan test", 2);
+    RUNTESTULP(exp(input1), std::exp(INPUT1), "exp test", 1);
+    //documentation says with 1 ulp, empirically found to be 2
+    RUNTESTULP(tanh(input1), std::tanh(INPUT1), "tanh test", 2);
     //display_fields_compare(ref, test, true, true);
-    RUNTEST(cos(input1), std::cos(INPUT1), "cos test");
-    RUNTEST(tan(input1), std::tan(INPUT1), "tan test");
-    RUNTEST(exp(input1), std::exp(INPUT1), "exp test");
-    RUNTEST(tanh(input1), std::tanh(INPUT1), "tanh test");
     RUNTEST(abs(input1), std::abs(INPUT1), "abs test");
     RUNTEST(-input1, -INPUT1, "negation test");
-    RUNTESTIGNORENAN(pow(input1, input2), std::pow(INPUT1, INPUT2), "power test");
-    RUNTESTIGNORENAN(sqrt(input1), std::sqrt(INPUT1), "square root test");
-    RUNTESTIGNORENAN(log(input1), std::log(INPUT1), "log test");
+    RUNTESTIGNORENANULP(pow(input1, input2), std::pow(INPUT1, INPUT2), "power test", 2);
+    RUNTESTIGNORENANULP(sqrt(input1), std::sqrt(INPUT1), "square root test", 0);
+    RUNTESTIGNORENANULP(log(input1), std::log(INPUT1), "log test", 1);
 
-    //These tests should fail when == is replaced in SpatialField
     RUNTEST(cond(input1 == input2, true)(false), INPUT1 == INPUT2, "equivalence test");
-    RUNTEST(input1 != input2, INPUT1 != INPUT2, "non-equivalence test");
+    RUNTEST(cond(input1 != input2, true)(false), INPUT1 != INPUT2, "non-equivalence test");
 
     RUNTEST(cond(input1 < input2, true)(false), INPUT1 < INPUT2, "less than test");
     RUNTEST(cond(input1 <= input2, true)(false), INPUT1 <= INPUT2, "less than or equal test");

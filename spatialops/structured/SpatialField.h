@@ -326,10 +326,13 @@ namespace structured{
      * @brief Comparison operators
      * WARNING: Slow in general and comparison with external fields will incur copy penalties.
      */
-    bool operator!=(const MyType&) const;
+    bool field_not_equal(const MyType&, double) const;
+    bool field_not_equal(const MyType&, double, const double) const;
     bool field_equal(const MyType&, double) const;
     bool field_equal(const MyType&, double, const double) const;
+    bool field_not_equal_abs(const MyType&, double) const;
     bool field_equal_abs(const MyType&, double) const;
+    bool field_not_equal_ulp(const MyType&, const unsigned int) const;
     bool field_equal_ulp(const MyType&, const unsigned int) const;
 
     /**
@@ -1376,11 +1379,15 @@ SpatialField<Location, GhostTraits, T>::operator=(const MyType& other)
 //------------------------------------------------------------------
 
 template<typename Location, typename GhostTraits, typename T>
-bool SpatialField<Location, GhostTraits, T>::operator!=(const MyType& other) const {
-  return !(this->field_equal(other, 0.0));
+bool SpatialField<Location, GhostTraits, T>::field_not_equal(const MyType& other, double error=0.0) const {
+  return !field_equal(other, error, nebo_norm(*this) * error * 4);
 }
-
+template<typename Location, typename GhostTraits, typename T>
+bool SpatialField<Location, GhostTraits, T>::field_not_equal(const MyType& other, double error, const double error_abs) const {
+  return !field_equal(other, error, error_abs);
+}
 //------------------------------------------------------------------
+
 template<typename Location, typename GhostTraits, typename T>
 bool SpatialField<Location, GhostTraits, T>::field_equal(const MyType& other, double error=0.0) const
 {
@@ -1483,6 +1490,13 @@ bool SpatialField<Location, GhostTraits, T>::field_equal(const MyType& other, do
 
   return result;
 }
+//------------------------------------------------------------------
+
+template<typename Location, typename GhostTraits, typename T>
+bool SpatialField<Location, GhostTraits, T>::field_not_equal_abs(const MyType& other, double error=0.0) const {
+  return !field_equal_abs(other, error);
+}
+//------------------------------------------------------------------
 
 template<typename Location, typename GhostTraits, typename T>
 bool SpatialField<Location, GhostTraits, T>::field_equal_abs(const MyType& other, double error=0.0) const
@@ -1572,6 +1586,13 @@ bool SpatialField<Location, GhostTraits, T>::field_equal_abs(const MyType& other
 
   return result;
 }
+//------------------------------------------------------------------
+
+template<typename Location, typename GhostTraits, typename T>
+bool SpatialField<Location, GhostTraits, T>::field_not_equal_ulp(const MyType& other, const unsigned int ulps) const {
+  return !field_equal_ulp(other, ulps);
+}
+//------------------------------------------------------------------
 
 template<typename Location, typename GhostTraits, typename T>
 bool SpatialField<Location, GhostTraits, T>::field_equal_ulp(const MyType& other, const unsigned int ulps) const
