@@ -1392,6 +1392,7 @@ template<typename Location, typename GhostTraits, typename T>
 bool SpatialField<Location, GhostTraits, T>::field_equal(const MyType& other, double error=0.0) const
 {
   //4 is an empirically found constant
+  //change to define constant
   return field_equal(other, error, nebo_norm(*this) * error * 4);
 }
 
@@ -1412,15 +1413,15 @@ bool SpatialField<Location, GhostTraits, T>::field_equal(const MyType& other, do
 
   //initialize ifld and iend
   if(memType_ == LOCAL_RAM) {
-    ifld = new const_iterator(const_cast<const MyType*>(this)->begin());
-    iend = new const_iterator(const_cast<const MyType*>(this)->end());
+    ifld = new const_iterator(this->begin());
+    iend = new const_iterator(this->end());
   }
   else if (memType_ == EXTERNAL_CUDA_GPU) {
     temp1 = new MyType(fieldWindow_, NULL, InternalStorage);
     *temp1 = *this;
 
-    ifld = new const_iterator(const_cast<const MyType*>(temp1)->begin());
-    iend = new const_iterator(const_cast<const MyType*>(temp1)->end());
+    ifld = new const_iterator(temp1->begin());
+    iend = new const_iterator(temp1->end());
   }
   else {
     std::ostringstream msg;
@@ -1435,13 +1436,13 @@ bool SpatialField<Location, GhostTraits, T>::field_equal(const MyType& other, do
 
   //initialize iother
   if(other.memory_device_type() == LOCAL_RAM) {
-    iother = new const_iterator(const_cast<const MyType&>(other).begin());
+    iother = new const_iterator(other.begin());
   }
   else if (other.memory_device_type() == EXTERNAL_CUDA_GPU) {
       temp2 = new MyType(fieldWindow_, NULL, InternalStorage);
       *temp2 = other;
 
-      iother = new const_iterator(const_cast<const MyType*>(temp2)->begin());
+      iother = new const_iterator(temp2->begin());
   }
   else {
     std::ostringstream msg;
@@ -1515,15 +1516,15 @@ bool SpatialField<Location, GhostTraits, T>::field_equal_abs(const MyType& other
 
   //initialize ifld and iend
   if(memType_ == LOCAL_RAM) {
-    ifld = new const_iterator(const_cast<const MyType*>(this)->begin());
-    iend = new const_iterator(const_cast<const MyType*>(this)->end());
+    ifld = new const_iterator(this->begin());
+    iend = new const_iterator(this->end());
   }
   else if (memType_ == EXTERNAL_CUDA_GPU) {
     temp1 = new MyType(fieldWindow_, NULL, InternalStorage);
     *temp1 = *this;
 
-    ifld = new const_iterator(const_cast<const MyType*>(temp1)->begin());
-    iend = new const_iterator(const_cast<const MyType*>(temp1)->end());
+    ifld = new const_iterator(temp1->begin());
+    iend = new const_iterator(temp1->end());
   }
   else {
     std::ostringstream msg;
@@ -1538,13 +1539,13 @@ bool SpatialField<Location, GhostTraits, T>::field_equal_abs(const MyType& other
 
   //initialize iother
   if(other.memory_device_type() == LOCAL_RAM) {
-    iother = new const_iterator(const_cast<const MyType&>(other).begin());
+    iother = new const_iterator(other.begin());
   }
-  else if (other.memory_device_type() == EXTERNAL_CUDA_GPU) {
+  else if(other.memory_device_type() == EXTERNAL_CUDA_GPU) {
       temp2 = new MyType(fieldWindow_, NULL, InternalStorage);
       *temp2 = other;
 
-      iother = new const_iterator(const_cast<const MyType*>(temp2)->begin());
+      iother = new const_iterator(temp2->begin());
   }
   else {
     std::ostringstream msg;
@@ -1565,14 +1566,14 @@ bool SpatialField<Location, GhostTraits, T>::field_equal_abs(const MyType& other
   bool result = true;
   for (; *ifld != *iend; ++(*ifld), ++(*iother)) {
     if(exact_comparison) {
-      if (**ifld != **iother) {
+      if(**ifld != **iother) {
         result = false;
         break;
       }
     }
     else {
-      if (std::abs(**ifld - **iother) > error) {
-        result =  false;
+      if(std::abs(**ifld - **iother) > error) {
+        result = false;
         break;
       }
     }
@@ -1610,15 +1611,15 @@ bool SpatialField<Location, GhostTraits, T>::field_equal_ulp(const MyType& other
 
   //initialize ifld and iend
   if(memType_ == LOCAL_RAM) {
-    ifld = new const_iterator(const_cast<const MyType*>(this)->begin());
-    iend = new const_iterator(const_cast<const MyType*>(this)->end());
+    ifld = new const_iterator(this->begin());
+    iend = new const_iterator(this->end());
   }
   else if (memType_ == EXTERNAL_CUDA_GPU) {
     temp1 = new MyType(fieldWindow_, NULL, InternalStorage);
     *temp1 = *this;
 
-    ifld = new const_iterator(const_cast<const MyType*>(temp1)->begin());
-    iend = new const_iterator(const_cast<const MyType*>(temp1)->end());
+    ifld = new const_iterator(temp1->begin());
+    iend = new const_iterator(temp1->end());
   }
   else {
     std::ostringstream msg;
@@ -1633,13 +1634,13 @@ bool SpatialField<Location, GhostTraits, T>::field_equal_ulp(const MyType& other
 
   //initialize iother
   if(other.memory_device_type() == LOCAL_RAM) {
-    iother = new const_iterator(const_cast<const MyType&>(other).begin());
+    iother = new const_iterator(other.begin());
   }
   else if (other.memory_device_type() == EXTERNAL_CUDA_GPU) {
       temp2 = new MyType(fieldWindow_, NULL, InternalStorage);
       *temp2 = other;
 
-      iother = new const_iterator(const_cast<const MyType*>(temp2)->begin());
+      iother = new const_iterator(temp2->begin());
   }
   else {
     std::ostringstream msg;
