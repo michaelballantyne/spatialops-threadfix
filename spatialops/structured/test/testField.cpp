@@ -235,13 +235,6 @@ bool manual_error_compare(FieldT& f1,
         else {
           //Defualt absolute error in SpatialField
           denom = nebo_norm(f1) * error * 4;
-          cout << "Nebo Norm: " << denom << endl;  //remove me
-        }
-        //remove me
-        if(*if1 == 0 || *if2 == 0) {
-          cout << "F1: " << *if1 << endl;
-          cout << "F2: " << *if2 << endl;
-          cout << "Error: " << std::abs(diff)/denom << endl;
         }
 
         if( std::abs(diff)/denom > error ) {
