@@ -1288,7 +1288,7 @@ template<typename Location, typename GhostTraits, typename T>
 SpatialField<Location, GhostTraits, T>&
 SpatialField<Location, GhostTraits, T>::operator=(const MyType& other)
 {
-  if( allocatedBytes_ != other.allocatedBytes_ ) {
+  if( fieldWindow_ != other.fieldWindow_ ) {
     std::ostringstream msg;
     msg << "Attempted assignment between fields of unequal size!\n"
         << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
