@@ -58,6 +58,8 @@
 #include <cuda_runtime.h>
 #endif
 
+#define DEFAULT_ABS_ERROR nebo_norm(*this) * error * 4
+
 namespace SpatialOps{
 namespace structured{
 
@@ -1393,7 +1395,7 @@ bool SpatialField<Location, GhostTraits, T>::field_equal(const MyType& other, do
 {
   //4 is an empirically found constant
   //change to define constant
-  return field_equal(other, error, nebo_norm(*this) * error * 4);
+  return field_equal(other, error, DEFAULT_ABS_ERROR);
 }
 
 template<typename Location, typename GhostTraits, typename T>
