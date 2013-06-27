@@ -143,8 +143,7 @@ void fill_field_range(FieldT * f1, double start, double range)
     f = f1;
   }
 
-  initialize_field(*f, start);
-  *f <<= *f * range;
+  initialize_field(*f, start, false, range);
 
   if(created_field) {
     *f1 = *f;
@@ -234,6 +233,7 @@ bool manual_error_compare(FieldT& f1,
           denom = std::abs(*if1);
         }
         else {
+          //use SpatialField.h define for this
           denom = nebo_norm(f1) * error*4;
           cout << "Nebo Norm: " << denom << endl;  //remove me
         }
@@ -325,9 +325,13 @@ bool test_field_equal( const IntVec npts,
   FieldT* f2;
 
   //local fields
-  FieldT lf1(window, NULL, InternalStorage); initialize_field(lf1, 0);
-  FieldT lf2(window, NULL, InternalStorage); initialize_field(lf2, 0); 
-  FieldT lf3(window, NULL, InternalStorage); initialize_field(lf3, total); 
+  FieldT lf1(window, NULL, InternalStorage); 
+  FieldT lf2(window, NULL, InternalStorage); 
+  FieldT lf3(window, NULL, InternalStorage); 
+
+  initialize_field(lf1, 0);
+  initialize_field(lf2, 0); 
+  initialize_field(lf3, total); 
 #ifdef __CUDACC__
   //gpu fields
   FieldT gf1(window, NULL, InternalStorage, EXTERNAL_CUDA_GPU, 0);
