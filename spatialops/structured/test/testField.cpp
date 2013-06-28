@@ -74,16 +74,16 @@ void jcs_pause()
   }                                                                               \
   sprinkle_in_field(&sf2, values2, F2AMOUNT+EXTREMEAMOUNT);                       \
                                                                                   \
-  COMPARE_FIELDS(sf1, sf2, ERRORMODE, ERROR, MESSAGE, EXPECTED);                   \
+  COMPARE_FIELDS(sf1, sf2, ERRORMODE, ERROR, MESSAGE, EXPECTED, 0);                  \
 }                                                                  
 
-#define COMPARE_FIELDS( F1VAL, F2VAL, ERRORMODE, ERROR, MESSAGE, EXPECTED)                                      \
+#define COMPARE_FIELDS( F1VAL, F2VAL, ERRORMODE, ERROR, MESSAGE, EXPECTED, ABSERROR)                           \
 {                                                                                                              \
   FieldT F1(window, NULL, InternalStorage, memType1);                                                          \
   FieldT F2(window, NULL, InternalStorage, memType2);                                                          \
   F1 <<= F1VAL;                                                                                                \
   F2 <<= F2VAL;                                                                                                \
-  status(manual_error_compare(F1, F2, ERROR, ERRORMODE, field_not_equal, verboseOutput, EXPECTED), MESSAGE);   \
+  status(manual_error_compare(F1, F2, ERROR, ERRORMODE, field_not_equal, verboseOutput, EXPECTED, ABSERROR), MESSAGE);   \
 }
 
 #define COMPARE_MEMORY_WINDOWS( F1NPTS, F2NPTS, ERRORMODE, MESSAGE)               \
@@ -206,7 +206,8 @@ bool manual_error_compare(FieldT& f1,
                     const ErrorType et,
                     const bool field_not_equal,
                     const bool verboseOutput,
-                    bool expected_equal)
+                    bool expected_equal,
+                    const double abs_error)
 {
   //copy the fields to local ram if applicable
   if(f1.memory_device_type() == EXTERNAL_CUDA_GPU) {
@@ -233,8 +234,13 @@ bool manual_error_compare(FieldT& f1,
           denom = std::abs(*if1);
         }
         else {
-          //Defualt absolute error in SpatialField
-          denom = nebo_norm(f1) * error * 4;
+          if(abs_error) {
+            denom = abs_error;
+          }
+          else {
+            //Defualt absolute error in SpatialField
+            denom = nebo_norm(f1) * error * 4;
+          }
         }
 
         if( std::abs(diff)/denom > error ) {
@@ -278,10 +284,16 @@ bool manual_error_compare(FieldT& f1,
   switch(et) {
     case RELATIVE:
       if(field_not_equal) {
-        return (man_equal == f1.field_not_equal(f2, error)) && (man_equal == expected_equal);
+        if(abs_error)
+          return (man_equal == f1.field_not_equal(f2, error, abs_error)) && (man_equal == expected_equal);
+        else
+          return (man_equal == f1.field_not_equal(f2, error)) && (man_equal == expected_equal);
       }
       else {
-        return (man_equal == f1.field_equal(f2, error)) && (man_equal == expected_equal);
+        if(abs_error)
+          return (man_equal == f1.field_equal(f2, error, abs_error)) && (man_equal == expected_equal);
+        else
+          return (man_equal == f1.field_equal(f2, error)) && (man_equal == expected_equal);
       }
     case ABSOLUTE:
       if(field_not_equal) {
@@ -353,7 +365,7 @@ bool test_field_equal( const IntVec npts,
 #endif
 
   //two duplicate fields exactly equal
-  status(manual_error_compare(*f1, *f2, 0.0, et, field_not_equal, verboseOutput, true), "Duplicate Fields Equal");
+  status(manual_error_compare(*f1, *f2, 0.0, et, field_not_equal, verboseOutput, true, 0), "Duplicate Fields Equal");
 
   //change second field and compare not equal
 #ifdef __CUDACC__
@@ -368,18 +380,18 @@ bool test_field_equal( const IntVec npts,
 #else
   f2 = &lf3;
 #endif
-  status(manual_error_compare(*f1, *f2, 0.0, et, field_not_equal, verboseOutput, false), "Non-Duplicate Fields Not Equal");
+  status(manual_error_compare(*f1, *f2, 0.0, et, field_not_equal, verboseOutput, false, 0), "Non-Duplicate Fields Not Equal");
 
 
   switch(et) {
     case RELATIVE:
       //relative error test
-      COMPARE_FIELDS(3.0, 7.49, RELATIVE, 1.5, "Off By 150% (Equal)", true);
-      COMPARE_FIELDS(3.0, 7.51, RELATIVE, 1.5, "Off By 150% (Not Equal)", false);
-      COMPARE_FIELDS(3.0, 3.98, RELATIVE, .33, "Off By 33% (Equal)", true);
-      COMPARE_FIELDS(3.0, 4.10, RELATIVE, .33, "Off By 33% (Not Equal)", false);
-      COMPARE_FIELDS(3.0, 2.97, RELATIVE, .01, "Off By 1% (Equal)", true);
-      COMPARE_FIELDS(3.0, 2.96, RELATIVE, .01, "Off By 1% (Not Equal)", false);
+      COMPARE_FIELDS(3.0, 7.49, RELATIVE, 1.5, "Off By 150% (Equal)", true, 0);
+      COMPARE_FIELDS(3.0, 7.51, RELATIVE, 1.5, "Off By 150% (Not Equal)", false, 0);
+      COMPARE_FIELDS(3.0, 3.98, RELATIVE, .33, "Off By 33% (Equal)", true, 0);
+      COMPARE_FIELDS(3.0, 4.10, RELATIVE, .33, "Off By 33% (Not Equal)", false, 0);
+      COMPARE_FIELDS(3.0, 2.97, RELATIVE, .01, "Off By 1% (Equal)", true, 0);
+      COMPARE_FIELDS(3.0, 2.96, RELATIVE, .01, "Off By 1% (Not Equal)", false, 0);
 
       //near zero value tests
       COMPARE_SPRNKLE_FIELDS(1, 0, 8, 1, .01, 8, 0, 0, RELATIVE, .01, "Near Zero Field Range [-1, 1] Off By 1% (Equal)", true);
@@ -392,16 +404,21 @@ bool test_field_equal( const IntVec npts,
       COMPARE_SPRNKLE_FIELDS(1, 0, 8, 1, 1, 8, 1000, 1, RELATIVE, .01, "Outlier Near Zero Field Range [-1, 1] Off By 1% (Not Equal)", false);
       COMPARE_SPRNKLE_FIELDS(1, 0, 8, 1, .1, 8, 1000, 5, RELATIVE, .01, "Five Outlier Near Zero Field Range [-1, 1] Off By 1% (Equal)", true);
       COMPARE_SPRNKLE_FIELDS(1, 0, 8, 1, 1, 8, 1000, 5, RELATIVE, .01, "Five Outlier Near Zero Field Range [-1, 1] Off By 1% (Not Equal)", false);
+
+      //Custom Absolute Error
+      COMPARE_FIELDS(0.0, 1.0, RELATIVE, 1.0, "Custom Error: 1 Off By 100% (Equal)", true, 1);
+      COMPARE_FIELDS(0.0, 2.0, RELATIVE, 2.0, "Custom Error: 2 Off By 200% (Equal)", true, 1);
+      COMPARE_FIELDS(0.0, 2.0, RELATIVE, 1.0, "Custom Error: 2 Off By 100% (Not Equal)", false, 1);
       break;
     case ABSOLUTE:
       //absolute error test
-      COMPARE_FIELDS(1.0, 1.0 + nl.epsilon(), ABSOLUTE, nl.epsilon(), "Off By epsilon (Equal)", true);
-      COMPARE_FIELDS(1.0, 1.0 + 2*nl.epsilon(), ABSOLUTE, nl.epsilon(), "Off By epsilon (Not Equal)", false);
-      COMPARE_FIELDS(0.033, 0.024, ABSOLUTE, std::pow(10,-2), "Off By 10^-2 (Equal)", true);
-      COMPARE_FIELDS(0.033, 0.022, ABSOLUTE, std::pow(10,-2), "Off By 10^-2 (Not Equal)", false);
-      COMPARE_FIELDS(4679000.0, 4680000.0, ABSOLUTE, std::pow(10,3), "Off By 10^3 (Equal)", true);
-      COMPARE_FIELDS(4679000.0, 4681000.0, ABSOLUTE, std::pow(10,3), "Off By 10^3 (Not Equal)", false);
-      COMPARE_FIELDS(4679000.0, 6890330.0, ABSOLUTE, 11569300.0, "Large Number Check, Exact Error (Equal)", true);
+      COMPARE_FIELDS(1.0, 1.0 + nl.epsilon(), ABSOLUTE, nl.epsilon(), "Off By epsilon (Equal)", true, 0);
+      COMPARE_FIELDS(1.0, 1.0 + 2*nl.epsilon(), ABSOLUTE, nl.epsilon(), "Off By epsilon (Not Equal)", false, 0);
+      COMPARE_FIELDS(0.033, 0.024, ABSOLUTE, std::pow(10,-2), "Off By 10^-2 (Equal)", true, 0);
+      COMPARE_FIELDS(0.033, 0.022, ABSOLUTE, std::pow(10,-2), "Off By 10^-2 (Not Equal)", false, 0);
+      COMPARE_FIELDS(4679000.0, 4680000.0, ABSOLUTE, std::pow(10,3), "Off By 10^3 (Equal)", true, 0);
+      COMPARE_FIELDS(4679000.0, 4681000.0, ABSOLUTE, std::pow(10,3), "Off By 10^3 (Not Equal)", false, 0);
+      COMPARE_FIELDS(4679000.0, 6890330.0, ABSOLUTE, 11569300.0, "Large Number Check, Exact Error (Equal)", true, 0);
       break;
     case ULP:
       using boost::math::float_prior;
@@ -409,43 +426,43 @@ bool test_field_equal( const IntVec npts,
       using boost::math::float_advance;
 
       //near zero value tests
-      COMPARE_FIELDS(0.0, float_next(0.0), ULP, 1, "Near Zero Off By 1 ulp (Equal)", true);
-      COMPARE_FIELDS(0.0, float_advance(0.0, 2), ULP, 1, "Near Zero Off By 1 ulp (Not Equal)", false);
-      COMPARE_FIELDS(0.0, -float_advance(0.0, 2), ULP, 2, "Near Zero Off By 2 ulps (Equal)", true);
-      COMPARE_FIELDS(0.0, -float_advance(0.0, 3), ULP, 2, "Near Zero Off By 2 ulps (Not Equal)", false);
-      COMPARE_FIELDS(-float_advance(0.0, 1), 0.0, ULP, 1, "Near Zero Reversed Off By 1 ulp (Equal)", true);
-      COMPARE_FIELDS(float_advance(0.0, 2), 0.0, ULP, 1, "Near Zero Reversed Off By 1 ulp (Not Equal)", false);
+      COMPARE_FIELDS(0.0, float_next(0.0), ULP, 1, "Near Zero Off By 1 ulp (Equal)", true, 0);
+      COMPARE_FIELDS(0.0, float_advance(0.0, 2), ULP, 1, "Near Zero Off By 1 ulp (Not Equal)", false, 0);
+      COMPARE_FIELDS(0.0, -float_advance(0.0, 2), ULP, 2, "Near Zero Off By 2 ulps (Equal)", true, 0);
+      COMPARE_FIELDS(0.0, -float_advance(0.0, 3), ULP, 2, "Near Zero Off By 2 ulps (Not Equal)", false, 0);
+      COMPARE_FIELDS(-float_advance(0.0, 1), 0.0, ULP, 1, "Near Zero Reversed Off By 1 ulp (Equal)", true, 0);
+      COMPARE_FIELDS(float_advance(0.0, 2), 0.0, ULP, 1, "Near Zero Reversed Off By 1 ulp (Not Equal)", false, 0);
 
       //machine epsilon
-      COMPARE_FIELDS(1.0, 1.0+nl.epsilon(), ULP, 1, "Machine epsilon at 1.0 is 1 ulp (Equal)", true);
-      COMPARE_FIELDS(1.0, 1.0+nl.epsilon(), ULP, 0, "Machine epsilon at 1.0 is not 0 ulps (Not Equal)", false);
+      COMPARE_FIELDS(1.0, 1.0+nl.epsilon(), ULP, 1, "Machine epsilon at 1.0 is 1 ulp (Equal)", true, 0);
+      COMPARE_FIELDS(1.0, 1.0+nl.epsilon(), ULP, 0, "Machine epsilon at 1.0 is not 0 ulps (Not Equal)", false, 0);
 
       //ulps error test
-      COMPARE_FIELDS(3.0, float_prior(3.0), ULP, 1, "Off By 1 ulp (Equal)", true);
-      COMPARE_FIELDS(3.0, float_advance(3.0, -2), ULP, 1, "Off By 1 ulp (Not Equal)", false);
-      COMPARE_FIELDS(3.0, float_advance(3.0, 3), ULP, 3, "Off By 3 ulps (Equal)", true);
-      COMPARE_FIELDS(3.0, float_advance(3.0, 4), ULP, 3, "Off By 3 ulps (Not Equal)", false);
-      COMPARE_FIELDS(3.0, float_advance(3.0, 20), ULP, 20, "Off By 20 ulps (Equal)", true);
-      COMPARE_FIELDS(3.0, float_advance(3.0, -21), ULP, 20, "Off By 20 ulps (Not Equal)", false);
+      COMPARE_FIELDS(3.0, float_prior(3.0), ULP, 1, "Off By 1 ulp (Equal)", true, 0);
+      COMPARE_FIELDS(3.0, float_advance(3.0, -2), ULP, 1, "Off By 1 ulp (Not Equal)", false, 0);
+      COMPARE_FIELDS(3.0, float_advance(3.0, 3), ULP, 3, "Off By 3 ulps (Equal)", true, 0);
+      COMPARE_FIELDS(3.0, float_advance(3.0, 4), ULP, 3, "Off By 3 ulps (Not Equal)", false, 0);
+      COMPARE_FIELDS(3.0, float_advance(3.0, 20), ULP, 20, "Off By 20 ulps (Equal)", true, 0);
+      COMPARE_FIELDS(3.0, float_advance(3.0, -21), ULP, 20, "Off By 20 ulps (Not Equal)", false, 0);
 
       //limits test
-      COMPARE_FIELDS(nl.max(), float_advance(nl.max(), -1), ULP, 1, "Max Double Off By -1 ulp (Equal)", true);
-      COMPARE_FIELDS(nl.min(), float_advance(nl.min(), 1), ULP, 1, "Min > 0 Off By 1 ulp (Equal)", true);
-      COMPARE_FIELDS(nl.min(), float_advance(nl.min(), -1), ULP, 1, "Min > 0 Off By -1 ulp (Equal)", true);
-      COMPARE_FIELDS(-nl.max(), float_advance(-nl.max(), 1), ULP, 1, "Min Off By 1 ulps (Equal)", true);
+      COMPARE_FIELDS(nl.max(), float_advance(nl.max(), -1), ULP, 1, "Max Double Off By -1 ulp (Equal)", true, 0);
+      COMPARE_FIELDS(nl.min(), float_advance(nl.min(), 1), ULP, 1, "Min > 0 Off By 1 ulp (Equal)", true, 0);
+      COMPARE_FIELDS(nl.min(), float_advance(nl.min(), -1), ULP, 1, "Min > 0 Off By -1 ulp (Equal)", true, 0);
+      COMPARE_FIELDS(-nl.max(), float_advance(-nl.max(), 1), ULP, 1, "Min Off By 1 ulps (Equal)", true, 0);
       try {
         //manual compare useless
-        COMPARE_FIELDS(nl.max(), nl.infinity(), ULP, 20, "fail", true);
+        COMPARE_FIELDS(nl.max(), nl.infinity(), ULP, 20, "fail", true, 0);
         status(false, "Max Double = Infinity By 20 ulps (Throws Exception)");
       } catch(std::domain_error) {status(true,  "Max Double = Infinity By 20 ulps (Throws Exception)");}
       try {
         //manual compare useless
-        COMPARE_FIELDS(-nl.max(), -nl.infinity(), ULP, 20, "fail", true);
+        COMPARE_FIELDS(-nl.max(), -nl.infinity(), ULP, 20, "fail", true, 0);
         status(false, "Min Double = Infinity By 20 ulps (Throws Exception)");
       } catch(std::domain_error) {status(true, "Min Double = Infinity By 20 ulps (Throws Exception)");}
       try {
         //manual compare useless
-        COMPARE_FIELDS(nan(""), nan(""), ULP, 20, "fail", true);
+        COMPARE_FIELDS(nan(""), nan(""), ULP, 20, "fail", true, 0);
         status(false, "NAN = NAN By 20 ulps (Throws Exception)");
       } catch(std::domain_error) {status(true, "NAN = NAN By 20 ulps (Throws Exception)");}
       break;
