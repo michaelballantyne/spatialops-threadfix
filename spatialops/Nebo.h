@@ -23,6 +23,8 @@
 #ifndef NEBO_H
 #define NEBO_H
 
+#include <spatialops/SpatialOpsConfigure.h>
+
 #include <spatialops/NeboBasic.h>
 #include <spatialops/NeboRhs.h>
 #include <spatialops/NeboOperators.h>
