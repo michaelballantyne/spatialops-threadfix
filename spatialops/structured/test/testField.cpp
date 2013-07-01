@@ -75,7 +75,7 @@ void jcs_pause()
   sprinkle_in_field(&sf2, values2, F2AMOUNT+EXTREMEAMOUNT);                       \
                                                                                   \
   COMPARE_FIELDS(sf1, sf2, ERRORMODE, ERROR, MESSAGE, EXPECTED, 0);                  \
-}                                                                  
+}
 
 #define COMPARE_FIELDS( F1VAL, F2VAL, ERRORMODE, ERROR, MESSAGE, EXPECTED, ABSERROR)                           \
 {                                                                                                              \
@@ -113,7 +113,7 @@ void jcs_pause()
                                                                                   \
   status(result, MESSAGE);                                                        \
 }
-  
+
 
 /**
  * Function fill_field_range
@@ -259,7 +259,7 @@ bool manual_error_compare(FieldT& f1,
           try {
             //get floats in direction of *if2
             limit = nextafter(limit, inf);
-          } catch(...) { 
+          } catch(...) {
             limit = inf;
             break;
           }
@@ -275,7 +275,7 @@ bool manual_error_compare(FieldT& f1,
   std::ostringstream msg;
   msg << "Manual Compare Result: " << (man_equal ? "Equal" : "Not Equal");
   TestHelper tmp(verboseOutput);
-  tmp(man_equal == expected_equal, msg.str()); 
+  tmp(man_equal == expected_equal, msg.str());
 
   //switch expected_equal and manual equal result based on field_not_equal compare
   if(field_not_equal) {man_equal = !man_equal; expected_equal = !expected_equal;}
@@ -330,13 +330,13 @@ bool test_field_equal( const IntVec npts,
   FieldT* f2;
 
   //local fields
-  FieldT lf1(window, NULL, InternalStorage); 
-  FieldT lf2(window, NULL, InternalStorage); 
-  FieldT lf3(window, NULL, InternalStorage); 
+  FieldT lf1(window, NULL, InternalStorage);
+  FieldT lf2(window, NULL, InternalStorage);
+  FieldT lf3(window, NULL, InternalStorage);
 
   initialize_field(lf1, 0);
-  initialize_field(lf2, 0); 
-  initialize_field(lf3, total); 
+  initialize_field(lf2, 0);
+  initialize_field(lf3, total);
 #ifdef __CUDACC__
   //gpu fields
   FieldT gf1(window, NULL, InternalStorage, EXTERNAL_CUDA_GPU, 0);
@@ -344,18 +344,18 @@ bool test_field_equal( const IntVec npts,
   FieldT gf3(window, NULL, InternalStorage, EXTERNAL_CUDA_GPU, 0);
   //move local initialized fields to gpu if necessary
   if(memType1 == EXTERNAL_CUDA_GPU) {
-    lf1.add_consumer(EXTERNAL_CUDA_GPU, 0); 
-    gf1 <<= lf1; 
+    lf1.add_consumer(EXTERNAL_CUDA_GPU, 0);
+    gf1 <<= lf1;
     f1 = &gf1;
-  } 
+  }
   else {
     f1 = &lf1;
   }
   if(memType2 == EXTERNAL_CUDA_GPU) {
-    lf2.add_consumer(EXTERNAL_CUDA_GPU, 0); 
+    lf2.add_consumer(EXTERNAL_CUDA_GPU, 0);
     gf2 <<= lf2;
     f2 = &gf2;
-  } 
+  }
   else {
     f2 = &lf2;
   }
@@ -370,10 +370,10 @@ bool test_field_equal( const IntVec npts,
   //change second field and compare not equal
 #ifdef __CUDACC__
   if(memType2 == EXTERNAL_CUDA_GPU) {
-    lf3.add_consumer(EXTERNAL_CUDA_GPU, 0); 
+    lf3.add_consumer(EXTERNAL_CUDA_GPU, 0);
     gf3 <<= lf3;
     f2 = &gf3;
-  } 
+  }
   else {
     f2 = &lf3;
   }

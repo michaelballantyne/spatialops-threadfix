@@ -62,7 +62,7 @@ using namespace structured;
         RUNTEST(50.3 OP (input2 OP input3), 50.3 OP (INPUT2 OP INPUT3), TESTTYPE" (Scalar x SubExpr) test");        \
         RUNTEST((input1 OP input2) OP 4.7, (INPUT1 OP INPUT2) OP 4.7, TESTTYPE" (SubExpr x Scalar) test");          \
     }                                                                                                               \
-                                                                
+
 #define INPUT1 input1(ii, jj, kk)
 #define INPUT2 input2(ii, jj, kk)
 #define INPUT3 input3(ii, jj, kk)
@@ -154,7 +154,7 @@ int main( int iarg, char* carg[] )
     RUNTEST(cond(input1 < input2 && input3 < input4, true)(false), INPUT1 < INPUT2 && INPUT3 < INPUT4, "boolean and test");
     RUNTEST(cond(input1 < input2 || input3 < input4, true)(false), INPUT1 < INPUT2 || INPUT3 < INPUT4, "boolean or test");
     RUNTEST(cond(!(input1 < input2), true)(false), !(INPUT1 < INPUT2), "boolean not test");
-    
+
     RUNTEST(max(input1, 0.0), std::max(INPUT1, 0.0), "max test");
     RUNTEST(min(input1, 0.0), std::min(INPUT1, 0.0), "min test");
 

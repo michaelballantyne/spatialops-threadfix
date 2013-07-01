@@ -109,7 +109,7 @@ namespace structured{
                          const BCSide side,
                          const BCEval bceval,
                          const OperatorDatabase& opdb );
-    
+
     /**
      *  @param window The memory window of the field on which the BC is
      *         is being applied.
@@ -129,15 +129,15 @@ namespace structured{
      *  \li We may need to change the way BCEval works since in the current
      *      model, the SAME bceval is applied at all points. This will not work
      *      with spatially varying bcs.
-     */            
+     */
     BoundaryConditionOp( const MemoryWindow& window,
                          const std::vector<IntVec>& destIndices,
                          const BCSide side,
                          const BCEval bceval,
-                         const OperatorDatabase& opdb );    
+                         const OperatorDatabase& opdb );
 
     ~BoundaryConditionOp(){}
-    
+
     double getGhostCoef() const{ return ca_; }
     double getInteriorCoef() const{ return cb_; }
     const std::vector<int>& getFlatGhostPoints() const{ return flatGhostPoints_; }
@@ -184,7 +184,7 @@ namespace structured{
   }
 
   //------------------------------------------------------------------
-  
+
   template< typename OpT, typename BCEval >
   BoundaryConditionOp<OpT,BCEval>::
   BoundaryConditionOp( const SpatialOps::structured::MemoryWindow& window,
@@ -208,10 +208,10 @@ namespace structured{
     for( ; destPointsIter != destIJKPoints.end(); ++destPointsIter ) {
       flatGhostPoints_.push_back(window.flat_index(*destPointsIter + ( (side==MINUS_SIDE) ? S1Shift::int_vec() : S2Shift::int_vec() )));    // a_point
       flatInteriorPoints_.push_back(window.flat_index(*destPointsIter + ( (side==MINUS_SIDE) ? S2Shift::int_vec() : S1Shift::int_vec() ))); // b_point
-    }    
+    }
   }
-  
-  //------------------------------------------------------------------  
+
+  //------------------------------------------------------------------
 
   template< typename OpT, typename BCEval >
   void

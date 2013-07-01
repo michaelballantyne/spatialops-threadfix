@@ -14,24 +14,24 @@ int print_length = 8;
 template<typename Field>
 void print(Field const & given) {
   typename Field::const_iterator ig = given.begin();
-  
+
   for(int i = 0; i < print_length; i++) {
     std::cout << *ig << std::endl;
     ++ig;
   };
-  
+
   std::cout << std::endl;
 };
 
 template<typename Field>
 void print_all(Field const & given) {
   typename Field::const_iterator ig = given.begin();
-  
+
   for(int i = 0; ig != given.end(); i++) {
     std::cout << *ig << std::endl;
     ++ig;
   };
-  
+
   std::cout << std::endl;
 };
 
@@ -40,14 +40,14 @@ int main()
   const int nx=10, ny=12, nz=14;
 
   typedef SVolField Field;
-  
+
   const MemoryWindow window( get_window_with_ghost<Field>(IntVec(nx,ny,nz),true,true,true) );
 
   Field a( window, NULL );
   Field b( window, NULL );
   Field c( window, NULL );
   Field d( window, NULL );
-  
+
   std::vector<Field> vec = std::vector<Field>();
 
   int const max = nx * ny * nz;
@@ -243,6 +243,6 @@ int main()
   //               (1.0);
 
   print(c);
-  
+
   return 0;
 }

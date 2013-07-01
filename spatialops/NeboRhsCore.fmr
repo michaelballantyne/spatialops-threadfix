@@ -111,7 +111,7 @@
                 (list 5 4 1)
                 "build-gpu-rhs"))
 (define bs-gpu-rhs (arg-swap build-gpu-rhs 7 3 "bs-gpu-rhs"))
-(define (build-Reduction name 
+(define (build-Reduction name
                          tpl-irreg-pars
                          tpl-reg-pars
                          typedefs

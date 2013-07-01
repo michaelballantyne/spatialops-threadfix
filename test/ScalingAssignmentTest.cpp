@@ -161,7 +161,7 @@ int main( int iarg, char* carg[] )
   Field f36( window, NULL );
   Field f36_( window, NULL );
   Field result( window, NULL );
-  
+
   Field::iterator if01 = f01.begin();
   Field::iterator if02 = f02.begin();
   Field::iterator if03 = f03.begin();

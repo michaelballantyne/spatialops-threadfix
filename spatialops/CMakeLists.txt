@@ -19,7 +19,7 @@ set( SO_HEADERS
   SpatialOpsTools.h
   WriteMatlab.h
   )
-  
+
 # create dummy/empty file to circumvent restriction on add_library
 file( WRITE ${CMAKE_CURRENT_BINARY_DIR}/empty.cpp "" )
 

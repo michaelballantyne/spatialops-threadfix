@@ -88,7 +88,7 @@ inline void print_field(Field const & f) {
 };
 
 template<typename Field>
-inline void interior_print_field(Field const & f) { 
+inline void interior_print_field(Field const & f) {
     internal_print_field<Field>(f.interior_begin(), f.window_without_ghost());
 };
 
