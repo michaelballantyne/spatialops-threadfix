@@ -35,7 +35,6 @@
 #include <sstream>
 #include <map>
 #include <algorithm>
-#include <string.h>
 
 #include <spatialops/SpatialOpsConfigure.h>
 
@@ -46,12 +45,6 @@
 #include <spatialops/structured/MemoryPool.h>
 #include <boost/static_assert.hpp>
 
-#ifdef SOPS_BOOST_SERIALIZATION
-# include <boost/serialization/serialization.hpp>
-# include <boost/serialization/split_member.hpp>
-# include <boost/serialization/binary_object.hpp>
-#endif
-
 #ifdef ENABLE_THREADS
 #include <boost/thread/mutex.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
@@ -60,8 +53,6 @@
 #ifdef ENABLE_CUDA
 #include <cuda_runtime.h>
 #endif
-
-class RHS;
 
 namespace SpatialOps{
 namespace structured{
@@ -139,48 +130,6 @@ namespace structured{
 #   endif
 
     inline void reset_values(const T* values);
-
-#ifdef SOPS_BOOST_SERIALIZATION
-    friend class boost::serialization::access;
-
-    template<typename Archive>
-    void save( Archive& ar, const unsigned int version ) const
-    {
-      ar << fieldWindow_;
-      ar << interiorFieldWindow_;
-      ar << builtField_;
-
-      const size_t npts = fieldWindow_.glob_dim(0)
-      * fieldWindow_.glob_dim(1)
-      * fieldWindow_.glob_dim(2);
-      ar << npts;
-
-      for( size_t i=0; i<npts; ++i ) {
-        ar << fieldValues_[i];
-      }
-
-    }
-
-    template<typename Archive>
-    void load( Archive& ar, const unsigned int version )
-    {
-      ar >> const_cast<MemoryWindow&>(fieldWindow_);
-      ar >> interiorFieldWindow_;
-      ar >> const_cast<bool&>(builtField_);
-
-      size_t npts;
-      ar >> npts;
-      if( builtField_ ) {
-        fieldValues_ = new T[ npts ];
-      }
-
-      for( size_t i=0; i<npts; ++i ) {
-        ar >> fieldValues_[i];
-      }
-    }
-
-    BOOST_SERIALIZATION_SPLIT_MEMBER()
-#endif
 
 #ifdef ENABLE_THREADS
     /**
@@ -302,8 +251,8 @@ namespace structured{
         std::ostringstream msg;
         msg << "Field type ( "
             << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
-            << " does not support direct iteration, and has no local consumer field allocated.\n";
-        msg << "\t - " << __FILE__ << " : " << __LINE__;
+            << " does not support direct iteration, and has no local consumer field allocated.\n"
+            << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
         throw(std::runtime_error(msg.str()));
       }
       return const_iterator(fieldValues_, fieldWindow_);
@@ -314,16 +263,16 @@ namespace structured{
         std::ostringstream msg;
         msg << "Field type ( "
             << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
-            << " does not support direct iteration, and has no local consumer field allocated.\n";
-        msg << "\t - " << __FILE__ << " : " << __LINE__;
+            << " does not support direct iteration, and has no local consumer field allocated.\n"
+            << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
         throw(std::runtime_error(msg.str()));
       }
       else if (hasConsumer_) {
 	std::ostringstream msg;
         msg << "Field type ( "
-	<< DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
-	<< " has consumers, so it cannot support non-const iteration.\n";
-        msg << "\t - " << __FILE__ << " : " << __LINE__;
+            << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
+            << " has consumers, so it cannot support non-const iteration.\n"
+            << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
         throw(std::runtime_error(msg.str()));
       }
       return iterator(fieldValues_, fieldWindow_);
@@ -337,8 +286,8 @@ namespace structured{
         std::ostringstream msg;
         msg << "Field type ( "
             << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
-            << " does not support direct iteration, and has no local consumer field allocated.\n";
-        msg << "\t - " << __FILE__ << " : " << __LINE__;
+            << " does not support direct iteration, and has no local consumer field allocated.\n"
+            << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
         throw(std::runtime_error(msg.str()));
       }
       return const_interior_iterator( fieldValues_, interiorFieldWindow_ );
@@ -349,16 +298,16 @@ namespace structured{
         std::ostringstream msg;
         msg << "Field type ( "
             << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
-            << " does not support non-const iteration.\n";
-        msg << "\t - " << __FILE__ << " : " << __LINE__;
+            << " does not support non-const iteration.\n"
+            << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
         throw(std::runtime_error(msg.str()));
       }
       else if (hasConsumer_) {
 	std::ostringstream msg;
         msg << "Field type ( "
-	<< DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
-	<< " has consumers, so it cannot support non-const iteration.\n";
-        msg << "\t - " << __FILE__ << " : " << __LINE__;
+            << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
+            << " has consumers, so it cannot support non-const iteration.\n"
+            << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
         throw(std::runtime_error(msg.str()));
       }
       return interior_iterator(fieldValues_, interiorFieldWindow_);
@@ -664,8 +613,7 @@ SpatialField( const MemoryWindow& window,
       std::ostringstream msg;
       msg << "Unsupported attempt to create field of type ( "
           << DeviceTypeTools::get_memory_type_description(memType_)
-          << " )\n";
-      msg << "\t - " << __FILE__ << " : " << __LINE__;
+          << " )\n" << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
       throw(std::runtime_error(msg.str()));
     }
   }
@@ -727,13 +675,13 @@ SpatialField( const MemoryWindow& window, const SpatialField& other )
 template<typename Location, typename GhostTraits, typename T>
 SpatialField<Location, GhostTraits, T>::~SpatialField() {
 #ifdef ENABLE_CUDA
-	//Release any fields allocated for consumer use
-	for( typename ConsumerMap::iterator i = myConsumerFieldValues_.begin(); i != myConsumerFieldValues_.end(); ++i ){
-	  Pool<T>::self().put( EXTERNAL_CUDA_GPU, i->second );
-	}
+  //Release any fields allocated for consumer use
+  for( typename ConsumerMap::iterator i = myConsumerFieldValues_.begin(); i != myConsumerFieldValues_.end(); ++i ){
+    Pool<T>::self().put( EXTERNAL_CUDA_GPU, i->second );
+  }
 
-	consumerFieldValues_.clear();
-	myConsumerFieldValues_.clear();
+  consumerFieldValues_.clear();
+  myConsumerFieldValues_.clear();
 #endif
 
   if ( builtField_ ) {
@@ -746,12 +694,12 @@ SpatialField<Location, GhostTraits, T>::~SpatialField() {
 #ifdef ENABLE_CUDA
     case EXTERNAL_CUDA_GPU: {
 
-    	//Deallocate local_ram consumer copy if it exists
-    	if( fieldValues_ != NULL ) {
-    		delete[] fieldValues_;
-    		fieldValues_ = NULL;
-    	}
-    	ema::cuda::CUDADeviceInterface::self().release( (void*)fieldValuesExtDevice_, deviceIndex_);
+      //Deallocate local_ram consumer copy if it exists
+      if( fieldValues_ != NULL ) {
+        delete[] fieldValues_;
+        fieldValues_ = NULL;
+      }
+      ema::cuda::CUDADeviceInterface::self().release( (void*)fieldValuesExtDevice_, deviceIndex_);
     }
     break;
 #endif
@@ -759,8 +707,8 @@ SpatialField<Location, GhostTraits, T>::~SpatialField() {
       std::ostringstream msg;
       msg << "Attempt to release ( "
           << DeviceTypeTools::get_memory_type_description(memType_)
-      << " ) field type, without supporting libraries -- this likely indicates a serious problem in field initialization\n";
-      msg << "\t - " << __FILE__ << " : " << __LINE__;
+          << " ) field type, without supporting libraries -- this likely indicates a serious problem in field initialization\n"
+          << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
       throw( std::runtime_error( msg.str() ) );
     }
   }
@@ -803,8 +751,8 @@ reset_values( const T* values )
   default:
     std::ostringstream msg;
     msg << "Reset values called for unsupported field type ( "
-        << DeviceTypeTools::get_memory_type_description(memType_) << " )";
-    msg << "\t - " << __FILE__ << " : " << __LINE__;
+        << DeviceTypeTools::get_memory_type_description(memType_) << " )"
+        << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
     throw(std::runtime_error(msg.str()));
   }
 }
@@ -818,19 +766,19 @@ field_values( const MemoryType consumerMemoryType,
 {
   if ( hasConsumer_ ) {
     std::ostringstream msg;
-        msg << "Field type ( "
-            << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
-            << " does not support 'non-const' access to field values.\n";
-        msg << "\t - " << __FILE__ << " : " << __LINE__;
-        throw(std::runtime_error(msg.str()));
+    msg << "Field type ( "
+        << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
+        << " does not support 'non-const' access to field values.\n"
+        << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
+    throw(std::runtime_error(msg.str()));
   }
-  
-    switch( consumerMemoryType ){
+
+  switch( consumerMemoryType ){
   case LOCAL_RAM:{
     if( fieldValues_ == NULL ){
       std::ostringstream msg;
-      msg << "Request for consumer field pointer on a device (Local RAM) for which it has not been allocated\n";
-      msg << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
+      msg << "Request for consumer field pointer on a device (Local RAM) for which it has not been allocated\n"
+          << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
       throw(std::runtime_error(msg.str()));
     }
     return fieldValues_;
@@ -849,8 +797,8 @@ field_values( const MemoryType consumerMemoryType,
     }
 
     std::ostringstream msg;
-    msg << "Request for consumer field pointer on a device (GPU) for which it has not been allocated\n";
-    msg << "\t - " << __FILE__ << " : " << __LINE__;
+    msg << "Request for consumer field pointer on a device (GPU) for which it has not been allocated\n"
+        << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
     throw( std::runtime_error(msg.str()) );
 
   }
@@ -858,7 +806,7 @@ field_values( const MemoryType consumerMemoryType,
   default:{
     std::ostringstream msg;
     msg << "Request for consumer field pointer to unknown or unsupported device\n";
-    msg << "\t - " << __FILE__ << " : " << __LINE__;
+    msg << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
     throw(std::runtime_error(msg.str()));
   }
   }
@@ -876,8 +824,8 @@ template<typename Location, typename GhostTraits, typename T>
   case LOCAL_RAM:{
     if( fieldValues_ == NULL ){
       std::ostringstream msg;
-      msg << "Request for consumer field pointer on a device (Local RAM) for which it has not been allocated\n";
-      msg << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
+      msg << "Request for consumer field pointer on a device (Local RAM) for which it has not been allocated\n"
+          << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
       throw(std::runtime_error(msg.str()));
     }
     return fieldValues_;
@@ -896,16 +844,16 @@ template<typename Location, typename GhostTraits, typename T>
     }
 
     std::ostringstream msg;
-    msg << "Request for consumer field pointer on a device (GPU) for which it has not been allocated\n";
-    msg << "\t - " << __FILE__ << " : " << __LINE__;
+    msg << "Request for consumer field pointer on a device (GPU) for which it has not been allocated\n"
+        << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
     throw( std::runtime_error(msg.str()) );
 
   }
 #endif
   default:{
     std::ostringstream msg;
-    msg << "Request for consumer field pointer to unknown or unsupported device\n";
-    msg << "\t - " << __FILE__ << " : " << __LINE__;
+    msg << "Request for consumer field pointer to unknown or unsupported device\n"
+        << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
     throw(std::runtime_error(msg.str()));
   }
   }
@@ -970,9 +918,9 @@ add_consumer( MemoryType consumerMemoryType,
 #endif
     default:{
       std::ostringstream msg;
-      msg << "Failed call to add_consumer on Spatial Field, unknown source device type\n";
-      msg << "This error indicates a serious problem in how this field was originally created\n";
-      msg << "\t - " << __FILE__ << " : " << __LINE__;
+      msg << "Failed call to add_consumer on Spatial Field, unknown source device type\n"
+          << "This error indicates a serious problem in how this field was originally created\n"
+          << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
       throw(std::runtime_error(msg.str()));
     }
     }
@@ -1014,9 +962,9 @@ add_consumer( MemoryType consumerMemoryType,
 
     default:{
       std::ostringstream msg;
-      msg << "Failed call to add_consumer on Spatial Field, unknown source device type\n";
-      msg << "This error indicates a serious problem in how this field was originally created\n";
-      msg << "\t - " << __FILE__ << " : " << __LINE__;
+      msg << "Failed call to add_consumer on Spatial Field, unknown source device type\n"
+          << "This error indicates a serious problem in how this field was originally created\n"
+          << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
       throw(std::runtime_error(msg.str()));
     }
     }
@@ -1026,9 +974,9 @@ add_consumer( MemoryType consumerMemoryType,
 
   default: {
     std::ostringstream msg;
-    msg << "Failed call to add_consumer on Spatial Field, unknown destination device type\n";
-    msg << "Ensure that you are compiling spatial ops with the proper end device support\n";
-    msg << "\t - " << __FILE__ << " : " << __LINE__;
+    msg << "Failed call to add_consumer on Spatial Field, unknown destination device type\n"
+        << "Ensure that you are compiling spatial ops with the proper end device support\n"
+        << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
     throw(std::runtime_error(msg.str()));
   }
   }
@@ -1063,11 +1011,11 @@ find_consumer( MemoryType consumerMemoryType,
     }
 #endif
     default:{
-        std::ostringstream msg;
-        msg << "Failed call to find_consumer on Spatial Field, unknown source device type\n";
-        msg << "This error indicates a serious problem in how this field was originally created\n";
-        msg << "\t - " << __FILE__ << " : " << __LINE__;
-        throw(std::runtime_error(msg.str()));
+      std::ostringstream msg;
+      msg << "Failed call to find_consumer on Spatial Field, unknown source device type\n"
+          << "This error indicates a serious problem in how this field was originally created\n"
+          << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
+      throw(std::runtime_error(msg.str()));
     }
     }
 
@@ -1081,9 +1029,9 @@ find_consumer( MemoryType consumerMemoryType,
 
   default: {
     std::ostringstream msg;
-    msg << "Failed call to find_consumer on Spatial Field, unknown destination device type\n";
-    msg << "Ensure that you are compiling spatial ops with the proper end device support\n";
-    msg << "\t - " << __FILE__ << " : " << __LINE__;
+    msg << "Failed call to find_consumer on Spatial Field, unknown destination device type\n"
+        << "Ensure that you are compiling spatial ops with the proper end device support\n"
+        << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
     throw(std::runtime_error(msg.str()));
   }
   }
@@ -1146,8 +1094,8 @@ SpatialField<Location,GhostTraits,T>::interior_end() const
   } else {
     std::ostringstream msg;
     msg << "Unsupported request for iterator to external field type ( "
-        << DeviceTypeTools::get_memory_type_description(memType_) << " )";
-    msg << "\t - " << __FILE__ << " : " << __LINE__;
+        << DeviceTypeTools::get_memory_type_description(memType_) << " )"
+        << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
     throw(std::runtime_error(msg.str()));
   }
 }
@@ -1167,8 +1115,8 @@ SpatialField<Location,GhostTraits,T>::interior_end()
   default:
     std::ostringstream msg;
     msg << "Unsupported request for iterator to external field type ( "
-        << DeviceTypeTools::get_memory_type_description(memType_) << " )";
-    msg << "\t - " << __FILE__ << " : " << __LINE__;
+        << DeviceTypeTools::get_memory_type_description(memType_) << " )"
+        << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
     throw(std::runtime_error(msg.str()));
   }
 }
@@ -1189,8 +1137,8 @@ operator()( const size_t i, const size_t j, const size_t k )
     msg << "Field type ( "
         << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
         << " does not support direct indexing.\n"
-        << "Note: this function is DEPRECATED and is not recommended for future use.\n";
-    msg << "\t - " << __FILE__ << " : " << __LINE__;
+        << "Note: this function is DEPRECATED and is not recommended for future use.\n"
+        << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
     throw(std::runtime_error(msg.str()));
   }
 }
@@ -1202,9 +1150,9 @@ SpatialField<Location, GhostTraits, T>::operator()(const IntVec& ijk)
   switch (memType_) {
   case LOCAL_RAM: {
 #   ifndef NDEBUG
-    assert(ijk[0] < fieldWindow_.extent(0));
-    assert(ijk[1] < fieldWindow_.extent(1));
-    assert(ijk[2] < fieldWindow_.extent(2));
+    assert(ijk[0] <  fieldWindow_.extent(0));
+    assert(ijk[1] <  fieldWindow_.extent(1));
+    assert(ijk[2] <  fieldWindow_.extent(2));
     assert(ijk[0] >= fieldWindow_.offset(0));
     assert(ijk[1] >= fieldWindow_.offset(1));
     assert(ijk[2] >= fieldWindow_.offset(2));
@@ -1216,8 +1164,8 @@ SpatialField<Location, GhostTraits, T>::operator()(const IntVec& ijk)
     msg << "Field type ( "
         << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
         << " does not support direct indexing.\n"
-        << "Note: this function is DEPRECATED and is not recommended for future use.\n";
-    msg << "\t - " << __FILE__ << " : " << __LINE__;
+        << "Note: this function is DEPRECATED and is not recommended for future use.\n"
+        << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
     throw(std::runtime_error(msg.str()));
   }
 }
@@ -1244,8 +1192,8 @@ operator()( const size_t i, const size_t j, const size_t k ) const
     msg << "Field type ( "
         << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
         << " does not support direct indexing, and has no consumer field allocated.\n"
-        << "Note: this function is DEPRECATED and is not recommended for future use.\n";
-    msg << "\t - " << __FILE__ << " : " << __LINE__;
+        << "Note: this function is DEPRECATED and is not recommended for future use.\n"
+        << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
     throw(std::runtime_error(msg.str()));
   }
 }
@@ -1267,8 +1215,8 @@ operator()( const IntVec& ijk ) const
     msg << "Field type ( "
         << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
         << " does not support direct indexing, and has no consumer field allocated.\n"
-        << "Note: this function is DEPRECATED and is not recommended for future use.\n";
-    msg << "\t - " << __FILE__ << " : " << __LINE__;
+        << "Note: this function is DEPRECATED and is not recommended for future use.\n"
+        << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
     throw(std::runtime_error(msg.str()));
   }
 }
@@ -1288,8 +1236,8 @@ SpatialField<Location, GhostTraits, T>::operator[](const size_t i)
     msg << "Field type ( "
         << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
         << " does not support direct indexing.\n"
-        << "Note: this function is DEPRECATED and is not recommended for future use.\n";
-    msg << "\t - " << __FILE__ << " : " << __LINE__;
+        << "Note: this function is DEPRECATED and is not recommended for future use.\n"
+        << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
     throw(std::runtime_error(msg.str()));
   }
 }
@@ -1313,8 +1261,8 @@ SpatialField<Location, GhostTraits, T>::operator[](const size_t i) const
     msg << "Field type ( "
         << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
         << " does not support direct indexing and has not allocated a consumer field.\n"
-        << "Note: this function is DEPRECATED and is not recommended for future use.\n";
-    msg << "\t - " << __FILE__ << " : " << __LINE__;
+        << "Note: this function is DEPRECATED and is not recommended for future use.\n"
+        << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
     throw(std::runtime_error(msg.str()));
   }
 }
@@ -1328,7 +1276,7 @@ SpatialField<Location, GhostTraits, T>::operator=(const MyType& other)
   if( allocatedBytes_ != other.allocatedBytes_ ) {
     std::ostringstream msg;
     msg << "Attempted assignment between fields of unequal size!\n"
-        << "\t - " << __FILE__ << " : " << __LINE__;
+        << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
     throw(std::runtime_error(msg.str()));
   }
 
@@ -1354,12 +1302,12 @@ SpatialField<Location, GhostTraits, T>::operator=(const MyType& other)
 
     default:
       std::ostringstream msg;
-      msg << "Attempted unsupported copy operation, at " << __FILE__
-          << " : " << __LINE__ << std::endl;
-      msg << "\t - "
+      msg << "Attempted unsupported copy operation, at n\t"
+          << __FILE__ << " : " << __LINE__ << std::endl
+          << "\t - "
           << DeviceTypeTools::get_memory_type_description(memType_) << " = "
           << DeviceTypeTools::get_memory_type_description(
-              other.memory_device_type());
+              other.memory_device_type()) << std::endl;
       throw(std::runtime_error(msg.str()));
     }
     return *this;
@@ -1390,9 +1338,10 @@ SpatialField<Location, GhostTraits, T>::operator=(const MyType& other)
 
     default: {
       std::ostringstream msg;
-      msg << "Attempted unsupported copy operation, at " << __FILE__ << " : " << __LINE__ << std::endl;
-      msg << "\t - " << DeviceTypeTools::get_memory_type_description(memType_) << " = "
-          << DeviceTypeTools::get_memory_type_description(other.memory_device_type());
+      msg << "Attempted unsupported copy operation, at " << std::endl
+          << "\t" << __FILE__ << " : " << __LINE__ << std::endl
+          << "\t - " << DeviceTypeTools::get_memory_type_description(memType_) << " = "
+          << DeviceTypeTools::get_memory_type_description(other.memory_device_type()) << std::endl;
       throw( std::runtime_error ( msg.str() ));
     }
 
@@ -1403,12 +1352,12 @@ SpatialField<Location, GhostTraits, T>::operator=(const MyType& other)
 #endif
   default:
     std::ostringstream msg;
-    msg << "Attempted unsupported copy operation, at " << __FILE__ << " : "
-        << __LINE__ << std::endl;
-    msg << "\t - " << DeviceTypeTools::get_memory_type_description(memType_)
-    << " = "
-    << DeviceTypeTools::get_memory_type_description(
-        other.memory_device_type());
+    msg << "Attempted unsupported copy operation, at \n\t"
+        << __FILE__ << " : " << __LINE__ << std::endl
+        << "\t - " << DeviceTypeTools::get_memory_type_description(memType_)
+        << " = "
+        << DeviceTypeTools::get_memory_type_description(
+        other.memory_device_type()) << std::endl;
     throw(std::runtime_error(msg.str()));
   } // end outer switch
   return *this;
@@ -1459,12 +1408,12 @@ bool SpatialField<Location, GhostTraits, T>::operator==(const MyType& other) con
 #endif
     default:{
       std::ostringstream msg;
-      msg << "Attempted unsupported compare operation, at " << __FILE__
-          << " : " << __LINE__ << std::endl;
-      msg << "\t - "
+      msg << "Attempted unsupported compare operation, at \n\t"
+          << __FILE__ << " : " << __LINE__ << std::endl
+          << "\t - "
           << DeviceTypeTools::get_memory_type_description(memType_) << " = "
           << DeviceTypeTools::get_memory_type_description(
-              other.memory_device_type());
+              other.memory_device_type()) << std::endl;
       throw(std::runtime_error(msg.str()));
     }
     } // switch( other.memory_device_type() )
@@ -1519,11 +1468,11 @@ bool SpatialField<Location, GhostTraits, T>::operator==(const MyType& other) con
 
     default: {
       std::ostringstream msg;
-      msg << "Attempted unsupported compare operation, at " << __FILE__
-          << " : " << __LINE__ << std::endl;
-      msg << "\t - "
+      msg << "Attempted unsupported compare operation, at \n\t"
+          << __FILE__ << " : " << __LINE__ << std::endl
+          << "\t - "
           << DeviceTypeTools::get_memory_type_description(memType_) << " = "
-          << DeviceTypeTools::get_memory_type_description( other.memory_device_type() );
+          << DeviceTypeTools::get_memory_type_description( other.memory_device_type() ) << std::endl;
       throw(std::runtime_error(msg.str()));
     }
     }
@@ -1531,12 +1480,11 @@ bool SpatialField<Location, GhostTraits, T>::operator==(const MyType& other) con
 #endif
   default:
     std::ostringstream msg;
-    msg << "Attempted unsupported compare operation, at " << __FILE__ << " : "
-        << __LINE__ << std::endl;
-    msg << "\t - " << DeviceTypeTools::get_memory_type_description(memType_)
-    << " = "
-    << DeviceTypeTools::get_memory_type_description(
-        other.memory_device_type());
+    msg << "Attempted unsupported compare operation, at \n\t"
+        << __FILE__ << " : " << __LINE__ << std::endl
+        << "\t - " << DeviceTypeTools::get_memory_type_description(memType_)
+        << " = "
+        << DeviceTypeTools::get_memory_type_description( other.memory_device_type()) << std::endl;
     throw(std::runtime_error(msg.str()));
   }
 }
