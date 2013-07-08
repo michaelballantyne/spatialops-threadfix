@@ -34,10 +34,6 @@
 #include <spatialops/structured/IntVec.h>
 #include <spatialops/structured/IndexTriplet.h>
 
-#ifdef SOPS_BOOST_SERIALIZATION
-# include <boost/serialization/serialization.hpp>
-#endif
-
 #ifndef NDEBUG
 # include <cassert>
 # include <stdexcept>
@@ -74,33 +70,6 @@ namespace structured{
     IntVec offset_;     ///< The offset for this window
     IntVec extent_;     ///< The extent of this window
     IntVec bc_;         ///< Indicates presence of a physical boundary on the + side of the window
-
-#   ifdef SOPS_BOOST_SERIALIZATION
-    friend class boost::serialization::access;
-
-    template<typename Archive>
-    void serialize( Archive& ar, const unsigned int version )
-    {
-      ar & nptsGlob_;
-      ar & offset_;
-      ar & extent_;
-      ar & bc_;
-    }
-
-    template<typename Archive>
-    void save_construct_data( Archive& ar, const MemoryWindow* w, const unsigned int version )
-    {
-      ar << w->nptsGlob_ << w->offset_ << w->extent_ << w->bc_;
-    }
-
-    template<typename Archive>
-    void load_construct_data( Archive& ar, const MemoryWindow* w, const unsigned int version )
-    {
-      IntVec npg, ofs, ext, bc;
-      ar >> npg >> ofs >> ext >> bc;
-      ::new(w)MemoryWindow( npg, ofs, ext, bc[0], bc[1], bc[2] );
-    }
-#   endif
 
   public:
 

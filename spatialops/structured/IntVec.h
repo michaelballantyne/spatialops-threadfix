@@ -34,10 +34,6 @@
 #include <cassert>
 
 
-#ifdef SOPS_BOOST_SERIALIZATION
-#include <boost/serialization/serialization.hpp>
-#endif // SOPS_BOOST_SERIALIZATION
-
 namespace SpatialOps{
   namespace structured{
 
@@ -52,15 +48,6 @@ namespace SpatialOps{
       friend std::ostream& operator<<(std::ostream&, const IntVec&);
 
       int ijk[3];
-
-#   ifdef SOPS_BOOST_SERIALIZATION
-      friend class boost::serialization::access;
-      template<typename Archive>
-      void serialize( Archive& ar, const unsigned int version )
-      {
-        ar & ijk;
-      }
-#   endif
 
     public:
 
