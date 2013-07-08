@@ -35,6 +35,7 @@ install( FILES
   Stencil2.h
   Stencil2_def.h
   Stencil4.h
+  Stencil4_def.h
   StencilBuilder.h
   DESTINATION include/spatialops/structured/stencil/
   PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
