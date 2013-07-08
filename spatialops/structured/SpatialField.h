@@ -35,6 +35,7 @@
 #include <sstream>
 #include <map>
 #include <algorithm>
+#include <string.h> // for memcmp below...
 
 #include <spatialops/SpatialOpsConfigure.h>
 
@@ -1454,14 +1455,12 @@ bool SpatialField<Location, GhostTraits, T>::operator==(const MyType& other) con
       CDI.memcpy_from( tempLHS, fieldValuesExtDevice_, allocatedBytes_, deviceIndex_ );
       CDI.memcpy_from( tempRHS, other.fieldValuesExtDevice_, allocatedBytes_, other.deviceIndex_ );
 
-      if( memcmp(tempLHS, tempRHS, allocatedBytes_) ) {
-        free(tempLHS);
-        free(tempRHS);
-
-        return false;
-      }
       free(tempLHS);
       free(tempRHS);
+
+      if( memcmp(tempLHS, tempRHS, allocatedBytes_) ) {
+        return false;
+      }
 
       return true;
     }
