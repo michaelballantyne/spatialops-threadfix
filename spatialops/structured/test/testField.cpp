@@ -264,15 +264,6 @@ bool test_store( const IntVec& dim, const IntVec& bc )
   status( f2->window_with_ghost() == f2a->window_with_ghost(), "f2==f2a" );
   status( f2->window_with_ghost() == f2b->window_with_ghost(), "f2==f2b" );
 
-  const MemoryWindow w3 = get_window_with_ghost<FT1>( dim*2, bc[0]==1, bc[1]==1, bc[2]==1 );
-  std::vector<MemoryWindow> w3s = w3.split( IntVec(2,2,2),
-                                            FT1::Ghost::NGhostMinus::int_vec(),
-                                            FT1::Ghost::NGhostPlus::int_vec() );
-  SpatFldPtr<FT1> f3 = SpatialFieldStore::get_from_window<FT1>( w3s[0] );
-  status( w3s[0].local_npts() == f1->window_with_ghost().glob_npts() );
-  status( f1->window_without_ghost().glob_npts() == f3->window_without_ghost().glob_npts() );
-  status( f3->window_with_ghost().glob_npts() == w3s[0].local_npts() );
-
   FT1 f4( f1->window_with_ghost(), f1->field_values(), ExternalStorage );
   SpatFldPtr<FT1> f4a = SpatialFieldStore::get<FT1>(f4);
   status( f4a->window_with_ghost() == f1a->window_with_ghost() );

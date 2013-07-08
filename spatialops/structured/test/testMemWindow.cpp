@@ -178,44 +178,28 @@ int main()
 
   // test memory window splitting - no BCs
   {
-    const IntVec nbase(5,9,7);
+    const IntVec nbase(5,9,7), divisions(2,2,2);
     const MemoryWindow parent( nbase, true, true, true );
-    std::vector<MemoryWindow> children = parent.split( IntVec(2,2,2) );
 
-    TestHelper status(true);
+    TestHelper status(false);
 
-    status( children.size() == 8, "number of children" );
-
-    status( children[0] == MemoryWindow( nbase, IntVec(0,0,0), IntVec(3,5,4), false, false, false ), "child 000" );
-    status( children[1] == MemoryWindow( nbase, IntVec(3,0,0), IntVec(2,5,4), true , false, false ), "child 100" );
-    status( children[2] == MemoryWindow( nbase, IntVec(0,5,0), IntVec(3,4,4), false, true , false ), "child 010" );
-    status( children[3] == MemoryWindow( nbase, IntVec(3,5,0), IntVec(2,4,4), true , true , false ), "child 110" );
-
-    status( children[4] == MemoryWindow( nbase, IntVec(0,0,4), IntVec(3,5,3), false, false, true  ), "child 001" );
-    status( children[5] == MemoryWindow( nbase, IntVec(3,0,4), IntVec(2,5,3), true , false, true  ), "child 101" );
-    status( children[6] == MemoryWindow( nbase, IntVec(0,5,4), IntVec(3,4,3), false, true , true  ), "child 011" );
-    status( children[7] == MemoryWindow( nbase, IntVec(3,5,4), IntVec(2,4,3), true , true , true  ), "child 111" );
+    status( parent.refine(divisions,IntVec(0,0,0)) == MemoryWindow( nbase, IntVec(0,0,0), IntVec(3,5,4), false, false, false ), "child 000" );
+    status( parent.refine(divisions,IntVec(1,0,0)) == MemoryWindow( nbase, IntVec(3,0,0), IntVec(2,5,4), true , false, false ), "child 100" );
+    status( parent.refine(divisions,IntVec(0,1,0)) == MemoryWindow( nbase, IntVec(0,5,0), IntVec(3,4,4), false, true , false ), "child 010" );
+    status( parent.refine(divisions,IntVec(1,1,0)) == MemoryWindow( nbase, IntVec(3,5,0), IntVec(2,4,4), true , true , false ), "child 110" );
+    status( parent.refine(divisions,IntVec(0,0,1)) == MemoryWindow( nbase, IntVec(0,0,4), IntVec(3,5,3), false, false, true  ), "child 001" );
+    status( parent.refine(divisions,IntVec(1,0,1)) == MemoryWindow( nbase, IntVec(3,0,4), IntVec(2,5,3), true , false, true  ), "child 101" );
+    status( parent.refine(divisions,IntVec(0,1,1)) == MemoryWindow( nbase, IntVec(0,5,4), IntVec(3,4,3), false, true , true  ), "child 011" );
+    status( parent.refine(divisions,IntVec(1,1,1)) == MemoryWindow( nbase, IntVec(3,5,4), IntVec(2,4,3), true , true , true  ), "child 111" );
 
     overall( status.ok(), "Memory window splitting" );
-  }
-
-  {
-    const IntVec nxyz(6,6,1);
-    const MemoryWindow parent( nxyz, false, false, false );
-    std::vector<MemoryWindow> children = parent.split( IntVec(1,3,1), IntVec(1,1,0), IntVec(1,1,0) );
-    TestHelper status(true);
-    status( children.size() == 3, " number of children" );
-    status( children[0] == MemoryWindow( nxyz, IntVec(0,0,0), IntVec(6,4,1), false, false, false ), " child 0" );
-    status( children[1] == MemoryWindow( nxyz, IntVec(0,2,0), IntVec(6,3,1), false, false, false ), " child 1" );
-    status( children[2] == MemoryWindow( nxyz, IntVec(0,3,0), IntVec(6,3,1), false, false, false ), " child 2" );
-    overall( status.ok(), "6x6x1 split into 6x3x1 with ghosts" );
   }
 
   // test memory window resizing ghost
   {
       const IntVec size(6,6,6);
       const MemoryWindow base(size, false, false, false);
-      TestHelper status(true);
+      TestHelper status(false);
       status( base.resize_ghost<GhostData<0,0,0,0,0,0,0,0,0>, GhostData<0,0,0,0,0,0,0,0,0> >() == base, " no resize with no ghost" );
       status( base.resize_ghost<GhostData<1,1,1,1,1,1,1,1,1>, GhostData<1,1,1,1,1,1,1,1,1> >() == base, " no resize with ghost" );
       status( base.resize_ghost<GhostData<2,2,2,2,2,2,2,2,2>, GhostData<2,1,1,2,0,0,1,1,1> >() == MemoryWindow(size, IntVec(0,0,1), IntVec(5,4,4), false, false, false), " complex resize" );
@@ -227,7 +211,7 @@ int main()
       const IntVec size(6,6,6);
       const MemoryWindow base(size, false, false, false);
       const MemoryWindow shaved = base.resize_ghost<GhostData<2,2,2,2,2,2,2,2,2>, GhostData<1,2,2,2,0,0,1,1,1> >();
-      TestHelper status(true);
+      TestHelper status(false);
       status( shaved.shift<IndexTriplet<0,0,0> >() == shaved, " no shift test 1");
       status( shaved.shift<IndexTriplet<0,0,0> >() == MemoryWindow(size, IntVec(1,0,1), IntVec(5,4,4), false, false, false), " no shift test 2");
       status( shaved.shift<IndexTriplet<-1,2,0> >() == MemoryWindow(size, IntVec(0,2,1), IntVec(5,4,4), false, false, false), " up and down shift");
