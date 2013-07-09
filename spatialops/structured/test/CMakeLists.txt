@@ -20,12 +20,6 @@ add_executable( test_tools testTools.cpp )
 target_link_libraries( test_tools ${TPL_LIBRARIES} )
 add_test( test_tools test_tools )
 
-if( ENABLE_BOOST_SERIALIZATION )
-  add_executable( test_serialize testSerialization.cpp )
-  target_link_libraries( test_serialize ${libs} )
-  add_test( test_serialization test_serialize )
-endif()
-
 macro( build_test tname exec tout )
   add_test( CUDA_${tname} ${exec} ) 
 
