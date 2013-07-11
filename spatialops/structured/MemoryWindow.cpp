@@ -31,6 +31,7 @@ namespace SpatialOps{
     inline bool check_positive( const IntVec& v ){ return (v[0]> 0) & (v[1]> 0) & (v[2]> 0); }
     inline bool check_ge_zero ( const IntVec& v ){ return (v[0]>=0) & (v[1]>=0) & (v[2]>=0); }
 
+    //---------------------------------------------------------------
 
     MemoryWindow::MemoryWindow( const int npts[3],
                                 const int offset[3],
@@ -72,14 +73,63 @@ namespace SpatialOps{
 #   endif
     }
 
+    //---------------------------------------------------------------
+
     MemoryWindow::MemoryWindow( const MemoryWindow& other )
     : nptsGlob_( other.nptsGlob_ ),
       offset_  ( other.offset_   ),
       extent_  ( other.extent_   )
     {}
 
+    //---------------------------------------------------------------
+
+    MemoryWindow&
+    MemoryWindow::operator=( const MemoryWindow& other )
+    {
+      nptsGlob_ = other.nptsGlob_;
+      offset_   = other.offset_;
+      extent_   = other.extent_;
+      return *this;
+    }
+
+    //---------------------------------------------------------------
+
     MemoryWindow::~MemoryWindow()
     {}
+
+    //---------------------------------------------------------------
+
+    MemoryWindow
+    MemoryWindow::refine( const IntVec& splitPattern,
+                          const IntVec& location ) const
+    {
+#     ifndef NDEBUG
+      for( size_t i=0; i<3; ++i ){
+        assert( extent_[i] >= splitPattern[i] );
+        assert( splitPattern[i] > 0 );
+        assert( extent_[i] + offset_[i] <= nptsGlob_[i] );
+        assert( location[i] < splitPattern[i] );
+        assert( location[i] >= 0 );
+      }
+#     endif
+      // try to make windows close to same size
+      const IntVec nextra = IntVec( extent_[0] % splitPattern[0],
+                                    extent_[1] % splitPattern[1],
+                                    extent_[2] % splitPattern[2] );
+      const IntVec stdExtent = IntVec( extent_[0] / splitPattern[0],
+                                       extent_[1] / splitPattern[1],
+                                       extent_[2] / splitPattern[2] );
+      const IntVec baseOffset = IntVec( offset_[0] + stdExtent[0] * location[0] + (location[0] < nextra[0] ? location[0] : nextra[0]),
+                                        offset_[1] + stdExtent[1] * location[1] + (location[1] < nextra[1] ? location[1] : nextra[1]),
+                                        offset_[2] + stdExtent[2] * location[2] + (location[2] < nextra[2] ? location[2] : nextra[2]) );
+      const IntVec baseExtent = IntVec( stdExtent[0] + (location[0] < nextra[0] ? 1 : 0),
+                                        stdExtent[1] + (location[1] < nextra[1] ? 1 : 0),
+                                        stdExtent[2] + (location[2] < nextra[2] ? 1 : 0) );
+
+      return MemoryWindow( nptsGlob_, baseOffset, baseExtent );
+    };
+
+    //---------------------------------------------------------------
 
     ostream& operator<<(ostream& os, const MemoryWindow& w ){
       os << w.nptsGlob_ << w.offset_ << w.extent_;

@@ -127,6 +127,8 @@ namespace structured{
     GhostDataRT& operator+=( const GhostDataRT& );
     GhostDataRT  operator- ( const GhostDataRT& ) const;
     GhostDataRT& operator-=( const GhostDataRT& );
+
+    bool operator==( const GhostDataRT& ) const;
   };
 
   std::ostream& operator<<( std::ostream&, const GhostDataRT& );

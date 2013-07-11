@@ -285,6 +285,52 @@ bool test_store( const IntVec& dim, const IntVec& bc )
 
 //--------------------------------------------------------------------
 
+template< typename FieldT >
+bool test_ghost_resize( const IntVec npts )
+{
+  TestHelper status(false);
+
+  const GhostDataRT ghost1(1);
+  const GhostDataRT ghost2(1);
+  const BoundaryCellInfo bc = BoundaryCellInfo::build<FieldT>(true,true,true);
+  const MemoryWindow window1( get_window_with_ghost(npts,ghost1,bc) );
+  const MemoryWindow window2( get_window_with_ghost(npts,ghost2,bc) );
+  FieldT f1( window1, bc, ghost1, NULL );
+  FieldT f2( window2, bc, ghost2, NULL );
+
+  for( typename FieldT::iterator if2=f2.begin(); if2!=f2.end(); ++if2 ){
+    *if2 = 0.0;
+  }
+
+  for( typename FieldT::iterator if1=f1.begin(); if1!=f1.end(); ++if1 ){
+    *if1 = 3.0;
+  }
+
+  f2.reset_valid_ghosts( ghost1 );
+  status( f2.get_valid_ghost_data() == ghost1 );
+  {
+    typename FieldT::iterator if1=f1.begin(), if2=f2.begin();
+    for( ; if2!=f2.end(); ++if1, ++if2 ){
+      *if2 = *if1;
+    }
+  }
+
+  FieldT f3( get_window_with_ghost(npts,ghost2,bc), f2 );
+  for( typename FieldT::iterator if3=f3.begin(); if3!=f3.end(); ++if3 ){
+    status( *if3 == 3.0 );
+  }
+
+//  // jcs todo: activate this:
+//  f2 <<= 3.0;
+//  f1 <<= 0.0;
+//  f1 <<= f2;  // should happen only on the valid ghost region for f1.
+
+  return status.ok();
+}
+
+
+//--------------------------------------------------------------------
+
 int main()
 {
   TestHelper overall(true);
@@ -476,6 +522,10 @@ int main()
     }
 
     overall( status.ok(), "field operations" );
+  }
+
+  {
+    overall( test_ghost_resize<SVolField>(IntVec(5,6,7)), "SVol ghost resize" );
   }
 
   if( overall.isfailed() ){

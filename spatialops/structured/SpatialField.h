@@ -103,7 +103,7 @@ namespace structured{
     typedef SpatialField<FieldLocation,GhostTraits,T> MyType;
     typedef std::map<unsigned short int, T*> ConsumerMap;
 
-    const MemoryWindow fieldWindow_;	///< Full representation of the window to the field ( includes ghost cells )
+    MemoryWindow fieldWindow_;	        ///< Full representation of the window to the field ( includes ghost cells )
     MemoryWindow interiorFieldWindow_;  ///< Window representation sans ghost cells.
 
     const BoundaryCellInfo bcInfo_;     ///< information about this field's behavior on a boundary
@@ -409,10 +409,31 @@ namespace structured{
      *        can lead to modification of the number of valid ghost cells.  This
      *        information is recorded here.
      */
-    GhostDataRT& get_valid_ghost_data() const{ return validGhosts_; }
+    const GhostDataRT& get_valid_ghost_data() const{ return validGhosts_; }
 
     unsigned int allocated_bytes() const {
     	return allocatedBytes_;
+    }
+
+    /**
+     * @brief reset the active window given the provided number of valid ghosts
+     * @param ghosts the number of ghosts, which cannot be larger than the number of valid ghosts on this field.
+     *
+     * This method should be used when a field assignment can only occur on a subset of the field due to invalidation of some of the ghost cells.
+     */
+    inline void reset_valid_ghosts( const GhostDataRT& ghosts ){
+#     ifndef NDEBUG
+      // don't allow the valid ghosts to expand
+      for( int i=0; i<3; ++i ){
+        assert( ghosts.get_minus(i) <= validGhosts_.get_minus(i) );
+        assert( ghosts.get_plus(i)  <= validGhosts_.get_plus(i)  );
+      }
+#     endif
+      const IntVec diff = validGhosts_.get_minus() - ghosts.get_minus();
+      validGhosts_ = ghosts;
+      fieldWindow_ = MemoryWindow( fieldWindow_.glob_dim(),
+                                   fieldWindow_.offset() + diff,
+                                   fieldWindow_.extent() - diff - validGhosts_.get_plus() + ghosts.get_plus() );
     }
 
     // jcs needs to be redone/removed

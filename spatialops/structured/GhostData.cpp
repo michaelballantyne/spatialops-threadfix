@@ -112,6 +112,14 @@ namespace SpatialOps{ namespace structured{
 
   //-----------------------------------------------------------------
 
+  bool
+  GhostDataRT::operator==( const GhostDataRT& rhs ) const
+  {
+    return (minus_ == rhs.minus_) && (plus_ == rhs.plus_);
+  }
+
+  //-----------------------------------------------------------------
+
   std::ostream& operator<<( std::ostream& out, const GhostDataRT& gd )
   {
     out << "{ " << gd.get_minus() << " " << gd.get_plus() << " }";
