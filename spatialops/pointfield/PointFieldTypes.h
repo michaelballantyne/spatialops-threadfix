@@ -35,7 +35,11 @@ namespace Point{
     typedef structured::IndexTriplet<0,0,0> NGhostPlus;
   };
 
-  struct PointFieldTraits{ typedef NODIR FaceDir; typedef NODIR StagLoc; };
+  struct PointFieldTraits{
+    typedef NODIR FaceDir;
+    typedef NODIR StagLoc;
+    typedef structured::IndexTriplet<0,0,0> BCExtra;
+  };
 
   /**
    *  \brief The PointField type is intended for use in extracting and

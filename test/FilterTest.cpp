@@ -112,12 +112,15 @@ int main(int iarg, char* carg[]) {
 #endif
     }
 
-    const MemoryWindow window( get_window_with_ghost<Field>(IntVec(nx,ny,nz),false,false,false) );
+    const int nghost = 1;
+    const GhostDataRT ghost(nghost);
+    const BoundaryCellInfo bc = BoundaryCellInfo::build<Field>(false,false,false);
+    const MemoryWindow window( get_window_with_ghost(IntVec(nx,ny,nz),ghost,bc) );
 
-    Field a( window, NULL );
-    Field b( window, NULL );
-    Field cr( window, NULL );
-    Field sr( window, NULL );
+    Field  a( window, bc, ghost, NULL );
+    Field  b( window, bc, ghost, NULL );
+    Field cr( window, bc, ghost, NULL );
+    Field sr( window, bc, ghost, NULL );
 
     Field::iterator ia = a.begin();
     Field::iterator ib = b.begin();

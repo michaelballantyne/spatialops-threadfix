@@ -20,6 +20,7 @@ typedef SpatialOps::structured::SVolField CellField;
 using SpatialOps::structured::IntVec;
 using SpatialOps::write_matlab;
 using SpatialOps::structured::MemoryWindow;
+namespace SS=SpatialOps::structured;
 
 int main()
 {
@@ -31,21 +32,26 @@ int main()
     if( totDim[i]>1 )
       totDim[i] += CellField::Ghost::NGhostMinus::int_vec()[i] +
                    CellField::Ghost::NGhostPlus::int_vec()[i];
+
+  const SS::GhostDataRT cg(1);
+  const SS::BoundaryCellInfo cbc = SS::BoundaryCellInfo::build<CellField>();
   const MemoryWindow mw( totDim );
 
   //
   // build the fields
   //
-  CellField cellField( mw, NULL );
-  CellField cellFieldvalues( mw, NULL );
-  CellField   ctmp( mw, NULL );
+  CellField       cellField( mw, cbc, cg, NULL );
+  CellField cellFieldvalues( mw, cbc, cg, NULL );
+  CellField            ctmp( mw, cbc, cg, NULL );
 
+  const SS::GhostDataRT pg(0);
+  const SS::BoundaryCellInfo pbc = SS::BoundaryCellInfo::build<SpatialOps::Particle::ParticleField>();
   const MemoryWindow pmw( IntVec(np,1,1) );
 
-  SpatialOps::Particle::ParticleField pCoord( pmw, NULL );
-  SpatialOps::Particle::ParticleField pSize ( pmw, NULL );
-  SpatialOps::Particle::ParticleField pfield( pmw, NULL );
-  SpatialOps::Particle::ParticleField ptmp  ( pmw, NULL );
+  SpatialOps::Particle::ParticleField pCoord( pmw, pbc, pg, NULL );
+  SpatialOps::Particle::ParticleField pSize ( pmw, pbc, pg, NULL );
+  SpatialOps::Particle::ParticleField pfield( pmw, pbc, pg, NULL );
+  SpatialOps::Particle::ParticleField ptmp  ( pmw, pbc, pg, NULL );
 
   //
   // set the cCoord coordinates.  These go from -0.5 to 10.5

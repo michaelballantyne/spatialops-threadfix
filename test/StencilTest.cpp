@@ -127,15 +127,17 @@ inline void evaluate_serial_example(FieldType & result,
     typename BasicOpTypes<FieldType>::DivZ* const divZOp_ = opDB.retrieve_operator<typename BasicOpTypes<FieldType>::DivZ>();
 
     MemoryWindow const w = phi.window_with_ghost();
-    typename FaceTypes<FieldType>::XFace tmpFaceX( w, NULL );
-    typename FaceTypes<FieldType>::XFace tmpFaceX2( w, NULL );
-    FieldType tmpX( w, NULL );
-    typename FaceTypes<FieldType>::YFace tmpFaceY( w, NULL );
-    typename FaceTypes<FieldType>::YFace tmpFaceY2( w, NULL );
-    FieldType tmpY( w, NULL );
-    typename FaceTypes<FieldType>::ZFace tmpFaceZ( w, NULL );
-    typename FaceTypes<FieldType>::ZFace tmpFaceZ2( w, NULL );
-    FieldType tmpZ( w, NULL );
+    const GhostDataRT& g = phi.get_ghost_data();
+    const BoundaryCellInfo& bc = phi.boundary_info();
+    typename FaceTypes<FieldType>::XFace  tmpFaceX( w, bc, g, NULL );
+    typename FaceTypes<FieldType>::XFace tmpFaceX2( w, bc, g, NULL );
+    FieldType tmpX( w, bc, g, NULL );
+    typename FaceTypes<FieldType>::YFace  tmpFaceY( w, bc, g, NULL );
+    typename FaceTypes<FieldType>::YFace tmpFaceY2( w, bc, g, NULL );
+    FieldType tmpY( w, bc, g, NULL );
+    typename FaceTypes<FieldType>::ZFace  tmpFaceZ( w, bc, g, NULL );
+    typename FaceTypes<FieldType>::ZFace tmpFaceZ2( w, bc, g, NULL );
+    FieldType tmpZ( w, bc, g, NULL );
 
     RUN_TEST(// X - direction
 	     gradXOp_  ->apply_to_field( phi,    tmpFaceX  );
@@ -239,12 +241,15 @@ int main(int iarg, char* carg[]) {
 #endif
     }
 
-    const MemoryWindow window( get_window_with_ghost<Field>(IntVec(nx,ny,nz),false,false,false) );
+    const int nghost = 1;
+    const GhostDataRT ghost( nghost );
+    const BoundaryCellInfo bc = BoundaryCellInfo::build<Field>( false, false, false );
+    const MemoryWindow window( get_window_with_ghost(IntVec(nx,ny,nz),ghost,bc) );
 
-    Field a( window, NULL );
-    Field b( window, NULL );
-    Field cr( window, NULL );
-    Field sr( window, NULL );
+    Field  a( window, bc, ghost, NULL );
+    Field  b( window, bc, ghost, NULL );
+    Field cr( window, bc, ghost, NULL );
+    Field sr( window, bc, ghost, NULL );
 
     Field::iterator ia = a.begin();
     Field::iterator ib = b.begin();

@@ -2,19 +2,23 @@
 #include <spatialops/pointfield/PointOperators.h>
 
 #include <spatialops/structured/FVStaggeredBCTools.h>
+#include <spatialops/structured/GhostData.h>
 
 #include <test/TestHelper.h>
 
 #include <iostream>
 
 typedef SpatialOps::Point::PointField FieldT;
+namespace SS=SpatialOps::structured;
 
 int main()
 {
   const size_t npts = 10;
-  const SpatialOps::structured::MemoryWindow mw( SpatialOps::structured::IntVec( npts, 1, 1 ) );
+  const SS::GhostDataRT ghost(1);
+  const SS::BoundaryCellInfo bc = SS::BoundaryCellInfo::build<FieldT>();
+  const SS::MemoryWindow mw( SS::IntVec( npts, 1, 1 ) );
 
-  FieldT f( mw, NULL );
+  FieldT f( mw, bc, ghost, NULL );
 
   double x=0.1;
   for( FieldT::iterator ifld=f.begin(); ifld!=f.end(); ++ifld, x+=1.0 ){
@@ -30,11 +34,11 @@ int main()
   }
 
   {
-    typedef SpatialOps::structured::ConstValEval BCVal;
-    typedef SpatialOps::structured::BoundaryCondition<FieldT,BCVal> BC;
+    typedef SS::ConstValEval BCVal;
+    typedef SS::BoundaryCondition<FieldT,BCVal> BC;
 
-    BC bc1( SpatialOps::structured::IntVec(2,1,1), BCVal(1.234) );
-    BC bc2( SpatialOps::structured::IntVec(4,1,1), BCVal(3.456) );
+    BC bc1( SS::IntVec(2,1,1), BCVal(1.234) );
+    BC bc2( SS::IntVec(4,1,1), BCVal(3.456) );
   
     bc1(f);
     bc2(f);
@@ -49,8 +53,8 @@ int main()
     SpatialOps::Point::FieldToPoint<FieldT> ftp(ix);
     SpatialOps::Point::PointToField<FieldT> ptf(ix);
 
-    const SpatialOps::structured::MemoryWindow mw2( SpatialOps::structured::IntVec(2,1,1) );
-    FieldT f2( mw2, NULL );
+    const SS::MemoryWindow mw2( SpatialOps::structured::IntVec(2,1,1) );
+    FieldT f2( mw2, bc, ghost, NULL );
     ftp.apply_to_field( f, f2 );
     status( f2[0] == 3.456, "Field2Point Interp (1)" );
     status( f2[1] == 1.234, "Field2Point Interp (2)" );

@@ -31,9 +31,11 @@ bool test_iterator( const IntVec npts,
 {
   TestHelper status(verboseOutput);
 
-  const MemoryWindow window( get_window_with_ghost<FieldT>(npts,true,true,true) );
-  FieldT f1( window, NULL );
-  FieldT f2( window, NULL );
+  const GhostDataRT ghost(1);
+  const BoundaryCellInfo bc = BoundaryCellInfo::build<FieldT>(true,true,true);
+  const MemoryWindow window( get_window_with_ghost(npts,ghost,bc) );
+  FieldT f1( window, bc, ghost, NULL );
+  FieldT f2( window, bc, ghost, NULL );
   f1 <<= 2.0;
   f2 <<= 1.0;
 
@@ -48,13 +50,13 @@ bool test_iterator( const IntVec npts,
     typename FieldT::iterator i1, i2;
     i1 = f1.begin();
     i2 = f1.begin();
-    status( *i1 == *i2 );
+    status( *i1 == *i2, "iterator begin()" );
   }
   {
     typename FieldT::const_iterator i1, i2;
     i1 = f1.begin();
     i2 = f1.begin();
-    status( *i1 == *i2 );
+    status( *i1 == *i2, "const iterator begin()" );
   }
 
   if2 = f2.begin() + 2;
@@ -134,9 +136,11 @@ template< typename FieldT >
 bool test_interior( const IntVec npts,
                     const bool verbose )
 {
-  const MemoryWindow window( get_window_with_ghost<FieldT>(npts,true,true,true) );
-  FieldT f1( window, NULL );
-  FieldT f2( window, NULL );
+  const GhostDataRT ghost(1);
+  const BoundaryCellInfo bc = BoundaryCellInfo::build<FieldT>(true,true,true);
+  const MemoryWindow window( get_window_with_ghost(npts,ghost,bc) );
+  FieldT f1( window, bc, ghost, NULL );
+  FieldT f2( window, bc, ghost, NULL );
   f1 <<= 2.0;
   const FieldT f3(f1);
 
@@ -212,10 +216,12 @@ bool test_interior( const IntVec npts,
 template<typename T>
 struct ThreadWork{
   void doit(){
-    const MemoryWindow ww = get_window_with_ghost<T>( IntVec(24,1,1), true,true,true );
+    const GhostDataRT ghost(1);
+    const BoundaryCellInfo bc = BoundaryCellInfo::build<T>(true,true,true);
+    const MemoryWindow ww = get_window_with_ghost( IntVec(24,1,1), ghost, bc );
     for( size_t i=0; i<100; ++i ){
-      SpatFldPtr<T> f1 = SpatialFieldStore::get_from_window<T>( ww );
-      SpatFldPtr<T> f2 = SpatialFieldStore::get_from_window<T>( ww );
+      SpatFldPtr<T> f1 = SpatialFieldStore::get_from_window<T>( ww, ghost, bc );
+      SpatFldPtr<T> f2 = SpatialFieldStore::get_from_window<T>( ww, ghost, bc );
       *f1 <<= 0.0;
     }
   }
@@ -230,8 +236,14 @@ bool test_store( const IntVec& dim, const IntVec& bc )
 //  jcs_pause();
   TestHelper status(false);
 
-  const MemoryWindow w1 = get_window_with_ghost<FT1>( dim, bc[0]==1, bc[1]==1, bc[2]==1 );
-  const MemoryWindow w2 = get_window_with_ghost<FT2>( dim, bc[0]==1, bc[1]==1, bc[2]==1 );
+  const GhostDataRT ghost1(1);
+  const GhostDataRT ghost2(1);
+
+  const BoundaryCellInfo bc1 = BoundaryCellInfo::build<FT1>(bc[0],bc[1],bc[2]);
+  const BoundaryCellInfo bc2 = BoundaryCellInfo::build<FT2>(bc[0],bc[1],bc[2]);
+
+  const MemoryWindow w1 = get_window_with_ghost( dim, ghost1, bc1 );
+  const MemoryWindow w2 = get_window_with_ghost( dim, ghost2, bc2 );
 
 # ifdef ENABLE_THREADS
   set_hard_thread_count( NTHREADS );
@@ -254,8 +266,8 @@ bool test_store( const IntVec& dim, const IntVec& bc )
   }
 # endif
 
-  SpatFldPtr<FT1> f1 = SpatialFieldStore::get_from_window<FT1>( w1 );
-  SpatFldPtr<FT2> f2 = SpatialFieldStore::get_from_window<FT2>( w2 );
+  SpatFldPtr<FT1> f1 = SpatialFieldStore::get_from_window<FT1>( w1, bc1, ghost1 );
+  SpatFldPtr<FT2> f2 = SpatialFieldStore::get_from_window<FT2>( w2, bc2, ghost2 );
   SpatFldPtr<FT1> f1a= SpatialFieldStore::get<FT1>( *f1 );
   SpatFldPtr<FT2> f2a= SpatialFieldStore::get<FT2>( *f2 );
   SpatFldPtr<FT2> f2b= SpatialFieldStore::get<FT2>( *f1 );
@@ -264,9 +276,9 @@ bool test_store( const IntVec& dim, const IntVec& bc )
   status( f2->window_with_ghost() == f2a->window_with_ghost(), "f2==f2a" );
   status( f2->window_with_ghost() == f2b->window_with_ghost(), "f2==f2b" );
 
-  FT1 f4( f1->window_with_ghost(), f1->field_values(), ExternalStorage );
+  FT1 f4( f1->window_with_ghost(), f1->boundary_info(), f1->get_ghost_data(), f1->field_values(), ExternalStorage );
   SpatFldPtr<FT1> f4a = SpatialFieldStore::get<FT1>(f4);
-  status( f4a->window_with_ghost() == f1a->window_with_ghost() );
+  status( f4a->window_with_ghost() == f1a->window_with_ghost(), "f4a==f1a" );
 
   return status.ok();
 }
@@ -294,13 +306,14 @@ int main()
     overall( test_store<SVolField,  SSurfZField>( IntVec(30,40,50), IntVec(0,0,0) ), "SVol,SSZ      store" );
     overall( test_store<XSurfXField,SVolField  >( IntVec(30,40,50), IntVec(0,0,0) ), "XSX ,SVol     store" );
     overall( test_store<XSurfXField,ZVolField  >( IntVec(30,40,50), IntVec(0,0,0) ), "XSX ,ZVol     store" );
-    overall( test_store<YSurfZField,ZSurfXField>( IntVec(30,40,50), IntVec(0,0,0) ), "XSX ,ZVol     store" );
+    overall( test_store<YSurfZField,ZSurfXField>( IntVec(30,40,50), IntVec(0,0,0) ), "YSZ ,ZSX     store" );
   }
   catch(...){
     overall(false);
     std::cout << "exception thrown while running test_store" << std::endl;
     return -1;
   }
+
   stop = boost::posix_time::microsec_clock::universal_time();
   std::cout << "elapsed time (s): " << (stop-start).total_microseconds()*1e-6 << std::endl;
 
@@ -429,9 +442,11 @@ int main()
     TestHelper status(false);
 
     const int npts[3] = {10,11,12};
+    const GhostDataRT ghost(1);
+    const BoundaryCellInfo bc = BoundaryCellInfo::build<SVolField>();
     const MemoryWindow window(npts);
-    SVolField svol1( window, NULL, InternalStorage );
-    SVolField svol2( window, NULL, InternalStorage );
+    SVolField svol1( window, bc, ghost, NULL, InternalStorage );
+    SVolField svol2( window, bc, ghost, NULL, InternalStorage );
 
     for( int k=0; k<npts[2]; ++k ){
       for( int j=0; j<npts[1]; ++j ){

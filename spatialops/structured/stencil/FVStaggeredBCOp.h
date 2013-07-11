@@ -223,8 +223,8 @@ namespace structured{
     const MemoryWindow& w = f.window_without_ghost();
 
     if (singlePointBC_) {
-      const MemoryWindow wa( w.glob_dim(), w.offset()+apoint_, IntVec(1,1,1), w.has_bc(0), w.has_bc(1), w.has_bc(2) );
-      const MemoryWindow wb( w.glob_dim(), w.offset()+bpoint_, IntVec(1,1,1), w.has_bc(0), w.has_bc(1), w.has_bc(2) );
+      const MemoryWindow wa( w.glob_dim(), w.offset()+apoint_, IntVec(1,1,1) );
+      const MemoryWindow wb( w.glob_dim(), w.offset()+bpoint_, IntVec(1,1,1) );
       SrcFieldT fa( wa, f );
       SrcFieldT fb( wb, f );
       fa <<= ( bcEval_() - cb_ * fb ) / ca_;
@@ -234,8 +234,8 @@ namespace structured{
       std::vector<int>::const_iterator ia = flatGhostPoints_.begin(); // ia is the ghost flat index
       std::vector<int>::const_iterator ib = flatInteriorPoints_.begin(); // ib is the interior flat index
       for( ; ia != flatGhostPoints_.end(); ++ia, ++ib ){
-        const MemoryWindow wa( w.glob_dim(), w.offset()+w.ijk_index_from_local(*ia), IntVec(1,1,1), w.has_bc(0), w.has_bc(1), w.has_bc(2) );
-        const MemoryWindow wb( w.glob_dim(), w.offset()+w.ijk_index_from_local(*ib), IntVec(1,1,1), w.has_bc(0), w.has_bc(1), w.has_bc(2) );
+        const MemoryWindow wa( w.glob_dim(), w.offset()+w.ijk_index_from_local(*ia), IntVec(1,1,1) );
+        const MemoryWindow wb( w.glob_dim(), w.offset()+w.ijk_index_from_local(*ib), IntVec(1,1,1) );
         SrcFieldT fa( wa, f );
         SrcFieldT fb( wb, f );
         fa <<= ( bcEval_() - cb_ * fb ) / ca_;

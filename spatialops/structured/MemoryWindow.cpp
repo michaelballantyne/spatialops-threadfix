@@ -40,8 +40,7 @@ namespace SpatialOps{
                                 const bool bcz )
     : nptsGlob_( npts ),
       offset_( offset ),
-      extent_( extent ),
-      bc_( bcx, bcy, bcz )
+      extent_( extent )
     {
 #   ifndef NDEBUG
       assert( sanity_check() );
@@ -56,8 +55,19 @@ namespace SpatialOps{
                                 const bool bcz )
     : nptsGlob_( npts ),
       offset_( offset ),
-      extent_( extent ),
-      bc_( bcx, bcy, bcz )
+      extent_( extent )
+    {
+#   ifndef NDEBUG
+      assert( sanity_check() );
+#   endif
+   }
+
+    MemoryWindow::MemoryWindow( const IntVec& npts,
+                                const IntVec& offset,
+                                const IntVec& extent )
+    : nptsGlob_( npts ),
+      offset_( offset ),
+      extent_( extent )
     {
 #   ifndef NDEBUG
       assert( sanity_check() );
@@ -68,8 +78,7 @@ namespace SpatialOps{
                                 const bool bcx,
                                 const bool bcy,
                                 const bool bcz )
-    : nptsGlob_( npts ), offset_(0,0,0), extent_( npts ),
-      bc_( bcx, bcy, bcz )
+    : nptsGlob_( npts ), offset_(0,0,0), extent_( npts )
     {
 #   ifndef NDEBUG
       assert( sanity_check() );
@@ -80,8 +89,7 @@ namespace SpatialOps{
                                 const bool bcx,
                                 const bool bcy,
                                 const bool bcz )
-    : nptsGlob_( npts ), offset_(0,0,0), extent_( npts ),
-      bc_( bcx, bcy, bcz )
+    : nptsGlob_( npts ), offset_(0,0,0), extent_( npts )
     {
 #   ifndef NDEBUG
       assert( sanity_check() );
@@ -91,15 +99,14 @@ namespace SpatialOps{
     MemoryWindow::MemoryWindow( const MemoryWindow& other )
     : nptsGlob_( other.nptsGlob_ ),
       offset_  ( other.offset_   ),
-      extent_  ( other.extent_   ),
-      bc_      ( other.bc_       )
+      extent_  ( other.extent_   )
     {}
 
     MemoryWindow::~MemoryWindow()
     {}
 
     ostream& operator<<(ostream& os, const MemoryWindow& w ){
-      os << w.nptsGlob_ << w.offset_ << w.extent_ << w.bc_;
+      os << w.nptsGlob_ << w.offset_ << w.extent_;
       return os;
     }
 

@@ -25,221 +25,244 @@ using std::endl;
 //--------------------------------------------------------------------
 
 template<typename Field>
-void initialize_field(Field & f) {
-    typename Field::iterator i = f.begin();
-    MemoryWindow mw = f.window_with_ghost();
-    int xLength = mw.extent(0);
-    int yLength = mw.extent(1);
-    int zLength = mw.extent(2);
+void initialize_field(Field & f)
+{
+  typename Field::iterator i = f.begin();
+  MemoryWindow mw = f.window_with_ghost();
+  int xLength = mw.extent(0);
+  int yLength = mw.extent(1);
+  int zLength = mw.extent(2);
 
-    for(int x = 1; x <= xLength; x++) {
-        for(int y = 1; y <= yLength; y++) {
-            for(int z = 1; z <= zLength; z++) {
-                *i = sin(x +
-                         y * xLength +
-                         z * xLength * yLength);
-                i++;
-            };
-        };
+  for(int x = 1; x <= xLength; x++) {
+    for(int y = 1; y <= yLength; y++) {
+      for(int z = 1; z <= zLength; z++) {
+        *i = sin(x +
+            y * xLength +
+            z * xLength * yLength);
+        i++;
+      };
     };
+  };
 };
 
 //--------------------------------------------------------------------
 
 template<typename OpType, typename SrcType, typename DestType>
-bool test_stencil2(IntVec npts,
-                   OperatorDatabase & opdb,
-                   bool bc[]) {
-    //basic definitions:
-    const MemoryWindow mwSrc  = get_window_with_ghost<SrcType> (npts, bc[0], bc[1], bc[2]);
-    const MemoryWindow mwDest = get_window_with_ghost<DestType>(npts, bc[0], bc[1], bc[2]);
-    SrcType  src (mwSrc,  NULL);
-    DestType ref (mwDest, NULL);
-    DestType test(mwDest, NULL);
+bool test_stencil2(const IntVec npts,
+                   const OperatorDatabase & opdb,
+                   bool bc[])
+{
+  //basic definitions:
+  const GhostDataRT  srcGhost(1);
+  const GhostDataRT destGhost(1);
+  const BoundaryCellInfo  srcBC = BoundaryCellInfo::build< SrcType>(bc[0],bc[1],bc[2]);
+  const BoundaryCellInfo destBC = BoundaryCellInfo::build<DestType>(bc[0],bc[1],bc[2]);
+  const MemoryWindow mwSrc  = get_window_with_ghost(npts,  srcGhost,  srcBC);
+  const MemoryWindow mwDest = get_window_with_ghost(npts, destGhost, destBC);
 
-    //initialize source field / zero out result fields:
-    initialize_field(src);
-    ref <<= 0.0;
-    test <<= 0.0;
+  SrcType  src ( mwSrc,   srcBC,  srcGhost, NULL );
+  DestType ref ( mwDest, destBC, destGhost, NULL );
+  DestType test( mwDest, destBC, destGhost, NULL );
 
-    //get operator:
-    typedef typename SpatialOps::structured::OperatorTypeBuilder<OpType,SrcType,DestType>::type Op;
-    const Op* const op = opdb.retrieve_operator<Op>();
+  //initialize source field / zero out result fields:
+  initialize_field(src);
+  ref <<= 0.0;
+  test <<= 0.0;
 
-    //run reference:
-    ref_stencil2_apply_to_field(op->get_minus_coef(),
-                                op->get_plus_coef(),
-                                src,
-                                ref);
+  //get operator:
+  typedef typename SpatialOps::structured::OperatorTypeBuilder<OpType,SrcType,DestType>::type Op;
+  const Op* const op = opdb.retrieve_operator<Op>();
 
-    //run operator:
-    op->apply_to_field(src, test);
+  //run reference:
+  ref_stencil2_apply_to_field(op->get_minus_coef(),
+                              op->get_plus_coef(),
+                              src,
+                              ref);
 
-    return (test == ref);
+  //run operator:
+  op->apply_to_field(src, test);
+
+  return (test == ref);
 };
 
 //--------------------------------------------------------------------
 
 template<typename OpType, typename SrcType, typename DestType>
-bool test_stencil4(IntVec npts,
-                   OperatorDatabase & opdb,
-                   bool bc[]) {
+bool test_stencil4(const IntVec npts,
+                   const OperatorDatabase & opdb,
+                   bool bc[])
+{
     //basic definitions:
-    const MemoryWindow mwSrc  = get_window_with_ghost<SrcType> (npts, bc[0], bc[1], bc[2]);
-    const MemoryWindow mwDest = get_window_with_ghost<DestType>(npts, bc[0], bc[1], bc[2]);
-    SrcType  src (mwSrc,  NULL);
-    DestType ref (mwDest, NULL);
-    DestType test(mwDest, NULL);
+  const GhostDataRT  srcGhost(1);
+  const GhostDataRT destGhost(1);
+  const BoundaryCellInfo  srcBC = BoundaryCellInfo::build< SrcType>(bc[0],bc[1],bc[2]);
+  const BoundaryCellInfo destBC = BoundaryCellInfo::build<DestType>(bc[0],bc[1],bc[2]);
+  const MemoryWindow mwSrc  = get_window_with_ghost(npts,  srcGhost,  srcBC);
+  const MemoryWindow mwDest = get_window_with_ghost(npts, destGhost, destBC);
+  SrcType  src (mwSrc,   srcBC,  srcGhost, NULL);
+  DestType ref (mwDest, destBC, destGhost, NULL);
+  DestType test(mwDest, destBC, destGhost, NULL);
 
-    //initialize source field / zero out result fields:
-    initialize_field(src);
-    ref <<= 0.0;
-    test <<= 0.0;
+  //initialize source field / zero out result fields:
+  initialize_field(src);
+  ref <<= 0.0;
+  test <<= 0.0;
 
-    //get operator:
-    typedef typename SpatialOps::structured::OperatorTypeBuilder<OpType,SrcType,DestType>::type Op;
-    const Op* const op = opdb.retrieve_operator<Op>();
+  //get operator:
+  typedef typename SpatialOps::structured::OperatorTypeBuilder<OpType,SrcType,DestType>::type Op;
+  const Op* const op = opdb.retrieve_operator<Op>();
 
-    //run reference:
-    ref_stencil4_apply_to_field(op->get_coef1(),
-                                op->get_coef2(),
-                                op->get_coef3(),
-                                op->get_coef4(),
-                                src,
-                                ref);
+  //run reference:
+  ref_stencil4_apply_to_field(op->get_coef1(),
+                              op->get_coef2(),
+                              op->get_coef3(),
+                              op->get_coef4(),
+                              src,
+                              ref);
 
-    //run operator:
-    op->apply_to_field(src, test);
+  //run operator:
+  op->apply_to_field(src, test);
 
-    return (test == ref);
+  return (test == ref);
 };
 
 //--------------------------------------------------------------------
 
 template<typename OpType, typename FieldType>
-bool test_fd_stencil2(IntVec npts,
-                   OperatorDatabase & opdb,
-                   bool bc[]) {
-    //basic definitions:
-    const MemoryWindow mw  = get_window_with_ghost<FieldType> (npts, bc[0], bc[1], bc[2]);
-    FieldType src (mw,  NULL);
-    FieldType ref (mw, NULL);
-    FieldType test(mw, NULL);
+bool test_fd_stencil2(const IntVec npts,
+                      const OperatorDatabase & opdb,
+                      bool bc[])
+{
+  //basic definitions:
+  const GhostDataRT ghost(1);
+  const BoundaryCellInfo bcinfo = BoundaryCellInfo::build<FieldType>(bc[0], bc[1], bc[2]);
+  const MemoryWindow mw  = get_window_with_ghost(npts, ghost, bcinfo);
+  FieldType src (mw, bcinfo, ghost, NULL);
+  FieldType ref (mw, bcinfo, ghost, NULL);
+  FieldType test(mw, bcinfo, ghost, NULL);
 
-    //initialize source field / zero out result fields:
-    initialize_field(src);
-    ref <<= 0.0;
-    test <<= 0.0;
+  //initialize source field / zero out result fields:
+  initialize_field(src);
+  ref <<= 0.0;
+  test <<= 0.0;
 
-    //get operator:
-    typedef typename SpatialOps::structured::OperatorTypeBuilder<OpType,FieldType,FieldType>::type Op;
-    const Op* const op = opdb.retrieve_operator<Op>();
+  //get operator:
+  typedef typename SpatialOps::structured::OperatorTypeBuilder<OpType,FieldType,FieldType>::type Op;
+  const Op* const op = opdb.retrieve_operator<Op>();
 
-    //run reference:
-    ref_fd_stencil2_apply_to_field<OpType,FieldType>(op->get_minus_coef(),
-                                                     op->get_plus_coef(),
-                                                     src,
-                                                     ref);
+  //run reference:
+  ref_fd_stencil2_apply_to_field<OpType,FieldType>(op->get_minus_coef(),
+                                                   op->get_plus_coef(),
+                                                   src,
+                                                   ref);
 
-    //run operator:
-    op->apply_to_field(src, test);
+  //run operator:
+  op->apply_to_field(src, test);
 
-    return (test == ref);
+  return (test == ref);
 };
 
 //--------------------------------------------------------------------
 
 template<typename OpType, typename SrcType, typename DestType>
-bool test_null_stencil(IntVec npts,
-                       OperatorDatabase & opdb,
-                       bool bc[]) {
-    //basic definitions:
-    const MemoryWindow mwSrc  = get_window_with_ghost<SrcType> (npts, bc[0], bc[1], bc[2]);
-    const MemoryWindow mwDest = get_window_with_ghost<DestType>(npts, bc[0], bc[1], bc[2]);
-    SrcType  src (mwSrc,  NULL);
-    DestType ref (mwDest, NULL);
-    DestType test(mwDest, NULL);
+bool test_null_stencil(const IntVec npts,
+                       const OperatorDatabase & opdb,
+                       bool bc[])
+{
+  //basic definitions:
+  const GhostDataRT  srcGhost(1);
+  const GhostDataRT destGhost(1);
+  const BoundaryCellInfo  srcBC = BoundaryCellInfo::build< SrcType>(bc[0],bc[1],bc[2]);
+  const BoundaryCellInfo destBC = BoundaryCellInfo::build<DestType>(bc[0],bc[1],bc[2]);
+  const MemoryWindow mwSrc  = get_window_with_ghost(npts,  srcGhost,  srcBC);
+  const MemoryWindow mwDest = get_window_with_ghost(npts, destGhost, destBC);
+  SrcType  src (mwSrc,   srcBC,  srcGhost, NULL);
+  DestType ref (mwDest, destBC, destGhost, NULL);
+  DestType test(mwDest, destBC, destGhost, NULL);
 
-    //initialize source field / zero out result fields:
-    initialize_field(src);
-    ref <<= 0.0;
-    test <<= 0.0;
+  //initialize source field / zero out result fields:
+  initialize_field(src);
+  ref <<= 0.0;
+  test <<= 0.0;
 
-    //get operator:
-    typedef typename SpatialOps::structured::OperatorTypeBuilder<OpType,SrcType,DestType>::type Op;
-    const Op* const op = opdb.retrieve_operator<Op>();
+  //get operator:
+  typedef typename SpatialOps::structured::OperatorTypeBuilder<OpType,SrcType,DestType>::type Op;
+  const Op* const op = opdb.retrieve_operator<Op>();
 
-    //run reference:
-    ref_null_stencil_apply_to_field(src, ref);
+  //run reference:
+  ref_null_stencil_apply_to_field(src, ref);
 
-    //run operator:
-    op->apply_to_field(src, test);
+  //run operator:
+  op->apply_to_field(src, test);
 
-    return (test == ref);
+  return (test == ref);
 };
 
 //--------------------------------------------------------------------
 
 template<typename OpType, typename FieldType>
-bool test_box_filter_stencil(IntVec npts,
-                             OperatorDatabase & opdb,
-                             bool bc[]) {
-    //basic definitions:
-    const MemoryWindow mwSrc  = get_window_with_ghost<FieldType> (npts, bc[0], bc[1], bc[2]);
-    const MemoryWindow mwDest = get_window_with_ghost<FieldType>(npts, bc[0], bc[1], bc[2]);
-    FieldType src (mwSrc,  NULL);
-    FieldType ref (mwDest, NULL);
-    FieldType test(mwDest, NULL);
+bool test_box_filter_stencil(const IntVec npts,
+                             const OperatorDatabase & opdb,
+                             bool bc[])
+{
+  //basic definitions:
+  const GhostDataRT ghost(1);
+  const BoundaryCellInfo bcinfo = BoundaryCellInfo::build<FieldType>(bc[0], bc[1], bc[2]);
+  const MemoryWindow mw = get_window_with_ghost(npts, ghost, bcinfo);
+  FieldType src (mw, bcinfo, ghost, NULL);
+  FieldType ref (mw, bcinfo, ghost, NULL);
+  FieldType test(mw, bcinfo, ghost, NULL);
 
-    //initialize source field / zero out result fields:
-    initialize_field(src);
-    ref <<= 0.0;
-    test <<= 0.0;
+  //initialize source field / zero out result fields:
+  initialize_field(src);
+  ref <<= 0.0;
+  test <<= 0.0;
 
-    //get operator:
-    typedef typename SpatialOps::structured::OperatorTypeBuilder<OpType,FieldType,FieldType>::type Op;
-    const Op* const op = opdb.retrieve_operator<Op>();
+  //get operator:
+  typedef typename SpatialOps::structured::OperatorTypeBuilder<OpType,FieldType,FieldType>::type Op;
+  const Op* const op = opdb.retrieve_operator<Op>();
 
-    //run reference:
-    ref_box_filter_stencil_apply_to_field(src, ref);
+  //run reference:
+  ref_box_filter_stencil_apply_to_field(src, ref);
 
-    //run operator:
-    op->apply_to_field(src, test);
+  //run operator:
+  op->apply_to_field(src, test);
 
-    return (test == ref);
+  return (test == ref);
 };
 
 //--------------------------------------------------------------------
 
 template<typename VolField>
 inline bool test_basic_stencils(const IntVec npts,
-                                OperatorDatabase & opdb,
-                                bool bc[]) {
-    typedef typename FaceTypes<VolField>::XFace SurfXField;
-    typedef typename FaceTypes<VolField>::YFace SurfYField;
-    typedef typename FaceTypes<VolField>::ZFace SurfZField;
+                                const OperatorDatabase & opdb,
+                                bool bc[])
+{
+  typedef typename FaceTypes<VolField>::XFace SurfXField;
+  typedef typename FaceTypes<VolField>::YFace SurfYField;
+  typedef typename FaceTypes<VolField>::ZFace SurfZField;
 
-    TestHelper status(true);
+  TestHelper status(true);
 
-    if( npts[0] > 1) {
-        status( test_stencil2<Interpolant, VolField,   SurfXField>(npts, opdb, bc), "Interpolant VolField -> SurfXField (2)" );
-        status( test_stencil2<Gradient,    VolField,   SurfXField>(npts, opdb, bc), "Gradient    VolField -> SurfXField (2)" );
-        status( test_stencil2<Divergence,  SurfXField, VolField>  (npts, opdb, bc), "Divergence  SurfXField -> VolField (2)" );
-    };
+  if( npts[0] > 1) {
+    status( test_stencil2<Interpolant, VolField,   SurfXField>(npts, opdb, bc), "Interpolant VolField -> SurfXField (2)" );
+    status( test_stencil2<Gradient,    VolField,   SurfXField>(npts, opdb, bc), "Gradient    VolField -> SurfXField (2)" );
+    status( test_stencil2<Divergence,  SurfXField, VolField>  (npts, opdb, bc), "Divergence  SurfXField -> VolField (2)" );
+  };
 
-    if( npts[1] > 1) {
-        status( test_stencil2<Interpolant, VolField,   SurfYField>(npts, opdb, bc), "Interpolant VolField -> SurfYField (2)" );
-        status( test_stencil2<Gradient,    VolField,   SurfYField>(npts, opdb, bc), "Gradient    VolField -> SurfYField (2)" );
-        status( test_stencil2<Divergence,  SurfYField, VolField>  (npts, opdb, bc), "Divergence  SurfYField -> VolField (2)" );
-    };
+  if( npts[1] > 1) {
+    status( test_stencil2<Interpolant, VolField,   SurfYField>(npts, opdb, bc), "Interpolant VolField -> SurfYField (2)" );
+    status( test_stencil2<Gradient,    VolField,   SurfYField>(npts, opdb, bc), "Gradient    VolField -> SurfYField (2)" );
+    status( test_stencil2<Divergence,  SurfYField, VolField>  (npts, opdb, bc), "Divergence  SurfYField -> VolField (2)" );
+  };
 
-    if( npts[2] > 1) {
-        status( test_stencil2<Interpolant, VolField,   SurfZField>(npts, opdb, bc), "Interpolant VolField -> SurfZField (2)" );
-        status( test_stencil2<Gradient,    VolField,   SurfZField>(npts, opdb, bc), "Gradient    VolField -> SurfZField (2)" );
-        status( test_stencil2<Divergence,  SurfZField, VolField>  (npts, opdb, bc), "Divergence  SurfZField -> VolField (2)" );
-    };
+  if( npts[2] > 1) {
+    status( test_stencil2<Interpolant, VolField,   SurfZField>(npts, opdb, bc), "Interpolant VolField -> SurfZField (2)" );
+    status( test_stencil2<Gradient,    VolField,   SurfZField>(npts, opdb, bc), "Gradient    VolField -> SurfZField (2)" );
+    status( test_stencil2<Divergence,  SurfZField, VolField>  (npts, opdb, bc), "Divergence  SurfZField -> VolField (2)" );
+  };
 
-    return status.ok();
+  return status.ok();
 };
 
 //--------------------------------------------------------------------
@@ -327,12 +350,12 @@ int main( int iarg, char* carg[] )
     po::options_description desc("Supported Options");
     desc.add_options()
       ( "help", "print help message\n" )
-      ( "nx",   po::value<int>(&nx)->default_value(11), "number of points in x-dir for base mesh" )
-      ( "ny",   po::value<int>(&ny)->default_value(11), "number of points in y-dir for base mesh" )
-      ( "nz",   po::value<int>(&nz)->default_value(11), "number of points in z-dir for base mesh" )
-      ( "bcx",  "physical boundary on +x side?" )
-      ( "bcy",  "physical boundary on +y side?" )
-      ( "bcz",  "physical boundary on +z side?" );
+      ( "nx",  po::value<int>(&nx)->default_value(11), "number of points in x-dir for base mesh" )
+      ( "ny",  po::value<int>(&ny)->default_value(11), "number of points in y-dir for base mesh" )
+      ( "nz",  po::value<int>(&nz)->default_value(11), "number of points in z-dir for base mesh" )
+      ( "bcx", "physical boundary on +x side?" )
+      ( "bcy", "physical boundary on +y side?" )
+      ( "bcz", "physical boundary on +z side?" );
 
     po::variables_map args;
     po::store( po::parse_command_line(iarg,carg,desc), args );

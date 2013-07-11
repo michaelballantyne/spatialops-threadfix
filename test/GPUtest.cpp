@@ -17,16 +17,19 @@
 namespace po = boost::program_options;
 
 using namespace SpatialOps;
+namespace SS = SpatialOps::structured;
 
 template<typename FieldType>
 void nebo_allocate(typename FieldType::memory_window mw,
+                   const structured::BoundaryCellInfo& bc,
+                   const structured::GhostDataRT& g,
                    std::vector<FieldType *> & ptr_fields,
                    std::vector<FieldType> & fields,
                    int numFields) {
     ptr_fields.clear();
     fields.clear();
     for(int ii = 0; ii < numFields; ii++) {
-        ptr_fields.push_back(new FieldType(mw, NULL));
+        ptr_fields.push_back(new FieldType(mw,bc,g,NULL));
         fields.push_back(* (ptr_fields.back()));
     };
 };
@@ -40,6 +43,8 @@ void nebo_initialize(std::vector<FieldType> & fields,
 
 template<typename FieldType>
 void nebo_cuda_allocate(typename FieldType::memory_window mw,
+                        const structured::BoundaryCellInfo& bc,
+                        const structured::GhostDataRT& g,
                         std::vector<FieldType *> & ptr_gpu_fields,
                         std::vector<FieldType> & gpu_fields,
                         int numFields) {
@@ -48,12 +53,14 @@ void nebo_cuda_allocate(typename FieldType::memory_window mw,
     for(int ii = 0; ii < numFields; ii++) {
 #ifdef ENABLE_CUDA
         ptr_gpu_fields.push_back(new FieldType(mw,
+                                               bc,
+                                               g,
                                                NULL,
                                                structured::InternalStorage,
                                                EXTERNAL_CUDA_GPU,
                                                0));
 #else
-        ptr_gpu_fields.push_back(new FieldType(mw, NULL));
+        ptr_gpu_fields.push_back(new FieldType(mw,bc,g,NULL));
 #endif
 
         gpu_fields.push_back(* (ptr_gpu_fields.back()));
@@ -102,7 +109,10 @@ int main( int iarg, char* carg[] )
         }
     }
 
-    const SpatialOps::structured::MemoryWindow window( SpatialOps::structured::get_window_with_ghost<Field>(npts,true,true,true) );
+    const int nghost = 1;
+    const SS::GhostDataRT ghost( nghost );
+    const SS::BoundaryCellInfo bc = SS::BoundaryCellInfo::build<Field>( true, true, true );
+    const SS::MemoryWindow window( SS::get_window_with_ghost(npts,ghost,bc) );
     int rawSize = ((npts[0] > 1 ? npts[0] + 2 : 1) *
                    (npts[1] > 1 ? npts[1] + 2 : 1) *
                    (npts[2] > 1 ? npts[2] + 2 : 1));
@@ -112,25 +122,25 @@ int main( int iarg, char* carg[] )
     //CPU fields:
     std::vector<Field *> ptr_fs;
     std::vector<Field> fs;
-    Field result(window, NULL);
-    Field result_from_gpu(window, NULL);
+    Field result(window, bc, ghost, NULL);
+    Field result_from_gpu(window, bc, ghost, NULL);
 
     //GPU fields:
     std::vector<Field *> ptr_gpu_fs;
     std::vector<Field> gpu_fs;
 #ifdef ENABLE_CUDA
-    Field gpu_result(window, NULL, structured::InternalStorage, EXTERNAL_CUDA_GPU, 0);
+    Field gpu_result(window, bc, ghost, NULL, structured::InternalStorage, EXTERNAL_CUDA_GPU, 0);
 #else
-    Field gpu_result(window, NULL);
+    Field gpu_result(window, bc, ghost, NULL);
 #endif
     //allocate space on CPU:
-    nebo_allocate(window, ptr_fs, fs, COUNT);
+    nebo_allocate(window, bc, ghost, ptr_fs, fs, COUNT);
 
     //initialize CPU fields:
     nebo_initialize(fs, rawSize);
 
     //allocate space on GPU:
-    nebo_cuda_allocate(window, ptr_gpu_fs, gpu_fs, COUNT);
+    nebo_cuda_allocate(window, bc, ghost, ptr_gpu_fs, gpu_fs, COUNT);
 
     //copy input fields to GPU:
     nebo_copy(gpu_fs, fs, 2);

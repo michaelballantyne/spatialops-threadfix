@@ -39,7 +39,7 @@ typedef SpatialOps::structured::BasicOpTypes<CellField>::DivZ       DivZ;
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace po = boost::program_options;
-
+namespace SS = SpatialOps::structured;
 
 int main( int iarg, char* carg[] )
 {
@@ -109,28 +109,35 @@ int main( int iarg, char* carg[] )
   const InterpZ* const interpz = sodb.retrieve_operator<InterpZ>();
 
   // build fields
-  const SpatialOps::structured::MemoryWindow vwindow( SpatialOps::structured::get_window_with_ghost<CellField>(npts,true,true,true) );
+  const SS::GhostDataRT ghost(1);
 
-  CellField temperature( vwindow, NULL );
-  CellField thermCond  ( vwindow, NULL );
-  CellField rhoCp      ( vwindow, NULL );
-  CellField xcoord     ( vwindow, NULL );
-  CellField ycoord     ( vwindow, NULL );
-  CellField zcoord     ( vwindow, NULL );
-  CellField rhs        ( vwindow, NULL );
+  const SS::BoundaryCellInfo cellBC = SS::BoundaryCellInfo::build< CellField>(true,true,true);
 
-  SpatialOps::structured::Grid grid( npts, length );
+  const SS::MemoryWindow vwindow( SS::get_window_with_ghost(npts,ghost,cellBC) );
+
+  CellField temperature( vwindow, cellBC, ghost, NULL );
+  CellField thermCond  ( vwindow, cellBC, ghost, NULL );
+  CellField rhoCp      ( vwindow, cellBC, ghost, NULL );
+  CellField xcoord     ( vwindow, cellBC, ghost, NULL );
+  CellField ycoord     ( vwindow, cellBC, ghost, NULL );
+  CellField zcoord     ( vwindow, cellBC, ghost, NULL );
+  CellField rhs        ( vwindow, cellBC, ghost, NULL );
+
+  SS::Grid grid( npts, length );
   grid.set_coord<SpatialOps::XDIR>( xcoord );
   grid.set_coord<SpatialOps::YDIR>( ycoord );
   grid.set_coord<SpatialOps::ZDIR>( zcoord );
 
-  const SpatialOps::structured::MemoryWindow xwindow( SpatialOps::structured::get_window_with_ghost<XSideField>(npts,true,true,true) );
-  const SpatialOps::structured::MemoryWindow ywindow( SpatialOps::structured::get_window_with_ghost<YSideField>(npts,true,true,true) );
-  const SpatialOps::structured::MemoryWindow zwindow( SpatialOps::structured::get_window_with_ghost<ZSideField>(npts,true,true,true) );
+  const SS::BoundaryCellInfo xBC = SS::BoundaryCellInfo::build<XSideField>(true,true,true);
+  const SS::BoundaryCellInfo yBC = SS::BoundaryCellInfo::build<YSideField>(true,true,true);
+  const SS::BoundaryCellInfo zBC = SS::BoundaryCellInfo::build<ZSideField>(true,true,true);
+  const SS::MemoryWindow xwindow( SS::get_window_with_ghost(npts,ghost,xBC) );
+  const SS::MemoryWindow ywindow( SS::get_window_with_ghost(npts,ghost,yBC) );
+  const SS::MemoryWindow zwindow( SS::get_window_with_ghost(npts,ghost,zBC) );
 
-  XSideField xflux( xwindow, NULL );
-  YSideField yflux( ywindow, NULL );
-  ZSideField zflux( zwindow, NULL );
+  XSideField xflux( xwindow, xBC, ghost, NULL );
+  YSideField yflux( ywindow, yBC, ghost, NULL );
+  ZSideField zflux( zwindow, zBC, ghost, NULL );
 
   {
     using namespace SpatialOps;

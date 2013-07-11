@@ -43,6 +43,7 @@
 #include <spatialops/structured/MemoryTypes.h>
 #include <spatialops/structured/MemoryWindow.h>
 #include <spatialops/structured/GhostData.h>
+#include <spatialops/structured/BoundaryCellInfo.h>
 #include <spatialops/structured/MemoryPool.h>
 #include <boost/static_assert.hpp>
 
@@ -81,10 +82,6 @@ namespace structured{
    *    this field is associated with.  It also defines whether this
    *    field is on a volume or surface.
    *
-   *  \tparam GhostTraits - The ghost type traits.  Must define an
-   *    enum value \c NGHOST that gives the number of ghost cells for
-   *    this field.
-   *
    *  \tparam T - the underlying datatype (defaults to \c double)
    *
    *  \par Related classes:
@@ -93,7 +90,6 @@ namespace structured{
    *
    *  \par Public Typedefs
    *   - \c field_type - this field's type
-   *   - \c Ghost - the ghost type traits
    *   - \c Location - the location type traits
    *   - \c value_type  - the type of underlying data being stored in this SpatialField
    *   - \c iterator, \c const_iterator - iterators to the elements in this field
@@ -110,6 +106,10 @@ namespace structured{
     const MemoryWindow fieldWindow_;	///< Full representation of the window to the field ( includes ghost cells )
     MemoryWindow interiorFieldWindow_;  ///< Window representation sans ghost cells.
 
+    const BoundaryCellInfo bcInfo_;     ///< information about this field's behavior on a boundary
+    const GhostDataRT ghosts_;          ///< The total number of ghost cells on each face of this field.
+    GhostDataRT validGhosts_;           ///< The number of valid ghost cells on each face of this field.
+
     T* fieldValues_;			///< Values associated with this field in the context of LOCAL_RAM
     T* fieldValuesExtDevice_;           ///< External field pointer ( This pointer will only be valid on the device it was created )
     const bool builtField_;		///< Indicates whether or not we created this field ( we could just be wrapping memory )
@@ -118,8 +118,8 @@ namespace structured{
     unsigned short deviceIndex_;        ///< Indicates which device is this field stored on
 
     //Note: Presently this is assumed to be a collection of GPU based < index, pointer pairs >;
-    //		which is not as general is it likely should be, but GPUs are currently the only external
-    //		device we're interested in supporting.
+    //      which is not as general is it likely should be, but GPUs are currently the only external
+    //      device we're interested in supporting.
     ConsumerMap consumerFieldValues_;	///< Provides the ability to store and track copies of this field consumed on other devices.
     bool hasConsumer_;                  ///< Indicates whether a field has consumers or not
     ConsumerMap myConsumerFieldValues_;	///< Provides the ability to correctly delete/release copies of this field that this field allocated
@@ -139,18 +139,18 @@ namespace structured{
      */
     class ExecMutex {
 #   ifdef ENABLE_THREADS
-        const boost::mutex::scoped_lock lock;
-        inline boost::mutex& get_mutex() const {static boost::mutex m; return m;}
+      const boost::mutex::scoped_lock lock;
+      inline boost::mutex& get_mutex() const {static boost::mutex m; return m;}
 
-        public:
-        ExecMutex() : lock( get_mutex() ) {}
-        ~ExecMutex() {}
+    public:
+      ExecMutex() : lock( get_mutex() ) {}
+      ~ExecMutex() {}
 #   else
-      public:
-        ExecMutex() {
-        }
-        ~ExecMutex() {
-        }
+    public:
+      ExecMutex() {
+      }
+      ~ExecMutex() {
+      }
 #   endif
     };
 #endif
@@ -172,6 +172,9 @@ namespace structured{
      *  \brief Construct a SpatialField
      *  \param window - the MemoryWindow that specifies this field
      *         including ghost cells.
+     *  \param bc information on boundary treatment for this field
+     *  \param ghosts information on ghost cells for this field
+     *  \param fieldValues a pointer to memory to be wrapped by this field
      *  \param mode Storage options.  If InternalStorage then the
      *         fieldValues will be copied into an internal buffer.  If
      *         ExternalStorage then the fieldValues will be stored
@@ -180,8 +183,14 @@ namespace structured{
      *         suggests that InternalStorage is best, since it
      *         protects against memory corruption and inadvertent
      *         deletion of the field's underlying memory.
+     *  \param consumerMemoryType describes where this field lives (e.g., CPU, GPU)
+     *  \param devIdx the identifier for the GPU/accelerator if the field lives
+     *         there. This allows for the case where multiple accelerators are
+     *         on a given node.
      */
     SpatialField( const MemoryWindow& window,
+                  const BoundaryCellInfo& bc,
+                  const GhostDataRT& ghosts,
                   T* const fieldValues,
                   const StorageMode mode = InternalStorage,
                   const MemoryType consumerMemoryType = LOCAL_RAM,
@@ -343,6 +352,8 @@ namespace structured{
 
     bool find_consumer(MemoryType consumerMemoryType, const unsigned short int consumerDeviceIndex) const;
 
+    const BoundaryCellInfo& boundary_info() const{ return bcInfo_; }
+
     const MemoryWindow& window_without_ghost() const {
       return interiorFieldWindow_;
     }
@@ -387,14 +398,24 @@ namespace structured{
     T* field_values(const MemoryType consumerMemoryType = LOCAL_RAM, const unsigned short int consumerDeviceIndex = 0);
     const T* field_values(const MemoryType consumerMemoryType = LOCAL_RAM, const unsigned short int consumerDeviceIndex = 0) const;
 
+    /**
+     * @brief obtain the ghost information for this field
+     */
+    const GhostDataRT& get_ghost_data() const{ return ghosts_; }
+
+    /**
+     * @brief Obtain the information about the valid number of ghosts for this
+     *        field.  Manipulation of fields through nebo assignment operators
+     *        can lead to modification of the number of valid ghost cells.  This
+     *        information is recorded here.
+     */
+    GhostDataRT& get_valid_ghost_data() const{ return validGhosts_; }
+
     unsigned int allocated_bytes() const {
     	return allocatedBytes_;
     }
 
-    unsigned int get_ghost_size() const {
-      return GhostTraits::NGHOST;
-    }
-
+    // jcs needs to be redone/removed
     template<typename NewGhost>
     inline field_type resize_ghost() const {
         typename GhostFromField<MyType>::result typedef OldGhost;
@@ -422,10 +443,13 @@ namespace structured{
         BOOST_STATIC_ASSERT(int(NewGhost::pZ) <= int(OldGhost::pZ));
         BOOST_STATIC_ASSERT(int(NewGhost::bZ) <= int(OldGhost::bZ));
 
-        return MyType(window_with_ghost().template resize_ghost<OldGhost, NewGhost>(),
-		      *this);
+        // jcs should this use "ghosts_" or "validGhosts_" ????
+        const GhostDataRT newGhosts( NewGhost::neg_int_vec(),
+                                     NewGhost::pos_int_vec() );
+        return MyType( window_with_ghost().resize_ghost(ghosts_,newGhosts), *this );
     }
 
+    // jcs needs to be removed
     template<typename NewGhost>
     inline field_type resize_ghost_and_maintain_interior() const {
         typename GhostFromField<MyType>::result typedef OldGhost;
@@ -475,10 +499,20 @@ namespace structured{
         BOOST_STATIC_ASSERT(int(NewGhost::pZ) >= int(Minimum::pZ));
         BOOST_STATIC_ASSERT(int(NewGhost::bZ) >= int(Minimum::bZ));
 
-        return MyType(window_with_ghost().template resize_ghost<OldGhost, NewGhost>(),
-		      *this);
+        const GhostDataRT ghostNew( NewGhost::neg_int_vec(), NewGhost::pos_int_vec() );
+
+//        IntVec plus = ghostNew.get_plus();
+//        if( ghosts_.has_bc(0) ) plus[0] += MyType::Location::BCExtra::x_value();
+//        if( ghosts_.has_bc(1) ) plus[1] += MyType::Location::BCExtra::y_value();
+//        if( ghosts_.has_bc(2) ) plus[2] += MyType::Location::BCExtra::z_value();
+//        ghostNew.set_plus( plus );
+
+        // jcs should this use "ghosts_" or "validGhosts_" ????
+        const MemoryWindow w = window_with_ghost().resize_ghost( ghosts_, ghostNew );
+        return MyType( w, *this );
     }
 
+    // jcs remove this
     template<typename Shift>
     inline field_type shift() const {
         typename GhostFromField<MyType>::result typedef OldGhost;
@@ -506,10 +540,12 @@ namespace structured{
         BOOST_STATIC_ASSERT(Shift::Z > 0 ? ((int)(Shift::Z) <= (int)(OldGhost::pZ)) : true);
         BOOST_STATIC_ASSERT(Shift::Z > 0 ? ((int)(Shift::Z) <= (int)(OldGhost::bZ)) : true);
 
-        return MyType(window_with_ghost().template shift<Shift>(),
-		      *this);
+        return MyType( window_with_ghost().shift(Shift::int_vec()), *this );
+//        return MyType(window_with_ghost().template shift<Shift>(),
+//		      *this);
     }
 
+    // jcs remove this
     template<typename Shift>
     inline field_type shift_and_maintain_interior() const {
 
@@ -531,11 +567,13 @@ namespace structured{
         return *this;
     }
 
+    // jcs remove this
     template<typename NewGhost, typename Shift>
     inline field_type resize_ghost_and_shift() const {
         return resize_ghost<NewGhost>().template shift<Shift>();
     }
 
+    // jcs remove this
     template<typename NewGhost, typename Shift>
     inline field_type resize_ghost_and_shift_and_maintain_interior() const {
         return resize_ghost_and_maintain_interior<NewGhost>().template shift_and_maintain_interior<Shift>();
@@ -551,11 +589,16 @@ namespace structured{
 template<typename Location, typename GhostTraits, typename T>
 SpatialField<Location, GhostTraits, T>::
 SpatialField( const MemoryWindow& window,
+              const BoundaryCellInfo& bc,
+              const GhostDataRT& ghost,
               T* const fieldValues,
               const StorageMode mode,
               const MemoryType mtype,
               const unsigned short int devIdx )
     : fieldWindow_(window), interiorFieldWindow_(window), // reset with correct info later
+      bcInfo_( bc ),
+      ghosts_     ( ghost ),
+      validGhosts_( ghost ),
       fieldValues_( ( mtype == LOCAL_RAM ) ?
                     ( ( mode == ExternalStorage) ? fieldValues : (NULL) )
                     : ( NULL ) ),
@@ -573,20 +616,30 @@ SpatialField( const MemoryWindow& window,
 #     endif
 { //InteriorStorage => we build a new field
   //Exterior storage => we wrap T*
-  IntVec ext = window.extent();
-  IntVec ofs = window.offset();
 
-  for (size_t i = 0; i < 3; ++i) {
-    if (ext[i] > 1) {
-      ext[i] -= Ghost::NGhostMinus::int_vec()[i] + Ghost::NGhostPlus::int_vec()[i];
-      ofs[i] += Ghost::NGhostMinus::int_vec()[i];
+# ifndef NDEBUG
+  // ensure that we have a consistent BoundaryCellInfo object
+  for( int i=0; i<3; ++i ){
+    if( bcInfo_.has_bc(i) ){
+      assert( bcInfo_.num_extra(i) == Location::BCExtra::int_vec()[i] );
     }
   }
+# endif // NDEBUG
+
+  // set the interior MemoryWindow
+  IntVec ext = window.extent();
+  IntVec ofs = window.offset();
+  for (size_t i = 0; i < 3; ++i) {
+    if (ext[i] > 1) {
+      ext[i] -= ghosts_.get_minus(i) + ghosts_.get_plus(i);
+      ofs[i] += ghosts_.get_minus(i);
+    }
+  }
+  interiorFieldWindow_ = MemoryWindow( window.glob_dim(), ofs, ext );
 
   //Determine raw byte count -- this is sometimes required for external device allocation.
   allocatedBytes_ = sizeof(T) * ( window.glob_npts() );
 
-  interiorFieldWindow_ = MemoryWindow( window.glob_dim(), ofs, ext, window.has_bc(0), window.has_bc(1), window.has_bc(2) );
   switch ( mtype ) {
       case LOCAL_RAM:
 	if( mode == InternalStorage ){
@@ -630,6 +683,9 @@ template<typename Location, typename GhostTraits, typename T>
 SpatialField<Location, GhostTraits, T>::SpatialField( const SpatialField& other )
 : fieldWindow_(other.fieldWindow_),
   interiorFieldWindow_(other.interiorFieldWindow_),
+  bcInfo_( other.bcInfo_ ),
+  ghosts_( other.ghosts_ ),
+  validGhosts_( other.validGhosts_ ),
   fieldValues_(other.fieldValues_),
   fieldValuesExtDevice_(other.fieldValuesExtDevice_),
   builtField_(false),
@@ -650,6 +706,9 @@ SpatialField<Location, GhostTraits, T>::
 SpatialField( const MemoryWindow& window, const SpatialField& other )
 : fieldWindow_(window),
   interiorFieldWindow_( other.interiorFieldWindow_ ), // This should not be used!
+  bcInfo_( other.bcInfo_ ),
+  ghosts_( other.ghosts_ ),
+  validGhosts_( other.ghosts_ ),
   fieldValues_(other.fieldValues_),
   fieldValuesExtDevice_(other.fieldValuesExtDevice_),
   builtField_(false),
@@ -1044,7 +1103,7 @@ template<typename Location, typename GhostTraits, typename T>
 typename SpatialField<Location, GhostTraits, T>::const_iterator
 SpatialField<Location,GhostTraits, T>::end() const
 {
-  // We can allow constant interation of the field even if its not local,
+  // We can allow constant iteration of the field even if its not local,
   // so long as it has a local consumer field allocated
   if( memType_ == LOCAL_RAM || fieldValues_ != NULL ){
     int extent = fieldWindow_.extent(0) * fieldWindow_.extent(1) * fieldWindow_.extent(2);

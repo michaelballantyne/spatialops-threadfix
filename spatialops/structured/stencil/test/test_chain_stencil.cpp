@@ -51,38 +51,46 @@ namespace po = boost::program_options;
 
 template<typename FirstOpType, typename SecondOpType, typename SrcType, typename ItmdType, typename DestType>
  inline bool test_stencil_chain(OperatorDatabase & opdb, IntVec npts, bool bc[]) {
-    /* basic definitions: */
-    const MemoryWindow mwSrc = get_window_with_ghost<SrcType>(npts, bc[0], bc[1], bc[2]);
-    const MemoryWindow mwItmd = get_window_with_ghost<ItmdType>(npts, bc[0], bc[1], bc[2]);
-    const MemoryWindow mwDest = get_window_with_ghost<DestType>(npts, bc[0], bc[1], bc[2]);
-    SrcType src(mwSrc, NULL);
-    ItmdType itmd(mwItmd, NULL);
-    DestType ref(mwDest, NULL);
-    DestType test(mwDest, NULL);
+  /* basic definitions: */
+  const GhostDataRT srcGhost (1);
+  const GhostDataRT itmGhost (1);
+  const GhostDataRT destGhost(1);
 
-    /* initialize source field / zero out result fields: */
-    initialize_field(src);
-    itmd <<= 0.0;
-    ref <<= 0.0;
-    test <<= 0.0;
+  const BoundaryCellInfo  srcbc = BoundaryCellInfo::build<SrcType >(bc[0],bc[1],bc[2]);
+  const BoundaryCellInfo  itmbc = BoundaryCellInfo::build<ItmdType>(bc[0],bc[1],bc[2]);
+  const BoundaryCellInfo destbc = BoundaryCellInfo::build<DestType>(bc[0],bc[1],bc[2]);
 
-    /* get first operator */
-    typename OperatorTypeBuilder<FirstOpType, SrcType, ItmdType>::type typedef FirstOp;
-    const FirstOp * const firstOp = opdb.retrieve_operator<FirstOp>();
+  const MemoryWindow mwSrc  = get_window_with_ghost(npts, srcGhost ,  srcbc);
+  const MemoryWindow mwItmd = get_window_with_ghost(npts, itmGhost ,  itmbc);
+  const MemoryWindow mwDest = get_window_with_ghost(npts, destGhost, destbc);
+  SrcType   src( mwSrc,   srcbc,  srcGhost, NULL );
+  ItmdType itmd( mwItmd,  itmbc,  itmGhost, NULL );
+  DestType  ref( mwDest, destbc, destGhost, NULL );
+  DestType test( mwDest, destbc, destGhost, NULL );
 
-    /* get second operator: */
-    typename OperatorTypeBuilder<SecondOpType, ItmdType, DestType>::type typedef SecondOp;
-    const SecondOp * const secondOp = opdb.retrieve_operator<SecondOp>();
+  /* initialize source field / zero out result fields: */
+  initialize_field(src);
+  itmd <<= 0.0;
+  ref <<= 0.0;
+  test <<= 0.0;
 
-    /* run reference: */
-    itmd <<= (*firstOp)(src);
-    ref <<= (*secondOp)(itmd);
+  /* get first operator */
+  typename OperatorTypeBuilder<FirstOpType, SrcType, ItmdType>::type typedef FirstOp;
+  const FirstOp * const firstOp = opdb.retrieve_operator<FirstOp>();
 
-    /* run operator: */
-    test <<= (*secondOp)((*firstOp)(src));
+  /* get second operator: */
+  typename OperatorTypeBuilder<SecondOpType, ItmdType, DestType>::type typedef SecondOp;
+  const SecondOp * const secondOp = opdb.retrieve_operator<SecondOp>();
 
-    return interior_display_fields_compare(ref, test, false, false);
- }
+  /* run reference: */
+  itmd <<= (*firstOp)(src);
+  ref <<= (*secondOp)(itmd);
+
+  /* run operator: */
+  test <<= (*secondOp)((*firstOp)(src));
+
+  return interior_display_fields_compare(ref, test, false, false);
+}
 
 template<typename FirstOpType, typename SecondOpType, typename SrcType, typename ItmdType, typename DestType>
  inline void test_stencil_chain_with_status(TestHelper & status, OperatorDatabase & opdb, IntVec npts, bool bc[], string const & str) {

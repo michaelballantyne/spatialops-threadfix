@@ -45,7 +45,100 @@
 #include <sstream>
 
 namespace SpatialOps{
-  namespace structured{
+namespace structured{
+
+
+  /**
+   * \class GhostDataRT
+   * \date July, 2013
+   * \author James C. Sutherland
+   * \brief Holds information about the number of ghost cells on each side of the domain
+   */
+  class GhostDataRT
+  {
+    IntVec minus_, plus_;
+
+  public:
+
+    /**
+     * @brief Construct a GhostData
+     * @param nx Number of ghost cells on the -x face
+     * @param px Number of ghost cells on the +x face
+     * @param ny Number of ghost cells on the -y face
+     * @param py Number of ghost cells on the +y face
+     * @param nz Number of ghost cells on the -z face
+     * @param pz Number of ghost cells on the +z face
+     */
+    GhostDataRT( const int nx, const int px,
+                 const int ny, const int py,
+                 const int nz, const int pz );
+
+    /**
+     * @brief Construct a GhostData
+     * @param minus Number of ghost cells on the (-) x, y, and z faces
+     * @param plus  Number of ghost cells on the (+) x, y, and z faces
+     */
+    GhostDataRT( const IntVec& minus,
+                 const IntVec& plus );
+
+    /**
+     * \brief construct a GhostData with the same number of ghost cells on each face
+     * @param n the number of ghost cells on each face (defaults to zero)
+     * @param bcx (defaults false) true if there is a physical boundary on the (+x) face
+     * @param bcy (defaults false) true if there is a physical boundary on the (+y) face
+     * @param bcz (defaults false) true if there is a physical boundary on the (+z) face
+     */
+    GhostDataRT( const int n=0 );
+
+    GhostDataRT( const GhostDataRT& );
+    GhostDataRT& operator=( const GhostDataRT& );
+
+    /**
+     * @brief obtain the IntVec containing the number of ghost cells on the (-) faces
+     */
+    inline IntVec get_minus() const{ return minus_; }
+
+    /**
+     * @brief obtain the number of ghost cells on the requested (-) face (0=x, 1=y, 2=z)
+     */
+    inline int get_minus( const int i ) const{ return minus_[i]; }
+
+    /**
+     * @brief obtain the IntVec containing the number of ghost cells on the (+) faces
+     */
+    inline IntVec get_plus() const{ return plus_; }
+
+    /**
+     * @brief obtain the number of ghost cells on the requested (+) face (0=x, 1=y, 2=z)
+     */
+    inline int get_plus( const int i ) const{ return plus_[i]; }
+
+    /**
+     * @brief set the number of ghost cells on the requested (-) face (0=x, 1=y, 2=z)
+     */
+    inline void set_minus( const IntVec& minus ){ minus_ = minus; }
+
+    /**
+     * @brief set the number of ghost cells on the requested (+) face (0=x, 1=y, 2=z)
+     */
+    inline void set_plus( const IntVec& plus ){ plus_ = plus; }
+
+    GhostDataRT  operator+ ( const GhostDataRT& ) const;
+    GhostDataRT& operator+=( const GhostDataRT& );
+    GhostDataRT  operator- ( const GhostDataRT& ) const;
+    GhostDataRT& operator-=( const GhostDataRT& );
+  };
+
+  std::ostream& operator<<( std::ostream&, const GhostDataRT& );
+
+
+
+
+
+
+
+
+
 
     /**
      *  \struct GhostData

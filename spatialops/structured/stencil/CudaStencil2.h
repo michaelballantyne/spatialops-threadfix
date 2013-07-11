@@ -52,7 +52,7 @@ namespace SpatialOps {
         IntVec s2OFF = Extents::Src2Offset::int_vec();
 
         IntVec wEX = wdest.extent();
-        IntVec dEX = wEX + Extents::DestOffset::int_vec() + wdest.has_bc() * Extents::DestOffset::int_vec();
+        IntVec dEX = wEX + Extents::DestOffset::int_vec() + dest.get_ghost_data().has_bc() * Extents::DestOffset::int_vec();
         IntVec sEX = ws.glob_dim();
 
         //Call interface function -- hack to avoid nvcc meta-template failures

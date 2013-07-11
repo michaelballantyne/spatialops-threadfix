@@ -29,6 +29,7 @@
 #include <spatialops/structured/ExternalAllocators.h>
 #include <spatialops/structured/IndexTriplet.h>
 #include <spatialops/structured/MemoryPool.h>
+#include <spatialops/structured/GhostData.h>
 
 #include <stack>
 #include <map>
@@ -230,6 +231,8 @@ public:
   template<typename FieldT>
   inline static SpatFldPtr<FieldT>
   get_from_window( const structured::MemoryWindow& window,
+                   const structured::BoundaryCellInfo& bc,
+                   const structured::GhostDataRT&,
                    const MemoryType mtype = LOCAL_RAM,
                    const unsigned short int deviceIndex = 0 );
 
@@ -250,11 +253,16 @@ public:
   {
     using namespace structured;
     const MemoryWindow& ws = f.window_with_ghost();
-    const MemoryWindow w( ws.glob_dim() + Subtract< typename FieldT::Location::BCExtra, typename ProtoT::Location::BCExtra >::result::int_vec() * ws.has_bc(),
+    GhostDataRT gs = f.get_ghost_data();
+
+    const BoundaryCellInfo bc = BoundaryCellInfo::build<FieldT>( f.boundary_info().has_bc() );
+
+    const IntVec inc = bc.has_bc() * Subtract< typename FieldT::Location::BCExtra, typename ProtoT::Location::BCExtra >::result::int_vec();
+    const MemoryWindow w( ws.glob_dim() + inc,
                           ws.offset(),
-                          ws.extent()   + Subtract< typename FieldT::Location::BCExtra, typename ProtoT::Location::BCExtra >::result::int_vec() * ws.has_bc(),
-                          ws.has_bc(0), ws.has_bc(1), ws.has_bc(2) );
-    return get_from_window<FieldT>(w,mtype,deviceIndex);
+                          ws.extent()   + inc );
+
+    return get_from_window<FieldT>(w,bc,gs,mtype,deviceIndex);
   }
 
 
@@ -549,6 +557,8 @@ inline
 SpatFldPtr<FieldT>
 SpatialFieldStore::
 get_from_window( const structured::MemoryWindow& window,
+                 const structured::BoundaryCellInfo& bc,
+                 const structured::GhostDataRT& ghost,
                  const MemoryType mtype,
                  const unsigned short int deviceIndex )
 {
@@ -558,8 +568,7 @@ get_from_window( const structured::MemoryWindow& window,
 #endif
     const structured::MemoryWindow mw( window.extent(),
                                        structured::IntVec(0,0,0),
-                                       window.extent(),
-                                       window.has_bc(0), window.has_bc(1), window.has_bc(2) );
+                                       window.extent() );
     const size_t npts = mw.glob_npts();
 
   switch (mtype) {
@@ -569,12 +578,12 @@ get_from_window( const structured::MemoryWindow& window,
     AtomicT* iftmp = fnew;
     for( size_t i=0; i<npts; ++i, ++iftmp )  *iftmp = 0.0;
 #   endif
-    return SpatFldPtr<FieldT>( new FieldT(mw,fnew,structured::ExternalStorage), true );
+    return SpatFldPtr<FieldT>( new FieldT(mw,bc,ghost,fnew,structured::ExternalStorage), true );
   }
 #ifdef ENABLE_CUDA
   case EXTERNAL_CUDA_GPU: {
     AtomicT* fnew = structured::Pool<AtomicT>::self().get(mtype, npts);
-    return SpatFldPtr<FieldT>( new FieldT(window, fnew, structured::ExternalStorage, mtype,
+    return SpatFldPtr<FieldT>( new FieldT(window, ghost, fnew, structured::ExternalStorage, mtype,
             deviceIndex ), true );
   }
 #endif

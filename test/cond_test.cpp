@@ -41,12 +41,15 @@ int main()
 
   typedef SVolField Field;
   
-  const MemoryWindow window( get_window_with_ghost<Field>(IntVec(nx,ny,nz),true,true,true) );
+  const int nghost = 1;
+  const GhostDataRT ghost(nghost);
+  const BoundaryCellInfo bc = BoundaryCellInfo::build<Field>(true,true,true);
+  const MemoryWindow window( get_window_with_ghost(IntVec(nx,ny,nz),ghost,bc) );
 
-  Field a( window, NULL );
-  Field b( window, NULL );
-  Field c( window, NULL );
-  Field d( window, NULL );
+  Field a( window, bc, ghost, NULL );
+  Field b( window, bc, ghost, NULL );
+  Field c( window, bc, ghost, NULL );
+  Field d( window, bc, ghost, NULL );
   
   std::vector<Field> vec = std::vector<Field>();
 

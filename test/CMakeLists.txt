@@ -5,10 +5,6 @@ set( libs spatialops spatialops-structured spatialops-stencil ${TPL_LIBRARIES} )
 nebo_add_executable( gpu_test GPUtest.cpp )
 target_link_libraries( gpu_test ${libs} )
 
-nebo_add_executable( simple_field SimpleFieldTest.cpp )
-target_link_libraries( simple_field ${libs} )
-add_test( simple_field simple_field )
-
 nebo_add_executable( field_exprs testFieldExprs.cpp )
 target_link_libraries( field_exprs ${libs} )
 add_test( field_exprs field_exprs )

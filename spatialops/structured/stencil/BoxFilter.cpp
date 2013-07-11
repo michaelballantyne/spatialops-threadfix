@@ -47,8 +47,7 @@ namespace structured{
         for( size_t i=0; i<ihi; ++i ){
           fields.push_back( FieldT( MemoryWindow( ws.glob_dim(),
                                                   ws.offset()+IntVec(i,j,k),
-                                                  ws.extent()-of,
-                                                  ws.has_bc(0), ws.has_bc(1), ws.has_bc(2) ),
+                                                  ws.extent()-of ),
 				    src) );
         }
       }
@@ -79,10 +78,8 @@ namespace structured{
     // create the destination field memory window
     FieldT d( MemoryWindow( w_dest.glob_dim(),
                             w_dest.offset()+of,
-                            w_dest.extent()+ex,
-                            w_dest.has_bc(0), w_dest.has_bc(1), w_dest.has_bc(2) ),
-              dest.field_values(),
-              ExternalStorage );
+                            w_dest.extent()+ex ),
+              dest );
 
     const double fac = 1.0 / double(srcFields_.size());
     typename FieldT::iterator id=d.begin();

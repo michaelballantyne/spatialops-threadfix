@@ -19,10 +19,12 @@ bool run_test( const IntVec& dim )
   const bool bc[3] = {false,false,false};
   const std::vector<double> length(3,1.0);
 
-  MemoryWindow mw = get_window_with_ghost<SVolField>( dim, bc[0], bc[1], bc[2] );
+  const GhostDataRT ghost(1);
+  const BoundaryCellInfo bcinfo = BoundaryCellInfo::build<SVolField>(bc[0],bc[1],bc[2]);
+  const MemoryWindow mw = get_window_with_ghost( dim, ghost, bcinfo );
 
-  SVolField    f( mw, NULL );
-  SVolField fbar( mw, NULL );
+  SVolField    f( mw, bcinfo, ghost, NULL );
+  SVolField fbar( mw, bcinfo, ghost, NULL );
 
   Grid grid(dim,length);
   grid.set_coord<DirT>(f);

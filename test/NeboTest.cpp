@@ -67,13 +67,16 @@ int main( int iarg, char* carg[] )
 
     typedef SVolField Field;
 
-    const MemoryWindow window( get_window_with_ghost<Field>(IntVec(nx,ny,nz),bcplus[0],bcplus[1],bcplus[2]) );
+    const int nghost = 1;
+    const GhostDataRT ghost(nghost);
+    const BoundaryCellInfo bcinfo = BoundaryCellInfo::build<Field>(bcplus[0],bcplus[1],bcplus[2]);
+    const MemoryWindow window( get_window_with_ghost(IntVec(nx,ny,nz),ghost,bcinfo) );
 
-    Field input1( window, NULL );
-    Field input2( window, NULL );
-    Field input3( window, NULL );
-    Field test( window, NULL );
-    Field ref( window, NULL );
+    Field input1( window, bcinfo, ghost, NULL );
+    Field input2( window, bcinfo, ghost, NULL );
+    Field input3( window, bcinfo, ghost, NULL );
+    Field   test( window, bcinfo, ghost, NULL );
+    Field    ref( window, bcinfo, ghost, NULL );
 
     const int total = nx * ny * nz;
 

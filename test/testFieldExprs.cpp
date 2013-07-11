@@ -17,9 +17,14 @@ template< typename FieldT >
 bool test( const SS::IntVec dim )
 {
   TestHelper status(false);
-  const SS::MemoryWindow w( SS::get_window_with_ghost<FieldT>(dim,true,true,true) );
-  FieldT f1(w,NULL), f2(w,NULL), f3(w,NULL), f4(w,NULL);
-  FieldT x(w,NULL);
+  const SS::GhostDataRT ghost(1);
+  const SS::BoundaryCellInfo bc = SS::BoundaryCellInfo::build<FieldT>(true,true,true);
+  const SS::MemoryWindow w( SS::get_window_with_ghost(dim,ghost,bc) );
+  FieldT f1(w,bc,ghost,NULL),
+         f2(w,bc,ghost,NULL),
+         f3(w,bc,ghost,NULL),
+         f4(w,bc,ghost,NULL),
+          x(w,bc,ghost,NULL);
 
   const SS::IntVec& globDim = w.glob_dim();
   const double dx = 3.1415 / (globDim[0]-1);
@@ -94,8 +99,10 @@ bool test( const SS::IntVec dim )
                                // Particle stuff doesn't compile
                                // otherwise...
 
+  const SS::BoundaryCellInfo pbc( SS::BoundaryCellInfo::build<SP::ParticleField>(bc.has_bc()) );
+  const SS::GhostDataRT pg(0);
   const SS::MemoryWindow pw( SpatialOps::structured::IntVec(100,1,1) );
-  SP::ParticleField pf1(pw,NULL), pf2(pw,NULL), pf3(pw,NULL);
+  SP::ParticleField pf1(pw,pbc,pg,NULL), pf2(pw,pbc,pg,NULL), pf3(pw,pbc,pg,NULL);
   pf1 <<= 1.0;
   pf3 <<= 2.0;
   pf2 <<= pf1 * pf3;

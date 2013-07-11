@@ -1,4 +1,5 @@
 set( src
+     GhostData.cpp
      Grid.cpp
      MemoryWindow.cpp
     )
@@ -23,6 +24,7 @@ add_subdirectory( stencil )
 target_link_libraries( spatialops-structured spatialops-stencil )
 
 install( FILES
+  BoundaryCellInfo.h
   FVStaggeredBCTools.h
   FVStaggeredFieldTypes.h
   FVTools.h

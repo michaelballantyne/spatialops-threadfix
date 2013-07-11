@@ -29,10 +29,10 @@
 # include <sstream>
 
 #include <spatialops/SpatialOpsConfigure.h>
-#include <spatialops/SpatialOpsDefs.h>
 
 #include <spatialops/structured/IntVec.h>
-#include <spatialops/structured/IndexTriplet.h>
+#include <spatialops/structured/GhostData.h>
+#include <spatialops/structured/IndexTriplet.h> // jcs remove...
 
 #ifndef NDEBUG
 # include <cassert>
@@ -69,7 +69,6 @@ namespace structured{
     IntVec nptsGlob_;   ///< The global number of points
     IntVec offset_;     ///< The offset for this window
     IntVec extent_;     ///< The extent of this window
-    IntVec bc_;         ///< Indicates presence of a physical boundary on the + side of the window
 
   public:
 
@@ -105,6 +104,10 @@ namespace structured{
                   const bool bcx,
                   const bool bcy,
                   const bool bcz );
+
+    MemoryWindow( const IntVec& npts,
+                  const IntVec& offset,
+                  const IntVec& extent );
 
     /**
      *  \brief construct a MemoryWindow object where there is no "window"
@@ -171,10 +174,7 @@ namespace structured{
                                           stdExtent[1] + (location[1] < nextra[1] ? 1 : 0),
                                           stdExtent[2] + (location[2] < nextra[2] ? 1 : 0) );
 
-        return MemoryWindow( nptsGlob_, baseOffset, baseExtent,
-                             location[0]==splitPattern[0]-1 ? bc_[0] : false,
-                             location[1]==splitPattern[1]-1 ? bc_[1] : false,
-                             location[2]==splitPattern[2]-1 ? bc_[2] : false );
+        return MemoryWindow( nptsGlob_, baseOffset, baseExtent );
     };
 
     /**
@@ -185,32 +185,39 @@ namespace structured{
      *
      *  \return new MemoryWindow reduced from having oldNeg/oldPos ghost cells (and extra cells along boundary conditions) to having newNeg/newPos ghost cells on each face.
      */
-    template<typename OldGhost, typename NewGhost>
-    inline MemoryWindow
-    resize_ghost() const {
-        return MemoryWindow(nptsGlob_,
-                            offset_ + OldGhost::offset()    - NewGhost::offset(),
-                            extent_ - OldGhost::extent(bc_) + NewGhost::extent(bc_),
-                            bc_[0],
-                            bc_[1],
-                            bc_[2]);
+    // jcs remove:
+//    template<typename OldGhost, typename NewGhost>
+//    inline MemoryWindow
+//    resize_ghost() const {
+//        return MemoryWindow(nptsGlob_,
+//                            offset_ + OldGhost::offset()    - NewGhost::offset(),
+//                            extent_ - OldGhost::extent(IntVec(0,0,0)) + NewGhost::extent(IntVec(0,0,0)) );
+//    }
+    // jcs remove:
+    inline MemoryWindow resize_ghost( const GhostDataRT& oldGhost, const GhostDataRT& newGhost ) const{
+      const IntVec minusDiff = oldGhost.get_minus() - newGhost.get_minus();
+      return MemoryWindow( nptsGlob_,
+                           offset_ + minusDiff ,
+                           extent_ - minusDiff - oldGhost.get_plus() + newGhost.get_plus() );
     }
 
     /**
      *  \brief shifts/moves the MemoryWindow by given amounts.
      *
-     *  \param size is an IndexTriplet that specifies how much to shift/move the memory window.
+     *  \param shft is an IntVec that specifies how much to shift/move the memory window.
      *
      *  \return new MemoryWindow moved by size.
      */
+    // jcs remove
     template<typename IndexTriplet>
     inline MemoryWindow shift() const {
         return MemoryWindow(nptsGlob_,
                             offset_ + IndexTriplet::int_vec(),
-                            extent_,
-                            bc_[0],
-                            bc_[1],
-                            bc_[2]);
+                            extent_ );
+    }
+    // jcs remove
+    inline MemoryWindow shift( const IntVec& shft ) const {
+        return MemoryWindow( nptsGlob_, offset_+shft, extent_ );
     }
 
     /**
@@ -244,8 +251,7 @@ namespace structured{
      *         window), obtain the ijk index in the global memory
      *         space.
      */
-    inline IntVec ijk_index_from_local( const int loc ) const
-    {
+    inline IntVec ijk_index_from_local( const int loc ) const{
       return flat_to_ijk(extent_,loc);
     }
 
@@ -270,34 +276,18 @@ namespace structured{
     inline const IntVec& glob_dim() const{ return nptsGlob_; }
 
     /**
-     * \brief Query if there is a physical BC on the + side of this window in the given direction.
-     * @param i The direction: (x,y,z) = (0,1,2)
-     * @return true if a BC is present on the + side of this window, false otherwise.
-     */
-    inline bool has_bc( const size_t i ) const{ return bc_[i]; }
-
-    /**
-     * \brief Obtain an IntVec indicating the presence of a physical BC
-     *        (1=present, 0=not present) on each + side of this window.
-     * @return IntVec indicating the presence of a BC on the + side of this window.
-     */
-    inline const IntVec& has_bc() const{ return bc_; }
-
-    /**
      * \brief compare two MemoryWindows for equality
      */
     inline bool operator==( const MemoryWindow& w ) const{
       return (nptsGlob_ == w.nptsGlob_) &&
              (extent_   == w.extent_  ) &&
-             (offset_   == w.offset_  ) &&
-             (bc_       == w.bc_      );
+             (offset_   == w.offset_  );
     }
 
     inline bool operator!=( const MemoryWindow& w ) const{
       return (nptsGlob_ != w.nptsGlob_) ||
              (extent_   != w.extent_  ) ||
-             (offset_   != w.offset_  ) ||
-             (bc_       != w.bc_      );
+             (offset_   != w.offset_  );
     }
 
     /**
@@ -307,8 +297,7 @@ namespace structured{
     inline std::string print() const {
       std::stringstream s;
       s << "Offset: " << offset_ << std::endl
-        << "Extent: " << extent_ << std::endl
-        << "BC :    " << bc_     << std::endl;
+        << "Extent: " << extent_ << std::endl;
       return s.str();
     }
 
@@ -501,11 +490,11 @@ namespace structured{
       int xyExtent_;
   };
 
-  template<typename FieldType>
-  inline FieldIterator<FieldType> operator+(int change,
-                                            FieldIterator<FieldType> const & iterator) {
-      return iterator + change;
-  };
+//  template<typename FieldType>
+//  inline FieldIterator<FieldType> operator+(int change,
+//                                            FieldIterator<FieldType> const & iterator) {
+//      return iterator + change;
+//  };
 
   template<typename FieldType>
     class ConstFieldIterator : public std::iterator<std::random_access_iterator_tag, typename FieldType::value_type> {
@@ -675,11 +664,11 @@ namespace structured{
       int xyExtent_;
   };
 
-  template<typename FieldType>
-  inline ConstFieldIterator<FieldType> operator+(int change,
-                                                 ConstFieldIterator<FieldType> const & iterator) {
-      return iterator + change;
-  };
+//  template<typename FieldType>
+//  inline ConstFieldIterator<FieldType> operator+(int change,
+//                                                 ConstFieldIterator<FieldType> const & iterator) {
+//      return iterator + change;
+//  };
 
 } // namespace structured
 } // namespace SpatialOps

@@ -54,7 +54,7 @@ IntVec s3OFF = Extents::Src3Offset::int_vec();
 IntVec s4OFF = Extents::Src4Offset::int_vec();
 
 IntVec wEX = wdest.extent();
-IntVec dEX = wEX + Extents::DestOffset::int_vec() + wdest.has_bc() * Extents::DestOffset::int_vec();
+IntVec dEX = wEX + Extents::DestOffset::int_vec() + dest.get_ghost_data().has_bc() * Extents::DestOffset::int_vec();
 IntVec sEX = ws.glob_dim();
 
 //Call interface function -- hack to avoid nvcc meta-template failures

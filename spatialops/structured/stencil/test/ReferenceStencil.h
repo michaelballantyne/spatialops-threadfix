@@ -285,30 +285,21 @@ namespace structured {
 
         const MemoryWindow wd(wdest.glob_dim(),
                               wdest.offset() + Extents::DestOffset::int_vec(),
-                              wdest.extent() + Extents::DestExtent::int_vec() + wdest.has_bc() * Extents::DestExtentBC::int_vec(),
-                              wdest.has_bc(0),
-                              wdest.has_bc(1),
-                              wdest.has_bc(2));
+                              wdest.extent() + Extents::DestExtent::int_vec() + dest.boundary_info().has_bc() * Extents::DestExtentBC::int_vec() );
         const MemoryWindow ws1(wsrc.glob_dim(),
                                wsrc.offset() + Extents::Src1Offset::int_vec(),
-                               wsrc.extent() + Extents::Src1Extent::int_vec() + wsrc.has_bc() * Extents::Src1ExtentBC::int_vec(),
-                               wsrc.has_bc(0),
-                               wsrc.has_bc(1),
-                               wsrc.has_bc(2));
+                               wsrc.extent() + Extents::Src1Extent::int_vec() + src.boundary_info().has_bc() * Extents::Src1ExtentBC::int_vec() );
         const MemoryWindow ws2(wsrc.glob_dim(),
                                wsrc.offset() + Extents::Src2Offset::int_vec(),
-                               wsrc.extent() + Extents::Src2Extent::int_vec() + wsrc.has_bc() * Extents::Src2ExtentBC::int_vec(),
-                               wsrc.has_bc(0),
-                               wsrc.has_bc(1),
-                               wsrc.has_bc(2));
+                               wsrc.extent() + Extents::Src2Extent::int_vec() + src.boundary_info().has_bc() * Extents::Src2ExtentBC::int_vec() );
 
 #       ifndef NDEBUG
             assert(ws1.extent() == ws2.extent() && ws1.extent() == wd.extent());
 #       endif
 
-              DestType d(wd, dest.field_values(), ExternalStorage);
-        const SrcType s1(ws1, src);
-        const SrcType s2(ws2, src);
+              DestType d(wd, dest);
+        const SrcType s1(ws1,src);
+        const SrcType s2(ws2,src);
 
         typename DestType::iterator id = d.begin();
         typename DestType::iterator ide = d.end();
@@ -332,49 +323,37 @@ namespace structured {
     {
         RefStencil4Detail::ExtentsAndOffsets<SrcType, DestType> typedef Extents;
 
+        const GhostDataRT&  srcGhost =  src.get_ghost_data();
+        const GhostDataRT& destGhost = dest.get_ghost_data();
+
         const MemoryWindow & wsrc = src.window_with_ghost();
         const MemoryWindow & wdest = dest.window_with_ghost();
 
         const MemoryWindow wd(wdest.glob_dim(),
                               wdest.offset() + Extents::DestOffset::int_vec(),
-                              wdest.extent() + Extents::DestExtent::int_vec() + wdest.has_bc() * Extents::DestExtentBC::int_vec(),
-                              wdest.has_bc(0),
-                              wdest.has_bc(1),
-                              wdest.has_bc(2));
+                              wdest.extent() + Extents::DestExtent::int_vec() + dest.boundary_info().has_bc() * Extents::DestExtentBC::int_vec() );
         const MemoryWindow ws1(wsrc.glob_dim(),
                                wsrc.offset() + Extents::Src1Offset::int_vec(),
-                               wsrc.extent() + Extents::Src1Extent::int_vec() + wsrc.has_bc() * Extents::Src1ExtentBC::int_vec(),
-                               wsrc.has_bc(0),
-                               wsrc.has_bc(1),
-                               wsrc.has_bc(2));
+                               wsrc.extent() + Extents::Src1Extent::int_vec() + src.boundary_info().has_bc() * Extents::Src1ExtentBC::int_vec()  );
         const MemoryWindow ws2(wsrc.glob_dim(),
                                wsrc.offset() + Extents::Src2Offset::int_vec(),
-                               wsrc.extent() + Extents::Src2Extent::int_vec() + wsrc.has_bc() * Extents::Src2ExtentBC::int_vec(),
-                               wsrc.has_bc(0),
-                               wsrc.has_bc(1),
-                               wsrc.has_bc(2));
+                               wsrc.extent() + Extents::Src2Extent::int_vec() + src.boundary_info().has_bc() * Extents::Src2ExtentBC::int_vec() );
         const MemoryWindow ws3(wsrc.glob_dim(),
                                wsrc.offset() + Extents::Src3Offset::int_vec(),
-                               wsrc.extent() + Extents::Src3Extent::int_vec() + wsrc.has_bc() * Extents::Src3ExtentBC::int_vec(),
-                               wsrc.has_bc(0),
-                               wsrc.has_bc(1),
-                               wsrc.has_bc(2));
+                               wsrc.extent() + Extents::Src3Extent::int_vec() + src.boundary_info().has_bc() * Extents::Src3ExtentBC::int_vec() );
         const MemoryWindow ws4(wsrc.glob_dim(),
                                wsrc.offset() + Extents::Src4Offset::int_vec(),
-                               wsrc.extent() + Extents::Src4Extent::int_vec() + wsrc.has_bc() * Extents::Src4ExtentBC::int_vec(),
-                               wsrc.has_bc(0),
-                               wsrc.has_bc(1),
-                               wsrc.has_bc(2));
+                               wsrc.extent() + Extents::Src4Extent::int_vec() + src.boundary_info().has_bc() * Extents::Src4ExtentBC::int_vec() );
 
 #       ifndef NDEBUG
             assert(ws1.extent() == ws2.extent() && ws1.extent() == ws3.extent() && ws1.extent() == ws4.extent() && ws1.extent() == wd.extent());
 #       endif
 
-        DestType d(wd, dest.field_values(), ExternalStorage);
-        SrcType s1(ws1, src);
-        SrcType s2(ws2, src);
-        SrcType s3(ws3, src);
-        SrcType s4(ws4, src);
+        DestType d(wd, dest);
+        SrcType s1(ws1,src);
+        SrcType s2(ws2,src);
+        SrcType s3(ws3,src);
+        SrcType s4(ws4,src);
 
         typename DestType::iterator id = d.begin();
         typename DestType::iterator ide = d.end();
@@ -396,41 +375,32 @@ namespace structured {
                                                 const FieldType & src,
                                                       FieldType & dest )
     {
-        const MemoryWindow & w = src.window_with_ghost();
-        typedef typename UnitTriplet<typename OpType::DirT>::type DirVec;
-        const IntVec shift = DirVec::int_vec() + DirVec::int_vec();
+      const MemoryWindow & w = src.window_with_ghost();
+      typedef typename UnitTriplet<typename OpType::DirT>::type DirVec;
+      const IntVec shift = DirVec::int_vec() + DirVec::int_vec();
 
-        const MemoryWindow wd(w.glob_dim(),
-                              w.offset() + DirVec::int_vec(),
-                              w.extent() - shift,
-                              w.has_bc(0),
-                              w.has_bc(1),
-                              w.has_bc(2));
-        const MemoryWindow ws1(w.glob_dim(),
-                               w.offset(),
-                               w.extent() - shift,
-                               w.has_bc(0),
-                               w.has_bc(1),
-                               w.has_bc(2));
-        const MemoryWindow ws2(w.glob_dim(),
-                               w.offset() + shift,
-                               w.extent() - shift,
-                               w.has_bc(0),
-                               w.has_bc(1),
-                               w.has_bc(2));
+      const MemoryWindow wd(w.glob_dim(),
+                            w.offset() + DirVec::int_vec(),
+                            w.extent() - shift );
+      const MemoryWindow ws1(w.glob_dim(),
+                             w.offset(),
+                             w.extent() );
+      const MemoryWindow ws2(w.glob_dim(),
+                             w.offset() + shift,
+                             w.extent() - shift );
 
-        FieldType d(wd, dest.field_values(), ExternalStorage);
-        FieldType s1(ws1, src);
-        FieldType s2(ws2, src);
+      FieldType d(wd, dest);
+      FieldType s1(ws1, src);
+      FieldType s2(ws2, src);
 
-        typename FieldType::iterator id = d.begin();
-        typename FieldType::iterator ide = d.end();
-        typename FieldType::const_iterator is1 = s1.begin();
-        typename FieldType::const_iterator is2 = s2.begin();
+      typename FieldType::iterator id = d.begin();
+      typename FieldType::iterator ide = d.end();
+      typename FieldType::const_iterator is1 = s1.begin();
+      typename FieldType::const_iterator is2 = s2.begin();
 
-        for(; id != ide; ++id, ++is1, ++is2) {
-            *id = *is1 * coefLo + *is2 * coefHi;
-        };
+      for(; id != ide; ++id, ++is1, ++is2) {
+        *id = *is1 * coefLo + *is2 * coefHi;
+      };
     };
 
     //------------------------------------------------------------------
@@ -439,18 +409,17 @@ namespace structured {
     inline void ref_null_stencil_apply_to_field( const SrcType  & src,
                                                        DestType & dest )
     {
+#     ifndef NDEBUG
+      assert( src.window_with_ghost() == dest.window_with_ghost() );
+#     endif
 
-#       ifndef NDEBUG
-            assert( src.window_with_ghost() == dest.window_with_ghost() );
-#       endif
+      typename SrcType::const_iterator isrc = src.begin();
+      typename DestType::iterator idest = dest.begin();
+      const typename DestType::iterator ideste = dest.end();
 
-        typename SrcType::const_iterator isrc = src.begin();
-        typename DestType::iterator idest = dest.begin();
-        const typename DestType::iterator ideste = dest.end();
-
-        for( ; idest!=ideste; ++isrc, ++idest ){
-            *idest = *isrc;
-        }
+      for( ; idest!=ideste; ++isrc, ++idest ){
+        *idest = *isrc;
+      }
     };
 
     //------------------------------------------------------------------
@@ -459,65 +428,62 @@ namespace structured {
     inline void ref_box_filter_stencil_apply_to_field( const FieldType & src,
                                                              FieldType & dest )
     {
-        typedef typename FieldType::const_iterator ConstFieldIter;
+      typedef typename FieldType::const_iterator ConstFieldIter;
 
-        std::vector<FieldType> fields;
-        std::vector<ConstFieldIter> iters;
+      std::vector<FieldType> fields;
+      std::vector<ConstFieldIter> iters;
 
-        const MemoryWindow& w_dest = dest.window_with_ghost();
-        const MemoryWindow& ws = src.window_with_ghost();
+      const MemoryWindow& w_dest = dest.window_with_ghost();
+      const MemoryWindow& ws = src.window_with_ghost();
 
-        fields.clear();
-        iters.clear();
-        const size_t ihi = ws.glob_dim(0)>1 ? 3 : 1;
-        const size_t jhi = ws.glob_dim(1)>1 ? 3 : 1;
-        const size_t khi = ws.glob_dim(2)>1 ? 3 : 1;
-        const IntVec off( ihi>1 ? 2 : 0, jhi>1 ? 2 : 0, khi>1 ? 2 : 0 );
-        for( size_t k=0; k<khi; ++k ){
-            for( size_t j=0; j<jhi; ++j ){
-                for( size_t i=0; i<ihi; ++i ){
-                    fields.push_back( FieldType( MemoryWindow( ws.glob_dim(),
-                                                               ws.offset()+IntVec(i,j,k),
-                                                               ws.extent()-off,
-                                                               ws.has_bc(0), ws.has_bc(1), ws.has_bc(2) ),
-						 src) );
-                }
-            }
+      fields.clear();
+      iters.clear();
+      const size_t ihi = ws.glob_dim(0)>1 ? 3 : 1;
+      const size_t jhi = ws.glob_dim(1)>1 ? 3 : 1;
+      const size_t khi = ws.glob_dim(2)>1 ? 3 : 1;
+      const IntVec off( ihi>1 ? 2 : 0, jhi>1 ? 2 : 0, khi>1 ? 2 : 0 );
+      for( size_t k=0; k<khi; ++k ){
+        for( size_t j=0; j<jhi; ++j ){
+          for( size_t i=0; i<ihi; ++i ){
+            fields.push_back( FieldType( MemoryWindow( ws.glob_dim(),
+                                                       ws.offset()+IntVec(i,j,k),
+                                                       ws.extent()-off ),
+                                         src) );
+          }
         }
+      }
 
-        assert( fields.size() == ihi*jhi*khi );
+      assert( fields.size() == ihi*jhi*khi );
 
-        for( typename std::vector<FieldType>::const_iterator is=fields.begin(); is!=fields.end(); ++is ){
-            iters.push_back( is->begin() );
+      for( typename std::vector<FieldType>::const_iterator is=fields.begin(); is!=fields.end(); ++is ){
+        iters.push_back( is->begin() );
+      }
+
+      IntVec of, ex;
+      for( int i=0; i<3; ++i ){
+        of[i] = w_dest.glob_dim(i)>1 ? 1 : 0;
+        ex[i] = w_dest.glob_dim(i)>1 ? -2 : 0;
+      }
+
+      // create the destination field memory window
+      FieldType d( MemoryWindow( w_dest.glob_dim(),
+                                 w_dest.offset()+of,
+                                 w_dest.extent()+ex ),
+                   dest );
+
+      const double fac = 1.0 / double(fields.size());
+      typename FieldType::iterator id=d.begin();
+      const typename FieldType::iterator ide=d.end();
+      for( ; id!=ide; ++id ){
+        *id = 0.0;
+        typename std::vector<ConstFieldIter>::iterator isi=iters.begin();
+        const typename std::vector<ConstFieldIter>::const_iterator isie=iters.end();
+        for( ; isi!=isie; ++isi ){
+          *id += **isi;
+          ++(*isi);  // increment this source iterator to the next point
         }
-
-        IntVec of, ex;
-        for( int i=0; i<3; ++i ){
-            of[i] = w_dest.glob_dim(i)>1 ? 1 : 0;
-            ex[i] = w_dest.glob_dim(i)>1 ? -2 : 0;
-        }
-
-        // create the destination field memory window
-        FieldType d( MemoryWindow( w_dest.glob_dim(),
-                                   w_dest.offset()+of,
-                                   w_dest.extent()+ex,
-                                   w_dest.has_bc(0), w_dest.has_bc(1), w_dest.has_bc(2) ),
-                     dest.field_values(),
-                     ExternalStorage );
-
-        const double fac = 1.0 / double(fields.size());
-        typename FieldType::iterator id=d.begin();
-        const typename FieldType::iterator ide=d.end();
-        for( ; id!=ide; ++id ){
-            *id = 0.0;
-            typename std::vector<ConstFieldIter>::iterator isi=iters.begin();
-            const typename std::vector<ConstFieldIter>::const_iterator isie=iters.end();
-            for( ; isi!=isie; ++isi ){
-                *id += **isi;
-                ++(*isi);  // increment this source iterator to the next point
-            }
-            *id *= fac;
-        }
+        *id *= fac;
+      }
     };
 
   }// namespace structured

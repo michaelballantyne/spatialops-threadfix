@@ -212,11 +212,16 @@ double apply_stencil( const SpatialOps::structured::IntVec& npts,
   typedef typename OpT::SrcFieldType   SrcT;
   typedef typename OpT::DestFieldType  DestT;
 
-  const MemoryWindow smw = get_window_with_ghost<SrcT >( npts, bcPlus[0], bcPlus[1], bcPlus[2] );
-  const MemoryWindow dmw = get_window_with_ghost<DestT>( npts, bcPlus[0], bcPlus[1], bcPlus[2] );
+  const GhostDataRT sg(1);
+  const GhostDataRT dg(1);
+  const BoundaryCellInfo sbc = BoundaryCellInfo::build< SrcT>( bcPlus[0],bcPlus[1],bcPlus[2] );
+  const BoundaryCellInfo dbc = BoundaryCellInfo::build<DestT>( bcPlus[0],bcPlus[1],bcPlus[2] );
+  const MemoryWindow smw = get_window_with_ghost( npts, sg, sbc );
+  const MemoryWindow dmw = get_window_with_ghost( npts, dg, dbc );
 
-  SrcT src(smw, NULL), xs(smw,NULL), ys(smw, NULL), zs(smw,NULL);
-  DestT dest(dmw, NULL), xd(dmw, NULL), yd(dmw,NULL), zd(dmw,NULL), destExact(dmw, NULL);
+
+  SrcT   src(smw,sbc,sg,NULL), xs(smw,sbc,sg,NULL), ys(smw,sbc,sg,NULL), zs(smw,sbc,sg,NULL);
+  DestT dest(dmw,dbc,dg,NULL), xd(dmw,dbc,dg,NULL), yd(dmw,dbc,dg,NULL), zd(dmw,dbc,dg,NULL), destExact(dmw,dbc,dg,NULL);
 
   const Grid grid( npts, std::vector<double>(3,length) );
 
