@@ -34,10 +34,7 @@ namespace SpatialOps{
 
     MemoryWindow::MemoryWindow( const int npts[3],
                                 const int offset[3],
-                                const int extent[3],
-                                const bool bcx,
-                                const bool bcy,
-                                const bool bcz )
+                                const int extent[3] )
     : nptsGlob_( npts ),
       offset_( offset ),
       extent_( extent )
@@ -46,21 +43,6 @@ namespace SpatialOps{
       assert( sanity_check() );
 #   endif
     }
-
-    MemoryWindow::MemoryWindow( const IntVec& npts,
-                                const IntVec& offset,
-                                const IntVec& extent,
-                                const bool bcx,
-                                const bool bcy,
-                                const bool bcz )
-    : nptsGlob_( npts ),
-      offset_( offset ),
-      extent_( extent )
-    {
-#   ifndef NDEBUG
-      assert( sanity_check() );
-#   endif
-   }
 
     MemoryWindow::MemoryWindow( const IntVec& npts,
                                 const IntVec& offset,
@@ -72,12 +54,9 @@ namespace SpatialOps{
 #   ifndef NDEBUG
       assert( sanity_check() );
 #   endif
-    }
+   }
 
-    MemoryWindow::MemoryWindow( const int npts[3],
-                                const bool bcx,
-                                const bool bcy,
-                                const bool bcz )
+    MemoryWindow::MemoryWindow( const int npts[3] )
     : nptsGlob_( npts ), offset_(0,0,0), extent_( npts )
     {
 #   ifndef NDEBUG
@@ -85,10 +64,7 @@ namespace SpatialOps{
 #   endif
     }
 
-    MemoryWindow::MemoryWindow( const IntVec& npts,
-                                const bool bcx,
-                                const bool bcy,
-                                const bool bcz )
+    MemoryWindow::MemoryWindow( const IntVec& npts )
     : nptsGlob_( npts ), offset_(0,0,0), extent_( npts )
     {
 #   ifndef NDEBUG

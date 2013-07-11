@@ -83,10 +83,7 @@ namespace structured{
      */
     MemoryWindow( const int npts[3],
                   const int offset[3],
-                  const int extent[3],
-                  const bool bcx,
-                  const bool bcy,
-                  const bool bcz );
+                  const int extent[3] );
 
     /**
      *  \brief construct a MemoryWindow object
@@ -94,17 +91,7 @@ namespace structured{
      *  \param npts the total (global) number of points in each direction
      *  \param offset the offset into the memory
      *  \param extent the size of the block that we are considering
-     *  \param bcx true if a physical boundary is present in the (+x) direction
-     *  \param bcy true if a physical boundary is present in the (+y) direction
-     *  \param bcz true if a physical boundary is present in the (+z) direction
      */
-    MemoryWindow( const IntVec& npts,
-                  const IntVec& offset,
-                  const IntVec& extent,
-                  const bool bcx,
-                  const bool bcy,
-                  const bool bcz );
-
     MemoryWindow( const IntVec& npts,
                   const IntVec& offset,
                   const IntVec& extent );
@@ -113,14 +100,8 @@ namespace structured{
      *  \brief construct a MemoryWindow object where there is no "window"
      *
      *  \param npts the total (global) number of points in each direction
-     *  \param bcx (optional - default false) true if a physical boundary is present in the (+x) direction
-     *  \param bcy (optional - default false) true if a physical boundary is present in the (+y) direction
-     *  \param bcz (optional - default false) true if a physical boundary is present in the (+z) direction
      */
-    MemoryWindow( const int npts[3],
-                  const bool bcx=false,
-                  const bool bcy=false,
-                  const bool bcz=false );
+    MemoryWindow( const int npts[3] );
 
     /**
      *  \brief construct a MemoryWindow object where there is no "window"
@@ -130,10 +111,7 @@ namespace structured{
      *  \param bcy (optional - default false) true if a physical boundary is present in the (+y) direction
      *  \param bcz (optional - default false) true if a physical boundary is present in the (+z) direction
      */
-    MemoryWindow( const IntVec& npts,
-                  const bool bcx=false,
-                  const bool bcy=false,
-                  const bool bcz=false );
+    MemoryWindow( const IntVec& npts );
 
     MemoryWindow( const MemoryWindow& other );
 
