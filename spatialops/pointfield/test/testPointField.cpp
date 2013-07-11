@@ -14,7 +14,7 @@ namespace SS=SpatialOps::structured;
 int main()
 {
   const size_t npts = 10;
-  const SS::GhostDataRT ghost(1);
+  const SS::GhostDataRT ghost(0);
   const SS::BoundaryCellInfo bc = SS::BoundaryCellInfo::build<FieldT>();
   const SS::MemoryWindow mw( SS::IntVec( npts, 1, 1 ) );
 
