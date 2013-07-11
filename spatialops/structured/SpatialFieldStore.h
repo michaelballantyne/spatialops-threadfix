@@ -245,15 +245,21 @@ public:
   template< typename FieldT, typename ProtoT >
   inline static SpatFldPtr<FieldT>
   get( const ProtoT& f,
-       const MemoryType mtype = LOCAL_RAM,
-       const unsigned short int deviceIndex = 0 )
+       MemoryType mtype = UNKNOWN,
+       unsigned short int deviceIndex = -9999 )
   {
     using namespace structured;
+
+    if( deviceIndex == -9999 ) deviceIndex = f.device_index();
+
+    if( mtype == UNKNOWN ) mtype = f.memory_device_type();
+
     const MemoryWindow& ws = f.window_with_ghost();
     const MemoryWindow w( ws.glob_dim() + Subtract< typename FieldT::Location::BCExtra, typename ProtoT::Location::BCExtra >::result::int_vec() * ws.has_bc(),
                           ws.offset(),
                           ws.extent()   + Subtract< typename FieldT::Location::BCExtra, typename ProtoT::Location::BCExtra >::result::int_vec() * ws.has_bc(),
                           ws.has_bc(0), ws.has_bc(1), ws.has_bc(2) );
+
     return get_from_window<FieldT>(w,mtype,deviceIndex);
   }
 
