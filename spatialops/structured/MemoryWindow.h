@@ -131,22 +131,6 @@ namespace structured{
     refine( const IntVec& splitPattern,
             const IntVec& location ) const;
 
-    /**
-     *  \brief Resizes/reduces the MemoryWindow to given number of ghost cells.
-     *
-     *  \param oldGhost is a GhostData that specifies how many ghost cells are currently on each face
-     *  \param newGhost is a GhostData that specifies how many ghost cells are to be on each face
-     *
-     *  \return new MemoryWindow reduced from having oldNeg/oldPos ghost cells (and extra cells along boundary conditions) to having newNeg/newPos ghost cells on each face.
-     */
-    // jcs remove:
-//    template<typename OldGhost, typename NewGhost>
-//    inline MemoryWindow
-//    resize_ghost() const {
-//        return MemoryWindow(nptsGlob_,
-//                            offset_ + OldGhost::offset()    - NewGhost::offset(),
-//                            extent_ - OldGhost::extent(IntVec(0,0,0)) + NewGhost::extent(IntVec(0,0,0)) );
-//    }
     // jcs remove:
     inline MemoryWindow resize_ghost( const GhostDataRT& oldGhost, const GhostDataRT& newGhost ) const{
       const IntVec minusDiff = oldGhost.get_minus() - newGhost.get_minus();
@@ -155,20 +139,6 @@ namespace structured{
                            extent_ - minusDiff - oldGhost.get_plus() + newGhost.get_plus() );
     }
 
-    /**
-     *  \brief shifts/moves the MemoryWindow by given amounts.
-     *
-     *  \param shft is an IntVec that specifies how much to shift/move the memory window.
-     *
-     *  \return new MemoryWindow moved by size.
-     */
-    // jcs remove
-    template<typename IndexTriplet>
-    inline MemoryWindow shift() const {
-        return MemoryWindow(nptsGlob_,
-                            offset_ + IndexTriplet::int_vec(),
-                            extent_ );
-    }
     // jcs remove
     inline MemoryWindow shift( const IntVec& shft ) const {
         return MemoryWindow( nptsGlob_, offset_+shft, extent_ );
