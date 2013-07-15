@@ -5,6 +5,8 @@
 #include <test/TestHelper.h>
 #include <test/FieldHelper.h>
 
+#include <spatialops/structured/FieldComparisons.h>
+
 #ifdef ENABLE_THREADS
 #include <spatialops/ThreadPool.h>
 #include <boost/thread/barrier.hpp>
@@ -83,7 +85,7 @@ void jcs_pause()
   FieldT F2(window, NULL, InternalStorage, memType2);                                                          \
   F1 <<= F1VAL;                                                                                                \
   F2 <<= F2VAL;                                                                                                \
-  status(manual_error_compare(F1, F2, ERROR, ERRORMODE, field_not_equal, verboseOutput, EXPECTED, ABSERROR), MESSAGE);   \
+  status(manual_error_compare(F1, F2, ERROR, ERRORMODE, test_field_not_equal, verboseOutput, EXPECTED, ABSERROR), MESSAGE);   \
 }
 
 #define COMPARE_MEMORY_WINDOWS( F1NPTS, F2NPTS, ERRORMODE, MESSAGE)               \
@@ -98,13 +100,13 @@ void jcs_pause()
   try {                                                                           \
     switch(et) {                                                                  \
       case RELATIVE:                                                              \
-        F1.field_equal(F2, 0.0);                                                  \
+        field_equal(F1, F2, 0.0);                                                  \
           break;                                                                  \
       case ABSOLUTE:                                                              \
-        F1.field_equal_abs(F2, 0.0);                                              \
+        field_equal_abs(F1, F2, 0.0);                                              \
           break;                                                                  \
       case ULP:                                                                   \
-        F1.field_equal_ulp(F2, 0);                                                \
+        field_equal_ulp(F1, F2, 0);                                                \
           break;                                                                  \
     }                                                                             \
     result = false;                                                               \
@@ -204,7 +206,7 @@ bool manual_error_compare(FieldT& f1,
                     FieldT& f2,
                     const double error,
                     const ErrorType et,
-                    const bool field_not_equal,
+                    const bool test_field_not_equal,
                     const bool verboseOutput,
                     bool expected_equal,
                     const double abs_error)
@@ -230,17 +232,12 @@ bool manual_error_compare(FieldT& f1,
     switch(et) {
       case RELATIVE:
         double denom;
-        if(*if1) {
-          denom = std::abs(*if1);
+        if(abs_error) {
+          denom = std::abs(*if1) + abs_error;
         }
         else {
-          if(abs_error) {
-            denom = abs_error;
-          }
-          else {
-            //Defualt absolute error in SpatialField
-            denom = nebo_norm(f1) * error * 4;
-          }
+          //Defualt absolute error in SpatialField
+          denom = std::abs(*if1) + nebo_norm(f1) * error * .000001;
         }
 
         if( std::abs(diff)/denom > error ) {
@@ -277,37 +274,37 @@ bool manual_error_compare(FieldT& f1,
   TestHelper tmp(verboseOutput);
   tmp(man_equal == expected_equal, msg.str());
 
-  //switch expected_equal and manual equal result based on field_not_equal compare
-  if(field_not_equal) {man_equal = !man_equal; expected_equal = !expected_equal;}
+  //switch expected_equal and manual equal result based on test_field_not_equal compare
+  if(test_field_not_equal) {man_equal = !man_equal; expected_equal = !expected_equal;}
 
   //compare manual to function
   switch(et) {
     case RELATIVE:
-      if(field_not_equal) {
+      if(test_field_not_equal) {
         if(abs_error)
-          return (man_equal == f1.field_not_equal(f2, error, abs_error)) && (man_equal == expected_equal);
+          return (man_equal == field_not_equal(f1, f2, error, abs_error)) && (man_equal == expected_equal);
         else
-          return (man_equal == f1.field_not_equal(f2, error)) && (man_equal == expected_equal);
+          return (man_equal == field_not_equal(f1, f2, error)) && (man_equal == expected_equal);
       }
       else {
         if(abs_error)
-          return (man_equal == f1.field_equal(f2, error, abs_error)) && (man_equal == expected_equal);
+          return (man_equal == field_equal(f1, f2, error, abs_error)) && (man_equal == expected_equal);
         else
-          return (man_equal == f1.field_equal(f2, error)) && (man_equal == expected_equal);
+          return (man_equal == field_equal(f1, f2, error)) && (man_equal == expected_equal);
       }
     case ABSOLUTE:
-      if(field_not_equal) {
-        return (man_equal == f1.field_not_equal_abs(f2, error)) && (man_equal == expected_equal);
+      if(test_field_not_equal) {
+        return (man_equal == field_not_equal_abs(f1, f2, error)) && (man_equal == expected_equal);
       }
       else {
-        return (man_equal == f1.field_equal_abs(f2, error)) && (man_equal == expected_equal);
+        return (man_equal == field_equal_abs(f1, f2, error)) && (man_equal == expected_equal);
       }
     case ULP:
-      if(field_not_equal) {
-        return (man_equal == f1.field_not_equal_ulp(f2, error)) && (man_equal == expected_equal);
+      if(test_field_not_equal) {
+        return (man_equal == field_not_equal_ulp(f1, f2, error)) && (man_equal == expected_equal);
       }
       else {
-        return (man_equal == f1.field_equal_ulp(f2, error)) && (man_equal == expected_equal);
+        return (man_equal == field_equal_ulp(f1, f2, error)) && (man_equal == expected_equal);
       }
   }
   return false;
@@ -318,7 +315,7 @@ bool test_field_equal( const IntVec npts,
                        const MemoryType memType1,
                        const MemoryType memType2,
                        const ErrorType et,
-                       const bool field_not_equal,
+                       const bool test_field_not_equal,
                        const bool verboseOutput)
 {
   TestHelper status(verboseOutput);
@@ -365,7 +362,7 @@ bool test_field_equal( const IntVec npts,
 #endif
 
   //two duplicate fields exactly equal
-  status(manual_error_compare(*f1, *f2, 0.0, et, field_not_equal, verboseOutput, true, 0), "Duplicate Fields Equal");
+  status(manual_error_compare(*f1, *f2, 0.0, et, test_field_not_equal, verboseOutput, true, 0), "Duplicate Fields Equal");
 
   //change second field and compare not equal
 #ifdef __CUDACC__
@@ -380,7 +377,7 @@ bool test_field_equal( const IntVec npts,
 #else
   f2 = &lf3;
 #endif
-  status(manual_error_compare(*f1, *f2, 0.0, et, field_not_equal, verboseOutput, false, 0), "Non-Duplicate Fields Not Equal");
+  status(manual_error_compare(*f1, *f2, 0.0, et, test_field_not_equal, verboseOutput, false, 0), "Non-Duplicate Fields Not Equal");
 
 
   switch(et) {
@@ -394,21 +391,22 @@ bool test_field_equal( const IntVec npts,
       COMPARE_FIELDS(3.0, 2.96, RELATIVE, .01, "Off By 1% (Not Equal)", false, 0);
 
       //near zero value tests
-      COMPARE_SPRNKLE_FIELDS(1, 0, 8, 1, .01, 8, 0, 0, RELATIVE, .01, "Near Zero Field Range [-1, 1] Off By 1% (Equal)", true);
-      COMPARE_SPRNKLE_FIELDS(1, 0, 8, 1, .1, 8, 0, 0, RELATIVE, .01, "Near Zero Field Range [-1, 1] Off By 1% (Not Equal)", false);
-      COMPARE_SPRNKLE_FIELDS(10, 0, 8, 10, 1e-1, 8, 0, 0, RELATIVE, .01, "Near Zero Field Range [-10, 10] Off By 1% (Equal)", true);
-      COMPARE_SPRNKLE_FIELDS(10, 0, 8, 10, 1, 8, 0, 0, RELATIVE, .01, "Near Zero Field Range [-10, 10] Off By 1% (Not Equal)", false);
-      COMPARE_SPRNKLE_FIELDS(100000, 0, 8, 100000, 1e3, 8, 0, 0, RELATIVE, .01, "Near Zero Field Range [-100000, 100000] Off By 1% (Equal)", true);
-      COMPARE_SPRNKLE_FIELDS(100000, 0, 8, 100000, 1e4, 8, 0, 0, RELATIVE, .01, "Near Zero Field Range [-100000, 100000] Off By 1% (Not Equal)", false);
-      COMPARE_SPRNKLE_FIELDS(1, 0, 8, 1, .1, 8, 1000, 1, RELATIVE, .01, "Outlier Near Zero Field Range [-1, 1] Off By 1% (Equal)", true);
-      COMPARE_SPRNKLE_FIELDS(1, 0, 8, 1, 1, 8, 1000, 1, RELATIVE, .01, "Outlier Near Zero Field Range [-1, 1] Off By 1% (Not Equal)", false);
-      COMPARE_SPRNKLE_FIELDS(1, 0, 8, 1, .1, 8, 1000, 5, RELATIVE, .01, "Five Outlier Near Zero Field Range [-1, 1] Off By 1% (Equal)", true);
-      COMPARE_SPRNKLE_FIELDS(1, 0, 8, 1, 1, 8, 1000, 5, RELATIVE, .01, "Five Outlier Near Zero Field Range [-1, 1] Off By 1% (Not Equal)", false);
+      COMPARE_SPRNKLE_FIELDS(1, 0, 8, 1, 1e-9, 8, 0, 0, RELATIVE, .01, "Near Zero Field Range [-1, 1] Off By 1% (Equal)", true);
+      COMPARE_SPRNKLE_FIELDS(1, 0, 8, 1, 1e-8, 8, 0, 0, RELATIVE, .01, "Near Zero Field Range [-1, 1] Off By 1% (Not Equal)", false);
+      COMPARE_SPRNKLE_FIELDS(10, 0, 8, 10, 1e-8, 8, 0, 0, RELATIVE, .01, "Near Zero Field Range [-10, 10] Off By 1% (Equal)", true);
+      COMPARE_SPRNKLE_FIELDS(10, 0, 8, 10, 1e-7, 8, 0, 0, RELATIVE, .01, "Near Zero Field Range [-10, 10] Off By 1% (Not Equal)", false);
+      COMPARE_SPRNKLE_FIELDS(100000, 0, 8, 100000, 1e-4, 8, 0, 0, RELATIVE, .01, "Near Zero Field Range [-100000, 100000] Off By 1% (Equal)", true);
+      COMPARE_SPRNKLE_FIELDS(100000, 0, 8, 100000, 1e-3, 8, 0, 0, RELATIVE, .01, "Near Zero Field Range [-100000, 100000] Off By 1% (Not Equal)", false);
+      COMPARE_SPRNKLE_FIELDS(1, 0, 8, 1, 1e-7, 8, 1000, 1, RELATIVE, .01, "Outlier Near Zero Field Range [-1, 1] Off By 1% (Equal)", true);
+      COMPARE_SPRNKLE_FIELDS(1, 0, 8, 1, 1e-6, 8, 1000, 1, RELATIVE, .01, "Outlier Near Zero Field Range [-1, 1] Off By 1% (Not Equal)", false);
+      COMPARE_SPRNKLE_FIELDS(1, 0, 8, 1, 1e-7, 8, 1000, 5, RELATIVE, .01, "Five Outlier Near Zero Field Range [-1, 1] Off By 1% (Equal)", true);
+      COMPARE_SPRNKLE_FIELDS(1, 0, 8, 1, 1e-6, 8, 1000, 5, RELATIVE, .01, "Five Outlier Near Zero Field Range [-1, 1] Off By 1% (Not Equal)", false);
 
       //Custom Absolute Error
-      COMPARE_FIELDS(0.0, 1.0, RELATIVE, 1.0, "Custom Error: 1 Off By 100% (Equal)", true, 1);
-      COMPARE_FIELDS(0.0, 2.0, RELATIVE, 2.0, "Custom Error: 2 Off By 200% (Equal)", true, 1);
-      COMPARE_FIELDS(0.0, 2.0, RELATIVE, 1.0, "Custom Error: 2 Off By 100% (Not Equal)", false, 1);
+      COMPARE_FIELDS(1.0, 3.0, RELATIVE, 1.0, "Absolute Tolerance 1: 1-3 Off By 100% (Equal)", true, 1.0);
+      COMPARE_FIELDS(1.0, 4.0, RELATIVE, 1.0, "Absolute Tolerance 1: 1-4 Off By 100% (Not Equal)", false, 1.0);
+      COMPARE_FIELDS(1.0, 5.0, RELATIVE, 2.0, "Absolute Tolerance 1: 1-5 Off By 200% (Equal)", true, 1.0);
+      COMPARE_FIELDS(1.0, 5.0, RELATIVE, 1.0, "Absolute Tolerance 1: 1-5 Off By 100% (Not Equal)", false, 1.0);
       break;
     case ABSOLUTE:
       //absolute error test
@@ -736,6 +734,7 @@ int main()
   TestHelper overall(true);
 
   bool verbose = false;
+  bool fieldEqualVerbose = false;
 
   boost::posix_time::ptime start, stop;
   start = boost::posix_time::microsec_clock::universal_time();
@@ -915,60 +914,63 @@ int main()
     {
       SpatFldPtr<SVolField> sv3 = SpatialFieldStore::get<SVolField>( svol1 );
       *sv3 = svol1;
-      status( sv3->field_equal(svol1, 0.0), "spatial field pointer from store" );
+      status( field_equal(*sv3, svol1, 0.0), "spatial field pointer from store" );
     }
 
     overall( status.ok(), "field operations" );
   }
 
-  IntVec win_size(10, 11, 12);
-  //test field_equal
-  overall(test_field_equal<SVolField>(win_size, LOCAL_RAM, LOCAL_RAM, RELATIVE, false, false), "LOCAL_RAM x LOCAL_RAM Relative Equal Test");
+  //test field comparison functions
+  {
+    IntVec winSize(10, 11, 12);
+    //test field_equal
+    overall(test_field_equal<SVolField>(winSize, LOCAL_RAM, LOCAL_RAM, RELATIVE, false, fieldEqualVerbose), "LOCAL_RAM x LOCAL_RAM Relative Equal Test");
 #ifdef __CUDACC__
-  overall(test_field_equal<SVolField>(win_size, LOCAL_RAM, EXTERNAL_CUDA_GPU, RELATIVE, false, false), "LOCAL_RAM x EXTERNAL_CUDA_GPU Relative Equal Test");
-  overall(test_field_equal<SVolField>(win_size, EXTERNAL_CUDA_GPU, LOCAL_RAM, RELATIVE, false, false), "EXTERNAL_CUDA_GPU x LOCAL_RAM Relative Equal Test");
-  overall(test_field_equal<SVolField>(win_size, EXTERNAL_CUDA_GPU, EXTERNAL_CUDA_GPU, RELATIVE, false, false), "EXTERNAL_CUDA_GPU x EXTERNAL_CUDA_GPU Relative Equal Test");
+    overall(test_field_equal<SVolField>(winSize, LOCAL_RAM, EXTERNAL_CUDA_GPU, RELATIVE, false, fieldEqualVerbose), "LOCAL_RAM x EXTERNAL_CUDA_GPU Relative Equal Test");
+    overall(test_field_equal<SVolField>(winSize, EXTERNAL_CUDA_GPU, LOCAL_RAM, RELATIVE, false, fieldEqualVerbose), "EXTERNAL_CUDA_GPU x LOCAL_RAM Relative Equal Test");
+    overall(test_field_equal<SVolField>(winSize, EXTERNAL_CUDA_GPU, EXTERNAL_CUDA_GPU, RELATIVE, false, fieldEqualVerbose), "EXTERNAL_CUDA_GPU x EXTERNAL_CUDA_GPU Relative Equal Test");
 #endif
 
-  //test field_equal_abs
-  overall(test_field_equal<SVolField>(win_size, LOCAL_RAM, LOCAL_RAM, ABSOLUTE, false, false), "LOCAL_RAM x LOCAL_RAM Absolute Error Equal Test");
+    //test field_equal_abs
+    overall(test_field_equal<SVolField>(winSize, LOCAL_RAM, LOCAL_RAM, ABSOLUTE, false, fieldEqualVerbose), "LOCAL_RAM x LOCAL_RAM Absolute Error Equal Test");
 #ifdef __CUDACC__
-  overall(test_field_equal<SVolField>(win_size, LOCAL_RAM, EXTERNAL_CUDA_GPU, ABSOLUTE, false, false), "LOCAL_RAM x EXTERNAL_CUDA_GPU Absolute Error Equal Test");
-  overall(test_field_equal<SVolField>(win_size, EXTERNAL_CUDA_GPU, LOCAL_RAM, ABSOLUTE, false, false), "EXTERNAL_CUDA_GPU x LOCAL_RAM Absolute Error Equal Test");
-  overall(test_field_equal<SVolField>(win_size, EXTERNAL_CUDA_GPU, EXTERNAL_CUDA_GPU, ABSOLUTE, false, false), "EXTERNAL_CUDA_GPU x EXTERNAL_CUDA_GPU Absolute Error Equal Test");
+    overall(test_field_equal<SVolField>(winSize, LOCAL_RAM, EXTERNAL_CUDA_GPU, ABSOLUTE, false, fieldEqualVerbose), "LOCAL_RAM x EXTERNAL_CUDA_GPU Absolute Error Equal Test");
+    overall(test_field_equal<SVolField>(winSize, EXTERNAL_CUDA_GPU, LOCAL_RAM, ABSOLUTE, false, fieldEqualVerbose), "EXTERNAL_CUDA_GPU x LOCAL_RAM Absolute Error Equal Test");
+    overall(test_field_equal<SVolField>(winSize, EXTERNAL_CUDA_GPU, EXTERNAL_CUDA_GPU, ABSOLUTE, false, fieldEqualVerbose), "EXTERNAL_CUDA_GPU x EXTERNAL_CUDA_GPU Absolute Error Equal Test");
 #endif
 
-  //test field_equal_ulp
-  overall(test_field_equal<SVolField>(win_size, LOCAL_RAM, LOCAL_RAM, ULP, false, false), "LOCAL_RAM x LOCAL_RAM Ulps Equal Test");
+    //test field_equal_ulp
+    overall(test_field_equal<SVolField>(winSize, LOCAL_RAM, LOCAL_RAM, ULP, false, fieldEqualVerbose), "LOCAL_RAM x LOCAL_RAM Ulps Equal Test");
 #ifdef __CUDACC__
-  overall(test_field_equal<SVolField>(win_size, LOCAL_RAM, EXTERNAL_CUDA_GPU, ULP, false, false), "LOCAL_RAM x EXTERNAL_CUDA_GPU Ulps Equal Test");
-  overall(test_field_equal<SVolField>(win_size, EXTERNAL_CUDA_GPU, LOCAL_RAM, ULP, false, false), "EXTERNAL_CUDA_GPU x LOCAL_RAM Ulps Equal Test");
-  overall(test_field_equal<SVolField>(win_size, EXTERNAL_CUDA_GPU, EXTERNAL_CUDA_GPU, ULP, false, false), "EXTERNAL_CUDA_GPU x EXTERNAL_CUDA_GPU Ulps Equal Test");
+    overall(test_field_equal<SVolField>(winSize, LOCAL_RAM, EXTERNAL_CUDA_GPU, ULP, false, fieldEqualVerbose), "LOCAL_RAM x EXTERNAL_CUDA_GPU Ulps Equal Test");
+    overall(test_field_equal<SVolField>(winSize, EXTERNAL_CUDA_GPU, LOCAL_RAM, ULP, false, fieldEqualVerbose), "EXTERNAL_CUDA_GPU x LOCAL_RAM Ulps Equal Test");
+    overall(test_field_equal<SVolField>(winSize, EXTERNAL_CUDA_GPU, EXTERNAL_CUDA_GPU, ULP, false, fieldEqualVerbose), "EXTERNAL_CUDA_GPU x EXTERNAL_CUDA_GPU Ulps Equal Test");
 #endif
 
-  //test field_not_equal
-  overall(test_field_equal<SVolField>(win_size, LOCAL_RAM, LOCAL_RAM, RELATIVE, true, false), "LOCAL_RAM x LOCAL_RAM Relative Not Equal Test");
+    //test field_not_equal
+    overall(test_field_equal<SVolField>(winSize, LOCAL_RAM, LOCAL_RAM, RELATIVE, true, fieldEqualVerbose), "LOCAL_RAM x LOCAL_RAM Relative Not Equal Test");
 #ifdef __CUDACC__
-  overall(test_field_equal<SVolField>(win_size, LOCAL_RAM, EXTERNAL_CUDA_GPU, RELATIVE, true, false), "LOCAL_RAM x EXTERNAL_CUDA_GPU Relative Not Equal Test");
-  overall(test_field_equal<SVolField>(win_size, EXTERNAL_CUDA_GPU, LOCAL_RAM, RELATIVE, true, false), "EXTERNAL_CUDA_GPU x LOCAL_RAM Relative Not Equal Test");
-  overall(test_field_equal<SVolField>(win_size, EXTERNAL_CUDA_GPU, EXTERNAL_CUDA_GPU, RELATIVE, true, false), "EXTERNAL_CUDA_GPU x EXTERNAL_CUDA_GPU Relative Not Equal Test");
+    overall(test_field_equal<SVolField>(winSize, LOCAL_RAM, EXTERNAL_CUDA_GPU, RELATIVE, true, fieldEqualVerbose), "LOCAL_RAM x EXTERNAL_CUDA_GPU Relative Not Equal Test");
+    overall(test_field_equal<SVolField>(winSize, EXTERNAL_CUDA_GPU, LOCAL_RAM, RELATIVE, true, fieldEqualVerbose), "EXTERNAL_CUDA_GPU x LOCAL_RAM Relative Not Equal Test");
+    overall(test_field_equal<SVolField>(winSize, EXTERNAL_CUDA_GPU, EXTERNAL_CUDA_GPU, RELATIVE, true, fieldEqualVerbose), "EXTERNAL_CUDA_GPU x EXTERNAL_CUDA_GPU Relative Not Equal Test");
 #endif
 
-  //test field_not_equal_abs
-  overall(test_field_equal<SVolField>(win_size, LOCAL_RAM, LOCAL_RAM, ABSOLUTE, true, false), "LOCAL_RAM x LOCAL_RAM Absolute Error Not Equal Test");
+    //test field_not_equal_abs
+    overall(test_field_equal<SVolField>(winSize, LOCAL_RAM, LOCAL_RAM, ABSOLUTE, true, fieldEqualVerbose), "LOCAL_RAM x LOCAL_RAM Absolute Error Not Equal Test");
 #ifdef __CUDACC__
-  overall(test_field_equal<SVolField>(win_size, LOCAL_RAM, EXTERNAL_CUDA_GPU, ABSOLUTE, true, false), "LOCAL_RAM x EXTERNAL_CUDA_GPU Absolute Error Not Equal Test");
-  overall(test_field_equal<SVolField>(win_size, EXTERNAL_CUDA_GPU, LOCAL_RAM, ABSOLUTE, true, false), "EXTERNAL_CUDA_GPU x LOCAL_RAM Absolute Error Not Equal Test");
-  overall(test_field_equal<SVolField>(win_size, EXTERNAL_CUDA_GPU, EXTERNAL_CUDA_GPU, ABSOLUTE, true, false), "EXTERNAL_CUDA_GPU x EXTERNAL_CUDA_GPU Absolute Error Not Equal Test");
+    overall(test_field_equal<SVolField>(winSize, LOCAL_RAM, EXTERNAL_CUDA_GPU, ABSOLUTE, true, fieldEqualVerbose), "LOCAL_RAM x EXTERNAL_CUDA_GPU Absolute Error Not Equal Test");
+    overall(test_field_equal<SVolField>(winSize, EXTERNAL_CUDA_GPU, LOCAL_RAM, ABSOLUTE, true, fieldEqualVerbose), "EXTERNAL_CUDA_GPU x LOCAL_RAM Absolute Error Not Equal Test");
+    overall(test_field_equal<SVolField>(winSize, EXTERNAL_CUDA_GPU, EXTERNAL_CUDA_GPU, ABSOLUTE, true, fieldEqualVerbose), "EXTERNAL_CUDA_GPU x EXTERNAL_CUDA_GPU Absolute Error Not Equal Test");
 #endif
 
-  //test field_not_equal_ulp
-  overall(test_field_equal<SVolField>(win_size, LOCAL_RAM, LOCAL_RAM, ULP, true, false), "LOCAL_RAM x LOCAL_RAM Ulps Not Equal Test");
+    //test field_not_equal_ulp
+    overall(test_field_equal<SVolField>(winSize, LOCAL_RAM, LOCAL_RAM, ULP, true, fieldEqualVerbose), "LOCAL_RAM x LOCAL_RAM Ulps Not Equal Test");
 #ifdef __CUDACC__
-  overall(test_field_equal<SVolField>(win_size, LOCAL_RAM, EXTERNAL_CUDA_GPU, ULP, true, false), "LOCAL_RAM x EXTERNAL_CUDA_GPU Ulps Not Equal Test");
-  overall(test_field_equal<SVolField>(win_size, EXTERNAL_CUDA_GPU, LOCAL_RAM, ULP, true, false), "EXTERNAL_CUDA_GPU x LOCAL_RAM Ulps Not Equal Test");
-  overall(test_field_equal<SVolField>(win_size, EXTERNAL_CUDA_GPU, EXTERNAL_CUDA_GPU, ULP, true, false), "EXTERNAL_CUDA_GPU x EXTERNAL_CUDA_GPU Ulps Not Equal Test");
+    overall(test_field_equal<SVolField>(winSize, LOCAL_RAM, EXTERNAL_CUDA_GPU, ULP, true, fieldEqualVerbose), "LOCAL_RAM x EXTERNAL_CUDA_GPU Ulps Not Equal Test");
+    overall(test_field_equal<SVolField>(winSize, EXTERNAL_CUDA_GPU, LOCAL_RAM, ULP, true, fieldEqualVerbose), "EXTERNAL_CUDA_GPU x LOCAL_RAM Ulps Not Equal Test");
+    overall(test_field_equal<SVolField>(winSize, EXTERNAL_CUDA_GPU, EXTERNAL_CUDA_GPU, ULP, true, fieldEqualVerbose), "EXTERNAL_CUDA_GPU x EXTERNAL_CUDA_GPU Ulps Not Equal Test");
 #endif
+  }
 
 
   if( overall.isfailed() ){

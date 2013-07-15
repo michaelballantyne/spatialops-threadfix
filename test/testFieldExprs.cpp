@@ -4,6 +4,7 @@
 
 #include <spatialops/particles/ParticleFieldTypes.h>
 
+#include <spatialops/structured/FieldComparisons.h>
 #include "TestHelper.h"
 
 #include <numeric>
@@ -57,7 +58,7 @@ bool test( const SS::IntVec dim )
       }
     }
     f3 <<= cos(x);
-    status( f3.field_equal(f2, 0.0), "cos(x)" );
+    status( field_equal(f3, f2, 0.0), "cos(x)" );
 
     f3 <<= f1+(f2*f1)-f2/f1;
 

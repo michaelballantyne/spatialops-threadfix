@@ -37,6 +37,7 @@ install( FILES
   MemoryPool.h
   MemoryTypes.h
   MemoryWindow.h
+  FieldComparisons.h
   SpatialField.h
   SpatialFieldStore.h
   DESTINATION include/spatialops/structured

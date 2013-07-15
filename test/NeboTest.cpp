@@ -5,6 +5,8 @@
 #include <test/TestHelper.h>
 #include <test/FieldHelper.h>
 
+#include <spatialops/structured/FieldComparisons.h>
+
 #include <iostream>
 
 #include <boost/program_options.hpp>
@@ -31,21 +33,21 @@ using namespace structured;
     {                                                           \
         test <<= NEBOEXPR;                                      \
         MANUAL(EXPR);                                           \
-        status(ref.field_equal(test, 0.0), MESSAGE);            \
+        status(field_equal(ref, test, 0.0), MESSAGE);            \
     }                                                           \
 
 #define RUNTESTULP(NEBOEXPR, EXPR, MESSAGE, ULPS)               \
     {                                                           \
         test <<= NEBOEXPR;                                      \
         MANUAL(EXPR);                                           \
-        status(ref.field_equal_ulp(test, ULPS), MESSAGE);       \
+        status(field_equal_ulp(ref, test, ULPS), MESSAGE);       \
     }                                                           \
 
 #define RUNTESTIGNORENANULP(NEBOEXPR, EXPR, MESSAGE, ULPS)      \
     {                                                           \
         test <<= cond(NEBOEXPR != NEBOEXPR, 0.0)(NEBOEXPR);     \
         MANUAL(EXPR != EXPR ? 0.0 : EXPR);                      \
-        status(ref.field_equal_ulp(test, ULPS), MESSAGE);       \
+        status(field_equal_ulp(ref, test, ULPS), MESSAGE);       \
     }                                                           \
 
 #define RUN_BINARY_OP_TEST(OP, TESTTYPE)                                                                            \
