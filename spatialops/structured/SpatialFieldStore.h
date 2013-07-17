@@ -246,7 +246,7 @@ public:
   inline static SpatFldPtr<FieldT>
   get( const ProtoT& f,
        MemoryType mtype = UNKNOWN,
-       unsigned short int deviceIndex = -9999 )
+       short int deviceIndex = -9999 )
   {
     using namespace structured;
 
@@ -538,7 +538,7 @@ SpatFldPtr<double>
 SpatialFieldStore::
 get<double,double>( const double& d,
                     const MemoryType mtype,
-                    const unsigned short int deviceIndex )
+                    const short int deviceIndex )
 {
 # ifdef ENABLE_THREADS
   boost::mutex::scoped_lock lock( get_mutex() );
