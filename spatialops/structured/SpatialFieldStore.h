@@ -41,6 +41,15 @@
 
 namespace SpatialOps {
 
+  template<typename FT, typename IsPODT> struct ValTypeSelector;
+  template<typename FT> struct ValTypeSelector<FT, boost::true_type> {
+    typedef FT type;
+  };
+  template<typename FT> struct ValTypeSelector<FT, boost::false_type> {
+    typedef typename FT::AtomicT type;
+  };
+
+
 /**
  *  @class  SpatFldPtr
  *  @author James C. Sutherland
@@ -158,8 +167,8 @@ public:
   // Wrap some spatial field calls to get around
   // problems when trying to call methods of de-referenced pointers to
   inline unsigned int   allocated_bytes() const;
-  inline double*        field_values()    const;
-  inline unsigned short device_index()    const;
+  inline typename ValTypeSelector<FieldT,typename boost::is_pod<FieldT>::type >::type* field_values() const;
+  inline unsigned short device_index() const;
 
   void detach();
 
@@ -208,13 +217,6 @@ private:
  */
 class SpatialFieldStore {
 
-  template<typename FT, typename IsPODT> struct ValTypeSelector;
-  template<typename FT> struct ValTypeSelector<FT, boost::true_type> {
-    typedef FT type;
-  };
-  template<typename FT> struct ValTypeSelector<FT, boost::false_type> {
-    typedef typename FT::AtomicT type;
-  };
 
 public:
 
@@ -274,10 +276,10 @@ public:
    *  objects.  Calling it anywhere else can result in memory corruption.
    */
   template<typename FieldT>
-    inline static void restore_field(const MemoryType mtype, FieldT& f);
+  inline static void restore_field(const MemoryType mtype, FieldT& f);
 
-//  inline static size_t active(){ return Pool<double>::self().active(); }
-//  inline static size_t total() { return Pool<double>::self().total(); }
+//  inline static size_t active(){ return Pool<typename FieldT::AtomicT>::self().active(); }
+//  inline static size_t total() { return Pool<typename FieldT::AtomicT>::self().total(); }
 
 private:
 
@@ -492,7 +494,8 @@ inline unsigned int SpatFldPtr<FieldT>::allocated_bytes() const{
 //------------------------------------------------------------------
 
 template<typename FieldT>
-inline double* SpatFldPtr<FieldT>::field_values() const {
+inline typename ValTypeSelector< FieldT, typename boost::is_pod<FieldT>::type >::type*
+SpatFldPtr<FieldT>::field_values() const {
   return f_->field_values();
 }
 
