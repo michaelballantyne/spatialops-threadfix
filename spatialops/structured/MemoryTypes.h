@@ -30,24 +30,24 @@ namespace SpatialOps{
    */
   namespace DeviceTypeTools {
   inline std::string get_memory_type_description( MemoryType m )
-	{
-	  switch ( m ){
-	  case LOCAL_RAM:
-		return std::string("Locally allocated, generic system RAM.");
-	  case LOCAL_VECTOR_INST:
-		return std::string("Locally allocated, vector device or CPU extension.");
-	  case EXTERNAL_CUDA_GPU:
-		return std::string("Externally allocated, CUDA GPU device.");
-	  case EXTERNAL_OPENCL_GPU:
-		return std::string("Externally allocated, OpenCL GPU device.");
-	  case EXTERNAL_INTEL_MIK:
-		return std::string("Externally allocated, intel MIK device.");
-	  case DEBUG_TEST_OPT:
-		return std::string("Debugging value -- Are you sure this is what you want to be using?");
-	  default:
-		return std::string("Unknown or Invalid");
-	  }
-	}
+  {
+    switch ( m ){
+    case LOCAL_RAM:
+      return std::string("Locally allocated, generic system RAM.");
+    case LOCAL_VECTOR_INST:
+      return std::string("Locally allocated, vector device or CPU extension.");
+    case EXTERNAL_CUDA_GPU:
+      return std::string("Externally allocated, CUDA GPU device.");
+    case EXTERNAL_OPENCL_GPU:
+      return std::string("Externally allocated, OpenCL GPU device.");
+    case EXTERNAL_INTEL_MIK:
+      return std::string("Externally allocated, intel MIK device.");
+    case DEBUG_TEST_OPT:
+      return std::string("Debugging value -- Are you sure this is what you want to be using?");
+    default:
+      return std::string("Unknown or Invalid");
+    }
+  }
   } // namespace DeviceTypeTools
 } // namespace SpatialOps
 

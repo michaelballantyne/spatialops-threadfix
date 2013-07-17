@@ -599,7 +599,7 @@ get_from_window( const structured::MemoryWindow& window,
 
 template<typename FieldT>
 inline
-  void SpatialFieldStore::restore_field( const MemoryType mtype, FieldT& field )
+void SpatialFieldStore::restore_field( const MemoryType mtype, FieldT& field )
 {
 # ifdef ENABLE_THREADS
   boost::mutex::scoped_lock lock( get_mutex() );
