@@ -225,6 +225,10 @@ public:
    *  @brief Obtain a temporary field.
    *
    *  @param w  A memory window describing the desired field dimensions
+   *  @param bc the information on boundaries
+   *  @param ghost ghost information
+   *  @param mtype where this field should be located
+   *  @param deviceIndex for multiple GPUs, which one to locate the field on
    *
    *  Note that you should not dereference the SpatFldPtr object to
    *  store a SpatialField reference.  Doing so can cause memory
@@ -234,7 +238,7 @@ public:
   inline static SpatFldPtr<FieldT>
   get_from_window( const structured::MemoryWindow& window,
                    const structured::BoundaryCellInfo& bc,
-                   const structured::GhostDataRT&,
+                   const structured::GhostDataRT& ghost,
                    const MemoryType mtype = LOCAL_RAM,
                    const unsigned short int deviceIndex = 0 );
 
