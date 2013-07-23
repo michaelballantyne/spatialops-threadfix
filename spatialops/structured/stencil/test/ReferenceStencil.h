@@ -390,8 +390,8 @@ namespace structured {
                              w.extent() - shift );
 
       FieldType d(wd, dest);
-      FieldType s1(ws1, src);
-      FieldType s2(ws2, src);
+      const FieldType s1(ws1, src);
+      const FieldType s2(ws2, src);
 
       typename FieldType::iterator id = d.begin();
       typename FieldType::iterator ide = d.end();
