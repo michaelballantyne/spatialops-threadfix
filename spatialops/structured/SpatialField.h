@@ -117,11 +117,13 @@ namespace structured{
     MemoryType memType_; 		///< Indicates the type of device on which this field is allocated
     unsigned short deviceIndex_;        ///< Indicates which device is this field stored on
 
+    bool readOnly_;                     ///< flag set to prevent write-access to the field
+    bool disableInterior_;              ///< flag set to prevent interior iteration on this field
+
     //Note: Presently this is assumed to be a collection of GPU based < index, pointer pairs >;
     //      which is not as general is it likely should be, but GPUs are currently the only external
     //      device we're interested in supporting.
     ConsumerMap consumerFieldValues_;	///< Provides the ability to store and track copies of this field consumed on other devices.
-    bool hasConsumer_;                  ///< Indicates whether a field has consumers or not
     ConsumerMap myConsumerFieldValues_;	///< Provides the ability to correctly delete/release copies of this field that this field allocated
 
     unsigned long int allocatedBytes_;	///< Stores entire field size in bytes: sizeof(T) * glob.x * glob.y * glob.z
@@ -249,7 +251,7 @@ namespace structured{
      *  NOTE: USAGE IS DEPRECATED!! Not supported for external field types
      */
     inline T& operator[](const size_t i);
-    inline T& operator[](const size_t i) const;
+    inline const T& operator[](const size_t i) const;
 
     /**
      * \brief Iterator constructs for traversing memory windows.
@@ -257,7 +259,7 @@ namespace structured{
      * @return
      */
     inline const_iterator begin() const {
-      if (memType_ != LOCAL_RAM && fieldValues_ == NULL) {
+      if( memType_ != LOCAL_RAM && fieldValues_ == NULL ){
         std::ostringstream msg;
         msg << "Field type ( "
             << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
@@ -269,7 +271,7 @@ namespace structured{
     }
 
     inline iterator begin() {
-      if (memType_ != LOCAL_RAM) {
+      if( memType_ != LOCAL_RAM ){
         std::ostringstream msg;
         msg << "Field type ( "
             << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
@@ -277,11 +279,11 @@ namespace structured{
             << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
         throw(std::runtime_error(msg.str()));
       }
-      else if (hasConsumer_) {
+      if( readOnly_ ){
 	std::ostringstream msg;
         msg << "Field type ( "
             << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
-            << " has consumers, so it cannot support non-const iteration.\n"
+            << " is read-only, so it cannot support non-const iteration.\n"
             << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
         throw(std::runtime_error(msg.str()));
       }
@@ -292,7 +294,13 @@ namespace structured{
     inline iterator end();
 
     inline const_interior_iterator interior_begin() const {
-      if ( memType_ != LOCAL_RAM && fieldValues_ == NULL ) {
+      if( disableInterior_ ){
+        std::ostringstream msg;
+        msg << "Interior iterators cannot be obtained on resized fields" << std::endl
+            << __FILE__ << " : " << __LINE__ << std::endl;
+        throw( std::runtime_error(msg.str()) );
+      }
+      if( memType_ != LOCAL_RAM && fieldValues_ == NULL ){
         std::ostringstream msg;
         msg << "Field type ( "
             << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
@@ -304,6 +312,13 @@ namespace structured{
     }
 
     inline interior_iterator interior_begin() {
+      if( disableInterior_ ){
+        std::ostringstream msg;
+        msg << "Interior iterators cannot be obtained on resized fields" << std::endl
+            << __FILE__ << " : " << __LINE__ << std::endl;
+        throw( std::runtime_error(msg.str()) );
+      }
+
       if (memType_ != LOCAL_RAM) {
         std::ostringstream msg;
         msg << "Field type ( "
@@ -312,7 +327,7 @@ namespace structured{
             << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
         throw(std::runtime_error(msg.str()));
       }
-      else if (hasConsumer_) {
+      else if( readOnly_ ){
 	std::ostringstream msg;
         msg << "Field type ( "
             << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
@@ -427,6 +442,26 @@ namespace structured{
       fieldWindow_ = MemoryWindow( fieldWindow_.glob_dim(),
                                    fieldWindow_.offset() + diff,
                                    fieldWindow_.extent() - diff - validGhosts_.get_plus() + ghosts.get_plus() );
+    }
+
+    /**
+     * @brief Obtain a child field that is reshaped.
+     * @param extentModify the amount to modify the extent of the current field by
+     * @param shift the number of grid points to shif the current field by
+     * @return the reshaped child field
+     *
+     * The memory is the same as the parent field, but windowed differently.
+     * Note that a reshaped field is considered read-only and you cannot obtain
+     * interior iterators for these fields.
+     */
+    MyType
+    inline reshape( const IntVec& extentModify,
+                    const IntVec& shift ) const
+    {
+      MemoryWindow w( fieldWindow_.glob_dim(),
+                      fieldWindow_.offset() + shift,
+                      fieldWindow_.extent() + extentModify );
+      return MyType( w, *this );
     }
 
     // jcs needs to be redone/removed
@@ -609,7 +644,8 @@ SpatialField( const MemoryWindow& window,
               const StorageMode mode,
               const MemoryType mtype,
               const unsigned short int devIdx )
-    : fieldWindow_(window), interiorFieldWindow_(window), // reset with correct info later
+    : fieldWindow_(window),
+      interiorFieldWindow_(window), // reset with correct info later
       bcInfo_( bc ),
       ghosts_     ( ghost ),
       validGhosts_( ghost ),
@@ -623,7 +659,8 @@ SpatialField( const MemoryWindow& window,
       builtField_( mode == InternalStorage ),
       memType_( mtype ),
       deviceIndex_( devIdx ),
-      hasConsumer_( false ),
+      readOnly_( false ),
+      disableInterior_( false ),
       allocatedBytes_( 0 )
 #     ifdef ENABLE_CUDA
       , cudaStream_( 0 )
@@ -705,8 +742,9 @@ SpatialField<Location, GhostTraits, T>::SpatialField( const SpatialField& other 
   builtField_(false),
   memType_(other.memType_),
   deviceIndex_(other.deviceIndex_),
+  readOnly_( other.readOnly_ ),
+  disableInterior_( other.disableInterior_ ),
   consumerFieldValues_(other.consumerFieldValues_),
-  hasConsumer_( other.hasConsumer_ ),
   allocatedBytes_( other.allocatedBytes_ )
 # ifdef ENABLE_CUDA
   , cudaStream_( other.cudaStream_ )
@@ -728,13 +766,31 @@ SpatialField( const MemoryWindow& window, const SpatialField& other )
   builtField_(false),
   memType_(other.memType_),
   deviceIndex_(other.deviceIndex_),
+  readOnly_( other.readOnly_ ),
+  disableInterior_( other.disableInterior_ ),
   consumerFieldValues_(other.consumerFieldValues_),
-  hasConsumer_( other.hasConsumer_ ),
   allocatedBytes_( other.allocatedBytes_ )
 # ifdef ENABLE_CUDA
     , cudaStream_( other.cudaStream_ )
 # endif
 {
+  /*
+   *  If the new window results in a view of the field that
+   *  cuts into the interior, then disable interior iterators.
+   */
+  if( window.offset(0) > other.interiorFieldWindow_.offset(0) ||
+      window.offset(1) > other.interiorFieldWindow_.offset(1) ||
+      window.offset(2) > other.interiorFieldWindow_.offset(2) ||
+      window.extent(0)+window.offset(0) < interiorFieldWindow_.offset(0)+interiorFieldWindow_.extent(0) ||
+      window.extent(1)+window.offset(1) < interiorFieldWindow_.offset(1)+interiorFieldWindow_.extent(1) ||
+      window.extent(2)+window.offset(2) < interiorFieldWindow_.offset(2)+interiorFieldWindow_.extent(2) )
+  {
+    // jcs I would like to be able to disable write access, but in multithreaded
+    //     situations we must be able to write to subsets of the field.
+    //readOnly_ = true;
+    disableInterior_ = true;
+  }
+
   // ensure that we are doing sane operations with the new window:
 # ifndef NDEBUG
   assert( window.sanity_check() );
@@ -841,7 +897,7 @@ T* SpatialField<Location, GhostTraits, T>::
 field_values( const MemoryType consumerMemoryType,
               const unsigned short int consumerDeviceIndex )
 {
-  if ( hasConsumer_ ) {
+  if( readOnly_ ){
     std::ostringstream msg;
     msg << "Field type ( "
         << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
@@ -893,9 +949,9 @@ field_values( const MemoryType consumerMemoryType,
 //------------------------------------------------------------------
 
 template<typename Location, typename GhostTraits, typename T>
-  const T* SpatialField<Location, GhostTraits, T>::
-  field_values( const MemoryType consumerMemoryType,
-		const unsigned short int consumerDeviceIndex ) const
+const T* SpatialField<Location, GhostTraits, T>::
+field_values( const MemoryType consumerMemoryType,
+    const unsigned short int consumerDeviceIndex ) const
 {
   switch( consumerMemoryType ){
   case LOCAL_RAM:{
@@ -943,7 +999,7 @@ void SpatialField<Location, GhostTraits, T>::
 add_consumer( MemoryType consumerMemoryType,
               const unsigned short int consumerDeviceIndex )
 {
-  hasConsumer_ = true;
+  readOnly_ = true;  // once a consumer is added, we only allow read-only access
 #ifdef DEBUG_SF_ALL
   std::cout << "Caught call to Spatial Field add_consumer for field : " << this->field_values() << "\n";
 #endif
@@ -1164,6 +1220,12 @@ template<typename Location, typename GhostTraits, typename T>
 typename SpatialField<Location, GhostTraits, T>::const_interior_iterator
 SpatialField<Location,GhostTraits,T>::interior_end() const
 {
+  if( disableInterior_ ){
+    std::ostringstream msg;
+    msg << "Interior iterators cannot be obtained on resized fields" << std::endl
+        << __FILE__ << " : " << __LINE__ << std::endl;
+    throw( std::runtime_error(msg.str()) );
+  }
   if( memType_ == LOCAL_RAM || fieldValues_ != NULL ) {
     const size_t extent = interiorFieldWindow_.extent(0) * interiorFieldWindow_.extent(1) * interiorFieldWindow_.extent(2);
     const_interior_iterator i(fieldValues_, interiorFieldWindow_);
@@ -1183,6 +1245,19 @@ template<typename Location, typename GhostTraits, typename T>
 typename SpatialField<Location, GhostTraits, T>::interior_iterator
 SpatialField<Location,GhostTraits,T>::interior_end()
 {
+  if( disableInterior_ ){
+    std::ostringstream msg;
+    msg << "Interior iterators cannot be obtained on resized fields" << std::endl
+        << __FILE__ << " : " << __LINE__ << std::endl;
+    throw( std::runtime_error(msg.str()) );
+  }
+  if( readOnly_ ){
+    std::ostringstream msg;
+    msg << "Cannot obtain a non-const iterator to a read-only field." << std::endl
+        << __FILE__ << " : " << __LINE__ << std::endl;
+    throw( std::runtime_error(msg.str()) );
+  }
+
   switch (memType_) {
   case LOCAL_RAM: {
     const size_t extent = interiorFieldWindow_.extent(0) * interiorFieldWindow_.extent(1) * interiorFieldWindow_.extent(2);
@@ -1205,6 +1280,13 @@ T&
 SpatialField<Location, GhostTraits, T>::
 operator()( const size_t i, const size_t j, const size_t k )
 {
+  if( readOnly_ ){
+    std::ostringstream msg;
+    msg << "Cannot obtain a non-const iterator to a read-only field." << std::endl
+        << __FILE__ << " : " << __LINE__ << std::endl;
+    throw( std::runtime_error(msg.str()) );
+  }
+
   switch (memType_) {
   case LOCAL_RAM: {
     return (*this)(IntVec(i, j, k));
@@ -1224,6 +1306,13 @@ template<typename Location, typename GhostTraits, typename T>
 T&
 SpatialField<Location, GhostTraits, T>::operator()(const IntVec& ijk)
 {
+  if( readOnly_ ){
+    std::ostringstream msg;
+    msg << "Cannot obtain a non-const iterator to a read-only field." << std::endl
+        << __FILE__ << " : " << __LINE__ << std::endl;
+    throw( std::runtime_error(msg.str()) );
+  }
+
   switch (memType_) {
   case LOCAL_RAM: {
 #   ifndef NDEBUG
@@ -1304,6 +1393,13 @@ template<typename Location, typename GhostTraits, typename T>
 T&
 SpatialField<Location, GhostTraits, T>::operator[](const size_t i)
 {
+  if( readOnly_ ){
+    std::ostringstream msg;
+    msg << "Cannot obtain a non-const iterator to a read-only field." << std::endl
+        << __FILE__ << " : " << __LINE__ << std::endl;
+    throw( std::runtime_error(msg.str()) );
+  }
+
   switch (memType_) {
   case LOCAL_RAM: {
     return fieldValues_[i];
@@ -1328,12 +1424,10 @@ SpatialField<Location, GhostTraits, T>::operator[](const size_t i)
 //		However, given the deprecated nature of the function, this may
 //		not be an immediate issue.
 template<typename Location, typename GhostTraits, typename T>
-T&
+const T&
 SpatialField<Location, GhostTraits, T>::operator[](const size_t i) const
 {
-  if ( memType_ == LOCAL_RAM || fieldValues_ != NULL ){
-    return fieldValues_[i];
-  } else {
+  if( memType_ != LOCAL_RAM || fieldValues_ == NULL ){
     std::ostringstream msg;
     msg << "Field type ( "
         << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
@@ -1342,6 +1436,7 @@ SpatialField<Location, GhostTraits, T>::operator[](const size_t i) const
         << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
     throw(std::runtime_error(msg.str()));
   }
+  return fieldValues_[i];
 }
 
 //------------------------------------------------------------------
@@ -1350,6 +1445,13 @@ template<typename Location, typename GhostTraits, typename T>
 SpatialField<Location, GhostTraits, T>&
 SpatialField<Location, GhostTraits, T>::operator=(const MyType& other)
 {
+  if( readOnly_ ){
+    std::ostringstream msg;
+    msg << "Cannot obtain a non-const iterator to a read-only field." << std::endl
+        << __FILE__ << " : " << __LINE__ << std::endl;
+    throw( std::runtime_error(msg.str()) );
+  }
+
   if( allocatedBytes_ != other.allocatedBytes_ ) {
     std::ostringstream msg;
     msg << "Attempted assignment between fields of unequal size!\n"
