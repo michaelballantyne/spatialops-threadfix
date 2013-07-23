@@ -38,6 +38,16 @@
 
 namespace SpatialOps{ namespace structured{
 
+  inline void check_valid( const IntVec& minus, const IntVec& plus )
+  {
+#   ifndef NDEBUG
+    for( int i=0; i<3; ++i ){
+      assert( minus[i] >= 0 );
+      assert(  plus[i] >= 0 );
+    }
+#   endif
+  }
+
   //-----------------------------------------------------------------
 
   GhostDataRT::GhostDataRT( const int nx, const int px,
@@ -45,18 +55,24 @@ namespace SpatialOps{ namespace structured{
                             const int nz, const int pz )
   : minus_( nx, ny, nz ),
     plus_ ( px, py, pz )
-  {}
+  {
+    check_valid(minus_,plus_);
+  }
 
   GhostDataRT::GhostDataRT( const IntVec& minus,
                             const IntVec& plus )
   : minus_( minus ),
     plus_ ( plus  )
-  {}
+  {
+    check_valid(minus_,plus_);
+  }
 
   GhostDataRT::GhostDataRT( const int n )
   : minus_( n, n, n ),
     plus_ ( n, n, n )
-  {}
+  {
+    check_valid(minus_,plus_);
+  }
 
   //-----------------------------------------------------------------
 
@@ -65,6 +81,7 @@ namespace SpatialOps{ namespace structured{
   {
     minus_ = rhs.minus_;
     plus_  = rhs.plus_;
+    check_valid(minus_,plus_);
     return *this;
   }
 
@@ -72,6 +89,7 @@ namespace SpatialOps{ namespace structured{
   {
     minus_ = rhs.minus_;
     plus_  = rhs.plus_;
+    check_valid(minus_,plus_);
   }
 
   //-----------------------------------------------------------------
@@ -99,6 +117,7 @@ namespace SpatialOps{ namespace structured{
   {
     minus_ -= rhs.minus_;
     plus_  -= rhs.plus_;
+    check_valid(minus_,plus_);
     return *this;
   }
 
@@ -107,6 +126,7 @@ namespace SpatialOps{ namespace structured{
   {
     minus_ += rhs.minus_;
     plus_  += rhs.plus_;
+    check_valid(minus_,plus_);
     return *this;
   }
 

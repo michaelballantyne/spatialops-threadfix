@@ -422,13 +422,6 @@ namespace structured{
      * This method should be used when a field assignment can only occur on a subset of the field due to invalidation of some of the ghost cells.
      */
     inline void reset_valid_ghosts( const GhostDataRT& ghosts ){
-#     ifndef NDEBUG
-      // don't allow the valid ghosts to expand
-      for( int i=0; i<3; ++i ){
-        assert( ghosts.get_minus(i) <= validGhosts_.get_minus(i) );
-        assert( ghosts.get_plus(i)  <= validGhosts_.get_plus(i)  );
-      }
-#     endif
       const IntVec diff = validGhosts_.get_minus() - ghosts.get_minus();
       validGhosts_ = ghosts;
       fieldWindow_ = MemoryWindow( fieldWindow_.glob_dim(),
