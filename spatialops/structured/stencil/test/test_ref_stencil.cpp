@@ -543,7 +543,7 @@ int main( int iarg, char* carg[] )
           return 0;
       }
   }
-  catch( std::runtime_error& e ){
+  catch( std::exception& e ){
       cout << e.what() << endl;
   }
 
