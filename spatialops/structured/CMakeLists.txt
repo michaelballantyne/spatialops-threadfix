@@ -1,6 +1,7 @@
 set( src
      GhostData.cpp
      Grid.cpp
+     MemoryPool.cpp
      MemoryWindow.cpp
     )
 
@@ -34,11 +35,11 @@ install( FILES
   IntVec.h
   ExternalAllocators.h
   CudaMemoryAllocator.h
+  MemoryPool.h
   MemoryTypes.h
   MemoryWindow.h
   SpatialField.h
   SpatialFieldStore.h
-  MemoryPool.h
   DESTINATION include/spatialops/structured
   PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
   )

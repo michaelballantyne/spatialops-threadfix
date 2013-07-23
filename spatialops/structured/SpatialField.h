@@ -731,6 +731,9 @@ SpatialField( const MemoryWindow& window, const SpatialField& other )
   consumerFieldValues_(other.consumerFieldValues_),
   hasConsumer_( other.hasConsumer_ ),
   allocatedBytes_( other.allocatedBytes_ )
+# ifdef ENABLE_CUDA
+    , cudaStream_( other.cudaStream_ )
+# endif
 {
   // ensure that we are doing sane operations with the new window:
 # ifndef NDEBUG

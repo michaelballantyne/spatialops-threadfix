@@ -137,6 +137,8 @@ namespace SpatialOps{
      * Assumes a fortran-style layout (e.g. first index varies fastest)
      */
     inline int ijk_to_flat( const IntVec& dim, const IntVec& loc ){
+      assert( loc[0] < dim[0] && loc[1] < dim[1] && loc[2] < dim[2] );
+      assert( loc[0] >= 0 && loc[1] >= 0 && loc[2] >= 0 );
       return loc[0] + loc[1]*dim[0] + loc[2]*dim[0]*dim[1];
     }
 
@@ -147,6 +149,8 @@ namespace SpatialOps{
      * Assumes a fortran-style layout (e.g. first index varies fastest)
      */
     inline IntVec flat_to_ijk( const IntVec& dim, const int pt ){
+      assert( pt >= 0 );
+      assert( pt < dim[0]*dim[1]*dim[2] );
       return IntVec( pt % dim[0], (pt / dim[0]) % dim[1], pt / (dim[0]*dim[1]) );
     }
 
