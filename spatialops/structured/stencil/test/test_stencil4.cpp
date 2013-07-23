@@ -67,28 +67,33 @@ int main( int iarg, char* carg[] )
          << endl;
   }
 
-  TestHelper status( true );
+  try{
+    TestHelper status( true );
 
-  const double length = 10.0;
+    const double length = 10.0;
 
-  if( npts[0]>1 && npts[1]>1 ) status( run_convergence<Interpolant,SVolField,XSurfYField,XDIR,YDIR>( npts, bcplus, length, 2.0 ), "SVol->XSurfY" );
-  if( npts[0]>1 && npts[2]>1 ) status( run_convergence<Interpolant,SVolField,XSurfZField,XDIR,ZDIR>( npts, bcplus, length, 2.0 ), "SVol->XSurfZ" );
-  if( npts[1]>1 && npts[0]>1 ) status( run_convergence<Interpolant,SVolField,YSurfXField,XDIR,YDIR>( npts, bcplus, length, 2.0 ), "SVol->YSurfX" );
-  if( npts[1]>1 && npts[2]>1 ) status( run_convergence<Interpolant,SVolField,YSurfZField,YDIR,ZDIR>( npts, bcplus, length, 2.0 ), "SVol->YSurfZ" );
+    if( npts[0]>1 && npts[1]>1 ) status( run_convergence<Interpolant,SVolField,XSurfYField,XDIR,YDIR>( npts, bcplus, length, 2.0 ), "SVol->XSurfY" );
+    if( npts[0]>1 && npts[2]>1 ) status( run_convergence<Interpolant,SVolField,XSurfZField,XDIR,ZDIR>( npts, bcplus, length, 2.0 ), "SVol->XSurfZ" );
+    if( npts[1]>1 && npts[0]>1 ) status( run_convergence<Interpolant,SVolField,YSurfXField,XDIR,YDIR>( npts, bcplus, length, 2.0 ), "SVol->YSurfX" );
+    if( npts[1]>1 && npts[2]>1 ) status( run_convergence<Interpolant,SVolField,YSurfZField,YDIR,ZDIR>( npts, bcplus, length, 2.0 ), "SVol->YSurfZ" );
 
-  if( npts[2]>1 && npts[0]>1 ) status( run_convergence<Interpolant,SVolField,ZSurfXField,XDIR,ZDIR>( npts, bcplus, length, 2.0 ), "SVol->ZSurfX" );
-  if( npts[2]>1 && npts[1]>1 ) status( run_convergence<Interpolant,SVolField,ZSurfYField,YDIR,ZDIR>( npts, bcplus, length, 2.0 ), "SVol->ZSurfY" );
+    if( npts[2]>1 && npts[0]>1 ) status( run_convergence<Interpolant,SVolField,ZSurfXField,XDIR,ZDIR>( npts, bcplus, length, 2.0 ), "SVol->ZSurfX" );
+    if( npts[2]>1 && npts[1]>1 ) status( run_convergence<Interpolant,SVolField,ZSurfYField,YDIR,ZDIR>( npts, bcplus, length, 2.0 ), "SVol->ZSurfY" );
 
-  if( npts[0]>1 && npts[1]>1 ) status( run_convergence<Interpolant,XSurfYField,SVolField,XDIR,YDIR>( npts, bcplus, length, 2.0 ), "XSurfY->SVol" );
-  if( npts[0]>1 && npts[1]>1 ) status( run_convergence<Interpolant,XSurfZField,SVolField,XDIR,ZDIR>( npts, bcplus, length, 2.0 ), "XSurfZ->SVol" );
-  if( npts[0]>1 && npts[1]>1 ) status( run_convergence<Interpolant,YSurfXField,SVolField,YDIR,XDIR>( npts, bcplus, length, 2.0 ), "YSurfX->SVol" );
-  if( npts[0]>1 && npts[1]>1 ) status( run_convergence<Interpolant,YSurfZField,SVolField,YDIR,ZDIR>( npts, bcplus, length, 2.0 ), "YSurfZ->SVol" );
-  if( npts[0]>1 && npts[1]>1 ) status( run_convergence<Interpolant,ZSurfXField,SVolField,ZDIR,XDIR>( npts, bcplus, length, 2.0 ), "ZSurfX->SVol" );
-  if( npts[0]>1 && npts[1]>1 ) status( run_convergence<Interpolant,ZSurfYField,SVolField,ZDIR,YDIR>( npts, bcplus, length, 2.0 ), "ZSurfY->SVol" );
+    if( npts[0]>1 && npts[1]>1 ) status( run_convergence<Interpolant,XSurfYField,SVolField,XDIR,YDIR>( npts, bcplus, length, 2.0 ), "XSurfY->SVol" );
+    if( npts[0]>1 && npts[1]>1 ) status( run_convergence<Interpolant,XSurfZField,SVolField,XDIR,ZDIR>( npts, bcplus, length, 2.0 ), "XSurfZ->SVol" );
+    if( npts[0]>1 && npts[1]>1 ) status( run_convergence<Interpolant,YSurfXField,SVolField,YDIR,XDIR>( npts, bcplus, length, 2.0 ), "YSurfX->SVol" );
+    if( npts[0]>1 && npts[1]>1 ) status( run_convergence<Interpolant,YSurfZField,SVolField,YDIR,ZDIR>( npts, bcplus, length, 2.0 ), "YSurfZ->SVol" );
+    if( npts[0]>1 && npts[1]>1 ) status( run_convergence<Interpolant,ZSurfXField,SVolField,ZDIR,XDIR>( npts, bcplus, length, 2.0 ), "ZSurfX->SVol" );
+    if( npts[0]>1 && npts[1]>1 ) status( run_convergence<Interpolant,ZSurfYField,SVolField,ZDIR,YDIR>( npts, bcplus, length, 2.0 ), "ZSurfY->SVol" );
 
-  if( status.ok() ){
-    cout << "PASS" << endl;
-    return 0;
+    if( status.ok() ){
+      cout << "PASS" << endl;
+      return 0;
+    }
+  }
+  catch( std::exception& err ){
+    cout << err.what() << std::endl;
   }
   cout << "FAIL" << endl;
   return -1;
