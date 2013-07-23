@@ -220,8 +220,8 @@ struct ThreadWork{
     const BoundaryCellInfo bc = BoundaryCellInfo::build<T>(true,true,true);
     const MemoryWindow ww = get_window_with_ghost( IntVec(24,1,1), ghost, bc );
     for( size_t i=0; i<100; ++i ){
-      SpatFldPtr<T> f1 = SpatialFieldStore::get_from_window<T>( ww, ghost, bc );
-      SpatFldPtr<T> f2 = SpatialFieldStore::get_from_window<T>( ww, ghost, bc );
+      SpatFldPtr<T> f1 = SpatialFieldStore::get_from_window<T>( ww, bc, ghost );
+      SpatFldPtr<T> f2 = SpatialFieldStore::get_from_window<T>( ww, bc, ghost );
       *f1 <<= 0.0;
     }
   }
