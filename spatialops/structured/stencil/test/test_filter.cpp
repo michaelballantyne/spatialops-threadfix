@@ -46,33 +46,39 @@ bool run_test( const IntVec& dim )
 
 int main()
 {
-  TestHelper status(true);
+  try{
+    TestHelper status(true);
 
-  status( run_test<XDIR>( IntVec(30, 1, 1) ), "[30, 1, 1], X" );
-  status( run_test<XDIR>( IntVec(30,30, 1) ), "[30,30, 1], X" );
-  status( run_test<XDIR>( IntVec(30, 1,30) ), "[30, 1,30], X" );
-  status( run_test<XDIR>( IntVec(30,30,30) ), "[30,30,30], X" );
+    status( run_test<XDIR>( IntVec(30, 1, 1) ), "[30, 1, 1], X" );
+    status( run_test<XDIR>( IntVec(30,30, 1) ), "[30,30, 1], X" );
+    status( run_test<XDIR>( IntVec(30, 1,30) ), "[30, 1,30], X" );
+    status( run_test<XDIR>( IntVec(30,30,30) ), "[30,30,30], X" );
 
-  std::cout << std::endl;
+    std::cout << std::endl;
 
-  status( run_test<YDIR>( IntVec( 1,30, 1) ), "[ 1,30, 1], Y" );
-  status( run_test<YDIR>( IntVec(30,30, 1) ), "[30,30, 1], Y" );
-  status( run_test<YDIR>( IntVec( 1,30,30) ), "[ 1,30,30], Y" );
-  status( run_test<YDIR>( IntVec(30,30,30) ), "[30,30,30], Y" );
+    status( run_test<YDIR>( IntVec( 1,30, 1) ), "[ 1,30, 1], Y" );
+    status( run_test<YDIR>( IntVec(30,30, 1) ), "[30,30, 1], Y" );
+    status( run_test<YDIR>( IntVec( 1,30,30) ), "[ 1,30,30], Y" );
+    status( run_test<YDIR>( IntVec(30,30,30) ), "[30,30,30], Y" );
 
-  std::cout << std::endl;
+    std::cout << std::endl;
 
-  status( run_test<ZDIR>( IntVec( 1, 1,30) ), "[ 1, 1,30], Z" );
-  status( run_test<ZDIR>( IntVec(30, 1,30) ), "[30, 1,30], Z" );
-  status( run_test<ZDIR>( IntVec( 1,30,30) ), "[ 1,30,30], Z" );
-  status( run_test<ZDIR>( IntVec(30,30,30) ), "[30,30,30], Z" );
+    status( run_test<ZDIR>( IntVec( 1, 1,30) ), "[ 1, 1,30], Z" );
+    status( run_test<ZDIR>( IntVec(30, 1,30) ), "[30, 1,30], Z" );
+    status( run_test<ZDIR>( IntVec( 1,30,30) ), "[ 1,30,30], Z" );
+    status( run_test<ZDIR>( IntVec(30,30,30) ), "[30,30,30], Z" );
 
-  std::cout << std::endl;
+    std::cout << std::endl;
 
-  if( status.ok() ){
-    std::cout << "PASS" << std::endl;
-    return 0;
+    if( status.ok() ){
+      std::cout << "PASS" << std::endl;
+      return 0;
+    }
+  }
+  catch( std::exception& err ){
+    std::cout << err.what() << std::endl;
   }
   std::cout << "FAIL" << std::endl;
   return -1;
 }
+

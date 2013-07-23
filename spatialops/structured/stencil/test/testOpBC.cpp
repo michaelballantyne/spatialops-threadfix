@@ -246,24 +246,27 @@ int main()
 {
   TestHelper status(true);
 
-  status( test_driver( IntVec(10,1 ,1 ) ), "Mesh: (10,1,1)\n" );
-  status( test_driver( IntVec(1 ,10,1 ) ), "Mesh: (1,10,1)\n" );
-  status( test_driver( IntVec(1 ,1 ,10) ), "Mesh: (1,1,10)\n" );
+  try{
+    status( test_driver( IntVec(10,1 ,1 ) ), "Mesh: (10,1,1)\n" );
+    status( test_driver( IntVec(1 ,10,1 ) ), "Mesh: (1,10,1)\n" );
+    status( test_driver( IntVec(1 ,1 ,10) ), "Mesh: (1,1,10)\n" );
 
-  status( test_driver( IntVec(10,10,1 ) ), "Mesh: (10,10,1)\n" );
-  status( test_driver( IntVec(10,1 ,10) ), "Mesh: (10,1,10)\n" );
-  status( test_driver( IntVec(1 ,10,10) ), "Mesh: (1,10,10)\n" );
+    status( test_driver( IntVec(10,10,1 ) ), "Mesh: (10,10,1)\n" );
+    status( test_driver( IntVec(10,1 ,10) ), "Mesh: (10,1,10)\n" );
+    status( test_driver( IntVec(1 ,10,10) ), "Mesh: (1,10,10)\n" );
 
-  status( test_driver( IntVec(10,10,10) ), "Mesh: (10,10,10)\n" );
+    status( test_driver( IntVec(10,10,10) ), "Mesh: (10,10,10)\n" );
 
-  cout << endl << "----------" << endl
-      << "BC Op Test: ";
-  if( status.ok() ){
-    cout << "PASS" << endl << "----------" << endl;
-    return 0;
+    cout << endl << "----------" << endl
+        << "BC Op Test: ";
+    if( status.ok() ){
+      cout << "PASS" << endl << "----------" << endl;
+      return 0;
+    }
   }
-  else{
-    cout << "FAIL" << endl << "----------" << endl;
+  catch( std::exception& err ){
+    cout << err.what() << std::endl;
   }
+  cout << "FAIL" << endl << "----------" << endl;
   return -1;
 }
