@@ -2,15 +2,12 @@
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/structured/FVTools.h>
 
-#include <spatialops/particles/ParticleFieldTypes.h>
-
 #include <spatialops/structured/FieldComparisons.h>
 #include "TestHelper.h"
 
 #include <numeric>
 
 namespace SS = SpatialOps::structured;
-namespace SP = SpatialOps::Particle;
 
 using namespace SpatialOps;
 
@@ -23,7 +20,7 @@ bool test( const SS::IntVec dim )
   FieldT x(w,NULL);
 
   const SS::IntVec& globDim = w.glob_dim();
-  const double dx = 3.1415 / (globDim[0]-1);
+  const double dx = 3.1415 / (globDim[0]);
   for( int k=0; k<globDim[2]; ++k ){
     for( int j=0; j<globDim[1]; ++j ){
       for( int i=0; i<globDim[0]; ++i ){
@@ -37,71 +34,42 @@ bool test( const SS::IntVec dim )
   typedef typename FieldT::iterator       iter;
 
   {
-    TestHelper tmp(false);
-    f1 <<= 1.0 + sin( x ) + 2.0;
+    f1 <<= sin( x ) + 3.0;
     constiter i1=f1.begin(), ix=x.begin();
     for( iter i2=f2.begin(); i2!=f2.end(); ++i2, ++ix, ++i1 ){
       *i2 = sin( *ix ) + 3.0;
-      tmp( *i1 == *i2 );
     }
-    status( tmp.ok(), "sin(x)+3" );
+    status( field_equal_ulp(f2, f1, 1), "sin(x)+3" );
   }
 
   {
-    TestHelper tmp(false);
-    {
-      constiter ix=x.begin();
-      iter i2=f2.begin();
-      for( iter i1=f1.begin(); i1!=f1.end(); ++i1, ++i2, ++ix ){
-        *i1 = std::sin( *ix ) + 4.0;
-        *i2 = std::cos( *ix ) + 3.0;
-      }
+    constiter ix=x.begin();
+    iter i2=f2.begin();
+    for( iter i1=f1.begin(); i1!=f1.end(); ++i1, ++i2, ++ix ){
+      *i1 = std::sin( *ix ) + 4.0;
+      *i2 = std::cos( *ix ) + 3.0;
     }
-    f3 <<= cos(x);
-    status( field_equal(f3, f2, 0.0), "cos(x)" );
-
-    f3 <<= f1+(f2*f1)-f2/f1;
-
-    double l2norm = 0;
-    constiter i1=f1.begin(), i2=f2.begin(), i3=f3.begin();
-    for( iter i4=f4.begin(); i4!=f4.end(); ++i4, ++i3, ++i2, ++i1 ){
-      *i4 = *i1 + (*i2 * *i1) - *i2 / *i1;
-      tmp( *i4 == *i3 );
-      l2norm += (*i4 * *i4);
-    }
-    l2norm = sqrt(l2norm);
-    status( tmp.ok(), "a+(a*b)-b/a" );
-
-    status( l2norm == field_norm(f4), "norm" );
-    status( *std::max_element(f4.begin(),f4.end()) == field_max(f4), "max" );
-    status( *std::min_element(f4.begin(),f4.end()) == field_min(f4), "min" );
-    status( std::accumulate(f4.begin(),f4.end(),0.0) == field_sum(f4), "sum" );
-
-    // ensure that this compiles
-    const double pi = 3.141592653589793;
-    f3 <<= cos( pi*x*0.5 ) + sin(x*pi) + tanh(x+exp(x/2));
-    f3 <<= f3 * cos(f3);
-    f3 <<= f3 + f1*f2;
-
-    f1 <<= -1.0;
-    f1 <<= abs(f1);
-    for( constiter i1=f1.begin(); i1!=f1.end(); ++i1 ){
-      tmp( *i1 == 1.0 );
-    }
-    status( tmp.ok(), "abs(-1.0) == 1.0" );
   }
+  f3 <<= cos(x) + 3.0;
+  status( field_equal_ulp(f2, f3, 1), "cos(x)" );
 
-  using namespace SpatialOps;  // not sure why we must have this here.
-                               // Particle stuff doesn't compile
-                               // otherwise...
+  f3 <<= f1+(f2*f1)-f2/f1;
 
-  const SS::MemoryWindow pw( SpatialOps::structured::IntVec(100,1,1) );
-  SP::ParticleField pf1(pw,NULL), pf2(pw,NULL), pf3(pw,NULL);
-  pf1 <<= 1.0;
-  pf3 <<= 2.0;
-  pf2 <<= pf1 * pf3;
+  double l2norm = 0;
+  constiter i1=f1.begin(), i2=f2.begin(), i3=f3.begin();
+  for( iter i4=f4.begin(); i4!=f4.end(); ++i4, ++i3, ++i2, ++i1 ){
+    *i4 = *i1 + (*i2 * *i1) - *i2 / *i1;
+    l2norm += (*i4 * *i4);
+  }
+  l2norm = sqrt(l2norm);
+  status( field_equal_ulp(f4, f3, 1), "a+(a*b)-b/a" );
 
-  return true;
+  status( l2norm == field_norm(f4), "norm" );
+  status( *std::max_element(f4.begin(),f4.end()) == field_max(f4), "max" );
+  status( *std::min_element(f4.begin(),f4.end()) == field_min(f4), "min" );
+  status( std::accumulate(f4.begin(),f4.end(),0.0) == field_sum(f4), "sum" );
+
+  return status.ok();
 }
 
 
@@ -137,15 +105,15 @@ int main()
 {
   TestHelper status( true );
 
-  status( drive_test( SS::IntVec(10,1,1) ) );
-  status( drive_test( SS::IntVec(1,10,1) ) );
-  status( drive_test( SS::IntVec(1,1,10) ) );
+  status( drive_test( SS::IntVec(10,1,1) ), "Dimension: (10,1,1) tests");
+  status( drive_test( SS::IntVec(1,10,1) ), "Dimension: (1,10,1) tests");
+  status( drive_test( SS::IntVec(1,1,10) ), "Dimension: (1,1,10) tests");
 
-  status( drive_test( SS::IntVec(10,10,1) ) );
-  status( drive_test( SS::IntVec(10,1,10) ) );
-  status( drive_test( SS::IntVec(1,10,10) ) );
+  status( drive_test( SS::IntVec(10,10,1) ), "Dimension: (10,10,1) tests");
+  status( drive_test( SS::IntVec(10,1,10) ), "Dimension: (10,1,10) tests");
+  status( drive_test( SS::IntVec(1,10,10) ), "Dimension: (1,10,10) tests");
 
-  status( drive_test( SS::IntVec(10,10,10) ) );
+  status( drive_test( SS::IntVec(10,10,10) ), "Dimension: (10,10,10) tests");
 
   if( status.ok() ) return 0;
   return -1;
