@@ -323,362 +323,366 @@ namespace structured{
   class ConstFieldIterator;  // forward
 
   template<typename FieldType>
-    class FieldIterator : public std::iterator<std::random_access_iterator_tag, typename FieldType::value_type> {
-      friend class ConstFieldIterator<FieldType>;
-      typedef FieldIterator<FieldType> Self;
-      typedef typename FieldType::value_type AtomicType;
+  class FieldIterator : public std::iterator<std::random_access_iterator_tag, typename FieldType::value_type> {
+    friend class ConstFieldIterator<FieldType>;
+    typedef FieldIterator<FieldType> Self;
+    typedef typename FieldType::value_type AtomicType;
 
   public:
-      FieldIterator()
-        : current_(NULL),
-          count_(0),
-          xIndex_(0), yIndex_(0), zIndex_(0),
-          yStep_(0), zStep_(0),
-          xExtent_(0), yExtent_(0), zExtent_(0),
-          xyExtent_(0)
-      {};
+    FieldIterator()
+    : current_(NULL),
+      count_(0),
+      xIndex_(0), yIndex_(0), zIndex_(0),
+      yStep_(0), zStep_(0),
+      xExtent_(0), yExtent_(0), zExtent_(0),
+      xyExtent_(0)
+    {};
 
-      FieldIterator(AtomicType * field_values,
-                    const MemoryWindow & w)
-      : current_(field_values +
-                 w.offset(0) +
-                 w.offset(1) * w.glob_dim(0) +
-                 w.offset(2) * w.glob_dim(0) * w.glob_dim(1)),
-          count_(0),
-          xIndex_(0), yIndex_(0), zIndex_(0),
-          yStep_(w.glob_dim(0) - w.extent(0)),
-          zStep_((w.glob_dim(1) - w.extent(1)) * w.glob_dim(0)),
-          xExtent_(w.extent(0)),
-          yExtent_(w.extent(1)),
-          zExtent_(w.extent(2)),
-          xyExtent_(w.extent(0) * w.extent(1))
-      {};
+    FieldIterator( AtomicType * field_values,
+                   const MemoryWindow & w )
+    : current_(field_values +
+               w.offset(0) +
+               w.offset(1) * w.glob_dim(0) +
+               w.offset(2) * w.glob_dim(0) * w.glob_dim(1)),
+      count_(0),
+      xIndex_(0), yIndex_(0), zIndex_(0),
+      yStep_(w.glob_dim(0) - w.extent(0)),
+      zStep_((w.glob_dim(1) - w.extent(1)) * w.glob_dim(0)),
+      xExtent_(w.extent(0)),
+      yExtent_(w.extent(1)),
+      zExtent_(w.extent(2)),
+      xyExtent_(w.extent(0) * w.extent(1))
+    {};
 
-      //mutable dereference
-      inline AtomicType & operator*() {
-#         ifndef NDEBUG
-          if(count_ != (xIndex_ +
-                        yIndex_ * xExtent_ +
-                        zIndex_ * xyExtent_)) {
-              std::ostringstream msg;
-              msg << __FILE__ << " : " << __LINE__ << std::endl
-                  << "iterator's internal count is off";
-              throw std::runtime_error(msg.str());
-          };
-          if(xIndex_ >= xExtent_ ||
-             yIndex_ >= yExtent_ ||
-             zIndex_ >= zExtent_ ||
-             xIndex_ < 0 ||
-             yIndex_ < 0 ||
-             zIndex_ < 0) {
-              std::ostringstream msg;
-              msg << __FILE__ << " : " << __LINE__ << std::endl
-                  << "iterator is in an invalid state for dereference";
-              throw std::runtime_error(msg.str());
-          };
-#         endif
-          return *current_;
+    //mutable dereference
+    inline AtomicType & operator*() {
+#     ifndef NDEBUG
+      if( count_ != (xIndex_ +
+          yIndex_ * xExtent_ +
+          zIndex_ * xyExtent_) ){
+        std::ostringstream msg;
+        msg << __FILE__ << " : " << __LINE__ << std::endl
+            << "iterator's internal count is off";
+        throw std::runtime_error(msg.str());
       };
-
-      //immutable dereference
-      inline AtomicType const & operator*() const {
-#         ifndef NDEBUG
-          if(count_ != (xIndex_ +
-                        yIndex_ * xExtent_ +
-                        zIndex_ * xyExtent_)) {
-              std::ostringstream msg;
-              msg << __FILE__ << " : " << __LINE__ << std::endl
-                  << "iterator's internal count is off";
-              throw std::runtime_error(msg.str());
-          };
-          if(xIndex_ >= xExtent_ ||
-             yIndex_ >= yExtent_ ||
-             zIndex_ >= zExtent_ ||
-             xIndex_ < 0 ||
-             yIndex_ < 0 ||
-             zIndex_ < 0) {
-              std::ostringstream msg;
-              msg << __FILE__ << " : " << __LINE__ << std::endl
-                  << "iterator is in an invalid state for dereference";
-              throw std::runtime_error(msg.str());
-          };
-#         endif
-          return *current_;
+      if( xIndex_ >= xExtent_ ||
+          yIndex_ >= yExtent_ ||
+          zIndex_ >= zExtent_ ||
+          xIndex_ < 0 ||
+          yIndex_ < 0 ||
+          zIndex_ < 0 ){
+        std::ostringstream msg;
+        msg << __FILE__ << " : " << __LINE__ << std::endl
+            << "iterator is in an invalid state for dereference";
+        throw std::runtime_error(msg.str());
       };
+#     endif
+      return *current_;
+    };
 
-      //increment
-      inline Self & operator++() {
-          current_++; //xStep
-          count_++;
-          xIndex_++;
-          if(xIndex_ == xExtent_) {
-              current_ += yStep_; //yStep
-              xIndex_ = 0;
-              yIndex_++;
-              if(yIndex_ == yExtent_) {
-                  current_ += zStep_; //zStep
-                  yIndex_ = 0;
-                  zIndex_++;
-              };
-          };
-          return *this;
+    //immutable dereference
+    inline AtomicType const & operator*() const {
+#     ifndef NDEBUG
+      if(count_ != (xIndex_ +
+          yIndex_ * xExtent_ +
+          zIndex_ * xyExtent_)) {
+        std::ostringstream msg;
+        msg << __FILE__ << " : " << __LINE__ << std::endl
+            << "iterator's internal count is off";
+        throw std::runtime_error(msg.str());
       };
-      inline Self operator++(int) { Self result = *this; ++(*this); return result; };
-
-      //decrement
-      inline Self & operator--() {
-          current_--; //xStep
-          count_--;
-          xIndex_--;
-          if(xIndex_ == -1) {
-              current_ -= yStep_; //yStep
-              xIndex_ = xExtent_ - 1;
-              yIndex_--;
-              if(yIndex_ == -1) {
-                  current_ -= zStep_; //zStep
-                  yIndex_ = yExtent_ - 1;
-                  zIndex_--;
-              };
-          };
-          return *this;
+      if( xIndex_ >= xExtent_ ||
+          yIndex_ >= yExtent_ ||
+          zIndex_ >= zExtent_ ||
+          xIndex_ < 0 ||
+          yIndex_ < 0 ||
+          zIndex_ < 0 ){
+        std::ostringstream msg;
+        msg << __FILE__ << " : " << __LINE__ << std::endl
+            << "iterator is in an invalid state for dereference";
+        throw std::runtime_error(msg.str());
       };
-      inline Self operator--(int) { Self result = *this; --(*this); return result; };
+#     endif
+      return *current_;
+    };
 
-      //compound assignment
-      inline Self & operator+=(int change) {
-          //small change (only changes xIndex_)
-          if((change > 0 && //positive change
-              change < xExtent_ - xIndex_) ||
-             (change < 0 && //negative change
-              - change < xIndex_)) {
-              current_ += change;
-              xIndex_ += change;
-              count_ += change;
-          }
-          //bigger change (changes yIndex_ and/or zIndex_)
-          else {
-              current_ += (change + //xStep
-                           yStep_ * (((count_ + change) / xExtent_) - (count_ / xExtent_)) +
-                           zStep_ * (((count_ + change) / xyExtent_) - (count_ /xyExtent_)));
-              count_ += change;
-              xIndex_ = count_ % xExtent_;
-              yIndex_ = (count_ % xyExtent_) / xExtent_;
-              zIndex_ = count_ / xyExtent_;
-          };
-          return *this;
+    //increment
+    inline Self & operator++() {
+      current_++; //xStep
+      count_++;
+      xIndex_++;
+      if(xIndex_ == xExtent_) {
+        current_ += yStep_; //yStep
+        xIndex_ = 0;
+        yIndex_++;
+        if(yIndex_ == yExtent_) {
+          current_ += zStep_; //zStep
+          yIndex_ = 0;
+          zIndex_++;
+        };
       };
-      inline Self & operator-=(int change) { return *this += -change; };
+      return *this;
+    };
+    inline Self operator++(int) { Self result = *this; ++(*this); return result; };
 
-      //addition/subtraction
-      inline Self operator+ (int change) const { Self result = *this; result += change; return result; };
-      inline Self operator- (int change) const { return *this + (-change); };
+    //decrement
+    inline Self & operator--() {
+      current_--; //xStep
+      count_--;
+      xIndex_--;
+      if( xIndex_ == -1 ){
+        current_ -= yStep_; //yStep
+        xIndex_ = xExtent_ - 1;
+        yIndex_--;
+        if( yIndex_ == -1 ){
+          current_ -= zStep_; //zStep
+          yIndex_ = yExtent_ - 1;
+          zIndex_--;
+        };
+      };
+      return *this;
+    };
+    inline Self operator--(int) { Self result = *this; --(*this); return result; };
 
-      //pointer subtraction
-      inline ptrdiff_t operator- (Self const & other) const { return count_ - other.count_; };
+    //compound assignment
+    inline Self & operator+=(int change) {
+      //small change (only changes xIndex_)
+      if( (change > 0 && //positive change
+           change < xExtent_ - xIndex_) ||
+          (change < 0 && //negative change
+           -change < xIndex_) ){
+        current_ += change;
+        xIndex_ += change;
+        count_ += change;
+      }
+      //bigger change (changes yIndex_ and/or zIndex_)
+      else {
+        current_ += (change + //xStep
+            yStep_ * (((count_ + change) / xExtent_ ) - (count_ / xExtent_)) +
+            zStep_ * (((count_ + change) / xyExtent_) - (count_ /xyExtent_)));
+        count_ += change;
+        xIndex_ = count_ % xExtent_;
+        yIndex_ = (count_ % xyExtent_) / xExtent_;
+        zIndex_ = count_ / xyExtent_;
+      };
+      return *this;
+    };
+    inline Self & operator-=(int change) { return *this += -change; };
 
-      //offset dereference
-      inline AtomicType & operator[](int change) { Self result = *this; result += change; return *result; };
+    //addition/subtraction
+    inline Self operator+ (int change) const { Self result = *this; result += change; return result; };
+    inline Self operator- (int change) const { return *this + (-change); };
 
-      //comparisons
-      inline bool operator==(Self const & other) const { return current_ == other.current_; };
-      inline bool operator!=(Self const & other) const { return current_ != other.current_; };
-      inline bool operator< (Self const & other) const { return current_ <  other.current_; };
-      inline bool operator> (Self const & other) const { return current_ >  other.current_; };
-      inline bool operator<=(Self const & other) const { return current_ <= other.current_; };
-      inline bool operator>=(Self const & other) const { return current_ >= other.current_; };
+    //pointer subtraction
+    inline ptrdiff_t operator- (Self const & other) const { return count_ - other.count_; };
+
+    //offset dereference
+    inline AtomicType & operator[](int change) { Self result = *this; result += change; return *result; };
+
+    //comparisons
+    inline bool operator==(Self const & other) const { return current_ == other.current_; };
+    inline bool operator!=(Self const & other) const { return current_ != other.current_; };
+    inline bool operator< (Self const & other) const { return current_ <  other.current_; };
+    inline bool operator> (Self const & other) const { return current_ >  other.current_; };
+    inline bool operator<=(Self const & other) const { return current_ <= other.current_; };
+    inline bool operator>=(Self const & other) const { return current_ >= other.current_; };
+
+    IntVec location() const{ return IntVec(xIndex_,yIndex_,zIndex_); }
 
   private:
-      AtomicType * current_;
-      int count_;
-      int xIndex_;
-      int yIndex_;
-      int zIndex_;
-      int yStep_;
-      int zStep_;
-      int xExtent_;
-      int yExtent_;
-      int zExtent_;
-      int xyExtent_;
+    AtomicType * current_;
+    int count_;
+    int xIndex_;
+    int yIndex_;
+    int zIndex_;
+    int yStep_;
+    int zStep_;
+    int xExtent_;
+    int yExtent_;
+    int zExtent_;
+    int xyExtent_;
   };
 
   template<typename FieldType>
-  inline FieldIterator<FieldType> operator+(int change,
-                                            FieldIterator<FieldType> const & iterator) {
-      return iterator + change;
+  inline FieldIterator<FieldType> operator+( const int change,
+                                             FieldIterator<FieldType> const & iterator) {
+    return iterator + change;
   };
 
   template<typename FieldType>
-    class ConstFieldIterator : public std::iterator<std::random_access_iterator_tag, typename FieldType::value_type> {
-      typedef ConstFieldIterator<FieldType> Self;
-      typedef typename FieldType::value_type AtomicType;
+  class ConstFieldIterator : public std::iterator<std::random_access_iterator_tag, typename FieldType::value_type> {
+    typedef ConstFieldIterator<FieldType> Self;
+    typedef typename FieldType::value_type AtomicType;
 
   public:
-      ConstFieldIterator()
-        : current_(NULL),
-          count_(0),
-          xIndex_(0), yIndex_(0), zIndex_(0),
-          yStep_(0), zStep_(0),
-          xExtent_(0), yExtent_(0), zExtent_(0),
-          xyExtent_(0)
-      {};
+    ConstFieldIterator()
+    : current_(NULL),
+      count_(0),
+      xIndex_(0), yIndex_(0), zIndex_(0),
+      yStep_(0), zStep_(0),
+      xExtent_(0), yExtent_(0), zExtent_(0),
+      xyExtent_(0)
+  {};
 
-      ConstFieldIterator(AtomicType * field_values,
-                         const MemoryWindow & w)
-      : current_(field_values +
-                 w.offset(0) * 1 +
-                 w.offset(1) * w.glob_dim(0) +
-                 w.offset(2) * w.glob_dim(0) * w.glob_dim(1)),
-          count_(0),
-          xIndex_(0), yIndex_(0), zIndex_(0),
-          yStep_(w.glob_dim(0) - w.extent(0)),
-          zStep_((w.glob_dim(1) - w.extent(1)) * w.glob_dim(0)),
-          xExtent_(w.extent(0)),
-          yExtent_(w.extent(1)),
-          zExtent_(w.extent(2)),
-          xyExtent_(w.extent(0) * w.extent(1))
-      {};
+    ConstFieldIterator(AtomicType * field_values,
+                       const MemoryWindow & w)
+    : current_(field_values +
+               w.offset(0) * 1 +
+               w.offset(1) * w.glob_dim(0) +
+               w.offset(2) * w.glob_dim(0) * w.glob_dim(1)),
+      count_(0),
+      xIndex_(0), yIndex_(0), zIndex_(0),
+      yStep_(w.glob_dim(0) - w.extent(0)),
+      zStep_((w.glob_dim(1) - w.extent(1)) * w.glob_dim(0)),
+      xExtent_(w.extent(0)),
+      yExtent_(w.extent(1)),
+      zExtent_(w.extent(2)),
+      xyExtent_(w.extent(0) * w.extent(1))
+    {};
 
-      ConstFieldIterator(const FieldIterator<FieldType> it)
-        : current_(it.current_),
-          count_(it.count_),
-          xIndex_(it.xIndex_),
-          yIndex_(it.yIndex_),
-          zIndex_(it.zIndex_),
-          yStep_(it.yStep_),
-          zStep_(it.zStep_),
-          xExtent_(it.xExtent_),
-          yExtent_(it.yExtent_),
-          zExtent_(it.zExtent_),
-          xyExtent_(it.xyExtent_)
-      {};
+    ConstFieldIterator(const FieldIterator<FieldType> it)
+    : current_(it.current_),
+      count_(it.count_),
+      xIndex_(it.xIndex_),
+      yIndex_(it.yIndex_),
+      zIndex_(it.zIndex_),
+      yStep_(it.yStep_),
+      zStep_(it.zStep_),
+      xExtent_(it.xExtent_),
+      yExtent_(it.yExtent_),
+      zExtent_(it.zExtent_),
+      xyExtent_(it.xyExtent_)
+    {};
 
-      //immutable dereference
-      inline AtomicType const & operator*() const {
+    //immutable dereference
+    inline AtomicType const & operator*() const {
 #         ifndef NDEBUG
-          if(count_ != (xIndex_ +
-                        yIndex_ * xExtent_ +
-                        zIndex_ * xyExtent_)) {
-              std::ostringstream msg;
-              msg << __FILE__ << " : " << __LINE__ << std::endl
-                  << "iterator's internal count is off";
-              throw std::runtime_error(msg.str());
-          };
-          if(xIndex_ >= xExtent_ ||
-             yIndex_ >= yExtent_ ||
-             zIndex_ >= zExtent_ ||
-             xIndex_ < 0 ||
-             yIndex_ < 0 ||
-             zIndex_ < 0) {
-              std::ostringstream msg;
-              msg << __FILE__ << " : " << __LINE__ << std::endl
-                  << "iterator is in an invalid state for dereference";
-              throw std::runtime_error(msg.str());
-          };
+      if( count_ != (xIndex_ +
+          yIndex_ * xExtent_ +
+          zIndex_ * xyExtent_) ){
+        std::ostringstream msg;
+        msg << __FILE__ << " : " << __LINE__ << std::endl
+            << "iterator's internal count is off";
+        throw std::runtime_error(msg.str());
+      };
+      if( xIndex_ >= xExtent_ ||
+          yIndex_ >= yExtent_ ||
+          zIndex_ >= zExtent_ ||
+          xIndex_ < 0 ||
+          yIndex_ < 0 ||
+          zIndex_ < 0 ){
+        std::ostringstream msg;
+        msg << __FILE__ << " : " << __LINE__ << std::endl
+            << "iterator is in an invalid state for dereference";
+        throw std::runtime_error(msg.str());
+      };
 #         endif
-          return *current_;
+      return *current_;
+    };
+
+    //increment
+    inline Self & operator++() {
+      current_++; //xStep
+      count_++;
+      xIndex_++;
+      if( xIndex_ == xExtent_ ){
+        current_ += yStep_; //yStep
+        xIndex_ = 0;
+        yIndex_++;
+        if( yIndex_ == yExtent_ ){
+          current_ += zStep_; //zStep
+          yIndex_ = 0;
+          zIndex_++;
+        };
       };
+      return *this;
+    };
+    inline Self operator++(int) { Self result = *this; ++(*this); return result; };
 
-      //increment
-      inline Self & operator++() {
-          current_++; //xStep
-          count_++;
-          xIndex_++;
-          if(xIndex_ == xExtent_) {
-              current_ += yStep_; //yStep
-              xIndex_ = 0;
-              yIndex_++;
-              if(yIndex_ == yExtent_) {
-                  current_ += zStep_; //zStep
-                  yIndex_ = 0;
-                  zIndex_++;
-              };
-          };
-          return *this;
+    //decrement
+    inline Self & operator--() {
+      current_--; //xStep
+      count_--;
+      xIndex_--;
+      if( xIndex_ == -1 ){
+        current_ -= yStep_; //yStep
+        xIndex_ = xExtent_ - 1;
+        yIndex_--;
+        if( yIndex_ == -1 ){
+          current_ -= zStep_; //zStep
+          yIndex_ = yExtent_ - 1;
+          zIndex_--;
+        };
       };
-      inline Self operator++(int) { Self result = *this; ++(*this); return result; };
+      return *this;
+    };
+    inline Self operator--(int) { Self result = *this; --(*this); return result; };
 
-      //decrement
-      inline Self & operator--() {
-          current_--; //xStep
-          count_--;
-          xIndex_--;
-          if(xIndex_ == -1) {
-              current_ -= yStep_; //yStep
-              xIndex_ = xExtent_ - 1;
-              yIndex_--;
-              if(yIndex_ == -1) {
-                  current_ -= zStep_; //zStep
-                  yIndex_ = yExtent_ - 1;
-                  zIndex_--;
-              };
-          };
-          return *this;
+    //compound assignment
+    inline Self & operator+=(int change) {
+      //small change (only changes xIndex_)
+      if( (change > 0 && //positive change
+           change < xExtent_ - xIndex_) ||
+          (change < 0 && //negative change
+              - change < xIndex_) ){
+        current_ += change;
+        xIndex_ += change;
+        count_ += change;
+      }
+      //bigger change (changes yIndex_ and/or zIndex_)
+      else {
+        int new_count = count_ + change;
+        int old_count = count_;
+        current_ += (change + //xStep
+            yStep_ * ((new_count / xExtent_) - (old_count / xExtent_)) +
+            zStep_ * ((new_count / xyExtent_) - (old_count /xyExtent_)));
+        count_ += change;
+        xIndex_ = count_ % xExtent_;
+        yIndex_ = (count_ % xyExtent_) / xExtent_;
+        zIndex_ = count_ / xyExtent_;
       };
-      inline Self operator--(int) { Self result = *this; --(*this); return result; };
+      return *this;
+    };
+    inline Self & operator-=(int change) { return *this += -change; };
 
-      //compound assignment
-      inline Self & operator+=(int change) {
-          //small change (only changes xIndex_)
-          if((change > 0 && //positive change
-              change < xExtent_ - xIndex_) ||
-             (change < 0 && //negative change
-              - change < xIndex_)) {
-              current_ += change;
-              xIndex_ += change;
-              count_ += change;
-          }
-          //bigger change (changes yIndex_ and/or zIndex_)
-          else {
-              int new_count = count_ + change;
-              int old_count = count_;
-              current_ += (change + //xStep
-                           yStep_ * ((new_count / xExtent_) - (old_count / xExtent_)) +
-                           zStep_ * ((new_count / xyExtent_) - (old_count /xyExtent_)));
-              count_ += change;
-              xIndex_ = count_ % xExtent_;
-              yIndex_ = (count_ % xyExtent_) / xExtent_;
-              zIndex_ = count_ / xyExtent_;
-          };
-          return *this;
-      };
-      inline Self & operator-=(int change) { return *this += -change; };
+    //addition/subtraction
+    inline Self operator+ (int change) const { Self result = *this; result += change; return result; };
+    inline Self operator- (int change) const { return *this + (-change); };
 
-      //addition/subtraction
-      inline Self operator+ (int change) const { Self result = *this; result += change; return result; };
-      inline Self operator- (int change) const { return *this + (-change); };
+    //iterator subtraction
+    inline ptrdiff_t operator- (Self const & other) const { return count_ - other.count_; };
 
-      //iterator subtraction
-      inline ptrdiff_t operator- (Self const & other) const { return count_ - other.count_; };
+    //offset dereference
+    inline AtomicType & operator[](int change) { Self result = *this; result += change; return *result; };
 
-      //offset dereference
-      inline AtomicType & operator[](int change) { Self result = *this; result += change; return *result; };
+    IntVec location() const{ return IntVec(xIndex_,yIndex_,zIndex_); }
 
-      //comparisons
-      inline bool operator==(Self const & other) const { return current_ == other.current_; };
-      inline bool operator!=(Self const & other) const { return current_ != other.current_; };
-      inline bool operator< (Self const & other) const { return current_ <  other.current_; };
-      inline bool operator> (Self const & other) const { return current_ >  other.current_; };
-      inline bool operator<=(Self const & other) const { return current_ <= other.current_; };
-      inline bool operator>=(Self const & other) const { return current_ >= other.current_; };
+    //comparisons
+    inline bool operator==(Self const & other) const { return current_ == other.current_; };
+    inline bool operator!=(Self const & other) const { return current_ != other.current_; };
+    inline bool operator< (Self const & other) const { return current_ <  other.current_; };
+    inline bool operator> (Self const & other) const { return current_ >  other.current_; };
+    inline bool operator<=(Self const & other) const { return current_ <= other.current_; };
+    inline bool operator>=(Self const & other) const { return current_ >= other.current_; };
 
   private:
-      AtomicType * current_;
-      int count_;
-      int xIndex_;
-      int yIndex_;
-      int zIndex_;
-      int yStep_;
-      int zStep_;
-      int xExtent_;
-      int yExtent_;
-      int zExtent_;
-      int xyExtent_;
+    AtomicType * current_;
+    int count_;
+    int xIndex_;
+    int yIndex_;
+    int zIndex_;
+    int yStep_;
+    int zStep_;
+    int xExtent_;
+    int yExtent_;
+    int zExtent_;
+    int xyExtent_;
   };
 
   template<typename FieldType>
-  inline ConstFieldIterator<FieldType> operator+(int change,
-                                                 ConstFieldIterator<FieldType> const & iterator) {
-      return iterator + change;
+  inline ConstFieldIterator<FieldType> operator+( const int change,
+                                                  ConstFieldIterator<FieldType> const & iterator) {
+    return iterator + change;
   };
 
 } // namespace structured
