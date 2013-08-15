@@ -374,18 +374,13 @@ int main(int iarg, char * carg[]) {
        test_stencil_chain_with_status<Interpolant, InterpolantZ, SVolField, SVolField, SVolField>(status, opdb, npts, bc, "Interpolant (SVolField->SVolField) -> InterpolantZ (SVolField->SVolField)");
       test_stencil_chain_with_status<Interpolant, Interpolant, SVolField, SVolField, SVolField>(status, opdb, npts, bc, "Interpolant (SVolField->SVolField) -> Interpolant (SVolField->SVolField)");
 
-      if( status.ok() ){
-        cout << "ALL TESTS PASSED :)" << endl;
-        return 0;
-      }
+      if(status.ok()) { cout << "ALL TESTS PASSED :)" << endl; return 0; };
    }
-   catch(std::runtime_error & e){
-     cout << e.what() << endl;
-   };
+   catch(std::runtime_error & e){ cout << e.what() << endl; };
 
    cout << "******************************" << endl
-       << " At least one test FAILED :(" << endl
-       << "******************************" << endl;
+    << " At least one test FAILED :(" << endl
+    << "******************************" << endl;
 
    return -1;
 }
