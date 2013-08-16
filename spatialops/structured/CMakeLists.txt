@@ -31,6 +31,7 @@ install( FILES
   GhostData.h
   IndexTriplet.h
   IntVec.h
+  Numeric3Vec.h
   ExternalAllocators.h
   CudaMemoryAllocator.h
   MemoryPool.h
