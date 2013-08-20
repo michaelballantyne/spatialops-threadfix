@@ -31,7 +31,7 @@
 #include <spatialops/structured/MemoryPool.h>
 #include <spatialops/structured/SpatialField.h>
 
-#include <spatialops/structured/CudaMemoryAllocator.h>
+#include <spatialops/structured/ExternalAllocators.h>
 
 #include <boost/type_traits.hpp>
 
@@ -78,8 +78,10 @@ template< typename T >
 Pool<T>&
 Pool<T>::self()
 {
+# ifdef ENABLE_CUDA
   //ensure CUDA driver is loaded before pool is initialized
   static cudaError_t junk = cudaGetDeviceCount(0);
+# endif
   // see Modern C++ (Alexandrescu) chapter 6 for an excellent discussion on singleton implementation
   static Pool<T> p;
   return p;
