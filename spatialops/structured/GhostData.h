@@ -44,6 +44,8 @@
 #include <string>
 #include <sstream>
 
+#define GHOST_MAX 9001
+
 namespace SpatialOps{
 namespace structured{
 
@@ -57,6 +59,7 @@ namespace structured{
   class GhostDataRT
   {
     IntVec minus_, plus_;
+    bool isInf_;
 
   public:
 
@@ -84,9 +87,6 @@ namespace structured{
     /**
      * \brief construct a GhostData with the same number of ghost cells on each face
      * @param n the number of ghost cells on each face (defaults to zero)
-     * @param bcx (defaults false) true if there is a physical boundary on the (+x) face
-     * @param bcy (defaults false) true if there is a physical boundary on the (+y) face
-     * @param bcz (defaults false) true if there is a physical boundary on the (+z) face
      */
     GhostDataRT( const int n=0 );
 
@@ -116,12 +116,12 @@ namespace structured{
     /**
      * @brief set the number of ghost cells on the requested (-) face (0=x, 1=y, 2=z)
      */
-    inline void set_minus( const IntVec& minus ){ minus_ = minus; }
+    void set_minus( const IntVec& );
 
     /**
      * @brief set the number of ghost cells on the requested (+) face (0=x, 1=y, 2=z)
      */
-    inline void set_plus( const IntVec& plus ){ plus_ = plus; }
+    void set_plus( const IntVec& );
 
     GhostDataRT  operator+ ( const GhostDataRT& ) const;
     GhostDataRT& operator+=( const GhostDataRT& );
@@ -130,6 +130,10 @@ namespace structured{
 
     bool operator==( const GhostDataRT& ) const;
   };
+
+  GhostDataRT min( const GhostDataRT&, const GhostDataRT& );
+
+  GhostDataRT point_to_ghost( const IntVec& );
 
   std::ostream& operator<<( std::ostream&, const GhostDataRT& );
 

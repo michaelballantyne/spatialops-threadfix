@@ -154,6 +154,12 @@ namespace SpatialOps{
       return IntVec( pt % dim[0], (pt / dim[0]) % dim[1], pt / (dim[0]*dim[1]) );
     }
 
+    inline IntVec min(const IntVec& first, const IntVec& second) {
+        return IntVec((first[0] < second[0] ? first[0] : second[0]),
+                      (first[1] < second[1] ? first[1] : second[1]),
+                      (first[2] < second[2] ? first[2] : second[2]));
+    }
+
   } // namespace structured
 } // namespace SpatialOps
 

@@ -127,15 +127,26 @@ namespace SpatialOps {
       inline IntVec has_bc() const{ return isbc_; }
 
       /**
-       * \brief obtain the number of extra cells present on this field due to presence of physical boundaries
+       * \brief obtain the number of extra cells *potentially* present on this field due to presence of physical boundaries
        * @param dir the direction of interest (0=x, 1=y, 2=z)
        */
       inline int num_extra( const int dir ) const{ return nExtra_[dir]; }
 
       /**
-       * \brief obtain the number of extra cells present on this field due to presence of physical boundaries
+       * \brief obtain the number of extra cells *potentially* present on this field due to presence of physical boundaries
        */
       inline IntVec num_extra() const{ return nExtra_; }
+
+      /**
+       * \brief obtain the number of extra cells *actually* present on this field due to presence of physical boundaries
+       * @param dir the direction of interest (0=x, 1=y, 2=z)
+       */
+      inline int has_extra( const int dir ) const{ return has_bc(dir) ? num_extra(dir) : 0; }
+
+      /**
+       * \brief obtain the number of extra cells *actually* present on this field due to presence of physical boundaries
+       */
+      inline IntVec has_extra() const{ return IntVec(has_extra(0), has_extra(1), has_extra(2)); }
     };
 
     inline std::ostream& operator<<( std::ostream& out, const BoundaryCellInfo& bc ){

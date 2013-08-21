@@ -50,11 +50,29 @@ namespace SpatialOps{ namespace structured{
 
   //-----------------------------------------------------------------
 
+  // If any value is infinite (>= GHOST_MAX), then return true
+  //  Infinite ghost data is used within Nebo to account for scalars
+  inline bool is_IntVec_infinite(const IntVec & values) {
+    return (values[0] >= GHOST_MAX &&
+            values[1] >= GHOST_MAX &&
+            values[2] >= GHOST_MAX);
+  }
+
+  // If any value is infinite (>= GHOST_MAX), then return true
+  //  Infinite ghost data is used within Nebo to account for scalars
+  inline bool is_ghost_infinite(const IntVec & minus, const IntVec & plus) {
+    return (is_IntVec_infinite(minus) &&
+            is_IntVec_infinite(plus));
+  }
+
+  //-----------------------------------------------------------------
+
   GhostDataRT::GhostDataRT( const int nx, const int px,
                             const int ny, const int py,
                             const int nz, const int pz )
   : minus_( nx, ny, nz ),
-    plus_ ( px, py, pz )
+    plus_ ( px, py, pz ),
+    isInf_(is_ghost_infinite(minus_,plus_))
   {
     check_valid(minus_,plus_);
   }
@@ -62,14 +80,16 @@ namespace SpatialOps{ namespace structured{
   GhostDataRT::GhostDataRT( const IntVec& minus,
                             const IntVec& plus )
   : minus_( minus ),
-    plus_ ( plus  )
+    plus_ ( plus  ),
+    isInf_(is_ghost_infinite(minus_,plus_))
   {
     check_valid(minus_,plus_);
   }
 
   GhostDataRT::GhostDataRT( const int n )
   : minus_( n, n, n ),
-    plus_ ( n, n, n )
+    plus_ ( n, n, n ),
+    isInf_(is_ghost_infinite(minus_,plus_))
   {
     check_valid(minus_,plus_);
   }
@@ -82,6 +102,7 @@ namespace SpatialOps{ namespace structured{
     minus_ = rhs.minus_;
     plus_  = rhs.plus_;
     check_valid(minus_,plus_);
+    isInf_ = rhs.isInf_;
     return *this;
   }
 
@@ -90,6 +111,23 @@ namespace SpatialOps{ namespace structured{
     minus_ = rhs.minus_;
     plus_  = rhs.plus_;
     check_valid(minus_,plus_);
+    isInf_ = rhs.isInf_;
+  }
+
+  //-----------------------------------------------------------------
+
+  void
+  GhostDataRT::set_minus( const IntVec& minus )
+  {
+    minus_ = minus;
+    isInf_ = is_ghost_infinite(minus_,plus_);
+  }
+
+  void
+  GhostDataRT::set_plus( const IntVec& plus )
+  {
+    plus_ = plus;
+    isInf_ = is_ghost_infinite(minus_,plus_);
   }
 
   //-----------------------------------------------------------------
@@ -115,18 +153,28 @@ namespace SpatialOps{ namespace structured{
   GhostDataRT&
   GhostDataRT::operator-=( const GhostDataRT& rhs )
   {
-    minus_ -= rhs.minus_;
-    plus_  -= rhs.plus_;
-    check_valid(minus_,plus_);
+    if(rhs.isInf_) {
+      throw(std::runtime_error("Cannot use infinite ghost data on the right-hand side of subtraction."));
+    } else if(!isInf_) {
+      minus_ -= rhs.minus_;
+      plus_  -= rhs.plus_;
+      check_valid(minus_,plus_);
+    }
     return *this;
   }
 
   GhostDataRT&
   GhostDataRT::operator+=( const GhostDataRT& rhs )
   {
-    minus_ += rhs.minus_;
-    plus_  += rhs.plus_;
-    check_valid(minus_,plus_);
+    if(!isInf_) {
+      if(rhs.isInf_) {
+        *this = rhs;
+      } else {
+        minus_ += rhs.minus_;
+        plus_  += rhs.plus_;
+        check_valid(minus_,plus_);
+      }
+    }
     return *this;
   }
 
@@ -136,6 +184,28 @@ namespace SpatialOps{ namespace structured{
   GhostDataRT::operator==( const GhostDataRT& rhs ) const
   {
     return (minus_ == rhs.minus_) && (plus_ == rhs.plus_);
+  }
+
+  //-----------------------------------------------------------------
+
+  GhostDataRT
+  min( const GhostDataRT& first, const GhostDataRT& second )
+  {
+      return GhostDataRT(min(first.get_minus(), second.get_minus()),
+                         min(first.get_plus(), second.get_plus()));
+  }
+
+  //-----------------------------------------------------------------
+
+  GhostDataRT
+  point_to_ghost( const IntVec& given )
+  {
+      return GhostDataRT((given[0] < 0 ? - given[0] : 0),
+                         (given[0] > 0 ?   given[0] : 0),
+                         (given[1] < 0 ? - given[1] : 0),
+                         (given[1] > 0 ?   given[1] : 0),
+                         (given[2] < 0 ? - given[2] : 0),
+                         (given[2] > 0 ?   given[2] : 0));
   }
 
   //-----------------------------------------------------------------
