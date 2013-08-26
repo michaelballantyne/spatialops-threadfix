@@ -31,33 +31,26 @@
                          gpu-prep-body
                          RD-cons-args
                          publics)
-                  (list (tpl-def (list (tpl-pmtr VG-chunk)
-                                       (tpl-pmtr SH-chunk))
-                                 (r-fcn-def (constize (fcn-dcl 'init 'SeqWalkType))
-                                            null
-                                            (fc 'SeqWalkType SW-cons-args)))
-                        (threads-only (tpl-def (tpl-pmtr VG-chunk)
-                                               (r-fcn-def (constize (fcn-dcl 'resize 'ResizeType))
-                                                          null
-                                                          (fc 'ResizeType RS-cons-args))))
+                  (list (r-fcn-def (constize (fcn-dcl 'init 'SeqWalkType ghost-arg shift-arg))
+                                   null
+                                   (fc 'SeqWalkType SW-cons-args))
+                        (threads-only (r-fcn-def (constize (fcn-dcl 'resize 'ResizeType ghost-arg))
+                                                 null
+                                                 (fc 'ResizeType RS-cons-args)))
                         (gpu-only (bb (r-fcn-def (constize (fcn-dcl 'cpu_ready 'bool))
                                                  null
                                                  cpu-ready-body)
                                       (r-fcn-def (constize (fcn-dcl 'gpu_ready 'bool (adc 'int DI-chunk)))
                                                  null
                                                  gpu-ready-body)
-                                      (tpl-def (list (tpl-pmtr VG-chunk)
-                                                     (tpl-pmtr SH-chunk))
-                                               (r-fcn-def (constize (fcn-dcl 'gpu_init 'GPUWalkType (adc 'int DI-chunk)))
-                                                          null
-                                                          (fc 'GPUWalkType gpu-cons-args)))
+                                      (r-fcn-def (constize (fcn-dcl 'gpu_init 'GPUWalkType ghost-arg shift-arg (adc 'int DI-chunk)))
+                                                 null
+                                                 (fc 'GPUWalkType gpu-cons-args))
                                       (gpu-test-only (fcn-def (constize (fcn-dcl 'gpu_prep void-chunk (adc 'int DI-chunk)))
                                                               gpu-prep-body))))
-                        (tpl-def (list (tpl-pmtr VG-chunk)
-                                       (tpl-pmtr SH-chunk))
-                                 (r-fcn-def (constize (fcn-dcl 'reduce_init 'ReductionType))
-                                            null
-                                            (fc 'ReductionType RD-cons-args)))
+                        (r-fcn-def (constize (fcn-dcl 'reduce_init 'ReductionType ghost-arg shift-arg))
+                                   null
+                                   (fc 'ReductionType RD-cons-args))
                         publics))
                 (list 7 8 1)
                 "build-Initial-rhs"))
@@ -66,13 +59,13 @@
   (combine-args build-Resize-general
                 (lambda (SW-cons-args
                          publics)
-                  (list (tpl-def (tpl-pmtr SH-chunk)
-                                 (r-fcn-def (constize (fcn-dcl 'init
-                                                               'SeqWalkType
-                                                               (adcr IntVec 'split)
-                                                               (adcr IntVec 'location)))
-                                            null
-                                            (fc 'SeqWalkType SW-cons-args)))
+                  (list (r-fcn-def (constize (fcn-dcl 'init
+                                                      'SeqWalkType
+                                                      shift-arg
+                                                      (adcr IntVec 'split)
+                                                      (adcr IntVec 'location)))
+                                   null
+                                   (fc 'SeqWalkType SW-cons-args))
                         publics))
                 (list 6 2 1)
                 "build-Resize-rhs"))

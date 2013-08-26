@@ -57,15 +57,14 @@
                                    ResultType const & initialValue,
                                    NeboExpression<ExprType, FieldType> const &
                                    fexpr) {
-          typename ExprType::PossibleValidGhost typedef ValidGhost;
+          structured::GhostDataRT ghosts = fexpr.expr().possible_ghosts();
 
-          structured::IndexTriplet<0, 0, 0> typedef Shift;
+          const structured::IntVec shift = structured::IntVec(0, 0, 0);
 
           ResultType result = initialValue;
 
-          typename ExprType::ReductionType expr = fexpr.expr().template
-                                                               reduce_init<ValidGhost,
-                                                                           Shift>();
+          typename ExprType::ReductionType expr = fexpr.expr().reduce_init(ghosts,
+                                                                           shift);
 
           while(!(expr.at_end())) {
              result = proc(result, expr.eval());
@@ -99,15 +98,14 @@
                                             ResultType const & initialValue,
                                             NeboExpression<ExprType, FieldType>
                                             const & fexpr) {
-          structured::GhostData<0, 0, 0, 0, 0, 0, 0, 0, 0> typedef ValidGhost;
+          structured::GhostDataRT ghosts(0);
 
-          structured::IndexTriplet<0, 0, 0> typedef Shift;
+          const structured::IntVec shift = structured::IntVec(0, 0, 0);
 
           ResultType result = initialValue;
 
-          typename ExprType::ReductionType expr = fexpr.expr().template
-                                                               reduce_init<ValidGhost,
-                                                                           Shift>();
+          typename ExprType::ReductionType expr = fexpr.expr().reduce_init(ghosts,
+                                                                           shift);
 
           while(!(expr.at_end())) {
              result = proc(result, expr.eval());
@@ -150,13 +148,12 @@
                                                          NeboExpression<ExprType,
                                                                         FieldType>
                                                          const & fexpr) {
-          typename ExprType::PossibleValidGhost typedef ValidGhost;
+          structured::GhostDataRT ghosts = fexpr.expr().possible_ghosts();
 
-          structured::IndexTriplet<0, 0, 0> typedef Shift;
+          const structured::IntVec shift = structured::IntVec(0, 0, 0);
 
-          typename ExprType::ReductionType expr = fexpr.expr().template
-                                                               reduce_init<ValidGhost,
-                                                                           Shift>();
+          typename ExprType::ReductionType expr = fexpr.expr().reduce_init(ghosts,
+                                                                           shift);
 
           typename FieldType::value_type result = expr.eval();
 
@@ -207,13 +204,12 @@
                                                                   NeboExpression<ExprType,
                                                                                  FieldType>
                                                                   const & fexpr) {
-          structured::GhostData<0, 0, 0, 0, 0, 0, 0, 0, 0> typedef ValidGhost;
+          structured::GhostDataRT ghosts(0);
 
-          structured::IndexTriplet<0, 0, 0> typedef Shift;
+          const structured::IntVec shift = structured::IntVec(0, 0, 0);
 
-          typename ExprType::ReductionType expr = fexpr.expr().template
-                                                               reduce_init<ValidGhost,
-                                                                           Shift>();
+          typename ExprType::ReductionType expr = fexpr.expr().reduce_init(ghosts,
+                                                                           shift);
 
           typename FieldType::value_type result = expr.eval();
 
@@ -264,13 +260,12 @@
                                                          NeboExpression<ExprType,
                                                                         FieldType>
                                                          const & fexpr) {
-          typename ExprType::PossibleValidGhost typedef ValidGhost;
+          structured::GhostDataRT ghosts = fexpr.expr().possible_ghosts();
 
-          structured::IndexTriplet<0, 0, 0> typedef Shift;
+          const structured::IntVec shift = structured::IntVec(0, 0, 0);
 
-          typename ExprType::ReductionType expr = fexpr.expr().template
-                                                               reduce_init<ValidGhost,
-                                                                           Shift>();
+          typename ExprType::ReductionType expr = fexpr.expr().reduce_init(ghosts,
+                                                                           shift);
 
           typename FieldType::value_type result = expr.eval();
 
@@ -320,13 +315,12 @@
                                                                   NeboExpression<ExprType,
                                                                                  FieldType>
                                                                   const & fexpr) {
-          structured::GhostData<0, 0, 0, 0, 0, 0, 0, 0, 0> typedef ValidGhost;
+          structured::GhostDataRT ghosts(0);
 
-          structured::IndexTriplet<0, 0, 0> typedef Shift;
+          const structured::IntVec shift = structured::IntVec(0, 0, 0);
 
-          typename ExprType::ReductionType expr = fexpr.expr().template
-                                                               reduce_init<ValidGhost,
-                                                                           Shift>();
+          typename ExprType::ReductionType expr = fexpr.expr().reduce_init(ghosts,
+                                                                           shift);
 
           typename FieldType::value_type result = expr.eval();
 

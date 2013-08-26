@@ -71,10 +71,9 @@
                                        return-type
                                        pmtrs
                                        args
-                                       (list (typedef (tpl-pmtr (scope 'ExprType report-VG-chunk))
-                                                      VG-chunk)
-                                             (typedef (scope 'structured (tpl-use 'IndexTriplet "0" "0" "0"))
-                                                      SH-chunk)
+                                       (list (nt= GhostData 'ghosts (mfc (mfc 'fexpr 'expr)
+                                                                         'possible_ghosts))
+                                             (nt=c IntVec 'shift ZeroIntVec)
                                              body)
                                        return-expr)
         (build-catamorphism-with-field (c name '_interior)
@@ -82,13 +81,8 @@
                                        return-type
                                        pmtrs
                                        args
-                                       (list (typedef (scope 'structured (tpl-use 'GhostData
-                                                                                  "0" "0" "0"
-                                                                                  "0" "0" "0"
-                                                                                  "0" "0" "0"))
-                                                      VG-chunk)
-                                             (typedef (scope 'structured (tpl-use 'IndexTriplet "0" "0" "0"))
-                                                      SH-chunk)
+                                       (list (ad GhostData (fc 'ghosts "0"))
+                                             (nt=c IntVec 'shift ZeroIntVec)
                                              body)
                                        return-expr)))
 
@@ -155,7 +149,9 @@
                              (nt= (tpl-pmtr (scope 'ExprType 'ReductionType))
                                   'expr
                                   (mfc (mfc 'fexpr 'expr)
-                                       (tpl-fcn-use 'reduce_init VG-chunk SH-chunk)))
+                                       'reduce_init
+                                       'ghosts
+                                       'shift))
                              (nwhile (n-not (mfc 'expr 'at_end))
                                      (n= 'result (fc 'proc 'result (mfc 'expr 'eval)))
                                      (mfc 'expr 'next)))
@@ -174,7 +170,9 @@
                                 (list (nt= (tpl-pmtr (scope 'ExprType 'ReductionType))
                                            'expr
                                            (mfc (mfc 'fexpr 'expr)
-                                                (tpl-fcn-use 'reduce_init VG-chunk SH-chunk)))
+                                                'reduce_init
+                                                'ghosts
+                                                'shift))
                                       (nt= AtomicType 'result (mfc 'expr 'eval))
                                       (mfc 'expr 'next)
                                       (nwhile (n-not (mfc 'expr 'at_end))

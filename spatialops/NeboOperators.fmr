@@ -45,16 +45,14 @@
          op_-lst))
   (define (IN-typedef type)
     (lambda (Op) (tpl-pmtr (scope Op type))))
-  (define (build-VG Op-VG-lst)
-    (cond [(equal? 1 (length Op-VG-lst)) (first Op-VG-lst)]
-          [(equal? 2 (length Op-VG-lst)) (tpl-pmtr (scope (scope 'structured (tpl-use 'Minimum
-                                                                                      (first Op-VG-lst)
-                                                                                      (second Op-VG-lst)))
-                                                          'result))]
-          [else (tpl-pmtr (scope (scope 'structured (tpl-use 'Minimum
-                                                             (first Op-VG-lst)
-                                                             (build-VG (rest Op-VG-lst))))
-                                 'result))]))
+  (define ghosts
+    (letrec ([mins (lambda (calls)
+                      (cond [(equal? 1 (length calls)) (first calls)]
+                            [else (fc 'min
+                                      (first calls)
+                                      (mins (rest calls)))]))])
+      (mins (mapper (lambda (op) (mfc op 'possible_ghosts))
+                    op_-lst))))
   (define gen-data-mems
     (mapper (lambda (Op op_) (sadc Op op_))
             Op-lst
@@ -86,24 +84,21 @@
                 Op-lst
                 (bs-Initial-rhs null
                                 null
-                                (build-VG (mapper (lambda (Op) (tpl-pmtr (scope Op report-VG-chunk)))
-                                                  Op-lst))
                                 gen-constructor
-                                (op_-mfc (tpl-fcn-use 'init VG-chunk SH-chunk))
-                                (op_-mfc (tpl-fcn-use 'resize VG-chunk))
+                                ghosts
+                                (op_-mfc 'init 'ghosts 'shift)
+                                (op_-mfc 'resize 'ghosts)
                                 (exec-and-check 'cpu_ready)
                                 (exec-and-check 'gpu_ready DI-chunk)
-                                (op_-mfc (tpl-fcn-use 'gpu_init VG-chunk SH-chunk) DI-chunk)
+                                (op_-mfc 'gpu_init 'ghosts 'shift DI-chunk)
                                 (b/a semi-colon-chunk s (op_-mfc 'gpu_prep DI-chunk))
-                                (op_-mfc (tpl-fcn-use 'reduce_init VG-chunk SH-chunk))
+                                (op_-mfc 'reduce_init 'ghosts 'shift)
                                 null
                                 gen-data-mems)
                 (bs-Resize-rhs null
                                null
                                gen-constructor
-                               (op_-mfc (tpl-fcn-use 'init SH-chunk)
-                                        'split
-                                        'location)
+                               (op_-mfc 'init 'shift 'split 'location)
                                null
                                gen-data-mems)
                 (bs-SeqWalk-rhs (s-typedef eval-return-type 'EvalReturnType)

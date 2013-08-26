@@ -195,31 +195,6 @@ int main()
     overall( status.ok(), "Memory window splitting" );
   }
 
-  // test memory window resizing ghost
-  {
-    const IntVec size(6,6,6);
-    const MemoryWindow base(size);
-    TestHelper status(false);
-    GhostDataRT g0(0), g1(1), g2(2), gg(2,1,2,0,1,1);
-
-    status( base.resize_ghost(g0,g0) == base, " no resize with no ghost" );
-    status( base.resize_ghost(g1,g1) == base, " no resize with ghost" );
-    status( base.resize_ghost(g2,gg) == MemoryWindow( size, IntVec(0,0,1), IntVec(5,4,4) ), " complex resize" );
-    overall( status.ok(), "Basic resizing ghost test" );
-  }
-
-  // test memory window shifting
-  {
-    const IntVec size(6,6,6);
-    const MemoryWindow base(size);
-    const MemoryWindow shaved = base.resize_ghost( GhostDataRT(2), GhostDataRT(1,2,2,0,1,1) );
-    TestHelper status(false);
-    status( shaved.shift( IntVec( 0,0,0) ) == shaved, " no shift test 1");
-    status( shaved.shift( IntVec( 0,0,0) ) == MemoryWindow(size, IntVec(1,0,1), IntVec(5,4,4) ), " no shift test 2");
-    status( shaved.shift( IntVec(-1,2,0) ) == MemoryWindow(size, IntVec(0,2,1), IntVec(5,4,4) ), " up and down shift");
-    overall( status.ok(), "Basic shifting test" );
-  }
-
   if( overall.isfailed() ) return -1;
   return 0;
 }

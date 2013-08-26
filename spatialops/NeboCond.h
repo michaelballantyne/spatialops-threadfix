@@ -41,8 +41,6 @@
 
          NeboNil typedef ReductionType;
 
-         structured::InfiniteGhostData typedef PossibleValidGhost;
-
          NeboNil() {}
       };
 
@@ -84,26 +82,24 @@
                      typename Expr::ReductionType,
                      FieldType> typedef ReductionType;
 
-          typename structured::Minimum<typename Test::PossibleValidGhost,
-                                       typename Expr::PossibleValidGhost>::
-          result typedef PossibleValidGhost;
-
           NeboClause(Test const & t, Expr const & e)
           : test_(t), expr_(e)
           {}
 
-          template<typename ValidGhost, typename Shift>
-           inline SeqWalkType init(void) const {
-              return SeqWalkType(test_.template init<ValidGhost, Shift>(),
-                                 expr_.template init<ValidGhost, Shift>());
-           }
+          inline structured::GhostDataRT possible_ghosts(void) const {
+             return min(test_.possible_ghosts(), expr_.possible_ghosts());
+          }
+
+          inline SeqWalkType init(structured::GhostDataRT const & ghosts,
+                                  structured::IntVec const & shift) const {
+             return SeqWalkType(test_.init(ghosts, shift),
+                                expr_.init(ghosts, shift));
+          }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             template<typename ValidGhost>
-              inline ResizeType resize(void) const {
-                 return ResizeType(test_.template resize<ValidGhost>(),
-                                   expr_.template resize<ValidGhost>());
-              }
+             inline ResizeType resize(structured::GhostDataRT const & ghosts) const {
+                return ResizeType(test_.resize(ghosts), expr_.resize(ghosts));
+             }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
@@ -116,11 +112,12 @@
                 return test_.gpu_ready(deviceIndex) && expr_.gpu_ready(deviceIndex);
              }
 
-             template<typename ValidGhost, typename Shift>
-              inline GPUWalkType gpu_init(int const deviceIndex) const {
-                 return GPUWalkType(test_.template gpu_init<ValidGhost, Shift>(deviceIndex),
-                                    expr_.template gpu_init<ValidGhost, Shift>(deviceIndex));
-              }
+             inline GPUWalkType gpu_init(structured::GhostDataRT const & ghosts,
+                                         structured::IntVec const & shift,
+                                         int const deviceIndex) const {
+                return GPUWalkType(test_.gpu_init(ghosts, shift, deviceIndex),
+                                   expr_.gpu_init(ghosts, shift, deviceIndex));
+             }
 
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
@@ -133,11 +130,12 @@
 #         endif
           /* __CUDACC__ */
 
-          template<typename ValidGhost, typename Shift>
-           inline ReductionType reduce_init(void) const {
-              return ReductionType(test_.template reduce_init<ValidGhost, Shift>(),
-                                   expr_.template reduce_init<ValidGhost, Shift>());
-           }
+          inline ReductionType reduce_init(structured::GhostDataRT const &
+                                           ghosts,
+                                           structured::IntVec const & shift) const {
+             return ReductionType(test_.reduce_init(ghosts, shift),
+                                  expr_.reduce_init(ghosts, shift));
+          }
 
          private:
           Test const test_;
@@ -161,12 +159,12 @@
              : test_(test), expr_(expr)
              {}
 
-             template<typename Shift>
-              inline SeqWalkType init(structured::IntVec const & split,
-                                      structured::IntVec const & location) const {
-                 return SeqWalkType(test_.template init<Shift>(split, location),
-                                    expr_.template init<Shift>(split, location));
-              }
+             inline SeqWalkType init(structured::IntVec const & shift,
+                                     structured::IntVec const & split,
+                                     structured::IntVec const & location) const {
+                return SeqWalkType(test_.init(shift, split, location),
+                                   expr_.init(shift, split, location));
+             }
 
             private:
              Test const test_;
@@ -303,26 +301,24 @@
                    typename Otherwise::ReductionType,
                    FieldType> typedef ReductionType;
 
-          typename structured::Minimum<typename ClauseType::PossibleValidGhost,
-                                       typename Otherwise::PossibleValidGhost>::
-          result typedef PossibleValidGhost;
-
           NeboCond(ClauseType const & c, Otherwise const & e)
           : clause_(c), otherwise_(e)
           {}
 
-          template<typename ValidGhost, typename Shift>
-           inline SeqWalkType init(void) const {
-              return SeqWalkType(clause_.template init<ValidGhost, Shift>(),
-                                 otherwise_.template init<ValidGhost, Shift>());
-           }
+          inline structured::GhostDataRT possible_ghosts(void) const {
+             return min(clause_.possible_ghosts(), otherwise_.possible_ghosts());
+          }
+
+          inline SeqWalkType init(structured::GhostDataRT const & ghosts,
+                                  structured::IntVec const & shift) const {
+             return SeqWalkType(clause_.init(ghosts, shift),
+                                otherwise_.init(ghosts, shift));
+          }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             template<typename ValidGhost>
-              inline ResizeType resize(void) const {
-                 return ResizeType(clause_.template resize<ValidGhost>(),
-                                   otherwise_.template resize<ValidGhost>());
-              }
+             inline ResizeType resize(structured::GhostDataRT const & ghosts) const {
+                return ResizeType(clause_.resize(ghosts), otherwise_.resize(ghosts));
+             }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
@@ -335,12 +331,14 @@
                 return clause_.gpu_ready(deviceIndex) && otherwise_.gpu_ready(deviceIndex);
              }
 
-             template<typename ValidGhost, typename Shift>
-              inline GPUWalkType gpu_init(int const deviceIndex) const {
-                 return GPUWalkType(clause_.template gpu_init<ValidGhost, Shift>(deviceIndex),
-                                    otherwise_.template gpu_init<ValidGhost,
-                                                                 Shift>(deviceIndex));
-              }
+             inline GPUWalkType gpu_init(structured::GhostDataRT const & ghosts,
+                                         structured::IntVec const & shift,
+                                         int const deviceIndex) const {
+                return GPUWalkType(clause_.gpu_init(ghosts, shift, deviceIndex),
+                                   otherwise_.gpu_init(ghosts,
+                                                       shift,
+                                                       deviceIndex));
+             }
 
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
@@ -353,13 +351,12 @@
 #         endif
           /* __CUDACC__ */
 
-          template<typename ValidGhost, typename Shift>
-           inline ReductionType reduce_init(void) const {
-              return ReductionType(clause_.template reduce_init<ValidGhost,
-                                                                Shift>(),
-                                   otherwise_.template reduce_init<ValidGhost,
-                                                                   Shift>());
-           }
+          inline ReductionType reduce_init(structured::GhostDataRT const &
+                                           ghosts,
+                                           structured::IntVec const & shift) const {
+             return ReductionType(clause_.reduce_init(ghosts, shift),
+                                  otherwise_.reduce_init(ghosts, shift));
+          }
 
           inline ClauseType const & clause(void) const { return clause_; }
 
@@ -387,13 +384,12 @@
              : clause_(clause), otherwise_(otherwise)
              {}
 
-             template<typename Shift>
-              inline SeqWalkType init(structured::IntVec const & split,
-                                      structured::IntVec const & location) const {
-                 return SeqWalkType(clause_.template init<Shift>(split, location),
-                                    otherwise_.template init<Shift>(split,
-                                                                    location));
-              }
+             inline SeqWalkType init(structured::IntVec const & shift,
+                                     structured::IntVec const & split,
+                                     structured::IntVec const & location) const {
+                return SeqWalkType(clause_.init(shift, split, location),
+                                   otherwise_.init(shift, split, location));
+             }
 
             private:
              ClauseType const clause_;

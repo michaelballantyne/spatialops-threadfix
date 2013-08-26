@@ -47,34 +47,71 @@
  (d "Meta-programming compiler flags"
     (struct-declare-chunk 'All)
     (struct-declare-chunk 'InteriorOnly))
- (let ([CalculateValidGhost
-        (lambda (iterator result-type)
-          (d iterator
-             (tpl-srt-def 'CalculateValidGhost
-                          (list (tpl-pmtr 'ExprType)
-                                (tpl-pmtr FT-chunk))
-                          (list iterator 'ExprType FT-chunk)
-                          (s-typedef result-type 'Result))))])
-   (list (tpl-srt-dcl 'CalculateValidGhost
-                      (list (tpl-pmtr 'IteratorType)
-                            (tpl-pmtr 'ExprType)
-                            (tpl-pmtr FT-chunk))
-                      null)
-         (CalculateValidGhost
-          'All
-          (tpl-pmtr (scope (scope 'structured
-                                  (tpl-use 'Minimum
-                                           (tpl-pmtr (scope 'ExprType
-                                                            report-VG-chunk))
-                                           (tpl-pmtr (scope (scope 'structured
-                                                                   (tpl-use 'GhostFromField FT-chunk))
-                                                            'result))))
-                           'result)))
-         (CalculateValidGhost
-          'InteriorOnly
-          (tpl-pmtr (scope (scope 'structured
-                                  (tpl-use 'MinimumGhostFromField FT-chunk))
-                           'result)))))
+
+ (let ([check (lambda (dir)
+                (nif (n-and (mfc 'bc 'has_bc dir)
+                            (n< (mfc 'rhs 'get_plus dir)
+                                (mfc 'bc 'has_extra dir)))
+                     (build-error (list 'Nebo 'Ghost 'Checking)
+                                  (list '(Not enough valid extra cells to validate all interior)
+                                        (break 'cells 'in 'the dir 'direction)))))])
+   (r-fcn-def (fcn-dcl 'calculate_valid_ghost
+                       GhostData
+                       (adc 'bool 'useGhost)
+                       (adcr GhostData 'lhs)
+                       (adcr BCInfo 'bc)
+                       (adcr GhostData 'rhs))
+              (list (check "0")
+                    (check "1")
+                    (check "2")
+                    (nt= GhostData 'lhs_w_extra (n+ 'lhs (fc 'point_to_ghost (mfc 'bc 'has_extra)))))
+              (ter-cond 'useGhost
+                        (fc 'min 'lhs_w_extra 'rhs)
+                        (fc GhostData
+                            ZeroIntVec
+                            (mfc 'bc 'has_extra)))))
+ (r-fcn-def (fcn-dcl 'calculate_valid_lhs_ghost
+                     GhostData
+                     ghost-arg
+                     (adcr BCInfo 'bc))
+            null
+            (n- 'ghosts
+                (fc 'point_to_ghost (mfc 'bc 'has_extra))))
+
+ (tpl-def (tpl-pmtr FT-chunk)
+          (r-fcn-def (fcn-dcl 'resize_ghost
+                              FT-chunk
+                              (adcr FT-chunk 'field)
+                              ghost-arg)
+                     (list (nt=c IntVec 'oldMinus (mfc (mfc 'field 'get_valid_ghost_data) 'get_minus))
+                           (nt=c IntVec 'oldPlus (mfc (mfc 'field 'get_valid_ghost_data) 'get_plus))
+                           (nt=c IntVec 'newMinus (mfc 'ghosts 'get_minus))
+                           (nt=c IntVec 'newPlus (mfc 'ghosts 'get_plus))
+                           (nt=c IntVec 'offsetChange (n- 'oldMinus 'newMinus))
+                           (nt=c IntVec 'extentChange (n+ 'newMinus (n- 'newPlus (n- 'oldMinus 'oldPlus)))))
+                     (mfc 'field 'reshape 'extentChange 'offsetChange)))
+
+ (tpl-def (tpl-pmtr FT-chunk)
+          (r-fcn-def (fcn-dcl 'shift_window
+                              FT-chunk
+                              (adcr FT-chunk 'field)
+                              shift-arg)
+                     null
+                     (mfc 'field
+                          'reshape
+                          ZeroIntVec
+                          'shift)))
+
+ (tpl-def (tpl-pmtr FT-chunk)
+          (r-fcn-def (fcn-dcl 'resize_ghost_and_shift_window
+                              FT-chunk
+                              (adcr FT-chunk 'field)
+                              ghost-arg
+                              shift-arg)
+                     null
+                     (fc 'shift_window
+                         (fc 'resize_ghost 'field 'ghosts)
+                         'shift)))
 
  (tpl-srt-dcl 'NeboFieldCheck
               (list (tpl-pmtr 'Type1)

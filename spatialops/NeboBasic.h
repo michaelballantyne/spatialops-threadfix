@@ -59,23 +59,97 @@
       struct All;
       struct InteriorOnly;
 
-      template<typename IteratorType, typename ExprType, typename FieldType>
-       struct CalculateValidGhost;
+      inline structured::GhostDataRT calculate_valid_ghost(bool const useGhost,
+                                                           structured::
+                                                           GhostDataRT const &
+                                                           lhs,
+                                                           structured::
+                                                           BoundaryCellInfo
+                                                           const & bc,
+                                                           structured::
+                                                           GhostDataRT const &
+                                                           rhs) {
+         if(bc.has_bc(0) && rhs.get_plus(0) < bc.has_extra(0)) {
+            std::ostringstream msg;
+            msg << "Nebo error in " << "Nebo Ghost Checking" << ":\n";
+            msg << "Not enough valid extra cells to validate all interior ";
+            msg << "cells in the 0 direction";
+            msg << "\n";
+            msg << "\t - " << __FILE__ << " : " << __LINE__;
+            throw(std::runtime_error(msg.str()));;
+         };
 
-      /* All */
-      template<typename ExprType, typename FieldType>
-       struct CalculateValidGhost<All, ExprType, FieldType> {
-         typename structured::Minimum<typename ExprType::PossibleValidGhost,
-                                      typename structured::GhostFromField<FieldType>::
-                                      result>::result typedef Result;
+         if(bc.has_bc(1) && rhs.get_plus(1) < bc.has_extra(1)) {
+            std::ostringstream msg;
+            msg << "Nebo error in " << "Nebo Ghost Checking" << ":\n";
+            msg << "Not enough valid extra cells to validate all interior ";
+            msg << "cells in the 1 direction";
+            msg << "\n";
+            msg << "\t - " << __FILE__ << " : " << __LINE__;
+            throw(std::runtime_error(msg.str()));;
+         };
+
+         if(bc.has_bc(2) && rhs.get_plus(2) < bc.has_extra(2)) {
+            std::ostringstream msg;
+            msg << "Nebo error in " << "Nebo Ghost Checking" << ":\n";
+            msg << "Not enough valid extra cells to validate all interior ";
+            msg << "cells in the 2 direction";
+            msg << "\n";
+            msg << "\t - " << __FILE__ << " : " << __LINE__;
+            throw(std::runtime_error(msg.str()));;
+         };
+
+         structured::GhostDataRT lhs_w_extra = lhs + point_to_ghost(bc.has_extra());
+
+         return (useGhost ? min(lhs_w_extra, rhs) : structured::GhostDataRT(structured::
+                                                                            IntVec(0,
+                                                                                   0,
+                                                                                   0),
+                                                                            bc.has_extra()));
       };
 
-      /* InteriorOnly */
-      template<typename ExprType, typename FieldType>
-       struct CalculateValidGhost<InteriorOnly, ExprType, FieldType> {
-         typename structured::MinimumGhostFromField<FieldType>::result typedef
-         Result;
+      inline structured::GhostDataRT calculate_valid_lhs_ghost(structured::
+                                                               GhostDataRT const
+                                                               & ghosts,
+                                                               structured::
+                                                               BoundaryCellInfo
+                                                               const & bc) {
+         return ghosts - point_to_ghost(bc.has_extra());
       };
+
+      template<typename FieldType>
+       inline FieldType resize_ghost(FieldType const & field,
+                                     structured::GhostDataRT const & ghosts) {
+          const structured::IntVec oldMinus = field.get_valid_ghost_data().get_minus();
+
+          const structured::IntVec oldPlus = field.get_valid_ghost_data().get_plus();
+
+          const structured::IntVec newMinus = ghosts.get_minus();
+
+          const structured::IntVec newPlus = ghosts.get_plus();
+
+          const structured::IntVec offsetChange = oldMinus - newMinus;
+
+          const structured::IntVec extentChange = newMinus + newPlus - oldMinus
+          - oldPlus;
+
+          return field.reshape(extentChange, offsetChange);
+       };
+
+      template<typename FieldType>
+       inline FieldType shift_window(FieldType const & field,
+                                     structured::IntVec const & shift) {
+          return field.reshape(structured::IntVec(0, 0, 0), shift);
+       };
+
+      template<typename FieldType>
+       inline FieldType resize_ghost_and_shift_window(FieldType const & field,
+                                                      structured::GhostDataRT
+                                                      const & ghosts,
+                                                      structured::IntVec const &
+                                                      shift) {
+          return shift_window(resize_ghost(field, ghosts), shift);
+       };
 
       template<typename Type1, typename Type2>
        struct NeboFieldCheck;

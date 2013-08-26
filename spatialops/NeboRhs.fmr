@@ -30,10 +30,10 @@
                                                    'value_type)
                                             'AtomicType)
                                  null
-                                 (scope 'structured 'InfiniteGhostData)
                                  (bm-constructor (adc 'AtomicType 'v)
                                                  (cons-asgn 'value_ 'v)
                                                  null)
+                                 (fc GhostData 'GHOST_MAX)
                                  'value_
                                  'value_
                                  'true
@@ -92,10 +92,10 @@
                  null
                  (bs-Initial-rhs null
                                  null
-                                 (scope 'structured 'InfiniteGhostData)
                                  (bm-constructor (adc 'bool 'v)
                                                  (cons-asgn 'value_ 'v)
                                                  null)
+                                 (fc GhostData 'GHOST_MAX)
                                  'value_
                                  'value_
                                  'true
@@ -148,22 +148,37 @@
                  null
                  (bs-Initial-rhs null
                                  null
-                                 (tpl-pmtr (scope (scope 'structured (tpl-use 'GhostFromField FT-chunk))
-                                                  'result))
                                  (bm-constructor (adcr FT-chunk 'f)
                                                  (cons-asgn 'field_ 'f)
                                                  null)
-                                 (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift VG-chunk SH-chunk))
-                                 (mfc 'field_ (tpl-fcn-use 'resize_ghost VG-chunk))
+                                 (n+ (mfc 'field_ 'get_valid_ghost_data)
+                                     (fc 'point_to_ghost (mfc (mfc 'field_ 'boundary_info) 'has_extra)))
+                                 (fc 'resize_ghost_and_shift_window
+                                     'field_
+                                     (n- 'ghosts
+                                         (fc 'point_to_ghost (mfc (mfc 'field_ 'boundary_info) 'has_extra)))
+                                     'shift)
+                                 (fc 'resize_ghost
+                                     'field_
+                                     (n- 'ghosts
+                                         (fc 'point_to_ghost (mfc (mfc 'field_ 'boundary_info) 'has_extra))))
                                  (mfc 'field_ 'find_consumer 'LOCAL_RAM "0")
                                  (mfc 'field_ 'find_consumer 'EXTERNAL_CUDA_GPU DI-chunk)
                                  (list DI-chunk
-                                       (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift VG-chunk SH-chunk)))
+                                       (fc 'resize_ghost_and_shift_window
+                                           'field_
+                                           (n- 'ghosts
+                                               (fc 'point_to_ghost (mfc (mfc 'field_ 'boundary_info) 'has_extra)))
+                                           'shift))
                                  (c (fc (tpl-use 'const_cast (ptr FT-chunk))
                                         (take-ptr 'field_))
                                     '->
                                     (fc 'add_consumer 'EXTERNAL_CUDA_GPU DI-chunk))
-                                 (mfc 'field_ (tpl-fcn-use 'resize_ghost_and_shift VG-chunk SH-chunk))
+                                 (fc 'resize_ghost_and_shift_window
+                                     'field_
+                                     (n- 'ghosts
+                                         (fc 'point_to_ghost (mfc (mfc 'field_ 'boundary_info) 'has_extra)))
+                                     'shift)
                                  null
                                  (sadc FT-chunk 'field_))
                  (bs-Resize-rhs null
@@ -171,13 +186,14 @@
                                 (bm-constructor (adcr FT-chunk 'f)
                                                 (cons-asgn 'field_ 'f)
                                                 null)
-                                (mfc (fc FT-chunk
-                                         (mfc (mfc 'field_ 'window_with_ghost)
-                                              'refine
-                                              'split
-                                              'location)
-                                         'field_)
-                                     (tpl-fcn-use 'shift SH-chunk))
+                                (fc 'shift_window
+                                    (fc FT-chunk
+                                        (mfc (mfc 'field_ 'window_with_ghost)
+                                             'refine
+                                             'split
+                                             'location)
+                                        'field_)
+                                    'shift)
                                 null
                                 (sadc FT-chunk 'field_))
                  (bs-SeqWalk-rhs (s-typedef (scope (tpl-pmtr FT-chunk)

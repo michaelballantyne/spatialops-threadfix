@@ -131,19 +131,6 @@ namespace structured{
     refine( const IntVec& splitPattern,
             const IntVec& location ) const;
 
-    // jcs remove:
-    inline MemoryWindow resize_ghost( const GhostDataRT& oldGhost, const GhostDataRT& newGhost ) const{
-      const IntVec minusDiff = oldGhost.get_minus() - newGhost.get_minus();
-      return MemoryWindow( nptsGlob_,
-                           offset_ + minusDiff ,
-                           extent_ - minusDiff - oldGhost.get_plus() + newGhost.get_plus() );
-    }
-
-    // jcs remove
-    inline MemoryWindow shift( const IntVec& shft ) const {
-        return MemoryWindow( nptsGlob_, offset_+shft, extent_ );
-    }
-
     /**
      *  \brief given the local ijk location (0-based on the local
      *         window), obtain the flat index in the global memory

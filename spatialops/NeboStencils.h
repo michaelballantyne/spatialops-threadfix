@@ -114,21 +114,12 @@
              NeboStencilPointCollection<NewPoint, MyType> typedef Result;
           };
 
-          template<typename GivenPossibleValidGhost>
-           struct PossibleGhost {
-             typename structured::Invalidate<GivenPossibleValidGhost, Point>::
-             result typedef CurrentPossibleValidGhost;
-
-             typename Collection::template PossibleGhost<GivenPossibleValidGhost>
-             typedef EarlierPointsPossibleGhost;
-
-             typename EarlierPointsPossibleGhost::Result typedef
-             EarlierPointsPossibleValidGhost;
-
-             typename structured::Minimum<CurrentPossibleValidGhost,
-                                          EarlierPointsPossibleValidGhost>::
-             result typedef Result;
-          };
+          static inline structured::GhostDataRT possible_ghosts(structured::
+                                                                GhostDataRT
+                                                                const & ghosts) {
+             return min(ghosts - point_to_ghost(Point::int_vec()),
+                        Collection::possible_ghosts(ghosts));
+          }
 
           template<typename ArgPreSeqWalk, typename DestType>
            struct ConstructExpr {
@@ -146,40 +137,43 @@
              SumOp<SeqWalk, EarlierPointsResult, MultiplyType, DestType> typedef
              Result;
 
-             template<typename ValidGhost, typename Shift>
-              static inline Result const in_sq_construct(ArgPreSeqWalk const &
-                                                         arg,
-                                                         NeboStencilCoefCollection<length>
-                                                         const & coefs) {
-                 typename structured::Add<Shift, Point>::result typedef NewShift;
+             static inline Result const in_sq_construct(structured::GhostDataRT
+                                                        const & ghosts,
+                                                        structured::IntVec const
+                                                        & shift,
+                                                        ArgPreSeqWalk const &
+                                                        arg,
+                                                        NeboStencilCoefCollection<length>
+                                                        const & coefs) {
+                return Result(EarlierPointsType::in_sq_construct(ghosts,
+                                                                 shift,
+                                                                 arg,
+                                                                 coefs.others()),
+                              MultiplyType(arg.init(ghosts,
+                                                    shift + Point::int_vec()),
+                                           Coef(coefs.coef())));
+             }
 
-                 return Result(EarlierPointsType::template in_sq_construct<ValidGhost,
-                                                                           Shift>(arg,
-                                                                                  coefs.others()),
-                               MultiplyType(arg.template init<ValidGhost,
-                                                              NewShift>(),
-                                            Coef(coefs.coef())));
-              }
-
-             template<typename Shift>
-              static inline Result const rs_sq_construct(ArgPreSeqWalk const &
-                                                         arg,
-                                                         NeboStencilCoefCollection<length>
-                                                         const & coefs,
-                                                         structured::IntVec
-                                                         const & split,
-                                                         structured::IntVec
-                                                         const & location) {
-                 typename structured::Add<Shift, Point>::result typedef NewShift;
-
-                 return Result(EarlierPointsType::template rs_sq_construct<Shift>(arg,
-                                                                                  coefs.others(),
-                                                                                  split,
-                                                                                  location),
-                               MultiplyType(arg.template init<NewShift>(split,
-                                                                        location),
-                                            Coef(coefs.coef())));
-              }
+             static inline Result const rs_sq_construct(structured::IntVec const
+                                                        & shift,
+                                                        ArgPreSeqWalk const &
+                                                        arg,
+                                                        NeboStencilCoefCollection<length>
+                                                        const & coefs,
+                                                        structured::IntVec const
+                                                        & split,
+                                                        structured::IntVec const
+                                                        & location) {
+                return Result(EarlierPointsType::rs_sq_construct(shift,
+                                                                 arg,
+                                                                 coefs.others(),
+                                                                 split,
+                                                                 location),
+                              MultiplyType(arg.init(shift + Point::int_vec(),
+                                                    split,
+                                                    location),
+                                           Coef(coefs.coef())));
+             }
           };
 
 #         ifdef __CUDACC__
@@ -200,24 +194,28 @@
                 SumOp<GPUWalk, EarlierPointsResult, MultiplyType, DestType>
                 typedef Result;
 
-                template<typename ValidGhost, typename Shift>
-                 static inline Result const in_gpu_construct(int const
-                                                             deviceIndex,
-                                                             ArgPreGPUWalk const
-                                                             & arg,
-                                                             NeboStencilCoefCollection<length>
-                                                             const & coefs) {
-                    typename structured::Add<Shift, Point>::result typedef
-                    NewShift;
-
-                    return Result(EarlierPointsType::template in_gpu_construct<ValidGhost,
-                                                                               Shift>(deviceIndex,
-                                                                                      arg,
-                                                                                      coefs.others()),
-                                  MultiplyType(arg.template gpu_init<ValidGhost,
-                                                                     NewShift>(deviceIndex),
-                                               Coef(coefs.coef())));
-                 }
+                static inline Result const in_gpu_construct(structured::
+                                                            GhostDataRT const &
+                                                            ghosts,
+                                                            structured::IntVec
+                                                            const & shift,
+                                                            int const
+                                                            deviceIndex,
+                                                            ArgPreGPUWalk const
+                                                            & arg,
+                                                            NeboStencilCoefCollection<length>
+                                                            const & coefs) {
+                   return Result(EarlierPointsType::in_gpu_construct(ghosts,
+                                                                     shift,
+                                                                     deviceIndex,
+                                                                     arg,
+                                                                     coefs.others()),
+                                 MultiplyType(arg.gpu_init(ghosts,
+                                                           shift + Point::
+                                                           int_vec(),
+                                                           deviceIndex),
+                                              Coef(coefs.coef())));
+                }
              };
 #         endif
           /* __CUDACC__ */
@@ -239,33 +237,37 @@
              SumOp<Reduction, EarlierPointsResult, MultiplyType, DestType>
              typedef Result;
 
-             template<typename ValidGhost, typename Shift>
-              static inline Result const in_rd_construct(ArgPreReduction const &
-                                                         arg,
-                                                         NeboStencilCoefCollection<length>
-                                                         const & coefs) {
-                 typename structured::Add<Shift, Point>::result typedef NewShift;
+             static inline Result const in_rd_construct(structured::GhostDataRT
+                                                        const & ghosts,
+                                                        structured::IntVec const
+                                                        & shift,
+                                                        ArgPreReduction const &
+                                                        arg,
+                                                        NeboStencilCoefCollection<length>
+                                                        const & coefs) {
+                return Result(EarlierPointsType::in_rd_construct(ghosts,
+                                                                 shift,
+                                                                 arg,
+                                                                 coefs.others()),
+                              MultiplyType(arg.reduce_init(ghosts,
+                                                           shift + Point::
+                                                           int_vec()),
+                                           Coef(coefs.coef())));
+             }
 
-                 return Result(EarlierPointsType::template in_rd_construct<ValidGhost,
-                                                                           Shift>(arg,
-                                                                                  coefs.others()),
-                               MultiplyType(arg.template reduce_init<ValidGhost,
-                                                                     NewShift>(),
-                                            Coef(coefs.coef())));
-              }
-
-             template<typename Shift>
-              static inline Result const rs_rd_construct(ArgPreReduction const &
-                                                         arg,
-                                                         NeboStencilCoefCollection<length>
-                                                         const & coefs) {
-                 typename structured::Add<Shift, Point>::result typedef NewShift;
-
-                 return Result(EarlierPointsType::template rs_rd_construct<Shift>(arg,
-                                                                                  coefs.others()),
-                               MultiplyType(arg.template reduce_init<NewShift>(),
-                                            Coef(coefs.coef())));
-              }
+             static inline Result const rs_rd_construct(structured::IntVec const
+                                                        & shift,
+                                                        ArgPreReduction const &
+                                                        arg,
+                                                        NeboStencilCoefCollection<length>
+                                                        const & coefs) {
+                return Result(EarlierPointsType::rs_rd_construct(shift,
+                                                                 arg,
+                                                                 coefs.others()),
+                              MultiplyType(arg.reduce_init(shift + Point::
+                                                           int_vec()),
+                                           Coef(coefs.coef())));
+             }
           };
       };
 
@@ -285,11 +287,11 @@
              NeboStencilPointCollection<NewPoint, MyType> typedef Result;
           };
 
-          template<typename GivenPossibleValidGhost>
-           struct PossibleGhost {
-             typename structured::Invalidate<GivenPossibleValidGhost, Point>::
-             result typedef Result;
-          };
+          static inline structured::GhostDataRT possible_ghosts(structured::
+                                                                GhostDataRT
+                                                                const & ghosts) {
+             return ghosts - point_to_ghost(Point::int_vec());
+          }
 
           template<typename ArgPreSeqWalk, typename DestType>
            struct ConstructExpr {
@@ -299,30 +301,30 @@
 
              ProdOp<SeqWalk, Arg, Coef, DestType> typedef Result;
 
-             template<typename ValidGhost, typename Shift>
-              static inline Result const in_sq_construct(ArgPreSeqWalk const &
-                                                         arg,
-                                                         NeboStencilCoefCollection<1>
-                                                         const & coefs) {
-                 typename structured::Add<Shift, Point>::result typedef NewShift;
+             static inline Result const in_sq_construct(structured::GhostDataRT
+                                                        const & ghosts,
+                                                        structured::IntVec const
+                                                        & shift,
+                                                        ArgPreSeqWalk const &
+                                                        arg,
+                                                        NeboStencilCoefCollection<1>
+                                                        const & coefs) {
+                return Result(arg.init(ghosts, shift + Point::int_vec()), Coef(coefs.coef()));
+             }
 
-                 return Result(arg.template init<ValidGhost, NewShift>(), Coef(coefs.coef()));
-              }
-
-             template<typename Shift>
-              static inline Result const rs_sq_construct(ArgPreSeqWalk const &
-                                                         arg,
-                                                         NeboStencilCoefCollection<1>
-                                                         const & coefs,
-                                                         structured::IntVec
-                                                         const & split,
-                                                         structured::IntVec
-                                                         const & location) {
-                 typename structured::Add<Shift, Point>::result typedef NewShift;
-
-                 return Result(arg.template init<NewShift>(split, location),
-                               Coef(coefs.coef()));
-              }
+             static inline Result const rs_sq_construct(structured::IntVec const
+                                                        & shift,
+                                                        ArgPreSeqWalk const &
+                                                        arg,
+                                                        NeboStencilCoefCollection<1>
+                                                        const & coefs,
+                                                        structured::IntVec const
+                                                        & split,
+                                                        structured::IntVec const
+                                                        & location) {
+                return Result(arg.init(shift + Point::int_vec(), split, location),
+                              Coef(coefs.coef()));
+             }
           };
 
 #         ifdef __CUDACC__
@@ -334,19 +336,22 @@
 
                 ProdOp<GPUWalk, Arg, Coef, DestType> typedef Result;
 
-                template<typename ValidGhost, typename Shift>
-                 static inline Result const in_gpu_construct(int const
-                                                             deviceIndex,
-                                                             ArgPreGPUWalk const
-                                                             & arg,
-                                                             NeboStencilCoefCollection<1>
-                                                             const & coefs) {
-                    typename structured::Add<Shift, Point>::result typedef
-                    NewShift;
-
-                    return Result(arg.template gpu_init<ValidGhost, NewShift>(deviceIndex),
-                                  Coef(coefs.coef()));
-                 }
+                static inline Result const in_gpu_construct(structured::
+                                                            GhostDataRT const &
+                                                            ghosts,
+                                                            structured::IntVec
+                                                            const & shift,
+                                                            int const
+                                                            deviceIndex,
+                                                            ArgPreGPUWalk const
+                                                            & arg,
+                                                            NeboStencilCoefCollection<1>
+                                                            const & coefs) {
+                   return Result(arg.gpu_init(ghosts,
+                                              shift + Point::int_vec(),
+                                              deviceIndex),
+                                 Coef(coefs.coef()));
+                }
              };
 #         endif
           /* __CUDACC__ */
@@ -359,26 +364,26 @@
 
              ProdOp<Reduction, Arg, Coef, DestType> typedef Result;
 
-             template<typename ValidGhost, typename Shift>
-              static inline Result const in_rd_construct(ArgPreReduction const &
-                                                         arg,
-                                                         NeboStencilCoefCollection<1>
-                                                         const & coefs) {
-                 typename structured::Add<Shift, Point>::result typedef NewShift;
+             static inline Result const in_rd_construct(structured::GhostDataRT
+                                                        const & ghosts,
+                                                        structured::IntVec const
+                                                        & shift,
+                                                        ArgPreReduction const &
+                                                        arg,
+                                                        NeboStencilCoefCollection<1>
+                                                        const & coefs) {
+                return Result(arg.reduce_init(ghosts, shift + Point::int_vec()),
+                              Coef(coefs.coef()));
+             }
 
-                 return Result(arg.template reduce_init<ValidGhost, NewShift>(),
-                               Coef(coefs.coef()));
-              }
-
-             template<typename Shift>
-              static inline Result const rs_rd_construct(ArgPreReduction const &
-                                                         arg,
-                                                         NeboStencilCoefCollection<1>
-                                                         const & coefs) {
-                 typename structured::Add<Shift, Point>::result typedef NewShift;
-
-                 return Result(arg.template reduce_init<NewShift>(), Coef(coefs.coef()));
-              }
+             static inline Result const rs_rd_construct(structured::IntVec const
+                                                        & shift,
+                                                        ArgPreReduction const &
+                                                        arg,
+                                                        NeboStencilCoefCollection<1>
+                                                        const & coefs) {
+                return Result(arg.reduce_init(shift + Point::int_vec()), Coef(coefs.coef()));
+             }
           };
       };
 
@@ -457,25 +462,26 @@
           NeboStencil<Reduction, Pts, ArgReductionType, FieldType> typedef
           ReductionType;
 
-          typename Pts::template PossibleGhost<typename Arg::PossibleValidGhost>::
-          Result typedef PossibleValidGhost;
-
           NeboStencil(Arg const & a, Coefs const & coefs)
           : arg_(a), coefs_(coefs)
           {}
 
-          template<typename ValidGhost, typename Shift>
-           inline SeqWalkType init(void) const {
-              return SeqWalkType(ConstructExpr::template in_sq_construct<ValidGhost,
-                                                                         Shift>(arg_,
-                                                                                coefs_));
-           }
+          inline structured::GhostDataRT possible_ghosts(void) const {
+             return Pts::possible_ghosts(arg_.possible_ghosts());
+          }
+
+          inline SeqWalkType init(structured::GhostDataRT const & ghosts,
+                                  structured::IntVec const & shift) const {
+             return SeqWalkType(ConstructExpr::in_sq_construct(ghosts,
+                                                               shift,
+                                                               arg_,
+                                                               coefs_));
+          }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             template<typename ValidGhost>
-              inline ResizeType resize(void) const {
-                 return ResizeType(arg_.template resize<ValidGhost>(), coefs_);
-              }
+             inline ResizeType resize(structured::GhostDataRT const & ghosts) const {
+                return ResizeType(arg_.resize(ghosts), coefs_);
+             }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
@@ -486,13 +492,15 @@
                 return arg_.gpu_ready(deviceIndex);
              }
 
-             template<typename ValidGhost, typename Shift>
-              inline GPUWalkType gpu_init(int const deviceIndex) const {
-                 return GPUWalkType(ConstructGPUExpr::template in_gpu_construct<ValidGhost,
-                                                                                Shift>(deviceIndex,
-                                                                                       arg_,
-                                                                                       coefs_));
-              }
+             inline GPUWalkType gpu_init(structured::GhostDataRT const & ghosts,
+                                         structured::IntVec const & shift,
+                                         int const deviceIndex) const {
+                return GPUWalkType(ConstructGPUExpr::in_gpu_construct(ghosts,
+                                                                      shift,
+                                                                      deviceIndex,
+                                                                      arg_,
+                                                                      coefs_));
+             }
 
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
@@ -503,12 +511,14 @@
 #         endif
           /* __CUDACC__ */
 
-          template<typename ValidGhost, typename Shift>
-           inline ReductionType reduce_init(void) const {
-              return ReductionType(ConstructExpr::template in_reduce_construct<ValidGhost,
-                                                                               Shift>(arg_,
-                                                                                      coefs_));
-           }
+          inline ReductionType reduce_init(structured::GhostDataRT const &
+                                           ghosts,
+                                           structured::IntVec const & shift) const {
+             return ReductionType(ConstructExpr::in_reduce_construct(ghosts,
+                                                                     shift,
+                                                                     arg_,
+                                                                     coefs_));
+          }
 
          private:
           Arg const arg_;
@@ -537,14 +547,15 @@
              : arg_(arg), coefs_(coefs)
              {}
 
-             template<typename Shift>
-              inline SeqWalkType init(structured::IntVec const & split,
-                                      structured::IntVec const & location) const {
-                 return SeqWalkType(ConstructExpr::template rs_sq_construct<Shift>(arg_,
-                                                                                   coefs_,
-                                                                                   split,
-                                                                                   location));
-              }
+             inline SeqWalkType init(structured::IntVec const & shift,
+                                     structured::IntVec const & split,
+                                     structured::IntVec const & location) const {
+                return SeqWalkType(ConstructExpr::rs_sq_construct(shift,
+                                                                  arg_,
+                                                                  coefs_,
+                                                                  split,
+                                                                  location));
+             }
 
             private:
              Arg const arg_;

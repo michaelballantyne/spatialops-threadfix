@@ -51,18 +51,23 @@
 
           NeboScalar<Reduction, FieldType> typedef ReductionType;
 
-          structured::InfiniteGhostData typedef PossibleValidGhost;
-
           NeboScalar(AtomicType const v)
           : value_(v)
           {}
 
-          template<typename ValidGhost, typename Shift>
-           inline SeqWalkType init(void) const { return SeqWalkType(value_); }
+          inline structured::GhostDataRT possible_ghosts(void) const {
+             return structured::GhostDataRT(GHOST_MAX);
+          }
+
+          inline SeqWalkType init(structured::GhostDataRT const & ghosts,
+                                  structured::IntVec const & shift) const {
+             return SeqWalkType(value_);
+          }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             template<typename ValidGhost>
-              inline ResizeType resize(void) const { return ResizeType(value_); }
+             inline ResizeType resize(structured::GhostDataRT const & ghosts) const {
+                return ResizeType(value_);
+             }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
@@ -71,10 +76,11 @@
 
              inline bool gpu_ready(int const deviceIndex) const { return true; }
 
-             template<typename ValidGhost, typename Shift>
-              inline GPUWalkType gpu_init(int const deviceIndex) const {
-                 return GPUWalkType(value_);
-              }
+             inline GPUWalkType gpu_init(structured::GhostDataRT const & ghosts,
+                                         structured::IntVec const & shift,
+                                         int const deviceIndex) const {
+                return GPUWalkType(value_);
+             }
 
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {}
@@ -83,10 +89,11 @@
 #         endif
           /* __CUDACC__ */
 
-          template<typename ValidGhost, typename Shift>
-           inline ReductionType reduce_init(void) const {
-              return ReductionType(value_);
-           }
+          inline ReductionType reduce_init(structured::GhostDataRT const &
+                                           ghosts,
+                                           structured::IntVec const & shift) const {
+             return ReductionType(value_);
+          }
 
          private:
           AtomicType const value_;
@@ -107,11 +114,11 @@
              : value_(value)
              {}
 
-             template<typename Shift>
-              inline SeqWalkType init(structured::IntVec const & split,
-                                      structured::IntVec const & location) const {
-                 return SeqWalkType(value_);
-              }
+             inline SeqWalkType init(structured::IntVec const & shift,
+                                     structured::IntVec const & split,
+                                     structured::IntVec const & location) const {
+                return SeqWalkType(value_);
+             }
 
             private:
              AtomicType const value_;
@@ -211,18 +218,23 @@
 
           NeboBoolean<Reduction, FieldType> typedef ReductionType;
 
-          structured::InfiniteGhostData typedef PossibleValidGhost;
-
           NeboBoolean(bool const v)
           : value_(v)
           {}
 
-          template<typename ValidGhost, typename Shift>
-           inline SeqWalkType init(void) const { return SeqWalkType(value_); }
+          inline structured::GhostDataRT possible_ghosts(void) const {
+             return structured::GhostDataRT(GHOST_MAX);
+          }
+
+          inline SeqWalkType init(structured::GhostDataRT const & ghosts,
+                                  structured::IntVec const & shift) const {
+             return SeqWalkType(value_);
+          }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             template<typename ValidGhost>
-              inline ResizeType resize(void) const { return ResizeType(value_); }
+             inline ResizeType resize(structured::GhostDataRT const & ghosts) const {
+                return ResizeType(value_);
+             }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
@@ -231,10 +243,11 @@
 
              inline bool gpu_ready(int const deviceIndex) const { return true; }
 
-             template<typename ValidGhost, typename Shift>
-              inline GPUWalkType gpu_init(int const deviceIndex) const {
-                 return GPUWalkType(value_);
-              }
+             inline GPUWalkType gpu_init(structured::GhostDataRT const & ghosts,
+                                         structured::IntVec const & shift,
+                                         int const deviceIndex) const {
+                return GPUWalkType(value_);
+             }
 
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {}
@@ -243,10 +256,11 @@
 #         endif
           /* __CUDACC__ */
 
-          template<typename ValidGhost, typename Shift>
-           inline ReductionType reduce_init(void) const {
-              return ReductionType(value_);
-           }
+          inline ReductionType reduce_init(structured::GhostDataRT const &
+                                           ghosts,
+                                           structured::IntVec const & shift) const {
+             return ReductionType(value_);
+          }
 
          private:
           bool const value_;
@@ -265,11 +279,11 @@
              : value_(value)
              {}
 
-             template<typename Shift>
-              inline SeqWalkType init(structured::IntVec const & split,
-                                      structured::IntVec const & location) const {
-                 return SeqWalkType(value_);
-              }
+             inline SeqWalkType init(structured::IntVec const & shift,
+                                     structured::IntVec const & split,
+                                     structured::IntVec const & location) const {
+                return SeqWalkType(value_);
+             }
 
             private:
              bool const value_;
@@ -365,24 +379,26 @@
 
           NeboConstField<Reduction, FieldType> typedef ReductionType;
 
-          typename structured::GhostFromField<FieldType>::result typedef
-          PossibleValidGhost;
-
           NeboConstField(FieldType const & f)
           : field_(f)
           {}
 
-          template<typename ValidGhost, typename Shift>
-           inline SeqWalkType init(void) const {
-              return SeqWalkType(field_.template resize_ghost_and_shift<ValidGhost,
-                                                                        Shift>());
-           }
+          inline structured::GhostDataRT possible_ghosts(void) const {
+             return field_.get_valid_ghost_data() + point_to_ghost(field_.boundary_info().has_extra());
+          }
+
+          inline SeqWalkType init(structured::GhostDataRT const & ghosts,
+                                  structured::IntVec const & shift) const {
+             return SeqWalkType(resize_ghost_and_shift_window(field_,
+                                                              ghosts -
+                                                              point_to_ghost(field_.boundary_info().has_extra()),
+                                                              shift));
+          }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             template<typename ValidGhost>
-              inline ResizeType resize(void) const {
-                 return ResizeType(field_.template resize_ghost<ValidGhost>());
-              }
+             inline ResizeType resize(structured::GhostDataRT const & ghosts) const {
+                return ResizeType(resize_ghost(field_, ghosts - point_to_ghost(field_.boundary_info().has_extra())));
+             }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
@@ -395,12 +411,15 @@
                 return field_.find_consumer(EXTERNAL_CUDA_GPU, deviceIndex);
              }
 
-             template<typename ValidGhost, typename Shift>
-              inline GPUWalkType gpu_init(int const deviceIndex) const {
-                 return GPUWalkType(deviceIndex,
-                                    field_.template resize_ghost_and_shift<ValidGhost,
-                                                                           Shift>());
-              }
+             inline GPUWalkType gpu_init(structured::GhostDataRT const & ghosts,
+                                         structured::IntVec const & shift,
+                                         int const deviceIndex) const {
+                return GPUWalkType(deviceIndex,
+                                   resize_ghost_and_shift_window(field_,
+                                                                 ghosts -
+                                                                 point_to_ghost(field_.boundary_info().has_extra()),
+                                                                 shift));
+             }
 
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
@@ -412,11 +431,14 @@
 #         endif
           /* __CUDACC__ */
 
-          template<typename ValidGhost, typename Shift>
-           inline ReductionType reduce_init(void) const {
-              return ReductionType(field_.template resize_ghost_and_shift<ValidGhost,
-                                                                          Shift>());
-           }
+          inline ReductionType reduce_init(structured::GhostDataRT const &
+                                           ghosts,
+                                           structured::IntVec const & shift) const {
+             return ReductionType(resize_ghost_and_shift_window(field_,
+                                                                ghosts -
+                                                                point_to_ghost(field_.boundary_info().has_extra()),
+                                                                shift));
+          }
 
          private:
           FieldType const field_;
@@ -435,13 +457,14 @@
              : field_(f)
              {}
 
-             template<typename Shift>
-              inline SeqWalkType init(structured::IntVec const & split,
-                                      structured::IntVec const & location) const {
-                 return SeqWalkType(FieldType(field_.window_with_ghost().refine(split,
-                                                                                location),
-                                              field_).template shift<Shift>());
-              }
+             inline SeqWalkType init(structured::IntVec const & shift,
+                                     structured::IntVec const & split,
+                                     structured::IntVec const & location) const {
+                return SeqWalkType(shift_window(FieldType(field_.window_with_ghost().refine(split,
+                                                                                            location),
+                                                          field_),
+                                                shift));
+             }
 
             private:
              FieldType const field_;

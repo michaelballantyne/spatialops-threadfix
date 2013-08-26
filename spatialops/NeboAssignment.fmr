@@ -21,7 +21,7 @@
 (include "spatialops/FulmarAbbreviations.fmr")
 (include "spatialops/NeboCore.fmr")
 
-(define (single-assign name iterator tpl-pmtrs rhs-input-type rhs-type rhs-expr)
+(define (single-assign name use-ghost tpl-pmtrs rhs-input-type rhs-type rhs-expr)
   (tpl-def (map tpl-pmtr (flatten* tpl-pmtrs FT-chunk))
            (r-fcn-def (fcn-dcl name
                                (cref FT-chunk)
@@ -32,26 +32,27 @@
                                 null)
                             (mfc (fc (tpl-use NF-chunk 'Initial FT-chunk)
                                      'lhs)
-                                 (tpl-fcn-use 'assign iterator 'RhsType)
+                                 (tpl-fcn-use 'assign 'RhsType)
+                                 use-ghost
                                  rhs-expr))
                       'lhs)))
-(define (assigns name iterator)
+(define (assigns name use-ghost)
   (internal-smt-list-chunk
    blank-line-chunk
    (single-assign name
-                  iterator
+                  use-ghost
                   null
                   (tpl-pmtr (scope FT-chunk 'value_type))
                   (tpl-use NS-chunk 'Initial FT-chunk)
                   (fc 'RhsType 'rhs))
    (single-assign name
-                  iterator
+                  use-ghost
                   null
                   FT-chunk
                   (tpl-use NCF-chunk 'Initial FT-chunk)
                   (fc 'RhsType 'rhs))
    (single-assign name
-                  iterator
+                  use-ghost
                   'RhsType
                   (tpl-use NE-chunk 'RhsType FT-chunk)
                   #false
@@ -59,6 +60,6 @@
 
 (n 'SpatialOps
    (assigns (bs 'operator '<<=)
-            'All)
+            'true)
    (assigns 'interior_assign
-            'InteriorOnly))
+            'false))

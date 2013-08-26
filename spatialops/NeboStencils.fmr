@@ -110,19 +110,11 @@
                                         null
                                         (s-typedef (tpl-use NSPC 'NewPoint 'MyType)
                                                    'Result))
-                         (s-tpl-srt-def 'PossibleGhost
-                                        (tpl-pmtr 'GivenPossibleValidGhost)
-                                        null
-                                        (s-typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Invalidate 'GivenPossibleValidGhost 'Point))
-                                                                    'result))
-                                                   'CurrentPossibleValidGhost)
-                                        (s-typedef (tpl-pmtr (scope 'Collection (tpl-fcn-use 'PossibleGhost 'GivenPossibleValidGhost)))
-                                                   'EarlierPointsPossibleGhost)
-                                        (s-typedef (tpl-pmtr (scope 'EarlierPointsPossibleGhost 'Result))
-                                                   'EarlierPointsPossibleValidGhost)
-                                        (s-typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Minimum 'CurrentPossibleValidGhost 'EarlierPointsPossibleValidGhost))
-                                                                    'result))
-                                                   'Result))
+                         (r-fcn-def (s-fcn-dcl 'possible_ghosts GhostData ghost-arg)
+                                    null
+                                    (fc 'min (n- 'ghosts (fc 'point_to_ghost (fc (scope 'Point 'int_vec))))
+                                        (fc (scope 'Collection 'possible_ghosts)
+                                            'ghosts)))
                          (s-tpl-srt-def 'ConstructExpr
                                         (list (tpl-pmtr 'ArgPreSeqWalk)
                                               (tpl-pmtr 'DestType))
@@ -140,45 +132,44 @@
                                                    'EarlierPointsResult)
                                         (s-typedef (tpl-use 'SumOp 'SeqWalk 'EarlierPointsResult 'MultiplyType 'DestType)
                                                    'Result)
-                                        (tpl-def (list (tpl-pmtr VG-chunk)
-                                                       (tpl-pmtr SH-chunk))
-                                                 (r-fcn-def (s-fcn-dcl 'in_sq_construct
-                                                                       (tc 'Result)
-                                                                       (adcr 'ArgPreSeqWalk 'arg)
-                                                                       (adcr (tpl-use NSCC 'length) 'coefs))
-                                                            (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
-                                                                                      'result))
-                                                                     'NewShift)
-                                                            (fc 'Result
-                                                                (fc (scope 'EarlierPointsType
-                                                                           (tpl-fcn-use 'in_sq_construct VG-chunk SH-chunk))
-                                                                    'arg
-                                                                    (mfc 'coefs 'others))
-                                                                (fc 'MultiplyType
-                                                                    (mfc 'arg (tpl-fcn-use 'init VG-chunk 'NewShift))
-                                                                    (fc 'Coef (mfc 'coefs 'coef))))))
-                                        (tpl-def (tpl-pmtr SH-chunk)
-                                                 (r-fcn-def (s-fcn-dcl 'rs_sq_construct
-                                                                       (tc 'Result)
-                                                                       (adcr 'ArgPreSeqWalk 'arg)
-                                                                       (adcr (tpl-use NSCC 'length) 'coefs)
-                                                                       (adcr IntVec 'split)
-                                                                       (adcr IntVec 'location))
-                                                            (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
-                                                                                      'result))
-                                                                     'NewShift)
-                                                            (fc 'Result
-                                                                (fc (scope 'EarlierPointsType (tpl-fcn-use 'rs_sq_construct SH-chunk))
-                                                                    'arg
-                                                                    (mfc 'coefs 'others)
-                                                                    'split
-                                                                    'location)
-                                                                (fc 'MultiplyType
-                                                                    (mfc 'arg
-                                                                         (tpl-fcn-use 'init 'NewShift)
-                                                                         'split
-                                                                         'location)
-                                                                    (fc 'Coef (mfc 'coefs 'coef)))))))
+                                        (r-fcn-def (s-fcn-dcl 'in_sq_construct
+                                                              (tc 'Result)
+                                                              ghost-arg
+                                                              shift-arg
+                                                              (adcr 'ArgPreSeqWalk 'arg)
+                                                              (adcr (tpl-use NSCC 'length) 'coefs))
+                                                   null
+                                                   (fc 'Result
+                                                       (fc (scope 'EarlierPointsType 'in_sq_construct)
+                                                           'ghosts
+                                                           'shift
+                                                           'arg
+                                                           (mfc 'coefs 'others))
+                                                       (fc 'MultiplyType
+                                                           (mfc 'arg 'init 'ghosts (n+ 'shift (fc (scope 'Point 'int_vec))))
+                                                           (fc 'Coef (mfc 'coefs 'coef)))))
+                                        (r-fcn-def (s-fcn-dcl 'rs_sq_construct
+                                                              (tc 'Result)
+                                                              shift-arg
+                                                              (adcr 'ArgPreSeqWalk 'arg)
+                                                              (adcr (tpl-use NSCC 'length) 'coefs)
+                                                              (adcr IntVec 'split)
+                                                              (adcr IntVec 'location))
+                                                   null
+                                                   (fc 'Result
+                                                       (fc (scope 'EarlierPointsType 'rs_sq_construct)
+                                                           'shift
+                                                           'arg
+                                                           (mfc 'coefs 'others)
+                                                           'split
+                                                           'location)
+                                                       (fc 'MultiplyType
+                                                           (mfc 'arg
+                                                                'init
+                                                                (n+ 'shift (fc (scope 'Point 'int_vec)))
+                                                                'split
+                                                                'location)
+                                                           (fc 'Coef (mfc 'coefs 'coef))))))
                          (gpu-only
                           (s-tpl-srt-def 'ConstructGPUExpr
                                          (list (tpl-pmtr 'ArgPreGPUWalk)
@@ -197,26 +188,28 @@
                                                     'EarlierPointsResult)
                                          (s-typedef (tpl-use 'SumOp 'GPUWalk 'EarlierPointsResult 'MultiplyType 'DestType)
                                                     'Result)
-                                         (tpl-def (list (tpl-pmtr VG-chunk)
-                                                        (tpl-pmtr SH-chunk))
-                                                  (r-fcn-def (s-fcn-dcl 'in_gpu_construct
-                                                                        (tc 'Result)
-                                                                        (adc 'int DI-chunk)
-                                                                        (adcr 'ArgPreGPUWalk 'arg)
-                                                                        (adcr (tpl-use NSCC 'length) 'coefs))
-                                                             (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
-                                                                                       'result))
-                                                                      'NewShift)
-                                                             (fc 'Result
-                                                                 (fc (scope 'EarlierPointsType (tpl-fcn-use 'in_gpu_construct VG-chunk SH-chunk))
-                                                                     DI-chunk
-                                                                     'arg
-                                                                     (mfc 'coefs 'others))
-                                                                 (fc 'MultiplyType
-                                                                     (mfc 'arg
-                                                                          (tpl-fcn-use 'gpu_init VG-chunk 'NewShift)
-                                                                          DI-chunk)
-                                                                     (fc 'Coef (mfc 'coefs 'coef))))))))
+                                         (r-fcn-def (s-fcn-dcl 'in_gpu_construct
+                                                               (tc 'Result)
+                                                               ghost-arg
+                                                               shift-arg
+                                                               (adc 'int DI-chunk)
+                                                               (adcr 'ArgPreGPUWalk 'arg)
+                                                               (adcr (tpl-use NSCC 'length) 'coefs))
+                                                    null
+                                                    (fc 'Result
+                                                        (fc (scope 'EarlierPointsType 'in_gpu_construct)
+                                                            'ghosts
+                                                            'shift
+                                                            DI-chunk
+                                                            'arg
+                                                            (mfc 'coefs 'others))
+                                                        (fc 'MultiplyType
+                                                            (mfc 'arg
+                                                                 'gpu_init
+                                                                 'ghosts
+                                                                 (n+ 'shift (fc (scope 'Point 'int_vec)))
+                                                                 DI-chunk)
+                                                            (fc 'Coef (mfc 'coefs 'coef)))))))
                          (s-tpl-srt-def 'ConstructReductionExpr
                                         (list (tpl-pmtr 'ArgPreReduction)
                                               (tpl-pmtr 'DestType))
@@ -234,37 +227,36 @@
                                                    'EarlierPointsResult)
                                         (s-typedef (tpl-use 'SumOp 'Reduction 'EarlierPointsResult 'MultiplyType 'DestType)
                                                    'Result)
-                                        (tpl-def (list (tpl-pmtr VG-chunk)
-                                                       (tpl-pmtr SH-chunk))
-                                                 (r-fcn-def (s-fcn-dcl 'in_rd_construct
-                                                                       (tc 'Result)
-                                                                       (adcr 'ArgPreReduction 'arg)
-                                                                       (adcr (tpl-use NSCC 'length) 'coefs))
-                                                            (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
-                                                                                      'result))
-                                                                     'NewShift)
-                                                            (fc 'Result
-                                                                (fc (scope 'EarlierPointsType (tpl-fcn-use 'in_rd_construct VG-chunk SH-chunk))
-                                                                    'arg
-                                                                    (mfc 'coefs 'others))
-                                                                (fc 'MultiplyType
-                                                                    (mfc 'arg (tpl-fcn-use 'reduce_init VG-chunk 'NewShift))
-                                                                    (fc 'Coef (mfc 'coefs 'coef))))))
-                                        (tpl-def (tpl-pmtr SH-chunk)
-                                                 (r-fcn-def (s-fcn-dcl 'rs_rd_construct
-                                                                       (tc 'Result)
-                                                                       (adcr 'ArgPreReduction 'arg)
-                                                                       (adcr (tpl-use NSCC 'length) 'coefs))
-                                                            (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
-                                                                                      'result))
-                                                                     'NewShift)
-                                                            (fc 'Result
-                                                                (fc (scope 'EarlierPointsType (tpl-fcn-use 'rs_rd_construct SH-chunk))
-                                                                    'arg
-                                                                    (mfc 'coefs 'others))
-                                                                (fc 'MultiplyType
-                                                                    (mfc 'arg (tpl-fcn-use 'reduce_init 'NewShift))
-                                                                    (fc 'Coef (mfc 'coefs 'coef)))))))))
+                                        (r-fcn-def (s-fcn-dcl 'in_rd_construct
+                                                              (tc 'Result)
+                                                              ghost-arg
+                                                              shift-arg
+                                                              (adcr 'ArgPreReduction 'arg)
+                                                              (adcr (tpl-use NSCC 'length) 'coefs))
+                                                   null
+                                                   (fc 'Result
+                                                       (fc (scope 'EarlierPointsType 'in_rd_construct)
+                                                           'ghosts
+                                                           'shift
+                                                           'arg
+                                                           (mfc 'coefs 'others))
+                                                       (fc 'MultiplyType
+                                                           (mfc 'arg 'reduce_init 'ghosts (n+ 'shift (fc (scope 'Point 'int_vec))))
+                                                           (fc 'Coef (mfc 'coefs 'coef)))))
+                                        (r-fcn-def (s-fcn-dcl 'rs_rd_construct
+                                                              (tc 'Result)
+                                                              shift-arg
+                                                              (adcr 'ArgPreReduction 'arg)
+                                                              (adcr (tpl-use NSCC 'length) 'coefs))
+                                                   null
+                                                   (fc 'Result
+                                                       (fc (scope 'EarlierPointsType 'rs_rd_construct)
+                                                           'shift
+                                                           'arg
+                                                           (mfc 'coefs 'others))
+                                                       (fc 'MultiplyType
+                                                           (mfc 'arg 'reduce_init (n+ 'shift (fc (scope 'Point 'int_vec))))
+                                                           (fc 'Coef (mfc 'coefs 'coef))))))))
 
    (tpl-srt-def NSPC
                 (tpl-pmtr 'PointType)
@@ -279,13 +271,9 @@
                                         null
                                         (s-typedef (tpl-use NSPC 'NewPoint 'MyType)
                                                    'Result))
-                         (s-tpl-srt-def 'PossibleGhost
-                                        (tpl-pmtr 'GivenPossibleValidGhost)
-                                        null
-                                        (s-typedef (tpl-pmtr (scope (scope 'structured
-                                                                           (tpl-use 'Invalidate 'GivenPossibleValidGhost 'Point))
-                                                                    'result))
-                                                   'Result))
+                         (r-fcn-def (s-fcn-dcl 'possible_ghosts GhostData ghost-arg)
+                                    null
+                                    (n- 'ghosts (fc 'point_to_ghost (fc (scope 'Point 'int_vec)))))
                          (s-tpl-srt-def 'ConstructExpr
                                         (list (tpl-pmtr 'ArgPreSeqWalk)
                                               (tpl-pmtr 'DestType))
@@ -296,34 +284,31 @@
                                                    'Arg)
                                         (s-typedef (tpl-use 'ProdOp 'SeqWalk 'Arg 'Coef 'DestType)
                                                    'Result)
-                                        (tpl-def (list (tpl-pmtr VG-chunk)
-                                                       (tpl-pmtr SH-chunk))
-                                                 (r-fcn-def (s-fcn-dcl 'in_sq_construct
-                                                                       (tc 'Result)
-                                                                       (adcr 'ArgPreSeqWalk 'arg)
-                                                                       (adcr (tpl-use NSCC "1") 'coefs))
-                                                            (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
-                                                                                      'result))
-                                                                     'NewShift)
-                                                            (fc 'Result
-                                                                (mfc 'arg (tpl-fcn-use 'init VG-chunk 'NewShift))
-                                                                (fc 'Coef (mfc 'coefs 'coef)))))
-                                        (tpl-def (tpl-pmtr SH-chunk)
-                                                 (r-fcn-def (s-fcn-dcl 'rs_sq_construct
-                                                                       (tc 'Result)
-                                                                       (adcr 'ArgPreSeqWalk 'arg)
-                                                                       (adcr (tpl-use NSCC "1") 'coefs)
-                                                                       (adcr IntVec 'split)
-                                                                       (adcr IntVec 'location))
-                                                            (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
-                                                                                      'result))
-                                                                     'NewShift)
-                                                            (fc 'Result
-                                                                (mfc 'arg
-                                                                     (tpl-fcn-use 'init 'NewShift)
-                                                                     'split
-                                                                     'location)
-                                                                (fc 'Coef (mfc 'coefs 'coef))))))
+                                        (r-fcn-def (s-fcn-dcl 'in_sq_construct
+                                                              (tc 'Result)
+                                                              ghost-arg
+                                                              shift-arg
+                                                              (adcr 'ArgPreSeqWalk 'arg)
+                                                              (adcr (tpl-use NSCC "1") 'coefs))
+                                                   null
+                                                   (fc 'Result
+                                                       (mfc 'arg 'init 'ghosts (n+ 'shift (fc (scope 'Point 'int_vec))))
+                                                       (fc 'Coef (mfc 'coefs 'coef))))
+                                        (r-fcn-def (s-fcn-dcl 'rs_sq_construct
+                                                              (tc 'Result)
+                                                              shift-arg
+                                                              (adcr 'ArgPreSeqWalk 'arg)
+                                                              (adcr (tpl-use NSCC "1") 'coefs)
+                                                              (adcr IntVec 'split)
+                                                              (adcr IntVec 'location))
+                                                   null
+                                                   (fc 'Result
+                                                       (mfc 'arg
+                                                            'init
+                                                            (n+ 'shift (fc (scope 'Point 'int_vec)))
+                                                            'split
+                                                            'location)
+                                                       (fc 'Coef (mfc 'coefs 'coef)))))
                          (gpu-only
                           (s-tpl-srt-def 'ConstructGPUExpr
                                          (list (tpl-pmtr 'ArgPreGPUWalk)
@@ -335,21 +320,21 @@
                                                     'Arg)
                                          (s-typedef (tpl-use 'ProdOp 'GPUWalk 'Arg 'Coef 'DestType)
                                                     'Result)
-                                         (tpl-def (list (tpl-pmtr VG-chunk)
-                                                        (tpl-pmtr SH-chunk))
-                                                  (r-fcn-def (s-fcn-dcl 'in_gpu_construct
-                                                                        (tc 'Result)
-                                                                        (adc 'int DI-chunk)
-                                                                        (adcr 'ArgPreGPUWalk 'arg)
-                                                                        (adcr (tpl-use NSCC "1") 'coefs))
-                                                             (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
-                                                                                       'result))
-                                                                      'NewShift)
-                                                             (fc 'Result
-                                                                 (mfc 'arg
-                                                                      (tpl-fcn-use 'gpu_init VG-chunk 'NewShift)
-                                                                      DI-chunk)
-                                                                 (fc 'Coef (mfc 'coefs 'coef)))))))
+                                         (r-fcn-def (s-fcn-dcl 'in_gpu_construct
+                                                               (tc 'Result)
+                                                               ghost-arg
+                                                               shift-arg
+                                                               (adc 'int DI-chunk)
+                                                               (adcr 'ArgPreGPUWalk 'arg)
+                                                               (adcr (tpl-use NSCC "1") 'coefs))
+                                                    null
+                                                    (fc 'Result
+                                                        (mfc 'arg
+                                                             'gpu_init
+                                                             'ghosts
+                                                             (n+ 'shift (fc (scope 'Point 'int_vec)))
+                                                             DI-chunk)
+                                                        (fc 'Coef (mfc 'coefs 'coef))))))
                          (s-tpl-srt-def 'ConstructReductionExpr
                                         (list (tpl-pmtr 'ArgPreReduction)
                                               (tpl-pmtr 'DestType))
@@ -360,29 +345,25 @@
                                                    'Arg)
                                         (s-typedef (tpl-use 'ProdOp 'Reduction 'Arg 'Coef 'DestType)
                                                    'Result)
-                                        (tpl-def (list (tpl-pmtr VG-chunk)
-                                                       (tpl-pmtr SH-chunk))
-                                                 (r-fcn-def (s-fcn-dcl 'in_rd_construct
-                                                                       (tc 'Result)
-                                                                       (adcr 'ArgPreReduction 'arg)
-                                                                       (adcr (tpl-use NSCC "1") 'coefs))
-                                                            (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
-                                                                                      'result))
-                                                                     'NewShift)
-                                                            (fc 'Result
-                                                                (mfc 'arg (tpl-fcn-use 'reduce_init VG-chunk 'NewShift))
-                                                                (fc 'Coef (mfc 'coefs 'coef)))))
-                                        (tpl-def (tpl-pmtr SH-chunk)
-                                                 (r-fcn-def (s-fcn-dcl 'rs_rd_construct
-                                                                       (tc 'Result)
-                                                                       (adcr 'ArgPreReduction 'arg)
-                                                                       (adcr (tpl-use NSCC "1") 'coefs))
-                                                            (typedef (tpl-pmtr (scope (scope 'structured (tpl-use 'Add SH-chunk 'Point))
-                                                                                      'result))
-                                                                     'NewShift)
-                                                            (fc 'Result
-                                                                (mfc 'arg (tpl-fcn-use 'reduce_init 'NewShift))
-                                                                (fc 'Coef (mfc 'coefs 'coef))))))))
+                                        (r-fcn-def (s-fcn-dcl 'in_rd_construct
+                                                              (tc 'Result)
+                                                              ghost-arg
+                                                              shift-arg
+                                                              (adcr 'ArgPreReduction 'arg)
+                                                              (adcr (tpl-use NSCC "1") 'coefs))
+                                                   null
+                                                   (fc 'Result
+                                                       (mfc 'arg 'reduce_init 'ghosts (n+ 'shift (fc (scope 'Point 'int_vec))))
+                                                       (fc 'Coef (mfc 'coefs 'coef))))
+                                        (r-fcn-def (s-fcn-dcl 'rs_rd_construct
+                                                              (tc 'Result)
+                                                              shift-arg
+                                                              (adcr 'ArgPreReduction 'arg)
+                                                              (adcr (tpl-use NSCC "1") 'coefs))
+                                                   null
+                                                   (fc 'Result
+                                                       (mfc 'arg 'reduce_init (n+ 'shift (fc (scope 'Point 'int_vec))))
+                                                       (fc 'Coef (mfc 'coefs 'coef)))))))
 
    (tpl-srt-def 'BuildStencilPointCollection
                 (tpl-pmtr 'First)
@@ -442,26 +423,32 @@
                                        (list 'Pts (tpl-pmtr (scope 'Arg 'ResizeType)))
                                        (list 'Pts 'ArgGPUWalkType)
                                        (list 'Pts 'ArgReductionType))
-                                 (tpl-pmtr (scope (scope 'Pts (tpl-fcn-use 'PossibleGhost (tpl-pmtr (scope 'Arg report-VG-chunk))))
-                                                  'Result))
                                  (bm-constructor (list (adcr 'Arg 'a)
                                                        (adcr 'Coefs 'coefs))
                                                  (list (cons-asgn 'arg_ 'a)
                                                        (cons-asgn 'coefs_ 'coefs))
                                                  null)
-                                 (fc (scope 'ConstructExpr (tpl-fcn-use 'in_sq_construct VG-chunk SH-chunk))
+                                 (fc (scope 'Pts 'possible_ghosts)
+                                     (mfc 'arg_ 'possible_ghosts))
+                                 (fc (scope 'ConstructExpr 'in_sq_construct)
+                                     'ghosts
+                                     'shift
                                      'arg_
                                      'coefs_)
-                                 (list (mfc 'arg_ (tpl-fcn-use 'resize VG-chunk))
+                                 (list (mfc 'arg_ 'resize 'ghosts)
                                        'coefs_)
                                  (mfc 'arg_ 'cpu_ready)
                                  (mfc 'arg_ 'gpu_ready DI-chunk)
-                                 (fc (scope 'ConstructGPUExpr (tpl-fcn-use 'in_gpu_construct VG-chunk SH-chunk))
+                                 (fc (scope 'ConstructGPUExpr 'in_gpu_construct)
+                                     'ghosts
+                                     'shift
                                      DI-chunk
                                      'arg_
                                      'coefs_)
                                  (mfc 'arg_ 'gpu_prep DI-chunk)
-                                 (fc (scope 'ConstructExpr (tpl-fcn-use 'in_reduce_construct VG-chunk SH-chunk))
+                                 (fc (scope 'ConstructExpr 'in_reduce_construct)
+                                     'ghosts
+                                     'shift
                                      'arg_
                                      'coefs_)
                                  null
@@ -480,7 +467,8 @@
                                                 (list (cons-asgn 'arg_ 'arg)
                                                       (cons-asgn 'coefs_ 'coefs))
                                                 null)
-                                (fc (scope 'ConstructExpr (tpl-fcn-use 'rs_sq_construct SH-chunk))
+                                (fc (scope 'ConstructExpr 'rs_sq_construct)
+                                    'shift
                                     'arg_
                                     'coefs_
                                     'split

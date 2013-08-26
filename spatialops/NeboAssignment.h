@@ -32,7 +32,8 @@
                                              const & rhs) {
           NeboScalar<Initial, FieldType> typedef RhsType;
 
-          NeboField<Initial, FieldType>(lhs).template assign<All, RhsType>(RhsType(rhs));
+          NeboField<Initial, FieldType>(lhs).template assign<RhsType>(true,
+                                                                      RhsType(rhs));
 
           return lhs;
        };
@@ -42,7 +43,8 @@
                                              FieldType const & rhs) {
           NeboConstField<Initial, FieldType> typedef RhsType;
 
-          NeboField<Initial, FieldType>(lhs).template assign<All, RhsType>(RhsType(rhs));
+          NeboField<Initial, FieldType>(lhs).template assign<RhsType>(true,
+                                                                      RhsType(rhs));
 
           return lhs;
        };
@@ -51,7 +53,7 @@
        inline FieldType const & operator <<=(FieldType & lhs,
                                              NeboExpression<RhsType, FieldType>
                                              const & rhs) {
-          NeboField<Initial, FieldType>(lhs).template assign<All, RhsType>(rhs.expr());
+          NeboField<Initial, FieldType>(lhs).template assign<RhsType>(true, rhs.expr());
 
           return lhs;
        };
@@ -62,8 +64,8 @@
                                                 const & rhs) {
           NeboScalar<Initial, FieldType> typedef RhsType;
 
-          NeboField<Initial, FieldType>(lhs).template assign<InteriorOnly,
-                                                             RhsType>(RhsType(rhs));
+          NeboField<Initial, FieldType>(lhs).template assign<RhsType>(false,
+                                                                      RhsType(rhs));
 
           return lhs;
        };
@@ -73,8 +75,8 @@
                                                 FieldType const & rhs) {
           NeboConstField<Initial, FieldType> typedef RhsType;
 
-          NeboField<Initial, FieldType>(lhs).template assign<InteriorOnly,
-                                                             RhsType>(RhsType(rhs));
+          NeboField<Initial, FieldType>(lhs).template assign<RhsType>(false,
+                                                                      RhsType(rhs));
 
           return lhs;
        };
@@ -84,8 +86,7 @@
                                                 NeboExpression<RhsType,
                                                                FieldType> const
                                                 & rhs) {
-          NeboField<Initial, FieldType>(lhs).template assign<InteriorOnly,
-                                                             RhsType>(rhs.expr());
+          NeboField<Initial, FieldType>(lhs).template assign<RhsType>(false, rhs.expr());
 
           return lhs;
        };

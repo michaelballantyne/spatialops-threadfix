@@ -57,24 +57,23 @@
 
           NeboField<Reduction, FieldType> typedef ReductionType;
 
-          typename structured::GhostFromField<FieldType>::result typedef
-          PossibleValidGhost;
-
           NeboField(FieldType f)
           : field_(f)
           {}
 
-          structured::IndexTriplet<0, 0, 0> typedef Shift;
+          inline structured::GhostDataRT possible_ghosts(void) const {
+             return field_.get_ghost_data();
+          }
 
-          template<typename Iterator, typename RhsType>
-           inline void assign(RhsType rhs) {
+          template<typename RhsType>
+           inline void assign(bool const useGhost, RhsType rhs) {
 #             ifdef __CUDACC__
 #                ifdef NEBO_GPU_TEST
-                    gpu_test_assign<Iterator, RhsType>(rhs)
+                    gpu_test_assign<RhsType>(useGhost, rhs)
 #                else
                     if(gpu_ready()) {
                        if(rhs.gpu_ready(gpu_device_index())) {
-                          gpu_assign<Iterator, RhsType>(rhs);
+                          gpu_assign<RhsType>(useGhost, rhs);
                        }
                        else {
                           std::ostringstream msg;
@@ -90,7 +89,7 @@
                     else {
                        if(cpu_ready()) {
                           if(rhs.cpu_ready()) {
-                             cpu_assign<Iterator, RhsType>(rhs);
+                             cpu_assign<RhsType>(useGhost, rhs);
                           }
                           else {
                              std::ostringstream msg;
@@ -117,37 +116,42 @@
 #                endif
                  /* NEBO_GPU_TEST */
 #             else
-                 cpu_assign<Iterator, RhsType>(rhs)
+                 cpu_assign<RhsType>(useGhost, rhs)
 #             endif
               /* __CUDACC__ */;
            }
 
          private:
-          template<typename Iterator, typename RhsType>
-           inline void cpu_assign(RhsType rhs) {
+          template<typename RhsType>
+           inline void cpu_assign(bool const useGhost, RhsType rhs) {
 #             ifdef FIELD_EXPRESSION_THREADS
                  if(is_thread_parallel()) {
-                    thread_parallel_assign<Iterator, RhsType>(rhs);
+                    thread_parallel_assign<RhsType>(useGhost, rhs);
                  }
-                 else { sequential_assign<Iterator, RhsType>(rhs); }
+                 else { sequential_assign<RhsType>(useGhost, rhs); }
 #             else
-                 sequential_assign<Iterator, RhsType>(rhs)
+                 sequential_assign<RhsType>(useGhost, rhs)
 #             endif
               /* FIELD_EXPRESSION_THREADS */;
            }
 
-          template<typename Iterator, typename RhsType>
-           inline void sequential_assign(RhsType rhs) {
+          template<typename RhsType>
+           inline void sequential_assign(bool const useGhost, RhsType rhs) {
 #             ifdef NEBO_REPORT_BACKEND
                  std::cout << "Starting Nebo sequential" << std::endl
 #             endif
               /* NEBO_REPORT_BACKEND */;
 
-              typename CalculateValidGhost<Iterator, RhsType, FieldType>::Result
-              typedef ValidGhost;
+              structured::GhostDataRT rhs_ghosts = calculate_valid_ghost(useGhost,
+                                                                         possible_ghosts(),
+                                                                         field_.boundary_info(),
+                                                                         rhs.possible_ghosts());
 
-              init<ValidGhost, Shift>().assign(rhs.template init<ValidGhost,
-                                                                 Shift>());
+              structured::GhostDataRT lhs_ghosts = calculate_valid_lhs_ghost(rhs_ghosts,
+                                                                             field_.boundary_info());
+
+              init(lhs_ghosts).assign(rhs.init(rhs_ghosts,
+                                               structured::IntVec(0, 0, 0)));
 
 #             ifdef NEBO_REPORT_BACKEND
                  std::cout << "Finished Nebo sequential" << std::endl
@@ -155,16 +159,14 @@
               /* NEBO_REPORT_BACKEND */;
            }
 
-          template<typename ValidGhost, typename Shift>
-           inline SeqWalkType init(void) {
-              return SeqWalkType(field_.template
-                                        resize_ghost_and_shift_and_maintain_interior<ValidGhost,
-                                                                                     Shift>());
-           }
+          inline SeqWalkType init(structured::GhostDataRT const & ghosts) {
+             return SeqWalkType((field_.reset_valid_ghosts(ghosts), field_));
+          }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             template<typename Iterator, typename RhsType>
-              inline void thread_parallel_assign(RhsType rhs) {
+             template<typename RhsType>
+              inline void thread_parallel_assign(bool const useGhost,
+                                                 RhsType rhs) {
 #                ifdef NEBO_REPORT_BACKEND
                     std::cout << "Starting Nebo thread parallel" << std::endl
 #                endif
@@ -174,20 +176,25 @@
 
                  const int thread_count = get_soft_thread_count();
 
-                 typename CalculateValidGhost<Iterator, RhsType, FieldType>::
-                 Result typedef ValidGhost;
+                 structured::GhostDataRT rhs_ghosts = calculate_valid_ghost(useGhost,
+                                                                            possible_ghosts(),
+                                                                            field_.boundary_info(),
+                                                                            rhs.possible_ghosts());
+
+                 structured::GhostDataRT lhs_ghosts = calculate_valid_lhs_ghost(rhs_ghosts,
+                                                                                field_.boundary_info());
 
                  typename RhsType::ResizeType typedef RhsResizeType;
 
-                 const structured::IntVec split = nebo_find_partition(field_.template
-                                                                             resize_ghost<ValidGhost>().window_with_ghost().extent(),
+                 const structured::IntVec split = nebo_find_partition(resize_ghost(field_,
+                                                                                   lhs_ghosts).window_with_ghost().extent(),
                                                                       thread_count);
 
                  const int max = nebo_partition_count(split);
 
-                 ResizeType new_lhs = resize<ValidGhost>();
+                 ResizeType new_lhs = resize(lhs_ghosts);
 
-                 RhsResizeType new_rhs = rhs.template resize<ValidGhost>();
+                 RhsResizeType new_rhs = rhs.resize(rhs_ghosts);
 
                  structured::IntVec location = structured::IntVec(0, 0, 0);
 
@@ -211,24 +218,27 @@
                  /* NEBO_REPORT_BACKEND */;
               }
 
-             template<typename ValidGhost>
-              inline ResizeType resize(void) {
-                 return ResizeType(field_.template
-                                          resize_ghost_and_maintain_interior<ValidGhost>());
-              }
+             inline ResizeType resize(structured::GhostDataRT const & ghosts) {
+                return ResizeType(resize_ghost(field_, ghosts));
+             }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
-             template<typename Iterator, typename RhsType>
-              inline void gpu_assign(RhsType rhs) {
+             template<typename RhsType>
+              inline void gpu_assign(bool const useGhost, RhsType rhs) {
 #                ifdef NEBO_REPORT_BACKEND
                     std::cout << "Starting Nebo CUDA" << std::endl
 #                endif
                  /* NEBO_REPORT_BACKEND */;
 
-                 typename CalculateValidGhost<Iterator, RhsType, FieldType>::
-                 Result typedef ValidGhost;
+                 structured::GhostDataRT rhs_ghosts = calculate_valid_ghost(useGhost,
+                                                                            possible_ghosts(),
+                                                                            field_.boundary_info(),
+                                                                            rhs.possible_ghosts());
+
+                 structured::GhostDataRT lhs_ghosts = calculate_valid_lhs_ghost(rhs_ghosts,
+                                                                                field_.boundary_info());
 
                  typename RhsType::GPUWalkType typedef RhsGPUWalkType;
 
@@ -251,11 +261,13 @@
                  gpu_assign_kernel<GPUWalkType, RhsGPUWalkType><<<dimGrid,
                                                                   dimBlock,
                                                                   0,
-                                                                  field_.get_stream()>>>(gpu_init<ValidGhost,
-                                                                                                  Shift>(),
-                                                                                         rhs.template
-                                                                                             gpu_init<ValidGhost,
-                                                                                                      Shift>(gpu_device_index()));
+                                                                  field_.get_stream()>>>(gpu_init(lhs_ghosts),
+                                                                                         rhs.gpu_init(rhs_ghosts,
+                                                                                                      structured::
+                                                                                                      IntVec(0,
+                                                                                                             0,
+                                                                                                             0),
+                                                                                                      gpu_device_index()));
 
 #                ifdef NEBO_REPORT_BACKEND
                     std::cout << "Finished Nebo CUDA" << std::endl
@@ -264,27 +276,24 @@
               }
 
              inline bool cpu_ready(void) const {
-                return field_.memory_device_type() == LOCAL_RAM;
+                return LOCAL_RAM == field_.memory_device_type();
              }
 
              inline bool gpu_ready(void) const {
-                return field_.memory_device_type() == EXTERNAL_CUDA_GPU;
+                return EXTERNAL_CUDA_GPU == field_.memory_device_type();
              }
 
              inline int gpu_device_index(void) const {
                 return field_.device_index();
              }
 
-             template<typename ValidGhost, typename Shift>
-              inline GPUWalkType gpu_init(void) {
-                 return GPUWalkType(field_.template
-                                           resize_ghost_and_shift_and_maintain_interior<ValidGhost,
-                                                                                        Shift>());
-              }
+             inline GPUWalkType gpu_init(structured::GhostDataRT const & ghosts) {
+                return GPUWalkType(resize_ghost(field_, ghosts));
+             }
 
 #            ifdef NEBO_GPU_TEST
-                template<typename Iterator, typename RhsType>
-                 inline void gpu_test_assign(RhsType rhs) {
+                template<typename RhsType>
+                 inline void gpu_test_assign(bool const useGhost, RhsType rhs) {
 #                   ifdef NEBO_REPORT_BACKEND
                        std::cout << "Starting Nebo CUDA with Nebo copying" <<
                        std::endl
@@ -302,7 +311,7 @@
 
                        NeboField<Initial, FieldType> gpu_lhs(gpu_field);
 
-                       gpu_lhs.template gpu_assign<Iterator, RhsType>(rhs);
+                       gpu_lhs.template gpu_assign<RhsType>(useGhost, rhs);
 
                        ema::cuda::CUDADeviceInterface & CDI = ema::cuda::
                        CUDADeviceInterface::self();
@@ -313,7 +322,7 @@
                                        field_.allocated_bytes(),
                                        0);
                     }
-                    else { gpu_assign<Iterator, RhsType>(rhs); };
+                    else { gpu_assign<RhsType>(useGhost, rhs); };
 
 #                   ifdef NEBO_REPORT_BACKEND
                        std::cout << "Finished Nebo CUDA with Nebo copying" <<
@@ -342,16 +351,17 @@
              : field_(f)
              {}
 
-             structured::IndexTriplet<0, 0, 0> typedef Shift;
-
 #            ifdef FIELD_EXPRESSION_THREADS
                 template<typename RhsType>
                  inline void assign(RhsType const & rhs,
                                     structured::IntVec const & split,
                                     structured::IntVec const & location,
                                     BI::interprocess_semaphore * semaphore) {
-                    init<Shift>(split, location).assign(rhs.template init<Shift>(split,
-                                                                                 location));
+                    init(split, location).assign(rhs.init(structured::IntVec(0,
+                                                                             0,
+                                                                             0),
+                                                          split,
+                                                          location));
 
                     semaphore->post();
                  }
@@ -359,14 +369,12 @@
              /* FIELD_EXPRESSION_THREADS */
 
             private:
-             template<typename Shift>
-              inline SeqWalkType init(structured::IntVec const & split,
-                                      structured::IntVec const & location) {
-                 return SeqWalkType(FieldType(field_.window_with_ghost().refine(split,
-                                                                                location),
-                                              field_).template
-                                                      shift_and_maintain_interior<Shift>());
-              }
+             inline SeqWalkType init(structured::IntVec const & split,
+                                     structured::IntVec const & location) {
+                return SeqWalkType(FieldType(field_.window_with_ghost().refine(split,
+                                                                               location),
+                                             field_));
+             }
 
              FieldType field_;
          }

@@ -394,7 +394,6 @@
             (s-typedef Nil-chunk 'SeqWalkType)
             (gpu-only (s-typedef Nil-chunk 'GPUWalkType))
             (s-typedef Nil-chunk 'ReductionType)
-            (s-typedef (scope 'structured 'InfiniteGhostData) report-VG-chunk)
             (constructor-chunk Nil-chunk
                                null
                                null))
@@ -404,34 +403,28 @@
                  (list 'Test 'Expr)
                  (bs-Initial-rhs null
                                  null
-                                 (tpl-pmtr (scope (scope 'structured
-                                                         (tpl-use 'Minimum
-                                                                  (tpl-pmtr (scope 'Test report-VG-chunk))
-                                                                  (tpl-pmtr (scope 'Expr report-VG-chunk))))
-                                                  'result))
                                  (bm-constructor (list (adcr 'Test 't)
                                                        (adcr 'Expr 'e))
                                                  (list (cons-asgn 'test_ 't)
                                                        (cons-asgn 'expr_ 'e))
                                                  null)
-                                 (list (mfc 'test_ (tpl-fcn-use 'init VG-chunk SH-chunk))
-                                       (mfc 'expr_ (tpl-fcn-use 'init VG-chunk SH-chunk)))
-                                 (list (mfc 'test_ (tpl-fcn-use 'resize VG-chunk))
-                                       (mfc 'expr_ (tpl-fcn-use 'resize VG-chunk)))
+                                 (fc 'min
+                                     (mfc 'test_ 'possible_ghosts)
+                                     (mfc 'expr_ 'possible_ghosts))
+                                 (list (mfc 'test_ 'init 'ghosts 'shift)
+                                       (mfc 'expr_ 'init 'ghosts 'shift))
+                                 (list (mfc 'test_ 'resize 'ghosts)
+                                       (mfc 'expr_ 'resize 'ghosts))
                                  (n-and (mfc 'test_ 'cpu_ready)
                                         (mfc 'expr_ 'cpu_ready))
                                  (n-and (mfc 'test_ 'gpu_ready DI-chunk)
                                         (mfc 'expr_ 'gpu_ready DI-chunk))
-                                 (list (mfc 'test_
-                                            (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)
-                                            DI-chunk)
-                                       (mfc 'expr_
-                                            (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)
-                                            DI-chunk))
+                                 (list (mfc 'test_ 'gpu_init 'ghosts 'shift DI-chunk)
+                                       (mfc 'expr_ 'gpu_init 'ghosts 'shift DI-chunk))
                                  (list (mfc 'test_ 'gpu_prep DI-chunk)
                                        (mfc 'expr_ 'gpu_prep DI-chunk))
-                                 (list (mfc 'test_ (tpl-fcn-use 'reduce_init VG-chunk SH-chunk))
-                                       (mfc 'expr_ (tpl-fcn-use 'reduce_init VG-chunk SH-chunk)))
+                                 (list (mfc 'test_ 'reduce_init 'ghosts 'shift)
+                                       (mfc 'expr_ 'reduce_init 'ghosts 'shift))
                                  null
                                  (list (sadc 'Test 'test_)
                                        (sadc 'Expr 'expr_)))
@@ -442,14 +435,8 @@
                                                 (list (cons-asgn 'test_ 'test)
                                                       (cons-asgn 'expr_ 'expr))
                                                 null)
-                                (list (mfc 'test_
-                                           (tpl-fcn-use 'init SH-chunk)
-                                           'split
-                                           'location)
-                                      (mfc 'expr_
-                                           (tpl-fcn-use 'init SH-chunk)
-                                           'split
-                                           'location))
+                                (list (mfc 'test_ 'init 'shift 'split 'location)
+                                      (mfc 'expr_ 'init 'shift 'split 'location))
                                 null
                                 (list (sadc 'Test 'test_)
                                       (sadc 'Expr 'expr_)))
@@ -513,33 +500,28 @@
                  (list CT-chunk 'Otherwise)
                  (bs-Initial-rhs null
                                  null
-                                 (tpl-pmtr (scope (scope 'structured (tpl-use 'Minimum
-                                                                              (tpl-pmtr (scope CT-chunk report-VG-chunk))
-                                                                              (tpl-pmtr (scope 'Otherwise report-VG-chunk))))
-                                                  'result))
                                  (bm-constructor (list (adcr CT-chunk 'c)
                                                        (adcr 'Otherwise 'e))
                                                  (list (cons-asgn 'clause_ 'c)
                                                        (cons-asgn 'otherwise_ 'e))
                                                  null)
-                                 (list (mfc 'clause_ (tpl-fcn-use 'init VG-chunk SH-chunk))
-                                       (mfc 'otherwise_ (tpl-fcn-use 'init VG-chunk SH-chunk)))
-                                 (list (mfc 'clause_ (tpl-fcn-use 'resize VG-chunk))
-                                       (mfc 'otherwise_ (tpl-fcn-use 'resize VG-chunk)))
+                                 (fc 'min
+                                     (mfc 'clause_ 'possible_ghosts)
+                                     (mfc 'otherwise_ 'possible_ghosts))
+                                 (list (mfc 'clause_ 'init 'ghosts 'shift)
+                                       (mfc 'otherwise_ 'init 'ghosts 'shift))
+                                 (list (mfc 'clause_ 'resize 'ghosts)
+                                       (mfc 'otherwise_ 'resize 'ghosts))
                                  (n-and (mfc 'clause_ 'cpu_ready)
                                         (mfc 'otherwise_ 'cpu_ready))
                                  (n-and (mfc 'clause_ 'gpu_ready DI-chunk)
                                         (mfc 'otherwise_ 'gpu_ready DI-chunk))
-                                 (list (mfc 'clause_
-                                            (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)
-                                            DI-chunk)
-                                       (mfc 'otherwise_
-                                            (tpl-fcn-use 'gpu_init VG-chunk SH-chunk)
-                                            DI-chunk))
+                                 (list (mfc 'clause_ 'gpu_init 'ghosts 'shift DI-chunk)
+                                       (mfc 'otherwise_ 'gpu_init 'ghosts 'shift DI-chunk))
                                  (list (mfc 'clause_ 'gpu_prep DI-chunk)
                                        (mfc 'otherwise_ 'gpu_prep DI-chunk))
-                                 (list (mfc 'clause_ (tpl-fcn-use 'reduce_init VG-chunk SH-chunk))
-                                       (mfc 'otherwise_ (tpl-fcn-use 'reduce_init VG-chunk SH-chunk)))
+                                 (list (mfc 'clause_ 'reduce_init 'ghosts 'shift)
+                                       (mfc 'otherwise_ 'reduce_init 'ghosts 'shift))
                                  (list (r-fcn-def (constize (fcn-dcl 'clause (cref CT-chunk)))
                                                   null
                                                   'clause_)
@@ -555,14 +537,8 @@
                                                 (list (cons-asgn 'clause_ 'clause)
                                                       (cons-asgn 'otherwise_ 'otherwise))
                                                 null)
-                                (list (mfc 'clause_
-                                           (tpl-fcn-use 'init SH-chunk)
-                                           'split
-                                           'location)
-                                      (mfc 'otherwise_
-                                           (tpl-fcn-use 'init SH-chunk)
-                                           'split
-                                           'location))
+                                (list (mfc 'clause_ 'init 'shift 'split 'location)
+                                      (mfc 'otherwise_ 'init 'shift 'split 'location))
                                 null
                                 (list (sadc CT-chunk 'clause_)
                                       (sadc 'Otherwise 'otherwise_)))
