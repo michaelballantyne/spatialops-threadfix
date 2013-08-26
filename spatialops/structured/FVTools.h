@@ -53,141 +53,37 @@ namespace structured{
   //------------------------------------------------------------------
 
   /**
-   *  \fn int get_nx_with_ghost( const int, const bool )
+   *  \fn int get_dim_with_ghost( const int, const int, const int, const int )
    *
    *  \brief obtain the number of points in the x direction
    *
-   *  \param nxNoGhost number of points in the x-direction excluding
+   *  \param nNoGhost number of points in the current direction excluding
    *    ghost cells
    *
-   *  \param ghost the GhostDataRT information
+   *  \param minusGhost the number of ghost cells on the negative face
    *
-   *  \return the number of points in the x-direction, including ghost cells.
+   *  \param plusGhost the number of ghost cells on the positive face
    *
-   *  \tparam FieldT the type of field that we want NX for.
+   *  \param bc the number of boundary cells on the positive face
+   *
+   *  \return the number of points in the current direction, including ghost cells
+   *    and boundary cells
+   *
    */
-  template<typename FieldT>
-  inline int get_nx_with_ghost( const int nxNoGhost,
-                                const GhostDataRT& ghost,
-                                const bool hasBC )
+  inline int get_dim_with_ghost( const int nNoGhost,
+                                 const int minusGhost,
+                                 const int plusGhost,
+                                 const int bc )
   {
-    return ( nxNoGhost>1
-             ? ( nxNoGhost + ghost.get_minus(0) + ghost.get_plus(0)
-                 + (hasBC ? FieldT::Location::BCExtra::x_value() : 0) )
+    return ( nNoGhost > 1
+             ? ( nNoGhost + minusGhost + plusGhost + bc )
              : 1 );
   }
 
-  inline int get_nx_with_ghost( const int nxNoGhost,
-                                const GhostDataRT& ghost,
-                                const BoundaryCellInfo& bc )
-  {
-    return ( nxNoGhost>1
-             ? ( nxNoGhost + ghost.get_minus(0) + ghost.get_plus(0)
-                 + ( bc.has_bc(0) ? bc.num_extra(0) : 0) )
-             : 1 );
-  }
+  //------------------------------------------------------------------
 
   /**
-   *  \fn int get_ny_with_ghost( const int, const bool )
-   *
-   *  \brief obtain the number of points in the y direction
-   *
-   *  \param nyNoGhost number of points in the y-direction excluding
-   *    ghost cells
-   *
-   *  \param ghost the GhostDataRT information
-   *
-   *  \return the number of points in the y-direction, including ghost cells.
-   *
-   *  \tparam FieldT the type of field that we want NY for.
-   */
-  template<typename FieldT>
-  inline int get_ny_with_ghost( const int nyNoGhost,
-                                const GhostDataRT& ghost,
-                                const bool hasBC )
-  {
-    return ( nyNoGhost>1
-             ? ( nyNoGhost + ghost.get_minus(1) + ghost.get_plus(1)
-                 + (hasBC ? FieldT::Location::BCExtra::y_value() : 0) )
-             : 1 );
-  }
-
-  inline int get_ny_with_ghost( const int nyNoGhost,
-                                const GhostDataRT& ghost,
-                                const BoundaryCellInfo& bc )
-  {
-    return ( nyNoGhost>1
-             ? ( nyNoGhost + ghost.get_minus(1) + ghost.get_plus(1)
-                 + (bc.has_bc(1) ? bc.num_extra(1) : 0) )
-             : 1 );
-  }
-
-  /**
-   *  \fn int get_nz_with_ghost( const int, const bool )
-   *
-   *  \brief obtain the number of points in the z direction
-   *
-   *  \param nzNoGhost number of points in the z-direction excluding
-   *    ghost cells
-   *
-   *  \param ghost the GhostDataRT information
-   *
-   *  \return the number of points in the z-direction, including ghost cells.
-   *
-   *  \tparam FieldT the type of field that we want NZ for.
-   */
-  template<typename FieldT>
-  inline int get_nz_with_ghost( const int nzNoGhost,
-                                const GhostDataRT& ghost,
-                                const bool hasBC )
-  {
-    return ( nzNoGhost>1
-             ? ( nzNoGhost + ghost.get_minus(2) + ghost.get_plus(2)
-                 + (hasBC ? FieldT::Location::BCExtra::z_value() : 0) )
-             : 1 );
-  }
-
-  inline int get_nz_with_ghost( const int nzNoGhost,
-                                const GhostDataRT& ghost,
-                                const BoundaryCellInfo& bc )
-  {
-    return ( nzNoGhost>1
-             ? ( nzNoGhost + ghost.get_minus(2) + ghost.get_plus(2)
-                 + (bc.has_bc(2) ? bc.num_extra(2) : 0) )
-             : 1 );
-  }
-
-  template<> inline int get_nx_with_ghost<double>( const int nxNoGhost, const GhostDataRT& ghost, const bool hasBC ){ return nxNoGhost; }
-  template<> inline int get_ny_with_ghost<double>( const int nyNoGhost, const GhostDataRT& ghost, const bool hasBC ){ return nyNoGhost; }
-  template<> inline int get_nz_with_ghost<double>( const int nzNoGhost, const GhostDataRT& ghost, const bool hasBC ){ return nzNoGhost; }
-
-  /**
-   *  \fn int get_dim_with_ghost( const IntVec&, const bool, const bool, const bool )
-   *
-   *  \brief obtain the number of points in each direction for the given field type
-   *
-   *  \param dimNoGhost number of points in each direction excluding
-   *    ghost cells
-   *
-   *  \param ghost the GhostDataRT information
-   *
-   *  \return the number of points in each direction, including ghost cells.
-   *
-   *  \tparam FieldT the type of field that we want (NX,NY,NZ) for.
-   */
-  IntVec
-  inline get_dim_with_ghost( const IntVec& dimNoGhost,
-                             const GhostDataRT& ghost,
-                             const BoundaryCellInfo& bc )
-  {
-    return IntVec( get_nx_with_ghost( dimNoGhost[0], ghost, bc ),
-                   get_ny_with_ghost( dimNoGhost[1], ghost, bc ),
-                   get_nz_with_ghost( dimNoGhost[2], ghost, bc ) );
-  }
-
-
-  /**
-   *  \fn MemoryWindow get_window_with_ghost( const IntVec&, const GhostDataRT& )
+   *  \fn MemoryWindow get_window_with_ghost( const IntVec&, const GhostDataRT&, const BoundaryCellInfo& )
    *  \brief Obtain the memory window for a field on a patch that is a single, contiguous memory block
    *
    *  \param dimNoGhost number of points in each direction excluding
@@ -200,48 +96,18 @@ namespace structured{
    *   use specifically with fields that share common BoundaryCellInfo.
    *
    *  \return the total number of points in the field, including ghost cells.
-   *
-   *  \tparam FieldT the type of field that we want (NX,NY,NZ) for.
    */
   MemoryWindow
   inline get_window_with_ghost( const IntVec& localDim,
                                 const GhostDataRT& ghost,
                                 const BoundaryCellInfo& bc )
   {
-    const IntVec dim( get_nx_with_ghost( localDim[0], ghost, bc ),
-                      get_ny_with_ghost( localDim[1], ghost, bc ),
-                      get_nz_with_ghost( localDim[2], ghost, bc ) );
-    return MemoryWindow( dim );
+      return MemoryWindow( IntVec( get_dim_with_ghost( localDim[0], ghost.get_minus(0), ghost.get_plus(0), bc.has_extra(0) ),
+                                   get_dim_with_ghost( localDim[1], ghost.get_minus(1), ghost.get_plus(1), bc.has_extra(1) ),
+                                   get_dim_with_ghost( localDim[2], ghost.get_minus(2), ghost.get_plus(2), bc.has_extra(2) ) ) );
   }
 
   //------------------------------------------------------------------
-
-  /**
-   *  \brief Obtain the memory window for a field on a patch that is a subset of a larger memory block
-   *
-   *  \param globalDim the global dimensionality of the memory block (without ghost cells)
-   *  \param localDim  the dimensionality of the field in consideration (without ghost cells)
-   *  \param offset    the offset (start ijk index) of the local field in the global address space.
-   *
-   *  \param ghost the GhostDataRT information
-   */
-  template<typename FieldT>
-  MemoryWindow
-  inline get_window_with_ghost( const IntVec& globalDim,
-                                const IntVec& localDim,
-                                const IntVec& offset,
-                                const GhostDataRT& ghost )
-  {
-    const IntVec dimLoc( get_nx_with_ghost<FieldT>(localDim[0],ghost),
-                         get_ny_with_ghost<FieldT>(localDim[1],ghost),
-                         get_nz_with_ghost<FieldT>(localDim[2],ghost) );
-    const IntVec dimGlob( get_nx_with_ghost<FieldT>(globalDim[0],ghost),
-                          get_ny_with_ghost<FieldT>(globalDim[1],ghost),
-                          get_nz_with_ghost<FieldT>(globalDim[2],ghost) );
-    return MemoryWindow( dimGlob, offset, dimLoc );
-  }
-
-  //==================================================================
 
   /**
    *  @}
