@@ -705,16 +705,15 @@
                                 (if (not (null? tests))
                                     (d (c "Test for chains starting with " (stringize (build-stencil-string first-stencil)))
                                        tests)
-                                    null)))
+                                    null))
+                     (nif (mfc 'status 'ok)
+                          (list (bs 'cout "<<" (stringize "ALL TESTS PASSED :)") "<<" 'endl)
+                                (bs return-chunk "0"))))
                     new-line-chunk
                     (fc 'catch (bs (scope 'std 'runtime_error) "&" 'e))
                     (body-chunk (bs 'cout "<<" (mfc 'e 'what) "<<" 'endl)))
-                 (nifelse (mfc 'status 'ok)
-                          (bs 'cout "<<" (stringize "ALL TESTS PASSED :)") "<<" 'endl)
-                          (bs 'cout "<<" (stringize "******************************") "<<" 'endl new-line-chunk
-                              "<<" (stringize " At least one test FAILED :(") "<<" 'endl new-line-chunk
-                              "<<" (stringize "******************************") "<<" 'endl))
+                 (bs 'cout "<<" (stringize "******************************") "<<" 'endl new-line-chunk
+                     "<<" (stringize " At least one test FAILED :(") "<<" 'endl new-line-chunk
+                     "<<" (stringize "******************************") "<<" 'endl)
                  )
-           (ter-cond (mfc 'status 'ok)
-                     "0"
-                     "-1"))
+           "-1")

@@ -290,7 +290,7 @@ namespace boost { namespace threadpool { namespace detail
 
       if(wait)
       {
-        while(m_active_worker_count > 0)
+        while(m_worker_count > 0)
         {
           self->m_worker_idle_or_terminated_event.wait(lock);
         }
