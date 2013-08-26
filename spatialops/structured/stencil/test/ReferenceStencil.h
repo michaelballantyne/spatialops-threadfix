@@ -384,7 +384,7 @@ namespace structured {
                             w.extent() - shift );
       const MemoryWindow ws1(w.glob_dim(),
                              w.offset(),
-                             w.extent() );
+                             w.extent() - shift );
       const MemoryWindow ws2(w.glob_dim(),
                              w.offset() + shift,
                              w.extent() - shift );

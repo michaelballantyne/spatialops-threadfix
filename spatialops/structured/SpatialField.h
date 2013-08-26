@@ -438,10 +438,10 @@ namespace structured{
      */
     inline void reset_valid_ghosts( const GhostDataRT& ghosts ){
       const IntVec diff = validGhosts_.get_minus() - ghosts.get_minus();
-      validGhosts_ = ghosts;
       fieldWindow_ = MemoryWindow( fieldWindow_.glob_dim(),
                                    fieldWindow_.offset() + diff,
                                    fieldWindow_.extent() - diff - validGhosts_.get_plus() + ghosts.get_plus() );
+      validGhosts_ = ghosts;
     }
 
     /**
