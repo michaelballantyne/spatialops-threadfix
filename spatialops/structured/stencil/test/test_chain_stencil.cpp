@@ -51,46 +51,42 @@ namespace po = boost::program_options;
 
 template<typename FirstOpType, typename SecondOpType, typename SrcType, typename ItmdType, typename DestType>
  inline bool test_stencil_chain(OperatorDatabase & opdb, IntVec npts, bool bc[]) {
-  /* basic definitions: */
-  const GhostData srcGhost (1);
-  const GhostData itmGhost (1);
-  const GhostData destGhost(1);
+    /* basic definitions: */
+    const structured::GhostData ghosts = structured::GhostData(1);
+    const structured::BoundaryCellInfo srcbc = structured::BoundaryCellInfo::build<SrcType>(bc[0], bc[1], bc[2]);
+    const structured::BoundaryCellInfo itmbc = structured::BoundaryCellInfo::build<ItmdType>(bc[0], bc[1], bc[2]);
+    const structured::BoundaryCellInfo destbc = structured::BoundaryCellInfo::build<DestType>(bc[0], bc[1], bc[2]);
+    const MemoryWindow mwSrc = get_window_with_ghost(npts, ghosts, srcbc);
+    const MemoryWindow mwItmd = get_window_with_ghost(npts, ghosts, itmbc);
+    const MemoryWindow mwDest = get_window_with_ghost(npts, ghosts, destbc);
+    SrcType src(mwSrc, srcbc, ghosts, NULL);
+    ItmdType itmd(mwItmd, itmbc, ghosts, NULL);
+    DestType ref(mwDest, destbc, ghosts, NULL);
+    DestType test(mwDest, destbc, ghosts, NULL);
 
-  const BoundaryCellInfo  srcbc = BoundaryCellInfo::build<SrcType >(bc[0],bc[1],bc[2]);
-  const BoundaryCellInfo  itmbc = BoundaryCellInfo::build<ItmdType>(bc[0],bc[1],bc[2]);
-  const BoundaryCellInfo destbc = BoundaryCellInfo::build<DestType>(bc[0],bc[1],bc[2]);
+    /* initialize source field / zero out result fields: */
+    initialize_field(src);
+    itmd <<= 0.0;
+    ref <<= 0.0;
+    test <<= 0.0;
 
-  const MemoryWindow mwSrc  = get_window_with_ghost(npts, srcGhost ,  srcbc);
-  const MemoryWindow mwItmd = get_window_with_ghost(npts, itmGhost ,  itmbc);
-  const MemoryWindow mwDest = get_window_with_ghost(npts, destGhost, destbc);
-  SrcType   src( mwSrc,   srcbc,  srcGhost, NULL );
-  ItmdType itmd( mwItmd,  itmbc,  itmGhost, NULL );
-  DestType  ref( mwDest, destbc, destGhost, NULL );
-  DestType test( mwDest, destbc, destGhost, NULL );
+    /* get first operator */
+    typename OperatorTypeBuilder<FirstOpType, SrcType, ItmdType>::type typedef FirstOp;
+    const FirstOp * const firstOp = opdb.retrieve_operator<FirstOp>();
 
-  /* initialize source field / zero out result fields: */
-  initialize_field(src);
-  itmd <<= 0.0;
-  ref <<= 0.0;
-  test <<= 0.0;
+    /* get second operator: */
+    typename OperatorTypeBuilder<SecondOpType, ItmdType, DestType>::type typedef SecondOp;
+    const SecondOp * const secondOp = opdb.retrieve_operator<SecondOp>();
 
-  /* get first operator */
-  typename OperatorTypeBuilder<FirstOpType, SrcType, ItmdType>::type typedef FirstOp;
-  const FirstOp * const firstOp = opdb.retrieve_operator<FirstOp>();
+    /* run reference: */
+    itmd <<= (*firstOp)(src);
+    ref <<= (*secondOp)(itmd);
 
-  /* get second operator: */
-  typename OperatorTypeBuilder<SecondOpType, ItmdType, DestType>::type typedef SecondOp;
-  const SecondOp * const secondOp = opdb.retrieve_operator<SecondOp>();
+    /* run operator: */
+    test <<= (*secondOp)((*firstOp)(src));
 
-  /* run reference: */
-  itmd <<= (*firstOp)(src);
-  ref <<= (*secondOp)(itmd);
-
-  /* run operator: */
-  test <<= (*secondOp)((*firstOp)(src));
-
-  return interior_display_fields_compare(ref, test, false, false);
-}
+    return interior_display_fields_compare(ref, test, false, false);
+ }
 
 template<typename FirstOpType, typename SecondOpType, typename SrcType, typename ItmdType, typename DestType>
  inline void test_stencil_chain_with_status(TestHelper & status, OperatorDatabase & opdb, IntVec npts, bool bc[], string const & str) {

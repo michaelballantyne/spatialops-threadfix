@@ -60,15 +60,13 @@
       struct InteriorOnly;
 
       inline structured::GhostData calculate_valid_ghost(bool const useGhost,
-                                                           structured::
-                                                           GhostData const &
-                                                           lhs,
-                                                           structured::
-                                                           BoundaryCellInfo
-                                                           const & bc,
-                                                           structured::
-                                                           GhostData const &
-                                                           rhs) {
+                                                         structured::GhostData
+                                                         const & lhs,
+                                                         structured::
+                                                         BoundaryCellInfo const
+                                                         & bc,
+                                                         structured::GhostData
+                                                         const & rhs) {
          if(bc.has_bc(0) && rhs.get_plus(0) < bc.has_extra(0)) {
             std::ostringstream msg;
             msg << "Nebo error in " << "Nebo Ghost Checking" << ":\n";
@@ -102,18 +100,18 @@
          structured::GhostData lhs_w_extra = lhs + point_to_ghost(bc.has_extra());
 
          return (useGhost ? min(lhs_w_extra, rhs) : structured::GhostData(structured::
-                                                                            IntVec(0,
-                                                                                   0,
-                                                                                   0),
-                                                                            bc.has_extra()));
+                                                                          IntVec(0,
+                                                                                 0,
+                                                                                 0),
+                                                                          bc.has_extra()));
       };
 
       inline structured::GhostData calculate_valid_lhs_ghost(structured::
-                                                               GhostData const
-                                                               & ghosts,
-                                                               structured::
-                                                               BoundaryCellInfo
-                                                               const & bc) {
+                                                             GhostData const &
+                                                             ghosts,
+                                                             structured::
+                                                             BoundaryCellInfo
+                                                             const & bc) {
          return ghosts - point_to_ghost(bc.has_extra());
       };
 

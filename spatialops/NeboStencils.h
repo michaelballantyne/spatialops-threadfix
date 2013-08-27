@@ -115,8 +115,8 @@
           };
 
           static inline structured::GhostData possible_ghosts(structured::
-                                                                GhostData
-                                                                const & ghosts) {
+                                                              GhostData const &
+                                                              ghosts) {
              return min(ghosts - point_to_ghost(Point::int_vec()),
                         Collection::possible_ghosts(ghosts));
           }
@@ -288,8 +288,8 @@
           };
 
           static inline structured::GhostData possible_ghosts(structured::
-                                                                GhostData
-                                                                const & ghosts) {
+                                                              GhostData const &
+                                                              ghosts) {
              return ghosts - point_to_ghost(Point::int_vec());
           }
 
@@ -511,8 +511,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const &
-                                           ghosts,
+          inline ReductionType reduce_init(structured::GhostData const & ghosts,
                                            structured::IntVec const & shift) const {
              return ReductionType(ConstructExpr::in_reduce_construct(ghosts,
                                                                      shift,

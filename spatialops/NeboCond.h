@@ -130,8 +130,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const &
-                                           ghosts,
+          inline ReductionType reduce_init(structured::GhostData const & ghosts,
                                            structured::IntVec const & shift) const {
              return ReductionType(test_.reduce_init(ghosts, shift),
                                   expr_.reduce_init(ghosts, shift));
@@ -351,8 +350,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const &
-                                           ghosts,
+          inline ReductionType reduce_init(structured::GhostData const & ghosts,
                                            structured::IntVec const & shift) const {
              return ReductionType(clause_.reduce_init(ghosts, shift),
                                   otherwise_.reduce_init(ghosts, shift));

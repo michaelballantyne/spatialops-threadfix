@@ -143,12 +143,12 @@
               /* NEBO_REPORT_BACKEND */;
 
               structured::GhostData rhs_ghosts = calculate_valid_ghost(useGhost,
-                                                                         possible_ghosts(),
-                                                                         field_.boundary_info(),
-                                                                         rhs.possible_ghosts());
+                                                                       possible_ghosts(),
+                                                                       field_.boundary_info(),
+                                                                       rhs.possible_ghosts());
 
               structured::GhostData lhs_ghosts = calculate_valid_lhs_ghost(rhs_ghosts,
-                                                                             field_.boundary_info());
+                                                                           field_.boundary_info());
 
               init(lhs_ghosts).assign(rhs.init(rhs_ghosts,
                                                structured::IntVec(0, 0, 0)));
@@ -177,12 +177,12 @@
                  const int thread_count = get_soft_thread_count();
 
                  structured::GhostData rhs_ghosts = calculate_valid_ghost(useGhost,
-                                                                            possible_ghosts(),
-                                                                            field_.boundary_info(),
-                                                                            rhs.possible_ghosts());
+                                                                          possible_ghosts(),
+                                                                          field_.boundary_info(),
+                                                                          rhs.possible_ghosts());
 
                  structured::GhostData lhs_ghosts = calculate_valid_lhs_ghost(rhs_ghosts,
-                                                                                field_.boundary_info());
+                                                                              field_.boundary_info());
 
                  typename RhsType::ResizeType typedef RhsResizeType;
 
@@ -233,12 +233,12 @@
                  /* NEBO_REPORT_BACKEND */;
 
                  structured::GhostData rhs_ghosts = calculate_valid_ghost(useGhost,
-                                                                            possible_ghosts(),
-                                                                            field_.boundary_info(),
-                                                                            rhs.possible_ghosts());
+                                                                          possible_ghosts(),
+                                                                          field_.boundary_info(),
+                                                                          rhs.possible_ghosts());
 
                  structured::GhostData lhs_ghosts = calculate_valid_lhs_ghost(rhs_ghosts,
-                                                                                field_.boundary_info());
+                                                                              field_.boundary_info());
 
                  typename RhsType::GPUWalkType typedef RhsGPUWalkType;
 

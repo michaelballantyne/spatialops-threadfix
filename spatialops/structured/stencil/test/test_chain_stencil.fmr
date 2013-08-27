@@ -19,6 +19,7 @@
  ; IN THE SOFTWARE.
 
 (include "spatialops/FulmarAbbreviations.fmr")
+(include "spatialops/NeboCore.fmr")
 
 (define (stringize . args) (immediate-chunk (c "\"" args "\"")))
 
@@ -523,25 +524,29 @@
                              (ad 'IntVec 'npts)
                              (ad 'bool (c 'bc "[]")))
                     (list (d "basic definitions:"
-                             (nt=c 'MemoryWindow 'mwSrc (fc (tpl-use 'get_window_with_ghost 'SrcType)
-                                                            'npts
-                                                            (c 'bc "[0]")
-                                                            (c 'bc "[1]")
-                                                            (c 'bc "[2]")))
-                             (nt=c 'MemoryWindow 'mwItmd (fc (tpl-use 'get_window_with_ghost 'ItmdType)
-                                                             'npts
-                                                             (c 'bc "[0]")
-                                                             (c 'bc "[1]")
-                                                             (c 'bc "[2]")))
-                             (nt=c 'MemoryWindow 'mwDest (fc (tpl-use 'get_window_with_ghost 'DestType)
-                                                             'npts
-                                                             (c 'bc "[0]")
-                                                             (c 'bc "[1]")
-                                                             (c 'bc "[2]")))
-                             (bs 'SrcType (fc 'src 'mwSrc 'NULL))
-                             (ad 'ItmdType (fc 'itmd 'mwItmd 'NULL))
-                             (ad 'DestType (fc 'ref 'mwDest 'NULL))
-                             (ad 'DestType (fc 'test 'mwDest 'NULL)))
+                             (nt=c GhostData 'ghosts (fc GhostData "1"))
+                             (nt=c BCInfo 'srcbc (fc (tpl-use (scope BCInfo 'build)
+                                                              'SrcType)
+                                                     "bc[0]"
+                                                     "bc[1]"
+                                                     "bc[2]"))
+                             (nt=c BCInfo 'itmbc (fc (tpl-use (scope BCInfo 'build)
+                                                              'ItmdType)
+                                                     "bc[0]"
+                                                     "bc[1]"
+                                                     "bc[2]"))
+                             (nt=c BCInfo 'destbc (fc (tpl-use (scope BCInfo 'build)
+                                                               'DestType)
+                                                      "bc[0]"
+                                                      "bc[1]"
+                                                      "bc[2]"))
+                             (nt=c 'MemoryWindow 'mwSrc (fc 'get_window_with_ghost 'npts 'ghosts 'srcbc))
+                             (nt=c 'MemoryWindow 'mwItmd (fc 'get_window_with_ghost 'npts 'ghosts 'itmbc))
+                             (nt=c 'MemoryWindow 'mwDest (fc 'get_window_with_ghost 'npts 'ghosts 'destbc))
+                             (bs 'SrcType (fc 'src 'mwSrc 'srcbc 'ghosts 'NULL))
+                             (ad 'ItmdType (fc 'itmd 'mwItmd 'itmbc 'ghosts 'NULL))
+                             (ad 'DestType (fc 'ref 'mwDest 'destbc 'ghosts 'NULL))
+                             (ad 'DestType (fc 'test 'mwDest 'destbc 'ghosts 'NULL)))
                           (d "initialize source field / zero out result fields:"
                              (fc 'initialize_field 'src)
                              (bs 'itmd '<<= "0.0")

@@ -89,8 +89,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const &
-                                           ghosts,
+          inline ReductionType reduce_init(structured::GhostData const & ghosts,
                                            structured::IntVec const & shift) const {
              return ReductionType(value_);
           }
@@ -256,8 +255,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const &
-                                           ghosts,
+          inline ReductionType reduce_init(structured::GhostData const & ghosts,
                                            structured::IntVec const & shift) const {
              return ReductionType(value_);
           }
@@ -431,8 +429,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const &
-                                           ghosts,
+          inline ReductionType reduce_init(structured::GhostData const & ghosts,
                                            structured::IntVec const & shift) const {
              return ReductionType(resize_ghost_and_shift_window(field_,
                                                                 ghosts -

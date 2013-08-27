@@ -110,8 +110,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const &
-                                           ghosts,
+          inline ReductionType reduce_init(structured::GhostData const & ghosts,
                                            structured::IntVec const & shift) const {
              return ReductionType(operand1_.reduce_init(ghosts, shift),
                                   operand2_.reduce_init(ghosts, shift));
@@ -514,8 +513,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const &
-                                           ghosts,
+          inline ReductionType reduce_init(structured::GhostData const & ghosts,
                                            structured::IntVec const & shift) const {
              return ReductionType(operand1_.reduce_init(ghosts, shift),
                                   operand2_.reduce_init(ghosts, shift));
@@ -922,8 +920,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const &
-                                           ghosts,
+          inline ReductionType reduce_init(structured::GhostData const & ghosts,
                                            structured::IntVec const & shift) const {
              return ReductionType(operand1_.reduce_init(ghosts, shift),
                                   operand2_.reduce_init(ghosts, shift));
@@ -1330,8 +1327,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const &
-                                           ghosts,
+          inline ReductionType reduce_init(structured::GhostData const & ghosts,
                                            structured::IntVec const & shift) const {
              return ReductionType(operand1_.reduce_init(ghosts, shift),
                                   operand2_.reduce_init(ghosts, shift));
@@ -1719,8 +1715,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const &
-                                           ghosts,
+          inline ReductionType reduce_init(structured::GhostData const & ghosts,
                                            structured::IntVec const & shift) const {
              return ReductionType(operand_.reduce_init(ghosts, shift));
           }
@@ -1932,8 +1927,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const &
-                                           ghosts,
+          inline ReductionType reduce_init(structured::GhostData const & ghosts,
                                            structured::IntVec const & shift) const {
              return ReductionType(operand_.reduce_init(ghosts, shift));
           }
@@ -2145,8 +2139,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const &
-                                           ghosts,
+          inline ReductionType reduce_init(structured::GhostData const & ghosts,
                                            structured::IntVec const & shift) const {
              return ReductionType(operand_.reduce_init(ghosts, shift));
           }
@@ -2358,8 +2351,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const &
-                                           ghosts,
+          inline ReductionType reduce_init(structured::GhostData const & ghosts,
                                            structured::IntVec const & shift) const {
              return ReductionType(operand_.reduce_init(ghosts, shift));
           }
@@ -2571,8 +2563,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const &
-                                           ghosts,
+          inline ReductionType reduce_init(structured::GhostData const & ghosts,
                                            structured::IntVec const & shift) const {
              return ReductionType(operand_.reduce_init(ghosts, shift));
           }
@@ -2781,8 +2772,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const &
-                                           ghosts,
+          inline ReductionType reduce_init(structured::GhostData const & ghosts,
                                            structured::IntVec const & shift) const {
              return ReductionType(operand_.reduce_init(ghosts, shift));
           }
@@ -2994,8 +2984,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const &
-                                           ghosts,
+          inline ReductionType reduce_init(structured::GhostData const & ghosts,
                                            structured::IntVec const & shift) const {
              return ReductionType(operand_.reduce_init(ghosts, shift));
           }
@@ -3215,8 +3204,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const &
-                                           ghosts,
+          inline ReductionType reduce_init(structured::GhostData const & ghosts,
                                            structured::IntVec const & shift) const {
              return ReductionType(operand1_.reduce_init(ghosts, shift),
                                   operand2_.reduce_init(ghosts, shift));
@@ -3602,8 +3590,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const &
-                                           ghosts,
+          inline ReductionType reduce_init(structured::GhostData const & ghosts,
                                            structured::IntVec const & shift) const {
              return ReductionType(operand_.reduce_init(ghosts, shift));
           }
@@ -3812,8 +3799,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const &
-                                           ghosts,
+          inline ReductionType reduce_init(structured::GhostData const & ghosts,
                                            structured::IntVec const & shift) const {
              return ReductionType(operand_.reduce_init(ghosts, shift));
           }
@@ -4040,8 +4026,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const &
-                                           ghosts,
+          inline ReductionType reduce_init(structured::GhostData const & ghosts,
                                            structured::IntVec const & shift) const {
              return ReductionType(operand1_.reduce_init(ghosts, shift),
                                   operand2_.reduce_init(ghosts, shift));
@@ -4467,8 +4452,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const &
-                                           ghosts,
+          inline ReductionType reduce_init(structured::GhostData const & ghosts,
                                            structured::IntVec const & shift) const {
              return ReductionType(operand1_.reduce_init(ghosts, shift),
                                   operand2_.reduce_init(ghosts, shift));
@@ -4898,8 +4882,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const &
-                                           ghosts,
+          inline ReductionType reduce_init(structured::GhostData const & ghosts,
                                            structured::IntVec const & shift) const {
              return ReductionType(operand1_.reduce_init(ghosts, shift),
                                   operand2_.reduce_init(ghosts, shift));
@@ -5323,8 +5306,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const &
-                                           ghosts,
+          inline ReductionType reduce_init(structured::GhostData const & ghosts,
                                            structured::IntVec const & shift) const {
              return ReductionType(operand1_.reduce_init(ghosts, shift),
                                   operand2_.reduce_init(ghosts, shift));
@@ -5761,8 +5743,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const &
-                                           ghosts,
+          inline ReductionType reduce_init(structured::GhostData const & ghosts,
                                            structured::IntVec const & shift) const {
              return ReductionType(operand1_.reduce_init(ghosts, shift),
                                   operand2_.reduce_init(ghosts, shift));
@@ -6188,8 +6169,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const &
-                                           ghosts,
+          inline ReductionType reduce_init(structured::GhostData const & ghosts,
                                            structured::IntVec const & shift) const {
              return ReductionType(operand1_.reduce_init(ghosts, shift),
                                   operand2_.reduce_init(ghosts, shift));
@@ -6628,8 +6608,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const &
-                                           ghosts,
+          inline ReductionType reduce_init(structured::GhostData const & ghosts,
                                            structured::IntVec const & shift) const {
              return ReductionType(operand1_.reduce_init(ghosts, shift),
                                   operand2_.reduce_init(ghosts, shift));
@@ -6911,8 +6890,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const &
-                                           ghosts,
+          inline ReductionType reduce_init(structured::GhostData const & ghosts,
                                            structured::IntVec const & shift) const {
              return ReductionType(operand1_.reduce_init(ghosts, shift),
                                   operand2_.reduce_init(ghosts, shift));
@@ -7175,8 +7153,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const &
-                                           ghosts,
+          inline ReductionType reduce_init(structured::GhostData const & ghosts,
                                            structured::IntVec const & shift) const {
              return ReductionType(operand_.reduce_init(ghosts, shift));
           }
@@ -7379,8 +7356,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const &
-                                           ghosts,
+          inline ReductionType reduce_init(structured::GhostData const & ghosts,
                                            structured::IntVec const & shift) const {
              return ReductionType(operand1_.reduce_init(ghosts, shift),
                                   operand2_.reduce_init(ghosts, shift));
@@ -7784,8 +7760,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const &
-                                           ghosts,
+          inline ReductionType reduce_init(structured::GhostData const & ghosts,
                                            structured::IntVec const & shift) const {
              return ReductionType(operand1_.reduce_init(ghosts, shift),
                                   operand2_.reduce_init(ghosts, shift));
