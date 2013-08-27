@@ -113,7 +113,7 @@ int main(int iarg, char* carg[]) {
     }
 
     const int nghost = 1;
-    const GhostDataRT ghost(nghost);
+    const GhostData ghost(nghost);
     const BoundaryCellInfo bc = BoundaryCellInfo::build<Field>(false,false,false);
     const MemoryWindow window( get_window_with_ghost(IntVec(nx,ny,nz),ghost,bc) );
 

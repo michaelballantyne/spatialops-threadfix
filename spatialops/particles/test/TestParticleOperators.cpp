@@ -29,7 +29,7 @@ int main()
 
   IntVec dim(10,1,1);
 
-  const SS::GhostDataRT cg(1);
+  const SS::GhostData cg(1);
   const SS::BoundaryCellInfo cbc = SS::BoundaryCellInfo::build<CellField>();
   const MemoryWindow mw = get_window_with_ghost( dim, cg, SS::BoundaryCellInfo::build<CellField>(false,false,false) );
 
@@ -40,7 +40,7 @@ int main()
   CellField cellFieldvalues( mw, cbc, cg, NULL );
   CellField            ctmp( mw, cbc, cg, NULL );
 
-  const SS::GhostDataRT pg(0);
+  const SS::GhostData pg(0);
   const SS::BoundaryCellInfo pbc = SS::BoundaryCellInfo::build<SpatialOps::Particle::ParticleField>();
   const MemoryWindow pmw( IntVec(np,1,1) );
 

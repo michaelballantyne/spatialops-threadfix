@@ -83,13 +83,13 @@ namespace structured{
   //------------------------------------------------------------------
 
   /**
-   *  \fn MemoryWindow get_window_with_ghost( const IntVec&, const GhostDataRT&, const BoundaryCellInfo& )
+   *  \fn MemoryWindow get_window_with_ghost( const IntVec&, const GhostData&, const BoundaryCellInfo& )
    *  \brief Obtain the memory window for a field on a patch that is a single, contiguous memory block
    *
    *  \param dimNoGhost number of points in each direction excluding
    *    ghost cells
    *
-   *  \param ghost the GhostDataRT information
+   *  \param ghost the GhostData information
    *
    *  \param bc BoundaryCellInfo describing the behavior of a field when a (+) side
    *   boundary is present.  Note that a MemoryWindow obtained here is paired for
@@ -99,7 +99,7 @@ namespace structured{
    */
   MemoryWindow
   inline get_window_with_ghost( const IntVec& localDim,
-                                const GhostDataRT& ghost,
+                                const GhostData& ghost,
                                 const BoundaryCellInfo& bc )
   {
       return MemoryWindow( IntVec( get_dim_with_ghost( localDim[0], ghost.get_minus(0), ghost.get_plus(0), bc.has_extra(0) ),

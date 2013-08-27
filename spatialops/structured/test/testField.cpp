@@ -31,7 +31,7 @@ bool test_iterator( const IntVec npts,
 {
   TestHelper status(verboseOutput);
 
-  const GhostDataRT ghost(1);
+  const GhostData ghost(1);
   const BoundaryCellInfo bc = BoundaryCellInfo::build<FieldT>(true,true,true);
   const MemoryWindow window( get_window_with_ghost(npts,ghost,bc) );
   FieldT f1( window, bc, ghost, NULL );
@@ -136,7 +136,7 @@ template< typename FieldT >
 bool test_interior( const IntVec npts,
                     const bool verbose )
 {
-  const GhostDataRT ghost(1);
+  const GhostData ghost(1);
   const BoundaryCellInfo bc = BoundaryCellInfo::build<FieldT>(true,true,true);
   const MemoryWindow window( get_window_with_ghost(npts,ghost,bc) );
   FieldT f1( window, bc, ghost, NULL );
@@ -216,7 +216,7 @@ bool test_interior( const IntVec npts,
 template<typename T>
 struct ThreadWork{
   void doit(){
-    const GhostDataRT ghost(1);
+    const GhostData ghost(1);
     const BoundaryCellInfo bc = BoundaryCellInfo::build<T>(true,true,true);
     const MemoryWindow ww = get_window_with_ghost( IntVec(24,1,1), ghost, bc );
     for( size_t i=0; i<100; ++i ){
@@ -236,8 +236,8 @@ bool test_store( const IntVec& dim, const IntVec& bc )
 //  jcs_pause();
   TestHelper status(false);
 
-  const GhostDataRT ghost1(1);
-  const GhostDataRT ghost2(1);
+  const GhostData ghost1(1);
+  const GhostData ghost2(1);
 
   const BoundaryCellInfo bc1 = BoundaryCellInfo::build<FT1>(bc[0],bc[1],bc[2]);
   const BoundaryCellInfo bc2 = BoundaryCellInfo::build<FT2>(bc[0],bc[1],bc[2]);
@@ -290,8 +290,8 @@ bool test_ghost_resize( const IntVec npts )
 {
   TestHelper status(false);
 
-  const GhostDataRT ghost1(1);
-  const GhostDataRT ghost2(1);
+  const GhostData ghost1(1);
+  const GhostData ghost2(1);
   const BoundaryCellInfo bc = BoundaryCellInfo::build<FieldT>(true,true,true);
   const MemoryWindow window1( get_window_with_ghost(npts,ghost1,bc) );
   const MemoryWindow window2( get_window_with_ghost(npts,ghost2,bc) );
@@ -488,7 +488,7 @@ int main()
     TestHelper status(false);
 
     const int npts[3] = {10,11,12};
-    const GhostDataRT ghost(1);
+    const GhostData ghost(1);
     const BoundaryCellInfo bc = BoundaryCellInfo::build<SVolField>();
     const MemoryWindow window(npts);
     SVolField svol1( window, bc, ghost, NULL, InternalStorage );

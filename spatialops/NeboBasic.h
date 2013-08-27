@@ -59,15 +59,15 @@
       struct All;
       struct InteriorOnly;
 
-      inline structured::GhostDataRT calculate_valid_ghost(bool const useGhost,
+      inline structured::GhostData calculate_valid_ghost(bool const useGhost,
                                                            structured::
-                                                           GhostDataRT const &
+                                                           GhostData const &
                                                            lhs,
                                                            structured::
                                                            BoundaryCellInfo
                                                            const & bc,
                                                            structured::
-                                                           GhostDataRT const &
+                                                           GhostData const &
                                                            rhs) {
          if(bc.has_bc(0) && rhs.get_plus(0) < bc.has_extra(0)) {
             std::ostringstream msg;
@@ -99,17 +99,17 @@
             throw(std::runtime_error(msg.str()));;
          };
 
-         structured::GhostDataRT lhs_w_extra = lhs + point_to_ghost(bc.has_extra());
+         structured::GhostData lhs_w_extra = lhs + point_to_ghost(bc.has_extra());
 
-         return (useGhost ? min(lhs_w_extra, rhs) : structured::GhostDataRT(structured::
+         return (useGhost ? min(lhs_w_extra, rhs) : structured::GhostData(structured::
                                                                             IntVec(0,
                                                                                    0,
                                                                                    0),
                                                                             bc.has_extra()));
       };
 
-      inline structured::GhostDataRT calculate_valid_lhs_ghost(structured::
-                                                               GhostDataRT const
+      inline structured::GhostData calculate_valid_lhs_ghost(structured::
+                                                               GhostData const
                                                                & ghosts,
                                                                structured::
                                                                BoundaryCellInfo
@@ -119,7 +119,7 @@
 
       template<typename FieldType>
        inline FieldType resize_ghost(FieldType const & field,
-                                     structured::GhostDataRT const & ghosts) {
+                                     structured::GhostData const & ghosts) {
           const structured::IntVec oldMinus = field.get_valid_ghost_data().get_minus();
 
           const structured::IntVec oldPlus = field.get_valid_ghost_data().get_plus();
@@ -144,7 +144,7 @@
 
       template<typename FieldType>
        inline FieldType resize_ghost_and_shift_window(FieldType const & field,
-                                                      structured::GhostDataRT
+                                                      structured::GhostData
                                                       const & ghosts,
                                                       structured::IntVec const &
                                                       shift) {

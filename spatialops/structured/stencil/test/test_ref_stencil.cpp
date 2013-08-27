@@ -53,8 +53,8 @@ bool test_stencil2(const IntVec npts,
                    bool bc[])
 {
   //basic definitions:
-  const GhostDataRT  srcGhost(1);
-  const GhostDataRT destGhost(1);
+  const GhostData  srcGhost(1);
+  const GhostData destGhost(1);
   const BoundaryCellInfo  srcBC = BoundaryCellInfo::build< SrcType>(bc[0],bc[1],bc[2]);
   const BoundaryCellInfo destBC = BoundaryCellInfo::build<DestType>(bc[0],bc[1],bc[2]);
   const MemoryWindow mwSrc  = get_window_with_ghost(npts,  srcGhost,  srcBC);
@@ -93,8 +93,8 @@ bool test_stencil4(const IntVec npts,
                    bool bc[])
 {
     //basic definitions:
-  const GhostDataRT  srcGhost(1);
-  const GhostDataRT destGhost(1);
+  const GhostData  srcGhost(1);
+  const GhostData destGhost(1);
   const BoundaryCellInfo  srcBC = BoundaryCellInfo::build< SrcType>(bc[0],bc[1],bc[2]);
   const BoundaryCellInfo destBC = BoundaryCellInfo::build<DestType>(bc[0],bc[1],bc[2]);
   const MemoryWindow mwSrc  = get_window_with_ghost(npts,  srcGhost,  srcBC);
@@ -134,7 +134,7 @@ bool test_fd_stencil2(const IntVec npts,
                       bool bc[])
 {
   //basic definitions:
-  const GhostDataRT ghost(1);
+  const GhostData ghost(1);
   const BoundaryCellInfo bcinfo = BoundaryCellInfo::build<FieldType>(bc[0], bc[1], bc[2]);
   const MemoryWindow mw  = get_window_with_ghost(npts, ghost, bcinfo);
   FieldType src (mw, bcinfo, ghost, NULL);
@@ -170,8 +170,8 @@ bool test_null_stencil(const IntVec npts,
                        bool bc[])
 {
   //basic definitions:
-  const GhostDataRT  srcGhost(1);
-  const GhostDataRT destGhost(1);
+  const GhostData  srcGhost(1);
+  const GhostData destGhost(1);
   const BoundaryCellInfo  srcBC = BoundaryCellInfo::build< SrcType>(bc[0],bc[1],bc[2]);
   const BoundaryCellInfo destBC = BoundaryCellInfo::build<DestType>(bc[0],bc[1],bc[2]);
   const MemoryWindow mwSrc  = get_window_with_ghost(npts,  srcGhost,  srcBC);
@@ -206,7 +206,7 @@ bool test_box_filter_stencil(const IntVec npts,
                              bool bc[])
 {
   //basic definitions:
-  const GhostDataRT ghost(1);
+  const GhostData ghost(1);
   const BoundaryCellInfo bcinfo = BoundaryCellInfo::build<FieldType>(bc[0], bc[1], bc[2]);
   const MemoryWindow mw = get_window_with_ghost(npts, ghost, bcinfo);
   FieldType src (mw, bcinfo, ghost, NULL);

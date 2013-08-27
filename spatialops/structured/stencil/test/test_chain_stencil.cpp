@@ -52,9 +52,9 @@ namespace po = boost::program_options;
 template<typename FirstOpType, typename SecondOpType, typename SrcType, typename ItmdType, typename DestType>
  inline bool test_stencil_chain(OperatorDatabase & opdb, IntVec npts, bool bc[]) {
   /* basic definitions: */
-  const GhostDataRT srcGhost (1);
-  const GhostDataRT itmGhost (1);
-  const GhostDataRT destGhost(1);
+  const GhostData srcGhost (1);
+  const GhostData itmGhost (1);
+  const GhostData destGhost(1);
 
   const BoundaryCellInfo  srcbc = BoundaryCellInfo::build<SrcType >(bc[0],bc[1],bc[2]);
   const BoundaryCellInfo  itmbc = BoundaryCellInfo::build<ItmdType>(bc[0],bc[1],bc[2]);

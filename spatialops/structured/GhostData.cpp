@@ -1,5 +1,5 @@
 /**
- *  \file   GhostDataRT.cpp
+ *  \file   GhostData.cpp
  *  \date   Jul 8, 2013
  *  \author "James C. Sutherland"
  *
@@ -67,7 +67,7 @@ namespace SpatialOps{ namespace structured{
 
   //-----------------------------------------------------------------
 
-  GhostDataRT::GhostDataRT( const int nx, const int px,
+  GhostData::GhostData( const int nx, const int px,
                             const int ny, const int py,
                             const int nz, const int pz )
   : minus_( nx, ny, nz ),
@@ -77,7 +77,7 @@ namespace SpatialOps{ namespace structured{
     check_valid(minus_,plus_);
   }
 
-  GhostDataRT::GhostDataRT( const IntVec& minus,
+  GhostData::GhostData( const IntVec& minus,
                             const IntVec& plus )
   : minus_( minus ),
     plus_ ( plus  ),
@@ -86,7 +86,7 @@ namespace SpatialOps{ namespace structured{
     check_valid(minus_,plus_);
   }
 
-  GhostDataRT::GhostDataRT( const int n )
+  GhostData::GhostData( const int n )
   : minus_( n, n, n ),
     plus_ ( n, n, n ),
     isInf_(is_ghost_infinite(minus_,plus_))
@@ -96,8 +96,8 @@ namespace SpatialOps{ namespace structured{
 
   //-----------------------------------------------------------------
 
-  GhostDataRT&
-  GhostDataRT::operator=( const GhostDataRT& rhs )
+  GhostData&
+  GhostData::operator=( const GhostData& rhs )
   {
     minus_ = rhs.minus_;
     plus_  = rhs.plus_;
@@ -106,7 +106,7 @@ namespace SpatialOps{ namespace structured{
     return *this;
   }
 
-  GhostDataRT::GhostDataRT( const GhostDataRT& rhs )
+  GhostData::GhostData( const GhostData& rhs )
   {
     minus_ = rhs.minus_;
     plus_  = rhs.plus_;
@@ -117,14 +117,14 @@ namespace SpatialOps{ namespace structured{
   //-----------------------------------------------------------------
 
   void
-  GhostDataRT::set_minus( const IntVec& minus )
+  GhostData::set_minus( const IntVec& minus )
   {
     minus_ = minus;
     isInf_ = is_ghost_infinite(minus_,plus_);
   }
 
   void
-  GhostDataRT::set_plus( const IntVec& plus )
+  GhostData::set_plus( const IntVec& plus )
   {
     plus_ = plus;
     isInf_ = is_ghost_infinite(minus_,plus_);
@@ -132,26 +132,26 @@ namespace SpatialOps{ namespace structured{
 
   //-----------------------------------------------------------------
 
-  GhostDataRT
-  GhostDataRT::operator-( const GhostDataRT& rhs ) const
+  GhostData
+  GhostData::operator-( const GhostData& rhs ) const
   {
-    GhostDataRT g(*this);
+    GhostData g(*this);
     g -= rhs;
     return g;
   }
 
-  GhostDataRT
-  GhostDataRT::operator+( const GhostDataRT& rhs ) const
+  GhostData
+  GhostData::operator+( const GhostData& rhs ) const
   {
-    GhostDataRT g(*this);
+    GhostData g(*this);
     g += rhs;
     return g;
   }
 
   //-----------------------------------------------------------------
 
-  GhostDataRT&
-  GhostDataRT::operator-=( const GhostDataRT& rhs )
+  GhostData&
+  GhostData::operator-=( const GhostData& rhs )
   {
     if(rhs.isInf_) {
       throw(std::runtime_error("Cannot use infinite ghost data on the right-hand side of subtraction."));
@@ -163,8 +163,8 @@ namespace SpatialOps{ namespace structured{
     return *this;
   }
 
-  GhostDataRT&
-  GhostDataRT::operator+=( const GhostDataRT& rhs )
+  GhostData&
+  GhostData::operator+=( const GhostData& rhs )
   {
     if(!isInf_) {
       if(rhs.isInf_) {
@@ -181,26 +181,26 @@ namespace SpatialOps{ namespace structured{
   //-----------------------------------------------------------------
 
   bool
-  GhostDataRT::operator==( const GhostDataRT& rhs ) const
+  GhostData::operator==( const GhostData& rhs ) const
   {
     return (minus_ == rhs.minus_) && (plus_ == rhs.plus_);
   }
 
   //-----------------------------------------------------------------
 
-  GhostDataRT
-  min( const GhostDataRT& first, const GhostDataRT& second )
+  GhostData
+  min( const GhostData& first, const GhostData& second )
   {
-      return GhostDataRT(min(first.get_minus(), second.get_minus()),
+      return GhostData(min(first.get_minus(), second.get_minus()),
                          min(first.get_plus(), second.get_plus()));
   }
 
   //-----------------------------------------------------------------
 
-  GhostDataRT
+  GhostData
   point_to_ghost( const IntVec& given )
   {
-      return GhostDataRT((given[0] < 0 ? - given[0] : 0),
+      return GhostData((given[0] < 0 ? - given[0] : 0),
                          (given[0] > 0 ?   given[0] : 0),
                          (given[1] < 0 ? - given[1] : 0),
                          (given[1] > 0 ?   given[1] : 0),
@@ -210,7 +210,7 @@ namespace SpatialOps{ namespace structured{
 
   //-----------------------------------------------------------------
 
-  std::ostream& operator<<( std::ostream& out, const GhostDataRT& gd )
+  std::ostream& operator<<( std::ostream& out, const GhostData& gd )
   {
     out << "{ " << gd.get_minus() << " " << gd.get_plus() << " }";
     return out;

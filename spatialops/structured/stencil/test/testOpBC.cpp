@@ -43,8 +43,8 @@ bool test_bc_helper( const OperatorDatabase& opDB,
 
   const OpT& op = *opDB.retrieve_operator<OpT>();
 
-  const GhostDataRT  fghost(1);
-  const GhostDataRT dfghost(1);
+  const GhostData  fghost(1);
+  const GhostData dfghost(1);
   const BoundaryCellInfo  fbc = BoundaryCellInfo::build< SrcFieldT>( bcFlag[0], bcFlag[1], bcFlag[2] );
   const BoundaryCellInfo dfbc = BoundaryCellInfo::build<DestFieldT>( bcFlag[0], bcFlag[1], bcFlag[2] );
 

@@ -114,8 +114,8 @@
              NeboStencilPointCollection<NewPoint, MyType> typedef Result;
           };
 
-          static inline structured::GhostDataRT possible_ghosts(structured::
-                                                                GhostDataRT
+          static inline structured::GhostData possible_ghosts(structured::
+                                                                GhostData
                                                                 const & ghosts) {
              return min(ghosts - point_to_ghost(Point::int_vec()),
                         Collection::possible_ghosts(ghosts));
@@ -137,7 +137,7 @@
              SumOp<SeqWalk, EarlierPointsResult, MultiplyType, DestType> typedef
              Result;
 
-             static inline Result const in_sq_construct(structured::GhostDataRT
+             static inline Result const in_sq_construct(structured::GhostData
                                                         const & ghosts,
                                                         structured::IntVec const
                                                         & shift,
@@ -195,7 +195,7 @@
                 typedef Result;
 
                 static inline Result const in_gpu_construct(structured::
-                                                            GhostDataRT const &
+                                                            GhostData const &
                                                             ghosts,
                                                             structured::IntVec
                                                             const & shift,
@@ -237,7 +237,7 @@
              SumOp<Reduction, EarlierPointsResult, MultiplyType, DestType>
              typedef Result;
 
-             static inline Result const in_rd_construct(structured::GhostDataRT
+             static inline Result const in_rd_construct(structured::GhostData
                                                         const & ghosts,
                                                         structured::IntVec const
                                                         & shift,
@@ -287,8 +287,8 @@
              NeboStencilPointCollection<NewPoint, MyType> typedef Result;
           };
 
-          static inline structured::GhostDataRT possible_ghosts(structured::
-                                                                GhostDataRT
+          static inline structured::GhostData possible_ghosts(structured::
+                                                                GhostData
                                                                 const & ghosts) {
              return ghosts - point_to_ghost(Point::int_vec());
           }
@@ -301,7 +301,7 @@
 
              ProdOp<SeqWalk, Arg, Coef, DestType> typedef Result;
 
-             static inline Result const in_sq_construct(structured::GhostDataRT
+             static inline Result const in_sq_construct(structured::GhostData
                                                         const & ghosts,
                                                         structured::IntVec const
                                                         & shift,
@@ -337,7 +337,7 @@
                 ProdOp<GPUWalk, Arg, Coef, DestType> typedef Result;
 
                 static inline Result const in_gpu_construct(structured::
-                                                            GhostDataRT const &
+                                                            GhostData const &
                                                             ghosts,
                                                             structured::IntVec
                                                             const & shift,
@@ -364,7 +364,7 @@
 
              ProdOp<Reduction, Arg, Coef, DestType> typedef Result;
 
-             static inline Result const in_rd_construct(structured::GhostDataRT
+             static inline Result const in_rd_construct(structured::GhostData
                                                         const & ghosts,
                                                         structured::IntVec const
                                                         & shift,
@@ -466,11 +466,11 @@
           : arg_(a), coefs_(coefs)
           {}
 
-          inline structured::GhostDataRT possible_ghosts(void) const {
+          inline structured::GhostData possible_ghosts(void) const {
              return Pts::possible_ghosts(arg_.possible_ghosts());
           }
 
-          inline SeqWalkType init(structured::GhostDataRT const & ghosts,
+          inline SeqWalkType init(structured::GhostData const & ghosts,
                                   structured::IntVec const & shift) const {
              return SeqWalkType(ConstructExpr::in_sq_construct(ghosts,
                                                                shift,
@@ -479,7 +479,7 @@
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::GhostDataRT const & ghosts) const {
+             inline ResizeType resize(structured::GhostData const & ghosts) const {
                 return ResizeType(arg_.resize(ghosts), coefs_);
              }
 #         endif
@@ -492,7 +492,7 @@
                 return arg_.gpu_ready(deviceIndex);
              }
 
-             inline GPUWalkType gpu_init(structured::GhostDataRT const & ghosts,
+             inline GPUWalkType gpu_init(structured::GhostData const & ghosts,
                                          structured::IntVec const & shift,
                                          int const deviceIndex) const {
                 return GPUWalkType(ConstructGPUExpr::in_gpu_construct(ghosts,
@@ -511,7 +511,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostDataRT const &
+          inline ReductionType reduce_init(structured::GhostData const &
                                            ghosts,
                                            structured::IntVec const & shift) const {
              return ReductionType(ConstructExpr::in_reduce_construct(ghosts,

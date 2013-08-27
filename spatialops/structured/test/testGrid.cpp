@@ -23,7 +23,7 @@ bool test_field( const Grid& grid,
                  const double yhi,
                  const double zhi )
 {
-  const GhostDataRT ghost(1);
+  const GhostData ghost(1);
   const BoundaryCellInfo bc = BoundaryCellInfo::build<FieldT>( bcx,bcy,bcz );
   const MemoryWindow window = get_window_with_ghost( grid.extent(), ghost, bc );
   FieldT f( window, bc, ghost, NULL );

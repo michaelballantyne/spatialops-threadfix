@@ -105,8 +105,8 @@ namespace structured{
     MemoryWindow interiorFieldWindow_;  ///< Window representation sans ghost cells.
 
     const BoundaryCellInfo bcInfo_;     ///< information about this field's behavior on a boundary
-    const GhostDataRT ghosts_;          ///< The total number of ghost cells on each face of this field.
-    GhostDataRT validGhosts_;           ///< The number of valid ghost cells on each face of this field.
+    const GhostData ghosts_;          ///< The total number of ghost cells on each face of this field.
+    GhostData validGhosts_;           ///< The number of valid ghost cells on each face of this field.
 
     T* fieldValues_;			///< Values associated with this field in the context of LOCAL_RAM
     T* fieldValuesExtDevice_;           ///< External field pointer ( This pointer will only be valid on the device it was created )
@@ -190,7 +190,7 @@ namespace structured{
      */
     SpatialField( const MemoryWindow& window,
                   const BoundaryCellInfo& bc,
-                  const GhostDataRT& ghosts,
+                  const GhostData& ghosts,
                   T* const fieldValues,
                   const StorageMode mode = InternalStorage,
                   const MemoryType consumerMemoryType = LOCAL_RAM,
@@ -414,7 +414,7 @@ namespace structured{
     /**
      * @brief obtain the ghost information for this field
      */
-    const GhostDataRT& get_ghost_data() const{ return ghosts_; }
+    const GhostData& get_ghost_data() const{ return ghosts_; }
 
     /**
      * @brief Obtain the information about the valid number of ghosts for this
@@ -422,7 +422,7 @@ namespace structured{
      *        can lead to modification of the number of valid ghost cells.  This
      *        information is recorded here.
      */
-    const GhostDataRT& get_valid_ghost_data() const{ return validGhosts_; }
+    const GhostData& get_valid_ghost_data() const{ return validGhosts_; }
 
     unsigned int allocated_bytes() const {
     	return allocatedBytes_;
@@ -434,7 +434,7 @@ namespace structured{
      *
      * This method should be used when a field assignment can only occur on a subset of the field due to invalidation of some of the ghost cells.
      */
-    inline void reset_valid_ghosts( const GhostDataRT& ghosts ){
+    inline void reset_valid_ghosts( const GhostData& ghosts ){
       const IntVec diff = validGhosts_.get_minus() - ghosts.get_minus();
       fieldWindow_ = MemoryWindow( fieldWindow_.glob_dim(),
                                    fieldWindow_.offset() + diff,
@@ -473,7 +473,7 @@ template<typename Location, typename T>
 SpatialField<Location,T>::
 SpatialField( const MemoryWindow& window,
               const BoundaryCellInfo& bc,
-              const GhostDataRT& ghost,
+              const GhostData& ghost,
               T* const fieldValues,
               const StorageMode mode,
               const MemoryType mtype,

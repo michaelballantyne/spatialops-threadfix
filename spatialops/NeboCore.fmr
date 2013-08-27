@@ -34,7 +34,7 @@
 (define Cond-chunk 'NeboCond)
 (define CT-chunk 'ClauseType)
 (define IntVec (scope 'structured 'IntVec))
-(define GhostData (scope 'structured 'GhostDataRT))
+(define GhostData (scope 'structured 'GhostData))
 (define ghost-arg (adcr GhostData 'ghosts))
 (define ZeroIntVec (fc IntVec "0" "0" "0"))
 (define shift-arg (adcr IntVec 'shift))

@@ -51,12 +51,12 @@ namespace structured{
 
 
   /**
-   * \class GhostDataRT
+   * \class GhostData
    * \date July, 2013
    * \author James C. Sutherland
    * \brief Holds information about the number of ghost cells on each side of the domain
    */
-  class GhostDataRT
+  class GhostData
   {
     IntVec minus_, plus_;
     bool isInf_;
@@ -72,7 +72,7 @@ namespace structured{
      * @param nz Number of ghost cells on the -z face
      * @param pz Number of ghost cells on the +z face
      */
-    GhostDataRT( const int nx, const int px,
+    GhostData( const int nx, const int px,
                  const int ny, const int py,
                  const int nz, const int pz );
 
@@ -81,17 +81,17 @@ namespace structured{
      * @param minus Number of ghost cells on the (-) x, y, and z faces
      * @param plus  Number of ghost cells on the (+) x, y, and z faces
      */
-    GhostDataRT( const IntVec& minus,
+    GhostData( const IntVec& minus,
                  const IntVec& plus );
 
     /**
      * \brief construct a GhostData with the same number of ghost cells on each face
      * @param n the number of ghost cells on each face (defaults to zero)
      */
-    GhostDataRT( const int n=0 );
+    GhostData( const int n=0 );
 
-    GhostDataRT( const GhostDataRT& );
-    GhostDataRT& operator=( const GhostDataRT& );
+    GhostData( const GhostData& );
+    GhostData& operator=( const GhostData& );
 
     /**
      * @brief obtain the IntVec containing the number of ghost cells on the (-) faces
@@ -123,19 +123,19 @@ namespace structured{
      */
     void set_plus( const IntVec& );
 
-    GhostDataRT  operator+ ( const GhostDataRT& ) const;
-    GhostDataRT& operator+=( const GhostDataRT& );
-    GhostDataRT  operator- ( const GhostDataRT& ) const;
-    GhostDataRT& operator-=( const GhostDataRT& );
+    GhostData  operator+ ( const GhostData& ) const;
+    GhostData& operator+=( const GhostData& );
+    GhostData  operator- ( const GhostData& ) const;
+    GhostData& operator-=( const GhostData& );
 
-    bool operator==( const GhostDataRT& ) const;
+    bool operator==( const GhostData& ) const;
   };
 
-  GhostDataRT min( const GhostDataRT&, const GhostDataRT& );
+  GhostData min( const GhostData&, const GhostData& );
 
-  GhostDataRT point_to_ghost( const IntVec& );
+  GhostData point_to_ghost( const IntVec& );
 
-  std::ostream& operator<<( std::ostream&, const GhostDataRT& );
+  std::ostream& operator<<( std::ostream&, const GhostData& );
 
 
   } // namespace structured

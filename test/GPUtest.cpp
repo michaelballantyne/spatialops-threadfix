@@ -22,7 +22,7 @@ namespace SS = SpatialOps::structured;
 template<typename FieldType>
 void nebo_allocate(typename FieldType::memory_window mw,
                    const structured::BoundaryCellInfo& bc,
-                   const structured::GhostDataRT& g,
+                   const structured::GhostData& g,
                    std::vector<FieldType *> & ptr_fields,
                    std::vector<FieldType> & fields,
                    int numFields) {
@@ -44,7 +44,7 @@ void nebo_initialize(std::vector<FieldType> & fields,
 template<typename FieldType>
 void nebo_cuda_allocate(typename FieldType::memory_window mw,
                         const structured::BoundaryCellInfo& bc,
-                        const structured::GhostDataRT& g,
+                        const structured::GhostData& g,
                         std::vector<FieldType *> & ptr_gpu_fields,
                         std::vector<FieldType> & gpu_fields,
                         int numFields) {
@@ -110,7 +110,7 @@ int main( int iarg, char* carg[] )
     }
 
     const int nghost = 1;
-    const SS::GhostDataRT ghost( nghost );
+    const SS::GhostData ghost( nghost );
     const SS::BoundaryCellInfo bc = SS::BoundaryCellInfo::build<Field>( true, true, true );
     const SS::MemoryWindow window( SS::get_window_with_ghost(npts,ghost,bc) );
     int rawSize = ((npts[0] > 1 ? npts[0] + 2 : 1) *

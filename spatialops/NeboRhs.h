@@ -55,17 +55,17 @@
           : value_(v)
           {}
 
-          inline structured::GhostDataRT possible_ghosts(void) const {
-             return structured::GhostDataRT(GHOST_MAX);
+          inline structured::GhostData possible_ghosts(void) const {
+             return structured::GhostData(GHOST_MAX);
           }
 
-          inline SeqWalkType init(structured::GhostDataRT const & ghosts,
+          inline SeqWalkType init(structured::GhostData const & ghosts,
                                   structured::IntVec const & shift) const {
              return SeqWalkType(value_);
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::GhostDataRT const & ghosts) const {
+             inline ResizeType resize(structured::GhostData const & ghosts) const {
                 return ResizeType(value_);
              }
 #         endif
@@ -76,7 +76,7 @@
 
              inline bool gpu_ready(int const deviceIndex) const { return true; }
 
-             inline GPUWalkType gpu_init(structured::GhostDataRT const & ghosts,
+             inline GPUWalkType gpu_init(structured::GhostData const & ghosts,
                                          structured::IntVec const & shift,
                                          int const deviceIndex) const {
                 return GPUWalkType(value_);
@@ -89,7 +89,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostDataRT const &
+          inline ReductionType reduce_init(structured::GhostData const &
                                            ghosts,
                                            structured::IntVec const & shift) const {
              return ReductionType(value_);
@@ -222,17 +222,17 @@
           : value_(v)
           {}
 
-          inline structured::GhostDataRT possible_ghosts(void) const {
-             return structured::GhostDataRT(GHOST_MAX);
+          inline structured::GhostData possible_ghosts(void) const {
+             return structured::GhostData(GHOST_MAX);
           }
 
-          inline SeqWalkType init(structured::GhostDataRT const & ghosts,
+          inline SeqWalkType init(structured::GhostData const & ghosts,
                                   structured::IntVec const & shift) const {
              return SeqWalkType(value_);
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::GhostDataRT const & ghosts) const {
+             inline ResizeType resize(structured::GhostData const & ghosts) const {
                 return ResizeType(value_);
              }
 #         endif
@@ -243,7 +243,7 @@
 
              inline bool gpu_ready(int const deviceIndex) const { return true; }
 
-             inline GPUWalkType gpu_init(structured::GhostDataRT const & ghosts,
+             inline GPUWalkType gpu_init(structured::GhostData const & ghosts,
                                          structured::IntVec const & shift,
                                          int const deviceIndex) const {
                 return GPUWalkType(value_);
@@ -256,7 +256,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostDataRT const &
+          inline ReductionType reduce_init(structured::GhostData const &
                                            ghosts,
                                            structured::IntVec const & shift) const {
              return ReductionType(value_);
@@ -383,11 +383,11 @@
           : field_(f)
           {}
 
-          inline structured::GhostDataRT possible_ghosts(void) const {
+          inline structured::GhostData possible_ghosts(void) const {
              return field_.get_valid_ghost_data() + point_to_ghost(field_.boundary_info().has_extra());
           }
 
-          inline SeqWalkType init(structured::GhostDataRT const & ghosts,
+          inline SeqWalkType init(structured::GhostData const & ghosts,
                                   structured::IntVec const & shift) const {
              return SeqWalkType(resize_ghost_and_shift_window(field_,
                                                               ghosts -
@@ -396,7 +396,7 @@
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::GhostDataRT const & ghosts) const {
+             inline ResizeType resize(structured::GhostData const & ghosts) const {
                 return ResizeType(resize_ghost(field_, ghosts - point_to_ghost(field_.boundary_info().has_extra())));
              }
 #         endif
@@ -411,7 +411,7 @@
                 return field_.find_consumer(EXTERNAL_CUDA_GPU, deviceIndex);
              }
 
-             inline GPUWalkType gpu_init(structured::GhostDataRT const & ghosts,
+             inline GPUWalkType gpu_init(structured::GhostData const & ghosts,
                                          structured::IntVec const & shift,
                                          int const deviceIndex) const {
                 return GPUWalkType(deviceIndex,
@@ -431,7 +431,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostDataRT const &
+          inline ReductionType reduce_init(structured::GhostData const &
                                            ghosts,
                                            structured::IntVec const & shift) const {
              return ReductionType(resize_ghost_and_shift_window(field_,

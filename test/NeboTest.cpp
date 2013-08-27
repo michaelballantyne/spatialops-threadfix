@@ -68,7 +68,7 @@ int main( int iarg, char* carg[] )
     typedef SVolField Field;
 
     const int nghost = 1;
-    const GhostDataRT ghost(nghost);
+    const GhostData ghost(nghost);
     const BoundaryCellInfo bcinfo = BoundaryCellInfo::build<Field>(bcplus[0],bcplus[1],bcplus[2]);
     const MemoryWindow window( get_window_with_ghost(IntVec(nx,ny,nz),ghost,bcinfo) );
 

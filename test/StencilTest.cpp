@@ -127,7 +127,7 @@ inline void evaluate_serial_example(FieldType & result,
     typename BasicOpTypes<FieldType>::DivZ* const divZOp_ = opDB.retrieve_operator<typename BasicOpTypes<FieldType>::DivZ>();
 
     MemoryWindow const w = phi.window_with_ghost();
-    const GhostDataRT& g = phi.get_ghost_data();
+    const GhostData& g = phi.get_ghost_data();
     const BoundaryCellInfo& bc = phi.boundary_info();
     typename FaceTypes<FieldType>::XFace  tmpFaceX( w, bc, g, NULL );
     typename FaceTypes<FieldType>::XFace tmpFaceX2( w, bc, g, NULL );
@@ -242,7 +242,7 @@ int main(int iarg, char* carg[]) {
     }
 
     const int nghost = 1;
-    const GhostDataRT ghost( nghost );
+    const GhostData ghost( nghost );
     const BoundaryCellInfo bc = BoundaryCellInfo::build<Field>( false, false, false );
     const MemoryWindow window( get_window_with_ghost(IntVec(nx,ny,nz),ghost,bc) );
 

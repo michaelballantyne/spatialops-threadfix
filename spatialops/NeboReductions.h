@@ -57,7 +57,7 @@
                                    ResultType const & initialValue,
                                    NeboExpression<ExprType, FieldType> const &
                                    fexpr) {
-          structured::GhostDataRT ghosts = fexpr.expr().possible_ghosts();
+          structured::GhostData ghosts = fexpr.expr().possible_ghosts();
 
           const structured::IntVec shift = structured::IntVec(0, 0, 0);
 
@@ -98,7 +98,7 @@
                                             ResultType const & initialValue,
                                             NeboExpression<ExprType, FieldType>
                                             const & fexpr) {
-          structured::GhostDataRT ghosts(0);
+          structured::GhostData ghosts(0);
 
           const structured::IntVec shift = structured::IntVec(0, 0, 0);
 
@@ -148,7 +148,7 @@
                                                          NeboExpression<ExprType,
                                                                         FieldType>
                                                          const & fexpr) {
-          structured::GhostDataRT ghosts = fexpr.expr().possible_ghosts();
+          structured::GhostData ghosts = fexpr.expr().possible_ghosts();
 
           const structured::IntVec shift = structured::IntVec(0, 0, 0);
 
@@ -204,7 +204,7 @@
                                                                   NeboExpression<ExprType,
                                                                                  FieldType>
                                                                   const & fexpr) {
-          structured::GhostDataRT ghosts(0);
+          structured::GhostData ghosts(0);
 
           const structured::IntVec shift = structured::IntVec(0, 0, 0);
 
@@ -260,7 +260,7 @@
                                                          NeboExpression<ExprType,
                                                                         FieldType>
                                                          const & fexpr) {
-          structured::GhostDataRT ghosts = fexpr.expr().possible_ghosts();
+          structured::GhostData ghosts = fexpr.expr().possible_ghosts();
 
           const structured::IntVec shift = structured::IntVec(0, 0, 0);
 
@@ -315,7 +315,7 @@
                                                                   NeboExpression<ExprType,
                                                                                  FieldType>
                                                                   const & fexpr) {
-          structured::GhostDataRT ghosts(0);
+          structured::GhostData ghosts(0);
 
           const structured::IntVec shift = structured::IntVec(0, 0, 0);
 

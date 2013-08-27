@@ -19,7 +19,7 @@ bool run_test( const IntVec& dim )
   const bool bc[3] = {false,false,false};
   const std::vector<double> length(3,1.0);
 
-  const GhostDataRT ghost(1);
+  const GhostData ghost(1);
   const BoundaryCellInfo bcinfo = BoundaryCellInfo::build<SVolField>(bc[0],bc[1],bc[2]);
   const MemoryWindow mw = get_window_with_ghost( dim, ghost, bcinfo );
 

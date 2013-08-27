@@ -212,8 +212,8 @@ double apply_stencil( const SpatialOps::structured::IntVec& npts,
   typedef typename OpT::SrcFieldType   SrcT;
   typedef typename OpT::DestFieldType  DestT;
 
-  const GhostDataRT sg(1);
-  const GhostDataRT dg(1);
+  const GhostData sg(1);
+  const GhostData dg(1);
   const BoundaryCellInfo sbc = BoundaryCellInfo::build< SrcT>( bcPlus[0],bcPlus[1],bcPlus[2] );
   const BoundaryCellInfo dbc = BoundaryCellInfo::build<DestT>( bcPlus[0],bcPlus[1],bcPlus[2] );
   const MemoryWindow smw = get_window_with_ghost( npts, sg, sbc );

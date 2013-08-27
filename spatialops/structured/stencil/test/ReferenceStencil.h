@@ -323,8 +323,8 @@ namespace structured {
     {
         RefStencil4Detail::ExtentsAndOffsets<SrcType, DestType> typedef Extents;
 
-        const GhostDataRT&  srcGhost =  src.get_ghost_data();
-        const GhostDataRT& destGhost = dest.get_ghost_data();
+        const GhostData&  srcGhost =  src.get_ghost_data();
+        const GhostData& destGhost = dest.get_ghost_data();
 
         const MemoryWindow & wsrc = src.window_with_ghost();
         const MemoryWindow & wdest = dest.window_with_ghost();

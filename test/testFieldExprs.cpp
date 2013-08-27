@@ -17,7 +17,7 @@ template< typename FieldT >
 bool test( const SS::IntVec dim )
 {
   TestHelper status(false);
-  const SS::GhostDataRT ghost(1);
+  const SS::GhostData ghost(1);
   const SS::BoundaryCellInfo bc = SS::BoundaryCellInfo::build<FieldT>(true,true,true);
   const SS::MemoryWindow w( SS::get_window_with_ghost(dim,ghost,bc) );
   FieldT f1(w,bc,ghost,NULL),
@@ -100,7 +100,7 @@ bool test( const SS::IntVec dim )
                                // otherwise...
 
   const SS::BoundaryCellInfo pbc( SS::BoundaryCellInfo::build<SP::ParticleField>(bc.has_bc()) );
-  const SS::GhostDataRT pg(0);
+  const SS::GhostData pg(0);
   const SS::MemoryWindow pw( SpatialOps::structured::IntVec(100,1,1) );
   SP::ParticleField pf1(pw,pbc,pg,NULL), pf2(pw,pbc,pg,NULL), pf3(pw,pbc,pg,NULL);
   pf1 <<= 1.0;

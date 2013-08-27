@@ -109,7 +109,7 @@ int main( int iarg, char* carg[] )
   const InterpZ* const interpz = sodb.retrieve_operator<InterpZ>();
 
   // build fields
-  const SS::GhostDataRT ghost(1);
+  const SS::GhostData ghost(1);
 
   const SS::BoundaryCellInfo cellBC = SS::BoundaryCellInfo::build< CellField>(true,true,true);
 

@@ -238,7 +238,7 @@ public:
   inline static SpatFldPtr<FieldT>
   get_from_window( const structured::MemoryWindow& window,
                    const structured::BoundaryCellInfo& bc,
-                   const structured::GhostDataRT& ghost,
+                   const structured::GhostData& ghost,
                    const MemoryType mtype = LOCAL_RAM,
                    const unsigned short int deviceIndex = 0 );
 
@@ -264,7 +264,7 @@ public:
     if( mtype == UNKNOWN ) mtype = f.memory_device_type();
 
     const MemoryWindow& ws = f.window_with_ghost();
-    GhostDataRT gs = f.get_ghost_data();
+    GhostData gs = f.get_ghost_data();
 
     const BoundaryCellInfo bc = BoundaryCellInfo::build<FieldT>( f.boundary_info().has_bc() );
 
@@ -570,7 +570,7 @@ SpatFldPtr<FieldT>
 SpatialFieldStore::
 get_from_window( const structured::MemoryWindow& window,
                  const structured::BoundaryCellInfo& bc,
-                 const structured::GhostDataRT& ghost,
+                 const structured::GhostData& ghost,
                  const MemoryType mtype,
                  const unsigned short int deviceIndex )
 {

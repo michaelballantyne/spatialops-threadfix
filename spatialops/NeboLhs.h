@@ -61,7 +61,7 @@
           : field_(f)
           {}
 
-          inline structured::GhostDataRT possible_ghosts(void) const {
+          inline structured::GhostData possible_ghosts(void) const {
              return field_.get_ghost_data();
           }
 
@@ -142,12 +142,12 @@
 #             endif
               /* NEBO_REPORT_BACKEND */;
 
-              structured::GhostDataRT rhs_ghosts = calculate_valid_ghost(useGhost,
+              structured::GhostData rhs_ghosts = calculate_valid_ghost(useGhost,
                                                                          possible_ghosts(),
                                                                          field_.boundary_info(),
                                                                          rhs.possible_ghosts());
 
-              structured::GhostDataRT lhs_ghosts = calculate_valid_lhs_ghost(rhs_ghosts,
+              structured::GhostData lhs_ghosts = calculate_valid_lhs_ghost(rhs_ghosts,
                                                                              field_.boundary_info());
 
               init(lhs_ghosts).assign(rhs.init(rhs_ghosts,
@@ -159,7 +159,7 @@
               /* NEBO_REPORT_BACKEND */;
            }
 
-          inline SeqWalkType init(structured::GhostDataRT const & ghosts) {
+          inline SeqWalkType init(structured::GhostData const & ghosts) {
              return SeqWalkType((field_.reset_valid_ghosts(ghosts), field_));
           }
 
@@ -176,12 +176,12 @@
 
                  const int thread_count = get_soft_thread_count();
 
-                 structured::GhostDataRT rhs_ghosts = calculate_valid_ghost(useGhost,
+                 structured::GhostData rhs_ghosts = calculate_valid_ghost(useGhost,
                                                                             possible_ghosts(),
                                                                             field_.boundary_info(),
                                                                             rhs.possible_ghosts());
 
-                 structured::GhostDataRT lhs_ghosts = calculate_valid_lhs_ghost(rhs_ghosts,
+                 structured::GhostData lhs_ghosts = calculate_valid_lhs_ghost(rhs_ghosts,
                                                                                 field_.boundary_info());
 
                  typename RhsType::ResizeType typedef RhsResizeType;
@@ -218,7 +218,7 @@
                  /* NEBO_REPORT_BACKEND */;
               }
 
-             inline ResizeType resize(structured::GhostDataRT const & ghosts) {
+             inline ResizeType resize(structured::GhostData const & ghosts) {
                 return ResizeType(resize_ghost(field_, ghosts));
              }
 #         endif
@@ -232,12 +232,12 @@
 #                endif
                  /* NEBO_REPORT_BACKEND */;
 
-                 structured::GhostDataRT rhs_ghosts = calculate_valid_ghost(useGhost,
+                 structured::GhostData rhs_ghosts = calculate_valid_ghost(useGhost,
                                                                             possible_ghosts(),
                                                                             field_.boundary_info(),
                                                                             rhs.possible_ghosts());
 
-                 structured::GhostDataRT lhs_ghosts = calculate_valid_lhs_ghost(rhs_ghosts,
+                 structured::GhostData lhs_ghosts = calculate_valid_lhs_ghost(rhs_ghosts,
                                                                                 field_.boundary_info());
 
                  typename RhsType::GPUWalkType typedef RhsGPUWalkType;
@@ -287,7 +287,7 @@
                 return field_.device_index();
              }
 
-             inline GPUWalkType gpu_init(structured::GhostDataRT const & ghosts) {
+             inline GPUWalkType gpu_init(structured::GhostData const & ghosts) {
                 return GPUWalkType(resize_ghost(field_, ghosts));
              }
 

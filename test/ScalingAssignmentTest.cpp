@@ -52,7 +52,7 @@ int main( int iarg, char* carg[] )
 #endif
   }
 
-  const SS::GhostDataRT ghost(1);
+  const SS::GhostData ghost(1);
   const SS::BoundaryCellInfo bc = SS::BoundaryCellInfo::build<Field>(true,true,true);
   const SS::MemoryWindow window( SpatialOps::structured::get_window_with_ghost(npts,ghost,bc) );
 
