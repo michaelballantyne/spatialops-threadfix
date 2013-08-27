@@ -30,11 +30,6 @@
 namespace SpatialOps{
 namespace Point{
 
-  struct PointFieldGhostTraits{
-    typedef structured::IndexTriplet<0,0,0> NGhostMinus;
-    typedef structured::IndexTriplet<0,0,0> NGhostPlus;
-  };
-
   struct PointFieldTraits{
     typedef NODIR FaceDir;
     typedef NODIR StagLoc;
@@ -50,8 +45,7 @@ namespace Point{
    *  points from a parent field and return them back to a parent
    *  field.
    */
-  typedef structured::SpatialField< Point::PointFieldTraits,
-                                    Point::PointFieldGhostTraits >  PointField;
+  typedef structured::SpatialField< Point::PointFieldTraits >  PointField;
 
 }  // namespace Point
 } // namespace SpatialOps

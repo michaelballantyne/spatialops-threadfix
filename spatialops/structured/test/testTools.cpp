@@ -82,30 +82,6 @@ int main()
   status( Kronecker<1,-1>::value == 0, "delta(1,-1)" );
   status( Kronecker<2,2>::value == 1, "delta(2,2)" );
 
-  status( IsSameType< Invalidate<GhostData<1,1,1,1,1,1,1,1,1>,GhostData<0,0,0,0,0,0,0,0,0> >::result, GhostData<1,1,1,1,1,1,1,1,1> >::result, "GD invalidate 0");
-  status( IsSameType< Invalidate<GhostData<2,2,2,2,2,2,2,2,2>,GhostData<1,1,1,1,1,1,1,1,1> >::result, GhostData<1,1,1,1,1,1,1,1,1> >::result, "Basic GD invalidate");
-  status( IsSameType< Invalidate<GhostData<3,4,5,6,7,8,2,1,0>,GhostData<2,1,0,1,2,3,0,1,2> >::result, GhostData<1,3,5,5,5,5,2,0,-2> >::result, "Complex GD invalidiate");
-
-  status( IsSameType< Invalidate<GhostData<2,3,3,4,5,5,6,7,7>,IndexTriplet<1,-1,0> >::result, GhostData<2,2,2,3,5,5,6,7,7> >::result, "GD/trip add test 1");
-  status( IsSameType< Invalidate<GhostData<2,3,3,4,5,5,6,7,7>,IndexTriplet<1,0,-1> >::result, GhostData<2,2,2,4,5,5,5,7,7> >::result, "GD/trip add test 2");
-  status( IsSameType< Invalidate<GhostData<2,3,3,4,5,5,6,7,7>,IndexTriplet<0,1,-1> >::result, GhostData<2,3,3,4,4,4,5,7,7> >::result, "GD/trip add test 3");
-  status( IsSameType< Invalidate<GhostData<2,3,3,4,5,5,6,7,7>,IndexTriplet<0,-1,1> >::result, GhostData<2,3,3,3,5,5,6,6,6> >::result, "GD/trip add test 4");
-  status( IsSameType< Invalidate<GhostData<2,3,3,4,5,5,6,7,7>,IndexTriplet<-1,0,1> >::result, GhostData<1,3,3,4,5,5,6,6,6> >::result, "GD/trip add test 5");
-  status( IsSameType< Invalidate<GhostData<2,3,3,4,5,5,6,7,7>,IndexTriplet<-1,1,0> >::result, GhostData<1,3,3,4,4,4,6,7,7> >::result, "GD/trip add test 6");
-
-  status( IsSameType< GhostFromField<TestField<NoGhost,  T000> >::result, GhostData<0,0,0,0,0,0,0,0,0> >::result, "GhostFromField test 1");
-  status( IsSameType< GhostFromField<TestField<OneGhost, T000> >::result, GhostData<1,1,1,1,1,1,1,1,1> >::result, "GhostFromField test 2");
-  status( IsSameType< GhostFromField<TestField<TwoGhost, T000> >::result, GhostData<2,2,2,2,2,2,2,2,2> >::result, "GhostFromField test 3");
-  status( IsSameType< GhostFromField<TestField<NoGhost,  T100> >::result, GhostData<0,0,1,0,0,0,0,0,0> >::result, "GhostFromField test 4");
-  status( IsSameType< GhostFromField<TestField<NoGhost,  T010> >::result, GhostData<0,0,0,0,0,1,0,0,0> >::result, "GhostFromField test 5");
-  status( IsSameType< GhostFromField<TestField<NoGhost,  T111> >::result, GhostData<0,0,1,0,0,1,0,0,1> >::result, "GhostFromField test 6");
-  status( IsSameType< GhostFromField<TestField<OneGhost, T100> >::result, GhostData<1,1,2,1,1,1,1,1,1> >::result, "GhostFromField test 7");
-  status( IsSameType< GhostFromField<TestField<TwoGhost, T011> >::result, GhostData<2,2,2,2,2,3,2,2,3> >::result, "GhostFromField test 8");
-
-  status( IsSameType< Minimum<GhostData<1,1,1,1,1,1,1,1,1>, GhostData<0,0,0,0,0,0,0,0,0> >::result, GhostData<0,0,0,0,0,0,0,0,0> >::result, "Minimum GD test 1");
-  status( IsSameType< Minimum<GhostData<0,0,0,0,0,0,0,0,0>, GhostData<1,1,1,1,1,1,1,1,1> >::result, GhostData<0,0,0,0,0,0,0,0,0> >::result, "Minimum GD test 2");
-  status( IsSameType< Minimum<GhostData<1,2,3,4,5,6,7,8,9>, GhostData<9,8,7,6,5,4,3,2,1> >::result, GhostData<1,2,3,4,5,4,3,2,1> >::result, "Minimum GD test 3");
-
   if( status.ok() ){
     cout << "PASS" << endl;
     return 0;

@@ -96,11 +96,9 @@ namespace structured{
    *   - \c interior_iterator, \c const_interior_iterator - iterators to the interior elements in this field (excludes ghost cells).
    */
   template< typename FieldLocation,
-            typename GhostTraits,
             typename T=double >
   class SpatialField
   {
-    typedef SpatialField<FieldLocation,GhostTraits,T> MyType;
     typedef std::map<unsigned short int, T*> ConsumerMap;
 
     MemoryWindow fieldWindow_;	        ///< Full representation of the window to the field ( includes ghost cells )
@@ -159,8 +157,8 @@ namespace structured{
 
   public:
 
-    typedef SpatialField<FieldLocation, GhostTraits, T> field_type;
-    typedef GhostTraits Ghost;
+    typedef SpatialField<FieldLocation,T> field_type;
+//    typedef GhostTraits Ghost;
     typedef FieldLocation Location;
     typedef T AtomicT;
     typedef T value_type;
@@ -341,14 +339,14 @@ namespace structured{
     inline const_interior_iterator interior_end() const;
     inline interior_iterator interior_end();
 
-    inline MyType& operator =(const MyType&);
+    inline field_type& operator =(const field_type&);
 
     /**
      * @brief Comparison operators
      * WARNING: Slow in general and comparison with external fields will incur copy penalties.
      */
-    bool operator!=(const MyType&) const;
-    bool operator==(const MyType&) const;
+    bool operator!=(const field_type&) const;
+    bool operator==(const field_type&) const;
 
     /**
      * @brief Make this field available on another device type, index pair. Adding consumer fields
@@ -454,14 +452,14 @@ namespace structured{
      * Note that a reshaped field is considered read-only and you cannot obtain
      * interior iterators for these fields.
      */
-    MyType
+    field_type
     inline reshape( const IntVec& extentModify,
                     const IntVec& shift ) const
     {
       MemoryWindow w( fieldWindow_.glob_dim(),
                       fieldWindow_.offset() + shift,
                       fieldWindow_.extent() + extentModify );
-      return MyType( w, *this );
+      return field_type( w, *this );
     }
   };
 
@@ -471,8 +469,8 @@ namespace structured{
 //
 //==================================================================
 
-template<typename Location, typename GhostTraits, typename T>
-SpatialField<Location, GhostTraits, T>::
+template<typename Location, typename T>
+SpatialField<Location,T>::
 SpatialField( const MemoryWindow& window,
               const BoundaryCellInfo& bc,
               const GhostDataRT& ghost,
@@ -566,8 +564,8 @@ SpatialField( const MemoryWindow& window,
 
 //------------------------------------------------------------------
 
-template<typename Location, typename GhostTraits, typename T>
-SpatialField<Location, GhostTraits, T>::SpatialField( const SpatialField& other )
+template<typename Location, typename T>
+SpatialField<Location,T>::SpatialField( const SpatialField& other )
 : fieldWindow_(other.fieldWindow_),
   interiorFieldWindow_(other.interiorFieldWindow_),
   bcInfo_( other.bcInfo_ ),
@@ -589,8 +587,8 @@ SpatialField<Location, GhostTraits, T>::SpatialField( const SpatialField& other 
 
 //------------------------------------------------------------------
 
-template<typename Location, typename GhostTraits, typename T>
-SpatialField<Location, GhostTraits, T>::
+template<typename Location, typename T>
+SpatialField<Location,T>::
 SpatialField( const MemoryWindow& window, const SpatialField& other )
 : fieldWindow_(window),
   interiorFieldWindow_( other.interiorFieldWindow_ ), // This should not be used!
@@ -641,8 +639,8 @@ SpatialField( const MemoryWindow& window, const SpatialField& other )
 
   //------------------------------------------------------------------
 
-template<typename Location, typename GhostTraits, typename T>
-SpatialField<Location, GhostTraits, T>::~SpatialField() {
+template<typename Location, typename T>
+SpatialField<Location,T>::~SpatialField() {
 #ifdef ENABLE_CUDA
   //Release any fields allocated for consumer use
   for( typename ConsumerMap::iterator i = myConsumerFieldValues_.begin(); i != myConsumerFieldValues_.end(); ++i ){
@@ -685,8 +683,8 @@ SpatialField<Location, GhostTraits, T>::~SpatialField() {
 
 //------------------------------------------------------------------
 
-template<typename FieldLocation, typename GhostTraits, typename T>
-void SpatialField<FieldLocation, GhostTraits, T>::
+template<typename FieldLocation, typename T>
+void SpatialField<FieldLocation,T>::
 reset_values( const T* values )
 {
   switch ( memType_ ) {
@@ -728,8 +726,8 @@ reset_values( const T* values )
 
 //------------------------------------------------------------------
 
-template<typename Location, typename GhostTraits, typename T>
-T* SpatialField<Location, GhostTraits, T>::
+template<typename Location, typename T>
+T* SpatialField<Location,T>::
 field_values( const MemoryType consumerMemoryType,
               const unsigned short int consumerDeviceIndex )
 {
@@ -784,8 +782,8 @@ field_values( const MemoryType consumerMemoryType,
 
 //------------------------------------------------------------------
 
-template<typename Location, typename GhostTraits, typename T>
-const T* SpatialField<Location, GhostTraits, T>::
+template<typename Location, typename T>
+const T* SpatialField<Location,T>::
 field_values( const MemoryType consumerMemoryType,
     const unsigned short int consumerDeviceIndex ) const
 {
@@ -830,8 +828,8 @@ field_values( const MemoryType consumerMemoryType,
 
 //------------------------------------------------------------------
 
-template<typename Location, typename GhostTraits, typename T>
-void SpatialField<Location, GhostTraits, T>::
+template<typename Location, typename T>
+void SpatialField<Location,T>::
 add_consumer( MemoryType consumerMemoryType,
               const unsigned short int consumerDeviceIndex )
 {
@@ -953,8 +951,8 @@ add_consumer( MemoryType consumerMemoryType,
 
 //------------------------------------------------------------------
 
-template<typename Location, typename GhostTraits, typename T>
-bool SpatialField<Location, GhostTraits, T>::
+template<typename Location, typename T>
+bool SpatialField<Location,T>::
 find_consumer( MemoryType consumerMemoryType,
               const unsigned short int consumerDeviceIndex ) const
 {
@@ -1008,9 +1006,9 @@ find_consumer( MemoryType consumerMemoryType,
 
 //------------------------------------------------------------------
 
-template<typename Location, typename GhostTraits, typename T>
-typename SpatialField<Location, GhostTraits, T>::const_iterator
-SpatialField<Location,GhostTraits, T>::end() const
+template<typename Location, typename T>
+typename SpatialField<Location,T>::const_iterator
+SpatialField<Location,T>::end() const
 {
   // We can allow constant iteration of the field even if its not local,
   // so long as it has a local consumer field allocated
@@ -1030,9 +1028,9 @@ SpatialField<Location,GhostTraits, T>::end() const
 
 //------------------------------------------------------------------
 
-template<typename Location, typename GhostTraits, typename T>
-typename SpatialField<Location, GhostTraits, T>::iterator
-SpatialField<Location,GhostTraits, T>::end()
+template<typename Location, typename T>
+typename SpatialField<Location,T>::iterator
+SpatialField<Location,T>::end()
 {
   switch (memType_) {
   case LOCAL_RAM: {
@@ -1052,9 +1050,9 @@ SpatialField<Location,GhostTraits, T>::end()
 
 //------------------------------------------------------------------
 
-template<typename Location, typename GhostTraits, typename T>
-typename SpatialField<Location, GhostTraits, T>::const_interior_iterator
-SpatialField<Location,GhostTraits,T>::interior_end() const
+template<typename Location, typename T>
+typename SpatialField<Location,T>::const_interior_iterator
+SpatialField<Location,T>::interior_end() const
 {
   if( disableInterior_ ){
     std::ostringstream msg;
@@ -1077,9 +1075,9 @@ SpatialField<Location,GhostTraits,T>::interior_end() const
 
 //------------------------------------------------------------------
 
-template<typename Location, typename GhostTraits, typename T>
-typename SpatialField<Location, GhostTraits, T>::interior_iterator
-SpatialField<Location,GhostTraits,T>::interior_end()
+template<typename Location, typename T>
+typename SpatialField<Location,T>::interior_iterator
+SpatialField<Location,T>::interior_end()
 {
   if( disableInterior_ ){
     std::ostringstream msg;
@@ -1111,9 +1109,9 @@ SpatialField<Location,GhostTraits,T>::interior_end()
 
 //------------------------------------------------------------------
 
-template<typename Location, typename GhostTraits, typename T>
+template<typename Location, typename T>
 T&
-SpatialField<Location, GhostTraits, T>::
+SpatialField<Location,T>::
 operator()( const size_t i, const size_t j, const size_t k )
 {
   if( readOnly_ ){
@@ -1138,9 +1136,9 @@ operator()( const size_t i, const size_t j, const size_t k )
   }
 }
 
-template<typename Location, typename GhostTraits, typename T>
+template<typename Location, typename T>
 T&
-SpatialField<Location, GhostTraits, T>::operator()(const IntVec& ijk)
+SpatialField<Location,T>::operator()(const IntVec& ijk)
 {
   if( readOnly_ ){
     std::ostringstream msg;
@@ -1174,8 +1172,8 @@ SpatialField<Location, GhostTraits, T>::operator()(const IntVec& ijk)
 
 //------------------------------------------------------------------
 
-template<typename Location, typename GhostTraits, typename T>
-const T& SpatialField<Location, GhostTraits, T>::
+template<typename Location, typename T>
+const T& SpatialField<Location,T>::
 operator()( const size_t i, const size_t j, const size_t k ) const
 {
   if ( memType_ == LOCAL_RAM || fieldValues_ != NULL ) {
@@ -1200,9 +1198,9 @@ operator()( const size_t i, const size_t j, const size_t k ) const
   }
 }
 
-template<typename Location, typename GhostTraits, typename T>
+template<typename Location, typename T>
 const T&
-SpatialField<Location, GhostTraits, T>::
+SpatialField<Location,T>::
 operator()( const IntVec& ijk ) const
 {
   if( memType_ == LOCAL_RAM || fieldValues_ != NULL ){
@@ -1225,9 +1223,9 @@ operator()( const IntVec& ijk ) const
 
 //------------------------------------------------------------------
 
-template<typename Location, typename GhostTraits, typename T>
+template<typename Location, typename T>
 T&
-SpatialField<Location, GhostTraits, T>::operator[](const size_t i)
+SpatialField<Location,T>::operator[](const size_t i)
 {
   if( readOnly_ ){
     std::ostringstream msg;
@@ -1259,9 +1257,9 @@ SpatialField<Location, GhostTraits, T>::operator[](const size_t i)
 //		is allocated.
 //		However, given the deprecated nature of the function, this may
 //		not be an immediate issue.
-template<typename Location, typename GhostTraits, typename T>
+template<typename Location, typename T>
 const T&
-SpatialField<Location, GhostTraits, T>::operator[](const size_t i) const
+SpatialField<Location,T>::operator[](const size_t i) const
 {
   if( memType_ != LOCAL_RAM || fieldValues_ == NULL ){
     std::ostringstream msg;
@@ -1277,9 +1275,9 @@ SpatialField<Location, GhostTraits, T>::operator[](const size_t i) const
 
 //------------------------------------------------------------------
 
-template<typename Location, typename GhostTraits, typename T>
-SpatialField<Location, GhostTraits, T>&
-SpatialField<Location, GhostTraits, T>::operator=(const MyType& other)
+template<typename Location, typename T>
+SpatialField<Location,T>&
+SpatialField<Location,T>::operator=(const field_type& other)
 {
   if( readOnly_ ){
     std::ostringstream msg;
@@ -1380,15 +1378,15 @@ SpatialField<Location, GhostTraits, T>::operator=(const MyType& other)
 
 //------------------------------------------------------------------
 
-template<typename Location, typename GhostTraits, typename T>
-bool SpatialField<Location, GhostTraits, T>::operator!=(const MyType& other) const {
+template<typename Location, typename T>
+bool SpatialField<Location,T>::operator!=(const field_type& other) const {
   return !(*this == other);
 }
 
 //------------------------------------------------------------------
 
-template<typename Location, typename GhostTraits, typename T>
-bool SpatialField<Location, GhostTraits, T>::operator==(const MyType& other) const
+template<typename Location, typename T>
+bool SpatialField<Location,T>::operator==(const field_type& other) const
 {
   switch (memType_) {
   case LOCAL_RAM: {

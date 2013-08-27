@@ -27,15 +27,11 @@ int main()
   const size_t np=1;
   //const double dx = 1.0;
 
-  IntVec totDim(10,1,1);
-  for( size_t i=0; i<3; ++i )
-    if( totDim[i]>1 )
-      totDim[i] += CellField::Ghost::NGhostMinus::int_vec()[i] +
-                   CellField::Ghost::NGhostPlus::int_vec()[i];
+  IntVec dim(10,1,1);
 
   const SS::GhostDataRT cg(1);
   const SS::BoundaryCellInfo cbc = SS::BoundaryCellInfo::build<CellField>();
-  const MemoryWindow mw( totDim );
+  const MemoryWindow mw = get_window_with_ghost( dim, cg, SS::BoundaryCellInfo::build<CellField>(false,false,false) );
 
   //
   // build the fields

@@ -224,9 +224,9 @@ namespace Particle{
     ParticleField::const_iterator psizeiter = particleSize.begin();
     ParticleField::iterator destiter = dest.begin();
     for( ; plociter!=particleCoord.end(); ++plociter, ++destiter, ++psizeiter ){
-      double leftloc = *plociter-( *psizeiter / 2) ;
-      const double rightloc = *plociter+( *psizeiter / 2) ;
-      int leftcellIx1 = int((*plociter-( *psizeiter / 2)) / dx_) + 1;
+      double leftloc = *plociter-( *psizeiter / 2.0) ;
+      const double rightloc = *plociter+( *psizeiter / 2.0) ;
+      int leftcellIx1 = int((*plociter-( *psizeiter / 2.0)) / dx_) + 1;
 #     ifndef NDEBUG
       if( leftcellIx1 >= nmax || leftcellIx1<0 ){
         throw std::runtime_error( "Particle is outside of the domain!" );
@@ -234,7 +234,7 @@ namespace Particle{
 #     endif
       //std::cout<<"leftloc  :  "<<leftloc<<"  rightloc  :  "<<rightloc<<"   leftcellIx1 : "<<leftcellIx1<<std::endl;
       while(leftloc < rightloc){
-        double rb = coordVec_[leftcellIx1] + dx_/2 ;
+        double rb = coordVec_[leftcellIx1] + dx_/2.0 ;
         if(rb > rightloc)
           rb = rightloc ;
         *destiter += src[leftcellIx1] * (rb-leftloc) / *psizeiter ;

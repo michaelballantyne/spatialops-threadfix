@@ -40,19 +40,13 @@ namespace Particle{
    *  and we must define operators to move between particle fields and
    *  mesh fields.
    */
-
-  struct ParticleGhostTraits{
-    typedef structured::IndexTriplet<0,0,0> NGhostMinus;
-    typedef structured::IndexTriplet<0,0,0> NGhostPlus;
-  };
-
   struct ParticleFieldTraits{
     typedef NODIR FaceDir;
     typedef structured::IndexTriplet<0,0,0>  Offset;
     typedef structured::IndexTriplet<0,0,0>  BCExtra;
   };
 
-  typedef structured::SpatialField< ParticleFieldTraits, ParticleGhostTraits  > ParticleField;
+  typedef structured::SpatialField< ParticleFieldTraits > ParticleField;
 
 
 } // namespace Particle
