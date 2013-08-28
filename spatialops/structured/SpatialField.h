@@ -122,6 +122,7 @@ namespace structured{
     //		device we're interested in supporting.
     ConsumerMap consumerFieldValues_;	///< Provides the ability to store and track copies of this field consumed on other devices.
     bool hasConsumer_;                  ///< Indicates whether a field has consumers or not
+    bool hascpuConsumer_;
     ConsumerMap myConsumerFieldValues_;	///< Provides the ability to correctly delete/release copies of this field that this field allocated
 
     unsigned long int allocatedBytes_;	///< Stores entire field size in bytes: sizeof(T) * glob.x * glob.y * glob.z
@@ -567,6 +568,7 @@ SpatialField( const MemoryWindow& window,
       memType_( mtype ),
       deviceIndex_( devIdx ),
       hasConsumer_( false ),
+      hascpuConsumer_( false ),
       allocatedBytes_( 0 )
 #     ifdef ENABLE_CUDA
       , cudaStream_( 0 )
@@ -637,6 +639,7 @@ SpatialField<Location, GhostTraits, T>::SpatialField( const SpatialField& other 
   deviceIndex_(other.deviceIndex_),
   consumerFieldValues_(other.consumerFieldValues_),
   hasConsumer_( other.hasConsumer_ ),
+  hascpuConsumer_( false ),
   allocatedBytes_( other.allocatedBytes_ )
 # ifdef ENABLE_CUDA
   , cudaStream_( other.cudaStream_ )
@@ -657,6 +660,7 @@ SpatialField( const MemoryWindow& window, const SpatialField& other )
   deviceIndex_(other.deviceIndex_),
   consumerFieldValues_(other.consumerFieldValues_),
   hasConsumer_( other.hasConsumer_ ),
+  hascpuConsumer_( false ),
   allocatedBytes_( other.allocatedBytes_ )
 # ifdef ENABLE_CUDA
     , cudaStream_( other.cudaStream_ )
@@ -686,6 +690,10 @@ SpatialField<Location, GhostTraits, T>::~SpatialField() {
 
   consumerFieldValues_.clear();
   myConsumerFieldValues_.clear();
+
+  if ( hascpuConsumer_ ) {
+    Pool<T>::self().put( LOCAL_RAM, fieldValues_ );
+  }
 #endif
 
   if ( builtField_ ) {
@@ -697,12 +705,6 @@ SpatialField<Location, GhostTraits, T>::~SpatialField() {
     break;
 #ifdef ENABLE_CUDA
     case EXTERNAL_CUDA_GPU: {
-
-      //Deallocate local_ram consumer copy if it exists
-      if( fieldValues_ != NULL ) {
-        delete[] fieldValues_;
-        fieldValues_ = NULL;
-      }
       ema::cuda::CUDADeviceInterface::self().release( (void*)fieldValuesExtDevice_, deviceIndex_);
     }
     break;
@@ -902,6 +904,7 @@ add_consumer( MemoryType consumerMemoryType,
 #endif
 
       if( fieldValues_ == NULL ) {  // Space is already allocated
+        hascpuConsumer_ = true;
 #ifdef DEBUG_SF_ALL
         std::cout << "Consumer field does not exist, allocating...\n\n";
 #endif
