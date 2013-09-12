@@ -50,8 +50,10 @@
 #include <spatialops/structured/ExternalAllocators.h>
 
 //Boost includes
+#ifdef ENABLE_THREADS
 #include <boost/thread/mutex.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
+#endif
 
 #ifndef CUDAMEMORYALLOCATOR_H_
 #define CUDAMEMORYALLOCATOR_H_
