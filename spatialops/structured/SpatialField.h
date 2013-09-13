@@ -1157,12 +1157,12 @@ SpatialField<Location, GhostTraits, T>::operator()(const IntVec& ijk)
   switch (memType_) {
   case LOCAL_RAM: {
 #   ifndef NDEBUG
-    assert(ijk[0] <  fieldWindow_.extent(0));
-    assert(ijk[1] <  fieldWindow_.extent(1));
-    assert(ijk[2] <  fieldWindow_.extent(2));
-    assert(ijk[0] >= fieldWindow_.offset(0));
-    assert(ijk[1] >= fieldWindow_.offset(1));
-    assert(ijk[2] >= fieldWindow_.offset(2));
+    assert( (size_t)ijk[0] <  fieldWindow_.extent(0) );
+    assert( (size_t)ijk[1] <  fieldWindow_.extent(1) );
+    assert( (size_t)ijk[2] <  fieldWindow_.extent(2) );
+    assert( (size_t)ijk[0] >= fieldWindow_.offset(0) );
+    assert( (size_t)ijk[1] >= fieldWindow_.offset(1) );
+    assert( (size_t)ijk[2] >= fieldWindow_.offset(2) );
 #   endif
     return fieldValues_[fieldWindow_.flat_index(ijk)];
   }
@@ -1185,12 +1185,12 @@ operator()( const size_t i, const size_t j, const size_t k ) const
 {
   if ( memType_ == LOCAL_RAM || fieldValues_ != NULL ) {
 #   ifndef NDEBUG
-    assert(i < fieldWindow_.extent(0));
-    assert(j < fieldWindow_.extent(1));
-    assert(k < fieldWindow_.extent(2));
-    assert(i >= fieldWindow_.offset(0));
-    assert(j >= fieldWindow_.offset(1));
-    assert(k >= fieldWindow_.offset(2));
+    assert( i <  fieldWindow_.extent(0) );
+    assert( j <  fieldWindow_.extent(1) );
+    assert( k <  fieldWindow_.extent(2) );
+    assert( i >= fieldWindow_.offset(0) );
+    assert( j >= fieldWindow_.offset(1) );
+    assert( k >= fieldWindow_.offset(2) );
 #   endif
     IntVec ijk(i,j,k);
     return fieldValues_[fieldWindow_.flat_index(ijk)];
@@ -1212,9 +1212,9 @@ operator()( const IntVec& ijk ) const
 {
   if( memType_ == LOCAL_RAM || fieldValues_ != NULL ){
 #   ifndef NDEBUG
-    assert( ijk[0] < fieldWindow_.extent(0) && ijk[0] >= fieldWindow_.offset(0) );
-    assert( ijk[1] < fieldWindow_.extent(1) && ijk[1] >= fieldWindow_.offset(1) );
-    assert( ijk[2] < fieldWindow_.extent(2) && ijk[2] >= fieldWindow_.offset(2) );
+    assert( (size_t)ijk[0] < fieldWindow_.extent(0) && (size_t)ijk[0] >= fieldWindow_.offset(0) );
+    assert( (size_t)ijk[1] < fieldWindow_.extent(1) && (size_t)ijk[1] >= fieldWindow_.offset(1) );
+    assert( (size_t)ijk[2] < fieldWindow_.extent(2) && (size_t)ijk[2] >= fieldWindow_.offset(2) );
 #   endif
     return fieldValues_[fieldWindow_.flat_index(ijk)];
   } else {
