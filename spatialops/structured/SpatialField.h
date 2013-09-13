@@ -122,6 +122,10 @@ namespace structured{
     //      which is not as general is it likely should be, but GPUs are currently the only external
     //      device we're interested in supporting.
     ConsumerMap consumerFieldValues_;	///< Provides the ability to store and track copies of this field consumed on other devices.
+
+    bool hasConsumer_;                  ///< Indicates whether a field has consumers or not
+    bool hascpuConsumer_;
+
     ConsumerMap myConsumerFieldValues_;	///< Provides the ability to correctly delete/release copies of this field that this field allocated
 
     unsigned long int allocatedBytes_;	///< Stores entire field size in bytes: sizeof(T) * glob.x * glob.y * glob.z
@@ -493,8 +497,8 @@ SpatialField( const MemoryWindow& window,
       builtField_( mode == InternalStorage ),
       memType_( mtype ),
       deviceIndex_( devIdx ),
-      readOnly_( false ),
-      disableInterior_( false ),
+      hasConsumer_( false ),
+      hascpuConsumer_( false ),
       allocatedBytes_( 0 )
 #     ifdef ENABLE_CUDA
       , cudaStream_( 0 )
@@ -579,6 +583,8 @@ SpatialField<Location,T>::SpatialField( const SpatialField& other )
   readOnly_( other.readOnly_ ),
   disableInterior_( other.disableInterior_ ),
   consumerFieldValues_(other.consumerFieldValues_),
+  hasConsumer_( other.hasConsumer_ ),
+  hascpuConsumer_( false ),
   allocatedBytes_( other.allocatedBytes_ )
 # ifdef ENABLE_CUDA
   , cudaStream_( other.cudaStream_ )
@@ -603,6 +609,8 @@ SpatialField( const MemoryWindow& window, const SpatialField& other )
   readOnly_( other.readOnly_ ),
   disableInterior_( other.disableInterior_ ),
   consumerFieldValues_(other.consumerFieldValues_),
+  hasConsumer_( other.hasConsumer_ ),
+  hascpuConsumer_( false ),
   allocatedBytes_( other.allocatedBytes_ )
 # ifdef ENABLE_CUDA
     , cudaStream_( other.cudaStream_ )
@@ -649,6 +657,10 @@ SpatialField<Location,T>::~SpatialField() {
 
   consumerFieldValues_.clear();
   myConsumerFieldValues_.clear();
+
+  if ( hascpuConsumer_ ) {
+    Pool<T>::self().put( LOCAL_RAM, fieldValues_ );
+  }
 #endif
 
   if ( builtField_ ) {
@@ -660,12 +672,6 @@ SpatialField<Location,T>::~SpatialField() {
     break;
 #ifdef ENABLE_CUDA
     case EXTERNAL_CUDA_GPU: {
-
-      //Deallocate local_ram consumer copy if it exists
-      if( fieldValues_ != NULL ) {
-        delete[] fieldValues_;
-        fieldValues_ = NULL;
-      }
       ema::cuda::CUDADeviceInterface::self().release( (void*)fieldValuesExtDevice_, deviceIndex_);
     }
     break;
@@ -865,6 +871,7 @@ add_consumer( MemoryType consumerMemoryType,
 #endif
 
       if( fieldValues_ == NULL ) {  // Space is already allocated
+        hascpuConsumer_ = true;
 #ifdef DEBUG_SF_ALL
         std::cout << "Consumer field does not exist, allocating...\n\n";
 #endif
@@ -1150,12 +1157,12 @@ SpatialField<Location,T>::operator()(const IntVec& ijk)
   switch (memType_) {
   case LOCAL_RAM: {
 #   ifndef NDEBUG
-    assert(ijk[0] <  fieldWindow_.extent(0));
-    assert(ijk[1] <  fieldWindow_.extent(1));
-    assert(ijk[2] <  fieldWindow_.extent(2));
-    assert(ijk[0] >= fieldWindow_.offset(0));
-    assert(ijk[1] >= fieldWindow_.offset(1));
-    assert(ijk[2] >= fieldWindow_.offset(2));
+    assert( (size_t)ijk[0] <  fieldWindow_.extent(0) );
+    assert( (size_t)ijk[1] <  fieldWindow_.extent(1) );
+    assert( (size_t)ijk[2] <  fieldWindow_.extent(2) );
+    assert( (size_t)ijk[0] >= fieldWindow_.offset(0) );
+    assert( (size_t)ijk[1] >= fieldWindow_.offset(1) );
+    assert( (size_t)ijk[2] >= fieldWindow_.offset(2) );
 #   endif
     return fieldValues_[fieldWindow_.flat_index(ijk)];
   }
@@ -1178,12 +1185,12 @@ operator()( const size_t i, const size_t j, const size_t k ) const
 {
   if ( memType_ == LOCAL_RAM || fieldValues_ != NULL ) {
 #   ifndef NDEBUG
-    assert(i < fieldWindow_.extent(0));
-    assert(j < fieldWindow_.extent(1));
-    assert(k < fieldWindow_.extent(2));
-    assert(i >= fieldWindow_.offset(0));
-    assert(j >= fieldWindow_.offset(1));
-    assert(k >= fieldWindow_.offset(2));
+    assert( i <  fieldWindow_.extent(0) );
+    assert( j <  fieldWindow_.extent(1) );
+    assert( k <  fieldWindow_.extent(2) );
+    assert( i >= fieldWindow_.offset(0) );
+    assert( j >= fieldWindow_.offset(1) );
+    assert( k >= fieldWindow_.offset(2) );
 #   endif
     IntVec ijk(i,j,k);
     return fieldValues_[fieldWindow_.flat_index(ijk)];
@@ -1205,9 +1212,9 @@ operator()( const IntVec& ijk ) const
 {
   if( memType_ == LOCAL_RAM || fieldValues_ != NULL ){
 #   ifndef NDEBUG
-    assert( ijk[0] < fieldWindow_.extent(0) && ijk[0] >= fieldWindow_.offset(0) );
-    assert( ijk[1] < fieldWindow_.extent(1) && ijk[1] >= fieldWindow_.offset(1) );
-    assert( ijk[2] < fieldWindow_.extent(2) && ijk[2] >= fieldWindow_.offset(2) );
+    assert( (size_t)ijk[0] < fieldWindow_.extent(0) && (size_t)ijk[0] >= fieldWindow_.offset(0) );
+    assert( (size_t)ijk[1] < fieldWindow_.extent(1) && (size_t)ijk[1] >= fieldWindow_.offset(1) );
+    assert( (size_t)ijk[2] < fieldWindow_.extent(2) && (size_t)ijk[2] >= fieldWindow_.offset(2) );
 #   endif
     return fieldValues_[fieldWindow_.flat_index(ijk)];
   } else {
