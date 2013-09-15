@@ -192,6 +192,9 @@ bool test_interior( const IntVec npts,
     }
   }
 
+  status( if1 == f1.interior_end(), "iterator interior_end (1)" );
+  status( if2 == f2.interior_end(), "iterator interior_end (2)" );
+
   if1 = f1.interior_begin();
   if2 = f2.interior_begin();
   for( ; if2!=if2e; ++if1, ++if2 ){
