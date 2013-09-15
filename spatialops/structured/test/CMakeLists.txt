@@ -4,6 +4,10 @@ set( libs spatialops-structured spatialops ${TPL_LIBRARIES} )
 
 include_directories( ${spatialops_SOURCE_DIR}/include . )
 
+nebo_add_executable( test_field_compare testFieldComparisons.cpp )
+target_link_libraries( test_field_compare ${libs} )
+add_test( test_field_compare test_field_compare )
+
 nebo_add_executable( test_field testField.cpp )
 target_link_libraries( test_field ${libs} )
 add_test( test_field test_field )
