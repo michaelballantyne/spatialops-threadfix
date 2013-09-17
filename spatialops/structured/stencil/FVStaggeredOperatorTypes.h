@@ -117,10 +117,10 @@ namespace structured{
   template<>                                    \
   struct OperatorTypeBuilder<OP,SRC,DEST>{      \
     typedef NeboStencilBuilder<OP,              \
-                               typename STYLE<OP,SRC,DEST>::StPtCollection, \
-                               SRC,                                         \
-                               DEST>                                        \
-            type;                                                           \
+                               STYLE<OP,SRC,DEST>::StPtCollection, \
+                               SRC,                                \
+                               DEST>                               \
+            type;                                                  \
   };
 
 #define BASIC_OPTYPE_BUILDER( VOL )                                     \
@@ -236,7 +236,7 @@ namespace structured{
 #define FD_OP_BUILDER( OP, FIELDT )                             \
   template<> struct OperatorTypeBuilder<OP,FIELDT,FIELDT>{      \
     typedef NeboStencilBuilder<OP,                              \
-                               typename FDStencilCollection<OP,FIELDT,FIELDT>::StPtCollection, \
+                               FDStencilCollection<OP,FIELDT,FIELDT>::StPtCollection, \
                                FIELDT,                          \
                                FIELDT>                          \
             type;                                               \
