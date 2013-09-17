@@ -42,6 +42,30 @@
 
           inline double coef(void) const { return coef_; }
 
+          inline double get_coef(int const index) const {
+             if(index < 0) {
+                std::ostringstream msg;
+                msg << "Nebo error in " << "Nebo Stencil Coefficient Collection"
+                << ":\n";
+                msg << "given negative value for coefficient index";
+                msg << "\n";
+                msg << "\t - " << __FILE__ << " : " << __LINE__;
+                throw(std::runtime_error(msg.str()));;
+             };
+
+             if(index >= Length) {
+                std::ostringstream msg;
+                msg << "Nebo error in " << "Nebo Stencil Coefficient Collection"
+                << ":\n";
+                msg << "trying to access a coefficient that does not exist";
+                msg << "\n";
+                msg << "\t - " << __FILE__ << " : " << __LINE__;
+                throw(std::runtime_error(msg.str()));;
+             };
+
+             return (index == Length - 1 ? coef() : others().get_coef(index));
+          }
+
           inline NeboStencilCoefCollection<Length - 1> const others(void) const {
              return others_;
           }
@@ -64,6 +88,30 @@
           }
 
           inline double coef(void) const { return coef_; }
+
+          inline double get_coef(int const index) const {
+             if(index < 0) {
+                std::ostringstream msg;
+                msg << "Nebo error in " << "Nebo Stencil Coefficient Collection"
+                << ":\n";
+                msg << "given negative value for coefficient index";
+                msg << "\n";
+                msg << "\t - " << __FILE__ << " : " << __LINE__;
+                throw(std::runtime_error(msg.str()));;
+             };
+
+             if(index > 1) {
+                std::ostringstream msg;
+                msg << "Nebo error in " << "Nebo Stencil Coefficient Collection"
+                << ":\n";
+                msg << "trying to access a coefficient that does not exist";
+                msg << "\n";
+                msg << "\t - " << __FILE__ << " : " << __LINE__;
+                throw(std::runtime_error(msg.str()));;
+             };
+
+             return coef();
+          }
 
          private:
           double const coef_;

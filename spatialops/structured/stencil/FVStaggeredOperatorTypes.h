@@ -65,11 +65,14 @@ namespace structured{
   template<typename OpT, typename SrcT, typename DestT>
   struct OperatorTypeBuilder;
 
-  // no-op. Note that you should avoid this since it is an expensive
-  // way to do a no-op as it forces a full copy.
+  // no-op. Note that you should avoid this since it adds some overhead to Nebo.
   template< typename FieldT >
   struct OperatorTypeBuilder<Interpolant,FieldT,FieldT>{
-    typedef NullStencil<Interpolant,FieldT,FieldT> type;
+    typedef NeboStencilBuilder<Interpolant,
+                               typename NullStencilCollection<Interpolant,FieldT,FieldT>::StPtCollection,
+                               FieldT,
+                               FieldT>
+            type;
   };
 
   /**
@@ -110,25 +113,29 @@ namespace structured{
   //---- Generally, you should not use these macros from user code.    ----
   //-----------------------------------------------------------------------
 
-#define OP_BUILDER( STENCIL, OP, SRC, DEST )    \
+#define OP_BUILDER( STYLE, OP, SRC, DEST )      \
   template<>                                    \
   struct OperatorTypeBuilder<OP,SRC,DEST>{      \
-    typedef STENCIL<OP,SRC,DEST> type;          \
+    typedef NeboStencilBuilder<OP,              \
+                               typename STYLE<OP,SRC,DEST>::StPtCollection, \
+                               SRC,                                         \
+                               DEST>                                        \
+            type;                                                           \
   };
 
 #define BASIC_OPTYPE_BUILDER( VOL )                                     \
-  OP_BUILDER( Stencil2, Interpolant, VOL, FaceTypes<VOL>::XFace )       \
-  OP_BUILDER( Stencil2, Interpolant, VOL, FaceTypes<VOL>::YFace )       \
-  OP_BUILDER( Stencil2, Interpolant, VOL, FaceTypes<VOL>::ZFace )       \
-  OP_BUILDER( Stencil2, Interpolant, FaceTypes<VOL>::XFace, VOL )       \
-  OP_BUILDER( Stencil2, Interpolant, FaceTypes<VOL>::YFace, VOL )       \
-  OP_BUILDER( Stencil2, Interpolant, FaceTypes<VOL>::ZFace, VOL )       \
-  OP_BUILDER( Stencil2, Gradient,    VOL, FaceTypes<VOL>::XFace )       \
-  OP_BUILDER( Stencil2, Gradient,    VOL, FaceTypes<VOL>::YFace )       \
-  OP_BUILDER( Stencil2, Gradient,    VOL, FaceTypes<VOL>::ZFace )       \
-  OP_BUILDER( Stencil2, Divergence,  FaceTypes<VOL>::XFace, VOL )       \
-  OP_BUILDER( Stencil2, Divergence,  FaceTypes<VOL>::YFace, VOL )       \
-  OP_BUILDER( Stencil2, Divergence,  FaceTypes<VOL>::ZFace, VOL )       \
+  OP_BUILDER( Stencil2Collection, Interpolant, VOL, FaceTypes<VOL>::XFace ) \
+  OP_BUILDER( Stencil2Collection, Interpolant, VOL, FaceTypes<VOL>::YFace ) \
+  OP_BUILDER( Stencil2Collection, Interpolant, VOL, FaceTypes<VOL>::ZFace ) \
+  OP_BUILDER( Stencil2Collection, Interpolant, FaceTypes<VOL>::XFace, VOL ) \
+  OP_BUILDER( Stencil2Collection, Interpolant, FaceTypes<VOL>::YFace, VOL ) \
+  OP_BUILDER( Stencil2Collection, Interpolant, FaceTypes<VOL>::ZFace, VOL ) \
+  OP_BUILDER( Stencil2Collection, Gradient,    VOL, FaceTypes<VOL>::XFace ) \
+  OP_BUILDER( Stencil2Collection, Gradient,    VOL, FaceTypes<VOL>::YFace ) \
+  OP_BUILDER( Stencil2Collection, Gradient,    VOL, FaceTypes<VOL>::ZFace ) \
+  OP_BUILDER( Stencil2Collection, Divergence,  FaceTypes<VOL>::XFace, VOL ) \
+  OP_BUILDER( Stencil2Collection, Divergence,  FaceTypes<VOL>::YFace, VOL ) \
+  OP_BUILDER( Stencil2Collection, Divergence,  FaceTypes<VOL>::ZFace, VOL ) \
   template<>                                                            \
   struct BasicOpTypes<VOL>                                              \
   {                                                                     \
@@ -150,74 +157,74 @@ namespace structured{
   BASIC_OPTYPE_BUILDER( ZVolField )
 
 
-  OP_BUILDER( Stencil2, Interpolant, XVolField, YSurfXField )
-  OP_BUILDER( Stencil2, Gradient,    XVolField, YSurfXField )
-  OP_BUILDER( Stencil2, Interpolant, XVolField, ZSurfXField )
-  OP_BUILDER( Stencil2, Gradient,    XVolField, ZSurfXField )
+  OP_BUILDER( Stencil2Collection, Interpolant, XVolField, YSurfXField )
+  OP_BUILDER( Stencil2Collection, Gradient,    XVolField, YSurfXField )
+  OP_BUILDER( Stencil2Collection, Interpolant, XVolField, ZSurfXField )
+  OP_BUILDER( Stencil2Collection, Gradient,    XVolField, ZSurfXField )
 
-  OP_BUILDER( Stencil2, Interpolant, YVolField, XSurfYField )
-  OP_BUILDER( Stencil2, Gradient,    YVolField, XSurfYField )
-  OP_BUILDER( Stencil2, Interpolant, YVolField, ZSurfYField )
-  OP_BUILDER( Stencil2, Gradient,    YVolField, ZSurfYField )
+  OP_BUILDER( Stencil2Collection, Interpolant, YVolField, XSurfYField )
+  OP_BUILDER( Stencil2Collection, Gradient,    YVolField, XSurfYField )
+  OP_BUILDER( Stencil2Collection, Interpolant, YVolField, ZSurfYField )
+  OP_BUILDER( Stencil2Collection, Gradient,    YVolField, ZSurfYField )
 
-  OP_BUILDER( Stencil2, Interpolant, ZVolField, XSurfZField )
-  OP_BUILDER( Stencil2, Gradient,    ZVolField, XSurfZField )
-  OP_BUILDER( Stencil2, Interpolant, ZVolField, YSurfZField )
-  OP_BUILDER( Stencil2, Gradient,    ZVolField, YSurfZField )
+  OP_BUILDER( Stencil2Collection, Interpolant, ZVolField, XSurfZField )
+  OP_BUILDER( Stencil2Collection, Gradient,    ZVolField, XSurfZField )
+  OP_BUILDER( Stencil2Collection, Interpolant, ZVolField, YSurfZField )
+  OP_BUILDER( Stencil2Collection, Gradient,    ZVolField, YSurfZField )
 
-  OP_BUILDER( Stencil2, Interpolant, SVolField, XVolField )
-  OP_BUILDER( Stencil2, Gradient,    SVolField, XVolField )
+  OP_BUILDER( Stencil2Collection, Interpolant, SVolField, XVolField )
+  OP_BUILDER( Stencil2Collection, Gradient,    SVolField, XVolField )
 
-  OP_BUILDER( Stencil2, Interpolant, SVolField, YVolField )
-  OP_BUILDER( Stencil2, Gradient,    SVolField, YVolField )
+  OP_BUILDER( Stencil2Collection, Interpolant, SVolField, YVolField )
+  OP_BUILDER( Stencil2Collection, Gradient,    SVolField, YVolField )
 
-  OP_BUILDER( Stencil2, Interpolant, SVolField, ZVolField )
-  OP_BUILDER( Stencil2, Gradient,    SVolField, ZVolField )
+  OP_BUILDER( Stencil2Collection, Interpolant, SVolField, ZVolField )
+  OP_BUILDER( Stencil2Collection, Gradient,    SVolField, ZVolField )
 
-  OP_BUILDER( Stencil2, Interpolant, XVolField, SVolField )
-  OP_BUILDER( Stencil2, Gradient,    XVolField, SVolField )
+  OP_BUILDER( Stencil2Collection, Interpolant, XVolField, SVolField )
+  OP_BUILDER( Stencil2Collection, Gradient,    XVolField, SVolField )
 
-  OP_BUILDER( Stencil2, Interpolant, YVolField, SVolField )
-  OP_BUILDER( Stencil2, Gradient,    YVolField, SVolField )
+  OP_BUILDER( Stencil2Collection, Interpolant, YVolField, SVolField )
+  OP_BUILDER( Stencil2Collection, Gradient,    YVolField, SVolField )
 
-  OP_BUILDER( Stencil2, Interpolant, ZVolField, SVolField )
-  OP_BUILDER( Stencil2, Gradient,    ZVolField, SVolField )
+  OP_BUILDER( Stencil2Collection, Interpolant, ZVolField, SVolField )
+  OP_BUILDER( Stencil2Collection, Gradient,    ZVolField, SVolField )
 
 
-  OP_BUILDER( NullStencil, Interpolant, XVolField, SSurfXField )
-  OP_BUILDER( NullStencil, Interpolant, YVolField, SSurfYField )
-  OP_BUILDER( NullStencil, Interpolant, ZVolField, SSurfZField )
+  OP_BUILDER( NullStencilCollection, Interpolant, XVolField, SSurfXField )
+  OP_BUILDER( NullStencilCollection, Interpolant, YVolField, SSurfYField )
+  OP_BUILDER( NullStencilCollection, Interpolant, ZVolField, SSurfZField )
 
-  OP_BUILDER( NullStencil, Interpolant, SVolField, XSurfXField )
-  OP_BUILDER( NullStencil, Interpolant, SVolField, YSurfYField )
-  OP_BUILDER( NullStencil, Interpolant, SVolField, ZSurfZField )
+  OP_BUILDER( NullStencilCollection, Interpolant, SVolField, XSurfXField )
+  OP_BUILDER( NullStencilCollection, Interpolant, SVolField, YSurfYField )
+  OP_BUILDER( NullStencilCollection, Interpolant, SVolField, ZSurfZField )
 
-  OP_BUILDER( NullStencil, Interpolant, XSurfXField, SVolField )
-  OP_BUILDER( NullStencil, Interpolant, YSurfYField, SVolField )
-  OP_BUILDER( NullStencil, Interpolant, ZSurfZField, SVolField )
+  OP_BUILDER( NullStencilCollection, Interpolant, XSurfXField, SVolField )
+  OP_BUILDER( NullStencilCollection, Interpolant, YSurfYField, SVolField )
+  OP_BUILDER( NullStencilCollection, Interpolant, ZSurfZField, SVolField )
 
-  OP_BUILDER( Stencil4, Interpolant, SVolField, XSurfYField )
-  OP_BUILDER( Stencil4, Interpolant, SVolField, XSurfZField )
+  OP_BUILDER( Stencil4Collection, Interpolant, SVolField, XSurfYField )
+  OP_BUILDER( Stencil4Collection, Interpolant, SVolField, XSurfZField )
 
-  OP_BUILDER( Stencil4, Interpolant, SVolField, YSurfXField )
-  OP_BUILDER( Stencil4, Interpolant, SVolField, YSurfZField )
+  OP_BUILDER( Stencil4Collection, Interpolant, SVolField, YSurfXField )
+  OP_BUILDER( Stencil4Collection, Interpolant, SVolField, YSurfZField )
 
-  OP_BUILDER( Stencil4, Interpolant, SVolField, ZSurfXField )
-  OP_BUILDER( Stencil4, Interpolant, SVolField, ZSurfYField )
+  OP_BUILDER( Stencil4Collection, Interpolant, SVolField, ZSurfXField )
+  OP_BUILDER( Stencil4Collection, Interpolant, SVolField, ZSurfYField )
 
-  OP_BUILDER( Stencil4, Interpolant, XSurfYField, SVolField )
-  OP_BUILDER( Stencil4, Interpolant, XSurfZField, SVolField )
-  OP_BUILDER( Stencil4, Interpolant, YSurfXField, SVolField )
-  OP_BUILDER( Stencil4, Interpolant, YSurfZField, SVolField )
-  OP_BUILDER( Stencil4, Interpolant, ZSurfXField, SVolField )
-  OP_BUILDER( Stencil4, Interpolant, ZSurfYField, SVolField )
+  OP_BUILDER( Stencil4Collection, Interpolant, XSurfYField, SVolField )
+  OP_BUILDER( Stencil4Collection, Interpolant, XSurfZField, SVolField )
+  OP_BUILDER( Stencil4Collection, Interpolant, YSurfXField, SVolField )
+  OP_BUILDER( Stencil4Collection, Interpolant, YSurfZField, SVolField )
+  OP_BUILDER( Stencil4Collection, Interpolant, ZSurfXField, SVolField )
+  OP_BUILDER( Stencil4Collection, Interpolant, ZSurfYField, SVolField )
 
-  OP_BUILDER( Stencil4, Interpolant, XVolField, YVolField )
-  OP_BUILDER( Stencil4, Interpolant, XVolField, ZVolField )
-  OP_BUILDER( Stencil4, Interpolant, YVolField, XVolField )
-  OP_BUILDER( Stencil4, Interpolant, YVolField, ZVolField )
-  OP_BUILDER( Stencil4, Interpolant, ZVolField, XVolField )
-  OP_BUILDER( Stencil4, Interpolant, ZVolField, YVolField )
+  OP_BUILDER( Stencil4Collection, Interpolant, XVolField, YVolField )
+  OP_BUILDER( Stencil4Collection, Interpolant, XVolField, ZVolField )
+  OP_BUILDER( Stencil4Collection, Interpolant, YVolField, XVolField )
+  OP_BUILDER( Stencil4Collection, Interpolant, YVolField, ZVolField )
+  OP_BUILDER( Stencil4Collection, Interpolant, ZVolField, XVolField )
+  OP_BUILDER( Stencil4Collection, Interpolant, ZVolField, YVolField )
 
   // Filter operators
   template<> struct OperatorTypeBuilder<Filter,SVolField,SVolField>{ typedef BoxFilter<SVolField> type; };
@@ -226,8 +233,15 @@ namespace structured{
   template<> struct OperatorTypeBuilder<Filter,ZVolField,ZVolField>{ typedef BoxFilter<ZVolField> type; };
 
   // finite difference:
-#define FD_OP_BUILDER( OP, FIELDT )        \
-    template<> struct OperatorTypeBuilder<OP,FIELDT,FIELDT>{ typedef FDStencil2<OP,FIELDT,OP::DirT> type; };
+#define FD_OP_BUILDER( OP, FIELDT )                             \
+  template<> struct OperatorTypeBuilder<OP,FIELDT,FIELDT>{      \
+    typedef NeboStencilBuilder<OP,                              \
+                               typename FDStencilCollection<OP,FIELDT,FIELDT>::StPtCollection, \
+                               FIELDT,                          \
+                               FIELDT>                          \
+            type;                                               \
+  };
+
 #define FD_ALL_VOL_FIELDS( OP ) \
     FD_OP_BUILDER(OP,SVolField) \
     FD_OP_BUILDER(OP,XVolField) \
