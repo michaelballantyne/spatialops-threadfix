@@ -18,6 +18,7 @@ set( SO_HEADERS
   SpatialOpsDefs.h
   SpatialOpsTools.h
   WriteMatlab.h
+  Semaphore.h
   )
   
 # create dummy/empty file to circumvent restriction on add_library
