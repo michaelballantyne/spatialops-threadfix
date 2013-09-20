@@ -122,7 +122,7 @@ namespace structured{
     //		device we're interested in supporting.
     ConsumerMap consumerFieldValues_;	///< Provides the ability to store and track copies of this field consumed on other devices.
     bool hasConsumer_;                  ///< Indicates whether a field has consumers or not
-    bool hascpuConsumer_;
+    bool builtCpuConsumer_;
     ConsumerMap myConsumerFieldValues_;	///< Provides the ability to correctly delete/release copies of this field that this field allocated
 
     unsigned long int allocatedBytes_;	///< Stores entire field size in bytes: sizeof(T) * glob.x * glob.y * glob.z
@@ -568,7 +568,7 @@ SpatialField( const MemoryWindow& window,
       memType_( mtype ),
       deviceIndex_( devIdx ),
       hasConsumer_( false ),
-      hascpuConsumer_( false ),
+      builtCpuConsumer_( false ),
       allocatedBytes_( 0 )
 #     ifdef ENABLE_CUDA
       , cudaStream_( 0 )
@@ -639,7 +639,7 @@ SpatialField<Location, GhostTraits, T>::SpatialField( const SpatialField& other 
   deviceIndex_(other.deviceIndex_),
   consumerFieldValues_(other.consumerFieldValues_),
   hasConsumer_( other.hasConsumer_ ),
-  hascpuConsumer_( false ),
+  builtCpuConsumer_( false ),
   allocatedBytes_( other.allocatedBytes_ )
 # ifdef ENABLE_CUDA
   , cudaStream_( other.cudaStream_ )
@@ -660,7 +660,7 @@ SpatialField( const MemoryWindow& window, const SpatialField& other )
   deviceIndex_(other.deviceIndex_),
   consumerFieldValues_(other.consumerFieldValues_),
   hasConsumer_( other.hasConsumer_ ),
-  hascpuConsumer_( false ),
+  builtCpuConsumer_( false ),
   allocatedBytes_( other.allocatedBytes_ )
 # ifdef ENABLE_CUDA
     , cudaStream_( other.cudaStream_ )
@@ -691,7 +691,7 @@ SpatialField<Location, GhostTraits, T>::~SpatialField() {
   consumerFieldValues_.clear();
   myConsumerFieldValues_.clear();
 
-  if ( hascpuConsumer_ ) {
+  if ( builtCpuConsumer_ ) {
     Pool<T>::self().put( LOCAL_RAM, fieldValues_ );
   }
 #endif
@@ -904,7 +904,7 @@ add_consumer( MemoryType consumerMemoryType,
 #endif
 
       if( fieldValues_ == NULL ) {  // Space is already allocated
-        hascpuConsumer_ = true;
+        builtCpuConsumer_ = true;
 #ifdef DEBUG_SF_ALL
         std::cout << "Consumer field does not exist, allocating...\n\n";
 #endif
