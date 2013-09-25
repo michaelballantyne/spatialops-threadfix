@@ -82,37 +82,37 @@ int main()
   status( spc[1] == length[1]/npts[1], "dy" );
   status( spc[2] == length[2]/npts[2], "dz" );
 
-  status( test_field<SVolField  >( grid, false, false, false, spc[0]/2.0, spc[1]/2.0, spc[2]/2.0, length[0]-spc[0]/2.0, length[1]-spc[1]/2.0, length[2]-spc[2]/2.0 ), "SVolField (n,n,n)" ); 
-  status( test_field<SVolField  >( grid,  true,  true,  true, spc[0]/2.0, spc[1]/2.0, spc[2]/2.0, length[0]-spc[0]/2.0, length[1]-spc[1]/2.0, length[2]-spc[2]/2.0 ), "SVolField (n,n,n)" ); 
-  status( test_field<SSurfXField>( grid, false, false, false, 0         , spc[1]/2.0, spc[2]/2.0, length[0]-spc[0]    , length[1]-spc[1]/2.0, length[2]-spc[2]/2.0 ), "SSurfXField (n,n,n)" ); 
-  status( test_field<SSurfXField>( grid,  true,  true,  true, 0         , spc[1]/2.0, spc[2]/2.0, length[0]           , length[1]-spc[1]/2.0, length[2]-spc[2]/2.0 ), "SSurfXField (y,y,y)" ); 
+  status( test_field<SVolField  >( grid, false, false, false, spc[0]/2.0, spc[1]/2.0, spc[2]/2.0, length[0]-spc[0]/2.0, length[1]-spc[1]/2.0, length[2]-spc[2]/2.0 ), "SVolField (n,n,n)" );
+  status( test_field<SVolField  >( grid,  true,  true,  true, spc[0]/2.0, spc[1]/2.0, spc[2]/2.0, length[0]-spc[0]/2.0, length[1]-spc[1]/2.0, length[2]-spc[2]/2.0 ), "SVolField (n,n,n)" );
+  status( test_field<SSurfXField>( grid, false, false, false, 0         , spc[1]/2.0, spc[2]/2.0, length[0]-spc[0]    , length[1]-spc[1]/2.0, length[2]-spc[2]/2.0 ), "SSurfXField (n,n,n)" );
+  status( test_field<SSurfXField>( grid,  true,  true,  true, 0         , spc[1]/2.0, spc[2]/2.0, length[0]           , length[1]-spc[1]/2.0, length[2]-spc[2]/2.0 ), "SSurfXField (y,y,y)" );
   status( test_field<SSurfYField>( grid, false, false, false, spc[0]/2.0, 0         , spc[2]/2.0, length[0]-spc[0]/2.0, length[1]-spc[1]    , length[2]-spc[2]/2.0 ), "SSurfYField (n,n,n)" );
   status( test_field<SSurfYField>( grid,  true,  true,  true, spc[0]/2.0, 0         , spc[2]/2.0, length[0]-spc[0]/2.0, length[1]           , length[2]-spc[2]/2.0 ), "SSurfYField (y,y,y)" );
   status( test_field<SSurfZField>( grid, false, false, false, spc[0]/2.0, spc[1]/2.0, 0         , length[0]-spc[0]/2.0, length[1]-spc[1]/2.0, length[2]-spc[2]     ), "SSurfZField (n,n,n)" );
   status( test_field<SSurfZField>( grid,  true,  true,  true, spc[0]/2.0, spc[1]/2.0, 0         , length[0]-spc[0]/2.0, length[1]-spc[1]/2.0, length[2]            ), "SSurfZField (y,y,y)" );
 
-  status( test_field<XVolField  >( grid, false, false, false, 0         , spc[1]/2.0, spc[2]/2.0, length[0]-spc[0]    , length[1]-spc[1]/2.0, length[2]-spc[2]/2.0 ), "XVolField (n,n,n)" ); 
-  status( test_field<XVolField  >( grid,  true,  true,  true, 0         , spc[1]/2.0, spc[2]/2.0, length[0]           , length[1]-spc[1]/2.0, length[2]-spc[2]/2.0 ), "XVolField (n,n,n)" ); 
-  status( test_field<XSurfXField>( grid, false, false, false, spc[0]/2.0, spc[1]/2.0, spc[2]/2.0, length[0]-spc[0]/2.0, length[1]-spc[1]/2.0, length[2]-spc[2]/2.0 ), "XSurfXField (n,n,n)" ); 
-  status( test_field<XSurfXField>( grid,  true,  true,  true, spc[0]/2.0, spc[1]/2.0, spc[2]/2.0, length[0]-spc[0]/2.0, length[1]-spc[1]/2.0, length[2]-spc[2]/2.0 ), "XSurfXField (y,y,y)" ); 
+  status( test_field<XVolField  >( grid, false, false, false, 0         , spc[1]/2.0, spc[2]/2.0, length[0]-spc[0]    , length[1]-spc[1]/2.0, length[2]-spc[2]/2.0 ), "XVolField (n,n,n)" );
+  status( test_field<XVolField  >( grid,  true,  true,  true, 0         , spc[1]/2.0, spc[2]/2.0, length[0]           , length[1]-spc[1]/2.0, length[2]-spc[2]/2.0 ), "XVolField (n,n,n)" );
+  status( test_field<XSurfXField>( grid, false, false, false, spc[0]/2.0, spc[1]/2.0, spc[2]/2.0, length[0]-spc[0]/2.0, length[1]-spc[1]/2.0, length[2]-spc[2]/2.0 ), "XSurfXField (n,n,n)" );
+  status( test_field<XSurfXField>( grid,  true,  true,  true, spc[0]/2.0, spc[1]/2.0, spc[2]/2.0, length[0]-spc[0]/2.0, length[1]-spc[1]/2.0, length[2]-spc[2]/2.0 ), "XSurfXField (y,y,y)" );
   status( test_field<XSurfYField>( grid, false, false, false, 0         , 0         , spc[2]/2.0, length[0]-spc[0]    , length[1]-spc[1]    , length[2]-spc[2]/2.0 ), "XSurfYField (n,n,n)" );
   status( test_field<XSurfYField>( grid,  true,  true,  true, 0         , 0         , spc[2]/2.0, length[0]-spc[0]    , length[1]           , length[2]-spc[2]/2.0 ), "XSurfYField (y,y,y)" );
   status( test_field<XSurfZField>( grid, false, false, false, 0         , spc[1]/2.0, 0         , length[0]-spc[0]    , length[1]-spc[1]/2.0, length[2]-spc[2]     ), "XSurfZField (n,n,n)" );
   status( test_field<XSurfZField>( grid,  true,  true,  true, 0         , spc[1]/2.0, 0         , length[0]-spc[0]    , length[1]-spc[1]/2.0, length[2]            ), "XSurfZField (y,y,y)" );
 
-  status( test_field<YVolField  >( grid, false, false, false, spc[0]/2.0, 0         , spc[2]/2.0, length[0]-spc[0]/2.0, length[1]-spc[1]    , length[2]-spc[2]/2.0 ), "YVolField (n,n,n)" ); 
-  status( test_field<YVolField  >( grid,  true,  true,  true, spc[0]/2.0, 0         , spc[2]/2.0, length[0]-spc[0]/2.0, length[1]           , length[2]-spc[2]/2.0 ), "YVolField (n,n,n)" ); 
-  status( test_field<YSurfXField>( grid, false, false, false, 0         , 0         , spc[2]/2.0, length[0]-spc[0]    , length[1]-spc[1]    , length[2]-spc[2]/2.0 ), "YSurfXField (n,n,n)" ); 
-  status( test_field<YSurfXField>( grid,  true,  true,  true, 0         , 0         , spc[2]/2.0, length[0]           , length[1]-spc[1]    , length[2]-spc[2]/2.0 ), "YSurfXField (y,y,y)" ); 
+  status( test_field<YVolField  >( grid, false, false, false, spc[0]/2.0, 0         , spc[2]/2.0, length[0]-spc[0]/2.0, length[1]-spc[1]    , length[2]-spc[2]/2.0 ), "YVolField (n,n,n)" );
+  status( test_field<YVolField  >( grid,  true,  true,  true, spc[0]/2.0, 0         , spc[2]/2.0, length[0]-spc[0]/2.0, length[1]           , length[2]-spc[2]/2.0 ), "YVolField (n,n,n)" );
+  status( test_field<YSurfXField>( grid, false, false, false, 0         , 0         , spc[2]/2.0, length[0]-spc[0]    , length[1]-spc[1]    , length[2]-spc[2]/2.0 ), "YSurfXField (n,n,n)" );
+  status( test_field<YSurfXField>( grid,  true,  true,  true, 0         , 0         , spc[2]/2.0, length[0]           , length[1]-spc[1]    , length[2]-spc[2]/2.0 ), "YSurfXField (y,y,y)" );
   status( test_field<YSurfYField>( grid, false, false, false, spc[0]/2.0, spc[1]/2.0, spc[2]/2.0, length[0]-spc[0]/2.0, length[1]-spc[1]/2.0, length[2]-spc[2]/2.0 ), "YSurfYField (n,n,n)" );
   status( test_field<YSurfYField>( grid,  true,  true,  true, spc[0]/2.0, spc[1]/2.0, spc[2]/2.0, length[0]-spc[0]/2.0, length[1]-spc[1]/2.0, length[2]-spc[2]/2.0 ), "YSurfYField (y,y,y)" );
   status( test_field<YSurfZField>( grid, false, false, false, spc[0]/2.0, 0         , 0         , length[0]-spc[0]/2.0, length[1]-spc[1]    , length[2]-spc[2]     ), "YSurfZField (n,n,n)" );
   status( test_field<YSurfZField>( grid,  true,  true,  true, spc[0]/2.0, 0         , 0         , length[0]-spc[0]/2.0, length[1]-spc[1]    , length[2]            ), "YSurfZField (y,y,y)" );
 
-  status( test_field<ZVolField  >( grid, false, false, false, spc[0]/2.0, spc[1]/2.0, 0         , length[0]-spc[0]/2.0, length[1]-spc[1]/2.0, length[2]-spc[2]     ), "ZVolField (n,n,n)" ); 
-  status( test_field<ZVolField  >( grid,  true,  true,  true, spc[0]/2.0, spc[1]/2.0, 0         , length[0]-spc[0]/2.0, length[1]-spc[1]/2.0, length[2]            ), "ZVolField (n,n,n)" ); 
-  status( test_field<ZSurfXField>( grid, false, false, false, 0         , spc[1]/2.0, 0         , length[0]-spc[0]    , length[1]-spc[1]/2.0, length[2]-spc[2]     ), "ZSurfXField (n,n,n)" ); 
-  status( test_field<ZSurfXField>( grid,  true,  true,  true, 0         , spc[1]/2.0, 0         , length[0]           , length[1]-spc[1]/2.0, length[2]-spc[2]     ), "ZSurfXField (y,y,y)" ); 
+  status( test_field<ZVolField  >( grid, false, false, false, spc[0]/2.0, spc[1]/2.0, 0         , length[0]-spc[0]/2.0, length[1]-spc[1]/2.0, length[2]-spc[2]     ), "ZVolField (n,n,n)" );
+  status( test_field<ZVolField  >( grid,  true,  true,  true, spc[0]/2.0, spc[1]/2.0, 0         , length[0]-spc[0]/2.0, length[1]-spc[1]/2.0, length[2]            ), "ZVolField (n,n,n)" );
+  status( test_field<ZSurfXField>( grid, false, false, false, 0         , spc[1]/2.0, 0         , length[0]-spc[0]    , length[1]-spc[1]/2.0, length[2]-spc[2]     ), "ZSurfXField (n,n,n)" );
+  status( test_field<ZSurfXField>( grid,  true,  true,  true, 0         , spc[1]/2.0, 0         , length[0]           , length[1]-spc[1]/2.0, length[2]-spc[2]     ), "ZSurfXField (y,y,y)" );
   status( test_field<ZSurfYField>( grid, false, false, false, spc[0]/2.0, 0         , 0         , length[0]-spc[0]/2.0, length[1]-spc[1]    , length[2]-spc[2]     ), "ZSurfYField (n,n,n)" );
   status( test_field<ZSurfYField>( grid,  true,  true,  true, spc[0]/2.0, 0         , 0         , length[0]-spc[0]/2.0, length[1]           , length[2]-spc[2]     ), "ZSurfYField (y,y,y)" );
   status( test_field<ZSurfZField>( grid, false, false, false, spc[0]/2.0, spc[1]/2.0, spc[2]/2.0, length[0]-spc[0]/2.0, length[1]-spc[1]/2.0, length[2]-spc[2]/2.0 ), "ZSurfZField (n,n,n)" );

@@ -4,6 +4,8 @@
 #include <spatialops/Nebo.h>
 #include <test/TestHelper.h>
 
+#include <spatialops/structured/FieldComparisons.h>
+
 #ifdef ENABLE_THREADS
 #include <spatialops/ThreadPool.h>
 #include <boost/thread/barrier.hpp>
@@ -24,6 +26,8 @@ void jcs_pause()
   std::cout << "Press <ENTER> to continue...";
   std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 }
+
+//--------------------------------------------------------------------
 
 template<typename FieldT>
 bool test_iterator( const IntVec npts,
@@ -191,6 +195,9 @@ bool test_interior( const IntVec npts,
       }
     }
   }
+
+  status( if1 == f1.interior_end(), "iterator interior_end (1)" );
+  status( if2 == f2.interior_end(), "iterator interior_end (2)" );
 
   if1 = f1.interior_begin();
   if2 = f2.interior_begin();
@@ -518,7 +525,7 @@ int main()
     {
       SpatFldPtr<SVolField> sv3 = SpatialFieldStore::get<SVolField>( svol1 );
       *sv3 = svol1;
-      status( *sv3 == svol1, "spatial field pointer from store" );
+      status( field_equal(*sv3, svol1, 0.0), "spatial field pointer from store" );
     }
 
     overall( status.ok(), "field operations" );

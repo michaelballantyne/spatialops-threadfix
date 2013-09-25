@@ -4,6 +4,10 @@ set( libs spatialops-structured spatialops ${TPL_LIBRARIES} )
 
 include_directories( ${spatialops_SOURCE_DIR}/include . )
 
+nebo_add_executable( test_field_compare testFieldComparisons.cpp )
+target_link_libraries( test_field_compare ${libs} )
+add_test( test_field_compare test_field_compare )
+
 nebo_add_executable( test_field testField.cpp )
 target_link_libraries( test_field ${libs} )
 add_test( test_field test_field )
@@ -21,7 +25,7 @@ target_link_libraries( test_tools ${TPL_LIBRARIES} )
 add_test( test_tools test_tools )
 
 macro( build_test tname exec tout )
-  add_test( CUDA_${tname} ${exec} ) 
+  add_test( CUDA_${tname} ${exec} )
 
   set_tests_properties ( CUDA_${tname} PROPERTIES PASS_REGULAR_EXPRESSION ${tout} )
 endmacro()
@@ -34,22 +38,22 @@ if( CUDA_CUDA_LIBRARY )
   add_executable( ctest ctest.cpp )
   set( driver_link_libs cudaVecLib ${CUDA_LIBRARIES} )
   target_link_libraries( ctest ${driver_link_libs} )
-  
+
   set( cxxtemp ${CMAKE_CXX_FLAGS} )
   set( CMAKE_CXX_FLAGS "-DDEBUG_CUDA_VERBOSE ${cxxtemp}" )
   add_executable( debug_memtest_flags memtest1.cpp )
   target_link_libraries( debug_memtest_flags spatialops )
   set( CMAKE_CXX_FLAGS ${cxxtemp} )
-  
+
   add_executable( simplememtest memtest1.cpp )
   target_link_libraries( simplememtest spatialops )
-  
+
   add_executable( sharedmemtest memtest2.cpp )
   target_link_libraries( sharedmemtest spatialops )
-  
+
   #add_executable( extfieldtest testExternalField.cpp )
   #target_link_libraries( extfieldtest ${libs} )
-  
+
   cuda_add_executable( extstenciltest ExternalStencilTest.cu )
   set( driver_link_libs ${libs} ${CUDA_LIBRARIES} )
   target_link_libraries( extstenciltest ${driver_link_libs} )
@@ -60,7 +64,7 @@ if( CUDA_CUDA_LIBRARY )
   build_test( SharedMemoryTest sharedmemtest "Success" )
   #build_test( ExternalFieldTest extfieldtest "Success" )
   build_test( ExternalStencilTest extstenciltest "Success" )
-  
+
 else( CUDA_CUDA_LIBRARY )
   message( STATUS "Must include CUDA libraries to build cuda test base" )
 endif( CUDA_CUDA_LIBRARY )

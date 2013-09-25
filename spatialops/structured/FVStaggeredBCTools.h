@@ -87,7 +87,7 @@ namespace structured{
     const IntVec point_;
     const BCEval bcEval_;
     const bool singlePointBC_;
-    std::vector<int> flatPoints_; // flat index points    
+    std::vector<int> flatPoints_; // flat index points
 
   public:
 
@@ -116,10 +116,10 @@ namespace structured{
      *  \li We may need to change the way BCEval works since in the current
      *      model, the SAME bceval is applied at all points. This will not work
      *      with spatially varying bcs.
-     */        
+     */
     BoundaryCondition( const MemoryWindow& window,
                        const std::vector<IntVec>& ijkpoints,
-                       const BCEval bcEval );    
+                       const BCEval bcEval );
 
     ~BoundaryCondition(){}
 
@@ -151,24 +151,24 @@ namespace structured{
       bcEval_( bcEval ),
       singlePointBC_(true)
   {}
-  
+
   //------------------------------------------------------------------
-  
+
   template< typename FieldT, typename BCEval >
   BoundaryCondition<FieldT,BCEval>::
   BoundaryCondition( const MemoryWindow& window,
                     const std::vector<IntVec>& ijkpoints,
                     const BCEval bcEval )
-  : bcEval_( bcEval ),    
+  : bcEval_( bcEval ),
     singlePointBC_(false)
   {
 
     for( std::vector<IntVec>::const_iterator ijkIter = ijkpoints.begin();
         ijkIter != ijkpoints.end(); ++ijkIter )
     {
-      flatPoints_.push_back(window.flat_index(*ijkIter));           
-    }                        
-  }  
+      flatPoints_.push_back(window.flat_index(*ijkIter));
+    }
+  }
 
   //------------------------------------------------------------------
 
@@ -186,7 +186,7 @@ namespace structured{
           flatIterator != flatPoints_.end(); ++flatIterator )
       {
         f[*flatIterator] = bcEval_();
-      }          
+      }
     }
   }
 

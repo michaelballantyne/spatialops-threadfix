@@ -52,7 +52,7 @@ if( ENABLE_THREADS )
   set( boost_comps ${boost_comps} "thread;system" )
   message( STATUS "Thread libs: " ${CMAKE_THREAD_LIBS_INIT} )
 else()
-  set( NTHREADS 1 )  
+  set( NTHREADS 1 )
 endif( ENABLE_THREADS )
 
 set(Boost_USE_MULTITHREAD ON)
@@ -88,7 +88,7 @@ if( ENABLE_CUDA )
   message( STATUS "SpatialOps will be compiled with CUDA Support" )
   FIND_PACKAGE( CUDA REQUIRED )
   SET( CUDA_ARCHITECTURE "2.1" CACHE STRING "2.1" )
-  STRING( REGEX REPLACE "([1-9])\\.([0-9])" "\\1\\2" CUDA_ARCH_STR ${CUDA_ARCHITECTURE} )   
+  STRING( REGEX REPLACE "([1-9])\\.([0-9])" "\\1\\2" CUDA_ARCH_STR ${CUDA_ARCHITECTURE} )
   SET( CUDA_NVCC_FLAGS "-arch=sm_${CUDA_ARCH_STR}" CACHE STRING "Compiler flags passed to NVCC" FORCE )
   SET( CUDA_NVCC_FLAGS_RELEASE "--optimize=03" CACHE STRING "Release build compiler flags" FORCE )
   option( NEBO_GPU_TEST "Require Nebo to handle data transfer between CPU and GPU" OFF )
@@ -118,7 +118,7 @@ if( GIT_FOUND )
     COMMAND ${GIT_EXECUTABLE} log -1 "--pretty=format:\"%H\""
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     RESULT_VARIABLE RESULT
-    OUTPUT_VARIABLE SOPS_REPO_HASH 
+    OUTPUT_VARIABLE SOPS_REPO_HASH
     OUTPUT_STRIP_TRAILING_WHITESPACE
     )
   if( NOT ${RESULT} EQUAL 0 )
@@ -127,7 +127,7 @@ if( GIT_FOUND )
   execute_process(
     COMMAND ${GIT_EXECUTABLE} log -1 "--pretty=format:\"%cd\""
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-    OUTPUT_VARIABLE SOPS_REPO_DATE 
+    OUTPUT_VARIABLE SOPS_REPO_DATE
     OUTPUT_STRIP_TRAILING_WHITESPACE
     )
    if( NOT ${RESULT} EQUAL 0 )

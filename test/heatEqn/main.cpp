@@ -21,11 +21,11 @@ typedef SpatialOps::structured::SSurfZField ZSideField;
 typedef SpatialOps::structured::BasicOpTypes<CellField>::GradX      GradX;
 typedef SpatialOps::structured::BasicOpTypes<CellField>::InterpC2FX InterpX;
 typedef SpatialOps::structured::BasicOpTypes<CellField>::DivX       DivX;
-  
+
 typedef SpatialOps::structured::BasicOpTypes<CellField>::GradY      GradY;
 typedef SpatialOps::structured::BasicOpTypes<CellField>::InterpC2FY InterpY;
 typedef SpatialOps::structured::BasicOpTypes<CellField>::DivY       DivY;
-  
+
 typedef SpatialOps::structured::BasicOpTypes<CellField>::GradZ      GradZ;
 typedef SpatialOps::structured::BasicOpTypes<CellField>::InterpC2FZ InterpZ;
 typedef SpatialOps::structured::BasicOpTypes<CellField>::DivZ       DivZ;

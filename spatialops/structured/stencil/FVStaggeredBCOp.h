@@ -71,10 +71,10 @@ namespace structured{
             typename BCEval >
   class BoundaryConditionOp
   {
-    typedef typename OpT::SrcFieldType    SrcFieldT;
-    typedef typename OpT::DestFieldType   DestFieldT;
-    typedef typename OpT:: LowStPt        S1Shift;
-    typedef typename OpT::HighStPt        S2Shift;
+    typedef typename OpT::SrcFieldType                           SrcFieldT;
+    typedef typename OpT::DestFieldType                          DestFieldT;
+    typedef typename OpT::PointCollectionType::Collection::Point S1Shift;
+    typedef typename OpT::PointCollectionType::Point             S2Shift;
 
     const BCEval bcEval_;  ///< functor to set the value of the BC
     const IntVec apoint_;  ///< the index for the value in the source field we will set
@@ -109,7 +109,7 @@ namespace structured{
                          const BCSide side,
                          const BCEval bceval,
                          const OperatorDatabase& opdb );
-    
+
     /**
      *  @param window The memory window of the field on which the BC is
      *         is being applied.
@@ -129,15 +129,15 @@ namespace structured{
      *  \li We may need to change the way BCEval works since in the current
      *      model, the SAME bceval is applied at all points. This will not work
      *      with spatially varying bcs.
-     */            
+     */
     BoundaryConditionOp( const MemoryWindow& window,
                          const std::vector<IntVec>& destIndices,
                          const BCSide side,
                          const BCEval bceval,
-                         const OperatorDatabase& opdb );    
+                         const OperatorDatabase& opdb );
 
     ~BoundaryConditionOp(){}
-    
+
     double getGhostCoef() const{ return ca_; }
     double getInteriorCoef() const{ return cb_; }
     const std::vector<int>& getFlatGhostPoints() const{ return flatGhostPoints_; }
@@ -179,12 +179,12 @@ namespace structured{
     //   phi_a = (phi_bc - b*phi_b) / a
     //
     const OpT* const op = soDatabase.retrieve_operator<OpT>();
-    ca_ = (side==MINUS_SIDE || side==NO_SIDE ? op->get_minus_coef() : op->get_plus_coef()  );
-    cb_ = (side==MINUS_SIDE || side==NO_SIDE ? op->get_plus_coef()  : op->get_minus_coef() );
+    ca_ = (side==MINUS_SIDE || side==NO_SIDE ? op->coefs().get_coef(0) : op->coefs().get_coef(1) );
+    cb_ = (side==MINUS_SIDE || side==NO_SIDE ? op->coefs().get_coef(1) : op->coefs().get_coef(0) );
   }
 
   //------------------------------------------------------------------
-  
+
   template< typename OpT, typename BCEval >
   BoundaryConditionOp<OpT,BCEval>::
   BoundaryConditionOp( const SpatialOps::structured::MemoryWindow& window,
@@ -201,17 +201,17 @@ namespace structured{
     //   phi_a = (phi_bc - b*phi_b) / a
     //
     const OpT* const op = soDatabase.retrieve_operator<OpT>();
-    ca_ = (side==MINUS_SIDE ? op->get_minus_coef() : op->get_plus_coef()  );
-    cb_ = (side==MINUS_SIDE ? op->get_plus_coef()  : op->get_minus_coef() );
+    ca_ = (side==MINUS_SIDE ? op->coefs().get_coef(0) : op->coefs().get_coef(1) );
+    cb_ = (side==MINUS_SIDE ? op->coefs().get_coef(1) : op->coefs().get_coef(0) );
     //
     std::vector<IntVec>::const_iterator destPointsIter = destIJKPoints.begin();
     for( ; destPointsIter != destIJKPoints.end(); ++destPointsIter ) {
       flatGhostPoints_.push_back(window.flat_index(*destPointsIter + ( (side==MINUS_SIDE) ? S1Shift::int_vec() : S2Shift::int_vec() )));    // a_point
       flatInteriorPoints_.push_back(window.flat_index(*destPointsIter + ( (side==MINUS_SIDE) ? S2Shift::int_vec() : S1Shift::int_vec() ))); // b_point
-    }    
+    }
   }
-  
-  //------------------------------------------------------------------  
+
+  //------------------------------------------------------------------
 
   template< typename OpT, typename BCEval >
   void

@@ -35,6 +35,9 @@
 #include <sstream>
 #include <map>
 #include <algorithm>
+#include <cmath>
+#include <limits>
+#include <boost/math/special_functions/next.hpp>
 #include <string.h> // for memcmp below...
 
 #include <spatialops/SpatialOpsConfigure.h>
@@ -55,6 +58,7 @@
 #ifdef ENABLE_CUDA
 #include <cuda_runtime.h>
 #endif
+
 
 namespace SpatialOps{
 namespace structured{
@@ -122,10 +126,8 @@ namespace structured{
     //      which is not as general is it likely should be, but GPUs are currently the only external
     //      device we're interested in supporting.
     ConsumerMap consumerFieldValues_;	///< Provides the ability to store and track copies of this field consumed on other devices.
-
     bool hasConsumer_;                  ///< Indicates whether a field has consumers or not
-    bool hascpuConsumer_;
-
+    bool builtCpuConsumer_;
     ConsumerMap myConsumerFieldValues_;	///< Provides the ability to correctly delete/release copies of this field that this field allocated
 
     unsigned long int allocatedBytes_;	///< Stores entire field size in bytes: sizeof(T) * glob.x * glob.y * glob.z
@@ -346,13 +348,6 @@ namespace structured{
     inline field_type& operator =(const field_type&);
 
     /**
-     * @brief Comparison operators
-     * WARNING: Slow in general and comparison with external fields will incur copy penalties.
-     */
-    bool operator!=(const field_type&) const;
-    bool operator==(const field_type&) const;
-
-    /**
      * @brief Make this field available on another device type, index pair. Adding consumer fields
      * 		  increases the memory held by the the spatial field by 'allocated_bytes' for each
      *		  unique device added.
@@ -497,8 +492,10 @@ SpatialField( const MemoryWindow& window,
       builtField_( mode == InternalStorage ),
       memType_( mtype ),
       deviceIndex_( devIdx ),
+      readOnly_( false ),
+      disableInterior_( false ),
       hasConsumer_( false ),
-      hascpuConsumer_( false ),
+      builtCpuConsumer_( false ),
       allocatedBytes_( 0 )
 #     ifdef ENABLE_CUDA
       , cudaStream_( 0 )
@@ -584,7 +581,7 @@ SpatialField<Location,T>::SpatialField( const SpatialField& other )
   disableInterior_( other.disableInterior_ ),
   consumerFieldValues_(other.consumerFieldValues_),
   hasConsumer_( other.hasConsumer_ ),
-  hascpuConsumer_( false ),
+  builtCpuConsumer_( false ),
   allocatedBytes_( other.allocatedBytes_ )
 # ifdef ENABLE_CUDA
   , cudaStream_( other.cudaStream_ )
@@ -610,7 +607,7 @@ SpatialField( const MemoryWindow& window, const SpatialField& other )
   disableInterior_( other.disableInterior_ ),
   consumerFieldValues_(other.consumerFieldValues_),
   hasConsumer_( other.hasConsumer_ ),
-  hascpuConsumer_( false ),
+  builtCpuConsumer_( false ),
   allocatedBytes_( other.allocatedBytes_ )
 # ifdef ENABLE_CUDA
     , cudaStream_( other.cudaStream_ )
@@ -658,7 +655,7 @@ SpatialField<Location,T>::~SpatialField() {
   consumerFieldValues_.clear();
   myConsumerFieldValues_.clear();
 
-  if ( hascpuConsumer_ ) {
+  if ( builtCpuConsumer_ ) {
     Pool<T>::self().put( LOCAL_RAM, fieldValues_ );
   }
 #endif
@@ -871,7 +868,7 @@ add_consumer( MemoryType consumerMemoryType,
 #endif
 
       if( fieldValues_ == NULL ) {  // Space is already allocated
-        hascpuConsumer_ = true;
+        builtCpuConsumer_ = true;
 #ifdef DEBUG_SF_ALL
         std::cout << "Consumer field does not exist, allocating...\n\n";
 #endif
@@ -1293,7 +1290,7 @@ SpatialField<Location,T>::operator=(const field_type& other)
     throw( std::runtime_error(msg.str()) );
   }
 
-  if( allocatedBytes_ != other.allocatedBytes_ ) {
+  if( fieldWindow_ != other.fieldWindow_ ) {
     std::ostringstream msg;
     msg << "Attempted assignment between fields of unequal size!\n"
         << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
@@ -1382,132 +1379,6 @@ SpatialField<Location,T>::operator=(const field_type& other)
   } // end outer switch
   return *this;
 }
-
-//------------------------------------------------------------------
-
-template<typename Location, typename T>
-bool SpatialField<Location,T>::operator!=(const field_type& other) const {
-  return !(*this == other);
-}
-
-//------------------------------------------------------------------
-
-template<typename Location, typename T>
-bool SpatialField<Location,T>::operator==(const field_type& other) const
-{
-  switch (memType_) {
-  case LOCAL_RAM: {
-    switch (other.memory_device_type()) {
-    case LOCAL_RAM: {
-      const_iterator iother = other.begin();
-      const_iterator iend = this->end();
-      for (const_iterator ifld = this->begin(); ifld != iend; ++ifld, ++iother) {
-        if (*ifld != *iother) return false;
-      }
-      return true;
-    }
-#ifdef ENABLE_CUDA
-    case EXTERNAL_CUDA_GPU: {
-      // Comparing LOCAL_RAM == EXTERNAL_CUDA_GPU
-      // Note: This will incur a full copy penalty from the GPU and should not be used in a time sensitive context.
-      if( allocatedBytes_ != other.allocatedBytes_ ) {
-        throw( std::runtime_error( "Attempted comparison between fields of unequal size." ) );
-      }
-
-      void* temp = (void*)malloc(allocatedBytes_);
-      ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-      CDI.memcpy_from( temp, other.fieldValuesExtDevice_, allocatedBytes_, other.deviceIndex_ );
-
-      if( memcmp(temp, fieldValues_, allocatedBytes_) ) {
-        free(temp);
-        return false;
-      }
-      free(temp);
-      return true;
-    }
-#endif
-    default:{
-      std::ostringstream msg;
-      msg << "Attempted unsupported compare operation, at \n\t"
-          << __FILE__ << " : " << __LINE__ << std::endl
-          << "\t - "
-          << DeviceTypeTools::get_memory_type_description(memType_) << " = "
-          << DeviceTypeTools::get_memory_type_description(
-              other.memory_device_type()) << std::endl;
-      throw(std::runtime_error(msg.str()));
-    }
-    } // switch( other.memory_device_type() )
-  } // case LOCAL_RAM
-#ifdef ENABLE_CUDA
-  case EXTERNAL_CUDA_GPU: {
-    switch( other.memory_device_type() ) {
-    case LOCAL_RAM: {
-      // Comparing EXTERNAL_CUDA_GPU == LOCAL_RAM
-      // WARNING: This will incur a full copy penalty from the GPU and should not be used in a time sensitive context.
-      if( allocatedBytes_ != other.allocatedBytes_ ) {
-        throw( std::runtime_error( "Attempted comparison between fields of unequal size." ) );
-      }
-
-      void* temp = (void*)malloc(allocatedBytes_);
-      ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-      CDI.memcpy_from( temp, fieldValuesExtDevice_, allocatedBytes_, deviceIndex_ );
-
-      if( memcmp(temp, other.fieldValues_, allocatedBytes_) ) {
-        free(temp);
-        return false;
-      }
-
-      free(temp);
-      return true;
-    }
-
-    case EXTERNAL_CUDA_GPU: {
-      // Comparing EXTERNAL_CUDA_GPU == EXTERNAL_CUDA_GPU
-      // WARNING: This will incur a full copy penalty from the GPU and should not be used in a time sensitive context.
-      if( allocatedBytes_ != other.allocatedBytes_ ) {
-        throw( std::runtime_error( "Attempted comparison between fields of unequal size." ) );
-      }
-      void* tempLHS = (void*)malloc(allocatedBytes_);
-      void* tempRHS = (void*)malloc(allocatedBytes_);
-
-      ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-      CDI.memcpy_from( tempLHS, fieldValuesExtDevice_, allocatedBytes_, deviceIndex_ );
-      CDI.memcpy_from( tempRHS, other.fieldValuesExtDevice_, allocatedBytes_, other.deviceIndex_ );
-
-      free(tempLHS);
-      free(tempRHS);
-
-      if( memcmp(tempLHS, tempRHS, allocatedBytes_) ) {
-        return false;
-      }
-
-      return true;
-    }
-
-    default: {
-      std::ostringstream msg;
-      msg << "Attempted unsupported compare operation, at \n\t"
-          << __FILE__ << " : " << __LINE__ << std::endl
-          << "\t - "
-          << DeviceTypeTools::get_memory_type_description(memType_) << " = "
-          << DeviceTypeTools::get_memory_type_description( other.memory_device_type() ) << std::endl;
-      throw(std::runtime_error(msg.str()));
-    }
-    }
-  }
-#endif
-  default:
-    std::ostringstream msg;
-    msg << "Attempted unsupported compare operation, at \n\t"
-        << __FILE__ << " : " << __LINE__ << std::endl
-        << "\t - " << DeviceTypeTools::get_memory_type_description(memType_)
-        << " = "
-        << DeviceTypeTools::get_memory_type_description( other.memory_device_type()) << std::endl;
-    throw(std::runtime_error(msg.str()));
-  }
-}
-
-//------------------------------------------------------------------
 
 } // namespace structured
 } // namespace SpatialOps

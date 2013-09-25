@@ -1,12 +1,12 @@
 # SpatialOpsConfig.cmake - defines variables to assist in applications
 # that link with SpatialOps
-# 
+#
 # The following variables are defined:
-# 
+#
 # SpatialOps_FOUND - true (1)
-# 
+#
 # SpatialOps_INCLUDE_DIR - include directories for SpatialOps
-# 
+#
 # Typical useage:
 #    find_package( SpatialOps )
 #    include_directories( ${SpatialOps_INCLUDE_DIR} )

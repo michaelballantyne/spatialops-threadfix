@@ -30,7 +30,8 @@ template<typename Field>
 inline void internal_initialize_field(typename Field::iterator fi,
                                       const MemoryWindow mw,
                                       const double start,
-                                      const bool print) {
+                                      const bool print,
+                                      const double range) {
     int xLength = mw.extent(0);
     int yLength = mw.extent(1);
     int zLength = mw.extent(2);
@@ -38,7 +39,7 @@ inline void internal_initialize_field(typename Field::iterator fi,
     for(int z = 1; z <= zLength; z++) {
         for(int y = 1; y <= yLength; y++) {
             for(int x = 1; x <= xLength; x++, fi++) {
-                *fi = sin(start + x + y * xLength + z * xLength * yLength);
+                *fi = range * sin(start + x + y * xLength + z * xLength * yLength);
                 if(print) cout << *fi << " ";
             };
             if(print) cout << endl;
@@ -50,15 +51,17 @@ inline void internal_initialize_field(typename Field::iterator fi,
 template<typename Field>
 inline void initialize_field(Field & f,
                              const double start = 0.0,
-                             const bool print = false) {
-    internal_initialize_field<Field>(f.begin(), f.window_with_ghost(), start, print);
+                             const bool print = false,
+                             const double range = 1.0) {
+    internal_initialize_field<Field>(f.begin(), f.window_with_ghost(), start, print, range);
 };
 
 template<typename Field>
 inline void interior_initialize_field(Field & f,
                                       const double start = 0.0,
-                                      const bool print = false) {
-    internal_initialize_field<Field>(f.interior_begin(), f.window_without_ghost(), start, print);
+                                      const bool print = false,
+                                      const double range = 1.0) {
+    internal_initialize_field<Field>(f.interior_begin(), f.window_without_ghost(), start, print, range);
 };
 
 template<typename Field>
@@ -85,7 +88,7 @@ inline void print_field(Field const & f) {
 };
 
 template<typename Field>
-inline void interior_print_field(Field const & f) { 
+inline void interior_print_field(Field const & f) {
     internal_print_field<Field>(f.interior_begin(), f.window_without_ghost());
 };
 
