@@ -211,7 +211,7 @@ bool manual_error_compare(FieldT& f1,
   typename FieldT::const_iterator if1 = const_cast<const FieldT&>(f1).begin();
   typename FieldT::const_iterator if1e = const_cast<const FieldT&>(f1).end();
   typename FieldT::const_iterator if2 = const_cast<const FieldT&>(f2).begin();
-  const std::numeric_limits<double> nl;
+  std::numeric_limits<double> nl;
 
   //manually determine equality
   bool man_equal = true;
@@ -307,7 +307,7 @@ bool test_field_equal( const IntVec npts,
                        const bool verboseOutput)
 {
   TestHelper status(verboseOutput);
-  const std::numeric_limits<double> nl;
+  std::numeric_limits<double> nl;
   const MemoryWindow window(npts);
   const int total = npts[0] * npts[1] * npts[2];
 
@@ -400,10 +400,10 @@ bool test_field_equal( const IntVec npts,
       //absolute error test
       COMPARE_FIELDS(1.0, 1.0 + nl.epsilon(), ABSOLUTE, nl.epsilon(), "Off By epsilon (Equal)", true, 0);
       COMPARE_FIELDS(1.0, 1.0 + 2*nl.epsilon(), ABSOLUTE, nl.epsilon(), "Off By epsilon (Not Equal)", false, 0);
-      COMPARE_FIELDS(0.033, 0.024, ABSOLUTE, std::pow(10,-2), "Off By 10^-2 (Equal)", true, 0);
-      COMPARE_FIELDS(0.033, 0.022, ABSOLUTE, std::pow(10,-2), "Off By 10^-2 (Not Equal)", false, 0);
-      COMPARE_FIELDS(4679000.0, 4680000.0, ABSOLUTE, std::pow(10,3), "Off By 10^3 (Equal)", true, 0);
-      COMPARE_FIELDS(4679000.0, 4681000.0, ABSOLUTE, std::pow(10,3), "Off By 10^3 (Not Equal)", false, 0);
+      COMPARE_FIELDS(0.033, 0.024, ABSOLUTE, std::pow(10.0,-2), "Off By 10^-2 (Equal)", true, 0);
+      COMPARE_FIELDS(0.033, 0.022, ABSOLUTE, std::pow(10.0,-2), "Off By 10^-2 (Not Equal)", false, 0);
+      COMPARE_FIELDS(4679000.0, 4680000.0, ABSOLUTE, std::pow(10.0,3), "Off By 10^3 (Equal)", true, 0);
+      COMPARE_FIELDS(4679000.0, 4681000.0, ABSOLUTE, std::pow(10.0,3), "Off By 10^3 (Not Equal)", false, 0);
       COMPARE_FIELDS(4679000.0, 6890330.0, ABSOLUTE, 11569300.0, "Large Number Check, Exact Error (Equal)", true, 0);
       break;
     case ULP:
@@ -491,7 +491,7 @@ bool manual_error_compare(double d,
   //iterate through fields.
   typename FieldT::const_iterator if1 = const_cast<const FieldT&>(f1).begin();
   typename FieldT::const_iterator if1e = const_cast<const FieldT&>(f1).end();
-  const std::numeric_limits<double> nl;
+  std::numeric_limits<double> nl;
 
   //manually determine equality
   bool man_equal = true;
@@ -593,7 +593,7 @@ bool test_field_equal_scalar( const IntVec npts,
                               const bool verboseOutput)
 {
   TestHelper status(verboseOutput);
-  const std::numeric_limits<double> nl;
+  std::numeric_limits<double> nl;
   const MemoryWindow window(npts);
   const int total = npts[0] * npts[1] * npts[2];
 
@@ -646,10 +646,10 @@ bool test_field_equal_scalar( const IntVec npts,
       //absolute error test
       COMPARE_FIELDS_SCALAR(1.0, 1.0 + nl.epsilon(), ABSOLUTE, nl.epsilon(), "Off By epsilon (Equal)", true, 0);
       COMPARE_FIELDS_SCALAR(1.0, 1.0 + 2*nl.epsilon(), ABSOLUTE, nl.epsilon(), "Off By epsilon (Not Equal)", false, 0);
-      COMPARE_FIELDS_SCALAR(0.033, 0.024, ABSOLUTE, std::pow(10,-2), "Off By 10^-2 (Equal)", true, 0);
-      COMPARE_FIELDS_SCALAR(0.033, 0.022, ABSOLUTE, std::pow(10,-2), "Off By 10^-2 (Not Equal)", false, 0);
-      COMPARE_FIELDS_SCALAR(4679000.0, 4680000.0, ABSOLUTE, std::pow(10,3), "Off By 10^3 (Equal)", true, 0);
-      COMPARE_FIELDS_SCALAR(4679000.0, 4681000.0, ABSOLUTE, std::pow(10,3), "Off By 10^3 (Not Equal)", false, 0);
+      COMPARE_FIELDS_SCALAR(0.033, 0.024, ABSOLUTE, std::pow(10.0,-2), "Off By 10^-2 (Equal)", true, 0);
+      COMPARE_FIELDS_SCALAR(0.033, 0.022, ABSOLUTE, std::pow(10.0,-2), "Off By 10^-2 (Not Equal)", false, 0);
+      COMPARE_FIELDS_SCALAR(4679000.0, 4680000.0, ABSOLUTE, std::pow(10.0,3), "Off By 10^3 (Equal)", true, 0);
+      COMPARE_FIELDS_SCALAR(4679000.0, 4681000.0, ABSOLUTE, std::pow(10.0,3), "Off By 10^3 (Not Equal)", false, 0);
       COMPARE_FIELDS_SCALAR(4679000.0, 6890330.0, ABSOLUTE, 11569300.0, "Large Number Check, Exact Error (Equal)", true, 0);
       break;
     case ULP:
