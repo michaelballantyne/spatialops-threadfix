@@ -71,10 +71,10 @@ namespace structured{
             typename BCEval >
   class BoundaryConditionOp
   {
-    typedef typename OpT::SrcFieldType    SrcFieldT;
-    typedef typename OpT::DestFieldType   DestFieldT;
-    typedef typename OpT:: LowStPt        S1Shift;
-    typedef typename OpT::HighStPt        S2Shift;
+    typedef typename OpT::SrcFieldType                           SrcFieldT;
+    typedef typename OpT::DestFieldType                          DestFieldT;
+    typedef typename OpT::PointCollectionType::Collection::Point S1Shift;
+    typedef typename OpT::PointCollectionType::Point             S2Shift;
 
     const BCEval bcEval_;  ///< functor to set the value of the BC
     const IntVec apoint_;  ///< the index for the value in the source field we will set
@@ -179,8 +179,8 @@ namespace structured{
     //   phi_a = (phi_bc - b*phi_b) / a
     //
     const OpT* const op = soDatabase.retrieve_operator<OpT>();
-    ca_ = (side==MINUS_SIDE || side==NO_SIDE ? op->get_minus_coef() : op->get_plus_coef()  );
-    cb_ = (side==MINUS_SIDE || side==NO_SIDE ? op->get_plus_coef()  : op->get_minus_coef() );
+    ca_ = (side==MINUS_SIDE || side==NO_SIDE ? op->coefs().get_coef(0) : op->coefs().get_coef(1) );
+    cb_ = (side==MINUS_SIDE || side==NO_SIDE ? op->coefs().get_coef(1) : op->coefs().get_coef(0) );
   }
 
   //------------------------------------------------------------------
@@ -201,8 +201,8 @@ namespace structured{
     //   phi_a = (phi_bc - b*phi_b) / a
     //
     const OpT* const op = soDatabase.retrieve_operator<OpT>();
-    ca_ = (side==MINUS_SIDE ? op->get_minus_coef() : op->get_plus_coef()  );
-    cb_ = (side==MINUS_SIDE ? op->get_plus_coef()  : op->get_minus_coef() );
+    ca_ = (side==MINUS_SIDE ? op->coefs().get_coef(0) : op->coefs().get_coef(1) );
+    cb_ = (side==MINUS_SIDE ? op->coefs().get_coef(1) : op->coefs().get_coef(0) );
     //
     std::vector<IntVec>::const_iterator destPointsIter = destIJKPoints.begin();
     for( ; destPointsIter != destIJKPoints.end(); ++destPointsIter ) {

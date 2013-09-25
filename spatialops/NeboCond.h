@@ -702,11 +702,13 @@
                                                                    FieldType> >::
                                 Result,
                                 FieldType> operator ()(double const d) {
-             return NeboExpression<typename ReverseClauses<NeboScalar<Initial,
-                                                                      FieldType>
-                                   >::Result,
-                                   FieldType>(reverse(NeboScalar<Initial,
-                                                                 FieldType>(d)));
+             NeboScalar<Initial, FieldType> typedef Scalar;
+
+             typename ReverseClauses<Scalar>::Result typedef ReversedClauses;
+
+             NeboExpression<ReversedClauses, FieldType> typedef ReturnType;
+
+             return ReturnType(reverse(Scalar(d)));
           }
 
           inline NeboExpression<typename ReverseClauses<NeboConstField<Initial,
@@ -715,10 +717,11 @@
                                 FieldType> operator ()(FieldType const & f) {
              NeboConstField<Initial, FieldType> typedef Field;
 
-             NeboExpression<Field, FieldType> typedef Expression;
+             typename ReverseClauses<Field>::Result typedef ReversedClauses;
 
-             return NeboExpression<typename ReverseClauses<Field>::Result,
-                                   FieldType>(reverse(Field(f)));
+             NeboExpression<ReversedClauses, FieldType> typedef ReturnType;
+
+             return ReturnType(reverse(Field(f)));
           }
 
           template<typename Expr>
@@ -726,8 +729,11 @@
                                  FieldType> operator ()(NeboExpression<Expr,
                                                                        FieldType>
                                                         const & e) {
-              return NeboExpression<typename ReverseClauses<Expr>::Result,
-                                    FieldType>(reverse(e.expr()));
+              typename ReverseClauses<Expr>::Result typedef ReversedClauses;
+
+              NeboExpression<ReversedClauses, FieldType> typedef ReturnType;
+
+              return ReturnType(reverse(e.expr()));
            }
 
           inline CondBuilder<NeboCond<Initial,
@@ -742,13 +748,13 @@
 
              NeboScalar<Initial, FieldType> typedef Scalar;
 
-             NeboClause<Initial, Boolean, Scalar, FieldType> typedef NewClause;
+             NeboClause<Initial, Boolean, Scalar, FieldType> typedef Clause;
 
-             NeboCond<Initial, NewClause, Clauses, FieldType> typedef Cond;
+             NeboCond<Initial, Clause, Clauses, FieldType> typedef Cond;
 
              CondBuilder<Cond> typedef ReturnType;
 
-             return ReturnType(Cond(NewClause(Boolean(b), Scalar(d)), clauses_));
+             return ReturnType(Cond(Clause(Boolean(b), Scalar(d)), clauses_));
           }
 
           inline CondBuilder<NeboCond<Initial,
@@ -956,10 +962,17 @@
            operator ()(FieldType const & f) {
               NeboConstField<Initial, FieldType> typedef Field;
 
-              NeboExpression<Field, FieldType> typedef Expression;
+              typename Clauses::template Convert<FieldType>::Converted typedef
+              ConvertedClauses;
 
-              return CondBuilder<typename Clauses::template Convert<FieldType>::
-                                 Converted>(clauses_.template convert<FieldType>())(f);
+              CondBuilder<ConvertedClauses> typedef NewBuilder;
+
+              typename NewBuilder::template ReverseClauses<Field>::Result
+              typedef ReversedClauses;
+
+              NeboExpression<ReversedClauses, FieldType> typedef ReturnType;
+
+              return ReturnType(NewBuilder(clauses_.template convert<FieldType>()).reverse(Field(f)));
            }
 
           template<typename Expr, typename FieldType>
@@ -975,8 +988,17 @@
                                                          field_type,
                                                          FieldType>::Result>
            operator ()(NeboExpression<Expr, FieldType> const & e) {
-              return CondBuilder<typename Clauses::template Convert<FieldType>::
-                                 Converted>(clauses_.template convert<FieldType>())(e);
+              typename Clauses::template Convert<FieldType>::Converted typedef
+              ConvertedClauses;
+
+              CondBuilder<ConvertedClauses> typedef NewBuilder;
+
+              typename NewBuilder::template ReverseClauses<Expr>::Result typedef
+              ReversedClauses;
+
+              NeboExpression<ReversedClauses, FieldType> typedef ReturnType;
+
+              return ReturnType(NewBuilder(clauses_.template convert<FieldType>()).reverse(e.expr()));
            }
 
           inline CondBuilder<NeboSimpleCond<Clauses> > operator ()(bool const b,
@@ -1030,15 +1052,11 @@
 
               NeboClause<Initial, Boolean, Field, FieldType> typedef Clause;
 
-              NeboCond<Initial,
-                       Clause,
-                       typename Clauses::template Convert<typename
-                                                          NeboFieldCheck<typename
-                                                                         FieldType::
-                                                                         field_type,
-                                                                         FieldType>::
-                                                          Result>::Converted,
-                       FieldType> typedef Cond;
+              typename Clauses::template Convert<FieldType>::Converted typedef
+              ConvertedClauses;
+
+              NeboCond<Initial, Clause, ConvertedClauses, FieldType> typedef
+              Cond;
 
               CondBuilder<Cond> typedef ReturnType;
 
@@ -1081,15 +1099,11 @@
 
               NeboClause<Initial, Boolean, Expr, FieldType> typedef Clause;
 
-              NeboCond<Initial,
-                       Clause,
-                       typename Clauses::template Convert<typename
-                                                          NeboFieldCheck<typename
-                                                                         FieldType::
-                                                                         field_type,
-                                                                         FieldType>::
-                                                          Result>::Converted,
-                       FieldType> typedef Cond;
+              typename Clauses::template Convert<FieldType>::Converted typedef
+              ConvertedClauses;
+
+              NeboCond<Initial, Clause, ConvertedClauses, FieldType> typedef
+              Cond;
 
               CondBuilder<Cond> typedef ReturnType;
 
@@ -1132,15 +1146,11 @@
 
               NeboClause<Initial, BoolExpr, Scalar, FieldType> typedef Clause;
 
-              NeboCond<Initial,
-                       Clause,
-                       typename Clauses::template Convert<typename
-                                                          NeboFieldCheck<typename
-                                                                         FieldType::
-                                                                         field_type,
-                                                                         FieldType>::
-                                                          Result>::Converted,
-                       FieldType> typedef Cond;
+              typename Clauses::template Convert<FieldType>::Converted typedef
+              ConvertedClauses;
+
+              NeboCond<Initial, Clause, ConvertedClauses, FieldType> typedef
+              Cond;
 
               CondBuilder<Cond> typedef ReturnType;
 
@@ -1183,15 +1193,11 @@
 
               NeboClause<Initial, BoolExpr, Field, FieldType> typedef Clause;
 
-              NeboCond<Initial,
-                       Clause,
-                       typename Clauses::template Convert<typename
-                                                          NeboFieldCheck<typename
-                                                                         FieldType::
-                                                                         field_type,
-                                                                         FieldType>::
-                                                          Result>::Converted,
-                       FieldType> typedef Cond;
+              typename Clauses::template Convert<FieldType>::Converted typedef
+              ConvertedClauses;
+
+              NeboCond<Initial, Clause, ConvertedClauses, FieldType> typedef
+              Cond;
 
               CondBuilder<Cond> typedef ReturnType;
 
@@ -1228,15 +1234,11 @@
                                                              const & e) {
               NeboClause<Initial, BoolExpr, Expr, FieldType> typedef Clause;
 
-              NeboCond<Initial,
-                       Clause,
-                       typename Clauses::template Convert<typename
-                                                          NeboFieldCheck<typename
-                                                                         FieldType::
-                                                                         field_type,
-                                                                         FieldType>::
-                                                          Result>::Converted,
-                       FieldType> typedef Cond;
+              typename Clauses::template Convert<FieldType>::Converted typedef
+              ConvertedClauses;
+
+              NeboCond<Initial, Clause, ConvertedClauses, FieldType> typedef
+              Cond;
 
               CondBuilder<Cond> typedef ReturnType;
 
@@ -1268,9 +1270,9 @@
                                                                               f) {
           NeboConstField<Initial, FieldType> typedef Field;
 
-          NeboExpression<Field, FieldType> typedef Expression;
+          NeboExpression<Field, FieldType> typedef ReturnType;
 
-          return Expression(Field(f));
+          return ReturnType(Field(f));
        };
 
       template<typename Expr, typename FieldType>

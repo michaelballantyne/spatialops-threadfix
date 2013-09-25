@@ -69,8 +69,8 @@ bool test_stencil2(IntVec npts,
     const Op* const op = opdb.retrieve_operator<Op>();
 
     //run reference:
-    ref_stencil2_apply_to_field(op->get_minus_coef(),
-                                op->get_plus_coef(),
+    ref_stencil2_apply_to_field(op->coefs().get_coef(0),
+                                op->coefs().get_coef(1),
                                 src,
                                 ref);
 
@@ -103,10 +103,10 @@ bool test_stencil4(IntVec npts,
     const Op* const op = opdb.retrieve_operator<Op>();
 
     //run reference:
-    ref_stencil4_apply_to_field(op->get_coef1(),
-                                op->get_coef2(),
-                                op->get_coef3(),
-                                op->get_coef4(),
+    ref_stencil4_apply_to_field(op->coefs().get_coef(0),
+                                op->coefs().get_coef(1),
+                                op->coefs().get_coef(2),
+                                op->coefs().get_coef(3),
                                 src,
                                 ref);
 
@@ -138,8 +138,8 @@ bool test_fd_stencil2(IntVec npts,
     const Op* const op = opdb.retrieve_operator<Op>();
 
     //run reference:
-    ref_fd_stencil2_apply_to_field<OpType,FieldType>(op->get_minus_coef(),
-                                                     op->get_plus_coef(),
+    ref_fd_stencil2_apply_to_field<OpType,FieldType>(op->coefs().get_coef(0),
+                                                     op->coefs().get_coef(1),
                                                      src,
                                                      ref);
 

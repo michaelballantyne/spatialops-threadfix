@@ -42,6 +42,20 @@
                          (r-fcn-def (constize (fcn-dcl 'coef 'double))
                                     null
                                     'coef_)
+                         (r-fcn-def (constize (fcn-dcl 'get_coef
+                                                       'double
+                                                       (adc 'int 'index)))
+                                    (list (nif (n< 'index "0")
+                                               (build-error '(Nebo Stencil Coefficient Collection)
+                                                            '(given negative value for coefficient index)))
+                                          (nif (n>= 'index 'Length)
+                                               (build-error '(Nebo Stencil Coefficient Collection)
+                                                            '(trying to access a coefficient that does not exist))))
+                                    (ter-cond (n== 'index (n- 'Length "1"))
+                                              (fc 'coef)
+                                              (mfc (fc 'others)
+                                                   'get_coef
+                                                   'index)))
                          (r-fcn-def (constize (fcn-dcl 'others (tc (tpl-use NSCC (n- 'Length "1")))))
                                     null
                                     'others_))
@@ -64,7 +78,17 @@
                                         'c))
                          (r-fcn-def (constize (fcn-dcl 'coef 'double))
                                     null
-                                    'coef_))
+                                    'coef_)
+                         (r-fcn-def (constize (fcn-dcl 'get_coef
+                                                       'double
+                                                       (adc 'int 'index)))
+                                    (list (nif (n< 'index "0")
+                                               (build-error '(Nebo Stencil Coefficient Collection)
+                                                            '(given negative value for coefficient index)))
+                                          (nif (n> 'index "1")
+                                               (build-error '(Nebo Stencil Coefficient Collection)
+                                                            '(trying to access a coefficient that does not exist))))
+                                    (fc 'coef)))
                 (priv-sec (sadc 'double 'coef_)))
 
    (r-fcn-def (fcn-dcl 'build_coef_collection
