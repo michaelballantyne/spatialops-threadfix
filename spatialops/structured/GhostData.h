@@ -73,8 +73,8 @@ namespace structured{
      * @param pz Number of ghost cells on the +z face
      */
     GhostData( const int nx, const int px,
-                 const int ny, const int py,
-                 const int nz, const int pz );
+               const int ny, const int py,
+               const int nz, const int pz );
 
     /**
      * @brief Construct a GhostData
@@ -82,7 +82,7 @@ namespace structured{
      * @param plus  Number of ghost cells on the (+) x, y, and z faces
      */
     GhostData( const IntVec& minus,
-                 const IntVec& plus );
+               const IntVec& plus );
 
     /**
      * \brief construct a GhostData with the same number of ghost cells on each face

@@ -486,7 +486,7 @@ SpatialField( const MemoryWindow& window,
                     ( ( mode == ExternalStorage) ? fieldValues : (NULL) )
                     : ( NULL ) ),
       fieldValuesExtDevice_( (mtype == EXTERNAL_CUDA_GPU ) ?
-    		  	  	  	  	 // Note: this assumes fieldValues is on the proper GPU....
+          // Note: this assumes fieldValues is on the proper GPU....
                              ( ( mode == ExternalStorage ) ? fieldValues : (NULL) ) // reset gpu memory later
                              : ( NULL ) ),
       builtField_( mode == InternalStorage ),
@@ -1285,7 +1285,7 @@ SpatialField<Location,T>::operator=(const field_type& other)
 {
   if( readOnly_ ){
     std::ostringstream msg;
-    msg << "Cannot obtain a non-const iterator to a read-only field." << std::endl
+    msg << "Cannot assign a read-only field." << std::endl
         << __FILE__ << " : " << __LINE__ << std::endl;
     throw( std::runtime_error(msg.str()) );
   }
