@@ -43,8 +43,7 @@
 #     include <boost/bind.hpp>
 #     include <spatialops/ThreadPool.h>
 #     include <spatialops/structured/IntVec.h>
-#     include <boost/interprocess/sync/interprocess_semaphore.hpp>
-      namespace BI = boost::interprocess;
+#     include <spatialops/Semaphore.h>
 #  endif
    /* FIELD_EXPRESSION_THREADS */
 
