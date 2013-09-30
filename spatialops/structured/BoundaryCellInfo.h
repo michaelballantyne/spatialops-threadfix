@@ -133,7 +133,7 @@ namespace SpatialOps {
       inline int num_extra( const int dir ) const{ return nExtra_[dir]; }
 
       /**
-       * \brief obtain the number of extra cells *potentially* present on this field due to presence of physical boundaries
+       * \brief obtain the number of extra cells present on this field due to presence of physical boundaries.  If no physical boundary is present, this returns zero.
        */
       inline IntVec num_extra() const{ return nExtra_; }
 
