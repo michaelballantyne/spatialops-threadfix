@@ -275,7 +275,7 @@ namespace structured{
     }
 
     inline iterator begin() {
-      if( memType_ != LOCAL_RAM ){
+      if (memType_ != LOCAL_RAM && !hasConsumer_) {
         std::ostringstream msg;
         msg << "Field type ( "
             << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
@@ -323,7 +323,7 @@ namespace structured{
         throw( std::runtime_error(msg.str()) );
       }
 
-      if (memType_ != LOCAL_RAM) {
+      if (memType_ != LOCAL_RAM && !hasConsumer_) {
         std::ostringstream msg;
         msg << "Field type ( "
             << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"

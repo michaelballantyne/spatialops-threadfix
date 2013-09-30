@@ -69,6 +69,11 @@ class Numeric3Vec
      ijk[0]=x.ijk[0];  ijk[1]=x.ijk[1];  ijk[2]=x.ijk[2];
    }
 
+   template<typename T1>
+   inline Numeric3Vec(const Numeric3Vec<T1>& x){
+     ijk[0]=(T)(x[0]);  ijk[1]=(T)(x[1]);  ijk[2]=(T)(x[2]);
+   }
+
    inline T  operator[](const size_t i) const{ assert(i<3); return ijk[i]; }
    inline T& operator[](const size_t i) { assert(i<3); return ijk[i]; }
 
@@ -107,13 +112,14 @@ class Numeric3Vec
                     ijk[2] / v.ijk[2] );
    }
 
-   inline Numeric3Vec operator*( const T v ) const{
+   template<typename T1>
+   inline Numeric3Vec operator*( const T1 v ) const{
      return Numeric3Vec(ijk[0] * v,
                    ijk[1] * v,
                    ijk[2] * v);
    }
-
-   inline Numeric3Vec operator/( const T v) const{
+   template<typename T1>
+   inline Numeric3Vec operator/( const T1 v) const{
 	   return Numeric3Vec(ijk[0]/v, ijk[1]/v, ijk[2]/v);
    }
 

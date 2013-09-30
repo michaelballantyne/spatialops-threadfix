@@ -36,8 +36,7 @@
                                     'boost/bind.hpp
                                     'spatialops/ThreadPool.h
                                     'spatialops/structured/IntVec.h
-                                    'boost/interprocess/sync/interprocess_semaphore.hpp)
-                 (cc (nt= 'namespace 'BI (scope 'boost 'interprocess)))))
+                                    'spatialops/Semaphore.h)))
 
 (gpu-only (pp-includes-chunk 'sstream
                              'spatialops/structured/MemoryTypes.h))

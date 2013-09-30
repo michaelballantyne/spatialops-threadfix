@@ -172,7 +172,7 @@
 #                endif
                  /* NEBO_REPORT_BACKEND */;
 
-                 BI::interprocess_semaphore semaphore(0);
+                 Semaphore semaphore(0);
 
                  const int thread_count = get_soft_thread_count();
 
@@ -356,7 +356,7 @@
                  inline void assign(RhsType const & rhs,
                                     structured::IntVec const & split,
                                     structured::IntVec const & location,
-                                    BI::interprocess_semaphore * semaphore) {
+                                    Semaphore * semaphore) {
                     init(split, location).assign(rhs.init(structured::IntVec(0,
                                                                              0,
                                                                              0),
