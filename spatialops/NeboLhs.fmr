@@ -83,7 +83,7 @@
                                            null
                                            (fc 'SeqWalkType SW-cons-args))
                                 (threads-only (bb (assign 'thread_parallel_assign
-                                                          (list (bs (scope 'BI 'interprocess_semaphore)
+                                                          (list (bs 'Semaphore
                                                                     (fc 'semaphore "0"))
                                                                 (nt=c 'int 'thread_count (fc 'get_soft_thread_count))
                                                                 thread-parallel-assign-body
@@ -125,7 +125,7 @@
                                                    (list (adcr 'RhsType 'rhs)
                                                          (adcr IntVec 'split)
                                                          (adcr IntVec 'location)
-                                                         (adp (scope 'BI 'interprocess_semaphore) 'semaphore))
+                                                         (adp 'Semaphore 'semaphore))
                                                    (list assign-body
                                                          (fc (c 'semaphore '-> 'post))))))
                               publics))
