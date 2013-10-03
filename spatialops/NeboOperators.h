@@ -3942,6 +3942,215 @@
           return ReturnTerm(ReturnType(arg.expr()));
        };
 
+      template<typename CurrentMode, typename Operand, typename FieldType>
+       struct Log10Fcn;
+      template<typename Operand, typename FieldType>
+       struct Log10Fcn<Initial, Operand, FieldType> {
+         public:
+          FieldType typedef field_type;
+
+          typename field_type::memory_window typedef MemoryWindow;
+
+          Log10Fcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef
+          SeqWalkType;
+
+#         ifdef FIELD_EXPRESSION_THREADS
+             Log10Fcn<Resize, typename Operand::ResizeType, FieldType> typedef
+             ResizeType;
+#         endif
+          /* FIELD_EXPRESSION_THREADS */
+
+#         ifdef __CUDACC__
+             Log10Fcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef
+             GPUWalkType;
+#         endif
+          /* __CUDACC__ */
+
+          Log10Fcn<Reduction, typename Operand::ReductionType, FieldType>
+          typedef ReductionType;
+
+          Log10Fcn(Operand const & operand)
+          : operand_(operand)
+          {}
+
+          inline structured::GhostData possible_ghosts(void) const {
+             return operand_.possible_ghosts();
+          }
+
+          inline SeqWalkType init(structured::GhostData const & ghosts,
+                                  structured::IntVec const & shift) const {
+             return SeqWalkType(operand_.init(ghosts, shift));
+          }
+
+#         ifdef FIELD_EXPRESSION_THREADS
+             inline ResizeType resize(structured::GhostData const & ghosts) const {
+                return ResizeType(operand_.resize(ghosts));
+             }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */
+
+#         ifdef __CUDACC__
+             inline bool cpu_ready(void) const { return (operand_.cpu_ready()); }
+
+             inline bool gpu_ready(int const deviceIndex) const {
+                return (operand_.gpu_ready(deviceIndex));
+             }
+
+             inline GPUWalkType gpu_init(structured::GhostData const & ghosts,
+                                         structured::IntVec const & shift,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(ghosts, shift, deviceIndex));
+             }
+
+#            ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const {
+                   operand_.gpu_prep(deviceIndex);
+                }
+#            endif
+             /* NEBO_GPU_TEST */
+#         endif
+          /* __CUDACC__ */
+
+          inline ReductionType reduce_init(structured::GhostData const & ghosts,
+                                           structured::IntVec const & shift) const {
+             return ReductionType(operand_.reduce_init(ghosts, shift));
+          }
+
+         private:
+          Operand const operand_;
+      };
+#     ifdef FIELD_EXPRESSION_THREADS
+         template<typename Operand, typename FieldType>
+          struct Log10Fcn<Resize, Operand, FieldType> {
+            public:
+             FieldType typedef field_type;
+
+             typename field_type::memory_window typedef MemoryWindow;
+
+             Log10Fcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef
+             SeqWalkType;
+
+             Log10Fcn(Operand const & operand)
+             : operand_(operand)
+             {}
+
+             inline SeqWalkType init(structured::IntVec const & shift,
+                                     structured::IntVec const & split,
+                                     structured::IntVec const & location) const {
+                return SeqWalkType(operand_.init(shift, split, location));
+             }
+
+            private:
+             Operand const operand_;
+         }
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
+      template<typename Operand, typename FieldType>
+       struct Log10Fcn<SeqWalk, Operand, FieldType> {
+         public:
+          FieldType typedef field_type;
+
+          typename field_type::memory_window typedef MemoryWindow;
+
+          typename FieldType::value_type typedef EvalReturnType;
+
+          Log10Fcn(Operand const & operand)
+          : operand_(operand)
+          {}
+
+          inline void next(void) { operand_.next(); }
+
+          inline EvalReturnType eval(void) const {
+             return std::log10(operand_.eval());
+          }
+
+         private:
+          Operand operand_;
+      };
+#     ifdef __CUDACC__
+         template<typename Operand, typename FieldType>
+          struct Log10Fcn<GPUWalk, Operand, FieldType> {
+            public:
+             FieldType typedef field_type;
+
+             typename field_type::memory_window typedef MemoryWindow;
+
+             typename field_type::value_type typedef AtomicType;
+
+             Log10Fcn(Operand const & operand)
+             : operand_(operand)
+             {}
+
+             __device__ inline void start(int x, int y) { operand_.start(x, y); }
+
+             __device__ inline void next(void) { operand_.next(); }
+
+             __device__ inline AtomicType eval(void) const {
+                return std::log10(operand_.eval());
+             }
+
+            private:
+             Operand operand_;
+         }
+#     endif
+      /* __CUDACC__ */;
+      template<typename Operand, typename FieldType>
+       struct Log10Fcn<Reduction, Operand, FieldType> {
+         public:
+          FieldType typedef field_type;
+
+          typename field_type::memory_window typedef MemoryWindow;
+
+          typename FieldType::value_type typedef EvalReturnType;
+
+          Log10Fcn(Operand const & operand)
+          : operand_(operand)
+          {}
+
+          inline void next(void) { operand_.next(); }
+
+          inline bool at_end(void) const { return (operand_.at_end()); }
+
+          inline bool has_length(void) const { return (operand_.has_length()); }
+
+          inline EvalReturnType eval(void) const {
+             return std::log10(operand_.eval());
+          }
+
+         private:
+          Operand operand_;
+      };
+
+      /* Field */
+      template<typename FieldType>
+       inline NeboExpression<Log10Fcn<Initial,
+                                      NeboConstField<Initial,
+                                                     typename NeboFieldCheck<typename
+                                                                             FieldType::
+                                                                             field_type,
+                                                                             FieldType>::
+                                                     Result>,
+                                      FieldType>,
+                             FieldType> log10(FieldType const & arg) {
+          Log10Fcn<Initial, NeboConstField<Initial, FieldType>, FieldType>
+          typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg)));
+       }
+
+      /* SubExpr */
+      template<typename SubExpr, typename FieldType>
+       inline NeboExpression<Log10Fcn<Initial, SubExpr, FieldType>, FieldType>
+       log10(NeboExpression<SubExpr, FieldType> const & arg) {
+          Log10Fcn<Initial, SubExpr, FieldType> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg.expr()));
+       };
+
       template<typename CurrentMode,
                typename Operand1,
                typename Operand2,

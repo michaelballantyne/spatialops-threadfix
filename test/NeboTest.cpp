@@ -147,6 +147,8 @@ int main( int iarg, char* carg[] )
     RUNTESTIGNORENANULP(pow(input1, input2), std::pow(INPUT1, INPUT2), "power test", 2);
     RUNTESTIGNORENANULP(sqrt(input1), std::sqrt(INPUT1), "square root test", 0);
     RUNTESTIGNORENANULP(log(input1), std::log(INPUT1), "log test", 1);
+    //documentation says with 1 ulp, empirically found to be 2
+    RUNTESTIGNORENANULP(log10(input1), std::log10(INPUT1), "log10 test", 2);
 
     RUNTEST(cond(input1 == input2, true)(false), INPUT1 == INPUT2, "equivalence test");
     RUNTEST(cond(input1 != input2, true)(false), INPUT1 != INPUT2, "non-equivalence test");

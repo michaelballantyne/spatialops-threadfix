@@ -365,6 +365,9 @@
    (build-unary-function 'LogFcn
                          (scope 'std 'log)
                          'log)
+   (build-unary-function 'Log10Fcn
+                         (scope 'std 'log10)
+                         'log10)
    (build-comparison-operator 'EqualCmp '== (bs 'operator '==))
    (build-comparison-operator 'InequalCmp '!= (bs 'operator '!=))
    (build-comparison-operator 'LessThanCmp '< (bs 'operator '<))
