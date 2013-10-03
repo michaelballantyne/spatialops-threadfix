@@ -14,6 +14,8 @@ namespace po = boost::program_options;
 
 using namespace SpatialOps;
 using namespace structured;
+using std::cout;
+using std::endl;
 
 #define MANUAL(EXPR)                                            \
     {                                                           \

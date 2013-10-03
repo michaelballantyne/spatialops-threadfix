@@ -22,9 +22,6 @@
   #include <spatialops/structured/MemoryWindow.h>
 #endif
 
-using std::cout;
-using std::endl;
-
 template< typename FieldT >
 void function( const FieldT& x, const FieldT& y, const FieldT& z, FieldT& f ){
   using namespace SpatialOps;
