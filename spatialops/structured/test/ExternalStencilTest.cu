@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <fstream>
 #include <time.h>
+#include <spatialops/structured/BoundaryCellInfo.h>
 #include "CudaStencilLib.h"
 #include "ExternalStencilTest.h"
 
@@ -101,9 +102,10 @@ int main(int argc, char** argv){
 
   MemoryWindow swin(sset);
 
-
-  PointFloatField pff(swin, NULL, InternalStorage, LOCAL_RAM, 0);
-  PointFloatField spff(swin, svals, InternalStorage, EXTERNAL_CUDA_GPU, 0);
+  const GhostData ghost(0);
+  const BoundaryCellInfo bc = BoundaryCellInfo::build<PointFloatField>(false,false,false);
+  PointFloatField  pff(swin, bc, ghost, NULL,  InternalStorage, LOCAL_RAM, 0);
+  PointFloatField spff(swin, bc, ghost, svals, InternalStorage, EXTERNAL_CUDA_GPU, 0);
 
   CDI.print_device_info();
 

@@ -47,13 +47,13 @@ namespace SpatialOps {
         const MemoryWindow& wdest = dest.window_with_ghost();
         const MemoryWindow& ws = src.window_with_ghost();
 
-        IntVec dOFF  = Extents::DestOffset::int_vec();
-        IntVec s1OFF = Extents::Src1Offset::int_vec();
-        IntVec s2OFF = Extents::Src2Offset::int_vec();
+        const IntVec dOFF  = Extents::DestOffset::int_vec();
+        const IntVec s1OFF = Extents::Src1Offset::int_vec();
+        const IntVec s2OFF = Extents::Src2Offset::int_vec();
 
-        IntVec wEX = wdest.extent();
-        IntVec dEX = wEX + Extents::DestOffset::int_vec() + dest.get_ghost_data().has_bc() * Extents::DestOffset::int_vec();
-        IntVec sEX = ws.glob_dim();
+        const IntVec wEX = wdest.extent();
+        const IntVec dEX = wEX + Extents::DestOffset::int_vec() + dest.boundary_info().has_bc() * Extents::DestOffset::int_vec();
+        const IntVec sEX = ws.glob_dim();
 
         //Call interface function -- hack to avoid nvcc meta-template failures
         cuda_stencil_2_apply_to_field< typename DestType::AtomicT, typename Extents::Dir >(

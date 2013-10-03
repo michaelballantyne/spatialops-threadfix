@@ -30,28 +30,22 @@
 #include <spatialops/structured/IndexTriplet.h>
 
 namespace SpatialOps {
-	namespace Point {
+  namespace Point {
 
-	struct PointFieldGhostTraits {
-		typedef structured::IndexTriplet<0,0,0> NGhostMinus;
-		typedef structured::IndexTriplet<0,0,0> NGhostPlus;
-	};
+    struct PointFieldTraits { typedef NODIR FaceDir; typedef NODIR StagLoc; };
 
-	struct PointFieldTraits { typedef NODIR FaceDir; typedef NODIR StagLoc; };
+    /**
+     *  \brief The PointField type is intended for use in extracting and
+     *         working with individual points from within another field type.
+     *
+     *  This field type is not compatible with operations such as
+     *  interpolants, gradients, etc.  Operators are provided to extract
+     *  points from a parent field and return them back to a parent
+     *  field.
+     */
+    typedef structured::SpatialField<Point::PointFieldTraits, float> PointFloatField;
 
-	/**
-	 *  \brief The PointField type is intended for use in extracting and
-	 *         working with individual points from within another field type.
-	 *
-	 *  This field type is not compatible with operations such as
-	 *  interpolants, gradients, etc.  Operators are provided to extract
-	 *  points from a parent field and return them back to a parent
-	 *  field.
-	 */
-	typedef structured::SpatialField<Point::PointFieldTraits,
-		Point::PointFieldGhostTraits, float> PointFloatField;
-
-	} // namespace Point
+  } // namespace Point
 } // namespace SpatialOps
 
 
