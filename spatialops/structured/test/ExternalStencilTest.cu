@@ -39,8 +39,8 @@ using namespace ema::cuda;
 #define ITERATIONS 1
 
 void stencil7_cpu( float* data_in, float* data_out, int nx, int ny, int nz ){
-  float dx = 1;//, dy = 1, dz = 1;
-  float dxsq = dx*dx;
+  const float dx = 1;//, dy = 1, dz = 1;
+  const float dxsq = dx*dx;
   //float dysq = dy*dy;
   //float dzsq = dz*dz;
 
@@ -48,7 +48,7 @@ void stencil7_cpu( float* data_in, float* data_out, int nx, int ny, int nz ){
    for( int j = 1; j < SMALL-1; ++j)
     for( int i = 1; i < SMALL-1; ++i){
       for( int data_reuse = 0; data_reuse < 1; ++data_reuse ){
-        float tijk = 2*data_in[ Index3D( nx, ny, i, j, k) ];
+        const float tijk = 2*data_in[ Index3D( nx, ny, i, j, k) ];
         data_out[Index3D (nx, ny, i, j, k)] =
         (
           // X direction
@@ -100,7 +100,7 @@ int main(int argc, char** argv){
 
   CUDADeviceInterface& CDI = CUDADeviceInterface::self();
 
-  MemoryWindow swin(sset);
+  const MemoryWindow swin(sset);
 
   const GhostData ghost(0);
   const BoundaryCellInfo bc = BoundaryCellInfo::build<PointFloatField>(false,false,false);
