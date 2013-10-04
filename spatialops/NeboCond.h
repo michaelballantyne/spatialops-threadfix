@@ -90,15 +90,18 @@
              return min(test_.possible_ghosts(), expr_.possible_ghosts());
           }
 
-          inline SeqWalkType init(structured::GhostData const & ghosts,
+          inline SeqWalkType init(structured::IntVec const & minus,
+                                  structured::IntVec const & plus,
                                   structured::IntVec const & shift) const {
-             return SeqWalkType(test_.init(ghosts, shift),
-                                expr_.init(ghosts, shift));
+             return SeqWalkType(test_.init(minus, plus, shift),
+                                expr_.init(minus, plus, shift));
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::GhostData const & ghosts) const {
-                return ResizeType(test_.resize(ghosts), expr_.resize(ghosts));
+             inline ResizeType resize(structured::IntVec const & minus,
+                                      structured::IntVec const & plus) const {
+                return ResizeType(test_.resize(minus, plus),
+                                  expr_.resize(minus, plus));
              }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
@@ -112,11 +115,18 @@
                 return test_.gpu_ready(deviceIndex) && expr_.gpu_ready(deviceIndex);
              }
 
-             inline GPUWalkType gpu_init(structured::GhostData const & ghosts,
+             inline GPUWalkType gpu_init(structured::IntVec const & minus,
+                                         structured::IntVec const & plus,
                                          structured::IntVec const & shift,
                                          int const deviceIndex) const {
-                return GPUWalkType(test_.gpu_init(ghosts, shift, deviceIndex),
-                                   expr_.gpu_init(ghosts, shift, deviceIndex));
+                return GPUWalkType(test_.gpu_init(minus,
+                                                  plus,
+                                                  shift,
+                                                  deviceIndex),
+                                   expr_.gpu_init(minus,
+                                                  plus,
+                                                  shift,
+                                                  deviceIndex));
              }
 
 #            ifdef NEBO_GPU_TEST
@@ -130,10 +140,11 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const & ghosts,
+          inline ReductionType reduce_init(structured::IntVec const & minus,
+                                           structured::IntVec const & plus,
                                            structured::IntVec const & shift) const {
-             return ReductionType(test_.reduce_init(ghosts, shift),
-                                  expr_.reduce_init(ghosts, shift));
+             return ReductionType(test_.reduce_init(minus, plus, shift),
+                                  expr_.reduce_init(minus, plus, shift));
           }
 
          private:
@@ -308,15 +319,18 @@
              return min(clause_.possible_ghosts(), otherwise_.possible_ghosts());
           }
 
-          inline SeqWalkType init(structured::GhostData const & ghosts,
+          inline SeqWalkType init(structured::IntVec const & minus,
+                                  structured::IntVec const & plus,
                                   structured::IntVec const & shift) const {
-             return SeqWalkType(clause_.init(ghosts, shift),
-                                otherwise_.init(ghosts, shift));
+             return SeqWalkType(clause_.init(minus, plus, shift),
+                                otherwise_.init(minus, plus, shift));
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::GhostData const & ghosts) const {
-                return ResizeType(clause_.resize(ghosts), otherwise_.resize(ghosts));
+             inline ResizeType resize(structured::IntVec const & minus,
+                                      structured::IntVec const & plus) const {
+                return ResizeType(clause_.resize(minus, plus),
+                                  otherwise_.resize(minus, plus));
              }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
@@ -330,11 +344,16 @@
                 return clause_.gpu_ready(deviceIndex) && otherwise_.gpu_ready(deviceIndex);
              }
 
-             inline GPUWalkType gpu_init(structured::GhostData const & ghosts,
+             inline GPUWalkType gpu_init(structured::IntVec const & minus,
+                                         structured::IntVec const & plus,
                                          structured::IntVec const & shift,
                                          int const deviceIndex) const {
-                return GPUWalkType(clause_.gpu_init(ghosts, shift, deviceIndex),
-                                   otherwise_.gpu_init(ghosts,
+                return GPUWalkType(clause_.gpu_init(minus,
+                                                    plus,
+                                                    shift,
+                                                    deviceIndex),
+                                   otherwise_.gpu_init(minus,
+                                                       plus,
                                                        shift,
                                                        deviceIndex));
              }
@@ -350,10 +369,11 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const & ghosts,
+          inline ReductionType reduce_init(structured::IntVec const & minus,
+                                           structured::IntVec const & plus,
                                            structured::IntVec const & shift) const {
-             return ReductionType(clause_.reduce_init(ghosts, shift),
-                                  otherwise_.reduce_init(ghosts, shift));
+             return ReductionType(clause_.reduce_init(minus, plus, shift),
+                                  otherwise_.reduce_init(minus, plus, shift));
           }
 
           inline ClauseType const & clause(void) const { return clause_; }

@@ -40,12 +40,12 @@ namespace SpatialOps{ namespace structured{
 
   inline void check_valid( const IntVec& minus, const IntVec& plus )
   {
-//#   ifndef NDEBUG
-//    for( int i=0; i<3; ++i ){
-//      assert( minus[i] >= 0 );
-//      assert(  plus[i] >= 0 );
-//    }
-//#   endif
+#   ifndef NDEBUG
+    for( int i=0; i<3; ++i ){
+      assert( minus[i] >= 0 );
+      assert(  plus[i] >= 0 );
+    }
+#   endif
   }
 
   //-----------------------------------------------------------------

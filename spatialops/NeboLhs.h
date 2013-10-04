@@ -150,8 +150,12 @@
               structured::GhostData lhs_ghosts = calculate_valid_lhs_ghost(rhs_ghosts,
                                                                            field_.boundary_info());
 
-              init(lhs_ghosts).assign(rhs.init(rhs_ghosts,
-                                               structured::IntVec(0, 0, 0)));
+              init(lhs_ghosts.get_minus(), lhs_ghosts.get_plus()).assign(rhs.init(rhs_ghosts.get_minus(),
+                                                                                  rhs_ghosts.get_plus(),
+                                                                                  structured::
+                                                                                  IntVec(0,
+                                                                                         0,
+                                                                                         0)));
 
 #             ifdef NEBO_REPORT_BACKEND
                  std::cout << "Finished Nebo sequential" << std::endl
@@ -159,8 +163,11 @@
               /* NEBO_REPORT_BACKEND */;
            }
 
-          inline SeqWalkType init(structured::GhostData const & ghosts) {
-             return SeqWalkType((field_.reset_valid_ghosts(ghosts), field_));
+          inline SeqWalkType init(structured::IntVec const & minus,
+                                  structured::IntVec const & plus) {
+             return SeqWalkType((field_.reset_valid_ghosts(structured::GhostData(minus,
+                                                                                 plus)),
+                                 field_));
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
@@ -187,14 +194,16 @@
                  typename RhsType::ResizeType typedef RhsResizeType;
 
                  const structured::IntVec split = nebo_find_partition(resize_ghost(field_,
-                                                                                   lhs_ghosts).window_with_ghost().extent(),
+                                                                                   lhs_ghosts.get_minus(),
+                                                                                   lhs_ghosts.get_plus()).window_with_ghost().extent(),
                                                                       thread_count);
 
                  const int max = nebo_partition_count(split);
 
-                 ResizeType new_lhs = resize(lhs_ghosts);
+                 ResizeType new_lhs = resize(lhs_ghosts.get_minus(), lhs_ghosts.get_plus());
 
-                 RhsResizeType new_rhs = rhs.resize(rhs_ghosts);
+                 RhsResizeType new_rhs = rhs.resize(rhs_ghosts.get_minus(),
+                                                    rhs_ghosts.get_plus());
 
                  structured::IntVec location = structured::IntVec(0, 0, 0);
 
@@ -218,8 +227,12 @@
                  /* NEBO_REPORT_BACKEND */;
               }
 
-             inline ResizeType resize(structured::GhostData const & ghosts) {
-                return ResizeType(resize_ghost(field_, ghosts));
+             inline ResizeType resize(structured::IntVec const & minus,
+                                      structured::IntVec const & plus) {
+                return ResizeType((field_.reset_valid_ghosts(structured::
+                                                             GhostData(minus,
+                                                                       plus)),
+                                   field_));
              }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
@@ -261,8 +274,10 @@
                  gpu_assign_kernel<GPUWalkType, RhsGPUWalkType><<<dimGrid,
                                                                   dimBlock,
                                                                   0,
-                                                                  field_.get_stream()>>>(gpu_init(lhs_ghosts),
-                                                                                         rhs.gpu_init(rhs_ghosts,
+                                                                  field_.get_stream()>>>(gpu_init(lhs_ghosts(get_minus),
+                                                                                                  lhs_ghosts(get_plus)),
+                                                                                         rhs.gpu_init(rhs_ghosts.get_minus(),
+                                                                                                      rhs_ghosts.get_plus(),
                                                                                                       structured::
                                                                                                       IntVec(0,
                                                                                                              0,
@@ -287,8 +302,12 @@
                 return field_.device_index();
              }
 
-             inline GPUWalkType gpu_init(structured::GhostData const & ghosts) {
-                return GPUWalkType(resize_ghost(field_, ghosts));
+             inline GPUWalkType gpu_init(structured::IntVec const & minus,
+                                         structured::IntVec const & plus) {
+                return GPUWalkType((field_.reset_valid_ghosts(structured::
+                                                              GhostData(minus,
+                                                                        plus)),
+                                    field_));
              }
 
 #            ifdef NEBO_GPU_TEST

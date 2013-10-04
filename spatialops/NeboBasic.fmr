@@ -71,30 +71,28 @@
                             (mfc 'bc 'has_extra)))))
  (r-fcn-def (fcn-dcl 'calculate_valid_lhs_ghost
                      GhostData
-                     ghost-arg
+                     ghost-pmtr
                      (adcr BCInfo 'bc))
             null
-            (n- 'ghosts
+            (n- ghost-arg
                 (fc 'point_to_ghost (mfc 'bc 'has_extra))))
 
  (tpl-def (tpl-pmtr FT-chunk)
           (r-fcn-def (fcn-dcl 'resize_ghost
                               FT-chunk
                               (adcr FT-chunk 'field)
-                              ghost-arg)
+                              resize-pmtr)
                      (list (nt=c IntVec 'oldMinus (mfc (mfc 'field 'get_valid_ghost_data) 'get_minus))
                            (nt=c IntVec 'oldPlus (mfc (mfc 'field 'get_valid_ghost_data) 'get_plus))
-                           (nt=c IntVec 'newMinus (mfc 'ghosts 'get_minus))
-                           (nt=c IntVec 'newPlus (mfc 'ghosts 'get_plus))
-                           (nt=c IntVec 'offsetChange (n- 'oldMinus 'newMinus))
-                           (nt=c IntVec 'extentChange (n+ 'newMinus (n- 'newPlus (n- 'oldMinus 'oldPlus)))))
+                           (nt=c IntVec 'offsetChange (n- 'oldMinus 'minus))
+                           (nt=c IntVec 'extentChange (n+ 'minus (n- 'plus (n- 'oldMinus 'oldPlus)))))
                      (mfc 'field 'reshape 'extentChange 'offsetChange)))
 
  (tpl-def (tpl-pmtr FT-chunk)
           (r-fcn-def (fcn-dcl 'shift_window
                               FT-chunk
                               (adcr FT-chunk 'field)
-                              shift-arg)
+                              shift-pmtr)
                      null
                      (mfc 'field
                           'reshape
@@ -105,11 +103,11 @@
           (r-fcn-def (fcn-dcl 'resize_ghost_and_shift_window
                               FT-chunk
                               (adcr FT-chunk 'field)
-                              ghost-arg
-                              shift-arg)
+                              resize-pmtr
+                              shift-pmtr)
                      null
                      (fc 'shift_window
-                         (fc 'resize_ghost 'field 'ghosts)
+                         (fc 'resize_ghost 'field 'minus 'plus)
                          'shift)))
 
  (tpl-srt-dcl 'NeboFieldCheck

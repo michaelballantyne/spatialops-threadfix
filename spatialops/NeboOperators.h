@@ -72,15 +72,18 @@
              return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
           }
 
-          inline SeqWalkType init(structured::GhostData const & ghosts,
+          inline SeqWalkType init(structured::IntVec const & minus,
+                                  structured::IntVec const & plus,
                                   structured::IntVec const & shift) const {
-             return SeqWalkType(operand1_.init(ghosts, shift),
-                                operand2_.init(ghosts, shift));
+             return SeqWalkType(operand1_.init(minus, plus, shift),
+                                operand2_.init(minus, plus, shift));
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::GhostData const & ghosts) const {
-                return ResizeType(operand1_.resize(ghosts), operand2_.resize(ghosts));
+             inline ResizeType resize(structured::IntVec const & minus,
+                                      structured::IntVec const & plus) const {
+                return ResizeType(operand1_.resize(minus, plus),
+                                  operand2_.resize(minus, plus));
              }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
@@ -94,11 +97,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(structured::GhostData const & ghosts,
+             inline GPUWalkType gpu_init(structured::IntVec const & minus,
+                                         structured::IntVec const & plus,
                                          structured::IntVec const & shift,
                                          int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(ghosts, shift, deviceIndex),
-                                   operand2_.gpu_init(ghosts, shift, deviceIndex));
+                return GPUWalkType(operand1_.gpu_init(minus,
+                                                      plus,
+                                                      shift,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(minus,
+                                                      plus,
+                                                      shift,
+                                                      deviceIndex));
              }
 
 #            ifdef NEBO_GPU_TEST
@@ -110,10 +120,11 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const & ghosts,
+          inline ReductionType reduce_init(structured::IntVec const & minus,
+                                           structured::IntVec const & plus,
                                            structured::IntVec const & shift) const {
-             return ReductionType(operand1_.reduce_init(ghosts, shift),
-                                  operand2_.reduce_init(ghosts, shift));
+             return ReductionType(operand1_.reduce_init(minus, plus, shift),
+                                  operand2_.reduce_init(minus, plus, shift));
           }
 
          private:
@@ -475,15 +486,18 @@
              return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
           }
 
-          inline SeqWalkType init(structured::GhostData const & ghosts,
+          inline SeqWalkType init(structured::IntVec const & minus,
+                                  structured::IntVec const & plus,
                                   structured::IntVec const & shift) const {
-             return SeqWalkType(operand1_.init(ghosts, shift),
-                                operand2_.init(ghosts, shift));
+             return SeqWalkType(operand1_.init(minus, plus, shift),
+                                operand2_.init(minus, plus, shift));
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::GhostData const & ghosts) const {
-                return ResizeType(operand1_.resize(ghosts), operand2_.resize(ghosts));
+             inline ResizeType resize(structured::IntVec const & minus,
+                                      structured::IntVec const & plus) const {
+                return ResizeType(operand1_.resize(minus, plus),
+                                  operand2_.resize(minus, plus));
              }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
@@ -497,11 +511,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(structured::GhostData const & ghosts,
+             inline GPUWalkType gpu_init(structured::IntVec const & minus,
+                                         structured::IntVec const & plus,
                                          structured::IntVec const & shift,
                                          int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(ghosts, shift, deviceIndex),
-                                   operand2_.gpu_init(ghosts, shift, deviceIndex));
+                return GPUWalkType(operand1_.gpu_init(minus,
+                                                      plus,
+                                                      shift,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(minus,
+                                                      plus,
+                                                      shift,
+                                                      deviceIndex));
              }
 
 #            ifdef NEBO_GPU_TEST
@@ -513,10 +534,11 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const & ghosts,
+          inline ReductionType reduce_init(structured::IntVec const & minus,
+                                           structured::IntVec const & plus,
                                            structured::IntVec const & shift) const {
-             return ReductionType(operand1_.reduce_init(ghosts, shift),
-                                  operand2_.reduce_init(ghosts, shift));
+             return ReductionType(operand1_.reduce_init(minus, plus, shift),
+                                  operand2_.reduce_init(minus, plus, shift));
           }
 
          private:
@@ -882,15 +904,18 @@
              return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
           }
 
-          inline SeqWalkType init(structured::GhostData const & ghosts,
+          inline SeqWalkType init(structured::IntVec const & minus,
+                                  structured::IntVec const & plus,
                                   structured::IntVec const & shift) const {
-             return SeqWalkType(operand1_.init(ghosts, shift),
-                                operand2_.init(ghosts, shift));
+             return SeqWalkType(operand1_.init(minus, plus, shift),
+                                operand2_.init(minus, plus, shift));
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::GhostData const & ghosts) const {
-                return ResizeType(operand1_.resize(ghosts), operand2_.resize(ghosts));
+             inline ResizeType resize(structured::IntVec const & minus,
+                                      structured::IntVec const & plus) const {
+                return ResizeType(operand1_.resize(minus, plus),
+                                  operand2_.resize(minus, plus));
              }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
@@ -904,11 +929,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(structured::GhostData const & ghosts,
+             inline GPUWalkType gpu_init(structured::IntVec const & minus,
+                                         structured::IntVec const & plus,
                                          structured::IntVec const & shift,
                                          int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(ghosts, shift, deviceIndex),
-                                   operand2_.gpu_init(ghosts, shift, deviceIndex));
+                return GPUWalkType(operand1_.gpu_init(minus,
+                                                      plus,
+                                                      shift,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(minus,
+                                                      plus,
+                                                      shift,
+                                                      deviceIndex));
              }
 
 #            ifdef NEBO_GPU_TEST
@@ -920,10 +952,11 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const & ghosts,
+          inline ReductionType reduce_init(structured::IntVec const & minus,
+                                           structured::IntVec const & plus,
                                            structured::IntVec const & shift) const {
-             return ReductionType(operand1_.reduce_init(ghosts, shift),
-                                  operand2_.reduce_init(ghosts, shift));
+             return ReductionType(operand1_.reduce_init(minus, plus, shift),
+                                  operand2_.reduce_init(minus, plus, shift));
           }
 
          private:
@@ -1289,15 +1322,18 @@
              return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
           }
 
-          inline SeqWalkType init(structured::GhostData const & ghosts,
+          inline SeqWalkType init(structured::IntVec const & minus,
+                                  structured::IntVec const & plus,
                                   structured::IntVec const & shift) const {
-             return SeqWalkType(operand1_.init(ghosts, shift),
-                                operand2_.init(ghosts, shift));
+             return SeqWalkType(operand1_.init(minus, plus, shift),
+                                operand2_.init(minus, plus, shift));
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::GhostData const & ghosts) const {
-                return ResizeType(operand1_.resize(ghosts), operand2_.resize(ghosts));
+             inline ResizeType resize(structured::IntVec const & minus,
+                                      structured::IntVec const & plus) const {
+                return ResizeType(operand1_.resize(minus, plus),
+                                  operand2_.resize(minus, plus));
              }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
@@ -1311,11 +1347,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(structured::GhostData const & ghosts,
+             inline GPUWalkType gpu_init(structured::IntVec const & minus,
+                                         structured::IntVec const & plus,
                                          structured::IntVec const & shift,
                                          int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(ghosts, shift, deviceIndex),
-                                   operand2_.gpu_init(ghosts, shift, deviceIndex));
+                return GPUWalkType(operand1_.gpu_init(minus,
+                                                      plus,
+                                                      shift,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(minus,
+                                                      plus,
+                                                      shift,
+                                                      deviceIndex));
              }
 
 #            ifdef NEBO_GPU_TEST
@@ -1327,10 +1370,11 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const & ghosts,
+          inline ReductionType reduce_init(structured::IntVec const & minus,
+                                           structured::IntVec const & plus,
                                            structured::IntVec const & shift) const {
-             return ReductionType(operand1_.reduce_init(ghosts, shift),
-                                  operand2_.reduce_init(ghosts, shift));
+             return ReductionType(operand1_.reduce_init(minus, plus, shift),
+                                  operand2_.reduce_init(minus, plus, shift));
           }
 
          private:
@@ -1681,14 +1725,16 @@
              return operand_.possible_ghosts();
           }
 
-          inline SeqWalkType init(structured::GhostData const & ghosts,
+          inline SeqWalkType init(structured::IntVec const & minus,
+                                  structured::IntVec const & plus,
                                   structured::IntVec const & shift) const {
-             return SeqWalkType(operand_.init(ghosts, shift));
+             return SeqWalkType(operand_.init(minus, plus, shift));
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::GhostData const & ghosts) const {
-                return ResizeType(operand_.resize(ghosts));
+             inline ResizeType resize(structured::IntVec const & minus,
+                                      structured::IntVec const & plus) const {
+                return ResizeType(operand_.resize(minus, plus));
              }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
@@ -1700,10 +1746,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(structured::GhostData const & ghosts,
+             inline GPUWalkType gpu_init(structured::IntVec const & minus,
+                                         structured::IntVec const & plus,
                                          structured::IntVec const & shift,
                                          int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(ghosts, shift, deviceIndex));
+                return GPUWalkType(operand_.gpu_init(minus,
+                                                     plus,
+                                                     shift,
+                                                     deviceIndex));
              }
 
 #            ifdef NEBO_GPU_TEST
@@ -1715,9 +1765,10 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const & ghosts,
+          inline ReductionType reduce_init(structured::IntVec const & minus,
+                                           structured::IntVec const & plus,
                                            structured::IntVec const & shift) const {
-             return ReductionType(operand_.reduce_init(ghosts, shift));
+             return ReductionType(operand_.reduce_init(minus, plus, shift));
           }
 
          private:
@@ -1893,14 +1944,16 @@
              return operand_.possible_ghosts();
           }
 
-          inline SeqWalkType init(structured::GhostData const & ghosts,
+          inline SeqWalkType init(structured::IntVec const & minus,
+                                  structured::IntVec const & plus,
                                   structured::IntVec const & shift) const {
-             return SeqWalkType(operand_.init(ghosts, shift));
+             return SeqWalkType(operand_.init(minus, plus, shift));
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::GhostData const & ghosts) const {
-                return ResizeType(operand_.resize(ghosts));
+             inline ResizeType resize(structured::IntVec const & minus,
+                                      structured::IntVec const & plus) const {
+                return ResizeType(operand_.resize(minus, plus));
              }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
@@ -1912,10 +1965,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(structured::GhostData const & ghosts,
+             inline GPUWalkType gpu_init(structured::IntVec const & minus,
+                                         structured::IntVec const & plus,
                                          structured::IntVec const & shift,
                                          int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(ghosts, shift, deviceIndex));
+                return GPUWalkType(operand_.gpu_init(minus,
+                                                     plus,
+                                                     shift,
+                                                     deviceIndex));
              }
 
 #            ifdef NEBO_GPU_TEST
@@ -1927,9 +1984,10 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const & ghosts,
+          inline ReductionType reduce_init(structured::IntVec const & minus,
+                                           structured::IntVec const & plus,
                                            structured::IntVec const & shift) const {
-             return ReductionType(operand_.reduce_init(ghosts, shift));
+             return ReductionType(operand_.reduce_init(minus, plus, shift));
           }
 
          private:
@@ -2105,14 +2163,16 @@
              return operand_.possible_ghosts();
           }
 
-          inline SeqWalkType init(structured::GhostData const & ghosts,
+          inline SeqWalkType init(structured::IntVec const & minus,
+                                  structured::IntVec const & plus,
                                   structured::IntVec const & shift) const {
-             return SeqWalkType(operand_.init(ghosts, shift));
+             return SeqWalkType(operand_.init(minus, plus, shift));
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::GhostData const & ghosts) const {
-                return ResizeType(operand_.resize(ghosts));
+             inline ResizeType resize(structured::IntVec const & minus,
+                                      structured::IntVec const & plus) const {
+                return ResizeType(operand_.resize(minus, plus));
              }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
@@ -2124,10 +2184,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(structured::GhostData const & ghosts,
+             inline GPUWalkType gpu_init(structured::IntVec const & minus,
+                                         structured::IntVec const & plus,
                                          structured::IntVec const & shift,
                                          int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(ghosts, shift, deviceIndex));
+                return GPUWalkType(operand_.gpu_init(minus,
+                                                     plus,
+                                                     shift,
+                                                     deviceIndex));
              }
 
 #            ifdef NEBO_GPU_TEST
@@ -2139,9 +2203,10 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const & ghosts,
+          inline ReductionType reduce_init(structured::IntVec const & minus,
+                                           structured::IntVec const & plus,
                                            structured::IntVec const & shift) const {
-             return ReductionType(operand_.reduce_init(ghosts, shift));
+             return ReductionType(operand_.reduce_init(minus, plus, shift));
           }
 
          private:
@@ -2317,14 +2382,16 @@
              return operand_.possible_ghosts();
           }
 
-          inline SeqWalkType init(structured::GhostData const & ghosts,
+          inline SeqWalkType init(structured::IntVec const & minus,
+                                  structured::IntVec const & plus,
                                   structured::IntVec const & shift) const {
-             return SeqWalkType(operand_.init(ghosts, shift));
+             return SeqWalkType(operand_.init(minus, plus, shift));
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::GhostData const & ghosts) const {
-                return ResizeType(operand_.resize(ghosts));
+             inline ResizeType resize(structured::IntVec const & minus,
+                                      structured::IntVec const & plus) const {
+                return ResizeType(operand_.resize(minus, plus));
              }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
@@ -2336,10 +2403,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(structured::GhostData const & ghosts,
+             inline GPUWalkType gpu_init(structured::IntVec const & minus,
+                                         structured::IntVec const & plus,
                                          structured::IntVec const & shift,
                                          int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(ghosts, shift, deviceIndex));
+                return GPUWalkType(operand_.gpu_init(minus,
+                                                     plus,
+                                                     shift,
+                                                     deviceIndex));
              }
 
 #            ifdef NEBO_GPU_TEST
@@ -2351,9 +2422,10 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const & ghosts,
+          inline ReductionType reduce_init(structured::IntVec const & minus,
+                                           structured::IntVec const & plus,
                                            structured::IntVec const & shift) const {
-             return ReductionType(operand_.reduce_init(ghosts, shift));
+             return ReductionType(operand_.reduce_init(minus, plus, shift));
           }
 
          private:
@@ -2529,14 +2601,16 @@
              return operand_.possible_ghosts();
           }
 
-          inline SeqWalkType init(structured::GhostData const & ghosts,
+          inline SeqWalkType init(structured::IntVec const & minus,
+                                  structured::IntVec const & plus,
                                   structured::IntVec const & shift) const {
-             return SeqWalkType(operand_.init(ghosts, shift));
+             return SeqWalkType(operand_.init(minus, plus, shift));
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::GhostData const & ghosts) const {
-                return ResizeType(operand_.resize(ghosts));
+             inline ResizeType resize(structured::IntVec const & minus,
+                                      structured::IntVec const & plus) const {
+                return ResizeType(operand_.resize(minus, plus));
              }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
@@ -2548,10 +2622,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(structured::GhostData const & ghosts,
+             inline GPUWalkType gpu_init(structured::IntVec const & minus,
+                                         structured::IntVec const & plus,
                                          structured::IntVec const & shift,
                                          int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(ghosts, shift, deviceIndex));
+                return GPUWalkType(operand_.gpu_init(minus,
+                                                     plus,
+                                                     shift,
+                                                     deviceIndex));
              }
 
 #            ifdef NEBO_GPU_TEST
@@ -2563,9 +2641,10 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const & ghosts,
+          inline ReductionType reduce_init(structured::IntVec const & minus,
+                                           structured::IntVec const & plus,
                                            structured::IntVec const & shift) const {
-             return ReductionType(operand_.reduce_init(ghosts, shift));
+             return ReductionType(operand_.reduce_init(minus, plus, shift));
           }
 
          private:
@@ -2738,14 +2817,16 @@
              return operand_.possible_ghosts();
           }
 
-          inline SeqWalkType init(structured::GhostData const & ghosts,
+          inline SeqWalkType init(structured::IntVec const & minus,
+                                  structured::IntVec const & plus,
                                   structured::IntVec const & shift) const {
-             return SeqWalkType(operand_.init(ghosts, shift));
+             return SeqWalkType(operand_.init(minus, plus, shift));
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::GhostData const & ghosts) const {
-                return ResizeType(operand_.resize(ghosts));
+             inline ResizeType resize(structured::IntVec const & minus,
+                                      structured::IntVec const & plus) const {
+                return ResizeType(operand_.resize(minus, plus));
              }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
@@ -2757,10 +2838,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(structured::GhostData const & ghosts,
+             inline GPUWalkType gpu_init(structured::IntVec const & minus,
+                                         structured::IntVec const & plus,
                                          structured::IntVec const & shift,
                                          int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(ghosts, shift, deviceIndex));
+                return GPUWalkType(operand_.gpu_init(minus,
+                                                     plus,
+                                                     shift,
+                                                     deviceIndex));
              }
 
 #            ifdef NEBO_GPU_TEST
@@ -2772,9 +2857,10 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const & ghosts,
+          inline ReductionType reduce_init(structured::IntVec const & minus,
+                                           structured::IntVec const & plus,
                                            structured::IntVec const & shift) const {
-             return ReductionType(operand_.reduce_init(ghosts, shift));
+             return ReductionType(operand_.reduce_init(minus, plus, shift));
           }
 
          private:
@@ -2950,14 +3036,16 @@
              return operand_.possible_ghosts();
           }
 
-          inline SeqWalkType init(structured::GhostData const & ghosts,
+          inline SeqWalkType init(structured::IntVec const & minus,
+                                  structured::IntVec const & plus,
                                   structured::IntVec const & shift) const {
-             return SeqWalkType(operand_.init(ghosts, shift));
+             return SeqWalkType(operand_.init(minus, plus, shift));
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::GhostData const & ghosts) const {
-                return ResizeType(operand_.resize(ghosts));
+             inline ResizeType resize(structured::IntVec const & minus,
+                                      structured::IntVec const & plus) const {
+                return ResizeType(operand_.resize(minus, plus));
              }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
@@ -2969,10 +3057,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(structured::GhostData const & ghosts,
+             inline GPUWalkType gpu_init(structured::IntVec const & minus,
+                                         structured::IntVec const & plus,
                                          structured::IntVec const & shift,
                                          int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(ghosts, shift, deviceIndex));
+                return GPUWalkType(operand_.gpu_init(minus,
+                                                     plus,
+                                                     shift,
+                                                     deviceIndex));
              }
 
 #            ifdef NEBO_GPU_TEST
@@ -2984,9 +3076,10 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const & ghosts,
+          inline ReductionType reduce_init(structured::IntVec const & minus,
+                                           structured::IntVec const & plus,
                                            structured::IntVec const & shift) const {
-             return ReductionType(operand_.reduce_init(ghosts, shift));
+             return ReductionType(operand_.reduce_init(minus, plus, shift));
           }
 
          private:
@@ -3166,15 +3259,18 @@
              return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
           }
 
-          inline SeqWalkType init(structured::GhostData const & ghosts,
+          inline SeqWalkType init(structured::IntVec const & minus,
+                                  structured::IntVec const & plus,
                                   structured::IntVec const & shift) const {
-             return SeqWalkType(operand1_.init(ghosts, shift),
-                                operand2_.init(ghosts, shift));
+             return SeqWalkType(operand1_.init(minus, plus, shift),
+                                operand2_.init(minus, plus, shift));
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::GhostData const & ghosts) const {
-                return ResizeType(operand1_.resize(ghosts), operand2_.resize(ghosts));
+             inline ResizeType resize(structured::IntVec const & minus,
+                                      structured::IntVec const & plus) const {
+                return ResizeType(operand1_.resize(minus, plus),
+                                  operand2_.resize(minus, plus));
              }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
@@ -3188,11 +3284,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(structured::GhostData const & ghosts,
+             inline GPUWalkType gpu_init(structured::IntVec const & minus,
+                                         structured::IntVec const & plus,
                                          structured::IntVec const & shift,
                                          int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(ghosts, shift, deviceIndex),
-                                   operand2_.gpu_init(ghosts, shift, deviceIndex));
+                return GPUWalkType(operand1_.gpu_init(minus,
+                                                      plus,
+                                                      shift,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(minus,
+                                                      plus,
+                                                      shift,
+                                                      deviceIndex));
              }
 
 #            ifdef NEBO_GPU_TEST
@@ -3204,10 +3307,11 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const & ghosts,
+          inline ReductionType reduce_init(structured::IntVec const & minus,
+                                           structured::IntVec const & plus,
                                            structured::IntVec const & shift) const {
-             return ReductionType(operand1_.reduce_init(ghosts, shift),
-                                  operand2_.reduce_init(ghosts, shift));
+             return ReductionType(operand1_.reduce_init(minus, plus, shift),
+                                  operand2_.reduce_init(minus, plus, shift));
           }
 
          private:
@@ -3556,14 +3660,16 @@
              return operand_.possible_ghosts();
           }
 
-          inline SeqWalkType init(structured::GhostData const & ghosts,
+          inline SeqWalkType init(structured::IntVec const & minus,
+                                  structured::IntVec const & plus,
                                   structured::IntVec const & shift) const {
-             return SeqWalkType(operand_.init(ghosts, shift));
+             return SeqWalkType(operand_.init(minus, plus, shift));
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::GhostData const & ghosts) const {
-                return ResizeType(operand_.resize(ghosts));
+             inline ResizeType resize(structured::IntVec const & minus,
+                                      structured::IntVec const & plus) const {
+                return ResizeType(operand_.resize(minus, plus));
              }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
@@ -3575,10 +3681,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(structured::GhostData const & ghosts,
+             inline GPUWalkType gpu_init(structured::IntVec const & minus,
+                                         structured::IntVec const & plus,
                                          structured::IntVec const & shift,
                                          int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(ghosts, shift, deviceIndex));
+                return GPUWalkType(operand_.gpu_init(minus,
+                                                     plus,
+                                                     shift,
+                                                     deviceIndex));
              }
 
 #            ifdef NEBO_GPU_TEST
@@ -3590,9 +3700,10 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const & ghosts,
+          inline ReductionType reduce_init(structured::IntVec const & minus,
+                                           structured::IntVec const & plus,
                                            structured::IntVec const & shift) const {
-             return ReductionType(operand_.reduce_init(ghosts, shift));
+             return ReductionType(operand_.reduce_init(minus, plus, shift));
           }
 
          private:
@@ -3765,14 +3876,16 @@
              return operand_.possible_ghosts();
           }
 
-          inline SeqWalkType init(structured::GhostData const & ghosts,
+          inline SeqWalkType init(structured::IntVec const & minus,
+                                  structured::IntVec const & plus,
                                   structured::IntVec const & shift) const {
-             return SeqWalkType(operand_.init(ghosts, shift));
+             return SeqWalkType(operand_.init(minus, plus, shift));
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::GhostData const & ghosts) const {
-                return ResizeType(operand_.resize(ghosts));
+             inline ResizeType resize(structured::IntVec const & minus,
+                                      structured::IntVec const & plus) const {
+                return ResizeType(operand_.resize(minus, plus));
              }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
@@ -3784,10 +3897,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(structured::GhostData const & ghosts,
+             inline GPUWalkType gpu_init(structured::IntVec const & minus,
+                                         structured::IntVec const & plus,
                                          structured::IntVec const & shift,
                                          int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(ghosts, shift, deviceIndex));
+                return GPUWalkType(operand_.gpu_init(minus,
+                                                     plus,
+                                                     shift,
+                                                     deviceIndex));
              }
 
 #            ifdef NEBO_GPU_TEST
@@ -3799,9 +3916,10 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const & ghosts,
+          inline ReductionType reduce_init(structured::IntVec const & minus,
+                                           structured::IntVec const & plus,
                                            structured::IntVec const & shift) const {
-             return ReductionType(operand_.reduce_init(ghosts, shift));
+             return ReductionType(operand_.reduce_init(minus, plus, shift));
           }
 
          private:
@@ -3977,14 +4095,16 @@
              return operand_.possible_ghosts();
           }
 
-          inline SeqWalkType init(structured::GhostData const & ghosts,
+          inline SeqWalkType init(structured::IntVec const & minus,
+                                  structured::IntVec const & plus,
                                   structured::IntVec const & shift) const {
-             return SeqWalkType(operand_.init(ghosts, shift));
+             return SeqWalkType(operand_.init(minus, plus, shift));
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::GhostData const & ghosts) const {
-                return ResizeType(operand_.resize(ghosts));
+             inline ResizeType resize(structured::IntVec const & minus,
+                                      structured::IntVec const & plus) const {
+                return ResizeType(operand_.resize(minus, plus));
              }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
@@ -3996,10 +4116,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(structured::GhostData const & ghosts,
+             inline GPUWalkType gpu_init(structured::IntVec const & minus,
+                                         structured::IntVec const & plus,
                                          structured::IntVec const & shift,
                                          int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(ghosts, shift, deviceIndex));
+                return GPUWalkType(operand_.gpu_init(minus,
+                                                     plus,
+                                                     shift,
+                                                     deviceIndex));
              }
 
 #            ifdef NEBO_GPU_TEST
@@ -4011,9 +4135,10 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const & ghosts,
+          inline ReductionType reduce_init(structured::IntVec const & minus,
+                                           structured::IntVec const & plus,
                                            structured::IntVec const & shift) const {
-             return ReductionType(operand_.reduce_init(ghosts, shift));
+             return ReductionType(operand_.reduce_init(minus, plus, shift));
           }
 
          private:
@@ -4197,15 +4322,18 @@
              return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
           }
 
-          inline SeqWalkType init(structured::GhostData const & ghosts,
+          inline SeqWalkType init(structured::IntVec const & minus,
+                                  structured::IntVec const & plus,
                                   structured::IntVec const & shift) const {
-             return SeqWalkType(operand1_.init(ghosts, shift),
-                                operand2_.init(ghosts, shift));
+             return SeqWalkType(operand1_.init(minus, plus, shift),
+                                operand2_.init(minus, plus, shift));
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::GhostData const & ghosts) const {
-                return ResizeType(operand1_.resize(ghosts), operand2_.resize(ghosts));
+             inline ResizeType resize(structured::IntVec const & minus,
+                                      structured::IntVec const & plus) const {
+                return ResizeType(operand1_.resize(minus, plus),
+                                  operand2_.resize(minus, plus));
              }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
@@ -4219,11 +4347,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(structured::GhostData const & ghosts,
+             inline GPUWalkType gpu_init(structured::IntVec const & minus,
+                                         structured::IntVec const & plus,
                                          structured::IntVec const & shift,
                                          int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(ghosts, shift, deviceIndex),
-                                   operand2_.gpu_init(ghosts, shift, deviceIndex));
+                return GPUWalkType(operand1_.gpu_init(minus,
+                                                      plus,
+                                                      shift,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(minus,
+                                                      plus,
+                                                      shift,
+                                                      deviceIndex));
              }
 
 #            ifdef NEBO_GPU_TEST
@@ -4235,10 +4370,11 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const & ghosts,
+          inline ReductionType reduce_init(structured::IntVec const & minus,
+                                           structured::IntVec const & plus,
                                            structured::IntVec const & shift) const {
-             return ReductionType(operand1_.reduce_init(ghosts, shift),
-                                  operand2_.reduce_init(ghosts, shift));
+             return ReductionType(operand1_.reduce_init(minus, plus, shift),
+                                  operand2_.reduce_init(minus, plus, shift));
           }
 
          private:
@@ -4623,15 +4759,18 @@
              return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
           }
 
-          inline SeqWalkType init(structured::GhostData const & ghosts,
+          inline SeqWalkType init(structured::IntVec const & minus,
+                                  structured::IntVec const & plus,
                                   structured::IntVec const & shift) const {
-             return SeqWalkType(operand1_.init(ghosts, shift),
-                                operand2_.init(ghosts, shift));
+             return SeqWalkType(operand1_.init(minus, plus, shift),
+                                operand2_.init(minus, plus, shift));
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::GhostData const & ghosts) const {
-                return ResizeType(operand1_.resize(ghosts), operand2_.resize(ghosts));
+             inline ResizeType resize(structured::IntVec const & minus,
+                                      structured::IntVec const & plus) const {
+                return ResizeType(operand1_.resize(minus, plus),
+                                  operand2_.resize(minus, plus));
              }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
@@ -4645,11 +4784,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(structured::GhostData const & ghosts,
+             inline GPUWalkType gpu_init(structured::IntVec const & minus,
+                                         structured::IntVec const & plus,
                                          structured::IntVec const & shift,
                                          int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(ghosts, shift, deviceIndex),
-                                   operand2_.gpu_init(ghosts, shift, deviceIndex));
+                return GPUWalkType(operand1_.gpu_init(minus,
+                                                      plus,
+                                                      shift,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(minus,
+                                                      plus,
+                                                      shift,
+                                                      deviceIndex));
              }
 
 #            ifdef NEBO_GPU_TEST
@@ -4661,10 +4807,11 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const & ghosts,
+          inline ReductionType reduce_init(structured::IntVec const & minus,
+                                           structured::IntVec const & plus,
                                            structured::IntVec const & shift) const {
-             return ReductionType(operand1_.reduce_init(ghosts, shift),
-                                  operand2_.reduce_init(ghosts, shift));
+             return ReductionType(operand1_.reduce_init(minus, plus, shift),
+                                  operand2_.reduce_init(minus, plus, shift));
           }
 
          private:
@@ -5053,15 +5200,18 @@
              return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
           }
 
-          inline SeqWalkType init(structured::GhostData const & ghosts,
+          inline SeqWalkType init(structured::IntVec const & minus,
+                                  structured::IntVec const & plus,
                                   structured::IntVec const & shift) const {
-             return SeqWalkType(operand1_.init(ghosts, shift),
-                                operand2_.init(ghosts, shift));
+             return SeqWalkType(operand1_.init(minus, plus, shift),
+                                operand2_.init(minus, plus, shift));
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::GhostData const & ghosts) const {
-                return ResizeType(operand1_.resize(ghosts), operand2_.resize(ghosts));
+             inline ResizeType resize(structured::IntVec const & minus,
+                                      structured::IntVec const & plus) const {
+                return ResizeType(operand1_.resize(minus, plus),
+                                  operand2_.resize(minus, plus));
              }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
@@ -5075,11 +5225,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(structured::GhostData const & ghosts,
+             inline GPUWalkType gpu_init(structured::IntVec const & minus,
+                                         structured::IntVec const & plus,
                                          structured::IntVec const & shift,
                                          int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(ghosts, shift, deviceIndex),
-                                   operand2_.gpu_init(ghosts, shift, deviceIndex));
+                return GPUWalkType(operand1_.gpu_init(minus,
+                                                      plus,
+                                                      shift,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(minus,
+                                                      plus,
+                                                      shift,
+                                                      deviceIndex));
              }
 
 #            ifdef NEBO_GPU_TEST
@@ -5091,10 +5248,11 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const & ghosts,
+          inline ReductionType reduce_init(structured::IntVec const & minus,
+                                           structured::IntVec const & plus,
                                            structured::IntVec const & shift) const {
-             return ReductionType(operand1_.reduce_init(ghosts, shift),
-                                  operand2_.reduce_init(ghosts, shift));
+             return ReductionType(operand1_.reduce_init(minus, plus, shift),
+                                  operand2_.reduce_init(minus, plus, shift));
           }
 
          private:
@@ -5477,15 +5635,18 @@
              return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
           }
 
-          inline SeqWalkType init(structured::GhostData const & ghosts,
+          inline SeqWalkType init(structured::IntVec const & minus,
+                                  structured::IntVec const & plus,
                                   structured::IntVec const & shift) const {
-             return SeqWalkType(operand1_.init(ghosts, shift),
-                                operand2_.init(ghosts, shift));
+             return SeqWalkType(operand1_.init(minus, plus, shift),
+                                operand2_.init(minus, plus, shift));
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::GhostData const & ghosts) const {
-                return ResizeType(operand1_.resize(ghosts), operand2_.resize(ghosts));
+             inline ResizeType resize(structured::IntVec const & minus,
+                                      structured::IntVec const & plus) const {
+                return ResizeType(operand1_.resize(minus, plus),
+                                  operand2_.resize(minus, plus));
              }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
@@ -5499,11 +5660,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(structured::GhostData const & ghosts,
+             inline GPUWalkType gpu_init(structured::IntVec const & minus,
+                                         structured::IntVec const & plus,
                                          structured::IntVec const & shift,
                                          int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(ghosts, shift, deviceIndex),
-                                   operand2_.gpu_init(ghosts, shift, deviceIndex));
+                return GPUWalkType(operand1_.gpu_init(minus,
+                                                      plus,
+                                                      shift,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(minus,
+                                                      plus,
+                                                      shift,
+                                                      deviceIndex));
              }
 
 #            ifdef NEBO_GPU_TEST
@@ -5515,10 +5683,11 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const & ghosts,
+          inline ReductionType reduce_init(structured::IntVec const & minus,
+                                           structured::IntVec const & plus,
                                            structured::IntVec const & shift) const {
-             return ReductionType(operand1_.reduce_init(ghosts, shift),
-                                  operand2_.reduce_init(ghosts, shift));
+             return ReductionType(operand1_.reduce_init(minus, plus, shift),
+                                  operand2_.reduce_init(minus, plus, shift));
           }
 
          private:
@@ -5914,15 +6083,18 @@
              return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
           }
 
-          inline SeqWalkType init(structured::GhostData const & ghosts,
+          inline SeqWalkType init(structured::IntVec const & minus,
+                                  structured::IntVec const & plus,
                                   structured::IntVec const & shift) const {
-             return SeqWalkType(operand1_.init(ghosts, shift),
-                                operand2_.init(ghosts, shift));
+             return SeqWalkType(operand1_.init(minus, plus, shift),
+                                operand2_.init(minus, plus, shift));
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::GhostData const & ghosts) const {
-                return ResizeType(operand1_.resize(ghosts), operand2_.resize(ghosts));
+             inline ResizeType resize(structured::IntVec const & minus,
+                                      structured::IntVec const & plus) const {
+                return ResizeType(operand1_.resize(minus, plus),
+                                  operand2_.resize(minus, plus));
              }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
@@ -5936,11 +6108,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(structured::GhostData const & ghosts,
+             inline GPUWalkType gpu_init(structured::IntVec const & minus,
+                                         structured::IntVec const & plus,
                                          structured::IntVec const & shift,
                                          int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(ghosts, shift, deviceIndex),
-                                   operand2_.gpu_init(ghosts, shift, deviceIndex));
+                return GPUWalkType(operand1_.gpu_init(minus,
+                                                      plus,
+                                                      shift,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(minus,
+                                                      plus,
+                                                      shift,
+                                                      deviceIndex));
              }
 
 #            ifdef NEBO_GPU_TEST
@@ -5952,10 +6131,11 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const & ghosts,
+          inline ReductionType reduce_init(structured::IntVec const & minus,
+                                           structured::IntVec const & plus,
                                            structured::IntVec const & shift) const {
-             return ReductionType(operand1_.reduce_init(ghosts, shift),
-                                  operand2_.reduce_init(ghosts, shift));
+             return ReductionType(operand1_.reduce_init(minus, plus, shift),
+                                  operand2_.reduce_init(minus, plus, shift));
           }
 
          private:
@@ -6340,15 +6520,18 @@
              return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
           }
 
-          inline SeqWalkType init(structured::GhostData const & ghosts,
+          inline SeqWalkType init(structured::IntVec const & minus,
+                                  structured::IntVec const & plus,
                                   structured::IntVec const & shift) const {
-             return SeqWalkType(operand1_.init(ghosts, shift),
-                                operand2_.init(ghosts, shift));
+             return SeqWalkType(operand1_.init(minus, plus, shift),
+                                operand2_.init(minus, plus, shift));
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::GhostData const & ghosts) const {
-                return ResizeType(operand1_.resize(ghosts), operand2_.resize(ghosts));
+             inline ResizeType resize(structured::IntVec const & minus,
+                                      structured::IntVec const & plus) const {
+                return ResizeType(operand1_.resize(minus, plus),
+                                  operand2_.resize(minus, plus));
              }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
@@ -6362,11 +6545,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(structured::GhostData const & ghosts,
+             inline GPUWalkType gpu_init(structured::IntVec const & minus,
+                                         structured::IntVec const & plus,
                                          structured::IntVec const & shift,
                                          int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(ghosts, shift, deviceIndex),
-                                   operand2_.gpu_init(ghosts, shift, deviceIndex));
+                return GPUWalkType(operand1_.gpu_init(minus,
+                                                      plus,
+                                                      shift,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(minus,
+                                                      plus,
+                                                      shift,
+                                                      deviceIndex));
              }
 
 #            ifdef NEBO_GPU_TEST
@@ -6378,10 +6568,11 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const & ghosts,
+          inline ReductionType reduce_init(structured::IntVec const & minus,
+                                           structured::IntVec const & plus,
                                            structured::IntVec const & shift) const {
-             return ReductionType(operand1_.reduce_init(ghosts, shift),
-                                  operand2_.reduce_init(ghosts, shift));
+             return ReductionType(operand1_.reduce_init(minus, plus, shift),
+                                  operand2_.reduce_init(minus, plus, shift));
           }
 
          private:
@@ -6779,15 +6970,18 @@
              return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
           }
 
-          inline SeqWalkType init(structured::GhostData const & ghosts,
+          inline SeqWalkType init(structured::IntVec const & minus,
+                                  structured::IntVec const & plus,
                                   structured::IntVec const & shift) const {
-             return SeqWalkType(operand1_.init(ghosts, shift),
-                                operand2_.init(ghosts, shift));
+             return SeqWalkType(operand1_.init(minus, plus, shift),
+                                operand2_.init(minus, plus, shift));
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::GhostData const & ghosts) const {
-                return ResizeType(operand1_.resize(ghosts), operand2_.resize(ghosts));
+             inline ResizeType resize(structured::IntVec const & minus,
+                                      structured::IntVec const & plus) const {
+                return ResizeType(operand1_.resize(minus, plus),
+                                  operand2_.resize(minus, plus));
              }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
@@ -6801,11 +6995,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(structured::GhostData const & ghosts,
+             inline GPUWalkType gpu_init(structured::IntVec const & minus,
+                                         structured::IntVec const & plus,
                                          structured::IntVec const & shift,
                                          int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(ghosts, shift, deviceIndex),
-                                   operand2_.gpu_init(ghosts, shift, deviceIndex));
+                return GPUWalkType(operand1_.gpu_init(minus,
+                                                      plus,
+                                                      shift,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(minus,
+                                                      plus,
+                                                      shift,
+                                                      deviceIndex));
              }
 
 #            ifdef NEBO_GPU_TEST
@@ -6817,10 +7018,11 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const & ghosts,
+          inline ReductionType reduce_init(structured::IntVec const & minus,
+                                           structured::IntVec const & plus,
                                            structured::IntVec const & shift) const {
-             return ReductionType(operand1_.reduce_init(ghosts, shift),
-                                  operand2_.reduce_init(ghosts, shift));
+             return ReductionType(operand1_.reduce_init(minus, plus, shift),
+                                  operand2_.reduce_init(minus, plus, shift));
           }
 
          private:
@@ -7061,15 +7263,18 @@
              return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
           }
 
-          inline SeqWalkType init(structured::GhostData const & ghosts,
+          inline SeqWalkType init(structured::IntVec const & minus,
+                                  structured::IntVec const & plus,
                                   structured::IntVec const & shift) const {
-             return SeqWalkType(operand1_.init(ghosts, shift),
-                                operand2_.init(ghosts, shift));
+             return SeqWalkType(operand1_.init(minus, plus, shift),
+                                operand2_.init(minus, plus, shift));
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::GhostData const & ghosts) const {
-                return ResizeType(operand1_.resize(ghosts), operand2_.resize(ghosts));
+             inline ResizeType resize(structured::IntVec const & minus,
+                                      structured::IntVec const & plus) const {
+                return ResizeType(operand1_.resize(minus, plus),
+                                  operand2_.resize(minus, plus));
              }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
@@ -7083,11 +7288,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(structured::GhostData const & ghosts,
+             inline GPUWalkType gpu_init(structured::IntVec const & minus,
+                                         structured::IntVec const & plus,
                                          structured::IntVec const & shift,
                                          int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(ghosts, shift, deviceIndex),
-                                   operand2_.gpu_init(ghosts, shift, deviceIndex));
+                return GPUWalkType(operand1_.gpu_init(minus,
+                                                      plus,
+                                                      shift,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(minus,
+                                                      plus,
+                                                      shift,
+                                                      deviceIndex));
              }
 
 #            ifdef NEBO_GPU_TEST
@@ -7099,10 +7311,11 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const & ghosts,
+          inline ReductionType reduce_init(structured::IntVec const & minus,
+                                           structured::IntVec const & plus,
                                            structured::IntVec const & shift) const {
-             return ReductionType(operand1_.reduce_init(ghosts, shift),
-                                  operand2_.reduce_init(ghosts, shift));
+             return ReductionType(operand1_.reduce_init(minus, plus, shift),
+                                  operand2_.reduce_init(minus, plus, shift));
           }
 
          private:
@@ -7328,14 +7541,16 @@
              return operand_.possible_ghosts();
           }
 
-          inline SeqWalkType init(structured::GhostData const & ghosts,
+          inline SeqWalkType init(structured::IntVec const & minus,
+                                  structured::IntVec const & plus,
                                   structured::IntVec const & shift) const {
-             return SeqWalkType(operand_.init(ghosts, shift));
+             return SeqWalkType(operand_.init(minus, plus, shift));
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::GhostData const & ghosts) const {
-                return ResizeType(operand_.resize(ghosts));
+             inline ResizeType resize(structured::IntVec const & minus,
+                                      structured::IntVec const & plus) const {
+                return ResizeType(operand_.resize(minus, plus));
              }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
@@ -7347,10 +7562,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(structured::GhostData const & ghosts,
+             inline GPUWalkType gpu_init(structured::IntVec const & minus,
+                                         structured::IntVec const & plus,
                                          structured::IntVec const & shift,
                                          int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(ghosts, shift, deviceIndex));
+                return GPUWalkType(operand_.gpu_init(minus,
+                                                     plus,
+                                                     shift,
+                                                     deviceIndex));
              }
 
 #            ifdef NEBO_GPU_TEST
@@ -7362,9 +7581,10 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const & ghosts,
+          inline ReductionType reduce_init(structured::IntVec const & minus,
+                                           structured::IntVec const & plus,
                                            structured::IntVec const & shift) const {
-             return ReductionType(operand_.reduce_init(ghosts, shift));
+             return ReductionType(operand_.reduce_init(minus, plus, shift));
           }
 
          private:
@@ -7527,15 +7747,18 @@
              return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
           }
 
-          inline SeqWalkType init(structured::GhostData const & ghosts,
+          inline SeqWalkType init(structured::IntVec const & minus,
+                                  structured::IntVec const & plus,
                                   structured::IntVec const & shift) const {
-             return SeqWalkType(operand1_.init(ghosts, shift),
-                                operand2_.init(ghosts, shift));
+             return SeqWalkType(operand1_.init(minus, plus, shift),
+                                operand2_.init(minus, plus, shift));
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::GhostData const & ghosts) const {
-                return ResizeType(operand1_.resize(ghosts), operand2_.resize(ghosts));
+             inline ResizeType resize(structured::IntVec const & minus,
+                                      structured::IntVec const & plus) const {
+                return ResizeType(operand1_.resize(minus, plus),
+                                  operand2_.resize(minus, plus));
              }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
@@ -7549,11 +7772,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(structured::GhostData const & ghosts,
+             inline GPUWalkType gpu_init(structured::IntVec const & minus,
+                                         structured::IntVec const & plus,
                                          structured::IntVec const & shift,
                                          int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(ghosts, shift, deviceIndex),
-                                   operand2_.gpu_init(ghosts, shift, deviceIndex));
+                return GPUWalkType(operand1_.gpu_init(minus,
+                                                      plus,
+                                                      shift,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(minus,
+                                                      plus,
+                                                      shift,
+                                                      deviceIndex));
              }
 
 #            ifdef NEBO_GPU_TEST
@@ -7565,10 +7795,11 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const & ghosts,
+          inline ReductionType reduce_init(structured::IntVec const & minus,
+                                           structured::IntVec const & plus,
                                            structured::IntVec const & shift) const {
-             return ReductionType(operand1_.reduce_init(ghosts, shift),
-                                  operand2_.reduce_init(ghosts, shift));
+             return ReductionType(operand1_.reduce_init(minus, plus, shift),
+                                  operand2_.reduce_init(minus, plus, shift));
           }
 
          private:
@@ -7931,15 +8162,18 @@
              return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
           }
 
-          inline SeqWalkType init(structured::GhostData const & ghosts,
+          inline SeqWalkType init(structured::IntVec const & minus,
+                                  structured::IntVec const & plus,
                                   structured::IntVec const & shift) const {
-             return SeqWalkType(operand1_.init(ghosts, shift),
-                                operand2_.init(ghosts, shift));
+             return SeqWalkType(operand1_.init(minus, plus, shift),
+                                operand2_.init(minus, plus, shift));
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::GhostData const & ghosts) const {
-                return ResizeType(operand1_.resize(ghosts), operand2_.resize(ghosts));
+             inline ResizeType resize(structured::IntVec const & minus,
+                                      structured::IntVec const & plus) const {
+                return ResizeType(operand1_.resize(minus, plus),
+                                  operand2_.resize(minus, plus));
              }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
@@ -7953,11 +8187,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(structured::GhostData const & ghosts,
+             inline GPUWalkType gpu_init(structured::IntVec const & minus,
+                                         structured::IntVec const & plus,
                                          structured::IntVec const & shift,
                                          int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(ghosts, shift, deviceIndex),
-                                   operand2_.gpu_init(ghosts, shift, deviceIndex));
+                return GPUWalkType(operand1_.gpu_init(minus,
+                                                      plus,
+                                                      shift,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(minus,
+                                                      plus,
+                                                      shift,
+                                                      deviceIndex));
              }
 
 #            ifdef NEBO_GPU_TEST
@@ -7969,10 +8210,11 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const & ghosts,
+          inline ReductionType reduce_init(structured::IntVec const & minus,
+                                           structured::IntVec const & plus,
                                            structured::IntVec const & shift) const {
-             return ReductionType(operand1_.reduce_init(ghosts, shift),
-                                  operand2_.reduce_init(ghosts, shift));
+             return ReductionType(operand1_.reduce_init(minus, plus, shift),
+                                  operand2_.reduce_init(minus, plus, shift));
           }
 
          private:

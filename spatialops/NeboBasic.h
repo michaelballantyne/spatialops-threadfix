@@ -116,19 +116,16 @@
 
       template<typename FieldType>
        inline FieldType resize_ghost(FieldType const & field,
-                                     structured::GhostData const & ghosts) {
+                                     structured::IntVec const & minus,
+                                     structured::IntVec const & plus) {
           const structured::IntVec oldMinus = field.get_valid_ghost_data().get_minus();
 
           const structured::IntVec oldPlus = field.get_valid_ghost_data().get_plus();
 
-          const structured::IntVec newMinus = ghosts.get_minus();
+          const structured::IntVec offsetChange = oldMinus - minus;
 
-          const structured::IntVec newPlus = ghosts.get_plus();
-
-          const structured::IntVec offsetChange = oldMinus - newMinus;
-
-          const structured::IntVec extentChange = newMinus + newPlus - oldMinus
-          - oldPlus;
+          const structured::IntVec extentChange = minus + plus - oldMinus -
+          oldPlus;
 
           return field.reshape(extentChange, offsetChange);
        };
@@ -141,11 +138,13 @@
 
       template<typename FieldType>
        inline FieldType resize_ghost_and_shift_window(FieldType const & field,
-                                                      structured::GhostData
-                                                      const & ghosts,
+                                                      structured::IntVec const &
+                                                      minus,
+                                                      structured::IntVec const &
+                                                      plus,
                                                       structured::IntVec const &
                                                       shift) {
-          return shift_window(resize_ghost(field, ghosts), shift);
+          return shift_window(resize_ghost(field, minus, plus), shift);
        };
 
       template<typename Type1, typename Type2>

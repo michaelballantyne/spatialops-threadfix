@@ -134,7 +134,7 @@
                                         null
                                         (s-typedef (tpl-use NSPC 'NewPoint 'MyType)
                                                    'Result))
-                         (r-fcn-def (s-fcn-dcl 'possible_ghosts GhostData ghost-arg)
+                         (r-fcn-def (s-fcn-dcl 'possible_ghosts GhostData ghost-pmtr)
                                     null
                                     (fc 'min (n- 'ghosts (fc 'point_to_ghost (fc (scope 'Point 'int_vec))))
                                         (fc (scope 'Collection 'possible_ghosts)
@@ -158,23 +158,23 @@
                                                    'Result)
                                         (r-fcn-def (s-fcn-dcl 'in_sq_construct
                                                               (tc 'Result)
-                                                              ghost-arg
-                                                              shift-arg
+                                                              resize-pmtr
+                                                              shift-pmtr
                                                               (adcr 'ArgPreSeqWalk 'arg)
                                                               (adcr (tpl-use NSCC 'length) 'coefs))
                                                    null
                                                    (fc 'Result
                                                        (fc (scope 'EarlierPointsType 'in_sq_construct)
-                                                           'ghosts
+                                                           resize-arg
                                                            'shift
                                                            'arg
                                                            (mfc 'coefs 'others))
                                                        (fc 'MultiplyType
-                                                           (mfc 'arg 'init 'ghosts (n+ 'shift (fc (scope 'Point 'int_vec))))
+                                                           (mfc 'arg 'init resize-arg (n+ 'shift (fc (scope 'Point 'int_vec))))
                                                            (fc 'Coef (mfc 'coefs 'coef)))))
                                         (r-fcn-def (s-fcn-dcl 'rs_sq_construct
                                                               (tc 'Result)
-                                                              shift-arg
+                                                              shift-pmtr
                                                               (adcr 'ArgPreSeqWalk 'arg)
                                                               (adcr (tpl-use NSCC 'length) 'coefs)
                                                               (adcr IntVec 'split)
@@ -214,15 +214,15 @@
                                                     'Result)
                                          (r-fcn-def (s-fcn-dcl 'in_gpu_construct
                                                                (tc 'Result)
-                                                               ghost-arg
-                                                               shift-arg
+                                                               resize-pmtr
+                                                               shift-pmtr
                                                                (adc 'int DI-chunk)
                                                                (adcr 'ArgPreGPUWalk 'arg)
                                                                (adcr (tpl-use NSCC 'length) 'coefs))
                                                     null
                                                     (fc 'Result
                                                         (fc (scope 'EarlierPointsType 'in_gpu_construct)
-                                                            'ghosts
+                                                            resize-arg
                                                             'shift
                                                             DI-chunk
                                                             'arg
@@ -230,7 +230,7 @@
                                                         (fc 'MultiplyType
                                                             (mfc 'arg
                                                                  'gpu_init
-                                                                 'ghosts
+                                                                 resize-arg
                                                                  (n+ 'shift (fc (scope 'Point 'int_vec)))
                                                                  DI-chunk)
                                                             (fc 'Coef (mfc 'coefs 'coef)))))))
@@ -253,23 +253,23 @@
                                                    'Result)
                                         (r-fcn-def (s-fcn-dcl 'in_rd_construct
                                                               (tc 'Result)
-                                                              ghost-arg
-                                                              shift-arg
+                                                              resize-pmtr
+                                                              shift-pmtr
                                                               (adcr 'ArgPreReduction 'arg)
                                                               (adcr (tpl-use NSCC 'length) 'coefs))
                                                    null
                                                    (fc 'Result
                                                        (fc (scope 'EarlierPointsType 'in_rd_construct)
-                                                           'ghosts
+                                                           resize-arg
                                                            'shift
                                                            'arg
                                                            (mfc 'coefs 'others))
                                                        (fc 'MultiplyType
-                                                           (mfc 'arg 'reduce_init 'ghosts (n+ 'shift (fc (scope 'Point 'int_vec))))
+                                                           (mfc 'arg 'reduce_init resize-arg (n+ 'shift (fc (scope 'Point 'int_vec))))
                                                            (fc 'Coef (mfc 'coefs 'coef)))))
                                         (r-fcn-def (s-fcn-dcl 'rs_rd_construct
                                                               (tc 'Result)
-                                                              shift-arg
+                                                              shift-pmtr
                                                               (adcr 'ArgPreReduction 'arg)
                                                               (adcr (tpl-use NSCC 'length) 'coefs))
                                                    null
@@ -295,7 +295,7 @@
                                         null
                                         (s-typedef (tpl-use NSPC 'NewPoint 'MyType)
                                                    'Result))
-                         (r-fcn-def (s-fcn-dcl 'possible_ghosts GhostData ghost-arg)
+                         (r-fcn-def (s-fcn-dcl 'possible_ghosts GhostData ghost-pmtr)
                                     null
                                     (n- 'ghosts (fc 'point_to_ghost (fc (scope 'Point 'int_vec)))))
                          (s-tpl-srt-def 'ConstructExpr
@@ -310,17 +310,17 @@
                                                    'Result)
                                         (r-fcn-def (s-fcn-dcl 'in_sq_construct
                                                               (tc 'Result)
-                                                              ghost-arg
-                                                              shift-arg
+                                                              resize-pmtr
+                                                              shift-pmtr
                                                               (adcr 'ArgPreSeqWalk 'arg)
                                                               (adcr (tpl-use NSCC "1") 'coefs))
                                                    null
                                                    (fc 'Result
-                                                       (mfc 'arg 'init 'ghosts (n+ 'shift (fc (scope 'Point 'int_vec))))
+                                                       (mfc 'arg 'init resize-arg (n+ 'shift (fc (scope 'Point 'int_vec))))
                                                        (fc 'Coef (mfc 'coefs 'coef))))
                                         (r-fcn-def (s-fcn-dcl 'rs_sq_construct
                                                               (tc 'Result)
-                                                              shift-arg
+                                                              shift-pmtr
                                                               (adcr 'ArgPreSeqWalk 'arg)
                                                               (adcr (tpl-use NSCC "1") 'coefs)
                                                               (adcr IntVec 'split)
@@ -346,8 +346,8 @@
                                                     'Result)
                                          (r-fcn-def (s-fcn-dcl 'in_gpu_construct
                                                                (tc 'Result)
-                                                               ghost-arg
-                                                               shift-arg
+                                                               resize-pmtr
+                                                               shift-pmtr
                                                                (adc 'int DI-chunk)
                                                                (adcr 'ArgPreGPUWalk 'arg)
                                                                (adcr (tpl-use NSCC "1") 'coefs))
@@ -355,7 +355,7 @@
                                                     (fc 'Result
                                                         (mfc 'arg
                                                              'gpu_init
-                                                             'ghosts
+                                                             resize-arg
                                                              (n+ 'shift (fc (scope 'Point 'int_vec)))
                                                              DI-chunk)
                                                         (fc 'Coef (mfc 'coefs 'coef))))))
@@ -371,17 +371,17 @@
                                                    'Result)
                                         (r-fcn-def (s-fcn-dcl 'in_rd_construct
                                                               (tc 'Result)
-                                                              ghost-arg
-                                                              shift-arg
+                                                              resize-pmtr
+                                                              shift-pmtr
                                                               (adcr 'ArgPreReduction 'arg)
                                                               (adcr (tpl-use NSCC "1") 'coefs))
                                                    null
                                                    (fc 'Result
-                                                       (mfc 'arg 'reduce_init 'ghosts (n+ 'shift (fc (scope 'Point 'int_vec))))
+                                                       (mfc 'arg 'reduce_init resize-arg (n+ 'shift (fc (scope 'Point 'int_vec))))
                                                        (fc 'Coef (mfc 'coefs 'coef))))
                                         (r-fcn-def (s-fcn-dcl 'rs_rd_construct
                                                               (tc 'Result)
-                                                              shift-arg
+                                                              shift-pmtr
                                                               (adcr 'ArgPreReduction 'arg)
                                                               (adcr (tpl-use NSCC "1") 'coefs))
                                                    null
@@ -455,23 +455,23 @@
                                  (fc (scope 'Pts 'possible_ghosts)
                                      (mfc 'arg_ 'possible_ghosts))
                                  (fc (scope 'ConstructExpr 'in_sq_construct)
-                                     'ghosts
+                                     resize-arg
                                      'shift
                                      'arg_
                                      'coefs_)
-                                 (list (mfc 'arg_ 'resize 'ghosts)
+                                 (list (mfc 'arg_ 'resize resize-arg)
                                        'coefs_)
                                  (mfc 'arg_ 'cpu_ready)
                                  (mfc 'arg_ 'gpu_ready DI-chunk)
                                  (fc (scope 'ConstructGPUExpr 'in_gpu_construct)
-                                     'ghosts
+                                     resize-arg
                                      'shift
                                      DI-chunk
                                      'arg_
                                      'coefs_)
                                  (mfc 'arg_ 'gpu_prep DI-chunk)
                                  (fc (scope 'ConstructExpr 'in_reduce_construct)
-                                     'ghosts
+                                     resize-arg
                                      'shift
                                      'arg_
                                      'coefs_)

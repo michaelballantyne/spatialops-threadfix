@@ -150,7 +150,8 @@
                                   'expr
                                   (mfc (mfc 'fexpr 'expr)
                                        'reduce_init
-                                       'ghosts
+                                       (mfc 'ghosts 'get_minus)
+                                       (mfc 'ghosts 'get_plus)
                                        'shift))
                              (nwhile (n-not (mfc 'expr 'at_end))
                                      (n= 'result (fc 'proc 'result (mfc 'expr 'eval)))
@@ -171,7 +172,8 @@
                                            'expr
                                            (mfc (mfc 'fexpr 'expr)
                                                 'reduce_init
-                                                'ghosts
+                                                (mfc 'ghosts 'get_minus)
+                                                (mfc 'ghosts 'get_plus)
                                                 'shift))
                                       (nt= AtomicType 'result (mfc 'expr 'eval))
                                       (mfc 'expr 'next)

@@ -79,7 +79,7 @@
                                                              (assign-call 'sequential_assign))
                                                     (assign-call 'sequential_assign)))
                                 (assign 'sequential_assign sequential-assign-body 'sequential)
-                                (r-fcn-def (fcn-dcl 'init 'SeqWalkType ghost-arg)
+                                (r-fcn-def (fcn-dcl 'init 'SeqWalkType resize-pmtr)
                                            null
                                            (fc 'SeqWalkType SW-cons-args))
                                 (threads-only (bb (assign 'thread_parallel_assign
@@ -92,7 +92,7 @@
                                                                       (n++ 'ii)
                                                                       (mfc 'semaphore 'wait)))
                                                           (bs 'thread 'parallel))
-                                                  (r-fcn-def (fcn-dcl 'resize 'ResizeType ghost-arg)
+                                                  (r-fcn-def (fcn-dcl 'resize 'ResizeType resize-pmtr)
                                                                       null
                                                                       (fc 'ResizeType RS-cons-args))))
                                 (gpu-only (bb (assign 'gpu_assign gpu-assign-body 'CUDA)
@@ -105,7 +105,7 @@
                                               (r-fcn-def (constize (fcn-dcl 'gpu_device_index 'int))
                                                          null
                                                          gpu-device-index-body)
-                                              (r-fcn-def (fcn-dcl 'gpu_init 'GPUWalkType ghost-arg)
+                                              (r-fcn-def (fcn-dcl 'gpu_init 'GPUWalkType resize-pmtr)
                                                          null
                                                          (fc 'GPUWalkType gpu-cons-args))
                                               (gpu-test-only (assign 'gpu_test_assign
@@ -237,22 +237,36 @@
                                    (mfc 'field_ 'get_ghost_data)
                                    null
                                    (list calculate-Ghost
-                                         (mfc (fc 'init 'lhs_ghosts)
+                                         (mfc (fc 'init
+                                                  (mfc 'lhs_ghosts 'get_minus)
+                                                  (mfc 'lhs_ghosts 'get_plus))
                                               'assign
-                                              (mfc 'rhs 'init 'rhs_ghosts ZeroIntVec)))
-                                   (p (mfc 'field_ 'reset_valid_ghosts 'ghosts)
+                                              (mfc 'rhs
+                                                   'init
+                                                   (mfc 'rhs_ghosts 'get_minus)
+                                                   (mfc 'rhs_ghosts 'get_plus)
+                                                   ZeroIntVec)))
+                                   (p (mfc 'field_ 'reset_valid_ghosts (fc GhostData resize-arg))
                                       'field_)
                                    (list calculate-Ghost
                                          (typedef (tpl-pmtr (scope 'RhsType 'ResizeType))
                                                   'RhsResizeType)
                                          (nt=c IntVec 'split (fc 'nebo_find_partition
-                                                                 (mfc (mfc (fc 'resize_ghost 'field_ 'lhs_ghosts)
+                                                                 (mfc (mfc (fc 'resize_ghost
+                                                                               'field_
+                                                                               (mfc 'lhs_ghosts 'get_minus)
+                                                                               (mfc 'lhs_ghosts 'get_plus))
                                                                            'window_with_ghost)
                                                                       'extent)
                                                                  'thread_count))
                                          (nt=c 'int 'max (fc 'nebo_partition_count 'split))
-                                         (nt= 'ResizeType 'new_lhs (fc 'resize 'lhs_ghosts))
-                                         (nt= 'RhsResizeType 'new_rhs (mfc 'rhs 'resize 'rhs_ghosts))
+                                         (nt= 'ResizeType 'new_lhs (fc 'resize
+                                                                       (mfc 'lhs_ghosts 'get_minus)
+                                                                       (mfc 'lhs_ghosts 'get_plus)))
+                                         (nt= 'RhsResizeType 'new_rhs (mfc 'rhs
+                                                                           'resize
+                                                                           (mfc 'rhs_ghosts 'get_minus)
+                                                                           (mfc 'rhs_ghosts 'get_plus)))
                                          (nt= IntVec 'location ZeroIntVec)
                                          (nfor (nt= 'int 'count "0")
                                                (n< 'count 'max)
@@ -267,7 +281,8 @@
                                                         'location
                                                         (take-ptr 'semaphore)))
                                                (n= 'location (fc 'nebo_next_partition 'location 'split))))
-                                   (fc 'resize_ghost 'field_ 'ghosts)
+                                   (p (mfc 'field_ 'reset_valid_ghosts (fc GhostData resize-arg))
+                                      'field_)
                                    (let ([extent-def (lambda (num)
                                                        (nt= 'int
                                                             (l 'extent num)
@@ -295,16 +310,20 @@
                                                            'dimBlock
                                                            "0"
                                                            (mfc 'field_ 'get_stream))
-                                               (fc 'gpu_init 'lhs_ghosts)
+                                               (fc 'gpu_init
+                                                   (fc 'lhs_ghosts 'get_minus)
+                                                   (fc 'lhs_ghosts 'get_plus))
                                                (mfc 'rhs
                                                     'gpu_init
-                                                    'rhs_ghosts
+                                                    (mfc 'rhs_ghosts 'get_minus)
+                                                    (mfc 'rhs_ghosts 'get_plus)
                                                     ZeroIntVec
                                                     (fc 'gpu_device_index)))))
                                    (n== 'LOCAL_RAM (mfc 'field_ 'memory_device_type))
                                    (n== 'EXTERNAL_CUDA_GPU (mfc 'field_ 'memory_device_type))
                                    (mfc 'field_ 'device_index)
-                                   (fc 'resize_ghost 'field_ 'ghosts)
+                                   (p (mfc 'field_ 'reset_valid_ghosts (fc GhostData resize-arg))
+                                      'field_)
                                    (list (mfc 'rhs 'gpu_prep "0")
                                          (nifelse (n== 'LOCAL_RAM (mfc 'field_ 'memory_device_type))
                                                   (list (ad FT-chunk

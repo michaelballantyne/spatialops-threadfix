@@ -185,19 +185,23 @@
              SumOp<SeqWalk, EarlierPointsResult, MultiplyType, DestType> typedef
              Result;
 
-             static inline Result const in_sq_construct(structured::GhostData
-                                                        const & ghosts,
+             static inline Result const in_sq_construct(structured::IntVec const
+                                                        & minus,
+                                                        structured::IntVec const
+                                                        & plus,
                                                         structured::IntVec const
                                                         & shift,
                                                         ArgPreSeqWalk const &
                                                         arg,
                                                         NeboStencilCoefCollection<length>
                                                         const & coefs) {
-                return Result(EarlierPointsType::in_sq_construct(ghosts,
+                return Result(EarlierPointsType::in_sq_construct(minus,
+                                                                 plus,
                                                                  shift,
                                                                  arg,
                                                                  coefs.others()),
-                              MultiplyType(arg.init(ghosts,
+                              MultiplyType(arg.init(minus,
+                                                    plus,
                                                     shift + Point::int_vec()),
                                            Coef(coefs.coef())));
              }
@@ -242,9 +246,10 @@
                 SumOp<GPUWalk, EarlierPointsResult, MultiplyType, DestType>
                 typedef Result;
 
-                static inline Result const in_gpu_construct(structured::
-                                                            GhostData const &
-                                                            ghosts,
+                static inline Result const in_gpu_construct(structured::IntVec
+                                                            const & minus,
+                                                            structured::IntVec
+                                                            const & plus,
                                                             structured::IntVec
                                                             const & shift,
                                                             int const
@@ -253,12 +258,14 @@
                                                             & arg,
                                                             NeboStencilCoefCollection<length>
                                                             const & coefs) {
-                   return Result(EarlierPointsType::in_gpu_construct(ghosts,
+                   return Result(EarlierPointsType::in_gpu_construct(minus,
+                                                                     plus,
                                                                      shift,
                                                                      deviceIndex,
                                                                      arg,
                                                                      coefs.others()),
-                                 MultiplyType(arg.gpu_init(ghosts,
+                                 MultiplyType(arg.gpu_init(minus,
+                                                           plus,
                                                            shift + Point::
                                                            int_vec(),
                                                            deviceIndex),
@@ -285,19 +292,23 @@
              SumOp<Reduction, EarlierPointsResult, MultiplyType, DestType>
              typedef Result;
 
-             static inline Result const in_rd_construct(structured::GhostData
-                                                        const & ghosts,
+             static inline Result const in_rd_construct(structured::IntVec const
+                                                        & minus,
+                                                        structured::IntVec const
+                                                        & plus,
                                                         structured::IntVec const
                                                         & shift,
                                                         ArgPreReduction const &
                                                         arg,
                                                         NeboStencilCoefCollection<length>
                                                         const & coefs) {
-                return Result(EarlierPointsType::in_rd_construct(ghosts,
+                return Result(EarlierPointsType::in_rd_construct(minus,
+                                                                 plus,
                                                                  shift,
                                                                  arg,
                                                                  coefs.others()),
-                              MultiplyType(arg.reduce_init(ghosts,
+                              MultiplyType(arg.reduce_init(minus,
+                                                           plus,
                                                            shift + Point::
                                                            int_vec()),
                                            Coef(coefs.coef())));
@@ -349,15 +360,18 @@
 
              ProdOp<SeqWalk, Arg, Coef, DestType> typedef Result;
 
-             static inline Result const in_sq_construct(structured::GhostData
-                                                        const & ghosts,
+             static inline Result const in_sq_construct(structured::IntVec const
+                                                        & minus,
+                                                        structured::IntVec const
+                                                        & plus,
                                                         structured::IntVec const
                                                         & shift,
                                                         ArgPreSeqWalk const &
                                                         arg,
                                                         NeboStencilCoefCollection<1>
                                                         const & coefs) {
-                return Result(arg.init(ghosts, shift + Point::int_vec()), Coef(coefs.coef()));
+                return Result(arg.init(minus, plus, shift + Point::int_vec()),
+                              Coef(coefs.coef()));
              }
 
              static inline Result const rs_sq_construct(structured::IntVec const
@@ -384,9 +398,10 @@
 
                 ProdOp<GPUWalk, Arg, Coef, DestType> typedef Result;
 
-                static inline Result const in_gpu_construct(structured::
-                                                            GhostData const &
-                                                            ghosts,
+                static inline Result const in_gpu_construct(structured::IntVec
+                                                            const & minus,
+                                                            structured::IntVec
+                                                            const & plus,
                                                             structured::IntVec
                                                             const & shift,
                                                             int const
@@ -395,7 +410,8 @@
                                                             & arg,
                                                             NeboStencilCoefCollection<1>
                                                             const & coefs) {
-                   return Result(arg.gpu_init(ghosts,
+                   return Result(arg.gpu_init(minus,
+                                              plus,
                                               shift + Point::int_vec(),
                                               deviceIndex),
                                  Coef(coefs.coef()));
@@ -412,15 +428,19 @@
 
              ProdOp<Reduction, Arg, Coef, DestType> typedef Result;
 
-             static inline Result const in_rd_construct(structured::GhostData
-                                                        const & ghosts,
+             static inline Result const in_rd_construct(structured::IntVec const
+                                                        & minus,
+                                                        structured::IntVec const
+                                                        & plus,
                                                         structured::IntVec const
                                                         & shift,
                                                         ArgPreReduction const &
                                                         arg,
                                                         NeboStencilCoefCollection<1>
                                                         const & coefs) {
-                return Result(arg.reduce_init(ghosts, shift + Point::int_vec()),
+                return Result(arg.reduce_init(minus,
+                                              plus,
+                                              shift + Point::int_vec()),
                               Coef(coefs.coef()));
              }
 
@@ -518,17 +538,20 @@
              return Pts::possible_ghosts(arg_.possible_ghosts());
           }
 
-          inline SeqWalkType init(structured::GhostData const & ghosts,
+          inline SeqWalkType init(structured::IntVec const & minus,
+                                  structured::IntVec const & plus,
                                   structured::IntVec const & shift) const {
-             return SeqWalkType(ConstructExpr::in_sq_construct(ghosts,
+             return SeqWalkType(ConstructExpr::in_sq_construct(minus,
+                                                               plus,
                                                                shift,
                                                                arg_,
                                                                coefs_));
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::GhostData const & ghosts) const {
-                return ResizeType(arg_.resize(ghosts), coefs_);
+             inline ResizeType resize(structured::IntVec const & minus,
+                                      structured::IntVec const & plus) const {
+                return ResizeType(arg_.resize(minus, plus), coefs_);
              }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
@@ -540,10 +563,12 @@
                 return arg_.gpu_ready(deviceIndex);
              }
 
-             inline GPUWalkType gpu_init(structured::GhostData const & ghosts,
+             inline GPUWalkType gpu_init(structured::IntVec const & minus,
+                                         structured::IntVec const & plus,
                                          structured::IntVec const & shift,
                                          int const deviceIndex) const {
-                return GPUWalkType(ConstructGPUExpr::in_gpu_construct(ghosts,
+                return GPUWalkType(ConstructGPUExpr::in_gpu_construct(minus,
+                                                                      plus,
                                                                       shift,
                                                                       deviceIndex,
                                                                       arg_,
@@ -559,9 +584,11 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::GhostData const & ghosts,
+          inline ReductionType reduce_init(structured::IntVec const & minus,
+                                           structured::IntVec const & plus,
                                            structured::IntVec const & shift) const {
-             return ReductionType(ConstructExpr::in_reduce_construct(ghosts,
+             return ReductionType(ConstructExpr::in_reduce_construct(minus,
+                                                                     plus,
                                                                      shift,
                                                                      arg_,
                                                                      coefs_));

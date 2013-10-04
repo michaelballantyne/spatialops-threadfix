@@ -155,20 +155,23 @@
                                      (fc 'point_to_ghost (mfc (mfc 'field_ 'boundary_info) 'has_extra)))
                                  (fc 'resize_ghost_and_shift_window
                                      'field_
-                                     (n- 'ghosts
-                                         (fc 'point_to_ghost (mfc (mfc 'field_ 'boundary_info) 'has_extra)))
+                                     'minus
+                                     (n- 'plus
+                                         (mfc (mfc 'field_ 'boundary_info) 'has_extra))
                                      'shift)
                                  (fc 'resize_ghost
                                      'field_
-                                     (n- 'ghosts
-                                         (fc 'point_to_ghost (mfc (mfc 'field_ 'boundary_info) 'has_extra))))
+                                     'minus
+                                     (n- 'plus
+                                         (mfc (mfc 'field_ 'boundary_info) 'has_extra)))
                                  (mfc 'field_ 'find_consumer 'LOCAL_RAM "0")
                                  (mfc 'field_ 'find_consumer 'EXTERNAL_CUDA_GPU DI-chunk)
                                  (list DI-chunk
                                        (fc 'resize_ghost_and_shift_window
                                            'field_
-                                           (n- 'ghosts
-                                               (fc 'point_to_ghost (mfc (mfc 'field_ 'boundary_info) 'has_extra)))
+                                           'minus
+                                           (n- 'plus
+                                               (mfc (mfc 'field_ 'boundary_info) 'has_extra))
                                            'shift))
                                  (c (fc (tpl-use 'const_cast (ptr FT-chunk))
                                         (take-ptr 'field_))
@@ -176,8 +179,9 @@
                                     (fc 'add_consumer 'EXTERNAL_CUDA_GPU DI-chunk))
                                  (fc 'resize_ghost_and_shift_window
                                      'field_
-                                     (n- 'ghosts
-                                         (fc 'point_to_ghost (mfc (mfc 'field_ 'boundary_info) 'has_extra)))
+                                     'minus
+                                     (n- 'plus
+                                         (mfc (mfc 'field_ 'boundary_info) 'has_extra))
                                      'shift)
                                  null
                                  (sadc FT-chunk 'field_))

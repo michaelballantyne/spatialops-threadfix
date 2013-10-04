@@ -63,7 +63,8 @@
 
           ResultType result = initialValue;
 
-          typename ExprType::ReductionType expr = fexpr.expr().reduce_init(ghosts,
+          typename ExprType::ReductionType expr = fexpr.expr().reduce_init(ghosts.get_minus(),
+                                                                           ghosts.get_plus(),
                                                                            shift);
 
           while(!(expr.at_end())) {
@@ -104,7 +105,8 @@
 
           ResultType result = initialValue;
 
-          typename ExprType::ReductionType expr = fexpr.expr().reduce_init(ghosts,
+          typename ExprType::ReductionType expr = fexpr.expr().reduce_init(ghosts.get_minus(),
+                                                                           ghosts.get_plus(),
                                                                            shift);
 
           while(!(expr.at_end())) {
@@ -152,7 +154,8 @@
 
           const structured::IntVec shift = structured::IntVec(0, 0, 0);
 
-          typename ExprType::ReductionType expr = fexpr.expr().reduce_init(ghosts,
+          typename ExprType::ReductionType expr = fexpr.expr().reduce_init(ghosts.get_minus(),
+                                                                           ghosts.get_plus(),
                                                                            shift);
 
           typename FieldType::value_type result = expr.eval();
@@ -208,7 +211,8 @@
 
           const structured::IntVec shift = structured::IntVec(0, 0, 0);
 
-          typename ExprType::ReductionType expr = fexpr.expr().reduce_init(ghosts,
+          typename ExprType::ReductionType expr = fexpr.expr().reduce_init(ghosts.get_minus(),
+                                                                           ghosts.get_plus(),
                                                                            shift);
 
           typename FieldType::value_type result = expr.eval();
@@ -264,7 +268,8 @@
 
           const structured::IntVec shift = structured::IntVec(0, 0, 0);
 
-          typename ExprType::ReductionType expr = fexpr.expr().reduce_init(ghosts,
+          typename ExprType::ReductionType expr = fexpr.expr().reduce_init(ghosts.get_minus(),
+                                                                           ghosts.get_plus(),
                                                                            shift);
 
           typename FieldType::value_type result = expr.eval();
@@ -319,7 +324,8 @@
 
           const structured::IntVec shift = structured::IntVec(0, 0, 0);
 
-          typename ExprType::ReductionType expr = fexpr.expr().reduce_init(ghosts,
+          typename ExprType::ReductionType expr = fexpr.expr().reduce_init(ghosts.get_minus(),
+                                                                           ghosts.get_plus(),
                                                                            shift);
 
           typename FieldType::value_type result = expr.eval();
