@@ -40,12 +40,12 @@ namespace SpatialOps{ namespace structured{
 
   inline void check_valid( const IntVec& minus, const IntVec& plus )
   {
-#   ifndef NDEBUG
-    for( int i=0; i<3; ++i ){
-      assert( minus[i] >= 0 );
-      assert(  plus[i] >= 0 );
-    }
-#   endif
+//#   ifndef NDEBUG
+//    for( int i=0; i<3; ++i ){
+//      assert( minus[i] >= 0 );
+//      assert(  plus[i] >= 0 );
+//    }
+//#   endif
   }
 
   //-----------------------------------------------------------------
@@ -155,11 +155,10 @@ namespace SpatialOps{ namespace structured{
   {
     if(rhs.isInf_) {
       throw(std::runtime_error("Cannot use infinite ghost data on the right-hand side of subtraction."));
-    } else if(!isInf_) {
-      minus_ -= rhs.minus_;
-      plus_  -= rhs.plus_;
-      check_valid(minus_,plus_);
     }
+    minus_ -= rhs.minus_;
+    plus_  -= rhs.plus_;
+    check_valid(minus_,plus_);
     return *this;
   }
 
