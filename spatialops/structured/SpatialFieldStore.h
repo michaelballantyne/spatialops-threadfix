@@ -595,8 +595,10 @@ get_from_window( const structured::MemoryWindow& window,
 #ifdef ENABLE_CUDA
   case EXTERNAL_CUDA_GPU: {
     AtomicT* fnew = structured::Pool<AtomicT>::self().get(mtype, npts);
-    return SpatFldPtr<FieldT>( new FieldT(window, ghost, fnew, structured::ExternalStorage, mtype,
-            deviceIndex ), true );
+    return SpatFldPtr<FieldT>( new FieldT(window, bc, ghost, fnew,
+                                          structured::ExternalStorage,
+                                          mtype, deviceIndex ),
+                               true );
   }
 #endif
   default: {

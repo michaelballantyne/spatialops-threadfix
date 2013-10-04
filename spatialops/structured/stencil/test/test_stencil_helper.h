@@ -236,7 +236,7 @@ double apply_stencil( const SpatialOps::structured::IntVec& npts,
   #ifdef ENABLE_CUDA
   const MemoryType mtype = EXTERNAL_CUDA_GPU;
   const StorageMode mode = InternalStorage;
-  DestT gpuDest( dmw, NULL, mode, mtype );
+  DestT gpuDest( dmw, dbc, dg, NULL, mode, mtype );
   #endif
 
   #ifdef ENABLE_CUDA

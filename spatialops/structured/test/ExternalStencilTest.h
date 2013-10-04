@@ -32,7 +32,11 @@
 namespace SpatialOps {
   namespace Point {
 
-    struct PointFieldTraits { typedef NODIR FaceDir; typedef NODIR StagLoc; };
+    struct PointFieldTraits {
+      typedef NODIR FaceDir;
+      typedef structured::IndexTriplet< 0, 0, 0> Offset;
+      typedef structured::IndexTriplet<0,0,0>  BCExtra;
+    };
 
     /**
      *  \brief The PointField type is intended for use in extracting and
