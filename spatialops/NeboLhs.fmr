@@ -311,8 +311,8 @@
                                                            "0"
                                                            (mfc 'field_ 'get_stream))
                                                (fc 'gpu_init
-                                                   (fc 'lhs_ghosts 'get_minus)
-                                                   (fc 'lhs_ghosts 'get_plus))
+                                                   (mfc 'lhs_ghosts 'get_minus)
+                                                   (mfc 'lhs_ghosts 'get_plus))
                                                (mfc 'rhs
                                                     'gpu_init
                                                     (mfc 'rhs_ghosts 'get_minus)

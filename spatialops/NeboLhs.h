@@ -274,8 +274,8 @@
                  gpu_assign_kernel<GPUWalkType, RhsGPUWalkType><<<dimGrid,
                                                                   dimBlock,
                                                                   0,
-                                                                  field_.get_stream()>>>(gpu_init(lhs_ghosts(get_minus),
-                                                                                                  lhs_ghosts(get_plus)),
+                                                                  field_.get_stream()>>>(gpu_init(lhs_ghosts.get_minus(),
+                                                                                                  lhs_ghosts.get_plus()),
                                                                                          rhs.gpu_init(rhs_ghosts.get_minus(),
                                                                                                       rhs_ghosts.get_plus(),
                                                                                                       structured::
