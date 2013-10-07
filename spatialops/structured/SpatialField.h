@@ -127,7 +127,6 @@ namespace structured{
     //      which is not as general is it likely should be, but GPUs are currently the only external
     //      device we're interested in supporting.
     ConsumerMap consumerFieldValues_;	///< Provides the ability to store and track copies of this field consumed on other devices.
-    bool hasConsumer_;                  ///< Indicates whether a field has consumers or not
     bool builtCpuConsumer_;
     ConsumerMap myConsumerFieldValues_;	///< Provides the ability to correctly delete/release copies of this field that this field allocated
 
@@ -276,7 +275,7 @@ namespace structured{
     }
 
     inline iterator begin() {
-      if (memType_ != LOCAL_RAM && !hasConsumer_) {
+      if (memType_ != LOCAL_RAM && !readOnly_) {
         std::ostringstream msg;
         msg << "Field type ( "
             << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
@@ -324,7 +323,7 @@ namespace structured{
         throw( std::runtime_error(msg.str()) );
       }
 
-      if (memType_ != LOCAL_RAM && !hasConsumer_) {
+      if (memType_ != LOCAL_RAM && !readOnly_) {
         std::ostringstream msg;
         msg << "Field type ( "
             << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
@@ -532,7 +531,6 @@ SpatialField( const MemoryWindow& window,
       deviceIndex_( devIdx ),
       readOnly_( false ),
       disableInterior_( false ),
-      hasConsumer_( false ),
       builtCpuConsumer_( false ),
       allocatedBytes_( 0 )
 #     ifdef ENABLE_CUDA
@@ -623,7 +621,6 @@ SpatialField<Location,T>::SpatialField( const SpatialField& other )
   readOnly_( other.readOnly_ ),
   disableInterior_( other.disableInterior_ ),
   consumerFieldValues_(other.consumerFieldValues_),
-  hasConsumer_( other.hasConsumer_ ),
   builtCpuConsumer_( false ),
   allocatedBytes_( other.allocatedBytes_ )
 # ifdef ENABLE_CUDA
@@ -649,7 +646,6 @@ SpatialField( const MemoryWindow& window, const SpatialField& other )
   readOnly_( other.readOnly_ ),
   disableInterior_( other.disableInterior_ ),
   consumerFieldValues_(other.consumerFieldValues_),
-  hasConsumer_( other.hasConsumer_ ),
   builtCpuConsumer_( false ),
   allocatedBytes_( other.allocatedBytes_ )
 # ifdef ENABLE_CUDA
