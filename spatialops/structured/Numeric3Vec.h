@@ -136,6 +136,10 @@ class Numeric3Vec
      return *this;
    }
 
+   inline T sum() const{
+     return ijk[0]+ijk[1]+ijk[2];
+   }
+
  };
 
 template<typename T>
