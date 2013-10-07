@@ -323,6 +323,8 @@
 
                     if(LOCAL_RAM == field_.memory_device_type()) {
                        FieldType gpu_field(field_.window_with_ghost(),
+                                           field_.boundary_info(),
+                                           field_.get_valid_ghost_data(),
                                            NULL,
                                            structured::InternalStorage,
                                            EXTERNAL_CUDA_GPU,

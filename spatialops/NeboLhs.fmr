@@ -329,6 +329,8 @@
                                                   (list (ad FT-chunk
                                                             (fc 'gpu_field
                                                                 (mfc 'field_ 'window_with_ghost)
+                                                                (mfc 'field_ 'boundary_info)
+                                                                (mfc 'field_ 'get_valid_ghost_data)
                                                                 'NULL
                                                                 (scope 'structured 'InternalStorage)
                                                                 'EXTERNAL_CUDA_GPU
