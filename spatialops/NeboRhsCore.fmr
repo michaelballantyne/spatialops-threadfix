@@ -52,9 +52,9 @@
                                    null
                                    (fc 'ReductionType RD-cons-args))
                         publics))
-                (list 7 8 1)
+                (list 8 8 1)
                 "build-Initial-rhs"))
-(define bs-Initial-rhs (arg-swap build-Initial-rhs 13 3 "bs-Initial-rhs"))
+(define bs-Initial-rhs (arg-swap build-Initial-rhs 13 4 "bs-Initial-rhs"))
 (define build-Resize-rhs
   (combine-args build-Resize-general
                 (lambda (SW-cons-args
@@ -67,9 +67,9 @@
                                    null
                                    (fc 'SeqWalkType SW-cons-args))
                         publics))
-                (list 6 2 1)
+                (list 7 2 1)
                 "build-Resize-rhs"))
-(define bs-Resize-rhs (arg-swap build-Resize-rhs 6 3 "bs-Resize-rhs"))
+(define bs-Resize-rhs (arg-swap build-Resize-rhs 6 4 "bs-Resize-rhs"))
 (define build-SeqWalk-rhs
   (combine-args build-SeqWalk-general
                 (lambda (next-body
@@ -81,13 +81,14 @@
                                    null
                                    eval-result)
                         publics))
-                (list 5 4 1)
+                (list 6 4 1)
                 "build-SeqWalk-rhs"))
-(define bs-SeqWalk-rhs (arg-swap build-SeqWalk-rhs 7 3 "bs-SeqWalk-rhs"))
+(define bs-SeqWalk-rhs (arg-swap build-SeqWalk-rhs 7 4 "bs-SeqWalk-rhs"))
 (define build-gpu-rhs
   (combine-args build-gpu-general
                 (lambda (start-body
                          next-body
+                         eval-type
                          eval-result
                          publics)
                   (list (device-use (v-fcn-def 'start
@@ -97,14 +98,15 @@
                         (device-use (v-fcn-def 'next
                                                null
                                                next-body))
-                        (device-use (r-fcn-def (constize (fcn-dcl 'eval 'AtomicType))
+                        (device-use (r-fcn-def (constize (fcn-dcl 'eval eval-type))
                                                null
                                                eval-result))
                         publics))
-                (list 5 4 1)
+                (list 6 5 1)
                 "build-gpu-rhs"))
-(define bs-gpu-rhs (arg-swap build-gpu-rhs 7 3 "bs-gpu-rhs"))
+(define bs-gpu-rhs (arg-swap build-gpu-rhs 8 4 "bs-gpu-rhs"))
 (define (build-Reduction name
+                         FT
                          tpl-irreg-pars
                          tpl-reg-pars
                          typedefs
@@ -118,8 +120,10 @@
                          privates)
   (build-mode name
               'Reduction
+              FT
               (list tpl-irreg-pars tpl-reg-pars)
-              typedefs
+              (list (FT-def-vt FT)
+                    typedefs)
               constructor
               (list (v-fcn-def 'next null next)
                     (r-fcn-def (constize (fcn-dcl 'at_end 'bool))
@@ -133,4 +137,4 @@
                                eval-result)
                     publics)
               privates))
-(define bs-Reduction (arg-swap build-Reduction 9 3 "bs-Reduction"))
+(define bs-Reduction (arg-swap build-Reduction 9 4 "bs-Reduction"))

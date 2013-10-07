@@ -54,8 +54,6 @@
          public:
           FieldType typedef field_type;
 
-          typename field_type::memory_window typedef MemoryWindow;
-
           NeboClause<SeqWalk,
                      typename Test::SeqWalkType,
                      typename Expr::SeqWalkType,
@@ -158,8 +156,6 @@
             public:
              FieldType typedef field_type;
 
-             typename field_type::memory_window typedef MemoryWindow;
-
              NeboClause<SeqWalk,
                         typename Test::SeqWalkType,
                         typename Expr::SeqWalkType,
@@ -188,9 +184,7 @@
          public:
           FieldType typedef field_type;
 
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef AtomicType;
+          typename field_type::value_type typedef value_type;
 
           NeboClause(Test const & test, Expr const & expr)
           : test_(test), expr_(expr)
@@ -198,7 +192,7 @@
 
           inline void next(void) { test_.next(); expr_.next(); }
 
-          inline AtomicType eval(void) const { return expr_.eval(); }
+          inline value_type eval(void) const { return expr_.eval(); }
 
           inline bool check(void) const { return test_.eval(); }
 
@@ -213,9 +207,7 @@
             public:
              FieldType typedef field_type;
 
-             typename field_type::memory_window typedef MemoryWindow;
-
-             typename field_type::value_type typedef AtomicType;
+             typename field_type::value_type typedef value_type;
 
              NeboClause(Test const & test, Expr const & expr)
              : test_(test), expr_(expr)
@@ -227,7 +219,7 @@
 
              __device__ inline void next(void) { test_.next(); expr_.next(); }
 
-             __device__ inline AtomicType eval(void) const {
+             __device__ inline value_type eval(void) const {
                 return expr_.eval();
              }
 
@@ -245,9 +237,7 @@
          public:
           FieldType typedef field_type;
 
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef AtomicType;
+          typename field_type::value_type typedef value_type;
 
           NeboClause(Test const & test, Expr const & expr)
           : test_(test), expr_(expr)
@@ -263,7 +253,7 @@
              return (test_.has_length() || expr_.has_length());
           }
 
-          inline AtomicType eval(void) const { return expr_.eval(); }
+          inline value_type eval(void) const { return expr_.eval(); }
 
           inline bool check(void) const { return test_.eval(); }
 
@@ -282,8 +272,6 @@
        struct NeboCond<Initial, ClauseType, Otherwise, FieldType> {
          public:
           FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
 
           NeboCond<SeqWalk,
                    typename ClauseType::SeqWalkType,
@@ -391,8 +379,6 @@
             public:
              FieldType typedef field_type;
 
-             typename field_type::memory_window typedef MemoryWindow;
-
              NeboCond<SeqWalk,
                       typename ClauseType::SeqWalkType,
                       typename Otherwise::SeqWalkType,
@@ -421,9 +407,7 @@
          public:
           FieldType typedef field_type;
 
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef AtomicType;
+          typename field_type::value_type typedef value_type;
 
           NeboCond(ClauseType const & clause, Otherwise const & otherwise)
           : clause_(clause), otherwise_(otherwise)
@@ -431,7 +415,7 @@
 
           inline void next(void) { clause_.next(); otherwise_.next(); }
 
-          inline AtomicType eval(void) const {
+          inline value_type eval(void) const {
              return (clause_.check() ? clause_.eval() : otherwise_.eval());
           }
 
@@ -446,9 +430,7 @@
             public:
              FieldType typedef field_type;
 
-             typename field_type::memory_window typedef MemoryWindow;
-
-             typename field_type::value_type typedef AtomicType;
+             typename field_type::value_type typedef value_type;
 
              NeboCond(ClauseType const & clause, Otherwise const & otherwise)
              : clause_(clause), otherwise_(otherwise)
@@ -462,7 +444,7 @@
                 clause_.next(); otherwise_.next();
              }
 
-             __device__ inline AtomicType eval(void) const {
+             __device__ inline value_type eval(void) const {
                 return (clause_.check() ? clause_.eval() : otherwise_.eval());
              }
 
@@ -478,9 +460,7 @@
          public:
           FieldType typedef field_type;
 
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef AtomicType;
+          typename field_type::value_type typedef value_type;
 
           NeboCond(ClauseType const & clause, Otherwise const & otherwise)
           : clause_(clause), otherwise_(otherwise)
@@ -496,7 +476,7 @@
              return (clause_.has_length() || otherwise_.has_length());
           }
 
-          inline AtomicType eval(void) const {
+          inline value_type eval(void) const {
              return (clause_.check() ? clause_.eval() : otherwise_.eval());
           }
 
@@ -518,9 +498,9 @@
 
           template<typename FieldType>
            struct Convert {
-             NeboBoolean<Initial, FieldType> typedef Boolean;
+             NeboScalar<Initial, bool> typedef Boolean;
 
-             NeboScalar<Initial, FieldType> typedef Scalar;
+             NeboScalar<Initial, typename FieldType::value_type> typedef Scalar;
 
              NeboClause<Initial, Boolean, Scalar, FieldType> typedef Converted;
 
@@ -713,10 +693,12 @@
            }
 
           inline NeboExpression<typename ReverseClauses<NeboScalar<Initial,
-                                                                   FieldType> >::
+                                                                   typename
+                                                                   FieldType::
+                                                                   value_type> >::
                                 Result,
                                 FieldType> operator ()(double const d) {
-             NeboScalar<Initial, FieldType> typedef Scalar;
+             NeboScalar<Initial, typename FieldType::value_type> typedef Scalar;
 
              typename ReverseClauses<Scalar>::Result typedef ReversedClauses;
 
@@ -752,15 +734,17 @@
 
           inline CondBuilder<NeboCond<Initial,
                                       NeboClause<Initial,
-                                                 NeboBoolean<Initial, FieldType>,
-                                                 NeboScalar<Initial, FieldType>,
+                                                 NeboScalar<Initial, bool>,
+                                                 NeboScalar<Initial,
+                                                            typename FieldType::
+                                                            value_type>,
                                                  FieldType>,
                                       Clauses,
                                       FieldType> > operator ()(bool const b,
                                                                double const d) {
-             NeboBoolean<Initial, FieldType> typedef Boolean;
+             NeboScalar<Initial, bool> typedef Boolean;
 
-             NeboScalar<Initial, FieldType> typedef Scalar;
+             NeboScalar<Initial, typename FieldType::value_type> typedef Scalar;
 
              NeboClause<Initial, Boolean, Scalar, FieldType> typedef Clause;
 
@@ -773,7 +757,7 @@
 
           inline CondBuilder<NeboCond<Initial,
                                       NeboClause<Initial,
-                                                 NeboBoolean<Initial, FieldType>,
+                                                 NeboScalar<Initial, bool>,
                                                  NeboConstField<Initial,
                                                                 FieldType>,
                                                  FieldType>,
@@ -781,7 +765,7 @@
                                       FieldType> > operator ()(bool const b,
                                                                FieldType const &
                                                                f) {
-             NeboBoolean<Initial, FieldType> typedef Boolean;
+             NeboScalar<Initial, bool> typedef Boolean;
 
              NeboConstField<Initial, FieldType> typedef Field;
 
@@ -797,7 +781,7 @@
           template<typename Expr>
            inline CondBuilder<NeboCond<Initial,
                                        NeboClause<Initial,
-                                                  NeboBoolean<Initial, FieldType>,
+                                                  NeboScalar<Initial, bool>,
                                                   Expr,
                                                   FieldType>,
                                        Clauses,
@@ -805,7 +789,7 @@
                                                                 NeboExpression<Expr,
                                                                                FieldType>
                                                                 const & e) {
-              NeboBoolean<Initial, FieldType> typedef Boolean;
+              NeboScalar<Initial, bool> typedef Boolean;
 
               NeboClause<Initial, Boolean, Expr, FieldType> typedef Clause;
 
@@ -820,14 +804,16 @@
            inline CondBuilder<NeboCond<Initial,
                                        NeboClause<Initial,
                                                   BoolExpr,
-                                                  NeboScalar<Initial, FieldType>,
+                                                  NeboScalar<Initial,
+                                                             typename FieldType::
+                                                             value_type>,
                                                   FieldType>,
                                        Clauses,
                                        FieldType> > operator ()(NeboBooleanExpression<BoolExpr,
                                                                                       FieldType>
                                                                 const & nb,
                                                                 double const d) {
-              NeboScalar<Initial, FieldType> typedef Scalar;
+              NeboScalar<Initial, typename FieldType::value_type> typedef Scalar;
 
               NeboClause<Initial, BoolExpr, Scalar, FieldType> typedef Clause;
 
@@ -1028,13 +1014,7 @@
           template<typename FieldType>
            inline CondBuilder<NeboCond<Initial,
                                        NeboClause<Initial,
-                                                  NeboBoolean<Initial,
-                                                              typename
-                                                              NeboFieldCheck<typename
-                                                                             FieldType::
-                                                                             field_type,
-                                                                             FieldType>::
-                                                              Result>,
+                                                  NeboScalar<Initial, bool>,
                                                   NeboConstField<Initial,
                                                                  typename
                                                                  NeboFieldCheck<typename
@@ -1060,7 +1040,7 @@
                                                                FieldType>::
                                        Result> > operator ()(bool const b,
                                                              FieldType const & f) {
-              NeboBoolean<Initial, FieldType> typedef Boolean;
+              NeboScalar<Initial, bool> typedef Boolean;
 
               NeboConstField<Initial, FieldType> typedef Field;
 
@@ -1081,13 +1061,7 @@
           template<typename Expr, typename FieldType>
            inline CondBuilder<NeboCond<Initial,
                                        NeboClause<Initial,
-                                                  NeboBoolean<Initial,
-                                                              typename
-                                                              NeboFieldCheck<typename
-                                                                             FieldType::
-                                                                             field_type,
-                                                                             FieldType>::
-                                                              Result>,
+                                                  NeboScalar<Initial, bool>,
                                                   Expr,
                                                   typename NeboFieldCheck<typename
                                                                           FieldType::
@@ -1109,7 +1083,7 @@
                                                              NeboExpression<Expr,
                                                                             FieldType>
                                                              const & e) {
-              NeboBoolean<Initial, FieldType> typedef Boolean;
+              NeboScalar<Initial, bool> typedef Boolean;
 
               NeboClause<Initial, Boolean, Expr, FieldType> typedef Clause;
 
@@ -1130,12 +1104,8 @@
                                        NeboClause<Initial,
                                                   BoolExpr,
                                                   NeboScalar<Initial,
-                                                             typename
-                                                             NeboFieldCheck<typename
-                                                                            FieldType::
-                                                                            field_type,
-                                                                            FieldType>::
-                                                             Result>,
+                                                             typename FieldType::
+                                                             value_type>,
                                                   typename NeboFieldCheck<typename
                                                                           FieldType::
                                                                           field_type,
@@ -1156,7 +1126,7 @@
                                                                                    FieldType>
                                                              const & nb,
                                                              double const d) {
-              NeboScalar<Initial, FieldType> typedef Scalar;
+              NeboScalar<Initial, typename FieldType::value_type> typedef Scalar;
 
               NeboClause<Initial, BoolExpr, Scalar, FieldType> typedef Clause;
 
@@ -1313,13 +1283,7 @@
       template<typename FieldType>
        inline CondBuilder<NeboCond<Initial,
                                    NeboClause<Initial,
-                                              NeboBoolean<Initial,
-                                                          typename
-                                                          NeboFieldCheck<typename
-                                                                         FieldType::
-                                                                         field_type,
-                                                                         FieldType>::
-                                                          Result>,
+                                              NeboScalar<Initial, bool>,
                                               NeboConstField<Initial,
                                                              typename
                                                              NeboFieldCheck<typename
@@ -1337,7 +1301,7 @@
                                                            field_type,
                                                            FieldType>::Result> >
        cond(bool const b, FieldType const & f) {
-          NeboBoolean<Initial, FieldType> typedef Boolean;
+          NeboScalar<Initial, bool> typedef Boolean;
 
           NeboConstField<Initial, FieldType> typedef Field;
 
@@ -1353,13 +1317,7 @@
       template<typename Expr, typename FieldType>
        inline CondBuilder<NeboCond<Initial,
                                    NeboClause<Initial,
-                                              NeboBoolean<Initial,
-                                                          typename
-                                                          NeboFieldCheck<typename
-                                                                         FieldType::
-                                                                         field_type,
-                                                                         FieldType>::
-                                                          Result>,
+                                              NeboScalar<Initial, bool>,
                                               Expr,
                                               typename NeboFieldCheck<typename
                                                                       FieldType::
@@ -1371,7 +1329,7 @@
                                                            field_type,
                                                            FieldType>::Result> >
        cond(bool const b, NeboExpression<Expr, FieldType> const & e) {
-          NeboBoolean<Initial, FieldType> typedef Boolean;
+          NeboScalar<Initial, bool> typedef Boolean;
 
           NeboClause<Initial, Boolean, Expr, FieldType> typedef Clause;
 
@@ -1387,11 +1345,8 @@
                                    NeboClause<Initial,
                                               BoolExpr,
                                               NeboScalar<Initial,
-                                                         typename NeboFieldCheck<typename
-                                                                                 FieldType::
-                                                                                 field_type,
-                                                                                 FieldType>::
-                                                         Result>,
+                                                         typename FieldType::
+                                                         value_type>,
                                               typename NeboFieldCheck<typename
                                                                       FieldType::
                                                                       field_type,
@@ -1403,7 +1358,7 @@
                                                            FieldType>::Result> >
        cond(NeboBooleanExpression<BoolExpr, FieldType> const & nb,
             double const d) {
-          NeboScalar<Initial, FieldType> typedef Scalar;
+          NeboScalar<Initial, typename FieldType::value_type> typedef Scalar;
 
           NeboClause<Initial, BoolExpr, Scalar, FieldType> typedef Clause;
 

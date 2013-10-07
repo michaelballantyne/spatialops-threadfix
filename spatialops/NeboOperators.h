@@ -26,43 +26,32 @@
 #  define NEBO_OPERATORS_H
 
    namespace SpatialOps {
-      template<typename CurrentMode,
-               typename Operand1,
-               typename Operand2,
-               typename FieldType>
+      template<typename CurrentMode, typename Operand1, typename Operand2>
        struct SumOp;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct SumOp<Initial, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct SumOp<Initial, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
           SumOp<SeqWalk,
                 typename Operand1::SeqWalkType,
-                typename Operand2::SeqWalkType,
-                FieldType> typedef SeqWalkType;
+                typename Operand2::SeqWalkType> typedef SeqWalkType;
 
 #         ifdef FIELD_EXPRESSION_THREADS
              SumOp<Resize,
                    typename Operand1::ResizeType,
-                   typename Operand2::ResizeType,
-                   FieldType> typedef ResizeType;
+                   typename Operand2::ResizeType> typedef ResizeType;
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
              SumOp<GPUWalk,
                    typename Operand1::GPUWalkType,
-                   typename Operand2::GPUWalkType,
-                   FieldType> typedef GPUWalkType;
+                   typename Operand2::GPUWalkType> typedef GPUWalkType;
 #         endif
           /* __CUDACC__ */
 
           SumOp<Reduction,
                 typename Operand1::ReductionType,
-                typename Operand2::ReductionType,
-                FieldType> typedef ReductionType;
+                typename Operand2::ReductionType> typedef ReductionType;
 
           SumOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -133,17 +122,12 @@
           Operand2 const operand2_;
       };
 #     ifdef FIELD_EXPRESSION_THREADS
-         template<typename Operand1, typename Operand2, typename FieldType>
-          struct SumOp<Resize, Operand1, Operand2, FieldType> {
+         template<typename Operand1, typename Operand2>
+          struct SumOp<Resize, Operand1, Operand2> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
              SumOp<SeqWalk,
                    typename Operand1::SeqWalkType,
-                   typename Operand2::SeqWalkType,
-                   FieldType> typedef SeqWalkType;
+                   typename Operand2::SeqWalkType> typedef SeqWalkType;
 
              SumOp(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -163,14 +147,10 @@
          }
 #     endif
       /* FIELD_EXPRESSION_THREADS */;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct SumOp<SeqWalk, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct SumOp<SeqWalk, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef EvalReturnType;
+          typename Operand1::value_type typedef value_type;
 
           SumOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -178,7 +158,7 @@
 
           inline void next(void) { operand1_.next(); operand2_.next(); }
 
-          inline EvalReturnType eval(void) const {
+          inline value_type eval(void) const {
              return (operand1_.eval() + operand2_.eval());
           }
 
@@ -188,14 +168,10 @@
           Operand2 operand2_;
       };
 #     ifdef __CUDACC__
-         template<typename Operand1, typename Operand2, typename FieldType>
-          struct SumOp<GPUWalk, Operand1, Operand2, FieldType> {
+         template<typename Operand1, typename Operand2>
+          struct SumOp<GPUWalk, Operand1, Operand2> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             typename field_type::value_type typedef AtomicType;
+             typename Operand1::value_type typedef value_type;
 
              SumOp(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -213,7 +189,7 @@
                 operand2_.next();
              }
 
-             __device__ inline AtomicType eval(void) const {
+             __device__ inline value_type eval(void) const {
                 return (operand1_.eval() + operand2_.eval());
              }
 
@@ -224,14 +200,10 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct SumOp<Reduction, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct SumOp<Reduction, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef EvalReturnType;
+          typename Operand1::value_type typedef value_type;
 
           SumOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -247,7 +219,7 @@
              return (operand1_.has_length() || operand2_.has_length());
           }
 
-          inline EvalReturnType eval(void) const {
+          inline value_type eval(void) const {
              return (operand1_.eval() + operand2_.eval());
           }
 
@@ -260,46 +232,87 @@
       /* Scalar X Field */
       template<typename FieldType>
        inline NeboExpression<SumOp<Initial,
-                                   NeboScalar<Initial, FieldType>,
+                                   NeboScalar<Initial,
+                                              typename FieldType::value_type>,
                                    NeboConstField<Initial,
                                                   typename NeboFieldCheck<typename
                                                                           FieldType::
                                                                           field_type,
                                                                           FieldType>::
-                                                  Result>,
-                                   FieldType>,
+                                                  Result> >,
                              FieldType> operator +(typename FieldType::
                                                    value_type const & arg1,
                                                    FieldType const & arg2) {
           SumOp<Initial,
-                NeboScalar<Initial, FieldType>,
-                NeboConstField<Initial, FieldType>,
-                FieldType> typedef ReturnType;
+                NeboScalar<Initial, typename FieldType::value_type>,
+                NeboConstField<Initial, FieldType> > typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
-          return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
+          return ReturnTerm(ReturnType(NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg1),
                                        NeboConstField<Initial, FieldType>(arg2)));
        }
 
       /* Scalar X SubExpr */
       template<typename SubExpr2, typename FieldType>
        inline NeboExpression<SumOp<Initial,
-                                   NeboScalar<Initial, FieldType>,
-                                   SubExpr2,
-                                   FieldType>,
+                                   NeboScalar<Initial,
+                                              typename FieldType::value_type>,
+                                   SubExpr2>,
                              FieldType> operator +(typename FieldType::
                                                    value_type const & arg1,
                                                    NeboExpression<SubExpr2,
                                                                   FieldType>
                                                    const & arg2) {
-          SumOp<Initial, NeboScalar<Initial, FieldType>, SubExpr2, FieldType>
-          typedef ReturnType;
+          SumOp<Initial,
+                NeboScalar<Initial, typename FieldType::value_type>,
+                SubExpr2> typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
-          return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
+          return ReturnTerm(ReturnType(NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg1),
                                        arg2.expr()));
+       }
+
+      /* Scalar X SingleValue */
+      template<typename T>
+       inline NeboSingleValueExpression<SumOp<Initial,
+                                              NeboScalar<Initial, T>,
+                                              NeboConstSingleValueField<Initial,
+                                                                        T> >,
+                                        T> operator +(T const & arg1,
+                                                      SpatialOps::structured::
+                                                      SpatialField<SpatialOps::
+                                                                   structured::
+                                                                   SingleValue,
+                                                                   T> const &
+                                                      arg2) {
+          SumOp<Initial,
+                NeboScalar<Initial, T>,
+                NeboConstSingleValueField<Initial, T> > typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboScalar<Initial, T>(arg1),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* Scalar X SingleValueExpr */
+      template<typename SubExpr2, typename T>
+       inline NeboSingleValueExpression<SumOp<Initial,
+                                              NeboScalar<Initial, T>,
+                                              SubExpr2>,
+                                        T> operator +(T const & arg1,
+                                                      NeboSingleValueExpression<SubExpr2,
+                                                                                T>
+                                                      const & arg2) {
+          SumOp<Initial, NeboScalar<Initial, T>, SubExpr2> typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboScalar<Initial, T>(arg1), arg2.expr()));
        }
 
       /* Field X Scalar */
@@ -311,20 +324,21 @@
                                                                           field_type,
                                                                           FieldType>::
                                                   Result>,
-                                   NeboScalar<Initial, FieldType>,
-                                   FieldType>,
+                                   NeboScalar<Initial,
+                                              typename FieldType::value_type> >,
                              FieldType> operator +(FieldType const & arg1,
                                                    typename FieldType::
                                                    value_type const & arg2) {
           SumOp<Initial,
                 NeboConstField<Initial, FieldType>,
-                NeboScalar<Initial, FieldType>,
-                FieldType> typedef ReturnType;
+                NeboScalar<Initial, typename FieldType::value_type> > typedef
+          ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
-                                       NeboScalar<Initial, FieldType>(arg2)));
+                                       NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg2)));
        }
 
       /* Field X Field */
@@ -341,14 +355,12 @@
                                                                           FieldType::
                                                                           field_type,
                                                                           FieldType>::
-                                                  Result>,
-                                   FieldType>,
+                                                  Result> >,
                              FieldType> operator +(FieldType const & arg1,
                                                    FieldType const & arg2) {
           SumOp<Initial,
                 NeboConstField<Initial, FieldType>,
-                NeboConstField<Initial, FieldType>,
-                FieldType> typedef ReturnType;
+                NeboConstField<Initial, FieldType> > typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -365,14 +377,74 @@
                                                                           field_type,
                                                                           FieldType>::
                                                   Result>,
-                                   SubExpr2,
-                                   FieldType>,
+                                   SubExpr2>,
                              FieldType> operator +(FieldType const & arg1,
                                                    NeboExpression<SubExpr2,
                                                                   FieldType>
                                                    const & arg2) {
-          SumOp<Initial, NeboConstField<Initial, FieldType>, SubExpr2, FieldType>
+          SumOp<Initial, NeboConstField<Initial, FieldType>, SubExpr2> typedef
+          ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* Field X SingleValue */
+      template<typename FieldType>
+       inline NeboExpression<SumOp<Initial,
+                                   NeboConstField<Initial,
+                                                  typename NeboFieldCheck<typename
+                                                                          FieldType::
+                                                                          field_type,
+                                                                          FieldType>::
+                                                  Result>,
+                                   NeboConstSingleValueField<Initial,
+                                                             typename FieldType::
+                                                             value_type> >,
+                             FieldType> operator +(FieldType const & arg1,
+                                                   SpatialOps::structured::
+                                                   SpatialField<SpatialOps::
+                                                                structured::
+                                                                SingleValue,
+                                                                typename
+                                                                FieldType::
+                                                                value_type>
+                                                   const & arg2) {
+          SumOp<Initial,
+                NeboConstField<Initial, FieldType>,
+                NeboConstSingleValueField<Initial,
+                                          typename FieldType::value_type> >
           typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
+                                       NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg2)));
+       }
+
+      /* Field X SingleValueExpr */
+      template<typename SubExpr2, typename FieldType>
+       inline NeboExpression<SumOp<Initial,
+                                   NeboConstField<Initial,
+                                                  typename NeboFieldCheck<typename
+                                                                          FieldType::
+                                                                          field_type,
+                                                                          FieldType>::
+                                                  Result>,
+                                   SubExpr2>,
+                             FieldType> operator +(FieldType const & arg1,
+                                                   NeboSingleValueExpression<SubExpr2,
+                                                                             typename
+                                                                             FieldType::
+                                                                             value_type>
+                                                   const & arg2) {
+          SumOp<Initial, NeboConstField<Initial, FieldType>, SubExpr2> typedef
+          ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -384,20 +456,23 @@
       template<typename SubExpr1, typename FieldType>
        inline NeboExpression<SumOp<Initial,
                                    SubExpr1,
-                                   NeboScalar<Initial, FieldType>,
-                                   FieldType>,
+                                   NeboScalar<Initial,
+                                              typename FieldType::value_type> >,
                              FieldType> operator +(NeboExpression<SubExpr1,
                                                                   FieldType>
                                                    const & arg1,
                                                    typename FieldType::
                                                    value_type const & arg2) {
-          SumOp<Initial, SubExpr1, NeboScalar<Initial, FieldType>, FieldType>
-          typedef ReturnType;
+          SumOp<Initial,
+                SubExpr1,
+                NeboScalar<Initial, typename FieldType::value_type> > typedef
+          ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg1.expr(),
-                                       NeboScalar<Initial, FieldType>(arg2)));
+                                       NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg2)));
        }
 
       /* SubExpr X Field */
@@ -409,14 +484,13 @@
                                                                           FieldType::
                                                                           field_type,
                                                                           FieldType>::
-                                                  Result>,
-                                   FieldType>,
+                                                  Result> >,
                              FieldType> operator +(NeboExpression<SubExpr1,
                                                                   FieldType>
                                                    const & arg1,
                                                    FieldType const & arg2) {
-          SumOp<Initial, SubExpr1, NeboConstField<Initial, FieldType>, FieldType>
-          typedef ReturnType;
+          SumOp<Initial, SubExpr1, NeboConstField<Initial, FieldType> > typedef
+          ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -426,57 +500,323 @@
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2, typename FieldType>
-       inline NeboExpression<SumOp<Initial, SubExpr1, SubExpr2, FieldType>,
-                             FieldType> operator +(NeboExpression<SubExpr1,
-                                                                  FieldType>
-                                                   const & arg1,
-                                                   NeboExpression<SubExpr2,
-                                                                  FieldType>
-                                                   const & arg2) {
-          SumOp<Initial, SubExpr1, SubExpr2, FieldType> typedef ReturnType;
+       inline NeboExpression<SumOp<Initial, SubExpr1, SubExpr2>, FieldType>
+       operator +(NeboExpression<SubExpr1, FieldType> const & arg1,
+                  NeboExpression<SubExpr2, FieldType> const & arg2) {
+          SumOp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SubExpr X SingleValue */
+      template<typename SubExpr1, typename FieldType>
+       inline NeboExpression<SumOp<Initial,
+                                   SubExpr1,
+                                   NeboConstSingleValueField<Initial,
+                                                             typename FieldType::
+                                                             value_type> >,
+                             FieldType> operator +(NeboExpression<SubExpr1,
+                                                                  FieldType>
+                                                   const & arg1,
+                                                   SpatialOps::structured::
+                                                   SpatialField<SpatialOps::
+                                                                structured::
+                                                                SingleValue,
+                                                                typename
+                                                                FieldType::
+                                                                value_type>
+                                                   const & arg2) {
+          SumOp<Initial,
+                SubExpr1,
+                NeboConstSingleValueField<Initial,
+                                          typename FieldType::value_type> >
+          typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg2)));
+       }
+
+      /* SubExpr X SingleValueExpr */
+      template<typename SubExpr1, typename SubExpr2, typename FieldType>
+       inline NeboExpression<SumOp<Initial, SubExpr1, SubExpr2>, FieldType>
+       operator +(NeboExpression<SubExpr1, FieldType> const & arg1,
+                  NeboSingleValueExpression<SubExpr2,
+                                            typename FieldType::value_type>
+                  const & arg2) {
+          SumOp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SingleValue X Scalar */
+      template<typename T>
+       inline NeboSingleValueExpression<SumOp<Initial,
+                                              NeboConstSingleValueField<Initial,
+                                                                        T>,
+                                              NeboScalar<Initial, T> >,
+                                        T> operator +(SpatialOps::structured::
+                                                      SpatialField<SpatialOps::
+                                                                   structured::
+                                                                   SingleValue,
+                                                                   T> const &
+                                                      arg1,
+                                                      T const & arg2) {
+          SumOp<Initial,
+                NeboConstSingleValueField<Initial, T>,
+                NeboScalar<Initial, T> > typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       NeboScalar<Initial, T>(arg2)));
+       }
+
+      /* SingleValue X Field */
+      template<typename FieldType>
+       inline NeboExpression<SumOp<Initial,
+                                   NeboConstSingleValueField<Initial,
+                                                             typename FieldType::
+                                                             value_type>,
+                                   NeboConstField<Initial,
+                                                  typename NeboFieldCheck<typename
+                                                                          FieldType::
+                                                                          field_type,
+                                                                          FieldType>::
+                                                  Result> >,
+                             FieldType> operator +(SpatialOps::structured::
+                                                   SpatialField<SpatialOps::
+                                                                structured::
+                                                                SingleValue,
+                                                                typename
+                                                                FieldType::
+                                                                value_type>
+                                                   const & arg1,
+                                                   FieldType const & arg2) {
+          SumOp<Initial,
+                NeboConstSingleValueField<Initial,
+                                          typename FieldType::value_type>,
+                NeboConstField<Initial, FieldType> > typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg1),
+                                       NeboConstField<Initial, FieldType>(arg2)));
+       }
+
+      /* SingleValue X SubExpr */
+      template<typename SubExpr2, typename FieldType>
+       inline NeboExpression<SumOp<Initial,
+                                   NeboConstSingleValueField<Initial,
+                                                             typename FieldType::
+                                                             value_type>,
+                                   SubExpr2>,
+                             FieldType> operator +(SpatialOps::structured::
+                                                   SpatialField<SpatialOps::
+                                                                structured::
+                                                                SingleValue,
+                                                                typename
+                                                                FieldType::
+                                                                value_type>
+                                                   const & arg1,
+                                                   NeboExpression<SubExpr2,
+                                                                  FieldType>
+                                                   const & arg2) {
+          SumOp<Initial,
+                NeboConstSingleValueField<Initial,
+                                          typename FieldType::value_type>,
+                SubExpr2> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* SingleValue X SingleValue */
+      template<typename T>
+       inline NeboSingleValueExpression<SumOp<Initial,
+                                              NeboConstSingleValueField<Initial,
+                                                                        T>,
+                                              NeboConstSingleValueField<Initial,
+                                                                        T> >,
+                                        T> operator +(SpatialOps::structured::
+                                                      SpatialField<SpatialOps::
+                                                                   structured::
+                                                                   SingleValue,
+                                                                   T> const &
+                                                      arg1,
+                                                      SpatialOps::structured::
+                                                      SpatialField<SpatialOps::
+                                                                   structured::
+                                                                   SingleValue,
+                                                                   T> const &
+                                                      arg2) {
+          SumOp<Initial,
+                NeboConstSingleValueField<Initial, T>,
+                NeboConstSingleValueField<Initial, T> > typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* SingleValue X SingleValueExpr */
+      template<typename SubExpr2, typename T>
+       inline NeboSingleValueExpression<SumOp<Initial,
+                                              NeboConstSingleValueField<Initial,
+                                                                        T>,
+                                              SubExpr2>,
+                                        T> operator +(SpatialOps::structured::
+                                                      SpatialField<SpatialOps::
+                                                                   structured::
+                                                                   SingleValue,
+                                                                   T> const &
+                                                      arg1,
+                                                      NeboSingleValueExpression<SubExpr2,
+                                                                                T>
+                                                      const & arg2) {
+          SumOp<Initial, NeboConstSingleValueField<Initial, T>, SubExpr2>
+          typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* SingleValueExpr X Scalar */
+      template<typename SubExpr1, typename T>
+       inline NeboSingleValueExpression<SumOp<Initial,
+                                              SubExpr1,
+                                              NeboScalar<Initial, T> >,
+                                        T> operator +(NeboSingleValueExpression<SubExpr1,
+                                                                                T>
+                                                      const & arg1,
+                                                      T const & arg2) {
+          SumOp<Initial, SubExpr1, NeboScalar<Initial, T> > typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), NeboScalar<Initial, T>(arg2)));
+       }
+
+      /* SingleValueExpr X Field */
+      template<typename SubExpr1, typename FieldType>
+       inline NeboExpression<SumOp<Initial,
+                                   SubExpr1,
+                                   NeboConstField<Initial,
+                                                  typename NeboFieldCheck<typename
+                                                                          FieldType::
+                                                                          field_type,
+                                                                          FieldType>::
+                                                  Result> >,
+                             FieldType> operator +(NeboSingleValueExpression<SubExpr1,
+                                                                             typename
+                                                                             FieldType::
+                                                                             value_type>
+                                                   const & arg1,
+                                                   FieldType const & arg2) {
+          SumOp<Initial, SubExpr1, NeboConstField<Initial, FieldType> > typedef
+          ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstField<Initial, FieldType>(arg2)));
+       }
+
+      /* SingleValueExpr X SubExpr */
+      template<typename SubExpr1, typename SubExpr2, typename FieldType>
+       inline NeboExpression<SumOp<Initial, SubExpr1, SubExpr2>, FieldType>
+       operator +(NeboSingleValueExpression<SubExpr1,
+                                            typename FieldType::value_type>
+                  const & arg1,
+                  NeboExpression<SubExpr2, FieldType> const & arg2) {
+          SumOp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SingleValueExpr X SingleValue */
+      template<typename SubExpr1, typename T>
+       inline NeboSingleValueExpression<SumOp<Initial,
+                                              SubExpr1,
+                                              NeboConstSingleValueField<Initial,
+                                                                        T> >,
+                                        T> operator +(NeboSingleValueExpression<SubExpr1,
+                                                                                T>
+                                                      const & arg1,
+                                                      SpatialOps::structured::
+                                                      SpatialField<SpatialOps::
+                                                                   structured::
+                                                                   SingleValue,
+                                                                   T> const &
+                                                      arg2) {
+          SumOp<Initial, SubExpr1, NeboConstSingleValueField<Initial, T> >
+          typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* SingleValueExpr X SingleValueExpr */
+      template<typename SubExpr1, typename SubExpr2, typename T>
+       inline NeboSingleValueExpression<SumOp<Initial, SubExpr1, SubExpr2>, T>
+       operator +(NeboSingleValueExpression<SubExpr1, T> const & arg1,
+                  NeboSingleValueExpression<SubExpr2, T> const & arg2) {
+          SumOp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
        };
 
-      template<typename CurrentMode,
-               typename Operand1,
-               typename Operand2,
-               typename FieldType>
+      template<typename CurrentMode, typename Operand1, typename Operand2>
        struct DiffOp;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct DiffOp<Initial, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct DiffOp<Initial, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
           DiffOp<SeqWalk,
                  typename Operand1::SeqWalkType,
-                 typename Operand2::SeqWalkType,
-                 FieldType> typedef SeqWalkType;
+                 typename Operand2::SeqWalkType> typedef SeqWalkType;
 
 #         ifdef FIELD_EXPRESSION_THREADS
              DiffOp<Resize,
                     typename Operand1::ResizeType,
-                    typename Operand2::ResizeType,
-                    FieldType> typedef ResizeType;
+                    typename Operand2::ResizeType> typedef ResizeType;
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
              DiffOp<GPUWalk,
                     typename Operand1::GPUWalkType,
-                    typename Operand2::GPUWalkType,
-                    FieldType> typedef GPUWalkType;
+                    typename Operand2::GPUWalkType> typedef GPUWalkType;
 #         endif
           /* __CUDACC__ */
 
           DiffOp<Reduction,
                  typename Operand1::ReductionType,
-                 typename Operand2::ReductionType,
-                 FieldType> typedef ReductionType;
+                 typename Operand2::ReductionType> typedef ReductionType;
 
           DiffOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -547,17 +887,12 @@
           Operand2 const operand2_;
       };
 #     ifdef FIELD_EXPRESSION_THREADS
-         template<typename Operand1, typename Operand2, typename FieldType>
-          struct DiffOp<Resize, Operand1, Operand2, FieldType> {
+         template<typename Operand1, typename Operand2>
+          struct DiffOp<Resize, Operand1, Operand2> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
              DiffOp<SeqWalk,
                     typename Operand1::SeqWalkType,
-                    typename Operand2::SeqWalkType,
-                    FieldType> typedef SeqWalkType;
+                    typename Operand2::SeqWalkType> typedef SeqWalkType;
 
              DiffOp(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -577,14 +912,10 @@
          }
 #     endif
       /* FIELD_EXPRESSION_THREADS */;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct DiffOp<SeqWalk, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct DiffOp<SeqWalk, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef EvalReturnType;
+          typename Operand1::value_type typedef value_type;
 
           DiffOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -592,7 +923,7 @@
 
           inline void next(void) { operand1_.next(); operand2_.next(); }
 
-          inline EvalReturnType eval(void) const {
+          inline value_type eval(void) const {
              return (operand1_.eval() - operand2_.eval());
           }
 
@@ -602,14 +933,10 @@
           Operand2 operand2_;
       };
 #     ifdef __CUDACC__
-         template<typename Operand1, typename Operand2, typename FieldType>
-          struct DiffOp<GPUWalk, Operand1, Operand2, FieldType> {
+         template<typename Operand1, typename Operand2>
+          struct DiffOp<GPUWalk, Operand1, Operand2> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             typename field_type::value_type typedef AtomicType;
+             typename Operand1::value_type typedef value_type;
 
              DiffOp(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -627,7 +954,7 @@
                 operand2_.next();
              }
 
-             __device__ inline AtomicType eval(void) const {
+             __device__ inline value_type eval(void) const {
                 return (operand1_.eval() - operand2_.eval());
              }
 
@@ -638,14 +965,10 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct DiffOp<Reduction, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct DiffOp<Reduction, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef EvalReturnType;
+          typename Operand1::value_type typedef value_type;
 
           DiffOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -661,7 +984,7 @@
              return (operand1_.has_length() || operand2_.has_length());
           }
 
-          inline EvalReturnType eval(void) const {
+          inline value_type eval(void) const {
              return (operand1_.eval() - operand2_.eval());
           }
 
@@ -674,46 +997,87 @@
       /* Scalar X Field */
       template<typename FieldType>
        inline NeboExpression<DiffOp<Initial,
-                                    NeboScalar<Initial, FieldType>,
+                                    NeboScalar<Initial,
+                                               typename FieldType::value_type>,
                                     NeboConstField<Initial,
                                                    typename NeboFieldCheck<typename
                                                                            FieldType::
                                                                            field_type,
                                                                            FieldType>::
-                                                   Result>,
-                                    FieldType>,
+                                                   Result> >,
                              FieldType> operator -(typename FieldType::
                                                    value_type const & arg1,
                                                    FieldType const & arg2) {
           DiffOp<Initial,
-                 NeboScalar<Initial, FieldType>,
-                 NeboConstField<Initial, FieldType>,
-                 FieldType> typedef ReturnType;
+                 NeboScalar<Initial, typename FieldType::value_type>,
+                 NeboConstField<Initial, FieldType> > typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
-          return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
+          return ReturnTerm(ReturnType(NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg1),
                                        NeboConstField<Initial, FieldType>(arg2)));
        }
 
       /* Scalar X SubExpr */
       template<typename SubExpr2, typename FieldType>
        inline NeboExpression<DiffOp<Initial,
-                                    NeboScalar<Initial, FieldType>,
-                                    SubExpr2,
-                                    FieldType>,
+                                    NeboScalar<Initial,
+                                               typename FieldType::value_type>,
+                                    SubExpr2>,
                              FieldType> operator -(typename FieldType::
                                                    value_type const & arg1,
                                                    NeboExpression<SubExpr2,
                                                                   FieldType>
                                                    const & arg2) {
-          DiffOp<Initial, NeboScalar<Initial, FieldType>, SubExpr2, FieldType>
-          typedef ReturnType;
+          DiffOp<Initial,
+                 NeboScalar<Initial, typename FieldType::value_type>,
+                 SubExpr2> typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
-          return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
+          return ReturnTerm(ReturnType(NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg1),
                                        arg2.expr()));
+       }
+
+      /* Scalar X SingleValue */
+      template<typename T>
+       inline NeboSingleValueExpression<DiffOp<Initial,
+                                               NeboScalar<Initial, T>,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T> >,
+                                        T> operator -(T const & arg1,
+                                                      SpatialOps::structured::
+                                                      SpatialField<SpatialOps::
+                                                                   structured::
+                                                                   SingleValue,
+                                                                   T> const &
+                                                      arg2) {
+          DiffOp<Initial,
+                 NeboScalar<Initial, T>,
+                 NeboConstSingleValueField<Initial, T> > typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboScalar<Initial, T>(arg1),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* Scalar X SingleValueExpr */
+      template<typename SubExpr2, typename T>
+       inline NeboSingleValueExpression<DiffOp<Initial,
+                                               NeboScalar<Initial, T>,
+                                               SubExpr2>,
+                                        T> operator -(T const & arg1,
+                                                      NeboSingleValueExpression<SubExpr2,
+                                                                                T>
+                                                      const & arg2) {
+          DiffOp<Initial, NeboScalar<Initial, T>, SubExpr2> typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboScalar<Initial, T>(arg1), arg2.expr()));
        }
 
       /* Field X Scalar */
@@ -725,20 +1089,21 @@
                                                                            field_type,
                                                                            FieldType>::
                                                    Result>,
-                                    NeboScalar<Initial, FieldType>,
-                                    FieldType>,
+                                    NeboScalar<Initial,
+                                               typename FieldType::value_type> >,
                              FieldType> operator -(FieldType const & arg1,
                                                    typename FieldType::
                                                    value_type const & arg2) {
           DiffOp<Initial,
                  NeboConstField<Initial, FieldType>,
-                 NeboScalar<Initial, FieldType>,
-                 FieldType> typedef ReturnType;
+                 NeboScalar<Initial, typename FieldType::value_type> > typedef
+          ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
-                                       NeboScalar<Initial, FieldType>(arg2)));
+                                       NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg2)));
        }
 
       /* Field X Field */
@@ -755,14 +1120,12 @@
                                                                            FieldType::
                                                                            field_type,
                                                                            FieldType>::
-                                                   Result>,
-                                    FieldType>,
+                                                   Result> >,
                              FieldType> operator -(FieldType const & arg1,
                                                    FieldType const & arg2) {
           DiffOp<Initial,
                  NeboConstField<Initial, FieldType>,
-                 NeboConstField<Initial, FieldType>,
-                 FieldType> typedef ReturnType;
+                 NeboConstField<Initial, FieldType> > typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -779,16 +1142,74 @@
                                                                            field_type,
                                                                            FieldType>::
                                                    Result>,
-                                    SubExpr2,
-                                    FieldType>,
+                                    SubExpr2>,
                              FieldType> operator -(FieldType const & arg1,
                                                    NeboExpression<SubExpr2,
                                                                   FieldType>
                                                    const & arg2) {
+          DiffOp<Initial, NeboConstField<Initial, FieldType>, SubExpr2> typedef
+          ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* Field X SingleValue */
+      template<typename FieldType>
+       inline NeboExpression<DiffOp<Initial,
+                                    NeboConstField<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result>,
+                                    NeboConstSingleValueField<Initial,
+                                                              typename FieldType::
+                                                              value_type> >,
+                             FieldType> operator -(FieldType const & arg1,
+                                                   SpatialOps::structured::
+                                                   SpatialField<SpatialOps::
+                                                                structured::
+                                                                SingleValue,
+                                                                typename
+                                                                FieldType::
+                                                                value_type>
+                                                   const & arg2) {
           DiffOp<Initial,
                  NeboConstField<Initial, FieldType>,
-                 SubExpr2,
-                 FieldType> typedef ReturnType;
+                 NeboConstSingleValueField<Initial,
+                                           typename FieldType::value_type> >
+          typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
+                                       NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg2)));
+       }
+
+      /* Field X SingleValueExpr */
+      template<typename SubExpr2, typename FieldType>
+       inline NeboExpression<DiffOp<Initial,
+                                    NeboConstField<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result>,
+                                    SubExpr2>,
+                             FieldType> operator -(FieldType const & arg1,
+                                                   NeboSingleValueExpression<SubExpr2,
+                                                                             typename
+                                                                             FieldType::
+                                                                             value_type>
+                                                   const & arg2) {
+          DiffOp<Initial, NeboConstField<Initial, FieldType>, SubExpr2> typedef
+          ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -800,20 +1221,23 @@
       template<typename SubExpr1, typename FieldType>
        inline NeboExpression<DiffOp<Initial,
                                     SubExpr1,
-                                    NeboScalar<Initial, FieldType>,
-                                    FieldType>,
+                                    NeboScalar<Initial,
+                                               typename FieldType::value_type> >,
                              FieldType> operator -(NeboExpression<SubExpr1,
                                                                   FieldType>
                                                    const & arg1,
                                                    typename FieldType::
                                                    value_type const & arg2) {
-          DiffOp<Initial, SubExpr1, NeboScalar<Initial, FieldType>, FieldType>
-          typedef ReturnType;
+          DiffOp<Initial,
+                 SubExpr1,
+                 NeboScalar<Initial, typename FieldType::value_type> > typedef
+          ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg1.expr(),
-                                       NeboScalar<Initial, FieldType>(arg2)));
+                                       NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg2)));
        }
 
       /* SubExpr X Field */
@@ -825,16 +1249,13 @@
                                                                            FieldType::
                                                                            field_type,
                                                                            FieldType>::
-                                                   Result>,
-                                    FieldType>,
+                                                   Result> >,
                              FieldType> operator -(NeboExpression<SubExpr1,
                                                                   FieldType>
                                                    const & arg1,
                                                    FieldType const & arg2) {
-          DiffOp<Initial,
-                 SubExpr1,
-                 NeboConstField<Initial, FieldType>,
-                 FieldType> typedef ReturnType;
+          DiffOp<Initial, SubExpr1, NeboConstField<Initial, FieldType> > typedef
+          ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -844,57 +1265,323 @@
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2, typename FieldType>
-       inline NeboExpression<DiffOp<Initial, SubExpr1, SubExpr2, FieldType>,
-                             FieldType> operator -(NeboExpression<SubExpr1,
-                                                                  FieldType>
-                                                   const & arg1,
-                                                   NeboExpression<SubExpr2,
-                                                                  FieldType>
-                                                   const & arg2) {
-          DiffOp<Initial, SubExpr1, SubExpr2, FieldType> typedef ReturnType;
+       inline NeboExpression<DiffOp<Initial, SubExpr1, SubExpr2>, FieldType>
+       operator -(NeboExpression<SubExpr1, FieldType> const & arg1,
+                  NeboExpression<SubExpr2, FieldType> const & arg2) {
+          DiffOp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SubExpr X SingleValue */
+      template<typename SubExpr1, typename FieldType>
+       inline NeboExpression<DiffOp<Initial,
+                                    SubExpr1,
+                                    NeboConstSingleValueField<Initial,
+                                                              typename FieldType::
+                                                              value_type> >,
+                             FieldType> operator -(NeboExpression<SubExpr1,
+                                                                  FieldType>
+                                                   const & arg1,
+                                                   SpatialOps::structured::
+                                                   SpatialField<SpatialOps::
+                                                                structured::
+                                                                SingleValue,
+                                                                typename
+                                                                FieldType::
+                                                                value_type>
+                                                   const & arg2) {
+          DiffOp<Initial,
+                 SubExpr1,
+                 NeboConstSingleValueField<Initial,
+                                           typename FieldType::value_type> >
+          typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg2)));
+       }
+
+      /* SubExpr X SingleValueExpr */
+      template<typename SubExpr1, typename SubExpr2, typename FieldType>
+       inline NeboExpression<DiffOp<Initial, SubExpr1, SubExpr2>, FieldType>
+       operator -(NeboExpression<SubExpr1, FieldType> const & arg1,
+                  NeboSingleValueExpression<SubExpr2,
+                                            typename FieldType::value_type>
+                  const & arg2) {
+          DiffOp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SingleValue X Scalar */
+      template<typename T>
+       inline NeboSingleValueExpression<DiffOp<Initial,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T>,
+                                               NeboScalar<Initial, T> >,
+                                        T> operator -(SpatialOps::structured::
+                                                      SpatialField<SpatialOps::
+                                                                   structured::
+                                                                   SingleValue,
+                                                                   T> const &
+                                                      arg1,
+                                                      T const & arg2) {
+          DiffOp<Initial,
+                 NeboConstSingleValueField<Initial, T>,
+                 NeboScalar<Initial, T> > typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       NeboScalar<Initial, T>(arg2)));
+       }
+
+      /* SingleValue X Field */
+      template<typename FieldType>
+       inline NeboExpression<DiffOp<Initial,
+                                    NeboConstSingleValueField<Initial,
+                                                              typename FieldType::
+                                                              value_type>,
+                                    NeboConstField<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result> >,
+                             FieldType> operator -(SpatialOps::structured::
+                                                   SpatialField<SpatialOps::
+                                                                structured::
+                                                                SingleValue,
+                                                                typename
+                                                                FieldType::
+                                                                value_type>
+                                                   const & arg1,
+                                                   FieldType const & arg2) {
+          DiffOp<Initial,
+                 NeboConstSingleValueField<Initial,
+                                           typename FieldType::value_type>,
+                 NeboConstField<Initial, FieldType> > typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg1),
+                                       NeboConstField<Initial, FieldType>(arg2)));
+       }
+
+      /* SingleValue X SubExpr */
+      template<typename SubExpr2, typename FieldType>
+       inline NeboExpression<DiffOp<Initial,
+                                    NeboConstSingleValueField<Initial,
+                                                              typename FieldType::
+                                                              value_type>,
+                                    SubExpr2>,
+                             FieldType> operator -(SpatialOps::structured::
+                                                   SpatialField<SpatialOps::
+                                                                structured::
+                                                                SingleValue,
+                                                                typename
+                                                                FieldType::
+                                                                value_type>
+                                                   const & arg1,
+                                                   NeboExpression<SubExpr2,
+                                                                  FieldType>
+                                                   const & arg2) {
+          DiffOp<Initial,
+                 NeboConstSingleValueField<Initial,
+                                           typename FieldType::value_type>,
+                 SubExpr2> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* SingleValue X SingleValue */
+      template<typename T>
+       inline NeboSingleValueExpression<DiffOp<Initial,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T>,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T> >,
+                                        T> operator -(SpatialOps::structured::
+                                                      SpatialField<SpatialOps::
+                                                                   structured::
+                                                                   SingleValue,
+                                                                   T> const &
+                                                      arg1,
+                                                      SpatialOps::structured::
+                                                      SpatialField<SpatialOps::
+                                                                   structured::
+                                                                   SingleValue,
+                                                                   T> const &
+                                                      arg2) {
+          DiffOp<Initial,
+                 NeboConstSingleValueField<Initial, T>,
+                 NeboConstSingleValueField<Initial, T> > typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* SingleValue X SingleValueExpr */
+      template<typename SubExpr2, typename T>
+       inline NeboSingleValueExpression<DiffOp<Initial,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T>,
+                                               SubExpr2>,
+                                        T> operator -(SpatialOps::structured::
+                                                      SpatialField<SpatialOps::
+                                                                   structured::
+                                                                   SingleValue,
+                                                                   T> const &
+                                                      arg1,
+                                                      NeboSingleValueExpression<SubExpr2,
+                                                                                T>
+                                                      const & arg2) {
+          DiffOp<Initial, NeboConstSingleValueField<Initial, T>, SubExpr2>
+          typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* SingleValueExpr X Scalar */
+      template<typename SubExpr1, typename T>
+       inline NeboSingleValueExpression<DiffOp<Initial,
+                                               SubExpr1,
+                                               NeboScalar<Initial, T> >,
+                                        T> operator -(NeboSingleValueExpression<SubExpr1,
+                                                                                T>
+                                                      const & arg1,
+                                                      T const & arg2) {
+          DiffOp<Initial, SubExpr1, NeboScalar<Initial, T> > typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), NeboScalar<Initial, T>(arg2)));
+       }
+
+      /* SingleValueExpr X Field */
+      template<typename SubExpr1, typename FieldType>
+       inline NeboExpression<DiffOp<Initial,
+                                    SubExpr1,
+                                    NeboConstField<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result> >,
+                             FieldType> operator -(NeboSingleValueExpression<SubExpr1,
+                                                                             typename
+                                                                             FieldType::
+                                                                             value_type>
+                                                   const & arg1,
+                                                   FieldType const & arg2) {
+          DiffOp<Initial, SubExpr1, NeboConstField<Initial, FieldType> > typedef
+          ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstField<Initial, FieldType>(arg2)));
+       }
+
+      /* SingleValueExpr X SubExpr */
+      template<typename SubExpr1, typename SubExpr2, typename FieldType>
+       inline NeboExpression<DiffOp<Initial, SubExpr1, SubExpr2>, FieldType>
+       operator -(NeboSingleValueExpression<SubExpr1,
+                                            typename FieldType::value_type>
+                  const & arg1,
+                  NeboExpression<SubExpr2, FieldType> const & arg2) {
+          DiffOp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SingleValueExpr X SingleValue */
+      template<typename SubExpr1, typename T>
+       inline NeboSingleValueExpression<DiffOp<Initial,
+                                               SubExpr1,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T> >,
+                                        T> operator -(NeboSingleValueExpression<SubExpr1,
+                                                                                T>
+                                                      const & arg1,
+                                                      SpatialOps::structured::
+                                                      SpatialField<SpatialOps::
+                                                                   structured::
+                                                                   SingleValue,
+                                                                   T> const &
+                                                      arg2) {
+          DiffOp<Initial, SubExpr1, NeboConstSingleValueField<Initial, T> >
+          typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* SingleValueExpr X SingleValueExpr */
+      template<typename SubExpr1, typename SubExpr2, typename T>
+       inline NeboSingleValueExpression<DiffOp<Initial, SubExpr1, SubExpr2>, T>
+       operator -(NeboSingleValueExpression<SubExpr1, T> const & arg1,
+                  NeboSingleValueExpression<SubExpr2, T> const & arg2) {
+          DiffOp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
        };
 
-      template<typename CurrentMode,
-               typename Operand1,
-               typename Operand2,
-               typename FieldType>
+      template<typename CurrentMode, typename Operand1, typename Operand2>
        struct ProdOp;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct ProdOp<Initial, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct ProdOp<Initial, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
           ProdOp<SeqWalk,
                  typename Operand1::SeqWalkType,
-                 typename Operand2::SeqWalkType,
-                 FieldType> typedef SeqWalkType;
+                 typename Operand2::SeqWalkType> typedef SeqWalkType;
 
 #         ifdef FIELD_EXPRESSION_THREADS
              ProdOp<Resize,
                     typename Operand1::ResizeType,
-                    typename Operand2::ResizeType,
-                    FieldType> typedef ResizeType;
+                    typename Operand2::ResizeType> typedef ResizeType;
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
              ProdOp<GPUWalk,
                     typename Operand1::GPUWalkType,
-                    typename Operand2::GPUWalkType,
-                    FieldType> typedef GPUWalkType;
+                    typename Operand2::GPUWalkType> typedef GPUWalkType;
 #         endif
           /* __CUDACC__ */
 
           ProdOp<Reduction,
                  typename Operand1::ReductionType,
-                 typename Operand2::ReductionType,
-                 FieldType> typedef ReductionType;
+                 typename Operand2::ReductionType> typedef ReductionType;
 
           ProdOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -965,17 +1652,12 @@
           Operand2 const operand2_;
       };
 #     ifdef FIELD_EXPRESSION_THREADS
-         template<typename Operand1, typename Operand2, typename FieldType>
-          struct ProdOp<Resize, Operand1, Operand2, FieldType> {
+         template<typename Operand1, typename Operand2>
+          struct ProdOp<Resize, Operand1, Operand2> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
              ProdOp<SeqWalk,
                     typename Operand1::SeqWalkType,
-                    typename Operand2::SeqWalkType,
-                    FieldType> typedef SeqWalkType;
+                    typename Operand2::SeqWalkType> typedef SeqWalkType;
 
              ProdOp(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -995,14 +1677,10 @@
          }
 #     endif
       /* FIELD_EXPRESSION_THREADS */;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct ProdOp<SeqWalk, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct ProdOp<SeqWalk, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef EvalReturnType;
+          typename Operand1::value_type typedef value_type;
 
           ProdOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -1010,7 +1688,7 @@
 
           inline void next(void) { operand1_.next(); operand2_.next(); }
 
-          inline EvalReturnType eval(void) const {
+          inline value_type eval(void) const {
              return (operand1_.eval() * operand2_.eval());
           }
 
@@ -1020,14 +1698,10 @@
           Operand2 operand2_;
       };
 #     ifdef __CUDACC__
-         template<typename Operand1, typename Operand2, typename FieldType>
-          struct ProdOp<GPUWalk, Operand1, Operand2, FieldType> {
+         template<typename Operand1, typename Operand2>
+          struct ProdOp<GPUWalk, Operand1, Operand2> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             typename field_type::value_type typedef AtomicType;
+             typename Operand1::value_type typedef value_type;
 
              ProdOp(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -1045,7 +1719,7 @@
                 operand2_.next();
              }
 
-             __device__ inline AtomicType eval(void) const {
+             __device__ inline value_type eval(void) const {
                 return (operand1_.eval() * operand2_.eval());
              }
 
@@ -1056,14 +1730,10 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct ProdOp<Reduction, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct ProdOp<Reduction, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef EvalReturnType;
+          typename Operand1::value_type typedef value_type;
 
           ProdOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -1079,7 +1749,7 @@
              return (operand1_.has_length() || operand2_.has_length());
           }
 
-          inline EvalReturnType eval(void) const {
+          inline value_type eval(void) const {
              return (operand1_.eval() * operand2_.eval());
           }
 
@@ -1092,46 +1762,87 @@
       /* Scalar X Field */
       template<typename FieldType>
        inline NeboExpression<ProdOp<Initial,
-                                    NeboScalar<Initial, FieldType>,
+                                    NeboScalar<Initial,
+                                               typename FieldType::value_type>,
                                     NeboConstField<Initial,
                                                    typename NeboFieldCheck<typename
                                                                            FieldType::
                                                                            field_type,
                                                                            FieldType>::
-                                                   Result>,
-                                    FieldType>,
+                                                   Result> >,
                              FieldType> operator *(typename FieldType::
                                                    value_type const & arg1,
                                                    FieldType const & arg2) {
           ProdOp<Initial,
-                 NeboScalar<Initial, FieldType>,
-                 NeboConstField<Initial, FieldType>,
-                 FieldType> typedef ReturnType;
+                 NeboScalar<Initial, typename FieldType::value_type>,
+                 NeboConstField<Initial, FieldType> > typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
-          return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
+          return ReturnTerm(ReturnType(NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg1),
                                        NeboConstField<Initial, FieldType>(arg2)));
        }
 
       /* Scalar X SubExpr */
       template<typename SubExpr2, typename FieldType>
        inline NeboExpression<ProdOp<Initial,
-                                    NeboScalar<Initial, FieldType>,
-                                    SubExpr2,
-                                    FieldType>,
+                                    NeboScalar<Initial,
+                                               typename FieldType::value_type>,
+                                    SubExpr2>,
                              FieldType> operator *(typename FieldType::
                                                    value_type const & arg1,
                                                    NeboExpression<SubExpr2,
                                                                   FieldType>
                                                    const & arg2) {
-          ProdOp<Initial, NeboScalar<Initial, FieldType>, SubExpr2, FieldType>
-          typedef ReturnType;
+          ProdOp<Initial,
+                 NeboScalar<Initial, typename FieldType::value_type>,
+                 SubExpr2> typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
-          return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
+          return ReturnTerm(ReturnType(NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg1),
                                        arg2.expr()));
+       }
+
+      /* Scalar X SingleValue */
+      template<typename T>
+       inline NeboSingleValueExpression<ProdOp<Initial,
+                                               NeboScalar<Initial, T>,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T> >,
+                                        T> operator *(T const & arg1,
+                                                      SpatialOps::structured::
+                                                      SpatialField<SpatialOps::
+                                                                   structured::
+                                                                   SingleValue,
+                                                                   T> const &
+                                                      arg2) {
+          ProdOp<Initial,
+                 NeboScalar<Initial, T>,
+                 NeboConstSingleValueField<Initial, T> > typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboScalar<Initial, T>(arg1),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* Scalar X SingleValueExpr */
+      template<typename SubExpr2, typename T>
+       inline NeboSingleValueExpression<ProdOp<Initial,
+                                               NeboScalar<Initial, T>,
+                                               SubExpr2>,
+                                        T> operator *(T const & arg1,
+                                                      NeboSingleValueExpression<SubExpr2,
+                                                                                T>
+                                                      const & arg2) {
+          ProdOp<Initial, NeboScalar<Initial, T>, SubExpr2> typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboScalar<Initial, T>(arg1), arg2.expr()));
        }
 
       /* Field X Scalar */
@@ -1143,20 +1854,21 @@
                                                                            field_type,
                                                                            FieldType>::
                                                    Result>,
-                                    NeboScalar<Initial, FieldType>,
-                                    FieldType>,
+                                    NeboScalar<Initial,
+                                               typename FieldType::value_type> >,
                              FieldType> operator *(FieldType const & arg1,
                                                    typename FieldType::
                                                    value_type const & arg2) {
           ProdOp<Initial,
                  NeboConstField<Initial, FieldType>,
-                 NeboScalar<Initial, FieldType>,
-                 FieldType> typedef ReturnType;
+                 NeboScalar<Initial, typename FieldType::value_type> > typedef
+          ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
-                                       NeboScalar<Initial, FieldType>(arg2)));
+                                       NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg2)));
        }
 
       /* Field X Field */
@@ -1173,14 +1885,12 @@
                                                                            FieldType::
                                                                            field_type,
                                                                            FieldType>::
-                                                   Result>,
-                                    FieldType>,
+                                                   Result> >,
                              FieldType> operator *(FieldType const & arg1,
                                                    FieldType const & arg2) {
           ProdOp<Initial,
                  NeboConstField<Initial, FieldType>,
-                 NeboConstField<Initial, FieldType>,
-                 FieldType> typedef ReturnType;
+                 NeboConstField<Initial, FieldType> > typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -1197,16 +1907,74 @@
                                                                            field_type,
                                                                            FieldType>::
                                                    Result>,
-                                    SubExpr2,
-                                    FieldType>,
+                                    SubExpr2>,
                              FieldType> operator *(FieldType const & arg1,
                                                    NeboExpression<SubExpr2,
                                                                   FieldType>
                                                    const & arg2) {
+          ProdOp<Initial, NeboConstField<Initial, FieldType>, SubExpr2> typedef
+          ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* Field X SingleValue */
+      template<typename FieldType>
+       inline NeboExpression<ProdOp<Initial,
+                                    NeboConstField<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result>,
+                                    NeboConstSingleValueField<Initial,
+                                                              typename FieldType::
+                                                              value_type> >,
+                             FieldType> operator *(FieldType const & arg1,
+                                                   SpatialOps::structured::
+                                                   SpatialField<SpatialOps::
+                                                                structured::
+                                                                SingleValue,
+                                                                typename
+                                                                FieldType::
+                                                                value_type>
+                                                   const & arg2) {
           ProdOp<Initial,
                  NeboConstField<Initial, FieldType>,
-                 SubExpr2,
-                 FieldType> typedef ReturnType;
+                 NeboConstSingleValueField<Initial,
+                                           typename FieldType::value_type> >
+          typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
+                                       NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg2)));
+       }
+
+      /* Field X SingleValueExpr */
+      template<typename SubExpr2, typename FieldType>
+       inline NeboExpression<ProdOp<Initial,
+                                    NeboConstField<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result>,
+                                    SubExpr2>,
+                             FieldType> operator *(FieldType const & arg1,
+                                                   NeboSingleValueExpression<SubExpr2,
+                                                                             typename
+                                                                             FieldType::
+                                                                             value_type>
+                                                   const & arg2) {
+          ProdOp<Initial, NeboConstField<Initial, FieldType>, SubExpr2> typedef
+          ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -1218,20 +1986,23 @@
       template<typename SubExpr1, typename FieldType>
        inline NeboExpression<ProdOp<Initial,
                                     SubExpr1,
-                                    NeboScalar<Initial, FieldType>,
-                                    FieldType>,
+                                    NeboScalar<Initial,
+                                               typename FieldType::value_type> >,
                              FieldType> operator *(NeboExpression<SubExpr1,
                                                                   FieldType>
                                                    const & arg1,
                                                    typename FieldType::
                                                    value_type const & arg2) {
-          ProdOp<Initial, SubExpr1, NeboScalar<Initial, FieldType>, FieldType>
-          typedef ReturnType;
+          ProdOp<Initial,
+                 SubExpr1,
+                 NeboScalar<Initial, typename FieldType::value_type> > typedef
+          ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg1.expr(),
-                                       NeboScalar<Initial, FieldType>(arg2)));
+                                       NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg2)));
        }
 
       /* SubExpr X Field */
@@ -1243,16 +2014,13 @@
                                                                            FieldType::
                                                                            field_type,
                                                                            FieldType>::
-                                                   Result>,
-                                    FieldType>,
+                                                   Result> >,
                              FieldType> operator *(NeboExpression<SubExpr1,
                                                                   FieldType>
                                                    const & arg1,
                                                    FieldType const & arg2) {
-          ProdOp<Initial,
-                 SubExpr1,
-                 NeboConstField<Initial, FieldType>,
-                 FieldType> typedef ReturnType;
+          ProdOp<Initial, SubExpr1, NeboConstField<Initial, FieldType> > typedef
+          ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -1262,57 +2030,323 @@
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2, typename FieldType>
-       inline NeboExpression<ProdOp<Initial, SubExpr1, SubExpr2, FieldType>,
-                             FieldType> operator *(NeboExpression<SubExpr1,
-                                                                  FieldType>
-                                                   const & arg1,
-                                                   NeboExpression<SubExpr2,
-                                                                  FieldType>
-                                                   const & arg2) {
-          ProdOp<Initial, SubExpr1, SubExpr2, FieldType> typedef ReturnType;
+       inline NeboExpression<ProdOp<Initial, SubExpr1, SubExpr2>, FieldType>
+       operator *(NeboExpression<SubExpr1, FieldType> const & arg1,
+                  NeboExpression<SubExpr2, FieldType> const & arg2) {
+          ProdOp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SubExpr X SingleValue */
+      template<typename SubExpr1, typename FieldType>
+       inline NeboExpression<ProdOp<Initial,
+                                    SubExpr1,
+                                    NeboConstSingleValueField<Initial,
+                                                              typename FieldType::
+                                                              value_type> >,
+                             FieldType> operator *(NeboExpression<SubExpr1,
+                                                                  FieldType>
+                                                   const & arg1,
+                                                   SpatialOps::structured::
+                                                   SpatialField<SpatialOps::
+                                                                structured::
+                                                                SingleValue,
+                                                                typename
+                                                                FieldType::
+                                                                value_type>
+                                                   const & arg2) {
+          ProdOp<Initial,
+                 SubExpr1,
+                 NeboConstSingleValueField<Initial,
+                                           typename FieldType::value_type> >
+          typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg2)));
+       }
+
+      /* SubExpr X SingleValueExpr */
+      template<typename SubExpr1, typename SubExpr2, typename FieldType>
+       inline NeboExpression<ProdOp<Initial, SubExpr1, SubExpr2>, FieldType>
+       operator *(NeboExpression<SubExpr1, FieldType> const & arg1,
+                  NeboSingleValueExpression<SubExpr2,
+                                            typename FieldType::value_type>
+                  const & arg2) {
+          ProdOp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SingleValue X Scalar */
+      template<typename T>
+       inline NeboSingleValueExpression<ProdOp<Initial,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T>,
+                                               NeboScalar<Initial, T> >,
+                                        T> operator *(SpatialOps::structured::
+                                                      SpatialField<SpatialOps::
+                                                                   structured::
+                                                                   SingleValue,
+                                                                   T> const &
+                                                      arg1,
+                                                      T const & arg2) {
+          ProdOp<Initial,
+                 NeboConstSingleValueField<Initial, T>,
+                 NeboScalar<Initial, T> > typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       NeboScalar<Initial, T>(arg2)));
+       }
+
+      /* SingleValue X Field */
+      template<typename FieldType>
+       inline NeboExpression<ProdOp<Initial,
+                                    NeboConstSingleValueField<Initial,
+                                                              typename FieldType::
+                                                              value_type>,
+                                    NeboConstField<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result> >,
+                             FieldType> operator *(SpatialOps::structured::
+                                                   SpatialField<SpatialOps::
+                                                                structured::
+                                                                SingleValue,
+                                                                typename
+                                                                FieldType::
+                                                                value_type>
+                                                   const & arg1,
+                                                   FieldType const & arg2) {
+          ProdOp<Initial,
+                 NeboConstSingleValueField<Initial,
+                                           typename FieldType::value_type>,
+                 NeboConstField<Initial, FieldType> > typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg1),
+                                       NeboConstField<Initial, FieldType>(arg2)));
+       }
+
+      /* SingleValue X SubExpr */
+      template<typename SubExpr2, typename FieldType>
+       inline NeboExpression<ProdOp<Initial,
+                                    NeboConstSingleValueField<Initial,
+                                                              typename FieldType::
+                                                              value_type>,
+                                    SubExpr2>,
+                             FieldType> operator *(SpatialOps::structured::
+                                                   SpatialField<SpatialOps::
+                                                                structured::
+                                                                SingleValue,
+                                                                typename
+                                                                FieldType::
+                                                                value_type>
+                                                   const & arg1,
+                                                   NeboExpression<SubExpr2,
+                                                                  FieldType>
+                                                   const & arg2) {
+          ProdOp<Initial,
+                 NeboConstSingleValueField<Initial,
+                                           typename FieldType::value_type>,
+                 SubExpr2> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* SingleValue X SingleValue */
+      template<typename T>
+       inline NeboSingleValueExpression<ProdOp<Initial,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T>,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T> >,
+                                        T> operator *(SpatialOps::structured::
+                                                      SpatialField<SpatialOps::
+                                                                   structured::
+                                                                   SingleValue,
+                                                                   T> const &
+                                                      arg1,
+                                                      SpatialOps::structured::
+                                                      SpatialField<SpatialOps::
+                                                                   structured::
+                                                                   SingleValue,
+                                                                   T> const &
+                                                      arg2) {
+          ProdOp<Initial,
+                 NeboConstSingleValueField<Initial, T>,
+                 NeboConstSingleValueField<Initial, T> > typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* SingleValue X SingleValueExpr */
+      template<typename SubExpr2, typename T>
+       inline NeboSingleValueExpression<ProdOp<Initial,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T>,
+                                               SubExpr2>,
+                                        T> operator *(SpatialOps::structured::
+                                                      SpatialField<SpatialOps::
+                                                                   structured::
+                                                                   SingleValue,
+                                                                   T> const &
+                                                      arg1,
+                                                      NeboSingleValueExpression<SubExpr2,
+                                                                                T>
+                                                      const & arg2) {
+          ProdOp<Initial, NeboConstSingleValueField<Initial, T>, SubExpr2>
+          typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* SingleValueExpr X Scalar */
+      template<typename SubExpr1, typename T>
+       inline NeboSingleValueExpression<ProdOp<Initial,
+                                               SubExpr1,
+                                               NeboScalar<Initial, T> >,
+                                        T> operator *(NeboSingleValueExpression<SubExpr1,
+                                                                                T>
+                                                      const & arg1,
+                                                      T const & arg2) {
+          ProdOp<Initial, SubExpr1, NeboScalar<Initial, T> > typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), NeboScalar<Initial, T>(arg2)));
+       }
+
+      /* SingleValueExpr X Field */
+      template<typename SubExpr1, typename FieldType>
+       inline NeboExpression<ProdOp<Initial,
+                                    SubExpr1,
+                                    NeboConstField<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result> >,
+                             FieldType> operator *(NeboSingleValueExpression<SubExpr1,
+                                                                             typename
+                                                                             FieldType::
+                                                                             value_type>
+                                                   const & arg1,
+                                                   FieldType const & arg2) {
+          ProdOp<Initial, SubExpr1, NeboConstField<Initial, FieldType> > typedef
+          ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstField<Initial, FieldType>(arg2)));
+       }
+
+      /* SingleValueExpr X SubExpr */
+      template<typename SubExpr1, typename SubExpr2, typename FieldType>
+       inline NeboExpression<ProdOp<Initial, SubExpr1, SubExpr2>, FieldType>
+       operator *(NeboSingleValueExpression<SubExpr1,
+                                            typename FieldType::value_type>
+                  const & arg1,
+                  NeboExpression<SubExpr2, FieldType> const & arg2) {
+          ProdOp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SingleValueExpr X SingleValue */
+      template<typename SubExpr1, typename T>
+       inline NeboSingleValueExpression<ProdOp<Initial,
+                                               SubExpr1,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T> >,
+                                        T> operator *(NeboSingleValueExpression<SubExpr1,
+                                                                                T>
+                                                      const & arg1,
+                                                      SpatialOps::structured::
+                                                      SpatialField<SpatialOps::
+                                                                   structured::
+                                                                   SingleValue,
+                                                                   T> const &
+                                                      arg2) {
+          ProdOp<Initial, SubExpr1, NeboConstSingleValueField<Initial, T> >
+          typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* SingleValueExpr X SingleValueExpr */
+      template<typename SubExpr1, typename SubExpr2, typename T>
+       inline NeboSingleValueExpression<ProdOp<Initial, SubExpr1, SubExpr2>, T>
+       operator *(NeboSingleValueExpression<SubExpr1, T> const & arg1,
+                  NeboSingleValueExpression<SubExpr2, T> const & arg2) {
+          ProdOp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
        };
 
-      template<typename CurrentMode,
-               typename Operand1,
-               typename Operand2,
-               typename FieldType>
+      template<typename CurrentMode, typename Operand1, typename Operand2>
        struct DivOp;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct DivOp<Initial, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct DivOp<Initial, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
           DivOp<SeqWalk,
                 typename Operand1::SeqWalkType,
-                typename Operand2::SeqWalkType,
-                FieldType> typedef SeqWalkType;
+                typename Operand2::SeqWalkType> typedef SeqWalkType;
 
 #         ifdef FIELD_EXPRESSION_THREADS
              DivOp<Resize,
                    typename Operand1::ResizeType,
-                   typename Operand2::ResizeType,
-                   FieldType> typedef ResizeType;
+                   typename Operand2::ResizeType> typedef ResizeType;
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
              DivOp<GPUWalk,
                    typename Operand1::GPUWalkType,
-                   typename Operand2::GPUWalkType,
-                   FieldType> typedef GPUWalkType;
+                   typename Operand2::GPUWalkType> typedef GPUWalkType;
 #         endif
           /* __CUDACC__ */
 
           DivOp<Reduction,
                 typename Operand1::ReductionType,
-                typename Operand2::ReductionType,
-                FieldType> typedef ReductionType;
+                typename Operand2::ReductionType> typedef ReductionType;
 
           DivOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -1383,17 +2417,12 @@
           Operand2 const operand2_;
       };
 #     ifdef FIELD_EXPRESSION_THREADS
-         template<typename Operand1, typename Operand2, typename FieldType>
-          struct DivOp<Resize, Operand1, Operand2, FieldType> {
+         template<typename Operand1, typename Operand2>
+          struct DivOp<Resize, Operand1, Operand2> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
              DivOp<SeqWalk,
                    typename Operand1::SeqWalkType,
-                   typename Operand2::SeqWalkType,
-                   FieldType> typedef SeqWalkType;
+                   typename Operand2::SeqWalkType> typedef SeqWalkType;
 
              DivOp(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -1413,14 +2442,10 @@
          }
 #     endif
       /* FIELD_EXPRESSION_THREADS */;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct DivOp<SeqWalk, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct DivOp<SeqWalk, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef EvalReturnType;
+          typename Operand1::value_type typedef value_type;
 
           DivOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -1428,7 +2453,7 @@
 
           inline void next(void) { operand1_.next(); operand2_.next(); }
 
-          inline EvalReturnType eval(void) const {
+          inline value_type eval(void) const {
              return (operand1_.eval() / operand2_.eval());
           }
 
@@ -1438,14 +2463,10 @@
           Operand2 operand2_;
       };
 #     ifdef __CUDACC__
-         template<typename Operand1, typename Operand2, typename FieldType>
-          struct DivOp<GPUWalk, Operand1, Operand2, FieldType> {
+         template<typename Operand1, typename Operand2>
+          struct DivOp<GPUWalk, Operand1, Operand2> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             typename field_type::value_type typedef AtomicType;
+             typename Operand1::value_type typedef value_type;
 
              DivOp(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -1463,7 +2484,7 @@
                 operand2_.next();
              }
 
-             __device__ inline AtomicType eval(void) const {
+             __device__ inline value_type eval(void) const {
                 return (operand1_.eval() / operand2_.eval());
              }
 
@@ -1474,14 +2495,10 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct DivOp<Reduction, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct DivOp<Reduction, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef EvalReturnType;
+          typename Operand1::value_type typedef value_type;
 
           DivOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -1497,7 +2514,7 @@
              return (operand1_.has_length() || operand2_.has_length());
           }
 
-          inline EvalReturnType eval(void) const {
+          inline value_type eval(void) const {
              return (operand1_.eval() / operand2_.eval());
           }
 
@@ -1510,46 +2527,87 @@
       /* Scalar X Field */
       template<typename FieldType>
        inline NeboExpression<DivOp<Initial,
-                                   NeboScalar<Initial, FieldType>,
+                                   NeboScalar<Initial,
+                                              typename FieldType::value_type>,
                                    NeboConstField<Initial,
                                                   typename NeboFieldCheck<typename
                                                                           FieldType::
                                                                           field_type,
                                                                           FieldType>::
-                                                  Result>,
-                                   FieldType>,
+                                                  Result> >,
                              FieldType> operator /(typename FieldType::
                                                    value_type const & arg1,
                                                    FieldType const & arg2) {
           DivOp<Initial,
-                NeboScalar<Initial, FieldType>,
-                NeboConstField<Initial, FieldType>,
-                FieldType> typedef ReturnType;
+                NeboScalar<Initial, typename FieldType::value_type>,
+                NeboConstField<Initial, FieldType> > typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
-          return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
+          return ReturnTerm(ReturnType(NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg1),
                                        NeboConstField<Initial, FieldType>(arg2)));
        }
 
       /* Scalar X SubExpr */
       template<typename SubExpr2, typename FieldType>
        inline NeboExpression<DivOp<Initial,
-                                   NeboScalar<Initial, FieldType>,
-                                   SubExpr2,
-                                   FieldType>,
+                                   NeboScalar<Initial,
+                                              typename FieldType::value_type>,
+                                   SubExpr2>,
                              FieldType> operator /(typename FieldType::
                                                    value_type const & arg1,
                                                    NeboExpression<SubExpr2,
                                                                   FieldType>
                                                    const & arg2) {
-          DivOp<Initial, NeboScalar<Initial, FieldType>, SubExpr2, FieldType>
-          typedef ReturnType;
+          DivOp<Initial,
+                NeboScalar<Initial, typename FieldType::value_type>,
+                SubExpr2> typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
-          return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
+          return ReturnTerm(ReturnType(NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg1),
                                        arg2.expr()));
+       }
+
+      /* Scalar X SingleValue */
+      template<typename T>
+       inline NeboSingleValueExpression<DivOp<Initial,
+                                              NeboScalar<Initial, T>,
+                                              NeboConstSingleValueField<Initial,
+                                                                        T> >,
+                                        T> operator /(T const & arg1,
+                                                      SpatialOps::structured::
+                                                      SpatialField<SpatialOps::
+                                                                   structured::
+                                                                   SingleValue,
+                                                                   T> const &
+                                                      arg2) {
+          DivOp<Initial,
+                NeboScalar<Initial, T>,
+                NeboConstSingleValueField<Initial, T> > typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboScalar<Initial, T>(arg1),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* Scalar X SingleValueExpr */
+      template<typename SubExpr2, typename T>
+       inline NeboSingleValueExpression<DivOp<Initial,
+                                              NeboScalar<Initial, T>,
+                                              SubExpr2>,
+                                        T> operator /(T const & arg1,
+                                                      NeboSingleValueExpression<SubExpr2,
+                                                                                T>
+                                                      const & arg2) {
+          DivOp<Initial, NeboScalar<Initial, T>, SubExpr2> typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboScalar<Initial, T>(arg1), arg2.expr()));
        }
 
       /* Field X Scalar */
@@ -1561,20 +2619,21 @@
                                                                           field_type,
                                                                           FieldType>::
                                                   Result>,
-                                   NeboScalar<Initial, FieldType>,
-                                   FieldType>,
+                                   NeboScalar<Initial,
+                                              typename FieldType::value_type> >,
                              FieldType> operator /(FieldType const & arg1,
                                                    typename FieldType::
                                                    value_type const & arg2) {
           DivOp<Initial,
                 NeboConstField<Initial, FieldType>,
-                NeboScalar<Initial, FieldType>,
-                FieldType> typedef ReturnType;
+                NeboScalar<Initial, typename FieldType::value_type> > typedef
+          ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
-                                       NeboScalar<Initial, FieldType>(arg2)));
+                                       NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg2)));
        }
 
       /* Field X Field */
@@ -1591,14 +2650,12 @@
                                                                           FieldType::
                                                                           field_type,
                                                                           FieldType>::
-                                                  Result>,
-                                   FieldType>,
+                                                  Result> >,
                              FieldType> operator /(FieldType const & arg1,
                                                    FieldType const & arg2) {
           DivOp<Initial,
                 NeboConstField<Initial, FieldType>,
-                NeboConstField<Initial, FieldType>,
-                FieldType> typedef ReturnType;
+                NeboConstField<Initial, FieldType> > typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -1615,14 +2672,74 @@
                                                                           field_type,
                                                                           FieldType>::
                                                   Result>,
-                                   SubExpr2,
-                                   FieldType>,
+                                   SubExpr2>,
                              FieldType> operator /(FieldType const & arg1,
                                                    NeboExpression<SubExpr2,
                                                                   FieldType>
                                                    const & arg2) {
-          DivOp<Initial, NeboConstField<Initial, FieldType>, SubExpr2, FieldType>
+          DivOp<Initial, NeboConstField<Initial, FieldType>, SubExpr2> typedef
+          ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* Field X SingleValue */
+      template<typename FieldType>
+       inline NeboExpression<DivOp<Initial,
+                                   NeboConstField<Initial,
+                                                  typename NeboFieldCheck<typename
+                                                                          FieldType::
+                                                                          field_type,
+                                                                          FieldType>::
+                                                  Result>,
+                                   NeboConstSingleValueField<Initial,
+                                                             typename FieldType::
+                                                             value_type> >,
+                             FieldType> operator /(FieldType const & arg1,
+                                                   SpatialOps::structured::
+                                                   SpatialField<SpatialOps::
+                                                                structured::
+                                                                SingleValue,
+                                                                typename
+                                                                FieldType::
+                                                                value_type>
+                                                   const & arg2) {
+          DivOp<Initial,
+                NeboConstField<Initial, FieldType>,
+                NeboConstSingleValueField<Initial,
+                                          typename FieldType::value_type> >
           typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
+                                       NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg2)));
+       }
+
+      /* Field X SingleValueExpr */
+      template<typename SubExpr2, typename FieldType>
+       inline NeboExpression<DivOp<Initial,
+                                   NeboConstField<Initial,
+                                                  typename NeboFieldCheck<typename
+                                                                          FieldType::
+                                                                          field_type,
+                                                                          FieldType>::
+                                                  Result>,
+                                   SubExpr2>,
+                             FieldType> operator /(FieldType const & arg1,
+                                                   NeboSingleValueExpression<SubExpr2,
+                                                                             typename
+                                                                             FieldType::
+                                                                             value_type>
+                                                   const & arg2) {
+          DivOp<Initial, NeboConstField<Initial, FieldType>, SubExpr2> typedef
+          ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -1634,20 +2751,23 @@
       template<typename SubExpr1, typename FieldType>
        inline NeboExpression<DivOp<Initial,
                                    SubExpr1,
-                                   NeboScalar<Initial, FieldType>,
-                                   FieldType>,
+                                   NeboScalar<Initial,
+                                              typename FieldType::value_type> >,
                              FieldType> operator /(NeboExpression<SubExpr1,
                                                                   FieldType>
                                                    const & arg1,
                                                    typename FieldType::
                                                    value_type const & arg2) {
-          DivOp<Initial, SubExpr1, NeboScalar<Initial, FieldType>, FieldType>
-          typedef ReturnType;
+          DivOp<Initial,
+                SubExpr1,
+                NeboScalar<Initial, typename FieldType::value_type> > typedef
+          ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg1.expr(),
-                                       NeboScalar<Initial, FieldType>(arg2)));
+                                       NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg2)));
        }
 
       /* SubExpr X Field */
@@ -1659,14 +2779,13 @@
                                                                           FieldType::
                                                                           field_type,
                                                                           FieldType>::
-                                                  Result>,
-                                   FieldType>,
+                                                  Result> >,
                              FieldType> operator /(NeboExpression<SubExpr1,
                                                                   FieldType>
                                                    const & arg1,
                                                    FieldType const & arg2) {
-          DivOp<Initial, SubExpr1, NeboConstField<Initial, FieldType>, FieldType>
-          typedef ReturnType;
+          DivOp<Initial, SubExpr1, NeboConstField<Initial, FieldType> > typedef
+          ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -1676,45 +2795,315 @@
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2, typename FieldType>
-       inline NeboExpression<DivOp<Initial, SubExpr1, SubExpr2, FieldType>,
-                             FieldType> operator /(NeboExpression<SubExpr1,
-                                                                  FieldType>
-                                                   const & arg1,
-                                                   NeboExpression<SubExpr2,
-                                                                  FieldType>
-                                                   const & arg2) {
-          DivOp<Initial, SubExpr1, SubExpr2, FieldType> typedef ReturnType;
+       inline NeboExpression<DivOp<Initial, SubExpr1, SubExpr2>, FieldType>
+       operator /(NeboExpression<SubExpr1, FieldType> const & arg1,
+                  NeboExpression<SubExpr2, FieldType> const & arg2) {
+          DivOp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SubExpr X SingleValue */
+      template<typename SubExpr1, typename FieldType>
+       inline NeboExpression<DivOp<Initial,
+                                   SubExpr1,
+                                   NeboConstSingleValueField<Initial,
+                                                             typename FieldType::
+                                                             value_type> >,
+                             FieldType> operator /(NeboExpression<SubExpr1,
+                                                                  FieldType>
+                                                   const & arg1,
+                                                   SpatialOps::structured::
+                                                   SpatialField<SpatialOps::
+                                                                structured::
+                                                                SingleValue,
+                                                                typename
+                                                                FieldType::
+                                                                value_type>
+                                                   const & arg2) {
+          DivOp<Initial,
+                SubExpr1,
+                NeboConstSingleValueField<Initial,
+                                          typename FieldType::value_type> >
+          typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg2)));
+       }
+
+      /* SubExpr X SingleValueExpr */
+      template<typename SubExpr1, typename SubExpr2, typename FieldType>
+       inline NeboExpression<DivOp<Initial, SubExpr1, SubExpr2>, FieldType>
+       operator /(NeboExpression<SubExpr1, FieldType> const & arg1,
+                  NeboSingleValueExpression<SubExpr2,
+                                            typename FieldType::value_type>
+                  const & arg2) {
+          DivOp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SingleValue X Scalar */
+      template<typename T>
+       inline NeboSingleValueExpression<DivOp<Initial,
+                                              NeboConstSingleValueField<Initial,
+                                                                        T>,
+                                              NeboScalar<Initial, T> >,
+                                        T> operator /(SpatialOps::structured::
+                                                      SpatialField<SpatialOps::
+                                                                   structured::
+                                                                   SingleValue,
+                                                                   T> const &
+                                                      arg1,
+                                                      T const & arg2) {
+          DivOp<Initial,
+                NeboConstSingleValueField<Initial, T>,
+                NeboScalar<Initial, T> > typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       NeboScalar<Initial, T>(arg2)));
+       }
+
+      /* SingleValue X Field */
+      template<typename FieldType>
+       inline NeboExpression<DivOp<Initial,
+                                   NeboConstSingleValueField<Initial,
+                                                             typename FieldType::
+                                                             value_type>,
+                                   NeboConstField<Initial,
+                                                  typename NeboFieldCheck<typename
+                                                                          FieldType::
+                                                                          field_type,
+                                                                          FieldType>::
+                                                  Result> >,
+                             FieldType> operator /(SpatialOps::structured::
+                                                   SpatialField<SpatialOps::
+                                                                structured::
+                                                                SingleValue,
+                                                                typename
+                                                                FieldType::
+                                                                value_type>
+                                                   const & arg1,
+                                                   FieldType const & arg2) {
+          DivOp<Initial,
+                NeboConstSingleValueField<Initial,
+                                          typename FieldType::value_type>,
+                NeboConstField<Initial, FieldType> > typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg1),
+                                       NeboConstField<Initial, FieldType>(arg2)));
+       }
+
+      /* SingleValue X SubExpr */
+      template<typename SubExpr2, typename FieldType>
+       inline NeboExpression<DivOp<Initial,
+                                   NeboConstSingleValueField<Initial,
+                                                             typename FieldType::
+                                                             value_type>,
+                                   SubExpr2>,
+                             FieldType> operator /(SpatialOps::structured::
+                                                   SpatialField<SpatialOps::
+                                                                structured::
+                                                                SingleValue,
+                                                                typename
+                                                                FieldType::
+                                                                value_type>
+                                                   const & arg1,
+                                                   NeboExpression<SubExpr2,
+                                                                  FieldType>
+                                                   const & arg2) {
+          DivOp<Initial,
+                NeboConstSingleValueField<Initial,
+                                          typename FieldType::value_type>,
+                SubExpr2> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* SingleValue X SingleValue */
+      template<typename T>
+       inline NeboSingleValueExpression<DivOp<Initial,
+                                              NeboConstSingleValueField<Initial,
+                                                                        T>,
+                                              NeboConstSingleValueField<Initial,
+                                                                        T> >,
+                                        T> operator /(SpatialOps::structured::
+                                                      SpatialField<SpatialOps::
+                                                                   structured::
+                                                                   SingleValue,
+                                                                   T> const &
+                                                      arg1,
+                                                      SpatialOps::structured::
+                                                      SpatialField<SpatialOps::
+                                                                   structured::
+                                                                   SingleValue,
+                                                                   T> const &
+                                                      arg2) {
+          DivOp<Initial,
+                NeboConstSingleValueField<Initial, T>,
+                NeboConstSingleValueField<Initial, T> > typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* SingleValue X SingleValueExpr */
+      template<typename SubExpr2, typename T>
+       inline NeboSingleValueExpression<DivOp<Initial,
+                                              NeboConstSingleValueField<Initial,
+                                                                        T>,
+                                              SubExpr2>,
+                                        T> operator /(SpatialOps::structured::
+                                                      SpatialField<SpatialOps::
+                                                                   structured::
+                                                                   SingleValue,
+                                                                   T> const &
+                                                      arg1,
+                                                      NeboSingleValueExpression<SubExpr2,
+                                                                                T>
+                                                      const & arg2) {
+          DivOp<Initial, NeboConstSingleValueField<Initial, T>, SubExpr2>
+          typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* SingleValueExpr X Scalar */
+      template<typename SubExpr1, typename T>
+       inline NeboSingleValueExpression<DivOp<Initial,
+                                              SubExpr1,
+                                              NeboScalar<Initial, T> >,
+                                        T> operator /(NeboSingleValueExpression<SubExpr1,
+                                                                                T>
+                                                      const & arg1,
+                                                      T const & arg2) {
+          DivOp<Initial, SubExpr1, NeboScalar<Initial, T> > typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), NeboScalar<Initial, T>(arg2)));
+       }
+
+      /* SingleValueExpr X Field */
+      template<typename SubExpr1, typename FieldType>
+       inline NeboExpression<DivOp<Initial,
+                                   SubExpr1,
+                                   NeboConstField<Initial,
+                                                  typename NeboFieldCheck<typename
+                                                                          FieldType::
+                                                                          field_type,
+                                                                          FieldType>::
+                                                  Result> >,
+                             FieldType> operator /(NeboSingleValueExpression<SubExpr1,
+                                                                             typename
+                                                                             FieldType::
+                                                                             value_type>
+                                                   const & arg1,
+                                                   FieldType const & arg2) {
+          DivOp<Initial, SubExpr1, NeboConstField<Initial, FieldType> > typedef
+          ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstField<Initial, FieldType>(arg2)));
+       }
+
+      /* SingleValueExpr X SubExpr */
+      template<typename SubExpr1, typename SubExpr2, typename FieldType>
+       inline NeboExpression<DivOp<Initial, SubExpr1, SubExpr2>, FieldType>
+       operator /(NeboSingleValueExpression<SubExpr1,
+                                            typename FieldType::value_type>
+                  const & arg1,
+                  NeboExpression<SubExpr2, FieldType> const & arg2) {
+          DivOp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SingleValueExpr X SingleValue */
+      template<typename SubExpr1, typename T>
+       inline NeboSingleValueExpression<DivOp<Initial,
+                                              SubExpr1,
+                                              NeboConstSingleValueField<Initial,
+                                                                        T> >,
+                                        T> operator /(NeboSingleValueExpression<SubExpr1,
+                                                                                T>
+                                                      const & arg1,
+                                                      SpatialOps::structured::
+                                                      SpatialField<SpatialOps::
+                                                                   structured::
+                                                                   SingleValue,
+                                                                   T> const &
+                                                      arg2) {
+          DivOp<Initial, SubExpr1, NeboConstSingleValueField<Initial, T> >
+          typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* SingleValueExpr X SingleValueExpr */
+      template<typename SubExpr1, typename SubExpr2, typename T>
+       inline NeboSingleValueExpression<DivOp<Initial, SubExpr1, SubExpr2>, T>
+       operator /(NeboSingleValueExpression<SubExpr1, T> const & arg1,
+                  NeboSingleValueExpression<SubExpr2, T> const & arg2) {
+          DivOp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
        };
 
-      template<typename CurrentMode, typename Operand, typename FieldType>
+      template<typename CurrentMode, typename Operand>
        struct SinFcn;
-      template<typename Operand, typename FieldType>
-       struct SinFcn<Initial, Operand, FieldType> {
+      template<typename Operand>
+       struct SinFcn<Initial, Operand> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          SinFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef
-          SeqWalkType;
+          SinFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             SinFcn<Resize, typename Operand::ResizeType, FieldType> typedef
-             ResizeType;
+             SinFcn<Resize, typename Operand::ResizeType> typedef ResizeType;
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
-             SinFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef
-             GPUWalkType;
+             SinFcn<GPUWalk, typename Operand::GPUWalkType> typedef GPUWalkType;
 #         endif
           /* __CUDACC__ */
 
-          SinFcn<Reduction, typename Operand::ReductionType, FieldType> typedef
+          SinFcn<Reduction, typename Operand::ReductionType> typedef
           ReductionType;
 
           SinFcn(Operand const & operand)
@@ -1775,15 +3164,10 @@
           Operand const operand_;
       };
 #     ifdef FIELD_EXPRESSION_THREADS
-         template<typename Operand, typename FieldType>
-          struct SinFcn<Resize, Operand, FieldType> {
+         template<typename Operand>
+          struct SinFcn<Resize, Operand> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             SinFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef
-             SeqWalkType;
+             SinFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
 
              SinFcn(Operand const & operand)
              : operand_(operand)
@@ -1800,14 +3184,10 @@
          }
 #     endif
       /* FIELD_EXPRESSION_THREADS */;
-      template<typename Operand, typename FieldType>
-       struct SinFcn<SeqWalk, Operand, FieldType> {
+      template<typename Operand>
+       struct SinFcn<SeqWalk, Operand> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef EvalReturnType;
+          typename Operand::value_type typedef value_type;
 
           SinFcn(Operand const & operand)
           : operand_(operand)
@@ -1815,7 +3195,7 @@
 
           inline void next(void) { operand_.next(); }
 
-          inline EvalReturnType eval(void) const {
+          inline value_type eval(void) const {
              return std::sin(operand_.eval());
           }
 
@@ -1823,14 +3203,10 @@
           Operand operand_;
       };
 #     ifdef __CUDACC__
-         template<typename Operand, typename FieldType>
-          struct SinFcn<GPUWalk, Operand, FieldType> {
+         template<typename Operand>
+          struct SinFcn<GPUWalk, Operand> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             typename field_type::value_type typedef AtomicType;
+             typename Operand::value_type typedef value_type;
 
              SinFcn(Operand const & operand)
              : operand_(operand)
@@ -1840,7 +3216,7 @@
 
              __device__ inline void next(void) { operand_.next(); }
 
-             __device__ inline AtomicType eval(void) const {
+             __device__ inline value_type eval(void) const {
                 return std::sin(operand_.eval());
              }
 
@@ -1849,14 +3225,10 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand, typename FieldType>
-       struct SinFcn<Reduction, Operand, FieldType> {
+      template<typename Operand>
+       struct SinFcn<Reduction, Operand> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef EvalReturnType;
+          typename Operand::value_type typedef value_type;
 
           SinFcn(Operand const & operand)
           : operand_(operand)
@@ -1868,7 +3240,7 @@
 
           inline bool has_length(void) const { return (operand_.has_length()); }
 
-          inline EvalReturnType eval(void) const {
+          inline value_type eval(void) const {
              return std::sin(operand_.eval());
           }
 
@@ -1884,10 +3256,9 @@
                                                                            FieldType::
                                                                            field_type,
                                                                            FieldType>::
-                                                   Result>,
-                                    FieldType>,
+                                                   Result> >,
                              FieldType> sin(FieldType const & arg) {
-          SinFcn<Initial, NeboConstField<Initial, FieldType>, FieldType> typedef
+          SinFcn<Initial, NeboConstField<Initial, FieldType> > typedef
           ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
@@ -1897,43 +3268,66 @@
 
       /* SubExpr */
       template<typename SubExpr, typename FieldType>
-       inline NeboExpression<SinFcn<Initial, SubExpr, FieldType>, FieldType> sin(NeboExpression<SubExpr,
-                                                                                                FieldType>
-                                                                                 const
-                                                                                 &
-                                                                                 arg) {
-          SinFcn<Initial, SubExpr, FieldType> typedef ReturnType;
+       inline NeboExpression<SinFcn<Initial, SubExpr>, FieldType> sin(NeboExpression<SubExpr,
+                                                                                     FieldType>
+                                                                      const &
+                                                                      arg) {
+          SinFcn<Initial, SubExpr> typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg.expr()));
+       }
+
+      /* SingleValue */
+      template<typename T>
+       inline NeboSingleValueExpression<SinFcn<Initial,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T> >,
+                                        T> sin(SpatialOps::structured::
+                                               SpatialField<SpatialOps::
+                                                            structured::
+                                                            SingleValue,
+                                                            T> const & arg) {
+          SinFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
+          ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg)));
+       }
+
+      /* SingleValueExpr */
+      template<typename SubExpr, typename T>
+       inline NeboSingleValueExpression<SinFcn<Initial, SubExpr>, T> sin(NeboSingleValueExpression<SubExpr,
+                                                                                                   T>
+                                                                         const &
+                                                                         arg) {
+          SinFcn<Initial, SubExpr> typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg.expr()));
        };
 
-      template<typename CurrentMode, typename Operand, typename FieldType>
+      template<typename CurrentMode, typename Operand>
        struct CosFcn;
-      template<typename Operand, typename FieldType>
-       struct CosFcn<Initial, Operand, FieldType> {
+      template<typename Operand>
+       struct CosFcn<Initial, Operand> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          CosFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef
-          SeqWalkType;
+          CosFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             CosFcn<Resize, typename Operand::ResizeType, FieldType> typedef
-             ResizeType;
+             CosFcn<Resize, typename Operand::ResizeType> typedef ResizeType;
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
-             CosFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef
-             GPUWalkType;
+             CosFcn<GPUWalk, typename Operand::GPUWalkType> typedef GPUWalkType;
 #         endif
           /* __CUDACC__ */
 
-          CosFcn<Reduction, typename Operand::ReductionType, FieldType> typedef
+          CosFcn<Reduction, typename Operand::ReductionType> typedef
           ReductionType;
 
           CosFcn(Operand const & operand)
@@ -1994,15 +3388,10 @@
           Operand const operand_;
       };
 #     ifdef FIELD_EXPRESSION_THREADS
-         template<typename Operand, typename FieldType>
-          struct CosFcn<Resize, Operand, FieldType> {
+         template<typename Operand>
+          struct CosFcn<Resize, Operand> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             CosFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef
-             SeqWalkType;
+             CosFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
 
              CosFcn(Operand const & operand)
              : operand_(operand)
@@ -2019,14 +3408,10 @@
          }
 #     endif
       /* FIELD_EXPRESSION_THREADS */;
-      template<typename Operand, typename FieldType>
-       struct CosFcn<SeqWalk, Operand, FieldType> {
+      template<typename Operand>
+       struct CosFcn<SeqWalk, Operand> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef EvalReturnType;
+          typename Operand::value_type typedef value_type;
 
           CosFcn(Operand const & operand)
           : operand_(operand)
@@ -2034,7 +3419,7 @@
 
           inline void next(void) { operand_.next(); }
 
-          inline EvalReturnType eval(void) const {
+          inline value_type eval(void) const {
              return std::cos(operand_.eval());
           }
 
@@ -2042,14 +3427,10 @@
           Operand operand_;
       };
 #     ifdef __CUDACC__
-         template<typename Operand, typename FieldType>
-          struct CosFcn<GPUWalk, Operand, FieldType> {
+         template<typename Operand>
+          struct CosFcn<GPUWalk, Operand> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             typename field_type::value_type typedef AtomicType;
+             typename Operand::value_type typedef value_type;
 
              CosFcn(Operand const & operand)
              : operand_(operand)
@@ -2059,7 +3440,7 @@
 
              __device__ inline void next(void) { operand_.next(); }
 
-             __device__ inline AtomicType eval(void) const {
+             __device__ inline value_type eval(void) const {
                 return std::cos(operand_.eval());
              }
 
@@ -2068,14 +3449,10 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand, typename FieldType>
-       struct CosFcn<Reduction, Operand, FieldType> {
+      template<typename Operand>
+       struct CosFcn<Reduction, Operand> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef EvalReturnType;
+          typename Operand::value_type typedef value_type;
 
           CosFcn(Operand const & operand)
           : operand_(operand)
@@ -2087,7 +3464,7 @@
 
           inline bool has_length(void) const { return (operand_.has_length()); }
 
-          inline EvalReturnType eval(void) const {
+          inline value_type eval(void) const {
              return std::cos(operand_.eval());
           }
 
@@ -2103,10 +3480,9 @@
                                                                            FieldType::
                                                                            field_type,
                                                                            FieldType>::
-                                                   Result>,
-                                    FieldType>,
+                                                   Result> >,
                              FieldType> cos(FieldType const & arg) {
-          CosFcn<Initial, NeboConstField<Initial, FieldType>, FieldType> typedef
+          CosFcn<Initial, NeboConstField<Initial, FieldType> > typedef
           ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
@@ -2116,43 +3492,66 @@
 
       /* SubExpr */
       template<typename SubExpr, typename FieldType>
-       inline NeboExpression<CosFcn<Initial, SubExpr, FieldType>, FieldType> cos(NeboExpression<SubExpr,
-                                                                                                FieldType>
-                                                                                 const
-                                                                                 &
-                                                                                 arg) {
-          CosFcn<Initial, SubExpr, FieldType> typedef ReturnType;
+       inline NeboExpression<CosFcn<Initial, SubExpr>, FieldType> cos(NeboExpression<SubExpr,
+                                                                                     FieldType>
+                                                                      const &
+                                                                      arg) {
+          CosFcn<Initial, SubExpr> typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg.expr()));
+       }
+
+      /* SingleValue */
+      template<typename T>
+       inline NeboSingleValueExpression<CosFcn<Initial,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T> >,
+                                        T> cos(SpatialOps::structured::
+                                               SpatialField<SpatialOps::
+                                                            structured::
+                                                            SingleValue,
+                                                            T> const & arg) {
+          CosFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
+          ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg)));
+       }
+
+      /* SingleValueExpr */
+      template<typename SubExpr, typename T>
+       inline NeboSingleValueExpression<CosFcn<Initial, SubExpr>, T> cos(NeboSingleValueExpression<SubExpr,
+                                                                                                   T>
+                                                                         const &
+                                                                         arg) {
+          CosFcn<Initial, SubExpr> typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg.expr()));
        };
 
-      template<typename CurrentMode, typename Operand, typename FieldType>
+      template<typename CurrentMode, typename Operand>
        struct TanFcn;
-      template<typename Operand, typename FieldType>
-       struct TanFcn<Initial, Operand, FieldType> {
+      template<typename Operand>
+       struct TanFcn<Initial, Operand> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          TanFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef
-          SeqWalkType;
+          TanFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             TanFcn<Resize, typename Operand::ResizeType, FieldType> typedef
-             ResizeType;
+             TanFcn<Resize, typename Operand::ResizeType> typedef ResizeType;
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
-             TanFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef
-             GPUWalkType;
+             TanFcn<GPUWalk, typename Operand::GPUWalkType> typedef GPUWalkType;
 #         endif
           /* __CUDACC__ */
 
-          TanFcn<Reduction, typename Operand::ReductionType, FieldType> typedef
+          TanFcn<Reduction, typename Operand::ReductionType> typedef
           ReductionType;
 
           TanFcn(Operand const & operand)
@@ -2213,15 +3612,10 @@
           Operand const operand_;
       };
 #     ifdef FIELD_EXPRESSION_THREADS
-         template<typename Operand, typename FieldType>
-          struct TanFcn<Resize, Operand, FieldType> {
+         template<typename Operand>
+          struct TanFcn<Resize, Operand> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             TanFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef
-             SeqWalkType;
+             TanFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
 
              TanFcn(Operand const & operand)
              : operand_(operand)
@@ -2238,14 +3632,10 @@
          }
 #     endif
       /* FIELD_EXPRESSION_THREADS */;
-      template<typename Operand, typename FieldType>
-       struct TanFcn<SeqWalk, Operand, FieldType> {
+      template<typename Operand>
+       struct TanFcn<SeqWalk, Operand> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef EvalReturnType;
+          typename Operand::value_type typedef value_type;
 
           TanFcn(Operand const & operand)
           : operand_(operand)
@@ -2253,7 +3643,7 @@
 
           inline void next(void) { operand_.next(); }
 
-          inline EvalReturnType eval(void) const {
+          inline value_type eval(void) const {
              return std::tan(operand_.eval());
           }
 
@@ -2261,14 +3651,10 @@
           Operand operand_;
       };
 #     ifdef __CUDACC__
-         template<typename Operand, typename FieldType>
-          struct TanFcn<GPUWalk, Operand, FieldType> {
+         template<typename Operand>
+          struct TanFcn<GPUWalk, Operand> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             typename field_type::value_type typedef AtomicType;
+             typename Operand::value_type typedef value_type;
 
              TanFcn(Operand const & operand)
              : operand_(operand)
@@ -2278,7 +3664,7 @@
 
              __device__ inline void next(void) { operand_.next(); }
 
-             __device__ inline AtomicType eval(void) const {
+             __device__ inline value_type eval(void) const {
                 return std::tan(operand_.eval());
              }
 
@@ -2287,14 +3673,10 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand, typename FieldType>
-       struct TanFcn<Reduction, Operand, FieldType> {
+      template<typename Operand>
+       struct TanFcn<Reduction, Operand> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef EvalReturnType;
+          typename Operand::value_type typedef value_type;
 
           TanFcn(Operand const & operand)
           : operand_(operand)
@@ -2306,7 +3688,7 @@
 
           inline bool has_length(void) const { return (operand_.has_length()); }
 
-          inline EvalReturnType eval(void) const {
+          inline value_type eval(void) const {
              return std::tan(operand_.eval());
           }
 
@@ -2322,10 +3704,9 @@
                                                                            FieldType::
                                                                            field_type,
                                                                            FieldType>::
-                                                   Result>,
-                                    FieldType>,
+                                                   Result> >,
                              FieldType> tan(FieldType const & arg) {
-          TanFcn<Initial, NeboConstField<Initial, FieldType>, FieldType> typedef
+          TanFcn<Initial, NeboConstField<Initial, FieldType> > typedef
           ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
@@ -2335,43 +3716,66 @@
 
       /* SubExpr */
       template<typename SubExpr, typename FieldType>
-       inline NeboExpression<TanFcn<Initial, SubExpr, FieldType>, FieldType> tan(NeboExpression<SubExpr,
-                                                                                                FieldType>
-                                                                                 const
-                                                                                 &
-                                                                                 arg) {
-          TanFcn<Initial, SubExpr, FieldType> typedef ReturnType;
+       inline NeboExpression<TanFcn<Initial, SubExpr>, FieldType> tan(NeboExpression<SubExpr,
+                                                                                     FieldType>
+                                                                      const &
+                                                                      arg) {
+          TanFcn<Initial, SubExpr> typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg.expr()));
+       }
+
+      /* SingleValue */
+      template<typename T>
+       inline NeboSingleValueExpression<TanFcn<Initial,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T> >,
+                                        T> tan(SpatialOps::structured::
+                                               SpatialField<SpatialOps::
+                                                            structured::
+                                                            SingleValue,
+                                                            T> const & arg) {
+          TanFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
+          ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg)));
+       }
+
+      /* SingleValueExpr */
+      template<typename SubExpr, typename T>
+       inline NeboSingleValueExpression<TanFcn<Initial, SubExpr>, T> tan(NeboSingleValueExpression<SubExpr,
+                                                                                                   T>
+                                                                         const &
+                                                                         arg) {
+          TanFcn<Initial, SubExpr> typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg.expr()));
        };
 
-      template<typename CurrentMode, typename Operand, typename FieldType>
+      template<typename CurrentMode, typename Operand>
        struct ExpFcn;
-      template<typename Operand, typename FieldType>
-       struct ExpFcn<Initial, Operand, FieldType> {
+      template<typename Operand>
+       struct ExpFcn<Initial, Operand> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          ExpFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef
-          SeqWalkType;
+          ExpFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             ExpFcn<Resize, typename Operand::ResizeType, FieldType> typedef
-             ResizeType;
+             ExpFcn<Resize, typename Operand::ResizeType> typedef ResizeType;
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
-             ExpFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef
-             GPUWalkType;
+             ExpFcn<GPUWalk, typename Operand::GPUWalkType> typedef GPUWalkType;
 #         endif
           /* __CUDACC__ */
 
-          ExpFcn<Reduction, typename Operand::ReductionType, FieldType> typedef
+          ExpFcn<Reduction, typename Operand::ReductionType> typedef
           ReductionType;
 
           ExpFcn(Operand const & operand)
@@ -2432,15 +3836,10 @@
           Operand const operand_;
       };
 #     ifdef FIELD_EXPRESSION_THREADS
-         template<typename Operand, typename FieldType>
-          struct ExpFcn<Resize, Operand, FieldType> {
+         template<typename Operand>
+          struct ExpFcn<Resize, Operand> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             ExpFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef
-             SeqWalkType;
+             ExpFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
 
              ExpFcn(Operand const & operand)
              : operand_(operand)
@@ -2457,14 +3856,10 @@
          }
 #     endif
       /* FIELD_EXPRESSION_THREADS */;
-      template<typename Operand, typename FieldType>
-       struct ExpFcn<SeqWalk, Operand, FieldType> {
+      template<typename Operand>
+       struct ExpFcn<SeqWalk, Operand> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef EvalReturnType;
+          typename Operand::value_type typedef value_type;
 
           ExpFcn(Operand const & operand)
           : operand_(operand)
@@ -2472,7 +3867,7 @@
 
           inline void next(void) { operand_.next(); }
 
-          inline EvalReturnType eval(void) const {
+          inline value_type eval(void) const {
              return std::exp(operand_.eval());
           }
 
@@ -2480,14 +3875,10 @@
           Operand operand_;
       };
 #     ifdef __CUDACC__
-         template<typename Operand, typename FieldType>
-          struct ExpFcn<GPUWalk, Operand, FieldType> {
+         template<typename Operand>
+          struct ExpFcn<GPUWalk, Operand> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             typename field_type::value_type typedef AtomicType;
+             typename Operand::value_type typedef value_type;
 
              ExpFcn(Operand const & operand)
              : operand_(operand)
@@ -2497,7 +3888,7 @@
 
              __device__ inline void next(void) { operand_.next(); }
 
-             __device__ inline AtomicType eval(void) const {
+             __device__ inline value_type eval(void) const {
                 return std::exp(operand_.eval());
              }
 
@@ -2506,14 +3897,10 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand, typename FieldType>
-       struct ExpFcn<Reduction, Operand, FieldType> {
+      template<typename Operand>
+       struct ExpFcn<Reduction, Operand> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef EvalReturnType;
+          typename Operand::value_type typedef value_type;
 
           ExpFcn(Operand const & operand)
           : operand_(operand)
@@ -2525,7 +3912,7 @@
 
           inline bool has_length(void) const { return (operand_.has_length()); }
 
-          inline EvalReturnType eval(void) const {
+          inline value_type eval(void) const {
              return std::exp(operand_.eval());
           }
 
@@ -2541,10 +3928,9 @@
                                                                            FieldType::
                                                                            field_type,
                                                                            FieldType>::
-                                                   Result>,
-                                    FieldType>,
+                                                   Result> >,
                              FieldType> exp(FieldType const & arg) {
-          ExpFcn<Initial, NeboConstField<Initial, FieldType>, FieldType> typedef
+          ExpFcn<Initial, NeboConstField<Initial, FieldType> > typedef
           ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
@@ -2554,43 +3940,67 @@
 
       /* SubExpr */
       template<typename SubExpr, typename FieldType>
-       inline NeboExpression<ExpFcn<Initial, SubExpr, FieldType>, FieldType> exp(NeboExpression<SubExpr,
-                                                                                                FieldType>
-                                                                                 const
-                                                                                 &
-                                                                                 arg) {
-          ExpFcn<Initial, SubExpr, FieldType> typedef ReturnType;
+       inline NeboExpression<ExpFcn<Initial, SubExpr>, FieldType> exp(NeboExpression<SubExpr,
+                                                                                     FieldType>
+                                                                      const &
+                                                                      arg) {
+          ExpFcn<Initial, SubExpr> typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg.expr()));
+       }
+
+      /* SingleValue */
+      template<typename T>
+       inline NeboSingleValueExpression<ExpFcn<Initial,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T> >,
+                                        T> exp(SpatialOps::structured::
+                                               SpatialField<SpatialOps::
+                                                            structured::
+                                                            SingleValue,
+                                                            T> const & arg) {
+          ExpFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
+          ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg)));
+       }
+
+      /* SingleValueExpr */
+      template<typename SubExpr, typename T>
+       inline NeboSingleValueExpression<ExpFcn<Initial, SubExpr>, T> exp(NeboSingleValueExpression<SubExpr,
+                                                                                                   T>
+                                                                         const &
+                                                                         arg) {
+          ExpFcn<Initial, SubExpr> typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg.expr()));
        };
 
-      template<typename CurrentMode, typename Operand, typename FieldType>
+      template<typename CurrentMode, typename Operand>
        struct TanhFcn;
-      template<typename Operand, typename FieldType>
-       struct TanhFcn<Initial, Operand, FieldType> {
+      template<typename Operand>
+       struct TanhFcn<Initial, Operand> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          TanhFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef
-          SeqWalkType;
+          TanhFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             TanhFcn<Resize, typename Operand::ResizeType, FieldType> typedef
-             ResizeType;
+             TanhFcn<Resize, typename Operand::ResizeType> typedef ResizeType;
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
-             TanhFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef
-             GPUWalkType;
+             TanhFcn<GPUWalk, typename Operand::GPUWalkType> typedef GPUWalkType
+             ;
 #         endif
           /* __CUDACC__ */
 
-          TanhFcn<Reduction, typename Operand::ReductionType, FieldType> typedef
+          TanhFcn<Reduction, typename Operand::ReductionType> typedef
           ReductionType;
 
           TanhFcn(Operand const & operand)
@@ -2651,15 +4061,11 @@
           Operand const operand_;
       };
 #     ifdef FIELD_EXPRESSION_THREADS
-         template<typename Operand, typename FieldType>
-          struct TanhFcn<Resize, Operand, FieldType> {
+         template<typename Operand>
+          struct TanhFcn<Resize, Operand> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             TanhFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef
-             SeqWalkType;
+             TanhFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType
+             ;
 
              TanhFcn(Operand const & operand)
              : operand_(operand)
@@ -2676,14 +4082,10 @@
          }
 #     endif
       /* FIELD_EXPRESSION_THREADS */;
-      template<typename Operand, typename FieldType>
-       struct TanhFcn<SeqWalk, Operand, FieldType> {
+      template<typename Operand>
+       struct TanhFcn<SeqWalk, Operand> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef EvalReturnType;
+          typename Operand::value_type typedef value_type;
 
           TanhFcn(Operand const & operand)
           : operand_(operand)
@@ -2691,7 +4093,7 @@
 
           inline void next(void) { operand_.next(); }
 
-          inline EvalReturnType eval(void) const {
+          inline value_type eval(void) const {
              return std::tanh(operand_.eval());
           }
 
@@ -2699,14 +4101,10 @@
           Operand operand_;
       };
 #     ifdef __CUDACC__
-         template<typename Operand, typename FieldType>
-          struct TanhFcn<GPUWalk, Operand, FieldType> {
+         template<typename Operand>
+          struct TanhFcn<GPUWalk, Operand> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             typename field_type::value_type typedef AtomicType;
+             typename Operand::value_type typedef value_type;
 
              TanhFcn(Operand const & operand)
              : operand_(operand)
@@ -2716,7 +4114,7 @@
 
              __device__ inline void next(void) { operand_.next(); }
 
-             __device__ inline AtomicType eval(void) const {
+             __device__ inline value_type eval(void) const {
                 return std::tanh(operand_.eval());
              }
 
@@ -2725,14 +4123,10 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand, typename FieldType>
-       struct TanhFcn<Reduction, Operand, FieldType> {
+      template<typename Operand>
+       struct TanhFcn<Reduction, Operand> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef EvalReturnType;
+          typename Operand::value_type typedef value_type;
 
           TanhFcn(Operand const & operand)
           : operand_(operand)
@@ -2744,7 +4138,7 @@
 
           inline bool has_length(void) const { return (operand_.has_length()); }
 
-          inline EvalReturnType eval(void) const {
+          inline value_type eval(void) const {
              return std::tanh(operand_.eval());
           }
 
@@ -2760,11 +4154,10 @@
                                                                             FieldType::
                                                                             field_type,
                                                                             FieldType>::
-                                                    Result>,
-                                     FieldType>,
+                                                    Result> >,
                              FieldType> tanh(FieldType const & arg) {
-          TanhFcn<Initial, NeboConstField<Initial, FieldType>, FieldType>
-          typedef ReturnType;
+          TanhFcn<Initial, NeboConstField<Initial, FieldType> > typedef
+          ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -2773,40 +4166,66 @@
 
       /* SubExpr */
       template<typename SubExpr, typename FieldType>
-       inline NeboExpression<TanhFcn<Initial, SubExpr, FieldType>, FieldType>
-       tanh(NeboExpression<SubExpr, FieldType> const & arg) {
-          TanhFcn<Initial, SubExpr, FieldType> typedef ReturnType;
+       inline NeboExpression<TanhFcn<Initial, SubExpr>, FieldType> tanh(NeboExpression<SubExpr,
+                                                                                       FieldType>
+                                                                        const &
+                                                                        arg) {
+          TanhFcn<Initial, SubExpr> typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg.expr()));
+       }
+
+      /* SingleValue */
+      template<typename T>
+       inline NeboSingleValueExpression<TanhFcn<Initial,
+                                                NeboConstSingleValueField<Initial,
+                                                                          T> >,
+                                        T> tanh(SpatialOps::structured::
+                                                SpatialField<SpatialOps::
+                                                             structured::
+                                                             SingleValue,
+                                                             T> const & arg) {
+          TanhFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
+          ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg)));
+       }
+
+      /* SingleValueExpr */
+      template<typename SubExpr, typename T>
+       inline NeboSingleValueExpression<TanhFcn<Initial, SubExpr>, T> tanh(NeboSingleValueExpression<SubExpr,
+                                                                                                     T>
+                                                                           const
+                                                                           & arg) {
+          TanhFcn<Initial, SubExpr> typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg.expr()));
        };
 
-      template<typename CurrentMode, typename Operand, typename FieldType>
+      template<typename CurrentMode, typename Operand>
        struct AbsFcn;
-      template<typename Operand, typename FieldType>
-       struct AbsFcn<Initial, Operand, FieldType> {
+      template<typename Operand>
+       struct AbsFcn<Initial, Operand> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          AbsFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef
-          SeqWalkType;
+          AbsFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             AbsFcn<Resize, typename Operand::ResizeType, FieldType> typedef
-             ResizeType;
+             AbsFcn<Resize, typename Operand::ResizeType> typedef ResizeType;
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
-             AbsFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef
-             GPUWalkType;
+             AbsFcn<GPUWalk, typename Operand::GPUWalkType> typedef GPUWalkType;
 #         endif
           /* __CUDACC__ */
 
-          AbsFcn<Reduction, typename Operand::ReductionType, FieldType> typedef
+          AbsFcn<Reduction, typename Operand::ReductionType> typedef
           ReductionType;
 
           AbsFcn(Operand const & operand)
@@ -2867,15 +4286,10 @@
           Operand const operand_;
       };
 #     ifdef FIELD_EXPRESSION_THREADS
-         template<typename Operand, typename FieldType>
-          struct AbsFcn<Resize, Operand, FieldType> {
+         template<typename Operand>
+          struct AbsFcn<Resize, Operand> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             AbsFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef
-             SeqWalkType;
+             AbsFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
 
              AbsFcn(Operand const & operand)
              : operand_(operand)
@@ -2892,14 +4306,10 @@
          }
 #     endif
       /* FIELD_EXPRESSION_THREADS */;
-      template<typename Operand, typename FieldType>
-       struct AbsFcn<SeqWalk, Operand, FieldType> {
+      template<typename Operand>
+       struct AbsFcn<SeqWalk, Operand> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef EvalReturnType;
+          typename Operand::value_type typedef value_type;
 
           AbsFcn(Operand const & operand)
           : operand_(operand)
@@ -2907,7 +4317,7 @@
 
           inline void next(void) { operand_.next(); }
 
-          inline EvalReturnType eval(void) const {
+          inline value_type eval(void) const {
              return std::abs(operand_.eval());
           }
 
@@ -2915,14 +4325,10 @@
           Operand operand_;
       };
 #     ifdef __CUDACC__
-         template<typename Operand, typename FieldType>
-          struct AbsFcn<GPUWalk, Operand, FieldType> {
+         template<typename Operand>
+          struct AbsFcn<GPUWalk, Operand> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             typename field_type::value_type typedef AtomicType;
+             typename Operand::value_type typedef value_type;
 
              AbsFcn(Operand const & operand)
              : operand_(operand)
@@ -2932,7 +4338,7 @@
 
              __device__ inline void next(void) { operand_.next(); }
 
-             __device__ inline AtomicType eval(void) const {
+             __device__ inline value_type eval(void) const {
                 return std::abs(operand_.eval());
              }
 
@@ -2941,14 +4347,10 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand, typename FieldType>
-       struct AbsFcn<Reduction, Operand, FieldType> {
+      template<typename Operand>
+       struct AbsFcn<Reduction, Operand> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef EvalReturnType;
+          typename Operand::value_type typedef value_type;
 
           AbsFcn(Operand const & operand)
           : operand_(operand)
@@ -2960,7 +4362,7 @@
 
           inline bool has_length(void) const { return (operand_.has_length()); }
 
-          inline EvalReturnType eval(void) const {
+          inline value_type eval(void) const {
              return std::abs(operand_.eval());
           }
 
@@ -2976,10 +4378,9 @@
                                                                            FieldType::
                                                                            field_type,
                                                                            FieldType>::
-                                                   Result>,
-                                    FieldType>,
+                                                   Result> >,
                              FieldType> abs(FieldType const & arg) {
-          AbsFcn<Initial, NeboConstField<Initial, FieldType>, FieldType> typedef
+          AbsFcn<Initial, NeboConstField<Initial, FieldType> > typedef
           ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
@@ -2989,43 +4390,66 @@
 
       /* SubExpr */
       template<typename SubExpr, typename FieldType>
-       inline NeboExpression<AbsFcn<Initial, SubExpr, FieldType>, FieldType> abs(NeboExpression<SubExpr,
-                                                                                                FieldType>
-                                                                                 const
-                                                                                 &
-                                                                                 arg) {
-          AbsFcn<Initial, SubExpr, FieldType> typedef ReturnType;
+       inline NeboExpression<AbsFcn<Initial, SubExpr>, FieldType> abs(NeboExpression<SubExpr,
+                                                                                     FieldType>
+                                                                      const &
+                                                                      arg) {
+          AbsFcn<Initial, SubExpr> typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg.expr()));
+       }
+
+      /* SingleValue */
+      template<typename T>
+       inline NeboSingleValueExpression<AbsFcn<Initial,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T> >,
+                                        T> abs(SpatialOps::structured::
+                                               SpatialField<SpatialOps::
+                                                            structured::
+                                                            SingleValue,
+                                                            T> const & arg) {
+          AbsFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
+          ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg)));
+       }
+
+      /* SingleValueExpr */
+      template<typename SubExpr, typename T>
+       inline NeboSingleValueExpression<AbsFcn<Initial, SubExpr>, T> abs(NeboSingleValueExpression<SubExpr,
+                                                                                                   T>
+                                                                         const &
+                                                                         arg) {
+          AbsFcn<Initial, SubExpr> typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg.expr()));
        };
 
-      template<typename CurrentMode, typename Operand, typename FieldType>
+      template<typename CurrentMode, typename Operand>
        struct NegFcn;
-      template<typename Operand, typename FieldType>
-       struct NegFcn<Initial, Operand, FieldType> {
+      template<typename Operand>
+       struct NegFcn<Initial, Operand> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          NegFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef
-          SeqWalkType;
+          NegFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             NegFcn<Resize, typename Operand::ResizeType, FieldType> typedef
-             ResizeType;
+             NegFcn<Resize, typename Operand::ResizeType> typedef ResizeType;
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
-             NegFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef
-             GPUWalkType;
+             NegFcn<GPUWalk, typename Operand::GPUWalkType> typedef GPUWalkType;
 #         endif
           /* __CUDACC__ */
 
-          NegFcn<Reduction, typename Operand::ReductionType, FieldType> typedef
+          NegFcn<Reduction, typename Operand::ReductionType> typedef
           ReductionType;
 
           NegFcn(Operand const & operand)
@@ -3086,15 +4510,10 @@
           Operand const operand_;
       };
 #     ifdef FIELD_EXPRESSION_THREADS
-         template<typename Operand, typename FieldType>
-          struct NegFcn<Resize, Operand, FieldType> {
+         template<typename Operand>
+          struct NegFcn<Resize, Operand> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             NegFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef
-             SeqWalkType;
+             NegFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
 
              NegFcn(Operand const & operand)
              : operand_(operand)
@@ -3111,14 +4530,10 @@
          }
 #     endif
       /* FIELD_EXPRESSION_THREADS */;
-      template<typename Operand, typename FieldType>
-       struct NegFcn<SeqWalk, Operand, FieldType> {
+      template<typename Operand>
+       struct NegFcn<SeqWalk, Operand> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef EvalReturnType;
+          typename Operand::value_type typedef value_type;
 
           NegFcn(Operand const & operand)
           : operand_(operand)
@@ -3126,20 +4541,16 @@
 
           inline void next(void) { operand_.next(); }
 
-          inline EvalReturnType eval(void) const { return -(operand_.eval()); }
+          inline value_type eval(void) const { return -(operand_.eval()); }
 
          private:
           Operand operand_;
       };
 #     ifdef __CUDACC__
-         template<typename Operand, typename FieldType>
-          struct NegFcn<GPUWalk, Operand, FieldType> {
+         template<typename Operand>
+          struct NegFcn<GPUWalk, Operand> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             typename field_type::value_type typedef AtomicType;
+             typename Operand::value_type typedef value_type;
 
              NegFcn(Operand const & operand)
              : operand_(operand)
@@ -3149,7 +4560,7 @@
 
              __device__ inline void next(void) { operand_.next(); }
 
-             __device__ inline AtomicType eval(void) const {
+             __device__ inline value_type eval(void) const {
                 return -(operand_.eval());
              }
 
@@ -3158,14 +4569,10 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand, typename FieldType>
-       struct NegFcn<Reduction, Operand, FieldType> {
+      template<typename Operand>
+       struct NegFcn<Reduction, Operand> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef EvalReturnType;
+          typename Operand::value_type typedef value_type;
 
           NegFcn(Operand const & operand)
           : operand_(operand)
@@ -3177,7 +4584,7 @@
 
           inline bool has_length(void) const { return (operand_.has_length()); }
 
-          inline EvalReturnType eval(void) const { return -(operand_.eval()); }
+          inline value_type eval(void) const { return -(operand_.eval()); }
 
          private:
           Operand operand_;
@@ -3191,10 +4598,9 @@
                                                                            FieldType::
                                                                            field_type,
                                                                            FieldType>::
-                                                   Result>,
-                                    FieldType>,
+                                                   Result> >,
                              FieldType> operator -(FieldType const & arg) {
-          NegFcn<Initial, NeboConstField<Initial, FieldType>, FieldType> typedef
+          NegFcn<Initial, NeboConstField<Initial, FieldType> > typedef
           ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
@@ -3204,52 +4610,77 @@
 
       /* SubExpr */
       template<typename SubExpr, typename FieldType>
-       inline NeboExpression<NegFcn<Initial, SubExpr, FieldType>, FieldType>
-       operator -(NeboExpression<SubExpr, FieldType> const & arg) {
-          NegFcn<Initial, SubExpr, FieldType> typedef ReturnType;
+       inline NeboExpression<NegFcn<Initial, SubExpr>, FieldType> operator -(NeboExpression<SubExpr,
+                                                                                            FieldType>
+                                                                             const
+                                                                             &
+                                                                             arg) {
+          NegFcn<Initial, SubExpr> typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg.expr()));
+       }
+
+      /* SingleValue */
+      template<typename T>
+       inline NeboSingleValueExpression<NegFcn<Initial,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T> >,
+                                        T> operator -(SpatialOps::structured::
+                                                      SpatialField<SpatialOps::
+                                                                   structured::
+                                                                   SingleValue,
+                                                                   T> const &
+                                                      arg) {
+          NegFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
+          ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg)));
+       }
+
+      /* SingleValueExpr */
+      template<typename SubExpr, typename T>
+       inline NeboSingleValueExpression<NegFcn<Initial, SubExpr>, T> operator -(NeboSingleValueExpression<SubExpr,
+                                                                                                          T>
+                                                                                const
+                                                                                &
+                                                                                arg) {
+          NegFcn<Initial, SubExpr> typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg.expr()));
        };
 
-      template<typename CurrentMode,
-               typename Operand1,
-               typename Operand2,
-               typename FieldType>
+      template<typename CurrentMode, typename Operand1, typename Operand2>
        struct PowFcn;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct PowFcn<Initial, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct PowFcn<Initial, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
           PowFcn<SeqWalk,
                  typename Operand1::SeqWalkType,
-                 typename Operand2::SeqWalkType,
-                 FieldType> typedef SeqWalkType;
+                 typename Operand2::SeqWalkType> typedef SeqWalkType;
 
 #         ifdef FIELD_EXPRESSION_THREADS
              PowFcn<Resize,
                     typename Operand1::ResizeType,
-                    typename Operand2::ResizeType,
-                    FieldType> typedef ResizeType;
+                    typename Operand2::ResizeType> typedef ResizeType;
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
              PowFcn<GPUWalk,
                     typename Operand1::GPUWalkType,
-                    typename Operand2::GPUWalkType,
-                    FieldType> typedef GPUWalkType;
+                    typename Operand2::GPUWalkType> typedef GPUWalkType;
 #         endif
           /* __CUDACC__ */
 
           PowFcn<Reduction,
                  typename Operand1::ReductionType,
-                 typename Operand2::ReductionType,
-                 FieldType> typedef ReductionType;
+                 typename Operand2::ReductionType> typedef ReductionType;
 
           PowFcn(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -3320,17 +4751,12 @@
           Operand2 const operand2_;
       };
 #     ifdef FIELD_EXPRESSION_THREADS
-         template<typename Operand1, typename Operand2, typename FieldType>
-          struct PowFcn<Resize, Operand1, Operand2, FieldType> {
+         template<typename Operand1, typename Operand2>
+          struct PowFcn<Resize, Operand1, Operand2> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
              PowFcn<SeqWalk,
                     typename Operand1::SeqWalkType,
-                    typename Operand2::SeqWalkType,
-                    FieldType> typedef SeqWalkType;
+                    typename Operand2::SeqWalkType> typedef SeqWalkType;
 
              PowFcn(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -3350,14 +4776,10 @@
          }
 #     endif
       /* FIELD_EXPRESSION_THREADS */;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct PowFcn<SeqWalk, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct PowFcn<SeqWalk, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef EvalReturnType;
+          typename Operand1::value_type typedef value_type;
 
           PowFcn(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -3365,7 +4787,7 @@
 
           inline void next(void) { operand1_.next(); operand2_.next(); }
 
-          inline EvalReturnType eval(void) const {
+          inline value_type eval(void) const {
              return std::pow(operand1_.eval(), operand2_.eval());
           }
 
@@ -3375,14 +4797,10 @@
           Operand2 operand2_;
       };
 #     ifdef __CUDACC__
-         template<typename Operand1, typename Operand2, typename FieldType>
-          struct PowFcn<GPUWalk, Operand1, Operand2, FieldType> {
+         template<typename Operand1, typename Operand2>
+          struct PowFcn<GPUWalk, Operand1, Operand2> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             typename field_type::value_type typedef AtomicType;
+             typename Operand1::value_type typedef value_type;
 
              PowFcn(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -3400,7 +4818,7 @@
                 operand2_.next();
              }
 
-             __device__ inline AtomicType eval(void) const {
+             __device__ inline value_type eval(void) const {
                 return std::pow(operand1_.eval(), operand2_.eval());
              }
 
@@ -3411,14 +4829,10 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct PowFcn<Reduction, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct PowFcn<Reduction, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef EvalReturnType;
+          typename Operand1::value_type typedef value_type;
 
           PowFcn(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -3434,7 +4848,7 @@
              return (operand1_.has_length() || operand2_.has_length());
           }
 
-          inline EvalReturnType eval(void) const {
+          inline value_type eval(void) const {
              return std::pow(operand1_.eval(), operand2_.eval());
           }
 
@@ -3447,45 +4861,85 @@
       /* Scalar X Field */
       template<typename FieldType>
        inline NeboExpression<PowFcn<Initial,
-                                    NeboScalar<Initial, FieldType>,
+                                    NeboScalar<Initial,
+                                               typename FieldType::value_type>,
                                     NeboConstField<Initial,
                                                    typename NeboFieldCheck<typename
                                                                            FieldType::
                                                                            field_type,
                                                                            FieldType>::
-                                                   Result>,
-                                    FieldType>,
+                                                   Result> >,
                              FieldType> pow(typename FieldType::value_type const
                                             & arg1,
                                             FieldType const & arg2) {
           PowFcn<Initial,
-                 NeboScalar<Initial, FieldType>,
-                 NeboConstField<Initial, FieldType>,
-                 FieldType> typedef ReturnType;
+                 NeboScalar<Initial, typename FieldType::value_type>,
+                 NeboConstField<Initial, FieldType> > typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
-          return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
+          return ReturnTerm(ReturnType(NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg1),
                                        NeboConstField<Initial, FieldType>(arg2)));
        }
 
       /* Scalar X SubExpr */
       template<typename SubExpr2, typename FieldType>
        inline NeboExpression<PowFcn<Initial,
-                                    NeboScalar<Initial, FieldType>,
-                                    SubExpr2,
-                                    FieldType>,
+                                    NeboScalar<Initial,
+                                               typename FieldType::value_type>,
+                                    SubExpr2>,
                              FieldType> pow(typename FieldType::value_type const
                                             & arg1,
                                             NeboExpression<SubExpr2, FieldType>
                                             const & arg2) {
-          PowFcn<Initial, NeboScalar<Initial, FieldType>, SubExpr2, FieldType>
-          typedef ReturnType;
+          PowFcn<Initial,
+                 NeboScalar<Initial, typename FieldType::value_type>,
+                 SubExpr2> typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
-          return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
+          return ReturnTerm(ReturnType(NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg1),
                                        arg2.expr()));
+       }
+
+      /* Scalar X SingleValue */
+      template<typename T>
+       inline NeboSingleValueExpression<PowFcn<Initial,
+                                               NeboScalar<Initial, T>,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T> >,
+                                        T> pow(T const & arg1,
+                                               SpatialOps::structured::
+                                               SpatialField<SpatialOps::
+                                                            structured::
+                                                            SingleValue,
+                                                            T> const & arg2) {
+          PowFcn<Initial,
+                 NeboScalar<Initial, T>,
+                 NeboConstSingleValueField<Initial, T> > typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboScalar<Initial, T>(arg1),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* Scalar X SingleValueExpr */
+      template<typename SubExpr2, typename T>
+       inline NeboSingleValueExpression<PowFcn<Initial,
+                                               NeboScalar<Initial, T>,
+                                               SubExpr2>,
+                                        T> pow(T const & arg1,
+                                               NeboSingleValueExpression<SubExpr2,
+                                                                         T>
+                                               const & arg2) {
+          PowFcn<Initial, NeboScalar<Initial, T>, SubExpr2> typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboScalar<Initial, T>(arg1), arg2.expr()));
        }
 
       /* Field X Scalar */
@@ -3497,20 +4951,21 @@
                                                                            field_type,
                                                                            FieldType>::
                                                    Result>,
-                                    NeboScalar<Initial, FieldType>,
-                                    FieldType>,
+                                    NeboScalar<Initial,
+                                               typename FieldType::value_type> >,
                              FieldType> pow(FieldType const & arg1,
                                             typename FieldType::value_type const
                                             & arg2) {
           PowFcn<Initial,
                  NeboConstField<Initial, FieldType>,
-                 NeboScalar<Initial, FieldType>,
-                 FieldType> typedef ReturnType;
+                 NeboScalar<Initial, typename FieldType::value_type> > typedef
+          ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
-                                       NeboScalar<Initial, FieldType>(arg2)));
+                                       NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg2)));
        }
 
       /* Field X Field */
@@ -3527,14 +4982,12 @@
                                                                            FieldType::
                                                                            field_type,
                                                                            FieldType>::
-                                                   Result>,
-                                    FieldType>,
+                                                   Result> >,
                              FieldType> pow(FieldType const & arg1,
                                             FieldType const & arg2) {
           PowFcn<Initial,
                  NeboConstField<Initial, FieldType>,
-                 NeboConstField<Initial, FieldType>,
-                 FieldType> typedef ReturnType;
+                 NeboConstField<Initial, FieldType> > typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -3551,15 +5004,72 @@
                                                                            field_type,
                                                                            FieldType>::
                                                    Result>,
-                                    SubExpr2,
-                                    FieldType>,
+                                    SubExpr2>,
                              FieldType> pow(FieldType const & arg1,
                                             NeboExpression<SubExpr2, FieldType>
                                             const & arg2) {
+          PowFcn<Initial, NeboConstField<Initial, FieldType>, SubExpr2> typedef
+          ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* Field X SingleValue */
+      template<typename FieldType>
+       inline NeboExpression<PowFcn<Initial,
+                                    NeboConstField<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result>,
+                                    NeboConstSingleValueField<Initial,
+                                                              typename FieldType::
+                                                              value_type> >,
+                             FieldType> pow(FieldType const & arg1,
+                                            SpatialOps::structured::SpatialField<SpatialOps::
+                                                                                 structured::
+                                                                                 SingleValue,
+                                                                                 typename
+                                                                                 FieldType::
+                                                                                 value_type>
+                                            const & arg2) {
           PowFcn<Initial,
                  NeboConstField<Initial, FieldType>,
-                 SubExpr2,
-                 FieldType> typedef ReturnType;
+                 NeboConstSingleValueField<Initial,
+                                           typename FieldType::value_type> >
+          typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
+                                       NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg2)));
+       }
+
+      /* Field X SingleValueExpr */
+      template<typename SubExpr2, typename FieldType>
+       inline NeboExpression<PowFcn<Initial,
+                                    NeboConstField<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result>,
+                                    SubExpr2>,
+                             FieldType> pow(FieldType const & arg1,
+                                            NeboSingleValueExpression<SubExpr2,
+                                                                      typename
+                                                                      FieldType::
+                                                                      value_type>
+                                            const & arg2) {
+          PowFcn<Initial, NeboConstField<Initial, FieldType>, SubExpr2> typedef
+          ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -3571,19 +5081,22 @@
       template<typename SubExpr1, typename FieldType>
        inline NeboExpression<PowFcn<Initial,
                                     SubExpr1,
-                                    NeboScalar<Initial, FieldType>,
-                                    FieldType>,
+                                    NeboScalar<Initial,
+                                               typename FieldType::value_type> >,
                              FieldType> pow(NeboExpression<SubExpr1, FieldType>
                                             const & arg1,
                                             typename FieldType::value_type const
                                             & arg2) {
-          PowFcn<Initial, SubExpr1, NeboScalar<Initial, FieldType>, FieldType>
-          typedef ReturnType;
+          PowFcn<Initial,
+                 SubExpr1,
+                 NeboScalar<Initial, typename FieldType::value_type> > typedef
+          ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg1.expr(),
-                                       NeboScalar<Initial, FieldType>(arg2)));
+                                       NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg2)));
        }
 
       /* SubExpr X Field */
@@ -3595,15 +5108,12 @@
                                                                            FieldType::
                                                                            field_type,
                                                                            FieldType>::
-                                                   Result>,
-                                    FieldType>,
+                                                   Result> >,
                              FieldType> pow(NeboExpression<SubExpr1, FieldType>
                                             const & arg1,
                                             FieldType const & arg2) {
-          PowFcn<Initial,
-                 SubExpr1,
-                 NeboConstField<Initial, FieldType>,
-                 FieldType> typedef ReturnType;
+          PowFcn<Initial, SubExpr1, NeboConstField<Initial, FieldType> > typedef
+          ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -3613,43 +5123,327 @@
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2, typename FieldType>
-       inline NeboExpression<PowFcn<Initial, SubExpr1, SubExpr2, FieldType>,
-                             FieldType> pow(NeboExpression<SubExpr1, FieldType>
-                                            const & arg1,
-                                            NeboExpression<SubExpr2, FieldType>
-                                            const & arg2) {
-          PowFcn<Initial, SubExpr1, SubExpr2, FieldType> typedef ReturnType;
+       inline NeboExpression<PowFcn<Initial, SubExpr1, SubExpr2>, FieldType> pow(NeboExpression<SubExpr1,
+                                                                                                FieldType>
+                                                                                 const
+                                                                                 &
+                                                                                 arg1,
+                                                                                 NeboExpression<SubExpr2,
+                                                                                                FieldType>
+                                                                                 const
+                                                                                 &
+                                                                                 arg2) {
+          PowFcn<Initial, SubExpr1, SubExpr2> typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SubExpr X SingleValue */
+      template<typename SubExpr1, typename FieldType>
+       inline NeboExpression<PowFcn<Initial,
+                                    SubExpr1,
+                                    NeboConstSingleValueField<Initial,
+                                                              typename FieldType::
+                                                              value_type> >,
+                             FieldType> pow(NeboExpression<SubExpr1, FieldType>
+                                            const & arg1,
+                                            SpatialOps::structured::SpatialField<SpatialOps::
+                                                                                 structured::
+                                                                                 SingleValue,
+                                                                                 typename
+                                                                                 FieldType::
+                                                                                 value_type>
+                                            const & arg2) {
+          PowFcn<Initial,
+                 SubExpr1,
+                 NeboConstSingleValueField<Initial,
+                                           typename FieldType::value_type> >
+          typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg2)));
+       }
+
+      /* SubExpr X SingleValueExpr */
+      template<typename SubExpr1, typename SubExpr2, typename FieldType>
+       inline NeboExpression<PowFcn<Initial, SubExpr1, SubExpr2>, FieldType> pow(NeboExpression<SubExpr1,
+                                                                                                FieldType>
+                                                                                 const
+                                                                                 &
+                                                                                 arg1,
+                                                                                 NeboSingleValueExpression<SubExpr2,
+                                                                                                           typename
+                                                                                                           FieldType::
+                                                                                                           value_type>
+                                                                                 const
+                                                                                 &
+                                                                                 arg2) {
+          PowFcn<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SingleValue X Scalar */
+      template<typename T>
+       inline NeboSingleValueExpression<PowFcn<Initial,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T>,
+                                               NeboScalar<Initial, T> >,
+                                        T> pow(SpatialOps::structured::
+                                               SpatialField<SpatialOps::
+                                                            structured::
+                                                            SingleValue,
+                                                            T> const & arg1,
+                                               T const & arg2) {
+          PowFcn<Initial,
+                 NeboConstSingleValueField<Initial, T>,
+                 NeboScalar<Initial, T> > typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       NeboScalar<Initial, T>(arg2)));
+       }
+
+      /* SingleValue X Field */
+      template<typename FieldType>
+       inline NeboExpression<PowFcn<Initial,
+                                    NeboConstSingleValueField<Initial,
+                                                              typename FieldType::
+                                                              value_type>,
+                                    NeboConstField<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result> >,
+                             FieldType> pow(SpatialOps::structured::SpatialField<SpatialOps::
+                                                                                 structured::
+                                                                                 SingleValue,
+                                                                                 typename
+                                                                                 FieldType::
+                                                                                 value_type>
+                                            const & arg1,
+                                            FieldType const & arg2) {
+          PowFcn<Initial,
+                 NeboConstSingleValueField<Initial,
+                                           typename FieldType::value_type>,
+                 NeboConstField<Initial, FieldType> > typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg1),
+                                       NeboConstField<Initial, FieldType>(arg2)));
+       }
+
+      /* SingleValue X SubExpr */
+      template<typename SubExpr2, typename FieldType>
+       inline NeboExpression<PowFcn<Initial,
+                                    NeboConstSingleValueField<Initial,
+                                                              typename FieldType::
+                                                              value_type>,
+                                    SubExpr2>,
+                             FieldType> pow(SpatialOps::structured::SpatialField<SpatialOps::
+                                                                                 structured::
+                                                                                 SingleValue,
+                                                                                 typename
+                                                                                 FieldType::
+                                                                                 value_type>
+                                            const & arg1,
+                                            NeboExpression<SubExpr2, FieldType>
+                                            const & arg2) {
+          PowFcn<Initial,
+                 NeboConstSingleValueField<Initial,
+                                           typename FieldType::value_type>,
+                 SubExpr2> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* SingleValue X SingleValue */
+      template<typename T>
+       inline NeboSingleValueExpression<PowFcn<Initial,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T>,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T> >,
+                                        T> pow(SpatialOps::structured::
+                                               SpatialField<SpatialOps::
+                                                            structured::
+                                                            SingleValue,
+                                                            T> const & arg1,
+                                               SpatialOps::structured::
+                                               SpatialField<SpatialOps::
+                                                            structured::
+                                                            SingleValue,
+                                                            T> const & arg2) {
+          PowFcn<Initial,
+                 NeboConstSingleValueField<Initial, T>,
+                 NeboConstSingleValueField<Initial, T> > typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* SingleValue X SingleValueExpr */
+      template<typename SubExpr2, typename T>
+       inline NeboSingleValueExpression<PowFcn<Initial,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T>,
+                                               SubExpr2>,
+                                        T> pow(SpatialOps::structured::
+                                               SpatialField<SpatialOps::
+                                                            structured::
+                                                            SingleValue,
+                                                            T> const & arg1,
+                                               NeboSingleValueExpression<SubExpr2,
+                                                                         T>
+                                               const & arg2) {
+          PowFcn<Initial, NeboConstSingleValueField<Initial, T>, SubExpr2>
+          typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* SingleValueExpr X Scalar */
+      template<typename SubExpr1, typename T>
+       inline NeboSingleValueExpression<PowFcn<Initial,
+                                               SubExpr1,
+                                               NeboScalar<Initial, T> >,
+                                        T> pow(NeboSingleValueExpression<SubExpr1,
+                                                                         T>
+                                               const & arg1,
+                                               T const & arg2) {
+          PowFcn<Initial, SubExpr1, NeboScalar<Initial, T> > typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), NeboScalar<Initial, T>(arg2)));
+       }
+
+      /* SingleValueExpr X Field */
+      template<typename SubExpr1, typename FieldType>
+       inline NeboExpression<PowFcn<Initial,
+                                    SubExpr1,
+                                    NeboConstField<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result> >,
+                             FieldType> pow(NeboSingleValueExpression<SubExpr1,
+                                                                      typename
+                                                                      FieldType::
+                                                                      value_type>
+                                            const & arg1,
+                                            FieldType const & arg2) {
+          PowFcn<Initial, SubExpr1, NeboConstField<Initial, FieldType> > typedef
+          ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstField<Initial, FieldType>(arg2)));
+       }
+
+      /* SingleValueExpr X SubExpr */
+      template<typename SubExpr1, typename SubExpr2, typename FieldType>
+       inline NeboExpression<PowFcn<Initial, SubExpr1, SubExpr2>, FieldType> pow(NeboSingleValueExpression<SubExpr1,
+                                                                                                           typename
+                                                                                                           FieldType::
+                                                                                                           value_type>
+                                                                                 const
+                                                                                 &
+                                                                                 arg1,
+                                                                                 NeboExpression<SubExpr2,
+                                                                                                FieldType>
+                                                                                 const
+                                                                                 &
+                                                                                 arg2) {
+          PowFcn<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SingleValueExpr X SingleValue */
+      template<typename SubExpr1, typename T>
+       inline NeboSingleValueExpression<PowFcn<Initial,
+                                               SubExpr1,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T> >,
+                                        T> pow(NeboSingleValueExpression<SubExpr1,
+                                                                         T>
+                                               const & arg1,
+                                               SpatialOps::structured::
+                                               SpatialField<SpatialOps::
+                                                            structured::
+                                                            SingleValue,
+                                                            T> const & arg2) {
+          PowFcn<Initial, SubExpr1, NeboConstSingleValueField<Initial, T> >
+          typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* SingleValueExpr X SingleValueExpr */
+      template<typename SubExpr1, typename SubExpr2, typename T>
+       inline NeboSingleValueExpression<PowFcn<Initial, SubExpr1, SubExpr2>, T>
+       pow(NeboSingleValueExpression<SubExpr1, T> const & arg1,
+           NeboSingleValueExpression<SubExpr2, T> const & arg2) {
+          PowFcn<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
        };
 
-      template<typename CurrentMode, typename Operand, typename FieldType>
+      template<typename CurrentMode, typename Operand>
        struct SqrtFcn;
-      template<typename Operand, typename FieldType>
-       struct SqrtFcn<Initial, Operand, FieldType> {
+      template<typename Operand>
+       struct SqrtFcn<Initial, Operand> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          SqrtFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef
-          SeqWalkType;
+          SqrtFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             SqrtFcn<Resize, typename Operand::ResizeType, FieldType> typedef
-             ResizeType;
+             SqrtFcn<Resize, typename Operand::ResizeType> typedef ResizeType;
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
-             SqrtFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef
-             GPUWalkType;
+             SqrtFcn<GPUWalk, typename Operand::GPUWalkType> typedef GPUWalkType
+             ;
 #         endif
           /* __CUDACC__ */
 
-          SqrtFcn<Reduction, typename Operand::ReductionType, FieldType> typedef
+          SqrtFcn<Reduction, typename Operand::ReductionType> typedef
           ReductionType;
 
           SqrtFcn(Operand const & operand)
@@ -3710,15 +5504,11 @@
           Operand const operand_;
       };
 #     ifdef FIELD_EXPRESSION_THREADS
-         template<typename Operand, typename FieldType>
-          struct SqrtFcn<Resize, Operand, FieldType> {
+         template<typename Operand>
+          struct SqrtFcn<Resize, Operand> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             SqrtFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef
-             SeqWalkType;
+             SqrtFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType
+             ;
 
              SqrtFcn(Operand const & operand)
              : operand_(operand)
@@ -3735,14 +5525,10 @@
          }
 #     endif
       /* FIELD_EXPRESSION_THREADS */;
-      template<typename Operand, typename FieldType>
-       struct SqrtFcn<SeqWalk, Operand, FieldType> {
+      template<typename Operand>
+       struct SqrtFcn<SeqWalk, Operand> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef EvalReturnType;
+          typename Operand::value_type typedef value_type;
 
           SqrtFcn(Operand const & operand)
           : operand_(operand)
@@ -3750,7 +5536,7 @@
 
           inline void next(void) { operand_.next(); }
 
-          inline EvalReturnType eval(void) const {
+          inline value_type eval(void) const {
              return std::sqrt(operand_.eval());
           }
 
@@ -3758,14 +5544,10 @@
           Operand operand_;
       };
 #     ifdef __CUDACC__
-         template<typename Operand, typename FieldType>
-          struct SqrtFcn<GPUWalk, Operand, FieldType> {
+         template<typename Operand>
+          struct SqrtFcn<GPUWalk, Operand> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             typename field_type::value_type typedef AtomicType;
+             typename Operand::value_type typedef value_type;
 
              SqrtFcn(Operand const & operand)
              : operand_(operand)
@@ -3775,7 +5557,7 @@
 
              __device__ inline void next(void) { operand_.next(); }
 
-             __device__ inline AtomicType eval(void) const {
+             __device__ inline value_type eval(void) const {
                 return std::sqrt(operand_.eval());
              }
 
@@ -3784,14 +5566,10 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand, typename FieldType>
-       struct SqrtFcn<Reduction, Operand, FieldType> {
+      template<typename Operand>
+       struct SqrtFcn<Reduction, Operand> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef EvalReturnType;
+          typename Operand::value_type typedef value_type;
 
           SqrtFcn(Operand const & operand)
           : operand_(operand)
@@ -3803,7 +5581,7 @@
 
           inline bool has_length(void) const { return (operand_.has_length()); }
 
-          inline EvalReturnType eval(void) const {
+          inline value_type eval(void) const {
              return std::sqrt(operand_.eval());
           }
 
@@ -3819,11 +5597,10 @@
                                                                             FieldType::
                                                                             field_type,
                                                                             FieldType>::
-                                                    Result>,
-                                     FieldType>,
+                                                    Result> >,
                              FieldType> sqrt(FieldType const & arg) {
-          SqrtFcn<Initial, NeboConstField<Initial, FieldType>, FieldType>
-          typedef ReturnType;
+          SqrtFcn<Initial, NeboConstField<Initial, FieldType> > typedef
+          ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -3832,40 +5609,66 @@
 
       /* SubExpr */
       template<typename SubExpr, typename FieldType>
-       inline NeboExpression<SqrtFcn<Initial, SubExpr, FieldType>, FieldType>
-       sqrt(NeboExpression<SubExpr, FieldType> const & arg) {
-          SqrtFcn<Initial, SubExpr, FieldType> typedef ReturnType;
+       inline NeboExpression<SqrtFcn<Initial, SubExpr>, FieldType> sqrt(NeboExpression<SubExpr,
+                                                                                       FieldType>
+                                                                        const &
+                                                                        arg) {
+          SqrtFcn<Initial, SubExpr> typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg.expr()));
+       }
+
+      /* SingleValue */
+      template<typename T>
+       inline NeboSingleValueExpression<SqrtFcn<Initial,
+                                                NeboConstSingleValueField<Initial,
+                                                                          T> >,
+                                        T> sqrt(SpatialOps::structured::
+                                                SpatialField<SpatialOps::
+                                                             structured::
+                                                             SingleValue,
+                                                             T> const & arg) {
+          SqrtFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
+          ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg)));
+       }
+
+      /* SingleValueExpr */
+      template<typename SubExpr, typename T>
+       inline NeboSingleValueExpression<SqrtFcn<Initial, SubExpr>, T> sqrt(NeboSingleValueExpression<SubExpr,
+                                                                                                     T>
+                                                                           const
+                                                                           & arg) {
+          SqrtFcn<Initial, SubExpr> typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg.expr()));
        };
 
-      template<typename CurrentMode, typename Operand, typename FieldType>
+      template<typename CurrentMode, typename Operand>
        struct LogFcn;
-      template<typename Operand, typename FieldType>
-       struct LogFcn<Initial, Operand, FieldType> {
+      template<typename Operand>
+       struct LogFcn<Initial, Operand> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          LogFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef
-          SeqWalkType;
+          LogFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             LogFcn<Resize, typename Operand::ResizeType, FieldType> typedef
-             ResizeType;
+             LogFcn<Resize, typename Operand::ResizeType> typedef ResizeType;
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
-             LogFcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef
-             GPUWalkType;
+             LogFcn<GPUWalk, typename Operand::GPUWalkType> typedef GPUWalkType;
 #         endif
           /* __CUDACC__ */
 
-          LogFcn<Reduction, typename Operand::ReductionType, FieldType> typedef
+          LogFcn<Reduction, typename Operand::ReductionType> typedef
           ReductionType;
 
           LogFcn(Operand const & operand)
@@ -3926,15 +5729,10 @@
           Operand const operand_;
       };
 #     ifdef FIELD_EXPRESSION_THREADS
-         template<typename Operand, typename FieldType>
-          struct LogFcn<Resize, Operand, FieldType> {
+         template<typename Operand>
+          struct LogFcn<Resize, Operand> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             LogFcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef
-             SeqWalkType;
+             LogFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
 
              LogFcn(Operand const & operand)
              : operand_(operand)
@@ -3951,14 +5749,10 @@
          }
 #     endif
       /* FIELD_EXPRESSION_THREADS */;
-      template<typename Operand, typename FieldType>
-       struct LogFcn<SeqWalk, Operand, FieldType> {
+      template<typename Operand>
+       struct LogFcn<SeqWalk, Operand> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef EvalReturnType;
+          typename Operand::value_type typedef value_type;
 
           LogFcn(Operand const & operand)
           : operand_(operand)
@@ -3966,7 +5760,7 @@
 
           inline void next(void) { operand_.next(); }
 
-          inline EvalReturnType eval(void) const {
+          inline value_type eval(void) const {
              return std::log(operand_.eval());
           }
 
@@ -3974,14 +5768,10 @@
           Operand operand_;
       };
 #     ifdef __CUDACC__
-         template<typename Operand, typename FieldType>
-          struct LogFcn<GPUWalk, Operand, FieldType> {
+         template<typename Operand>
+          struct LogFcn<GPUWalk, Operand> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             typename field_type::value_type typedef AtomicType;
+             typename Operand::value_type typedef value_type;
 
              LogFcn(Operand const & operand)
              : operand_(operand)
@@ -3991,7 +5781,7 @@
 
              __device__ inline void next(void) { operand_.next(); }
 
-             __device__ inline AtomicType eval(void) const {
+             __device__ inline value_type eval(void) const {
                 return std::log(operand_.eval());
              }
 
@@ -4000,14 +5790,10 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand, typename FieldType>
-       struct LogFcn<Reduction, Operand, FieldType> {
+      template<typename Operand>
+       struct LogFcn<Reduction, Operand> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef EvalReturnType;
+          typename Operand::value_type typedef value_type;
 
           LogFcn(Operand const & operand)
           : operand_(operand)
@@ -4019,7 +5805,7 @@
 
           inline bool has_length(void) const { return (operand_.has_length()); }
 
-          inline EvalReturnType eval(void) const {
+          inline value_type eval(void) const {
              return std::log(operand_.eval());
           }
 
@@ -4035,10 +5821,9 @@
                                                                            FieldType::
                                                                            field_type,
                                                                            FieldType>::
-                                                   Result>,
-                                    FieldType>,
+                                                   Result> >,
                              FieldType> log(FieldType const & arg) {
-          LogFcn<Initial, NeboConstField<Initial, FieldType>, FieldType> typedef
+          LogFcn<Initial, NeboConstField<Initial, FieldType> > typedef
           ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
@@ -4048,44 +5833,68 @@
 
       /* SubExpr */
       template<typename SubExpr, typename FieldType>
-       inline NeboExpression<LogFcn<Initial, SubExpr, FieldType>, FieldType> log(NeboExpression<SubExpr,
-                                                                                                FieldType>
-                                                                                 const
-                                                                                 &
-                                                                                 arg) {
-          LogFcn<Initial, SubExpr, FieldType> typedef ReturnType;
+       inline NeboExpression<LogFcn<Initial, SubExpr>, FieldType> log(NeboExpression<SubExpr,
+                                                                                     FieldType>
+                                                                      const &
+                                                                      arg) {
+          LogFcn<Initial, SubExpr> typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg.expr()));
+       }
+
+      /* SingleValue */
+      template<typename T>
+       inline NeboSingleValueExpression<LogFcn<Initial,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T> >,
+                                        T> log(SpatialOps::structured::
+                                               SpatialField<SpatialOps::
+                                                            structured::
+                                                            SingleValue,
+                                                            T> const & arg) {
+          LogFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
+          ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg)));
+       }
+
+      /* SingleValueExpr */
+      template<typename SubExpr, typename T>
+       inline NeboSingleValueExpression<LogFcn<Initial, SubExpr>, T> log(NeboSingleValueExpression<SubExpr,
+                                                                                                   T>
+                                                                         const &
+                                                                         arg) {
+          LogFcn<Initial, SubExpr> typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg.expr()));
        };
 
-      template<typename CurrentMode, typename Operand, typename FieldType>
+      template<typename CurrentMode, typename Operand>
        struct Log10Fcn;
-      template<typename Operand, typename FieldType>
-       struct Log10Fcn<Initial, Operand, FieldType> {
+      template<typename Operand>
+       struct Log10Fcn<Initial, Operand> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          Log10Fcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef
-          SeqWalkType;
+          Log10Fcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             Log10Fcn<Resize, typename Operand::ResizeType, FieldType> typedef
-             ResizeType;
+             Log10Fcn<Resize, typename Operand::ResizeType> typedef ResizeType;
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
-             Log10Fcn<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef
+             Log10Fcn<GPUWalk, typename Operand::GPUWalkType> typedef
              GPUWalkType;
 #         endif
           /* __CUDACC__ */
 
-          Log10Fcn<Reduction, typename Operand::ReductionType, FieldType>
-          typedef ReductionType;
+          Log10Fcn<Reduction, typename Operand::ReductionType> typedef
+          ReductionType;
 
           Log10Fcn(Operand const & operand)
           : operand_(operand)
@@ -4145,14 +5954,10 @@
           Operand const operand_;
       };
 #     ifdef FIELD_EXPRESSION_THREADS
-         template<typename Operand, typename FieldType>
-          struct Log10Fcn<Resize, Operand, FieldType> {
+         template<typename Operand>
+          struct Log10Fcn<Resize, Operand> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             Log10Fcn<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef
+             Log10Fcn<SeqWalk, typename Operand::SeqWalkType> typedef
              SeqWalkType;
 
              Log10Fcn(Operand const & operand)
@@ -4170,14 +5975,10 @@
          }
 #     endif
       /* FIELD_EXPRESSION_THREADS */;
-      template<typename Operand, typename FieldType>
-       struct Log10Fcn<SeqWalk, Operand, FieldType> {
+      template<typename Operand>
+       struct Log10Fcn<SeqWalk, Operand> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef EvalReturnType;
+          typename Operand::value_type typedef value_type;
 
           Log10Fcn(Operand const & operand)
           : operand_(operand)
@@ -4185,7 +5986,7 @@
 
           inline void next(void) { operand_.next(); }
 
-          inline EvalReturnType eval(void) const {
+          inline value_type eval(void) const {
              return std::log10(operand_.eval());
           }
 
@@ -4193,14 +5994,10 @@
           Operand operand_;
       };
 #     ifdef __CUDACC__
-         template<typename Operand, typename FieldType>
-          struct Log10Fcn<GPUWalk, Operand, FieldType> {
+         template<typename Operand>
+          struct Log10Fcn<GPUWalk, Operand> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             typename field_type::value_type typedef AtomicType;
+             typename Operand::value_type typedef value_type;
 
              Log10Fcn(Operand const & operand)
              : operand_(operand)
@@ -4210,7 +6007,7 @@
 
              __device__ inline void next(void) { operand_.next(); }
 
-             __device__ inline AtomicType eval(void) const {
+             __device__ inline value_type eval(void) const {
                 return std::log10(operand_.eval());
              }
 
@@ -4219,14 +6016,10 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand, typename FieldType>
-       struct Log10Fcn<Reduction, Operand, FieldType> {
+      template<typename Operand>
+       struct Log10Fcn<Reduction, Operand> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef EvalReturnType;
+          typename Operand::value_type typedef value_type;
 
           Log10Fcn(Operand const & operand)
           : operand_(operand)
@@ -4238,7 +6031,7 @@
 
           inline bool has_length(void) const { return (operand_.has_length()); }
 
-          inline EvalReturnType eval(void) const {
+          inline value_type eval(void) const {
              return std::log10(operand_.eval());
           }
 
@@ -4254,11 +6047,10 @@
                                                                              FieldType::
                                                                              field_type,
                                                                              FieldType>::
-                                                     Result>,
-                                      FieldType>,
+                                                     Result> >,
                              FieldType> log10(FieldType const & arg) {
-          Log10Fcn<Initial, NeboConstField<Initial, FieldType>, FieldType>
-          typedef ReturnType;
+          Log10Fcn<Initial, NeboConstField<Initial, FieldType> > typedef
+          ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -4267,52 +6059,75 @@
 
       /* SubExpr */
       template<typename SubExpr, typename FieldType>
-       inline NeboExpression<Log10Fcn<Initial, SubExpr, FieldType>, FieldType>
-       log10(NeboExpression<SubExpr, FieldType> const & arg) {
-          Log10Fcn<Initial, SubExpr, FieldType> typedef ReturnType;
+       inline NeboExpression<Log10Fcn<Initial, SubExpr>, FieldType> log10(NeboExpression<SubExpr,
+                                                                                         FieldType>
+                                                                          const
+                                                                          & arg) {
+          Log10Fcn<Initial, SubExpr> typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg.expr()));
+       }
+
+      /* SingleValue */
+      template<typename T>
+       inline NeboSingleValueExpression<Log10Fcn<Initial,
+                                                 NeboConstSingleValueField<Initial,
+                                                                           T> >,
+                                        T> log10(SpatialOps::structured::
+                                                 SpatialField<SpatialOps::
+                                                              structured::
+                                                              SingleValue,
+                                                              T> const & arg) {
+          Log10Fcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
+          ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg)));
+       }
+
+      /* SingleValueExpr */
+      template<typename SubExpr, typename T>
+       inline NeboSingleValueExpression<Log10Fcn<Initial, SubExpr>, T> log10(NeboSingleValueExpression<SubExpr,
+                                                                                                       T>
+                                                                             const
+                                                                             &
+                                                                             arg) {
+          Log10Fcn<Initial, SubExpr> typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg.expr()));
        };
 
-      template<typename CurrentMode,
-               typename Operand1,
-               typename Operand2,
-               typename FieldType>
+      template<typename CurrentMode, typename Operand1, typename Operand2>
        struct EqualCmp;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct EqualCmp<Initial, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct EqualCmp<Initial, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
           EqualCmp<SeqWalk,
                    typename Operand1::SeqWalkType,
-                   typename Operand2::SeqWalkType,
-                   FieldType> typedef SeqWalkType;
+                   typename Operand2::SeqWalkType> typedef SeqWalkType;
 
 #         ifdef FIELD_EXPRESSION_THREADS
              EqualCmp<Resize,
                       typename Operand1::ResizeType,
-                      typename Operand2::ResizeType,
-                      FieldType> typedef ResizeType;
+                      typename Operand2::ResizeType> typedef ResizeType;
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
              EqualCmp<GPUWalk,
                       typename Operand1::GPUWalkType,
-                      typename Operand2::GPUWalkType,
-                      FieldType> typedef GPUWalkType;
+                      typename Operand2::GPUWalkType> typedef GPUWalkType;
 #         endif
           /* __CUDACC__ */
 
           EqualCmp<Reduction,
                    typename Operand1::ReductionType,
-                   typename Operand2::ReductionType,
-                   FieldType> typedef ReductionType;
+                   typename Operand2::ReductionType> typedef ReductionType;
 
           EqualCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -4383,17 +6198,12 @@
           Operand2 const operand2_;
       };
 #     ifdef FIELD_EXPRESSION_THREADS
-         template<typename Operand1, typename Operand2, typename FieldType>
-          struct EqualCmp<Resize, Operand1, Operand2, FieldType> {
+         template<typename Operand1, typename Operand2>
+          struct EqualCmp<Resize, Operand1, Operand2> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
              EqualCmp<SeqWalk,
                       typename Operand1::SeqWalkType,
-                      typename Operand2::SeqWalkType,
-                      FieldType> typedef SeqWalkType;
+                      typename Operand2::SeqWalkType> typedef SeqWalkType;
 
              EqualCmp(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -4413,14 +6223,10 @@
          }
 #     endif
       /* FIELD_EXPRESSION_THREADS */;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct EqualCmp<SeqWalk, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct EqualCmp<SeqWalk, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          bool typedef EvalReturnType;
+          typename Operand1::value_type typedef value_type;
 
           EqualCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -4428,7 +6234,7 @@
 
           inline void next(void) { operand1_.next(); operand2_.next(); }
 
-          inline EvalReturnType eval(void) const {
+          inline bool eval(void) const {
              return (operand1_.eval() == operand2_.eval());
           }
 
@@ -4438,14 +6244,10 @@
           Operand2 operand2_;
       };
 #     ifdef __CUDACC__
-         template<typename Operand1, typename Operand2, typename FieldType>
-          struct EqualCmp<GPUWalk, Operand1, Operand2, FieldType> {
+         template<typename Operand1, typename Operand2>
+          struct EqualCmp<GPUWalk, Operand1, Operand2> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             typename field_type::value_type typedef AtomicType;
+             typename Operand1::value_type typedef value_type;
 
              EqualCmp(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -4463,7 +6265,7 @@
                 operand2_.next();
              }
 
-             __device__ inline AtomicType eval(void) const {
+             __device__ inline bool eval(void) const {
                 return (operand1_.eval() == operand2_.eval());
              }
 
@@ -4474,14 +6276,10 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct EqualCmp<Reduction, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct EqualCmp<Reduction, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          bool typedef EvalReturnType;
+          typename Operand1::value_type typedef value_type;
 
           EqualCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -4497,7 +6295,7 @@
              return (operand1_.has_length() || operand2_.has_length());
           }
 
-          inline EvalReturnType eval(void) const {
+          inline bool eval(void) const {
              return (operand1_.eval() == operand2_.eval());
           }
 
@@ -4510,50 +6308,95 @@
       /* Scalar X Field */
       template<typename FieldType>
        inline NeboBooleanExpression<EqualCmp<Initial,
-                                             NeboScalar<Initial, FieldType>,
+                                             NeboScalar<Initial,
+                                                        typename FieldType::
+                                                        value_type>,
                                              NeboConstField<Initial,
                                                             typename
                                                             NeboFieldCheck<typename
                                                                            FieldType::
                                                                            field_type,
                                                                            FieldType>::
-                                                            Result>,
-                                             FieldType>,
+                                                            Result> >,
                                     FieldType> operator ==(typename FieldType::
                                                            value_type const &
                                                            arg1,
                                                            FieldType const &
                                                            arg2) {
           EqualCmp<Initial,
-                   NeboScalar<Initial, FieldType>,
-                   NeboConstField<Initial, FieldType>,
-                   FieldType> typedef ReturnType;
+                   NeboScalar<Initial, typename FieldType::value_type>,
+                   NeboConstField<Initial, FieldType> > typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
-          return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
+          return ReturnTerm(ReturnType(NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg1),
                                        NeboConstField<Initial, FieldType>(arg2)));
        }
 
       /* Scalar X SubExpr */
       template<typename SubExpr2, typename FieldType>
        inline NeboBooleanExpression<EqualCmp<Initial,
-                                             NeboScalar<Initial, FieldType>,
-                                             SubExpr2,
-                                             FieldType>,
+                                             NeboScalar<Initial,
+                                                        typename FieldType::
+                                                        value_type>,
+                                             SubExpr2>,
                                     FieldType> operator ==(typename FieldType::
                                                            value_type const &
                                                            arg1,
                                                            NeboExpression<SubExpr2,
                                                                           FieldType>
                                                            const & arg2) {
-          EqualCmp<Initial, NeboScalar<Initial, FieldType>, SubExpr2, FieldType>
-          typedef ReturnType;
+          EqualCmp<Initial,
+                   NeboScalar<Initial, typename FieldType::value_type>,
+                   SubExpr2> typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
-          return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
+          return ReturnTerm(ReturnType(NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg1),
                                        arg2.expr()));
+       }
+
+      /* Scalar X SingleValue */
+      template<typename T>
+       inline NeboBooleanSingleValueExpression<EqualCmp<Initial,
+                                                        NeboScalar<Initial, T>,
+                                                        NeboConstSingleValueField<Initial,
+                                                                                  T>
+                                               >,
+                                               T> operator ==(T const & arg1,
+                                                              SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>
+                                                              const & arg2) {
+          EqualCmp<Initial,
+                   NeboScalar<Initial, T>,
+                   NeboConstSingleValueField<Initial, T> > typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboScalar<Initial, T>(arg1),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* Scalar X SingleValueExpr */
+      template<typename SubExpr2, typename T>
+       inline NeboBooleanSingleValueExpression<EqualCmp<Initial,
+                                                        NeboScalar<Initial, T>,
+                                                        SubExpr2>,
+                                               T> operator ==(T const & arg1,
+                                                              NeboSingleValueExpression<SubExpr2,
+                                                                                        T>
+                                                              const & arg2) {
+          EqualCmp<Initial, NeboScalar<Initial, T>, SubExpr2> typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboScalar<Initial, T>(arg1), arg2.expr()));
        }
 
       /* Field X Scalar */
@@ -4566,8 +6409,9 @@
                                                                            field_type,
                                                                            FieldType>::
                                                             Result>,
-                                             NeboScalar<Initial, FieldType>,
-                                             FieldType>,
+                                             NeboScalar<Initial,
+                                                        typename FieldType::
+                                                        value_type> >,
                                     FieldType> operator ==(FieldType const &
                                                            arg1,
                                                            typename FieldType::
@@ -4575,13 +6419,14 @@
                                                            arg2) {
           EqualCmp<Initial,
                    NeboConstField<Initial, FieldType>,
-                   NeboScalar<Initial, FieldType>,
-                   FieldType> typedef ReturnType;
+                   NeboScalar<Initial, typename FieldType::value_type> > typedef
+          ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
-                                       NeboScalar<Initial, FieldType>(arg2)));
+                                       NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg2)));
        }
 
       /* Field X Field */
@@ -4600,16 +6445,14 @@
                                                                            FieldType::
                                                                            field_type,
                                                                            FieldType>::
-                                                            Result>,
-                                             FieldType>,
+                                                            Result> >,
                                     FieldType> operator ==(FieldType const &
                                                            arg1,
                                                            FieldType const &
                                                            arg2) {
           EqualCmp<Initial,
                    NeboConstField<Initial, FieldType>,
-                   NeboConstField<Initial, FieldType>,
-                   FieldType> typedef ReturnType;
+                   NeboConstField<Initial, FieldType> > typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -4627,17 +6470,82 @@
                                                                            field_type,
                                                                            FieldType>::
                                                             Result>,
-                                             SubExpr2,
-                                             FieldType>,
+                                             SubExpr2>,
                                     FieldType> operator ==(FieldType const &
                                                            arg1,
                                                            NeboExpression<SubExpr2,
                                                                           FieldType>
                                                            const & arg2) {
+          EqualCmp<Initial, NeboConstField<Initial, FieldType>, SubExpr2>
+          typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* Field X SingleValue */
+      template<typename FieldType>
+       inline NeboBooleanExpression<EqualCmp<Initial,
+                                             NeboConstField<Initial,
+                                                            typename
+                                                            NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                            Result>,
+                                             NeboConstSingleValueField<Initial,
+                                                                       typename
+                                                                       FieldType::
+                                                                       value_type>
+                                    >,
+                                    FieldType> operator ==(FieldType const &
+                                                           arg1,
+                                                           SpatialOps::
+                                                           structured::
+                                                           SpatialField<SpatialOps::
+                                                                        structured::
+                                                                        SingleValue,
+                                                                        typename
+                                                                        FieldType::
+                                                                        value_type>
+                                                           const & arg2) {
           EqualCmp<Initial,
                    NeboConstField<Initial, FieldType>,
-                   SubExpr2,
-                   FieldType> typedef ReturnType;
+                   NeboConstSingleValueField<Initial,
+                                             typename FieldType::value_type> >
+          typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
+                                       NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg2)));
+       }
+
+      /* Field X SingleValueExpr */
+      template<typename SubExpr2, typename FieldType>
+       inline NeboBooleanExpression<EqualCmp<Initial,
+                                             NeboConstField<Initial,
+                                                            typename
+                                                            NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                            Result>,
+                                             SubExpr2>,
+                                    FieldType> operator ==(FieldType const &
+                                                           arg1,
+                                                           NeboSingleValueExpression<SubExpr2,
+                                                                                     typename
+                                                                                     FieldType::
+                                                                                     value_type>
+                                                           const & arg2) {
+          EqualCmp<Initial, NeboConstField<Initial, FieldType>, SubExpr2>
+          typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -4649,21 +6557,25 @@
       template<typename SubExpr1, typename FieldType>
        inline NeboBooleanExpression<EqualCmp<Initial,
                                              SubExpr1,
-                                             NeboScalar<Initial, FieldType>,
-                                             FieldType>,
+                                             NeboScalar<Initial,
+                                                        typename FieldType::
+                                                        value_type> >,
                                     FieldType> operator ==(NeboExpression<SubExpr1,
                                                                           FieldType>
                                                            const & arg1,
                                                            typename FieldType::
                                                            value_type const &
                                                            arg2) {
-          EqualCmp<Initial, SubExpr1, NeboScalar<Initial, FieldType>, FieldType>
-          typedef ReturnType;
+          EqualCmp<Initial,
+                   SubExpr1,
+                   NeboScalar<Initial, typename FieldType::value_type> > typedef
+          ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg1.expr(),
-                                       NeboScalar<Initial, FieldType>(arg2)));
+                                       NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg2)));
        }
 
       /* SubExpr X Field */
@@ -4676,17 +6588,14 @@
                                                                            FieldType::
                                                                            field_type,
                                                                            FieldType>::
-                                                            Result>,
-                                             FieldType>,
+                                                            Result> >,
                                     FieldType> operator ==(NeboExpression<SubExpr1,
                                                                           FieldType>
                                                            const & arg1,
                                                            FieldType const &
                                                            arg2) {
-          EqualCmp<Initial,
-                   SubExpr1,
-                   NeboConstField<Initial, FieldType>,
-                   FieldType> typedef ReturnType;
+          EqualCmp<Initial, SubExpr1, NeboConstField<Initial, FieldType> >
+          typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -4696,60 +6605,360 @@
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2, typename FieldType>
-       inline NeboBooleanExpression<EqualCmp<Initial,
-                                             SubExpr1,
-                                             SubExpr2,
-                                             FieldType>,
+       inline NeboBooleanExpression<EqualCmp<Initial, SubExpr1, SubExpr2>,
                                     FieldType> operator ==(NeboExpression<SubExpr1,
                                                                           FieldType>
                                                            const & arg1,
                                                            NeboExpression<SubExpr2,
                                                                           FieldType>
                                                            const & arg2) {
-          EqualCmp<Initial, SubExpr1, SubExpr2, FieldType> typedef ReturnType;
+          EqualCmp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SubExpr X SingleValue */
+      template<typename SubExpr1, typename FieldType>
+       inline NeboBooleanExpression<EqualCmp<Initial,
+                                             SubExpr1,
+                                             NeboConstSingleValueField<Initial,
+                                                                       typename
+                                                                       FieldType::
+                                                                       value_type>
+                                    >,
+                                    FieldType> operator ==(NeboExpression<SubExpr1,
+                                                                          FieldType>
+                                                           const & arg1,
+                                                           SpatialOps::
+                                                           structured::
+                                                           SpatialField<SpatialOps::
+                                                                        structured::
+                                                                        SingleValue,
+                                                                        typename
+                                                                        FieldType::
+                                                                        value_type>
+                                                           const & arg2) {
+          EqualCmp<Initial,
+                   SubExpr1,
+                   NeboConstSingleValueField<Initial,
+                                             typename FieldType::value_type> >
+          typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg2)));
+       }
+
+      /* SubExpr X SingleValueExpr */
+      template<typename SubExpr1, typename SubExpr2, typename FieldType>
+       inline NeboBooleanExpression<EqualCmp<Initial, SubExpr1, SubExpr2>,
+                                    FieldType> operator ==(NeboExpression<SubExpr1,
+                                                                          FieldType>
+                                                           const & arg1,
+                                                           NeboSingleValueExpression<SubExpr2,
+                                                                                     typename
+                                                                                     FieldType::
+                                                                                     value_type>
+                                                           const & arg2) {
+          EqualCmp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SingleValue X Scalar */
+      template<typename T>
+       inline NeboBooleanSingleValueExpression<EqualCmp<Initial,
+                                                        NeboConstSingleValueField<Initial,
+                                                                                  T>,
+                                                        NeboScalar<Initial, T> >,
+                                               T> operator ==(SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>
+                                                              const & arg1,
+                                                              T const & arg2) {
+          EqualCmp<Initial,
+                   NeboConstSingleValueField<Initial, T>,
+                   NeboScalar<Initial, T> > typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       NeboScalar<Initial, T>(arg2)));
+       }
+
+      /* SingleValue X Field */
+      template<typename FieldType>
+       inline NeboBooleanExpression<EqualCmp<Initial,
+                                             NeboConstSingleValueField<Initial,
+                                                                       typename
+                                                                       FieldType::
+                                                                       value_type>,
+                                             NeboConstField<Initial,
+                                                            typename
+                                                            NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                            Result> >,
+                                    FieldType> operator ==(SpatialOps::
+                                                           structured::
+                                                           SpatialField<SpatialOps::
+                                                                        structured::
+                                                                        SingleValue,
+                                                                        typename
+                                                                        FieldType::
+                                                                        value_type>
+                                                           const & arg1,
+                                                           FieldType const &
+                                                           arg2) {
+          EqualCmp<Initial,
+                   NeboConstSingleValueField<Initial,
+                                             typename FieldType::value_type>,
+                   NeboConstField<Initial, FieldType> > typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg1),
+                                       NeboConstField<Initial, FieldType>(arg2)));
+       }
+
+      /* SingleValue X SubExpr */
+      template<typename SubExpr2, typename FieldType>
+       inline NeboBooleanExpression<EqualCmp<Initial,
+                                             NeboConstSingleValueField<Initial,
+                                                                       typename
+                                                                       FieldType::
+                                                                       value_type>,
+                                             SubExpr2>,
+                                    FieldType> operator ==(SpatialOps::
+                                                           structured::
+                                                           SpatialField<SpatialOps::
+                                                                        structured::
+                                                                        SingleValue,
+                                                                        typename
+                                                                        FieldType::
+                                                                        value_type>
+                                                           const & arg1,
+                                                           NeboExpression<SubExpr2,
+                                                                          FieldType>
+                                                           const & arg2) {
+          EqualCmp<Initial,
+                   NeboConstSingleValueField<Initial,
+                                             typename FieldType::value_type>,
+                   SubExpr2> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* SingleValue X SingleValue */
+      template<typename T>
+       inline NeboBooleanSingleValueExpression<EqualCmp<Initial,
+                                                        NeboConstSingleValueField<Initial,
+                                                                                  T>,
+                                                        NeboConstSingleValueField<Initial,
+                                                                                  T>
+                                               >,
+                                               T> operator ==(SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>
+                                                              const & arg1,
+                                                              SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>
+                                                              const & arg2) {
+          EqualCmp<Initial,
+                   NeboConstSingleValueField<Initial, T>,
+                   NeboConstSingleValueField<Initial, T> > typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* SingleValue X SingleValueExpr */
+      template<typename SubExpr2, typename T>
+       inline NeboBooleanSingleValueExpression<EqualCmp<Initial,
+                                                        NeboConstSingleValueField<Initial,
+                                                                                  T>,
+                                                        SubExpr2>,
+                                               T> operator ==(SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>
+                                                              const & arg1,
+                                                              NeboSingleValueExpression<SubExpr2,
+                                                                                        T>
+                                                              const & arg2) {
+          EqualCmp<Initial, NeboConstSingleValueField<Initial, T>, SubExpr2>
+          typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* SingleValueExpr X Scalar */
+      template<typename SubExpr1, typename T>
+       inline NeboBooleanSingleValueExpression<EqualCmp<Initial,
+                                                        SubExpr1,
+                                                        NeboScalar<Initial, T> >,
+                                               T> operator ==(NeboSingleValueExpression<SubExpr1,
+                                                                                        T>
+                                                              const & arg1,
+                                                              T const & arg2) {
+          EqualCmp<Initial, SubExpr1, NeboScalar<Initial, T> > typedef
+          ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), NeboScalar<Initial, T>(arg2)));
+       }
+
+      /* SingleValueExpr X Field */
+      template<typename SubExpr1, typename FieldType>
+       inline NeboBooleanExpression<EqualCmp<Initial,
+                                             SubExpr1,
+                                             NeboConstField<Initial,
+                                                            typename
+                                                            NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                            Result> >,
+                                    FieldType> operator ==(NeboSingleValueExpression<SubExpr1,
+                                                                                     typename
+                                                                                     FieldType::
+                                                                                     value_type>
+                                                           const & arg1,
+                                                           FieldType const &
+                                                           arg2) {
+          EqualCmp<Initial, SubExpr1, NeboConstField<Initial, FieldType> >
+          typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstField<Initial, FieldType>(arg2)));
+       }
+
+      /* SingleValueExpr X SubExpr */
+      template<typename SubExpr1, typename SubExpr2, typename FieldType>
+       inline NeboBooleanExpression<EqualCmp<Initial, SubExpr1, SubExpr2>,
+                                    FieldType> operator ==(NeboSingleValueExpression<SubExpr1,
+                                                                                     typename
+                                                                                     FieldType::
+                                                                                     value_type>
+                                                           const & arg1,
+                                                           NeboExpression<SubExpr2,
+                                                                          FieldType>
+                                                           const & arg2) {
+          EqualCmp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SingleValueExpr X SingleValue */
+      template<typename SubExpr1, typename T>
+       inline NeboBooleanSingleValueExpression<EqualCmp<Initial,
+                                                        SubExpr1,
+                                                        NeboConstSingleValueField<Initial,
+                                                                                  T>
+                                               >,
+                                               T> operator ==(NeboSingleValueExpression<SubExpr1,
+                                                                                        T>
+                                                              const & arg1,
+                                                              SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>
+                                                              const & arg2) {
+          EqualCmp<Initial, SubExpr1, NeboConstSingleValueField<Initial, T> >
+          typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* SingleValueExpr X SingleValueExpr */
+      template<typename SubExpr1, typename SubExpr2, typename T>
+       inline NeboBooleanSingleValueExpression<EqualCmp<Initial,
+                                                        SubExpr1,
+                                                        SubExpr2>,
+                                               T> operator ==(NeboSingleValueExpression<SubExpr1,
+                                                                                        T>
+                                                              const & arg1,
+                                                              NeboSingleValueExpression<SubExpr2,
+                                                                                        T>
+                                                              const & arg2) {
+          EqualCmp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
        };
 
-      template<typename CurrentMode,
-               typename Operand1,
-               typename Operand2,
-               typename FieldType>
+      template<typename CurrentMode, typename Operand1, typename Operand2>
        struct InequalCmp;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct InequalCmp<Initial, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct InequalCmp<Initial, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
           InequalCmp<SeqWalk,
                      typename Operand1::SeqWalkType,
-                     typename Operand2::SeqWalkType,
-                     FieldType> typedef SeqWalkType;
+                     typename Operand2::SeqWalkType> typedef SeqWalkType;
 
 #         ifdef FIELD_EXPRESSION_THREADS
              InequalCmp<Resize,
                         typename Operand1::ResizeType,
-                        typename Operand2::ResizeType,
-                        FieldType> typedef ResizeType;
+                        typename Operand2::ResizeType> typedef ResizeType;
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
              InequalCmp<GPUWalk,
                         typename Operand1::GPUWalkType,
-                        typename Operand2::GPUWalkType,
-                        FieldType> typedef GPUWalkType;
+                        typename Operand2::GPUWalkType> typedef GPUWalkType;
 #         endif
           /* __CUDACC__ */
 
           InequalCmp<Reduction,
                      typename Operand1::ReductionType,
-                     typename Operand2::ReductionType,
-                     FieldType> typedef ReductionType;
+                     typename Operand2::ReductionType> typedef ReductionType;
 
           InequalCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -4820,17 +7029,12 @@
           Operand2 const operand2_;
       };
 #     ifdef FIELD_EXPRESSION_THREADS
-         template<typename Operand1, typename Operand2, typename FieldType>
-          struct InequalCmp<Resize, Operand1, Operand2, FieldType> {
+         template<typename Operand1, typename Operand2>
+          struct InequalCmp<Resize, Operand1, Operand2> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
              InequalCmp<SeqWalk,
                         typename Operand1::SeqWalkType,
-                        typename Operand2::SeqWalkType,
-                        FieldType> typedef SeqWalkType;
+                        typename Operand2::SeqWalkType> typedef SeqWalkType;
 
              InequalCmp(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -4850,14 +7054,10 @@
          }
 #     endif
       /* FIELD_EXPRESSION_THREADS */;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct InequalCmp<SeqWalk, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct InequalCmp<SeqWalk, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          bool typedef EvalReturnType;
+          typename Operand1::value_type typedef value_type;
 
           InequalCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -4865,7 +7065,7 @@
 
           inline void next(void) { operand1_.next(); operand2_.next(); }
 
-          inline EvalReturnType eval(void) const {
+          inline bool eval(void) const {
              return (operand1_.eval() != operand2_.eval());
           }
 
@@ -4875,14 +7075,10 @@
           Operand2 operand2_;
       };
 #     ifdef __CUDACC__
-         template<typename Operand1, typename Operand2, typename FieldType>
-          struct InequalCmp<GPUWalk, Operand1, Operand2, FieldType> {
+         template<typename Operand1, typename Operand2>
+          struct InequalCmp<GPUWalk, Operand1, Operand2> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             typename field_type::value_type typedef AtomicType;
+             typename Operand1::value_type typedef value_type;
 
              InequalCmp(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -4900,7 +7096,7 @@
                 operand2_.next();
              }
 
-             __device__ inline AtomicType eval(void) const {
+             __device__ inline bool eval(void) const {
                 return (operand1_.eval() != operand2_.eval());
              }
 
@@ -4911,14 +7107,10 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct InequalCmp<Reduction, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct InequalCmp<Reduction, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          bool typedef EvalReturnType;
+          typename Operand1::value_type typedef value_type;
 
           InequalCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -4934,7 +7126,7 @@
              return (operand1_.has_length() || operand2_.has_length());
           }
 
-          inline EvalReturnType eval(void) const {
+          inline bool eval(void) const {
              return (operand1_.eval() != operand2_.eval());
           }
 
@@ -4947,37 +7139,39 @@
       /* Scalar X Field */
       template<typename FieldType>
        inline NeboBooleanExpression<InequalCmp<Initial,
-                                               NeboScalar<Initial, FieldType>,
+                                               NeboScalar<Initial,
+                                                          typename FieldType::
+                                                          value_type>,
                                                NeboConstField<Initial,
                                                               typename
                                                               NeboFieldCheck<typename
                                                                              FieldType::
                                                                              field_type,
                                                                              FieldType>::
-                                                              Result>,
-                                               FieldType>,
+                                                              Result> >,
                                     FieldType> operator !=(typename FieldType::
                                                            value_type const &
                                                            arg1,
                                                            FieldType const &
                                                            arg2) {
           InequalCmp<Initial,
-                     NeboScalar<Initial, FieldType>,
-                     NeboConstField<Initial, FieldType>,
-                     FieldType> typedef ReturnType;
+                     NeboScalar<Initial, typename FieldType::value_type>,
+                     NeboConstField<Initial, FieldType> > typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
-          return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
+          return ReturnTerm(ReturnType(NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg1),
                                        NeboConstField<Initial, FieldType>(arg2)));
        }
 
       /* Scalar X SubExpr */
       template<typename SubExpr2, typename FieldType>
        inline NeboBooleanExpression<InequalCmp<Initial,
-                                               NeboScalar<Initial, FieldType>,
-                                               SubExpr2,
-                                               FieldType>,
+                                               NeboScalar<Initial,
+                                                          typename FieldType::
+                                                          value_type>,
+                                               SubExpr2>,
                                     FieldType> operator !=(typename FieldType::
                                                            value_type const &
                                                            arg1,
@@ -4985,14 +7179,56 @@
                                                                           FieldType>
                                                            const & arg2) {
           InequalCmp<Initial,
-                     NeboScalar<Initial, FieldType>,
-                     SubExpr2,
-                     FieldType> typedef ReturnType;
+                     NeboScalar<Initial, typename FieldType::value_type>,
+                     SubExpr2> typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
-          return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
+          return ReturnTerm(ReturnType(NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg1),
                                        arg2.expr()));
+       }
+
+      /* Scalar X SingleValue */
+      template<typename T>
+       inline NeboBooleanSingleValueExpression<InequalCmp<Initial,
+                                                          NeboScalar<Initial, T>,
+                                                          NeboConstSingleValueField<Initial,
+                                                                                    T>
+                                               >,
+                                               T> operator !=(T const & arg1,
+                                                              SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>
+                                                              const & arg2) {
+          InequalCmp<Initial,
+                     NeboScalar<Initial, T>,
+                     NeboConstSingleValueField<Initial, T> > typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboScalar<Initial, T>(arg1),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* Scalar X SingleValueExpr */
+      template<typename SubExpr2, typename T>
+       inline NeboBooleanSingleValueExpression<InequalCmp<Initial,
+                                                          NeboScalar<Initial, T>,
+                                                          SubExpr2>,
+                                               T> operator !=(T const & arg1,
+                                                              NeboSingleValueExpression<SubExpr2,
+                                                                                        T>
+                                                              const & arg2) {
+          InequalCmp<Initial, NeboScalar<Initial, T>, SubExpr2> typedef
+          ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboScalar<Initial, T>(arg1), arg2.expr()));
        }
 
       /* Field X Scalar */
@@ -5005,8 +7241,9 @@
                                                                              field_type,
                                                                              FieldType>::
                                                               Result>,
-                                               NeboScalar<Initial, FieldType>,
-                                               FieldType>,
+                                               NeboScalar<Initial,
+                                                          typename FieldType::
+                                                          value_type> >,
                                     FieldType> operator !=(FieldType const &
                                                            arg1,
                                                            typename FieldType::
@@ -5014,13 +7251,14 @@
                                                            arg2) {
           InequalCmp<Initial,
                      NeboConstField<Initial, FieldType>,
-                     NeboScalar<Initial, FieldType>,
-                     FieldType> typedef ReturnType;
+                     NeboScalar<Initial, typename FieldType::value_type> >
+          typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
-                                       NeboScalar<Initial, FieldType>(arg2)));
+                                       NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg2)));
        }
 
       /* Field X Field */
@@ -5039,16 +7277,14 @@
                                                                              FieldType::
                                                                              field_type,
                                                                              FieldType>::
-                                                              Result>,
-                                               FieldType>,
+                                                              Result> >,
                                     FieldType> operator !=(FieldType const &
                                                            arg1,
                                                            FieldType const &
                                                            arg2) {
           InequalCmp<Initial,
                      NeboConstField<Initial, FieldType>,
-                     NeboConstField<Initial, FieldType>,
-                     FieldType> typedef ReturnType;
+                     NeboConstField<Initial, FieldType> > typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -5066,17 +7302,82 @@
                                                                              field_type,
                                                                              FieldType>::
                                                               Result>,
-                                               SubExpr2,
-                                               FieldType>,
+                                               SubExpr2>,
                                     FieldType> operator !=(FieldType const &
                                                            arg1,
                                                            NeboExpression<SubExpr2,
                                                                           FieldType>
                                                            const & arg2) {
+          InequalCmp<Initial, NeboConstField<Initial, FieldType>, SubExpr2>
+          typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* Field X SingleValue */
+      template<typename FieldType>
+       inline NeboBooleanExpression<InequalCmp<Initial,
+                                               NeboConstField<Initial,
+                                                              typename
+                                                              NeboFieldCheck<typename
+                                                                             FieldType::
+                                                                             field_type,
+                                                                             FieldType>::
+                                                              Result>,
+                                               NeboConstSingleValueField<Initial,
+                                                                         typename
+                                                                         FieldType::
+                                                                         value_type>
+                                    >,
+                                    FieldType> operator !=(FieldType const &
+                                                           arg1,
+                                                           SpatialOps::
+                                                           structured::
+                                                           SpatialField<SpatialOps::
+                                                                        structured::
+                                                                        SingleValue,
+                                                                        typename
+                                                                        FieldType::
+                                                                        value_type>
+                                                           const & arg2) {
           InequalCmp<Initial,
                      NeboConstField<Initial, FieldType>,
-                     SubExpr2,
-                     FieldType> typedef ReturnType;
+                     NeboConstSingleValueField<Initial,
+                                               typename FieldType::value_type> >
+          typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
+                                       NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg2)));
+       }
+
+      /* Field X SingleValueExpr */
+      template<typename SubExpr2, typename FieldType>
+       inline NeboBooleanExpression<InequalCmp<Initial,
+                                               NeboConstField<Initial,
+                                                              typename
+                                                              NeboFieldCheck<typename
+                                                                             FieldType::
+                                                                             field_type,
+                                                                             FieldType>::
+                                                              Result>,
+                                               SubExpr2>,
+                                    FieldType> operator !=(FieldType const &
+                                                           arg1,
+                                                           NeboSingleValueExpression<SubExpr2,
+                                                                                     typename
+                                                                                     FieldType::
+                                                                                     value_type>
+                                                           const & arg2) {
+          InequalCmp<Initial, NeboConstField<Initial, FieldType>, SubExpr2>
+          typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -5088,8 +7389,9 @@
       template<typename SubExpr1, typename FieldType>
        inline NeboBooleanExpression<InequalCmp<Initial,
                                                SubExpr1,
-                                               NeboScalar<Initial, FieldType>,
-                                               FieldType>,
+                                               NeboScalar<Initial,
+                                                          typename FieldType::
+                                                          value_type> >,
                                     FieldType> operator !=(NeboExpression<SubExpr1,
                                                                           FieldType>
                                                            const & arg1,
@@ -5098,13 +7400,14 @@
                                                            arg2) {
           InequalCmp<Initial,
                      SubExpr1,
-                     NeboScalar<Initial, FieldType>,
-                     FieldType> typedef ReturnType;
+                     NeboScalar<Initial, typename FieldType::value_type> >
+          typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg1.expr(),
-                                       NeboScalar<Initial, FieldType>(arg2)));
+                                       NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg2)));
        }
 
       /* SubExpr X Field */
@@ -5117,17 +7420,14 @@
                                                                              FieldType::
                                                                              field_type,
                                                                              FieldType>::
-                                                              Result>,
-                                               FieldType>,
+                                                              Result> >,
                                     FieldType> operator !=(NeboExpression<SubExpr1,
                                                                           FieldType>
                                                            const & arg1,
                                                            FieldType const &
                                                            arg2) {
-          InequalCmp<Initial,
-                     SubExpr1,
-                     NeboConstField<Initial, FieldType>,
-                     FieldType> typedef ReturnType;
+          InequalCmp<Initial, SubExpr1, NeboConstField<Initial, FieldType> >
+          typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -5137,60 +7437,362 @@
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2, typename FieldType>
-       inline NeboBooleanExpression<InequalCmp<Initial,
-                                               SubExpr1,
-                                               SubExpr2,
-                                               FieldType>,
+       inline NeboBooleanExpression<InequalCmp<Initial, SubExpr1, SubExpr2>,
                                     FieldType> operator !=(NeboExpression<SubExpr1,
                                                                           FieldType>
                                                            const & arg1,
                                                            NeboExpression<SubExpr2,
                                                                           FieldType>
                                                            const & arg2) {
-          InequalCmp<Initial, SubExpr1, SubExpr2, FieldType> typedef ReturnType;
+          InequalCmp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SubExpr X SingleValue */
+      template<typename SubExpr1, typename FieldType>
+       inline NeboBooleanExpression<InequalCmp<Initial,
+                                               SubExpr1,
+                                               NeboConstSingleValueField<Initial,
+                                                                         typename
+                                                                         FieldType::
+                                                                         value_type>
+                                    >,
+                                    FieldType> operator !=(NeboExpression<SubExpr1,
+                                                                          FieldType>
+                                                           const & arg1,
+                                                           SpatialOps::
+                                                           structured::
+                                                           SpatialField<SpatialOps::
+                                                                        structured::
+                                                                        SingleValue,
+                                                                        typename
+                                                                        FieldType::
+                                                                        value_type>
+                                                           const & arg2) {
+          InequalCmp<Initial,
+                     SubExpr1,
+                     NeboConstSingleValueField<Initial,
+                                               typename FieldType::value_type> >
+          typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg2)));
+       }
+
+      /* SubExpr X SingleValueExpr */
+      template<typename SubExpr1, typename SubExpr2, typename FieldType>
+       inline NeboBooleanExpression<InequalCmp<Initial, SubExpr1, SubExpr2>,
+                                    FieldType> operator !=(NeboExpression<SubExpr1,
+                                                                          FieldType>
+                                                           const & arg1,
+                                                           NeboSingleValueExpression<SubExpr2,
+                                                                                     typename
+                                                                                     FieldType::
+                                                                                     value_type>
+                                                           const & arg2) {
+          InequalCmp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SingleValue X Scalar */
+      template<typename T>
+       inline NeboBooleanSingleValueExpression<InequalCmp<Initial,
+                                                          NeboConstSingleValueField<Initial,
+                                                                                    T>,
+                                                          NeboScalar<Initial, T>
+                                               >,
+                                               T> operator !=(SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>
+                                                              const & arg1,
+                                                              T const & arg2) {
+          InequalCmp<Initial,
+                     NeboConstSingleValueField<Initial, T>,
+                     NeboScalar<Initial, T> > typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       NeboScalar<Initial, T>(arg2)));
+       }
+
+      /* SingleValue X Field */
+      template<typename FieldType>
+       inline NeboBooleanExpression<InequalCmp<Initial,
+                                               NeboConstSingleValueField<Initial,
+                                                                         typename
+                                                                         FieldType::
+                                                                         value_type>,
+                                               NeboConstField<Initial,
+                                                              typename
+                                                              NeboFieldCheck<typename
+                                                                             FieldType::
+                                                                             field_type,
+                                                                             FieldType>::
+                                                              Result> >,
+                                    FieldType> operator !=(SpatialOps::
+                                                           structured::
+                                                           SpatialField<SpatialOps::
+                                                                        structured::
+                                                                        SingleValue,
+                                                                        typename
+                                                                        FieldType::
+                                                                        value_type>
+                                                           const & arg1,
+                                                           FieldType const &
+                                                           arg2) {
+          InequalCmp<Initial,
+                     NeboConstSingleValueField<Initial,
+                                               typename FieldType::value_type>,
+                     NeboConstField<Initial, FieldType> > typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg1),
+                                       NeboConstField<Initial, FieldType>(arg2)));
+       }
+
+      /* SingleValue X SubExpr */
+      template<typename SubExpr2, typename FieldType>
+       inline NeboBooleanExpression<InequalCmp<Initial,
+                                               NeboConstSingleValueField<Initial,
+                                                                         typename
+                                                                         FieldType::
+                                                                         value_type>,
+                                               SubExpr2>,
+                                    FieldType> operator !=(SpatialOps::
+                                                           structured::
+                                                           SpatialField<SpatialOps::
+                                                                        structured::
+                                                                        SingleValue,
+                                                                        typename
+                                                                        FieldType::
+                                                                        value_type>
+                                                           const & arg1,
+                                                           NeboExpression<SubExpr2,
+                                                                          FieldType>
+                                                           const & arg2) {
+          InequalCmp<Initial,
+                     NeboConstSingleValueField<Initial,
+                                               typename FieldType::value_type>,
+                     SubExpr2> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* SingleValue X SingleValue */
+      template<typename T>
+       inline NeboBooleanSingleValueExpression<InequalCmp<Initial,
+                                                          NeboConstSingleValueField<Initial,
+                                                                                    T>,
+                                                          NeboConstSingleValueField<Initial,
+                                                                                    T>
+                                               >,
+                                               T> operator !=(SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>
+                                                              const & arg1,
+                                                              SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>
+                                                              const & arg2) {
+          InequalCmp<Initial,
+                     NeboConstSingleValueField<Initial, T>,
+                     NeboConstSingleValueField<Initial, T> > typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* SingleValue X SingleValueExpr */
+      template<typename SubExpr2, typename T>
+       inline NeboBooleanSingleValueExpression<InequalCmp<Initial,
+                                                          NeboConstSingleValueField<Initial,
+                                                                                    T>,
+                                                          SubExpr2>,
+                                               T> operator !=(SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>
+                                                              const & arg1,
+                                                              NeboSingleValueExpression<SubExpr2,
+                                                                                        T>
+                                                              const & arg2) {
+          InequalCmp<Initial, NeboConstSingleValueField<Initial, T>, SubExpr2>
+          typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* SingleValueExpr X Scalar */
+      template<typename SubExpr1, typename T>
+       inline NeboBooleanSingleValueExpression<InequalCmp<Initial,
+                                                          SubExpr1,
+                                                          NeboScalar<Initial, T>
+                                               >,
+                                               T> operator !=(NeboSingleValueExpression<SubExpr1,
+                                                                                        T>
+                                                              const & arg1,
+                                                              T const & arg2) {
+          InequalCmp<Initial, SubExpr1, NeboScalar<Initial, T> > typedef
+          ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), NeboScalar<Initial, T>(arg2)));
+       }
+
+      /* SingleValueExpr X Field */
+      template<typename SubExpr1, typename FieldType>
+       inline NeboBooleanExpression<InequalCmp<Initial,
+                                               SubExpr1,
+                                               NeboConstField<Initial,
+                                                              typename
+                                                              NeboFieldCheck<typename
+                                                                             FieldType::
+                                                                             field_type,
+                                                                             FieldType>::
+                                                              Result> >,
+                                    FieldType> operator !=(NeboSingleValueExpression<SubExpr1,
+                                                                                     typename
+                                                                                     FieldType::
+                                                                                     value_type>
+                                                           const & arg1,
+                                                           FieldType const &
+                                                           arg2) {
+          InequalCmp<Initial, SubExpr1, NeboConstField<Initial, FieldType> >
+          typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstField<Initial, FieldType>(arg2)));
+       }
+
+      /* SingleValueExpr X SubExpr */
+      template<typename SubExpr1, typename SubExpr2, typename FieldType>
+       inline NeboBooleanExpression<InequalCmp<Initial, SubExpr1, SubExpr2>,
+                                    FieldType> operator !=(NeboSingleValueExpression<SubExpr1,
+                                                                                     typename
+                                                                                     FieldType::
+                                                                                     value_type>
+                                                           const & arg1,
+                                                           NeboExpression<SubExpr2,
+                                                                          FieldType>
+                                                           const & arg2) {
+          InequalCmp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SingleValueExpr X SingleValue */
+      template<typename SubExpr1, typename T>
+       inline NeboBooleanSingleValueExpression<InequalCmp<Initial,
+                                                          SubExpr1,
+                                                          NeboConstSingleValueField<Initial,
+                                                                                    T>
+                                               >,
+                                               T> operator !=(NeboSingleValueExpression<SubExpr1,
+                                                                                        T>
+                                                              const & arg1,
+                                                              SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>
+                                                              const & arg2) {
+          InequalCmp<Initial, SubExpr1, NeboConstSingleValueField<Initial, T> >
+          typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* SingleValueExpr X SingleValueExpr */
+      template<typename SubExpr1, typename SubExpr2, typename T>
+       inline NeboBooleanSingleValueExpression<InequalCmp<Initial,
+                                                          SubExpr1,
+                                                          SubExpr2>,
+                                               T> operator !=(NeboSingleValueExpression<SubExpr1,
+                                                                                        T>
+                                                              const & arg1,
+                                                              NeboSingleValueExpression<SubExpr2,
+                                                                                        T>
+                                                              const & arg2) {
+          InequalCmp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
        };
 
-      template<typename CurrentMode,
-               typename Operand1,
-               typename Operand2,
-               typename FieldType>
+      template<typename CurrentMode, typename Operand1, typename Operand2>
        struct LessThanCmp;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct LessThanCmp<Initial, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct LessThanCmp<Initial, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
           LessThanCmp<SeqWalk,
                       typename Operand1::SeqWalkType,
-                      typename Operand2::SeqWalkType,
-                      FieldType> typedef SeqWalkType;
+                      typename Operand2::SeqWalkType> typedef SeqWalkType;
 
 #         ifdef FIELD_EXPRESSION_THREADS
              LessThanCmp<Resize,
                          typename Operand1::ResizeType,
-                         typename Operand2::ResizeType,
-                         FieldType> typedef ResizeType;
+                         typename Operand2::ResizeType> typedef ResizeType;
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
              LessThanCmp<GPUWalk,
                          typename Operand1::GPUWalkType,
-                         typename Operand2::GPUWalkType,
-                         FieldType> typedef GPUWalkType;
+                         typename Operand2::GPUWalkType> typedef GPUWalkType;
 #         endif
           /* __CUDACC__ */
 
           LessThanCmp<Reduction,
                       typename Operand1::ReductionType,
-                      typename Operand2::ReductionType,
-                      FieldType> typedef ReductionType;
+                      typename Operand2::ReductionType> typedef ReductionType;
 
           LessThanCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -5261,17 +7863,12 @@
           Operand2 const operand2_;
       };
 #     ifdef FIELD_EXPRESSION_THREADS
-         template<typename Operand1, typename Operand2, typename FieldType>
-          struct LessThanCmp<Resize, Operand1, Operand2, FieldType> {
+         template<typename Operand1, typename Operand2>
+          struct LessThanCmp<Resize, Operand1, Operand2> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
              LessThanCmp<SeqWalk,
                          typename Operand1::SeqWalkType,
-                         typename Operand2::SeqWalkType,
-                         FieldType> typedef SeqWalkType;
+                         typename Operand2::SeqWalkType> typedef SeqWalkType;
 
              LessThanCmp(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -5291,14 +7888,10 @@
          }
 #     endif
       /* FIELD_EXPRESSION_THREADS */;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct LessThanCmp<SeqWalk, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct LessThanCmp<SeqWalk, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          bool typedef EvalReturnType;
+          typename Operand1::value_type typedef value_type;
 
           LessThanCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -5306,7 +7899,7 @@
 
           inline void next(void) { operand1_.next(); operand2_.next(); }
 
-          inline EvalReturnType eval(void) const {
+          inline bool eval(void) const {
              return (operand1_.eval() < operand2_.eval());
           }
 
@@ -5316,14 +7909,10 @@
           Operand2 operand2_;
       };
 #     ifdef __CUDACC__
-         template<typename Operand1, typename Operand2, typename FieldType>
-          struct LessThanCmp<GPUWalk, Operand1, Operand2, FieldType> {
+         template<typename Operand1, typename Operand2>
+          struct LessThanCmp<GPUWalk, Operand1, Operand2> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             typename field_type::value_type typedef AtomicType;
+             typename Operand1::value_type typedef value_type;
 
              LessThanCmp(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -5341,7 +7930,7 @@
                 operand2_.next();
              }
 
-             __device__ inline AtomicType eval(void) const {
+             __device__ inline bool eval(void) const {
                 return (operand1_.eval() < operand2_.eval());
              }
 
@@ -5352,14 +7941,10 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct LessThanCmp<Reduction, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct LessThanCmp<Reduction, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          bool typedef EvalReturnType;
+          typename Operand1::value_type typedef value_type;
 
           LessThanCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -5375,7 +7960,7 @@
              return (operand1_.has_length() || operand2_.has_length());
           }
 
-          inline EvalReturnType eval(void) const {
+          inline bool eval(void) const {
              return (operand1_.eval() < operand2_.eval());
           }
 
@@ -5388,36 +7973,38 @@
       /* Scalar X Field */
       template<typename FieldType>
        inline NeboBooleanExpression<LessThanCmp<Initial,
-                                                NeboScalar<Initial, FieldType>,
+                                                NeboScalar<Initial,
+                                                           typename FieldType::
+                                                           value_type>,
                                                 NeboConstField<Initial,
                                                                typename
                                                                NeboFieldCheck<typename
                                                                               FieldType::
                                                                               field_type,
                                                                               FieldType>::
-                                                               Result>,
-                                                FieldType>,
+                                                               Result> >,
                                     FieldType> operator <(typename FieldType::
                                                           value_type const &
                                                           arg1,
                                                           FieldType const & arg2) {
           LessThanCmp<Initial,
-                      NeboScalar<Initial, FieldType>,
-                      NeboConstField<Initial, FieldType>,
-                      FieldType> typedef ReturnType;
+                      NeboScalar<Initial, typename FieldType::value_type>,
+                      NeboConstField<Initial, FieldType> > typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
-          return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
+          return ReturnTerm(ReturnType(NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg1),
                                        NeboConstField<Initial, FieldType>(arg2)));
        }
 
       /* Scalar X SubExpr */
       template<typename SubExpr2, typename FieldType>
        inline NeboBooleanExpression<LessThanCmp<Initial,
-                                                NeboScalar<Initial, FieldType>,
-                                                SubExpr2,
-                                                FieldType>,
+                                                NeboScalar<Initial,
+                                                           typename FieldType::
+                                                           value_type>,
+                                                SubExpr2>,
                                     FieldType> operator <(typename FieldType::
                                                           value_type const &
                                                           arg1,
@@ -5425,14 +8012,56 @@
                                                                          FieldType>
                                                           const & arg2) {
           LessThanCmp<Initial,
-                      NeboScalar<Initial, FieldType>,
-                      SubExpr2,
-                      FieldType> typedef ReturnType;
+                      NeboScalar<Initial, typename FieldType::value_type>,
+                      SubExpr2> typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
-          return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
+          return ReturnTerm(ReturnType(NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg1),
                                        arg2.expr()));
+       }
+
+      /* Scalar X SingleValue */
+      template<typename T>
+       inline NeboBooleanSingleValueExpression<LessThanCmp<Initial,
+                                                           NeboScalar<Initial, T>,
+                                                           NeboConstSingleValueField<Initial,
+                                                                                     T>
+                                               >,
+                                               T> operator <(T const & arg1,
+                                                             SpatialOps::
+                                                             structured::
+                                                             SpatialField<SpatialOps::
+                                                                          structured::
+                                                                          SingleValue,
+                                                                          T>
+                                                             const & arg2) {
+          LessThanCmp<Initial,
+                      NeboScalar<Initial, T>,
+                      NeboConstSingleValueField<Initial, T> > typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboScalar<Initial, T>(arg1),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* Scalar X SingleValueExpr */
+      template<typename SubExpr2, typename T>
+       inline NeboBooleanSingleValueExpression<LessThanCmp<Initial,
+                                                           NeboScalar<Initial, T>,
+                                                           SubExpr2>,
+                                               T> operator <(T const & arg1,
+                                                             NeboSingleValueExpression<SubExpr2,
+                                                                                       T>
+                                                             const & arg2) {
+          LessThanCmp<Initial, NeboScalar<Initial, T>, SubExpr2> typedef
+          ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboScalar<Initial, T>(arg1), arg2.expr()));
        }
 
       /* Field X Scalar */
@@ -5445,21 +8074,23 @@
                                                                               field_type,
                                                                               FieldType>::
                                                                Result>,
-                                                NeboScalar<Initial, FieldType>,
-                                                FieldType>,
+                                                NeboScalar<Initial,
+                                                           typename FieldType::
+                                                           value_type> >,
                                     FieldType> operator <(FieldType const & arg1,
                                                           typename FieldType::
                                                           value_type const &
                                                           arg2) {
           LessThanCmp<Initial,
                       NeboConstField<Initial, FieldType>,
-                      NeboScalar<Initial, FieldType>,
-                      FieldType> typedef ReturnType;
+                      NeboScalar<Initial, typename FieldType::value_type> >
+          typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
-                                       NeboScalar<Initial, FieldType>(arg2)));
+                                       NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg2)));
        }
 
       /* Field X Field */
@@ -5478,14 +8109,12 @@
                                                                               FieldType::
                                                                               field_type,
                                                                               FieldType>::
-                                                               Result>,
-                                                FieldType>,
+                                                               Result> >,
                                     FieldType> operator <(FieldType const & arg1,
                                                           FieldType const & arg2) {
           LessThanCmp<Initial,
                       NeboConstField<Initial, FieldType>,
-                      NeboConstField<Initial, FieldType>,
-                      FieldType> typedef ReturnType;
+                      NeboConstField<Initial, FieldType> > typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -5503,16 +8132,78 @@
                                                                               field_type,
                                                                               FieldType>::
                                                                Result>,
-                                                SubExpr2,
-                                                FieldType>,
+                                                SubExpr2>,
                                     FieldType> operator <(FieldType const & arg1,
                                                           NeboExpression<SubExpr2,
                                                                          FieldType>
                                                           const & arg2) {
+          LessThanCmp<Initial, NeboConstField<Initial, FieldType>, SubExpr2>
+          typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* Field X SingleValue */
+      template<typename FieldType>
+       inline NeboBooleanExpression<LessThanCmp<Initial,
+                                                NeboConstField<Initial,
+                                                               typename
+                                                               NeboFieldCheck<typename
+                                                                              FieldType::
+                                                                              field_type,
+                                                                              FieldType>::
+                                                               Result>,
+                                                NeboConstSingleValueField<Initial,
+                                                                          typename
+                                                                          FieldType::
+                                                                          value_type>
+                                    >,
+                                    FieldType> operator <(FieldType const & arg1,
+                                                          SpatialOps::structured::
+                                                          SpatialField<SpatialOps::
+                                                                       structured::
+                                                                       SingleValue,
+                                                                       typename
+                                                                       FieldType::
+                                                                       value_type>
+                                                          const & arg2) {
           LessThanCmp<Initial,
                       NeboConstField<Initial, FieldType>,
-                      SubExpr2,
-                      FieldType> typedef ReturnType;
+                      NeboConstSingleValueField<Initial,
+                                                typename FieldType::value_type> >
+          typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
+                                       NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg2)));
+       }
+
+      /* Field X SingleValueExpr */
+      template<typename SubExpr2, typename FieldType>
+       inline NeboBooleanExpression<LessThanCmp<Initial,
+                                                NeboConstField<Initial,
+                                                               typename
+                                                               NeboFieldCheck<typename
+                                                                              FieldType::
+                                                                              field_type,
+                                                                              FieldType>::
+                                                               Result>,
+                                                SubExpr2>,
+                                    FieldType> operator <(FieldType const & arg1,
+                                                          NeboSingleValueExpression<SubExpr2,
+                                                                                    typename
+                                                                                    FieldType::
+                                                                                    value_type>
+                                                          const & arg2) {
+          LessThanCmp<Initial, NeboConstField<Initial, FieldType>, SubExpr2>
+          typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -5524,8 +8215,9 @@
       template<typename SubExpr1, typename FieldType>
        inline NeboBooleanExpression<LessThanCmp<Initial,
                                                 SubExpr1,
-                                                NeboScalar<Initial, FieldType>,
-                                                FieldType>,
+                                                NeboScalar<Initial,
+                                                           typename FieldType::
+                                                           value_type> >,
                                     FieldType> operator <(NeboExpression<SubExpr1,
                                                                          FieldType>
                                                           const & arg1,
@@ -5534,13 +8226,14 @@
                                                           arg2) {
           LessThanCmp<Initial,
                       SubExpr1,
-                      NeboScalar<Initial, FieldType>,
-                      FieldType> typedef ReturnType;
+                      NeboScalar<Initial, typename FieldType::value_type> >
+          typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg1.expr(),
-                                       NeboScalar<Initial, FieldType>(arg2)));
+                                       NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg2)));
        }
 
       /* SubExpr X Field */
@@ -5553,16 +8246,13 @@
                                                                               FieldType::
                                                                               field_type,
                                                                               FieldType>::
-                                                               Result>,
-                                                FieldType>,
+                                                               Result> >,
                                     FieldType> operator <(NeboExpression<SubExpr1,
                                                                          FieldType>
                                                           const & arg1,
                                                           FieldType const & arg2) {
-          LessThanCmp<Initial,
-                      SubExpr1,
-                      NeboConstField<Initial, FieldType>,
-                      FieldType> typedef ReturnType;
+          LessThanCmp<Initial, SubExpr1, NeboConstField<Initial, FieldType> >
+          typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -5572,60 +8262,359 @@
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2, typename FieldType>
-       inline NeboBooleanExpression<LessThanCmp<Initial,
-                                                SubExpr1,
-                                                SubExpr2,
-                                                FieldType>,
+       inline NeboBooleanExpression<LessThanCmp<Initial, SubExpr1, SubExpr2>,
                                     FieldType> operator <(NeboExpression<SubExpr1,
                                                                          FieldType>
                                                           const & arg1,
                                                           NeboExpression<SubExpr2,
                                                                          FieldType>
                                                           const & arg2) {
-          LessThanCmp<Initial, SubExpr1, SubExpr2, FieldType> typedef ReturnType;
+          LessThanCmp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SubExpr X SingleValue */
+      template<typename SubExpr1, typename FieldType>
+       inline NeboBooleanExpression<LessThanCmp<Initial,
+                                                SubExpr1,
+                                                NeboConstSingleValueField<Initial,
+                                                                          typename
+                                                                          FieldType::
+                                                                          value_type>
+                                    >,
+                                    FieldType> operator <(NeboExpression<SubExpr1,
+                                                                         FieldType>
+                                                          const & arg1,
+                                                          SpatialOps::structured::
+                                                          SpatialField<SpatialOps::
+                                                                       structured::
+                                                                       SingleValue,
+                                                                       typename
+                                                                       FieldType::
+                                                                       value_type>
+                                                          const & arg2) {
+          LessThanCmp<Initial,
+                      SubExpr1,
+                      NeboConstSingleValueField<Initial,
+                                                typename FieldType::value_type> >
+          typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg2)));
+       }
+
+      /* SubExpr X SingleValueExpr */
+      template<typename SubExpr1, typename SubExpr2, typename FieldType>
+       inline NeboBooleanExpression<LessThanCmp<Initial, SubExpr1, SubExpr2>,
+                                    FieldType> operator <(NeboExpression<SubExpr1,
+                                                                         FieldType>
+                                                          const & arg1,
+                                                          NeboSingleValueExpression<SubExpr2,
+                                                                                    typename
+                                                                                    FieldType::
+                                                                                    value_type>
+                                                          const & arg2) {
+          LessThanCmp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SingleValue X Scalar */
+      template<typename T>
+       inline NeboBooleanSingleValueExpression<LessThanCmp<Initial,
+                                                           NeboConstSingleValueField<Initial,
+                                                                                     T>,
+                                                           NeboScalar<Initial, T>
+                                               >,
+                                               T> operator <(SpatialOps::
+                                                             structured::
+                                                             SpatialField<SpatialOps::
+                                                                          structured::
+                                                                          SingleValue,
+                                                                          T>
+                                                             const & arg1,
+                                                             T const & arg2) {
+          LessThanCmp<Initial,
+                      NeboConstSingleValueField<Initial, T>,
+                      NeboScalar<Initial, T> > typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       NeboScalar<Initial, T>(arg2)));
+       }
+
+      /* SingleValue X Field */
+      template<typename FieldType>
+       inline NeboBooleanExpression<LessThanCmp<Initial,
+                                                NeboConstSingleValueField<Initial,
+                                                                          typename
+                                                                          FieldType::
+                                                                          value_type>,
+                                                NeboConstField<Initial,
+                                                               typename
+                                                               NeboFieldCheck<typename
+                                                                              FieldType::
+                                                                              field_type,
+                                                                              FieldType>::
+                                                               Result> >,
+                                    FieldType> operator <(SpatialOps::structured::
+                                                          SpatialField<SpatialOps::
+                                                                       structured::
+                                                                       SingleValue,
+                                                                       typename
+                                                                       FieldType::
+                                                                       value_type>
+                                                          const & arg1,
+                                                          FieldType const & arg2) {
+          LessThanCmp<Initial,
+                      NeboConstSingleValueField<Initial,
+                                                typename FieldType::value_type>,
+                      NeboConstField<Initial, FieldType> > typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg1),
+                                       NeboConstField<Initial, FieldType>(arg2)));
+       }
+
+      /* SingleValue X SubExpr */
+      template<typename SubExpr2, typename FieldType>
+       inline NeboBooleanExpression<LessThanCmp<Initial,
+                                                NeboConstSingleValueField<Initial,
+                                                                          typename
+                                                                          FieldType::
+                                                                          value_type>,
+                                                SubExpr2>,
+                                    FieldType> operator <(SpatialOps::structured::
+                                                          SpatialField<SpatialOps::
+                                                                       structured::
+                                                                       SingleValue,
+                                                                       typename
+                                                                       FieldType::
+                                                                       value_type>
+                                                          const & arg1,
+                                                          NeboExpression<SubExpr2,
+                                                                         FieldType>
+                                                          const & arg2) {
+          LessThanCmp<Initial,
+                      NeboConstSingleValueField<Initial,
+                                                typename FieldType::value_type>,
+                      SubExpr2> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* SingleValue X SingleValue */
+      template<typename T>
+       inline NeboBooleanSingleValueExpression<LessThanCmp<Initial,
+                                                           NeboConstSingleValueField<Initial,
+                                                                                     T>,
+                                                           NeboConstSingleValueField<Initial,
+                                                                                     T>
+                                               >,
+                                               T> operator <(SpatialOps::
+                                                             structured::
+                                                             SpatialField<SpatialOps::
+                                                                          structured::
+                                                                          SingleValue,
+                                                                          T>
+                                                             const & arg1,
+                                                             SpatialOps::
+                                                             structured::
+                                                             SpatialField<SpatialOps::
+                                                                          structured::
+                                                                          SingleValue,
+                                                                          T>
+                                                             const & arg2) {
+          LessThanCmp<Initial,
+                      NeboConstSingleValueField<Initial, T>,
+                      NeboConstSingleValueField<Initial, T> > typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* SingleValue X SingleValueExpr */
+      template<typename SubExpr2, typename T>
+       inline NeboBooleanSingleValueExpression<LessThanCmp<Initial,
+                                                           NeboConstSingleValueField<Initial,
+                                                                                     T>,
+                                                           SubExpr2>,
+                                               T> operator <(SpatialOps::
+                                                             structured::
+                                                             SpatialField<SpatialOps::
+                                                                          structured::
+                                                                          SingleValue,
+                                                                          T>
+                                                             const & arg1,
+                                                             NeboSingleValueExpression<SubExpr2,
+                                                                                       T>
+                                                             const & arg2) {
+          LessThanCmp<Initial, NeboConstSingleValueField<Initial, T>, SubExpr2>
+          typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* SingleValueExpr X Scalar */
+      template<typename SubExpr1, typename T>
+       inline NeboBooleanSingleValueExpression<LessThanCmp<Initial,
+                                                           SubExpr1,
+                                                           NeboScalar<Initial, T>
+                                               >,
+                                               T> operator <(NeboSingleValueExpression<SubExpr1,
+                                                                                       T>
+                                                             const & arg1,
+                                                             T const & arg2) {
+          LessThanCmp<Initial, SubExpr1, NeboScalar<Initial, T> > typedef
+          ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), NeboScalar<Initial, T>(arg2)));
+       }
+
+      /* SingleValueExpr X Field */
+      template<typename SubExpr1, typename FieldType>
+       inline NeboBooleanExpression<LessThanCmp<Initial,
+                                                SubExpr1,
+                                                NeboConstField<Initial,
+                                                               typename
+                                                               NeboFieldCheck<typename
+                                                                              FieldType::
+                                                                              field_type,
+                                                                              FieldType>::
+                                                               Result> >,
+                                    FieldType> operator <(NeboSingleValueExpression<SubExpr1,
+                                                                                    typename
+                                                                                    FieldType::
+                                                                                    value_type>
+                                                          const & arg1,
+                                                          FieldType const & arg2) {
+          LessThanCmp<Initial, SubExpr1, NeboConstField<Initial, FieldType> >
+          typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstField<Initial, FieldType>(arg2)));
+       }
+
+      /* SingleValueExpr X SubExpr */
+      template<typename SubExpr1, typename SubExpr2, typename FieldType>
+       inline NeboBooleanExpression<LessThanCmp<Initial, SubExpr1, SubExpr2>,
+                                    FieldType> operator <(NeboSingleValueExpression<SubExpr1,
+                                                                                    typename
+                                                                                    FieldType::
+                                                                                    value_type>
+                                                          const & arg1,
+                                                          NeboExpression<SubExpr2,
+                                                                         FieldType>
+                                                          const & arg2) {
+          LessThanCmp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SingleValueExpr X SingleValue */
+      template<typename SubExpr1, typename T>
+       inline NeboBooleanSingleValueExpression<LessThanCmp<Initial,
+                                                           SubExpr1,
+                                                           NeboConstSingleValueField<Initial,
+                                                                                     T>
+                                               >,
+                                               T> operator <(NeboSingleValueExpression<SubExpr1,
+                                                                                       T>
+                                                             const & arg1,
+                                                             SpatialOps::
+                                                             structured::
+                                                             SpatialField<SpatialOps::
+                                                                          structured::
+                                                                          SingleValue,
+                                                                          T>
+                                                             const & arg2) {
+          LessThanCmp<Initial, SubExpr1, NeboConstSingleValueField<Initial, T> >
+          typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* SingleValueExpr X SingleValueExpr */
+      template<typename SubExpr1, typename SubExpr2, typename T>
+       inline NeboBooleanSingleValueExpression<LessThanCmp<Initial,
+                                                           SubExpr1,
+                                                           SubExpr2>,
+                                               T> operator <(NeboSingleValueExpression<SubExpr1,
+                                                                                       T>
+                                                             const & arg1,
+                                                             NeboSingleValueExpression<SubExpr2,
+                                                                                       T>
+                                                             const & arg2) {
+          LessThanCmp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
        };
 
-      template<typename CurrentMode,
-               typename Operand1,
-               typename Operand2,
-               typename FieldType>
+      template<typename CurrentMode, typename Operand1, typename Operand2>
        struct LessThanEqualCmp;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct LessThanEqualCmp<Initial, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct LessThanEqualCmp<Initial, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
           LessThanEqualCmp<SeqWalk,
                            typename Operand1::SeqWalkType,
-                           typename Operand2::SeqWalkType,
-                           FieldType> typedef SeqWalkType;
+                           typename Operand2::SeqWalkType> typedef SeqWalkType;
 
 #         ifdef FIELD_EXPRESSION_THREADS
              LessThanEqualCmp<Resize,
                               typename Operand1::ResizeType,
-                              typename Operand2::ResizeType,
-                              FieldType> typedef ResizeType;
+                              typename Operand2::ResizeType> typedef ResizeType;
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
              LessThanEqualCmp<GPUWalk,
                               typename Operand1::GPUWalkType,
-                              typename Operand2::GPUWalkType,
-                              FieldType> typedef GPUWalkType;
+                              typename Operand2::GPUWalkType> typedef
+             GPUWalkType;
 #         endif
           /* __CUDACC__ */
 
           LessThanEqualCmp<Reduction,
                            typename Operand1::ReductionType,
-                           typename Operand2::ReductionType,
-                           FieldType> typedef ReductionType;
+                           typename Operand2::ReductionType> typedef
+          ReductionType;
 
           LessThanEqualCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -5696,17 +8685,13 @@
           Operand2 const operand2_;
       };
 #     ifdef FIELD_EXPRESSION_THREADS
-         template<typename Operand1, typename Operand2, typename FieldType>
-          struct LessThanEqualCmp<Resize, Operand1, Operand2, FieldType> {
+         template<typename Operand1, typename Operand2>
+          struct LessThanEqualCmp<Resize, Operand1, Operand2> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
              LessThanEqualCmp<SeqWalk,
                               typename Operand1::SeqWalkType,
-                              typename Operand2::SeqWalkType,
-                              FieldType> typedef SeqWalkType;
+                              typename Operand2::SeqWalkType> typedef
+             SeqWalkType;
 
              LessThanEqualCmp(Operand1 const & operand1,
                               Operand2 const & operand2)
@@ -5727,14 +8712,10 @@
          }
 #     endif
       /* FIELD_EXPRESSION_THREADS */;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct LessThanEqualCmp<SeqWalk, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct LessThanEqualCmp<SeqWalk, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          bool typedef EvalReturnType;
+          typename Operand1::value_type typedef value_type;
 
           LessThanEqualCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -5742,7 +8723,7 @@
 
           inline void next(void) { operand1_.next(); operand2_.next(); }
 
-          inline EvalReturnType eval(void) const {
+          inline bool eval(void) const {
              return (operand1_.eval() <= operand2_.eval());
           }
 
@@ -5752,14 +8733,10 @@
           Operand2 operand2_;
       };
 #     ifdef __CUDACC__
-         template<typename Operand1, typename Operand2, typename FieldType>
-          struct LessThanEqualCmp<GPUWalk, Operand1, Operand2, FieldType> {
+         template<typename Operand1, typename Operand2>
+          struct LessThanEqualCmp<GPUWalk, Operand1, Operand2> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             typename field_type::value_type typedef AtomicType;
+             typename Operand1::value_type typedef value_type;
 
              LessThanEqualCmp(Operand1 const & operand1,
                               Operand2 const & operand2)
@@ -5778,7 +8755,7 @@
                 operand2_.next();
              }
 
-             __device__ inline AtomicType eval(void) const {
+             __device__ inline bool eval(void) const {
                 return (operand1_.eval() <= operand2_.eval());
              }
 
@@ -5789,14 +8766,10 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct LessThanEqualCmp<Reduction, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct LessThanEqualCmp<Reduction, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          bool typedef EvalReturnType;
+          typename Operand1::value_type typedef value_type;
 
           LessThanEqualCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -5812,7 +8785,7 @@
              return (operand1_.has_length() || operand2_.has_length());
           }
 
-          inline EvalReturnType eval(void) const {
+          inline bool eval(void) const {
              return (operand1_.eval() <= operand2_.eval());
           }
 
@@ -5826,28 +8799,30 @@
       template<typename FieldType>
        inline NeboBooleanExpression<LessThanEqualCmp<Initial,
                                                      NeboScalar<Initial,
-                                                                FieldType>,
+                                                                typename
+                                                                FieldType::
+                                                                value_type>,
                                                      NeboConstField<Initial,
                                                                     typename
                                                                     NeboFieldCheck<typename
                                                                                    FieldType::
                                                                                    field_type,
                                                                                    FieldType>::
-                                                                    Result>,
-                                                     FieldType>,
+                                                                    Result> >,
                                     FieldType> operator <=(typename FieldType::
                                                            value_type const &
                                                            arg1,
                                                            FieldType const &
                                                            arg2) {
           LessThanEqualCmp<Initial,
-                           NeboScalar<Initial, FieldType>,
-                           NeboConstField<Initial, FieldType>,
-                           FieldType> typedef ReturnType;
+                           NeboScalar<Initial, typename FieldType::value_type>,
+                           NeboConstField<Initial, FieldType> > typedef
+          ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
-          return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
+          return ReturnTerm(ReturnType(NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg1),
                                        NeboConstField<Initial, FieldType>(arg2)));
        }
 
@@ -5855,9 +8830,10 @@
       template<typename SubExpr2, typename FieldType>
        inline NeboBooleanExpression<LessThanEqualCmp<Initial,
                                                      NeboScalar<Initial,
-                                                                FieldType>,
-                                                     SubExpr2,
-                                                     FieldType>,
+                                                                typename
+                                                                FieldType::
+                                                                value_type>,
+                                                     SubExpr2>,
                                     FieldType> operator <=(typename FieldType::
                                                            value_type const &
                                                            arg1,
@@ -5865,14 +8841,59 @@
                                                                           FieldType>
                                                            const & arg2) {
           LessThanEqualCmp<Initial,
-                           NeboScalar<Initial, FieldType>,
-                           SubExpr2,
-                           FieldType> typedef ReturnType;
+                           NeboScalar<Initial, typename FieldType::value_type>,
+                           SubExpr2> typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
-          return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
+          return ReturnTerm(ReturnType(NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg1),
                                        arg2.expr()));
+       }
+
+      /* Scalar X SingleValue */
+      template<typename T>
+       inline NeboBooleanSingleValueExpression<LessThanEqualCmp<Initial,
+                                                                NeboScalar<Initial,
+                                                                           T>,
+                                                                NeboConstSingleValueField<Initial,
+                                                                                          T>
+                                               >,
+                                               T> operator <=(T const & arg1,
+                                                              SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>
+                                                              const & arg2) {
+          LessThanEqualCmp<Initial,
+                           NeboScalar<Initial, T>,
+                           NeboConstSingleValueField<Initial, T> > typedef
+          ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboScalar<Initial, T>(arg1),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* Scalar X SingleValueExpr */
+      template<typename SubExpr2, typename T>
+       inline NeboBooleanSingleValueExpression<LessThanEqualCmp<Initial,
+                                                                NeboScalar<Initial,
+                                                                           T>,
+                                                                SubExpr2>,
+                                               T> operator <=(T const & arg1,
+                                                              NeboSingleValueExpression<SubExpr2,
+                                                                                        T>
+                                                              const & arg2) {
+          LessThanEqualCmp<Initial, NeboScalar<Initial, T>, SubExpr2> typedef
+          ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboScalar<Initial, T>(arg1), arg2.expr()));
        }
 
       /* Field X Scalar */
@@ -5886,8 +8907,9 @@
                                                                                    FieldType>::
                                                                     Result>,
                                                      NeboScalar<Initial,
-                                                                FieldType>,
-                                                     FieldType>,
+                                                                typename
+                                                                FieldType::
+                                                                value_type> >,
                                     FieldType> operator <=(FieldType const &
                                                            arg1,
                                                            typename FieldType::
@@ -5895,13 +8917,14 @@
                                                            arg2) {
           LessThanEqualCmp<Initial,
                            NeboConstField<Initial, FieldType>,
-                           NeboScalar<Initial, FieldType>,
-                           FieldType> typedef ReturnType;
+                           NeboScalar<Initial, typename FieldType::value_type> >
+          typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
-                                       NeboScalar<Initial, FieldType>(arg2)));
+                                       NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg2)));
        }
 
       /* Field X Field */
@@ -5920,16 +8943,15 @@
                                                                                    FieldType::
                                                                                    field_type,
                                                                                    FieldType>::
-                                                                    Result>,
-                                                     FieldType>,
+                                                                    Result> >,
                                     FieldType> operator <=(FieldType const &
                                                            arg1,
                                                            FieldType const &
                                                            arg2) {
           LessThanEqualCmp<Initial,
                            NeboConstField<Initial, FieldType>,
-                           NeboConstField<Initial, FieldType>,
-                           FieldType> typedef ReturnType;
+                           NeboConstField<Initial, FieldType> > typedef
+          ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -5947,17 +8969,83 @@
                                                                                    field_type,
                                                                                    FieldType>::
                                                                     Result>,
-                                                     SubExpr2,
-                                                     FieldType>,
+                                                     SubExpr2>,
                                     FieldType> operator <=(FieldType const &
                                                            arg1,
                                                            NeboExpression<SubExpr2,
                                                                           FieldType>
                                                            const & arg2) {
+          LessThanEqualCmp<Initial, NeboConstField<Initial, FieldType>, SubExpr2>
+          typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* Field X SingleValue */
+      template<typename FieldType>
+       inline NeboBooleanExpression<LessThanEqualCmp<Initial,
+                                                     NeboConstField<Initial,
+                                                                    typename
+                                                                    NeboFieldCheck<typename
+                                                                                   FieldType::
+                                                                                   field_type,
+                                                                                   FieldType>::
+                                                                    Result>,
+                                                     NeboConstSingleValueField<Initial,
+                                                                               typename
+                                                                               FieldType::
+                                                                               value_type>
+                                    >,
+                                    FieldType> operator <=(FieldType const &
+                                                           arg1,
+                                                           SpatialOps::
+                                                           structured::
+                                                           SpatialField<SpatialOps::
+                                                                        structured::
+                                                                        SingleValue,
+                                                                        typename
+                                                                        FieldType::
+                                                                        value_type>
+                                                           const & arg2) {
           LessThanEqualCmp<Initial,
                            NeboConstField<Initial, FieldType>,
-                           SubExpr2,
-                           FieldType> typedef ReturnType;
+                           NeboConstSingleValueField<Initial,
+                                                     typename FieldType::
+                                                     value_type> > typedef
+          ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
+                                       NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg2)));
+       }
+
+      /* Field X SingleValueExpr */
+      template<typename SubExpr2, typename FieldType>
+       inline NeboBooleanExpression<LessThanEqualCmp<Initial,
+                                                     NeboConstField<Initial,
+                                                                    typename
+                                                                    NeboFieldCheck<typename
+                                                                                   FieldType::
+                                                                                   field_type,
+                                                                                   FieldType>::
+                                                                    Result>,
+                                                     SubExpr2>,
+                                    FieldType> operator <=(FieldType const &
+                                                           arg1,
+                                                           NeboSingleValueExpression<SubExpr2,
+                                                                                     typename
+                                                                                     FieldType::
+                                                                                     value_type>
+                                                           const & arg2) {
+          LessThanEqualCmp<Initial, NeboConstField<Initial, FieldType>, SubExpr2>
+          typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -5970,8 +9058,9 @@
        inline NeboBooleanExpression<LessThanEqualCmp<Initial,
                                                      SubExpr1,
                                                      NeboScalar<Initial,
-                                                                FieldType>,
-                                                     FieldType>,
+                                                                typename
+                                                                FieldType::
+                                                                value_type> >,
                                     FieldType> operator <=(NeboExpression<SubExpr1,
                                                                           FieldType>
                                                            const & arg1,
@@ -5980,13 +9069,14 @@
                                                            arg2) {
           LessThanEqualCmp<Initial,
                            SubExpr1,
-                           NeboScalar<Initial, FieldType>,
-                           FieldType> typedef ReturnType;
+                           NeboScalar<Initial, typename FieldType::value_type> >
+          typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg1.expr(),
-                                       NeboScalar<Initial, FieldType>(arg2)));
+                                       NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg2)));
        }
 
       /* SubExpr X Field */
@@ -5999,8 +9089,7 @@
                                                                                    FieldType::
                                                                                    field_type,
                                                                                    FieldType>::
-                                                                    Result>,
-                                                     FieldType>,
+                                                                    Result> >,
                                     FieldType> operator <=(NeboExpression<SubExpr1,
                                                                           FieldType>
                                                            const & arg1,
@@ -6008,8 +9097,8 @@
                                                            arg2) {
           LessThanEqualCmp<Initial,
                            SubExpr1,
-                           NeboConstField<Initial, FieldType>,
-                           FieldType> typedef ReturnType;
+                           NeboConstField<Initial, FieldType> > typedef
+          ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -6019,61 +9108,373 @@
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2, typename FieldType>
-       inline NeboBooleanExpression<LessThanEqualCmp<Initial,
-                                                     SubExpr1,
-                                                     SubExpr2,
-                                                     FieldType>,
+       inline NeboBooleanExpression<LessThanEqualCmp<Initial, SubExpr1, SubExpr2>,
                                     FieldType> operator <=(NeboExpression<SubExpr1,
                                                                           FieldType>
                                                            const & arg1,
                                                            NeboExpression<SubExpr2,
                                                                           FieldType>
                                                            const & arg2) {
-          LessThanEqualCmp<Initial, SubExpr1, SubExpr2, FieldType> typedef
-          ReturnType;
+          LessThanEqualCmp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SubExpr X SingleValue */
+      template<typename SubExpr1, typename FieldType>
+       inline NeboBooleanExpression<LessThanEqualCmp<Initial,
+                                                     SubExpr1,
+                                                     NeboConstSingleValueField<Initial,
+                                                                               typename
+                                                                               FieldType::
+                                                                               value_type>
+                                    >,
+                                    FieldType> operator <=(NeboExpression<SubExpr1,
+                                                                          FieldType>
+                                                           const & arg1,
+                                                           SpatialOps::
+                                                           structured::
+                                                           SpatialField<SpatialOps::
+                                                                        structured::
+                                                                        SingleValue,
+                                                                        typename
+                                                                        FieldType::
+                                                                        value_type>
+                                                           const & arg2) {
+          LessThanEqualCmp<Initial,
+                           SubExpr1,
+                           NeboConstSingleValueField<Initial,
+                                                     typename FieldType::
+                                                     value_type> > typedef
+          ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg2)));
+       }
+
+      /* SubExpr X SingleValueExpr */
+      template<typename SubExpr1, typename SubExpr2, typename FieldType>
+       inline NeboBooleanExpression<LessThanEqualCmp<Initial, SubExpr1, SubExpr2>,
+                                    FieldType> operator <=(NeboExpression<SubExpr1,
+                                                                          FieldType>
+                                                           const & arg1,
+                                                           NeboSingleValueExpression<SubExpr2,
+                                                                                     typename
+                                                                                     FieldType::
+                                                                                     value_type>
+                                                           const & arg2) {
+          LessThanEqualCmp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SingleValue X Scalar */
+      template<typename T>
+       inline NeboBooleanSingleValueExpression<LessThanEqualCmp<Initial,
+                                                                NeboConstSingleValueField<Initial,
+                                                                                          T>,
+                                                                NeboScalar<Initial,
+                                                                           T> >,
+                                               T> operator <=(SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>
+                                                              const & arg1,
+                                                              T const & arg2) {
+          LessThanEqualCmp<Initial,
+                           NeboConstSingleValueField<Initial, T>,
+                           NeboScalar<Initial, T> > typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       NeboScalar<Initial, T>(arg2)));
+       }
+
+      /* SingleValue X Field */
+      template<typename FieldType>
+       inline NeboBooleanExpression<LessThanEqualCmp<Initial,
+                                                     NeboConstSingleValueField<Initial,
+                                                                               typename
+                                                                               FieldType::
+                                                                               value_type>,
+                                                     NeboConstField<Initial,
+                                                                    typename
+                                                                    NeboFieldCheck<typename
+                                                                                   FieldType::
+                                                                                   field_type,
+                                                                                   FieldType>::
+                                                                    Result> >,
+                                    FieldType> operator <=(SpatialOps::
+                                                           structured::
+                                                           SpatialField<SpatialOps::
+                                                                        structured::
+                                                                        SingleValue,
+                                                                        typename
+                                                                        FieldType::
+                                                                        value_type>
+                                                           const & arg1,
+                                                           FieldType const &
+                                                           arg2) {
+          LessThanEqualCmp<Initial,
+                           NeboConstSingleValueField<Initial,
+                                                     typename FieldType::
+                                                     value_type>,
+                           NeboConstField<Initial, FieldType> > typedef
+          ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg1),
+                                       NeboConstField<Initial, FieldType>(arg2)));
+       }
+
+      /* SingleValue X SubExpr */
+      template<typename SubExpr2, typename FieldType>
+       inline NeboBooleanExpression<LessThanEqualCmp<Initial,
+                                                     NeboConstSingleValueField<Initial,
+                                                                               typename
+                                                                               FieldType::
+                                                                               value_type>,
+                                                     SubExpr2>,
+                                    FieldType> operator <=(SpatialOps::
+                                                           structured::
+                                                           SpatialField<SpatialOps::
+                                                                        structured::
+                                                                        SingleValue,
+                                                                        typename
+                                                                        FieldType::
+                                                                        value_type>
+                                                           const & arg1,
+                                                           NeboExpression<SubExpr2,
+                                                                          FieldType>
+                                                           const & arg2) {
+          LessThanEqualCmp<Initial,
+                           NeboConstSingleValueField<Initial,
+                                                     typename FieldType::
+                                                     value_type>,
+                           SubExpr2> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* SingleValue X SingleValue */
+      template<typename T>
+       inline NeboBooleanSingleValueExpression<LessThanEqualCmp<Initial,
+                                                                NeboConstSingleValueField<Initial,
+                                                                                          T>,
+                                                                NeboConstSingleValueField<Initial,
+                                                                                          T>
+                                               >,
+                                               T> operator <=(SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>
+                                                              const & arg1,
+                                                              SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>
+                                                              const & arg2) {
+          LessThanEqualCmp<Initial,
+                           NeboConstSingleValueField<Initial, T>,
+                           NeboConstSingleValueField<Initial, T> > typedef
+          ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* SingleValue X SingleValueExpr */
+      template<typename SubExpr2, typename T>
+       inline NeboBooleanSingleValueExpression<LessThanEqualCmp<Initial,
+                                                                NeboConstSingleValueField<Initial,
+                                                                                          T>,
+                                                                SubExpr2>,
+                                               T> operator <=(SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>
+                                                              const & arg1,
+                                                              NeboSingleValueExpression<SubExpr2,
+                                                                                        T>
+                                                              const & arg2) {
+          LessThanEqualCmp<Initial,
+                           NeboConstSingleValueField<Initial, T>,
+                           SubExpr2> typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* SingleValueExpr X Scalar */
+      template<typename SubExpr1, typename T>
+       inline NeboBooleanSingleValueExpression<LessThanEqualCmp<Initial,
+                                                                SubExpr1,
+                                                                NeboScalar<Initial,
+                                                                           T> >,
+                                               T> operator <=(NeboSingleValueExpression<SubExpr1,
+                                                                                        T>
+                                                              const & arg1,
+                                                              T const & arg2) {
+          LessThanEqualCmp<Initial, SubExpr1, NeboScalar<Initial, T> > typedef
+          ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), NeboScalar<Initial, T>(arg2)));
+       }
+
+      /* SingleValueExpr X Field */
+      template<typename SubExpr1, typename FieldType>
+       inline NeboBooleanExpression<LessThanEqualCmp<Initial,
+                                                     SubExpr1,
+                                                     NeboConstField<Initial,
+                                                                    typename
+                                                                    NeboFieldCheck<typename
+                                                                                   FieldType::
+                                                                                   field_type,
+                                                                                   FieldType>::
+                                                                    Result> >,
+                                    FieldType> operator <=(NeboSingleValueExpression<SubExpr1,
+                                                                                     typename
+                                                                                     FieldType::
+                                                                                     value_type>
+                                                           const & arg1,
+                                                           FieldType const &
+                                                           arg2) {
+          LessThanEqualCmp<Initial,
+                           SubExpr1,
+                           NeboConstField<Initial, FieldType> > typedef
+          ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstField<Initial, FieldType>(arg2)));
+       }
+
+      /* SingleValueExpr X SubExpr */
+      template<typename SubExpr1, typename SubExpr2, typename FieldType>
+       inline NeboBooleanExpression<LessThanEqualCmp<Initial, SubExpr1, SubExpr2>,
+                                    FieldType> operator <=(NeboSingleValueExpression<SubExpr1,
+                                                                                     typename
+                                                                                     FieldType::
+                                                                                     value_type>
+                                                           const & arg1,
+                                                           NeboExpression<SubExpr2,
+                                                                          FieldType>
+                                                           const & arg2) {
+          LessThanEqualCmp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SingleValueExpr X SingleValue */
+      template<typename SubExpr1, typename T>
+       inline NeboBooleanSingleValueExpression<LessThanEqualCmp<Initial,
+                                                                SubExpr1,
+                                                                NeboConstSingleValueField<Initial,
+                                                                                          T>
+                                               >,
+                                               T> operator <=(NeboSingleValueExpression<SubExpr1,
+                                                                                        T>
+                                                              const & arg1,
+                                                              SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>
+                                                              const & arg2) {
+          LessThanEqualCmp<Initial,
+                           SubExpr1,
+                           NeboConstSingleValueField<Initial, T> > typedef
+          ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* SingleValueExpr X SingleValueExpr */
+      template<typename SubExpr1, typename SubExpr2, typename T>
+       inline NeboBooleanSingleValueExpression<LessThanEqualCmp<Initial,
+                                                                SubExpr1,
+                                                                SubExpr2>,
+                                               T> operator <=(NeboSingleValueExpression<SubExpr1,
+                                                                                        T>
+                                                              const & arg1,
+                                                              NeboSingleValueExpression<SubExpr2,
+                                                                                        T>
+                                                              const & arg2) {
+          LessThanEqualCmp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
        };
 
-      template<typename CurrentMode,
-               typename Operand1,
-               typename Operand2,
-               typename FieldType>
+      template<typename CurrentMode, typename Operand1, typename Operand2>
        struct GreaterThanCmp;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct GreaterThanCmp<Initial, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct GreaterThanCmp<Initial, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
           GreaterThanCmp<SeqWalk,
                          typename Operand1::SeqWalkType,
-                         typename Operand2::SeqWalkType,
-                         FieldType> typedef SeqWalkType;
+                         typename Operand2::SeqWalkType> typedef SeqWalkType;
 
 #         ifdef FIELD_EXPRESSION_THREADS
              GreaterThanCmp<Resize,
                             typename Operand1::ResizeType,
-                            typename Operand2::ResizeType,
-                            FieldType> typedef ResizeType;
+                            typename Operand2::ResizeType> typedef ResizeType;
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
              GreaterThanCmp<GPUWalk,
                             typename Operand1::GPUWalkType,
-                            typename Operand2::GPUWalkType,
-                            FieldType> typedef GPUWalkType;
+                            typename Operand2::GPUWalkType> typedef GPUWalkType;
 #         endif
           /* __CUDACC__ */
 
           GreaterThanCmp<Reduction,
                          typename Operand1::ReductionType,
-                         typename Operand2::ReductionType,
-                         FieldType> typedef ReductionType;
+                         typename Operand2::ReductionType> typedef ReductionType
+          ;
 
           GreaterThanCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -6144,17 +9545,12 @@
           Operand2 const operand2_;
       };
 #     ifdef FIELD_EXPRESSION_THREADS
-         template<typename Operand1, typename Operand2, typename FieldType>
-          struct GreaterThanCmp<Resize, Operand1, Operand2, FieldType> {
+         template<typename Operand1, typename Operand2>
+          struct GreaterThanCmp<Resize, Operand1, Operand2> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
              GreaterThanCmp<SeqWalk,
                             typename Operand1::SeqWalkType,
-                            typename Operand2::SeqWalkType,
-                            FieldType> typedef SeqWalkType;
+                            typename Operand2::SeqWalkType> typedef SeqWalkType;
 
              GreaterThanCmp(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -6174,14 +9570,10 @@
          }
 #     endif
       /* FIELD_EXPRESSION_THREADS */;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct GreaterThanCmp<SeqWalk, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct GreaterThanCmp<SeqWalk, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          bool typedef EvalReturnType;
+          typename Operand1::value_type typedef value_type;
 
           GreaterThanCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -6189,7 +9581,7 @@
 
           inline void next(void) { operand1_.next(); operand2_.next(); }
 
-          inline EvalReturnType eval(void) const {
+          inline bool eval(void) const {
              return (operand1_.eval() > operand2_.eval());
           }
 
@@ -6199,14 +9591,10 @@
           Operand2 operand2_;
       };
 #     ifdef __CUDACC__
-         template<typename Operand1, typename Operand2, typename FieldType>
-          struct GreaterThanCmp<GPUWalk, Operand1, Operand2, FieldType> {
+         template<typename Operand1, typename Operand2>
+          struct GreaterThanCmp<GPUWalk, Operand1, Operand2> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             typename field_type::value_type typedef AtomicType;
+             typename Operand1::value_type typedef value_type;
 
              GreaterThanCmp(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -6224,7 +9612,7 @@
                 operand2_.next();
              }
 
-             __device__ inline AtomicType eval(void) const {
+             __device__ inline bool eval(void) const {
                 return (operand1_.eval() > operand2_.eval());
              }
 
@@ -6235,14 +9623,10 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct GreaterThanCmp<Reduction, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct GreaterThanCmp<Reduction, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          bool typedef EvalReturnType;
+          typename Operand1::value_type typedef value_type;
 
           GreaterThanCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -6258,7 +9642,7 @@
              return (operand1_.has_length() || operand2_.has_length());
           }
 
-          inline EvalReturnType eval(void) const {
+          inline bool eval(void) const {
              return (operand1_.eval() > operand2_.eval());
           }
 
@@ -6271,36 +9655,38 @@
       /* Scalar X Field */
       template<typename FieldType>
        inline NeboBooleanExpression<GreaterThanCmp<Initial,
-                                                   NeboScalar<Initial, FieldType>,
+                                                   NeboScalar<Initial,
+                                                              typename FieldType::
+                                                              value_type>,
                                                    NeboConstField<Initial,
                                                                   typename
                                                                   NeboFieldCheck<typename
                                                                                  FieldType::
                                                                                  field_type,
                                                                                  FieldType>::
-                                                                  Result>,
-                                                   FieldType>,
+                                                                  Result> >,
                                     FieldType> operator >(typename FieldType::
                                                           value_type const &
                                                           arg1,
                                                           FieldType const & arg2) {
           GreaterThanCmp<Initial,
-                         NeboScalar<Initial, FieldType>,
-                         NeboConstField<Initial, FieldType>,
-                         FieldType> typedef ReturnType;
+                         NeboScalar<Initial, typename FieldType::value_type>,
+                         NeboConstField<Initial, FieldType> > typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
-          return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
+          return ReturnTerm(ReturnType(NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg1),
                                        NeboConstField<Initial, FieldType>(arg2)));
        }
 
       /* Scalar X SubExpr */
       template<typename SubExpr2, typename FieldType>
        inline NeboBooleanExpression<GreaterThanCmp<Initial,
-                                                   NeboScalar<Initial, FieldType>,
-                                                   SubExpr2,
-                                                   FieldType>,
+                                                   NeboScalar<Initial,
+                                                              typename FieldType::
+                                                              value_type>,
+                                                   SubExpr2>,
                                     FieldType> operator >(typename FieldType::
                                                           value_type const &
                                                           arg1,
@@ -6308,14 +9694,59 @@
                                                                          FieldType>
                                                           const & arg2) {
           GreaterThanCmp<Initial,
-                         NeboScalar<Initial, FieldType>,
-                         SubExpr2,
-                         FieldType> typedef ReturnType;
+                         NeboScalar<Initial, typename FieldType::value_type>,
+                         SubExpr2> typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
-          return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
+          return ReturnTerm(ReturnType(NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg1),
                                        arg2.expr()));
+       }
+
+      /* Scalar X SingleValue */
+      template<typename T>
+       inline NeboBooleanSingleValueExpression<GreaterThanCmp<Initial,
+                                                              NeboScalar<Initial,
+                                                                         T>,
+                                                              NeboConstSingleValueField<Initial,
+                                                                                        T>
+                                               >,
+                                               T> operator >(T const & arg1,
+                                                             SpatialOps::
+                                                             structured::
+                                                             SpatialField<SpatialOps::
+                                                                          structured::
+                                                                          SingleValue,
+                                                                          T>
+                                                             const & arg2) {
+          GreaterThanCmp<Initial,
+                         NeboScalar<Initial, T>,
+                         NeboConstSingleValueField<Initial, T> > typedef
+          ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboScalar<Initial, T>(arg1),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* Scalar X SingleValueExpr */
+      template<typename SubExpr2, typename T>
+       inline NeboBooleanSingleValueExpression<GreaterThanCmp<Initial,
+                                                              NeboScalar<Initial,
+                                                                         T>,
+                                                              SubExpr2>,
+                                               T> operator >(T const & arg1,
+                                                             NeboSingleValueExpression<SubExpr2,
+                                                                                       T>
+                                                             const & arg2) {
+          GreaterThanCmp<Initial, NeboScalar<Initial, T>, SubExpr2> typedef
+          ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboScalar<Initial, T>(arg1), arg2.expr()));
        }
 
       /* Field X Scalar */
@@ -6328,21 +9759,23 @@
                                                                                  field_type,
                                                                                  FieldType>::
                                                                   Result>,
-                                                   NeboScalar<Initial, FieldType>,
-                                                   FieldType>,
+                                                   NeboScalar<Initial,
+                                                              typename FieldType::
+                                                              value_type> >,
                                     FieldType> operator >(FieldType const & arg1,
                                                           typename FieldType::
                                                           value_type const &
                                                           arg2) {
           GreaterThanCmp<Initial,
                          NeboConstField<Initial, FieldType>,
-                         NeboScalar<Initial, FieldType>,
-                         FieldType> typedef ReturnType;
+                         NeboScalar<Initial, typename FieldType::value_type> >
+          typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
-                                       NeboScalar<Initial, FieldType>(arg2)));
+                                       NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg2)));
        }
 
       /* Field X Field */
@@ -6361,14 +9794,12 @@
                                                                                  FieldType::
                                                                                  field_type,
                                                                                  FieldType>::
-                                                                  Result>,
-                                                   FieldType>,
+                                                                  Result> >,
                                     FieldType> operator >(FieldType const & arg1,
                                                           FieldType const & arg2) {
           GreaterThanCmp<Initial,
                          NeboConstField<Initial, FieldType>,
-                         NeboConstField<Initial, FieldType>,
-                         FieldType> typedef ReturnType;
+                         NeboConstField<Initial, FieldType> > typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -6386,16 +9817,79 @@
                                                                                  field_type,
                                                                                  FieldType>::
                                                                   Result>,
-                                                   SubExpr2,
-                                                   FieldType>,
+                                                   SubExpr2>,
                                     FieldType> operator >(FieldType const & arg1,
                                                           NeboExpression<SubExpr2,
                                                                          FieldType>
                                                           const & arg2) {
+          GreaterThanCmp<Initial, NeboConstField<Initial, FieldType>, SubExpr2>
+          typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* Field X SingleValue */
+      template<typename FieldType>
+       inline NeboBooleanExpression<GreaterThanCmp<Initial,
+                                                   NeboConstField<Initial,
+                                                                  typename
+                                                                  NeboFieldCheck<typename
+                                                                                 FieldType::
+                                                                                 field_type,
+                                                                                 FieldType>::
+                                                                  Result>,
+                                                   NeboConstSingleValueField<Initial,
+                                                                             typename
+                                                                             FieldType::
+                                                                             value_type>
+                                    >,
+                                    FieldType> operator >(FieldType const & arg1,
+                                                          SpatialOps::structured::
+                                                          SpatialField<SpatialOps::
+                                                                       structured::
+                                                                       SingleValue,
+                                                                       typename
+                                                                       FieldType::
+                                                                       value_type>
+                                                          const & arg2) {
           GreaterThanCmp<Initial,
                          NeboConstField<Initial, FieldType>,
-                         SubExpr2,
-                         FieldType> typedef ReturnType;
+                         NeboConstSingleValueField<Initial,
+                                                   typename FieldType::
+                                                   value_type> > typedef
+          ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
+                                       NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg2)));
+       }
+
+      /* Field X SingleValueExpr */
+      template<typename SubExpr2, typename FieldType>
+       inline NeboBooleanExpression<GreaterThanCmp<Initial,
+                                                   NeboConstField<Initial,
+                                                                  typename
+                                                                  NeboFieldCheck<typename
+                                                                                 FieldType::
+                                                                                 field_type,
+                                                                                 FieldType>::
+                                                                  Result>,
+                                                   SubExpr2>,
+                                    FieldType> operator >(FieldType const & arg1,
+                                                          NeboSingleValueExpression<SubExpr2,
+                                                                                    typename
+                                                                                    FieldType::
+                                                                                    value_type>
+                                                          const & arg2) {
+          GreaterThanCmp<Initial, NeboConstField<Initial, FieldType>, SubExpr2>
+          typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -6407,8 +9901,9 @@
       template<typename SubExpr1, typename FieldType>
        inline NeboBooleanExpression<GreaterThanCmp<Initial,
                                                    SubExpr1,
-                                                   NeboScalar<Initial, FieldType>,
-                                                   FieldType>,
+                                                   NeboScalar<Initial,
+                                                              typename FieldType::
+                                                              value_type> >,
                                     FieldType> operator >(NeboExpression<SubExpr1,
                                                                          FieldType>
                                                           const & arg1,
@@ -6417,13 +9912,14 @@
                                                           arg2) {
           GreaterThanCmp<Initial,
                          SubExpr1,
-                         NeboScalar<Initial, FieldType>,
-                         FieldType> typedef ReturnType;
+                         NeboScalar<Initial, typename FieldType::value_type> >
+          typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg1.expr(),
-                                       NeboScalar<Initial, FieldType>(arg2)));
+                                       NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg2)));
        }
 
       /* SubExpr X Field */
@@ -6436,16 +9932,13 @@
                                                                                  FieldType::
                                                                                  field_type,
                                                                                  FieldType>::
-                                                                  Result>,
-                                                   FieldType>,
+                                                                  Result> >,
                                     FieldType> operator >(NeboExpression<SubExpr1,
                                                                          FieldType>
                                                           const & arg1,
                                                           FieldType const & arg2) {
-          GreaterThanCmp<Initial,
-                         SubExpr1,
-                         NeboConstField<Initial, FieldType>,
-                         FieldType> typedef ReturnType;
+          GreaterThanCmp<Initial, SubExpr1, NeboConstField<Initial, FieldType> >
+          typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -6455,61 +9948,368 @@
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2, typename FieldType>
-       inline NeboBooleanExpression<GreaterThanCmp<Initial,
-                                                   SubExpr1,
-                                                   SubExpr2,
-                                                   FieldType>,
+       inline NeboBooleanExpression<GreaterThanCmp<Initial, SubExpr1, SubExpr2>,
                                     FieldType> operator >(NeboExpression<SubExpr1,
                                                                          FieldType>
                                                           const & arg1,
                                                           NeboExpression<SubExpr2,
                                                                          FieldType>
                                                           const & arg2) {
-          GreaterThanCmp<Initial, SubExpr1, SubExpr2, FieldType> typedef
-          ReturnType;
+          GreaterThanCmp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SubExpr X SingleValue */
+      template<typename SubExpr1, typename FieldType>
+       inline NeboBooleanExpression<GreaterThanCmp<Initial,
+                                                   SubExpr1,
+                                                   NeboConstSingleValueField<Initial,
+                                                                             typename
+                                                                             FieldType::
+                                                                             value_type>
+                                    >,
+                                    FieldType> operator >(NeboExpression<SubExpr1,
+                                                                         FieldType>
+                                                          const & arg1,
+                                                          SpatialOps::structured::
+                                                          SpatialField<SpatialOps::
+                                                                       structured::
+                                                                       SingleValue,
+                                                                       typename
+                                                                       FieldType::
+                                                                       value_type>
+                                                          const & arg2) {
+          GreaterThanCmp<Initial,
+                         SubExpr1,
+                         NeboConstSingleValueField<Initial,
+                                                   typename FieldType::
+                                                   value_type> > typedef
+          ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg2)));
+       }
+
+      /* SubExpr X SingleValueExpr */
+      template<typename SubExpr1, typename SubExpr2, typename FieldType>
+       inline NeboBooleanExpression<GreaterThanCmp<Initial, SubExpr1, SubExpr2>,
+                                    FieldType> operator >(NeboExpression<SubExpr1,
+                                                                         FieldType>
+                                                          const & arg1,
+                                                          NeboSingleValueExpression<SubExpr2,
+                                                                                    typename
+                                                                                    FieldType::
+                                                                                    value_type>
+                                                          const & arg2) {
+          GreaterThanCmp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SingleValue X Scalar */
+      template<typename T>
+       inline NeboBooleanSingleValueExpression<GreaterThanCmp<Initial,
+                                                              NeboConstSingleValueField<Initial,
+                                                                                        T>,
+                                                              NeboScalar<Initial,
+                                                                         T> >,
+                                               T> operator >(SpatialOps::
+                                                             structured::
+                                                             SpatialField<SpatialOps::
+                                                                          structured::
+                                                                          SingleValue,
+                                                                          T>
+                                                             const & arg1,
+                                                             T const & arg2) {
+          GreaterThanCmp<Initial,
+                         NeboConstSingleValueField<Initial, T>,
+                         NeboScalar<Initial, T> > typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       NeboScalar<Initial, T>(arg2)));
+       }
+
+      /* SingleValue X Field */
+      template<typename FieldType>
+       inline NeboBooleanExpression<GreaterThanCmp<Initial,
+                                                   NeboConstSingleValueField<Initial,
+                                                                             typename
+                                                                             FieldType::
+                                                                             value_type>,
+                                                   NeboConstField<Initial,
+                                                                  typename
+                                                                  NeboFieldCheck<typename
+                                                                                 FieldType::
+                                                                                 field_type,
+                                                                                 FieldType>::
+                                                                  Result> >,
+                                    FieldType> operator >(SpatialOps::structured::
+                                                          SpatialField<SpatialOps::
+                                                                       structured::
+                                                                       SingleValue,
+                                                                       typename
+                                                                       FieldType::
+                                                                       value_type>
+                                                          const & arg1,
+                                                          FieldType const & arg2) {
+          GreaterThanCmp<Initial,
+                         NeboConstSingleValueField<Initial,
+                                                   typename FieldType::
+                                                   value_type>,
+                         NeboConstField<Initial, FieldType> > typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg1),
+                                       NeboConstField<Initial, FieldType>(arg2)));
+       }
+
+      /* SingleValue X SubExpr */
+      template<typename SubExpr2, typename FieldType>
+       inline NeboBooleanExpression<GreaterThanCmp<Initial,
+                                                   NeboConstSingleValueField<Initial,
+                                                                             typename
+                                                                             FieldType::
+                                                                             value_type>,
+                                                   SubExpr2>,
+                                    FieldType> operator >(SpatialOps::structured::
+                                                          SpatialField<SpatialOps::
+                                                                       structured::
+                                                                       SingleValue,
+                                                                       typename
+                                                                       FieldType::
+                                                                       value_type>
+                                                          const & arg1,
+                                                          NeboExpression<SubExpr2,
+                                                                         FieldType>
+                                                          const & arg2) {
+          GreaterThanCmp<Initial,
+                         NeboConstSingleValueField<Initial,
+                                                   typename FieldType::
+                                                   value_type>,
+                         SubExpr2> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* SingleValue X SingleValue */
+      template<typename T>
+       inline NeboBooleanSingleValueExpression<GreaterThanCmp<Initial,
+                                                              NeboConstSingleValueField<Initial,
+                                                                                        T>,
+                                                              NeboConstSingleValueField<Initial,
+                                                                                        T>
+                                               >,
+                                               T> operator >(SpatialOps::
+                                                             structured::
+                                                             SpatialField<SpatialOps::
+                                                                          structured::
+                                                                          SingleValue,
+                                                                          T>
+                                                             const & arg1,
+                                                             SpatialOps::
+                                                             structured::
+                                                             SpatialField<SpatialOps::
+                                                                          structured::
+                                                                          SingleValue,
+                                                                          T>
+                                                             const & arg2) {
+          GreaterThanCmp<Initial,
+                         NeboConstSingleValueField<Initial, T>,
+                         NeboConstSingleValueField<Initial, T> > typedef
+          ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* SingleValue X SingleValueExpr */
+      template<typename SubExpr2, typename T>
+       inline NeboBooleanSingleValueExpression<GreaterThanCmp<Initial,
+                                                              NeboConstSingleValueField<Initial,
+                                                                                        T>,
+                                                              SubExpr2>,
+                                               T> operator >(SpatialOps::
+                                                             structured::
+                                                             SpatialField<SpatialOps::
+                                                                          structured::
+                                                                          SingleValue,
+                                                                          T>
+                                                             const & arg1,
+                                                             NeboSingleValueExpression<SubExpr2,
+                                                                                       T>
+                                                             const & arg2) {
+          GreaterThanCmp<Initial,
+                         NeboConstSingleValueField<Initial, T>,
+                         SubExpr2> typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* SingleValueExpr X Scalar */
+      template<typename SubExpr1, typename T>
+       inline NeboBooleanSingleValueExpression<GreaterThanCmp<Initial,
+                                                              SubExpr1,
+                                                              NeboScalar<Initial,
+                                                                         T> >,
+                                               T> operator >(NeboSingleValueExpression<SubExpr1,
+                                                                                       T>
+                                                             const & arg1,
+                                                             T const & arg2) {
+          GreaterThanCmp<Initial, SubExpr1, NeboScalar<Initial, T> > typedef
+          ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), NeboScalar<Initial, T>(arg2)));
+       }
+
+      /* SingleValueExpr X Field */
+      template<typename SubExpr1, typename FieldType>
+       inline NeboBooleanExpression<GreaterThanCmp<Initial,
+                                                   SubExpr1,
+                                                   NeboConstField<Initial,
+                                                                  typename
+                                                                  NeboFieldCheck<typename
+                                                                                 FieldType::
+                                                                                 field_type,
+                                                                                 FieldType>::
+                                                                  Result> >,
+                                    FieldType> operator >(NeboSingleValueExpression<SubExpr1,
+                                                                                    typename
+                                                                                    FieldType::
+                                                                                    value_type>
+                                                          const & arg1,
+                                                          FieldType const & arg2) {
+          GreaterThanCmp<Initial, SubExpr1, NeboConstField<Initial, FieldType> >
+          typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstField<Initial, FieldType>(arg2)));
+       }
+
+      /* SingleValueExpr X SubExpr */
+      template<typename SubExpr1, typename SubExpr2, typename FieldType>
+       inline NeboBooleanExpression<GreaterThanCmp<Initial, SubExpr1, SubExpr2>,
+                                    FieldType> operator >(NeboSingleValueExpression<SubExpr1,
+                                                                                    typename
+                                                                                    FieldType::
+                                                                                    value_type>
+                                                          const & arg1,
+                                                          NeboExpression<SubExpr2,
+                                                                         FieldType>
+                                                          const & arg2) {
+          GreaterThanCmp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SingleValueExpr X SingleValue */
+      template<typename SubExpr1, typename T>
+       inline NeboBooleanSingleValueExpression<GreaterThanCmp<Initial,
+                                                              SubExpr1,
+                                                              NeboConstSingleValueField<Initial,
+                                                                                        T>
+                                               >,
+                                               T> operator >(NeboSingleValueExpression<SubExpr1,
+                                                                                       T>
+                                                             const & arg1,
+                                                             SpatialOps::
+                                                             structured::
+                                                             SpatialField<SpatialOps::
+                                                                          structured::
+                                                                          SingleValue,
+                                                                          T>
+                                                             const & arg2) {
+          GreaterThanCmp<Initial,
+                         SubExpr1,
+                         NeboConstSingleValueField<Initial, T> > typedef
+          ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* SingleValueExpr X SingleValueExpr */
+      template<typename SubExpr1, typename SubExpr2, typename T>
+       inline NeboBooleanSingleValueExpression<GreaterThanCmp<Initial,
+                                                              SubExpr1,
+                                                              SubExpr2>,
+                                               T> operator >(NeboSingleValueExpression<SubExpr1,
+                                                                                       T>
+                                                             const & arg1,
+                                                             NeboSingleValueExpression<SubExpr2,
+                                                                                       T>
+                                                             const & arg2) {
+          GreaterThanCmp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
        };
 
-      template<typename CurrentMode,
-               typename Operand1,
-               typename Operand2,
-               typename FieldType>
+      template<typename CurrentMode, typename Operand1, typename Operand2>
        struct GreaterThanEqualCmp;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct GreaterThanEqualCmp<Initial, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct GreaterThanEqualCmp<Initial, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
           GreaterThanEqualCmp<SeqWalk,
                               typename Operand1::SeqWalkType,
-                              typename Operand2::SeqWalkType,
-                              FieldType> typedef SeqWalkType;
+                              typename Operand2::SeqWalkType> typedef
+          SeqWalkType;
 
 #         ifdef FIELD_EXPRESSION_THREADS
              GreaterThanEqualCmp<Resize,
                                  typename Operand1::ResizeType,
-                                 typename Operand2::ResizeType,
-                                 FieldType> typedef ResizeType;
+                                 typename Operand2::ResizeType> typedef
+             ResizeType;
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
              GreaterThanEqualCmp<GPUWalk,
                                  typename Operand1::GPUWalkType,
-                                 typename Operand2::GPUWalkType,
-                                 FieldType> typedef GPUWalkType;
+                                 typename Operand2::GPUWalkType> typedef
+             GPUWalkType;
 #         endif
           /* __CUDACC__ */
 
           GreaterThanEqualCmp<Reduction,
                               typename Operand1::ReductionType,
-                              typename Operand2::ReductionType,
-                              FieldType> typedef ReductionType;
+                              typename Operand2::ReductionType> typedef
+          ReductionType;
 
           GreaterThanEqualCmp(Operand1 const & operand1,
                               Operand2 const & operand2)
@@ -6581,17 +10381,13 @@
           Operand2 const operand2_;
       };
 #     ifdef FIELD_EXPRESSION_THREADS
-         template<typename Operand1, typename Operand2, typename FieldType>
-          struct GreaterThanEqualCmp<Resize, Operand1, Operand2, FieldType> {
+         template<typename Operand1, typename Operand2>
+          struct GreaterThanEqualCmp<Resize, Operand1, Operand2> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
              GreaterThanEqualCmp<SeqWalk,
                                  typename Operand1::SeqWalkType,
-                                 typename Operand2::SeqWalkType,
-                                 FieldType> typedef SeqWalkType;
+                                 typename Operand2::SeqWalkType> typedef
+             SeqWalkType;
 
              GreaterThanEqualCmp(Operand1 const & operand1,
                                  Operand2 const & operand2)
@@ -6612,14 +10408,10 @@
          }
 #     endif
       /* FIELD_EXPRESSION_THREADS */;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct GreaterThanEqualCmp<SeqWalk, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct GreaterThanEqualCmp<SeqWalk, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          bool typedef EvalReturnType;
+          typename Operand1::value_type typedef value_type;
 
           GreaterThanEqualCmp(Operand1 const & operand1,
                               Operand2 const & operand2)
@@ -6628,7 +10420,7 @@
 
           inline void next(void) { operand1_.next(); operand2_.next(); }
 
-          inline EvalReturnType eval(void) const {
+          inline bool eval(void) const {
              return (operand1_.eval() >= operand2_.eval());
           }
 
@@ -6638,14 +10430,10 @@
           Operand2 operand2_;
       };
 #     ifdef __CUDACC__
-         template<typename Operand1, typename Operand2, typename FieldType>
-          struct GreaterThanEqualCmp<GPUWalk, Operand1, Operand2, FieldType> {
+         template<typename Operand1, typename Operand2>
+          struct GreaterThanEqualCmp<GPUWalk, Operand1, Operand2> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             typename field_type::value_type typedef AtomicType;
+             typename Operand1::value_type typedef value_type;
 
              GreaterThanEqualCmp(Operand1 const & operand1,
                                  Operand2 const & operand2)
@@ -6664,7 +10452,7 @@
                 operand2_.next();
              }
 
-             __device__ inline AtomicType eval(void) const {
+             __device__ inline bool eval(void) const {
                 return (operand1_.eval() >= operand2_.eval());
              }
 
@@ -6675,14 +10463,10 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct GreaterThanEqualCmp<Reduction, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct GreaterThanEqualCmp<Reduction, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          bool typedef EvalReturnType;
+          typename Operand1::value_type typedef value_type;
 
           GreaterThanEqualCmp(Operand1 const & operand1,
                               Operand2 const & operand2)
@@ -6699,7 +10483,7 @@
              return (operand1_.has_length() || operand2_.has_length());
           }
 
-          inline EvalReturnType eval(void) const {
+          inline bool eval(void) const {
              return (operand1_.eval() >= operand2_.eval());
           }
 
@@ -6713,28 +10497,30 @@
       template<typename FieldType>
        inline NeboBooleanExpression<GreaterThanEqualCmp<Initial,
                                                         NeboScalar<Initial,
-                                                                   FieldType>,
+                                                                   typename
+                                                                   FieldType::
+                                                                   value_type>,
                                                         NeboConstField<Initial,
                                                                        typename
                                                                        NeboFieldCheck<typename
                                                                                       FieldType::
                                                                                       field_type,
                                                                                       FieldType>::
-                                                                       Result>,
-                                                        FieldType>,
+                                                                       Result> >,
                                     FieldType> operator >=(typename FieldType::
                                                            value_type const &
                                                            arg1,
                                                            FieldType const &
                                                            arg2) {
           GreaterThanEqualCmp<Initial,
-                              NeboScalar<Initial, FieldType>,
-                              NeboConstField<Initial, FieldType>,
-                              FieldType> typedef ReturnType;
+                              NeboScalar<Initial, typename FieldType::value_type>,
+                              NeboConstField<Initial, FieldType> > typedef
+          ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
-          return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
+          return ReturnTerm(ReturnType(NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg1),
                                        NeboConstField<Initial, FieldType>(arg2)));
        }
 
@@ -6742,9 +10528,10 @@
       template<typename SubExpr2, typename FieldType>
        inline NeboBooleanExpression<GreaterThanEqualCmp<Initial,
                                                         NeboScalar<Initial,
-                                                                   FieldType>,
-                                                        SubExpr2,
-                                                        FieldType>,
+                                                                   typename
+                                                                   FieldType::
+                                                                   value_type>,
+                                                        SubExpr2>,
                                     FieldType> operator >=(typename FieldType::
                                                            value_type const &
                                                            arg1,
@@ -6752,14 +10539,59 @@
                                                                           FieldType>
                                                            const & arg2) {
           GreaterThanEqualCmp<Initial,
-                              NeboScalar<Initial, FieldType>,
-                              SubExpr2,
-                              FieldType> typedef ReturnType;
+                              NeboScalar<Initial, typename FieldType::value_type>,
+                              SubExpr2> typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
-          return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
+          return ReturnTerm(ReturnType(NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg1),
                                        arg2.expr()));
+       }
+
+      /* Scalar X SingleValue */
+      template<typename T>
+       inline NeboBooleanSingleValueExpression<GreaterThanEqualCmp<Initial,
+                                                                   NeboScalar<Initial,
+                                                                              T>,
+                                                                   NeboConstSingleValueField<Initial,
+                                                                                             T>
+                                               >,
+                                               T> operator >=(T const & arg1,
+                                                              SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>
+                                                              const & arg2) {
+          GreaterThanEqualCmp<Initial,
+                              NeboScalar<Initial, T>,
+                              NeboConstSingleValueField<Initial, T> > typedef
+          ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboScalar<Initial, T>(arg1),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* Scalar X SingleValueExpr */
+      template<typename SubExpr2, typename T>
+       inline NeboBooleanSingleValueExpression<GreaterThanEqualCmp<Initial,
+                                                                   NeboScalar<Initial,
+                                                                              T>,
+                                                                   SubExpr2>,
+                                               T> operator >=(T const & arg1,
+                                                              NeboSingleValueExpression<SubExpr2,
+                                                                                        T>
+                                                              const & arg2) {
+          GreaterThanEqualCmp<Initial, NeboScalar<Initial, T>, SubExpr2> typedef
+          ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboScalar<Initial, T>(arg1), arg2.expr()));
        }
 
       /* Field X Scalar */
@@ -6773,8 +10605,9 @@
                                                                                       FieldType>::
                                                                        Result>,
                                                         NeboScalar<Initial,
-                                                                   FieldType>,
-                                                        FieldType>,
+                                                                   typename
+                                                                   FieldType::
+                                                                   value_type> >,
                                     FieldType> operator >=(FieldType const &
                                                            arg1,
                                                            typename FieldType::
@@ -6782,13 +10615,14 @@
                                                            arg2) {
           GreaterThanEqualCmp<Initial,
                               NeboConstField<Initial, FieldType>,
-                              NeboScalar<Initial, FieldType>,
-                              FieldType> typedef ReturnType;
+                              NeboScalar<Initial, typename FieldType::value_type>
+          > typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
-                                       NeboScalar<Initial, FieldType>(arg2)));
+                                       NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg2)));
        }
 
       /* Field X Field */
@@ -6807,16 +10641,15 @@
                                                                                       FieldType::
                                                                                       field_type,
                                                                                       FieldType>::
-                                                                       Result>,
-                                                        FieldType>,
+                                                                       Result> >,
                                     FieldType> operator >=(FieldType const &
                                                            arg1,
                                                            FieldType const &
                                                            arg2) {
           GreaterThanEqualCmp<Initial,
                               NeboConstField<Initial, FieldType>,
-                              NeboConstField<Initial, FieldType>,
-                              FieldType> typedef ReturnType;
+                              NeboConstField<Initial, FieldType> > typedef
+          ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -6834,8 +10667,7 @@
                                                                                       field_type,
                                                                                       FieldType>::
                                                                        Result>,
-                                                        SubExpr2,
-                                                        FieldType>,
+                                                        SubExpr2>,
                                     FieldType> operator >=(FieldType const &
                                                            arg1,
                                                            NeboExpression<SubExpr2,
@@ -6843,8 +10675,77 @@
                                                            const & arg2) {
           GreaterThanEqualCmp<Initial,
                               NeboConstField<Initial, FieldType>,
-                              SubExpr2,
-                              FieldType> typedef ReturnType;
+                              SubExpr2> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* Field X SingleValue */
+      template<typename FieldType>
+       inline NeboBooleanExpression<GreaterThanEqualCmp<Initial,
+                                                        NeboConstField<Initial,
+                                                                       typename
+                                                                       NeboFieldCheck<typename
+                                                                                      FieldType::
+                                                                                      field_type,
+                                                                                      FieldType>::
+                                                                       Result>,
+                                                        NeboConstSingleValueField<Initial,
+                                                                                  typename
+                                                                                  FieldType::
+                                                                                  value_type>
+                                    >,
+                                    FieldType> operator >=(FieldType const &
+                                                           arg1,
+                                                           SpatialOps::
+                                                           structured::
+                                                           SpatialField<SpatialOps::
+                                                                        structured::
+                                                                        SingleValue,
+                                                                        typename
+                                                                        FieldType::
+                                                                        value_type>
+                                                           const & arg2) {
+          GreaterThanEqualCmp<Initial,
+                              NeboConstField<Initial, FieldType>,
+                              NeboConstSingleValueField<Initial,
+                                                        typename FieldType::
+                                                        value_type> > typedef
+          ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
+                                       NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg2)));
+       }
+
+      /* Field X SingleValueExpr */
+      template<typename SubExpr2, typename FieldType>
+       inline NeboBooleanExpression<GreaterThanEqualCmp<Initial,
+                                                        NeboConstField<Initial,
+                                                                       typename
+                                                                       NeboFieldCheck<typename
+                                                                                      FieldType::
+                                                                                      field_type,
+                                                                                      FieldType>::
+                                                                       Result>,
+                                                        SubExpr2>,
+                                    FieldType> operator >=(FieldType const &
+                                                           arg1,
+                                                           NeboSingleValueExpression<SubExpr2,
+                                                                                     typename
+                                                                                     FieldType::
+                                                                                     value_type>
+                                                           const & arg2) {
+          GreaterThanEqualCmp<Initial,
+                              NeboConstField<Initial, FieldType>,
+                              SubExpr2> typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -6857,8 +10758,9 @@
        inline NeboBooleanExpression<GreaterThanEqualCmp<Initial,
                                                         SubExpr1,
                                                         NeboScalar<Initial,
-                                                                   FieldType>,
-                                                        FieldType>,
+                                                                   typename
+                                                                   FieldType::
+                                                                   value_type> >,
                                     FieldType> operator >=(NeboExpression<SubExpr1,
                                                                           FieldType>
                                                            const & arg1,
@@ -6867,13 +10769,14 @@
                                                            arg2) {
           GreaterThanEqualCmp<Initial,
                               SubExpr1,
-                              NeboScalar<Initial, FieldType>,
-                              FieldType> typedef ReturnType;
+                              NeboScalar<Initial, typename FieldType::value_type>
+          > typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg1.expr(),
-                                       NeboScalar<Initial, FieldType>(arg2)));
+                                       NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg2)));
        }
 
       /* SubExpr X Field */
@@ -6886,8 +10789,7 @@
                                                                                       FieldType::
                                                                                       field_type,
                                                                                       FieldType>::
-                                                                       Result>,
-                                                        FieldType>,
+                                                                       Result> >,
                                     FieldType> operator >=(NeboExpression<SubExpr1,
                                                                           FieldType>
                                                            const & arg1,
@@ -6895,8 +10797,8 @@
                                                            arg2) {
           GreaterThanEqualCmp<Initial,
                               SubExpr1,
-                              NeboConstField<Initial, FieldType>,
-                              FieldType> typedef ReturnType;
+                              NeboConstField<Initial, FieldType> > typedef
+          ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -6908,59 +10810,378 @@
       template<typename SubExpr1, typename SubExpr2, typename FieldType>
        inline NeboBooleanExpression<GreaterThanEqualCmp<Initial,
                                                         SubExpr1,
-                                                        SubExpr2,
-                                                        FieldType>,
+                                                        SubExpr2>,
                                     FieldType> operator >=(NeboExpression<SubExpr1,
                                                                           FieldType>
                                                            const & arg1,
                                                            NeboExpression<SubExpr2,
                                                                           FieldType>
                                                            const & arg2) {
-          GreaterThanEqualCmp<Initial, SubExpr1, SubExpr2, FieldType> typedef
-          ReturnType;
+          GreaterThanEqualCmp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SubExpr X SingleValue */
+      template<typename SubExpr1, typename FieldType>
+       inline NeboBooleanExpression<GreaterThanEqualCmp<Initial,
+                                                        SubExpr1,
+                                                        NeboConstSingleValueField<Initial,
+                                                                                  typename
+                                                                                  FieldType::
+                                                                                  value_type>
+                                    >,
+                                    FieldType> operator >=(NeboExpression<SubExpr1,
+                                                                          FieldType>
+                                                           const & arg1,
+                                                           SpatialOps::
+                                                           structured::
+                                                           SpatialField<SpatialOps::
+                                                                        structured::
+                                                                        SingleValue,
+                                                                        typename
+                                                                        FieldType::
+                                                                        value_type>
+                                                           const & arg2) {
+          GreaterThanEqualCmp<Initial,
+                              SubExpr1,
+                              NeboConstSingleValueField<Initial,
+                                                        typename FieldType::
+                                                        value_type> > typedef
+          ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg2)));
+       }
+
+      /* SubExpr X SingleValueExpr */
+      template<typename SubExpr1, typename SubExpr2, typename FieldType>
+       inline NeboBooleanExpression<GreaterThanEqualCmp<Initial,
+                                                        SubExpr1,
+                                                        SubExpr2>,
+                                    FieldType> operator >=(NeboExpression<SubExpr1,
+                                                                          FieldType>
+                                                           const & arg1,
+                                                           NeboSingleValueExpression<SubExpr2,
+                                                                                     typename
+                                                                                     FieldType::
+                                                                                     value_type>
+                                                           const & arg2) {
+          GreaterThanEqualCmp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SingleValue X Scalar */
+      template<typename T>
+       inline NeboBooleanSingleValueExpression<GreaterThanEqualCmp<Initial,
+                                                                   NeboConstSingleValueField<Initial,
+                                                                                             T>,
+                                                                   NeboScalar<Initial,
+                                                                              T>
+                                               >,
+                                               T> operator >=(SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>
+                                                              const & arg1,
+                                                              T const & arg2) {
+          GreaterThanEqualCmp<Initial,
+                              NeboConstSingleValueField<Initial, T>,
+                              NeboScalar<Initial, T> > typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       NeboScalar<Initial, T>(arg2)));
+       }
+
+      /* SingleValue X Field */
+      template<typename FieldType>
+       inline NeboBooleanExpression<GreaterThanEqualCmp<Initial,
+                                                        NeboConstSingleValueField<Initial,
+                                                                                  typename
+                                                                                  FieldType::
+                                                                                  value_type>,
+                                                        NeboConstField<Initial,
+                                                                       typename
+                                                                       NeboFieldCheck<typename
+                                                                                      FieldType::
+                                                                                      field_type,
+                                                                                      FieldType>::
+                                                                       Result> >,
+                                    FieldType> operator >=(SpatialOps::
+                                                           structured::
+                                                           SpatialField<SpatialOps::
+                                                                        structured::
+                                                                        SingleValue,
+                                                                        typename
+                                                                        FieldType::
+                                                                        value_type>
+                                                           const & arg1,
+                                                           FieldType const &
+                                                           arg2) {
+          GreaterThanEqualCmp<Initial,
+                              NeboConstSingleValueField<Initial,
+                                                        typename FieldType::
+                                                        value_type>,
+                              NeboConstField<Initial, FieldType> > typedef
+          ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg1),
+                                       NeboConstField<Initial, FieldType>(arg2)));
+       }
+
+      /* SingleValue X SubExpr */
+      template<typename SubExpr2, typename FieldType>
+       inline NeboBooleanExpression<GreaterThanEqualCmp<Initial,
+                                                        NeboConstSingleValueField<Initial,
+                                                                                  typename
+                                                                                  FieldType::
+                                                                                  value_type>,
+                                                        SubExpr2>,
+                                    FieldType> operator >=(SpatialOps::
+                                                           structured::
+                                                           SpatialField<SpatialOps::
+                                                                        structured::
+                                                                        SingleValue,
+                                                                        typename
+                                                                        FieldType::
+                                                                        value_type>
+                                                           const & arg1,
+                                                           NeboExpression<SubExpr2,
+                                                                          FieldType>
+                                                           const & arg2) {
+          GreaterThanEqualCmp<Initial,
+                              NeboConstSingleValueField<Initial,
+                                                        typename FieldType::
+                                                        value_type>,
+                              SubExpr2> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* SingleValue X SingleValue */
+      template<typename T>
+       inline NeboBooleanSingleValueExpression<GreaterThanEqualCmp<Initial,
+                                                                   NeboConstSingleValueField<Initial,
+                                                                                             T>,
+                                                                   NeboConstSingleValueField<Initial,
+                                                                                             T>
+                                               >,
+                                               T> operator >=(SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>
+                                                              const & arg1,
+                                                              SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>
+                                                              const & arg2) {
+          GreaterThanEqualCmp<Initial,
+                              NeboConstSingleValueField<Initial, T>,
+                              NeboConstSingleValueField<Initial, T> > typedef
+          ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* SingleValue X SingleValueExpr */
+      template<typename SubExpr2, typename T>
+       inline NeboBooleanSingleValueExpression<GreaterThanEqualCmp<Initial,
+                                                                   NeboConstSingleValueField<Initial,
+                                                                                             T>,
+                                                                   SubExpr2>,
+                                               T> operator >=(SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>
+                                                              const & arg1,
+                                                              NeboSingleValueExpression<SubExpr2,
+                                                                                        T>
+                                                              const & arg2) {
+          GreaterThanEqualCmp<Initial,
+                              NeboConstSingleValueField<Initial, T>,
+                              SubExpr2> typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* SingleValueExpr X Scalar */
+      template<typename SubExpr1, typename T>
+       inline NeboBooleanSingleValueExpression<GreaterThanEqualCmp<Initial,
+                                                                   SubExpr1,
+                                                                   NeboScalar<Initial,
+                                                                              T>
+                                               >,
+                                               T> operator >=(NeboSingleValueExpression<SubExpr1,
+                                                                                        T>
+                                                              const & arg1,
+                                                              T const & arg2) {
+          GreaterThanEqualCmp<Initial, SubExpr1, NeboScalar<Initial, T> >
+          typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), NeboScalar<Initial, T>(arg2)));
+       }
+
+      /* SingleValueExpr X Field */
+      template<typename SubExpr1, typename FieldType>
+       inline NeboBooleanExpression<GreaterThanEqualCmp<Initial,
+                                                        SubExpr1,
+                                                        NeboConstField<Initial,
+                                                                       typename
+                                                                       NeboFieldCheck<typename
+                                                                                      FieldType::
+                                                                                      field_type,
+                                                                                      FieldType>::
+                                                                       Result> >,
+                                    FieldType> operator >=(NeboSingleValueExpression<SubExpr1,
+                                                                                     typename
+                                                                                     FieldType::
+                                                                                     value_type>
+                                                           const & arg1,
+                                                           FieldType const &
+                                                           arg2) {
+          GreaterThanEqualCmp<Initial,
+                              SubExpr1,
+                              NeboConstField<Initial, FieldType> > typedef
+          ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstField<Initial, FieldType>(arg2)));
+       }
+
+      /* SingleValueExpr X SubExpr */
+      template<typename SubExpr1, typename SubExpr2, typename FieldType>
+       inline NeboBooleanExpression<GreaterThanEqualCmp<Initial,
+                                                        SubExpr1,
+                                                        SubExpr2>,
+                                    FieldType> operator >=(NeboSingleValueExpression<SubExpr1,
+                                                                                     typename
+                                                                                     FieldType::
+                                                                                     value_type>
+                                                           const & arg1,
+                                                           NeboExpression<SubExpr2,
+                                                                          FieldType>
+                                                           const & arg2) {
+          GreaterThanEqualCmp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SingleValueExpr X SingleValue */
+      template<typename SubExpr1, typename T>
+       inline NeboBooleanSingleValueExpression<GreaterThanEqualCmp<Initial,
+                                                                   SubExpr1,
+                                                                   NeboConstSingleValueField<Initial,
+                                                                                             T>
+                                               >,
+                                               T> operator >=(NeboSingleValueExpression<SubExpr1,
+                                                                                        T>
+                                                              const & arg1,
+                                                              SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>
+                                                              const & arg2) {
+          GreaterThanEqualCmp<Initial,
+                              SubExpr1,
+                              NeboConstSingleValueField<Initial, T> > typedef
+          ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* SingleValueExpr X SingleValueExpr */
+      template<typename SubExpr1, typename SubExpr2, typename T>
+       inline NeboBooleanSingleValueExpression<GreaterThanEqualCmp<Initial,
+                                                                   SubExpr1,
+                                                                   SubExpr2>,
+                                               T> operator >=(NeboSingleValueExpression<SubExpr1,
+                                                                                        T>
+                                                              const & arg1,
+                                                              NeboSingleValueExpression<SubExpr2,
+                                                                                        T>
+                                                              const & arg2) {
+          GreaterThanEqualCmp<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
        };
 
-      template<typename CurrentMode,
-               typename Operand1,
-               typename Operand2,
-               typename FieldType>
+      template<typename CurrentMode, typename Operand1, typename Operand2>
        struct AndOp;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct AndOp<Initial, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct AndOp<Initial, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
           AndOp<SeqWalk,
                 typename Operand1::SeqWalkType,
-                typename Operand2::SeqWalkType,
-                FieldType> typedef SeqWalkType;
+                typename Operand2::SeqWalkType> typedef SeqWalkType;
 
 #         ifdef FIELD_EXPRESSION_THREADS
              AndOp<Resize,
                    typename Operand1::ResizeType,
-                   typename Operand2::ResizeType,
-                   FieldType> typedef ResizeType;
+                   typename Operand2::ResizeType> typedef ResizeType;
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
              AndOp<GPUWalk,
                    typename Operand1::GPUWalkType,
-                   typename Operand2::GPUWalkType,
-                   FieldType> typedef GPUWalkType;
+                   typename Operand2::GPUWalkType> typedef GPUWalkType;
 #         endif
           /* __CUDACC__ */
 
           AndOp<Reduction,
                 typename Operand1::ReductionType,
-                typename Operand2::ReductionType,
-                FieldType> typedef ReductionType;
+                typename Operand2::ReductionType> typedef ReductionType;
 
           AndOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -7031,17 +11252,12 @@
           Operand2 const operand2_;
       };
 #     ifdef FIELD_EXPRESSION_THREADS
-         template<typename Operand1, typename Operand2, typename FieldType>
-          struct AndOp<Resize, Operand1, Operand2, FieldType> {
+         template<typename Operand1, typename Operand2>
+          struct AndOp<Resize, Operand1, Operand2> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
              AndOp<SeqWalk,
                    typename Operand1::SeqWalkType,
-                   typename Operand2::SeqWalkType,
-                   FieldType> typedef SeqWalkType;
+                   typename Operand2::SeqWalkType> typedef SeqWalkType;
 
              AndOp(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -7061,14 +11277,10 @@
          }
 #     endif
       /* FIELD_EXPRESSION_THREADS */;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct AndOp<SeqWalk, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct AndOp<SeqWalk, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          bool typedef EvalReturnType;
+          typename Operand1::value_type typedef value_type;
 
           AndOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -7076,7 +11288,7 @@
 
           inline void next(void) { operand1_.next(); operand2_.next(); }
 
-          inline EvalReturnType eval(void) const {
+          inline bool eval(void) const {
              return (operand1_.eval() && operand2_.eval());
           }
 
@@ -7086,14 +11298,10 @@
           Operand2 operand2_;
       };
 #     ifdef __CUDACC__
-         template<typename Operand1, typename Operand2, typename FieldType>
-          struct AndOp<GPUWalk, Operand1, Operand2, FieldType> {
+         template<typename Operand1, typename Operand2>
+          struct AndOp<GPUWalk, Operand1, Operand2> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             typename field_type::value_type typedef AtomicType;
+             typename Operand1::value_type typedef value_type;
 
              AndOp(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -7111,7 +11319,7 @@
                 operand2_.next();
              }
 
-             __device__ inline AtomicType eval(void) const {
+             __device__ inline bool eval(void) const {
                 return (operand1_.eval() && operand2_.eval());
              }
 
@@ -7122,14 +11330,10 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct AndOp<Reduction, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct AndOp<Reduction, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          bool typedef EvalReturnType;
+          typename Operand1::value_type typedef value_type;
 
           AndOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -7145,7 +11349,7 @@
              return (operand1_.has_length() || operand2_.has_length());
           }
 
-          inline EvalReturnType eval(void) const {
+          inline bool eval(void) const {
              return (operand1_.eval() && operand2_.eval());
           }
 
@@ -7158,102 +11362,79 @@
       /* Boolean X SubBoolExpr */
       template<typename SubBoolExpr2, typename FieldType>
        inline NeboBooleanExpression<AndOp<Initial,
-                                          NeboBoolean<Initial, FieldType>,
-                                          SubBoolExpr2,
-                                          FieldType>,
+                                          NeboScalar<Initial, bool>,
+                                          SubBoolExpr2>,
                                     FieldType> operator &&(bool const & arg1,
                                                            NeboBooleanExpression<SubBoolExpr2,
                                                                                  FieldType>
                                                            const & arg2) {
-          AndOp<Initial,
-                NeboBoolean<Initial, FieldType>,
-                SubBoolExpr2,
-                FieldType> typedef ReturnType;
+          AndOp<Initial, NeboScalar<Initial, bool>, SubBoolExpr2> typedef
+          ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
-          return ReturnTerm(ReturnType(NeboBoolean<Initial, FieldType>(arg1),
-                                       arg2.expr()));
+          return ReturnTerm(ReturnType(NeboScalar<Initial, bool>(arg1), arg2.expr()));
        }
 
       /* SubBoolExpr X Boolean */
       template<typename SubBoolExpr1, typename FieldType>
        inline NeboBooleanExpression<AndOp<Initial,
                                           SubBoolExpr1,
-                                          NeboBoolean<Initial, FieldType>,
-                                          FieldType>,
+                                          NeboScalar<Initial, bool> >,
                                     FieldType> operator &&(NeboBooleanExpression<SubBoolExpr1,
                                                                                  FieldType>
                                                            const & arg1,
                                                            bool const & arg2) {
-          AndOp<Initial,
-                SubBoolExpr1,
-                NeboBoolean<Initial, FieldType>,
-                FieldType> typedef ReturnType;
+          AndOp<Initial, SubBoolExpr1, NeboScalar<Initial, bool> > typedef
+          ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
-          return ReturnTerm(ReturnType(arg1.expr(),
-                                       NeboBoolean<Initial, FieldType>(arg2)));
+          return ReturnTerm(ReturnType(arg1.expr(), NeboScalar<Initial, bool>(arg2)));
        }
 
       /* SubBoolExpr X SubBoolExpr */
       template<typename SubBoolExpr1, typename SubBoolExpr2, typename FieldType>
-       inline NeboBooleanExpression<AndOp<Initial,
-                                          SubBoolExpr1,
-                                          SubBoolExpr2,
-                                          FieldType>,
+       inline NeboBooleanExpression<AndOp<Initial, SubBoolExpr1, SubBoolExpr2>,
                                     FieldType> operator &&(NeboBooleanExpression<SubBoolExpr1,
                                                                                  FieldType>
                                                            const & arg1,
                                                            NeboBooleanExpression<SubBoolExpr2,
                                                                                  FieldType>
                                                            const & arg2) {
-          AndOp<Initial, SubBoolExpr1, SubBoolExpr2, FieldType> typedef
-          ReturnType;
+          AndOp<Initial, SubBoolExpr1, SubBoolExpr2> typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
        };
 
-      template<typename CurrentMode,
-               typename Operand1,
-               typename Operand2,
-               typename FieldType>
+      template<typename CurrentMode, typename Operand1, typename Operand2>
        struct OrOp;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct OrOp<Initial, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct OrOp<Initial, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
           OrOp<SeqWalk,
                typename Operand1::SeqWalkType,
-               typename Operand2::SeqWalkType,
-               FieldType> typedef SeqWalkType;
+               typename Operand2::SeqWalkType> typedef SeqWalkType;
 
 #         ifdef FIELD_EXPRESSION_THREADS
              OrOp<Resize,
                   typename Operand1::ResizeType,
-                  typename Operand2::ResizeType,
-                  FieldType> typedef ResizeType;
+                  typename Operand2::ResizeType> typedef ResizeType;
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
              OrOp<GPUWalk,
                   typename Operand1::GPUWalkType,
-                  typename Operand2::GPUWalkType,
-                  FieldType> typedef GPUWalkType;
+                  typename Operand2::GPUWalkType> typedef GPUWalkType;
 #         endif
           /* __CUDACC__ */
 
           OrOp<Reduction,
                typename Operand1::ReductionType,
-               typename Operand2::ReductionType,
-               FieldType> typedef ReductionType;
+               typename Operand2::ReductionType> typedef ReductionType;
 
           OrOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -7324,17 +11505,12 @@
           Operand2 const operand2_;
       };
 #     ifdef FIELD_EXPRESSION_THREADS
-         template<typename Operand1, typename Operand2, typename FieldType>
-          struct OrOp<Resize, Operand1, Operand2, FieldType> {
+         template<typename Operand1, typename Operand2>
+          struct OrOp<Resize, Operand1, Operand2> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
              OrOp<SeqWalk,
                   typename Operand1::SeqWalkType,
-                  typename Operand2::SeqWalkType,
-                  FieldType> typedef SeqWalkType;
+                  typename Operand2::SeqWalkType> typedef SeqWalkType;
 
              OrOp(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -7354,14 +11530,10 @@
          }
 #     endif
       /* FIELD_EXPRESSION_THREADS */;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct OrOp<SeqWalk, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct OrOp<SeqWalk, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          bool typedef EvalReturnType;
+          typename Operand1::value_type typedef value_type;
 
           OrOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -7369,7 +11541,7 @@
 
           inline void next(void) { operand1_.next(); operand2_.next(); }
 
-          inline EvalReturnType eval(void) const {
+          inline bool eval(void) const {
              return (operand1_.eval() || operand2_.eval());
           }
 
@@ -7379,14 +11551,10 @@
           Operand2 operand2_;
       };
 #     ifdef __CUDACC__
-         template<typename Operand1, typename Operand2, typename FieldType>
-          struct OrOp<GPUWalk, Operand1, Operand2, FieldType> {
+         template<typename Operand1, typename Operand2>
+          struct OrOp<GPUWalk, Operand1, Operand2> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             typename field_type::value_type typedef AtomicType;
+             typename Operand1::value_type typedef value_type;
 
              OrOp(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -7404,7 +11572,7 @@
                 operand2_.next();
              }
 
-             __device__ inline AtomicType eval(void) const {
+             __device__ inline bool eval(void) const {
                 return (operand1_.eval() || operand2_.eval());
              }
 
@@ -7415,14 +11583,10 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct OrOp<Reduction, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct OrOp<Reduction, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          bool typedef EvalReturnType;
+          typename Operand1::value_type typedef value_type;
 
           OrOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -7438,7 +11602,7 @@
              return (operand1_.has_length() || operand2_.has_length());
           }
 
-          inline EvalReturnType eval(void) const {
+          inline bool eval(void) const {
              return (operand1_.eval() || operand2_.eval());
           }
 
@@ -7451,86 +11615,71 @@
       /* Boolean X SubBoolExpr */
       template<typename SubBoolExpr2, typename FieldType>
        inline NeboBooleanExpression<OrOp<Initial,
-                                         NeboBoolean<Initial, FieldType>,
-                                         SubBoolExpr2,
-                                         FieldType>,
+                                         NeboScalar<Initial, bool>,
+                                         SubBoolExpr2>,
                                     FieldType> operator ||(bool const & arg1,
                                                            NeboBooleanExpression<SubBoolExpr2,
                                                                                  FieldType>
                                                            const & arg2) {
-          OrOp<Initial, NeboBoolean<Initial, FieldType>, SubBoolExpr2, FieldType>
-          typedef ReturnType;
+          OrOp<Initial, NeboScalar<Initial, bool>, SubBoolExpr2> typedef
+          ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
-          return ReturnTerm(ReturnType(NeboBoolean<Initial, FieldType>(arg1),
-                                       arg2.expr()));
+          return ReturnTerm(ReturnType(NeboScalar<Initial, bool>(arg1), arg2.expr()));
        }
 
       /* SubBoolExpr X Boolean */
       template<typename SubBoolExpr1, typename FieldType>
        inline NeboBooleanExpression<OrOp<Initial,
                                          SubBoolExpr1,
-                                         NeboBoolean<Initial, FieldType>,
-                                         FieldType>,
+                                         NeboScalar<Initial, bool> >,
                                     FieldType> operator ||(NeboBooleanExpression<SubBoolExpr1,
                                                                                  FieldType>
                                                            const & arg1,
                                                            bool const & arg2) {
-          OrOp<Initial, SubBoolExpr1, NeboBoolean<Initial, FieldType>, FieldType>
-          typedef ReturnType;
+          OrOp<Initial, SubBoolExpr1, NeboScalar<Initial, bool> > typedef
+          ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
-          return ReturnTerm(ReturnType(arg1.expr(),
-                                       NeboBoolean<Initial, FieldType>(arg2)));
+          return ReturnTerm(ReturnType(arg1.expr(), NeboScalar<Initial, bool>(arg2)));
        }
 
       /* SubBoolExpr X SubBoolExpr */
       template<typename SubBoolExpr1, typename SubBoolExpr2, typename FieldType>
-       inline NeboBooleanExpression<OrOp<Initial,
-                                         SubBoolExpr1,
-                                         SubBoolExpr2,
-                                         FieldType>,
+       inline NeboBooleanExpression<OrOp<Initial, SubBoolExpr1, SubBoolExpr2>,
                                     FieldType> operator ||(NeboBooleanExpression<SubBoolExpr1,
                                                                                  FieldType>
                                                            const & arg1,
                                                            NeboBooleanExpression<SubBoolExpr2,
                                                                                  FieldType>
                                                            const & arg2) {
-          OrOp<Initial, SubBoolExpr1, SubBoolExpr2, FieldType> typedef
-          ReturnType;
+          OrOp<Initial, SubBoolExpr1, SubBoolExpr2> typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
        };
 
-      template<typename CurrentMode, typename Operand, typename FieldType>
+      template<typename CurrentMode, typename Operand>
        struct NotOp;
-      template<typename Operand, typename FieldType>
-       struct NotOp<Initial, Operand, FieldType> {
+      template<typename Operand>
+       struct NotOp<Initial, Operand> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          NotOp<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef
-          SeqWalkType;
+          NotOp<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             NotOp<Resize, typename Operand::ResizeType, FieldType> typedef
-             ResizeType;
+             NotOp<Resize, typename Operand::ResizeType> typedef ResizeType;
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
-             NotOp<GPUWalk, typename Operand::GPUWalkType, FieldType> typedef
-             GPUWalkType;
+             NotOp<GPUWalk, typename Operand::GPUWalkType> typedef GPUWalkType;
 #         endif
           /* __CUDACC__ */
 
-          NotOp<Reduction, typename Operand::ReductionType, FieldType> typedef
+          NotOp<Reduction, typename Operand::ReductionType> typedef
           ReductionType;
 
           NotOp(Operand const & operand)
@@ -7591,15 +11740,10 @@
           Operand const operand_;
       };
 #     ifdef FIELD_EXPRESSION_THREADS
-         template<typename Operand, typename FieldType>
-          struct NotOp<Resize, Operand, FieldType> {
+         template<typename Operand>
+          struct NotOp<Resize, Operand> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             NotOp<SeqWalk, typename Operand::SeqWalkType, FieldType> typedef
-             SeqWalkType;
+             NotOp<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
 
              NotOp(Operand const & operand)
              : operand_(operand)
@@ -7616,14 +11760,10 @@
          }
 #     endif
       /* FIELD_EXPRESSION_THREADS */;
-      template<typename Operand, typename FieldType>
-       struct NotOp<SeqWalk, Operand, FieldType> {
+      template<typename Operand>
+       struct NotOp<SeqWalk, Operand> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          bool typedef EvalReturnType;
+          typename Operand::value_type typedef value_type;
 
           NotOp(Operand const & operand)
           : operand_(operand)
@@ -7631,20 +11771,16 @@
 
           inline void next(void) { operand_.next(); }
 
-          inline EvalReturnType eval(void) const { return !(operand_.eval()); }
+          inline bool eval(void) const { return !(operand_.eval()); }
 
          private:
           Operand operand_;
       };
 #     ifdef __CUDACC__
-         template<typename Operand, typename FieldType>
-          struct NotOp<GPUWalk, Operand, FieldType> {
+         template<typename Operand>
+          struct NotOp<GPUWalk, Operand> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             typename field_type::value_type typedef AtomicType;
+             typename Operand::value_type typedef value_type;
 
              NotOp(Operand const & operand)
              : operand_(operand)
@@ -7654,7 +11790,7 @@
 
              __device__ inline void next(void) { operand_.next(); }
 
-             __device__ inline AtomicType eval(void) const {
+             __device__ inline bool eval(void) const {
                 return !(operand_.eval());
              }
 
@@ -7663,14 +11799,10 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand, typename FieldType>
-       struct NotOp<Reduction, Operand, FieldType> {
+      template<typename Operand>
+       struct NotOp<Reduction, Operand> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          bool typedef EvalReturnType;
+          typename Operand::value_type typedef value_type;
 
           NotOp(Operand const & operand)
           : operand_(operand)
@@ -7682,7 +11814,7 @@
 
           inline bool has_length(void) const { return (operand_.has_length()); }
 
-          inline EvalReturnType eval(void) const { return !(operand_.eval()); }
+          inline bool eval(void) const { return !(operand_.eval()); }
 
          private:
           Operand operand_;
@@ -7690,54 +11822,41 @@
 
       /* SubBoolExpr */
       template<typename SubBoolExpr, typename FieldType>
-       inline NeboBooleanExpression<NotOp<Initial, SubBoolExpr, FieldType>,
-                                    FieldType> operator !(NeboBooleanExpression<SubBoolExpr,
-                                                                                FieldType>
-                                                          const & arg) {
-          NotOp<Initial, SubBoolExpr, FieldType> typedef ReturnType;
+       inline NeboBooleanExpression<NotOp<Initial, SubBoolExpr>, FieldType>
+       operator !(NeboBooleanExpression<SubBoolExpr, FieldType> const & arg) {
+          NotOp<Initial, SubBoolExpr> typedef ReturnType;
 
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg.expr()));
        };
 
-      template<typename CurrentMode,
-               typename Operand1,
-               typename Operand2,
-               typename FieldType>
+      template<typename CurrentMode, typename Operand1, typename Operand2>
        struct MaxFcn;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct MaxFcn<Initial, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct MaxFcn<Initial, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
           MaxFcn<SeqWalk,
                  typename Operand1::SeqWalkType,
-                 typename Operand2::SeqWalkType,
-                 FieldType> typedef SeqWalkType;
+                 typename Operand2::SeqWalkType> typedef SeqWalkType;
 
 #         ifdef FIELD_EXPRESSION_THREADS
              MaxFcn<Resize,
                     typename Operand1::ResizeType,
-                    typename Operand2::ResizeType,
-                    FieldType> typedef ResizeType;
+                    typename Operand2::ResizeType> typedef ResizeType;
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
              MaxFcn<GPUWalk,
                     typename Operand1::GPUWalkType,
-                    typename Operand2::GPUWalkType,
-                    FieldType> typedef GPUWalkType;
+                    typename Operand2::GPUWalkType> typedef GPUWalkType;
 #         endif
           /* __CUDACC__ */
 
           MaxFcn<Reduction,
                  typename Operand1::ReductionType,
-                 typename Operand2::ReductionType,
-                 FieldType> typedef ReductionType;
+                 typename Operand2::ReductionType> typedef ReductionType;
 
           MaxFcn(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -7808,17 +11927,12 @@
           Operand2 const operand2_;
       };
 #     ifdef FIELD_EXPRESSION_THREADS
-         template<typename Operand1, typename Operand2, typename FieldType>
-          struct MaxFcn<Resize, Operand1, Operand2, FieldType> {
+         template<typename Operand1, typename Operand2>
+          struct MaxFcn<Resize, Operand1, Operand2> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
              MaxFcn<SeqWalk,
                     typename Operand1::SeqWalkType,
-                    typename Operand2::SeqWalkType,
-                    FieldType> typedef SeqWalkType;
+                    typename Operand2::SeqWalkType> typedef SeqWalkType;
 
              MaxFcn(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -7838,14 +11952,10 @@
          }
 #     endif
       /* FIELD_EXPRESSION_THREADS */;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct MaxFcn<SeqWalk, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct MaxFcn<SeqWalk, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef EvalReturnType;
+          typename Operand1::value_type typedef value_type;
 
           MaxFcn(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -7853,7 +11963,7 @@
 
           inline void next(void) { operand1_.next(); operand2_.next(); }
 
-          inline EvalReturnType eval(void) const {
+          inline value_type eval(void) const {
              return ((operand1_.eval() > operand2_.eval()) ? operand1_.eval() :
                      operand2_.eval());
           }
@@ -7864,14 +11974,10 @@
           Operand2 operand2_;
       };
 #     ifdef __CUDACC__
-         template<typename Operand1, typename Operand2, typename FieldType>
-          struct MaxFcn<GPUWalk, Operand1, Operand2, FieldType> {
+         template<typename Operand1, typename Operand2>
+          struct MaxFcn<GPUWalk, Operand1, Operand2> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             typename field_type::value_type typedef AtomicType;
+             typename Operand1::value_type typedef value_type;
 
              MaxFcn(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -7889,7 +11995,7 @@
                 operand2_.next();
              }
 
-             __device__ inline AtomicType eval(void) const {
+             __device__ inline value_type eval(void) const {
                 return ((operand1_.eval() > operand2_.eval()) ? operand1_.eval()
                         : operand2_.eval());
              }
@@ -7901,14 +12007,10 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct MaxFcn<Reduction, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct MaxFcn<Reduction, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef EvalReturnType;
+          typename Operand1::value_type typedef value_type;
 
           MaxFcn(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -7924,7 +12026,7 @@
              return (operand1_.has_length() || operand2_.has_length());
           }
 
-          inline EvalReturnType eval(void) const {
+          inline value_type eval(void) const {
              return ((operand1_.eval() > operand2_.eval()) ? operand1_.eval() :
                      operand2_.eval());
           }
@@ -7938,45 +12040,85 @@
       /* Scalar X Field */
       template<typename FieldType>
        inline NeboExpression<MaxFcn<Initial,
-                                    NeboScalar<Initial, FieldType>,
+                                    NeboScalar<Initial,
+                                               typename FieldType::value_type>,
                                     NeboConstField<Initial,
                                                    typename NeboFieldCheck<typename
                                                                            FieldType::
                                                                            field_type,
                                                                            FieldType>::
-                                                   Result>,
-                                    FieldType>,
+                                                   Result> >,
                              FieldType> max(typename FieldType::value_type const
                                             & arg1,
                                             FieldType const & arg2) {
           MaxFcn<Initial,
-                 NeboScalar<Initial, FieldType>,
-                 NeboConstField<Initial, FieldType>,
-                 FieldType> typedef ReturnType;
+                 NeboScalar<Initial, typename FieldType::value_type>,
+                 NeboConstField<Initial, FieldType> > typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
-          return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
+          return ReturnTerm(ReturnType(NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg1),
                                        NeboConstField<Initial, FieldType>(arg2)));
        }
 
       /* Scalar X SubExpr */
       template<typename SubExpr2, typename FieldType>
        inline NeboExpression<MaxFcn<Initial,
-                                    NeboScalar<Initial, FieldType>,
-                                    SubExpr2,
-                                    FieldType>,
+                                    NeboScalar<Initial,
+                                               typename FieldType::value_type>,
+                                    SubExpr2>,
                              FieldType> max(typename FieldType::value_type const
                                             & arg1,
                                             NeboExpression<SubExpr2, FieldType>
                                             const & arg2) {
-          MaxFcn<Initial, NeboScalar<Initial, FieldType>, SubExpr2, FieldType>
-          typedef ReturnType;
+          MaxFcn<Initial,
+                 NeboScalar<Initial, typename FieldType::value_type>,
+                 SubExpr2> typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
-          return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
+          return ReturnTerm(ReturnType(NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg1),
                                        arg2.expr()));
+       }
+
+      /* Scalar X SingleValue */
+      template<typename T>
+       inline NeboSingleValueExpression<MaxFcn<Initial,
+                                               NeboScalar<Initial, T>,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T> >,
+                                        T> max(T const & arg1,
+                                               SpatialOps::structured::
+                                               SpatialField<SpatialOps::
+                                                            structured::
+                                                            SingleValue,
+                                                            T> const & arg2) {
+          MaxFcn<Initial,
+                 NeboScalar<Initial, T>,
+                 NeboConstSingleValueField<Initial, T> > typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboScalar<Initial, T>(arg1),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* Scalar X SingleValueExpr */
+      template<typename SubExpr2, typename T>
+       inline NeboSingleValueExpression<MaxFcn<Initial,
+                                               NeboScalar<Initial, T>,
+                                               SubExpr2>,
+                                        T> max(T const & arg1,
+                                               NeboSingleValueExpression<SubExpr2,
+                                                                         T>
+                                               const & arg2) {
+          MaxFcn<Initial, NeboScalar<Initial, T>, SubExpr2> typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboScalar<Initial, T>(arg1), arg2.expr()));
        }
 
       /* Field X Scalar */
@@ -7988,20 +12130,21 @@
                                                                            field_type,
                                                                            FieldType>::
                                                    Result>,
-                                    NeboScalar<Initial, FieldType>,
-                                    FieldType>,
+                                    NeboScalar<Initial,
+                                               typename FieldType::value_type> >,
                              FieldType> max(FieldType const & arg1,
                                             typename FieldType::value_type const
                                             & arg2) {
           MaxFcn<Initial,
                  NeboConstField<Initial, FieldType>,
-                 NeboScalar<Initial, FieldType>,
-                 FieldType> typedef ReturnType;
+                 NeboScalar<Initial, typename FieldType::value_type> > typedef
+          ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
-                                       NeboScalar<Initial, FieldType>(arg2)));
+                                       NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg2)));
        }
 
       /* Field X Field */
@@ -8018,14 +12161,12 @@
                                                                            FieldType::
                                                                            field_type,
                                                                            FieldType>::
-                                                   Result>,
-                                    FieldType>,
+                                                   Result> >,
                              FieldType> max(FieldType const & arg1,
                                             FieldType const & arg2) {
           MaxFcn<Initial,
                  NeboConstField<Initial, FieldType>,
-                 NeboConstField<Initial, FieldType>,
-                 FieldType> typedef ReturnType;
+                 NeboConstField<Initial, FieldType> > typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -8042,15 +12183,72 @@
                                                                            field_type,
                                                                            FieldType>::
                                                    Result>,
-                                    SubExpr2,
-                                    FieldType>,
+                                    SubExpr2>,
                              FieldType> max(FieldType const & arg1,
                                             NeboExpression<SubExpr2, FieldType>
                                             const & arg2) {
+          MaxFcn<Initial, NeboConstField<Initial, FieldType>, SubExpr2> typedef
+          ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* Field X SingleValue */
+      template<typename FieldType>
+       inline NeboExpression<MaxFcn<Initial,
+                                    NeboConstField<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result>,
+                                    NeboConstSingleValueField<Initial,
+                                                              typename FieldType::
+                                                              value_type> >,
+                             FieldType> max(FieldType const & arg1,
+                                            SpatialOps::structured::SpatialField<SpatialOps::
+                                                                                 structured::
+                                                                                 SingleValue,
+                                                                                 typename
+                                                                                 FieldType::
+                                                                                 value_type>
+                                            const & arg2) {
           MaxFcn<Initial,
                  NeboConstField<Initial, FieldType>,
-                 SubExpr2,
-                 FieldType> typedef ReturnType;
+                 NeboConstSingleValueField<Initial,
+                                           typename FieldType::value_type> >
+          typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
+                                       NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg2)));
+       }
+
+      /* Field X SingleValueExpr */
+      template<typename SubExpr2, typename FieldType>
+       inline NeboExpression<MaxFcn<Initial,
+                                    NeboConstField<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result>,
+                                    SubExpr2>,
+                             FieldType> max(FieldType const & arg1,
+                                            NeboSingleValueExpression<SubExpr2,
+                                                                      typename
+                                                                      FieldType::
+                                                                      value_type>
+                                            const & arg2) {
+          MaxFcn<Initial, NeboConstField<Initial, FieldType>, SubExpr2> typedef
+          ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -8062,19 +12260,22 @@
       template<typename SubExpr1, typename FieldType>
        inline NeboExpression<MaxFcn<Initial,
                                     SubExpr1,
-                                    NeboScalar<Initial, FieldType>,
-                                    FieldType>,
+                                    NeboScalar<Initial,
+                                               typename FieldType::value_type> >,
                              FieldType> max(NeboExpression<SubExpr1, FieldType>
                                             const & arg1,
                                             typename FieldType::value_type const
                                             & arg2) {
-          MaxFcn<Initial, SubExpr1, NeboScalar<Initial, FieldType>, FieldType>
-          typedef ReturnType;
+          MaxFcn<Initial,
+                 SubExpr1,
+                 NeboScalar<Initial, typename FieldType::value_type> > typedef
+          ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg1.expr(),
-                                       NeboScalar<Initial, FieldType>(arg2)));
+                                       NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg2)));
        }
 
       /* SubExpr X Field */
@@ -8086,15 +12287,12 @@
                                                                            FieldType::
                                                                            field_type,
                                                                            FieldType>::
-                                                   Result>,
-                                    FieldType>,
+                                                   Result> >,
                              FieldType> max(NeboExpression<SubExpr1, FieldType>
                                             const & arg1,
                                             FieldType const & arg2) {
-          MaxFcn<Initial,
-                 SubExpr1,
-                 NeboConstField<Initial, FieldType>,
-                 FieldType> typedef ReturnType;
+          MaxFcn<Initial, SubExpr1, NeboConstField<Initial, FieldType> > typedef
+          ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -8104,55 +12302,334 @@
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2, typename FieldType>
-       inline NeboExpression<MaxFcn<Initial, SubExpr1, SubExpr2, FieldType>,
-                             FieldType> max(NeboExpression<SubExpr1, FieldType>
-                                            const & arg1,
-                                            NeboExpression<SubExpr2, FieldType>
-                                            const & arg2) {
-          MaxFcn<Initial, SubExpr1, SubExpr2, FieldType> typedef ReturnType;
+       inline NeboExpression<MaxFcn<Initial, SubExpr1, SubExpr2>, FieldType> max(NeboExpression<SubExpr1,
+                                                                                                FieldType>
+                                                                                 const
+                                                                                 &
+                                                                                 arg1,
+                                                                                 NeboExpression<SubExpr2,
+                                                                                                FieldType>
+                                                                                 const
+                                                                                 &
+                                                                                 arg2) {
+          MaxFcn<Initial, SubExpr1, SubExpr2> typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SubExpr X SingleValue */
+      template<typename SubExpr1, typename FieldType>
+       inline NeboExpression<MaxFcn<Initial,
+                                    SubExpr1,
+                                    NeboConstSingleValueField<Initial,
+                                                              typename FieldType::
+                                                              value_type> >,
+                             FieldType> max(NeboExpression<SubExpr1, FieldType>
+                                            const & arg1,
+                                            SpatialOps::structured::SpatialField<SpatialOps::
+                                                                                 structured::
+                                                                                 SingleValue,
+                                                                                 typename
+                                                                                 FieldType::
+                                                                                 value_type>
+                                            const & arg2) {
+          MaxFcn<Initial,
+                 SubExpr1,
+                 NeboConstSingleValueField<Initial,
+                                           typename FieldType::value_type> >
+          typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg2)));
+       }
+
+      /* SubExpr X SingleValueExpr */
+      template<typename SubExpr1, typename SubExpr2, typename FieldType>
+       inline NeboExpression<MaxFcn<Initial, SubExpr1, SubExpr2>, FieldType> max(NeboExpression<SubExpr1,
+                                                                                                FieldType>
+                                                                                 const
+                                                                                 &
+                                                                                 arg1,
+                                                                                 NeboSingleValueExpression<SubExpr2,
+                                                                                                           typename
+                                                                                                           FieldType::
+                                                                                                           value_type>
+                                                                                 const
+                                                                                 &
+                                                                                 arg2) {
+          MaxFcn<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SingleValue X Scalar */
+      template<typename T>
+       inline NeboSingleValueExpression<MaxFcn<Initial,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T>,
+                                               NeboScalar<Initial, T> >,
+                                        T> max(SpatialOps::structured::
+                                               SpatialField<SpatialOps::
+                                                            structured::
+                                                            SingleValue,
+                                                            T> const & arg1,
+                                               T const & arg2) {
+          MaxFcn<Initial,
+                 NeboConstSingleValueField<Initial, T>,
+                 NeboScalar<Initial, T> > typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       NeboScalar<Initial, T>(arg2)));
+       }
+
+      /* SingleValue X Field */
+      template<typename FieldType>
+       inline NeboExpression<MaxFcn<Initial,
+                                    NeboConstSingleValueField<Initial,
+                                                              typename FieldType::
+                                                              value_type>,
+                                    NeboConstField<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result> >,
+                             FieldType> max(SpatialOps::structured::SpatialField<SpatialOps::
+                                                                                 structured::
+                                                                                 SingleValue,
+                                                                                 typename
+                                                                                 FieldType::
+                                                                                 value_type>
+                                            const & arg1,
+                                            FieldType const & arg2) {
+          MaxFcn<Initial,
+                 NeboConstSingleValueField<Initial,
+                                           typename FieldType::value_type>,
+                 NeboConstField<Initial, FieldType> > typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg1),
+                                       NeboConstField<Initial, FieldType>(arg2)));
+       }
+
+      /* SingleValue X SubExpr */
+      template<typename SubExpr2, typename FieldType>
+       inline NeboExpression<MaxFcn<Initial,
+                                    NeboConstSingleValueField<Initial,
+                                                              typename FieldType::
+                                                              value_type>,
+                                    SubExpr2>,
+                             FieldType> max(SpatialOps::structured::SpatialField<SpatialOps::
+                                                                                 structured::
+                                                                                 SingleValue,
+                                                                                 typename
+                                                                                 FieldType::
+                                                                                 value_type>
+                                            const & arg1,
+                                            NeboExpression<SubExpr2, FieldType>
+                                            const & arg2) {
+          MaxFcn<Initial,
+                 NeboConstSingleValueField<Initial,
+                                           typename FieldType::value_type>,
+                 SubExpr2> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* SingleValue X SingleValue */
+      template<typename T>
+       inline NeboSingleValueExpression<MaxFcn<Initial,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T>,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T> >,
+                                        T> max(SpatialOps::structured::
+                                               SpatialField<SpatialOps::
+                                                            structured::
+                                                            SingleValue,
+                                                            T> const & arg1,
+                                               SpatialOps::structured::
+                                               SpatialField<SpatialOps::
+                                                            structured::
+                                                            SingleValue,
+                                                            T> const & arg2) {
+          MaxFcn<Initial,
+                 NeboConstSingleValueField<Initial, T>,
+                 NeboConstSingleValueField<Initial, T> > typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* SingleValue X SingleValueExpr */
+      template<typename SubExpr2, typename T>
+       inline NeboSingleValueExpression<MaxFcn<Initial,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T>,
+                                               SubExpr2>,
+                                        T> max(SpatialOps::structured::
+                                               SpatialField<SpatialOps::
+                                                            structured::
+                                                            SingleValue,
+                                                            T> const & arg1,
+                                               NeboSingleValueExpression<SubExpr2,
+                                                                         T>
+                                               const & arg2) {
+          MaxFcn<Initial, NeboConstSingleValueField<Initial, T>, SubExpr2>
+          typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* SingleValueExpr X Scalar */
+      template<typename SubExpr1, typename T>
+       inline NeboSingleValueExpression<MaxFcn<Initial,
+                                               SubExpr1,
+                                               NeboScalar<Initial, T> >,
+                                        T> max(NeboSingleValueExpression<SubExpr1,
+                                                                         T>
+                                               const & arg1,
+                                               T const & arg2) {
+          MaxFcn<Initial, SubExpr1, NeboScalar<Initial, T> > typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), NeboScalar<Initial, T>(arg2)));
+       }
+
+      /* SingleValueExpr X Field */
+      template<typename SubExpr1, typename FieldType>
+       inline NeboExpression<MaxFcn<Initial,
+                                    SubExpr1,
+                                    NeboConstField<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result> >,
+                             FieldType> max(NeboSingleValueExpression<SubExpr1,
+                                                                      typename
+                                                                      FieldType::
+                                                                      value_type>
+                                            const & arg1,
+                                            FieldType const & arg2) {
+          MaxFcn<Initial, SubExpr1, NeboConstField<Initial, FieldType> > typedef
+          ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstField<Initial, FieldType>(arg2)));
+       }
+
+      /* SingleValueExpr X SubExpr */
+      template<typename SubExpr1, typename SubExpr2, typename FieldType>
+       inline NeboExpression<MaxFcn<Initial, SubExpr1, SubExpr2>, FieldType> max(NeboSingleValueExpression<SubExpr1,
+                                                                                                           typename
+                                                                                                           FieldType::
+                                                                                                           value_type>
+                                                                                 const
+                                                                                 &
+                                                                                 arg1,
+                                                                                 NeboExpression<SubExpr2,
+                                                                                                FieldType>
+                                                                                 const
+                                                                                 &
+                                                                                 arg2) {
+          MaxFcn<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SingleValueExpr X SingleValue */
+      template<typename SubExpr1, typename T>
+       inline NeboSingleValueExpression<MaxFcn<Initial,
+                                               SubExpr1,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T> >,
+                                        T> max(NeboSingleValueExpression<SubExpr1,
+                                                                         T>
+                                               const & arg1,
+                                               SpatialOps::structured::
+                                               SpatialField<SpatialOps::
+                                                            structured::
+                                                            SingleValue,
+                                                            T> const & arg2) {
+          MaxFcn<Initial, SubExpr1, NeboConstSingleValueField<Initial, T> >
+          typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* SingleValueExpr X SingleValueExpr */
+      template<typename SubExpr1, typename SubExpr2, typename T>
+       inline NeboSingleValueExpression<MaxFcn<Initial, SubExpr1, SubExpr2>, T>
+       max(NeboSingleValueExpression<SubExpr1, T> const & arg1,
+           NeboSingleValueExpression<SubExpr2, T> const & arg2) {
+          MaxFcn<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
        };
 
-      template<typename CurrentMode,
-               typename Operand1,
-               typename Operand2,
-               typename FieldType>
+      template<typename CurrentMode, typename Operand1, typename Operand2>
        struct MinFcn;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct MinFcn<Initial, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct MinFcn<Initial, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
           MinFcn<SeqWalk,
                  typename Operand1::SeqWalkType,
-                 typename Operand2::SeqWalkType,
-                 FieldType> typedef SeqWalkType;
+                 typename Operand2::SeqWalkType> typedef SeqWalkType;
 
 #         ifdef FIELD_EXPRESSION_THREADS
              MinFcn<Resize,
                     typename Operand1::ResizeType,
-                    typename Operand2::ResizeType,
-                    FieldType> typedef ResizeType;
+                    typename Operand2::ResizeType> typedef ResizeType;
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
 #         ifdef __CUDACC__
              MinFcn<GPUWalk,
                     typename Operand1::GPUWalkType,
-                    typename Operand2::GPUWalkType,
-                    FieldType> typedef GPUWalkType;
+                    typename Operand2::GPUWalkType> typedef GPUWalkType;
 #         endif
           /* __CUDACC__ */
 
           MinFcn<Reduction,
                  typename Operand1::ReductionType,
-                 typename Operand2::ReductionType,
-                 FieldType> typedef ReductionType;
+                 typename Operand2::ReductionType> typedef ReductionType;
 
           MinFcn(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -8223,17 +12700,12 @@
           Operand2 const operand2_;
       };
 #     ifdef FIELD_EXPRESSION_THREADS
-         template<typename Operand1, typename Operand2, typename FieldType>
-          struct MinFcn<Resize, Operand1, Operand2, FieldType> {
+         template<typename Operand1, typename Operand2>
+          struct MinFcn<Resize, Operand1, Operand2> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
              MinFcn<SeqWalk,
                     typename Operand1::SeqWalkType,
-                    typename Operand2::SeqWalkType,
-                    FieldType> typedef SeqWalkType;
+                    typename Operand2::SeqWalkType> typedef SeqWalkType;
 
              MinFcn(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -8253,14 +12725,10 @@
          }
 #     endif
       /* FIELD_EXPRESSION_THREADS */;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct MinFcn<SeqWalk, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct MinFcn<SeqWalk, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef EvalReturnType;
+          typename Operand1::value_type typedef value_type;
 
           MinFcn(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -8268,7 +12736,7 @@
 
           inline void next(void) { operand1_.next(); operand2_.next(); }
 
-          inline EvalReturnType eval(void) const {
+          inline value_type eval(void) const {
              return ((operand1_.eval() < operand2_.eval()) ? operand1_.eval() :
                      operand2_.eval());
           }
@@ -8279,14 +12747,10 @@
           Operand2 operand2_;
       };
 #     ifdef __CUDACC__
-         template<typename Operand1, typename Operand2, typename FieldType>
-          struct MinFcn<GPUWalk, Operand1, Operand2, FieldType> {
+         template<typename Operand1, typename Operand2>
+          struct MinFcn<GPUWalk, Operand1, Operand2> {
             public:
-             FieldType typedef field_type;
-
-             typename field_type::memory_window typedef MemoryWindow;
-
-             typename field_type::value_type typedef AtomicType;
+             typename Operand1::value_type typedef value_type;
 
              MinFcn(Operand1 const & operand1, Operand2 const & operand2)
              : operand1_(operand1), operand2_(operand2)
@@ -8304,7 +12768,7 @@
                 operand2_.next();
              }
 
-             __device__ inline AtomicType eval(void) const {
+             __device__ inline value_type eval(void) const {
                 return ((operand1_.eval() < operand2_.eval()) ? operand1_.eval()
                         : operand2_.eval());
              }
@@ -8316,14 +12780,10 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand1, typename Operand2, typename FieldType>
-       struct MinFcn<Reduction, Operand1, Operand2, FieldType> {
+      template<typename Operand1, typename Operand2>
+       struct MinFcn<Reduction, Operand1, Operand2> {
          public:
-          FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef EvalReturnType;
+          typename Operand1::value_type typedef value_type;
 
           MinFcn(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -8339,7 +12799,7 @@
              return (operand1_.has_length() || operand2_.has_length());
           }
 
-          inline EvalReturnType eval(void) const {
+          inline value_type eval(void) const {
              return ((operand1_.eval() < operand2_.eval()) ? operand1_.eval() :
                      operand2_.eval());
           }
@@ -8353,45 +12813,85 @@
       /* Scalar X Field */
       template<typename FieldType>
        inline NeboExpression<MinFcn<Initial,
-                                    NeboScalar<Initial, FieldType>,
+                                    NeboScalar<Initial,
+                                               typename FieldType::value_type>,
                                     NeboConstField<Initial,
                                                    typename NeboFieldCheck<typename
                                                                            FieldType::
                                                                            field_type,
                                                                            FieldType>::
-                                                   Result>,
-                                    FieldType>,
+                                                   Result> >,
                              FieldType> min(typename FieldType::value_type const
                                             & arg1,
                                             FieldType const & arg2) {
           MinFcn<Initial,
-                 NeboScalar<Initial, FieldType>,
-                 NeboConstField<Initial, FieldType>,
-                 FieldType> typedef ReturnType;
+                 NeboScalar<Initial, typename FieldType::value_type>,
+                 NeboConstField<Initial, FieldType> > typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
-          return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
+          return ReturnTerm(ReturnType(NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg1),
                                        NeboConstField<Initial, FieldType>(arg2)));
        }
 
       /* Scalar X SubExpr */
       template<typename SubExpr2, typename FieldType>
        inline NeboExpression<MinFcn<Initial,
-                                    NeboScalar<Initial, FieldType>,
-                                    SubExpr2,
-                                    FieldType>,
+                                    NeboScalar<Initial,
+                                               typename FieldType::value_type>,
+                                    SubExpr2>,
                              FieldType> min(typename FieldType::value_type const
                                             & arg1,
                                             NeboExpression<SubExpr2, FieldType>
                                             const & arg2) {
-          MinFcn<Initial, NeboScalar<Initial, FieldType>, SubExpr2, FieldType>
-          typedef ReturnType;
+          MinFcn<Initial,
+                 NeboScalar<Initial, typename FieldType::value_type>,
+                 SubExpr2> typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
-          return ReturnTerm(ReturnType(NeboScalar<Initial, FieldType>(arg1),
+          return ReturnTerm(ReturnType(NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg1),
                                        arg2.expr()));
+       }
+
+      /* Scalar X SingleValue */
+      template<typename T>
+       inline NeboSingleValueExpression<MinFcn<Initial,
+                                               NeboScalar<Initial, T>,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T> >,
+                                        T> min(T const & arg1,
+                                               SpatialOps::structured::
+                                               SpatialField<SpatialOps::
+                                                            structured::
+                                                            SingleValue,
+                                                            T> const & arg2) {
+          MinFcn<Initial,
+                 NeboScalar<Initial, T>,
+                 NeboConstSingleValueField<Initial, T> > typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboScalar<Initial, T>(arg1),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* Scalar X SingleValueExpr */
+      template<typename SubExpr2, typename T>
+       inline NeboSingleValueExpression<MinFcn<Initial,
+                                               NeboScalar<Initial, T>,
+                                               SubExpr2>,
+                                        T> min(T const & arg1,
+                                               NeboSingleValueExpression<SubExpr2,
+                                                                         T>
+                                               const & arg2) {
+          MinFcn<Initial, NeboScalar<Initial, T>, SubExpr2> typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboScalar<Initial, T>(arg1), arg2.expr()));
        }
 
       /* Field X Scalar */
@@ -8403,20 +12903,21 @@
                                                                            field_type,
                                                                            FieldType>::
                                                    Result>,
-                                    NeboScalar<Initial, FieldType>,
-                                    FieldType>,
+                                    NeboScalar<Initial,
+                                               typename FieldType::value_type> >,
                              FieldType> min(FieldType const & arg1,
                                             typename FieldType::value_type const
                                             & arg2) {
           MinFcn<Initial,
                  NeboConstField<Initial, FieldType>,
-                 NeboScalar<Initial, FieldType>,
-                 FieldType> typedef ReturnType;
+                 NeboScalar<Initial, typename FieldType::value_type> > typedef
+          ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
-                                       NeboScalar<Initial, FieldType>(arg2)));
+                                       NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg2)));
        }
 
       /* Field X Field */
@@ -8433,14 +12934,12 @@
                                                                            FieldType::
                                                                            field_type,
                                                                            FieldType>::
-                                                   Result>,
-                                    FieldType>,
+                                                   Result> >,
                              FieldType> min(FieldType const & arg1,
                                             FieldType const & arg2) {
           MinFcn<Initial,
                  NeboConstField<Initial, FieldType>,
-                 NeboConstField<Initial, FieldType>,
-                 FieldType> typedef ReturnType;
+                 NeboConstField<Initial, FieldType> > typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -8457,15 +12956,72 @@
                                                                            field_type,
                                                                            FieldType>::
                                                    Result>,
-                                    SubExpr2,
-                                    FieldType>,
+                                    SubExpr2>,
                              FieldType> min(FieldType const & arg1,
                                             NeboExpression<SubExpr2, FieldType>
                                             const & arg2) {
+          MinFcn<Initial, NeboConstField<Initial, FieldType>, SubExpr2> typedef
+          ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* Field X SingleValue */
+      template<typename FieldType>
+       inline NeboExpression<MinFcn<Initial,
+                                    NeboConstField<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result>,
+                                    NeboConstSingleValueField<Initial,
+                                                              typename FieldType::
+                                                              value_type> >,
+                             FieldType> min(FieldType const & arg1,
+                                            SpatialOps::structured::SpatialField<SpatialOps::
+                                                                                 structured::
+                                                                                 SingleValue,
+                                                                                 typename
+                                                                                 FieldType::
+                                                                                 value_type>
+                                            const & arg2) {
           MinFcn<Initial,
                  NeboConstField<Initial, FieldType>,
-                 SubExpr2,
-                 FieldType> typedef ReturnType;
+                 NeboConstSingleValueField<Initial,
+                                           typename FieldType::value_type> >
+          typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg1),
+                                       NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg2)));
+       }
+
+      /* Field X SingleValueExpr */
+      template<typename SubExpr2, typename FieldType>
+       inline NeboExpression<MinFcn<Initial,
+                                    NeboConstField<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result>,
+                                    SubExpr2>,
+                             FieldType> min(FieldType const & arg1,
+                                            NeboSingleValueExpression<SubExpr2,
+                                                                      typename
+                                                                      FieldType::
+                                                                      value_type>
+                                            const & arg2) {
+          MinFcn<Initial, NeboConstField<Initial, FieldType>, SubExpr2> typedef
+          ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -8477,19 +13033,22 @@
       template<typename SubExpr1, typename FieldType>
        inline NeboExpression<MinFcn<Initial,
                                     SubExpr1,
-                                    NeboScalar<Initial, FieldType>,
-                                    FieldType>,
+                                    NeboScalar<Initial,
+                                               typename FieldType::value_type> >,
                              FieldType> min(NeboExpression<SubExpr1, FieldType>
                                             const & arg1,
                                             typename FieldType::value_type const
                                             & arg2) {
-          MinFcn<Initial, SubExpr1, NeboScalar<Initial, FieldType>, FieldType>
-          typedef ReturnType;
+          MinFcn<Initial,
+                 SubExpr1,
+                 NeboScalar<Initial, typename FieldType::value_type> > typedef
+          ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg1.expr(),
-                                       NeboScalar<Initial, FieldType>(arg2)));
+                                       NeboScalar<Initial,
+                                                  typename FieldType::value_type>(arg2)));
        }
 
       /* SubExpr X Field */
@@ -8501,15 +13060,12 @@
                                                                            FieldType::
                                                                            field_type,
                                                                            FieldType>::
-                                                   Result>,
-                                    FieldType>,
+                                                   Result> >,
                              FieldType> min(NeboExpression<SubExpr1, FieldType>
                                             const & arg1,
                                             FieldType const & arg2) {
-          MinFcn<Initial,
-                 SubExpr1,
-                 NeboConstField<Initial, FieldType>,
-                 FieldType> typedef ReturnType;
+          MinFcn<Initial, SubExpr1, NeboConstField<Initial, FieldType> > typedef
+          ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
 
@@ -8519,14 +13075,304 @@
 
       /* SubExpr X SubExpr */
       template<typename SubExpr1, typename SubExpr2, typename FieldType>
-       inline NeboExpression<MinFcn<Initial, SubExpr1, SubExpr2, FieldType>,
+       inline NeboExpression<MinFcn<Initial, SubExpr1, SubExpr2>, FieldType> min(NeboExpression<SubExpr1,
+                                                                                                FieldType>
+                                                                                 const
+                                                                                 &
+                                                                                 arg1,
+                                                                                 NeboExpression<SubExpr2,
+                                                                                                FieldType>
+                                                                                 const
+                                                                                 &
+                                                                                 arg2) {
+          MinFcn<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SubExpr X SingleValue */
+      template<typename SubExpr1, typename FieldType>
+       inline NeboExpression<MinFcn<Initial,
+                                    SubExpr1,
+                                    NeboConstSingleValueField<Initial,
+                                                              typename FieldType::
+                                                              value_type> >,
                              FieldType> min(NeboExpression<SubExpr1, FieldType>
+                                            const & arg1,
+                                            SpatialOps::structured::SpatialField<SpatialOps::
+                                                                                 structured::
+                                                                                 SingleValue,
+                                                                                 typename
+                                                                                 FieldType::
+                                                                                 value_type>
+                                            const & arg2) {
+          MinFcn<Initial,
+                 SubExpr1,
+                 NeboConstSingleValueField<Initial,
+                                           typename FieldType::value_type> >
+          typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg2)));
+       }
+
+      /* SubExpr X SingleValueExpr */
+      template<typename SubExpr1, typename SubExpr2, typename FieldType>
+       inline NeboExpression<MinFcn<Initial, SubExpr1, SubExpr2>, FieldType> min(NeboExpression<SubExpr1,
+                                                                                                FieldType>
+                                                                                 const
+                                                                                 &
+                                                                                 arg1,
+                                                                                 NeboSingleValueExpression<SubExpr2,
+                                                                                                           typename
+                                                                                                           FieldType::
+                                                                                                           value_type>
+                                                                                 const
+                                                                                 &
+                                                                                 arg2) {
+          MinFcn<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SingleValue X Scalar */
+      template<typename T>
+       inline NeboSingleValueExpression<MinFcn<Initial,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T>,
+                                               NeboScalar<Initial, T> >,
+                                        T> min(SpatialOps::structured::
+                                               SpatialField<SpatialOps::
+                                                            structured::
+                                                            SingleValue,
+                                                            T> const & arg1,
+                                               T const & arg2) {
+          MinFcn<Initial,
+                 NeboConstSingleValueField<Initial, T>,
+                 NeboScalar<Initial, T> > typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       NeboScalar<Initial, T>(arg2)));
+       }
+
+      /* SingleValue X Field */
+      template<typename FieldType>
+       inline NeboExpression<MinFcn<Initial,
+                                    NeboConstSingleValueField<Initial,
+                                                              typename FieldType::
+                                                              value_type>,
+                                    NeboConstField<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result> >,
+                             FieldType> min(SpatialOps::structured::SpatialField<SpatialOps::
+                                                                                 structured::
+                                                                                 SingleValue,
+                                                                                 typename
+                                                                                 FieldType::
+                                                                                 value_type>
+                                            const & arg1,
+                                            FieldType const & arg2) {
+          MinFcn<Initial,
+                 NeboConstSingleValueField<Initial,
+                                           typename FieldType::value_type>,
+                 NeboConstField<Initial, FieldType> > typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg1),
+                                       NeboConstField<Initial, FieldType>(arg2)));
+       }
+
+      /* SingleValue X SubExpr */
+      template<typename SubExpr2, typename FieldType>
+       inline NeboExpression<MinFcn<Initial,
+                                    NeboConstSingleValueField<Initial,
+                                                              typename FieldType::
+                                                              value_type>,
+                                    SubExpr2>,
+                             FieldType> min(SpatialOps::structured::SpatialField<SpatialOps::
+                                                                                 structured::
+                                                                                 SingleValue,
+                                                                                 typename
+                                                                                 FieldType::
+                                                                                 value_type>
                                             const & arg1,
                                             NeboExpression<SubExpr2, FieldType>
                                             const & arg2) {
-          MinFcn<Initial, SubExpr1, SubExpr2, FieldType> typedef ReturnType;
+          MinFcn<Initial,
+                 NeboConstSingleValueField<Initial,
+                                           typename FieldType::value_type>,
+                 SubExpr2> typedef ReturnType;
 
           NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial,
+                                                                 typename
+                                                                 FieldType::
+                                                                 value_type>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* SingleValue X SingleValue */
+      template<typename T>
+       inline NeboSingleValueExpression<MinFcn<Initial,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T>,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T> >,
+                                        T> min(SpatialOps::structured::
+                                               SpatialField<SpatialOps::
+                                                            structured::
+                                                            SingleValue,
+                                                            T> const & arg1,
+                                               SpatialOps::structured::
+                                               SpatialField<SpatialOps::
+                                                            structured::
+                                                            SingleValue,
+                                                            T> const & arg2) {
+          MinFcn<Initial,
+                 NeboConstSingleValueField<Initial, T>,
+                 NeboConstSingleValueField<Initial, T> > typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* SingleValue X SingleValueExpr */
+      template<typename SubExpr2, typename T>
+       inline NeboSingleValueExpression<MinFcn<Initial,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T>,
+                                               SubExpr2>,
+                                        T> min(SpatialOps::structured::
+                                               SpatialField<SpatialOps::
+                                                            structured::
+                                                            SingleValue,
+                                                            T> const & arg1,
+                                               NeboSingleValueExpression<SubExpr2,
+                                                                         T>
+                                               const & arg2) {
+          MinFcn<Initial, NeboConstSingleValueField<Initial, T>, SubExpr2>
+          typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg1),
+                                       arg2.expr()));
+       }
+
+      /* SingleValueExpr X Scalar */
+      template<typename SubExpr1, typename T>
+       inline NeboSingleValueExpression<MinFcn<Initial,
+                                               SubExpr1,
+                                               NeboScalar<Initial, T> >,
+                                        T> min(NeboSingleValueExpression<SubExpr1,
+                                                                         T>
+                                               const & arg1,
+                                               T const & arg2) {
+          MinFcn<Initial, SubExpr1, NeboScalar<Initial, T> > typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), NeboScalar<Initial, T>(arg2)));
+       }
+
+      /* SingleValueExpr X Field */
+      template<typename SubExpr1, typename FieldType>
+       inline NeboExpression<MinFcn<Initial,
+                                    SubExpr1,
+                                    NeboConstField<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result> >,
+                             FieldType> min(NeboSingleValueExpression<SubExpr1,
+                                                                      typename
+                                                                      FieldType::
+                                                                      value_type>
+                                            const & arg1,
+                                            FieldType const & arg2) {
+          MinFcn<Initial, SubExpr1, NeboConstField<Initial, FieldType> > typedef
+          ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstField<Initial, FieldType>(arg2)));
+       }
+
+      /* SingleValueExpr X SubExpr */
+      template<typename SubExpr1, typename SubExpr2, typename FieldType>
+       inline NeboExpression<MinFcn<Initial, SubExpr1, SubExpr2>, FieldType> min(NeboSingleValueExpression<SubExpr1,
+                                                                                                           typename
+                                                                                                           FieldType::
+                                                                                                           value_type>
+                                                                                 const
+                                                                                 &
+                                                                                 arg1,
+                                                                                 NeboExpression<SubExpr2,
+                                                                                                FieldType>
+                                                                                 const
+                                                                                 &
+                                                                                 arg2) {
+          MinFcn<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SingleValueExpr X SingleValue */
+      template<typename SubExpr1, typename T>
+       inline NeboSingleValueExpression<MinFcn<Initial,
+                                               SubExpr1,
+                                               NeboConstSingleValueField<Initial,
+                                                                         T> >,
+                                        T> min(NeboSingleValueExpression<SubExpr1,
+                                                                         T>
+                                               const & arg1,
+                                               SpatialOps::structured::
+                                               SpatialField<SpatialOps::
+                                                            structured::
+                                                            SingleValue,
+                                                            T> const & arg2) {
+          MinFcn<Initial, SubExpr1, NeboConstSingleValueField<Initial, T> >
+          typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(),
+                                       NeboConstSingleValueField<Initial, T>(arg2)));
+       }
+
+      /* SingleValueExpr X SingleValueExpr */
+      template<typename SubExpr1, typename SubExpr2, typename T>
+       inline NeboSingleValueExpression<MinFcn<Initial, SubExpr1, SubExpr2>, T>
+       min(NeboSingleValueExpression<SubExpr1, T> const & arg1,
+           NeboSingleValueExpression<SubExpr2, T> const & arg2) {
+          MinFcn<Initial, SubExpr1, SubExpr2> typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
        };

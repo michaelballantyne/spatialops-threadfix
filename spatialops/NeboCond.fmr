@@ -121,7 +121,7 @@
                                          public)))
 
 (define FT-test (tpl-pmtr (scope (tpl-use 'NeboFieldCheck
-                                          (tpl-pmtr (scope FT-chunk 'field_type))
+                                          (tpl-pmtr (scope FT-chunk ft-chunk))
                                           FT-chunk)
                                  'Result)))
 
@@ -201,8 +201,8 @@
   (list 'bool
         null
         (adc 'bool 'b)
-        (lambda (FT-use) (tpl-use NB-chunk 'Initial FT-use))
-        (typedef (tpl-use NB-chunk 'Initial FT-chunk)
+        (lambda (FT-use) (tpl-use NS-chunk 'Initial 'bool))
+        (typedef (tpl-use NS-chunk 'Initial 'bool)
                  'Boolean)
         'Boolean
         'b
@@ -239,8 +239,8 @@
         null
         (adc 'double 'd)
         (lambda (FT-use add-space) ((if add-space cs identity)
-                                    (tpl-use NS-chunk 'Initial FT-use)))
-        (typedef (tpl-use NS-chunk 'Initial FT-chunk)
+                                    (tpl-use NS-chunk 'Initial (tpl-pmtr (scope FT-chunk vt-chunk)))))
+        (typedef (tpl-use NS-chunk 'Initial (tpl-pmtr (scope FT-chunk vt-chunk)))
                  'Scalar)
         'Scalar
         'd
@@ -431,6 +431,7 @@
                                null))
 
    (build-struct Clause-chunk
+                 std-FT
                  null
                  (list 'Test 'Expr)
                  (bs-Initial-rhs null
@@ -472,9 +473,7 @@
                                 null
                                 (list (sadc 'Test 'test_)
                                       (sadc 'Expr 'expr_)))
-                 (bs-SeqWalk-rhs (s-typedef (scope (tpl-pmtr FT-chunk)
-                                                   'value_type)
-                                            'AtomicType)
+                 (bs-SeqWalk-rhs null
                                  (bm-constructor (list (adcr 'Test 'test)
                                                        (adcr 'Expr 'expr))
                                                  (list (cons-asgn 'test_ 'test)
@@ -482,7 +481,7 @@
                                                  null)
                                  (ccs (mfc 'test_ 'next)
                                       (mfc 'expr_ 'next))
-                                 'AtomicType
+                                 vt-chunk
                                  (mfc 'expr_ 'eval)
                                  (r-fcn-def (constize (fcn-dcl 'check 'bool))
                                             null
@@ -499,15 +498,14 @@
                                   (mfc 'expr_ 'start 'x 'y))
                              (ccs (mfc 'test_ 'next)
                                   (mfc 'expr_ 'next))
+                             vt-chunk
                              (mfc 'expr_ 'eval)
                              (device-use (r-fcn-def (constize (fcn-dcl 'check 'bool))
                                                     null
                                                     (mfc 'test_ 'eval)))
                              (list (sad 'Test 'test_)
                                    (sad 'Expr 'expr_)))
-                 (bs-Reduction (s-typedef (scope (tpl-pmtr FT-chunk)
-                                                 'value_type)
-                                          'AtomicType)
+                 (bs-Reduction null
                                (bm-constructor (list (adcr 'Test 'test)
                                                      (adcr 'Expr 'expr))
                                                (list (cons-asgn 'test_ 'test)
@@ -519,7 +517,7 @@
                                           (mfc 'expr_ 'at_end)))
                                (par (n-or (mfc 'test_ 'has_length)
                                           (mfc 'expr_ 'has_length)))
-                               'AtomicType
+                               vt-chunk
                                (mfc 'expr_ 'eval)
                                (r-fcn-def (constize (fcn-dcl 'check 'bool))
                                           null
@@ -528,6 +526,7 @@
                                      (sad 'Expr 'expr_))))
 
    (build-struct Cond-chunk
+                 std-FT
                  null
                  (list CT-chunk 'Otherwise)
                  (bs-Initial-rhs null
@@ -574,9 +573,7 @@
                                 null
                                 (list (sadc CT-chunk 'clause_)
                                       (sadc 'Otherwise 'otherwise_)))
-                 (bs-SeqWalk-rhs (s-typedef (scope (tpl-pmtr FT-chunk)
-                                                   'value_type)
-                                            'AtomicType)
+                 (bs-SeqWalk-rhs null
                                  (bm-constructor (list (adcr CT-chunk 'clause)
                                                        (adcr 'Otherwise 'otherwise))
                                                  (list (cons-asgn 'clause_ 'clause)
@@ -584,7 +581,7 @@
                                                  null)
                                  (ccs (mfc 'clause_ 'next)
                                       (mfc 'otherwise_ 'next))
-                                 'AtomicType
+                                 vt-chunk
                                  (ter-cond (mfc 'clause_ 'check)
                                            (mfc 'clause_ 'eval)
                                            (mfc 'otherwise_ 'eval))
@@ -601,15 +598,14 @@
                                   (mfc 'otherwise_ 'start 'x 'y))
                              (ccs (mfc 'clause_ 'next)
                                   (mfc 'otherwise_ 'next))
+                             vt-chunk
                              (ter-cond (mfc 'clause_ 'check)
                                        (mfc 'clause_ 'eval)
                                        (mfc 'otherwise_ 'eval))
                              null
                              (list (sad CT-chunk 'clause_)
                                    (sad 'Otherwise 'otherwise_)))
-                 (bs-Reduction (s-typedef (scope (tpl-pmtr FT-chunk)
-                                                 'value_type)
-                                          'AtomicType)
+                 (bs-Reduction null
                                (bm-constructor (list (adcr CT-chunk 'clause)
                                                      (adcr 'Otherwise 'otherwise))
                                                (list (cons-asgn 'clause_ 'clause)
@@ -621,7 +617,7 @@
                                           (mfc 'otherwise_ 'at_end)))
                                (par (n-or (mfc 'clause_ 'has_length)
                                           (mfc 'otherwise_ 'has_length)))
-                               'AtomicType
+                               vt-chunk
                                (ter-cond (mfc 'clause_ 'check)
                                          (mfc 'clause_ 'eval)
                                          (mfc 'otherwise_ 'eval))
@@ -644,9 +640,9 @@
                      (s-tpl-srt-def 'Convert
                                     (tpl-pmtr FT-chunk)
                                     null
-                                    (s-typedef (tpl-use NB-chunk 'Initial FT-chunk)
+                                    (s-typedef (tpl-use NS-chunk 'Initial 'bool)
                                                'Boolean)
-                                    (s-typedef (tpl-use NS-chunk 'Initial FT-chunk)
+                                    (s-typedef (tpl-use NS-chunk 'Initial (tpl-pmtr (scope FT-chunk vt-chunk)))
                                                'Scalar)
                                     (s-typedef (tpl-use Clause-chunk 'Initial 'Boolean 'Scalar FT-chunk)
                                                'Converted)

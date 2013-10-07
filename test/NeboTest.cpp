@@ -31,25 +31,33 @@ using std::endl;
             };                                                  \
         };                                                      \
     }
+
 #define RUNTEST(NEBOEXPR, EXPR, MESSAGE)                        \
     {                                                           \
         test <<= NEBOEXPR;                                      \
         MANUAL(EXPR);                                           \
-        status(field_equal(ref, test, 0.0), MESSAGE);            \
+        status(field_equal(ref, test, 0.0), MESSAGE);           \
+    }                                                           \
+
+#define RUNSVTEST(NEBOEXPR, EXPR, MESSAGE)                      \
+    {                                                           \
+        SVtest <<= NEBOEXPR;                                    \
+        SVref[0] = EXPR;                                        \
+        status(field_equal(SVref, SVtest, 0.0), MESSAGE);       \
     }                                                           \
 
 #define RUNTESTULP(NEBOEXPR, EXPR, MESSAGE, ULPS)               \
     {                                                           \
         test <<= NEBOEXPR;                                      \
         MANUAL(EXPR);                                           \
-        status(field_equal_ulp(ref, test, ULPS), MESSAGE);       \
+        status(field_equal_ulp(ref, test, ULPS), MESSAGE);      \
     }                                                           \
 
 #define RUNTESTIGNORENANULP(NEBOEXPR, EXPR, MESSAGE, ULPS)      \
     {                                                           \
         test <<= cond(NEBOEXPR != NEBOEXPR, 0.0)(NEBOEXPR);     \
         MANUAL(EXPR != EXPR ? 0.0 : EXPR);                      \
-        status(field_equal_ulp(ref, test, ULPS), MESSAGE);       \
+        status(field_equal_ulp(ref, test, ULPS), MESSAGE);      \
     }                                                           \
 
 #define RUN_BINARY_OP_TEST(OP, TESTTYPE)                                                                            \
@@ -65,6 +73,13 @@ using std::endl;
                 TESTTYPE" (SubExpr x SubExpr) test");                                                               \
         RUNTEST(50.3 OP (input2 OP input3), 50.3 OP (INPUT2 OP INPUT3), TESTTYPE" (Scalar x SubExpr) test");        \
         RUNTEST((input1 OP input2) OP 4.7, (INPUT1 OP INPUT2) OP 4.7, TESTTYPE" (SubExpr x Scalar) test");          \
+                                                                                                                    \
+        RUNTEST(SVinput1 OP 4.7, SVinput1[0] OP 4.7, TESTTYPE" (SVField x Scalar) test");                           \
+        RUNTEST(SVinput1 OP input1, SVinput1[0] OP INPUT1, TESTTYPE" (SVField x Field) test");                      \
+        RUNTEST(SVinput1 OP SVinput2, SVinput1[0] OP SVinput2[0], TESTTYPE" (SVField x SVField) test");             \
+                                                                                                                    \
+        RUNSVTEST(SVinput1 OP 4.7, SVinput1[0] OP 4.7, TESTTYPE" (SVField x Scalar) -> SVField test");              \
+        RUNSVTEST(SVinput1 OP SVinput2, SVinput1[0] OP SVinput2[0], TESTTYPE" (SVField x SVField) -> SVField test"); \
     }                                                                                                               \
 
 #define INPUT1 input1(ii, jj, kk)
@@ -106,11 +121,15 @@ int main( int iarg, char* carg[] )
     }
 
     typedef SVolField Field;
+    typedef SingleValueField Field2;
 
     const int nghost = 1;
     const GhostData ghost(nghost);
+    const GhostData SVghost(0);
     const BoundaryCellInfo bcinfo = BoundaryCellInfo::build<Field>(bcplus[0],bcplus[1],bcplus[2]);
+    const BoundaryCellInfo SVbcinfo = BoundaryCellInfo::build<Field>(false,false,false);
     const MemoryWindow window( get_window_with_ghost(IntVec(nx,ny,nz),ghost,bcinfo) );
+    const MemoryWindow SVwindow( get_window_with_ghost(IntVec(1,1,1),SVghost,SVbcinfo) );
 
     Field input1( window, bcinfo, ghost, NULL );
     Field input2( window, bcinfo, ghost, NULL );
@@ -119,6 +138,13 @@ int main( int iarg, char* carg[] )
     Field   test( window, bcinfo, ghost, NULL );
     Field    ref( window, bcinfo, ghost, NULL );
 
+    Field2 SVinput1( SVwindow, SVbcinfo, SVghost, NULL );
+    Field2 SVinput2( SVwindow, SVbcinfo, SVghost, NULL );
+    Field2 SVinput3( SVwindow, SVbcinfo, SVghost, NULL );
+    Field2 SVinput4( SVwindow, SVbcinfo, SVghost, NULL );
+    Field2   SVtest( SVwindow, SVbcinfo, SVghost, NULL );
+    Field2    SVref( SVwindow, SVbcinfo, SVghost, NULL );
+
     const int total = nx * ny * nz;
 
     initialize_field(input1, 0.0);
@@ -126,9 +152,17 @@ int main( int iarg, char* carg[] )
     initialize_field(input3, 2 * total);
     initialize_field(input4, 3 * total);
 
+    initialize_field(SVinput1, 0.0);
+    initialize_field(SVinput2, total);
+    initialize_field(SVinput3, 2 * total);
+    initialize_field(SVinput4, 3 * total);
+
     TestHelper status(true);
 
     RUNTEST(0.0, 0.0, "scalar assignment test"); cout << "\n";
+
+    RUNTEST(SVinput1, SVinput1[0], "SingleValue assignment test"); cout << "\n";
+    RUNSVTEST(SVinput1, SVinput1[0], "SingleValue -> SingleValue assignment test"); cout << "\n";
 
     RUN_BINARY_OP_TEST(+, "summation"); cout << "\n";
     RUN_BINARY_OP_TEST(-, "difference"); cout << "\n";

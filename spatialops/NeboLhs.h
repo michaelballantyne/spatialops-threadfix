@@ -41,8 +41,6 @@
          public:
           FieldType typedef field_type;
 
-          typename field_type::memory_window typedef MemoryWindow;
-
           NeboField<SeqWalk, FieldType> typedef SeqWalkType;
 
 #         ifdef FIELD_EXPRESSION_THREADS
@@ -364,8 +362,6 @@
             public:
              FieldType typedef field_type;
 
-             typename field_type::memory_window typedef MemoryWindow;
-
              NeboField<SeqWalk, FieldType> typedef SeqWalkType;
 
              NeboField(FieldType f)
@@ -406,9 +402,7 @@
          public:
           FieldType typedef field_type;
 
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef AtomicType;
+          typename field_type::value_type typedef value_type;
 
           NeboField(FieldType f)
           : iter_(f.begin()), end_(f.end())
@@ -426,7 +420,7 @@
 
           inline bool has_length(void) const { return true; }
 
-          inline AtomicType & ref(void) { return *iter_; }
+          inline value_type & ref(void) { return *iter_; }
 
           typename FieldType::iterator iter_;
 
@@ -438,9 +432,7 @@
             public:
              FieldType typedef field_type;
 
-             typename field_type::memory_window typedef MemoryWindow;
-
-             typename field_type::value_type typedef AtomicType;
+             typename field_type::value_type typedef value_type;
 
              NeboField(FieldType f)
              : current_(f.field_values(EXTERNAL_CUDA_GPU, f.device_index()) + f.window_with_ghost().offset(0)
@@ -494,9 +486,9 @@
                 return location_ >= zExtent_;
              }
 
-             __device__ inline AtomicType & ref(void) { return *current_; }
+             __device__ inline value_type & ref(void) { return *current_; }
 
-             AtomicType * current_;
+             value_type * current_;
 
              int location_;
 

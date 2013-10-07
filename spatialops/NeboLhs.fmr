@@ -112,9 +112,9 @@
                                                                      gpu-test-assign-body
                                                                      (bs 'CUDA 'with 'Nebo 'copying)))))
                                 privates))))
-                (list 7 1 11 0)
+                (list 8 1 11 0)
                 "build-Initial-lhs"))
-(define bs-Initial-lhs (arg-swap build-Initial-lhs 16 3 "bs-Initial-lhs"))
+(define bs-Initial-lhs (arg-swap build-Initial-lhs 16 4 "bs-Initial-lhs"))
 (define build-Resize-lhs
   (combine-args build-Resize-general
                 (list (lambda (assign-body
@@ -138,9 +138,9 @@
                                          null
                                          (fc 'SeqWalkType SW-cons-args))
                               privates)))
-                (list 6 2 2 0)
+                (list 7 2 2 0)
                 "build-Resize-lhs"))
-(define bs-Resize-lhs (arg-swap build-Resize-lhs 7 3 "bs-Resize-lhs"))
+(define bs-Resize-lhs (arg-swap build-Resize-lhs 7 4 "bs-Resize-lhs"))
 (define build-SeqWalk-lhs
   (combine-args build-SeqWalk-general
                 (list (lambda (assign-body
@@ -162,13 +162,13 @@
                               (r-fcn-def (constize (fcn-dcl 'has_length 'bool))
                                          null
                                          has-length-body)
-                              (r-fcn-def (fcn-dcl 'ref (ref 'AtomicType))
+                              (r-fcn-def (fcn-dcl 'ref (ref vt-chunk))
                                          null
                                          ref-result)
                               privates)))
-                (list 5 2 5 0)
+                (list 6 2 5 0)
                 "build-SeqWalk-lhs"))
-(define bs-SeqWalk-lhs (arg-swap build-SeqWalk-lhs 9 3 "bs-SeqWalk-lhs"))
+(define bs-SeqWalk-lhs (arg-swap build-SeqWalk-lhs 9 4 "bs-SeqWalk-lhs"))
 (define build-gpu-lhs
   (combine-args build-gpu-general
                 (list (lambda (assign-body
@@ -201,13 +201,13 @@
                               (device-use (r-fcn-def (fcn-dcl 'at_end 'bool)
                                                      null
                                                      at-end-result))
-                              (device-use (r-fcn-def (fcn-dcl 'ref (ref 'AtomicType))
+                              (device-use (r-fcn-def (fcn-dcl 'ref (ref vt-chunk))
                                                      null
                                                      ref-result))
                               privates)))
-                (list 5 2 6 0)
+                (list 6 2 6 0)
                 "build-gpu-lhs"))
-(define bs-gpu-lhs (arg-swap build-gpu-lhs 10 3 "bs-gpu-lhs"))
+(define bs-gpu-lhs (arg-swap build-gpu-lhs 10 4 "bs-gpu-lhs"))
 
                                         ; beginnning of file
 (n 'SpatialOps
@@ -219,6 +219,7 @@
                                (mfc 'lhs 'assign 'rhs))))
 
    (build-struct NF-chunk
+                 std-FT
                  null
                  null
                  (let ([calculate-Ghost (list (nt= GhostData 'rhs_ghosts (fc 'calculate_valid_ghost
@@ -377,9 +378,7 @@
                                          'location)
                                     'field_)
                                 (sad FT-chunk 'field_))
-                 (bs-SeqWalk-lhs (s-typedef (scope (tpl-pmtr FT-chunk)
-                                                   'value_type)
-                                            'AtomicType)
+                 (bs-SeqWalk-lhs null
                                  (bm-constructor (ad FT-chunk 'f)
                                                  (list (cons-asgn 'iter_ (mfc 'f 'begin))
                                                        (cons-asgn 'end_ (mfc 'f 'end)))
@@ -454,7 +453,7 @@
                                     (n++ 'location_))
                               (n>= 'location_ 'zExtent_)
                               (l '* 'current_)
-                              (list (sadp 'AtomicType 'current_)
+                              (list (sadp vt-chunk 'current_)
                                     (sad 'int 'location_)
                                     (sad 'int 'valid_)
                                     (sadc 'int 'xLength_)

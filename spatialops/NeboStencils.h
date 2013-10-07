@@ -171,19 +171,18 @@
 
           template<typename ArgPreSeqWalk, typename DestType>
            struct ConstructExpr {
-             NeboScalar<SeqWalk, DestType> typedef Coef;
+             NeboScalar<SeqWalk, typename DestType::value_type> typedef Coef;
 
              typename ArgPreSeqWalk::SeqWalkType typedef Arg;
 
-             ProdOp<SeqWalk, Arg, Coef, DestType> typedef MultiplyType;
+             ProdOp<SeqWalk, Arg, Coef> typedef MultiplyType;
 
              typename Collection::template ConstructExpr<ArgPreSeqWalk, DestType>
              typedef EarlierPointsType;
 
              typename EarlierPointsType::Result typedef EarlierPointsResult;
 
-             SumOp<SeqWalk, EarlierPointsResult, MultiplyType, DestType> typedef
-             Result;
+             SumOp<SeqWalk, EarlierPointsResult, MultiplyType> typedef Result;
 
              static inline Result const in_sq_construct(structured::IntVec const
                                                         & minus,
@@ -231,11 +230,11 @@
 #         ifdef __CUDACC__
              template<typename ArgPreGPUWalk, typename DestType>
               struct ConstructGPUExpr {
-                NeboScalar<GPUWalk, DestType> typedef Coef;
+                NeboScalar<GPUWalk, typename DestType::value_type> typedef Coef;
 
                 typename ArgPreGPUWalk::GPUWalkType typedef Arg;
 
-                ProdOp<GPUWalk, Arg, Coef, DestType> typedef MultiplyType;
+                ProdOp<GPUWalk, Arg, Coef> typedef MultiplyType;
 
                 typename Collection::template ConstructGPUExpr<ArgPreGPUWalk,
                                                                DestType> typedef
@@ -243,8 +242,8 @@
 
                 typename EarlierPointsType::Result typedef EarlierPointsResult;
 
-                SumOp<GPUWalk, EarlierPointsResult, MultiplyType, DestType>
-                typedef Result;
+                SumOp<GPUWalk, EarlierPointsResult, MultiplyType> typedef Result
+                ;
 
                 static inline Result const in_gpu_construct(structured::IntVec
                                                             const & minus,
@@ -277,11 +276,11 @@
 
           template<typename ArgPreReduction, typename DestType>
            struct ConstructReductionExpr {
-             NeboScalar<Reduction, DestType> typedef Coef;
+             NeboScalar<Reduction, typename DestType::value_type> typedef Coef;
 
              typename ArgPreReduction::ReductionType typedef Arg;
 
-             ProdOp<Reduction, Arg, Coef, DestType> typedef MultiplyType;
+             ProdOp<Reduction, Arg, Coef> typedef MultiplyType;
 
              typename Collection::template ConstructReductionExpr<ArgPreReduction,
                                                                   DestType>
@@ -289,8 +288,7 @@
 
              typename EarlierPointsType::Result typedef EarlierPointsResult;
 
-             SumOp<Reduction, EarlierPointsResult, MultiplyType, DestType>
-             typedef Result;
+             SumOp<Reduction, EarlierPointsResult, MultiplyType> typedef Result;
 
              static inline Result const in_rd_construct(structured::IntVec const
                                                         & minus,
@@ -354,11 +352,11 @@
 
           template<typename ArgPreSeqWalk, typename DestType>
            struct ConstructExpr {
-             NeboScalar<SeqWalk, DestType> typedef Coef;
+             NeboScalar<SeqWalk, typename DestType::value_type> typedef Coef;
 
              typename ArgPreSeqWalk::SeqWalkType typedef Arg;
 
-             ProdOp<SeqWalk, Arg, Coef, DestType> typedef Result;
+             ProdOp<SeqWalk, Arg, Coef> typedef Result;
 
              static inline Result const in_sq_construct(structured::IntVec const
                                                         & minus,
@@ -392,11 +390,11 @@
 #         ifdef __CUDACC__
              template<typename ArgPreGPUWalk, typename DestType>
               struct ConstructGPUExpr {
-                NeboScalar<GPUWalk, DestType> typedef Coef;
+                NeboScalar<GPUWalk, typename DestType::value_type> typedef Coef;
 
                 typename ArgPreGPUWalk::GPUWalkType typedef Arg;
 
-                ProdOp<GPUWalk, Arg, Coef, DestType> typedef Result;
+                ProdOp<GPUWalk, Arg, Coef> typedef Result;
 
                 static inline Result const in_gpu_construct(structured::IntVec
                                                             const & minus,
@@ -422,11 +420,11 @@
 
           template<typename ArgPreReduction, typename DestType>
            struct ConstructReductionExpr {
-             NeboScalar<Reduction, DestType> typedef Coef;
+             NeboScalar<Reduction, typename DestType::value_type> typedef Coef;
 
              typename ArgPreReduction::ReductionType typedef Arg;
 
-             ProdOp<Reduction, Arg, Coef, DestType> typedef Result;
+             ProdOp<Reduction, Arg, Coef> typedef Result;
 
              static inline Result const in_rd_construct(structured::IntVec const
                                                         & minus,
@@ -490,8 +488,6 @@
        struct NeboStencil<Initial, Pts, Arg, FieldType> {
          public:
           FieldType typedef field_type;
-
-          typename field_type::memory_window typedef MemoryWindow;
 
           NeboStencilCoefCollection<Pts::length> typedef Coefs;
 
@@ -605,8 +601,6 @@
             public:
              FieldType typedef field_type;
 
-             typename field_type::memory_window typedef MemoryWindow;
-
              NeboStencilCoefCollection<Pts::length> typedef Coefs;
 
              typename Pts::template ConstructExpr<Arg, FieldType> typedef
@@ -643,9 +637,7 @@
          public:
           FieldType typedef field_type;
 
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef AtomicType;
+          typename field_type::value_type typedef value_type;
 
           NeboStencil(Arg const & arg)
           : arg_(arg)
@@ -653,7 +645,7 @@
 
           inline void next(void) { arg_.next(); }
 
-          inline AtomicType eval(void) const { return arg_.eval(); }
+          inline value_type eval(void) const { return arg_.eval(); }
 
          private:
           Arg arg_;
@@ -664,9 +656,7 @@
             public:
              FieldType typedef field_type;
 
-             typename field_type::memory_window typedef MemoryWindow;
-
-             typename field_type::value_type typedef AtomicType;
+             typename field_type::value_type typedef value_type;
 
              NeboStencil(Arg const & a)
              : arg_(a)
@@ -676,7 +666,7 @@
 
              __device__ inline void next(void) { arg_.next(); }
 
-             __device__ inline AtomicType eval(void) const {
+             __device__ inline value_type eval(void) const {
                 return arg_.eval();
              }
 
@@ -690,9 +680,7 @@
          public:
           FieldType typedef field_type;
 
-          typename field_type::memory_window typedef MemoryWindow;
-
-          typename FieldType::value_type typedef AtomicType;
+          typename field_type::value_type typedef value_type;
 
           NeboStencil(Arg const & arg)
           : arg_(arg)
@@ -704,7 +692,7 @@
 
           inline bool has_length(void) const { return arg_.has_length(); }
 
-          inline AtomicType eval(void) const { return arg_.eval(); }
+          inline value_type eval(void) const { return arg_.eval(); }
 
          private:
           Arg arg_;

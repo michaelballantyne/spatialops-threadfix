@@ -25,6 +25,7 @@
                    'spatialops/structured/IndexTriplet.h
                    'spatialops/structured/GhostData.h
                    'spatialops/structured/SpatialField.h
+                   'spatialops/structured/FVStaggeredFieldTypes.h
                    'cmath
                    'math.h)
 
@@ -171,12 +172,12 @@
             'result)
 
  (let ([build-expression-type
-        (lambda (name)
+        (lambda (name tpl-arg type)
           (tpl-srt-def name
                        (list (tpl-pmtr 'Operand)
-                             (tpl-pmtr FT-chunk))
+                             (tpl-pmtr tpl-arg))
                        null
-                       (pub-sec (s-typedef FT-chunk 'field_type)
+                       (pub-sec (s-typedef type ft-chunk)
                                 (s-typedef 'Operand 'Expression)
                                 (constructor-chunk name
                                                    (adcr 'Operand 'given)
@@ -186,8 +187,10 @@
                                            null
                                            'expr_))
                        (priv-sec (sbs 'Operand 'expr_))))])
-   (list (build-expression-type NE-chunk)
-         (build-expression-type NBE-chunk)))
+   (list (build-expression-type NE-chunk FT-chunk FT-chunk)
+         (build-expression-type NSVE-chunk 'T SVFT-def-chunk)
+         (build-expression-type NBE-chunk FT-chunk FT-chunk)
+         (build-expression-type NBSVE-chunk 'T SVFT-def-chunk)))
 
  (let ([build-mode-def (lambda (name) (struct-declare-chunk name))])
    (d 'Modes:

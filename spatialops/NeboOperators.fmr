@@ -80,6 +80,7 @@
             Op-lst
             op_-lst))
   (build-struct name
+                no-FT
                 null
                 Op-lst
                 (bs-Initial-rhs null
@@ -101,26 +102,30 @@
                                (op_-mfc 'init 'shift 'split 'location)
                                null
                                gen-data-mems)
-                (bs-SeqWalk-rhs (s-typedef eval-return-type 'EvalReturnType)
+                (bs-SeqWalk-rhs (s-typedef (tpl-pmtr (scope (first Op-lst) vt-chunk))
+                                           vt-chunk)
                                 gen-constructor
                                 next
-                                'EvalReturnType
+                                eval-return-type
                                 internal-use
                                 null
                                 exec-data-mems)
-                (bs-gpu-rhs null
+                (bs-gpu-rhs (s-typedef (tpl-pmtr (scope (first Op-lst) vt-chunk))
+                                       vt-chunk)
                             gen-constructor
                             (op_-mfc 'start 'x 'y)
                             (op_-mfc 'next)
+                            eval-return-type
                             internal-use
                             null
                             exec-data-mems)
-                (bs-Reduction (s-typedef eval-return-type 'EvalReturnType)
+                (bs-Reduction (s-typedef (tpl-pmtr (scope (first Op-lst) vt-chunk))
+                                         vt-chunk)
                               gen-constructor
                               next
                               (exec-or-check 'at_end)
                               (exec-or-check 'has_length)
-                              'EvalReturnType
+                              eval-return-type
                               internal-use
                               null
                               exec-data-mems)))
@@ -128,8 +133,7 @@
 (define (build-binary-function-struct name internal-name)
   (build-Nary-struct name
                      2
-                     (scope (tpl-pmtr FT-chunk)
-                            'value_type)
+                     vt-chunk
                      (fc internal-name
                          (mfc 'operand1_ 'eval)
                          (mfc 'operand2_ 'eval))))
@@ -137,8 +141,7 @@
 (define (build-binary-operator-struct name internal-name)
   (build-Nary-struct name
                      2
-                     (scope (tpl-pmtr FT-chunk)
-                            'value_type)
+                     vt-chunk
                      (par (mfc 'operand1_ 'eval)
                           internal-name
                           (mfc 'operand2_ 'eval))))
@@ -146,8 +149,7 @@
 (define (build-unary-function-struct name internal-name)
   (build-Nary-struct name
                      1
-                     (scope (tpl-pmtr FT-chunk)
-                            'value_type)
+                     vt-chunk
                      (fc internal-name
                          (mfc 'operand_ 'eval))))
 
@@ -177,103 +179,230 @@
 (define (build-extremum-function-struct name comparison)
   (build-Nary-struct name
                      2
-                     (scope (tpl-pmtr FT-chunk)
-                            'value_type)
+                     vt-chunk
                      (ter-cond (par (mfc 'operand1_ 'eval)
                                     comparison
                                     (mfc 'operand2_ 'eval))
                                (mfc 'operand1_ 'eval)
                                (mfc 'operand2_ 'eval))))
 
-(define (if-arg-Scalar num)
-  (let ([type (tpl-use NS-chunk 'Initial FT-chunk)]
-        [arg (l 'arg num)])
-    (list 'Scalar
-          null
-          type
-          type
-          (adcr (tpl-pmtr (scope FT-chunk 'value_type))
-                arg)
-          (fc type arg))))
+(define (add-spacing-check arg)
+  (cs arg))
 
-(define (if-arg-Field num)
-  (let ([type (tpl-use NCF-chunk 'Initial FT-chunk)]
-        [arg (l 'arg num)])
-    (list 'Field
-          null
-          (tpl-use NCF-chunk 'Initial (tpl-pmtr (scope (tpl-use 'NeboFieldCheck
-                                                                (tpl-pmtr (scope FT-chunk 'field_type))
-                                                                FT-chunk)
-                                                       'Result)))
-          type
-          (adcr FT-chunk arg)
-          (fc type arg))))
+(define (ignore-spacing-check arg)
+  arg)
 
-(define (if-arg-SubExpr num)
-  (let* ([type (l 'SubExpr num)]
-         [input-type (tpl-use NE-chunk type FT-chunk)]
-         [arg (l 'arg num)])
-    (list 'SubExpr
-          type
-          type
-          type
-          (adcr input-type arg)
-          (mfc arg 'expr))))
+(define if-arg-Scalar
+  (list 'none
+        (lambda (num value-type)
+          (let ([type (tpl-use NS-chunk 'Initial value-type)]
+                [arg (l 'arg num)])
+            (list 'Scalar
+                  #false
+                  #false
+                  null
+                  add-spacing-check
+                  type
+                  type
+                  (adcr value-type arg)
+                  (fc type arg))))))
 
-(define (if-arg-Boolean num)
-  (let ([type (tpl-use NB-chunk 'Initial FT-chunk)]
-        [arg (l 'arg num)])
-    (list 'Boolean
-          null
-          type
-          type
-          (adcr 'bool arg)
-          (fc type arg))))
+(define if-arg-Field
+  (list 'field
+        (lambda (num value-type)
+          (let ([type (tpl-use NCF-chunk 'Initial FT-chunk)]
+                [arg (l 'arg num)])
+            (list 'Field
+                  #true
+                  #false
+                  null
+                  add-spacing-check
+                  (tpl-use NCF-chunk 'Initial (tpl-pmtr (scope (tpl-use 'NeboFieldCheck
+                                                                        (tpl-pmtr (scope FT-chunk ft-chunk))
+                                                                        FT-chunk)
+                                                               'Result)))
+                  type
+                  (adcr FT-chunk arg)
+                  (fc type arg))))))
 
-(define (if-arg-SubBoolExpr num)
-  (let* ([type (l 'SubBoolExpr num)]
-         [input-type (tpl-use NBE-chunk type FT-chunk)]
-         [arg (l 'arg num)])
-    (list 'SubBoolExpr
-          type
-          type
-          type
-          (adcr input-type arg)
-          (mfc arg 'expr))))
+(define if-arg-SubExpr
+  (list 'field
+        (lambda (num value-type)
+          (let* ([type (l 'SubExpr num)]
+                 [arg (l 'arg num)])
+            (list 'SubExpr
+                  #true
+                  #false
+                  type
+                  ignore-spacing-check
+                  type
+                  type
+                  (adcr (tpl-use NE-chunk type FT-chunk)
+                        arg)
+                  (mfc arg 'expr))))))
+
+(define if-arg-Boolean
+  (list 'boolean-only
+        (lambda (num value-type)
+          (let ([type (tpl-use NS-chunk 'Initial 'bool)]
+                [arg (l 'arg num)])
+            (list 'Boolean
+                  #false
+                  #false
+                  null
+                  add-spacing-check
+                  type
+                  type
+                  (adcr 'bool arg)
+                  (fc type arg))))))
+
+(define if-arg-SubBoolExpr
+  (list 'field
+        (lambda (num value-type)
+          (let* ([type (l 'SubBoolExpr num)]
+                 [arg (l 'arg num)])
+            (list 'SubBoolExpr
+                  #true
+                  #false
+                  type
+                  ignore-spacing-check
+                  type
+                  type
+                  (adcr (tpl-use NBE-chunk type FT-chunk)
+                        arg)
+                  (mfc arg 'expr))))))
+
+(define if-arg-SingleValue
+  (list 'atomic-only
+        (lambda (num value-type)
+          (let* ([type (tpl-use NCSVF-chunk 'Initial value-type)]
+                 [arg (l 'arg num)])
+            (list 'SingleValue
+                  #false
+                  #true
+                  null
+                  add-spacing-check
+                  (tpl-use NCSVF-chunk 'Initial value-type)
+                  type
+                  (adcr (SVFT-def-with-T value-type) arg)
+                  (fc type arg))))))
+
+(define if-arg-SubSingleValueExpr
+  (list 'atomic-only
+        (lambda (num value-type)
+          (let ([type (l 'SubExpr num)]
+                [arg (l 'arg num)])
+            (list 'SingleValueExpr
+                  #false
+                  #true
+                  type;null
+                  ignore-spacing-check
+                  type
+                  type
+                  (adcr (tpl-use NSVE-chunk type value-type)
+                        arg)
+                  (mfc arg 'expr))))))
+
+(define if-arg-SubBoolSingleValueExpr
+  (list 'atomic-only
+        (lambda (num value-type)
+          (let ([type (l 'SubBoolExpr num)]
+                [arg (l 'arg num)])
+            (list 'SubBoolSingleValueExpr
+                  #false
+                  #true
+                  null
+                  ignore-spacing-check
+                  type
+                  type
+                  (adcr (tpl-use NBSVE-chunk type value-type)
+                        arg)
+                  (mfc arg 'expr))))))
 
 (define (build-interface-case name
                               external-name
-                              result-term
+                              return-style
                               input-arg-info-lst)
-  (let* ([num-lst (let ([number (length input-arg-info-lst)])
+  (let* ([prep-tpl-args (lambda (checks args)
+                         (flatten* (take args (- (length args)
+                                                1))
+                                   ((last checks)
+                                    (last args))))]
+         [num-lst (let ([number (length input-arg-info-lst)])
                     (cond [(= 0 number) (error "Empty list of arguments to build-interface-case")]
                           [(= 1 number) (list "")]
                           [else (map number->string (sequence->list (in-range 1 (+ 1 number))))]))]
-         [arg-info-lst (map (lambda (arg num) (arg num))
+         [style (foldl (lambda (cur prev)
+                         (cond [(or (equal? 'field cur)
+                                    (equal? 'field prev))
+                                'field]
+                               [(or (equal? 'atomic-only cur)
+                                    (equal? 'atomic-only prev))
+                                'atomic-only]
+                               [(or (equal? 'boolean-only cur)
+                                    (equal? 'boolean-only prev))
+                                'boolean-only]
+                               [(or (equal? 'none cur)
+                                    (equal? 'none prev))
+                                'none]
+                               [else
+                                (error "Trying to build an operator with unknown styles: " cur prev)]))
+                       'default
+                       (map first input-arg-info-lst))]
+         [value-type (cond [(equal? 'none style)
+                            'error!] ; if style is none, this should be a boolean operation, and value-type should not be used
+                           [(equal? 'atomic-only style)
+                            'T]
+                           [else
+                            (tpl-pmtr (scope FT-chunk vt-chunk))])]
+         [arg-info-lst (map (lambda (arg num) ((second arg)
+                                               num
+                                               value-type))
                             input-arg-info-lst
                             num-lst)]
          [description-lst (map first arg-info-lst)]
-         [tpl-arg-lst (map second arg-info-lst)]
-         [result-tpl-arg-lst (map third arg-info-lst)]
-         [return-tpl-arg-lst (map fourth arg-info-lst)]
-         [parameter-lst (map fifth arg-info-lst)]
-         [arg-use-lst (map sixth arg-info-lst)])
+         [include-tpl (cond [(ormap second arg-info-lst)
+                             FT-chunk]
+                            [(ormap third arg-info-lst)
+                             'T]
+                            [else
+                             null])]
+         [tpl-arg-lst (map fourth arg-info-lst)]
+         [last-spacing (map fifth arg-info-lst)]
+         [return-type (lambda (arg)
+                        (cond [(and (equal? 'field style)
+                                    (equal? 'scalar return-style))
+                               (tpl-use NE-chunk arg FT-chunk)]
+                              [(and (equal? 'field style)
+                                    (equal? 'boolean return-style))
+                               (tpl-use NBE-chunk arg FT-chunk)]
+                              [(and (equal? 'atomic-only style)
+                                    (equal? 'scalar return-style))
+                               (tpl-use NSVE-chunk arg 'T)]
+                              [(and (equal? 'atomic-only style)
+                                    (equal? 'boolean return-style))
+                               (tpl-use NBSVE-chunk arg 'T)]
+                              [else
+                               (error "Trying to build an operator that has an unclear return structure: " style return-style)]))]
+         [construct-return-type (lambda (args)
+                                 (tpl-use name 'Initial (prep-tpl-args last-spacing args)))]
+         [result-type-type (construct-return-type (map sixth arg-info-lst))]
+         [return-tpl-type (construct-return-type (map seventh arg-info-lst))]
+         [parameter-lst (map eighth arg-info-lst)]
+         [arg-use-lst (map ninth arg-info-lst)])
     (d (c (add-between description-lst (scs 'X)))
-       (tpl-def (map tpl-pmtr (flatten* tpl-arg-lst FT-chunk))
+       (tpl-def (map tpl-pmtr (flatten* tpl-arg-lst include-tpl))
                 (r-fcn-def (fcn-dcl external-name
-                                    (tpl-use result-term
-                                             (tpl-use name 'Initial result-tpl-arg-lst FT-chunk)
-                                             FT-chunk)
+                                    (return-type result-type-type)
                                     parameter-lst)
-                           (list (typedef (tpl-use name 'Initial return-tpl-arg-lst FT-chunk)
-                                          'ReturnType)
-                                 (typedef (tpl-use result-term 'ReturnType FT-chunk)
+                           (list (typedef return-tpl-type 'ReturnType)
+                                 (typedef (return-type 'ReturnType)
                                           'ReturnTerm))
                            (fc 'ReturnTerm (fc 'ReturnType arg-use-lst)))))))
 
 (define (build-binary-interface name
                                 external-name
-                                expression-term
+                                op-return-style
                                 if-args)
   (let* ([raw-cross-products (foldl (lambda (arg1 previous)
                                       (append (foldl (lambda (arg2 previous)
@@ -288,7 +417,7 @@
          [cross-products (rest (reverse raw-cross-products))])
     (bb (map (lambda (args) (build-interface-case name
                                                   external-name
-                                                  expression-term
+                                                  op-return-style
                                                   args))
              cross-products))))
 
@@ -302,34 +431,34 @@
                                                (list arg)))
            if-args)))
 
-(define binary-expr-arg-lst (list if-arg-Scalar if-arg-Field if-arg-SubExpr))
-(define unary-expr-arg-lst (list if-arg-Field if-arg-SubExpr))
+(define binary-expr-arg-lst (list if-arg-Scalar if-arg-Field if-arg-SubExpr if-arg-SingleValue if-arg-SubSingleValueExpr))
+(define unary-expr-arg-lst (list if-arg-Field if-arg-SubExpr if-arg-SingleValue if-arg-SubSingleValueExpr))
 (define binary-logical-expr-arg-lst (list if-arg-Boolean if-arg-SubBoolExpr))
 (define unary-logical-expr-arg-lst (list if-arg-SubBoolExpr))
 (define (build-binary-function name internal-name external-name)
   (bl-smts (build-binary-function-struct name internal-name)
-           (build-binary-interface name external-name NE-chunk binary-expr-arg-lst)))
+           (build-binary-interface name external-name 'scalar binary-expr-arg-lst)))
 (define (build-binary-operator name internal-name external-name)
   (bl-smts (build-binary-operator-struct name internal-name)
-           (build-binary-interface name external-name NE-chunk binary-expr-arg-lst)))
+           (build-binary-interface name external-name 'scalar binary-expr-arg-lst)))
 (define (build-unary-function name internal-name external-name)
   (bl-smts (build-unary-function-struct name internal-name)
-           (build-unary-interface name external-name NE-chunk unary-expr-arg-lst)))
+           (build-unary-interface name external-name 'scalar unary-expr-arg-lst)))
 (define (build-comparison-operator name internal-name external-name)
   (bl-smts (build-comparison-struct name internal-name)
-           (build-binary-interface name external-name NBE-chunk binary-expr-arg-lst)))
+           (build-binary-interface name external-name 'boolean binary-expr-arg-lst)))
 (define (build-binary-logical-operator name internal-name external-name)
   (bl-smts (build-logical-operator-struct name internal-name)
-           (build-binary-interface name external-name NBE-chunk binary-logical-expr-arg-lst)))
+           (build-binary-interface name external-name 'boolean binary-logical-expr-arg-lst)))
 (define (build-unary-logical-function name internal-name external-name)
   (bl-smts (build-unary-logical-function-struct name internal-name)
-           (build-unary-interface name external-name NBE-chunk unary-logical-expr-arg-lst)))
+           (build-unary-interface name external-name 'boolean unary-logical-expr-arg-lst)))
 (define (build-unary-to-logical-function name internal-name external-name)
   (bl-smts (build-unary-logical-function-struct name internal-name)
-           (build-unary-interface name external-name NBE-chunk unary-expr-arg-lst)))
+           (build-unary-interface name external-name 'boolean unary-expr-arg-lst)))
 (define (build-extremum-function name comparison external-name)
   (bl-smts (build-extremum-function-struct name comparison)
-           (build-binary-interface name external-name NE-chunk binary-expr-arg-lst)))
+           (build-binary-interface name external-name 'scalar binary-expr-arg-lst)))
 
                                         ; beginnning of file
 (n 'SpatialOps

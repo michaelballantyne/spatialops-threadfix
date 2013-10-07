@@ -89,14 +89,14 @@
 (define (build-applied-catamorphism name body proc)
   (list (build-catamorphism-with-field name
                                        null
-                                       (tpl-pmtr (scope FT-chunk 'value_type))
+                                       (tpl-pmtr (scope FT-chunk vt-chunk))
                                        null
                                        null
                                        body
                                        (fc 'nebo_reduce proc 'fexpr))
         (build-catamorphism-with-field (c name '_interior)
                                        null
-                                       (tpl-pmtr (scope FT-chunk 'value_type))
+                                       (tpl-pmtr (scope FT-chunk vt-chunk))
                                        null
                                        null
                                        body
@@ -105,14 +105,14 @@
 (define (build-used-catamorphism name return-expr)
   (list (build-catamorphism-with-field name
                                        null
-                                       (tpl-pmtr (scope FT-chunk 'value_type))
+                                       (tpl-pmtr (scope FT-chunk vt-chunk))
                                        null
                                        null
                                        null
                                        (return-expr empty-chunk))
         (build-catamorphism-with-field (c name '_interior)
                                        null
-                                       (tpl-pmtr (scope FT-chunk 'value_type))
+                                       (tpl-pmtr (scope FT-chunk vt-chunk))
                                        null
                                        null
                                        null
@@ -142,7 +142,7 @@
                        (list (gen-fcn-dcl proc
                                           (cref 'ResultType)
                                           (cref 'ResultType)
-                                          (cref (tpl-pmtr (scope FT-chunk 'value_type))))
+                                          (cref (tpl-pmtr (scope FT-chunk vt-chunk))))
                              (adcr 'ResultType 'initialValue))
                        (list 'proc 'initialValue)
                        (list (nt= 'ResultType 'result 'initialValue)
@@ -159,14 +159,14 @@
                        'result)
    (let ([build-reduce
           (lambda (return-qual)
-            (define AtomicType (tpl-pmtr (scope FT-chunk 'value_type)))
+            (define atomic-type (tpl-pmtr (scope FT-chunk vt-chunk)))
             (build-catamorphism 'nebo_reduce
                                 null
-                                AtomicType
+                                atomic-type
                                 (gen-fcn-dcl proc
-                                             (return-qual AtomicType)
-                                             (cref AtomicType)
-                                             (cref AtomicType))
+                                             (return-qual atomic-type)
+                                             (cref atomic-type)
+                                             (cref atomic-type))
                                 'proc
                                 (list (nt= (tpl-pmtr (scope 'ExprType 'ReductionType))
                                            'expr
@@ -175,7 +175,7 @@
                                                 (mfc 'ghosts 'get_minus)
                                                 (mfc 'ghosts 'get_plus)
                                                 'shift))
-                                      (nt= AtomicType 'result (mfc 'expr 'eval))
+                                      (nt= atomic-type 'result (mfc 'expr 'eval))
                                       (mfc 'expr 'next)
                                       (nwhile (n-not (mfc 'expr 'at_end))
                                               (n= 'result (fc 'proc 'result (mfc 'expr 'eval)))
@@ -189,17 +189,16 @@
    (build-applied-catamorphism 'nebo_min
                                null
                                (scope 'std 'min))
-   (tpl-def (tpl-pmtr 'AtomicType)
+   (tpl-def (tpl-pmtr AT-chunk)
             (r-fcn-def (fcn-dcl 'sum
-                                'AtomicType
-                                (b s 'AtomicType const-chunk "&" 'a)
-                                (b s 'AtomicType const-chunk "&" 'b))
+                                AT-chunk
+                                (b s AT-chunk const-chunk "&" 'a)
+                                (b s AT-chunk const-chunk "&" 'b))
                        null
                        (b s 'a "+" 'b)))
    (build-applied-catamorphism 'nebo_sum
-                               (typedef (tpl-pmtr (scope FT-chunk 'value_type))
-                                        'AtomicType)
-                               (tpl-use 'sum 'AtomicType))
+                               null
+                               (tpl-use 'sum (tpl-pmtr (scope FT-chunk vt-chunk))))
    (build-used-catamorphism 'nebo_norm
                             (lambda (ext)
                               (fc (scope 'std 'sqrt)

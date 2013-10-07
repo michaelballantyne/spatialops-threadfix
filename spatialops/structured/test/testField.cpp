@@ -226,10 +226,17 @@ struct ThreadWork{
     const GhostData ghost(1);
     const BoundaryCellInfo bc = BoundaryCellInfo::build<T>(true,true,true);
     const MemoryWindow ww = get_window_with_ghost( IntVec(24,1,1), ghost, bc );
+
+    const GhostData SVghost(0);
+    const BoundaryCellInfo SVbc = BoundaryCellInfo::build<SingleValueField>(false,false,false);
+    const MemoryWindow SVww = get_window_with_ghost( IntVec(1,1,1), SVghost, SVbc );
+
     for( size_t i=0; i<100; ++i ){
       SpatFldPtr<T> f1 = SpatialFieldStore::get_from_window<T>( ww, bc, ghost );
       SpatFldPtr<T> f2 = SpatialFieldStore::get_from_window<T>( ww, bc, ghost );
       *f1 <<= 0.0;
+      SpatFldPtr<SingleValueField> f3 = SpatialFieldStore::get_from_window<SingleValueField>( SVww, SVbc, SVghost );
+      *f3 <<= 1.0;
     }
   }
 };

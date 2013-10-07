@@ -41,6 +41,7 @@
 #include <string.h> // for memcmp below...
 
 #include <spatialops/SpatialOpsConfigure.h>
+#include <spatialops/structured/FVStaggeredLocationTypes.h>
 
 #include <spatialops/structured/ExternalAllocators.h>
 #include <spatialops/structured/MemoryTypes.h>
@@ -462,6 +463,43 @@ namespace structured{
     }
   };
 
+//------------------------------------------------------------------
+
+template<typename Location>
+struct SingleValueCheck {
+  static inline void check(MemoryWindow const & window,
+                           GhostData const & ghosts) {};
+};
+
+template<>
+struct SingleValueCheck<SingleValue> {
+  static inline void check(MemoryWindow const & window,
+                           GhostData const & ghosts) {
+#ifndef NDEBUG
+    if( (window.extent(0) > 1) &&
+        (window.extent(1) > 1) &&
+        (window.extent(2) > 1) ) {
+      std::ostringstream msg;
+      msg << "Single Value Field does not support window extents larger than 1\n"
+          << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
+      throw(std::runtime_error(msg.str()));
+    };
+
+    if( (ghosts.get_minus(0) > 0) &&
+        (ghosts.get_minus(1) > 0) &&
+        (ghosts.get_minus(2) > 0) &&
+        (ghosts.get_plus(0) > 0) &&
+        (ghosts.get_plus(1) > 0) &&
+        (ghosts.get_plus(2) > 0) ) {
+      std::ostringstream msg;
+      msg << "Single Value Field does not support non-zero ghosts\n"
+          << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
+      throw(std::runtime_error(msg.str()));
+    };
+#endif
+  };
+};
+
 //==================================================================
 //
 //                          Implementation
@@ -515,6 +553,7 @@ SpatialField( const MemoryWindow& window,
 //    }
 //  }
 //# endif // NDEBUG
+  SingleValueCheck<Location>::check(fieldWindow_, ghosts_);
 
   // set the interior MemoryWindow
   IntVec ext = window.extent();
@@ -617,6 +656,8 @@ SpatialField( const MemoryWindow& window, const SpatialField& other )
     , cudaStream_( other.cudaStream_ )
 # endif
 {
+  SingleValueCheck<Location>::check(fieldWindow_, ghosts_);
+
   /*
    *  If the new window results in a view of the field that
    *  cuts into the interior, then disable interior iterators.

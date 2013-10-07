@@ -29,6 +29,7 @@
 #  include <spatialops/structured/IndexTriplet.h>
 #  include <spatialops/structured/GhostData.h>
 #  include <spatialops/structured/SpatialField.h>
+#  include <spatialops/structured/FVStaggeredFieldTypes.h>
 #  include <cmath>
 #  include <math.h>
 
@@ -205,6 +206,25 @@
           Operand expr_;
       };
 
+      template<typename Operand, typename T>
+       struct NeboSingleValueExpression {
+         public:
+          SpatialOps::structured::SpatialField<SpatialOps::structured::
+                                               SingleValue,
+                                               T> typedef field_type;
+
+          Operand typedef Expression;
+
+          NeboSingleValueExpression(Operand const & given)
+          : expr_(given)
+          {}
+
+          inline Operand const & expr(void) const { return expr_; }
+
+         private:
+          Operand expr_;
+      };
+
       template<typename Operand, typename FieldType>
        struct NeboBooleanExpression {
          public:
@@ -213,6 +233,25 @@
           Operand typedef Expression;
 
           NeboBooleanExpression(Operand const & given)
+          : expr_(given)
+          {}
+
+          inline Operand const & expr(void) const { return expr_; }
+
+         private:
+          Operand expr_;
+      };
+
+      template<typename Operand, typename T>
+       struct NeboBooleanSingleValueExpression {
+         public:
+          SpatialOps::structured::SpatialField<SpatialOps::structured::
+                                               SingleValue,
+                                               T> typedef field_type;
+
+          Operand typedef Expression;
+
+          NeboBooleanSingleValueExpression(Operand const & given)
           : expr_(given)
           {}
 

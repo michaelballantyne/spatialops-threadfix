@@ -27,6 +27,7 @@ target_link_libraries( spatialops-structured spatialops-stencil )
 install( FILES
   BoundaryCellInfo.h
   FVStaggeredBCTools.h
+  FVStaggeredLocationTypes.h
   FVStaggeredFieldTypes.h
   FVTools.h
   Grid.h

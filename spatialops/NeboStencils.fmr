@@ -143,18 +143,18 @@
                                         (list (tpl-pmtr 'ArgPreSeqWalk)
                                               (tpl-pmtr 'DestType))
                                         null
-                                        (s-typedef (tpl-use NS-chunk 'SeqWalk 'DestType)
+                                        (s-typedef (tpl-use NS-chunk 'SeqWalk (tpl-pmtr (scope 'DestType vt-chunk)))
                                                    'Coef)
                                         (s-typedef (tpl-pmtr (scope 'ArgPreSeqWalk 'SeqWalkType))
                                                    'Arg)
-                                        (s-typedef (tpl-use 'ProdOp 'SeqWalk 'Arg 'Coef 'DestType)
+                                        (s-typedef (tpl-use 'ProdOp 'SeqWalk 'Arg 'Coef)
                                                    'MultiplyType)
                                         (s-typedef (tpl-pmtr (scope 'Collection (tpl-fcn-use 'ConstructExpr 'ArgPreSeqWalk 'DestType)))
                                                    'EarlierPointsType)
                                         (s-typedef (tpl-pmtr (scope 'EarlierPointsType
                                                                     'Result))
                                                    'EarlierPointsResult)
-                                        (s-typedef (tpl-use 'SumOp 'SeqWalk 'EarlierPointsResult 'MultiplyType 'DestType)
+                                        (s-typedef (tpl-use 'SumOp 'SeqWalk 'EarlierPointsResult 'MultiplyType)
                                                    'Result)
                                         (r-fcn-def (s-fcn-dcl 'in_sq_construct
                                                               (tc 'Result)
@@ -199,18 +199,18 @@
                                          (list (tpl-pmtr 'ArgPreGPUWalk)
                                                (tpl-pmtr 'DestType))
                                          null
-                                         (s-typedef (tpl-use NS-chunk 'GPUWalk 'DestType)
+                                         (s-typedef (tpl-use NS-chunk 'GPUWalk (tpl-pmtr (scope 'DestType vt-chunk)))
                                                     'Coef)
                                          (s-typedef (tpl-pmtr (scope 'ArgPreGPUWalk 'GPUWalkType))
                                                     'Arg)
-                                         (s-typedef (tpl-use 'ProdOp 'GPUWalk 'Arg 'Coef 'DestType)
+                                         (s-typedef (tpl-use 'ProdOp 'GPUWalk 'Arg 'Coef)
                                                     'MultiplyType)
                                          (s-typedef (tpl-pmtr (scope 'Collection (tpl-fcn-use 'ConstructGPUExpr 'ArgPreGPUWalk 'DestType)))
                                                     'EarlierPointsType)
                                          (s-typedef (tpl-pmtr (scope 'EarlierPointsType
                                                                      'Result))
                                                     'EarlierPointsResult)
-                                         (s-typedef (tpl-use 'SumOp 'GPUWalk 'EarlierPointsResult 'MultiplyType 'DestType)
+                                         (s-typedef (tpl-use 'SumOp 'GPUWalk 'EarlierPointsResult 'MultiplyType)
                                                     'Result)
                                          (r-fcn-def (s-fcn-dcl 'in_gpu_construct
                                                                (tc 'Result)
@@ -238,18 +238,18 @@
                                         (list (tpl-pmtr 'ArgPreReduction)
                                               (tpl-pmtr 'DestType))
                                         null
-                                        (s-typedef (tpl-use NS-chunk 'Reduction 'DestType)
+                                        (s-typedef (tpl-use NS-chunk 'Reduction (tpl-pmtr (scope 'DestType vt-chunk)))
                                                    'Coef)
                                         (s-typedef (tpl-pmtr (scope 'ArgPreReduction 'ReductionType))
                                                    'Arg)
-                                        (s-typedef (tpl-use 'ProdOp 'Reduction 'Arg 'Coef 'DestType)
+                                        (s-typedef (tpl-use 'ProdOp 'Reduction 'Arg 'Coef)
                                                    'MultiplyType)
                                         (s-typedef (tpl-pmtr (scope 'Collection (tpl-fcn-use 'ConstructReductionExpr 'ArgPreReduction 'DestType)))
                                                    'EarlierPointsType)
                                         (s-typedef (tpl-pmtr (scope 'EarlierPointsType
                                                                     'Result))
                                                    'EarlierPointsResult)
-                                        (s-typedef (tpl-use 'SumOp 'Reduction 'EarlierPointsResult 'MultiplyType 'DestType)
+                                        (s-typedef (tpl-use 'SumOp 'Reduction 'EarlierPointsResult 'MultiplyType)
                                                    'Result)
                                         (r-fcn-def (s-fcn-dcl 'in_rd_construct
                                                               (tc 'Result)
@@ -302,11 +302,11 @@
                                         (list (tpl-pmtr 'ArgPreSeqWalk)
                                               (tpl-pmtr 'DestType))
                                         null
-                                        (s-typedef (tpl-use NS-chunk 'SeqWalk 'DestType)
+                                        (s-typedef (tpl-use NS-chunk 'SeqWalk (tpl-pmtr (scope 'DestType vt-chunk)))
                                                    'Coef)
                                         (s-typedef (tpl-pmtr (scope 'ArgPreSeqWalk 'SeqWalkType))
                                                    'Arg)
-                                        (s-typedef (tpl-use 'ProdOp 'SeqWalk 'Arg 'Coef 'DestType)
+                                        (s-typedef (tpl-use 'ProdOp 'SeqWalk 'Arg 'Coef)
                                                    'Result)
                                         (r-fcn-def (s-fcn-dcl 'in_sq_construct
                                                               (tc 'Result)
@@ -338,11 +338,11 @@
                                          (list (tpl-pmtr 'ArgPreGPUWalk)
                                                (tpl-pmtr 'DestType))
                                          null
-                                         (s-typedef (tpl-use NS-chunk 'GPUWalk 'DestType)
+                                         (s-typedef (tpl-use NS-chunk 'GPUWalk (tpl-pmtr (scope 'DestType vt-chunk)))
                                                     'Coef)
                                          (s-typedef (tpl-pmtr (scope 'ArgPreGPUWalk 'GPUWalkType))
                                                     'Arg)
-                                         (s-typedef (tpl-use 'ProdOp 'GPUWalk 'Arg 'Coef 'DestType)
+                                         (s-typedef (tpl-use 'ProdOp 'GPUWalk 'Arg 'Coef)
                                                     'Result)
                                          (r-fcn-def (s-fcn-dcl 'in_gpu_construct
                                                                (tc 'Result)
@@ -363,11 +363,11 @@
                                         (list (tpl-pmtr 'ArgPreReduction)
                                               (tpl-pmtr 'DestType))
                                         null
-                                        (s-typedef (tpl-use NS-chunk 'Reduction 'DestType)
+                                        (s-typedef (tpl-use NS-chunk 'Reduction (tpl-pmtr (scope 'DestType vt-chunk)))
                                                    'Coef)
                                         (s-typedef (tpl-pmtr (scope 'ArgPreReduction 'ReductionType))
                                                    'Arg)
-                                        (s-typedef (tpl-use 'ProdOp 'Reduction 'Arg 'Coef 'DestType)
+                                        (s-typedef (tpl-use 'ProdOp 'Reduction 'Arg 'Coef)
                                                    'Result)
                                         (r-fcn-def (s-fcn-dcl 'in_rd_construct
                                                               (tc 'Result)
@@ -426,6 +426,7 @@
                            'Result))
 
    (build-struct NSt
+                 std-FT
                  (list 'Pts 'Arg)
                  null
                  (bs-Initial-rhs (list (s-typedef (tpl-use NSCC (scope 'Pts 'length))
@@ -500,14 +501,12 @@
                                 null
                                 (list (sadc 'Arg 'arg_)
                                       (sadc 'Coefs 'coefs_)))
-                 (bs-SeqWalk-rhs (s-typedef (scope (tpl-pmtr FT-chunk)
-                                                   'value_type)
-                                            'AtomicType)
+                 (bs-SeqWalk-rhs null
                                  (bm-constructor (adcr 'Arg 'arg)
                                                  (cons-asgn 'arg_ 'arg)
                                                  null)
                                  (mfc 'arg_ 'next)
-                                 'AtomicType
+                                 vt-chunk
                                  (mfc 'arg_ 'eval)
                                  null
                                  (sad 'Arg 'arg_))
@@ -517,19 +516,18 @@
                                              null)
                              (mfc 'arg_ 'start 'x 'y)
                              (mfc 'arg_ 'next)
+                             vt-chunk
                              (mfc 'arg_ 'eval)
                              null
                              (sad 'Arg 'arg_))
-                 (bs-Reduction (s-typedef (scope (tpl-pmtr FT-chunk)
-                                                 'value_type)
-                                          'AtomicType)
+                 (bs-Reduction null
                                (bm-constructor (adcr 'Arg 'arg)
                                                (cons-asgn 'arg_ 'arg)
                                                null)
                                (mfc 'arg_ 'next)
                                (mfc 'arg_ 'at_end)
                                (mfc 'arg_ 'has_length)
-                               'AtomicType
+                               vt-chunk
                                (mfc 'arg_ 'eval)
                                null
                                (sad 'Arg 'arg_))))

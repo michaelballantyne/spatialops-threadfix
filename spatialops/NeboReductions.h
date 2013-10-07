@@ -429,9 +429,7 @@
        inline typename FieldType::value_type nebo_sum(NeboExpression<ExprType,
                                                                      FieldType>
                                                       const & fexpr) {
-          typename FieldType::value_type typedef AtomicType;
-
-          return nebo_reduce(sum<AtomicType>, fexpr);
+          return nebo_reduce(sum<typename FieldType::value_type>, fexpr);
        };
 
       template<typename FieldType>
@@ -445,9 +443,7 @@
        inline typename FieldType::value_type nebo_sum_interior(NeboExpression<ExprType,
                                                                               FieldType>
                                                                const & fexpr) {
-          typename FieldType::value_type typedef AtomicType;
-
-          return nebo_reduce_interior(sum<AtomicType>, fexpr);
+          return nebo_reduce_interior(sum<typename FieldType::value_type>, fexpr);
        };
 
       template<typename FieldType>
