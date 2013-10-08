@@ -194,7 +194,7 @@
 
 (define if-arg-Scalar
   (list 'none
-        (lambda (num value-type)
+        (lambda (num value-type checked-value-type)
           (let ([type (tpl-use NS-chunk 'Initial value-type)]
                 [arg (l 'arg num)])
             (list 'Scalar
@@ -204,12 +204,12 @@
                   add-spacing-check
                   type
                   type
-                  (adcr value-type arg)
+                  (adcr checked-value-type arg)
                   (fc type arg))))))
 
 (define if-arg-Field
   (list 'field
-        (lambda (num value-type)
+        (lambda (num value-type checked-value-type)
           (let ([type (tpl-use NCF-chunk 'Initial FT-chunk)]
                 [arg (l 'arg num)])
             (list 'Field
@@ -227,7 +227,7 @@
 
 (define if-arg-SubExpr
   (list 'field
-        (lambda (num value-type)
+        (lambda (num value-type checked-value-type)
           (let* ([type (l 'SubExpr num)]
                  [arg (l 'arg num)])
             (list 'SubExpr
@@ -243,7 +243,7 @@
 
 (define if-arg-Boolean
   (list 'boolean-only
-        (lambda (num value-type)
+        (lambda (num value-type checked-value-type)
           (let ([type (tpl-use NS-chunk 'Initial 'bool)]
                 [arg (l 'arg num)])
             (list 'Boolean
@@ -258,7 +258,7 @@
 
 (define if-arg-SubBoolExpr
   (list 'field
-        (lambda (num value-type)
+        (lambda (num value-type checked-value-type)
           (let* ([type (l 'SubBoolExpr num)]
                  [arg (l 'arg num)])
             (list 'SubBoolExpr
@@ -274,7 +274,7 @@
 
 (define if-arg-SingleValue
   (list 'atomic-only
-        (lambda (num value-type)
+        (lambda (num value-type checked-value-type)
           (let* ([type (tpl-use NCSVF-chunk 'Initial value-type)]
                  [arg (l 'arg num)])
             (list 'SingleValue
@@ -289,13 +289,13 @@
 
 (define if-arg-SubSingleValueExpr
   (list 'atomic-only
-        (lambda (num value-type)
+        (lambda (num value-type checked-value-type)
           (let ([type (l 'SubExpr num)]
                 [arg (l 'arg num)])
             (list 'SingleValueExpr
                   #false
                   #true
-                  type;null
+                  type
                   ignore-spacing-check
                   type
                   type
@@ -305,7 +305,7 @@
 
 (define if-arg-SubBoolSingleValueExpr
   (list 'atomic-only
-        (lambda (num value-type)
+        (lambda (num value-type checked-value-type)
           (let ([type (l 'SubBoolExpr num)]
                 [arg (l 'arg num)])
             (list 'SubBoolSingleValueExpr
@@ -357,7 +357,10 @@
                             (tpl-pmtr (scope FT-chunk vt-chunk))])]
          [arg-info-lst (map (lambda (arg num) ((second arg)
                                                num
-                                               value-type))
+                                               value-type
+                                               (if (equal? 'T value-type)
+                                                   (tpl-pmtr (scope SVFT-def-chunk vt-chunk))
+                                                   value-type)))
                             input-arg-info-lst
                             num-lst)]
          [description-lst (map first arg-info-lst)]
