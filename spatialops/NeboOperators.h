@@ -282,7 +282,12 @@
                                               NeboScalar<Initial, T>,
                                               NeboConstSingleValueField<Initial,
                                                                         T> >,
-                                        T> operator +(T const & arg1,
+                                        T> operator +(typename SpatialOps::
+                                                      structured::SpatialField<SpatialOps::
+                                                                               structured::
+                                                                               SingleValue,
+                                                                               T>::
+                                                      value_type const & arg1,
                                                       SpatialOps::structured::
                                                       SpatialField<SpatialOps::
                                                                    structured::
@@ -304,7 +309,12 @@
        inline NeboSingleValueExpression<SumOp<Initial,
                                               NeboScalar<Initial, T>,
                                               SubExpr2>,
-                                        T> operator +(T const & arg1,
+                                        T> operator +(typename SpatialOps::
+                                                      structured::SpatialField<SpatialOps::
+                                                                               structured::
+                                                                               SingleValue,
+                                                                               T>::
+                                                      value_type const & arg1,
                                                       NeboSingleValueExpression<SubExpr2,
                                                                                 T>
                                                       const & arg2) {
@@ -569,7 +579,12 @@
                                                                    SingleValue,
                                                                    T> const &
                                                       arg1,
-                                                      T const & arg2) {
+                                                      typename SpatialOps::
+                                                      structured::SpatialField<SpatialOps::
+                                                                               structured::
+                                                                               SingleValue,
+                                                                               T>::
+                                                      value_type const & arg2) {
           SumOp<Initial,
                 NeboConstSingleValueField<Initial, T>,
                 NeboScalar<Initial, T> > typedef ReturnType;
@@ -708,7 +723,12 @@
                                         T> operator +(NeboSingleValueExpression<SubExpr1,
                                                                                 T>
                                                       const & arg1,
-                                                      T const & arg2) {
+                                                      typename SpatialOps::
+                                                      structured::SpatialField<SpatialOps::
+                                                                               structured::
+                                                                               SingleValue,
+                                                                               T>::
+                                                      value_type const & arg2) {
           SumOp<Initial, SubExpr1, NeboScalar<Initial, T> > typedef ReturnType;
 
           NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
@@ -1047,7 +1067,12 @@
                                                NeboScalar<Initial, T>,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> operator -(T const & arg1,
+                                        T> operator -(typename SpatialOps::
+                                                      structured::SpatialField<SpatialOps::
+                                                                               structured::
+                                                                               SingleValue,
+                                                                               T>::
+                                                      value_type const & arg1,
                                                       SpatialOps::structured::
                                                       SpatialField<SpatialOps::
                                                                    structured::
@@ -1069,7 +1094,12 @@
        inline NeboSingleValueExpression<DiffOp<Initial,
                                                NeboScalar<Initial, T>,
                                                SubExpr2>,
-                                        T> operator -(T const & arg1,
+                                        T> operator -(typename SpatialOps::
+                                                      structured::SpatialField<SpatialOps::
+                                                                               structured::
+                                                                               SingleValue,
+                                                                               T>::
+                                                      value_type const & arg1,
                                                       NeboSingleValueExpression<SubExpr2,
                                                                                 T>
                                                       const & arg2) {
@@ -1334,7 +1364,12 @@
                                                                    SingleValue,
                                                                    T> const &
                                                       arg1,
-                                                      T const & arg2) {
+                                                      typename SpatialOps::
+                                                      structured::SpatialField<SpatialOps::
+                                                                               structured::
+                                                                               SingleValue,
+                                                                               T>::
+                                                      value_type const & arg2) {
           DiffOp<Initial,
                  NeboConstSingleValueField<Initial, T>,
                  NeboScalar<Initial, T> > typedef ReturnType;
@@ -1473,7 +1508,12 @@
                                         T> operator -(NeboSingleValueExpression<SubExpr1,
                                                                                 T>
                                                       const & arg1,
-                                                      T const & arg2) {
+                                                      typename SpatialOps::
+                                                      structured::SpatialField<SpatialOps::
+                                                                               structured::
+                                                                               SingleValue,
+                                                                               T>::
+                                                      value_type const & arg2) {
           DiffOp<Initial, SubExpr1, NeboScalar<Initial, T> > typedef ReturnType;
 
           NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
@@ -1812,7 +1852,12 @@
                                                NeboScalar<Initial, T>,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> operator *(T const & arg1,
+                                        T> operator *(typename SpatialOps::
+                                                      structured::SpatialField<SpatialOps::
+                                                                               structured::
+                                                                               SingleValue,
+                                                                               T>::
+                                                      value_type const & arg1,
                                                       SpatialOps::structured::
                                                       SpatialField<SpatialOps::
                                                                    structured::
@@ -1834,7 +1879,12 @@
        inline NeboSingleValueExpression<ProdOp<Initial,
                                                NeboScalar<Initial, T>,
                                                SubExpr2>,
-                                        T> operator *(T const & arg1,
+                                        T> operator *(typename SpatialOps::
+                                                      structured::SpatialField<SpatialOps::
+                                                                               structured::
+                                                                               SingleValue,
+                                                                               T>::
+                                                      value_type const & arg1,
                                                       NeboSingleValueExpression<SubExpr2,
                                                                                 T>
                                                       const & arg2) {
@@ -2099,7 +2149,12 @@
                                                                    SingleValue,
                                                                    T> const &
                                                       arg1,
-                                                      T const & arg2) {
+                                                      typename SpatialOps::
+                                                      structured::SpatialField<SpatialOps::
+                                                                               structured::
+                                                                               SingleValue,
+                                                                               T>::
+                                                      value_type const & arg2) {
           ProdOp<Initial,
                  NeboConstSingleValueField<Initial, T>,
                  NeboScalar<Initial, T> > typedef ReturnType;
@@ -2238,7 +2293,12 @@
                                         T> operator *(NeboSingleValueExpression<SubExpr1,
                                                                                 T>
                                                       const & arg1,
-                                                      T const & arg2) {
+                                                      typename SpatialOps::
+                                                      structured::SpatialField<SpatialOps::
+                                                                               structured::
+                                                                               SingleValue,
+                                                                               T>::
+                                                      value_type const & arg2) {
           ProdOp<Initial, SubExpr1, NeboScalar<Initial, T> > typedef ReturnType;
 
           NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
@@ -2577,7 +2637,12 @@
                                               NeboScalar<Initial, T>,
                                               NeboConstSingleValueField<Initial,
                                                                         T> >,
-                                        T> operator /(T const & arg1,
+                                        T> operator /(typename SpatialOps::
+                                                      structured::SpatialField<SpatialOps::
+                                                                               structured::
+                                                                               SingleValue,
+                                                                               T>::
+                                                      value_type const & arg1,
                                                       SpatialOps::structured::
                                                       SpatialField<SpatialOps::
                                                                    structured::
@@ -2599,7 +2664,12 @@
        inline NeboSingleValueExpression<DivOp<Initial,
                                               NeboScalar<Initial, T>,
                                               SubExpr2>,
-                                        T> operator /(T const & arg1,
+                                        T> operator /(typename SpatialOps::
+                                                      structured::SpatialField<SpatialOps::
+                                                                               structured::
+                                                                               SingleValue,
+                                                                               T>::
+                                                      value_type const & arg1,
                                                       NeboSingleValueExpression<SubExpr2,
                                                                                 T>
                                                       const & arg2) {
@@ -2864,7 +2934,12 @@
                                                                    SingleValue,
                                                                    T> const &
                                                       arg1,
-                                                      T const & arg2) {
+                                                      typename SpatialOps::
+                                                      structured::SpatialField<SpatialOps::
+                                                                               structured::
+                                                                               SingleValue,
+                                                                               T>::
+                                                      value_type const & arg2) {
           DivOp<Initial,
                 NeboConstSingleValueField<Initial, T>,
                 NeboScalar<Initial, T> > typedef ReturnType;
@@ -3003,7 +3078,12 @@
                                         T> operator /(NeboSingleValueExpression<SubExpr1,
                                                                                 T>
                                                       const & arg1,
-                                                      T const & arg2) {
+                                                      typename SpatialOps::
+                                                      structured::SpatialField<SpatialOps::
+                                                                               structured::
+                                                                               SingleValue,
+                                                                               T>::
+                                                      value_type const & arg2) {
           DivOp<Initial, SubExpr1, NeboScalar<Initial, T> > typedef ReturnType;
 
           NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
@@ -4910,7 +4990,12 @@
                                                NeboScalar<Initial, T>,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> pow(T const & arg1,
+                                        T> pow(typename SpatialOps::structured::
+                                               SpatialField<SpatialOps::
+                                                            structured::
+                                                            SingleValue,
+                                                            T>::value_type const
+                                               & arg1,
                                                SpatialOps::structured::
                                                SpatialField<SpatialOps::
                                                             structured::
@@ -4931,7 +5016,12 @@
        inline NeboSingleValueExpression<PowFcn<Initial,
                                                NeboScalar<Initial, T>,
                                                SubExpr2>,
-                                        T> pow(T const & arg1,
+                                        T> pow(typename SpatialOps::structured::
+                                               SpatialField<SpatialOps::
+                                                            structured::
+                                                            SingleValue,
+                                                            T>::value_type const
+                                               & arg1,
                                                NeboSingleValueExpression<SubExpr2,
                                                                          T>
                                                const & arg2) {
@@ -5203,7 +5293,12 @@
                                                             structured::
                                                             SingleValue,
                                                             T> const & arg1,
-                                               T const & arg2) {
+                                               typename SpatialOps::structured::
+                                               SpatialField<SpatialOps::
+                                                            structured::
+                                                            SingleValue,
+                                                            T>::value_type const
+                                               & arg2) {
           PowFcn<Initial,
                  NeboConstSingleValueField<Initial, T>,
                  NeboScalar<Initial, T> > typedef ReturnType;
@@ -5336,7 +5431,12 @@
                                         T> pow(NeboSingleValueExpression<SubExpr1,
                                                                          T>
                                                const & arg1,
-                                               T const & arg2) {
+                                               typename SpatialOps::structured::
+                                               SpatialField<SpatialOps::
+                                                            structured::
+                                                            SingleValue,
+                                                            T>::value_type const
+                                               & arg2) {
           PowFcn<Initial, SubExpr1, NeboScalar<Initial, T> > typedef ReturnType;
 
           NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
@@ -6365,7 +6465,15 @@
                                                         NeboConstSingleValueField<Initial,
                                                                                   T>
                                                >,
-                                               T> operator ==(T const & arg1,
+                                               T> operator ==(typename
+                                                              SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>::
+                                                              value_type const &
+                                                              arg1,
                                                               SpatialOps::
                                                               structured::
                                                               SpatialField<SpatialOps::
@@ -6388,7 +6496,15 @@
        inline NeboBooleanSingleValueExpression<EqualCmp<Initial,
                                                         NeboScalar<Initial, T>,
                                                         SubExpr2>,
-                                               T> operator ==(T const & arg1,
+                                               T> operator ==(typename
+                                                              SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>::
+                                                              value_type const &
+                                                              arg1,
                                                               NeboSingleValueExpression<SubExpr2,
                                                                                         T>
                                                               const & arg2) {
@@ -6686,7 +6802,15 @@
                                                                            SingleValue,
                                                                            T>
                                                               const & arg1,
-                                                              T const & arg2) {
+                                                              typename
+                                                              SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>::
+                                                              value_type const &
+                                                              arg2) {
           EqualCmp<Initial,
                    NeboConstSingleValueField<Initial, T>,
                    NeboScalar<Initial, T> > typedef ReturnType;
@@ -6835,7 +6959,15 @@
                                                T> operator ==(NeboSingleValueExpression<SubExpr1,
                                                                                         T>
                                                               const & arg1,
-                                                              T const & arg2) {
+                                                              typename
+                                                              SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>::
+                                                              value_type const &
+                                                              arg2) {
           EqualCmp<Initial, SubExpr1, NeboScalar<Initial, T> > typedef
           ReturnType;
 
@@ -7196,7 +7328,15 @@
                                                           NeboConstSingleValueField<Initial,
                                                                                     T>
                                                >,
-                                               T> operator !=(T const & arg1,
+                                               T> operator !=(typename
+                                                              SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>::
+                                                              value_type const &
+                                                              arg1,
                                                               SpatialOps::
                                                               structured::
                                                               SpatialField<SpatialOps::
@@ -7219,7 +7359,15 @@
        inline NeboBooleanSingleValueExpression<InequalCmp<Initial,
                                                           NeboScalar<Initial, T>,
                                                           SubExpr2>,
-                                               T> operator !=(T const & arg1,
+                                               T> operator !=(typename
+                                                              SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>::
+                                                              value_type const &
+                                                              arg1,
                                                               NeboSingleValueExpression<SubExpr2,
                                                                                         T>
                                                               const & arg2) {
@@ -7519,7 +7667,15 @@
                                                                            SingleValue,
                                                                            T>
                                                               const & arg1,
-                                                              T const & arg2) {
+                                                              typename
+                                                              SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>::
+                                                              value_type const &
+                                                              arg2) {
           InequalCmp<Initial,
                      NeboConstSingleValueField<Initial, T>,
                      NeboScalar<Initial, T> > typedef ReturnType;
@@ -7669,7 +7825,15 @@
                                                T> operator !=(NeboSingleValueExpression<SubExpr1,
                                                                                         T>
                                                               const & arg1,
-                                                              T const & arg2) {
+                                                              typename
+                                                              SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>::
+                                                              value_type const &
+                                                              arg2) {
           InequalCmp<Initial, SubExpr1, NeboScalar<Initial, T> > typedef
           ReturnType;
 
@@ -8029,7 +8193,14 @@
                                                            NeboConstSingleValueField<Initial,
                                                                                      T>
                                                >,
-                                               T> operator <(T const & arg1,
+                                               T> operator <(typename SpatialOps::
+                                                             structured::
+                                                             SpatialField<SpatialOps::
+                                                                          structured::
+                                                                          SingleValue,
+                                                                          T>::
+                                                             value_type const &
+                                                             arg1,
                                                              SpatialOps::
                                                              structured::
                                                              SpatialField<SpatialOps::
@@ -8052,7 +8223,14 @@
        inline NeboBooleanSingleValueExpression<LessThanCmp<Initial,
                                                            NeboScalar<Initial, T>,
                                                            SubExpr2>,
-                                               T> operator <(T const & arg1,
+                                               T> operator <(typename SpatialOps::
+                                                             structured::
+                                                             SpatialField<SpatialOps::
+                                                                          structured::
+                                                                          SingleValue,
+                                                                          T>::
+                                                             value_type const &
+                                                             arg1,
                                                              NeboSingleValueExpression<SubExpr2,
                                                                                        T>
                                                              const & arg2) {
@@ -8343,7 +8521,14 @@
                                                                           SingleValue,
                                                                           T>
                                                              const & arg1,
-                                                             T const & arg2) {
+                                                             typename SpatialOps::
+                                                             structured::
+                                                             SpatialField<SpatialOps::
+                                                                          structured::
+                                                                          SingleValue,
+                                                                          T>::
+                                                             value_type const &
+                                                             arg2) {
           LessThanCmp<Initial,
                       NeboConstSingleValueField<Initial, T>,
                       NeboScalar<Initial, T> > typedef ReturnType;
@@ -8490,7 +8675,14 @@
                                                T> operator <(NeboSingleValueExpression<SubExpr1,
                                                                                        T>
                                                              const & arg1,
-                                                             T const & arg2) {
+                                                             typename SpatialOps::
+                                                             structured::
+                                                             SpatialField<SpatialOps::
+                                                                          structured::
+                                                                          SingleValue,
+                                                                          T>::
+                                                             value_type const &
+                                                             arg2) {
           LessThanCmp<Initial, SubExpr1, NeboScalar<Initial, T> > typedef
           ReturnType;
 
@@ -8859,7 +9051,15 @@
                                                                 NeboConstSingleValueField<Initial,
                                                                                           T>
                                                >,
-                                               T> operator <=(T const & arg1,
+                                               T> operator <=(typename
+                                                              SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>::
+                                                              value_type const &
+                                                              arg1,
                                                               SpatialOps::
                                                               structured::
                                                               SpatialField<SpatialOps::
@@ -8884,7 +9084,15 @@
                                                                 NeboScalar<Initial,
                                                                            T>,
                                                                 SubExpr2>,
-                                               T> operator <=(T const & arg1,
+                                               T> operator <=(typename
+                                                              SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>::
+                                                              value_type const &
+                                                              arg1,
                                                               NeboSingleValueExpression<SubExpr2,
                                                                                         T>
                                                               const & arg2) {
@@ -9191,7 +9399,15 @@
                                                                            SingleValue,
                                                                            T>
                                                               const & arg1,
-                                                              T const & arg2) {
+                                                              typename
+                                                              SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>::
+                                                              value_type const &
+                                                              arg2) {
           LessThanEqualCmp<Initial,
                            NeboConstSingleValueField<Initial, T>,
                            NeboScalar<Initial, T> > typedef ReturnType;
@@ -9346,7 +9562,15 @@
                                                T> operator <=(NeboSingleValueExpression<SubExpr1,
                                                                                         T>
                                                               const & arg1,
-                                                              T const & arg2) {
+                                                              typename
+                                                              SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>::
+                                                              value_type const &
+                                                              arg2) {
           LessThanEqualCmp<Initial, SubExpr1, NeboScalar<Initial, T> > typedef
           ReturnType;
 
@@ -9712,7 +9936,14 @@
                                                               NeboConstSingleValueField<Initial,
                                                                                         T>
                                                >,
-                                               T> operator >(T const & arg1,
+                                               T> operator >(typename SpatialOps::
+                                                             structured::
+                                                             SpatialField<SpatialOps::
+                                                                          structured::
+                                                                          SingleValue,
+                                                                          T>::
+                                                             value_type const &
+                                                             arg1,
                                                              SpatialOps::
                                                              structured::
                                                              SpatialField<SpatialOps::
@@ -9737,7 +9968,14 @@
                                                               NeboScalar<Initial,
                                                                          T>,
                                                               SubExpr2>,
-                                               T> operator >(T const & arg1,
+                                               T> operator >(typename SpatialOps::
+                                                             structured::
+                                                             SpatialField<SpatialOps::
+                                                                          structured::
+                                                                          SingleValue,
+                                                                          T>::
+                                                             value_type const &
+                                                             arg1,
                                                              NeboSingleValueExpression<SubExpr2,
                                                                                        T>
                                                              const & arg2) {
@@ -10030,7 +10268,14 @@
                                                                           SingleValue,
                                                                           T>
                                                              const & arg1,
-                                                             T const & arg2) {
+                                                             typename SpatialOps::
+                                                             structured::
+                                                             SpatialField<SpatialOps::
+                                                                          structured::
+                                                                          SingleValue,
+                                                                          T>::
+                                                             value_type const &
+                                                             arg2) {
           GreaterThanCmp<Initial,
                          NeboConstSingleValueField<Initial, T>,
                          NeboScalar<Initial, T> > typedef ReturnType;
@@ -10181,7 +10426,14 @@
                                                T> operator >(NeboSingleValueExpression<SubExpr1,
                                                                                        T>
                                                              const & arg1,
-                                                             T const & arg2) {
+                                                             typename SpatialOps::
+                                                             structured::
+                                                             SpatialField<SpatialOps::
+                                                                          structured::
+                                                                          SingleValue,
+                                                                          T>::
+                                                             value_type const &
+                                                             arg2) {
           GreaterThanCmp<Initial, SubExpr1, NeboScalar<Initial, T> > typedef
           ReturnType;
 
@@ -10557,7 +10809,15 @@
                                                                    NeboConstSingleValueField<Initial,
                                                                                              T>
                                                >,
-                                               T> operator >=(T const & arg1,
+                                               T> operator >=(typename
+                                                              SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>::
+                                                              value_type const &
+                                                              arg1,
                                                               SpatialOps::
                                                               structured::
                                                               SpatialField<SpatialOps::
@@ -10582,7 +10842,15 @@
                                                                    NeboScalar<Initial,
                                                                               T>,
                                                                    SubExpr2>,
-                                               T> operator >=(T const & arg1,
+                                               T> operator >=(typename
+                                                              SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>::
+                                                              value_type const &
+                                                              arg1,
                                                               NeboSingleValueExpression<SubExpr2,
                                                                                         T>
                                                               const & arg2) {
@@ -10896,7 +11164,15 @@
                                                                            SingleValue,
                                                                            T>
                                                               const & arg1,
-                                                              T const & arg2) {
+                                                              typename
+                                                              SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>::
+                                                              value_type const &
+                                                              arg2) {
           GreaterThanEqualCmp<Initial,
                               NeboConstSingleValueField<Initial, T>,
                               NeboScalar<Initial, T> > typedef ReturnType;
@@ -11052,7 +11328,15 @@
                                                T> operator >=(NeboSingleValueExpression<SubExpr1,
                                                                                         T>
                                                               const & arg1,
-                                                              T const & arg2) {
+                                                              typename
+                                                              SpatialOps::
+                                                              structured::
+                                                              SpatialField<SpatialOps::
+                                                                           structured::
+                                                                           SingleValue,
+                                                                           T>::
+                                                              value_type const &
+                                                              arg2) {
           GreaterThanEqualCmp<Initial, SubExpr1, NeboScalar<Initial, T> >
           typedef ReturnType;
 
@@ -12089,7 +12373,12 @@
                                                NeboScalar<Initial, T>,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> max(T const & arg1,
+                                        T> max(typename SpatialOps::structured::
+                                               SpatialField<SpatialOps::
+                                                            structured::
+                                                            SingleValue,
+                                                            T>::value_type const
+                                               & arg1,
                                                SpatialOps::structured::
                                                SpatialField<SpatialOps::
                                                             structured::
@@ -12110,7 +12399,12 @@
        inline NeboSingleValueExpression<MaxFcn<Initial,
                                                NeboScalar<Initial, T>,
                                                SubExpr2>,
-                                        T> max(T const & arg1,
+                                        T> max(typename SpatialOps::structured::
+                                               SpatialField<SpatialOps::
+                                                            structured::
+                                                            SingleValue,
+                                                            T>::value_type const
+                                               & arg1,
                                                NeboSingleValueExpression<SubExpr2,
                                                                          T>
                                                const & arg2) {
@@ -12382,7 +12676,12 @@
                                                             structured::
                                                             SingleValue,
                                                             T> const & arg1,
-                                               T const & arg2) {
+                                               typename SpatialOps::structured::
+                                               SpatialField<SpatialOps::
+                                                            structured::
+                                                            SingleValue,
+                                                            T>::value_type const
+                                               & arg2) {
           MaxFcn<Initial,
                  NeboConstSingleValueField<Initial, T>,
                  NeboScalar<Initial, T> > typedef ReturnType;
@@ -12515,7 +12814,12 @@
                                         T> max(NeboSingleValueExpression<SubExpr1,
                                                                          T>
                                                const & arg1,
-                                               T const & arg2) {
+                                               typename SpatialOps::structured::
+                                               SpatialField<SpatialOps::
+                                                            structured::
+                                                            SingleValue,
+                                                            T>::value_type const
+                                               & arg2) {
           MaxFcn<Initial, SubExpr1, NeboScalar<Initial, T> > typedef ReturnType;
 
           NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
@@ -12862,7 +13166,12 @@
                                                NeboScalar<Initial, T>,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> min(T const & arg1,
+                                        T> min(typename SpatialOps::structured::
+                                               SpatialField<SpatialOps::
+                                                            structured::
+                                                            SingleValue,
+                                                            T>::value_type const
+                                               & arg1,
                                                SpatialOps::structured::
                                                SpatialField<SpatialOps::
                                                             structured::
@@ -12883,7 +13192,12 @@
        inline NeboSingleValueExpression<MinFcn<Initial,
                                                NeboScalar<Initial, T>,
                                                SubExpr2>,
-                                        T> min(T const & arg1,
+                                        T> min(typename SpatialOps::structured::
+                                               SpatialField<SpatialOps::
+                                                            structured::
+                                                            SingleValue,
+                                                            T>::value_type const
+                                               & arg1,
                                                NeboSingleValueExpression<SubExpr2,
                                                                          T>
                                                const & arg2) {
@@ -13155,7 +13469,12 @@
                                                             structured::
                                                             SingleValue,
                                                             T> const & arg1,
-                                               T const & arg2) {
+                                               typename SpatialOps::structured::
+                                               SpatialField<SpatialOps::
+                                                            structured::
+                                                            SingleValue,
+                                                            T>::value_type const
+                                               & arg2) {
           MinFcn<Initial,
                  NeboConstSingleValueField<Initial, T>,
                  NeboScalar<Initial, T> > typedef ReturnType;
@@ -13288,7 +13607,12 @@
                                         T> min(NeboSingleValueExpression<SubExpr1,
                                                                          T>
                                                const & arg1,
-                                               T const & arg2) {
+                                               typename SpatialOps::structured::
+                                               SpatialField<SpatialOps::
+                                                            structured::
+                                                            SingleValue,
+                                                            T>::value_type const
+                                               & arg2) {
           MinFcn<Initial, SubExpr1, NeboScalar<Initial, T> > typedef ReturnType;
 
           NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;

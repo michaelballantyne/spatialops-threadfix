@@ -74,10 +74,12 @@ using std::endl;
         RUNTEST(50.3 OP (input2 OP input3), 50.3 OP (INPUT2 OP INPUT3), TESTTYPE" (Scalar x SubExpr) test");        \
         RUNTEST((input1 OP input2) OP 4.7, (INPUT1 OP INPUT2) OP 4.7, TESTTYPE" (SubExpr x Scalar) test");          \
                                                                                                                     \
+        RUNTEST(SVinput1 OP 4, SVinput1[0] OP 4, TESTTYPE" (SVField x integer) test");                              \
         RUNTEST(SVinput1 OP 4.7, SVinput1[0] OP 4.7, TESTTYPE" (SVField x Scalar) test");                           \
         RUNTEST(SVinput1 OP input1, SVinput1[0] OP INPUT1, TESTTYPE" (SVField x Field) test");                      \
         RUNTEST(SVinput1 OP SVinput2, SVinput1[0] OP SVinput2[0], TESTTYPE" (SVField x SVField) test");             \
                                                                                                                     \
+        RUNSVTEST(SVinput1 OP 4, SVinput1[0] OP 4, TESTTYPE" (SVField x integer) -> SVField test");                 \
         RUNSVTEST(SVinput1 OP 4.7, SVinput1[0] OP 4.7, TESTTYPE" (SVField x Scalar) -> SVField test");              \
         RUNSVTEST(SVinput1 OP SVinput2, SVinput1[0] OP SVinput2[0], TESTTYPE" (SVField x SVField) -> SVField test"); \
     }                                                                                                               \
