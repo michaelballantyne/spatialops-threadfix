@@ -42,14 +42,6 @@
 
 namespace SpatialOps {
 
-  template<typename FT, typename IsPODT> struct ValTypeSelector;
-  template<typename FT> struct ValTypeSelector<FT, boost::true_type> {
-    typedef FT type;
-  };
-  template<typename FT> struct ValTypeSelector<FT, boost::false_type> {
-    typedef typename FT::AtomicT type;
-  };
-
 
 /**
  *  @class  SpatFldPtr
@@ -160,16 +152,6 @@ public:
   bool built_from_store() const {
     return builtFromStore_;
   }
-
-  // Devin: this gets around having to make a variety of structures to mimic
-  //		  partial specializations in downstream classes... It may not be
-  //		  ideal, but it works for now and is easily replaced
-
-  // Wrap some spatial field calls to get around
-  // problems when trying to call methods of de-referenced pointers to
-  inline unsigned int   allocated_bytes() const;
-  inline typename ValTypeSelector<FieldT,typename boost::is_pod<FieldT>::type >::type* field_values() const;
-  inline unsigned short device_index() const;
 
   void detach();
 
@@ -313,46 +295,6 @@ private:
 
 //=================================================================
 
-
-//TODO: This is a problem.... We really need to specialize the SpatialField class to handle singleton values efficiently
-//              As it is now, there are a number of semantic problems with how we have to treat doubles and we're not providing
-//              the proper meta information to effectively work around them
-template<>
-inline SpatFldPtr<double>::
-SpatFldPtr( double* const field,
-            const bool builtFromStore,
-            const MemoryType mtype,
-            const unsigned short int deviceIndex )
-  : f_(field),
-    count_(new int),
-    builtFromStore_(builtFromStore),
-    deviceIndex_(deviceIndex),
-    memType_(mtype)
-{
-  if( mtype != LOCAL_RAM ){
-    std::cout << "TRIED TO BUILD AN EXTRNAL DOUBLE -- NOT SUPPORTED YET\n";
-  }
-  *count_ = 1;
-}
-// specialized for doubles masquerading as spatial fields
-
-template<>
-inline unsigned int SpatFldPtr<double>::allocated_bytes() const{
-  return sizeof(double);
-}
-
-template<>
-inline double* SpatFldPtr<double>::field_values() const {
-  return f_;
-}
-
-template<>
-inline unsigned short SpatFldPtr<double>::device_index() const {
-  return deviceIndex_;
-}
-
-//====================================================================
-
 template<typename FieldT>
 SpatFldPtr<FieldT>::SpatFldPtr( FieldT* const f )
   : f_(f),
@@ -364,19 +306,8 @@ SpatFldPtr<FieldT>::SpatFldPtr( FieldT* const f )
   *count_ = 1;
 }
 
-template<>
-inline SpatFldPtr<double>::
-SpatFldPtr( double* const f, const bool builtFromStore )
-  : f_(f),
-    count_(new int),
-    builtFromStore_(builtFromStore),
-    deviceIndex_(0),
-    memType_(LOCAL_RAM)
-{
-  *count_ = 1;
-}
-
 //------------------------------------------------------------------
+
 template<typename FieldT>
 SpatFldPtr<FieldT>::SpatFldPtr(FieldT* const f, const bool builtFromStore)
   : f_(f),
@@ -498,67 +429,11 @@ void SpatFldPtr<FieldT>::detach() {
 //------------------------------------------------------------------
 
 template<typename FieldT>
-inline unsigned int SpatFldPtr<FieldT>::allocated_bytes() const{
-  return f_->allocated_bytes();
-}
-
-//------------------------------------------------------------------
-
-template<typename FieldT>
-inline typename ValTypeSelector< FieldT, typename boost::is_pod<FieldT>::type >::type*
-SpatFldPtr<FieldT>::field_values() const {
-  return f_->field_values();
-}
-
-//------------------------------------------------------------------
-
-template<typename FieldT>
-inline unsigned short SpatFldPtr<FieldT>::device_index() const {
-  return f_->device_index();;
-}
-
-//------------------------------------------------------------------
-template<typename FieldT>
 SpatFldPtr<FieldT>::~SpatFldPtr() {
   detach();
 }
+
 //------------------------------------------------------------------
-//Wrap a double
-template<>
-inline SpatFldPtr<double>::SpatFldPtr(double* const f)
-  : f_(f),
-    count_(new int),
-    builtFromStore_(false),
-    deviceIndex_(0),
-    memType_(LOCAL_RAM)
-{
-  *count_ = 1;
-}
-
-//==================================================================
-
-
-// specialized for doubles masquerading as SpatialFields
-
-template<>
-inline
-void
-  SpatialFieldStore::restore_field<double>( const MemoryType mtype, double& d )
-{}
-
-template<>
-inline
-SpatFldPtr<double>
-SpatialFieldStore::
-get<double,double>( const double& d,
-                    const MemoryType mtype,
-                    const short int deviceIndex )
-{
-# ifdef ENABLE_THREADS
-  boost::mutex::scoped_lock lock( get_mutex() );
-# endif
-  return SpatFldPtr<double>( new double, true, mtype, deviceIndex );
-}
 
 //====================================================================
 
@@ -574,10 +449,10 @@ get_from_window( const structured::MemoryWindow& window,
                  const MemoryType mtype,
                  const unsigned short int deviceIndex )
 {
-  typedef typename ValTypeSelector<FieldT,typename boost::is_pod<FieldT>::type>::type AtomicT;
-#ifdef ENABLE_THREADS
+  typedef typename FieldT::value_type ValT;
+# ifdef ENABLE_THREADS
   boost::mutex::scoped_lock lock( get_mutex() );
-#endif
+# endif
     const structured::MemoryWindow mw( window.extent(),
                                        structured::IntVec(0,0,0),
                                        window.extent() );
@@ -585,22 +460,22 @@ get_from_window( const structured::MemoryWindow& window,
 
   switch (mtype) {
   case LOCAL_RAM: { // Allocate from a store
-    AtomicT* fnew = structured::Pool<AtomicT>::self().get(mtype,npts);
+    ValT* fnew = structured::Pool<ValT>::self().get(mtype,npts);
 #   ifndef NDEBUG  // only zero the field for debug runs.
-    AtomicT* iftmp = fnew;
+    ValT* iftmp = fnew;
     for( size_t i=0; i<npts; ++i, ++iftmp )  *iftmp = 0.0;
 #   endif
     return SpatFldPtr<FieldT>( new FieldT(mw,bc,ghost,fnew,structured::ExternalStorage), true );
   }
-#ifdef ENABLE_CUDA
+# ifdef ENABLE_CUDA
   case EXTERNAL_CUDA_GPU: {
-    AtomicT* fnew = structured::Pool<AtomicT>::self().get(mtype, npts);
+    ValT* fnew = structured::Pool<ValT>::self().get(mtype, npts);
     return SpatFldPtr<FieldT>( new FieldT(window, bc, ghost, fnew,
                                           structured::ExternalStorage,
                                           mtype, deviceIndex ),
                                true );
   }
-#endif
+# endif
   default: {
     std::ostringstream msg;
     msg << "Attempt to create Spatial Field Pointer wrapping ( "
@@ -621,9 +496,9 @@ void SpatialFieldStore::restore_field( const MemoryType mtype, FieldT& field )
 # ifdef ENABLE_THREADS
   boost::mutex::scoped_lock lock( get_mutex() );
 # endif
-  typedef typename ValTypeSelector<FieldT,typename boost::is_pod<FieldT>::type>::type AtomicT;
-  AtomicT * values = const_cast<AtomicT *>((const_cast<FieldT const &>(field)).field_values(field.memory_device_type(), field.device_index()));
-  structured::Pool<AtomicT>::self().put( mtype, values );
+  typedef typename FieldT::value_type ValT;
+  ValT * values = const_cast<ValT *>((const_cast<FieldT const &>(field)).field_values(field.memory_device_type(), field.device_index()));
+  structured::Pool<ValT>::self().put( mtype, values );
 }
 
 } // namespace SpatialOps

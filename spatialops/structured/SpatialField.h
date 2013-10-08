@@ -138,7 +138,7 @@ namespace structured{
 
     inline void reset_values(const T* values);
 
-#ifdef ENABLE_THREADS
+#   ifdef ENABLE_THREADS
     /**
      *  \class ExecMutex
      *  \brief Scoped lock.
@@ -159,7 +159,7 @@ namespace structured{
       }
 #   endif
     };
-#endif
+#   endif
 
   public:
 
@@ -467,14 +467,15 @@ namespace structured{
 template<typename Location>
 struct SingleValueCheck {
   static inline void check(MemoryWindow const & window,
-                           GhostData const & ghosts) {};
+                           GhostData const & ghosts) {}
 };
 
 template<>
 struct SingleValueCheck<SingleValue> {
   static inline void check(MemoryWindow const & window,
-                           GhostData const & ghosts) {
-#ifndef NDEBUG
+                           GhostData const & ghosts)
+  {
+#   ifndef NDEBUG
     if( (window.extent(0) > 1) &&
         (window.extent(1) > 1) &&
         (window.extent(2) > 1) ) {
@@ -482,7 +483,7 @@ struct SingleValueCheck<SingleValue> {
       msg << "Single Value Field does not support window extents larger than 1\n"
           << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
       throw(std::runtime_error(msg.str()));
-    };
+    }
 
     if( (ghosts.get_minus(0) > 0) &&
         (ghosts.get_minus(1) > 0) &&
@@ -494,9 +495,9 @@ struct SingleValueCheck<SingleValue> {
       msg << "Single Value Field does not support non-zero ghosts\n"
           << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
       throw(std::runtime_error(msg.str()));
-    };
-#endif
-  };
+    }
+#   endif
+  }
 };
 
 //==================================================================
@@ -580,7 +581,7 @@ SpatialField( const MemoryWindow& window,
 	  }
 	}
       break;
-#ifdef ENABLE_CUDA
+#     ifdef ENABLE_CUDA
       case EXTERNAL_CUDA_GPU: {
         if( mode == InternalStorage ){
           // Allocate Memory, only if Storage Mode is INTERNAL.
@@ -589,7 +590,7 @@ SpatialField( const MemoryWindow& window,
         }
         break;
       }
-#endif
+#     endif
     default: {
       std::ostringstream msg;
       msg << "Unsupported attempt to create field of type ( "
@@ -686,8 +687,9 @@ SpatialField( const MemoryWindow& window, const SpatialField& other )
   //------------------------------------------------------------------
 
 template<typename Location, typename T>
-SpatialField<Location,T>::~SpatialField() {
-#ifdef ENABLE_CUDA
+SpatialField<Location,T>::~SpatialField()
+{
+# ifdef ENABLE_CUDA
   //Release any fields allocated for consumer use
   for( typename ConsumerMap::iterator i = myConsumerFieldValues_.begin(); i != myConsumerFieldValues_.end(); ++i ){
     Pool<T>::self().put( EXTERNAL_CUDA_GPU, i->second );
@@ -699,7 +701,7 @@ SpatialField<Location,T>::~SpatialField() {
   if ( builtCpuConsumer_ ) {
     Pool<T>::self().put( LOCAL_RAM, fieldValues_ );
   }
-#endif
+# endif
 
   if ( builtField_ ) {
     switch ( memType_ ) {
@@ -708,12 +710,12 @@ SpatialField<Location,T>::~SpatialField() {
       fieldValues_ = NULL;
     }
     break;
-#ifdef ENABLE_CUDA
+#   ifdef ENABLE_CUDA
     case EXTERNAL_CUDA_GPU: {
       ema::cuda::CUDADeviceInterface::self().release( (void*)fieldValuesExtDevice_, deviceIndex_);
     }
     break;
-#endif
+#   endif
     default:
       std::ostringstream msg;
       msg << "Attempt to release ( "
@@ -744,7 +746,7 @@ reset_values( const T* values )
     }
   }
   break;
-#ifdef ENABLE_CUDA
+# ifdef ENABLE_CUDA
   case EXTERNAL_CUDA_GPU: {
     ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
 
@@ -757,7 +759,7 @@ reset_values( const T* values )
 
   }
   break;
-#endif
+# endif
 
   default:
     std::ostringstream msg;
@@ -795,7 +797,7 @@ field_values( const MemoryType consumerMemoryType,
     return fieldValues_;
   }
 
-#ifdef ENABLE_CUDA
+# ifdef ENABLE_CUDA
   case EXTERNAL_CUDA_GPU: {
     //Check local allocations first
     if( consumerMemoryType == memType_  &&  consumerDeviceIndex == deviceIndex_  ) {
@@ -813,7 +815,7 @@ field_values( const MemoryType consumerMemoryType,
     throw( std::runtime_error(msg.str()) );
 
   }
-#endif
+# endif
   default:{
     std::ostringstream msg;
     msg << "Request for consumer field pointer to unknown or unsupported device\n";
@@ -842,7 +844,7 @@ field_values( const MemoryType consumerMemoryType,
     return fieldValues_;
   }
 
-#ifdef ENABLE_CUDA
+# ifdef ENABLE_CUDA
   case EXTERNAL_CUDA_GPU: {
     //Check local allocations first
     if( consumerMemoryType == memType_  &&  consumerDeviceIndex == deviceIndex_  ) {
@@ -860,7 +862,7 @@ field_values( const MemoryType consumerMemoryType,
     throw( std::runtime_error(msg.str()) );
 
   }
-#endif
+# endif
   default:{
     std::ostringstream msg;
     msg << "Request for consumer field pointer to unknown or unsupported device\n"
@@ -878,23 +880,23 @@ add_consumer( MemoryType consumerMemoryType,
               const unsigned short int consumerDeviceIndex )
 {
   readOnly_ = true;  // once a consumer is added, we only allow read-only access
-#ifdef DEBUG_SF_ALL
+# ifdef DEBUG_SF_ALL
   std::cout << "Caught call to Spatial Field add_consumer for field : " << this->field_values() << "\n";
-#endif
+# endif
   //Check for local allocation
   if( consumerMemoryType == memType_ && consumerDeviceIndex == deviceIndex_ ) {
     return;
   }
-#   ifdef ENABLE_THREADS
+# ifdef ENABLE_THREADS
   //Make sure adding consumers is per-field atomic
   ExecMutex lock;
-#   endif
+# endif
 
   //Take action based on where the field must be available and where it currently is
   switch( consumerMemoryType ){
   case LOCAL_RAM: {
     switch( memType_ ) {
-#ifdef ENABLE_CUDA
+#   ifdef ENABLE_CUDA
     case LOCAL_RAM: {
       // The only way we should get here is if for some reason a field was allocated as
       // LOCAL_RAM with a non-zero device index.
@@ -904,30 +906,30 @@ add_consumer( MemoryType consumerMemoryType,
     break;
 
     case EXTERNAL_CUDA_GPU: { // GPU field that needs to be available on the CPU
-#ifdef DEBUG_SF_ALL
+#     ifdef DEBUG_SF_ALL
       std::cout << "EXTERNAL_CUDA_GPU field\n";
-#endif
+#     endif
 
       if( fieldValues_ == NULL ) {  // Space is already allocated
         builtCpuConsumer_ = true;
-#ifdef DEBUG_SF_ALL
+#       ifdef DEBUG_SF_ALL
         std::cout << "Consumer field does not exist, allocating...\n\n";
-#endif
+#       endif
 	fieldValues_ = Pool<T>::self().get( consumerMemoryType, ( allocatedBytes_/sizeof(T) ) );
-#ifdef DEBUG_SF_ALL
+#       ifdef DEBUG_SF_ALL
         std::cout << "fieldValues_ == " << fieldValues_ << std::endl;
-#endif
+#       endif
       }
 
-#ifdef DEBUG_SF_ALL
+#     ifdef DEBUG_SF_ALL
       std::cout << "Calling memcpy with " << fieldValues_ << " " << fieldValuesExtDevice_
           << " " << allocatedBytes_ << " " << deviceIndex_ << std::endl;
-#endif
+#     endif
       ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
       CDI.memcpy_from( fieldValues_, fieldValuesExtDevice_, allocatedBytes_, deviceIndex_ );
     }
     break;
-#endif
+#   endif
     default:{
       std::ostringstream msg;
       msg << "Failed call to add_consumer on Spatial Field, unknown source device type\n"
@@ -940,7 +942,7 @@ add_consumer( MemoryType consumerMemoryType,
   } // LOCAL_RAM
   break;
 
-#ifdef ENABLE_CUDA
+# ifdef ENABLE_CUDA
   case EXTERNAL_CUDA_GPU: {
     switch( memType_ ) {
     case LOCAL_RAM: { //CPU Field needs to be available on a GPU
@@ -982,7 +984,7 @@ add_consumer( MemoryType consumerMemoryType,
     }
   } // EXTERNAL_CUDA_GPU
   break;
-#endif
+# endif
 
   default: {
     std::ostringstream msg;
@@ -1001,27 +1003,27 @@ bool SpatialField<Location,T>::
 find_consumer( MemoryType consumerMemoryType,
               const unsigned short int consumerDeviceIndex ) const
 {
-#ifdef DEBUG_SF_ALL
+# ifdef DEBUG_SF_ALL
   std::cout << "Caught call to Spatial Field find_consumer for field : " << this->field_values() << "\n";
-#endif
+# endif
   //Check for local allocation
   if( consumerMemoryType == memType_ && consumerDeviceIndex == deviceIndex_ ) {
     return true;
   }
-#   ifdef ENABLE_THREADS
+# ifdef ENABLE_THREADS
   //Make sure adding consumers is per-field atomic
   ExecMutex lock;
-#   endif
+# endif
 
   //Take action based on where the field must be available and where it currently is
   switch( consumerMemoryType ){
   case LOCAL_RAM: {
     switch( memType_ ) {
-#ifdef ENABLE_CUDA
+#   ifdef ENABLE_CUDA
     case EXTERNAL_CUDA_GPU: { // GPU field that needs to be available on the CPU
         return fieldValues_ != NULL;
     }
-#endif
+#   endif
     default:{
       std::ostringstream msg;
       msg << "Failed call to find_consumer on Spatial Field, unknown source device type\n"
@@ -1033,11 +1035,11 @@ find_consumer( MemoryType consumerMemoryType,
 
   } // LOCAL_RAM
 
-#ifdef ENABLE_CUDA
+# ifdef ENABLE_CUDA
   case EXTERNAL_CUDA_GPU: {
         return consumerFieldValues_.find( consumerDeviceIndex ) != consumerFieldValues_.end();
   } // EXTERNAL_CUDA_GPU
-#endif
+# endif
 
   default: {
     std::ostringstream msg;
@@ -1350,13 +1352,13 @@ SpatialField<Location,T>::operator=(const field_type& other)
     }
     break;
 
-#ifdef ENABLE_CUDA
+#   ifdef ENABLE_CUDA
     case EXTERNAL_CUDA_GPU: { //LOCAL_RAM = EXTERNAL_CUDA_GPU
       ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
       CDI.memcpy_from( fieldValues_, other.fieldValuesExtDevice_, allocatedBytes_, other.deviceIndex_ );
     }
     break;
-#endif
+#   endif
 
     default:
       std::ostringstream msg;
@@ -1370,7 +1372,7 @@ SpatialField<Location,T>::operator=(const field_type& other)
     }
     return *this;
   }
-#ifdef ENABLE_CUDA
+# ifdef ENABLE_CUDA
   case EXTERNAL_CUDA_GPU: {
     switch( other.memory_device_type() ) {
     case LOCAL_RAM: {
@@ -1407,7 +1409,7 @@ SpatialField<Location,T>::operator=(const field_type& other)
     break;
 
   }
-#endif
+# endif
   default:
     std::ostringstream msg;
     msg << "Attempted unsupported copy operation, at \n\t"
