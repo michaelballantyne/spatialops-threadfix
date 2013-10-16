@@ -27,15 +27,24 @@
 
 namespace SpatialOps {
 
+  /**
+   * \struct NeboStencilBuilder
+   * \brief Supports definition of new Nebo stencils.
+   *
+   * \tparam OperatorType the type of operator, e.g. SpatialOps::Gradient, SpatialOps::Interpolant, etc.
+   * \tparam PntCltnT     defines the stencil points
+   * \tparam SrcFieldT    the type of field that this operator acts on
+   * \tparam DestFieldT   the type of field that this operator produces
+   */
     template<typename OperatorType, typename PntCltnT, typename SrcFieldT, typename DestFieldT>
     struct NeboStencilBuilder {
     public:
-        typedef OperatorType  type;                 // operator type (Interpolant, Gradient, Divergence)
-        typedef PntCltnT      PointCollectionType;  // collection of stencil points
-        typedef SrcFieldT     SrcFieldType;         // source field type
-        typedef DestFieldT    DestFieldType;        // destination field type
+        typedef OperatorType  type;                 ///< operator type (Interpolant, Gradient, Divergence)
+        typedef PntCltnT      PointCollectionType;  ///< collection of stencil points
+        typedef SrcFieldT     SrcFieldType;         ///< source field type
+        typedef DestFieldT    DestFieldType;        ///< destination field type
         typedef NeboStencilCoefCollection<PointCollectionType::length>
-                              CoefCollection;       // collection of coefficients
+                              CoefCollection;       ///< collection of coefficients
 
         // typedefs for when argument is a Nebo expression
         template<typename Arg>
