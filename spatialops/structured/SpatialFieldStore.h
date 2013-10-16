@@ -271,9 +271,6 @@ public:
   template<typename FieldT>
   inline static void restore_field(const MemoryType mtype, FieldT& f);
 
-//  inline static size_t active(){ return Pool<typename FieldT::AtomicT>::self().active(); }
-//  inline static size_t total() { return Pool<typename FieldT::AtomicT>::self().total(); }
-
 private:
 
 #ifdef ENABLE_THREADS

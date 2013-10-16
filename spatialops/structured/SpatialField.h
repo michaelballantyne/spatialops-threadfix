@@ -164,9 +164,7 @@ namespace structured{
   public:
 
     typedef SpatialField<FieldLocation,T> field_type;
-//    typedef GhostTraits Ghost;
     typedef FieldLocation Location;
-    typedef T AtomicT;
     typedef T value_type;
     typedef MemoryWindow memory_window;
     typedef FieldIterator<field_type> iterator;

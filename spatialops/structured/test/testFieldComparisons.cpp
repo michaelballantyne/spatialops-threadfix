@@ -155,7 +155,7 @@ void fill_field_range(FieldT * f1, double start, double range)
  * Evenly space the values in vals array within the field.
  */
 template<typename FieldT>
-void sprinkle_in_field(FieldT * f1, typename FieldT::AtomicT* vals, size_t size)
+void sprinkle_in_field(FieldT * f1, typename FieldT::value_type* vals, size_t size)
 {
   size_t cells = f1->window_with_ghost().local_npts();
   if(size > cells) {
