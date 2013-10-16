@@ -58,15 +58,15 @@ namespace structured{
     const double dz = Lz/nz;
 
     //Coefficients:
-    NeboStencilCoefCollection<2> coefHalf = build_two_point_coef_collection( 0.5, 0.5 );
-    NeboStencilCoefCollection<2> coefDx = build_two_point_coef_collection( -1.0/dx, 1.0/dx );
-    NeboStencilCoefCollection<2> coefDy = build_two_point_coef_collection( -1.0/dy, 1.0/dy );
-    NeboStencilCoefCollection<2> coefDz = build_two_point_coef_collection( -1.0/dz, 1.0/dz );
-    NeboStencilCoefCollection<1> coefNull = build_coef_collection( 1.0 );
+    NeboStencilCoefCollection<2> coefHalf    = build_two_point_coef_collection( 0.5, 0.5 );
+    NeboStencilCoefCollection<2> coefDx      = build_two_point_coef_collection( -1.0/dx, 1.0/dx );
+    NeboStencilCoefCollection<2> coefDy      = build_two_point_coef_collection( -1.0/dy, 1.0/dy );
+    NeboStencilCoefCollection<2> coefDz      = build_two_point_coef_collection( -1.0/dz, 1.0/dz );
+    NeboStencilCoefCollection<1> coefNull    = build_coef_collection( 1.0 );
     NeboStencilCoefCollection<4> coefQuarter = build_four_point_coef_collection( 0.25, 0.25, 0.25, 0.25 );
-    NeboStencilCoefCollection<2> coefHalfDx = build_two_point_coef_collection( -0.5/dx, 0.5/dx );
-    NeboStencilCoefCollection<2> coefHalfDy = build_two_point_coef_collection( -0.5/dy, 0.5/dy );
-    NeboStencilCoefCollection<2> coefHalfDz = build_two_point_coef_collection( -0.5/dz, 0.5/dz );
+    NeboStencilCoefCollection<2> coefHalfDx  = build_two_point_coef_collection( -0.5/dx, 0.5/dx );
+    NeboStencilCoefCollection<2> coefHalfDy  = build_two_point_coef_collection( -0.5/dy, 0.5/dy );
+    NeboStencilCoefCollection<2> coefHalfDz  = build_two_point_coef_collection( -0.5/dz, 0.5/dz );
 
     //___________________________________________________________________
     // stencil2:

@@ -7,8 +7,6 @@ set( src
 
 nebo_set_add_file( src FDStencil2.cpp )
 nebo_set_add_file( src NullStencil.cpp )
-nebo_set_add_file( src Stencil2.cpp )
-nebo_set_add_file( src Stencil4.cpp )
 
 if( ENABLE_CUDA )
     set( src ${src}
@@ -32,10 +30,6 @@ install( FILES
   CudaStencil2Bridge.h
   CudaStencil4.h
   CudaStencil4Bridge.h
-  Stencil2.h
-  Stencil2_def.h
-  Stencil4.h
-  Stencil4_def.h
   StencilBuilder.h
   DESTINATION include/spatialops/structured/stencil/
   PERMISSIONS OWNER_READ GROUP_READ WORLD_READ

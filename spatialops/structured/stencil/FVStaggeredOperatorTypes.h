@@ -25,10 +25,8 @@
 
 #include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/stencil/Stencil2.h>
 #include <spatialops/structured/stencil/FDStencil2.h>
 #include <spatialops/structured/stencil/NullStencil.h>
-#include <spatialops/structured/stencil/Stencil4.h>
 #include <spatialops/structured/stencil/BoxFilter.h>
 
 namespace SpatialOps{
