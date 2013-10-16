@@ -5,9 +5,6 @@ set( src
      StencilBuilder.cpp
     )
 
-nebo_set_add_file( src FDStencil2.cpp )
-nebo_set_add_file( src NullStencil.cpp )
-
 nebo_add_library( spatialops-stencil src )
 
 if( ENABLE_TESTS )
@@ -16,9 +13,7 @@ endif( ENABLE_TESTS )
 
 install( FILES
   BoxFilter.h
-  FDStencil2.h
   FVStaggeredBCOp.h
-  NullStencil.h
   StencilBuilder.h
   DESTINATION include/spatialops/structured/stencil/
   PERMISSIONS OWNER_READ GROUP_READ WORLD_READ

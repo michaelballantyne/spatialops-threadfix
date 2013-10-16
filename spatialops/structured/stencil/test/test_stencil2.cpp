@@ -6,7 +6,6 @@
 #include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
 #include <spatialops/structured/stencil/StencilBuilder.h>
-#include <spatialops/structured/stencil/FDStencil2.h>
 
 #include "test_stencil_helper.h"
 #include <test/TestHelper.h>
