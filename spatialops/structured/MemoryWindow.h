@@ -404,12 +404,6 @@ namespace structured{
   };
 
   template<typename FieldType>
-  inline FieldIterator<FieldType> operator+( const int change,
-                                             FieldIterator<FieldType> const & iterator) {
-    return iterator + change;
-  };
-
-  template<typename FieldType>
   class ConstFieldIterator : public std::iterator<std::random_access_iterator_tag, typename FieldType::value_type> {
     typedef ConstFieldIterator<FieldType> Self;
     typedef typename FieldType::value_type AtomicType;
@@ -577,12 +571,6 @@ namespace structured{
     int yExtent_;
     int zExtent_;
     int xyExtent_;
-  };
-
-  template<typename FieldType>
-  inline ConstFieldIterator<FieldType> operator+( const int change,
-                                                  ConstFieldIterator<FieldType> const & iterator) {
-    return iterator + change;
   };
 
 } // namespace structured
