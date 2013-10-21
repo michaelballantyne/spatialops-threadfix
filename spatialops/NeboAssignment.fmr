@@ -98,6 +98,15 @@
                   (cs SVFT-def-chunk)
                   use-ghost
                   null
+                  (tpl-pmtr (scope SVFT-def-chunk vt-chunk))
+                  (tpl-use NS-chunk 'Initial (tpl-pmtr (scope SVFT-def-chunk vt-chunk)))
+                  (fc 'RhsType 'rhs))
+   (single-assign name
+                  'T
+                  SVFT-def-chunk
+                  (cs SVFT-def-chunk)
+                  use-ghost
+                  null
                   SVFT-def-chunk
                   (tpl-use NCSVF-chunk 'Initial 'T)
                   (fc 'RhsType 'rhs))
