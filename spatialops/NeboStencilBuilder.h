@@ -23,8 +23,6 @@
 #ifndef NEBO_STENCIL_BUILDER_H
 #define NEBO_STENCIL_BUILDER_H
 
-#include <spatialops/structured/IndexTriplet.h>
-
 namespace SpatialOps {
 
   /**
@@ -121,12 +119,6 @@ namespace SpatialOps {
     };
 
     template<typename OperatorType, typename SrcFieldType, typename DestFieldType>
-    struct NullStencilCollection {
-        typedef structured::IndexTriplet<0, 0, 0> StencilPoint;
-        typedef BuildStencilPointCollection<StencilPoint>::Result StPtCollection;
-    };
-
-    template<typename OperatorType, typename SrcFieldType, typename DestFieldType>
     struct Stencil4Collection {
         template<bool Boolean, typename True, typename False>
         struct TemplateIf;
@@ -192,6 +184,203 @@ namespace SpatialOps {
         typedef typename DirVec::Negate                                     LowStPt;
         typedef DirVec                                                      HighStPt;
         typedef typename BuildTwoPointCollection<LowStPt, HighStPt>::Result StPtCollection;
+    };
+
+  /**
+   * \struct NeboSumStencilBuilder
+   * \brief Supports definition of new Nebo sum stencils, which sums given stencil points WITHOUT coefficients.
+   *
+   * \tparam PntCltnT     defines the stencil points
+   * \tparam SrcFieldT    the type of field that this operator acts on
+   * \tparam DestFieldT   the type of field that this operator produces
+   */
+    template<typename PntCltnT, typename SrcFieldT, typename DestFieldT>
+    struct NeboSumStencilBuilder {
+    public:
+        typedef PntCltnT      PointCollectionType;  ///< collection of stencil points
+        typedef SrcFieldT     SrcFieldType;         ///< source field type
+        typedef DestFieldT    DestFieldType;        ///< destination field type
+
+        // typedefs for when argument is a Nebo expression
+        template<typename Arg>
+        struct WithArg {
+            typedef NeboSumStencil<Initial, PointCollectionType, Arg, DestFieldType> Stencil;
+            typedef NeboExpression<Stencil, DestFieldType> Result;
+        };
+
+        // typedefs for when argument is a field
+        typedef NeboConstField<Initial, SrcFieldType> FieldArg;
+        typedef NeboSumStencil<Initial, PointCollectionType, FieldArg, DestFieldType> FieldStencil;
+        typedef NeboExpression<FieldStencil, DestFieldType> FieldResult;
+
+        /**
+         *  \brief construct a stencil
+         */
+        NeboSumStencilBuilder()
+        {}
+
+        ~NeboSumStencilBuilder() {}
+
+        /**
+         * \brief Apply this operator to the supplied source field to produce the supplied destination field
+         * \param src the field that the operator is applied to
+         * \param dest the resulting field.
+         */
+        void apply_to_field( const SrcFieldType & src, DestFieldType & dest ) const {
+            dest <<= operator()(src);
+        }
+
+        /**
+         * \brief Nebo's inline operator for field values
+         * \param src the field to which the operator is applied
+         */
+        inline FieldResult operator ()( const SrcFieldType & src ) const {
+            return FieldResult(FieldStencil(FieldArg(src)));
+        }
+
+        /**
+         * \brief Nebo's inline operator for Nebo expressions
+         * \param src the Nebo expression to which the operator is applied
+         */
+        template<typename Arg>
+        inline typename WithArg<Arg>::Result
+        operator ()( const NeboExpression<Arg, SrcFieldType> & src ) const {
+            typedef typename WithArg<Arg>::Stencil Stencil;
+            typedef typename WithArg<Arg>::Result Result;
+            return Result(Stencil(src.expr()));
+        }
+    };
+
+    struct NullStencilCollection {
+        typedef BuildStencilPointCollection< structured::IndexTriplet<0, 0, 0> >::Result StPtCollection;
+    };
+
+  /**
+   * \struct NeboAverageStencilBuilder
+   * \brief Supports definition of new Nebo average stencils, which automatically averages given stencil points.
+   *
+   * \tparam PntCltnT     defines the stencil points
+   * \tparam SrcFieldT    the type of field that this operator acts on
+   * \tparam DestFieldT   the type of field that this operator produces
+   */
+    template<typename PntCltnT, typename SrcFieldT, typename DestFieldT>
+    struct NeboAverageStencilBuilder {
+    public:
+        typedef PntCltnT      PointCollectionType;  ///< collection of stencil points
+        typedef SrcFieldT     SrcFieldType;         ///< source field type
+        typedef DestFieldT    DestFieldType;        ///< destination field type
+
+        // typedefs for when argument is a Nebo expression
+        template<typename Arg>
+        struct WithArg {
+            typedef NeboSumStencil<Initial, PointCollectionType, Arg, DestFieldType> Stencil;
+            typedef NeboScalar<Initial, double> Scalar;
+            typedef ProdOp<Initial, Stencil, Scalar> Average;
+            typedef NeboExpression<Average, DestFieldType> Result;
+        };
+
+        // typedefs for when argument is a field
+        typedef NeboConstField<Initial, SrcFieldType> FieldArg;
+        typedef NeboScalar<Initial, double> FieldScalar;
+        typedef NeboSumStencil<Initial, PointCollectionType, FieldArg, DestFieldType> FieldStencil;
+        typedef ProdOp<Initial, FieldStencil, FieldScalar> FieldAverage;
+        typedef NeboExpression<FieldAverage, DestFieldType> FieldResult;
+
+        /**
+         *  \brief construct a stencil
+         */
+        NeboAverageStencilBuilder()
+        {}
+
+        ~NeboAverageStencilBuilder() {}
+
+        /**
+         * \brief Apply this operator to the supplied source field to produce the supplied destination field
+         * \param src the field that the operator is applied to
+         * \param dest the resulting field.
+         */
+        void apply_to_field( const SrcFieldType & src, DestFieldType & dest ) const {
+            dest <<= operator()(src);
+        }
+
+        /**
+         * \brief Nebo's inline operator for field values
+         * \param src the field to which the operator is applied
+         */
+        inline FieldResult operator ()( const SrcFieldType & src ) const {
+            return FieldResult(FieldAverage(FieldStencil(FieldArg(src)),
+                                            FieldScalar(1.0 / double(PointCollectionType::length))));
+        }
+
+        /**
+         * \brief Nebo's inline operator for Nebo expressions
+         * \param src the Nebo expression to which the operator is applied
+         */
+        template<typename Arg>
+        inline typename WithArg<Arg>::Result
+        operator ()( const NeboExpression<Arg, SrcFieldType> & src ) const {
+            typedef typename WithArg<Arg>::Stencil Stencil;
+            typedef typename WithArg<Arg>::Scalar Scalar;
+            typedef typename WithArg<Arg>::Average Average;
+            typedef typename WithArg<Arg>::Result Result;
+            return Result(Average(Stencil(src.expr()),
+                                  Scalar(1.0 / double(PointCollectionType::length))));
+        }
+    };
+
+#define NEBO_ADD_POINT(X,Y,Z)                           \
+    AddPoint< structured::IndexTriplet<X,Y,Z> >::Result
+
+#define NEBO_FIRST_POINT(X,Y,Z)                                         \
+    NeboStencilPointCollection<structured::IndexTriplet<X,Y,Z>, NeboNil>
+
+    struct BoxFilter3DStencilCollection {
+      typedef NEBO_FIRST_POINT(-1,-1,-1)::NEBO_ADD_POINT( 0,-1,-1)::NEBO_ADD_POINT( 1,-1,-1)
+              ::NEBO_ADD_POINT(-1, 0,-1)::NEBO_ADD_POINT( 0, 0,-1)::NEBO_ADD_POINT( 1, 0,-1)
+              ::NEBO_ADD_POINT(-1, 1,-1)::NEBO_ADD_POINT( 0, 1,-1)::NEBO_ADD_POINT( 1, 1,-1)
+              ::NEBO_ADD_POINT(-1,-1, 0)::NEBO_ADD_POINT( 0,-1, 0)::NEBO_ADD_POINT( 1,-1, 0)
+              ::NEBO_ADD_POINT(-1, 0, 0)::NEBO_ADD_POINT( 0, 0, 0)::NEBO_ADD_POINT( 1, 0, 0)
+              ::NEBO_ADD_POINT(-1, 1, 0)::NEBO_ADD_POINT( 0, 1, 0)::NEBO_ADD_POINT( 1, 1, 0)
+              ::NEBO_ADD_POINT(-1,-1, 1)::NEBO_ADD_POINT( 0,-1, 1)::NEBO_ADD_POINT( 1,-1, 1)
+              ::NEBO_ADD_POINT(-1, 0, 1)::NEBO_ADD_POINT( 0, 0, 1)::NEBO_ADD_POINT( 1, 0, 1)
+              ::NEBO_ADD_POINT(-1, 1, 1)::NEBO_ADD_POINT( 0, 1, 1)::NEBO_ADD_POINT( 1, 1, 1)
+          StPtCollection;
+    };
+
+    struct BoxFilter2DXYStencilCollection {
+      typedef NEBO_FIRST_POINT(-1,-1, 0)::NEBO_ADD_POINT( 0,-1, 0)::NEBO_ADD_POINT( 1,-1, 0)
+              ::NEBO_ADD_POINT(-1, 0, 0)::NEBO_ADD_POINT( 0, 0, 0)::NEBO_ADD_POINT( 1, 0, 0)
+              ::NEBO_ADD_POINT(-1, 1, 0)::NEBO_ADD_POINT( 0, 1, 0)::NEBO_ADD_POINT( 1, 1, 0)
+          StPtCollection;
+    };
+
+    struct BoxFilter2DXZStencilCollection {
+      typedef NEBO_FIRST_POINT(-1, 0,-1)::NEBO_ADD_POINT( 0, 0,-1)::NEBO_ADD_POINT( 1, 0,-1)
+              ::NEBO_ADD_POINT(-1, 0, 0)::NEBO_ADD_POINT( 0, 0, 0)::NEBO_ADD_POINT( 1, 0, 0)
+              ::NEBO_ADD_POINT(-1, 0, 1)::NEBO_ADD_POINT( 0, 0, 1)::NEBO_ADD_POINT( 1, 0, 1)
+          StPtCollection;
+    };
+
+    struct BoxFilter2DYZStencilCollection {
+      typedef NEBO_FIRST_POINT( 0,-1,-1)::NEBO_ADD_POINT( 0, 0,-1)::NEBO_ADD_POINT( 0, 1,-1)
+              ::NEBO_ADD_POINT( 0,-1, 0)::NEBO_ADD_POINT( 0, 0, 0)::NEBO_ADD_POINT( 0, 1, 0)
+              ::NEBO_ADD_POINT( 0,-1, 1)::NEBO_ADD_POINT( 0, 0, 1)::NEBO_ADD_POINT( 0, 1, 1)
+          StPtCollection;
+    };
+
+    struct BoxFilter1DXStencilCollection {
+      typedef NEBO_FIRST_POINT(-1, 0, 0)::NEBO_ADD_POINT( 0, 0, 0)::NEBO_ADD_POINT( 1, 0, 0)
+          StPtCollection;
+    };
+
+    struct BoxFilter1DYStencilCollection {
+      typedef NEBO_FIRST_POINT( 0,-1, 0)::NEBO_ADD_POINT( 0, 0, 0)::NEBO_ADD_POINT( 0, 1, 0)
+          StPtCollection;
+    };
+
+    struct BoxFilter1DZStencilCollection {
+      typedef NEBO_FIRST_POINT( 0, 0,-1)::NEBO_ADD_POINT( 0, 0, 0)::NEBO_ADD_POINT( 0, 0, 1)
+          StPtCollection;
     };
 
 } // namespace SpatialOps

@@ -169,15 +169,15 @@
                         Collection::possible_ghosts(ghosts));
           }
 
-          template<typename ArgPreSeqWalk, typename DestType>
+          template<typename PreArg, typename DestType>
            struct ConstructExpr {
              NeboScalar<SeqWalk, typename DestType::value_type> typedef Coef;
 
-             typename ArgPreSeqWalk::SeqWalkType typedef Arg;
+             typename PreArg::SeqWalkType typedef Arg;
 
              ProdOp<SeqWalk, Arg, Coef> typedef MultiplyType;
 
-             typename Collection::template ConstructExpr<ArgPreSeqWalk, DestType>
+             typename Collection::template ConstructExpr<PreArg, DestType>
              typedef EarlierPointsType;
 
              typename EarlierPointsType::Result typedef EarlierPointsResult;
@@ -190,8 +190,7 @@
                                                         & plus,
                                                         structured::IntVec const
                                                         & shift,
-                                                        ArgPreSeqWalk const &
-                                                        arg,
+                                                        PreArg const & arg,
                                                         NeboStencilCoefCollection<length>
                                                         const & coefs) {
                 return Result(EarlierPointsType::in_sq_construct(minus,
@@ -207,8 +206,7 @@
 
              static inline Result const rs_sq_construct(structured::IntVec const
                                                         & shift,
-                                                        ArgPreSeqWalk const &
-                                                        arg,
+                                                        PreArg const & arg,
                                                         NeboStencilCoefCollection<length>
                                                         const & coefs,
                                                         structured::IntVec const
@@ -228,17 +226,16 @@
           };
 
 #         ifdef __CUDACC__
-             template<typename ArgPreGPUWalk, typename DestType>
+             template<typename PreArg, typename DestType>
               struct ConstructGPUExpr {
                 NeboScalar<GPUWalk, typename DestType::value_type> typedef Coef;
 
-                typename ArgPreGPUWalk::GPUWalkType typedef Arg;
+                typename PreArg::GPUWalkType typedef Arg;
 
                 ProdOp<GPUWalk, Arg, Coef> typedef MultiplyType;
 
-                typename Collection::template ConstructGPUExpr<ArgPreGPUWalk,
-                                                               DestType> typedef
-                EarlierPointsType;
+                typename Collection::template ConstructGPUExpr<PreArg, DestType>
+                typedef EarlierPointsType;
 
                 typename EarlierPointsType::Result typedef EarlierPointsResult;
 
@@ -251,18 +248,17 @@
                                                             const & plus,
                                                             structured::IntVec
                                                             const & shift,
-                                                            int const
-                                                            deviceIndex,
-                                                            ArgPreGPUWalk const
-                                                            & arg,
+                                                            PreArg const & arg,
                                                             NeboStencilCoefCollection<length>
-                                                            const & coefs) {
+                                                            const & coefs,
+                                                            int const
+                                                            deviceIndex) {
                    return Result(EarlierPointsType::in_gpu_construct(minus,
                                                                      plus,
                                                                      shift,
-                                                                     deviceIndex,
                                                                      arg,
-                                                                     coefs.others()),
+                                                                     coefs.others(),
+                                                                     deviceIndex),
                                  MultiplyType(arg.gpu_init(minus,
                                                            plus,
                                                            shift + Point::
@@ -274,15 +270,15 @@
 #         endif
           /* __CUDACC__ */
 
-          template<typename ArgPreReduction, typename DestType>
+          template<typename PreArg, typename DestType>
            struct ConstructReductionExpr {
              NeboScalar<Reduction, typename DestType::value_type> typedef Coef;
 
-             typename ArgPreReduction::ReductionType typedef Arg;
+             typename PreArg::ReductionType typedef Arg;
 
              ProdOp<Reduction, Arg, Coef> typedef MultiplyType;
 
-             typename Collection::template ConstructReductionExpr<ArgPreReduction,
+             typename Collection::template ConstructReductionExpr<PreArg,
                                                                   DestType>
              typedef EarlierPointsType;
 
@@ -296,8 +292,7 @@
                                                         & plus,
                                                         structured::IntVec const
                                                         & shift,
-                                                        ArgPreReduction const &
-                                                        arg,
+                                                        PreArg const & arg,
                                                         NeboStencilCoefCollection<length>
                                                         const & coefs) {
                 return Result(EarlierPointsType::in_rd_construct(minus,
@@ -314,16 +309,144 @@
 
              static inline Result const rs_rd_construct(structured::IntVec const
                                                         & shift,
-                                                        ArgPreReduction const &
-                                                        arg,
+                                                        PreArg const & arg,
                                                         NeboStencilCoefCollection<length>
-                                                        const & coefs) {
+                                                        const & coefs,
+                                                        structured::IntVec const
+                                                        & split,
+                                                        structured::IntVec const
+                                                        & location) {
                 return Result(EarlierPointsType::rs_rd_construct(shift,
                                                                  arg,
-                                                                 coefs.others()),
+                                                                 coefs.others(),
+                                                                 split,
+                                                                 location),
                               MultiplyType(arg.reduce_init(shift + Point::
-                                                           int_vec()),
+                                                           int_vec(),
+                                                           split,
+                                                           location),
                                            Coef(coefs.coef())));
+             }
+          };
+
+          template<typename PreArg, typename DestType>
+           struct SumConstructExpr {
+             typename PreArg::SeqWalkType typedef Arg;
+
+             typename Collection::template SumConstructExpr<PreArg, DestType>
+             typedef EarlierPointsType;
+
+             typename EarlierPointsType::Result typedef EarlierPointsResult;
+
+             SumOp<SeqWalk, EarlierPointsResult, Arg> typedef Result;
+
+             static inline Result const in_sq_construct(structured::IntVec const
+                                                        & minus,
+                                                        structured::IntVec const
+                                                        & plus,
+                                                        structured::IntVec const
+                                                        & shift,
+                                                        PreArg const & arg) {
+                return Result(EarlierPointsType::in_sq_construct(minus,
+                                                                 plus,
+                                                                 shift,
+                                                                 arg),
+                              arg.init(minus, plus, shift + Point::int_vec()));
+             }
+
+             static inline Result const rs_sq_construct(structured::IntVec const
+                                                        & shift,
+                                                        PreArg const & arg,
+                                                        structured::IntVec const
+                                                        & split,
+                                                        structured::IntVec const
+                                                        & location) {
+                return Result(EarlierPointsType::rs_sq_construct(shift,
+                                                                 arg,
+                                                                 split,
+                                                                 location),
+                              arg.init(shift + Point::int_vec(), split, location));
+             }
+          };
+
+#         ifdef __CUDACC__
+             template<typename PreArg, typename DestType>
+              struct SumConstructGPUExpr {
+                typename PreArg::GPUWalkType typedef Arg;
+
+                typename Collection::template SumConstructGPUExpr<PreArg,
+                                                                  DestType>
+                typedef EarlierPointsType;
+
+                typename EarlierPointsType::Result typedef EarlierPointsResult;
+
+                SumOp<GPUWalk, EarlierPointsResult, Arg> typedef Result;
+
+                static inline Result const in_gpu_construct(structured::IntVec
+                                                            const & minus,
+                                                            structured::IntVec
+                                                            const & plus,
+                                                            structured::IntVec
+                                                            const & shift,
+                                                            PreArg const & arg,
+                                                            int const
+                                                            deviceIndex) {
+                   return Result(EarlierPointsType::in_gpu_construct(minus,
+                                                                     plus,
+                                                                     shift,
+                                                                     arg,
+                                                                     deviceIndex),
+                                 arg.gpu_init(minus,
+                                              plus,
+                                              shift + Point::int_vec(),
+                                              deviceIndex));
+                }
+             };
+#         endif
+          /* __CUDACC__ */
+
+          template<typename PreArg, typename DestType>
+           struct SumConstructReductionExpr {
+             typename PreArg::ReductionType typedef Arg;
+
+             typename Collection::template SumConstructReductionExpr<PreArg,
+                                                                     DestType>
+             typedef EarlierPointsType;
+
+             typename EarlierPointsType::Result typedef EarlierPointsResult;
+
+             SumOp<Reduction, EarlierPointsResult, Arg> typedef Result;
+
+             static inline Result const in_rd_construct(structured::IntVec const
+                                                        & minus,
+                                                        structured::IntVec const
+                                                        & plus,
+                                                        structured::IntVec const
+                                                        & shift,
+                                                        PreArg const & arg) {
+                return Result(EarlierPointsType::in_rd_construct(minus,
+                                                                 plus,
+                                                                 shift,
+                                                                 arg),
+                              arg.reduce_init(minus,
+                                              plus,
+                                              shift + Point::int_vec()));
+             }
+
+             static inline Result const rs_rd_construct(structured::IntVec const
+                                                        & shift,
+                                                        PreArg const & arg,
+                                                        structured::IntVec const
+                                                        & split,
+                                                        structured::IntVec const
+                                                        & location) {
+                return Result(EarlierPointsType::rs_rd_construct(shift,
+                                                                 arg,
+                                                                 split,
+                                                                 location),
+                              arg.reduce_init(shift + Point::int_vec(),
+                                              split,
+                                              location));
              }
           };
       };
@@ -350,11 +473,11 @@
              return ghosts - point_to_ghost(Point::int_vec());
           }
 
-          template<typename ArgPreSeqWalk, typename DestType>
+          template<typename PreArg, typename DestType>
            struct ConstructExpr {
              NeboScalar<SeqWalk, typename DestType::value_type> typedef Coef;
 
-             typename ArgPreSeqWalk::SeqWalkType typedef Arg;
+             typename PreArg::SeqWalkType typedef Arg;
 
              ProdOp<SeqWalk, Arg, Coef> typedef Result;
 
@@ -364,8 +487,7 @@
                                                         & plus,
                                                         structured::IntVec const
                                                         & shift,
-                                                        ArgPreSeqWalk const &
-                                                        arg,
+                                                        PreArg const & arg,
                                                         NeboStencilCoefCollection<1>
                                                         const & coefs) {
                 return Result(arg.init(minus, plus, shift + Point::int_vec()),
@@ -374,8 +496,7 @@
 
              static inline Result const rs_sq_construct(structured::IntVec const
                                                         & shift,
-                                                        ArgPreSeqWalk const &
-                                                        arg,
+                                                        PreArg const & arg,
                                                         NeboStencilCoefCollection<1>
                                                         const & coefs,
                                                         structured::IntVec const
@@ -388,11 +509,11 @@
           };
 
 #         ifdef __CUDACC__
-             template<typename ArgPreGPUWalk, typename DestType>
+             template<typename PreArg, typename DestType>
               struct ConstructGPUExpr {
                 NeboScalar<GPUWalk, typename DestType::value_type> typedef Coef;
 
-                typename ArgPreGPUWalk::GPUWalkType typedef Arg;
+                typename PreArg::GPUWalkType typedef Arg;
 
                 ProdOp<GPUWalk, Arg, Coef> typedef Result;
 
@@ -402,12 +523,11 @@
                                                             const & plus,
                                                             structured::IntVec
                                                             const & shift,
-                                                            int const
-                                                            deviceIndex,
-                                                            ArgPreGPUWalk const
-                                                            & arg,
+                                                            PreArg const & arg,
                                                             NeboStencilCoefCollection<1>
-                                                            const & coefs) {
+                                                            const & coefs,
+                                                            int const
+                                                            deviceIndex) {
                    return Result(arg.gpu_init(minus,
                                               plus,
                                               shift + Point::int_vec(),
@@ -418,11 +538,11 @@
 #         endif
           /* __CUDACC__ */
 
-          template<typename ArgPreReduction, typename DestType>
+          template<typename PreArg, typename DestType>
            struct ConstructReductionExpr {
              NeboScalar<Reduction, typename DestType::value_type> typedef Coef;
 
-             typename ArgPreReduction::ReductionType typedef Arg;
+             typename PreArg::ReductionType typedef Arg;
 
              ProdOp<Reduction, Arg, Coef> typedef Result;
 
@@ -432,8 +552,7 @@
                                                         & plus,
                                                         structured::IntVec const
                                                         & shift,
-                                                        ArgPreReduction const &
-                                                        arg,
+                                                        PreArg const & arg,
                                                         NeboStencilCoefCollection<1>
                                                         const & coefs) {
                 return Result(arg.reduce_init(minus,
@@ -444,11 +563,96 @@
 
              static inline Result const rs_rd_construct(structured::IntVec const
                                                         & shift,
-                                                        ArgPreReduction const &
-                                                        arg,
+                                                        PreArg const & arg,
                                                         NeboStencilCoefCollection<1>
-                                                        const & coefs) {
-                return Result(arg.reduce_init(shift + Point::int_vec()), Coef(coefs.coef()));
+                                                        const & coefs,
+                                                        structured::IntVec const
+                                                        & split,
+                                                        structured::IntVec const
+                                                        & location) {
+                return Result(arg.reduce_init(shift + Point::int_vec(),
+                                              split,
+                                              location),
+                              Coef(coefs.coef()));
+             }
+          };
+
+          template<typename PreArg, typename DestType>
+           struct SumConstructExpr {
+             typename PreArg::SeqWalkType typedef Arg;
+
+             Arg typedef Result;
+
+             static inline Result const in_sq_construct(structured::IntVec const
+                                                        & minus,
+                                                        structured::IntVec const
+                                                        & plus,
+                                                        structured::IntVec const
+                                                        & shift,
+                                                        PreArg const & arg) {
+                return arg.init(minus, plus, shift + Point::int_vec());
+             }
+
+             static inline Result const rs_sq_construct(structured::IntVec const
+                                                        & shift,
+                                                        PreArg const & arg,
+                                                        structured::IntVec const
+                                                        & split,
+                                                        structured::IntVec const
+                                                        & location) {
+                return arg.init(shift + Point::int_vec(), split, location);
+             }
+          };
+
+#         ifdef __CUDACC__
+             template<typename PreArg, typename DestType>
+              struct SumConstructGPUExpr {
+                typename PreArg::GPUWalkType typedef Arg;
+
+                Arg typedef Result;
+
+                static inline Result const in_gpu_construct(structured::IntVec
+                                                            const & minus,
+                                                            structured::IntVec
+                                                            const & plus,
+                                                            structured::IntVec
+                                                            const & shift,
+                                                            PreArg const & arg,
+                                                            int const
+                                                            deviceIndex) {
+                   return arg.gpu_init(minus,
+                                       plus,
+                                       shift + Point::int_vec(),
+                                       deviceIndex);
+                }
+             };
+#         endif
+          /* __CUDACC__ */
+
+          template<typename PreArg, typename DestType>
+           struct SumConstructReductionExpr {
+             typename PreArg::ReductionType typedef Arg;
+
+             Arg typedef Result;
+
+             static inline Result const in_rd_construct(structured::IntVec const
+                                                        & minus,
+                                                        structured::IntVec const
+                                                        & plus,
+                                                        structured::IntVec const
+                                                        & shift,
+                                                        PreArg const & arg) {
+                return arg.reduce_init(minus, plus, shift + Point::int_vec());
+             }
+
+             static inline Result const rs_rd_construct(structured::IntVec const
+                                                        & shift,
+                                                        PreArg const & arg,
+                                                        structured::IntVec const
+                                                        & split,
+                                                        structured::IntVec const
+                                                        & location) {
+                return arg.reduce_init(shift + Point::int_vec(), split, location);
              }
           };
       };
@@ -566,9 +770,9 @@
                 return GPUWalkType(ConstructGPUExpr::in_gpu_construct(minus,
                                                                       plus,
                                                                       shift,
-                                                                      deviceIndex,
                                                                       arg_,
-                                                                      coefs_));
+                                                                      coefs_,
+                                                                      deviceIndex));
              }
 
 #            ifdef NEBO_GPU_TEST
@@ -683,6 +887,213 @@
           typename field_type::value_type typedef value_type;
 
           NeboStencil(Arg const & arg)
+          : arg_(arg)
+          {}
+
+          inline void next(void) { arg_.next(); }
+
+          inline bool at_end(void) const { return arg_.at_end(); }
+
+          inline bool has_length(void) const { return arg_.has_length(); }
+
+          inline value_type eval(void) const { return arg_.eval(); }
+
+         private:
+          Arg arg_;
+      };
+
+      template<typename CurrentMode,
+               typename Pts,
+               typename Arg,
+               typename FieldType>
+       struct NeboSumStencil;
+      template<typename Pts, typename Arg, typename FieldType>
+       struct NeboSumStencil<Initial, Pts, Arg, FieldType> {
+         public:
+          FieldType typedef field_type;
+
+          typename Pts::template SumConstructExpr<Arg, FieldType> typedef
+          ConstructExpr;
+
+          typename ConstructExpr::Result typedef ArgSeqWalkType;
+
+#         ifdef __CUDACC__
+             typename Pts::template SumConstructGPUExpr<Arg, FieldType> typedef
+             ConstructGPUExpr;
+             typename ConstructGPUExpr::Result typedef ArgGPUWalkType;
+#         endif
+          /* __CUDACC__ */
+
+          typename Pts::template SumConstructReductionExpr<Arg, FieldType>
+          typedef ConstructReductionExpr;
+
+          typename ConstructReductionExpr::Result typedef ArgReductionType;
+
+          NeboSumStencil<SeqWalk, Pts, ArgSeqWalkType, FieldType> typedef
+          SeqWalkType;
+
+#         ifdef FIELD_EXPRESSION_THREADS
+             NeboSumStencil<Resize, Pts, typename Arg::ResizeType, FieldType>
+             typedef ResizeType;
+#         endif
+          /* FIELD_EXPRESSION_THREADS */
+
+#         ifdef __CUDACC__
+             NeboSumStencil<GPUWalk, Pts, ArgGPUWalkType, FieldType> typedef
+             GPUWalkType;
+#         endif
+          /* __CUDACC__ */
+
+          NeboSumStencil<Reduction, Pts, ArgReductionType, FieldType> typedef
+          ReductionType;
+
+          NeboSumStencil(Arg const & a)
+          : arg_(a)
+          {}
+
+          inline structured::GhostData possible_ghosts(void) const {
+             return Pts::possible_ghosts(arg_.possible_ghosts());
+          }
+
+          inline SeqWalkType init(structured::IntVec const & minus,
+                                  structured::IntVec const & plus,
+                                  structured::IntVec const & shift) const {
+             return SeqWalkType(ConstructExpr::in_sq_construct(minus,
+                                                               plus,
+                                                               shift,
+                                                               arg_));
+          }
+
+#         ifdef FIELD_EXPRESSION_THREADS
+             inline ResizeType resize(structured::IntVec const & minus,
+                                      structured::IntVec const & plus) const {
+                return ResizeType(arg_.resize(minus, plus));
+             }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */
+
+#         ifdef __CUDACC__
+             inline bool cpu_ready(void) const { return arg_.cpu_ready(); }
+
+             inline bool gpu_ready(int const deviceIndex) const {
+                return arg_.gpu_ready(deviceIndex);
+             }
+
+             inline GPUWalkType gpu_init(structured::IntVec const & minus,
+                                         structured::IntVec const & plus,
+                                         structured::IntVec const & shift,
+                                         int const deviceIndex) const {
+                return GPUWalkType(ConstructGPUExpr::in_gpu_construct(minus,
+                                                                      plus,
+                                                                      shift,
+                                                                      arg_,
+                                                                      deviceIndex));
+             }
+
+#            ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const {
+                   arg_.gpu_prep(deviceIndex);
+                }
+#            endif
+             /* NEBO_GPU_TEST */
+#         endif
+          /* __CUDACC__ */
+
+          inline ReductionType reduce_init(structured::IntVec const & minus,
+                                           structured::IntVec const & plus,
+                                           structured::IntVec const & shift) const {
+             return ReductionType(ConstructExpr::in_reduce_construct(minus,
+                                                                     plus,
+                                                                     shift,
+                                                                     arg_));
+          }
+
+         private:
+          Arg const arg_;
+      };
+#     ifdef FIELD_EXPRESSION_THREADS
+         template<typename Pts, typename Arg, typename FieldType>
+          struct NeboSumStencil<Resize, Pts, Arg, FieldType> {
+            public:
+             FieldType typedef field_type;
+
+             typename Pts::template SumConstructExpr<Arg, FieldType> typedef
+             ConstructExpr;
+
+             typename ConstructExpr::Result typedef ArgSeqWalkType;
+
+             NeboSumStencil<SeqWalk, Pts, ArgSeqWalkType, FieldType> typedef
+             SeqWalkType;
+
+             NeboSumStencil(Arg const & arg)
+             : arg_(arg)
+             {}
+
+             inline SeqWalkType init(structured::IntVec const & shift,
+                                     structured::IntVec const & split,
+                                     structured::IntVec const & location) const {
+                return SeqWalkType(ConstructExpr::rs_sq_construct(shift,
+                                                                  arg_,
+                                                                  split,
+                                                                  location));
+             }
+
+            private:
+             Arg const arg_;
+         }
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
+      template<typename Pts, typename Arg, typename FieldType>
+       struct NeboSumStencil<SeqWalk, Pts, Arg, FieldType> {
+         public:
+          FieldType typedef field_type;
+
+          typename field_type::value_type typedef value_type;
+
+          NeboSumStencil(Arg const & arg)
+          : arg_(arg)
+          {}
+
+          inline void next(void) { arg_.next(); }
+
+          inline value_type eval(void) const { return arg_.eval(); }
+
+         private:
+          Arg arg_;
+      };
+#     ifdef __CUDACC__
+         template<typename Pts, typename Arg, typename FieldType>
+          struct NeboSumStencil<GPUWalk, Pts, Arg, FieldType> {
+            public:
+             FieldType typedef field_type;
+
+             typename field_type::value_type typedef value_type;
+
+             NeboSumStencil(Arg const & a)
+             : arg_(a)
+             {}
+
+             __device__ inline void start(int x, int y) { arg_.start(x, y); }
+
+             __device__ inline void next(void) { arg_.next(); }
+
+             __device__ inline value_type eval(void) const {
+                return arg_.eval();
+             }
+
+            private:
+             Arg arg_;
+         }
+#     endif
+      /* __CUDACC__ */;
+      template<typename Pts, typename Arg, typename FieldType>
+       struct NeboSumStencil<Reduction, Pts, Arg, FieldType> {
+         public:
+          FieldType typedef field_type;
+
+          typename field_type::value_type typedef value_type;
+
+          NeboSumStencil(Arg const & arg)
           : arg_(arg)
           {}
 

@@ -25,7 +25,6 @@
 
 #include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/stencil/BoxFilter.h>
 #include <spatialops/Nebo.h>
 
 namespace SpatialOps{
@@ -65,10 +64,9 @@ namespace structured{
   // no-op. Note that you should avoid this since it adds some overhead to Nebo.
   template< typename FieldT >
   struct OperatorTypeBuilder<Interpolant,FieldT,FieldT>{
-    typedef NeboStencilBuilder<Interpolant,
-                               typename NullStencilCollection<Interpolant,FieldT,FieldT>::StPtCollection,
-                               FieldT,
-                               FieldT>
+    typedef NeboSumStencilBuilder<NullStencilCollection::StPtCollection,
+                                  FieldT,
+                                  FieldT>
             type;
   };
 
@@ -188,17 +186,26 @@ namespace structured{
   OP_BUILDER( Stencil2Collection, Gradient,    ZVolField, SVolField )
 
 
-  OP_BUILDER( NullStencilCollection, Interpolant, XVolField, SSurfXField )
-  OP_BUILDER( NullStencilCollection, Interpolant, YVolField, SSurfYField )
-  OP_BUILDER( NullStencilCollection, Interpolant, ZVolField, SSurfZField )
+#define NULL_OP_BUILDER( OP, SRC, DEST )                                 \
+  template<>                                                             \
+  struct OperatorTypeBuilder<OP,SRC,DEST>{                               \
+    typedef NeboSumStencilBuilder<NullStencilCollection::StPtCollection, \
+                                  SRC,                                   \
+                                  DEST>                                  \
+        type;                                                            \
+  };
 
-  OP_BUILDER( NullStencilCollection, Interpolant, SVolField, XSurfXField )
-  OP_BUILDER( NullStencilCollection, Interpolant, SVolField, YSurfYField )
-  OP_BUILDER( NullStencilCollection, Interpolant, SVolField, ZSurfZField )
+  NULL_OP_BUILDER( Interpolant, XVolField, SSurfXField )
+  NULL_OP_BUILDER( Interpolant, YVolField, SSurfYField )
+  NULL_OP_BUILDER( Interpolant, ZVolField, SSurfZField )
 
-  OP_BUILDER( NullStencilCollection, Interpolant, XSurfXField, SVolField )
-  OP_BUILDER( NullStencilCollection, Interpolant, YSurfYField, SVolField )
-  OP_BUILDER( NullStencilCollection, Interpolant, ZSurfZField, SVolField )
+  NULL_OP_BUILDER( Interpolant, SVolField, XSurfXField )
+  NULL_OP_BUILDER( Interpolant, SVolField, YSurfYField )
+  NULL_OP_BUILDER( Interpolant, SVolField, ZSurfZField )
+
+  NULL_OP_BUILDER( Interpolant, XSurfXField, SVolField )
+  NULL_OP_BUILDER( Interpolant, YSurfYField, SVolField )
+  NULL_OP_BUILDER( Interpolant, ZSurfZField, SVolField )
 
   OP_BUILDER( Stencil4Collection, Interpolant, SVolField, XSurfYField )
   OP_BUILDER( Stencil4Collection, Interpolant, SVolField, XSurfZField )
@@ -224,10 +231,18 @@ namespace structured{
   OP_BUILDER( Stencil4Collection, Interpolant, ZVolField, YVolField )
 
   // Filter operators
-  template<> struct OperatorTypeBuilder<Filter,SVolField,SVolField>{ typedef BoxFilter<SVolField> type; };
-  template<> struct OperatorTypeBuilder<Filter,XVolField,XVolField>{ typedef BoxFilter<XVolField> type; };
-  template<> struct OperatorTypeBuilder<Filter,YVolField,YVolField>{ typedef BoxFilter<YVolField> type; };
-  template<> struct OperatorTypeBuilder<Filter,ZVolField,ZVolField>{ typedef BoxFilter<ZVolField> type; };
+#define AVE_OP_BUILDER( FIELDT )                                      \
+  template<> struct OperatorTypeBuilder<Filter,FIELDT,FIELDT>{        \
+    typedef NeboAverageStencilBuilder<BoxFilter3DStencilCollection::StPtCollection, \
+                                      FIELDT,                         \
+                                      FIELDT>                         \
+        type;                                                         \
+  };
+
+  AVE_OP_BUILDER( SVolField )
+  AVE_OP_BUILDER( XVolField )
+  AVE_OP_BUILDER( YVolField )
+  AVE_OP_BUILDER( ZVolField )
 
   // finite difference:
 #define FD_OP_BUILDER( OP, FIELDT )                             \

@@ -62,7 +62,6 @@ namespace structured{
     NeboStencilCoefCollection<2> coefDx      = build_two_point_coef_collection( -1.0/dx, 1.0/dx );
     NeboStencilCoefCollection<2> coefDy      = build_two_point_coef_collection( -1.0/dy, 1.0/dy );
     NeboStencilCoefCollection<2> coefDz      = build_two_point_coef_collection( -1.0/dz, 1.0/dz );
-    NeboStencilCoefCollection<1> coefNull    = build_coef_collection( 1.0 );
     NeboStencilCoefCollection<4> coefQuarter = build_four_point_coef_collection( 0.25, 0.25, 0.25, 0.25 );
     NeboStencilCoefCollection<2> coefHalfDx  = build_two_point_coef_collection( -0.5/dx, 0.5/dx );
     NeboStencilCoefCollection<2> coefHalfDy  = build_two_point_coef_collection( -0.5/dy, 0.5/dy );
@@ -122,22 +121,22 @@ namespace structured{
     //___________________________________________________________________
     // NullStencil:
     //
-    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,SVolField,SVolField>::type( coefNull ) );
-    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,XVolField,XVolField>::type( coefNull ) );
-    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,YVolField,YVolField>::type( coefNull ) );
-    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,ZVolField,ZVolField>::type( coefNull ) );
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,SVolField,SVolField>::type() );
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,XVolField,XVolField>::type() );
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,YVolField,YVolField>::type() );
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,ZVolField,ZVolField>::type() );
 
-    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,XVolField,SSurfXField>::type( coefNull ) );
-    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,YVolField,SSurfYField>::type( coefNull ) );
-    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,ZVolField,SSurfZField>::type( coefNull ) );
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,XVolField,SSurfXField>::type() );
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,YVolField,SSurfYField>::type() );
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,ZVolField,SSurfZField>::type() );
 
-    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,SVolField,XSurfXField>::type( coefNull ) );
-    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,SVolField,YSurfYField>::type( coefNull ) );
-    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,SVolField,ZSurfZField>::type( coefNull ) );
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,SVolField,XSurfXField>::type() );
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,SVolField,YSurfYField>::type() );
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,SVolField,ZSurfZField>::type() );
 
-    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,XSurfXField,SVolField>::type( coefNull ) );
-    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,YSurfYField,SVolField>::type( coefNull ) );
-    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,ZSurfZField,SVolField>::type( coefNull ) );
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,XSurfXField,SVolField>::type() );
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,YSurfYField,SVolField>::type() );
+    opdb.register_new_operator( new OperatorTypeBuilder<Interpolant,ZSurfZField,SVolField>::type() );
 
     //___________________________________________________________________
     // stencil4:

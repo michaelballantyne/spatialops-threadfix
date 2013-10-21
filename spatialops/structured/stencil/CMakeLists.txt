@@ -1,7 +1,6 @@
 nebo_cuda_prep_dir()
 
 set( src
-     BoxFilter.cpp
      StencilBuilder.cpp
     )
 
@@ -12,7 +11,6 @@ if( ENABLE_TESTS )
 endif( ENABLE_TESTS )
 
 install( FILES
-  BoxFilter.h
   FVStaggeredBCOp.h
   StencilBuilder.h
   DESTINATION include/spatialops/structured/stencil/

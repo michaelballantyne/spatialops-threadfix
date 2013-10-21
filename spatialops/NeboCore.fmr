@@ -61,7 +61,6 @@
 (define NSP 'NeboStencilPoint)
 (define NSPC 'NeboStencilPointCollection)
 (define NSCC 'NeboStencilCoefCollection)
-(define NSt 'NeboStencil)
 (define (ignore . given)
   null)
 

@@ -10,7 +10,6 @@
 #include <spatialops/structured/stencil/StencilBuilder.h>
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/Nebo.h>
-#include <spatialops/structured/stencil/BoxFilter.h>
 
 //-- boost includes ---//
 #include <boost/program_options.hpp>
@@ -133,9 +132,28 @@ int main(int iarg, char* carg[]) {
         }
     };
 
-    const BoxFilter<SVolField> filter;
-    RUN_TEST(filter.apply_to_field( a, cr ),
-             "filter");
+  if( dim[0]>1 && dim[1]>1 && dim[2]>1 ) {
+      const NeboAverageStencilBuilder<BoxFilter3DStencilCollection::StPtCollection, SVolField, SVolField> filter;
+      RUN_TEST(filter.apply_to_field( a, cr ), "filter");
+  } else if( dim[0]>1 && dim[1]>1 ) {
+      const NeboAverageStencilBuilder<BoxFilter2DXYStencilCollection::StPtCollection, SVolField, SVolField> filter;
+      RUN_TEST(filter.apply_to_field( a, cr ), "filter");
+  } else if( dim[0]>1 && dim[2]>1 ) {
+      const NeboAverageStencilBuilder<BoxFilter2DXZStencilCollection::StPtCollection, SVolField, SVolField> filter;
+      RUN_TEST(filter.apply_to_field( a, cr ), "filter");
+  } else if( dim[1]>1 && dim[2]>1 ) {
+      const NeboAverageStencilBuilder<BoxFilter2DYZStencilCollection::StPtCollection, SVolField, SVolField> filter;
+      RUN_TEST(filter.apply_to_field( a, cr ), "filter");
+  } else if( dim[0]>1 ) {
+      const NeboAverageStencilBuilder<BoxFilter1DXStencilCollection::StPtCollection, SVolField, SVolField> filter;
+      RUN_TEST(filter.apply_to_field( a, cr ), "filter");
+  } else if( dim[1]>1 ) {
+      const NeboAverageStencilBuilder<BoxFilter1DYStencilCollection::StPtCollection, SVolField, SVolField> filter;
+      RUN_TEST(filter.apply_to_field( a, cr ), "filter");
+  } else if( dim[2]>1 ) {
+      const NeboAverageStencilBuilder<BoxFilter1DZStencilCollection::StPtCollection, SVolField, SVolField> filter;
+      RUN_TEST(filter.apply_to_field( a, cr ), "filter");
+  }
 
     return 0;
 };

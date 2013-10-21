@@ -409,23 +409,23 @@ int main( int iarg, char* carg[] )
       if( npts[1]>1 ) { status( test_basic_stencils<YVolField>(npts, opdb, bc), "YVol operators"); };
       if( npts[2]>1 ) { status( test_basic_stencils<ZVolField>(npts, opdb, bc), "ZVol operators"); };
 
-      if( npts[0]>1 & npts[1]>1 ) status( test_stencil2<Interpolant, XVolField, YSurfXField>(npts, opdb, bc), "Interpolant XVolField -> YSurfXField (2)" );
-      if( npts[0]>1 & npts[1]>1 ) status( test_stencil2<Gradient,    XVolField, YSurfXField>(npts, opdb, bc), "Gradient    XVolField -> YSurfXField (2)" );
+      if( npts[0]>1 && npts[1]>1 ) status( test_stencil2<Interpolant, XVolField, YSurfXField>(npts, opdb, bc), "Interpolant XVolField -> YSurfXField (2)" );
+      if( npts[0]>1 && npts[1]>1 ) status( test_stencil2<Gradient,    XVolField, YSurfXField>(npts, opdb, bc), "Gradient    XVolField -> YSurfXField (2)" );
 
-      if( npts[0]>1 & npts[2]>1 ) status( test_stencil2<Interpolant, XVolField, ZSurfXField>(npts, opdb, bc), "Interpolant XVolField -> ZSurfXField (2)" );
-      if( npts[0]>1 & npts[2]>1 ) status( test_stencil2<Gradient,    XVolField, ZSurfXField>(npts, opdb, bc), "Gradient    XVolField -> ZSurfXField (2)" );
+      if( npts[0]>1 && npts[2]>1 ) status( test_stencil2<Interpolant, XVolField, ZSurfXField>(npts, opdb, bc), "Interpolant XVolField -> ZSurfXField (2)" );
+      if( npts[0]>1 && npts[2]>1 ) status( test_stencil2<Gradient,    XVolField, ZSurfXField>(npts, opdb, bc), "Gradient    XVolField -> ZSurfXField (2)" );
 
-      if( npts[1]>1 & npts[0]>1 ) status( test_stencil2<Interpolant, YVolField, XSurfYField>(npts, opdb, bc), "Interpolant YVolField -> XSurfYField (2)" );
-      if( npts[1]>1 & npts[0]>1 ) status( test_stencil2<Gradient,    YVolField, XSurfYField>(npts, opdb, bc), "Gradient    YVolField -> XSurfYField (2)" );
+      if( npts[1]>1 && npts[0]>1 ) status( test_stencil2<Interpolant, YVolField, XSurfYField>(npts, opdb, bc), "Interpolant YVolField -> XSurfYField (2)" );
+      if( npts[1]>1 && npts[0]>1 ) status( test_stencil2<Gradient,    YVolField, XSurfYField>(npts, opdb, bc), "Gradient    YVolField -> XSurfYField (2)" );
 
-      if( npts[1]>1 & npts[2]>1 ) status( test_stencil2<Interpolant, YVolField, ZSurfYField>(npts, opdb, bc), "Interpolant YVolField -> ZSurfYField (2)" );
-      if( npts[1]>1 & npts[2]>1 ) status( test_stencil2<Gradient,    YVolField, ZSurfYField>(npts, opdb, bc), "Gradient    YVolField -> ZSurfYField (2)" );
+      if( npts[1]>1 && npts[2]>1 ) status( test_stencil2<Interpolant, YVolField, ZSurfYField>(npts, opdb, bc), "Interpolant YVolField -> ZSurfYField (2)" );
+      if( npts[1]>1 && npts[2]>1 ) status( test_stencil2<Gradient,    YVolField, ZSurfYField>(npts, opdb, bc), "Gradient    YVolField -> ZSurfYField (2)" );
 
-      if( npts[2]>1 & npts[0]>1 ) status( test_stencil2<Interpolant, ZVolField, XSurfZField>(npts, opdb, bc), "Interpolant ZVolField -> XSurfZField (2)" );
-      if( npts[2]>1 & npts[0]>1 ) status( test_stencil2<Gradient,    ZVolField, XSurfZField>(npts, opdb, bc), "Gradient    ZVolField -> XSurfZField (2)" );
+      if( npts[2]>1 && npts[0]>1 ) status( test_stencil2<Interpolant, ZVolField, XSurfZField>(npts, opdb, bc), "Interpolant ZVolField -> XSurfZField (2)" );
+      if( npts[2]>1 && npts[0]>1 ) status( test_stencil2<Gradient,    ZVolField, XSurfZField>(npts, opdb, bc), "Gradient    ZVolField -> XSurfZField (2)" );
 
-      if( npts[2]>1 & npts[1]>1 ) status( test_stencil2<Interpolant, ZVolField, YSurfZField>(npts, opdb, bc), "Interpolant ZVolField -> YSurfZField (2)" );
-      if( npts[2]>1 & npts[1]>1 ) status( test_stencil2<Gradient,    ZVolField, YSurfZField>(npts, opdb, bc), "Gradient    ZVolField -> YSurfZField (2)" );
+      if( npts[2]>1 && npts[1]>1 ) status( test_stencil2<Interpolant, ZVolField, YSurfZField>(npts, opdb, bc), "Interpolant ZVolField -> YSurfZField (2)" );
+      if( npts[2]>1 && npts[1]>1 ) status( test_stencil2<Gradient,    ZVolField, YSurfZField>(npts, opdb, bc), "Gradient    ZVolField -> YSurfZField (2)" );
 
       if( npts[0]>1 ) status( test_stencil2<Interpolant, SVolField, XVolField>(npts, opdb, bc), "Interpolant SVolField -> XVolField (2)" );
       if( npts[0]>1 ) status( test_stencil2<Gradient,    SVolField, XVolField>(npts, opdb, bc), "Gradient    SVolField -> XVolField (2)" );
@@ -459,32 +459,32 @@ int main( int iarg, char* carg[] )
 
       //Stencil4 tests:
 
-      if( npts[0]>1 & npts[1]>1 ) status( test_stencil4<Interpolant, SVolField, XSurfYField>(npts, opdb, bc), "Interpolant SVolField -> XSurfYField (4)" );
-      if( npts[0]>1 & npts[2]>1 ) status( test_stencil4<Interpolant, SVolField, XSurfZField>(npts, opdb, bc), "Interpolant SVolField -> XSurfZField (4)" );
+      if( npts[0]>1 && npts[1]>1 ) status( test_stencil4<Interpolant, SVolField, XSurfYField>(npts, opdb, bc), "Interpolant SVolField -> XSurfYField (4)" );
+      if( npts[0]>1 && npts[2]>1 ) status( test_stencil4<Interpolant, SVolField, XSurfZField>(npts, opdb, bc), "Interpolant SVolField -> XSurfZField (4)" );
 
-      if( npts[1]>1 & npts[0]>1 ) status( test_stencil4<Interpolant, SVolField, YSurfXField>(npts, opdb, bc), "Interpolant SVolField -> YSurfXField (4)" );
-      if( npts[1]>1 & npts[2]>1 ) status( test_stencil4<Interpolant, SVolField, YSurfZField>(npts, opdb, bc), "Interpolant SVolField -> YSurfZField (4)" );
+      if( npts[1]>1 && npts[0]>1 ) status( test_stencil4<Interpolant, SVolField, YSurfXField>(npts, opdb, bc), "Interpolant SVolField -> YSurfXField (4)" );
+      if( npts[1]>1 && npts[2]>1 ) status( test_stencil4<Interpolant, SVolField, YSurfZField>(npts, opdb, bc), "Interpolant SVolField -> YSurfZField (4)" );
 
-      if( npts[2]>1 & npts[0]>1 ) status( test_stencil4<Interpolant, SVolField, ZSurfXField>(npts, opdb, bc), "Interpolant SVolField -> ZSurfXField (4)" );
-      if( npts[2]>1 & npts[1]>1 ) status( test_stencil4<Interpolant, SVolField, ZSurfYField>(npts, opdb, bc), "Interpolant SVolField -> ZSurfYField (4)" );
+      if( npts[2]>1 && npts[0]>1 ) status( test_stencil4<Interpolant, SVolField, ZSurfXField>(npts, opdb, bc), "Interpolant SVolField -> ZSurfXField (4)" );
+      if( npts[2]>1 && npts[1]>1 ) status( test_stencil4<Interpolant, SVolField, ZSurfYField>(npts, opdb, bc), "Interpolant SVolField -> ZSurfYField (4)" );
 
-      if( npts[0]>1 & npts[1]>1 ) status( test_stencil4<Interpolant, XSurfYField, SVolField>(npts, opdb, bc), "Interpolant XSurfYField -> SVolField (4)" );
-      if( npts[0]>1 & npts[2]>1 ) status( test_stencil4<Interpolant, XSurfZField, SVolField>(npts, opdb, bc), "Interpolant XSurfZField -> SVolField (4)" );
+      if( npts[0]>1 && npts[1]>1 ) status( test_stencil4<Interpolant, XSurfYField, SVolField>(npts, opdb, bc), "Interpolant XSurfYField -> SVolField (4)" );
+      if( npts[0]>1 && npts[2]>1 ) status( test_stencil4<Interpolant, XSurfZField, SVolField>(npts, opdb, bc), "Interpolant XSurfZField -> SVolField (4)" );
 
-      if( npts[1]>1 & npts[0]>1 ) status( test_stencil4<Interpolant, YSurfXField, SVolField>(npts, opdb, bc), "Interpolant YSurfXField -> SVolField (4)" );
-      if( npts[1]>1 & npts[2]>1 ) status( test_stencil4<Interpolant, YSurfZField, SVolField>(npts, opdb, bc), "Interpolant YSurfZField -> SVolField (4)" );
+      if( npts[1]>1 && npts[0]>1 ) status( test_stencil4<Interpolant, YSurfXField, SVolField>(npts, opdb, bc), "Interpolant YSurfXField -> SVolField (4)" );
+      if( npts[1]>1 && npts[2]>1 ) status( test_stencil4<Interpolant, YSurfZField, SVolField>(npts, opdb, bc), "Interpolant YSurfZField -> SVolField (4)" );
 
-      if( npts[2]>1 & npts[0]>1 ) status( test_stencil4<Interpolant, ZSurfXField, SVolField>(npts, opdb, bc), "Interpolant ZSurfXField -> SVolField (4)" );
-      if( npts[2]>1 & npts[1]>1 ) status( test_stencil4<Interpolant, ZSurfYField, SVolField>(npts, opdb, bc), "Interpolant ZSurfYField -> SVolField (4)" );
+      if( npts[2]>1 && npts[0]>1 ) status( test_stencil4<Interpolant, ZSurfXField, SVolField>(npts, opdb, bc), "Interpolant ZSurfXField -> SVolField (4)" );
+      if( npts[2]>1 && npts[1]>1 ) status( test_stencil4<Interpolant, ZSurfYField, SVolField>(npts, opdb, bc), "Interpolant ZSurfYField -> SVolField (4)" );
 
-      if( npts[0]>1 & npts[1]>1 ) status( test_stencil4<Interpolant, XVolField, YVolField>(npts, opdb, bc), "Interpolant XVolField -> YVolField (4)" );
-      if( npts[0]>1 & npts[2]>1 ) status( test_stencil4<Interpolant, XVolField, ZVolField>(npts, opdb, bc), "Interpolant XVolField -> ZVolField (4)" );
+      if( npts[0]>1 && npts[1]>1 ) status( test_stencil4<Interpolant, XVolField, YVolField>(npts, opdb, bc), "Interpolant XVolField -> YVolField (4)" );
+      if( npts[0]>1 && npts[2]>1 ) status( test_stencil4<Interpolant, XVolField, ZVolField>(npts, opdb, bc), "Interpolant XVolField -> ZVolField (4)" );
 
-      if( npts[1]>1 & npts[0]>1 ) status( test_stencil4<Interpolant, YVolField, XVolField>(npts, opdb, bc), "Interpolant YVolField -> XVolField (4)" );
-      if( npts[1]>1 & npts[2]>1 ) status( test_stencil4<Interpolant, YVolField, ZVolField>(npts, opdb, bc), "Interpolant YVolField -> ZVolField (4)" );
+      if( npts[1]>1 && npts[0]>1 ) status( test_stencil4<Interpolant, YVolField, XVolField>(npts, opdb, bc), "Interpolant YVolField -> XVolField (4)" );
+      if( npts[1]>1 && npts[2]>1 ) status( test_stencil4<Interpolant, YVolField, ZVolField>(npts, opdb, bc), "Interpolant YVolField -> ZVolField (4)" );
 
-      if( npts[2]>1 & npts[0]>1 ) status( test_stencil4<Interpolant, ZVolField, XVolField>(npts, opdb, bc), "Interpolant ZVolField -> XVolField (4)" );
-      if( npts[2]>1 & npts[1]>1 ) status( test_stencil4<Interpolant, ZVolField, YVolField>(npts, opdb, bc), "Interpolant ZVolField -> YVolField (4)" );
+      if( npts[2]>1 && npts[0]>1 ) status( test_stencil4<Interpolant, ZVolField, XVolField>(npts, opdb, bc), "Interpolant ZVolField -> XVolField (4)" );
+      if( npts[2]>1 && npts[1]>1 ) status( test_stencil4<Interpolant, ZVolField, YVolField>(npts, opdb, bc), "Interpolant ZVolField -> YVolField (4)" );
 
       //Finite Difference (FDStencil2) tests:
 
@@ -535,10 +535,12 @@ int main( int iarg, char* carg[] )
       status( test_null_stencil<Interpolant, SVolField, ZSurfZField>(npts, opdb, bc), "Interpolant SVolField -> ZSurfZField (Null)" );
 
       //Box filter tests:
-      status( test_box_filter_stencil<Filter, SVolField>(npts, opdb, bc), "Filter SVolField -> SVolField (box filter)" );
-      status( test_box_filter_stencil<Filter, XVolField>(npts, opdb, bc), "Filter XVolField -> XVolField (box filter)" );
-      status( test_box_filter_stencil<Filter, YVolField>(npts, opdb, bc), "Filter YVolField -> YVolField (box filter)" );
-      status( test_box_filter_stencil<Filter, ZVolField>(npts, opdb, bc), "Filter ZVolField -> ZVolField (box filter)" );
+      if( npts[0]>1 && npts[1]>1 && npts[2] ) {
+          status( test_box_filter_stencil<Filter, SVolField>(npts, opdb, bc), "Filter SVolField -> SVolField (box filter)" );
+          status( test_box_filter_stencil<Filter, XVolField>(npts, opdb, bc), "Filter XVolField -> XVolField (box filter)" );
+          status( test_box_filter_stencil<Filter, YVolField>(npts, opdb, bc), "Filter YVolField -> YVolField (box filter)" );
+          status( test_box_filter_stencil<Filter, ZVolField>(npts, opdb, bc), "Filter ZVolField -> ZVolField (box filter)" );
+      }
 
       if( status.ok() ){
           cout << "ALL TESTS PASSED :)" << endl;
