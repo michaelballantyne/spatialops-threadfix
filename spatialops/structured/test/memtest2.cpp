@@ -38,7 +38,8 @@ int main(int argc, char** argv) {
   bool should_fail = false;
 
   try {
-    for (int device = 0; device < CDI.get_device_count(); ++device) {
+  //going to CDI.get_device_count() causes problems on machines where not all devices are free for use
+  for (int device = 0; device < 1; ++device) {
       CDI.update_memory_statistics();
       CUDAMemStats CMS;
       CDI.get_memory_statistics(CMS, device);

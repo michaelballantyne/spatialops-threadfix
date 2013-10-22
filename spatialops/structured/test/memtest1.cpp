@@ -37,7 +37,8 @@ int main(int argc, char** argv) {
   CUDASharedPointer p;
   int temp;
 
-  for (int device = 0; device < CDI.get_device_count(); ++device) {
+  //going to CDI.get_device_count() causes problems on machines where not all devices are free for use
+  for (int device = 0; device < 1; ++device) {
     try {
       for (int i = 1;; i *= 2) {
         CDI.update_memory_statistics();
