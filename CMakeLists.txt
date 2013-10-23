@@ -50,6 +50,7 @@ if( ENABLE_THREADS )
   find_package( Threads REQUIRED )
   set( TPL_LIBRARIES ${TPL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} )
   set( boost_comps ${boost_comps} "thread;system" )
+  set(Boost_USE_MULTITHREADED ON)
   message( STATUS "Thread libs: " ${CMAKE_THREAD_LIBS_INIT} )
 else()
   set( NTHREADS 1 )
@@ -61,13 +62,11 @@ if( DEFINED Boost_DIR )
   # give location hints.
   message( STATUS "Setting boost installation location as: " ${Boost_DIR} )
   set( Boost_NO_SYSTEM_PATHS ON )  # only look in the user-specified location - nowhere else!
-  set( ENV{BOOST_ROOT} ${Boost_DIR} )
-  set( ENV{Boost_DIR}  ${Boost_DIR} )
 endif( DEFINED Boost_DIR )
 
 set(BOOST_MIN_VERSION "1.49.0" )
 find_package( Boost ${BOOST_MIN_VERSION} REQUIRED COMPONENTS ${boost_comps} )
-mark_as_advanced( FORCE Boost_DIR )
+
 if( NOT Boost_FOUND )
   message( FATAL_ERROR "Boost was not found.  Try setting Boost_DIR to the path where boost is installed and try again" )
 else()
@@ -75,9 +74,7 @@ else()
   message( STATUS "      library installation found at: " ${Boost_LIBRARY_DIRS} )
   message( STATUS "      version: " ${Boost_MAJOR_VERSION}.${Boost_MINOR_VERSION}.${Boost_SUBMINOR_VERSION} )
 endif()
-set( TPL_INCLUDE_DIRS ${TPL_INCLUDE_DIRS}
-  ${Boost_INCLUDE_DIR}
-  )
+set( TPL_INCLUDE_DIRS ${TPL_INCLUDE_DIRS} ${Boost_INCLUDE_DIR} )
 if( boost_comps )
   set( TPL_LIBRARIES ${TPL_LIBRARIES} ${Boost_LIBRARIES} )
   message( STATUS ${Boost_LIBRARIES} )
@@ -95,9 +92,9 @@ if( ENABLE_CUDA )
   include_directories( ${CUDA_INCLUDE_DIRS} )
   set( TPL_LIBRARIES ${TPL_LIBRARIES} ${CUDA_LIBRARIES} )
 else( ENABLE_CUDA )
-#avoids confusion if someone tries to build with cuda support enabled and then reverts without clearing
-#the build directory
-	SET( CUDA_CUDA_LIBRARY OFF )
+  # avoids confusion if someone tries to build with cuda support enabled and then
+  # reverts without clearing the build directory
+  SET( CUDA_CUDA_LIBRARY OFF )
 endif( ENABLE_CUDA )
 
 #--------------------------------------
