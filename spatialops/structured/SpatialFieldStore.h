@@ -153,6 +153,10 @@ public:
     return builtFromStore_;
   }
 
+  /**
+   * Dissociate the field that this SpatFldPtr points to from this object,
+   * potentially releasing the memory that it points to as well.
+   */
   void detach();
 
 private:
