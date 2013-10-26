@@ -261,7 +261,7 @@ namespace structured{
      * @return
      */
     inline const_iterator begin() const {
-      if( memType_ != LOCAL_RAM && fieldValues_ == NULL ){
+      if( memType_ != LOCAL_RAM && fieldValues_ == NULL && !readOnly_ ){
         std::ostringstream msg;
         msg << "Field type ( "
             << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
@@ -361,6 +361,15 @@ namespace structured{
     void add_consumer(MemoryType consumerMemoryType, const unsigned short int consumerDeviceIndex);
 
     bool find_consumer(MemoryType consumerMemoryType, const unsigned short int consumerDeviceIndex) const;
+
+    /**
+     * @brief detect the field has any consumers on another device type using has_consumers(). Free
+     *      all the allocated consumers allocated back to the relevant Memory Pool using remove_consumers().   
+     *
+     */
+    bool has_consumers();
+
+    void remove_consumers();
 
     const BoundaryCellInfo& boundary_info() const{ return bcInfo_; }
 
@@ -877,7 +886,6 @@ void SpatialField<Location,T>::
 add_consumer( MemoryType consumerMemoryType,
               const unsigned short int consumerDeviceIndex )
 {
-  readOnly_ = true;  // once a consumer is added, we only allow read-only access
 # ifdef DEBUG_SF_ALL
   std::cout << "Caught call to Spatial Field add_consumer for field : " << this->field_values() << "\n";
 # endif
@@ -885,6 +893,9 @@ add_consumer( MemoryType consumerMemoryType,
   if( consumerMemoryType == memType_ && consumerDeviceIndex == deviceIndex_ ) {
     return;
   }
+
+  readOnly_ = true;  // once a consumer is added, we only allow read-only access
+
 # ifdef ENABLE_THREADS
   //Make sure adding consumers is per-field atomic
   ExecMutex lock;
@@ -1047,6 +1058,67 @@ find_consumer( MemoryType consumerMemoryType,
     throw(std::runtime_error(msg.str()));
   }
   }
+}
+
+//------------------------------------------------------------------
+
+template<typename Location, typename T>
+  bool SpatialField<Location,T>::
+  has_consumers()
+{
+#ifdef DEBUG_SF_ALL
+  std::cout << "Caught call to SpatialField::has_consumers() for field : " << this->field_values() << "\n";
+#endif
+  const unsigned short int consumerDeviceIndex = 0;
+
+  //Take action based on where the field must be available and where it currently is
+  if ( memType_ == LOCAL_RAM ) {
+    return consumerFieldValues_.find( consumerDeviceIndex ) != consumerFieldValues_.end();
+  }
+
+  else if ( memType_ == EXTERNAL_CUDA_GPU ) {
+    return fieldValues_ != NULL;
+  }
+
+  else {
+    std::ostringstream msg;
+       msg << "Failed call to has_consumers() on Spatial Field, unknown field memory type \n"
+           << "Ensure that you are compiling SpatialOps with the proper end device support\n"
+           << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
+       throw(std::runtime_error(msg.str()));
+  }
+}
+
+//------------------------------------------------------------------
+template<typename Location, typename T>
+  void SpatialField<Location,T>::
+  remove_consumers()
+{
+  // Note this method is only accessed by fields that are locked.
+#ifdef DEBUG_SF_ALL
+  std::cout << "Caught call to SpatialField::remove_consumers() for field : " << this->field_values() << std::endl;
+#endif
+
+#ifdef ENABLE_CUDA
+  //Release any fields allocated for "consumer" use
+  if( readOnly_ ){
+    for( typename ConsumerMap::iterator i = myConsumerFieldValues_.begin(); i != myConsumerFieldValues_.end(); ++i ){
+      // restore memory for consumer fields on GPU
+      Pool<T>::self().put( EXTERNAL_CUDA_GPU, i->second );
+      readOnly_ = false;
+    }
+    consumerFieldValues_.clear();
+    myConsumerFieldValues_.clear();
+
+    if ( memType_ == EXTERNAL_CUDA_GPU && builtCpuConsumer_ ) {
+      // restore memory for consumer fields on CPU
+      Pool<T>::self().put( LOCAL_RAM, fieldValues_ );
+      fieldValues_ = NULL;
+      readOnly_ = false;
+      builtCpuConsumer_ = false;
+    }
+  }
+#endif
 }
 
 //------------------------------------------------------------------
@@ -1306,7 +1378,8 @@ template<typename Location, typename T>
 const T&
 SpatialField<Location,T>::operator[](const size_t i) const
 {
-  if( memType_ != LOCAL_RAM || fieldValues_ == NULL ){
+  // GPU field and didn't have a consumer allocated on LOCAL_RAM
+  if( (memType_ != LOCAL_RAM && !readOnly_) || fieldValues_ == NULL ){
     std::ostringstream msg;
     msg << "Field type ( "
         << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
@@ -1315,6 +1388,12 @@ SpatialField<Location,T>::operator[](const size_t i) const
         << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
     throw(std::runtime_error(msg.str()));
   }
+
+  // GPU field has a consumer on LOCAL_RAM
+  if( memType_ == EXTERNAL_CUDA_GPU && builtCpuConsumer_ && fieldValues_ != NULL ){
+    return fieldValues_[i];
+  }
+  // For all other cases
   return fieldValues_[i];
 }
 
