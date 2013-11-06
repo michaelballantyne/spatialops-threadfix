@@ -578,14 +578,7 @@ SpatialField( const MemoryWindow& window,
   switch ( mtype ) {
       case LOCAL_RAM:
 	if( mode == InternalStorage ){
-	  try {
-	    fieldValues_ = new T[window.glob_dim(0) * window.glob_dim(1) * window.glob_dim(2)];
-	  }
-	  catch(std::runtime_error& e){
-	    std::cout << "Error occurred while allocating memory on LOCAL_RAM" << std::endl;
-	    std::cout << e.what() << std::endl;
-	    std::cout << __FILE__ << " : " << __LINE__ << std::endl;
-	  }
+          fieldValues_ = Pool<T>::self().get( LOCAL_RAM, window.glob_dim(0) * window.glob_dim(1) * window.glob_dim(2) );//( allocatedBytes_/sizeof(T) ) );
 	}
       break;
 #     ifdef ENABLE_CUDA
@@ -713,7 +706,7 @@ SpatialField<Location,T>::~SpatialField()
   if ( builtField_ ) {
     switch ( memType_ ) {
     case LOCAL_RAM: {
-      delete[] fieldValues_;
+      Pool<T>::self().put( LOCAL_RAM, fieldValues_ );
       fieldValues_ = NULL;
     }
     break;
