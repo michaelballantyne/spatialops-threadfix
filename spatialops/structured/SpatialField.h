@@ -451,7 +451,7 @@ namespace structured{
     /**
      * @brief Obtain a child field that is reshaped.
      * @param extentModify the amount to modify the extent of the current field by
-     * @param shift the number of grid points to shif the current field by
+     * @param shift the number of grid points to shift the current field by
      * @return the reshaped child field
      *
      * The memory is the same as the parent field, but windowed differently.
