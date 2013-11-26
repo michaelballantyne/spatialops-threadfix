@@ -389,42 +389,6 @@
                                                                    res-args
                                                                    'reduce_init))))
 
-   (tpl-srt-def 'BuildStencilPointCollection
-                (tpl-pmtr 'First)
-                null
-                (s-typedef (tpl-use NSPC 'First Nil-chunk)
-                           'Result))
-
-   (tpl-srt-def 'BuildTwoPointCollection
-                (list (tpl-pmtr 'First)
-                      (tpl-pmtr 'Second))
-                null
-                (s-typedef (tpl-pmtr (scope (tpl-use 'BuildStencilPointCollection 'First)
-                                            'Result))
-                           'FirstPoint)
-                (s-typedef (tpl-pmtr (scope (scope 'FirstPoint (tpl-fcn-use 'AddPoint 'Second))
-                                            'Result))
-                           'Result))
-
-   (tpl-srt-def 'BuildFourPointCollection
-                (list (tpl-pmtr 'First)
-                      (tpl-pmtr 'Second)
-                      (tpl-pmtr 'Third)
-                      (tpl-pmtr 'Fourth))
-                null
-                (s-typedef (tpl-pmtr (scope (tpl-use 'BuildStencilPointCollection 'First)
-                                            'Result))
-                           'FirstPoint)
-                (s-typedef (tpl-pmtr (scope (scope 'FirstPoint (tpl-fcn-use 'AddPoint 'Second))
-                                            'Result))
-                           'SecondFirstCollection)
-                (s-typedef (tpl-pmtr (scope (scope 'SecondFirstCollection (tpl-fcn-use 'AddPoint 'Third))
-                                            'Result))
-                           'ThirdSecondFirstCollection)
-                (s-typedef (tpl-pmtr (scope (scope 'ThirdSecondFirstCollection (tpl-fcn-use 'AddPoint 'Fourth))
-                                            'Result))
-                           'Result))
-
    (build-struct 'NeboStencil
                  std-FT
                  (list 'Pts 'Arg)

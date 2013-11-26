@@ -657,32 +657,6 @@
           };
       };
 
-      template<typename First>
-       struct BuildStencilPointCollection {
-         NeboStencilPointCollection<First, NeboNil> typedef Result;
-      };
-
-      template<typename First, typename Second>
-       struct BuildTwoPointCollection {
-         typename BuildStencilPointCollection<First>::Result typedef FirstPoint;
-
-         typename FirstPoint::template AddPoint<Second>::Result typedef Result;
-      };
-
-      template<typename First, typename Second, typename Third, typename Fourth>
-       struct BuildFourPointCollection {
-         typename BuildStencilPointCollection<First>::Result typedef FirstPoint;
-
-         typename FirstPoint::template AddPoint<Second>::Result typedef
-         SecondFirstCollection;
-
-         typename SecondFirstCollection::template AddPoint<Third>::Result
-         typedef ThirdSecondFirstCollection;
-
-         typename ThirdSecondFirstCollection::template AddPoint<Fourth>::Result
-         typedef Result;
-      };
-
       template<typename CurrentMode,
                typename Pts,
                typename Arg,

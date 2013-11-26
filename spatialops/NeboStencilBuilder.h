@@ -23,6 +23,34 @@
 #ifndef NEBO_STENCIL_BUILDER_H
 #define NEBO_STENCIL_BUILDER_H
 
+//To define new stencils use the following four macros.
+//NEBO_FIRST_POINT and NEBO_FIRST_IJK define a new Nebo stencil point collection.
+//NEBO_ADD_POINT and NEBO_ADD_IJK add a stencil point to an existing Nebo stencil point collection.
+//
+//NEBO_FIRST_POINT and NEBO_ADD_POINT are designed to work together.
+//Likewise, NEBO_FIRST_IJK and NEBO_ADD_IJK are designed to work together.
+//They can be mixed, but it is not recommended.
+//
+//NEBO_FIRST_POINT and NEBO_ADD_POINT are designed to work with stencil points based off of field types.
+//For examples, look at Stencil2Collection, Stencil4Collection, and FDStencilCollection definitions in this file.
+//
+//NEBO_FIRST_IJK and NEBO_ADD_IJK are designed to work on constant stencil points, whose shape does not change depending on field type.
+//For examples, look at NullStencilCollection and the seven BoxFilter*StencilCollection definitions in this file.
+
+
+
+//Define a new stencil from an IndexTriplet
+#define NEBO_FIRST_POINT(POINT) typename NeboStencilPointCollection< POINT, NeboNil >
+
+//Add a point (IndexTriplet) to an existing stencil
+#define NEBO_ADD_POINT(POINT) template AddPoint< POINT >::Result
+
+//Define a new stencil from three constant integers
+#define NEBO_FIRST_IJK(X, Y, Z) NeboStencilPointCollection< structured::IndexTriplet<X,Y,Z>, NeboNil >
+
+//Add a point (three constant integers) to an existing stencil
+#define NEBO_ADD_IJK(X, Y, Z) AddPoint< structured::IndexTriplet<X,Y,Z> >::Result
+
 namespace SpatialOps {
 
   /**
@@ -115,7 +143,7 @@ namespace SpatialOps {
         // high (second) stencil point location (relative to the destination point)
         typedef typename structured::LessThan<SrcOffset, DestOffset>::result HighStPt;
         // collection of all stencil points in this stencil
-        typedef typename BuildTwoPointCollection<LowStPt, HighStPt>::Result  StPtCollection;
+        typedef NEBO_FIRST_POINT(LowStPt)::NEBO_ADD_POINT(HighStPt)            StPtCollection;
     };
 
     template<typename OperatorType, typename SrcFieldType, typename DestFieldType>
@@ -171,10 +199,8 @@ namespace SpatialOps {
         typedef typename structured::Add<LoValInFirstDir, HiValInSecondDir>::result StPt3;
         typedef typename structured::Add<HiValInFirstDir, HiValInSecondDir>::result StPt4;
         // collection of all stencil points in this stencil
-        typedef typename BuildFourPointCollection<StPt1,
-                                                  StPt2,
-                                                  StPt3,
-                                                  StPt4>::Result                    StPtCollection;
+      typedef NEBO_FIRST_POINT(StPt1)::NEBO_ADD_POINT(StPt2)
+              ::NEBO_ADD_POINT(StPt3)::NEBO_ADD_POINT(StPt4)                        StPtCollection;
     };
 
     template<typename OperatorType, typename SrcFieldType, typename DestFieldType>
@@ -183,7 +209,7 @@ namespace SpatialOps {
         typedef typename structured::UnitTriplet<DirT>::type                DirVec;
         typedef typename DirVec::Negate                                     LowStPt;
         typedef DirVec                                                      HighStPt;
-        typedef typename BuildTwoPointCollection<LowStPt, HighStPt>::Result StPtCollection;
+        typedef NEBO_FIRST_POINT(LowStPt)::NEBO_ADD_POINT(HighStPt)         StPtCollection;
     };
 
   /**
@@ -252,7 +278,7 @@ namespace SpatialOps {
     };
 
     struct NullStencilCollection {
-        typedef BuildStencilPointCollection< structured::IndexTriplet<0, 0, 0> >::Result StPtCollection;
+        typedef NEBO_FIRST_IJK(0, 0, 0) StPtCollection;
     };
 
   /**
@@ -328,58 +354,52 @@ namespace SpatialOps {
         }
     };
 
-#define NEBO_ADD_POINT(X,Y,Z)                           \
-    AddPoint< structured::IndexTriplet<X,Y,Z> >::Result
-
-#define NEBO_FIRST_POINT(X,Y,Z)                                         \
-    NeboStencilPointCollection<structured::IndexTriplet<X,Y,Z>, NeboNil>
-
     struct BoxFilter3DStencilCollection {
-      typedef NEBO_FIRST_POINT(-1,-1,-1)::NEBO_ADD_POINT( 0,-1,-1)::NEBO_ADD_POINT( 1,-1,-1)
-              ::NEBO_ADD_POINT(-1, 0,-1)::NEBO_ADD_POINT( 0, 0,-1)::NEBO_ADD_POINT( 1, 0,-1)
-              ::NEBO_ADD_POINT(-1, 1,-1)::NEBO_ADD_POINT( 0, 1,-1)::NEBO_ADD_POINT( 1, 1,-1)
-              ::NEBO_ADD_POINT(-1,-1, 0)::NEBO_ADD_POINT( 0,-1, 0)::NEBO_ADD_POINT( 1,-1, 0)
-              ::NEBO_ADD_POINT(-1, 0, 0)::NEBO_ADD_POINT( 0, 0, 0)::NEBO_ADD_POINT( 1, 0, 0)
-              ::NEBO_ADD_POINT(-1, 1, 0)::NEBO_ADD_POINT( 0, 1, 0)::NEBO_ADD_POINT( 1, 1, 0)
-              ::NEBO_ADD_POINT(-1,-1, 1)::NEBO_ADD_POINT( 0,-1, 1)::NEBO_ADD_POINT( 1,-1, 1)
-              ::NEBO_ADD_POINT(-1, 0, 1)::NEBO_ADD_POINT( 0, 0, 1)::NEBO_ADD_POINT( 1, 0, 1)
-              ::NEBO_ADD_POINT(-1, 1, 1)::NEBO_ADD_POINT( 0, 1, 1)::NEBO_ADD_POINT( 1, 1, 1)
+      typedef NEBO_FIRST_IJK(-1,-1,-1)::NEBO_ADD_IJK( 0,-1,-1)::NEBO_ADD_IJK( 1,-1,-1)
+              ::NEBO_ADD_IJK(-1, 0,-1)::NEBO_ADD_IJK( 0, 0,-1)::NEBO_ADD_IJK( 1, 0,-1)
+              ::NEBO_ADD_IJK(-1, 1,-1)::NEBO_ADD_IJK( 0, 1,-1)::NEBO_ADD_IJK( 1, 1,-1)
+              ::NEBO_ADD_IJK(-1,-1, 0)::NEBO_ADD_IJK( 0,-1, 0)::NEBO_ADD_IJK( 1,-1, 0)
+              ::NEBO_ADD_IJK(-1, 0, 0)::NEBO_ADD_IJK( 0, 0, 0)::NEBO_ADD_IJK( 1, 0, 0)
+              ::NEBO_ADD_IJK(-1, 1, 0)::NEBO_ADD_IJK( 0, 1, 0)::NEBO_ADD_IJK( 1, 1, 0)
+              ::NEBO_ADD_IJK(-1,-1, 1)::NEBO_ADD_IJK( 0,-1, 1)::NEBO_ADD_IJK( 1,-1, 1)
+              ::NEBO_ADD_IJK(-1, 0, 1)::NEBO_ADD_IJK( 0, 0, 1)::NEBO_ADD_IJK( 1, 0, 1)
+              ::NEBO_ADD_IJK(-1, 1, 1)::NEBO_ADD_IJK( 0, 1, 1)::NEBO_ADD_IJK( 1, 1, 1)
           StPtCollection;
     };
 
     struct BoxFilter2DXYStencilCollection {
-      typedef NEBO_FIRST_POINT(-1,-1, 0)::NEBO_ADD_POINT( 0,-1, 0)::NEBO_ADD_POINT( 1,-1, 0)
-              ::NEBO_ADD_POINT(-1, 0, 0)::NEBO_ADD_POINT( 0, 0, 0)::NEBO_ADD_POINT( 1, 0, 0)
-              ::NEBO_ADD_POINT(-1, 1, 0)::NEBO_ADD_POINT( 0, 1, 0)::NEBO_ADD_POINT( 1, 1, 0)
+      typedef NEBO_FIRST_IJK(-1,-1, 0)::NEBO_ADD_IJK( 0,-1, 0)::NEBO_ADD_IJK( 1,-1, 0)
+              ::NEBO_ADD_IJK(-1, 0, 0)::NEBO_ADD_IJK( 0, 0, 0)::NEBO_ADD_IJK( 1, 0, 0)
+              ::NEBO_ADD_IJK(-1, 1, 0)::NEBO_ADD_IJK( 0, 1, 0)::NEBO_ADD_IJK( 1, 1, 0)
           StPtCollection;
     };
 
     struct BoxFilter2DXZStencilCollection {
-      typedef NEBO_FIRST_POINT(-1, 0,-1)::NEBO_ADD_POINT( 0, 0,-1)::NEBO_ADD_POINT( 1, 0,-1)
-              ::NEBO_ADD_POINT(-1, 0, 0)::NEBO_ADD_POINT( 0, 0, 0)::NEBO_ADD_POINT( 1, 0, 0)
-              ::NEBO_ADD_POINT(-1, 0, 1)::NEBO_ADD_POINT( 0, 0, 1)::NEBO_ADD_POINT( 1, 0, 1)
+      typedef NEBO_FIRST_IJK(-1, 0,-1)::NEBO_ADD_IJK( 0, 0,-1)::NEBO_ADD_IJK( 1, 0,-1)
+              ::NEBO_ADD_IJK(-1, 0, 0)::NEBO_ADD_IJK( 0, 0, 0)::NEBO_ADD_IJK( 1, 0, 0)
+              ::NEBO_ADD_IJK(-1, 0, 1)::NEBO_ADD_IJK( 0, 0, 1)::NEBO_ADD_IJK( 1, 0, 1)
           StPtCollection;
     };
 
     struct BoxFilter2DYZStencilCollection {
-      typedef NEBO_FIRST_POINT( 0,-1,-1)::NEBO_ADD_POINT( 0, 0,-1)::NEBO_ADD_POINT( 0, 1,-1)
-              ::NEBO_ADD_POINT( 0,-1, 0)::NEBO_ADD_POINT( 0, 0, 0)::NEBO_ADD_POINT( 0, 1, 0)
-              ::NEBO_ADD_POINT( 0,-1, 1)::NEBO_ADD_POINT( 0, 0, 1)::NEBO_ADD_POINT( 0, 1, 1)
+      typedef NEBO_FIRST_IJK( 0,-1,-1)::NEBO_ADD_IJK( 0, 0,-1)::NEBO_ADD_IJK( 0, 1,-1)
+              ::NEBO_ADD_IJK( 0,-1, 0)::NEBO_ADD_IJK( 0, 0, 0)::NEBO_ADD_IJK( 0, 1, 0)
+              ::NEBO_ADD_IJK( 0,-1, 1)::NEBO_ADD_IJK( 0, 0, 1)::NEBO_ADD_IJK( 0, 1, 1)
           StPtCollection;
     };
 
     struct BoxFilter1DXStencilCollection {
-      typedef NEBO_FIRST_POINT(-1, 0, 0)::NEBO_ADD_POINT( 0, 0, 0)::NEBO_ADD_POINT( 1, 0, 0)
+      typedef NEBO_FIRST_IJK(-1, 0, 0)::NEBO_ADD_IJK( 0, 0, 0)::NEBO_ADD_IJK( 1, 0, 0)
           StPtCollection;
     };
 
     struct BoxFilter1DYStencilCollection {
-      typedef NEBO_FIRST_POINT( 0,-1, 0)::NEBO_ADD_POINT( 0, 0, 0)::NEBO_ADD_POINT( 0, 1, 0)
+      typedef NEBO_FIRST_IJK( 0,-1, 0)::NEBO_ADD_IJK( 0, 0, 0)::NEBO_ADD_IJK( 0, 1, 0)
           StPtCollection;
     };
 
     struct BoxFilter1DZStencilCollection {
-      typedef NEBO_FIRST_POINT( 0, 0,-1)::NEBO_ADD_POINT( 0, 0, 0)::NEBO_ADD_POINT( 0, 0, 1)
+      typedef NEBO_FIRST_IJK( 0, 0,-1)::NEBO_ADD_IJK( 0, 0, 0)::NEBO_ADD_IJK( 0, 0, 1)
           StPtCollection;
     };
 
