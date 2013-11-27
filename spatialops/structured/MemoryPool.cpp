@@ -80,7 +80,15 @@ Pool<T>::self()
 {
 # ifdef ENABLE_CUDA
   //ensure CUDA driver is loaded before pool is initialized
-  static cudaError_t junk = cudaGetDeviceCount(0);
+  int deviceCount = 0;
+  static cudaError_t err = cudaGetDeviceCount(&deviceCount);
+  if (cudaSuccess != err) {
+        std::ostringstream msg;
+        msg << "Error at CudaGetDeviceCount() API, at " << __FILE__ << " : " << __LINE__
+            << std::endl;
+        msg << "\t - " << cudaGetErrorString(err);
+        throw(std::runtime_error(msg.str()));
+  }
 # endif
   // see Modern C++ (Alexandrescu) chapter 6 for an excellent discussion on singleton implementation
   static Pool<T> p;
