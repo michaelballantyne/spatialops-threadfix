@@ -27,6 +27,7 @@
 
 #include <spatialops/NeboBasic.h>
 #include <spatialops/NeboRhs.h>
+#include <spatialops/NeboMask.h>
 #include <spatialops/NeboOperators.h>
 #include <spatialops/NeboCond.h>
 #include <spatialops/NeboStencils.h>

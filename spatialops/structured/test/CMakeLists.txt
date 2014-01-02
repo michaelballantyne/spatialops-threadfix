@@ -8,6 +8,10 @@ nebo_add_executable( test_field_compare testFieldComparisons.cpp )
 target_link_libraries( test_field_compare ${libs} )
 add_test( test_field_compare test_field_compare )
 
+nebo_add_executable( test_mask testMask.cpp )
+target_link_libraries( test_mask ${libs} )
+add_test( test_mask test_mask )
+
 nebo_add_executable( test_field testField.cpp )
 target_link_libraries( test_field ${libs} )
 add_test( test_field test_field )

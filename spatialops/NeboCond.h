@@ -869,6 +869,80 @@
 
               return ReturnType(Cond(Clause(nb.expr(), e.expr()), clauses_));
            }
+
+          inline CondBuilder<NeboCond<Initial,
+                                      NeboClause<Initial,
+                                                 NeboMask<Initial, FieldType>,
+                                                 NeboScalar<Initial,
+                                                            typename FieldType::
+                                                            value_type>,
+                                                 FieldType>,
+                                      Clauses,
+                                      FieldType> > operator ()(structured::
+                                                               SpatialMask<FieldType>
+                                                               const & mask,
+                                                               double const d) {
+             NeboMask<Initial, FieldType> typedef Mask;
+
+             NeboScalar<Initial, typename FieldType::value_type> typedef Scalar;
+
+             NeboClause<Initial, Mask, Scalar, FieldType> typedef Clause;
+
+             NeboCond<Initial, Clause, Clauses, FieldType> typedef Cond;
+
+             CondBuilder<Cond> typedef ReturnType;
+
+             return ReturnType(Cond(Clause(Mask(mask), Scalar(d)), clauses_));
+          }
+
+          inline CondBuilder<NeboCond<Initial,
+                                      NeboClause<Initial,
+                                                 NeboMask<Initial, FieldType>,
+                                                 NeboConstField<Initial,
+                                                                FieldType>,
+                                                 FieldType>,
+                                      Clauses,
+                                      FieldType> > operator ()(structured::
+                                                               SpatialMask<FieldType>
+                                                               const & mask,
+                                                               FieldType const &
+                                                               f) {
+             NeboMask<Initial, FieldType> typedef Mask;
+
+             NeboConstField<Initial, FieldType> typedef Field;
+
+             NeboClause<Initial, Mask, Field, FieldType> typedef Clause;
+
+             NeboCond<Initial, Clause, Clauses, FieldType> typedef Cond;
+
+             CondBuilder<Cond> typedef ReturnType;
+
+             return ReturnType(Cond(Clause(Mask(mask), Field(f)), clauses_));
+          }
+
+          template<typename Expr>
+           inline CondBuilder<NeboCond<Initial,
+                                       NeboClause<Initial,
+                                                  NeboMask<Initial, FieldType>,
+                                                  Expr,
+                                                  FieldType>,
+                                       Clauses,
+                                       FieldType> > operator ()(structured::
+                                                                SpatialMask<FieldType>
+                                                                const & mask,
+                                                                NeboExpression<Expr,
+                                                                               FieldType>
+                                                                const & e) {
+              NeboMask<Initial, FieldType> typedef Mask;
+
+              NeboClause<Initial, Mask, Expr, FieldType> typedef Clause;
+
+              NeboCond<Initial, Clause, Clauses, FieldType> typedef Cond;
+
+              CondBuilder<Cond> typedef ReturnType;
+
+              return ReturnType(Cond(Clause(Mask(mask), e.expr()), clauses_));
+           }
       };
 
       template<typename Otherwise>
@@ -1229,6 +1303,161 @@
               return ReturnType(Cond(Clause(nb.expr(), e.expr()),
                                      clauses_.template convert<FieldType>()));
            }
+
+          template<typename FieldType>
+           inline CondBuilder<NeboCond<Initial,
+                                       NeboClause<Initial,
+                                                  NeboMask<Initial,
+                                                           typename
+                                                           NeboFieldCheck<typename
+                                                                          FieldType::
+                                                                          field_type,
+                                                                          FieldType>::
+                                                           Result>,
+                                                  NeboScalar<Initial,
+                                                             typename FieldType::
+                                                             value_type>,
+                                                  typename NeboFieldCheck<typename
+                                                                          FieldType::
+                                                                          field_type,
+                                                                          FieldType>::
+                                                  Result>,
+                                       typename Clauses::template Convert<typename
+                                                                          NeboFieldCheck<typename
+                                                                                         FieldType::
+                                                                                         field_type,
+                                                                                         FieldType>::
+                                                                          Result>::
+                                       Converted,
+                                       typename NeboFieldCheck<typename
+                                                               FieldType::
+                                                               field_type,
+                                                               FieldType>::
+                                       Result> > operator ()(structured::
+                                                             SpatialMask<FieldType>
+                                                             const & mask,
+                                                             double const d) {
+              NeboMask<Initial, FieldType> typedef Mask;
+
+              NeboScalar<Initial, typename FieldType::value_type> typedef Scalar;
+
+              NeboClause<Initial, Mask, Scalar, FieldType> typedef Clause;
+
+              typename Clauses::template Convert<FieldType>::Converted typedef
+              ConvertedClauses;
+
+              NeboCond<Initial, Clause, ConvertedClauses, FieldType> typedef
+              Cond;
+
+              CondBuilder<Cond> typedef ReturnType;
+
+              return ReturnType(Cond(Clause(Mask(mask), Scalar(d)),
+                                     clauses_.template convert<FieldType>()));
+           }
+
+          template<typename FieldType>
+           inline CondBuilder<NeboCond<Initial,
+                                       NeboClause<Initial,
+                                                  NeboMask<Initial,
+                                                           typename
+                                                           NeboFieldCheck<typename
+                                                                          FieldType::
+                                                                          field_type,
+                                                                          FieldType>::
+                                                           Result>,
+                                                  NeboConstField<Initial,
+                                                                 typename
+                                                                 NeboFieldCheck<typename
+                                                                                FieldType::
+                                                                                field_type,
+                                                                                FieldType>::
+                                                                 Result>,
+                                                  typename NeboFieldCheck<typename
+                                                                          FieldType::
+                                                                          field_type,
+                                                                          FieldType>::
+                                                  Result>,
+                                       typename Clauses::template Convert<typename
+                                                                          NeboFieldCheck<typename
+                                                                                         FieldType::
+                                                                                         field_type,
+                                                                                         FieldType>::
+                                                                          Result>::
+                                       Converted,
+                                       typename NeboFieldCheck<typename
+                                                               FieldType::
+                                                               field_type,
+                                                               FieldType>::
+                                       Result> > operator ()(structured::
+                                                             SpatialMask<FieldType>
+                                                             const & mask,
+                                                             FieldType const & f) {
+              NeboMask<Initial, FieldType> typedef Mask;
+
+              NeboConstField<Initial, FieldType> typedef Field;
+
+              NeboClause<Initial, Mask, Field, FieldType> typedef Clause;
+
+              typename Clauses::template Convert<FieldType>::Converted typedef
+              ConvertedClauses;
+
+              NeboCond<Initial, Clause, ConvertedClauses, FieldType> typedef
+              Cond;
+
+              CondBuilder<Cond> typedef ReturnType;
+
+              return ReturnType(Cond(Clause(Mask(mask), Field(f)),
+                                     clauses_.template convert<FieldType>()));
+           }
+
+          template<typename Expr, typename FieldType>
+           inline CondBuilder<NeboCond<Initial,
+                                       NeboClause<Initial,
+                                                  NeboMask<Initial,
+                                                           typename
+                                                           NeboFieldCheck<typename
+                                                                          FieldType::
+                                                                          field_type,
+                                                                          FieldType>::
+                                                           Result>,
+                                                  Expr,
+                                                  typename NeboFieldCheck<typename
+                                                                          FieldType::
+                                                                          field_type,
+                                                                          FieldType>::
+                                                  Result>,
+                                       typename Clauses::template Convert<typename
+                                                                          NeboFieldCheck<typename
+                                                                                         FieldType::
+                                                                                         field_type,
+                                                                                         FieldType>::
+                                                                          Result>::
+                                       Converted,
+                                       typename NeboFieldCheck<typename
+                                                               FieldType::
+                                                               field_type,
+                                                               FieldType>::
+                                       Result> > operator ()(structured::
+                                                             SpatialMask<FieldType>
+                                                             const & mask,
+                                                             NeboExpression<Expr,
+                                                                            FieldType>
+                                                             const & e) {
+              NeboMask<Initial, FieldType> typedef Mask;
+
+              NeboClause<Initial, Mask, Expr, FieldType> typedef Clause;
+
+              typename Clauses::template Convert<FieldType>::Converted typedef
+              ConvertedClauses;
+
+              NeboCond<Initial, Clause, ConvertedClauses, FieldType> typedef
+              Cond;
+
+              CondBuilder<Cond> typedef ReturnType;
+
+              return ReturnType(Cond(Clause(Mask(mask), e.expr()),
+                                     clauses_.template convert<FieldType>()));
+           }
       };
 
       template<>
@@ -1425,6 +1654,112 @@
           CondBuilder<Cond> typedef ReturnType;
 
           return ReturnType(Cond(Clause(nb.expr(), e.expr()), NeboNil()));
+       };
+
+      template<typename FieldType>
+       inline CondBuilder<NeboCond<Initial,
+                                   NeboClause<Initial,
+                                              NeboMask<Initial,
+                                                       typename NeboFieldCheck<typename
+                                                                               FieldType::
+                                                                               field_type,
+                                                                               FieldType>::
+                                                       Result>,
+                                              NeboScalar<Initial,
+                                                         typename FieldType::
+                                                         value_type>,
+                                              typename NeboFieldCheck<typename
+                                                                      FieldType::
+                                                                      field_type,
+                                                                      FieldType>::
+                                              Result>,
+                                   NeboNil,
+                                   typename NeboFieldCheck<typename FieldType::
+                                                           field_type,
+                                                           FieldType>::Result> >
+       cond(structured::SpatialMask<FieldType> const & mask, double const d) {
+          NeboMask<Initial, FieldType> typedef Mask;
+
+          NeboScalar<Initial, typename FieldType::value_type> typedef Scalar;
+
+          NeboClause<Initial, Mask, Scalar, FieldType> typedef Clause;
+
+          NeboCond<Initial, Clause, NeboNil, FieldType> typedef Cond;
+
+          CondBuilder<Cond> typedef ReturnType;
+
+          return ReturnType(Cond(Clause(Mask(mask), Scalar(d)), NeboNil()));
+       };
+
+      template<typename FieldType>
+       inline CondBuilder<NeboCond<Initial,
+                                   NeboClause<Initial,
+                                              NeboMask<Initial,
+                                                       typename NeboFieldCheck<typename
+                                                                               FieldType::
+                                                                               field_type,
+                                                                               FieldType>::
+                                                       Result>,
+                                              NeboConstField<Initial,
+                                                             typename
+                                                             NeboFieldCheck<typename
+                                                                            FieldType::
+                                                                            field_type,
+                                                                            FieldType>::
+                                                             Result>,
+                                              typename NeboFieldCheck<typename
+                                                                      FieldType::
+                                                                      field_type,
+                                                                      FieldType>::
+                                              Result>,
+                                   NeboNil,
+                                   typename NeboFieldCheck<typename FieldType::
+                                                           field_type,
+                                                           FieldType>::Result> >
+       cond(structured::SpatialMask<FieldType> const & mask, FieldType const & f) {
+          NeboMask<Initial, FieldType> typedef Mask;
+
+          NeboConstField<Initial, FieldType> typedef Field;
+
+          NeboClause<Initial, Mask, Field, FieldType> typedef Clause;
+
+          NeboCond<Initial, Clause, NeboNil, FieldType> typedef Cond;
+
+          CondBuilder<Cond> typedef ReturnType;
+
+          return ReturnType(Cond(Clause(Mask(mask), Field(f)), NeboNil()));
+       };
+
+      template<typename Expr, typename FieldType>
+       inline CondBuilder<NeboCond<Initial,
+                                   NeboClause<Initial,
+                                              NeboMask<Initial,
+                                                       typename NeboFieldCheck<typename
+                                                                               FieldType::
+                                                                               field_type,
+                                                                               FieldType>::
+                                                       Result>,
+                                              Expr,
+                                              typename NeboFieldCheck<typename
+                                                                      FieldType::
+                                                                      field_type,
+                                                                      FieldType>::
+                                              Result>,
+                                   NeboNil,
+                                   typename NeboFieldCheck<typename FieldType::
+                                                           field_type,
+                                                           FieldType>::Result> >
+       cond(structured::SpatialMask<FieldType> const & mask,
+            NeboExpression<Expr, FieldType> const & e) {
+          NeboMask<Initial, FieldType> typedef Mask;
+
+          NeboClause<Initial, Mask, Expr, FieldType> typedef Clause;
+
+          NeboCond<Initial, Clause, NeboNil, FieldType> typedef Cond;
+
+          CondBuilder<Cond> typedef ReturnType;
+
+          return ReturnType(Cond(Clause(Mask(mask), e.expr()), NeboNil()));
        };
 
 #     define nebo_cond cond//;

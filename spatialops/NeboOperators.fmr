@@ -272,6 +272,26 @@
                         arg)
                   (mfc arg 'expr))))))
 
+(define if-arg-Mask
+  (list 'field
+        (lambda (num value-type checked-value-type)
+          (let* ([type (tpl-use 'NeboMask 'Initial FT-chunk)]
+                 [arg (l 'arg num)])
+            (list 'Mask
+                  #true
+                  #false
+                  null
+                  add-spacing-check
+                  (tpl-use 'NeboMask 'Initial (tpl-pmtr (scope (tpl-use 'NeboFieldCheck
+                                                                        (tpl-pmtr (scope FT-chunk ft-chunk))
+                                                                        FT-chunk)
+                                                               'Result)))
+                  type
+                  (adcr (tpl-use (scope 'structured 'SpatialMask)
+                                 FT-chunk)
+                        arg)
+                  (fc type arg))))))
+
 (define if-arg-SingleValue
   (list 'atomic-only
         (lambda (num value-type checked-value-type)
@@ -355,12 +375,13 @@
                             'T]
                            [else
                             (tpl-pmtr (scope FT-chunk vt-chunk))])]
+         [checked-value-type (if (equal? 'T value-type)
+                                 (tpl-pmtr (scope SVFT-def-chunk vt-chunk))
+                                 value-type)]
          [arg-info-lst (map (lambda (arg num) ((second arg)
                                                num
                                                value-type
-                                               (if (equal? 'T value-type)
-                                                   (tpl-pmtr (scope SVFT-def-chunk vt-chunk))
-                                                   value-type)))
+                                               checked-value-type))
                             input-arg-info-lst
                             num-lst)]
          [description-lst (map first arg-info-lst)]
@@ -436,8 +457,8 @@
 
 (define binary-expr-arg-lst (list if-arg-Scalar if-arg-Field if-arg-SubExpr if-arg-SingleValue if-arg-SubSingleValueExpr))
 (define unary-expr-arg-lst (list if-arg-Field if-arg-SubExpr if-arg-SingleValue if-arg-SubSingleValueExpr))
-(define binary-logical-expr-arg-lst (list if-arg-Boolean if-arg-SubBoolExpr))
-(define unary-logical-expr-arg-lst (list if-arg-SubBoolExpr))
+(define binary-logical-expr-arg-lst (list if-arg-Boolean if-arg-SubBoolExpr if-arg-Mask))
+(define unary-logical-expr-arg-lst (list if-arg-SubBoolExpr if-arg-Mask))
 (define (build-binary-function name internal-name external-name)
   (bl-smts (build-binary-function-struct name internal-name)
            (build-binary-interface name external-name 'scalar binary-expr-arg-lst)))

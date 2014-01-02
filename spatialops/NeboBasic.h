@@ -29,6 +29,7 @@
 #  include <spatialops/structured/IndexTriplet.h>
 #  include <spatialops/structured/GhostData.h>
 #  include <spatialops/structured/SpatialField.h>
+#  include <spatialops/structured/SpatialMask.h>
 #  include <spatialops/structured/FVStaggeredFieldTypes.h>
 #  include <cmath>
 #  include <math.h>

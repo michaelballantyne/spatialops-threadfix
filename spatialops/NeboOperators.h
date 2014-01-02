@@ -11660,6 +11660,30 @@
           return ReturnTerm(ReturnType(NeboScalar<Initial, bool>(arg1), arg2.expr()));
        }
 
+      /* Boolean X Mask */
+      template<typename FieldType>
+       inline NeboBooleanExpression<AndOp<Initial,
+                                          NeboScalar<Initial, bool>,
+                                          NeboMask<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result> >,
+                                    FieldType> operator &&(bool const & arg1,
+                                                           structured::
+                                                           SpatialMask<FieldType>
+                                                           const & arg2) {
+          AndOp<Initial,
+                NeboScalar<Initial, bool>,
+                NeboMask<Initial, FieldType> > typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboScalar<Initial, bool>(arg1),
+                                       NeboMask<Initial, FieldType>(arg2)));
+       }
+
       /* SubBoolExpr X Boolean */
       template<typename SubBoolExpr1, typename FieldType>
        inline NeboBooleanExpression<AndOp<Initial,
@@ -11691,6 +11715,109 @@
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SubBoolExpr X Mask */
+      template<typename SubBoolExpr1, typename FieldType>
+       inline NeboBooleanExpression<AndOp<Initial,
+                                          SubBoolExpr1,
+                                          NeboMask<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result> >,
+                                    FieldType> operator &&(NeboBooleanExpression<SubBoolExpr1,
+                                                                                 FieldType>
+                                                           const & arg1,
+                                                           structured::
+                                                           SpatialMask<FieldType>
+                                                           const & arg2) {
+          AndOp<Initial, SubBoolExpr1, NeboMask<Initial, FieldType> > typedef
+          ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), NeboMask<Initial, FieldType>(arg2)));
+       }
+
+      /* Mask X Boolean */
+      template<typename FieldType>
+       inline NeboBooleanExpression<AndOp<Initial,
+                                          NeboMask<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result>,
+                                          NeboScalar<Initial, bool> >,
+                                    FieldType> operator &&(structured::
+                                                           SpatialMask<FieldType>
+                                                           const & arg1,
+                                                           bool const & arg2) {
+          AndOp<Initial,
+                NeboMask<Initial, FieldType>,
+                NeboScalar<Initial, bool> > typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboMask<Initial, FieldType>(arg1),
+                                       NeboScalar<Initial, bool>(arg2)));
+       }
+
+      /* Mask X SubBoolExpr */
+      template<typename SubBoolExpr2, typename FieldType>
+       inline NeboBooleanExpression<AndOp<Initial,
+                                          NeboMask<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result>,
+                                          SubBoolExpr2>,
+                                    FieldType> operator &&(structured::
+                                                           SpatialMask<FieldType>
+                                                           const & arg1,
+                                                           NeboBooleanExpression<SubBoolExpr2,
+                                                                                 FieldType>
+                                                           const & arg2) {
+          AndOp<Initial, NeboMask<Initial, FieldType>, SubBoolExpr2> typedef
+          ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboMask<Initial, FieldType>(arg1), arg2.expr()));
+       }
+
+      /* Mask X Mask */
+      template<typename FieldType>
+       inline NeboBooleanExpression<AndOp<Initial,
+                                          NeboMask<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result>,
+                                          NeboMask<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result> >,
+                                    FieldType> operator &&(structured::
+                                                           SpatialMask<FieldType>
+                                                           const & arg1,
+                                                           structured::
+                                                           SpatialMask<FieldType>
+                                                           const & arg2) {
+          AndOp<Initial,
+                NeboMask<Initial, FieldType>,
+                NeboMask<Initial, FieldType> > typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboMask<Initial, FieldType>(arg1),
+                                       NeboMask<Initial, FieldType>(arg2)));
        };
 
       template<typename CurrentMode, typename Operand1, typename Operand2>
@@ -11913,6 +12040,29 @@
           return ReturnTerm(ReturnType(NeboScalar<Initial, bool>(arg1), arg2.expr()));
        }
 
+      /* Boolean X Mask */
+      template<typename FieldType>
+       inline NeboBooleanExpression<OrOp<Initial,
+                                         NeboScalar<Initial, bool>,
+                                         NeboMask<Initial,
+                                                  typename NeboFieldCheck<typename
+                                                                          FieldType::
+                                                                          field_type,
+                                                                          FieldType>::
+                                                  Result> >,
+                                    FieldType> operator ||(bool const & arg1,
+                                                           structured::
+                                                           SpatialMask<FieldType>
+                                                           const & arg2) {
+          OrOp<Initial, NeboScalar<Initial, bool>, NeboMask<Initial, FieldType> >
+          typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboScalar<Initial, bool>(arg1),
+                                       NeboMask<Initial, FieldType>(arg2)));
+       }
+
       /* SubBoolExpr X Boolean */
       template<typename SubBoolExpr1, typename FieldType>
        inline NeboBooleanExpression<OrOp<Initial,
@@ -11944,6 +12094,108 @@
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SubBoolExpr X Mask */
+      template<typename SubBoolExpr1, typename FieldType>
+       inline NeboBooleanExpression<OrOp<Initial,
+                                         SubBoolExpr1,
+                                         NeboMask<Initial,
+                                                  typename NeboFieldCheck<typename
+                                                                          FieldType::
+                                                                          field_type,
+                                                                          FieldType>::
+                                                  Result> >,
+                                    FieldType> operator ||(NeboBooleanExpression<SubBoolExpr1,
+                                                                                 FieldType>
+                                                           const & arg1,
+                                                           structured::
+                                                           SpatialMask<FieldType>
+                                                           const & arg2) {
+          OrOp<Initial, SubBoolExpr1, NeboMask<Initial, FieldType> > typedef
+          ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), NeboMask<Initial, FieldType>(arg2)));
+       }
+
+      /* Mask X Boolean */
+      template<typename FieldType>
+       inline NeboBooleanExpression<OrOp<Initial,
+                                         NeboMask<Initial,
+                                                  typename NeboFieldCheck<typename
+                                                                          FieldType::
+                                                                          field_type,
+                                                                          FieldType>::
+                                                  Result>,
+                                         NeboScalar<Initial, bool> >,
+                                    FieldType> operator ||(structured::
+                                                           SpatialMask<FieldType>
+                                                           const & arg1,
+                                                           bool const & arg2) {
+          OrOp<Initial, NeboMask<Initial, FieldType>, NeboScalar<Initial, bool> >
+          typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboMask<Initial, FieldType>(arg1),
+                                       NeboScalar<Initial, bool>(arg2)));
+       }
+
+      /* Mask X SubBoolExpr */
+      template<typename SubBoolExpr2, typename FieldType>
+       inline NeboBooleanExpression<OrOp<Initial,
+                                         NeboMask<Initial,
+                                                  typename NeboFieldCheck<typename
+                                                                          FieldType::
+                                                                          field_type,
+                                                                          FieldType>::
+                                                  Result>,
+                                         SubBoolExpr2>,
+                                    FieldType> operator ||(structured::
+                                                           SpatialMask<FieldType>
+                                                           const & arg1,
+                                                           NeboBooleanExpression<SubBoolExpr2,
+                                                                                 FieldType>
+                                                           const & arg2) {
+          OrOp<Initial, NeboMask<Initial, FieldType>, SubBoolExpr2> typedef
+          ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboMask<Initial, FieldType>(arg1), arg2.expr()));
+       }
+
+      /* Mask X Mask */
+      template<typename FieldType>
+       inline NeboBooleanExpression<OrOp<Initial,
+                                         NeboMask<Initial,
+                                                  typename NeboFieldCheck<typename
+                                                                          FieldType::
+                                                                          field_type,
+                                                                          FieldType>::
+                                                  Result>,
+                                         NeboMask<Initial,
+                                                  typename NeboFieldCheck<typename
+                                                                          FieldType::
+                                                                          field_type,
+                                                                          FieldType>::
+                                                  Result> >,
+                                    FieldType> operator ||(structured::
+                                                           SpatialMask<FieldType>
+                                                           const & arg1,
+                                                           structured::
+                                                           SpatialMask<FieldType>
+                                                           const & arg2) {
+          OrOp<Initial,
+               NeboMask<Initial, FieldType>,
+               NeboMask<Initial, FieldType> > typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboMask<Initial, FieldType>(arg1),
+                                       NeboMask<Initial, FieldType>(arg2)));
        };
 
       template<typename CurrentMode, typename Operand>
@@ -12113,6 +12365,25 @@
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg.expr()));
+       }
+
+      /* Mask */
+      template<typename FieldType>
+       inline NeboBooleanExpression<NotOp<Initial,
+                                          NeboMask<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result> >,
+                                    FieldType> operator !(structured::
+                                                          SpatialMask<FieldType>
+                                                          const & arg) {
+          NotOp<Initial, NeboMask<Initial, FieldType> > typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboMask<Initial, FieldType>(arg)));
        };
 
       template<typename CurrentMode, typename Operand1, typename Operand2>

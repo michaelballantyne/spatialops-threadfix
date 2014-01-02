@@ -113,6 +113,12 @@ class Numeric3Vec
    }
 
    template<typename T1>
+   inline Numeric3Vec operator+( const T1 v ) const{
+     return Numeric3Vec(ijk[0] + v,
+                        ijk[1] + v,
+                        ijk[2] + v);
+   }
+   template<typename T1>
    inline Numeric3Vec operator*( const T1 v ) const{
      return Numeric3Vec(ijk[0] * v,
                    ijk[1] * v,

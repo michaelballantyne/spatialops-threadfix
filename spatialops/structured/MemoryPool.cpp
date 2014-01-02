@@ -219,6 +219,7 @@ Pool<T>::active() const{
 // explicit instantiation
 template class Pool<double>;
 template class Pool<float>;
+template class Pool<unsigned int>;
 
 }
 }

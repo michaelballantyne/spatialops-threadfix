@@ -180,25 +180,30 @@
   (eq? 'bool (first condition)))
 (define (condition-expr? condition)
   (eq? 'expr (first condition)))
-(define condition-tpl-pmtr second)
-(define condition-parameter third)
-(define (condition-result-type condition FT-use) ((fourth condition) FT-use))
-(define condition-typedef fifth)
-(define condition-result-name-type sixth)
-(define condition-simple-value seventh)
-(define condition-full-value eighth)
+(define (condition-mask? condition)
+  (eq? 'mask (first condition)))
+(define condition-FT-needed? second)
+(define condition-tpl-pmtr third)
+(define condition-parameter fourth)
+(define (condition-result-type condition FT-use) ((fifth condition) FT-use))
+(define condition-typedef sixth)
+(define condition-result-name-type seventh)
+(define condition-simple-value eighth)
+(define condition-full-value ninth)
 
 (define condition-final
   (list 'final
+        #false
         null
         null
-        'condition-final-result-type
+        'error!
         null
         'error!
         'error!
         'error!))
 (define condition-bool
   (list 'bool
+        #false
         null
         (adc 'bool 'b)
         (lambda (FT-use) (tpl-use NS-chunk 'Initial 'bool))
@@ -209,6 +214,7 @@
         (fc 'Boolean 'b)))
 (define condition-expr
   (list 'expr
+        #true
         'BoolExpr
         (adcr (tpl-use NBE-chunk 'BoolExpr FT-chunk) 'nb)
         (lambda (FT-use) 'BoolExpr)
@@ -216,8 +222,21 @@
         'BoolExpr
         (mfc 'nb 'expr)
         (mfc 'nb 'expr)))
+(define condition-mask
+  (list 'mask
+        #true
+        null
+        (adcr (tpl-use (scope 'structured 'SpatialMask)
+                       FT-chunk)
+              'mask)
+        (lambda (FT-use) (tpl-use 'NeboMask 'Initial FT-use))
+        (typedef (tpl-use 'NeboMask 'Initial FT-chunk)
+                 'Mask)
+        'Mask
+        'mask
+        (fc 'Mask 'mask)))
 
-(define condition-list (list condition-final condition-bool condition-expr))
+(define condition-list (list condition-final condition-bool condition-expr condition-mask))
 
 (define (value-double? value)
   (eq? 'double (first value)))
@@ -225,17 +244,19 @@
   (eq? 'field (first value)))
 (define (value-expr? value)
   (eq? 'expr (first value)))
-(define value-tpl-pmtr second)
-(define value-parameter third)
-(define (value-result-type value FT-use) ((fourth value) FT-use #false))
-(define (value-result-type-with-space value FT-use) ((fourth value) FT-use #true))
-(define value-typedef fifth)
-(define value-result-name-type sixth)
-(define value-simple-value seventh)
-(define value-full-value eighth)
+(define value-FT-needed? second)
+(define value-tpl-pmtr third)
+(define value-parameter fourth)
+(define (value-result-type value FT-use) ((fifth value) FT-use #false))
+(define (value-result-type-with-space value FT-use) ((fifth value) FT-use #true))
+(define value-typedef sixth)
+(define value-result-name-type seventh)
+(define value-simple-value eighth)
+(define value-full-value ninth)
 
 (define value-double
   (list 'double
+        #false
         null
         (adc 'double 'd)
         (lambda (FT-use add-space) ((if add-space cs identity)
@@ -247,6 +268,7 @@
         (fc 'Scalar 'd)))
 (define value-field
   (list 'field
+        #true
         null
         (adcr FT-chunk 'f)
         (lambda (FT-use add-space) ((if add-space cs identity)
@@ -258,6 +280,7 @@
         (fc 'Field 'f)))
 (define value-expr
   (list 'expr
+        #true
         'Expr
         (adcr (tpl-use NE-chunk 'Expr FT-chunk) 'e)
         (lambda (FT-use add-space) 'Expr)
@@ -396,8 +419,8 @@
     (define tpl-pmtrs
       (flatten (list (condition-tpl-pmtr condition)
                      (value-tpl-pmtr value)
-                     (if (or (condition-expr? condition)
-                             (not (value-double? value)))
+                     (if (or (condition-FT-needed? condition)
+                             (value-FT-needed? value))
                          (previous-FT-def previous)
                          null))))
     (if (null? tpl-pmtrs)

@@ -25,6 +25,7 @@
                    'spatialops/structured/IndexTriplet.h
                    'spatialops/structured/GhostData.h
                    'spatialops/structured/SpatialField.h
+                   'spatialops/structured/SpatialMask.h
                    'spatialops/structured/FVStaggeredFieldTypes.h
                    'cmath
                    'math.h)
