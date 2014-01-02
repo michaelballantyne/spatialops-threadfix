@@ -42,6 +42,8 @@ install( FILES
   MemoryWindow.h
   FieldComparisons.h
   SpatialField.h
+  SpatialMask.h
+  BitField.h
   SpatialFieldStore.h
   DESTINATION include/spatialops/structured
   PERMISSIONS OWNER_READ GROUP_READ WORLD_READ

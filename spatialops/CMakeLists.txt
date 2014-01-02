@@ -6,6 +6,7 @@ set( SO_HEADERS
   Nebo.h
   NeboBasic.h
   NeboRhs.h
+  NeboMask.h
   NeboOperators.h
   NeboCond.h
   NeboStencils.h
