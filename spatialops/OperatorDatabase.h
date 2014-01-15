@@ -90,7 +90,7 @@ public:
    *  \brief Retrieve an operator of the requested type.
    *  \param id In the case where more than one operator of this type
    *         has been registered, this specifies the identifier for
-   *         the desired operator.  This argument may be ommitted.
+   *         the desired operator.  This argument may be omitted.
    *         However, if omitted and multiple operators of this type
    *         are registered, an exception will be thrown.
    */

@@ -118,31 +118,34 @@ namespace structured{
             type;                                                  \
   };
 
-#define BASIC_OPTYPE_BUILDER( VOL )                                     \
-  OP_BUILDER( Stencil2Collection, Interpolant, VOL, FaceTypes<VOL>::XFace ) \
-  OP_BUILDER( Stencil2Collection, Interpolant, VOL, FaceTypes<VOL>::YFace ) \
-  OP_BUILDER( Stencil2Collection, Interpolant, VOL, FaceTypes<VOL>::ZFace ) \
-  OP_BUILDER( Stencil2Collection, Interpolant, FaceTypes<VOL>::XFace, VOL ) \
-  OP_BUILDER( Stencil2Collection, Interpolant, FaceTypes<VOL>::YFace, VOL ) \
-  OP_BUILDER( Stencil2Collection, Interpolant, FaceTypes<VOL>::ZFace, VOL ) \
-  OP_BUILDER( Stencil2Collection, Gradient,    VOL, FaceTypes<VOL>::XFace ) \
-  OP_BUILDER( Stencil2Collection, Gradient,    VOL, FaceTypes<VOL>::YFace ) \
-  OP_BUILDER( Stencil2Collection, Gradient,    VOL, FaceTypes<VOL>::ZFace ) \
-  OP_BUILDER( Stencil2Collection, Divergence,  FaceTypes<VOL>::XFace, VOL ) \
-  OP_BUILDER( Stencil2Collection, Divergence,  FaceTypes<VOL>::YFace, VOL ) \
-  OP_BUILDER( Stencil2Collection, Divergence,  FaceTypes<VOL>::ZFace, VOL ) \
-  template<>                                                            \
-  struct BasicOpTypes<VOL>                                              \
-  {                                                                     \
+#define BASIC_OPTYPE_BUILDER( VOL )                                                          \
+  OP_BUILDER( Stencil2Collection, Interpolant, VOL, FaceTypes<VOL>::XFace )                  \
+  OP_BUILDER( Stencil2Collection, Interpolant, VOL, FaceTypes<VOL>::YFace )                  \
+  OP_BUILDER( Stencil2Collection, Interpolant, VOL, FaceTypes<VOL>::ZFace )                  \
+  OP_BUILDER( Stencil2Collection, Interpolant, FaceTypes<VOL>::XFace, VOL )                  \
+  OP_BUILDER( Stencil2Collection, Interpolant, FaceTypes<VOL>::YFace, VOL )                  \
+  OP_BUILDER( Stencil2Collection, Interpolant, FaceTypes<VOL>::ZFace, VOL )                  \
+  OP_BUILDER( Stencil2Collection, Gradient,    VOL, FaceTypes<VOL>::XFace )                  \
+  OP_BUILDER( Stencil2Collection, Gradient,    VOL, FaceTypes<VOL>::YFace )                  \
+  OP_BUILDER( Stencil2Collection, Gradient,    VOL, FaceTypes<VOL>::ZFace )                  \
+  OP_BUILDER( Stencil2Collection, Divergence,  FaceTypes<VOL>::XFace, VOL )                  \
+  OP_BUILDER( Stencil2Collection, Divergence,  FaceTypes<VOL>::YFace, VOL )                  \
+  OP_BUILDER( Stencil2Collection, Divergence,  FaceTypes<VOL>::ZFace, VOL )                  \
+  template<>                                                                                 \
+  struct BasicOpTypes<VOL>                                                                   \
+  {                                                                                          \
     typedef OperatorTypeBuilder< Interpolant, VOL, FaceTypes<VOL>::XFace >::type InterpC2FX; \
     typedef OperatorTypeBuilder< Interpolant, VOL, FaceTypes<VOL>::YFace >::type InterpC2FY; \
     typedef OperatorTypeBuilder< Interpolant, VOL, FaceTypes<VOL>::ZFace >::type InterpC2FZ; \
-    typedef OperatorTypeBuilder< Gradient,    VOL, FaceTypes<VOL>::XFace >::type GradX; \
-    typedef OperatorTypeBuilder< Gradient,    VOL, FaceTypes<VOL>::YFace >::type GradY; \
-    typedef OperatorTypeBuilder< Gradient,    VOL, FaceTypes<VOL>::ZFace >::type GradZ; \
-    typedef OperatorTypeBuilder< Divergence,  FaceTypes<VOL>::XFace, VOL >::type DivX; \
-    typedef OperatorTypeBuilder< Divergence,  FaceTypes<VOL>::YFace, VOL >::type DivY; \
-    typedef OperatorTypeBuilder< Divergence,  FaceTypes<VOL>::ZFace, VOL >::type DivZ; \
+    typedef OperatorTypeBuilder< Interpolant, FaceTypes<VOL>::XFace, VOL >::type InterpF2CX; \
+    typedef OperatorTypeBuilder< Interpolant, FaceTypes<VOL>::YFace, VOL >::type InterpF2CY; \
+    typedef OperatorTypeBuilder< Interpolant, FaceTypes<VOL>::ZFace, VOL >::type InterpF2CZ; \
+    typedef OperatorTypeBuilder< Gradient,    VOL, FaceTypes<VOL>::XFace >::type GradX;      \
+    typedef OperatorTypeBuilder< Gradient,    VOL, FaceTypes<VOL>::YFace >::type GradY;      \
+    typedef OperatorTypeBuilder< Gradient,    VOL, FaceTypes<VOL>::ZFace >::type GradZ;      \
+    typedef OperatorTypeBuilder< Divergence,  FaceTypes<VOL>::XFace, VOL >::type DivX;       \
+    typedef OperatorTypeBuilder< Divergence,  FaceTypes<VOL>::YFace, VOL >::type DivY;       \
+    typedef OperatorTypeBuilder< Divergence,  FaceTypes<VOL>::ZFace, VOL >::type DivZ;       \
   };
 
 
