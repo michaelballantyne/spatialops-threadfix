@@ -422,7 +422,7 @@ namespace structured{
     {
 #     ifdef ENABLE_CUDA
       //Release any masks allocated for consumer use
-      for( typename ConsumerMap::iterator i = myConsumerBitValues_.begin(); i != myConsumerBitValues_.end(); ++i ){
+      for( ConsumerMap::iterator i = myConsumerBitValues_.begin(); i != myConsumerBitValues_.end(); ++i ){
         Pool<unsigned int>::self().put( EXTERNAL_CUDA_GPU, i->second );
       }
 
@@ -666,7 +666,7 @@ namespace structured{
     {
 #     ifdef ENABLE_CUDA
       //Release any masks allocated for "consumer" use
-      for(typename ConsumerMap::iterator i = myConsumerBitValues_.begin();
+      for( ConsumerMap::iterator i = myConsumerBitValues_.begin();
           i != myConsumerBitValues_.end();
           i++)
         Pool<unsigned int>::self().put(EXTERNAL_CUDA_GPU, i->second);
@@ -706,7 +706,7 @@ namespace structured{
         if(consumerMemoryType == memType_ && consumerDeviceIndex == deviceIndex_)
           return bitValuesExtDevice_;
 
-        typename ConsumerMap::const_iterator citer = consumerBitValues_.find(consumerDeviceIndex);
+        ConsumerMap::const_iterator citer = consumerBitValues_.find(consumerDeviceIndex);
         if(citer != consumerBitValues_.end())
           return citer->second;
 
