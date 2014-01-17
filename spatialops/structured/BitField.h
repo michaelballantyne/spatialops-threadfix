@@ -279,7 +279,7 @@ namespace structured{
     {
       switch ( memType_ ) {
       case LOCAL_RAM:
-        for(int i = 0; i < size_; i++)
+        for( unsigned int long i = 0; i < size_; ++i )
           bitValues_[i] = 0;
         break;
 #     ifdef ENABLE_CUDA

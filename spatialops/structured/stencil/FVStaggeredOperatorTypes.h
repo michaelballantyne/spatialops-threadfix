@@ -56,7 +56,7 @@ namespace structured{
    *  \endcode
    *
    *  Note that we only provide fully specialized versions of this template
-   *  so that unsupported operator types cannot be inadvertantly formed.
+   *  so that unsupported operator types cannot be inadvertently formed.
    */
   template<typename OpT, typename SrcT, typename DestT>
   struct OperatorTypeBuilder;
