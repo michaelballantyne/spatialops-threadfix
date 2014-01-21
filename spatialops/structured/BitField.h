@@ -23,9 +23,9 @@
 #ifndef SpatialOps_BitField_h
 #define SpatialOps_BitField_h
 
-#define NEBO_INT_BIT (sizeof(unsigned int) * CHAR_BIT)
-#define NEBO_INT_BYTE (sizeof(unsigned int))
-#define NEBO_ROUND_TO_INT(size) ((size + NEBO_INT_BIT - 1) / NEBO_INT_BIT)
+#define NEBO_INT_BIT ((signed int)(sizeof(unsigned int) * CHAR_BIT))
+#define NEBO_INT_BYTE ((signed int)(sizeof(unsigned int)))
+#define NEBO_ROUND_TO_INT(size) ((signed int)((size + NEBO_INT_BIT - 1) / NEBO_INT_BIT))
 
 #include <iostream>
 #include <cassert>
