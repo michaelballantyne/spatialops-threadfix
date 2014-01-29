@@ -28,6 +28,11 @@ add_executable( test_tools testTools.cpp )
 target_link_libraries( test_tools ${TPL_LIBRARIES} )
 add_test( test_tools test_tools )
 
+nebo_add_executable( test_bc testNeboBC.cpp )
+target_link_libraries( test_bc ${libs} )
+add_test( test_bc test_bc )
+
+
 macro( build_test tname exec tout )
   add_test( CUDA_${tname} ${exec} )
 

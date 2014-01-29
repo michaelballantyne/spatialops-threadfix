@@ -1082,6 +1082,201 @@
          private:
           Arg arg_;
       };
+
+      template<typename Point>
+       static inline structured::GhostData point_possible_ghosts(structured::
+                                                                 GhostData const
+                                                                 & ghosts) {
+          return ghosts - point_to_ghost(Point::int_vec());
+       };
+
+      template<typename CurrentMode,
+               typename Point,
+               typename Arg,
+               typename FieldType>
+       struct NeboMaskShift;
+      template<typename Point, typename Arg, typename FieldType>
+       struct NeboMaskShift<Initial, Point, Arg, FieldType> {
+         public:
+          FieldType typedef field_type;
+
+          typename Arg::SeqWalkType typedef ArgSeqWalkType;
+
+#         ifdef __CUDACC__
+             typename Arg::GPUWalkType typedef ArgGPUWalkType
+#         endif
+          /* __CUDACC__ */
+
+          typename Arg::ReductionType typedef ArgReductionType;
+
+          NeboMaskShift<SeqWalk, Point, ArgSeqWalkType, FieldType> typedef
+          SeqWalkType;
+
+#         ifdef FIELD_EXPRESSION_THREADS
+             NeboMaskShift<Resize, Point, typename Arg::ResizeType, FieldType>
+             typedef ResizeType;
+#         endif
+          /* FIELD_EXPRESSION_THREADS */
+
+#         ifdef __CUDACC__
+             NeboMaskShift<GPUWalk, Point, ArgGPUWalkType, FieldType> typedef
+             GPUWalkType;
+#         endif
+          /* __CUDACC__ */
+
+          NeboMaskShift<Reduction, Point, ArgReductionType, FieldType> typedef
+          ReductionType;
+
+          NeboMaskShift(Arg const & a)
+          : arg_(a)
+          {}
+
+          inline structured::GhostData possible_ghosts(void) const {
+             return point_possible_ghosts<Point>(arg_.possible_ghosts());
+          }
+
+          inline SeqWalkType init(structured::IntVec const & minus,
+                                  structured::IntVec const & plus,
+                                  structured::IntVec const & shift) const {
+             return SeqWalkType(arg_.init(minus, plus, shift + Point::int_vec()));
+          }
+
+#         ifdef FIELD_EXPRESSION_THREADS
+             inline ResizeType resize(structured::IntVec const & minus,
+                                      structured::IntVec const & plus) const {
+                return ResizeType(arg_.resize(minus, plus));
+             }
+#         endif
+          /* FIELD_EXPRESSION_THREADS */
+
+#         ifdef __CUDACC__
+             inline bool cpu_ready(void) const { return arg_.cpu_ready(); }
+
+             inline bool gpu_ready(int const deviceIndex) const {
+                return arg_.gpu_ready(deviceIndex);
+             }
+
+             inline GPUWalkType gpu_init(structured::IntVec const & minus,
+                                         structured::IntVec const & plus,
+                                         structured::IntVec const & shift,
+                                         int const deviceIndex) const {
+                return GPUWalkType(arg_.gpu_init(minus,
+                                                 plus,
+                                                 shift + Point::int_vec(),
+                                                 deviceIndex));
+             }
+
+#            ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const {
+                   arg_.gpu_prep(deviceIndex);
+                }
+#            endif
+             /* NEBO_GPU_TEST */
+#         endif
+          /* __CUDACC__ */
+
+          inline ReductionType reduce_init(structured::IntVec const & minus,
+                                           structured::IntVec const & plus,
+                                           structured::IntVec const & shift) const {
+             return ReductionType(arg_.reduce_init(minus,
+                                                   plus,
+                                                   shift + Point::int_vec()));
+          }
+
+          //private:
+          Arg const arg_;
+      };
+#     ifdef FIELD_EXPRESSION_THREADS
+         template<typename Point, typename Arg, typename FieldType>
+          struct NeboMaskShift<Resize, Point, Arg, FieldType> {
+            public:
+             FieldType typedef field_type;
+
+             typename Arg::SeqWalkType typedef ArgSeqWalkType;
+
+             NeboMaskShift<SeqWalk, Point, ArgSeqWalkType, FieldType> typedef
+             SeqWalkType;
+
+             NeboMaskShift(Arg const & arg)
+             : arg_(arg)
+             {}
+
+             inline SeqWalkType init(structured::IntVec const & shift,
+                                     structured::IntVec const & split,
+                                     structured::IntVec const & location) const {
+                return SeqWalkType(arg_.init(shift + Point::int_vec(),
+                                             split,
+                                             location));
+             }
+
+            private:
+             Arg const arg_;
+         }
+#     endif
+      /* FIELD_EXPRESSION_THREADS */;
+      template<typename Point, typename Arg, typename FieldType>
+       struct NeboMaskShift<SeqWalk, Point, Arg, FieldType> {
+         public:
+          FieldType typedef field_type;
+
+          typename field_type::value_type typedef value_type;
+
+          NeboMaskShift(Arg const & arg)
+          : arg_(arg)
+          {}
+
+          inline void next(void) { arg_.next(); }
+
+          inline bool eval(void) const { return arg_.eval(); }
+
+         private:
+          Arg arg_;
+      };
+#     ifdef __CUDACC__
+         template<typename Point, typename Arg, typename FieldType>
+          struct NeboMaskShift<GPUWalk, Point, Arg, FieldType> {
+            public:
+             FieldType typedef field_type;
+
+             typename field_type::value_type typedef value_type;
+
+             NeboMaskShift(Arg const & a)
+             : arg_(a)
+             {}
+
+             __device__ inline void start(int x, int y) { arg_.start(x, y); }
+
+             __device__ inline void next(void) { arg_.next(); }
+
+             __device__ inline bool eval(void) const { return arg_.eval(); }
+
+            private:
+             Arg arg_;
+         }
+#     endif
+      /* __CUDACC__ */;
+      template<typename Point, typename Arg, typename FieldType>
+       struct NeboMaskShift<Reduction, Point, Arg, FieldType> {
+         public:
+          FieldType typedef field_type;
+
+          typename field_type::value_type typedef value_type;
+
+          NeboMaskShift(Arg const & arg)
+          : arg_(arg)
+          {}
+
+          inline void next(void) { arg_.next(); }
+
+          inline bool at_end(void) const { return arg_.at_end(); }
+
+          inline bool has_length(void) const { return arg_.has_length(); }
+
+          inline bool eval(void) const { return arg_.eval(); }
+
+         private:
+          Arg arg_;
+      };
    } /* SpatialOps */
 
 #endif

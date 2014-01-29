@@ -584,4 +584,85 @@
                                vt-chunk
                                (mfc 'arg_ 'eval)
                                null
+                               (sad 'Arg 'arg_)))
+
+   (tpl-def (tpl-pmtr 'Point)
+            (r-fcn-def (s-fcn-dcl 'point_possible_ghosts GhostData ghost-pmtr)
+                       null
+                       (n- 'ghosts (fc 'point_to_ghost (fc (scope 'Point 'int_vec))))))
+
+   (build-struct 'NeboMaskShift
+                 std-FT
+                 (list 'Point 'Arg)
+                 null
+                 (bs-Initial-rhs (list (s-typedef (tpl-pmtr (scope 'Arg 'SeqWalkType))
+                                                  'ArgSeqWalkType)
+                                       (gpu-only (typedef (tpl-pmtr (scope 'Arg 'GPUWalkType))
+                                                          'ArgGPUWalkType))
+                                       (s-typedef (tpl-pmtr (scope 'Arg 'ReductionType))
+                                                  'ArgReductionType))
+                                 (list (list 'Point 'ArgSeqWalkType)
+                                       (list 'Point (tpl-pmtr (scope 'Arg 'ResizeType)))
+                                       (list 'Point 'ArgGPUWalkType)
+                                       (list 'Point 'ArgReductionType))
+                                 (bm-constructor (adcr 'Arg 'a)
+                                                 (cons-asgn 'arg_ 'a)
+                                                 null)
+                                 (fc (tpl-use 'point_possible_ghosts 'Point)
+                                     (mfc 'arg_ 'possible_ghosts))
+                                 (mfc 'arg_ 'init resize-arg (n+ 'shift (fc (scope 'Point 'int_vec))))
+                                 (mfc 'arg_ 'resize resize-arg)
+                                 (mfc 'arg_ 'cpu_ready)
+                                 (mfc 'arg_ 'gpu_ready DI-chunk)
+                                 (mfc 'arg_
+                                      'gpu_init
+                                      resize-arg
+                                      (n+ 'shift (fc (scope 'Point 'int_vec)))
+                                      DI-chunk)
+                                 (mfc 'arg_ 'gpu_prep DI-chunk)
+                                 (mfc 'arg_ 'reduce_init resize-arg (n+ 'shift (fc (scope 'Point 'int_vec))))
+                                 null
+                                 (sadc 'Arg 'arg_))
+                 (bs-Resize-rhs (s-typedef (tpl-pmtr (scope 'Arg 'SeqWalkType))
+                                           'ArgSeqWalkType)
+                                (list 'Point 'ArgSeqWalkType)
+                                (bm-constructor (adcr 'Arg 'arg)
+                                                (cons-asgn 'arg_ 'arg)
+                                                null)
+                                (mfc 'arg_
+                                     'init
+                                     (n+ 'shift (fc (scope 'Point 'int_vec)))
+                                     'split
+                                     'location)
+                                null
+                                (sadc 'Arg 'arg_))
+                 (bs-SeqWalk-rhs null
+                                 (bm-constructor (adcr 'Arg 'arg)
+                                                 (cons-asgn 'arg_ 'arg)
+                                                 null)
+                                 (mfc 'arg_ 'next)
+                                 'bool
+                                 (mfc 'arg_ 'eval)
+                                 null
+                                 (sad 'Arg 'arg_))
+                 (bs-gpu-rhs null
+                             (bm-constructor (adcr 'Arg 'a)
+                                             (cons-asgn 'arg_ 'a)
+                                             null)
+                             (mfc 'arg_ 'start 'x 'y)
+                             (mfc 'arg_ 'next)
+                             'bool
+                             (mfc 'arg_ 'eval)
+                             null
+                             (sad 'Arg 'arg_))
+                 (bs-Reduction null
+                               (bm-constructor (adcr 'Arg 'arg)
+                                               (cons-asgn 'arg_ 'arg)
+                                               null)
+                               (mfc 'arg_ 'next)
+                               (mfc 'arg_ 'at_end)
+                               (mfc 'arg_ 'has_length)
+                               'bool
+                               (mfc 'arg_ 'eval)
+                               null
                                (sad 'Arg 'arg_))))
