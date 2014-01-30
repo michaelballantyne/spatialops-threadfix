@@ -10,6 +10,7 @@ option( ENABLE_TESTS "Enable building of regression tests (recommended)" ON )
 option( ENABLE_THREADS "Enable multi-threaded support for stencil operations" OFF )
 option( ENABLE_CUDA   "Build Spatial Ops with CUDA support" OFF )
 option( NEBO_REPORT_BACKEND "Require Nebo to report what backend it is using" OFF )
+option( USE_CLANG "Build with clang" OFF)
 
 set( NTHREADS 1 CACHE STRING "Number of threads to use if ENABLE_THREADS is ON" )
 
@@ -102,6 +103,14 @@ else( ENABLE_CUDA )
   # reverts without clearing the build directory
   SET( CUDA_CUDA_LIBRARY OFF )
 endif( ENABLE_CUDA )
+
+#--CLANG
+if( USE_CLANG )
+  message( STATUS "SpatialOps will be compiled with Clang" )
+  SET (CMAKE_CXX_COMPILER "clang++" )
+  SET (CMAKE_BUILD_TYPE "Debug" )
+  SET (CMAKE_CXX_FLAGS "-Wall" )
+endif( USE_CLANG )
 
 #--------------------------------------
 
