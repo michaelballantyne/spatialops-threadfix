@@ -301,11 +301,11 @@ namespace structured{
 #     ifndef NDEBUG
       //check that point is in bounds
       assert(point[0] >= -ghosts_.get_minus(0));
-      assert(point[0] < maskWindow_.extent(0) + ghosts_.get_plus(0));
+      assert(point[0] < (signed int)(maskWindow_.extent(0)) + ghosts_.get_plus(0));
       assert(point[1] >= -ghosts_.get_minus(1));
-      assert(point[1] < maskWindow_.extent(1) + ghosts_.get_plus(1));
+      assert(point[1] < (signed int)(maskWindow_.extent(1)) + ghosts_.get_plus(1));
       assert(point[2] >= -ghosts_.get_minus(2));
-      assert(point[2] < maskWindow_.extent(2) + ghosts_.get_plus(2));
+      assert(point[2] < (signed int)(maskWindow_.extent(2)) + ghosts_.get_plus(2));
 #     endif
 
       const int xIndex = maskWindow_.offset(0) + point[0];
