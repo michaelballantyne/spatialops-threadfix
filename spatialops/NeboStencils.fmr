@@ -1,26 +1,31 @@
- ; Copyright (c) 2014 The University of Utah
- ;
- ; Permission is hereby granted, free of charge, to any person obtaining a copy
- ; of this software and associated documentation files (the "Software"), to
- ; deal in the Software without restriction, including without limitation the
- ; rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
- ; sell copies of the Software, and to permit persons to whom the Software is
- ; furnished to do so, subject to the following conditions:
- ;
- ; The above copyright notice and this permission notice shall be included in
- ; all copies or substantial portions of the Software.
- ;
- ; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- ; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- ; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- ; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- ; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- ; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- ; IN THE SOFTWARE.
+#lang fulmar
 
-(include "spatialops/FulmarAbbreviations.fmr")
-(include "spatialops/NeboCore.fmr")
-(include "spatialops/NeboRhsCore.fmr")
+"/*
+ * Copyright (c) 2014 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the \"Software\"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+"
+
+(require "FulmarAbbreviations.fmr")
+(require "NeboCore.fmr")
+(require "NeboRhsCore.fmr")
 
 (struct construct-fcn (name pmtrs return-expr) #:transparent)
 
@@ -166,503 +171,507 @@
                                       null
                                       (construct-fcn-return-expr fcn)))))
 
-(n 'SpatialOps
-   (tpl-srt-def NSCC
-                (bs 'int 'Length)
-                null
-                (pub-sec (constructor-chunk NSCC
-                                            (list (adcr (tpl-use NSCC (n- 'Length "1")) 'o)
-                                                  (adc 'double 'c))
-                                            (list (cons-asgn 'others_ 'o)
-                                                  (cons-asgn 'coef_ 'c))
-                                            null)
-                         (r-fcn-def (constize (fcn-dcl (bs 'operator (p))
-                                                       (tc (tpl-use NSCC (n+ 'Length "1")))
-                                                       (adc 'double 'c)))
-                                    null
-                                    (fc (tpl-use NSCC (n+ 'Length "1"))
-                                        '*this
-                                        'c))
-                         (r-fcn-def (constize (fcn-dcl 'coef 'double))
-                                    null
-                                    'coef_)
-                         (r-fcn-def (constize (fcn-dcl 'get_coef
-                                                       'double
-                                                       (adc 'int 'index)))
-                                    (list (nif (n< 'index "0")
-                                               (build-error '(Nebo Stencil Coefficient Collection)
-                                                            '(given negative value for coefficient index)))
-                                          (nif (n>= 'index 'Length)
-                                               (build-error '(Nebo Stencil Coefficient Collection)
-                                                            '(trying to access a coefficient that does not exist))))
-                                    (ter-cond (n== 'index (n- 'Length "1"))
-                                              (fc 'coef)
-                                              (mfc (fc 'others)
-                                                   'get_coef
-                                                   'index)))
-                         (r-fcn-def (constize (fcn-dcl 'others (tc (tpl-use NSCC (n- 'Length "1")))))
-                                    null
-                                    'others_))
-                (priv-sec (sadc (tpl-use NSCC (n- 'Length "1")) 'others_)
-                          (sadc 'double 'coef_)))
+                                        ; beginnning of file
+(pp-header-file
+ 'NEBO_STENCILS_H
+ (n 'SpatialOps
+    (tpl-srt-def NSCC
+                 (bs 'int 'Length)
+                 null
+                 (pub-sec (constructor NSCC
+                                       (list (adcr (tpl-use NSCC (n- 'Length "1")) 'o)
+                                             (adc 'double 'c))
+                                       (list (cons-asgn 'others_ 'o)
+                                             (cons-asgn 'coef_ 'c))
+                                       null)
+                          (r-fcn-def (constize (fcn-dcl (bs 'operator (p))
+                                                        (tc (tpl-use NSCC (n+ 'Length "1")))
+                                                        (adc 'double 'c)))
+                                     null
+                                     (fc (tpl-use NSCC (n+ 'Length "1"))
+                                         '*this
+                                         'c))
+                          (r-fcn-def (constize (fcn-dcl 'coef 'double))
+                                     null
+                                     'coef_)
+                          (r-fcn-def (constize (fcn-dcl 'get_coef
+                                                        'double
+                                                        (adc 'int 'index)))
+                                     (list (nif (n< 'index "0")
+                                                (build-error '(Nebo Stencil Coefficient Collection)
+                                                             '(given negative value for coefficient index)))
+                                           (nif (n>= 'index 'Length)
+                                                (build-error '(Nebo Stencil Coefficient Collection)
+                                                             '(trying to access a coefficient that does not exist))))
+                                     (ter-cond (n== 'index (n- 'Length "1"))
+                                               (fc 'coef)
+                                               (mfc (fc 'others)
+                                                    'get_coef
+                                                    'index)))
+                          (r-fcn-def (constize (fcn-dcl 'others (tc (tpl-use NSCC (n- 'Length "1")))))
+                                     null
+                                     'others_))
+                 (priv-sec (sadc (tpl-use NSCC (n- 'Length "1")) 'others_)
+                           (sadc 'double 'coef_)))
 
-   (tpl-srt-def NSCC
-                null
-                "1"
-                (pub-sec (constructor-chunk NSCC
-                                            (adc 'double 'c)
-                                            (cons-asgn 'coef_ 'c)
-                                            null)
-                         (r-fcn-def (constize (fcn-dcl (bs 'operator (p))
-                                                       (tc (tpl-use NSCC "2"))
-                                                       (adc 'double 'c)))
-                                    null
-                                    (fc (tpl-use NSCC "2")
-                                        '*this
-                                        'c))
-                         (r-fcn-def (constize (fcn-dcl 'coef 'double))
-                                    null
-                                    'coef_)
-                         (r-fcn-def (constize (fcn-dcl 'get_coef
-                                                       'double
-                                                       (adc 'int 'index)))
-                                    (list (nif (n< 'index "0")
-                                               (build-error '(Nebo Stencil Coefficient Collection)
-                                                            '(given negative value for coefficient index)))
-                                          (nif (n> 'index "1")
-                                               (build-error '(Nebo Stencil Coefficient Collection)
-                                                            '(trying to access a coefficient that does not exist))))
-                                    (fc 'coef)))
-                (priv-sec (sadc 'double 'coef_)))
+    (tpl-srt-def NSCC
+                 null
+                 "1"
+                 (pub-sec (constructor NSCC
+                                       (adc 'double 'c)
+                                       (cons-asgn 'coef_ 'c)
+                                       null)
+                          (r-fcn-def (constize (fcn-dcl (bs 'operator (p))
+                                                        (tc (tpl-use NSCC "2"))
+                                                        (adc 'double 'c)))
+                                     null
+                                     (fc (tpl-use NSCC "2")
+                                         '*this
+                                         'c))
+                          (r-fcn-def (constize (fcn-dcl 'coef 'double))
+                                     null
+                                     'coef_)
+                          (r-fcn-def (constize (fcn-dcl 'get_coef
+                                                        'double
+                                                        (adc 'int 'index)))
+                                     (list (nif (n< 'index "0")
+                                                (build-error '(Nebo Stencil Coefficient Collection)
+                                                             '(given negative value for coefficient index)))
+                                           (nif (n> 'index "1")
+                                                (build-error '(Nebo Stencil Coefficient Collection)
+                                                             '(trying to access a coefficient that does not exist))))
+                                     (fc 'coef)))
+                 (priv-sec (sadc 'double 'coef_)))
 
-   (r-fcn-def (fcn-dcl 'build_coef_collection
-                       (tc (tpl-use NSCC "1"))
-                       (adc 'double 'c))
-              null
-              (fc (tpl-use NSCC "1")
-                  'c))
+    (r-fcn-def (fcn-dcl 'build_coef_collection
+                        (tc (tpl-use NSCC "1"))
+                        (adc 'double 'c))
+               null
+               (fc (tpl-use NSCC "1")
+                   'c))
 
-   (r-fcn-def (fcn-dcl 'build_two_point_coef_collection
-                       (tc (tpl-use NSCC "2"))
-                       (adc 'double 'c1)
-                       (adc 'double 'c2))
-              null
-              (fc (fc (tpl-use NSCC "1")
-                      'c1)
-                  'c2))
+    (r-fcn-def (fcn-dcl 'build_two_point_coef_collection
+                        (tc (tpl-use NSCC "2"))
+                        (adc 'double 'c1)
+                        (adc 'double 'c2))
+               null
+               (fc (fc (tpl-use NSCC "1")
+                       'c1)
+                   'c2))
 
-   (r-fcn-def (fcn-dcl 'build_four_point_coef_collection
-                       (tc (tpl-use NSCC "4"))
-                       (adc 'double 'c1)
-                       (adc 'double 'c2)
-                       (adc 'double 'c3)
-                       (adc 'double 'c4))
-              null
-              (fc (fc (fc (fc (tpl-use NSCC "1")
-                              'c1)
-                          'c2)
-                      'c3)
-                  'c4))
+    (r-fcn-def (fcn-dcl 'build_four_point_coef_collection
+                        (tc (tpl-use NSCC "4"))
+                        (adc 'double 'c1)
+                        (adc 'double 'c2)
+                        (adc 'double 'c3)
+                        (adc 'double 'c4))
+               null
+               (fc (fc (fc (fc (tpl-use NSCC "1")
+                               'c1)
+                           'c2)
+                       'c3)
+                   'c4))
 
-   (tpl-srt-def NSPC
-                (list (tpl-pmtr 'PointType)
-                      (tpl-pmtr 'CollectionType))
-                null
-                (pub-sec (s-typedef 'PointType 'Point)
-                         (s-typedef 'CollectionType 'Collection)
-                         (s-typedef (tpl-use NSPC 'Point 'Collection)
-                                    'MyType)
-                         (enum (n= 'length (n+ "1" (scope 'Collection 'length))))
-                         (s-tpl-srt-def 'AddPoint
-                                        (tpl-pmtr 'NewPoint)
-                                        null
-                                        (s-typedef (tpl-use NSPC 'NewPoint 'MyType)
-                                                   'Result))
-                         (r-fcn-def (s-fcn-dcl 'possible_ghosts GhostData ghost-pmtr)
-                                    null
-                                    (fc 'min (n- 'ghosts (fc 'point_to_ghost (fc (scope 'Point 'int_vec))))
-                                        (fc (scope 'Collection 'possible_ghosts)
-                                            'ghosts)))
-                         (construct-expr 'ConstructExpr
-                                         (general-stencil-typedefs 'SeqWalk)
-                                         (general-construct-fcn 'in_sq_construct
+    (tpl-srt-def NSPC
+                 (list (tpl-pmtr 'PointType)
+                       (tpl-pmtr 'CollectionType))
+                 null
+                 (pub-sec (s-typedef 'PointType 'Point)
+                          (s-typedef 'CollectionType 'Collection)
+                          (s-typedef (tpl-use NSPC 'Point 'Collection)
+                                     'MyType)
+                          (enum (n= 'length (n+ "1" (scope 'Collection 'length))))
+                          (s-tpl-srt-def 'AddPoint
+                                         (tpl-pmtr 'NewPoint)
+                                         null
+                                         (s-typedef (tpl-use NSPC 'NewPoint 'MyType)
+                                                    'Result))
+                          (r-fcn-def (s-fcn-dcl 'possible_ghosts GhostData ghost-pmtr)
+                                     null
+                                     (fc 'min (n- 'ghosts (fc 'point_to_ghost (fc (scope 'Point 'int_vec))))
+                                         (fc (scope 'Collection 'possible_ghosts)
+                                             'ghosts)))
+                          (construct-expr 'ConstructExpr
+                                          (general-stencil-typedefs 'SeqWalk)
+                                          (general-construct-fcn 'in_sq_construct
+                                                                 seq-args
+                                                                 'init)
+                                          (general-construct-fcn 'rs_sq_construct
+                                                                 res-args
+                                                                 'init))
+                          (gpu-only
+                           (construct-expr 'ConstructGPUExpr
+                                           (general-stencil-typedefs 'GPUWalk)
+                                           (general-construct-fcn 'in_gpu_construct
+                                                                  gpu-args
+                                                                  'gpu_init)))
+                          (construct-expr 'ConstructReductionExpr
+                                          (general-stencil-typedefs 'Reduction)
+                                          (general-construct-fcn 'in_rd_construct
+                                                                 seq-args
+                                                                 'reduce_init)
+                                          (general-construct-fcn 'rs_rd_construct
+                                                                 res-args
+                                                                 'reduce_init))
+                          (construct-expr 'SumConstructExpr
+                                          (ave-general-stencil-typedefs 'SeqWalk)
+                                          (ave-general-construct-fcn 'in_sq_construct
+                                                                     seq-args
+                                                                     'init)
+                                          (ave-general-construct-fcn 'rs_sq_construct
+                                                                     res-args
+                                                                     'init))
+                          (gpu-only
+                           (construct-expr 'SumConstructGPUExpr
+                                           (ave-general-stencil-typedefs 'GPUWalk)
+                                           (ave-general-construct-fcn 'in_gpu_construct
+                                                                      gpu-args
+                                                                      'gpu_init)))
+                          (construct-expr 'SumConstructReductionExpr
+                                          (ave-general-stencil-typedefs 'Reduction)
+                                          (ave-general-construct-fcn 'in_rd_construct
+                                                                     seq-args
+                                                                     'reduce_init)
+                                          (ave-general-construct-fcn 'rs_rd_construct
+                                                                     res-args
+                                                                     'reduce_init))))
+
+    (tpl-srt-def NSPC
+                 (tpl-pmtr 'PointType)
+                 (list 'PointType Nil-chunk)
+                 (pub-sec (s-typedef 'PointType 'Point)
+                          (s-typedef Nil-chunk 'Collection)
+                          (s-typedef (tpl-use NSPC 'Point 'Collection)
+                                     'MyType)
+                          (enum (n= 'length "1"))
+                          (s-tpl-srt-def 'AddPoint
+                                         (tpl-pmtr 'NewPoint)
+                                         null
+                                         (s-typedef (tpl-use NSPC 'NewPoint 'MyType)
+                                                    'Result))
+                          (r-fcn-def (s-fcn-dcl 'possible_ghosts GhostData ghost-pmtr)
+                                     null
+                                     (n- 'ghosts (fc 'point_to_ghost (fc (scope 'Point 'int_vec)))))
+                          (construct-expr 'ConstructExpr
+                                          (single-stencil-typedefs 'SeqWalk)
+                                          (single-construct-fcn 'in_sq_construct
                                                                 seq-args
                                                                 'init)
-                                         (general-construct-fcn 'rs_sq_construct
+                                          (single-construct-fcn 'rs_sq_construct
                                                                 res-args
                                                                 'init))
-                         (gpu-only
-                          (construct-expr 'ConstructGPUExpr
-                                          (general-stencil-typedefs 'GPUWalk)
-                                          (general-construct-fcn 'in_gpu_construct
+                          (gpu-only
+                           (construct-expr 'ConstructGPUExpr
+                                           (single-stencil-typedefs 'GPUWalk)
+                                           (single-construct-fcn 'in_gpu_construct
                                                                  gpu-args
                                                                  'gpu_init)))
-                         (construct-expr 'ConstructReductionExpr
-                                         (general-stencil-typedefs 'Reduction)
-                                         (general-construct-fcn 'in_rd_construct
+                          (construct-expr 'ConstructReductionExpr
+                                          (single-stencil-typedefs 'Reduction)
+                                          (single-construct-fcn 'in_rd_construct
                                                                 seq-args
                                                                 'reduce_init)
-                                         (general-construct-fcn 'rs_rd_construct
+                                          (single-construct-fcn 'rs_rd_construct
                                                                 res-args
                                                                 'reduce_init))
-                         (construct-expr 'SumConstructExpr
-                                         (ave-general-stencil-typedefs 'SeqWalk)
-                                         (ave-general-construct-fcn 'in_sq_construct
+                          (construct-expr 'SumConstructExpr
+                                          (ave-single-stencil-typedefs 'SeqWalk)
+                                          (ave-single-construct-fcn 'in_sq_construct
                                                                     seq-args
                                                                     'init)
-                                         (ave-general-construct-fcn 'rs_sq_construct
+                                          (ave-single-construct-fcn 'rs_sq_construct
                                                                     res-args
                                                                     'init))
-                         (gpu-only
-                          (construct-expr 'SumConstructGPUExpr
-                                          (ave-general-stencil-typedefs 'GPUWalk)
-                                          (ave-general-construct-fcn 'in_gpu_construct
+                          (gpu-only
+                           (construct-expr 'SumConstructGPUExpr
+                                           (ave-single-stencil-typedefs 'GPUWalk)
+                                           (ave-single-construct-fcn 'in_gpu_construct
                                                                      gpu-args
                                                                      'gpu_init)))
-                         (construct-expr 'SumConstructReductionExpr
-                                         (ave-general-stencil-typedefs 'Reduction)
-                                         (ave-general-construct-fcn 'in_rd_construct
+                          (construct-expr 'SumConstructReductionExpr
+                                          (ave-single-stencil-typedefs 'Reduction)
+                                          (ave-single-construct-fcn 'in_rd_construct
                                                                     seq-args
                                                                     'reduce_init)
-                                         (ave-general-construct-fcn 'rs_rd_construct
+                                          (ave-single-construct-fcn 'rs_rd_construct
                                                                     res-args
                                                                     'reduce_init))))
 
-   (tpl-srt-def NSPC
-                (tpl-pmtr 'PointType)
-                (list 'PointType Nil-chunk)
-                (pub-sec (s-typedef 'PointType 'Point)
-                         (s-typedef Nil-chunk 'Collection)
-                         (s-typedef (tpl-use NSPC 'Point 'Collection)
-                                    'MyType)
-                         (enum (n= 'length "1"))
-                         (s-tpl-srt-def 'AddPoint
-                                        (tpl-pmtr 'NewPoint)
-                                        null
-                                        (s-typedef (tpl-use NSPC 'NewPoint 'MyType)
-                                                   'Result))
-                         (r-fcn-def (s-fcn-dcl 'possible_ghosts GhostData ghost-pmtr)
-                                    null
-                                    (n- 'ghosts (fc 'point_to_ghost (fc (scope 'Point 'int_vec)))))
-                         (construct-expr 'ConstructExpr
-                                         (single-stencil-typedefs 'SeqWalk)
-                                         (single-construct-fcn 'in_sq_construct
-                                                               seq-args
-                                                               'init)
-                                         (single-construct-fcn 'rs_sq_construct
-                                                               res-args
-                                                               'init))
-                         (gpu-only
-                          (construct-expr 'ConstructGPUExpr
-                                          (single-stencil-typedefs 'GPUWalk)
-                                          (single-construct-fcn 'in_gpu_construct
-                                                                gpu-args
-                                                                'gpu_init)))
-                         (construct-expr 'ConstructReductionExpr
-                                         (single-stencil-typedefs 'Reduction)
-                                         (single-construct-fcn 'in_rd_construct
-                                                               seq-args
-                                                               'reduce_init)
-                                         (single-construct-fcn 'rs_rd_construct
-                                                               res-args
-                                                               'reduce_init))
-                         (construct-expr 'SumConstructExpr
-                                         (ave-single-stencil-typedefs 'SeqWalk)
-                                         (ave-single-construct-fcn 'in_sq_construct
-                                                                   seq-args
-                                                                   'init)
-                                         (ave-single-construct-fcn 'rs_sq_construct
-                                                                   res-args
-                                                                   'init))
-                         (gpu-only
-                          (construct-expr 'SumConstructGPUExpr
-                                          (ave-single-stencil-typedefs 'GPUWalk)
-                                          (ave-single-construct-fcn 'in_gpu_construct
-                                                                    gpu-args
-                                                                    'gpu_init)))
-                         (construct-expr 'SumConstructReductionExpr
-                                         (ave-single-stencil-typedefs 'Reduction)
-                                         (ave-single-construct-fcn 'in_rd_construct
-                                                                   seq-args
-                                                                   'reduce_init)
-                                         (ave-single-construct-fcn 'rs_rd_construct
-                                                                   res-args
-                                                                   'reduce_init))))
-
-   (build-struct 'NeboStencil
-                 std-FT
-                 (list 'Pts 'Arg)
-                 null
-                 (bs-Initial-rhs (list (s-typedef (tpl-use NSCC (scope 'Pts 'length))
+    (build-struct 'NeboStencil
+                  std-FT
+                  (list 'Pts 'Arg)
+                  null
+                  (bs-Initial-rhs (list (s-typedef (tpl-use NSCC (scope 'Pts 'length))
+                                                   'Coefs)
+                                        (s-typedef (tpl-pmtr (scope 'Pts (tpl-fcn-use 'ConstructExpr 'Arg FT-chunk)))
+                                                   'ConstructExpr)
+                                        (s-typedef (tpl-pmtr (scope 'ConstructExpr
+                                                                    'Result))
+                                                   'ArgSeqWalkType)
+                                        (gpu-only (nl-smts (typedef (tpl-pmtr (scope 'Pts (tpl-fcn-use 'ConstructGPUExpr 'Arg FT-chunk)))
+                                                                    'ConstructGPUExpr)
+                                                           (typedef (tpl-pmtr (scope 'ConstructGPUExpr 'Result))
+                                                                    'ArgGPUWalkType)))
+                                        (s-typedef (tpl-pmtr (scope 'Pts (tpl-fcn-use 'ConstructReductionExpr 'Arg FT-chunk)))
+                                                   'ConstructReductionExpr)
+                                        (s-typedef (tpl-pmtr (scope 'ConstructReductionExpr 'Result))
+                                                   'ArgReductionType))
+                                  (list (list 'Pts 'ArgSeqWalkType)
+                                        (list 'Pts (tpl-pmtr (scope 'Arg 'ResizeType)))
+                                        (list 'Pts 'ArgGPUWalkType)
+                                        (list 'Pts 'ArgReductionType))
+                                  (bm-constructor (list (adcr 'Arg 'a)
+                                                        (adcr 'Coefs 'coefs))
+                                                  (list (cons-asgn 'arg_ 'a)
+                                                        (cons-asgn 'coefs_ 'coefs))
+                                                  null)
+                                  (fc (scope 'Pts 'possible_ghosts)
+                                      (mfc 'arg_ 'possible_ghosts))
+                                  (fc (scope 'ConstructExpr 'in_sq_construct)
+                                      resize-arg
+                                      'shift
+                                      'arg_
+                                      'coefs_)
+                                  (list (mfc 'arg_ 'resize resize-arg)
+                                        'coefs_)
+                                  (mfc 'arg_ 'cpu_ready)
+                                  (mfc 'arg_ 'gpu_ready DI-chunk)
+                                  (fc (scope 'ConstructGPUExpr 'in_gpu_construct)
+                                      resize-arg
+                                      'shift
+                                      'arg_
+                                      'coefs_
+                                      DI-chunk)
+                                  (mfc 'arg_ 'gpu_prep DI-chunk)
+                                  (fc (scope 'ConstructExpr 'in_reduce_construct)
+                                      resize-arg
+                                      'shift
+                                      'arg_
+                                      'coefs_)
+                                  null
+                                  (list (sadc 'Arg 'arg_)
+                                        (sadc 'Coefs 'coefs_)))
+                  (bs-Resize-rhs (list (s-typedef (tpl-use NSCC (scope 'Pts 'length))
                                                   'Coefs)
                                        (s-typedef (tpl-pmtr (scope 'Pts (tpl-fcn-use 'ConstructExpr 'Arg FT-chunk)))
                                                   'ConstructExpr)
                                        (s-typedef (tpl-pmtr (scope 'ConstructExpr
                                                                    'Result))
-                                                  'ArgSeqWalkType)
-                                       (gpu-only (nl-smts (typedef (tpl-pmtr (scope 'Pts (tpl-fcn-use 'ConstructGPUExpr 'Arg FT-chunk)))
-                                                                   'ConstructGPUExpr)
-                                                          (typedef (tpl-pmtr (scope 'ConstructGPUExpr 'Result))
-                                                                   'ArgGPUWalkType)))
-                                       (s-typedef (tpl-pmtr (scope 'Pts (tpl-fcn-use 'ConstructReductionExpr 'Arg FT-chunk)))
-                                                  'ConstructReductionExpr)
-                                       (s-typedef (tpl-pmtr (scope 'ConstructReductionExpr 'Result))
-                                                  'ArgReductionType))
-                                 (list (list 'Pts 'ArgSeqWalkType)
-                                       (list 'Pts (tpl-pmtr (scope 'Arg 'ResizeType)))
-                                       (list 'Pts 'ArgGPUWalkType)
-                                       (list 'Pts 'ArgReductionType))
-                                 (bm-constructor (list (adcr 'Arg 'a)
+                                                  'ArgSeqWalkType))
+                                 (list 'Pts 'ArgSeqWalkType)
+                                 (bm-constructor (list (adcr 'Arg 'arg)
                                                        (adcr 'Coefs 'coefs))
-                                                 (list (cons-asgn 'arg_ 'a)
+                                                 (list (cons-asgn 'arg_ 'arg)
                                                        (cons-asgn 'coefs_ 'coefs))
                                                  null)
-                                 (fc (scope 'Pts 'possible_ghosts)
-                                     (mfc 'arg_ 'possible_ghosts))
-                                 (fc (scope 'ConstructExpr 'in_sq_construct)
-                                     resize-arg
-                                     'shift
-                                     'arg_
-                                     'coefs_)
-                                 (list (mfc 'arg_ 'resize resize-arg)
-                                       'coefs_)
-                                 (mfc 'arg_ 'cpu_ready)
-                                 (mfc 'arg_ 'gpu_ready DI-chunk)
-                                 (fc (scope 'ConstructGPUExpr 'in_gpu_construct)
-                                     resize-arg
+                                 (fc (scope 'ConstructExpr 'rs_sq_construct)
                                      'shift
                                      'arg_
                                      'coefs_
-                                     DI-chunk)
-                                 (mfc 'arg_ 'gpu_prep DI-chunk)
-                                 (fc (scope 'ConstructExpr 'in_reduce_construct)
-                                     resize-arg
-                                     'shift
-                                     'arg_
-                                     'coefs_)
+                                     'split
+                                     'location)
                                  null
                                  (list (sadc 'Arg 'arg_)
                                        (sadc 'Coefs 'coefs_)))
-                 (bs-Resize-rhs (list (s-typedef (tpl-use NSCC (scope 'Pts 'length))
-                                                 'Coefs)
-                                      (s-typedef (tpl-pmtr (scope 'Pts (tpl-fcn-use 'ConstructExpr 'Arg FT-chunk)))
-                                                 'ConstructExpr)
-                                      (s-typedef (tpl-pmtr (scope 'ConstructExpr
-                                                                  'Result))
-                                                 'ArgSeqWalkType))
-                                (list 'Pts 'ArgSeqWalkType)
-                                (bm-constructor (list (adcr 'Arg 'arg)
-                                                      (adcr 'Coefs 'coefs))
-                                                (list (cons-asgn 'arg_ 'arg)
-                                                      (cons-asgn 'coefs_ 'coefs))
+                  (bs-SeqWalk-rhs null
+                                  (bm-constructor (adcr 'Arg 'arg)
+                                                  (cons-asgn 'arg_ 'arg)
+                                                  null)
+                                  (mfc 'arg_ 'next)
+                                  vt-chunk
+                                  (mfc 'arg_ 'eval)
+                                  null
+                                  (sad 'Arg 'arg_))
+                  (bs-gpu-rhs null
+                              (bm-constructor (adcr 'Arg 'a)
+                                              (cons-asgn 'arg_ 'a)
+                                              null)
+                              (mfc 'arg_ 'start 'x 'y)
+                              (mfc 'arg_ 'next)
+                              vt-chunk
+                              (mfc 'arg_ 'eval)
+                              null
+                              (sad 'Arg 'arg_))
+                  (bs-Reduction null
+                                (bm-constructor (adcr 'Arg 'arg)
+                                                (cons-asgn 'arg_ 'arg)
                                                 null)
-                                (fc (scope 'ConstructExpr 'rs_sq_construct)
-                                    'shift
-                                    'arg_
-                                    'coefs_
-                                    'split
-                                    'location)
+                                (mfc 'arg_ 'next)
+                                (mfc 'arg_ 'at_end)
+                                (mfc 'arg_ 'has_length)
+                                vt-chunk
+                                (mfc 'arg_ 'eval)
                                 null
-                                (list (sadc 'Arg 'arg_)
-                                      (sadc 'Coefs 'coefs_)))
-                 (bs-SeqWalk-rhs null
-                                 (bm-constructor (adcr 'Arg 'arg)
-                                                 (cons-asgn 'arg_ 'arg)
-                                                 null)
-                                 (mfc 'arg_ 'next)
-                                 vt-chunk
-                                 (mfc 'arg_ 'eval)
-                                 null
-                                 (sad 'Arg 'arg_))
-                 (bs-gpu-rhs null
-                             (bm-constructor (adcr 'Arg 'a)
-                                             (cons-asgn 'arg_ 'a)
-                                             null)
-                             (mfc 'arg_ 'start 'x 'y)
-                             (mfc 'arg_ 'next)
-                             vt-chunk
-                             (mfc 'arg_ 'eval)
-                             null
-                             (sad 'Arg 'arg_))
-                 (bs-Reduction null
-                               (bm-constructor (adcr 'Arg 'arg)
-                                               (cons-asgn 'arg_ 'arg)
-                                               null)
-                               (mfc 'arg_ 'next)
-                               (mfc 'arg_ 'at_end)
-                               (mfc 'arg_ 'has_length)
-                               vt-chunk
-                               (mfc 'arg_ 'eval)
-                               null
-                               (sad 'Arg 'arg_)))
+                                (sad 'Arg 'arg_)))
 
-   (build-struct 'NeboSumStencil
-                 std-FT
-                 (list 'Pts 'Arg)
-                 null
-                 (bs-Initial-rhs (list (s-typedef (tpl-pmtr (scope 'Pts (tpl-fcn-use 'SumConstructExpr 'Arg FT-chunk)))
+    (build-struct 'NeboSumStencil
+                  std-FT
+                  (list 'Pts 'Arg)
+                  null
+                  (bs-Initial-rhs (list (s-typedef (tpl-pmtr (scope 'Pts (tpl-fcn-use 'SumConstructExpr 'Arg FT-chunk)))
+                                                   'ConstructExpr)
+                                        (s-typedef (tpl-pmtr (scope 'ConstructExpr 'Result))
+                                                   'ArgSeqWalkType)
+                                        (gpu-only (nl-smts (typedef (tpl-pmtr (scope 'Pts (tpl-fcn-use 'SumConstructGPUExpr 'Arg FT-chunk)))
+                                                                    'ConstructGPUExpr)
+                                                           (typedef (tpl-pmtr (scope 'ConstructGPUExpr 'Result))
+                                                                    'ArgGPUWalkType)))
+                                        (s-typedef (tpl-pmtr (scope 'Pts (tpl-fcn-use 'SumConstructReductionExpr 'Arg FT-chunk)))
+                                                   'ConstructReductionExpr)
+                                        (s-typedef (tpl-pmtr (scope 'ConstructReductionExpr 'Result))
+                                                   'ArgReductionType))
+                                  (list (list 'Pts 'ArgSeqWalkType)
+                                        (list 'Pts (tpl-pmtr (scope 'Arg 'ResizeType)))
+                                        (list 'Pts 'ArgGPUWalkType)
+                                        (list 'Pts 'ArgReductionType))
+                                  (bm-constructor (adcr 'Arg 'a)
+                                                  (cons-asgn 'arg_ 'a)
+                                                  null)
+                                  (fc (scope 'Pts 'possible_ghosts)
+                                      (mfc 'arg_ 'possible_ghosts))
+                                  (fc (scope 'ConstructExpr 'in_sq_construct)
+                                      resize-arg
+                                      'shift
+                                      'arg_)
+                                  (mfc 'arg_ 'resize resize-arg)
+                                  (mfc 'arg_ 'cpu_ready)
+                                  (mfc 'arg_ 'gpu_ready DI-chunk)
+                                  (fc (scope 'ConstructGPUExpr 'in_gpu_construct)
+                                      resize-arg
+                                      'shift
+                                      'arg_
+                                      DI-chunk)
+                                  (mfc 'arg_ 'gpu_prep DI-chunk)
+                                  (fc (scope 'ConstructExpr 'in_reduce_construct)
+                                      resize-arg
+                                      'shift
+                                      'arg_)
+                                  null
+                                  (sadc 'Arg 'arg_))
+                  (bs-Resize-rhs (list (s-typedef (tpl-pmtr (scope 'Pts (tpl-fcn-use 'SumConstructExpr 'Arg FT-chunk)))
                                                   'ConstructExpr)
                                        (s-typedef (tpl-pmtr (scope 'ConstructExpr 'Result))
-                                                  'ArgSeqWalkType)
-                                       (gpu-only (nl-smts (typedef (tpl-pmtr (scope 'Pts (tpl-fcn-use 'SumConstructGPUExpr 'Arg FT-chunk)))
-                                                                   'ConstructGPUExpr)
-                                                          (typedef (tpl-pmtr (scope 'ConstructGPUExpr 'Result))
-                                                                   'ArgGPUWalkType)))
-                                       (s-typedef (tpl-pmtr (scope 'Pts (tpl-fcn-use 'SumConstructReductionExpr 'Arg FT-chunk)))
-                                                  'ConstructReductionExpr)
-                                       (s-typedef (tpl-pmtr (scope 'ConstructReductionExpr 'Result))
-                                                  'ArgReductionType))
-                                 (list (list 'Pts 'ArgSeqWalkType)
-                                       (list 'Pts (tpl-pmtr (scope 'Arg 'ResizeType)))
-                                       (list 'Pts 'ArgGPUWalkType)
-                                       (list 'Pts 'ArgReductionType))
-                                 (bm-constructor (adcr 'Arg 'a)
-                                                 (cons-asgn 'arg_ 'a)
+                                                  'ArgSeqWalkType))
+                                 (list 'Pts 'ArgSeqWalkType)
+                                 (bm-constructor (adcr 'Arg 'arg)
+                                                 (cons-asgn 'arg_ 'arg)
                                                  null)
-                                 (fc (scope 'Pts 'possible_ghosts)
-                                     (mfc 'arg_ 'possible_ghosts))
-                                 (fc (scope 'ConstructExpr 'in_sq_construct)
-                                     resize-arg
-                                     'shift
-                                     'arg_)
-                                 (mfc 'arg_ 'resize resize-arg)
-                                 (mfc 'arg_ 'cpu_ready)
-                                 (mfc 'arg_ 'gpu_ready DI-chunk)
-                                 (fc (scope 'ConstructGPUExpr 'in_gpu_construct)
-                                     resize-arg
+                                 (fc (scope 'ConstructExpr 'rs_sq_construct)
                                      'shift
                                      'arg_
-                                     DI-chunk)
-                                 (mfc 'arg_ 'gpu_prep DI-chunk)
-                                 (fc (scope 'ConstructExpr 'in_reduce_construct)
-                                     resize-arg
-                                     'shift
-                                     'arg_)
-                                 null
-                                 (sadc 'Arg 'arg_))
-                 (bs-Resize-rhs (list (s-typedef (tpl-pmtr (scope 'Pts (tpl-fcn-use 'SumConstructExpr 'Arg FT-chunk)))
-                                                 'ConstructExpr)
-                                      (s-typedef (tpl-pmtr (scope 'ConstructExpr 'Result))
-                                                 'ArgSeqWalkType))
-                                (list 'Pts 'ArgSeqWalkType)
-                                (bm-constructor (adcr 'Arg 'arg)
-                                                (cons-asgn 'arg_ 'arg)
-                                                null)
-                                (fc (scope 'ConstructExpr 'rs_sq_construct)
-                                    'shift
-                                    'arg_
-                                    'split
-                                    'location)
-                                null
-                                (sadc 'Arg 'arg_))
-                 (bs-SeqWalk-rhs null
-                                 (bm-constructor (adcr 'Arg 'arg)
-                                                 (cons-asgn 'arg_ 'arg)
-                                                 null)
-                                 (mfc 'arg_ 'next)
-                                 vt-chunk
-                                 (mfc 'arg_ 'eval)
-                                 null
-                                 (sad 'Arg 'arg_))
-                 (bs-gpu-rhs null
-                             (bm-constructor (adcr 'Arg 'a)
-                                             (cons-asgn 'arg_ 'a)
-                                             null)
-                             (mfc 'arg_ 'start 'x 'y)
-                             (mfc 'arg_ 'next)
-                             vt-chunk
-                             (mfc 'arg_ 'eval)
-                             null
-                             (sad 'Arg 'arg_))
-                 (bs-Reduction null
-                               (bm-constructor (adcr 'Arg 'arg)
-                                               (cons-asgn 'arg_ 'arg)
-                                               null)
-                               (mfc 'arg_ 'next)
-                               (mfc 'arg_ 'at_end)
-                               (mfc 'arg_ 'has_length)
-                               vt-chunk
-                               (mfc 'arg_ 'eval)
-                               null
-                               (sad 'Arg 'arg_)))
-
-   (tpl-def (tpl-pmtr 'Point)
-            (r-fcn-def (s-fcn-dcl 'point_possible_ghosts GhostData ghost-pmtr)
-                       null
-                       (n- 'ghosts (fc 'point_to_ghost (fc (scope 'Point 'int_vec))))))
-
-   (build-struct 'NeboMaskShift
-                 std-FT
-                 (list 'Point 'Arg)
-                 null
-                 (bs-Initial-rhs (list (s-typedef (tpl-pmtr (scope 'Arg 'SeqWalkType))
-                                                  'ArgSeqWalkType)
-                                       (gpu-only (s-typedef (tpl-pmtr (scope 'Arg 'GPUWalkType))
-                                                            'ArgGPUWalkType))
-                                       (s-typedef (tpl-pmtr (scope 'Arg 'ReductionType))
-                                                  'ArgReductionType))
-                                 (list (list 'Point 'ArgSeqWalkType)
-                                       (list 'Point (tpl-pmtr (scope 'Arg 'ResizeType)))
-                                       (list 'Point 'ArgGPUWalkType)
-                                       (list 'Point 'ArgReductionType))
-                                 (bm-constructor (adcr 'Arg 'a)
-                                                 (cons-asgn 'arg_ 'a)
-                                                 null)
-                                 (fc (tpl-use 'point_possible_ghosts 'Point)
-                                     (mfc 'arg_ 'possible_ghosts))
-                                 (mfc 'arg_ 'init resize-arg (n+ 'shift (fc (scope 'Point 'int_vec))))
-                                 (mfc 'arg_ 'resize resize-arg)
-                                 (mfc 'arg_ 'cpu_ready)
-                                 (mfc 'arg_ 'gpu_ready DI-chunk)
-                                 (mfc 'arg_
-                                      'gpu_init
-                                      resize-arg
-                                      (n+ 'shift (fc (scope 'Point 'int_vec)))
-                                      DI-chunk)
-                                 (mfc 'arg_ 'gpu_prep DI-chunk)
-                                 (mfc 'arg_ 'reduce_init resize-arg (n+ 'shift (fc (scope 'Point 'int_vec))))
-                                 null
-                                 (sadc 'Arg 'arg_))
-                 (bs-Resize-rhs (s-typedef (tpl-pmtr (scope 'Arg 'SeqWalkType))
-                                           'ArgSeqWalkType)
-                                (list 'Point 'ArgSeqWalkType)
-                                (bm-constructor (adcr 'Arg 'arg)
-                                                (cons-asgn 'arg_ 'arg)
-                                                null)
-                                (mfc 'arg_
-                                     'init
-                                     (n+ 'shift (fc (scope 'Point 'int_vec)))
                                      'split
                                      'location)
+                                 null
+                                 (sadc 'Arg 'arg_))
+                  (bs-SeqWalk-rhs null
+                                  (bm-constructor (adcr 'Arg 'arg)
+                                                  (cons-asgn 'arg_ 'arg)
+                                                  null)
+                                  (mfc 'arg_ 'next)
+                                  vt-chunk
+                                  (mfc 'arg_ 'eval)
+                                  null
+                                  (sad 'Arg 'arg_))
+                  (bs-gpu-rhs null
+                              (bm-constructor (adcr 'Arg 'a)
+                                              (cons-asgn 'arg_ 'a)
+                                              null)
+                              (mfc 'arg_ 'start 'x 'y)
+                              (mfc 'arg_ 'next)
+                              vt-chunk
+                              (mfc 'arg_ 'eval)
+                              null
+                              (sad 'Arg 'arg_))
+                  (bs-Reduction null
+                                (bm-constructor (adcr 'Arg 'arg)
+                                                (cons-asgn 'arg_ 'arg)
+                                                null)
+                                (mfc 'arg_ 'next)
+                                (mfc 'arg_ 'at_end)
+                                (mfc 'arg_ 'has_length)
+                                vt-chunk
+                                (mfc 'arg_ 'eval)
                                 null
-                                (sadc 'Arg 'arg_))
-                 (bs-SeqWalk-rhs null
+                                (sad 'Arg 'arg_)))
+
+    (tpl-def (tpl-pmtr 'Point)
+             (r-fcn-def (s-fcn-dcl 'point_possible_ghosts GhostData ghost-pmtr)
+                        null
+                        (n- 'ghosts (fc 'point_to_ghost (fc (scope 'Point 'int_vec))))))
+
+    (build-struct 'NeboMaskShift
+                  std-FT
+                  (list 'Point 'Arg)
+                  null
+                  (bs-Initial-rhs (list (s-typedef (tpl-pmtr (scope 'Arg 'SeqWalkType))
+                                                   'ArgSeqWalkType)
+                                        (gpu-only (s-typedef (tpl-pmtr (scope 'Arg 'GPUWalkType))
+                                                             'ArgGPUWalkType))
+                                        (s-typedef (tpl-pmtr (scope 'Arg 'ReductionType))
+                                                   'ArgReductionType))
+                                  (list (list 'Point 'ArgSeqWalkType)
+                                        (list 'Point (tpl-pmtr (scope 'Arg 'ResizeType)))
+                                        (list 'Point 'ArgGPUWalkType)
+                                        (list 'Point 'ArgReductionType))
+                                  (bm-constructor (adcr 'Arg 'a)
+                                                  (cons-asgn 'arg_ 'a)
+                                                  null)
+                                  (fc (tpl-use 'point_possible_ghosts 'Point)
+                                      (mfc 'arg_ 'possible_ghosts))
+                                  (mfc 'arg_ 'init resize-arg (n+ 'shift (fc (scope 'Point 'int_vec))))
+                                  (mfc 'arg_ 'resize resize-arg)
+                                  (mfc 'arg_ 'cpu_ready)
+                                  (mfc 'arg_ 'gpu_ready DI-chunk)
+                                  (mfc 'arg_
+                                       'gpu_init
+                                       resize-arg
+                                       (n+ 'shift (fc (scope 'Point 'int_vec)))
+                                       DI-chunk)
+                                  (mfc 'arg_ 'gpu_prep DI-chunk)
+                                  (mfc 'arg_ 'reduce_init resize-arg (n+ 'shift (fc (scope 'Point 'int_vec))))
+                                  null
+                                  (sadc 'Arg 'arg_))
+                  (bs-Resize-rhs (s-typedef (tpl-pmtr (scope 'Arg 'SeqWalkType))
+                                            'ArgSeqWalkType)
+                                 (list 'Point 'ArgSeqWalkType)
                                  (bm-constructor (adcr 'Arg 'arg)
                                                  (cons-asgn 'arg_ 'arg)
                                                  null)
-                                 (mfc 'arg_ 'next)
-                                 'bool
-                                 (mfc 'arg_ 'eval)
+                                 (mfc 'arg_
+                                      'init
+                                      (n+ 'shift (fc (scope 'Point 'int_vec)))
+                                      'split
+                                      'location)
                                  null
-                                 (sad 'Arg 'arg_))
-                 (bs-gpu-rhs null
-                             (bm-constructor (adcr 'Arg 'a)
-                                             (cons-asgn 'arg_ 'a)
-                                             null)
-                             (mfc 'arg_ 'start 'x 'y)
-                             (mfc 'arg_ 'next)
-                             'bool
-                             (mfc 'arg_ 'eval)
-                             null
-                             (sad 'Arg 'arg_))
-                 (bs-Reduction null
-                               (bm-constructor (adcr 'Arg 'arg)
-                                               (cons-asgn 'arg_ 'arg)
-                                               null)
-                               (mfc 'arg_ 'next)
-                               (mfc 'arg_ 'at_end)
-                               (mfc 'arg_ 'has_length)
-                               'bool
-                               (mfc 'arg_ 'eval)
-                               null
-                               (sad 'Arg 'arg_))))
+                                 (sadc 'Arg 'arg_))
+                  (bs-SeqWalk-rhs null
+                                  (bm-constructor (adcr 'Arg 'arg)
+                                                  (cons-asgn 'arg_ 'arg)
+                                                  null)
+                                  (mfc 'arg_ 'next)
+                                  'bool
+                                  (mfc 'arg_ 'eval)
+                                  null
+                                  (sad 'Arg 'arg_))
+                  (bs-gpu-rhs null
+                              (bm-constructor (adcr 'Arg 'a)
+                                              (cons-asgn 'arg_ 'a)
+                                              null)
+                              (mfc 'arg_ 'start 'x 'y)
+                              (mfc 'arg_ 'next)
+                              'bool
+                              (mfc 'arg_ 'eval)
+                              null
+                              (sad 'Arg 'arg_))
+                  (bs-Reduction null
+                                (bm-constructor (adcr 'Arg 'arg)
+                                                (cons-asgn 'arg_ 'arg)
+                                                null)
+                                (mfc 'arg_ 'next)
+                                (mfc 'arg_ 'at_end)
+                                (mfc 'arg_ 'has_length)
+                                'bool
+                                (mfc 'arg_ 'eval)
+                                null
+                                (sad 'Arg 'arg_))))
+ )

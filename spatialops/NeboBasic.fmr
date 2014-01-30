@@ -1,53 +1,59 @@
- ; Copyright (c) 2014 The University of Utah
- ;
- ; Permission is hereby granted, free of charge, to any person obtaining a copy
- ; of this software and associated documentation files (the "Software"), to
- ; deal in the Software without restriction, including without limitation the
- ; rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
- ; sell copies of the Software, and to permit persons to whom the Software is
- ; furnished to do so, subject to the following conditions:
- ;
- ; The above copyright notice and this permission notice shall be included in
- ; all copies or substantial portions of the Software.
- ;
- ; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- ; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- ; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- ; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- ; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- ; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- ; IN THE SOFTWARE.
+#lang fulmar
 
-(include "spatialops/FulmarAbbreviations.fmr")
-(include "spatialops/NeboCore.fmr")
+"/*
+ * Copyright (c) 2014 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the \"Software\"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+"
 
-(pp-includes-chunk 'spatialops/SpatialOpsConfigure.h
-                   'spatialops/structured/IndexTriplet.h
-                   'spatialops/structured/GhostData.h
-                   'spatialops/structured/SpatialField.h
-                   'spatialops/structured/SpatialMask.h
-                   'spatialops/structured/FVStaggeredFieldTypes.h
-                   'cmath
-                   'math.h)
+(require "FulmarAbbreviations.fmr")
+(require "NeboCore.fmr")
 
-(report-backend-only (pp-include-chunk 'iostream))
+(pp-header-file
+ 'NEBO_BASIC_H
+ (pp-includes 'spatialops/SpatialOpsConfigure.h
+              'spatialops/structured/IndexTriplet.h
+              'spatialops/structured/GhostData.h
+              'spatialops/structured/SpatialField.h
+              'spatialops/structured/SpatialMask.h
+              'spatialops/structured/FVStaggeredFieldTypes.h
+              'cmath
+              'math.h)
 
-(threads-only (b new-line-chunk
-                 (pp-includes-chunk 'spatialops/SpatialOpsTools.h
-                                    'vector
-                                    'boost/bind.hpp
-                                    'spatialops/ThreadPool.h
-                                    'spatialops/structured/IntVec.h
-                                    'spatialops/Semaphore.h)))
+(report-backend-only (pp-include 'iostream))
 
-(gpu-only (pp-includes-chunk 'sstream
-                             'spatialops/structured/MemoryTypes.h))
+(threads-only (b new-line (pp-includes 'spatialops/SpatialOpsTools.h
+                                       'vector
+                                       'boost/bind.hpp
+                                       'spatialops/ThreadPool.h
+                                       'spatialops/structured/IntVec.h
+                                       'spatialops/Semaphore.h)))
+
+(gpu-only (pp-includes 'sstream
+                       'spatialops/structured/MemoryTypes.h))
 
 (n
  'SpatialOps
  (d "Meta-programming compiler flags"
-    (struct-declare-chunk 'All)
-    (struct-declare-chunk 'InteriorOnly))
+    (struct-declare 'All)
+    (struct-declare 'InteriorOnly))
 
  (let ([check (lambda (dir)
                 (nif (n-and (mfc 'bc 'has_bc dir)
@@ -55,7 +61,7 @@
                                 (mfc 'bc 'has_extra dir)))
                      (build-error (list 'Nebo 'Ghost 'Checking)
                                   (list '(Not enough valid extra cells to validate all interior)
-                                        (break 'cells 'in 'the dir 'direction)))))])
+                                        (cout-break 'cells 'in 'the dir 'direction)))))])
    (r-fcn-def (fcn-dcl 'calculate_valid_ghost
                        GhostData
                        (adc 'bool 'useGhost)
@@ -126,10 +132,10 @@
                      IntVec
                      (list (adcr IntVec 'extent)
                            (adc 'int 'thread_count)))
-            (list (internal-smt-list-chunk new-line-chunk
-                                           (map (lambda (sym) (nt= 'int sym "1"))
-                                                (list 'x 'y 'z)))
-                  (b new-line-chunk
+            (list (internal-smt-list new-line
+                                     (map (lambda (sym) (nt= 'int sym "1"))
+                                          (list 'x 'y 'z)))
+                  (b new-line
                      (nifelseif (n<= 'thread_count (l 'extent "[2]"))
                                 (n= 'z 'thread_count)
                                 (n<= 'thread_count (l 'extent "[1]"))
@@ -151,7 +157,7 @@
                      (list (adcr IntVec 'current)
                            (adcr IntVec 'split)))
             (list (bs IntVec 'result)
-                  (b new-line-chunk
+                  (b new-line
                      (nifelseif (n< (l 'current "[2]")
                                     (n- (l 'split "[2]")
                                         "1"))
@@ -180,9 +186,9 @@
                        null
                        (pub-sec (s-typedef type ft-chunk)
                                 (s-typedef 'Operand 'Expression)
-                                (constructor-chunk name
-                                                   (adcr 'Operand 'given)
-                                                   (cons-asgn 'expr_ 'given))
+                                (constructor name
+                                             (adcr 'Operand 'given)
+                                             (cons-asgn 'expr_ 'given))
                                 (r-fcn-def (constize (fcn-dcl 'expr
                                                               (cref 'Operand)))
                                            null
@@ -193,10 +199,11 @@
          (build-expression-type NBE-chunk FT-chunk FT-chunk)
          (build-expression-type NBSVE-chunk 'T SVFT-def-chunk)))
 
- (let ([build-mode-def (lambda (name) (struct-declare-chunk name))])
+ (let ([build-mode-def (lambda (name) (struct-declare name))])
    (d 'Modes:
       (build-mode-def 'Initial)
       (threads-only (build-mode-def 'Resize))
       (build-mode-def 'SeqWalk)
       (gpu-only (build-mode-def 'GPUWalk))
       (build-mode-def 'Reduction))))
+)

@@ -1,3 +1,5 @@
+#lang fulmar
+
  ; Copyright (c) 2014 The University of Utah
  ;
  ; Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -17,6 +19,10 @@
  ; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  ; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  ; IN THE SOFTWARE.
+
+(require "FulmarAbbreviations.fmr")
+
+(provide (all-defined-out))
 
 (define DI-chunk 'deviceIndex)
 (define NE-chunk 'NeboExpression)
@@ -75,7 +81,7 @@
                                       (error (string-append report ": second set of arguments does not match expected number"))
                                       (apply proc (append args2 args1)))))))
 
-(define bm-constructor (arg-swap constructor-chunk 3 1 "bm-constructor"))
+(define bm-constructor (arg-swap constructor 3 1 "bm-constructor"))
 
 (define (combine-args final-proc combine-procs numbers report)
   (define combine-procs-lst (if (list? combine-procs)
@@ -302,12 +308,12 @@
                       SeqWalk
                       GPUWalk
                       Reduction)
-  (internal-smt-list-chunk new-line-chunk
-                           (tpl-srt-dcl name
-                                        (map tpl-pmtr (flatten* 'CurrentMode tpl-irreg-pars tpl-reg-pars (FT-tpl FT)))
-                                        null)
-                           (map (lambda (mode) (mode name FT tpl-irreg-pars tpl-reg-pars))
-                                (list Initial Resize SeqWalk GPUWalk Reduction))))
+  (internal-smt-list new-line
+                     (tpl-srt-dcl name
+                                  (map tpl-pmtr (flatten* 'CurrentMode tpl-irreg-pars tpl-reg-pars (FT-tpl FT)))
+                                  null)
+                     (map (lambda (mode) (mode name FT tpl-irreg-pars tpl-reg-pars))
+                          (list Initial Resize SeqWalk GPUWalk Reduction))))
 
 (define (build-error where . message)
   (define < '<<)
@@ -321,13 +327,10 @@
            (msg-add "\"\\t - \"" < '__FILE__ < "\" : \"" < '__LINE__)
            (fc 'throw (fc (scope 'std 'runtime_error)
                           (mfc 'msg 'str)))))
-(define (ic . chunks)  (immediate-chunk (c chunks)))
-(define end-line (list (ic "\""
-                           semi-colon-chunk
-                           new-line-chunk
-                           'msg)
+(define (ic . chunks)  (immediate (c chunks)))
+(define cout-end-line (list (ic "\"" ";" new-line 'msg)
                        '<<))
-(define (new-line chunk) (ic "\"" chunk))
-(define (break chunk . chunks) (list end-line
-                                     (new-line chunk)
-                                     chunks))
+(define (cout-new-line chunk) (ic "\"" chunk))
+(define (cout-break chunk . chunks) (list cout-end-line
+                                          (cout-new-line chunk)
+                                          chunks))

@@ -1,25 +1,30 @@
- ; Copyright (c) 2014 The University of Utah
- ;
- ; Permission is hereby granted, free of charge, to any person obtaining a copy
- ; of this software and associated documentation files (the "Software"), to
- ; deal in the Software without restriction, including without limitation the
- ; rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
- ; sell copies of the Software, and to permit persons to whom the Software is
- ; furnished to do so, subject to the following conditions:
- ;
- ; The above copyright notice and this permission notice shall be included in
- ; all copies or substantial portions of the Software.
- ;
- ; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- ; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- ; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- ; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- ; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- ; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- ; IN THE SOFTWARE.
+#lang fulmar
 
-(include "spatialops/FulmarAbbreviations.fmr")
-(include "spatialops/NeboCore.fmr")
+"/*
+ * Copyright (c) 2014 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the \"Software\"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+"
+
+(require "FulmarAbbreviations.fmr")
+(require "NeboCore.fmr")
 
 (define (build-catamorphism-with-field name
                                        tpl-pmtrs
@@ -109,7 +114,7 @@
                                        null
                                        null
                                        null
-                                       (return-expr empty-chunk))
+                                       (return-expr empty))
         (build-catamorphism-with-field (c name '_interior)
                                        null
                                        (tpl-pmtr (scope FT-chunk vt-chunk))
@@ -121,87 +126,90 @@
 (define proc (p (c "*" 'proc)))
 
                                         ; beginnning of file
-(map (lambda (name)
-       (list (m (c 'field_ name)
-                null
-                (c 'nebo_ name))
-             (m (c 'field_ name '_interior)
-                null
-                (c 'nebo_ name '_interior))))
-     (list 'fold
-           'reduce
-           'max
-           'min
-           'sum
-           'norm))
+(pp-header-file
+ 'NEBO_REDUCTIONS_H
+ (map (lambda (name)
+        (list (m (c 'field_ name)
+                 null
+                 (c 'nebo_ name))
+              (m (c 'field_ name '_interior)
+                 null
+                 (c 'nebo_ name '_interior))))
+      (list 'fold
+            'reduce
+            'max
+            'min
+            'sum
+            'norm))
 
-(n 'SpatialOps
-   (build-catamorphism 'nebo_fold
-                       (tpl-pmtr 'ResultType)
-                       'ResultType
-                       (list (gen-fcn-dcl proc
-                                          (cref 'ResultType)
-                                          (cref 'ResultType)
-                                          (cref (tpl-pmtr (scope FT-chunk vt-chunk))))
-                             (adcr 'ResultType 'initialValue))
-                       (list 'proc 'initialValue)
-                       (list (nt= 'ResultType 'result 'initialValue)
-                             (nt= (tpl-pmtr (scope 'ExprType 'ReductionType))
-                                  'expr
-                                  (mfc (mfc 'fexpr 'expr)
-                                       'reduce_init
-                                       (mfc 'ghosts 'get_minus)
-                                       (mfc 'ghosts 'get_plus)
-                                       'shift))
-                             (nwhile (n-not (mfc 'expr 'at_end))
-                                     (n= 'result (fc 'proc 'result (mfc 'expr 'eval)))
-                                     (mfc 'expr 'next)))
-                       'result)
-   (let ([build-reduce
-          (lambda (return-qual)
-            (define atomic-type (tpl-pmtr (scope FT-chunk vt-chunk)))
-            (build-catamorphism 'nebo_reduce
+ (n 'SpatialOps
+    (build-catamorphism 'nebo_fold
+                        (tpl-pmtr 'ResultType)
+                        'ResultType
+                        (list (gen-fcn-dcl proc
+                                           (cref 'ResultType)
+                                           (cref 'ResultType)
+                                           (cref (tpl-pmtr (scope FT-chunk vt-chunk))))
+                              (adcr 'ResultType 'initialValue))
+                        (list 'proc 'initialValue)
+                        (list (nt= 'ResultType 'result 'initialValue)
+                              (nt= (tpl-pmtr (scope 'ExprType 'ReductionType))
+                                   'expr
+                                   (mfc (mfc 'fexpr 'expr)
+                                        'reduce_init
+                                        (mfc 'ghosts 'get_minus)
+                                        (mfc 'ghosts 'get_plus)
+                                        'shift))
+                              (nwhile (n-not (mfc 'expr 'at_end))
+                                      (n= 'result (fc 'proc 'result (mfc 'expr 'eval)))
+                                      (mfc 'expr 'next)))
+                        'result)
+    (let ([build-reduce
+           (lambda (return-qual)
+             (define atomic-type (tpl-pmtr (scope FT-chunk vt-chunk)))
+             (build-catamorphism 'nebo_reduce
+                                 null
+                                 atomic-type
+                                 (gen-fcn-dcl proc
+                                              (return-qual atomic-type)
+                                              (cref atomic-type)
+                                              (cref atomic-type))
+                                 'proc
+                                 (list (nt= (tpl-pmtr (scope 'ExprType 'ReductionType))
+                                            'expr
+                                            (mfc (mfc 'fexpr 'expr)
+                                                 'reduce_init
+                                                 (mfc 'ghosts 'get_minus)
+                                                 (mfc 'ghosts 'get_plus)
+                                                 'shift))
+                                       (nt= atomic-type 'result (mfc 'expr 'eval))
+                                       (mfc 'expr 'next)
+                                       (nwhile (n-not (mfc 'expr 'at_end))
+                                               (n= 'result (fc 'proc 'result (mfc 'expr 'eval)))
+                                               (mfc 'expr 'next)))
+                                 'result))])
+      (list (build-reduce cref)
+            (build-reduce identity)))
+    (build-applied-catamorphism 'nebo_max
                                 null
-                                atomic-type
-                                (gen-fcn-dcl proc
-                                             (return-qual atomic-type)
-                                             (cref atomic-type)
-                                             (cref atomic-type))
-                                'proc
-                                (list (nt= (tpl-pmtr (scope 'ExprType 'ReductionType))
-                                           'expr
-                                           (mfc (mfc 'fexpr 'expr)
-                                                'reduce_init
-                                                (mfc 'ghosts 'get_minus)
-                                                (mfc 'ghosts 'get_plus)
-                                                'shift))
-                                      (nt= atomic-type 'result (mfc 'expr 'eval))
-                                      (mfc 'expr 'next)
-                                      (nwhile (n-not (mfc 'expr 'at_end))
-                                              (n= 'result (fc 'proc 'result (mfc 'expr 'eval)))
-                                              (mfc 'expr 'next)))
-                                'result))])
-     (list (build-reduce cref)
-           (build-reduce identity)))
-   (build-applied-catamorphism 'nebo_max
-                               null
-                               (scope 'std 'max))
-   (build-applied-catamorphism 'nebo_min
-                               null
-                               (scope 'std 'min))
-   (tpl-def (tpl-pmtr AT-chunk)
-            (r-fcn-def (fcn-dcl 'sum
-                                AT-chunk
-                                (b s AT-chunk const-chunk "&" 'a)
-                                (b s AT-chunk const-chunk "&" 'b))
-                       null
-                       (b s 'a "+" 'b)))
-   (build-applied-catamorphism 'nebo_sum
-                               null
-                               (tpl-use 'sum (tpl-pmtr (scope FT-chunk vt-chunk))))
-   (build-used-catamorphism 'nebo_norm
-                            (lambda (ext)
-                              (fc (scope 'std 'sqrt)
-                                  (fc (c 'nebo_sum ext)
-                                      (fc 'pow 'fexpr "2")))))
-   )
+                                (scope 'std 'max))
+    (build-applied-catamorphism 'nebo_min
+                                null
+                                (scope 'std 'min))
+    (tpl-def (tpl-pmtr AT-chunk)
+             (r-fcn-def (fcn-dcl 'sum
+                                 AT-chunk
+                                 (b s AT-chunk 'const "&" 'a)
+                                 (b s AT-chunk 'const "&" 'b))
+                        null
+                        (b s 'a "+" 'b)))
+    (build-applied-catamorphism 'nebo_sum
+                                null
+                                (tpl-use 'sum (tpl-pmtr (scope FT-chunk vt-chunk))))
+    (build-used-catamorphism 'nebo_norm
+                             (lambda (ext)
+                               (fc (scope 'std 'sqrt)
+                                   (fc (c 'nebo_sum ext)
+                                       (fc 'pow 'fexpr "2")))))
+    )
+ )

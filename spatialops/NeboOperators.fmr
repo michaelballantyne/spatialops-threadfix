@@ -1,26 +1,31 @@
- ; Copyright (c) 2014 The University of Utah
- ;
- ; Permission is hereby granted, free of charge, to any person obtaining a copy
- ; of this software and associated documentation files (the "Software"), to
- ; deal in the Software without restriction, including without limitation the
- ; rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
- ; sell copies of the Software, and to permit persons to whom the Software is
- ; furnished to do so, subject to the following conditions:
- ;
- ; The above copyright notice and this permission notice shall be included in
- ; all copies or substantial portions of the Software.
- ;
- ; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- ; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- ; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- ; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- ; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- ; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- ; IN THE SOFTWARE.
+#lang fulmar
 
-(include "spatialops/FulmarAbbreviations.fmr")
-(include "spatialops/NeboCore.fmr")
-(include "spatialops/NeboRhsCore.fmr")
+"/*
+ * Copyright (c) 2014 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the \"Software\"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+"
+
+(require "FulmarAbbreviations.fmr")
+(require "NeboCore.fmr")
+(require "NeboRhsCore.fmr")
 
 (define (build-Nary-struct name
                            number
@@ -68,7 +73,7 @@
                             op-lst)
                     null))
   (define next
-    (b/a semi-colon-chunk s (op_-mfc 'next)))
+    (b/a ";" s (op_-mfc 'next)))
   (define (exec-check n-logical fcn . args)
     (par (n-logical (op_-mfc fcn args))))
   (define (exec-or-check fcn)
@@ -92,7 +97,7 @@
                                 (exec-and-check 'cpu_ready)
                                 (exec-and-check 'gpu_ready DI-chunk)
                                 (op_-mfc 'gpu_init resize-arg 'shift DI-chunk)
-                                (b/a semi-colon-chunk s (op_-mfc 'gpu_prep DI-chunk))
+                                (b/a ";" s (op_-mfc 'gpu_prep DI-chunk))
                                 (op_-mfc 'reduce_init resize-arg 'shift)
                                 null
                                 gen-data-mems)
@@ -485,55 +490,58 @@
            (build-binary-interface name external-name 'scalar binary-expr-arg-lst)))
 
                                         ; beginnning of file
-(n 'SpatialOps
-   (build-binary-operator 'SumOp '+ (bs 'operator '+))
-   (build-binary-operator 'DiffOp '- (bs 'operator '-))
-   (build-binary-operator 'ProdOp '* (bs 'operator '*))
-   (build-binary-operator 'DivOp '/ (bs 'operator '/))
-   (build-unary-function 'SinFcn
-                         (scope 'std 'sin)
-                         'sin)
-   (build-unary-function 'CosFcn
-                         (scope 'std 'cos)
-                         'cos)
-   (build-unary-function 'TanFcn
-                         (scope 'std 'tan)
-                         'tan)
-   (build-unary-function 'ExpFcn
-                         (scope 'std 'exp)
-                         'exp)
-   (build-unary-function 'TanhFcn
-                         (scope 'std 'tanh)
-                         'tanh)
-   (build-unary-function 'AbsFcn
-                         (scope 'std 'abs)
-                         'abs)
-   (build-unary-function 'NegFcn '- (bs 'operator '-))
-   (build-binary-function 'PowFcn
-                          (scope 'std 'pow)
-                          'pow)
-   (build-unary-function 'SqrtFcn
-                         (scope 'std 'sqrt)
-                         'sqrt)
-   (build-unary-function 'LogFcn
-                         (scope 'std 'log)
-                         'log)
-   (build-unary-function 'Log10Fcn
-                         (scope 'std 'log10)
-                         'log10)
-   (build-comparison-operator 'EqualCmp '== (bs 'operator '==))
-   (build-comparison-operator 'InequalCmp '!= (bs 'operator '!=))
-   (build-comparison-operator 'LessThanCmp '< (bs 'operator '<))
-   (build-comparison-operator 'LessThanEqualCmp '<= (bs 'operator '<=))
-   (build-comparison-operator 'GreaterThanCmp '> (bs 'operator '>))
-   (build-comparison-operator 'GreaterThanEqualCmp '>= (bs 'operator '>=))
-   (build-binary-logical-operator 'AndOp '&& (bs 'operator '&&))
-   (build-binary-logical-operator 'OrOp "||" (bs 'operator "||"))
-   (build-unary-logical-function 'NotOp '! (bs 'operator '!))
-   (build-extremum-function 'MaxFcn '> 'max)
-   (build-extremum-function 'MinFcn '< 'min)
+(pp-header-file
+ 'NEBO_OPERATORS_H
+ (n 'SpatialOps
+    (build-binary-operator 'SumOp '+ (bs 'operator '+))
+    (build-binary-operator 'DiffOp '- (bs 'operator '-))
+    (build-binary-operator 'ProdOp '* (bs 'operator '*))
+    (build-binary-operator 'DivOp '/ (bs 'operator '/))
+    (build-unary-function 'SinFcn
+                          (scope 'std 'sin)
+                          'sin)
+    (build-unary-function 'CosFcn
+                          (scope 'std 'cos)
+                          'cos)
+    (build-unary-function 'TanFcn
+                          (scope 'std 'tan)
+                          'tan)
+    (build-unary-function 'ExpFcn
+                          (scope 'std 'exp)
+                          'exp)
+    (build-unary-function 'TanhFcn
+                          (scope 'std 'tanh)
+                          'tanh)
+    (build-unary-function 'AbsFcn
+                          (scope 'std 'abs)
+                          'abs)
+    (build-unary-function 'NegFcn '- (bs 'operator '-))
+    (build-binary-function 'PowFcn
+                           (scope 'std 'pow)
+                           'pow)
+    (build-unary-function 'SqrtFcn
+                          (scope 'std 'sqrt)
+                          'sqrt)
+    (build-unary-function 'LogFcn
+                          (scope 'std 'log)
+                          'log)
+    (build-unary-function 'Log10Fcn
+                          (scope 'std 'log10)
+                          'log10)
+    (build-comparison-operator 'EqualCmp '== (bs 'operator '==))
+    (build-comparison-operator 'InequalCmp '!= (bs 'operator '!=))
+    (build-comparison-operator 'LessThanCmp '< (bs 'operator '<))
+    (build-comparison-operator 'LessThanEqualCmp '<= (bs 'operator '<=))
+    (build-comparison-operator 'GreaterThanCmp '> (bs 'operator '>))
+    (build-comparison-operator 'GreaterThanEqualCmp '>= (bs 'operator '>=))
+    (build-binary-logical-operator 'AndOp '&& (bs 'operator '&&))
+    (build-binary-logical-operator 'OrOp "||" (bs 'operator "||"))
+    (build-unary-logical-function 'NotOp '! (bs 'operator '!))
+    (build-extremum-function 'MaxFcn '> 'max)
+    (build-extremum-function 'MinFcn '< 'min)
                                         ; commented out isnan because nvcc has some weird problem with it
                                         ;   (build-unary-to-logical-function 'IsNanFcn
                                         ;                                    (scope 'std 'isnan)
                                         ;                                    'isnan)
-   )
+    )
+ )

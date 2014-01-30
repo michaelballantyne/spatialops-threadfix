@@ -1,29 +1,32 @@
- ; Copyright (c) 2014 The University of Utah
- ;
- ; Permission is hereby granted, free of charge, to any person obtaining a copy
- ; of this software and associated documentation files (the "Software"), to
- ; deal in the Software without restriction, including without limitation the
- ; rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
- ; sell copies of the Software, and to permit persons to whom the Software is
- ; furnished to do so, subject to the following conditions:
- ;
- ; The above copyright notice and this permission notice shall be included in
- ; all copies or substantial portions of the Software.
- ;
- ; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- ; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- ; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- ; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- ; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- ; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- ; IN THE SOFTWARE.
+#lang fulmar
 
-(include "spatialops/FulmarAbbreviations.fmr")
-(include "spatialops/NeboCore.fmr")
+"/*
+ * Copyright (c) 2014 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the \"Software\"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+"
 
-(define (stringize . args) (immediate-chunk (c "\"" args "\"")))
+(require "../../../FulmarAbbreviations.fmr")
+(require "../../../NeboCore.fmr")
 
-(define IntVec (scope 'structured 'IntVec))
+(define (stringize . args) (immediate (c "\"" args "\"")))
 
 ;triplet of values for field locations and boundary condition locations
 (define (trip x y z)
@@ -462,7 +465,7 @@
   (if (null? guard-list)
       null
       (c (fc 'if (bs (add-between guard-list "&")))
-         new-line-chunk)))
+         new-line)))
 
 ;builds a chaining test for given stencils
 ; adds guards for a sanity check:
@@ -477,34 +480,34 @@
          null]
         [else
          (c (build-guard stencil1 stencil2)
-            (indent-chunk 1
-                          (fc (tpl-use 'test_stencil_chain_with_status
-                                       (stencil-op stencil1)
-                                       (stencil-op stencil2)
-                                       (field-name (stencil-src stencil1))
-                                       (field-name (stencil-src stencil2))
-                                       (field-name (stencil-dest stencil2)))
-                              'status
-                              'opdb
-                              'npts
-                              'bc
-                              (build-test-string stencil1 stencil2))))]))
+            (indent 1
+                    (fc (tpl-use 'test_stencil_chain_with_status
+                                 (stencil-op stencil1)
+                                 (stencil-op stencil2)
+                                 (field-name (stencil-src stencil1))
+                                 (field-name (stencil-src stencil2))
+                                 (field-name (stencil-dest stencil2)))
+                        'status
+                        'opdb
+                        'npts
+                        'bc
+                        (build-test-string stencil1 stencil2))))]))
 
                                         ; beginnning of file
-(pp-includes-chunk 'spatialops/SpatialOpsTools.h
-                   'spatialops/structured/FVStaggeredFieldTypes.h
-                   'spatialops/OperatorDatabase.h
-                   'spatialops/structured/FVTools.h
-                   'spatialops/structured/stencil/FVStaggeredOperatorTypes.h
-                   'spatialops/structured/stencil/StencilBuilder.h
-                   'test/TestHelper.h
-                   'test/FieldHelper.h
-                   'spatialops/Nebo.h
-                   'boost/program_options.hpp
-                   'string
-                   'stdexcept)
+(pp-includes 'spatialops/SpatialOpsTools.h
+             'spatialops/structured/FVStaggeredFieldTypes.h
+             'spatialops/OperatorDatabase.h
+             'spatialops/structured/FVTools.h
+             'spatialops/structured/stencil/FVStaggeredOperatorTypes.h
+             'spatialops/structured/stencil/StencilBuilder.h
+             'test/TestHelper.h
+             'test/FieldHelper.h
+             'spatialops/Nebo.h
+             'boost/program_options.hpp
+             'string
+             'stdexcept)
 
-(pp-alt-include-chunk 'ReferenceStencil.h)
+(pp-alt-include 'ReferenceStencil.h)
 
 (sbs 'using 'namespace 'SpatialOps)
 (sbs 'using 'namespace 'structured)
@@ -557,7 +560,7 @@
                                                        'type))
                                       'FirstOp)
                              (nt=c (bs (ptr 'FirstOp)
-                                       const-chunk)
+                                       'const)
                                    'firstOp
                                    (mfc 'opdb (tpl-use 'retrieve_operator 'FirstOp))))
                           (d "get second operator:"
@@ -565,7 +568,7 @@
                                                        'type))
                                       'SecondOp)
                              (nt=c (bs (ptr 'SecondOp)
-                                       const-chunk)
+                                       'const)
                                    'secondOp
                                    (mfc 'opdb (tpl-use 'retrieve_operator 'SecondOp))))
                           (d "run reference:"
@@ -600,46 +603,46 @@
                         (ad 'int 'iarg)
                         (ad (ptr 'char) (c 'carg "[]")))
            (list (bs 'int
-                     (c 'nx comma-chunk)
-                     (c 'ny comma-chunk)
+                     (c 'nx ",")
+                     (c 'ny ",")
                      (c 'nz))
                  (nt= 'bool
                      (c 'bc "[]")
-                     (body-list-chunk comma-chunk 'false 'false 'false))
+                     (body-list "," 'false 'false 'false))
                  (bs (scope 'po 'options_description)
                      (fc 'desc (stringize "Supported Options")))
                  (c (mfc 'desc 'add_options)
-                    new-line-chunk
+                    new-line
                     (p (stringize "help")
                        (stringize "print help message\\n"))
-                    new-line-chunk
+                    new-line
                     (p (stringize "nx")
                        (c (fc (scope 'po (tpl-use 'value 'int))
                               (c "&" 'nx))
                           "->"
                           (fc 'default_value "11"))
                        (stringize "number of points in x-dir for base mesh"))
-                    new-line-chunk
+                    new-line
                     (p (stringize "ny")
                        (c (fc (scope 'po (tpl-use 'value 'int))
                               (c "&" 'ny))
                           "->"
                           (fc 'default_value "11"))
                        (stringize "number of points in y-dir for base mesh"))
-                    new-line-chunk
+                    new-line
                     (p (stringize "nz")
                        (c (fc (scope 'po (tpl-use 'value 'int))
                               (c "&" 'nz))
                           "->"
                           (fc 'default_value "11"))
                        (stringize "number of points in z-dir for base mesh"))
-                    new-line-chunk
+                    new-line
                     (p (stringize 'bcx)
                        (stringize "physical boundary on +x side?"))
-                    new-line-chunk
+                    new-line
                     (p (stringize 'bcy)
                        (stringize "physical boundary on +y side?"))
-                    new-line-chunk
+                    new-line
                     (p (stringize 'bcz)
                        (stringize "physical boundary on +z side?")))
                  (bs (scope 'po 'variables_map) 'args)
@@ -661,31 +664,31 @@
                           'true))
                  (nif (mfc 'args 'count (stringize 'help))
                       (bs 'cout "<<" 'desc "<<" 'endl
-                          "<<" (stringize 'Examples:) "<<" 'endl new-line-chunk
-                          "<<" (stringize " test_stencil --nx 5 --ny 10 --nz 3 --bcx") "<<" 'endl new-line-chunk
-                          "<<" (stringize " test_stencil --bcx --bcy --bcz") "<<" 'endl new-line-chunk
-                          "<<" (stringize " test_stencil --nx 50 --bcz") "<<" 'endl new-line-chunk
+                          "<<" (stringize 'Examples:) "<<" 'endl new-line
+                          "<<" (stringize " test_stencil --nx 5 --ny 10 --nz 3 --bcx") "<<" 'endl new-line
+                          "<<" (stringize " test_stencil --bcx --bcy --bcz") "<<" 'endl new-line
+                          "<<" (stringize " test_stencil --nx 50 --bcz") "<<" 'endl new-line
                           "<<" 'endl)
                       (bs 'return "-1"))
                  (bs 'TestHelper (fc 'status 'true))
-                 (bs const-chunk 'IntVec (fc 'npts 'nx 'ny 'nz))
-                 (bs 'cout "<<" (stringize "Run information:") "<<" 'endl new-line-chunk
+                 (bs 'const 'IntVec (fc 'npts 'nx 'ny 'nz))
+                 (bs 'cout "<<" (stringize "Run information:") "<<" 'endl new-line
                      "<<" (stringize "  bcx    : ")
                      "<<" (ter-cond (c 'bc "[0]")
                                     (stringize 'ON)
                                     (stringize 'OFF))
-                     "<<" 'endl new-line-chunk
+                     "<<" 'endl new-line
                      "<<" (stringize "  bcy    : ")
                      "<<" (ter-cond (c 'bc "[1]")
                                     (stringize 'ON)
                                     (stringize 'OFF))
-                     "<<" 'endl new-line-chunk
+                     "<<" 'endl new-line
                      "<<" (stringize "  bcz    : ")
                      "<<" (ter-cond (c 'bc "[2]")
                                     (stringize 'ON)
                                     (stringize 'OFF))
-                     "<<" 'endl new-line-chunk
-                     "<<" (stringize "  domain : ") "<<" 'npts "<<" 'endl new-line-chunk
+                     "<<" 'endl new-line
+                     "<<" (stringize "  domain : ") "<<" 'npts "<<" 'endl new-line
                      "<<" 'endl)
                  (nt=c 'double 'length "10.0")
                  (bs 'OperatorDatabase 'opdb)
@@ -698,7 +701,7 @@
                      'length
                      'opdb)
                  (c 'try
-                    (body-chunk
+                    (body
                      (for*/list ([first-stencil stencil-short-list])
                                 (define raw-tests (for*/list ([second-stencil stencil-short-list])
                                                              (if (eq? (stencil-dest first-stencil)
@@ -713,12 +716,12 @@
                                     null))
                      (nif (mfc 'status 'ok)
                           (list (bs 'cout "<<" (stringize "ALL TESTS PASSED :)") "<<" 'endl)
-                                (bs return-chunk "0"))))
-                    new-line-chunk
+                                (bs 'return "0"))))
+                    new-line
                     (fc 'catch (bs (scope 'std 'runtime_error) "&" 'e))
-                    (body-chunk (bs 'cout "<<" (mfc 'e 'what) "<<" 'endl)))
-                 (bs 'cout "<<" (stringize "******************************") "<<" 'endl new-line-chunk
-                     "<<" (stringize " At least one test FAILED :(") "<<" 'endl new-line-chunk
+                    (body (bs 'cout "<<" (mfc 'e 'what) "<<" 'endl)))
+                 (bs 'cout "<<" (stringize "******************************") "<<" 'endl new-line
+                     "<<" (stringize " At least one test FAILED :(") "<<" 'endl new-line
                      "<<" (stringize "******************************") "<<" 'endl)
                  )
            "-1")

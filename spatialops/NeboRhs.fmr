@@ -1,267 +1,275 @@
- ; Copyright (c) 2014 The University of Utah
- ;
- ; Permission is hereby granted, free of charge, to any person obtaining a copy
- ; of this software and associated documentation files (the "Software"), to
- ; deal in the Software without restriction, including without limitation the
- ; rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
- ; sell copies of the Software, and to permit persons to whom the Software is
- ; furnished to do so, subject to the following conditions:
- ;
- ; The above copyright notice and this permission notice shall be included in
- ; all copies or substantial portions of the Software.
- ;
- ; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- ; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- ; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- ; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- ; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- ; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- ; IN THE SOFTWARE.
+#lang fulmar
 
-(include "spatialops/FulmarAbbreviations.fmr")
-(include "spatialops/NeboCore.fmr")
-(include "spatialops/NeboRhsCore.fmr")
+"/*
+ * Copyright (c) 2014 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the \"Software\"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+"
 
-(n 'SpatialOps
-   (build-struct NS-chunk
-                 scalar-FT
-                 null
-                 null
-                 (bs-Initial-rhs (s-typedef AT-chunk vt-chunk)
+(require "FulmarAbbreviations.fmr")
+(require "NeboCore.fmr")
+(require "NeboRhsCore.fmr")
+
+(pp-header-file
+ 'NEBO_RHS_H
+ (n 'SpatialOps
+    (build-struct NS-chunk
+                  scalar-FT
+                  null
+                  null
+                  (bs-Initial-rhs (s-typedef AT-chunk vt-chunk)
+                                  null
+                                  (bm-constructor (adc vt-chunk 'v)
+                                                  (cons-asgn 'value_ 'v)
+                                                  null)
+                                  (fc GhostData 'GHOST_MAX)
+                                  'value_
+                                  'value_
+                                  'true
+                                  'true
+                                  'value_
+                                  null
+                                  'value_
+                                  null
+                                  (sadc vt-chunk 'value_))
+                  (bs-Resize-rhs (s-typedef AT-chunk vt-chunk)
                                  null
-                                 (bm-constructor (adc vt-chunk 'v)
-                                                 (cons-asgn 'value_ 'v)
-                                                 null)
-                                 (fc GhostData 'GHOST_MAX)
-                                 'value_
-                                 'value_
-                                 'true
-                                 'true
-                                 'value_
-                                 null
-                                 'value_
-                                 null
-                                 (sadc vt-chunk 'value_))
-                 (bs-Resize-rhs (s-typedef AT-chunk vt-chunk)
-                                null
-                                (bm-constructor (adc vt-chunk 'value)
-                                                (cons-asgn 'value_ 'value)
-                                                null)
-                                'value_
-                                null
-                                (sadc vt-chunk 'value_))
-                 (bs-SeqWalk-rhs null
                                  (bm-constructor (adc vt-chunk 'value)
                                                  (cons-asgn 'value_ 'value)
                                                  null)
-                                 null
-                                 vt-chunk
                                  'value_
                                  null
                                  (sadc vt-chunk 'value_))
-                 (bs-gpu-rhs null
-                             (bm-constructor (adc vt-chunk 'value)
-                                             (cons-asgn 'value_ 'value)
-                                             null)
-                             null
-                             null
-                             vt-chunk
-                             'value_
-                             null
-                             (sadc vt-chunk 'value_))
-                 (bs-Reduction null
-                               (bm-constructor (adc vt-chunk 'value)
-                                               (cons-asgn 'value_ 'value)
-                                               null)
-                               null
-                               'false
-                               'false
-                               vt-chunk
-                               'value_
-                               null
-                               (sadc vt-chunk 'value_)))
+                  (bs-SeqWalk-rhs null
+                                  (bm-constructor (adc vt-chunk 'value)
+                                                  (cons-asgn 'value_ 'value)
+                                                  null)
+                                  null
+                                  vt-chunk
+                                  'value_
+                                  null
+                                  (sadc vt-chunk 'value_))
+                  (bs-gpu-rhs null
+                              (bm-constructor (adc vt-chunk 'value)
+                                              (cons-asgn 'value_ 'value)
+                                              null)
+                              null
+                              null
+                              vt-chunk
+                              'value_
+                              null
+                              (sadc vt-chunk 'value_))
+                  (bs-Reduction null
+                                (bm-constructor (adc vt-chunk 'value)
+                                                (cons-asgn 'value_ 'value)
+                                                null)
+                                null
+                                'false
+                                'false
+                                vt-chunk
+                                'value_
+                                null
+                                (sadc vt-chunk 'value_)))
 
-   (build-struct NCF-chunk
-                 std-FT
-                 null
-                 null
-                 (bs-Initial-rhs null
+    (build-struct NCF-chunk
+                  std-FT
+                  null
+                  null
+                  (bs-Initial-rhs null
+                                  null
+                                  (bm-constructor (adcr FT-chunk 'f)
+                                                  (cons-asgn 'field_ 'f)
+                                                  null)
+                                  (n+ (mfc 'field_ 'get_valid_ghost_data)
+                                      (fc 'point_to_ghost (mfc (mfc 'field_ 'boundary_info) 'has_extra)))
+                                  (fc 'resize_ghost_and_shift_window
+                                      'field_
+                                      'minus
+                                      (n- 'plus
+                                          (mfc (mfc 'field_ 'boundary_info) 'has_extra))
+                                      'shift)
+                                  (fc 'resize_ghost
+                                      'field_
+                                      'minus
+                                      (n- 'plus
+                                          (mfc (mfc 'field_ 'boundary_info) 'has_extra)))
+                                  (mfc 'field_ 'find_consumer 'LOCAL_RAM "0")
+                                  (mfc 'field_ 'find_consumer 'EXTERNAL_CUDA_GPU DI-chunk)
+                                  (list DI-chunk
+                                        (fc 'resize_ghost_and_shift_window
+                                            'field_
+                                            'minus
+                                            (n- 'plus
+                                                (mfc (mfc 'field_ 'boundary_info) 'has_extra))
+                                            'shift))
+                                  (c (fc (tpl-use 'const_cast (ptr FT-chunk))
+                                         (take-ptr 'field_))
+                                     '->
+                                     (fc 'add_consumer 'EXTERNAL_CUDA_GPU DI-chunk))
+                                  (fc 'resize_ghost_and_shift_window
+                                      'field_
+                                      'minus
+                                      (n- 'plus
+                                          (mfc (mfc 'field_ 'boundary_info) 'has_extra))
+                                      'shift)
+                                  null
+                                  (sadc FT-chunk 'field_))
+                  (bs-Resize-rhs null
                                  null
                                  (bm-constructor (adcr FT-chunk 'f)
                                                  (cons-asgn 'field_ 'f)
                                                  null)
-                                 (n+ (mfc 'field_ 'get_valid_ghost_data)
-                                     (fc 'point_to_ghost (mfc (mfc 'field_ 'boundary_info) 'has_extra)))
-                                 (fc 'resize_ghost_and_shift_window
-                                     'field_
-                                     'minus
-                                     (n- 'plus
-                                         (mfc (mfc 'field_ 'boundary_info) 'has_extra))
-                                     'shift)
-                                 (fc 'resize_ghost
-                                     'field_
-                                     'minus
-                                     (n- 'plus
-                                         (mfc (mfc 'field_ 'boundary_info) 'has_extra)))
-                                 (mfc 'field_ 'find_consumer 'LOCAL_RAM "0")
-                                 (mfc 'field_ 'find_consumer 'EXTERNAL_CUDA_GPU DI-chunk)
-                                 (list DI-chunk
-                                       (fc 'resize_ghost_and_shift_window
-                                           'field_
-                                           'minus
-                                           (n- 'plus
-                                               (mfc (mfc 'field_ 'boundary_info) 'has_extra))
-                                           'shift))
-                                 (c (fc (tpl-use 'const_cast (ptr FT-chunk))
-                                        (take-ptr 'field_))
-                                    '->
-                                    (fc 'add_consumer 'EXTERNAL_CUDA_GPU DI-chunk))
-                                 (fc 'resize_ghost_and_shift_window
-                                     'field_
-                                     'minus
-                                     (n- 'plus
-                                         (mfc (mfc 'field_ 'boundary_info) 'has_extra))
+                                 (fc 'shift_window
+                                     (fc FT-chunk
+                                         (mfc (mfc 'field_ 'window_with_ghost)
+                                              'refine
+                                              'split
+                                              'location)
+                                         'field_)
                                      'shift)
                                  null
                                  (sadc FT-chunk 'field_))
-                 (bs-Resize-rhs null
-                                null
-                                (bm-constructor (adcr FT-chunk 'f)
-                                                (cons-asgn 'field_ 'f)
-                                                null)
-                                (fc 'shift_window
-                                    (fc FT-chunk
-                                        (mfc (mfc 'field_ 'window_with_ghost)
-                                             'refine
-                                             'split
-                                             'location)
-                                        'field_)
-                                    'shift)
-                                null
-                                (sadc FT-chunk 'field_))
-                 (bs-SeqWalk-rhs null
-                                 (bm-constructor (adcr FT-chunk 'f)
-                                                 (cons-asgn 'iter_ (mfc 'f 'begin))
-                                                 null)
-                                 (n++ 'iter_)
-                                 vt-chunk
-                                 (l '* 'iter_)
-                                 null
-                                 (sad (tpl-pmtr (scope FT-chunk 'const_iterator))
-                                      'iter_))
-                 (bs-gpu-rhs null
-                             (bm-constructor
-                              (list (adc 'int DI-chunk)
-                                    (adcr FT-chunk 'f))
-                              (list (cons-asgn 'current_ (n+ (mfc 'f 'field_values 'EXTERNAL_CUDA_GPU DI-chunk)
-                                                             (n+ (mfc (mfc 'f 'window_with_ghost)
-                                                                      'offset
-                                                                      "0")
-                                                                 (n* (mfc (mfc 'f 'window_with_ghost)
+                  (bs-SeqWalk-rhs null
+                                  (bm-constructor (adcr FT-chunk 'f)
+                                                  (cons-asgn 'iter_ (mfc 'f 'begin))
+                                                  null)
+                                  (n++ 'iter_)
+                                  vt-chunk
+                                  (l '* 'iter_)
+                                  null
+                                  (sad (tpl-pmtr (scope FT-chunk 'const_iterator))
+                                       'iter_))
+                  (bs-gpu-rhs null
+                              (bm-constructor
+                               (list (adc 'int DI-chunk)
+                                     (adcr FT-chunk 'f))
+                               (list (cons-asgn 'current_ (n+ (mfc 'f 'field_values 'EXTERNAL_CUDA_GPU DI-chunk)
+                                                              (n+ (mfc (mfc 'f 'window_with_ghost)
+                                                                       'offset
+                                                                       "0")
+                                                                  (n* (mfc (mfc 'f 'window_with_ghost)
+                                                                           'glob_dim
+                                                                           "0")
+                                                                      (par (n+ (mfc (mfc 'f 'window_with_ghost)
+                                                                                    'offset
+                                                                                    "1")
+                                                                               (par (n* (mfc (mfc 'f 'window_with_ghost)
+                                                                                             'glob_dim
+                                                                                             "1")
+                                                                                        (mfc (mfc 'f 'window_with_ghost)
+                                                                                             'offset
+                                                                                             "2")))))))))
+                                     (cons-asgn 'xLength_ (mfc (mfc 'f
+                                                                    'window_with_ghost)
+                                                               'glob_dim
+                                                               "0"))
+                                     (cons-asgn 'step_ (n* 'xLength_ (mfc (mfc 'f
+                                                                               'window_with_ghost)
                                                                           'glob_dim
-                                                                          "0")
-                                                                     (par (n+ (mfc (mfc 'f 'window_with_ghost)
-                                                                                   'offset
-                                                                                   "1")
-                                                                              (par (n* (mfc (mfc 'f 'window_with_ghost)
-                                                                                            'glob_dim
-                                                                                            "1")
-                                                                                       (mfc (mfc 'f 'window_with_ghost)
-                                                                                            'offset
-                                                                                            "2")))))))))
-                                    (cons-asgn 'xLength_ (mfc (mfc 'f
-                                                                   'window_with_ghost)
-                                                              'glob_dim
-                                                              "0"))
-                                    (cons-asgn 'step_ (n* 'xLength_ (mfc (mfc 'f
-                                                                              'window_with_ghost)
-                                                                         'glob_dim
-                                                                         "1"))))
-                              null)
-                             (n+= 'current_ (n+ 'x (n* 'y 'xLength_)))
-                             (n+= 'current_ 'step_)
-                             vt-chunk
-                             (l '* 'current_)
-                             null
-                             (list (sadcp vt-chunk 'current_)
-                                   (sadc 'int 'xLength_)
-                                   (sadc 'int 'step_)))
-                 (bs-Reduction null
-                               (bm-constructor (adcr FT-chunk 'f)
-                                               (list (cons-asgn 'iter_ (mfc 'f 'begin))
-                                                     (cons-asgn 'end_ (mfc 'f 'end)))
-                                               null)
-                               (n++ 'iter_)
-                               (n== 'iter_ 'end_)
-                               'true
-                               vt-chunk
-                               (l '* 'iter_)
-                               null
-                               (list (sad (tpl-pmtr (scope FT-chunk 'const_iterator))
-                                          'iter_)
-                                     (sadc (tpl-pmtr (scope FT-chunk 'const_iterator))
-                                           'end_))))
-   (build-struct NCSVF-chunk
-                 SV-FT
-                 null
-                 null
-                 (bs-Initial-rhs (s-typedef SVFT-def-chunk SVFT-chunk)
-                                 null
-                                 (bm-constructor (adcr SVFT-chunk 'f)
-                                                 (cons-asgn 'field_ 'f)
-                                                 null)
-                                 (fc GhostData 'GHOST_MAX)
-                                 (bs "*" (mfc 'field_ 'field_values 'LOCAL_RAM))
-                                 (bs "*" (mfc 'field_ 'field_values 'LOCAL_RAM))
-                                 (mfc 'field_ 'find_consumer 'LOCAL_RAM "0")
-                                 (mfc 'field_ 'find_consumer 'EXTERNAL_CUDA_GPU DI-chunk)
-                                 (list DI-chunk 'field_)
-                                 (c (fc (tpl-use 'const_cast (ptr SVFT-chunk))
-                                        (take-ptr 'field_))
-                                    '->
-                                    (fc 'add_consumer 'EXTERNAL_CUDA_GPU DI-chunk))
-                                 (bs "*" (mfc 'field_ 'field_values 'LOCAL_RAM))
-                                 null
-                                 (sadc SVFT-chunk 'field_))
-                 (bs-Resize-rhs null
-                                null
-                                (bm-constructor (adcr 'double 'v)
-                                                (cons-asgn 'value_ 'v)
+                                                                          "1"))))
+                               null)
+                              (n+= 'current_ (n+ 'x (n* 'y 'xLength_)))
+                              (n+= 'current_ 'step_)
+                              vt-chunk
+                              (l '* 'current_)
+                              null
+                              (list (sadcp vt-chunk 'current_)
+                                    (sadc 'int 'xLength_)
+                                    (sadc 'int 'step_)))
+                  (bs-Reduction null
+                                (bm-constructor (adcr FT-chunk 'f)
+                                                (list (cons-asgn 'iter_ (mfc 'f 'begin))
+                                                      (cons-asgn 'end_ (mfc 'f 'end)))
                                                 null)
-                                'value_
+                                (n++ 'iter_)
+                                (n== 'iter_ 'end_)
+                                'true
+                                vt-chunk
+                                (l '* 'iter_)
                                 null
-                                (sadc 'double 'value_))
-                 (bs-SeqWalk-rhs null
+                                (list (sad (tpl-pmtr (scope FT-chunk 'const_iterator))
+                                           'iter_)
+                                      (sadc (tpl-pmtr (scope FT-chunk 'const_iterator))
+                                            'end_))))
+    (build-struct NCSVF-chunk
+                  SV-FT
+                  null
+                  null
+                  (bs-Initial-rhs (s-typedef SVFT-def-chunk SVFT-chunk)
+                                  null
+                                  (bm-constructor (adcr SVFT-chunk 'f)
+                                                  (cons-asgn 'field_ 'f)
+                                                  null)
+                                  (fc GhostData 'GHOST_MAX)
+                                  (bs "*" (mfc 'field_ 'field_values 'LOCAL_RAM))
+                                  (bs "*" (mfc 'field_ 'field_values 'LOCAL_RAM))
+                                  (mfc 'field_ 'find_consumer 'LOCAL_RAM "0")
+                                  (mfc 'field_ 'find_consumer 'EXTERNAL_CUDA_GPU DI-chunk)
+                                  (list DI-chunk 'field_)
+                                  (c (fc (tpl-use 'const_cast (ptr SVFT-chunk))
+                                         (take-ptr 'field_))
+                                     '->
+                                     (fc 'add_consumer 'EXTERNAL_CUDA_GPU DI-chunk))
+                                  (bs "*" (mfc 'field_ 'field_values 'LOCAL_RAM))
+                                  null
+                                  (sadc SVFT-chunk 'field_))
+                  (bs-Resize-rhs null
+                                 null
                                  (bm-constructor (adcr 'double 'v)
                                                  (cons-asgn 'value_ 'v)
                                                  null)
-                                 null
-                                 vt-chunk
                                  'value_
                                  null
-                                 (sad 'double 'value_))
-                 (bs-gpu-rhs (s-typedef SVFT-def-chunk SVFT-chunk)
-                             (bm-constructor (list (adc 'int DI-chunk)
-                                                   (adcr SVFT-chunk 'f))
-                                             (list (cons-asgn 'ptr_ (mfc 'f 'field_values 'EXTERNAL_CUDA_GPU DI-chunk))
-                                                   (cons-asgn 'value_ "0.0"))
-                                             null)
-                             (n= 'value_ (c "*" 'ptr_))
-                             null
-                             vt-chunk
-                             'value_
-                             null
-                             (list (sadc (cptr vt-chunk)
-                                         'ptr_)
-                                   (sad vt-chunk 'value_)))
-                 (bs-Reduction null
-                               (bm-constructor (adcr 'double 'v)
-                                               (cons-asgn 'value_ 'v)
-                                               null)
-                               null
-                               'false
-                               'false
-                               vt-chunk
-                               'value_
-                               null
-                               (sadc 'double 'value_))))
+                                 (sadc 'double 'value_))
+                  (bs-SeqWalk-rhs null
+                                  (bm-constructor (adcr 'double 'v)
+                                                  (cons-asgn 'value_ 'v)
+                                                  null)
+                                  null
+                                  vt-chunk
+                                  'value_
+                                  null
+                                  (sad 'double 'value_))
+                  (bs-gpu-rhs (s-typedef SVFT-def-chunk SVFT-chunk)
+                              (bm-constructor (list (adc 'int DI-chunk)
+                                                    (adcr SVFT-chunk 'f))
+                                              (list (cons-asgn 'ptr_ (mfc 'f 'field_values 'EXTERNAL_CUDA_GPU DI-chunk))
+                                                    (cons-asgn 'value_ "0.0"))
+                                              null)
+                              (n= 'value_ (c "*" 'ptr_))
+                              null
+                              vt-chunk
+                              'value_
+                              null
+                              (list (sadc (cptr vt-chunk)
+                                          'ptr_)
+                                    (sad vt-chunk 'value_)))
+                  (bs-Reduction null
+                                (bm-constructor (adcr 'double 'v)
+                                                (cons-asgn 'value_ 'v)
+                                                null)
+                                null
+                                'false
+                                'false
+                                vt-chunk
+                                'value_
+                                null
+                                (sadc 'double 'value_))))
+ )

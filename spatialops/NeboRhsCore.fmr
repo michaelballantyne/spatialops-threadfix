@@ -1,3 +1,5 @@
+#lang fulmar
+
  ; Copyright (c) 2014 The University of Utah
  ;
  ; Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,8 +20,10 @@
  ; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  ; IN THE SOFTWARE.
 
-(include "FulmarAbbreviations.fmr")
-(include "NeboCore.fmr")
+(require "FulmarAbbreviations.fmr")
+(require "NeboCore.fmr")
+
+(provide (all-defined-out))
 
 (define build-Initial-rhs
   (combine-args build-Initial-general
@@ -46,7 +50,7 @@
                                       (r-fcn-def (constize (fcn-dcl 'gpu_init 'GPUWalkType resize-pmtr shift-pmtr (adc 'int DI-chunk)))
                                                  null
                                                  (fc 'GPUWalkType gpu-cons-args))
-                                      (gpu-test-only (fcn-def (constize (fcn-dcl 'gpu_prep void-chunk (adc 'int DI-chunk)))
+                                      (gpu-test-only (fcn-def (constize (fcn-dcl 'gpu_prep 'void (adc 'int DI-chunk)))
                                                               gpu-prep-body))))
                         (r-fcn-def (constize (fcn-dcl 'reduce_init 'ReductionType resize-pmtr shift-pmtr))
                                    null
