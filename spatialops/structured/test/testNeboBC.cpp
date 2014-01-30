@@ -47,7 +47,7 @@ int main()
   SpatFldPtr<PhiFieldT > f  = SpatialFieldStore::get_from_window<PhiFieldT>( get_window_with_ghost(dim, fghost, fbc),  fbc,  fghost );
   SpatFldPtr<GammaFieldT> df = SpatialFieldStore::get_from_window<GammaFieldT>( get_window_with_ghost(dim,dfghost,dfbc), dfbc, dfghost );
 
-  typename PhiFieldT::iterator ifld=f->begin();
+  PhiFieldT::iterator ifld=f->begin();
   for( int i = 0; i < 12; i++)
     for(int j=0; j < 12; j++) {
       *ifld = i;
@@ -55,7 +55,7 @@ int main()
     }
   //*f <<= 3.0;
 
-  typename GammaFieldT::iterator idfld=df->begin();
+  GammaFieldT::iterator idfld=df->begin();
   for( int i = 0; i < 12; i++)
     for(int j=0; j < 12; j++) {
       *idfld = j;

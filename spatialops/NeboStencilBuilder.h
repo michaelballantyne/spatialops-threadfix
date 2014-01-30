@@ -527,7 +527,7 @@ namespace SpatialOps {
         else
           phi <<= cond(shift_.plus(mask), (gammaShift_(gamma) - phiShift_(phi) * srcCoef_) / destCoef_)
                       (phi);
-      };
+      }
 
       /**
        * \brief Apply boundary condition with gamma as a field
@@ -542,7 +542,7 @@ namespace SpatialOps {
         typedef NeboConstField<Initial, GammaFieldType> GammaField;
         typedef NeboExpression<GammaField, GammaFieldType> GammaExpr;
         (*this)(mask, phi, GammaExpr(GammaField(gamma)), minus);
-      };
+      }
 
       /**
        * \brief Apply boundary condition with gamma as a scalar
@@ -557,7 +557,7 @@ namespace SpatialOps {
         typedef NeboScalar<Initial, double> GammaScalar;
         typedef NeboExpression<GammaScalar, GammaFieldType> GammaExpr;
         (*this)(mask, phi, GammaExpr(GammaScalar(gamma)), minus);
-      };
+      }
 
     private:
       const double destCoef_;

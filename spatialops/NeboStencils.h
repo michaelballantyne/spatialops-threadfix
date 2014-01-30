@@ -1103,7 +1103,7 @@
           typename Arg::SeqWalkType typedef ArgSeqWalkType;
 
 #         ifdef __CUDACC__
-             typename Arg::GPUWalkType typedef ArgGPUWalkType
+             typename Arg::GPUWalkType typedef ArgGPUWalkType;
 #         endif
           /* __CUDACC__ */
 
@@ -1183,7 +1183,7 @@
                                                    shift + Point::int_vec()));
           }
 
-          //private:
+         private:
           Arg const arg_;
       };
 #     ifdef FIELD_EXPRESSION_THREADS

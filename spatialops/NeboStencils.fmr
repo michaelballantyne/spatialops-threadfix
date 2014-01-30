@@ -597,8 +597,8 @@
                  null
                  (bs-Initial-rhs (list (s-typedef (tpl-pmtr (scope 'Arg 'SeqWalkType))
                                                   'ArgSeqWalkType)
-                                       (gpu-only (typedef (tpl-pmtr (scope 'Arg 'GPUWalkType))
-                                                          'ArgGPUWalkType))
+                                       (gpu-only (s-typedef (tpl-pmtr (scope 'Arg 'GPUWalkType))
+                                                            'ArgGPUWalkType))
                                        (s-typedef (tpl-pmtr (scope 'Arg 'ReductionType))
                                                   'ArgReductionType))
                                  (list (list 'Point 'ArgSeqWalkType)
