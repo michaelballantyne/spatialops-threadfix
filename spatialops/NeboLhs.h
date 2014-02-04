@@ -269,6 +269,22 @@
 
                  dim3 dimGrid(gDimX, gDimY);
 
+#                ifndef NDEBUG
+                    cudaError err;
+
+                    if(cudaSuccess != (err = cudaStreamSynchronize(field_.get_stream())))
+                    {
+                       std::ostringstream msg;
+                       msg << "Nebo error in " << "CUDA Kernel - before call" <<
+                       ":\n";
+                       msg << "	 - " << cudaGetErrorString(err);
+                       msg << "\n";
+                       msg << "\t - " << __FILE__ << " : " << __LINE__;
+                       throw(std::runtime_error(msg.str()));;
+                    }
+#                endif
+                 /* NDEBUG */;
+
                  gpu_assign_kernel<GPUWalkType, RhsGPUWalkType><<<dimGrid,
                                                                   dimBlock,
                                                                   0,
@@ -281,6 +297,20 @@
                                                                                                              0,
                                                                                                              0),
                                                                                                       gpu_device_index()));
+
+#                ifndef NDEBUG
+                    if(cudaSuccess != (err = cudaStreamSynchronize(field_.get_stream())))
+                    {
+                       std::ostringstream msg;
+                       msg << "Nebo error in " << "CUDA Kernel - after call" <<
+                       ":\n";
+                       msg << "	 - " << cudaGetErrorString(err);
+                       msg << "\n";
+                       msg << "\t - " << __FILE__ << " : " << __LINE__;
+                       throw(std::runtime_error(msg.str()));;
+                    }
+#                endif
+                 /* NDEBUG */;
 
 #                ifdef NEBO_REPORT_BACKEND
                     std::cout << "Finished Nebo CUDA" << std::endl

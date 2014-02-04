@@ -131,6 +131,10 @@
   (gpu-only (gpu-test-or then else)))
 (define (full-gpu-test-only . chunks)
   (full-gpu-test-or chunks #false))
+(define (debug-only . chunks)
+  (pp-conditional-ifndef 'NDEBUG
+                         (c chunks)
+                         #false))
 (define (par . chunks)
   (p (bs chunks)))
 (define (ter-cond if then else)

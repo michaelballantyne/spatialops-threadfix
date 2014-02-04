@@ -313,6 +313,10 @@
                                             (dim-def 'gDimY 'extent1)
                                             (bs 'dim3 (fc 'dimBlock 'blockDim 'blockDim))
                                             (bs 'dim3 (fc 'dimGrid 'gDimX 'gDimY))
+                                            (debug-only (bb (cc (bs 'cudaError 'err))
+                                                            (nif (n!= 'cudaSuccess (p (n= 'err (fc 'cudaStreamSynchronize(mfc 'field_ 'get_stream)))))
+                                                                 (build-error-with-call "CUDA Kernel - before call" "\"\t - \""
+                                                                                        '<< (fc 'cudaGetErrorString 'err)))))
                                             (fc (kernel-use (tpl-use 'gpu_assign_kernel 'GPUWalkType 'RhsGPUWalkType)
                                                             'dimGrid
                                                             'dimBlock
@@ -326,7 +330,10 @@
                                                      (mfc 'rhs_ghosts 'get_minus)
                                                      (mfc 'rhs_ghosts 'get_plus)
                                                      ZeroIntVec
-                                                     (fc 'gpu_device_index)))))
+                                                     (fc 'gpu_device_index)))
+                                            (debug-only (nif (n!= 'cudaSuccess (p (n= 'err (fc 'cudaStreamSynchronize(mfc 'field_ 'get_stream)))))
+                                                             (build-error-with-call "CUDA Kernel - after call" "\"\t - \""
+                                                                                    '<< (fc 'cudaGetErrorString 'err))))))
                                     (n== 'LOCAL_RAM (mfc 'field_ 'memory_device_type))
                                     (n== 'EXTERNAL_CUDA_GPU (mfc 'field_ 'memory_device_type))
                                     (mfc 'field_ 'device_index)
