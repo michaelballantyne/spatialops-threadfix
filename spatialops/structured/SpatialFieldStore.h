@@ -497,7 +497,6 @@ void SpatialFieldStore::restore_field( const MemoryType mtype, FieldT& field )
 # endif
   typedef typename FieldT::value_type ValT;
   ValT * values = const_cast<ValT *>((const_cast<FieldT const &>(field)).field_values(field.memory_device_type(), field.device_index()));
-  std::cout << "\t->returning field to store (" << structured::Pool<ValT>::self().total() << ")\n";
   structured::Pool<ValT>::self().put( mtype, values );
 }
 
