@@ -411,18 +411,16 @@ SpatFldPtr<FieldT>::operator=(FieldT* const f) {
 template<typename FieldT>
 void SpatFldPtr<FieldT>::detach() {
   // was this an active SpatFldPtr?
-  if (count_ != NULL) {
+  if( count_ != NULL ){
     // this one is dying so decrement the count.
     --(*count_);
-    if (*count_ == 0) {
+    if( *count_ == 0 ){
       // kill the old one if needed
-      if (builtFromStore_) {
+      if( builtFromStore_ ){
 	SpatialFieldStore::restore_field(memType_, *f_);
       }
-      delete count_;
-      count_ = NULL;
-      delete f_;
-      f_ = NULL;
+      delete count_; count_ = NULL;
+      delete f_;     f_     = NULL;
     }
   }
 }
@@ -499,6 +497,7 @@ void SpatialFieldStore::restore_field( const MemoryType mtype, FieldT& field )
 # endif
   typedef typename FieldT::value_type ValT;
   ValT * values = const_cast<ValT *>((const_cast<FieldT const &>(field)).field_values(field.memory_device_type(), field.device_index()));
+  std::cout << "\t->returning field to store (" << structured::Pool<ValT>::self().total() << ")\n";
   structured::Pool<ValT>::self().put( mtype, values );
 }
 
