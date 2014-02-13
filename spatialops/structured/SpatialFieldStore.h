@@ -457,6 +457,11 @@ get_from_window( const structured::MemoryWindow& window,
                                        window.extent() );
     const size_t npts = mw.glob_npts();
 
+#   ifndef NDEBUG
+    assert( window.sanity_check() );
+    assert(     mw.sanity_check() );
+#   endif
+
   switch (mtype) {
   case LOCAL_RAM: { // Allocate from a store
     ValT* fnew = structured::Pool<ValT>::self().get(mtype,npts);
@@ -470,8 +475,8 @@ get_from_window( const structured::MemoryWindow& window,
   case EXTERNAL_CUDA_GPU: {
     ValT* fnew = structured::Pool<ValT>::self().get(mtype, npts);
     return SpatFldPtr<FieldT>( new FieldT( mw, bc, ghost, fnew,
-                                          structured::ExternalStorage,
-                                          mtype, deviceIndex ),
+                                           structured::ExternalStorage,
+                                           mtype, deviceIndex ),
                                true );
   }
 # endif
