@@ -45,12 +45,11 @@ namespace SpatialOps{
 template<typename T>
 class Numeric3Vec
  {
-	 T ijk[3];
+  T ijk[3];
 
  public:
 
-
-    Numeric3Vec(){ ijk[0]=0; ijk[1]=0; ijk[2]=0; }
+  Numeric3Vec(){ ijk[0]=0; ijk[1]=0; ijk[2]=0; }
 
    inline Numeric3Vec( const T i, const T j, const T k ){
      ijk[0]=i; ijk[1]=j; ijk[2]=k;

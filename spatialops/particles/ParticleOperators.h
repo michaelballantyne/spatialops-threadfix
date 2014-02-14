@@ -144,8 +144,6 @@ namespace Particle{
    {
      dest <<= 0.0;
 
-     //const double halfwidth = 0.5*dx_;
-
 #   ifndef NDEBUG
     const int nmax = dest.window_with_ghost().local_npts();
 #   endif
@@ -166,14 +164,12 @@ namespace Particle{
         throw std::runtime_error( "Particle is outside of the domain!" );
       }
 #     endif
-      //std::cout<<"leftloc  :  "<<leftloc<<"  rightloc  :  "<<rightloc<<"   leftcellIx1 : "<<leftcellIx1<<std::endl;
       //loop through all cells effected by the particle and add the source term
       while(leftloc < rightloc){
-        double rb = coordVec_[leftcellIx1] + dx_/2 ;
-        if(rb > rightloc)
-          rb = rightloc ;
-        dest[leftcellIx1] += *isrc * (rb-leftloc) / *psizeiter ;
-        leftcellIx1 += 1 ;
+        double rb = coordVec_[leftcellIx1] + dx_/2;
+        if( rb > rightloc ) rb = rightloc;
+        dest[leftcellIx1] += *isrc * (rb-leftloc) / *psizeiter;
+        ++leftcellIx1;
         leftloc = rb ;
       }
     }
@@ -214,9 +210,6 @@ namespace Particle{
                   const SrcFieldType& src,
                   DestFieldType& dest ) const
   {
-    dest <<= 0.0;
-
-    //const double halfwidth = 0.5*dx_;
 #   ifndef NDEBUG
     const int nmax = src.window_with_ghost().local_npts();
 #   endif
@@ -232,13 +225,12 @@ namespace Particle{
         throw std::runtime_error( "Particle is outside of the domain!" );
       }
 #     endif
-      //std::cout<<"leftloc  :  "<<leftloc<<"  rightloc  :  "<<rightloc<<"   leftcellIx1 : "<<leftcellIx1<<std::endl;
+      *destiter = 0.0;
       while(leftloc < rightloc){
-        double rb = coordVec_[leftcellIx1] + dx_/2.0 ;
-        if(rb > rightloc)
-          rb = rightloc ;
-        *destiter += src[leftcellIx1] * (rb-leftloc) / *psizeiter ;
-        leftcellIx1 += 1 ;
+        double rb = coordVec_[leftcellIx1] + dx_/2.0;
+        if( rb > rightloc ) rb = rightloc;
+        *destiter += src[leftcellIx1] * (rb-leftloc) / *psizeiter;
+        ++leftcellIx1;
         leftloc = rb ;
       }
     }
