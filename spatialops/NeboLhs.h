@@ -179,7 +179,7 @@
 
                  Semaphore semaphore(0);
 
-                 const int thread_count = get_soft_thread_count();
+                 const int thread_count = field_.get_partition_count();
 
                  structured::GhostData rhs_ghosts = calculate_valid_ghost(useGhost,
                                                                           possible_ghosts(),

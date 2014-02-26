@@ -90,7 +90,7 @@
                                 (threads-only (bb (assign 'thread_parallel_assign
                                                           (list (bs 'Semaphore
                                                                     (fc 'semaphore "0"))
-                                                                (nt=c 'int 'thread_count (fc 'get_soft_thread_count))
+                                                                (nt=c 'int 'thread_count (mfc 'field_ 'get_partition_count))
                                                                 thread-parallel-assign-body
                                                                 (nfor (nt= 'int 'ii "0")
                                                                       (n< 'ii 'max)
