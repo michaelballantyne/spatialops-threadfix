@@ -186,6 +186,9 @@ int main( int iarg, char* carg[] )
     //documentation says with 1 ulp, empirically found to be 2
     RUNTESTIGNORENANULP(log10(input1), std::log10(INPUT1), "log10 test", 2);
 
+    RUNTESTULP(erf(input1), erf(INPUT1), "erf test", 2);
+    RUNTESTULP(erfc(input1), erfc(INPUT1), "erfc test", 4);
+
     RUNTEST(cond(input1 == input2, true)(false), INPUT1 == INPUT2, "equivalence test");
     RUNTEST(cond(input1 != input2, true)(false), INPUT1 != INPUT2, "non-equivalence test");
 
