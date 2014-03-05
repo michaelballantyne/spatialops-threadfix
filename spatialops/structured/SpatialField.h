@@ -132,6 +132,10 @@ namespace structured{
 
     unsigned long int allocatedBytes_;	///< Stores entire field size in bytes: sizeof(T) * glob.x * glob.y * glob.z
 
+#   ifdef ENABLE_THREADS
+    int partitionCount_; // Number of partitions Nebo uses in its thread-parallel backend when assigning to this field
+#   endif
+
 #   ifdef ENABLE_CUDA
     cudaStream_t cudaStream_;
 #   endif
@@ -397,6 +401,20 @@ namespace structured{
       return deviceIndex_;
     }
 
+#   ifdef ENABLE_THREADS
+    /**
+     * Sets number of partitions Nebo uses in its thread-parallel backend when assigning to this field
+     *
+     */
+    void set_partition_count( const int count) { partitionCount_ = count; }
+
+    /**
+     * Returns number of partitions Nebo uses in its thread-parallel backend when assigning to this field
+     *
+     */
+    int get_partition_count() { return partitionCount_; }
+#   endif
+
 #   ifdef ENABLE_CUDA
     void set_stream( const cudaStream_t& stream ) { cudaStream_ = stream;  }
 
@@ -541,6 +559,9 @@ SpatialField( const MemoryWindow& window,
       disableInterior_( false ),
       builtCpuConsumer_( false ),
       allocatedBytes_( 0 )
+#     ifdef ENABLE_THREADS
+      , partitionCount_( NTHREADS )
+#     endif
 #     ifdef ENABLE_CUDA
       , cudaStream_( 0 )
 #     endif
@@ -624,6 +645,9 @@ SpatialField<Location,T>::SpatialField( const SpatialField& other )
   consumerFieldValues_(other.consumerFieldValues_),
   builtCpuConsumer_( false ),
   allocatedBytes_( other.allocatedBytes_ )
+# ifdef ENABLE_THREADS
+  , partitionCount_( other.partitionCount_ )
+# endif
 # ifdef ENABLE_CUDA
   , cudaStream_( other.cudaStream_ )
 # endif
@@ -649,6 +673,9 @@ SpatialField( const MemoryWindow& window, const SpatialField& other )
   consumerFieldValues_(other.consumerFieldValues_),
   builtCpuConsumer_( false ),
   allocatedBytes_( other.allocatedBytes_ )
+# ifdef ENABLE_THREADS
+  , partitionCount_( other.partitionCount_ )
+# endif
 # ifdef ENABLE_CUDA
     , cudaStream_( other.cudaStream_ )
 # endif

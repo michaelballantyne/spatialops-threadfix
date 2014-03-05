@@ -36,5 +36,38 @@
 #include <spatialops/NeboAssignment.h>
 #include <spatialops/NeboReductions.h>
 
+
+/* NEBO_ERROR_TRAP can be used to find where Nebo errors originate.
+ * NEBO_ERROR_TRAP takes a string and a block of code to run.
+ * NEBO_ERROR_TRAP does nothing in Release mode.
+ * In Debug mode, NEBO_ERROR_TRAP does the following:
+ *  If there is no error in the given code, NEBO_ERROR_TRAP does nothing.
+ *  If there is an error in the given code, NEBO_ERROR_TRAP adds the current file and line number.
+ *
+ * For example:
+ *  NEBO_ERROR_TRAP("TEST LOCATION", throw(std::runtime_error("ERROR MESSAGE"));)
+ * will throw this error:
+ *  terminate called after throwing an instance of 'std::runtime_error'
+ *    what():  Error in NEBO ERROR TRAP (ERROR LOCATION)
+            ERROR MESSAGE
+ *          At: /uufs/chpc.utah.edu/common/home/u0623470/aurora-cwearl/code/SpatialOps/test/Nebo.h : 48
+ *  Aborted
+ */
+#ifndef NDEBUG
+#define NEBO_ERROR_TRAP(STRING, CODE)     \
+  try { CODE }                            \
+  catch(std::runtime_error& e){           \
+    std::ostringstream msg;               \
+    msg << "Error in NEBO ERROR TRAP (";  \
+    msg << STRING;                        \
+    msg << ")\n\t" << e.what();           \
+    msg << "\n\tAt: ";                    \
+    msg << __FILE__ << " : " << __LINE__; \
+    throw(std::runtime_error(msg.str())); \
+  };
+#else
+#define NEBO_ERROR_TRAP(STRING, CODE) CODE
+#endif
+
 #endif
 

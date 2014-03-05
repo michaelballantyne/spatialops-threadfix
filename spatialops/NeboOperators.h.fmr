@@ -528,6 +528,12 @@
     (build-unary-function 'Log10Fcn
                           (scope 'std 'log10)
                           'log10)
+    (build-unary-function 'ErfFcn
+                          'erf;(scope 'std 'erf)
+                          'erf)
+    (build-unary-function 'ErfcFcn
+                          'erfc;(scope 'std 'erfc)
+                          'erfc)
     (build-comparison-operator 'EqualCmp '== (bs 'operator '==))
     (build-comparison-operator 'InequalCmp '!= (bs 'operator '!=))
     (build-comparison-operator 'LessThanCmp '< (bs 'operator '<))
