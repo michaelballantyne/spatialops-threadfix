@@ -416,7 +416,7 @@ namespace structured{
 #   endif
 
 #   ifdef ENABLE_CUDA
-    void set_stream( const cudaStream_t& stream ) { cudaStream_ = stream;  }
+    void set_stream( const cudaStream_t& stream ) { cudaStream_ = stream; }
 
     cudaStream_t const & get_stream() const { return cudaStream_; }
 #   endif
@@ -781,7 +781,7 @@ reset_values( const T* values )
       CDI.memset( fieldValuesExtDevice_, 0, allocatedBytes_, deviceIndex_ );
     } else {
       void* src = (void*)(values);
-      CDI.memcpy_to( fieldValuesExtDevice_, src, allocatedBytes_, deviceIndex_, cudaStream_ );
+      CDI.memcpy_to( fieldValuesExtDevice_, src, allocatedBytes_, deviceIndex_ );
     }
 
   }
@@ -955,8 +955,7 @@ add_consumer( MemoryType consumerMemoryType,
           << " " << allocatedBytes_ << " " << deviceIndex_ << std::endl;
 #     endif
       ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-      std::cout << "get_stream before copy from : " << cudaStream_ << std::endl;
-      CDI.memcpy_from( fieldValues_, fieldValuesExtDevice_, allocatedBytes_, deviceIndex_, cudaStream_ );
+      CDI.memcpy_from( fieldValues_, fieldValuesExtDevice_, allocatedBytes_, deviceIndex_ );
     }
     break;
 #   endif
@@ -984,8 +983,8 @@ add_consumer( MemoryType consumerMemoryType,
         consumerFieldValues_[consumerDeviceIndex] = Pool<T>::self().get( consumerMemoryType, ( allocatedBytes_/sizeof(T) ) );
         myConsumerFieldValues_[consumerDeviceIndex] = consumerFieldValues_[consumerDeviceIndex];
       }
-      std::cout << "get_stream before copy to : " << cudaStream_ << std::endl;
-      CDI.memcpy_to( (void*)consumerFieldValues_[consumerDeviceIndex], fieldValues_, allocatedBytes_, consumerDeviceIndex, cudaStream_ );
+
+      CDI.memcpy_to( (void*)consumerFieldValues_[consumerDeviceIndex], fieldValues_, allocatedBytes_, consumerDeviceIndex );
     }
     break;
 
@@ -1453,7 +1452,7 @@ SpatialField<Location,T>::operator=(const field_type& other)
 #   ifdef ENABLE_CUDA
     case EXTERNAL_CUDA_GPU: { //LOCAL_RAM = EXTERNAL_CUDA_GPU
       ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-      CDI.memcpy_from( fieldValues_, other.fieldValuesExtDevice_, allocatedBytes_, other.deviceIndex_, cudaStream_ );
+      CDI.memcpy_from( fieldValues_, other.fieldValuesExtDevice_, allocatedBytes_, other.deviceIndex_ );
     }
     break;
 #   endif
@@ -1476,7 +1475,7 @@ SpatialField<Location,T>::operator=(const field_type& other)
     case LOCAL_RAM: {
 
       ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-      CDI.memcpy_to( fieldValuesExtDevice_, other.fieldValues_, allocatedBytes_, deviceIndex_, cudaStream_ );
+      CDI.memcpy_to( fieldValuesExtDevice_, other.fieldValues_, allocatedBytes_, deviceIndex_ );
 
     }
     break;

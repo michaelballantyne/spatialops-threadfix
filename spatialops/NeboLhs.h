@@ -369,8 +369,7 @@
                                        gpu_field.field_values(EXTERNAL_CUDA_GPU,
                                                               0),
                                        field_.allocated_bytes(),
-                                       0,
-                                       field_.get_stream() );
+                                       0);
                     }
                     else { gpu_assign<RhsType>(useGhost, rhs); };
 
