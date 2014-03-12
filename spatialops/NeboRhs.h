@@ -246,10 +246,8 @@
 
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
-                   std::cout << "1. neborhs add_consumer \n";
                    const_cast<FieldType *>(&field_)->add_consumer(EXTERNAL_CUDA_GPU,
                                                                   deviceIndex);
-                   std::cout << "2. neborhs add_consumer \n";
                 }
 #            endif
              /* NEBO_GPU_TEST */
@@ -438,10 +436,8 @@
 
 #            ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
-                  std::cout << "3. neborhs add_consumer \n";
                    const_cast<SingleValueFieldType *>(&field_)->add_consumer(EXTERNAL_CUDA_GPU,
                                                                              deviceIndex);
-                   std::cout << "4. neborhs add_consumer \n";
                 }
 #            endif
              /* NEBO_GPU_TEST */

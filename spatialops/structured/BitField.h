@@ -514,7 +514,6 @@ namespace structured{
     inline void add_consumer(MemoryType consumerMemoryType,
                              const unsigned short int consumerDeviceIndex)
     {
-        std::cout << "1. Bit Field add_consumer() \n";
       //Check for local allocation
       if( consumerMemoryType == memType_ && consumerDeviceIndex == deviceIndex_ ) {
         return;
@@ -540,7 +539,7 @@ namespace structured{
           }
           {
             ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-//            CDI.memcpy_from(bitValues_, bitValuesExtDevice_, bytes_, deviceIndex_);
+            CDI.memcpy_from(bitValues_, bitValuesExtDevice_, bytes_, deviceIndex_);
           }
           break;
 #         endif
@@ -566,7 +565,7 @@ namespace structured{
             myConsumerBitValues_[consumerDeviceIndex] = consumerBitValues_[consumerDeviceIndex];
           };
 
-//          CDI.memcpy_to((void*)consumerBitValues_[consumerDeviceIndex], bitValues_, bytes_, consumerDeviceIndex);
+          CDI.memcpy_to((void*)consumerBitValues_[consumerDeviceIndex], bitValues_, bytes_, consumerDeviceIndex);
           break;
         }
 
@@ -605,7 +604,6 @@ namespace structured{
             << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
         throw(std::runtime_error(msg.str()));
       }
-      std::cout << "2. Bit Field add_consumer() \n";
     };
 
     inline bool find_consumer(MemoryType consumerMemoryType,

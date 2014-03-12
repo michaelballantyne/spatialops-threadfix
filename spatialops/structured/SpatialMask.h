@@ -209,9 +209,7 @@ namespace structured{
     inline void add_consumer(const MemoryType consumerMemoryType,
                              const unsigned short int consumerDeviceIndex)
     {
-        std::cout << "1. SpatialMask add_consumer() \n";
       bitField_.add_consumer(consumerMemoryType, consumerDeviceIndex);
-        std::cout << "2. SpatialMask add_consumer() \n";
     };
 
     inline bool find_consumer(MemoryType consumerMemoryType,

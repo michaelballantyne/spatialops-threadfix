@@ -34,9 +34,6 @@
 #include <spatialops/structured/ExternalAllocators.h>
 
 #include <boost/type_traits.hpp>
-#ifdef ENABLE_CUDA
-#include <cuda_runtime.h>
-#endif
 
 namespace SpatialOps{
 namespace structured{
@@ -49,7 +46,6 @@ Pool<T>::Pool() : deviceIndex_(0)
   pad_ = 0;
   cpuhighWater_ = 0;
 # ifdef ENABLE_CUDA
-  pinned_ = true;
   gpuhighWater_ = 0;
 # endif
 }
@@ -62,21 +58,7 @@ Pool<T>::~Pool()
   for( typename FQSizeMap::iterator i=cpufqm_.begin(); i!=cpufqm_.end(); ++i ){
     FieldQueue& fq = i->second;
     while( !fq.empty() ){
-#ifdef ENABLE_CUDA
-      cudaError_t err;
-      if (pinned_) {
-        if (cudaSuccess != (err = cudaFreeHost(fq.top())) ) {
-          std::ostringstream msg;
-          msg << "Failed while freeing pinned memory " << __FILE__ << " : " << __LINE__
-            << std::endl;
-          msg << "\t - " << cudaGetErrorString(err);
-          throw(std::runtime_error(msg.str()));
-        }
-      }
-      else { delete [] fq.top(); }
-#else
       delete [] fq.top();
-#endif
       fq.pop();
     }
   }
@@ -136,26 +118,7 @@ Pool<T>::get( const MemoryType mtype, const size_t _n )
     if( fq.empty() ){
       ++cpuhighWater_;
       try{
-#ifdef ENABLE_CUDA
-        /* Pinned Memory Mode
-         * As the Pinned memory allocation and deallocation has higher overhead
-         * this operation is performed at memory pool level which is created
-         * and destroyed only once.
-         */
-        cudaError_t err;
-        if (cudaSuccess != (err = cudaMallocHost((void**)&field, n*sizeof(T)))) {
-          std::ostringstream msg;
-          msg << "WARNING : Pinned Memory allocation failed , at " << __FILE__ << " : " << __LINE__
-              << std::endl;
-          msg << "\t - " << cudaGetErrorString(err);
-          msg << "Allocating Pageable memory instead. \n";
-          field = new T[n];
-          pinned_ = false;
-        }
-#else
-        // Pageable Memory mode
         field = new T[n];
-#endif
       }
       catch(std::runtime_error& e){
         std::cout << "Error occurred while allocating memory on LOCAL_RAM" << std::endl
