@@ -38,6 +38,7 @@ class Pool{
   typedef std::map<T*,size_t> FieldSizeMap;
 
   static bool destroyed_;
+  bool pinned_;
 
   FQSizeMap cpufqm_, gpufqm_;
   FieldSizeMap fsm_;

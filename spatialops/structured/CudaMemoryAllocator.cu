@@ -21,6 +21,8 @@
  */
 
 #include <spatialops/structured/CudaMemoryAllocator.h>
+//#define DEBUG_EXT_ALLOC_MEM
+//#define DEBUG_EXT_ALLOC_CUDA_DEVICE_MNGR
 
 namespace ema {
 namespace cuda {
@@ -96,24 +98,24 @@ void CudaFree(void* src, const unsigned int device) {
 /*---------------------------------------------------------------------*/
 
 void CudaMemcpy(void* dest, const void* src, const size_t sz, const unsigned int device,
-                const cudaMemcpyKind cmkk) {
+                const cudaMemcpyKind cmkk, cudaStream_t stream) {
 #ifdef  DEBUG_EXT_ALLOC_MEM
-  std::cout << "CudaMemcpy wrapper called (src,dest,size,device,type) -> ( ";
-  std::cout << src << "," << dest << "," << sz << "," << device << "," << cmkk << " )" <<  std::endl;
+  std::cout << "CudaMemcpyAsync wrapper called  (src,dest,size,device,type,stream) -> ( ";
+  std::cout << src << ", " << dest << ", " << sz << ", " << device << ", " << cmkk << " ," << stream << ")" << std::endl;
 #endif
   cudaError err;
-
   CudaSetDevice(device);
-  if (cudaSuccess != (err = cudaMemcpy(dest, src, sz, cmkk) ) ) {
+  if (cudaSuccess != (err = cudaMemcpyAsync(dest, src, sz, cmkk, stream )) ) {
+  //if (cudaSuccess != (err = cudaMemcpy(dest, src, sz, cmkk)) ) {
     std::ostringstream msg;
-    msg << "Cuda memcopy failed, at" << __FILE__ << " : " << __LINE__ << std::endl;
+    msg << "Cuda Async memcopy failed, at" << __FILE__ << " : " << __LINE__ << std::endl;
     msg << "\t - " << cudaGetErrorString(err);
     throw(std::runtime_error(msg.str()));
   }
 
 #ifdef  DEBUG_EXT_ALLOC_MEM
-  std::cout << "CudaMemcpy wrapper exiting (src,dest,size,device,type) -> ( ";
-  std::cout << src << "," << dest << "," << sz << "," << device << "," << cmkk << " )" << std::endl;
+  std::cout << "CudaMemcpyAsync wrapper exiting (src,dest,size,device,type,stream) -> ( ";
+  std::cout << src << " ," << dest << " ," << sz << " ," << device << " ," << cmkk << " ," << stream << ")" << std::endl;
 #endif
 }
 
@@ -363,29 +365,29 @@ void* CUDADeviceInterface::get_raw_pointer(unsigned long int N,
 /*---------------------------------------------------------------------*/
 
 void CUDADeviceInterface::memcpy_to(CUDASharedPointer& dest, const void* src,
-    const size_t sz) {
-  CudaMemcpy(dest.ptr_, src, sz, (*dest.deviceID_), cudaMemcpyHostToDevice);
+    const size_t sz, cudaStream_t stream) {
+  CudaMemcpy(dest.ptr_, src, sz, (*dest.deviceID_), cudaMemcpyHostToDevice, stream);
 }
 
 /*---------------------------------------------------------------------*/
 
 void CUDADeviceInterface::memcpy_to(void* dest, const void* src, const size_t sz,
-   const unsigned int deviceID) {
-  CudaMemcpy(dest, src, sz, deviceID, cudaMemcpyHostToDevice);
+   const unsigned int deviceID, cudaStream_t stream) {
+  CudaMemcpy(dest, src, sz, deviceID, cudaMemcpyHostToDevice, stream);
 }
 
 /*---------------------------------------------------------------------*/
 
 void CUDADeviceInterface::memcpy_from(void* dest, const CUDASharedPointer& src,
-    const size_t sz) {
-  CudaMemcpy(dest, src.ptr_, sz, (*src.deviceID_), cudaMemcpyDeviceToHost);
+    const size_t sz, cudaStream_t stream) {
+  CudaMemcpy(dest, src.ptr_, sz, (*src.deviceID_), cudaMemcpyDeviceToHost, stream);
 }
 
 /*---------------------------------------------------------------------*/
 
 void CUDADeviceInterface::memcpy_from(void* dest, const void* src, const size_t sz,
-    const unsigned int deviceID) {
-	CudaMemcpy(dest, src, sz, deviceID, cudaMemcpyDeviceToHost);
+    const unsigned int deviceID, cudaStream_t stream) {
+	CudaMemcpy(dest, src, sz, deviceID, cudaMemcpyDeviceToHost, stream);
 }
 
 /*---------------------------------------------------------------------*/

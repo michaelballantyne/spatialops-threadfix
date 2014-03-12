@@ -24,6 +24,10 @@
 #define EXTERNALALLOCATORS_H_
 #include <spatialops/SpatialOpsConfigure.h>
 
+#ifdef ENABLE_CUDA
+#include <cuda_runtime.h>
+#endif
+
 namespace ema {
 #ifdef ENABLE_CUDA
 namespace cuda { //ema::cuda
@@ -72,12 +76,12 @@ namespace cuda { //ema::cuda
     void release(void* x, const unsigned int K = 0);
 
     /** \brief copy a data block to a device**/
-    void memcpy_to(void* dest, const void* src, const size_t sz, const unsigned int deviceID);
-    void memcpy_to(CUDASharedPointer& dest, const void* src, const size_t sz);
+    void memcpy_to(void* dest, const void* src, const size_t sz, const unsigned int deviceID, cudaStream_t stream);
+    void memcpy_to(CUDASharedPointer& dest, const void* src, const size_t sz, cudaStream_t stream);
 
     /** \brief copy a data block from a device **/
-    void memcpy_from(void* dest, const void* src, const size_t sz, const unsigned int deviceID);
-    void memcpy_from(void* dest, const CUDASharedPointer& src, const size_t sz);
+    void memcpy_from(void* dest, const void* src, const size_t sz, const unsigned int deviceID, cudaStream_t stream);
+    void memcpy_from(void* dest, const CUDASharedPointer& src, const size_t sz, cudaStream_t stream);
 
     /** \brief copy a data block from one device to another **/
     void memcpy_peer(void* dest, const int dID, const void* src, const int sID, const size_t sz);

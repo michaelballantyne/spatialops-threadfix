@@ -416,8 +416,7 @@ namespace structured{
 #   endif
 
 #   ifdef ENABLE_CUDA
-    void set_stream( const cudaStream_t& stream ) { cudaStream_ = stream;  }
-
+    void set_stream( const cudaStream_t& stream ) { cudaStream_ = stream; }//std::cout << "cudaStream value in set_stream : " << cudaStream_ << std::endl;  }
     cudaStream_t const & get_stream() const { return cudaStream_; }
 #   endif
 
@@ -955,7 +954,7 @@ add_consumer( MemoryType consumerMemoryType,
           << " " << allocatedBytes_ << " " << deviceIndex_ << std::endl;
 #     endif
       ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-      std::cout << "get_stream before copy from : " << cudaStream_ << std::endl;
+      //std::cout << "get_stream before copy from : " << cudaStream_ << std::endl;
       CDI.memcpy_from( fieldValues_, fieldValuesExtDevice_, allocatedBytes_, deviceIndex_, cudaStream_ );
     }
     break;
@@ -984,7 +983,7 @@ add_consumer( MemoryType consumerMemoryType,
         consumerFieldValues_[consumerDeviceIndex] = Pool<T>::self().get( consumerMemoryType, ( allocatedBytes_/sizeof(T) ) );
         myConsumerFieldValues_[consumerDeviceIndex] = consumerFieldValues_[consumerDeviceIndex];
       }
-      std::cout << "get_stream before copy to : " << cudaStream_ << std::endl;
+      //std::cout << "get_stream before copy to : " << cudaStream_ << std::endl;
       CDI.memcpy_to( (void*)consumerFieldValues_[consumerDeviceIndex], fieldValues_, allocatedBytes_, consumerDeviceIndex, cudaStream_ );
     }
     break;

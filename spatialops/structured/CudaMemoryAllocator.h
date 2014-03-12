@@ -68,7 +68,7 @@ void CudaSetDevice(const int device);
 void CudaMalloc(void** src, const size_t sz, const unsigned int device);
 void CudaFree(void* src, const unsigned int device);
 void CudaMemcpy(void* src, const void* dest, const unsigned int device, const size_t sz,
-                cudaMemcpyKind cmkk);
+                cudaMemcpyKind cmkk, cudaStream_t stream );
 
 /* \brief Device management structure for all GPU devices */
 class CUDADeviceManager {
