@@ -83,39 +83,6 @@
 
 (define bm-constructor (arg-swap constructor 3 1 "bm-constructor"))
 
-(define (combine-args final-proc combine-procs numbers report)
-  (define combine-procs-lst (if (list? combine-procs)
-                                combine-procs
-                                (list combine-procs)))
-  (define combine-procs-count (length combine-procs-lst))
-  (define combine-count (- (length numbers) 2))
-  (define skip-num (first numbers))
-  (define combine-nums (take (rest numbers) combine-count))
-  (define final-num (last numbers))
-  (define total-num (apply + numbers))
-  (if (not (= combine-procs-count combine-count))
-      (error (string-append report " : number of procedures does not match number of argument counts"))
-      (lambda args (if (not (= total-num (length args)))
-                       (error (string-append report " : arguments do not match expected number"))
-                       (let* ([first-args (take args skip-num)]
-                              [combine-args (take (drop args skip-num)
-                                                  (apply + combine-nums))]
-                              [last-args (drop args (apply + skip-num combine-nums))]
-                              [combine-args-lst (reverse (first (foldl (lambda (count result)
-                                                                         (let ([answer (first result)]
-                                                                               [args (second result)])
-                                                                           (list (cons (take args count)
-                                                                                       answer)
-                                                                                 (drop args count))))
-                                                                       (list null combine-args)
-                                                                       combine-nums)))]
-                              [combine-results (map (lambda (proc args) (apply proc args))
-                                                    combine-procs-lst
-                                                    combine-args-lst)])
-                         (apply final-proc (append first-args
-                                                   combine-results
-                                                   last-args)))))))
-
 (define (map* proc . lsts)
   (apply map proc (map (lambda (lst) (if (list? lst)
                                          (flatten* lst)

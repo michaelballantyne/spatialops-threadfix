@@ -26,104 +26,130 @@
 (require "FulmarAbbreviations.fmr")
 (require "NeboCore.fmr")
 
-(define build-Initial-lhs
-  (combine-args build-Initial-general
-                (let ([assign (lambda (name body . backend)
-                                (let* ([report (lambda (fcn) (if (null? backend)
-                                                                 null
-                                                                 (fcn backend)))]
-                                       [report-start (report report-backend-start)]
-                                       [report-finish (report report-backend-finish)])
-                                  (tpl-def (tpl-pmtr 'RhsType)
-                                           (v-fcn-def name
-                                                      (list (adc 'bool 'useGhost)
-                                                            (ad 'RhsType 'rhs))
-                                                      report-start
-                                                      body
-                                                      report-finish))))]
-                      [assign-call (lambda (name)
-                                     (fc (tpl-use name 'RhsType)
-                                         'useGhost
-                                         'rhs))])
-                  (list (lambda (publics)
-                          (define (assign-error . message)
-                            (build-error (list 'Nebo 'Assignment)
-                                         message))
-                          (list (assign 'assign
-                                        (gpu-or (gpu-test-or (assign-call 'gpu_test_assign)
-                                                             (nifelse (fc 'gpu_ready)
-                                                                      (nifelse (mfc 'rhs 'gpu_ready (fc 'gpu_device_index))
-                                                                               (assign-call 'gpu_assign)
-                                                                               (assign-error (list '(Left-hand side of assignment allocated on)
-                                                                                                   (cout-break 'GPU '(but right-hand side is not \(completely\)))
-                                                                                                   (cout-break 'accessible '(on the same GPU)))))
-                                                                      (nifelse (fc 'cpu_ready)
-                                                                               (nifelse (mfc 'rhs 'cpu_ready)
-                                                                                        (assign-call 'cpu_assign)
-                                                                                        (assign-error (list '(Left-hand side of assignment allocated on)
-                                                                                                            (cout-break 'CPU '(but right-hand side is not))
-                                                                                                            (cout-break '(\(completely\)) '(accessible on CPU)))))
-                                                                               (assign-error (list '(Left-hand side of assignment allocated on)
-                                                                                                   (cout-break 'unknown '(device - not on CPU or GPU)))))))
-                                                (assign-call 'cpu_assign)))
-                                publics))
-                        (lambda (sequential-assign-body
-                                 SW-cons-args
-                                 thread-parallel-assign-body
-                                 RS-cons-args
-                                 gpu-assign-body
-                                 cpu-ready-body
-                                 gpu-ready-body
-                                 gpu-device-index-body
-                                 gpu-cons-args
-                                 gpu-test-assign-body
-                                 privates)
-                          (list (assign 'cpu_assign
-                                        (threads-or (nifelse (fc 'is_thread_parallel)
-                                                             (assign-call 'thread_parallel_assign)
-                                                             (assign-call 'sequential_assign))
-                                                    (assign-call 'sequential_assign)))
-                                (assign 'sequential_assign sequential-assign-body 'sequential)
-                                (r-fcn-def (fcn-dcl 'init 'SeqWalkType resize-pmtr)
-                                           null
-                                           (fc 'SeqWalkType SW-cons-args))
-                                (threads-only (bb (assign 'thread_parallel_assign
-                                                          (list (bs 'Semaphore
-                                                                    (fc 'semaphore "0"))
-                                                                (nt=c 'int 'thread_count (mfc 'field_ 'get_partition_count))
-                                                                thread-parallel-assign-body
-                                                                (nfor (nt= 'int 'ii "0")
-                                                                      (n< 'ii 'max)
-                                                                      (n++ 'ii)
-                                                                      (mfc 'semaphore 'wait)))
-                                                          (bs 'thread 'parallel))
-                                                  (r-fcn-def (fcn-dcl 'resize 'ResizeType resize-pmtr)
-                                                                      null
-                                                                      (fc 'ResizeType RS-cons-args))))
-                                (gpu-only (bb (assign 'gpu_assign gpu-assign-body 'CUDA)
-                                              (r-fcn-def (constize (fcn-dcl 'cpu_ready 'bool))
-                                                         null
-                                                         cpu-ready-body)
-                                              (r-fcn-def (constize (fcn-dcl 'gpu_ready 'bool))
-                                                         null
-                                                         gpu-ready-body)
-                                              (r-fcn-def (constize (fcn-dcl 'gpu_device_index 'int))
-                                                         null
-                                                         gpu-device-index-body)
-                                              (r-fcn-def (fcn-dcl 'gpu_init 'GPUWalkType resize-pmtr)
-                                                         null
-                                                         (fc 'GPUWalkType gpu-cons-args))
-                                              (gpu-test-only (assign 'gpu_test_assign
-                                                                     gpu-test-assign-body
-                                                                     (bs 'CUDA 'with 'Nebo 'copying)))))
-                                privates))))
-                (list 8 1 11 0)
-                "build-Initial-lhs"))
-(define bs-Initial-lhs (arg-swap build-Initial-lhs 16 4 "bs-Initial-lhs"))
-(define build-Resize-lhs
-  (combine-args build-Resize-general
-                (list (lambda (assign-body
+(define (build-Initial-lhs name
+                           FT
+                           tpl-irreg-pars
+                           tpl-reg-pars
+                           typedefs
+                           tpl-irreg-args
+                           constructor
+                           possible-ghosts
+                           publics
+                           sequential-assign-body
+                           SW-cons-args
+                           thread-parallel-assign-body
+                           RS-cons-args
+                           gpu-assign-body
+                           cpu-ready-body
+                           gpu-ready-body
+                           gpu-device-index-body
+                           gpu-cons-args
+                           gpu-test-assign-body
+                           privates)
+  (define (assign name body . backend)
+    (let* ([report (lambda (fcn) (if (null? backend)
+                                     null
+                                     (fcn backend)))]
+           [report-start (report report-backend-start)]
+           [report-finish (report report-backend-finish)])
+      (tpl-def (tpl-pmtr 'RhsType)
+               (v-fcn-def name
+                          (list (adc 'bool 'useGhost)
+                                (ad 'RhsType 'rhs))
+                          report-start
+                          body
+                          report-finish))))
+  (define (assign-call name)
+    (fc (tpl-use name 'RhsType)
+        'useGhost
+        'rhs))
+  (define (assign-error . message)
+    (build-error (list 'Nebo 'Assignment)
+                 message))
+  (build-Initial-general name
+                         FT
+                         tpl-irreg-pars
+                         tpl-reg-pars
+                         typedefs
+                         tpl-irreg-args
+                         constructor
+                         possible-ghosts
+                         (list (assign 'assign
+                                       (gpu-or (gpu-test-or (assign-call 'gpu_test_assign)
+                                                            (nifelse (fc 'gpu_ready)
+                                                                     (nifelse (mfc 'rhs 'gpu_ready (fc 'gpu_device_index))
+                                                                              (assign-call 'gpu_assign)
+                                                                              (assign-error (list '(Left-hand side of assignment allocated on)
+                                                                                                  (cout-break 'GPU '(but right-hand side is not \(completely\)))
+                                                                                                  (cout-break 'accessible '(on the same GPU)))))
+                                                                     (nifelse (fc 'cpu_ready)
+                                                                              (nifelse (mfc 'rhs 'cpu_ready)
+                                                                                       (assign-call 'cpu_assign)
+                                                                                       (assign-error (list '(Left-hand side of assignment allocated on)
+                                                                                                           (cout-break 'CPU '(but right-hand side is not))
+                                                                                                           (cout-break '(\(completely\)) '(accessible on CPU)))))
+                                                                              (assign-error (list '(Left-hand side of assignment allocated on)
+                                                                                                  (cout-break 'unknown '(device - not on CPU or GPU)))))))
+                                               (assign-call 'cpu_assign)))
                                publics)
+                         (list (assign 'cpu_assign
+                                       (threads-or (nifelse (fc 'is_thread_parallel)
+                                                            (assign-call 'thread_parallel_assign)
+                                                            (assign-call 'sequential_assign))
+                                                   (assign-call 'sequential_assign)))
+                               (assign 'sequential_assign sequential-assign-body 'sequential)
+                               (r-fcn-def (fcn-dcl 'init 'SeqWalkType resize-pmtr)
+                                          null
+                                          (fc 'SeqWalkType SW-cons-args))
+                               (threads-only (bb (assign 'thread_parallel_assign
+                                                         (list (bs 'Semaphore
+                                                                   (fc 'semaphore "0"))
+                                                               (nt=c 'int 'thread_count (mfc 'field_ 'get_partition_count))
+                                                               thread-parallel-assign-body
+                                                               (nfor (nt= 'int 'ii "0")
+                                                                     (n< 'ii 'max)
+                                                                     (n++ 'ii)
+                                                                     (mfc 'semaphore 'wait)))
+                                                         (bs 'thread 'parallel))
+                                                 (r-fcn-def (fcn-dcl 'resize 'ResizeType resize-pmtr)
+                                                            null
+                                                            (fc 'ResizeType RS-cons-args))))
+                               (gpu-only (bb (assign 'gpu_assign gpu-assign-body 'CUDA)
+                                             (r-fcn-def (constize (fcn-dcl 'cpu_ready 'bool))
+                                                        null
+                                                        cpu-ready-body)
+                                             (r-fcn-def (constize (fcn-dcl 'gpu_ready 'bool))
+                                                        null
+                                                        gpu-ready-body)
+                                             (r-fcn-def (constize (fcn-dcl 'gpu_device_index 'int))
+                                                        null
+                                                        gpu-device-index-body)
+                                             (r-fcn-def (fcn-dcl 'gpu_init 'GPUWalkType resize-pmtr)
+                                                        null
+                                                        (fc 'GPUWalkType gpu-cons-args))
+                                             (gpu-test-only (assign 'gpu_test_assign
+                                                                    gpu-test-assign-body
+                                                                    (bs 'CUDA 'with 'Nebo 'copying)))))
+                               privates)))
+(define bs-Initial-lhs (arg-swap build-Initial-lhs 16 4 "bs-Initial-lhs"))
+(define (build-Resize-lhs name
+                          FT
+                          tpl-irreg-pars
+                          tpl-reg-pars
+                          typedefs
+                          tpl-irreg-args
+                          constructor
+                          assign-body
+                          publics
+                          SW-cons-args
+                          privates)
+  (build-Resize-general name
+                        FT
+                        tpl-irreg-pars
+                        tpl-reg-pars
+                        typedefs
+                        tpl-irreg-args
+                        constructor
                         (list (threads-only
                                (tpl-def (tpl-pmtr 'RhsType)
                                         (v-fcn-def 'assign
@@ -133,9 +159,7 @@
                                                          (adp 'Semaphore 'semaphore))
                                                    (list assign-body
                                                          (fc (c 'semaphore '-> 'post))))))
-                              publics))
-                      (lambda (SW-cons-args
-                               privates)
+                              publics)
                         (list (r-fcn-def (fcn-dcl 'init
                                                   'SeqWalkType
                                                   (adcr IntVec 'split)
@@ -143,75 +167,89 @@
                                          null
                                          (fc 'SeqWalkType SW-cons-args))
                               privates)))
-                (list 7 2 2 0)
-                "build-Resize-lhs"))
 (define bs-Resize-lhs (arg-swap build-Resize-lhs 7 4 "bs-Resize-lhs"))
-(define build-SeqWalk-lhs
-  (combine-args build-SeqWalk-general
-                (list (lambda (assign-body
+(define (build-SeqWalk-lhs name
+                           FT
+                           tpl-irreg-pars
+                           tpl-reg-pars
+                           typedefs
+                           constructor
+                           assign-body
+                           publics
+                           next-body
+                           at-end-body
+                           has-length-body
+                           ref-result
+                           privates)
+  (build-SeqWalk-general name
+                         FT
+                         tpl-irreg-pars
+                         tpl-reg-pars
+                         typedefs
+                         constructor
+                         (list (tpl-def (tpl-pmtr 'RhsType)
+                                        (v-fcn-def 'assign
+                                                   (ad 'RhsType 'rhs)
+                                                   assign-body))
                                publics)
-                        (list (tpl-def (tpl-pmtr 'RhsType)
-                                       (v-fcn-def 'assign
-                                                  (ad 'RhsType 'rhs)
-                                                  assign-body))
-                              publics))
-                      (lambda (next-body
-                               at-end-body
-                               has-length-body
-                               ref-result
-                               privates)
-                        (list (v-fcn-def 'next null next-body)
-                              (r-fcn-def (constize (fcn-dcl 'at_end 'bool))
-                                         null
-                                         at-end-body)
-                              (r-fcn-def (constize (fcn-dcl 'has_length 'bool))
-                                         null
-                                         has-length-body)
-                              (r-fcn-def (fcn-dcl 'ref (ref vt-chunk))
-                                         null
-                                         ref-result)
-                              privates)))
-                (list 6 2 5 0)
-                "build-SeqWalk-lhs"))
+                         (list (v-fcn-def 'next null next-body)
+                               (r-fcn-def (constize (fcn-dcl 'at_end 'bool))
+                                          null
+                                          at-end-body)
+                               (r-fcn-def (constize (fcn-dcl 'has_length 'bool))
+                                          null
+                                          has-length-body)
+                               (r-fcn-def (fcn-dcl 'ref (ref vt-chunk))
+                                          null
+                                          ref-result)
+                               privates)))
 (define bs-SeqWalk-lhs (arg-swap build-SeqWalk-lhs 9 4 "bs-SeqWalk-lhs"))
-(define build-gpu-lhs
-  (combine-args build-gpu-general
-                (list (lambda (assign-body
-                               publics)
-                        (list (tpl-def (tpl-pmtr 'RhsType)
-                                       (device-use (v-fcn-def 'assign
-                                                              (ad 'RhsType 'rhs)
-                                                              (nt=c 'int 'ii (n+ (n* 'blockIdx.x 'blockDim.x) 'threadIdx.x))
-                                                              (nt=c 'int 'jj (n+ (n* 'blockIdx.y 'blockDim.y) 'threadIdx.y))
-                                                              (fc 'start 'ii 'jj)
-                                                              (mfc 'rhs 'start 'ii 'jj)
-                                                              assign-body)))
-                              publics))
-                      (lambda (valid-result
-                               start-body
-                               next-body
-                               at-end-result
-                               ref-result
-                               privates)
-                        (list (device-use (r-fcn-def (fcn-dcl 'valid 'bool)
-                                                     null
-                                                     valid-result))
-                              (device-use (v-fcn-def 'start
-                                                     (list (bs 'int 'x)
-                                                           (bs 'int 'y))
-                                                     start-body))
-                              (device-use (v-fcn-def 'next
-                                                     null
-                                                     next-body))
-                              (device-use (r-fcn-def (fcn-dcl 'at_end 'bool)
-                                                     null
-                                                     at-end-result))
-                              (device-use (r-fcn-def (fcn-dcl 'ref (ref vt-chunk))
-                                                     null
-                                                     ref-result))
-                              privates)))
-                (list 6 2 6 0)
-                "build-gpu-lhs"))
+(define (build-gpu-lhs name
+                       FT
+                       tpl-irreg-pars
+                       tpl-reg-pars
+                       typedefs
+                       constructor
+                       assign-body
+                       publics
+                       valid-result
+                       start-body
+                       next-body
+                       at-end-result
+                       ref-result
+                       privates)
+  (build-gpu-general name
+                     FT
+                     tpl-irreg-pars
+                     tpl-reg-pars
+                     typedefs
+                     constructor
+                     (list (tpl-def (tpl-pmtr 'RhsType)
+                                    (device-use (v-fcn-def 'assign
+                                                           (ad 'RhsType 'rhs)
+                                                           (nt=c 'int 'ii (n+ (n* 'blockIdx.x 'blockDim.x) 'threadIdx.x))
+                                                           (nt=c 'int 'jj (n+ (n* 'blockIdx.y 'blockDim.y) 'threadIdx.y))
+                                                           (fc 'start 'ii 'jj)
+                                                           (mfc 'rhs 'start 'ii 'jj)
+                                                           assign-body)))
+                           publics)
+                     (list (device-use (r-fcn-def (fcn-dcl 'valid 'bool)
+                                                  null
+                                                  valid-result))
+                           (device-use (v-fcn-def 'start
+                                                  (list (bs 'int 'x)
+                                                        (bs 'int 'y))
+                                                  start-body))
+                           (device-use (v-fcn-def 'next
+                                                  null
+                                                  next-body))
+                           (device-use (r-fcn-def (fcn-dcl 'at_end 'bool)
+                                                  null
+                                                  at-end-result))
+                           (device-use (r-fcn-def (fcn-dcl 'ref (ref vt-chunk))
+                                                  null
+                                                  ref-result))
+                           privates)))
 (define bs-gpu-lhs (arg-swap build-gpu-lhs 10 4 "bs-gpu-lhs"))
 
                                         ; beginnning of file

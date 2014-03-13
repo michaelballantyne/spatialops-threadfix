@@ -25,89 +25,135 @@
 
 (provide (all-defined-out))
 
-(define build-Initial-rhs
-  (combine-args build-Initial-general
-                (lambda (SW-cons-args
-                         RS-cons-args
-                         cpu-ready-body
-                         gpu-ready-body
-                         gpu-cons-args
-                         gpu-prep-body
-                         RD-cons-args
-                         publics)
-                  (list (r-fcn-def (constize (fcn-dcl 'init 'SeqWalkType resize-pmtr shift-pmtr))
-                                   null
-                                   (fc 'SeqWalkType SW-cons-args))
-                        (threads-only (r-fcn-def (constize (fcn-dcl 'resize 'ResizeType resize-pmtr))
-                                                 null
-                                                 (fc 'ResizeType RS-cons-args)))
-                        (gpu-only (bb (r-fcn-def (constize (fcn-dcl 'cpu_ready 'bool))
-                                                 null
-                                                 cpu-ready-body)
-                                      (r-fcn-def (constize (fcn-dcl 'gpu_ready 'bool (adc 'int DI-chunk)))
-                                                 null
-                                                 gpu-ready-body)
-                                      (r-fcn-def (constize (fcn-dcl 'gpu_init 'GPUWalkType resize-pmtr shift-pmtr (adc 'int DI-chunk)))
-                                                 null
-                                                 (fc 'GPUWalkType gpu-cons-args))
-                                      (gpu-test-only (fcn-def (constize (fcn-dcl 'gpu_prep 'void (adc 'int DI-chunk)))
-                                                              gpu-prep-body))))
-                        (r-fcn-def (constize (fcn-dcl 'reduce_init 'ReductionType resize-pmtr shift-pmtr))
-                                   null
-                                   (fc 'ReductionType RD-cons-args))
-                        publics))
-                (list 8 8 1)
-                "build-Initial-rhs"))
+(define (build-Initial-rhs name
+                           FT
+                           tpl-irreg-pars
+                           tpl-reg-pars
+                           typedefs
+                           tpl-irreg-args
+                           constructor
+                           possible-ghosts
+                           SW-cons-args
+                           RS-cons-args
+                           cpu-ready-body
+                           gpu-ready-body
+                           gpu-cons-args
+                           gpu-prep-body
+                           RD-cons-args
+                           publics
+                           privates)
+  (build-Initial-general name
+                         FT
+                         tpl-irreg-pars
+                         tpl-reg-pars
+                         typedefs
+                         tpl-irreg-args
+                         constructor
+                         possible-ghosts
+                         (list (r-fcn-def (constize (fcn-dcl 'init 'SeqWalkType resize-pmtr shift-pmtr))
+                                          null
+                                          (fc 'SeqWalkType SW-cons-args))
+                               (threads-only (r-fcn-def (constize (fcn-dcl 'resize 'ResizeType resize-pmtr))
+                                                        null
+                                                        (fc 'ResizeType RS-cons-args)))
+                               (gpu-only (bb (r-fcn-def (constize (fcn-dcl 'cpu_ready 'bool))
+                                                        null
+                                                        cpu-ready-body)
+                                             (r-fcn-def (constize (fcn-dcl 'gpu_ready 'bool (adc 'int DI-chunk)))
+                                                        null
+                                                        gpu-ready-body)
+                                             (r-fcn-def (constize (fcn-dcl 'gpu_init 'GPUWalkType resize-pmtr shift-pmtr (adc 'int DI-chunk)))
+                                                        null
+                                                        (fc 'GPUWalkType gpu-cons-args))
+                                             (gpu-test-only (fcn-def (constize (fcn-dcl 'gpu_prep 'void (adc 'int DI-chunk)))
+                                                                     gpu-prep-body))))
+                               (r-fcn-def (constize (fcn-dcl 'reduce_init 'ReductionType resize-pmtr shift-pmtr))
+                                          null
+                                          (fc 'ReductionType RD-cons-args))
+                               publics)
+                         privates))
 (define bs-Initial-rhs (arg-swap build-Initial-rhs 13 4 "bs-Initial-rhs"))
-(define build-Resize-rhs
-  (combine-args build-Resize-general
-                (lambda (SW-cons-args
-                         publics)
-                  (list (r-fcn-def (constize (fcn-dcl 'init
-                                                      'SeqWalkType
-                                                      shift-pmtr
-                                                      (adcr IntVec 'split)
-                                                      (adcr IntVec 'location)))
-                                   null
-                                   (fc 'SeqWalkType SW-cons-args))
-                        publics))
-                (list 7 2 1)
-                "build-Resize-rhs"))
+(define (build-Resize-rhs name
+                          FT
+                          tpl-irreg-pars
+                          tpl-reg-pars
+                          typedefs
+                          tpl-irreg-args
+                          constructor
+                          SW-cons-args
+                          publics
+                          privates)
+  (build-Resize-general name
+                        FT
+                        tpl-irreg-pars
+                        tpl-reg-pars
+                        typedefs
+                        tpl-irreg-args
+                        constructor
+                        (list (r-fcn-def (constize (fcn-dcl 'init
+                                                            'SeqWalkType
+                                                            shift-pmtr
+                                                            (adcr IntVec 'split)
+                                                            (adcr IntVec 'location)))
+                                         null
+                                         (fc 'SeqWalkType SW-cons-args))
+                              publics)
+                        privates))
 (define bs-Resize-rhs (arg-swap build-Resize-rhs 6 4 "bs-Resize-rhs"))
-(define build-SeqWalk-rhs
-  (combine-args build-SeqWalk-general
-                (lambda (next-body
-                         eval-type
-                         eval-result
-                         publics)
-                  (list (v-fcn-def 'next null next-body)
-                        (r-fcn-def (constize (fcn-dcl 'eval eval-type))
-                                   null
-                                   eval-result)
-                        publics))
-                (list 6 4 1)
-                "build-SeqWalk-rhs"))
+(define (build-SeqWalk-rhs name
+                           FT
+                           tpl-irreg-pars
+                           tpl-reg-pars
+                           typedefs
+                           constructor
+                           next-body
+                           eval-type
+                           eval-result
+                           publics
+                           privates)
+  (build-SeqWalk-general name
+                         FT
+                         tpl-irreg-pars
+                         tpl-reg-pars
+                         typedefs
+                         constructor
+                         (list (v-fcn-def 'next null next-body)
+                               (r-fcn-def (constize (fcn-dcl 'eval eval-type))
+                                          null
+                                          eval-result)
+                               publics)
+                         privates))
 (define bs-SeqWalk-rhs (arg-swap build-SeqWalk-rhs 7 4 "bs-SeqWalk-rhs"))
-(define build-gpu-rhs
-  (combine-args build-gpu-general
-                (lambda (start-body
-                         next-body
-                         eval-type
-                         eval-result
-                         publics)
-                  (list (device-use (v-fcn-def 'start
-                                               (list (bs 'int 'x)
-                                                     (bs 'int 'y))
-                                               start-body))
-                        (device-use (v-fcn-def 'next
-                                               null
-                                               next-body))
-                        (device-use (r-fcn-def (constize (fcn-dcl 'eval eval-type))
-                                               null
-                                               eval-result))
-                        publics))
-                (list 6 5 1)
-                "build-gpu-rhs"))
+(define (build-gpu-rhs name
+                       FT
+                       tpl-irreg-pars
+                       tpl-reg-pars
+                       typedefs
+                       constructor
+                       start-body
+                       next-body
+                       eval-type
+                       eval-result
+                       publics
+                       privates)
+  (build-gpu-general name
+                     FT
+                     tpl-irreg-pars
+                     tpl-reg-pars
+                     typedefs
+                     constructor
+                     (list (device-use (v-fcn-def 'start
+                                                  (list (bs 'int 'x)
+                                                        (bs 'int 'y))
+                                                  start-body))
+                           (device-use (v-fcn-def 'next
+                                                  null
+                                                  next-body))
+                           (device-use (r-fcn-def (constize (fcn-dcl 'eval eval-type))
+                                                  null
+                                                  eval-result))
+                           publics)
+                     privates))
 (define bs-gpu-rhs (arg-swap build-gpu-rhs 8 4 "bs-gpu-rhs"))
 (define (build-Reduction name
                          FT
