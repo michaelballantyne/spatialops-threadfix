@@ -20,53 +20,6 @@ using std::cout;
 using std::endl;
 
 //--------------------------------------------------------------------
-#define COMPARE_SPRNKLE_FIELDS( F1RANGE, F1SPVAL, F1AMOUNT,                       \
-                                F2RANGE, F2SPVAL, F2AMOUNT,                       \
-                                EXTREMEVAL, EXTREMEAMOUNT,                        \
-                                ERRORMODE, ERROR, MESSAGE, EXPECTED)              \
-{                                                                                 \
-  FieldT sf1(window, bc, gd, NULL, InternalStorage, memType1);                    \
-  FieldT sf2(window, bc, gd, NULL, InternalStorage, memType2);                    \
-                                                                                  \
-  /*Intialize Field 1*/                                                           \
-  fill_field_range(&sf1, 0, F1RANGE);                                             \
-  double values1[F1AMOUNT+EXTREMEAMOUNT];                                         \
-  size_t inc = F1AMOUNT/(EXTREMEAMOUNT + 1);                                      \
-  int i = 0;                                                                      \
-  for(int j = 0; j < EXTREMEAMOUNT; j++) {                                        \
-    for(int k = 0; k < inc; k++) {                                                \
-      values1[i] = F1SPVAL;                                                       \
-      i++;                                                                        \
-    }                                                                             \
-    values1[i] = EXTREMEVAL;                                                      \
-    i++;                                                                          \
-  }                                                                               \
-  for(; i < F1AMOUNT+EXTREMEAMOUNT; i++) {                                        \
-    values1[i] = F1SPVAL;                                                         \
-  }                                                                               \
-  sprinkle_in_field(&sf1, values1, F1AMOUNT+EXTREMEAMOUNT);                       \
-                                                                                  \
-  /*Intialize Field 2*/                                                           \
-  fill_field_range(&sf2, 0, F2RANGE);                                             \
-  double values2[F2AMOUNT+EXTREMEAMOUNT];                                         \
-  inc = F2AMOUNT/(EXTREMEAMOUNT + 1);                                             \
-  i = 0;                                                                          \
-  for(int j = 0; j < EXTREMEAMOUNT; j++) {                                        \
-    for(int k = 0; k < inc; k++) {                                                \
-      values2[i] = F2SPVAL;                                                       \
-      i++;                                                                        \
-    }                                                                             \
-    values2[i] = EXTREMEVAL;                                                      \
-    i++;                                                                          \
-  }                                                                               \
-  for(; i < F2AMOUNT+EXTREMEAMOUNT; i++) {                                        \
-    values2[i] = F2SPVAL;                                                         \
-  }                                                                               \
-  sprinkle_in_field(&sf2, values2, F2AMOUNT+EXTREMEAMOUNT);                       \
-                                                                                  \
-  status(compare_fields(&sf1, &sf2, ERRORMODE, ERROR, EXPECTED, 0, testFieldNotEqualFunction, verboseOutput), MESSAGE);               \
-}
-
 #define COMPARE_MEMORY_WINDOWS( F1NPTS, F2NPTS, ERRORMODE, MESSAGE)               \
 {                                                                                 \
   FieldT F1(MemoryWindow(F1NPTS), bc, gd, NULL, InternalStorage, memType1);       \
@@ -311,6 +264,59 @@ class TestFieldEqual
       total(npts[0]*npts[1]*npts[2])
   {}
 
+    bool compare_sprinkle_fields(
+        double const f1Range, double const  f1SprinkleVal, size_t const f1Amount,
+        double const f2Range, double const  f2SprinkleVal, size_t const f2Amount,
+        double const extremeVal, size_t const extremeAmount,
+        ErrorType const & et, 
+        double const error, 
+        bool const expectedEqual,
+        bool const testFieldNotEqualFunction,
+        bool const verboseOutput)
+    {
+      FieldT sf1(window, bc, gd, NULL, InternalStorage, memType1);
+      FieldT sf2(window, bc, gd, NULL, InternalStorage, memType2);
+
+      /* Fill in Field 1 Values to Sprinkle */
+      fill_field_range(&sf1, 0, f1Range);
+      double values1[f1Amount+extremeAmount];
+      size_t inc = f1Amount/(extremeAmount + 1);
+      int i = 0;
+      for(int j = 0; j < extremeAmount; j++) {
+        for(int k = 0; k < inc; k++) {
+          values1[i] = f1SprinkleVal;
+          i++;
+        }
+        values1[i] = extremeVal;
+        i++;
+      }
+      for(; i < f1Amount+extremeAmount; i++) {
+        values1[i] = f1SprinkleVal;
+      }
+      /*Intialize Field 1*/
+      sprinkle_in_field(&sf1, values1, f1Amount+extremeAmount);
+
+      /* Fill in Field 2 Values to Sprinkle */
+      fill_field_range(&sf2, 0, f2Range);
+      double values2[f2Amount+extremeAmount];
+      inc = f2Amount/(extremeAmount + 1);
+      i = 0;
+      for(int j = 0; j < extremeAmount; j++) {
+        for(int k = 0; k < inc; k++) {
+          values2[i] = f2SprinkleVal;
+          i++;
+        }
+        values2[i] = extremeVal;
+        i++;
+      }
+      for(; i < f2Amount+extremeAmount; i++) {
+        values2[i] = f2SprinkleVal;
+      }
+      /*Intialize Field 2*/
+      sprinkle_in_field(&sf2, values2, f2Amount+extremeAmount);
+
+      return compare_fields(&sf1, &sf2, et, error, expectedEqual, 0, testFieldNotEqualFunction, verboseOutput);
+    }
 
     inline bool compare_fields(double const f1Val,
         double const f2Val,
@@ -419,16 +425,26 @@ class TestFieldEqual
           status(compare_fields(3.0, 2.96, RELATIVE, .01, false, 0, testFieldNotEqualFunction, verboseOutput), "Off By 1% (Not Equal)");
 
           //near zero value tests
-          COMPARE_SPRNKLE_FIELDS(1, 0, 8, 1, 1e-9, 8, 0, 0, RELATIVE, .01, "Near Zero Field Range [-1, 1] Off By 1% (Equal)", true);
-          COMPARE_SPRNKLE_FIELDS(1, 0, 8, 1, 1e-8, 8, 0, 0, RELATIVE, .01, "Near Zero Field Range [-1, 1] Off By 1% (Not Equal)", false);
-          COMPARE_SPRNKLE_FIELDS(10, 0, 8, 10, 1e-8, 8, 0, 0, RELATIVE, .01, "Near Zero Field Range [-10, 10] Off By 1% (Equal)", true);
-          COMPARE_SPRNKLE_FIELDS(10, 0, 8, 10, 1e-7, 8, 0, 0, RELATIVE, .01, "Near Zero Field Range [-10, 10] Off By 1% (Not Equal)", false);
-          COMPARE_SPRNKLE_FIELDS(100000, 0, 8, 100000, 1e-4, 8, 0, 0, RELATIVE, .01, "Near Zero Field Range [-100000, 100000] Off By 1% (Equal)", true);
-          COMPARE_SPRNKLE_FIELDS(100000, 0, 8, 100000, 1e-3, 8, 0, 0, RELATIVE, .01, "Near Zero Field Range [-100000, 100000] Off By 1% (Not Equal)", false);
-          COMPARE_SPRNKLE_FIELDS(1, 0, 8, 1, 1e-7, 8, 1000, 1, RELATIVE, .01, "Outlier Near Zero Field Range [-1, 1] Off By 1% (Equal)", true);
-          COMPARE_SPRNKLE_FIELDS(1, 0, 8, 1, 1e-6, 8, 1000, 1, RELATIVE, .01, "Outlier Near Zero Field Range [-1, 1] Off By 1% (Not Equal)", false);
-          COMPARE_SPRNKLE_FIELDS(1, 0, 8, 1, 1e-7, 8, 1000, 5, RELATIVE, .01, "Five Outlier Near Zero Field Range [-1, 1] Off By 1% (Equal)", true);
-          COMPARE_SPRNKLE_FIELDS(1, 0, 8, 1, 1e-6, 8, 1000, 5, RELATIVE, .01, "Five Outlier Near Zero Field Range [-1, 1] Off By 1% (Not Equal)", false);
+          status(compare_sprinkle_fields(1, 0, 8, 1, 1e-9, 8, 0, 0, RELATIVE, .01, true, testFieldNotEqualFunction, verboseOutput),
+              "Near Zero Field Range [-1, 1] Off By 1% (Equal)");
+          status(compare_sprinkle_fields(1, 0, 8, 1, 1e-8, 8, 0, 0, RELATIVE, .01, false, testFieldNotEqualFunction, verboseOutput),
+              "Near Zero Field Range [-1, 1] Off By 1% (Not Equal)");
+          status(compare_sprinkle_fields(10, 0, 8, 10, 1e-8, 8, 0, 0, RELATIVE, .01, true, testFieldNotEqualFunction, verboseOutput),
+              "Near Zero Field Range [-10, 10] Off By 1% (Equal)");
+          status(compare_sprinkle_fields(10, 0, 8, 10, 1e-7, 8, 0, 0, RELATIVE, .01, false, testFieldNotEqualFunction, verboseOutput),
+              "Near Zero Field Range [-10, 10] Off By 1% (Not Equal)");
+          status(compare_sprinkle_fields(100000, 0, 8, 100000, 1e-4, 8, 0, 0, RELATIVE, .01, true, testFieldNotEqualFunction, verboseOutput),
+              "Near Zero Field Range [-100000, 100000] Off By 1% (Equal)");
+          status(compare_sprinkle_fields(100000, 0, 8, 100000, 1e-3, 8, 0, 0, RELATIVE, .01, false, testFieldNotEqualFunction, verboseOutput),
+              "Near Zero Field Range [-100000, 100000] Off By 1% (Not Equal)");
+          status(compare_sprinkle_fields(1, 0, 8, 1, 1e-7, 8, 1000, 1, RELATIVE, .01, true, testFieldNotEqualFunction, verboseOutput),
+              "Outlier Near Zero Field Range [-1, 1] Off By 1% (Equal)");
+          status(compare_sprinkle_fields(1, 0, 8, 1, 1e-6, 8, 1000, 1, RELATIVE, .01, false, testFieldNotEqualFunction, verboseOutput),
+              "Outlier Near Zero Field Range [-1, 1] Off By 1% (Not Equal)");
+          status(compare_sprinkle_fields(1, 0, 8, 1, 1e-7, 8, 1000, 5, RELATIVE, .01, true, testFieldNotEqualFunction, verboseOutput),
+              "Five Outlier Near Zero Field Range [-1, 1] Off By 1% (Equal)");
+          status(compare_sprinkle_fields(1, 0, 8, 1, 1e-6, 8, 1000, 5, RELATIVE, .01, false, testFieldNotEqualFunction, verboseOutput),
+              "Five Outlier Near Zero Field Range [-1, 1] Off By 1% (Not Equal)");
 
           //Custom Absolute Error
           status(compare_fields(1.0, 3.0, RELATIVE, 1.0, true, 1.0, testFieldNotEqualFunction, verboseOutput), "Absolute Tolerance 1: 1-3 Off By 100% (Equal)");
