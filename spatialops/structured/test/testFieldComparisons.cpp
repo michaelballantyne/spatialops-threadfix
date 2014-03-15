@@ -20,35 +20,6 @@ using std::cout;
 using std::endl;
 
 //--------------------------------------------------------------------
-#define COMPARE_MEMORY_WINDOWS( F1NPTS, F2NPTS, ERRORMODE, MESSAGE)               \
-{                                                                                 \
-  FieldT F1(MemoryWindow(F1NPTS), bc, gd, NULL, InternalStorage, memType1);       \
-  FieldT F2(MemoryWindow(F2NPTS), bc, gd, NULL, InternalStorage, memType2);       \
-                                                                                  \
-  F1 <<= 1.0;                                                                     \
-  F2 <<= 1.0;                                                                     \
-                                                                                  \
-  bool result = true;                                                             \
-  try {                                                                           \
-    switch(et) {                                                                  \
-      case RELATIVE:                                                              \
-        field_equal(F1, F2, 0.0);                                                 \
-          break;                                                                  \
-      case ABSOLUTE:                                                              \
-        field_equal_abs(F1, F2, 0.0);                                             \
-          break;                                                                  \
-      case ULP:                                                                   \
-        field_equal_ulp(F1, F2, 0);                                               \
-          break;                                                                  \
-    }                                                                             \
-    result = false;                                                               \
-  }                                                                               \
-  catch(std::runtime_error& e) {}                                                 \
-                                                                                  \
-  status(result, MESSAGE);                                                        \
-}
-
-
 /**
  * Function fill_field_range
  *
@@ -346,6 +317,43 @@ class TestFieldEqual
       return manual_error_compare(*f1, *f2, error, et, testFieldNotEqualFunction, verboseOutput, expectedEqual, absError);
     }
 
+    bool compare_memory_windows(IntVec const & f1Npts, IntVec const & f2Npts, ErrorType const & et, bool const testFieldNotEqualFunction)
+    {
+      FieldT F1(MemoryWindow(f1Npts), bc, gd, NULL, InternalStorage, memType1);
+      FieldT F2(MemoryWindow(f2Npts), bc, gd, NULL, InternalStorage, memType2);
+
+      F1 <<= 1.0;
+      F2 <<= 1.0;
+
+      bool result = true;
+      try {
+        switch(et) {
+          case RELATIVE:
+            if(testFieldNotEqualFunction)
+              field_not_equal(F1, F2, 0.0);
+            else
+              field_equal(F1, F2, 0.0);
+            break;
+          case ABSOLUTE:
+            if(testFieldNotEqualFunction)
+              field_not_equal_abs(F1, F2, 0.0);
+            else
+              field_equal_abs(F1, F2, 0.0);
+            break;
+          case ULP:
+            if(testFieldNotEqualFunction)
+              field_not_equal_ulp(F1, F2, 0);
+            else
+              field_equal_ulp(F1, F2, 0);
+            break;
+        }
+        result = false;
+      }
+      catch(std::runtime_error& e) {}
+
+      return result;
+    }
+
     bool test(const MemoryType memType1,
         const MemoryType memType2,
         const ErrorType et,
@@ -512,13 +520,13 @@ class TestFieldEqual
 
       //unequal memory window tests
       IntVec npts(window.glob_dim());
-      COMPARE_MEMORY_WINDOWS(npts, IntVec(npts[0]+5, npts[1], npts[2]), et,
+      status(compare_memory_windows(npts, IntVec(npts[0]+5, npts[1], npts[2]), et, testFieldNotEqualFunction),
           "Cannot Compare Windows Of Different Dimensions X");
-      COMPARE_MEMORY_WINDOWS(npts, IntVec(npts[0], npts[1]+2, npts[2]), et,
+      status(compare_memory_windows(npts, IntVec(npts[0], npts[1]+2, npts[2]), et, testFieldNotEqualFunction),
           "Cannot Compare Windows Of Different Dimensions Y");
-      COMPARE_MEMORY_WINDOWS(npts, IntVec(npts[0], npts[1], npts[2]+7), et,
+      status(compare_memory_windows(npts, IntVec(npts[0], npts[1], npts[2]+7), et, testFieldNotEqualFunction),
           "Cannot Compare Windows Of Different Dimensions Z");
-      COMPARE_MEMORY_WINDOWS(npts, IntVec(npts[1], npts[2], npts[0]), et,
+      status(compare_memory_windows(npts, IntVec(npts[1], npts[2], npts[0]), et, testFieldNotEqualFunction),
           "Cannot Compare Windows Of Different Dimensions, Same Memory Size");
 
       return status.ok();
