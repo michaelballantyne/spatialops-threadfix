@@ -503,18 +503,18 @@ class TestFieldEqual
           try {
             //manual compare useless
             status(compare_fields(nl.max(), nl.infinity(), ULP, 20, true, 0, testFieldNotEqualFunction, verboseOutput), "fail");
-            status(false, "Max Double = Infinity By 20 ulps (Throws Exception)");
-          } catch(std::domain_error) {status(true,  "Max Double = Infinity By 20 ulps (Throws Exception)");}
+            status(false, "Max Double = Infinity By 20 ulps (Throws Exception Correctly)");
+          } catch(std::domain_error) {status(true,  "Max Double = Infinity By 20 ulps (Throws Exception Correctly)");}
           try {
             //manual compare useless
             status(compare_fields(-nl.max(), -nl.infinity(), ULP, 20, true, 0, testFieldNotEqualFunction, verboseOutput), "fail");
-            status(false, "Min Double = Infinity By 20 ulps (Throws Exception)");
-          } catch(std::domain_error) {status(true, "Min Double = Infinity By 20 ulps (Throws Exception)");}
+            status(false, "Min Double = Infinity By 20 ulps (Throws Exception Correctly)");
+          } catch(std::domain_error) {status(true, "Min Double = Infinity By 20 ulps (Throws Exception Correctly)");}
           try {
             //manual compare useless
             status(compare_fields(nan(""), nan(""), ULP, 20, true, 0, testFieldNotEqualFunction, verboseOutput), "fail");
-            status(false, "NAN = NAN By 20 ulps (Throws Exception)");
-          } catch(std::domain_error) {status(true, "NAN = NAN By 20 ulps (Throws Exception)");}
+            status(false, "NAN = NAN By 20 ulps (Throws Exception Correctly)");
+          } catch(std::domain_error) {status(true, "NAN = NAN By 20 ulps (Throws Exception Correctly)");}
           break;
       }
 
@@ -746,18 +746,18 @@ class TestFieldEqualScalar
           try {
             //manual compare useless
             status(compare_field_scalar(nl.max(), nl.infinity(), ULP, 20, true, 0, testFieldNotEqualFunction, verboseOutput), "fail");
-            status(false, "Max Double = Infinity By 20 ulps (Throws Exception)");
-          } catch(std::domain_error) {status(true,  "Max Double = Infinity By 20 ulps (Throws Exception)");}
+            status(false, "Max Double = Infinity By 20 ulps (Throws Exception Correctly)");
+          } catch(std::domain_error) {status(true,  "Max Double = Infinity By 20 ulps (Throws Exception Correctly)");}
           try {
             //manual compare useless
             status(compare_field_scalar(-nl.max(), -nl.infinity(), ULP, 20, true, 0, testFieldNotEqualFunction, verboseOutput), "fail");
-            status(false, "Min Double = Infinity By 20 ulps (Throws Exception)");
-          } catch(std::domain_error) {status(true, "Min Double = Infinity By 20 ulps (Throws Exception)");}
+            status(false, "Min Double = Infinity By 20 ulps (Throws Exception Correctly)");
+          } catch(std::domain_error) {status(true, "Min Double = Infinity By 20 ulps (Throws Exception Correctly)");}
           try {
             //manual compare useless
             status(compare_field_scalar(nan(""), nan(""), ULP, 20, true, 0, testFieldNotEqualFunction, verboseOutput), "fail");
-            status(false, "NAN = NAN By 20 ulps (Throws Exception)");
-          } catch(std::domain_error) {status(true, "NAN = NAN By 20 ulps (Throws Exception)");}
+            status(false, "NAN = NAN By 20 ulps (Throws Exception Correctly)");
+          } catch(std::domain_error) {status(true, "NAN = NAN By 20 ulps (Throws Exception Correctly)");}
           break;
       }
 
