@@ -27,36 +27,59 @@
 
 #define FIELDCOMPARISONS_ABS_ERROR_CONST .000001
 
-#define FIELDCOMPARISONS_INITIALIZE_ITERATOR(ITER, FIELD, WINDOW, BOUNDARY, GHOST, TMPFIELD) \
-{                                                                            \
-  if(FIELD.memory_device_type() == LOCAL_RAM) {                              \
-    ITER = new typename FieldT::const_iterator(FIELD.begin());               \
-  }                                                                          \
-  else if (FIELD.memory_device_type() == EXTERNAL_CUDA_GPU) {                \
-    TMPFIELD = new FieldT(WINDOW, BOUNDARY, GHOST, NULL, InternalStorage);   \
-    *TMPFIELD = FIELD;                                                       \
-                                                                             \
-    ITER = new typename FieldT::const_iterator(TMPFIELD->begin());           \
-  }                                                                          \
-  else {                                                                     \
-    std::ostringstream msg;                                                  \
-    msg << "Attempted comparison operation on unsupported memory type, at "  \
-      << __FILE__                                                            \
-      << " : " << __LINE__ << std::endl;                                     \
-    msg << "\t - "                                                           \
-      << "Attempted to compare with a field in "                             \
-      << SpatialOps::DeviceTypeTools::get_memory_type_description(           \
-          FIELD.memory_device_type()) << std::endl;                          \
-    throw(std::runtime_error(msg.str()));                                    \
-  }                                                                          \
-}
-
 /**
  * @brief Comparison operators
  * WARNING: Slow in general and comparison with external fields will incur copy penalties.
  */
 namespace SpatialOps{
 namespace structured{
+
+/**
+ * @brief Returns a field iterator to data in \c field or null.  This function
+ * is only intended to be used by the functions in this file.
+ *
+ * This function will return a \c const_iterator to the data in \c field or a copy
+ * of the data in \c field.  This function will copy the data of \c field if \c
+ * field is not on local ram, and assign the pointer to the new memory created
+ * for the copy in \c localPtr.  It is up for the caller of this function to
+ * delete the iterator returned and the \c *localPtr if they are not null.
+ *
+ * If this function returns null, it means \c field had an unsupported memory
+ * type.
+ *
+ * @tparam FieldT -- Any type of SpatialField
+ * @param field -- Field to return an iterator to.
+ * @param window -- Memory window of \c field
+ * @param bcinfo -- Boundary cell info of \c field
+ * @param ghost -- Ghost data of \c field
+ * @param localPtr -- Pointer to a pointer which will be overriden if \c field
+ * does not exist on local ram.  This pointer will point to memory created for
+ * the copy of \c field to local ram.
+ */
+template<typename FieldT>
+inline static typename FieldT::const_iterator* init_iterator(FieldT const & field,
+    MemoryWindow const & window,
+    BoundaryCellInfo const & bcinfo,
+    GhostData const & ghost,
+    FieldT** const localPtr)
+{
+  //we can get the iterator directly if on local ram
+  if(field.memory_device_type() == LOCAL_RAM) {
+    return new typename FieldT::const_iterator(field.begin());
+  }
+  //we need to transfer the field to local ram to iterate
+  else if (field.memory_device_type() == EXTERNAL_CUDA_GPU) {
+    *localPtr = new FieldT(window, bcinfo, ghost, NULL, InternalStorage);
+    **localPtr = field;
+
+    return new typename FieldT::const_iterator((*localPtr)->begin());
+  }
+  else {
+    //unsupported memory comparison
+    return 0;
+  }
+}
+
 
 /**
  * @brief Returns if f1 is element-wise not equal to f2 within a certain relative
@@ -165,7 +188,17 @@ bool field_equal(const FieldT& f1, const FieldT& f2, double error, const double 
   typename FieldT::const_iterator *if2 = 0;
 
   //initialize if1 and iend
-  FIELDCOMPARISONS_INITIALIZE_ITERATOR(if1, f1, w1, bc1, gd1, temp1);
+  if(!(if1 = init_iterator(f1, w1, bc1, gd1, &temp1))) {
+    std::ostringstream msg;
+    msg << "Attempted comparison operation on unsupported memory type, at "
+      << __FILE__
+      << " : " << __LINE__ << std::endl;
+    msg << "\t - "
+      << "Attempted to compare with a field in "
+      << SpatialOps::DeviceTypeTools::get_memory_type_description(
+          f1.memory_device_type()) << std::endl;
+    throw(std::runtime_error(msg.str()));
+  }
   if(temp1)
     iend = new typename FieldT::const_iterator(temp1->end());
   else
@@ -173,7 +206,17 @@ bool field_equal(const FieldT& f1, const FieldT& f2, double error, const double 
 
 
   //initialize if2
-  FIELDCOMPARISONS_INITIALIZE_ITERATOR(if2, f2, w2, bc2, gd2, temp2); //memory leak if runtime error thrown
+  if(!(if2 = init_iterator(f2, w2, bc2, gd2, &temp2))) {
+    std::ostringstream msg;
+    msg << "Attempted comparison operation on unsupported memory type, at "
+      << __FILE__
+      << " : " << __LINE__ << std::endl;
+    msg << "\t - "
+      << "Attempted to compare with a field in "
+      << SpatialOps::DeviceTypeTools::get_memory_type_description(
+          f2.memory_device_type()) << std::endl;
+    throw(std::runtime_error(msg.str()));
+  } //memory leak if runtime error thrown
 
   //do comparison
   bool result = true;
@@ -257,14 +300,34 @@ bool field_equal_abs(const FieldT& f1, const FieldT& f2, double error=0.0)
   typename FieldT::const_iterator *if2 = 0;
 
   //initialize if1 and iend
-  FIELDCOMPARISONS_INITIALIZE_ITERATOR(if1, f1, w1, bc1, gd1, temp1);
+  if(!(if1 = init_iterator(f1, w1, bc1, gd1, &temp1))) {
+    std::ostringstream msg;
+    msg << "Attempted comparison operation on unsupported memory type, at "
+      << __FILE__
+      << " : " << __LINE__ << std::endl;
+    msg << "\t - "
+      << "Attempted to compare with a field in "
+      << SpatialOps::DeviceTypeTools::get_memory_type_description(
+          f1.memory_device_type()) << std::endl;
+    throw(std::runtime_error(msg.str()));
+  }
   if(temp1)
     iend = new typename FieldT::const_iterator(temp1->end());
   else
     iend = new typename FieldT::const_iterator(f1.end());
 
   //initialize if2
-  FIELDCOMPARISONS_INITIALIZE_ITERATOR(if2, f2, w2, bc2, gd2, temp2); //memory leak if runtime error thrown
+  if(!(if2 = init_iterator(f2, w2, bc2, gd2, &temp2))) {
+    std::ostringstream msg;
+    msg << "Attempted comparison operation on unsupported memory type, at "
+      << __FILE__
+      << " : " << __LINE__ << std::endl;
+    msg << "\t - "
+      << "Attempted to compare with a field in "
+      << SpatialOps::DeviceTypeTools::get_memory_type_description(
+          f2.memory_device_type()) << std::endl;
+    throw(std::runtime_error(msg.str()));
+  } //memory leak if runtime error thrown
 
   //do comparison
   bool result = true;
@@ -351,14 +414,34 @@ bool field_equal_ulp(const FieldT& f1, const FieldT& f2, const unsigned int ulps
   typename FieldT::const_iterator *if2 = 0;
 
   //initialize if1 and iend
-  FIELDCOMPARISONS_INITIALIZE_ITERATOR(if1, f1, w1, bc1, gd1, temp1);
+  if(!(if1 = init_iterator(f1, w1, bc1, gd1, &temp1))) {
+    std::ostringstream msg;
+    msg << "Attempted comparison operation on unsupported memory type, at "
+      << __FILE__
+      << " : " << __LINE__ << std::endl;
+    msg << "\t - "
+      << "Attempted to compare with a field in "
+      << SpatialOps::DeviceTypeTools::get_memory_type_description(
+          f1.memory_device_type()) << std::endl;
+    throw(std::runtime_error(msg.str()));
+  }
   if(temp1)
     iend = new typename FieldT::const_iterator(temp1->end());
   else
     iend = new typename FieldT::const_iterator(f1.end());
 
   //initialize if2
-  FIELDCOMPARISONS_INITIALIZE_ITERATOR(if2, f2, w2, bc2, gd2, temp2); //memory leak if runtime error thrown
+  if(!(if2 = init_iterator(f2, w2, bc2, gd2, &temp2))) {
+    std::ostringstream msg;
+    msg << "Attempted comparison operation on unsupported memory type, at "
+      << __FILE__
+      << " : " << __LINE__ << std::endl;
+    msg << "\t - "
+      << "Attempted to compare with a field in "
+      << SpatialOps::DeviceTypeTools::get_memory_type_description(
+          f2.memory_device_type()) << std::endl;
+    throw(std::runtime_error(msg.str()));
+  } //memory leak if runtime error thrown
 
   //do comparison
   bool result = true;
@@ -490,7 +573,17 @@ bool field_equal(const double d, const FieldT& f1, double error, const double er
   typename FieldT::const_iterator *iend = 0;
 
   //initialize if1 and iend
-  FIELDCOMPARISONS_INITIALIZE_ITERATOR(if1, f1, w1, bc1, gd1, temp1);
+  if(!(if1 = init_iterator(f1, w1, bc1, gd1, &temp1))) {
+    std::ostringstream msg;
+    msg << "Attempted comparison operation on unsupported memory type, at "
+      << __FILE__
+      << " : " << __LINE__ << std::endl;
+    msg << "\t - "
+      << "Attempted to compare with a field in "
+      << SpatialOps::DeviceTypeTools::get_memory_type_description(
+          f1.memory_device_type()) << std::endl;
+    throw(std::runtime_error(msg.str()));
+  }
   if(temp1)
     iend = new typename FieldT::const_iterator(temp1->end());
   else
@@ -567,7 +660,17 @@ bool field_equal_abs(const double d, const FieldT& f1, double error=0.0)
   typename FieldT::const_iterator *iend = 0;
 
   //initialize if1 and iend
-  FIELDCOMPARISONS_INITIALIZE_ITERATOR(if1, f1, w1, bc1, gd1, temp1);
+  if(!(if1 = init_iterator(f1, w1, bc1, gd1, &temp1))) {
+    std::ostringstream msg;
+    msg << "Attempted comparison operation on unsupported memory type, at "
+      << __FILE__
+      << " : " << __LINE__ << std::endl;
+    msg << "\t - "
+      << "Attempted to compare with a field in "
+      << SpatialOps::DeviceTypeTools::get_memory_type_description(
+          f1.memory_device_type()) << std::endl;
+    throw(std::runtime_error(msg.str()));
+  }
   if(temp1)
     iend = new typename FieldT::const_iterator(temp1->end());
   else
@@ -647,7 +750,17 @@ bool field_equal_ulp(const double d, const FieldT& f1, const unsigned int ulps)
   typename FieldT::const_iterator *iend = 0;
 
   //initialize if1 and iend
-  FIELDCOMPARISONS_INITIALIZE_ITERATOR(if1, f1, w1, bc1, gd1, temp1);
+  if(!(if1 = init_iterator(f1, w1, bc1, gd1, &temp1))) {
+    std::ostringstream msg;
+    msg << "Attempted comparison operation on unsupported memory type, at "
+      << __FILE__
+      << " : " << __LINE__ << std::endl;
+    msg << "\t - "
+      << "Attempted to compare with a field in "
+      << SpatialOps::DeviceTypeTools::get_memory_type_description(
+          f1.memory_device_type()) << std::endl;
+    throw(std::runtime_error(msg.str()));
+  }
   if(temp1)
     iend = new typename FieldT::const_iterator(temp1->end());
   else
