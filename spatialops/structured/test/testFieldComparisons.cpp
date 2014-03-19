@@ -227,8 +227,8 @@ class TestFieldEqual
     MemoryType memType2;
 
     TestFieldEqual(const IntVec npts)
-      : memType1(LOCAL_RAM), 
-      memType2(LOCAL_RAM), 
+      : memType1(LOCAL_RAM),
+      memType2(LOCAL_RAM),
       window(npts),
       bc(BoundaryCellInfo::build<FieldT>()),
       gd(1),
@@ -239,8 +239,8 @@ class TestFieldEqual
         double const f1Range, double const  f1SprinkleVal, size_t const f1Amount,
         double const f2Range, double const  f2SprinkleVal, size_t const f2Amount,
         double const extremeVal, size_t const extremeAmount,
-        ErrorType const & et, 
-        double const error, 
+        ErrorType const & et,
+        double const error,
         bool const expectedEqual,
         bool const testFieldNotEqualFunction,
         bool const verboseOutput)
@@ -657,7 +657,7 @@ class TestFieldEqualScalar
 
   public:
     TestFieldEqualScalar(const IntVec npts)
-      : memType1(LOCAL_RAM), window(npts), bc(BoundaryCellInfo::build<FieldT>()), 
+      : memType1(LOCAL_RAM), window(npts), bc(BoundaryCellInfo::build<FieldT>()),
       gd(1), total(npts[0]*npts[1]*npts[2])
     {}
 
