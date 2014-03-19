@@ -106,7 +106,6 @@
                            tpl-reg-pars
                            typedefs
                            constructor
-                           next-body
                            eval-type
                            eval-result
                            publics
@@ -117,13 +116,14 @@
                          tpl-reg-pars
                          typedefs
                          constructor
-                         (list (v-fcn-def 'next null next-body)
-                               (r-fcn-def (constize (fcn-dcl 'eval eval-type))
+                         (list (r-fcn-def (constize (fcn-dcl 'eval
+                                                             eval-type
+                                                             index-pmtr))
                                           null
                                           eval-result)
                                publics)
                          privates))
-(define bs-SeqWalk-rhs (arg-swap build-SeqWalk-rhs 7 4 "bs-SeqWalk-rhs"))
+(define bs-SeqWalk-rhs (arg-swap build-SeqWalk-rhs 6 4 "bs-SeqWalk-rhs"))
 (define (build-gpu-rhs name
                        FT
                        tpl-irreg-pars

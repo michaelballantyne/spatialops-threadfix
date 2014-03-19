@@ -61,7 +61,6 @@
                                   (bm-constructor (adc vt-chunk 'value)
                                                   (cons-asgn 'value_ 'value)
                                                   null)
-                                  null
                                   vt-chunk
                                   'value_
                                   null
@@ -99,17 +98,8 @@
                                                   null)
                                   (n+ (mfc 'field_ 'get_valid_ghost_data)
                                       (fc 'point_to_ghost (mfc (mfc 'field_ 'boundary_info) 'has_extra)))
-                                  (fc 'resize_ghost_and_shift_window
-                                      'field_
-                                      'minus
-                                      (n- 'plus
-                                          (mfc (mfc 'field_ 'boundary_info) 'has_extra))
-                                      'shift)
-                                  (fc 'resize_ghost
-                                      'field_
-                                      'minus
-                                      (n- 'plus
-                                          (mfc (mfc 'field_ 'boundary_info) 'has_extra)))
+                                  (list 'field_ 'shift)
+                                  'field_
                                   (mfc 'field_ 'find_consumer 'LOCAL_RAM "0")
                                   (mfc 'field_ 'find_consumer 'EXTERNAL_CUDA_GPU DI-chunk)
                                   (list DI-chunk
@@ -136,26 +126,47 @@
                                  (bm-constructor (adcr FT-chunk 'f)
                                                  (cons-asgn 'field_ 'f)
                                                  null)
-                                 (fc 'shift_window
-                                     (fc FT-chunk
-                                         (mfc (mfc 'field_ 'window_with_ghost)
-                                              'refine
-                                              'split
-                                              'location)
-                                         'field_)
-                                     'shift)
+                                 (list 'field_ 'shift)
                                  null
                                  (sadc FT-chunk 'field_))
                   (bs-SeqWalk-rhs null
-                                  (bm-constructor (adcr FT-chunk 'f)
-                                                  (cons-asgn 'iter_ (mfc 'f 'begin))
-                                                  null)
-                                  (n++ 'iter_)
+                                  (let* ([base-offset (lambda (dir) (par (n+ (mfc (mfc 'f 'window_with_ghost)
+                                                                                  'offset
+                                                                                  dir)
+                                                                             (ter-cond (n== "1" (mfc (mfc 'f 'window_with_ghost)
+                                                                                                        'extent
+                                                                                                        dir))
+                                                                                       "0"
+                                                                                       (mfc (mfc 'f 'get_valid_ghost_data)
+                                                                                            'get_minus
+                                                                                            dir)))))])
+                                    (bm-constructor (list (adcr FT-chunk 'f)
+                                                          (adcr IntVec 'shift))
+                                                    (list (cons-asgn 'xGlob_ (mfc (mfc 'f 'window_with_ghost)
+                                                                                  'glob_dim
+                                                                                  "0"))
+                                                          (cons-asgn 'yGlob_ (mfc (mfc 'f 'window_with_ghost)
+                                                                                  'glob_dim
+                                                                                  "1"))
+                                                          (cons-asgn 'base_ (n+ (mfc 'f 'field_values)
+                                                                                (n+ (base-offset "0")
+                                                                                    (n+ "shift[0]"
+                                                                                        (par (n* 'xGlob_
+                                                                                                 (par (n+ (base-offset "1")
+                                                                                                          (n+ "shift[1]"
+                                                                                                              (par (n* 'yGlob_
+                                                                                                                       (par (n+ (base-offset "2")
+                                                                                                                                "shift[2]"))))))))))))))
+                                                    null))
                                   vt-chunk
-                                  (l '* 'iter_)
+                                  (c 'base_
+                                     "["
+                                     (n+ 'x (n* 'xGlob_ (par (n+ 'y (par (n* 'yGlob_ 'z))))))
+                                     "]")
                                   null
-                                  (sad (tpl-pmtr (scope FT-chunk 'const_iterator))
-                                       'iter_))
+                                  (list (sadc 'int 'xGlob_)
+                                        (sadc 'int 'yGlob_)
+                                        (sadcp vt-chunk 'base_)))
                   (bs-gpu-rhs null
                               (bm-constructor
                                (list (adc 'int DI-chunk)
@@ -242,7 +253,6 @@
                                   (bm-constructor (adcr 'double 'v)
                                                   (cons-asgn 'value_ 'v)
                                                   null)
-                                  null
                                   vt-chunk
                                   'value_
                                   null

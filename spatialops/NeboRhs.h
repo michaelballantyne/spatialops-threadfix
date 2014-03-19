@@ -129,9 +129,9 @@
           : value_(value)
           {}
 
-          inline void next(void) {}
-
-          inline value_type eval(void) const { return value_; }
+          inline value_type eval(int const x, int const y, int const z) const {
+             return value_;
+          }
 
          private:
           value_type const value_;
@@ -210,16 +210,13 @@
           inline SeqWalkType init(structured::IntVec const & minus,
                                   structured::IntVec const & plus,
                                   structured::IntVec const & shift) const {
-             return SeqWalkType(resize_ghost_and_shift_window(field_,
-                                                              minus,
-                                                              plus - field_.boundary_info().has_extra(),
-                                                              shift));
+             return SeqWalkType(field_, shift);
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
              inline ResizeType resize(structured::IntVec const & minus,
                                       structured::IntVec const & plus) const {
-                return ResizeType(resize_ghost(field_, minus, plus - field_.boundary_info().has_extra()));
+                return ResizeType(field_);
              }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
@@ -281,10 +278,7 @@
              inline SeqWalkType init(structured::IntVec const & shift,
                                      structured::IntVec const & split,
                                      structured::IntVec const & location) const {
-                return SeqWalkType(shift_window(FieldType(field_.window_with_ghost().refine(split,
-                                                                                            location),
-                                                          field_),
-                                                shift));
+                return SeqWalkType(field_, shift);
              }
 
             private:
@@ -299,16 +293,29 @@
 
           typename field_type::value_type typedef value_type;
 
-          NeboConstField(FieldType const & f)
-          : iter_(f.begin())
+          NeboConstField(FieldType const & f, structured::IntVec const & shift)
+          : xGlob_(f.window_with_ghost().glob_dim(0)),
+            yGlob_(f.window_with_ghost().glob_dim(1)),
+            base_(f.field_values() + (f.window_with_ghost().offset(0) + (1 == f.window_with_ghost().extent(0)
+                                                                         ? 0 : f.get_valid_ghost_data().get_minus(0)))
+            + shift[0] + (xGlob_ * ((f.window_with_ghost().offset(1) + (1 == f.window_with_ghost().extent(1)
+                                                                        ? 0 : f.get_valid_ghost_data().get_minus(1)))
+                                    + shift[1] + (yGlob_ * ((f.window_with_ghost().offset(2)
+                                                             + (1 == f.window_with_ghost().extent(2)
+                                                                ? 0 : f.get_valid_ghost_data().get_minus(2)))
+                                                            + shift[2])))))
           {}
 
-          inline void next(void) { iter_++; }
-
-          inline value_type eval(void) const { return *iter_; }
+          inline value_type eval(int const x, int const y, int const z) const {
+             return base_[x + xGlob_ * (y + (yGlob_ * z))];
+          }
 
          private:
-          typename FieldType::const_iterator iter_;
+          int const xGlob_;
+
+          int const yGlob_;
+
+          value_type const * base_;
       };
 #     ifdef __CUDACC__
          template<typename FieldType>
@@ -491,9 +498,9 @@
           : value_(v)
           {}
 
-          inline void next(void) {}
-
-          inline value_type eval(void) const { return value_; }
+          inline value_type eval(int const x, int const y, int const z) const {
+             return value_;
+          }
 
          private:
           double value_;

@@ -190,11 +190,13 @@
           : test_(test), expr_(expr)
           {}
 
-          inline void next(void) { test_.next(); expr_.next(); }
+          inline value_type eval(int const x, int const y, int const z) const {
+             return expr_.eval(x, y, z);
+          }
 
-          inline value_type eval(void) const { return expr_.eval(); }
-
-          inline bool check(void) const { return test_.eval(); }
+          inline bool check(int const x, int const y, int const z) const {
+             return test_.eval(x, y, z);
+          }
 
          private:
           Test test_;
@@ -413,10 +415,10 @@
           : clause_(clause), otherwise_(otherwise)
           {}
 
-          inline void next(void) { clause_.next(); otherwise_.next(); }
-
-          inline value_type eval(void) const {
-             return (clause_.check() ? clause_.eval() : otherwise_.eval());
+          inline value_type eval(int const x, int const y, int const z) const {
+             return (clause_.check(x, y, z) ? clause_.eval(x, y, z) : otherwise_.eval(x,
+                                                                                      y,
+                                                                                      z));
           }
 
          private:

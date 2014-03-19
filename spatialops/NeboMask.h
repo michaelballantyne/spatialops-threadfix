@@ -148,15 +148,15 @@
           typename field_type::value_type typedef value_type;
 
           NeboMask(structured::SpatialMask<FieldType> const & m)
-          : iter_(m.begin())
+          : mask_(m)
           {}
 
-          inline void next(void) { iter_++; }
-
-          inline value_type eval(void) const { return *iter_; }
+          inline value_type eval(int const x, int const y, int const z) const {
+             return mask_(x, y, z);
+          }
 
          private:
-          typename structured::SpatialMask<FieldType>::const_iterator iter_;
+          structured::SpatialMask<FieldType> const mask_;
       };
 #     ifdef __CUDACC__
          template<typename FieldType>

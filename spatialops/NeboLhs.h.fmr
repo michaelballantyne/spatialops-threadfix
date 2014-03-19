@@ -176,9 +176,6 @@
                            constructor
                            assign-body
                            publics
-                           next-body
-                           at-end-body
-                           has-length-body
                            ref-result
                            privates)
   (build-SeqWalk-general name
@@ -192,18 +189,13 @@
                                                    (ad 'RhsType 'rhs)
                                                    assign-body))
                                publics)
-                         (list (v-fcn-def 'next null next-body)
-                               (r-fcn-def (constize (fcn-dcl 'at_end 'bool))
-                                          null
-                                          at-end-body)
-                               (r-fcn-def (constize (fcn-dcl 'has_length 'bool))
-                                          null
-                                          has-length-body)
-                               (r-fcn-def (fcn-dcl 'ref (ref vt-chunk))
+                         (list (r-fcn-def (fcn-dcl 'ref
+                                                   (ref vt-chunk)
+                                                   index-pmtr)
                                           null
                                           ref-result)
                                privates)))
-(define bs-SeqWalk-lhs (arg-swap build-SeqWalk-lhs 9 4 "bs-SeqWalk-lhs"))
+(define bs-SeqWalk-lhs (arg-swap build-SeqWalk-lhs 6 4 "bs-SeqWalk-lhs"))
 (define (build-gpu-lhs name
                        FT
                        tpl-irreg-pars
@@ -431,24 +423,77 @@
                                      'field_)
                                  (sad FT-chunk 'field_))
                   (bs-SeqWalk-lhs null
-                                  (bm-constructor (ad FT-chunk 'f)
-                                                  (list (cons-asgn 'iter_ (mfc 'f 'begin))
-                                                        (cons-asgn 'end_ (mfc 'f 'end)))
-                                                  null)
-                                  (nwhile (c '! (fc 'at_end))
-                                          (n= (fc 'ref)
-                                              (mfc 'rhs 'eval))
-                                          (fc 'next)
-                                          (mfc 'rhs 'next))
+                                  (let* ([check-extent (lambda (dir true false) (ter-cond (n== "1" (mfc (mfc 'f 'window_with_ghost)
+                                                                                                        'extent
+                                                                                                        dir))
+                                                                                          true
+                                                                                          false))]
+                                         [find-low (lambda (dir) (check-extent dir
+                                                                               "0"
+                                                                               (c "-" (par (mfc (mfc 'f 'get_valid_ghost_data)
+                                                                                                'get_minus
+                                                                                                dir)))))]
+                                         [find-high (lambda (dir) (check-extent dir
+                                                                                "1"
+                                                                                (n- (mfc (mfc 'f 'window_with_ghost)
+                                                                                         'extent
+                                                                                         dir)
+                                                                                    (mfc (mfc 'f 'get_valid_ghost_data)
+                                                                                         'get_minus
+                                                                                         dir))))]
+                                         [base-offset (lambda (dir) (par (n+ (mfc (mfc 'f 'window_with_ghost)
+                                                                                  'offset
+                                                                                  dir)
+                                                                             (check-extent dir
+                                                                                           "0"
+                                                                                           (mfc (mfc 'f 'get_valid_ghost_data)
+                                                                                                'get_minus
+                                                                                                dir)))))])
+                                    (bm-constructor (ad FT-chunk 'f)
+                                                    (list (cons-asgn 'xGlob_ (mfc (mfc 'f 'window_with_ghost)
+                                                                                  'glob_dim
+                                                                                  "0"))
+                                                          (cons-asgn 'yGlob_ (mfc (mfc 'f 'window_with_ghost)
+                                                                                  'glob_dim
+                                                                                  "1"))
+                                                          (cons-asgn 'base_ (n+ (mfc 'f 'field_values)
+                                                                                (n+ (base-offset "0")
+                                                                                    (par (n* 'xGlob_
+                                                                                             (par (n+ (base-offset "1")
+                                                                                                      (par (n* 'yGlob_
+                                                                                                               (base-offset "2"))))))))))
+                                                          (cons-asgn 'xLow_ (find-low "0"))
+                                                          (cons-asgn 'xHigh_ (find-high "0"))
+                                                          (cons-asgn 'yLow_ (find-low "1"))
+                                                          (cons-asgn 'yHigh_ (find-high "1"))
+                                                          (cons-asgn 'zLow_ (find-low "2"))
+                                                          (cons-asgn 'zHigh_ (find-high "2")))
+                                                    null))
+                                  (nfor (nt= 'int 'x 'xLow_)
+                                        (n< 'x 'xHigh_)
+                                        (n++ 'x)
+                                        (nfor (nt= 'int 'y 'yLow_)
+                                              (n< 'y 'yHigh_)
+                                              (n++ 'y)
+                                              (nfor (nt= 'int 'z 'zLow_)
+                                                    (n< 'z 'zHigh_)
+                                                    (n++ 'z)
+                                                    (n= (fc 'ref index-arg)
+                                                        (mfc 'rhs 'eval index-arg)))))
                                   null
-                                  (n++ 'iter_)
-                                  (n== 'iter_ 'end_)
-                                  'true
-                                  (l '* 'iter_)
-                                  (list (sad (tpl-pmtr (scope FT-chunk 'iterator))
-                                             'iter_)
-                                        (sadc (tpl-pmtr (scope FT-chunk 'iterator))
-                                              'end_)))
+                                  (c 'base_
+                                     "["
+                                     (n+ 'x (n* 'xGlob_ (par (n+ 'y (par (n* 'yGlob_ 'z))))))
+                                     "]")
+                                  (list (sadc 'int 'xGlob_)
+                                        (sadc 'int 'yGlob_)
+                                        (sadp vt-chunk 'base_)
+                                        (sadc 'int 'xLow_)
+                                        (sadc 'int 'xHigh_)
+                                        (sadc 'int 'yLow_)
+                                        (sadc 'int 'yHigh_)
+                                        (sadc 'int 'zLow_)
+                                        (sadc 'int 'zHigh_)))
                   (bs-gpu-lhs  null
                                (bm-constructor
                                 (ad FT-chunk 'f)

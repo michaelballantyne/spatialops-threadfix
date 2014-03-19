@@ -156,10 +156,8 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline void next(void) { operand1_.next(); operand2_.next(); }
-
-          inline value_type eval(void) const {
-             return (operand1_.eval() + operand2_.eval());
+          inline value_type eval(int const x, int const y, int const z) const {
+             return (operand1_.eval(x, y, z) + operand2_.eval(x, y, z));
           }
 
          private:
@@ -190,7 +188,7 @@
              }
 
              __device__ inline value_type eval(void) const {
-                return (operand1_.eval() + operand2_.eval());
+                return (operand1_.eval(x, y, z) + operand2_.eval(x, y, z));
              }
 
             private:
@@ -941,10 +939,8 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline void next(void) { operand1_.next(); operand2_.next(); }
-
-          inline value_type eval(void) const {
-             return (operand1_.eval() - operand2_.eval());
+          inline value_type eval(int const x, int const y, int const z) const {
+             return (operand1_.eval(x, y, z) - operand2_.eval(x, y, z));
           }
 
          private:
@@ -975,7 +971,7 @@
              }
 
              __device__ inline value_type eval(void) const {
-                return (operand1_.eval() - operand2_.eval());
+                return (operand1_.eval(x, y, z) - operand2_.eval(x, y, z));
              }
 
             private:
@@ -1726,10 +1722,8 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline void next(void) { operand1_.next(); operand2_.next(); }
-
-          inline value_type eval(void) const {
-             return (operand1_.eval() * operand2_.eval());
+          inline value_type eval(int const x, int const y, int const z) const {
+             return (operand1_.eval(x, y, z) * operand2_.eval(x, y, z));
           }
 
          private:
@@ -1760,7 +1754,7 @@
              }
 
              __device__ inline value_type eval(void) const {
-                return (operand1_.eval() * operand2_.eval());
+                return (operand1_.eval(x, y, z) * operand2_.eval(x, y, z));
              }
 
             private:
@@ -2511,10 +2505,8 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline void next(void) { operand1_.next(); operand2_.next(); }
-
-          inline value_type eval(void) const {
-             return (operand1_.eval() / operand2_.eval());
+          inline value_type eval(int const x, int const y, int const z) const {
+             return (operand1_.eval(x, y, z) / operand2_.eval(x, y, z));
           }
 
          private:
@@ -2545,7 +2537,7 @@
              }
 
              __device__ inline value_type eval(void) const {
-                return (operand1_.eval() / operand2_.eval());
+                return (operand1_.eval(x, y, z) / operand2_.eval(x, y, z));
              }
 
             private:
@@ -3273,10 +3265,8 @@
           : operand_(operand)
           {}
 
-          inline void next(void) { operand_.next(); }
-
-          inline value_type eval(void) const {
-             return std::sin(operand_.eval());
+          inline value_type eval(int const x, int const y, int const z) const {
+             return std::sin(operand_.eval(x, y, z));
           }
 
          private:
@@ -3297,7 +3287,7 @@
              __device__ inline void next(void) { operand_.next(); }
 
              __device__ inline value_type eval(void) const {
-                return std::sin(operand_.eval());
+                return std::sin(operand_.eval(x, y, z));
              }
 
             private:
@@ -3497,10 +3487,8 @@
           : operand_(operand)
           {}
 
-          inline void next(void) { operand_.next(); }
-
-          inline value_type eval(void) const {
-             return std::cos(operand_.eval());
+          inline value_type eval(int const x, int const y, int const z) const {
+             return std::cos(operand_.eval(x, y, z));
           }
 
          private:
@@ -3521,7 +3509,7 @@
              __device__ inline void next(void) { operand_.next(); }
 
              __device__ inline value_type eval(void) const {
-                return std::cos(operand_.eval());
+                return std::cos(operand_.eval(x, y, z));
              }
 
             private:
@@ -3721,10 +3709,8 @@
           : operand_(operand)
           {}
 
-          inline void next(void) { operand_.next(); }
-
-          inline value_type eval(void) const {
-             return std::tan(operand_.eval());
+          inline value_type eval(int const x, int const y, int const z) const {
+             return std::tan(operand_.eval(x, y, z));
           }
 
          private:
@@ -3745,7 +3731,7 @@
              __device__ inline void next(void) { operand_.next(); }
 
              __device__ inline value_type eval(void) const {
-                return std::tan(operand_.eval());
+                return std::tan(operand_.eval(x, y, z));
              }
 
             private:
@@ -3945,10 +3931,8 @@
           : operand_(operand)
           {}
 
-          inline void next(void) { operand_.next(); }
-
-          inline value_type eval(void) const {
-             return std::exp(operand_.eval());
+          inline value_type eval(int const x, int const y, int const z) const {
+             return std::exp(operand_.eval(x, y, z));
           }
 
          private:
@@ -3969,7 +3953,7 @@
              __device__ inline void next(void) { operand_.next(); }
 
              __device__ inline value_type eval(void) const {
-                return std::exp(operand_.eval());
+                return std::exp(operand_.eval(x, y, z));
              }
 
             private:
@@ -4171,10 +4155,8 @@
           : operand_(operand)
           {}
 
-          inline void next(void) { operand_.next(); }
-
-          inline value_type eval(void) const {
-             return std::tanh(operand_.eval());
+          inline value_type eval(int const x, int const y, int const z) const {
+             return std::tanh(operand_.eval(x, y, z));
           }
 
          private:
@@ -4195,7 +4177,7 @@
              __device__ inline void next(void) { operand_.next(); }
 
              __device__ inline value_type eval(void) const {
-                return std::tanh(operand_.eval());
+                return std::tanh(operand_.eval(x, y, z));
              }
 
             private:
@@ -4395,10 +4377,8 @@
           : operand_(operand)
           {}
 
-          inline void next(void) { operand_.next(); }
-
-          inline value_type eval(void) const {
-             return std::abs(operand_.eval());
+          inline value_type eval(int const x, int const y, int const z) const {
+             return std::abs(operand_.eval(x, y, z));
           }
 
          private:
@@ -4419,7 +4399,7 @@
              __device__ inline void next(void) { operand_.next(); }
 
              __device__ inline value_type eval(void) const {
-                return std::abs(operand_.eval());
+                return std::abs(operand_.eval(x, y, z));
              }
 
             private:
@@ -4619,9 +4599,9 @@
           : operand_(operand)
           {}
 
-          inline void next(void) { operand_.next(); }
-
-          inline value_type eval(void) const { return -(operand_.eval()); }
+          inline value_type eval(int const x, int const y, int const z) const {
+             return -(operand_.eval(x, y, z));
+          }
 
          private:
           Operand operand_;
@@ -4641,7 +4621,7 @@
              __device__ inline void next(void) { operand_.next(); }
 
              __device__ inline value_type eval(void) const {
-                return -(operand_.eval());
+                return -(operand_.eval(x, y, z));
              }
 
             private:
@@ -4865,10 +4845,8 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline void next(void) { operand1_.next(); operand2_.next(); }
-
-          inline value_type eval(void) const {
-             return std::pow(operand1_.eval(), operand2_.eval());
+          inline value_type eval(int const x, int const y, int const z) const {
+             return std::pow(operand1_.eval(x, y, z), operand2_.eval(x, y, z));
           }
 
          private:
@@ -4899,7 +4877,7 @@
              }
 
              __device__ inline value_type eval(void) const {
-                return std::pow(operand1_.eval(), operand2_.eval());
+                return std::pow(operand1_.eval(x, y, z), operand2_.eval(x, y, z));
              }
 
             private:
@@ -5634,10 +5612,8 @@
           : operand_(operand)
           {}
 
-          inline void next(void) { operand_.next(); }
-
-          inline value_type eval(void) const {
-             return std::sqrt(operand_.eval());
+          inline value_type eval(int const x, int const y, int const z) const {
+             return std::sqrt(operand_.eval(x, y, z));
           }
 
          private:
@@ -5658,7 +5634,7 @@
              __device__ inline void next(void) { operand_.next(); }
 
              __device__ inline value_type eval(void) const {
-                return std::sqrt(operand_.eval());
+                return std::sqrt(operand_.eval(x, y, z));
              }
 
             private:
@@ -5858,10 +5834,8 @@
           : operand_(operand)
           {}
 
-          inline void next(void) { operand_.next(); }
-
-          inline value_type eval(void) const {
-             return std::log(operand_.eval());
+          inline value_type eval(int const x, int const y, int const z) const {
+             return std::log(operand_.eval(x, y, z));
           }
 
          private:
@@ -5882,7 +5856,7 @@
              __device__ inline void next(void) { operand_.next(); }
 
              __device__ inline value_type eval(void) const {
-                return std::log(operand_.eval());
+                return std::log(operand_.eval(x, y, z));
              }
 
             private:
@@ -6084,10 +6058,8 @@
           : operand_(operand)
           {}
 
-          inline void next(void) { operand_.next(); }
-
-          inline value_type eval(void) const {
-             return std::log10(operand_.eval());
+          inline value_type eval(int const x, int const y, int const z) const {
+             return std::log10(operand_.eval(x, y, z));
           }
 
          private:
@@ -6108,7 +6080,7 @@
              __device__ inline void next(void) { operand_.next(); }
 
              __device__ inline value_type eval(void) const {
-                return std::log10(operand_.eval());
+                return std::log10(operand_.eval(x, y, z));
              }
 
             private:
@@ -6309,9 +6281,9 @@
           : operand_(operand)
           {}
 
-          inline void next(void) { operand_.next(); }
-
-          inline value_type eval(void) const { return erf(operand_.eval()); }
+          inline value_type eval(int const x, int const y, int const z) const {
+             return erf(operand_.eval(x, y, z));
+          }
 
          private:
           Operand operand_;
@@ -6331,7 +6303,7 @@
              __device__ inline void next(void) { operand_.next(); }
 
              __device__ inline value_type eval(void) const {
-                return erf(operand_.eval());
+                return erf(operand_.eval(x, y, z));
              }
 
             private:
@@ -6531,9 +6503,9 @@
           : operand_(operand)
           {}
 
-          inline void next(void) { operand_.next(); }
-
-          inline value_type eval(void) const { return erfc(operand_.eval()); }
+          inline value_type eval(int const x, int const y, int const z) const {
+             return erfc(operand_.eval(x, y, z));
+          }
 
          private:
           Operand operand_;
@@ -6553,7 +6525,7 @@
              __device__ inline void next(void) { operand_.next(); }
 
              __device__ inline value_type eval(void) const {
-                return erfc(operand_.eval());
+                return erfc(operand_.eval(x, y, z));
              }
 
             private:
@@ -6774,10 +6746,8 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline void next(void) { operand1_.next(); operand2_.next(); }
-
-          inline bool eval(void) const {
-             return (operand1_.eval() == operand2_.eval());
+          inline bool eval(int const x, int const y, int const z) const {
+             return (operand1_.eval(x, y, z) == operand2_.eval(x, y, z));
           }
 
          private:
@@ -6808,7 +6778,7 @@
              }
 
              __device__ inline bool eval(void) const {
-                return (operand1_.eval() == operand2_.eval());
+                return (operand1_.eval(x, y, z) == operand2_.eval(x, y, z));
              }
 
             private:
@@ -7637,10 +7607,8 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline void next(void) { operand1_.next(); operand2_.next(); }
-
-          inline bool eval(void) const {
-             return (operand1_.eval() != operand2_.eval());
+          inline bool eval(int const x, int const y, int const z) const {
+             return (operand1_.eval(x, y, z) != operand2_.eval(x, y, z));
           }
 
          private:
@@ -7671,7 +7639,7 @@
              }
 
              __device__ inline bool eval(void) const {
-                return (operand1_.eval() != operand2_.eval());
+                return (operand1_.eval(x, y, z) != operand2_.eval(x, y, z));
              }
 
             private:
@@ -8503,10 +8471,8 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline void next(void) { operand1_.next(); operand2_.next(); }
-
-          inline bool eval(void) const {
-             return (operand1_.eval() < operand2_.eval());
+          inline bool eval(int const x, int const y, int const z) const {
+             return (operand1_.eval(x, y, z) < operand2_.eval(x, y, z));
           }
 
          private:
@@ -8537,7 +8503,7 @@
              }
 
              __device__ inline bool eval(void) const {
-                return (operand1_.eval() < operand2_.eval());
+                return (operand1_.eval(x, y, z) < operand2_.eval(x, y, z));
              }
 
             private:
@@ -9355,10 +9321,8 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline void next(void) { operand1_.next(); operand2_.next(); }
-
-          inline bool eval(void) const {
-             return (operand1_.eval() <= operand2_.eval());
+          inline bool eval(int const x, int const y, int const z) const {
+             return (operand1_.eval(x, y, z) <= operand2_.eval(x, y, z));
           }
 
          private:
@@ -9390,7 +9354,7 @@
              }
 
              __device__ inline bool eval(void) const {
-                return (operand1_.eval() <= operand2_.eval());
+                return (operand1_.eval(x, y, z) <= operand2_.eval(x, y, z));
              }
 
             private:
@@ -10245,10 +10209,8 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline void next(void) { operand1_.next(); operand2_.next(); }
-
-          inline bool eval(void) const {
-             return (operand1_.eval() > operand2_.eval());
+          inline bool eval(int const x, int const y, int const z) const {
+             return (operand1_.eval(x, y, z) > operand2_.eval(x, y, z));
           }
 
          private:
@@ -10279,7 +10241,7 @@
              }
 
              __device__ inline bool eval(void) const {
-                return (operand1_.eval() > operand2_.eval());
+                return (operand1_.eval(x, y, z) > operand2_.eval(x, y, z));
              }
 
             private:
@@ -11112,10 +11074,8 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline void next(void) { operand1_.next(); operand2_.next(); }
-
-          inline bool eval(void) const {
-             return (operand1_.eval() >= operand2_.eval());
+          inline bool eval(int const x, int const y, int const z) const {
+             return (operand1_.eval(x, y, z) >= operand2_.eval(x, y, z));
           }
 
          private:
@@ -11147,7 +11107,7 @@
              }
 
              __device__ inline bool eval(void) const {
-                return (operand1_.eval() >= operand2_.eval());
+                return (operand1_.eval(x, y, z) >= operand2_.eval(x, y, z));
              }
 
             private:
@@ -12012,10 +11972,8 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline void next(void) { operand1_.next(); operand2_.next(); }
-
-          inline bool eval(void) const {
-             return (operand1_.eval() && operand2_.eval());
+          inline bool eval(int const x, int const y, int const z) const {
+             return (operand1_.eval(x, y, z) && operand2_.eval(x, y, z));
           }
 
          private:
@@ -12046,7 +12004,7 @@
              }
 
              __device__ inline bool eval(void) const {
-                return (operand1_.eval() && operand2_.eval());
+                return (operand1_.eval(x, y, z) && operand2_.eval(x, y, z));
              }
 
             private:
@@ -12392,10 +12350,8 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline void next(void) { operand1_.next(); operand2_.next(); }
-
-          inline bool eval(void) const {
-             return (operand1_.eval() || operand2_.eval());
+          inline bool eval(int const x, int const y, int const z) const {
+             return (operand1_.eval(x, y, z) || operand2_.eval(x, y, z));
           }
 
          private:
@@ -12426,7 +12382,7 @@
              }
 
              __device__ inline bool eval(void) const {
-                return (operand1_.eval() || operand2_.eval());
+                return (operand1_.eval(x, y, z) || operand2_.eval(x, y, z));
              }
 
             private:
@@ -12747,9 +12703,9 @@
           : operand_(operand)
           {}
 
-          inline void next(void) { operand_.next(); }
-
-          inline bool eval(void) const { return !(operand_.eval()); }
+          inline bool eval(int const x, int const y, int const z) const {
+             return !(operand_.eval(x, y, z));
+          }
 
          private:
           Operand operand_;
@@ -12769,7 +12725,7 @@
              __device__ inline void next(void) { operand_.next(); }
 
              __device__ inline bool eval(void) const {
-                return !(operand_.eval());
+                return !(operand_.eval(x, y, z));
              }
 
             private:
@@ -12958,11 +12914,9 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline void next(void) { operand1_.next(); operand2_.next(); }
-
-          inline value_type eval(void) const {
-             return ((operand1_.eval() > operand2_.eval()) ? operand1_.eval() :
-                     operand2_.eval());
+          inline value_type eval(int const x, int const y, int const z) const {
+             return ((operand1_.eval(x, y, z) > operand2_.eval(x, y, z)) ?
+                     operand1_.eval(x, y, z) : operand2_.eval(x, y, z));
           }
 
          private:
@@ -12993,8 +12947,8 @@
              }
 
              __device__ inline value_type eval(void) const {
-                return ((operand1_.eval() > operand2_.eval()) ? operand1_.eval()
-                        : operand2_.eval());
+                return ((operand1_.eval(x, y, z) > operand2_.eval(x, y, z)) ?
+                        operand1_.eval(x, y, z) : operand2_.eval(x, y, z));
              }
 
             private:
@@ -13751,11 +13705,9 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline void next(void) { operand1_.next(); operand2_.next(); }
-
-          inline value_type eval(void) const {
-             return ((operand1_.eval() < operand2_.eval()) ? operand1_.eval() :
-                     operand2_.eval());
+          inline value_type eval(int const x, int const y, int const z) const {
+             return ((operand1_.eval(x, y, z) < operand2_.eval(x, y, z)) ?
+                     operand1_.eval(x, y, z) : operand2_.eval(x, y, z));
           }
 
          private:
@@ -13786,8 +13738,8 @@
              }
 
              __device__ inline value_type eval(void) const {
-                return ((operand1_.eval() < operand2_.eval()) ? operand1_.eval()
-                        : operand2_.eval());
+                return ((operand1_.eval(x, y, z) < operand2_.eval(x, y, z)) ?
+                        operand1_.eval(x, y, z) : operand2_.eval(x, y, z));
              }
 
             private:

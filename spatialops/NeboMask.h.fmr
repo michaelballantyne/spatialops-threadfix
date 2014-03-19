@@ -93,14 +93,12 @@
                                  (sadc SpatialMask 'mask_))
                   (bs-SeqWalk-rhs null
                                   (bm-constructor (adcr SpatialMask 'm)
-                                                  (cons-asgn 'iter_ (mfc 'm 'begin))
+                                                  (cons-asgn 'mask_ 'm)
                                                   null)
-                                  (n++ 'iter_)
                                   vt-chunk
-                                  (l '* 'iter_)
+                                  (fc 'mask_ index-arg)
                                   null
-                                  (sad (tpl-pmtr (scope SpatialMask 'const_iterator))
-                                       'iter_))
+                                  (sadc SpatialMask 'mask_))
                   (bs-gpu-rhs null
                               (bm-constructor
                                (list (adc 'int DI-chunk)

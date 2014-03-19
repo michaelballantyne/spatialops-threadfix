@@ -821,9 +821,9 @@
           : arg_(arg)
           {}
 
-          inline void next(void) { arg_.next(); }
-
-          inline value_type eval(void) const { return arg_.eval(); }
+          inline value_type eval(int const x, int const y, int const z) const {
+             return arg_.eval(x, y, z);
+          }
 
          private:
           Arg arg_;
@@ -1028,9 +1028,9 @@
           : arg_(arg)
           {}
 
-          inline void next(void) { arg_.next(); }
-
-          inline value_type eval(void) const { return arg_.eval(); }
+          inline value_type eval(int const x, int const y, int const z) const {
+             return arg_.eval(x, y, z);
+          }
 
          private:
           Arg arg_;
@@ -1225,9 +1225,9 @@
           : arg_(arg)
           {}
 
-          inline void next(void) { arg_.next(); }
-
-          inline bool eval(void) const { return arg_.eval(); }
+          inline bool eval(int const x, int const y, int const z) const {
+             return arg_.eval(x, y, z);
+          }
 
          private:
           Arg arg_;

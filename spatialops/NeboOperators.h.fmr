@@ -30,7 +30,9 @@
 (define (build-Nary-struct name
                            number
                            eval-return-type
-                           internal-use)
+                           internal-use
+                           ;until reduce can use index:
+                           reduce-internal-use)
   (define num-lst
     (if (>= 1 number)
         '("")
@@ -110,7 +112,6 @@
                 (bs-SeqWalk-rhs (s-typedef (tpl-pmtr (scope (first Op-lst) vt-chunk))
                                            vt-chunk)
                                 gen-constructor
-                                next
                                 eval-return-type
                                 internal-use
                                 null
@@ -131,7 +132,7 @@
                               (exec-or-check 'at_end)
                               (exec-or-check 'has_length)
                               eval-return-type
-                              internal-use
+                              reduce-internal-use
                               null
                               exec-data-mems)))
 
@@ -140,6 +141,9 @@
                      2
                      vt-chunk
                      (fc internal-name
+                         (mfc 'operand1_ 'eval index-arg)
+                         (mfc 'operand2_ 'eval index-arg))
+                     (fc internal-name
                          (mfc 'operand1_ 'eval)
                          (mfc 'operand2_ 'eval))))
 
@@ -147,6 +151,9 @@
   (build-Nary-struct name
                      2
                      vt-chunk
+                     (par (mfc 'operand1_ 'eval index-arg)
+                          internal-name
+                          (mfc 'operand2_ 'eval index-arg))
                      (par (mfc 'operand1_ 'eval)
                           internal-name
                           (mfc 'operand2_ 'eval))))
@@ -156,12 +163,17 @@
                      1
                      vt-chunk
                      (fc internal-name
+                         (mfc 'operand_ 'eval index-arg))
+                     (fc internal-name
                          (mfc 'operand_ 'eval))))
 
 (define (build-comparison-struct name internal-name)
   (build-Nary-struct name
                      2
                      'bool
+                     (par (mfc 'operand1_ 'eval index-arg)
+                          internal-name
+                          (mfc 'operand2_ 'eval index-arg))
                      (par (mfc 'operand1_ 'eval)
                           internal-name
                           (mfc 'operand2_ 'eval))))
@@ -171,12 +183,17 @@
                      1
                      'bool
                      (fc internal-name
+                         (mfc 'operand_ 'eval index-arg))
+                     (fc internal-name
                          (mfc 'operand_ 'eval))))
 
 (define (build-logical-operator-struct name internal-name)
   (build-Nary-struct name
                      2
                      'bool
+                     (par (mfc 'operand1_ 'eval index-arg)
+                          internal-name
+                          (mfc 'operand2_ 'eval index-arg))
                      (par (mfc 'operand1_ 'eval)
                           internal-name
                           (mfc 'operand2_ 'eval))))
@@ -185,6 +202,11 @@
   (build-Nary-struct name
                      2
                      vt-chunk
+                     (ter-cond (par (mfc 'operand1_ 'eval index-arg)
+                                    comparison
+                                    (mfc 'operand2_ 'eval index-arg))
+                               (mfc 'operand1_ 'eval index-arg)
+                               (mfc 'operand2_ 'eval index-arg))
                      (ter-cond (par (mfc 'operand1_ 'eval)
                                     comparison
                                     (mfc 'operand2_ 'eval))

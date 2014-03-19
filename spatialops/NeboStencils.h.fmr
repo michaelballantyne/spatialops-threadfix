@@ -477,9 +477,8 @@
                                   (bm-constructor (adcr 'Arg 'arg)
                                                   (cons-asgn 'arg_ 'arg)
                                                   null)
-                                  (mfc 'arg_ 'next)
                                   vt-chunk
-                                  (mfc 'arg_ 'eval)
+                                  (mfc 'arg_ 'eval index-arg)
                                   null
                                   (sad 'Arg 'arg_))
                   (bs-gpu-rhs null
@@ -567,9 +566,8 @@
                                   (bm-constructor (adcr 'Arg 'arg)
                                                   (cons-asgn 'arg_ 'arg)
                                                   null)
-                                  (mfc 'arg_ 'next)
                                   vt-chunk
-                                  (mfc 'arg_ 'eval)
+                                  (mfc 'arg_ 'eval index-arg)
                                   null
                                   (sad 'Arg 'arg_))
                   (bs-gpu-rhs null
@@ -648,9 +646,8 @@
                                   (bm-constructor (adcr 'Arg 'arg)
                                                   (cons-asgn 'arg_ 'arg)
                                                   null)
-                                  (mfc 'arg_ 'next)
                                   'bool
-                                  (mfc 'arg_ 'eval)
+                                  (mfc 'arg_ 'eval index-arg)
                                   null
                                   (sad 'Arg 'arg_))
                   (bs-gpu-rhs null

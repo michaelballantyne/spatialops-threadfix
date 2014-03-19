@@ -435,26 +435,58 @@
           typename field_type::value_type typedef value_type;
 
           NeboField(FieldType f)
-          : iter_(f.begin()), end_(f.end())
+          : xGlob_(f.window_with_ghost().glob_dim(0)),
+            yGlob_(f.window_with_ghost().glob_dim(1)),
+            base_(f.field_values() + (f.window_with_ghost().offset(0) + (1 == f.window_with_ghost().extent(0)
+                                                                         ? 0 : f.get_valid_ghost_data().get_minus(0)))
+            + (xGlob_ * ((f.window_with_ghost().offset(1) + (1 == f.window_with_ghost().extent(1)
+                                                             ? 0 : f.get_valid_ghost_data().get_minus(1)))
+                         + (yGlob_ * (f.window_with_ghost().offset(2) + (1 == f.window_with_ghost().extent(2)
+                                                                         ? 0 : f.get_valid_ghost_data().get_minus(2))))))),
+            xLow_((1 == f.window_with_ghost().extent(0) ? 0 : -(f.get_valid_ghost_data().get_minus(0)))),
+            xHigh_((1 == f.window_with_ghost().extent(0) ? 1 : f.window_with_ghost().extent(0)
+                    - f.get_valid_ghost_data().get_minus(0))),
+            yLow_((1 == f.window_with_ghost().extent(1) ? 0 : -(f.get_valid_ghost_data().get_minus(1)))),
+            yHigh_((1 == f.window_with_ghost().extent(1) ? 1 : f.window_with_ghost().extent(1)
+                    - f.get_valid_ghost_data().get_minus(1))),
+            zLow_((1 == f.window_with_ghost().extent(2) ? 0 : -(f.get_valid_ghost_data().get_minus(2)))),
+            zHigh_((1 == f.window_with_ghost().extent(2) ? 1 : f.window_with_ghost().extent(2)
+                    - f.get_valid_ghost_data().get_minus(2)))
           {}
 
           template<typename RhsType>
            inline void assign(RhsType rhs) {
-              while(!at_end()) { ref() = rhs.eval(); next(); rhs.next(); };
+              for(int x = xLow_; x < xHigh_; x++) {
+                 for(int y = yLow_; y < yHigh_; y++) {
+                    for(int z = zLow_; z < zHigh_; z++) {
+                       ref(x, y, z) = rhs.eval(x, y, z);
+                    };
+                 };
+              };
            }
 
          private:
-          inline void next(void) { iter_++; }
+          inline value_type & ref(int const x, int const y, int const z) {
+             return base_[x + xGlob_ * (y + (yGlob_ * z))];
+          }
 
-          inline bool at_end(void) const { return iter_ == end_; }
+          int const xGlob_;
 
-          inline bool has_length(void) const { return true; }
+          int const yGlob_;
 
-          inline value_type & ref(void) { return *iter_; }
+          value_type * base_;
 
-          typename FieldType::iterator iter_;
+          int const xLow_;
 
-          typename FieldType::iterator const end_;
+          int const xHigh_;
+
+          int const yLow_;
+
+          int const yHigh_;
+
+          int const zLow_;
+
+          int const zHigh_;
       };
 #     ifdef __CUDACC__
          template<typename FieldType>
