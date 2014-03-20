@@ -456,9 +456,9 @@
 
           template<typename RhsType>
            inline void assign(RhsType rhs) {
-              for(int x = xLow_; x < xHigh_; x++) {
+              for(int z = zLow_; z < zHigh_; z++) {
                  for(int y = yLow_; y < yHigh_; y++) {
-                    for(int z = zLow_; z < zHigh_; z++) {
+                    for(int x = xLow_; x < xHigh_; x++) {
                        ref(x, y, z) = rhs.eval(x, y, z);
                     };
                  };
