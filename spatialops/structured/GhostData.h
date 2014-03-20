@@ -43,6 +43,7 @@
 #include <iomanip>
 #include <string>
 #include <sstream>
+#include <stdexcept>
 
 #define GHOST_MAX 9001
 
