@@ -47,8 +47,10 @@ namespace structured{
    * Assumes a fortran-style layout (e.g. first index varies fastest)
    */
   inline int ijk_to_flat( const IntVec& dim, const IntVec& loc ){
+#   ifndef NDEBUG
     assert( loc[0] < dim[0] && loc[1] < dim[1] && loc[2] < dim[2] );
     assert( loc[0] >= 0 && loc[1] >= 0 && loc[2] >= 0 );
+#   endif
     return loc[0] + loc[1]*dim[0] + loc[2]*dim[0]*dim[1];
   }
 
@@ -59,8 +61,10 @@ namespace structured{
    * Assumes a fortran-style layout (e.g. first index varies fastest)
    */
   inline IntVec flat_to_ijk( const IntVec& dim, const int pt ){
+#   ifndef NDEBUG
     assert( pt >= 0 );
     assert( pt < dim[0]*dim[1]*dim[2] );
+#   endif
     return IntVec( pt % dim[0], (pt / dim[0]) % dim[1], pt / (dim[0]*dim[1]) );
   }
 

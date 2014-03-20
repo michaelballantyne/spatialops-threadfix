@@ -1,5 +1,4 @@
 set( src
-     GhostData.cpp
      Grid.cpp
      MemoryPool.cpp
      MemoryWindow.cpp

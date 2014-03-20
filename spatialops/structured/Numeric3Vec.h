@@ -60,7 +60,7 @@ class Numeric3Vec
    }
 
    inline Numeric3Vec( const std::vector<T>& vec ){
-	 assert(vec.size() == 3);
+     assert(vec.size() == 3);
      ijk[0]=vec[0]; ijk[1]=vec[1]; ijk[2]=vec[2];
    }
 
@@ -73,8 +73,18 @@ class Numeric3Vec
      ijk[0]=(T)(x[0]);  ijk[1]=(T)(x[1]);  ijk[2]=(T)(x[2]);
    }
 
-   inline T  operator[](const size_t i) const{ assert(i<3); return ijk[i]; }
-   inline T& operator[](const size_t i) { assert(i<3); return ijk[i]; }
+   inline T  operator[](const size_t i) const{
+#    ifndef NDEBUG
+     assert(i<3);
+#    endif
+     return ijk[i];
+   }
+   inline T& operator[](const size_t i){
+#    ifndef NDEBUG
+     assert(i<3);
+#    endif
+     return ijk[i];
+   }
 
    Numeric3Vec& operator=(const Numeric3Vec& x){
      for( size_t i=0; i<3; ++i ) ijk[i] = x.ijk[i];

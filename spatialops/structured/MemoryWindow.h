@@ -113,7 +113,12 @@ namespace structured{
      */
     MemoryWindow( const IntVec& npts );
 
-    MemoryWindow( const MemoryWindow& other );
+    // inline to improve performance since this is frequently called from nebo
+    MemoryWindow( const MemoryWindow& other )
+    : nptsGlob_( other.nptsGlob_ ),
+      offset_  ( other.offset_   ),
+      extent_  ( other.extent_   )
+    {}
 
     MemoryWindow& operator=( const MemoryWindow& other );
 

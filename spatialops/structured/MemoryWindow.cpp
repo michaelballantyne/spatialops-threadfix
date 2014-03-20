@@ -75,14 +75,6 @@ namespace SpatialOps{
 
     //---------------------------------------------------------------
 
-    MemoryWindow::MemoryWindow( const MemoryWindow& other )
-    : nptsGlob_( other.nptsGlob_ ),
-      offset_  ( other.offset_   ),
-      extent_  ( other.extent_   )
-    {}
-
-    //---------------------------------------------------------------
-
     MemoryWindow&
     MemoryWindow::operator=( const MemoryWindow& other )
     {

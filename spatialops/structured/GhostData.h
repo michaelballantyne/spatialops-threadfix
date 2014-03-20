@@ -49,7 +49,6 @@
 namespace SpatialOps{
 namespace structured{
 
-
   /**
    * \class GhostData
    * \date July, 2013
@@ -58,8 +57,35 @@ namespace structured{
    */
   class GhostData
   {
+    // note that this is a header-only class to inline its methods to improve performance.
+
     IntVec minus_, plus_;
     bool isInf_;
+
+    inline void check_valid( const IntVec& minus, const IntVec& plus )
+    {
+  #   ifndef NDEBUG
+      for( int i=0; i<3; ++i ){
+        assert( minus[i] >= 0 );
+        assert(  plus[i] >= 0 );
+      }
+  #   endif
+    }
+
+    // If any value is infinite (>= GHOST_MAX), then return true
+    //  Infinite ghost data is used within Nebo to account for scalars
+    inline bool is_IntVec_infinite(const IntVec & values) {
+      return (values[0] >= GHOST_MAX &&
+              values[1] >= GHOST_MAX &&
+              values[2] >= GHOST_MAX);
+    }
+
+    // If any value is infinite (>= GHOST_MAX), then return true
+    //  Infinite ghost data is used within Nebo to account for scalars
+    inline bool is_ghost_infinite(const IntVec & minus, const IntVec & plus) {
+      return (is_IntVec_infinite(minus) &&
+              is_IntVec_infinite(plus));
+    }
 
   public:
 
@@ -74,7 +100,14 @@ namespace structured{
      */
     GhostData( const int nx, const int px,
                const int ny, const int py,
-               const int nz, const int pz );
+               const int nz, const int pz )
+    : minus_( nx, ny, nz ),
+      plus_ ( px, py, pz ),
+      isInf_(is_ghost_infinite(minus_,plus_))
+    {
+      check_valid(minus_,plus_);
+    }
+
 
     /**
      * @brief Construct a GhostData
@@ -82,16 +115,42 @@ namespace structured{
      * @param plus  Number of ghost cells on the (+) x, y, and z faces
      */
     GhostData( const IntVec& minus,
-               const IntVec& plus );
+               const IntVec& plus )
+    : minus_( minus ),
+      plus_ ( plus  ),
+      isInf_(is_ghost_infinite(minus_,plus_))
+    {
+      check_valid(minus_,plus_);
+    }
 
     /**
      * \brief construct a GhostData with the same number of ghost cells on each face
      * @param n the number of ghost cells on each face (defaults to zero)
      */
-    GhostData( const int n=0 );
+    GhostData( const int n=0 )
+    : minus_( n, n, n ),
+      plus_ ( n, n, n ),
+      isInf_(is_ghost_infinite(minus_,plus_))
+    {
+      check_valid(minus_,plus_);
+    }
 
-    GhostData( const GhostData& );
-    GhostData& operator=( const GhostData& );
+    GhostData( const GhostData& rhs )
+    {
+       minus_ = rhs.minus_;
+       plus_  = rhs.plus_;
+       check_valid(minus_,plus_);
+       isInf_ = rhs.isInf_;
+     }
+
+    GhostData& operator=( const GhostData& rhs )
+    {
+      minus_ = rhs.minus_;
+      plus_  = rhs.plus_;
+      check_valid(minus_,plus_);
+      isInf_ = rhs.isInf_;
+      return *this;
+    }
 
     /**
      * @brief obtain the IntVec containing the number of ghost cells on the (-) faces
@@ -116,26 +175,82 @@ namespace structured{
     /**
      * @brief set the number of ghost cells on the requested (-) face (0=x, 1=y, 2=z)
      */
-    void set_minus( const IntVec& );
+    inline void set_minus( const IntVec& minus){
+      minus_ = minus;
+      isInf_ = is_ghost_infinite(minus_,plus_);
+    }
+
 
     /**
      * @brief set the number of ghost cells on the requested (+) face (0=x, 1=y, 2=z)
      */
-    void set_plus( const IntVec& );
+    inline void set_plus( const IntVec& plus ){
+      plus_ = plus;
+      isInf_ = is_ghost_infinite(minus_,plus_);
+    }
 
-    GhostData  operator+ ( const GhostData& ) const;
-    GhostData& operator+=( const GhostData& );
-    GhostData  operator- ( const GhostData& ) const;
-    GhostData& operator-=( const GhostData& );
+    inline GhostData  operator+ ( const GhostData& rhs ) const{
+      GhostData g(*this);
+      g += rhs;
+      return g;
+    }
 
-    bool operator==( const GhostData& ) const;
+    inline GhostData& operator+=( const GhostData& rhs ){
+      if(!isInf_) {
+        if(rhs.isInf_) {
+          *this = rhs;
+        }
+        else {
+          minus_ += rhs.minus_;
+          plus_  += rhs.plus_;
+          check_valid(minus_,plus_);
+        }
+      }
+      return *this;
+    }
+
+    inline GhostData  operator- ( const GhostData& rhs ) const{
+      GhostData g(*this);
+      g -= rhs;
+      return g;
+    }
+
+    inline GhostData& operator-=( const GhostData& rhs ){
+      if(rhs.isInf_) {
+        throw(std::runtime_error("Cannot use infinite ghost data on the right-hand side of subtraction."));
+      }
+      minus_ -= rhs.minus_;
+      plus_  -= rhs.plus_;
+      check_valid(minus_,plus_);
+      return *this;
+    }
+
+    inline bool operator==( const GhostData& rhs ) const{
+      return (minus_ == rhs.minus_) && (plus_ == rhs.plus_);
+    }
   };
 
-  GhostData min( const GhostData&, const GhostData& );
+  inline GhostData min( const GhostData& first, const GhostData& second )
+  {
+    return GhostData( min( first.get_minus(), second.get_minus() ),
+                      min( first.get_plus(),  second.get_plus()  ));
+  }
 
-  GhostData point_to_ghost( const IntVec& );
+  inline GhostData point_to_ghost( const IntVec&  given )
+  {
+      return GhostData((given[0] < 0 ? - given[0] : 0),
+                       (given[0] > 0 ?   given[0] : 0),
+                       (given[1] < 0 ? - given[1] : 0),
+                       (given[1] > 0 ?   given[1] : 0),
+                       (given[2] < 0 ? - given[2] : 0),
+                       (given[2] > 0 ?   given[2] : 0));
+  }
 
-  std::ostream& operator<<( std::ostream&, const GhostData& );
+  inline std::ostream& operator<<( std::ostream& out, const GhostData& gd )
+  {
+    out << "{ " << gd.get_minus() << " " << gd.get_plus() << " }";
+    return out;
+  }
 
 
   } // namespace structured
