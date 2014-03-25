@@ -54,18 +54,24 @@
            [report-finish (report report-backend-finish)])
       (tpl-def (tpl-pmtr 'RhsType)
                (v-fcn-def name
-                          (list (adc 'bool 'useGhost)
-                                (ad 'RhsType 'rhs))
+                          (list (ad 'RhsType 'rhs)
+                                resize-pmtr
+                                low-high-pmtr)
                           report-start
                           body
                           report-finish))))
   (define (assign-call name)
     (fc (tpl-use name 'RhsType)
-        'useGhost
-        'rhs))
-  (define (assign-error . message)
+        'rhs
+        resize-arg
+        low-high-arg))
+  (define (assign-error standard message)
     (build-error (list 'Nebo 'Assignment)
-                 message))
+                 (list '(Left-hand side of assignment allocated on)
+                       (if standard
+                           (list (cout-break message '(but right-hand side is not))
+                                 (cout-break '\(completely\) 'accessible 'on 'the 'same message))
+                           message))))
   (build-Initial-general name
                          FT
                          tpl-irreg-pars
@@ -74,23 +80,41 @@
                          tpl-irreg-args
                          constructor
                          possible-ghosts
-                         (list (assign 'assign
-                                       (gpu-or (gpu-test-or (assign-call 'gpu_test_assign)
-                                                            (nifelse (fc 'gpu_ready)
-                                                                     (nifelse (mfc 'rhs 'gpu_ready (fc 'gpu_device_index))
-                                                                              (assign-call 'gpu_assign)
-                                                                              (assign-error (list '(Left-hand side of assignment allocated on)
-                                                                                                  (cout-break 'GPU '(but right-hand side is not \(completely\)))
-                                                                                                  (cout-break 'accessible '(on the same GPU)))))
-                                                                     (nifelse (fc 'cpu_ready)
-                                                                              (nifelse (mfc 'rhs 'cpu_ready)
-                                                                                       (assign-call 'cpu_assign)
-                                                                                       (assign-error (list '(Left-hand side of assignment allocated on)
-                                                                                                           (cout-break 'CPU '(but right-hand side is not))
-                                                                                                           (cout-break '(\(completely\)) '(accessible on CPU)))))
-                                                                              (assign-error (list '(Left-hand side of assignment allocated on)
-                                                                                                  (cout-break 'unknown '(device - not on CPU or GPU)))))))
-                                               (assign-call 'cpu_assign)))
+                         (list (tpl-def (tpl-pmtr 'RhsType)
+                                        (v-fcn-def 'assign
+                                                   (list (adc 'bool 'useGhost)
+                                                         (ad 'RhsType 'rhs))
+                                                   (nt= GhostData 'ghosts (fc 'calculate_actual_ghost
+                                                                              'useGhost
+                                                                               (fc 'possible_ghosts)
+                                                                               (mfc 'field_ 'boundary_info)
+                                                                               (mfc 'rhs 'possible_ghosts)))
+                                                   (nt= IntVec 'minus (mfc 'ghosts 'get_minus))
+                                                   (nt= IntVec 'plus (mfc 'ghosts 'get_plus))
+                                                   (nt= GhostData 'extents (fc 'calculate_limits
+                                                                               'useGhost
+                                                                               (mfc 'field_ 'window_with_ghost)
+                                                                               (mfc 'field_ 'get_valid_ghost_data)
+                                                                               (fc 'possible_ghosts)
+                                                                               (mfc 'field_ 'boundary_info)
+                                                                               (mfc 'rhs 'possible_ghosts)))
+                                                   (nt= 'int 'xLow (check-extent 'field_ "0" "0" (bs '- (mfc 'extents 'get_minus "0"))))
+                                                   (nt= 'int 'xHigh (check-extent 'field_ "0" "1" (mfc 'extents 'get_plus "0")))
+                                                   (nt= 'int 'yLow (check-extent 'field_ "1" "0" (bs '- (mfc 'extents 'get_minus "1"))))
+                                                   (nt= 'int 'yHigh (check-extent 'field_ "1" "1" (mfc 'extents 'get_plus "1")))
+                                                   (nt= 'int 'zLow (check-extent 'field_ "2" "0" (bs '- (mfc 'extents 'get_minus "2"))))
+                                                   (nt= 'int 'zHigh (check-extent 'field_ "2" "1" (mfc 'extents 'get_plus "2")))
+                                                   (gpu-or (gpu-test-or (assign-call 'gpu_test_assign)
+                                                                        (nifelse (fc 'gpu_ready)
+                                                                                 (nifelse (mfc 'rhs 'gpu_ready (fc 'gpu_device_index))
+                                                                                          (assign-call 'gpu_assign)
+                                                                                          (assign-error #true 'GPU))
+                                                                                 (nifelse (fc 'cpu_ready)
+                                                                                          (nifelse (mfc 'rhs 'cpu_ready)
+                                                                                                   (assign-call 'cpu_assign)
+                                                                                                   (assign-error #true 'CPU))
+                                                                                          (assign-error #false (cout-break 'unknown '(device - not on CPU or GPU))))))
+                                                           (assign-call 'cpu_assign))))
                                publics)
                          (list (assign 'cpu_assign
                                        (threads-or (nifelse (fc 'is_thread_parallel)
@@ -186,7 +210,8 @@
                          constructor
                          (list (tpl-def (tpl-pmtr 'RhsType)
                                         (v-fcn-def 'assign
-                                                   (ad 'RhsType 'rhs)
+                                                   (list (ad 'RhsType 'rhs)
+                                                         low-high-pmtr)
                                                    assign-body))
                                publics)
                          (list (r-fcn-def (fcn-dcl 'ref
@@ -259,149 +284,126 @@
                   std-FT
                   null
                   null
-                  (let ([calculate-Ghost (list (nt= GhostData 'rhs_ghosts (fc 'calculate_valid_ghost
-                                                                              'useGhost
-                                                                              (fc 'possible_ghosts)
-                                                                              (mfc 'field_ 'boundary_info)
-                                                                              (mfc 'rhs 'possible_ghosts)))
-                                               (nt= GhostData 'lhs_ghosts (fc 'calculate_valid_lhs_ghost
-                                                                              'rhs_ghosts
-                                                                              (mfc 'field_ 'boundary_info))))])
-                    (bs-Initial-lhs null
-                                    null
-                                    (bm-constructor (ad FT-chunk 'f)
-                                                    (cons-asgn 'field_ 'f)
-                                                    null)
-                                    (mfc 'field_ 'get_ghost_data)
-                                    null
-                                    (list calculate-Ghost
-                                          (mfc (fc 'init
-                                                   (mfc 'lhs_ghosts 'get_minus)
-                                                   (mfc 'lhs_ghosts 'get_plus))
-                                               'assign
-                                               (mfc 'rhs
-                                                    'init
-                                                    (mfc 'rhs_ghosts 'get_minus)
-                                                    (mfc 'rhs_ghosts 'get_plus)
-                                                    ZeroIntVec)))
-                                    (p (mfc 'field_ 'reset_valid_ghosts (fc GhostData resize-arg))
-                                       'field_)
-                                    (list calculate-Ghost
-                                          (typedef (tpl-pmtr (scope 'RhsType 'ResizeType))
-                                                   'RhsResizeType)
-                                          (nt=c IntVec 'split (fc 'nebo_find_partition
-                                                                  (mfc (mfc (fc 'resize_ghost
-                                                                                'field_
-                                                                                (mfc 'lhs_ghosts 'get_minus)
-                                                                                (mfc 'lhs_ghosts 'get_plus))
-                                                                            'window_with_ghost)
-                                                                       'extent)
-                                                                  'thread_count))
-                                          (nt=c 'int 'max (fc 'nebo_partition_count 'split))
-                                          (nt= 'ResizeType 'new_lhs (fc 'resize
-                                                                        (mfc 'lhs_ghosts 'get_minus)
-                                                                        (mfc 'lhs_ghosts 'get_plus)))
-                                          (nt= 'RhsResizeType 'new_rhs (mfc 'rhs
-                                                                            'resize
-                                                                            (mfc 'rhs_ghosts 'get_minus)
-                                                                            (mfc 'rhs_ghosts 'get_plus)))
-                                          (nt= IntVec 'location ZeroIntVec)
-                                          (nfor (nt= 'int 'count "0")
-                                                (n< 'count 'max)
-                                                (n++ 'count)
-                                                (mfc (fc (scope 'ThreadPoolFIFO 'self))
-                                                     'schedule
-                                                     (fc (scope 'boost 'bind)
-                                                         (take-ptr (scope 'ResizeType (tpl-fcn-use 'assign 'RhsResizeType)))
-                                                         'new_lhs
-                                                         'new_rhs
-                                                         'split
-                                                         'location
-                                                         (take-ptr 'semaphore)))
-                                                (n= 'location (fc 'nebo_next_partition 'location 'split))))
-                                    (p (mfc 'field_ 'reset_valid_ghosts (fc GhostData resize-arg))
-                                       'field_)
-                                    (let ([extent-def (lambda (num)
-                                                        (nt= 'int
-                                                             (l 'extent num)
-                                                             (mfc (mfc 'field_ 'window_with_ghost)
-                                                                  'extent
-                                                                  num)))]
-                                          [dim-def (lambda (name extent)
-                                                     (nt= 'int name (n+ (n/ extent 'blockDim)
-                                                                        (ter-cond (n> (par (n% extent 'blockDim))
-                                                                                      "0")
-                                                                                  "1"
-                                                                                  "0"))))])
-                                      (list calculate-Ghost
-                                            (typedef (tpl-pmtr (scope 'RhsType 'GPUWalkType))
-                                                     'RhsGPUWalkType)
-                                            (extent-def "0")
-                                            (extent-def "1")
-                                            (nt= 'int 'blockDim "16")
-                                            (dim-def 'gDimX 'extent0)
-                                            (dim-def 'gDimY 'extent1)
-                                            (bs 'dim3 (fc 'dimBlock 'blockDim 'blockDim))
-                                            (bs 'dim3 (fc 'dimGrid 'gDimX 'gDimY))
-                                            (debug-only (bb (cc (bs 'cudaError 'err))
-                                                            (nif (n!= 'cudaSuccess (p (n= 'err (fc 'cudaStreamSynchronize(mfc 'field_ 'get_stream)))))
-                                                                 (build-error-with-call "CUDA Kernel - before call" "\"\t - \""
-                                                                                        '<< (fc 'cudaGetErrorString 'err)))))
-                                            (fc (kernel-use (tpl-use 'gpu_assign_kernel 'GPUWalkType 'RhsGPUWalkType)
-                                                            'dimGrid
-                                                            'dimBlock
-                                                            "0"
-                                                            (mfc 'field_ 'get_stream))
-                                                (fc 'gpu_init
-                                                    (mfc 'lhs_ghosts 'get_minus)
-                                                    (mfc 'lhs_ghosts 'get_plus))
-                                                (mfc 'rhs
-                                                     'gpu_init
-                                                     (mfc 'rhs_ghosts 'get_minus)
-                                                     (mfc 'rhs_ghosts 'get_plus)
-                                                     ZeroIntVec
-                                                     (fc 'gpu_device_index)))
-                                            (debug-only (nif (n!= 'cudaSuccess (p (n= 'err (fc 'cudaStreamSynchronize(mfc 'field_ 'get_stream)))))
-                                                             (build-error-with-call "CUDA Kernel - after call" "\"\t - \""
-                                                                                    '<< (fc 'cudaGetErrorString 'err))))))
-                                    (n== 'LOCAL_RAM (mfc 'field_ 'memory_device_type))
-                                    (n== 'EXTERNAL_CUDA_GPU (mfc 'field_ 'memory_device_type))
-                                    (mfc 'field_ 'device_index)
-                                    (p (mfc 'field_ 'reset_valid_ghosts (fc GhostData resize-arg))
-                                       'field_)
-                                    (list (mfc 'rhs 'gpu_prep "0")
-                                          (nifelse (n== 'LOCAL_RAM (mfc 'field_ 'memory_device_type))
-                                                   (list (ad FT-chunk
-                                                             (fc 'gpu_field
-                                                                 (mfc 'field_ 'window_with_ghost)
-                                                                 (mfc 'field_ 'boundary_info)
-                                                                 (mfc 'field_ 'get_valid_ghost_data)
-                                                                 'NULL
-                                                                 (scope 'structured 'InternalStorage)
+                  (bs-Initial-lhs null
+                                  null
+                                  (bm-constructor (ad FT-chunk 'f)
+                                                  (cons-asgn 'field_ 'f)
+                                                  null)
+                                  (mfc 'field_ 'get_ghost_data)
+                                  null
+                                  (list (mfc (fc 'init resize-arg)
+                                             'assign
+                                             (mfc 'rhs 'init)
+                                             low-high-arg))
+                                  (p (mfc 'field_ 'reset_valid_ghosts (fc GhostData resize-arg))
+                                     'field_)
+                                  (list (typedef (tpl-pmtr (scope 'RhsType 'ResizeType))
+                                                 'RhsResizeType)
+                                        (nt=c IntVec 'split (fc 'nebo_find_partition
+                                                                (mfc (mfc (fc 'resize_ghost
+                                                                              'field_
+                                                                              (mfc 'lhs_ghosts 'get_minus)
+                                                                              (mfc 'lhs_ghosts 'get_plus))
+                                                                          'window_with_ghost)
+                                                                     'extent)
+                                                                'thread_count))
+                                        (nt=c 'int 'max (fc 'nebo_partition_count 'split))
+                                        (nt= 'ResizeType 'new_lhs (fc 'resize
+                                                                      (mfc 'lhs_ghosts 'get_minus)
+                                                                      (mfc 'lhs_ghosts 'get_plus)))
+                                        (nt= 'RhsResizeType 'new_rhs (mfc 'rhs
+                                                                          'resize
+                                                                          (mfc 'rhs_ghosts 'get_minus)
+                                                                          (mfc 'rhs_ghosts 'get_plus)))
+                                        (nt= IntVec 'location ZeroIntVec)
+                                        (nfor (nt= 'int 'count "0")
+                                              (n< 'count 'max)
+                                              (n++ 'count)
+                                              (mfc (fc (scope 'ThreadPoolFIFO 'self))
+                                                   'schedule
+                                                   (fc (scope 'boost 'bind)
+                                                       (take-ptr (scope 'ResizeType (tpl-fcn-use 'assign 'RhsResizeType)))
+                                                       'new_lhs
+                                                       'new_rhs
+                                                       'split
+                                                       'location
+                                                       (take-ptr 'semaphore)))
+                                              (n= 'location (fc 'nebo_next_partition 'location 'split))))
+                                  (p (mfc 'field_ 'reset_valid_ghosts (fc GhostData resize-arg))
+                                     'field_)
+                                  (let ([extent-def (lambda (num)
+                                                      (nt= 'int
+                                                           (l 'extent num)
+                                                           (mfc (mfc 'field_ 'window_with_ghost)
+                                                                'extent
+                                                                num)))]
+                                        [dim-def (lambda (name extent)
+                                                   (nt= 'int name (n+ (n/ extent 'blockDim)
+                                                                      (ter-cond (n> (par (n% extent 'blockDim))
+                                                                                    "0")
+                                                                                "1"
+                                                                                "0"))))])
+                                    (list (typedef (tpl-pmtr (scope 'RhsType 'GPUWalkType))
+                                                   'RhsGPUWalkType)
+                                          (extent-def "0")
+                                          (extent-def "1")
+                                          (nt= 'int 'blockDim "16")
+                                          (dim-def 'gDimX 'extent0)
+                                          (dim-def 'gDimY 'extent1)
+                                          (bs 'dim3 (fc 'dimBlock 'blockDim 'blockDim))
+                                          (bs 'dim3 (fc 'dimGrid 'gDimX 'gDimY))
+                                          (debug-only (bb (cc (bs 'cudaError 'err))
+                                                          (nif (n!= 'cudaSuccess (p (n= 'err (fc 'cudaStreamSynchronize(mfc 'field_ 'get_stream)))))
+                                                               (build-error-with-call "CUDA Kernel - before call" "\"\t - \""
+                                                                                      '<< (fc 'cudaGetErrorString 'err)))))
+                                          (fc (kernel-use (tpl-use 'gpu_assign_kernel 'GPUWalkType 'RhsGPUWalkType)
+                                                          'dimGrid
+                                                          'dimBlock
+                                                          "0"
+                                                          (mfc 'field_ 'get_stream))
+                                              (fc 'gpu_init)
+                                              (mfc 'rhs 'gpu_init (fc 'gpu_device_index)))
+                                          (debug-only (nif (n!= 'cudaSuccess (p (n= 'err (fc 'cudaStreamSynchronize(mfc 'field_ 'get_stream)))))
+                                                           (build-error-with-call "CUDA Kernel - after call" "\"\t - \""
+                                                                                  '<< (fc 'cudaGetErrorString 'err))))))
+                                  (n== 'LOCAL_RAM (mfc 'field_ 'memory_device_type))
+                                  (n== 'EXTERNAL_CUDA_GPU (mfc 'field_ 'memory_device_type))
+                                  (mfc 'field_ 'device_index)
+                                  (p (mfc 'field_ 'reset_valid_ghosts (fc GhostData resize-arg))
+                                     'field_)
+                                  (list (mfc 'rhs 'gpu_prep "0")
+                                        (nifelse (n== 'LOCAL_RAM (mfc 'field_ 'memory_device_type))
+                                                 (list (ad FT-chunk
+                                                           (fc 'gpu_field
+                                                               (mfc 'field_ 'window_with_ghost)
+                                                               (mfc 'field_ 'boundary_info)
+                                                               (mfc 'field_ 'get_valid_ghost_data)
+                                                               'NULL
+                                                               (scope 'structured 'InternalStorage)
+                                                               'EXTERNAL_CUDA_GPU
+                                                               "0"))
+                                                       (ad (tpl-use NF-chunk 'Initial FT-chunk)
+                                                           (fc 'gpu_lhs 'gpu_field))
+                                                       (mfc 'gpu_lhs
+                                                            (tpl-fcn-use 'gpu_assign 'RhsType)
+                                                            'useGhost
+                                                            'rhs)
+                                                       (let ([CDI (scope (scope 'ema 'cuda)
+                                                                         'CUDADeviceInterface)])
+                                                         (nt= (ref CDI) 'CDI (fc (scope CDI 'self))))
+                                                       (mfc 'CDI
+                                                            'memcpy_from
+                                                            (mfc 'field_ 'field_values)
+                                                            (mfc 'gpu_field
+                                                                 'field_values
                                                                  'EXTERNAL_CUDA_GPU
-                                                                 "0"))
-                                                         (ad (tpl-use NF-chunk 'Initial FT-chunk)
-                                                             (fc 'gpu_lhs 'gpu_field))
-                                                         (mfc 'gpu_lhs
-                                                              (tpl-fcn-use 'gpu_assign 'RhsType)
-                                                              'useGhost
-                                                              'rhs)
-                                                         (let ([CDI (scope (scope 'ema 'cuda)
-                                                                           'CUDADeviceInterface)])
-                                                           (nt= (ref CDI) 'CDI (fc (scope CDI 'self))))
-                                                         (mfc 'CDI
-                                                              'memcpy_from
-                                                              (mfc 'field_ 'field_values)
-                                                              (mfc 'gpu_field
-                                                                   'field_values
-                                                                   'EXTERNAL_CUDA_GPU
-                                                                   "0")
-                                                              (mfc 'field_ 'allocated_bytes)
-                                                              "0"))
-                                                   (fc (tpl-use 'gpu_assign 'RhsType)
-                                                       'useGhost
-                                                       'rhs)))
-                                    (sad FT-chunk 'field_)))
+                                                                 "0")
+                                                            (mfc 'field_ 'allocated_bytes)
+                                                            "0"))
+                                                 (fc (tpl-use 'gpu_assign 'RhsType)
+                                                     'useGhost
+                                                     'rhs)))
+                                  (sad FT-chunk 'field_))
                   (bs-Resize-lhs null
                                  null
                                  (bm-constructor (ad FT-chunk 'f)
@@ -409,11 +411,7 @@
                                                  null)
                                  (mfc (fc 'init 'split 'location)
                                       'assign
-                                      (mfc 'rhs
-                                           'init
-                                           ZeroIntVec
-                                           'split
-                                           'location))
+                                      (mfc 'rhs 'init 'split 'location))
                                  null
                                  (fc FT-chunk
                                      (mfc (mfc 'field_ 'window_with_ghost)
@@ -423,60 +421,23 @@
                                      'field_)
                                  (sad FT-chunk 'field_))
                   (bs-SeqWalk-lhs null
-                                  (let* ([check-extent (lambda (dir true false) (ter-cond (n== "1" (mfc (mfc 'f 'window_with_ghost)
-                                                                                                        'extent
-                                                                                                        dir))
-                                                                                          true
-                                                                                          false))]
-                                         [find-low (lambda (dir) (check-extent dir
-                                                                               "0"
-                                                                               (c "-" (par (mfc (mfc 'f 'get_valid_ghost_data)
-                                                                                                'get_minus
-                                                                                                dir)))))]
-                                         [find-high (lambda (dir) (check-extent dir
-                                                                                "1"
-                                                                                (n- (mfc (mfc 'f 'window_with_ghost)
-                                                                                         'extent
-                                                                                         dir)
-                                                                                    (mfc (mfc 'f 'get_valid_ghost_data)
-                                                                                         'get_minus
-                                                                                         dir))))]
-                                         [base-offset (lambda (dir) (par (n+ (mfc (mfc 'f 'window_with_ghost)
-                                                                                  'offset
-                                                                                  dir)
-                                                                             (check-extent dir
-                                                                                           "0"
-                                                                                           (mfc (mfc 'f 'get_valid_ghost_data)
-                                                                                                'get_minus
-                                                                                                dir)))))])
-                                    (bm-constructor (ad FT-chunk 'f)
-                                                    (list (cons-asgn 'xGlob_ (mfc (mfc 'f 'window_with_ghost)
-                                                                                  'glob_dim
-                                                                                  "0"))
-                                                          (cons-asgn 'yGlob_ (mfc (mfc 'f 'window_with_ghost)
-                                                                                  'glob_dim
-                                                                                  "1"))
-                                                          (cons-asgn 'base_ (n+ (mfc 'f 'field_values)
-                                                                                (n+ (base-offset "0")
-                                                                                    (par (n* 'xGlob_
-                                                                                             (par (n+ (base-offset "1")
-                                                                                                      (par (n* 'yGlob_
-                                                                                                               (base-offset "2"))))))))))
-                                                          (cons-asgn 'xLow_ (find-low "0"))
-                                                          (cons-asgn 'xHigh_ (find-high "0"))
-                                                          (cons-asgn 'yLow_ (find-low "1"))
-                                                          (cons-asgn 'yHigh_ (find-high "1"))
-                                                          (cons-asgn 'zLow_ (find-low "2"))
-                                                          (cons-asgn 'zHigh_ (find-high "2")))
-                                                    null))
-                                  (nfor (nt= 'int 'z 'zLow_)
-                                        (n< 'z 'zHigh_)
+                                  (bm-constructor (ad FT-chunk 'f)
+                                                  (list (cons-asgn 'xGlob_ (mfc (mfc 'f 'window_with_ghost)
+                                                                                'glob_dim
+                                                                                "0"))
+                                                        (cons-asgn 'yGlob_ (mfc (mfc 'f 'window_with_ghost)
+                                                                                'glob_dim
+                                                                                "1"))
+                                                        (cons-asgn 'base_ (compute-base 'f 'xGlob_ 'yGlob_)))
+                                                  null)
+                                  (nfor (nt= 'int 'z 'zLow)
+                                        (n< 'z 'zHigh)
                                         (n++ 'z)
-                                        (nfor (nt= 'int 'y 'yLow_)
-                                              (n< 'y 'yHigh_)
+                                        (nfor (nt= 'int 'y 'yLow)
+                                              (n< 'y 'yHigh)
                                               (n++ 'y)
-                                              (nfor (nt= 'int 'x 'xLow_)
-                                                    (n< 'x 'xHigh_)
+                                              (nfor (nt= 'int 'x 'xLow)
+                                                    (n< 'x 'xHigh)
                                                     (n++ 'x)
                                                     (n= (fc 'ref index-arg)
                                                         (mfc 'rhs 'eval index-arg)))))
@@ -487,13 +448,7 @@
                                      "]")
                                   (list (sadc 'int 'xGlob_)
                                         (sadc 'int 'yGlob_)
-                                        (sadp vt-chunk 'base_)
-                                        (sadc 'int 'xLow_)
-                                        (sadc 'int 'xHigh_)
-                                        (sadc 'int 'yLow_)
-                                        (sadc 'int 'yHigh_)
-                                        (sadc 'int 'zLow_)
-                                        (sadc 'int 'zHigh_)))
+                                        (sadp vt-chunk 'base_)))
                   (bs-gpu-lhs  null
                                (bm-constructor
                                 (ad FT-chunk 'f)

@@ -55,11 +55,7 @@
              return structured::GhostData(GHOST_MAX);
           }
 
-          inline SeqWalkType init(structured::IntVec const & minus,
-                                  structured::IntVec const & plus,
-                                  structured::IntVec const & shift) const {
-             return SeqWalkType(value_);
-          }
+          inline SeqWalkType init(void) const { return SeqWalkType(value_); }
 
 #         ifdef FIELD_EXPRESSION_THREADS
              inline ResizeType resize(structured::IntVec const & minus,
@@ -74,10 +70,7 @@
 
              inline bool gpu_ready(int const deviceIndex) const { return true; }
 
-             inline GPUWalkType gpu_init(structured::IntVec const & minus,
-                                         structured::IntVec const & plus,
-                                         structured::IntVec const & shift,
-                                         int const deviceIndex) const {
+             inline GPUWalkType gpu_init(int const deviceIndex) const {
                 return GPUWalkType(value_);
              }
 
@@ -88,9 +81,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::IntVec const & minus,
-                                           structured::IntVec const & plus,
-                                           structured::IntVec const & shift) const {
+          inline ReductionType reduce_init(void) const {
              return ReductionType(value_);
           }
 
@@ -109,8 +100,7 @@
              : value_(value)
              {}
 
-             inline SeqWalkType init(structured::IntVec const & shift,
-                                     structured::IntVec const & split,
+             inline SeqWalkType init(structured::IntVec const & split,
                                      structured::IntVec const & location) const {
                 return SeqWalkType(value_);
              }
@@ -207,11 +197,7 @@
              return field_.get_valid_ghost_data() + point_to_ghost(field_.boundary_info().has_extra());
           }
 
-          inline SeqWalkType init(structured::IntVec const & minus,
-                                  structured::IntVec const & plus,
-                                  structured::IntVec const & shift) const {
-             return SeqWalkType(field_, shift);
-          }
+          inline SeqWalkType init(void) const { return SeqWalkType(field_); }
 
 #         ifdef FIELD_EXPRESSION_THREADS
              inline ResizeType resize(structured::IntVec const & minus,
@@ -230,15 +216,8 @@
                 return field_.find_consumer(EXTERNAL_CUDA_GPU, deviceIndex);
              }
 
-             inline GPUWalkType gpu_init(structured::IntVec const & minus,
-                                         structured::IntVec const & plus,
-                                         structured::IntVec const & shift,
-                                         int const deviceIndex) const {
-                return GPUWalkType(deviceIndex,
-                                   resize_ghost_and_shift_window(field_,
-                                                                 minus,
-                                                                 plus - field_.boundary_info().has_extra(),
-                                                                 shift));
+             inline GPUWalkType gpu_init(int const deviceIndex) const {
+                return GPUWalkType(deviceIndex, field_);
              }
 
 #            ifdef NEBO_GPU_TEST
@@ -251,13 +230,8 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::IntVec const & minus,
-                                           structured::IntVec const & plus,
-                                           structured::IntVec const & shift) const {
-             return ReductionType(resize_ghost_and_shift_window(field_,
-                                                                minus,
-                                                                plus - field_.boundary_info().has_extra(),
-                                                                shift));
+          inline ReductionType reduce_init(void) const {
+             return ReductionType(field_);
           }
 
          private:
@@ -275,10 +249,9 @@
              : field_(f)
              {}
 
-             inline SeqWalkType init(structured::IntVec const & shift,
-                                     structured::IntVec const & split,
+             inline SeqWalkType init(structured::IntVec const & split,
                                      structured::IntVec const & location) const {
-                return SeqWalkType(field_, shift);
+                return SeqWalkType(field_);
              }
 
             private:
@@ -293,17 +266,15 @@
 
           typename field_type::value_type typedef value_type;
 
-          NeboConstField(FieldType const & f, structured::IntVec const & shift)
+          NeboConstField(FieldType const & f)
           : xGlob_(f.window_with_ghost().glob_dim(0)),
             yGlob_(f.window_with_ghost().glob_dim(1)),
             base_(f.field_values() + (f.window_with_ghost().offset(0) + (1 == f.window_with_ghost().extent(0)
                                                                          ? 0 : f.get_valid_ghost_data().get_minus(0)))
-            + shift[0] + (xGlob_ * ((f.window_with_ghost().offset(1) + (1 == f.window_with_ghost().extent(1)
-                                                                        ? 0 : f.get_valid_ghost_data().get_minus(1)))
-                                    + shift[1] + (yGlob_ * ((f.window_with_ghost().offset(2)
-                                                             + (1 == f.window_with_ghost().extent(2)
-                                                                ? 0 : f.get_valid_ghost_data().get_minus(2)))
-                                                            + shift[2])))))
+            + (xGlob_ * ((f.window_with_ghost().offset(1) + (1 == f.window_with_ghost().extent(1)
+                                                             ? 0 : f.get_valid_ghost_data().get_minus(1)))
+                         + yGlob_ * (f.window_with_ghost().offset(2) + (1 == f.window_with_ghost().extent(2)
+                                                                        ? 0 : f.get_valid_ghost_data().get_minus(2))))))
           {}
 
           inline value_type eval(int const x, int const y, int const z) const {
@@ -411,9 +382,7 @@
              return structured::GhostData(GHOST_MAX);
           }
 
-          inline SeqWalkType init(structured::IntVec const & minus,
-                                  structured::IntVec const & plus,
-                                  structured::IntVec const & shift) const {
+          inline SeqWalkType init(void) const {
              return SeqWalkType(* field_.field_values(LOCAL_RAM));
           }
 
@@ -434,10 +403,7 @@
                 return field_.find_consumer(EXTERNAL_CUDA_GPU, deviceIndex);
              }
 
-             inline GPUWalkType gpu_init(structured::IntVec const & minus,
-                                         structured::IntVec const & plus,
-                                         structured::IntVec const & shift,
-                                         int const deviceIndex) const {
+             inline GPUWalkType gpu_init(int const deviceIndex) const {
                 return GPUWalkType(deviceIndex, field_);
              }
 
@@ -451,9 +417,7 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::IntVec const & minus,
-                                           structured::IntVec const & plus,
-                                           structured::IntVec const & shift) const {
+          inline ReductionType reduce_init(void) const {
              return ReductionType(* field_.field_values(LOCAL_RAM));
           }
 
@@ -474,8 +438,7 @@
              : value_(v)
              {}
 
-             inline SeqWalkType init(structured::IntVec const & shift,
-                                     structured::IntVec const & split,
+             inline SeqWalkType init(structured::IntVec const & split,
                                      structured::IntVec const & location) const {
                 return SeqWalkType(value_);
              }

@@ -50,7 +50,7 @@
                          tpl-irreg-args
                          constructor
                          possible-ghosts
-                         (list (r-fcn-def (constize (fcn-dcl 'init 'SeqWalkType resize-pmtr shift-pmtr))
+                         (list (r-fcn-def (constize (fcn-dcl 'init 'SeqWalkType))
                                           null
                                           (fc 'SeqWalkType SW-cons-args))
                                (threads-only (r-fcn-def (constize (fcn-dcl 'resize 'ResizeType resize-pmtr))
@@ -62,12 +62,12 @@
                                              (r-fcn-def (constize (fcn-dcl 'gpu_ready 'bool (adc 'int DI-chunk)))
                                                         null
                                                         gpu-ready-body)
-                                             (r-fcn-def (constize (fcn-dcl 'gpu_init 'GPUWalkType resize-pmtr shift-pmtr (adc 'int DI-chunk)))
+                                             (r-fcn-def (constize (fcn-dcl 'gpu_init 'GPUWalkType (adc 'int DI-chunk)))
                                                         null
                                                         (fc 'GPUWalkType gpu-cons-args))
                                              (gpu-test-only (fcn-def (constize (fcn-dcl 'gpu_prep 'void (adc 'int DI-chunk)))
                                                                      gpu-prep-body))))
-                               (r-fcn-def (constize (fcn-dcl 'reduce_init 'ReductionType resize-pmtr shift-pmtr))
+                               (r-fcn-def (constize (fcn-dcl 'reduce_init 'ReductionType))
                                           null
                                           (fc 'ReductionType RD-cons-args))
                                publics)
@@ -92,7 +92,6 @@
                         constructor
                         (list (r-fcn-def (constize (fcn-dcl 'init
                                                             'SeqWalkType
-                                                            shift-pmtr
                                                             (adcr IntVec 'split)
                                                             (adcr IntVec 'location)))
                                          null

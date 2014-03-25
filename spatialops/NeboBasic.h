@@ -58,49 +58,61 @@
       struct All;
       struct InteriorOnly;
 
-      inline structured::GhostData calculate_valid_ghost(bool const useGhost,
-                                                         structured::GhostData const & lhs,
-                                                         structured::BoundaryCellInfo const & bc,
-                                                         structured::GhostData const & rhs) {
-         if(bc.has_bc(0) && rhs.get_plus(0) < bc.has_extra(0)) {
-            std::ostringstream msg;
-            msg << "Nebo error in " << "Nebo Ghost Checking" << ":\n";
-            msg << "Not enough valid extra cells to validate all interior ";
-            msg << "cells in the 0 direction";
-            msg << "\n";
-            msg << "\t - " << __FILE__ << " : " << __LINE__;
-            throw(std::runtime_error(msg.str()));;
-         };
+      inline structured::GhostData calculate_actual_ghost(bool const useGhost,
+                                                          structured::GhostData const & lhs,
+                                                          structured::BoundaryCellInfo const & bc,
+                                                          structured::GhostData const & rhs) {
+        if(bc.has_bc(0) && rhs.get_plus(0) < bc.has_extra(0)) {
+          std::ostringstream msg;
+          msg << "Nebo error in " << "Nebo Ghost Checking" << ":\n";
+          msg << "Not enough valid extra cells to validate all interior ";
+          msg << "cells in the X direction";
+          msg << "\n";
+          msg << "\t - " << __FILE__ << " : " << __LINE__;
+          throw(std::runtime_error(msg.str()));;
+        };
 
-         if(bc.has_bc(1) && rhs.get_plus(1) < bc.has_extra(1)) {
-            std::ostringstream msg;
-            msg << "Nebo error in " << "Nebo Ghost Checking" << ":\n";
-            msg << "Not enough valid extra cells to validate all interior ";
-            msg << "cells in the 1 direction";
-            msg << "\n";
-            msg << "\t - " << __FILE__ << " : " << __LINE__;
-            throw(std::runtime_error(msg.str()));;
-         };
+        if(bc.has_bc(1) && rhs.get_plus(1) < bc.has_extra(1)) {
+          std::ostringstream msg;
+          msg << "Nebo error in " << "Nebo Ghost Checking" << ":\n";
+          msg << "Not enough valid extra cells to validate all interior ";
+          msg << "cells in the Y direction";
+          msg << "\n";
+          msg << "\t - " << __FILE__ << " : " << __LINE__;
+          throw(std::runtime_error(msg.str()));;
+        };
 
-         if(bc.has_bc(2) && rhs.get_plus(2) < bc.has_extra(2)) {
-            std::ostringstream msg;
-            msg << "Nebo error in " << "Nebo Ghost Checking" << ":\n";
-            msg << "Not enough valid extra cells to validate all interior ";
-            msg << "cells in the 2 direction";
-            msg << "\n";
-            msg << "\t - " << __FILE__ << " : " << __LINE__;
-            throw(std::runtime_error(msg.str()));;
-         };
+        if(bc.has_bc(2) && rhs.get_plus(2) < bc.has_extra(2)) {
+          std::ostringstream msg;
+          msg << "Nebo error in " << "Nebo Ghost Checking" << ":\n";
+          msg << "Not enough valid extra cells to validate all interior ";
+          msg << "cells in the Z direction";
+          msg << "\n";
+          msg << "\t - " << __FILE__ << " : " << __LINE__;
+          throw(std::runtime_error(msg.str()));;
+        };
 
-         structured::GhostData lhs_w_extra = lhs + point_to_ghost(bc.has_extra());
-
-         return (useGhost ? min(lhs_w_extra, rhs) : structured::GhostData(structured::IntVec(0, 0, 0),
-                                                                          bc.has_extra()));
+        return ((useGhost
+                 ? min((lhs + point_to_ghost(bc.has_extra())), rhs)
+                 : structured::GhostData(structured::IntVec(0, 0, 0),
+                                         bc.has_extra()))
+                - point_to_ghost(bc.has_extra()));
       };
 
-      inline structured::GhostData calculate_valid_lhs_ghost(structured::GhostData const & ghosts,
-                                                             structured::BoundaryCellInfo const & bc) {
-         return ghosts - point_to_ghost(bc.has_extra());
+      inline structured::GhostData calculate_limits(bool const useGhost,
+                                                    structured::MemoryWindow const & lhsMemoryWindow,
+                                                    structured::GhostData const & lhsCurrentGhosts,
+                                                    structured::GhostData const & lhsPossibleGhosts,
+                                                    structured::BoundaryCellInfo const & bc,
+                                                    structured::GhostData const rhsPossibleGhosts) {
+        structured::GhostData lhsActualGhosts = calculate_actual_ghost(useGhost,
+                                                                       lhsPossibleGhosts,
+                                                                       bc,
+                                                                       rhsPossibleGhosts);
+        return structured::GhostData(lhsActualGhosts.get_minus(),
+                                     (lhsMemoryWindow.extent() - lhsCurrentGhosts.get_minus() - lhsCurrentGhosts.get_plus() +
+                                      lhsActualGhosts.get_plus()));
+                                      
       };
 
       template<typename FieldType>
@@ -113,20 +125,6 @@
           const structured::IntVec extentChange = minus + plus - oldMinus - oldPlus;
 
           return field.reshape(extentChange, offsetChange);
-       };
-
-      template<typename FieldType>
-       inline FieldType shift_window(FieldType const & field,
-                                     structured::IntVec const & shift) {
-          return field.reshape(structured::IntVec(0, 0, 0), shift);
-       };
-
-      template<typename FieldType>
-       inline FieldType resize_ghost_and_shift_window(FieldType const & field,
-                                                      structured::IntVec const & minus,
-                                                      structured::IntVec const & plus,
-                                                      structured::IntVec const & shift) {
-          return shift_window(resize_ghost(field, minus, plus), shift);
        };
 
       template<typename Type1, typename Type2>

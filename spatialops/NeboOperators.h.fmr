@@ -94,19 +94,19 @@
                                 null
                                 gen-constructor
                                 ghosts
-                                (op_-mfc 'init resize-arg 'shift)
+                                (op_-mfc 'init)
                                 (op_-mfc 'resize resize-arg)
                                 (exec-and-check 'cpu_ready)
                                 (exec-and-check 'gpu_ready DI-chunk)
-                                (op_-mfc 'gpu_init resize-arg 'shift DI-chunk)
+                                (op_-mfc 'gpu_init DI-chunk)
                                 (b/a ";" s (op_-mfc 'gpu_prep DI-chunk))
-                                (op_-mfc 'reduce_init resize-arg 'shift)
+                                (op_-mfc 'reduce_init)
                                 null
                                 gen-data-mems)
                 (bs-Resize-rhs null
                                null
                                gen-constructor
-                               (op_-mfc 'init 'shift 'split 'location)
+                               (op_-mfc 'init 'split 'location)
                                null
                                gen-data-mems)
                 (bs-SeqWalk-rhs (s-typedef (tpl-pmtr (scope (first Op-lst) vt-chunk))

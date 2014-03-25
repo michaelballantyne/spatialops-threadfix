@@ -56,6 +56,13 @@
                          (adc 'int 'y)
                          (adc 'int 'z)))
 (define index-arg (list 'x 'y 'z))
+(define low-high-pmtr (list (adc 'int 'xLow)
+                            (adc 'int 'xHigh)
+                            (adc 'int 'yLow)
+                            (adc 'int 'yHigh)
+                            (adc 'int 'zLow)
+                            (adc 'int 'zHigh)))
+(define low-high-arg (list 'xLow 'xHigh 'yLow 'yHigh 'zLow 'zHigh))
 (define IntVec (scope 'structured 'IntVec))
 (define GhostData (scope 'structured 'GhostData))
 (define resize-pmtr (list (adcr IntVec 'minus)
@@ -66,7 +73,6 @@
 (define ghost->resize (list (mfc 'ghosts 'get_minus)
                             (mfc 'ghosts 'get_plus)))
 (define ZeroIntVec (fc IntVec "0" "0" "0"))
-(define shift-pmtr (adcr IntVec 'shift))
 (define BCInfo (scope 'structured 'BoundaryCellInfo))
 (define NSP 'NeboStencilPoint)
 (define NSPC 'NeboStencilPointCollection)
@@ -285,6 +291,33 @@
                                   null)
                      (map (lambda (mode) (mode name FT tpl-irreg-pars tpl-reg-pars))
                           (list Initial Resize SeqWalk GPUWalk Reduction))))
+
+
+(define (check-extent field dir true false)
+  (ter-cond (n== "1" (mfc (mfc field 'window_with_ghost)
+                          'extent
+                          dir))
+            true
+            false))
+
+(define (base-offset-dir field dir)
+  (par (n+ (mfc (mfc field 'window_with_ghost)
+                'offset
+                dir)
+           (check-extent field
+                         dir
+                         "0"
+                         (mfc (mfc field 'get_valid_ghost_data)
+                              'get_minus
+                              dir)))))
+
+(define (compute-base field xGlob yGlob)
+  (n+ (mfc field 'field_values)
+      (n+ (base-offset-dir field "0")
+          (par (n* xGlob
+                   (par (n+ (base-offset-dir field "1")
+                            (par (n* yGlob
+                                     (base-offset-dir field "2"))))))))))
 
 (define (build-error-with-call where . message)
   (define < '<<)

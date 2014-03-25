@@ -184,44 +184,25 @@
 
              SumOp<SeqWalk, EarlierPointsResult, MultiplyType> typedef Result;
 
-             static inline Result const in_sq_construct(structured::IntVec const
-                                                        & minus,
-                                                        structured::IntVec const
-                                                        & plus,
-                                                        structured::IntVec const
-                                                        & shift,
-                                                        PreArg const & arg,
+             static inline Result const in_sq_construct(PreArg const & arg,
                                                         NeboStencilCoefCollection<length>
                                                         const & coefs) {
-                return Result(EarlierPointsType::in_sq_construct(minus,
-                                                                 plus,
-                                                                 shift,
-                                                                 arg,
-                                                                 coefs.others()),
-                              MultiplyType(arg.init(minus,
-                                                    plus,
-                                                    shift + Point::int_vec()),
-                                           Coef(coefs.coef())));
+                return Result(EarlierPointsType::in_sq_construct(arg, coefs.others()),
+                              MultiplyType(arg.init(), Coef(coefs.coef())));
              }
 
-             static inline Result const rs_sq_construct(structured::IntVec const
-                                                        & shift,
-                                                        PreArg const & arg,
+             static inline Result const rs_sq_construct(PreArg const & arg,
                                                         NeboStencilCoefCollection<length>
                                                         const & coefs,
                                                         structured::IntVec const
                                                         & split,
                                                         structured::IntVec const
                                                         & location) {
-                return Result(EarlierPointsType::rs_sq_construct(shift,
-                                                                 arg,
+                return Result(EarlierPointsType::rs_sq_construct(arg,
                                                                  coefs.others(),
                                                                  split,
                                                                  location),
-                              MultiplyType(arg.init(shift + Point::int_vec(),
-                                                    split,
-                                                    location),
-                                           Coef(coefs.coef())));
+                              MultiplyType(arg.init(split, location), Coef(coefs.coef())));
              }
           };
 
@@ -242,29 +223,15 @@
                 SumOp<GPUWalk, EarlierPointsResult, MultiplyType> typedef Result
                 ;
 
-                static inline Result const in_gpu_construct(structured::IntVec
-                                                            const & minus,
-                                                            structured::IntVec
-                                                            const & plus,
-                                                            structured::IntVec
-                                                            const & shift,
-                                                            PreArg const & arg,
+                static inline Result const in_gpu_construct(PreArg const & arg,
                                                             NeboStencilCoefCollection<length>
                                                             const & coefs,
                                                             int const
                                                             deviceIndex) {
-                   return Result(EarlierPointsType::in_gpu_construct(minus,
-                                                                     plus,
-                                                                     shift,
-                                                                     arg,
+                   return Result(EarlierPointsType::in_gpu_construct(arg,
                                                                      coefs.others(),
                                                                      deviceIndex),
-                                 MultiplyType(arg.gpu_init(minus,
-                                                           plus,
-                                                           shift + Point::
-                                                           int_vec(),
-                                                           deviceIndex),
-                                              Coef(coefs.coef())));
+                                 MultiplyType(arg.gpu_init(deviceIndex), Coef(coefs.coef())));
                 }
              };
 #         endif
@@ -286,45 +253,25 @@
 
              SumOp<Reduction, EarlierPointsResult, MultiplyType> typedef Result;
 
-             static inline Result const in_rd_construct(structured::IntVec const
-                                                        & minus,
-                                                        structured::IntVec const
-                                                        & plus,
-                                                        structured::IntVec const
-                                                        & shift,
-                                                        PreArg const & arg,
+             static inline Result const in_rd_construct(PreArg const & arg,
                                                         NeboStencilCoefCollection<length>
                                                         const & coefs) {
-                return Result(EarlierPointsType::in_rd_construct(minus,
-                                                                 plus,
-                                                                 shift,
-                                                                 arg,
-                                                                 coefs.others()),
-                              MultiplyType(arg.reduce_init(minus,
-                                                           plus,
-                                                           shift + Point::
-                                                           int_vec()),
-                                           Coef(coefs.coef())));
+                return Result(EarlierPointsType::in_rd_construct(arg, coefs.others()),
+                              MultiplyType(arg.reduce_init(), Coef(coefs.coef())));
              }
 
-             static inline Result const rs_rd_construct(structured::IntVec const
-                                                        & shift,
-                                                        PreArg const & arg,
+             static inline Result const rs_rd_construct(PreArg const & arg,
                                                         NeboStencilCoefCollection<length>
                                                         const & coefs,
                                                         structured::IntVec const
                                                         & split,
                                                         structured::IntVec const
                                                         & location) {
-                return Result(EarlierPointsType::rs_rd_construct(shift,
-                                                                 arg,
+                return Result(EarlierPointsType::rs_rd_construct(arg,
                                                                  coefs.others(),
                                                                  split,
                                                                  location),
-                              MultiplyType(arg.reduce_init(shift + Point::
-                                                           int_vec(),
-                                                           split,
-                                                           location),
+                              MultiplyType(arg.reduce_init(split, location),
                                            Coef(coefs.coef())));
              }
           };
@@ -340,32 +287,19 @@
 
              SumOp<SeqWalk, EarlierPointsResult, Arg> typedef Result;
 
-             static inline Result const in_sq_construct(structured::IntVec const
-                                                        & minus,
-                                                        structured::IntVec const
-                                                        & plus,
-                                                        structured::IntVec const
-                                                        & shift,
-                                                        PreArg const & arg) {
-                return Result(EarlierPointsType::in_sq_construct(minus,
-                                                                 plus,
-                                                                 shift,
-                                                                 arg),
-                              arg.init(minus, plus, shift + Point::int_vec()));
+             static inline Result const in_sq_construct(PreArg const & arg) {
+                return Result(EarlierPointsType::in_sq_construct(arg), arg.init());
              }
 
-             static inline Result const rs_sq_construct(structured::IntVec const
-                                                        & shift,
-                                                        PreArg const & arg,
+             static inline Result const rs_sq_construct(PreArg const & arg,
                                                         structured::IntVec const
                                                         & split,
                                                         structured::IntVec const
                                                         & location) {
-                return Result(EarlierPointsType::rs_sq_construct(shift,
-                                                                 arg,
+                return Result(EarlierPointsType::rs_sq_construct(arg,
                                                                  split,
                                                                  location),
-                              arg.init(shift + Point::int_vec(), split, location));
+                              arg.init(split, location));
              }
           };
 
@@ -382,24 +316,12 @@
 
                 SumOp<GPUWalk, EarlierPointsResult, Arg> typedef Result;
 
-                static inline Result const in_gpu_construct(structured::IntVec
-                                                            const & minus,
-                                                            structured::IntVec
-                                                            const & plus,
-                                                            structured::IntVec
-                                                            const & shift,
-                                                            PreArg const & arg,
+                static inline Result const in_gpu_construct(PreArg const & arg,
                                                             int const
                                                             deviceIndex) {
-                   return Result(EarlierPointsType::in_gpu_construct(minus,
-                                                                     plus,
-                                                                     shift,
-                                                                     arg,
+                   return Result(EarlierPointsType::in_gpu_construct(arg,
                                                                      deviceIndex),
-                                 arg.gpu_init(minus,
-                                              plus,
-                                              shift + Point::int_vec(),
-                                              deviceIndex));
+                                 arg.gpu_init(deviceIndex));
                 }
              };
 #         endif
@@ -417,36 +339,19 @@
 
              SumOp<Reduction, EarlierPointsResult, Arg> typedef Result;
 
-             static inline Result const in_rd_construct(structured::IntVec const
-                                                        & minus,
-                                                        structured::IntVec const
-                                                        & plus,
-                                                        structured::IntVec const
-                                                        & shift,
-                                                        PreArg const & arg) {
-                return Result(EarlierPointsType::in_rd_construct(minus,
-                                                                 plus,
-                                                                 shift,
-                                                                 arg),
-                              arg.reduce_init(minus,
-                                              plus,
-                                              shift + Point::int_vec()));
+             static inline Result const in_rd_construct(PreArg const & arg) {
+                return Result(EarlierPointsType::in_rd_construct(arg), arg.reduce_init());
              }
 
-             static inline Result const rs_rd_construct(structured::IntVec const
-                                                        & shift,
-                                                        PreArg const & arg,
+             static inline Result const rs_rd_construct(PreArg const & arg,
                                                         structured::IntVec const
                                                         & split,
                                                         structured::IntVec const
                                                         & location) {
-                return Result(EarlierPointsType::rs_rd_construct(shift,
-                                                                 arg,
+                return Result(EarlierPointsType::rs_rd_construct(arg,
                                                                  split,
                                                                  location),
-                              arg.reduce_init(shift + Point::int_vec(),
-                                              split,
-                                              location));
+                              arg.reduce_init(split, location));
              }
           };
       };
@@ -481,30 +386,20 @@
 
              ProdOp<SeqWalk, Arg, Coef> typedef Result;
 
-             static inline Result const in_sq_construct(structured::IntVec const
-                                                        & minus,
-                                                        structured::IntVec const
-                                                        & plus,
-                                                        structured::IntVec const
-                                                        & shift,
-                                                        PreArg const & arg,
+             static inline Result const in_sq_construct(PreArg const & arg,
                                                         NeboStencilCoefCollection<1>
                                                         const & coefs) {
-                return Result(arg.init(minus, plus, shift + Point::int_vec()),
-                              Coef(coefs.coef()));
+                return Result(arg.init(), Coef(coefs.coef()));
              }
 
-             static inline Result const rs_sq_construct(structured::IntVec const
-                                                        & shift,
-                                                        PreArg const & arg,
+             static inline Result const rs_sq_construct(PreArg const & arg,
                                                         NeboStencilCoefCollection<1>
                                                         const & coefs,
                                                         structured::IntVec const
                                                         & split,
                                                         structured::IntVec const
                                                         & location) {
-                return Result(arg.init(shift + Point::int_vec(), split, location),
-                              Coef(coefs.coef()));
+                return Result(arg.init(split, location), Coef(coefs.coef()));
              }
           };
 
@@ -517,22 +412,12 @@
 
                 ProdOp<GPUWalk, Arg, Coef> typedef Result;
 
-                static inline Result const in_gpu_construct(structured::IntVec
-                                                            const & minus,
-                                                            structured::IntVec
-                                                            const & plus,
-                                                            structured::IntVec
-                                                            const & shift,
-                                                            PreArg const & arg,
+                static inline Result const in_gpu_construct(PreArg const & arg,
                                                             NeboStencilCoefCollection<1>
                                                             const & coefs,
                                                             int const
                                                             deviceIndex) {
-                   return Result(arg.gpu_init(minus,
-                                              plus,
-                                              shift + Point::int_vec(),
-                                              deviceIndex),
-                                 Coef(coefs.coef()));
+                   return Result(arg.gpu_init(deviceIndex), Coef(coefs.coef()));
                 }
              };
 #         endif
@@ -546,34 +431,20 @@
 
              ProdOp<Reduction, Arg, Coef> typedef Result;
 
-             static inline Result const in_rd_construct(structured::IntVec const
-                                                        & minus,
-                                                        structured::IntVec const
-                                                        & plus,
-                                                        structured::IntVec const
-                                                        & shift,
-                                                        PreArg const & arg,
+             static inline Result const in_rd_construct(PreArg const & arg,
                                                         NeboStencilCoefCollection<1>
                                                         const & coefs) {
-                return Result(arg.reduce_init(minus,
-                                              plus,
-                                              shift + Point::int_vec()),
-                              Coef(coefs.coef()));
+                return Result(arg.reduce_init(), Coef(coefs.coef()));
              }
 
-             static inline Result const rs_rd_construct(structured::IntVec const
-                                                        & shift,
-                                                        PreArg const & arg,
+             static inline Result const rs_rd_construct(PreArg const & arg,
                                                         NeboStencilCoefCollection<1>
                                                         const & coefs,
                                                         structured::IntVec const
                                                         & split,
                                                         structured::IntVec const
                                                         & location) {
-                return Result(arg.reduce_init(shift + Point::int_vec(),
-                                              split,
-                                              location),
-                              Coef(coefs.coef()));
+                return Result(arg.reduce_init(split, location), Coef(coefs.coef()));
              }
           };
 
@@ -583,24 +454,16 @@
 
              Arg typedef Result;
 
-             static inline Result const in_sq_construct(structured::IntVec const
-                                                        & minus,
-                                                        structured::IntVec const
-                                                        & plus,
-                                                        structured::IntVec const
-                                                        & shift,
-                                                        PreArg const & arg) {
-                return arg.init(minus, plus, shift + Point::int_vec());
+             static inline Result const in_sq_construct(PreArg const & arg) {
+                return arg.init();
              }
 
-             static inline Result const rs_sq_construct(structured::IntVec const
-                                                        & shift,
-                                                        PreArg const & arg,
+             static inline Result const rs_sq_construct(PreArg const & arg,
                                                         structured::IntVec const
                                                         & split,
                                                         structured::IntVec const
                                                         & location) {
-                return arg.init(shift + Point::int_vec(), split, location);
+                return arg.init(split, location);
              }
           };
 
@@ -611,19 +474,10 @@
 
                 Arg typedef Result;
 
-                static inline Result const in_gpu_construct(structured::IntVec
-                                                            const & minus,
-                                                            structured::IntVec
-                                                            const & plus,
-                                                            structured::IntVec
-                                                            const & shift,
-                                                            PreArg const & arg,
+                static inline Result const in_gpu_construct(PreArg const & arg,
                                                             int const
                                                             deviceIndex) {
-                   return arg.gpu_init(minus,
-                                       plus,
-                                       shift + Point::int_vec(),
-                                       deviceIndex);
+                   return arg.gpu_init(deviceIndex);
                 }
              };
 #         endif
@@ -635,24 +489,16 @@
 
              Arg typedef Result;
 
-             static inline Result const in_rd_construct(structured::IntVec const
-                                                        & minus,
-                                                        structured::IntVec const
-                                                        & plus,
-                                                        structured::IntVec const
-                                                        & shift,
-                                                        PreArg const & arg) {
-                return arg.reduce_init(minus, plus, shift + Point::int_vec());
+             static inline Result const in_rd_construct(PreArg const & arg) {
+                return arg.reduce_init();
              }
 
-             static inline Result const rs_rd_construct(structured::IntVec const
-                                                        & shift,
-                                                        PreArg const & arg,
+             static inline Result const rs_rd_construct(PreArg const & arg,
                                                         structured::IntVec const
                                                         & split,
                                                         structured::IntVec const
                                                         & location) {
-                return arg.reduce_init(shift + Point::int_vec(), split, location);
+                return arg.reduce_init(split, location);
              }
           };
       };
@@ -712,14 +558,8 @@
              return Pts::possible_ghosts(arg_.possible_ghosts());
           }
 
-          inline SeqWalkType init(structured::IntVec const & minus,
-                                  structured::IntVec const & plus,
-                                  structured::IntVec const & shift) const {
-             return SeqWalkType(ConstructExpr::in_sq_construct(minus,
-                                                               plus,
-                                                               shift,
-                                                               arg_,
-                                                               coefs_));
+          inline SeqWalkType init(void) const {
+             return SeqWalkType(ConstructExpr::in_sq_construct(arg_, coefs_));
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
@@ -737,14 +577,8 @@
                 return arg_.gpu_ready(deviceIndex);
              }
 
-             inline GPUWalkType gpu_init(structured::IntVec const & minus,
-                                         structured::IntVec const & plus,
-                                         structured::IntVec const & shift,
-                                         int const deviceIndex) const {
-                return GPUWalkType(ConstructGPUExpr::in_gpu_construct(minus,
-                                                                      plus,
-                                                                      shift,
-                                                                      arg_,
+             inline GPUWalkType gpu_init(int const deviceIndex) const {
+                return GPUWalkType(ConstructGPUExpr::in_gpu_construct(arg_,
                                                                       coefs_,
                                                                       deviceIndex));
              }
@@ -758,13 +592,8 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::IntVec const & minus,
-                                           structured::IntVec const & plus,
-                                           structured::IntVec const & shift) const {
-             return ReductionType(ConstructExpr::in_reduce_construct(minus,
-                                                                     plus,
-                                                                     shift,
-                                                                     arg_,
+          inline ReductionType reduce_init(void) const {
+             return ReductionType(ConstructExpr::in_reduce_construct(arg_,
                                                                      coefs_));
           }
 
@@ -793,11 +622,9 @@
              : arg_(arg), coefs_(coefs)
              {}
 
-             inline SeqWalkType init(structured::IntVec const & shift,
-                                     structured::IntVec const & split,
+             inline SeqWalkType init(structured::IntVec const & split,
                                      structured::IntVec const & location) const {
-                return SeqWalkType(ConstructExpr::rs_sq_construct(shift,
-                                                                  arg_,
+                return SeqWalkType(ConstructExpr::rs_sq_construct(arg_,
                                                                   coefs_,
                                                                   split,
                                                                   location));
@@ -929,13 +756,8 @@
              return Pts::possible_ghosts(arg_.possible_ghosts());
           }
 
-          inline SeqWalkType init(structured::IntVec const & minus,
-                                  structured::IntVec const & plus,
-                                  structured::IntVec const & shift) const {
-             return SeqWalkType(ConstructExpr::in_sq_construct(minus,
-                                                               plus,
-                                                               shift,
-                                                               arg_));
+          inline SeqWalkType init(void) const {
+             return SeqWalkType(ConstructExpr::in_sq_construct(arg_));
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
@@ -953,14 +775,8 @@
                 return arg_.gpu_ready(deviceIndex);
              }
 
-             inline GPUWalkType gpu_init(structured::IntVec const & minus,
-                                         structured::IntVec const & plus,
-                                         structured::IntVec const & shift,
-                                         int const deviceIndex) const {
-                return GPUWalkType(ConstructGPUExpr::in_gpu_construct(minus,
-                                                                      plus,
-                                                                      shift,
-                                                                      arg_,
+             inline GPUWalkType gpu_init(int const deviceIndex) const {
+                return GPUWalkType(ConstructGPUExpr::in_gpu_construct(arg_,
                                                                       deviceIndex));
              }
 
@@ -973,13 +789,8 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::IntVec const & minus,
-                                           structured::IntVec const & plus,
-                                           structured::IntVec const & shift) const {
-             return ReductionType(ConstructExpr::in_reduce_construct(minus,
-                                                                     plus,
-                                                                     shift,
-                                                                     arg_));
+          inline ReductionType reduce_init(void) const {
+             return ReductionType(ConstructExpr::in_reduce_construct(arg_));
           }
 
          private:
@@ -1003,11 +814,9 @@
              : arg_(arg)
              {}
 
-             inline SeqWalkType init(structured::IntVec const & shift,
-                                     structured::IntVec const & split,
+             inline SeqWalkType init(structured::IntVec const & split,
                                      structured::IntVec const & location) const {
-                return SeqWalkType(ConstructExpr::rs_sq_construct(shift,
-                                                                  arg_,
+                return SeqWalkType(ConstructExpr::rs_sq_construct(arg_,
                                                                   split,
                                                                   location));
              }
@@ -1135,16 +944,14 @@
              return point_possible_ghosts<Point>(arg_.possible_ghosts());
           }
 
-          inline SeqWalkType init(structured::IntVec const & minus,
-                                  structured::IntVec const & plus,
-                                  structured::IntVec const & shift) const {
-             return SeqWalkType(arg_.init(minus, plus, shift + Point::int_vec()));
+          inline SeqWalkType init(void) const {
+             return SeqWalkType(arg_.init());
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
              inline ResizeType resize(structured::IntVec const & minus,
                                       structured::IntVec const & plus) const {
-                return ResizeType(arg_.resize(minus, plus));
+                return ResizeType(arg_.resize());
              }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
@@ -1156,14 +963,8 @@
                 return arg_.gpu_ready(deviceIndex);
              }
 
-             inline GPUWalkType gpu_init(structured::IntVec const & minus,
-                                         structured::IntVec const & plus,
-                                         structured::IntVec const & shift,
-                                         int const deviceIndex) const {
-                return GPUWalkType(arg_.gpu_init(minus,
-                                                 plus,
-                                                 shift + Point::int_vec(),
-                                                 deviceIndex));
+             inline GPUWalkType gpu_init(int const deviceIndex) const {
+                return GPUWalkType(arg_.gpu_init(deviceIndex));
              }
 
 #            ifdef NEBO_GPU_TEST
@@ -1175,12 +976,8 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::IntVec const & minus,
-                                           structured::IntVec const & plus,
-                                           structured::IntVec const & shift) const {
-             return ReductionType(arg_.reduce_init(minus,
-                                                   plus,
-                                                   shift + Point::int_vec()));
+          inline ReductionType reduce_init(void) const {
+             return ReductionType(arg_.reduce_init());
           }
 
          private:
@@ -1201,12 +998,9 @@
              : arg_(arg)
              {}
 
-             inline SeqWalkType init(structured::IntVec const & shift,
-                                     structured::IntVec const & split,
+             inline SeqWalkType init(structured::IntVec const & split,
                                      structured::IntVec const & location) const {
-                return SeqWalkType(arg_.init(shift + Point::int_vec(),
-                                             split,
-                                             location));
+                return SeqWalkType(arg_.init(split, location));
              }
 
             private:

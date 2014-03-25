@@ -72,15 +72,15 @@
 
 (struct args (begin-pmtrs end-pmtrs begin-args end-args) #:transparent)
 
-(define seq-args (args resize-pmtr null resize-arg null))
+(define seq-args (args null null null null))
 (define res-args (args null
                        (list (adcr IntVec 'split)
                              (adcr IntVec 'location))
                        null
                        (list 'split 'location)))
-(define gpu-args (args resize-pmtr
+(define gpu-args (args null
                        (adc 'int DI-chunk)
-                       resize-arg
+                       null
                        DI-chunk))
 
 (define (general-construct-fcn name
@@ -88,14 +88,12 @@
                                init-name)
   (construct-fcn name
                  (list (args-begin-pmtrs args)
-                       shift-pmtr
                        (adcr 'PreArg 'arg)
                        (adcr (tpl-use NSCC 'length) 'coefs)
                        (args-end-pmtrs args))
                  (fc 'Result
                      (fc (scope 'EarlierPointsType name)
                          (args-begin-args args)
-                         'shift
                          'arg
                          (mfc 'coefs 'others)
                          (args-end-args args))
@@ -103,7 +101,6 @@
                          (mfc 'arg
                               init-name
                               (args-begin-args args)
-                              (n+ 'shift (fc (scope 'Point 'int_vec)))
                               (args-end-args args))
                          (fc 'Coef (mfc 'coefs 'coef))))))
 
@@ -112,7 +109,6 @@
                               init-name)
   (construct-fcn name
                  (list (args-begin-pmtrs args)
-                       shift-pmtr
                        (adcr 'PreArg 'arg)
                        (adcr (tpl-use NSCC "1") 'coefs)
                        (args-end-pmtrs args))
@@ -120,7 +116,6 @@
                      (mfc 'arg
                           init-name
                           (args-begin-args args)
-                          (n+ 'shift (fc (scope 'Point 'int_vec)))
                           (args-end-args args))
                      (fc 'Coef (mfc 'coefs 'coef)))))
 
@@ -129,19 +124,16 @@
                                    init-name)
   (construct-fcn name
                  (list (args-begin-pmtrs args)
-                       shift-pmtr
                        (adcr 'PreArg 'arg)
                        (args-end-pmtrs args))
                  (fc 'Result
                      (fc (scope 'EarlierPointsType name)
                          (args-begin-args args)
-                         'shift
                          'arg
                          (args-end-args args))
                      (mfc 'arg
                           init-name
                           (args-begin-args args)
-                          (n+ 'shift (fc (scope 'Point 'int_vec)))
                           (args-end-args args)))))
 
 (define (ave-single-construct-fcn name
@@ -149,13 +141,11 @@
                                   init-name)
   (construct-fcn name
                  (list (args-begin-pmtrs args)
-                       shift-pmtr
                        (adcr 'PreArg 'arg)
                        (args-end-pmtrs args))
                  (mfc 'arg
                       init-name
                       (args-begin-args args)
-                      (n+ 'shift (fc (scope 'Point 'int_vec)))
                       (args-end-args args))))
 
 (define (construct-expr name typedefs . fcns)
@@ -428,8 +418,6 @@
                                   (fc (scope 'Pts 'possible_ghosts)
                                       (mfc 'arg_ 'possible_ghosts))
                                   (fc (scope 'ConstructExpr 'in_sq_construct)
-                                      resize-arg
-                                      'shift
                                       'arg_
                                       'coefs_)
                                   (list (mfc 'arg_ 'resize resize-arg)
@@ -437,15 +425,11 @@
                                   (mfc 'arg_ 'cpu_ready)
                                   (mfc 'arg_ 'gpu_ready DI-chunk)
                                   (fc (scope 'ConstructGPUExpr 'in_gpu_construct)
-                                      resize-arg
-                                      'shift
                                       'arg_
                                       'coefs_
                                       DI-chunk)
                                   (mfc 'arg_ 'gpu_prep DI-chunk)
                                   (fc (scope 'ConstructExpr 'in_reduce_construct)
-                                      resize-arg
-                                      'shift
                                       'arg_
                                       'coefs_)
                                   null
@@ -465,7 +449,6 @@
                                                        (cons-asgn 'coefs_ 'coefs))
                                                  null)
                                  (fc (scope 'ConstructExpr 'rs_sq_construct)
-                                     'shift
                                      'arg_
                                      'coefs_
                                      'split
@@ -529,21 +512,15 @@
                                   (fc (scope 'Pts 'possible_ghosts)
                                       (mfc 'arg_ 'possible_ghosts))
                                   (fc (scope 'ConstructExpr 'in_sq_construct)
-                                      resize-arg
-                                      'shift
                                       'arg_)
                                   (mfc 'arg_ 'resize resize-arg)
                                   (mfc 'arg_ 'cpu_ready)
                                   (mfc 'arg_ 'gpu_ready DI-chunk)
                                   (fc (scope 'ConstructGPUExpr 'in_gpu_construct)
-                                      resize-arg
-                                      'shift
                                       'arg_
                                       DI-chunk)
                                   (mfc 'arg_ 'gpu_prep DI-chunk)
                                   (fc (scope 'ConstructExpr 'in_reduce_construct)
-                                      resize-arg
-                                      'shift
                                       'arg_)
                                   null
                                   (sadc 'Arg 'arg_))
@@ -556,7 +533,6 @@
                                                  (cons-asgn 'arg_ 'arg)
                                                  null)
                                  (fc (scope 'ConstructExpr 'rs_sq_construct)
-                                     'shift
                                      'arg_
                                      'split
                                      'location)
@@ -616,17 +592,15 @@
                                                   null)
                                   (fc (tpl-use 'point_possible_ghosts 'Point)
                                       (mfc 'arg_ 'possible_ghosts))
-                                  (mfc 'arg_ 'init resize-arg (n+ 'shift (fc (scope 'Point 'int_vec))))
-                                  (mfc 'arg_ 'resize resize-arg)
+                                  (mfc 'arg_ 'init)
+                                  (mfc 'arg_ 'resize)
                                   (mfc 'arg_ 'cpu_ready)
                                   (mfc 'arg_ 'gpu_ready DI-chunk)
                                   (mfc 'arg_
                                        'gpu_init
-                                       resize-arg
-                                       (n+ 'shift (fc (scope 'Point 'int_vec)))
                                        DI-chunk)
                                   (mfc 'arg_ 'gpu_prep DI-chunk)
-                                  (mfc 'arg_ 'reduce_init resize-arg (n+ 'shift (fc (scope 'Point 'int_vec))))
+                                  (mfc 'arg_ 'reduce_init)
                                   null
                                   (sadc 'Arg 'arg_))
                   (bs-Resize-rhs (s-typedef (tpl-pmtr (scope 'Arg 'SeqWalkType))
@@ -637,7 +611,6 @@
                                                  null)
                                  (mfc 'arg_
                                       'init
-                                      (n+ 'shift (fc (scope 'Point 'int_vec)))
                                       'split
                                       'location)
                                  null

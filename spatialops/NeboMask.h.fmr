@@ -43,36 +43,16 @@
                                                   null)
                                   (n+ (mfc 'mask_ 'get_valid_ghost_data)
                                       (fc 'point_to_ghost (mfc (mfc 'mask_ 'boundary_info) 'has_extra)))
-                                  (fc 'resize_ghost_and_shift_window
-                                      'mask_
-                                      'minus
-                                      (n- 'plus
-                                          (mfc (mfc 'mask_ 'boundary_info) 'has_extra))
-                                      'shift)
-                                  (fc 'resize_ghost
-                                      'mask_
-                                      'minus
-                                      (n- 'plus
-                                          (mfc (mfc 'mask_ 'boundary_info) 'has_extra)))
+                                  'mask_
+                                  'mask_
                                   (mfc 'mask_ 'find_consumer 'LOCAL_RAM "0")
                                   (mfc 'mask_ 'find_consumer 'EXTERNAL_CUDA_GPU DI-chunk)
-                                  (list DI-chunk
-                                        (fc 'resize_ghost_and_shift_window
-                                            'mask_
-                                            'minus
-                                            (n- 'plus
-                                                (mfc (mfc 'mask_ 'boundary_info) 'has_extra))
-                                            'shift))
+                                  (list DI-chunk 'mask_)
                                   (c (fc (tpl-use 'const_cast (ptr SpatialMask))
                                          (take-ptr 'mask_))
                                      '->
                                      (fc 'add_consumer 'EXTERNAL_CUDA_GPU DI-chunk))
-                                  (fc 'resize_ghost_and_shift_window
-                                      'mask_
-                                      'minus
-                                      (n- 'plus
-                                          (mfc (mfc 'mask_ 'boundary_info) 'has_extra))
-                                      'shift)
+                                  'mask_
                                   null
                                   (sadc SpatialMask 'mask_))
                   (bs-Resize-rhs null
@@ -80,15 +60,13 @@
                                  (bm-constructor (adcr SpatialMask 'm)
                                                  (cons-asgn 'mask_ 'm)
                                                  null)
-                                 (fc 'shift_window
-                                     (fc (tpl-use (scope 'structured 'SpatialMask)
-                                                  FT-chunk)
-                                         (mfc (mfc 'mask_ 'window_with_ghost)
-                                              'refine
-                                              'split
-                                              'location)
-                                         'mask_)
-                                     'shift)
+                                 (fc (tpl-use (scope 'structured 'SpatialMask)
+                                              FT-chunk)
+                                     (mfc (mfc 'mask_ 'window_with_ghost)
+                                          'refine
+                                          'split
+                                          'location)
+                                     'mask_)
                                  null
                                  (sadc SpatialMask 'mask_))
                   (bs-SeqWalk-rhs null

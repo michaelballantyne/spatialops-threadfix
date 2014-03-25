@@ -55,19 +55,12 @@
              return mask_.get_valid_ghost_data() + point_to_ghost(mask_.boundary_info().has_extra());
           }
 
-          inline SeqWalkType init(structured::IntVec const & minus,
-                                  structured::IntVec const & plus,
-                                  structured::IntVec const & shift) const {
-             return SeqWalkType(resize_ghost_and_shift_window(mask_,
-                                                              minus,
-                                                              plus - mask_.boundary_info().has_extra(),
-                                                              shift));
-          }
+          inline SeqWalkType init(void) const { return SeqWalkType(mask_); }
 
 #         ifdef FIELD_EXPRESSION_THREADS
              inline ResizeType resize(structured::IntVec const & minus,
                                       structured::IntVec const & plus) const {
-                return ResizeType(resize_ghost(mask_, minus, plus - mask_.boundary_info().has_extra()));
+                return ResizeType(mask_);
              }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
@@ -81,15 +74,8 @@
                 return mask_.find_consumer(EXTERNAL_CUDA_GPU, deviceIndex);
              }
 
-             inline GPUWalkType gpu_init(structured::IntVec const & minus,
-                                         structured::IntVec const & plus,
-                                         structured::IntVec const & shift,
-                                         int const deviceIndex) const {
-                return GPUWalkType(deviceIndex,
-                                   resize_ghost_and_shift_window(mask_,
-                                                                 minus,
-                                                                 plus - mask_.boundary_info().has_extra(),
-                                                                 shift));
+             inline GPUWalkType gpu_init(int const deviceIndex) const {
+                return GPUWalkType(deviceIndex, mask_);
              }
 
 #            ifdef NEBO_GPU_TEST
@@ -102,13 +88,8 @@
 #         endif
           /* __CUDACC__ */
 
-          inline ReductionType reduce_init(structured::IntVec const & minus,
-                                           structured::IntVec const & plus,
-                                           structured::IntVec const & shift) const {
-             return ReductionType(resize_ghost_and_shift_window(mask_,
-                                                                minus,
-                                                                plus - mask_.boundary_info().has_extra(),
-                                                                shift));
+          inline ReductionType reduce_init(void) const {
+             return ReductionType(mask_);
           }
 
          private:
@@ -126,13 +107,11 @@
              : mask_(m)
              {}
 
-             inline SeqWalkType init(structured::IntVec const & shift,
-                                     structured::IntVec const & split,
+             inline SeqWalkType init(structured::IntVec const & split,
                                      structured::IntVec const & location) const {
-                return SeqWalkType(shift_window(structured::SpatialMask<FieldType>(mask_.window_with_ghost().refine(split,
-                                                                                                                    location),
-                                                                                   mask_),
-                                                shift));
+                return SeqWalkType(structured::SpatialMask<FieldType>(mask_.window_with_ghost().refine(split,
+                                                                                                       location),
+                                                                      mask_));
              }
 
             private:

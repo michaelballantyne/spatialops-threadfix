@@ -59,13 +59,9 @@
                                    fexpr) {
           structured::GhostData ghosts = fexpr.expr().possible_ghosts();
 
-          const structured::IntVec shift = structured::IntVec(0, 0, 0);
-
           ResultType result = initialValue;
 
-          typename ExprType::ReductionType expr = fexpr.expr().reduce_init(ghosts.get_minus(),
-                                                                           ghosts.get_plus(),
-                                                                           shift);
+          typename ExprType::ReductionType expr = fexpr.expr().reduce_init();
 
           while(!(expr.at_end())) {
              result = proc(result, expr.eval());
@@ -101,13 +97,9 @@
                                             const & fexpr) {
           structured::GhostData ghosts(0);
 
-          const structured::IntVec shift = structured::IntVec(0, 0, 0);
-
           ResultType result = initialValue;
 
-          typename ExprType::ReductionType expr = fexpr.expr().reduce_init(ghosts.get_minus(),
-                                                                           ghosts.get_plus(),
-                                                                           shift);
+          typename ExprType::ReductionType expr = fexpr.expr().reduce_init();
 
           while(!(expr.at_end())) {
              result = proc(result, expr.eval());
@@ -152,11 +144,7 @@
                                                          const & fexpr) {
           structured::GhostData ghosts = fexpr.expr().possible_ghosts();
 
-          const structured::IntVec shift = structured::IntVec(0, 0, 0);
-
-          typename ExprType::ReductionType expr = fexpr.expr().reduce_init(ghosts.get_minus(),
-                                                                           ghosts.get_plus(),
-                                                                           shift);
+          typename ExprType::ReductionType expr = fexpr.expr().reduce_init();
 
           typename FieldType::value_type result = expr.eval();
 
@@ -209,11 +197,7 @@
                                                                   const & fexpr) {
           structured::GhostData ghosts(0);
 
-          const structured::IntVec shift = structured::IntVec(0, 0, 0);
-
-          typename ExprType::ReductionType expr = fexpr.expr().reduce_init(ghosts.get_minus(),
-                                                                           ghosts.get_plus(),
-                                                                           shift);
+          typename ExprType::ReductionType expr = fexpr.expr().reduce_init();
 
           typename FieldType::value_type result = expr.eval();
 
@@ -266,11 +250,7 @@
                                                          const & fexpr) {
           structured::GhostData ghosts = fexpr.expr().possible_ghosts();
 
-          const structured::IntVec shift = structured::IntVec(0, 0, 0);
-
-          typename ExprType::ReductionType expr = fexpr.expr().reduce_init(ghosts.get_minus(),
-                                                                           ghosts.get_plus(),
-                                                                           shift);
+          typename ExprType::ReductionType expr = fexpr.expr().reduce_init();
 
           typename FieldType::value_type result = expr.eval();
 
@@ -322,11 +302,7 @@
                                                                   const & fexpr) {
           structured::GhostData ghosts(0);
 
-          const structured::IntVec shift = structured::IntVec(0, 0, 0);
-
-          typename ExprType::ReductionType expr = fexpr.expr().reduce_init(ghosts.get_minus(),
-                                                                           ghosts.get_plus(),
-                                                                           shift);
+          typename ExprType::ReductionType expr = fexpr.expr().reduce_init();
 
           typename FieldType::value_type result = expr.eval();
 
