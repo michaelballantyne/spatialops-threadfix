@@ -150,19 +150,79 @@
          return split[0] * split[1] * split[2];
       };
 
+      inline void nebo_set_up_extents(structured::IntVec const & current,
+                                      structured::IntVec const & split,
+                                      int & localXLow,
+                                      int & localXHigh,
+                                      int & localYLow,
+                                      int & localYHigh,
+                                      int & localZLow,
+                                      int & localZHigh,
+                                      int const xLow,
+                                      int const xHigh,
+                                      int const yLow,
+                                      int const yHigh,
+                                      int const zLow,
+                                      int const zHigh) {
+        using namespace structured;
+
+        //full extent indexed from 0 rather than DLow (which is nonpositive - zero or below)
+        IntVec const fullExtent(xHigh - xLow,
+                                yHigh - yLow,
+                                zHigh - zLow);
+
+        //sanity checks
+#       ifndef NDEBUG
+          for( size_t i=0; i<3; ++i ){
+            assert( fullExtent[i] >= split[i] );
+            assert( split[i] > 0 );
+            assert( current[i] < split[i] );
+            assert( current[i] >= 0 );
+          }
+#       endif
+
+        //extent of a partition
+        IntVec const stdExtent = fullExtent / split;
+
+        //number of partitions with an extra cell (to cover what is not covered by stdExtent)
+        IntVec const nExtra(fullExtent[0] % split[0],
+                            fullExtent[1] % split[1],
+                            fullExtent[2] % split[2]);
+
+        //number of previous paritions with an extra cell
+        IntVec const pastExtra(current[0] < nExtra[0] ? current[0] : nExtra[0],
+                               current[1] < nExtra[1] ? current[1] : nExtra[1],
+                               current[2] < nExtra[2] ? current[2] : nExtra[2]);
+
+        //does current partition have an extra cell
+        IntVec const currentExtra(current[0] < nExtra[0] ? 1 : 0,
+                                  current[1] < nExtra[1] ? 1 : 0,
+                                  current[2] < nExtra[2] ? 1 : 0);
+
+        //calculate current partition's low and high
+        IntVec const low = stdExtent * current + pastExtra;
+        IntVec const high = low + stdExtent + currentExtra;
+
+        //shift back to indexing from DLow rather than zero
+        localXLow = low[0] + xLow;
+        localYLow = low[1] + yLow;
+        localZLow = low[2] + zLow;
+        localXHigh = high[0] + xLow;
+        localYHigh = high[1] + yLow;
+        localZHigh = high[2] + zLow;
+      };
+
       inline structured::IntVec nebo_next_partition(structured::IntVec const & current,
                                                     structured::IntVec const & split) {
-         structured::IntVec result;
+        structured::IntVec result;
 
-         if(current[2] < split[2] - 1) {
-            result = structured::IntVec(current[0], current[1], 1 + current[2]);
-         }
-         else if(current[1] < split[1] - 1) {
-            result = structured::IntVec(current[0], 1 + current[1], 0);
-         }
-         else { result = structured::IntVec(1 + current[0], 0, 0); };
+        if(current[2] < split[2] - 1)
+          result = structured::IntVec(current[0], current[1], 1 + current[2]);
+        else if(current[1] < split[1] - 1)
+          result = structured::IntVec(current[0], 1 + current[1], 0);
+        else result = structured::IntVec(1 + current[0], 0, 0);
 
-         return result;
+        return result;
       };
 
       template<typename Operand, typename FieldType>
@@ -236,7 +296,7 @@
       /* Modes: */
       struct Initial;
 #     ifdef FIELD_EXPRESSION_THREADS
-         struct Resize
+         struct Resize;
 #     endif
       /* FIELD_EXPRESSION_THREADS */
       struct SeqWalk;

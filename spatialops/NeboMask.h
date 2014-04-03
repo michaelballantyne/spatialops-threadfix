@@ -58,10 +58,7 @@
           inline SeqWalkType init(void) const { return SeqWalkType(mask_); }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::IntVec const & minus,
-                                      structured::IntVec const & plus) const {
-                return ResizeType(mask_);
-             }
+             inline ResizeType resize(void) const { return ResizeType(mask_); }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
@@ -107,12 +104,7 @@
              : mask_(m)
              {}
 
-             inline SeqWalkType init(structured::IntVec const & split,
-                                     structured::IntVec const & location) const {
-                return SeqWalkType(structured::SpatialMask<FieldType>(mask_.window_with_ghost().refine(split,
-                                                                                                       location),
-                                                                      mask_));
-             }
+             inline SeqWalkType init(void) const { return SeqWalkType(mask_); }
 
             private:
              structured::SpatialMask<FieldType> const mask_;

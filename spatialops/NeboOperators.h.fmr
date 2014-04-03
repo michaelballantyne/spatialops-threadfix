@@ -95,7 +95,7 @@
                                 gen-constructor
                                 ghosts
                                 (op_-mfc 'init)
-                                (op_-mfc 'resize resize-arg)
+                                (op_-mfc 'resize)
                                 (exec-and-check 'cpu_ready)
                                 (exec-and-check 'gpu_ready DI-chunk)
                                 (op_-mfc 'gpu_init DI-chunk)
@@ -106,7 +106,7 @@
                 (bs-Resize-rhs null
                                null
                                gen-constructor
-                               (op_-mfc 'init 'split 'location)
+                               (op_-mfc 'init)
                                null
                                gen-data-mems)
                 (bs-SeqWalk-rhs (s-typedef (tpl-pmtr (scope (first Op-lst) vt-chunk))

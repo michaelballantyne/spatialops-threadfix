@@ -58,10 +58,7 @@
           inline SeqWalkType init(void) const { return SeqWalkType(value_); }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::IntVec const & minus,
-                                      structured::IntVec const & plus) const {
-                return ResizeType(value_);
-             }
+             inline ResizeType resize(void) const { return ResizeType(value_); }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
@@ -100,10 +97,7 @@
              : value_(value)
              {}
 
-             inline SeqWalkType init(structured::IntVec const & split,
-                                     structured::IntVec const & location) const {
-                return SeqWalkType(value_);
-             }
+             inline SeqWalkType init(void) const { return SeqWalkType(value_); }
 
             private:
              value_type const value_;
@@ -200,10 +194,7 @@
           inline SeqWalkType init(void) const { return SeqWalkType(field_); }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::IntVec const & minus,
-                                      structured::IntVec const & plus) const {
-                return ResizeType(field_);
-             }
+             inline ResizeType resize(void) const { return ResizeType(field_); }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
@@ -249,10 +240,7 @@
              : field_(f)
              {}
 
-             inline SeqWalkType init(structured::IntVec const & split,
-                                     structured::IntVec const & location) const {
-                return SeqWalkType(field_);
-             }
+             inline SeqWalkType init(void) const { return SeqWalkType(field_); }
 
             private:
              FieldType const field_;
@@ -387,8 +375,7 @@
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::IntVec const & minus,
-                                      structured::IntVec const & plus) const {
+             inline ResizeType resize(void) const {
                 return ResizeType(* field_.field_values(LOCAL_RAM));
              }
 #         endif
@@ -438,10 +425,7 @@
              : value_(v)
              {}
 
-             inline SeqWalkType init(structured::IntVec const & split,
-                                     structured::IntVec const & location) const {
-                return SeqWalkType(value_);
-             }
+             inline SeqWalkType init(void) const { return SeqWalkType(value_); }
 
             private:
              double const value_;

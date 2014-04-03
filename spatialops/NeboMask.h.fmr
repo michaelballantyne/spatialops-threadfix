@@ -60,13 +60,7 @@
                                  (bm-constructor (adcr SpatialMask 'm)
                                                  (cons-asgn 'mask_ 'm)
                                                  null)
-                                 (fc (tpl-use (scope 'structured 'SpatialMask)
-                                              FT-chunk)
-                                     (mfc (mfc 'mask_ 'window_with_ghost)
-                                          'refine
-                                          'split
-                                          'location)
-                                     'mask_)
+                                 'mask_
                                  null
                                  (sadc SpatialMask 'mask_))
                   (bs-SeqWalk-rhs null

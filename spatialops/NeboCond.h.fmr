@@ -498,8 +498,8 @@
                                                  (list (cons-asgn 'test_ 'test)
                                                        (cons-asgn 'expr_ 'expr))
                                                  null)
-                                 (list (mfc 'test_ 'init 'split 'location)
-                                       (mfc 'expr_ 'init 'split 'location))
+                                 (list (mfc 'test_ 'init)
+                                       (mfc 'expr_ 'init))
                                  null
                                  (list (sadc 'Test 'test_)
                                        (sadc 'Expr 'expr_)))
@@ -596,8 +596,8 @@
                                                  (list (cons-asgn 'clause_ 'clause)
                                                        (cons-asgn 'otherwise_ 'otherwise))
                                                  null)
-                                 (list (mfc 'clause_ 'init 'split 'location)
-                                       (mfc 'otherwise_ 'init 'split 'location))
+                                 (list (mfc 'clause_ 'init)
+                                       (mfc 'otherwise_ 'init))
                                  null
                                  (list (sadc CT-chunk 'clause_)
                                        (sadc 'Otherwise 'otherwise_)))

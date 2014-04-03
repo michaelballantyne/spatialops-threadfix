@@ -53,7 +53,7 @@
                          (list (r-fcn-def (constize (fcn-dcl 'init 'SeqWalkType))
                                           null
                                           (fc 'SeqWalkType SW-cons-args))
-                               (threads-only (r-fcn-def (constize (fcn-dcl 'resize 'ResizeType resize-pmtr))
+                               (threads-only (r-fcn-def (constize (fcn-dcl 'resize 'ResizeType))
                                                         null
                                                         (fc 'ResizeType RS-cons-args)))
                                (gpu-only (bb (r-fcn-def (constize (fcn-dcl 'cpu_ready 'bool))
@@ -91,9 +91,7 @@
                         tpl-irreg-args
                         constructor
                         (list (r-fcn-def (constize (fcn-dcl 'init
-                                                            'SeqWalkType
-                                                            (adcr IntVec 'split)
-                                                            (adcr IntVec 'location)))
+                                                            'SeqWalkType))
                                          null
                                          (fc 'SeqWalkType SW-cons-args))
                               publics)

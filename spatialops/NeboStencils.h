@@ -236,9 +236,8 @@
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::IntVec const & minus,
-                                      structured::IntVec const & plus) const {
-                return ResizeType(arg_.resize(minus, plus), coefs_);
+             inline ResizeType resize(void) const {
+                return ResizeType(arg_.resize(), coefs_);
              }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
@@ -287,9 +286,8 @@
              : arg_(arg), coefs_(coefs)
              {}
 
-             inline SeqWalkType init(structured::IntVec const & split,
-                                     structured::IntVec const & location) const {
-                return SeqWalkType(arg_.init(split, location), coefs_);
+             inline SeqWalkType init(void) const {
+                return SeqWalkType(arg_.init(), coefs_);
              }
 
             private:
@@ -445,9 +443,8 @@
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::IntVec const & minus,
-                                      structured::IntVec const & plus) const {
-                return ResizeType(arg_.resize(minus, plus));
+             inline ResizeType resize(void) const {
+                return ResizeType(arg_.resize());
              }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
@@ -492,9 +489,8 @@
              : arg_(arg)
              {}
 
-             inline SeqWalkType init(structured::IntVec const & split,
-                                     structured::IntVec const & location) const {
-                return SeqWalkType(arg_.init(split, location));
+             inline SeqWalkType init(void) const {
+                return SeqWalkType(arg_.init());
              }
 
             private:
@@ -662,8 +658,7 @@
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::IntVec const & minus,
-                                      structured::IntVec const & plus) const {
+             inline ResizeType resize(void) const {
                 return ResizeType(arg_.resize());
              }
 #         endif
@@ -711,9 +706,8 @@
              : arg_(arg)
              {}
 
-             inline SeqWalkType init(structured::IntVec const & split,
-                                     structured::IntVec const & location) const {
-                return SeqWalkType(arg_.init(split, location));
+             inline SeqWalkType init(void) const {
+                return SeqWalkType(arg_.init());
              }
 
             private:

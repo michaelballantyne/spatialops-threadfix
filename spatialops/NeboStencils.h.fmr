@@ -287,7 +287,7 @@
                                       (mfc 'arg_ 'possible_ghosts))
                                   (list (mfc 'arg_ 'init)
                                         'coefs_)
-                                  (list (mfc 'arg_ 'resize resize-arg)
+                                  (list (mfc 'arg_ 'resize)
                                         'coefs_)
                                   (mfc 'arg_ 'cpu_ready)
                                   (mfc 'arg_ 'gpu_ready DI-chunk)
@@ -308,7 +308,7 @@
                                                  (list (cons-asgn 'arg_ 'arg)
                                                        (cons-asgn 'coefs_ 'coefs))
                                                  null)
-                                 (list (mfc 'arg_ 'init 'split 'location)
+                                 (list (mfc 'arg_ 'init)
                                        'coefs_)
                                  null
                                  (list (sadc 'Arg 'arg_)
@@ -370,7 +370,7 @@
                                   (fc (scope 'Pts 'possible_ghosts)
                                       (mfc 'arg_ 'possible_ghosts))
                                   (mfc 'arg_ 'init)
-                                  (mfc 'arg_ 'resize resize-arg)
+                                  (mfc 'arg_ 'resize)
                                   (mfc 'arg_ 'cpu_ready)
                                   (mfc 'arg_ 'gpu_ready DI-chunk)
                                   (list (mfc 'arg_ 'gpu_init)
@@ -384,7 +384,7 @@
                                  (bm-constructor (adcr 'Arg 'arg)
                                                  (cons-asgn 'arg_ 'arg)
                                                  null)
-                                 (mfc 'arg_ 'init 'split 'location)
+                                 (mfc 'arg_ 'init)
                                  null
                                  (sadc 'Arg 'arg_))
                   (bs-SeqWalk-rhs (list (sum-general-eval-struct 'EvalExpr)
@@ -464,10 +464,7 @@
                                  (bm-constructor (adcr 'Arg 'arg)
                                                  (cons-asgn 'arg_ 'arg)
                                                  null)
-                                 (mfc 'arg_
-                                      'init
-                                      'split
-                                      'location)
+                                 (mfc 'arg_ 'init)
                                  null
                                  (sadc 'Arg 'arg_))
                   (bs-SeqWalk-rhs null

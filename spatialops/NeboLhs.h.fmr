@@ -26,6 +26,10 @@
 (require "FulmarAbbreviations.fmr")
 (require "NeboCore.fmr")
 
+(define resize-pmtr (list (adcr IntVec 'minus)
+                          (adcr IntVec 'plus)))
+(define resize-arg (list 'minus 'plus))
+
 (define (build-Initial-lhs name
                            FT
                            tpl-irreg-pars
@@ -91,6 +95,7 @@
                                                                                (mfc 'rhs 'possible_ghosts)))
                                                    (nt= IntVec 'minus (mfc 'ghosts 'get_minus))
                                                    (nt= IntVec 'plus (mfc 'ghosts 'get_plus))
+                                                   (mfc 'field_ 'reset_valid_ghosts (fc GhostData resize-arg))
                                                    (nt= GhostData 'extents (fc 'calculate_limits
                                                                                'useGhost
                                                                                (mfc 'field_ 'window_with_ghost)
@@ -122,7 +127,7 @@
                                                             (assign-call 'sequential_assign))
                                                    (assign-call 'sequential_assign)))
                                (assign 'sequential_assign sequential-assign-body 'sequential)
-                               (r-fcn-def (fcn-dcl 'init 'SeqWalkType resize-pmtr)
+                               (r-fcn-def (fcn-dcl 'init 'SeqWalkType)
                                           null
                                           (fc 'SeqWalkType SW-cons-args))
                                (threads-only (bb (assign 'thread_parallel_assign
@@ -135,7 +140,7 @@
                                                                      (n++ 'ii)
                                                                      (mfc 'semaphore 'wait)))
                                                          (bs 'thread 'parallel))
-                                                 (r-fcn-def (fcn-dcl 'resize 'ResizeType resize-pmtr)
+                                                 (r-fcn-def (fcn-dcl 'resize 'ResizeType)
                                                             null
                                                             (fc 'ResizeType RS-cons-args))))
                                (gpu-only (bb (assign 'gpu_assign gpu-assign-body 'CUDA)
@@ -148,7 +153,7 @@
                                              (r-fcn-def (constize (fcn-dcl 'gpu_device_index 'int))
                                                         null
                                                         gpu-device-index-body)
-                                             (r-fcn-def (fcn-dcl 'gpu_init 'GPUWalkType resize-pmtr)
+                                             (r-fcn-def (fcn-dcl 'gpu_init 'GPUWalkType)
                                                         null
                                                         (fc 'GPUWalkType gpu-cons-args))
                                              (gpu-test-only (assign 'gpu_test_assign
@@ -178,16 +183,13 @@
                                (tpl-def (tpl-pmtr 'RhsType)
                                         (v-fcn-def 'assign
                                                    (list (adcr 'RhsType 'rhs)
-                                                         (adcr IntVec 'split)
-                                                         (adcr IntVec 'location)
+                                                         low-high-pmtr
                                                          (adp 'Semaphore 'semaphore))
                                                    (list assign-body
                                                          (fc (c 'semaphore '-> 'post))))))
                               publics)
                         (list (r-fcn-def (fcn-dcl 'init
-                                                  'SeqWalkType
-                                                  (adcr IntVec 'split)
-                                                  (adcr IntVec 'location))
+                                                  'SeqWalkType)
                                          null
                                          (fc 'SeqWalkType SW-cons-args))
                               privates)))
@@ -291,46 +293,62 @@
                                                   null)
                                   (mfc 'field_ 'get_ghost_data)
                                   null
-                                  (list (mfc (fc 'init resize-arg)
+                                  (list (mfc (fc 'init)
                                              'assign
                                              (mfc 'rhs 'init)
                                              low-high-arg))
-                                  (p (mfc 'field_ 'reset_valid_ghosts (fc GhostData resize-arg))
-                                     'field_)
+                                  'field_
                                   (list (typedef (tpl-pmtr (scope 'RhsType 'ResizeType))
                                                  'RhsResizeType)
+                                        (nt= 'ResizeType 'new_lhs (fc 'resize))
+                                        (nt= 'RhsResizeType 'new_rhs (mfc 'rhs 'resize))
+                                        (ad 'int 'localXLow)
+                                        (ad 'int 'localXHigh)
+                                        (ad 'int 'localYLow)
+                                        (ad 'int 'localYHigh)
+                                        (ad 'int 'localZLow)
+                                        (ad 'int 'localZHigh)
                                         (nt=c IntVec 'split (fc 'nebo_find_partition
-                                                                (mfc (mfc (fc 'resize_ghost
-                                                                              'field_
-                                                                              (mfc 'lhs_ghosts 'get_minus)
-                                                                              (mfc 'lhs_ghosts 'get_plus))
-                                                                          'window_with_ghost)
-                                                                     'extent)
+                                                                (fc IntVec
+                                                                    (n- 'xHigh 'xLow)
+                                                                    (n- 'yHigh 'yLow)
+                                                                    (n- 'zHigh 'zLow))
                                                                 'thread_count))
                                         (nt=c 'int 'max (fc 'nebo_partition_count 'split))
-                                        (nt= 'ResizeType 'new_lhs (fc 'resize
-                                                                      (mfc 'lhs_ghosts 'get_minus)
-                                                                      (mfc 'lhs_ghosts 'get_plus)))
-                                        (nt= 'RhsResizeType 'new_rhs (mfc 'rhs
-                                                                          'resize
-                                                                          (mfc 'rhs_ghosts 'get_minus)
-                                                                          (mfc 'rhs_ghosts 'get_plus)))
                                         (nt= IntVec 'location ZeroIntVec)
                                         (nfor (nt= 'int 'count "0")
                                               (n< 'count 'max)
                                               (n++ 'count)
+                                              (fc 'nebo_set_up_extents
+                                                  'location
+                                                  'split
+                                                  'localXLow
+                                                  'localXHigh
+                                                  'localYLow
+                                                  'localYHigh
+                                                  'localZLow
+                                                  'localZHigh
+                                                  'xLow
+                                                  'xHigh
+                                                  'yLow
+                                                  'yHigh
+                                                  'zLow
+                                                  'zHigh)
                                               (mfc (fc (scope 'ThreadPoolFIFO 'self))
                                                    'schedule
                                                    (fc (scope 'boost 'bind)
                                                        (take-ptr (scope 'ResizeType (tpl-fcn-use 'assign 'RhsResizeType)))
                                                        'new_lhs
                                                        'new_rhs
-                                                       'split
-                                                       'location
+                                                       'localXLow
+                                                       'localXHigh
+                                                       'localYLow
+                                                       'localYHigh
+                                                       'localZLow
+                                                       'localZHigh
                                                        (take-ptr 'semaphore)))
                                               (n= 'location (fc 'nebo_next_partition 'location 'split))))
-                                  (p (mfc 'field_ 'reset_valid_ghosts (fc GhostData resize-arg))
-                                     'field_)
+                                  'field_
                                   (let ([extent-def (lambda (num)
                                                       (nt= 'int
                                                            (l 'extent num)
@@ -369,8 +387,7 @@
                                   (n== 'LOCAL_RAM (mfc 'field_ 'memory_device_type))
                                   (n== 'EXTERNAL_CUDA_GPU (mfc 'field_ 'memory_device_type))
                                   (mfc 'field_ 'device_index)
-                                  (p (mfc 'field_ 'reset_valid_ghosts (fc GhostData resize-arg))
-                                     'field_)
+                                  'field_
                                   (list (mfc 'rhs 'gpu_prep "0")
                                         (nifelse (n== 'LOCAL_RAM (mfc 'field_ 'memory_device_type))
                                                  (list (ad FT-chunk
@@ -409,16 +426,12 @@
                                  (bm-constructor (ad FT-chunk 'f)
                                                  (cons-asgn 'field_ 'f)
                                                  null)
-                                 (mfc (fc 'init 'split 'location)
+                                 (mfc (fc 'init)
                                       'assign
-                                      (mfc 'rhs 'init 'split 'location))
+                                      (mfc 'rhs 'init)
+                                      low-high-arg)
                                  null
-                                 (fc FT-chunk
-                                     (mfc (mfc 'field_ 'window_with_ghost)
-                                          'refine
-                                          'split
-                                          'location)
-                                     'field_)
+                                 'field_
                                  (sad FT-chunk 'field_))
                   (bs-SeqWalk-lhs null
                                   (bm-constructor (ad FT-chunk 'f)

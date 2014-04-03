@@ -125,18 +125,6 @@ namespace structured{
     ~MemoryWindow();
 
     /**
-     *  \brief Refines/reduces the MemoryWindow into a MemoryWindow within the original.
-     *
-     *  \param splitPattern the number of partitions made in each ordinate direction.
-     *  \param location the specific MemoryWindow to return.
-     *
-     *  \return MemoryWindow containing the new subwindow.
-     */
-    MemoryWindow
-    refine( const IntVec& splitPattern,
-            const IntVec& location ) const;
-
-    /**
      *  \brief given the local ijk location (0-based on the local
      *         window), obtain the flat index in the global memory
      *         space.

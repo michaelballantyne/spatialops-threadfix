@@ -176,25 +176,6 @@ int main()
     overall( status.ok(), "2x2x2 interior of a 4x4x4 box" );
   }
 
-  // test memory window splitting - no BCs
-  {
-    const IntVec nbase(5,9,7), divisions(2,2,2);
-    const MemoryWindow parent( nbase );
-
-    TestHelper status(false);
-
-    status( parent.refine(divisions,IntVec(0,0,0)) == MemoryWindow( nbase, IntVec(0,0,0), IntVec(3,5,4) ), "child 000" );
-    status( parent.refine(divisions,IntVec(1,0,0)) == MemoryWindow( nbase, IntVec(3,0,0), IntVec(2,5,4) ), "child 100" );
-    status( parent.refine(divisions,IntVec(0,1,0)) == MemoryWindow( nbase, IntVec(0,5,0), IntVec(3,4,4) ), "child 010" );
-    status( parent.refine(divisions,IntVec(1,1,0)) == MemoryWindow( nbase, IntVec(3,5,0), IntVec(2,4,4) ), "child 110" );
-    status( parent.refine(divisions,IntVec(0,0,1)) == MemoryWindow( nbase, IntVec(0,0,4), IntVec(3,5,3) ), "child 001" );
-    status( parent.refine(divisions,IntVec(1,0,1)) == MemoryWindow( nbase, IntVec(3,0,4), IntVec(2,5,3) ), "child 101" );
-    status( parent.refine(divisions,IntVec(0,1,1)) == MemoryWindow( nbase, IntVec(0,5,4), IntVec(3,4,3) ), "child 011" );
-    status( parent.refine(divisions,IntVec(1,1,1)) == MemoryWindow( nbase, IntVec(3,5,4), IntVec(2,4,3) ), "child 111" );
-
-    overall( status.ok(), "Memory window splitting" );
-  }
-
   if( overall.isfailed() ) return -1;
   return 0;
 }

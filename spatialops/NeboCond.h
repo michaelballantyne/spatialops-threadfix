@@ -93,8 +93,7 @@
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::IntVec const & minus,
-                                      structured::IntVec const & plus) const {
+             inline ResizeType resize(void) const {
                 return ResizeType(test_.resize(), expr_.resize());
              }
 #         endif
@@ -148,10 +147,8 @@
              : test_(test), expr_(expr)
              {}
 
-             inline SeqWalkType init(structured::IntVec const & split,
-                                     structured::IntVec const & location) const {
-                return SeqWalkType(test_.init(split, location),
-                                   expr_.init(split, location));
+             inline SeqWalkType init(void) const {
+                return SeqWalkType(test_.init(), expr_.init());
              }
 
             private:
@@ -296,8 +293,7 @@
           }
 
 #         ifdef FIELD_EXPRESSION_THREADS
-             inline ResizeType resize(structured::IntVec const & minus,
-                                      structured::IntVec const & plus) const {
+             inline ResizeType resize(void) const {
                 return ResizeType(clause_.resize(), otherwise_.resize());
              }
 #         endif
@@ -355,10 +351,8 @@
              : clause_(clause), otherwise_(otherwise)
              {}
 
-             inline SeqWalkType init(structured::IntVec const & split,
-                                     structured::IntVec const & location) const {
-                return SeqWalkType(clause_.init(split, location),
-                                   otherwise_.init(split, location));
+             inline SeqWalkType init(void) const {
+                return SeqWalkType(clause_.init(), otherwise_.init());
              }
 
             private:

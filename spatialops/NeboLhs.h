@@ -74,6 +74,8 @@
 
               structured::IntVec plus = ghosts.get_plus();
 
+              field_.reset_valid_ghosts(structured::GhostData(minus, plus));
+
               structured::GhostData extents = calculate_limits(useGhost,
                                                                field_.window_with_ghost(),
                                                                field_.get_valid_ghost_data(),
@@ -248,13 +250,7 @@
 #             endif
               /* NEBO_REPORT_BACKEND */;
 
-              init(minus, plus).assign(rhs.init(),
-                                       xLow,
-                                       xHigh,
-                                       yLow,
-                                       yHigh,
-                                       zLow,
-                                       zHigh);
+              init().assign(rhs.init(), xLow, xHigh, yLow, yHigh, zLow, zHigh);
 
 #             ifdef NEBO_REPORT_BACKEND
                  std::cout << "Finished Nebo sequential" << std::endl
@@ -262,12 +258,7 @@
               /* NEBO_REPORT_BACKEND */;
            }
 
-          inline SeqWalkType init(structured::IntVec const & minus,
-                                  structured::IntVec const & plus) {
-             return SeqWalkType((field_.reset_valid_ghosts(structured::GhostData(minus,
-                                                                                 plus)),
-                                 field_));
-          }
+          inline SeqWalkType init(void) { return SeqWalkType(field_); }
 
 #         ifdef FIELD_EXPRESSION_THREADS
              template<typename RhsType>
@@ -292,27 +283,64 @@
 
                  typename RhsType::ResizeType typedef RhsResizeType;
 
-                 const structured::IntVec split = nebo_find_partition(resize_ghost(field_,
-                                                                                   lhs_ghosts.get_minus(),
-                                                                                   lhs_ghosts.get_plus()).window_with_ghost().extent(),
+                 ResizeType new_lhs = resize();
+
+                 RhsResizeType new_rhs = rhs.resize();
+
+                 int localXLow;
+
+                 int localXHigh;
+
+                 int localYLow;
+
+                 int localYHigh;
+
+                 int localZLow;
+
+                 int localZHigh;
+
+                 const structured::IntVec split = nebo_find_partition(structured::
+                                                                      IntVec(xHigh
+                                                                             -
+                                                                             xLow,
+                                                                             yHigh
+                                                                             -
+                                                                             yLow,
+                                                                             zHigh
+                                                                             -
+                                                                             zLow),
                                                                       thread_count);
 
                  const int max = nebo_partition_count(split);
 
-                 ResizeType new_lhs = resize(lhs_ghosts.get_minus(), lhs_ghosts.get_plus());
-
-                 RhsResizeType new_rhs = rhs.resize(rhs_ghosts.get_minus(),
-                                                    rhs_ghosts.get_plus());
-
                  structured::IntVec location = structured::IntVec(0, 0, 0);
 
                  for(int count = 0; count < max; count++) {
+                    nebo_set_up_extents(location,
+                                        split,
+                                        localXLow,
+                                        localXHigh,
+                                        localYLow,
+                                        localYHigh,
+                                        localZLow,
+                                        localZHigh,
+                                        xLow,
+                                        xHigh,
+                                        yLow,
+                                        yHigh,
+                                        zLow,
+                                        zHigh);
+
                     ThreadPoolFIFO::self().schedule(boost::bind(&ResizeType::
                                                                 template assign<RhsResizeType>,
                                                                 new_lhs,
                                                                 new_rhs,
-                                                                split,
-                                                                location,
+                                                                localXLow,
+                                                                localXHigh,
+                                                                localYLow,
+                                                                localYHigh,
+                                                                localZLow,
+                                                                localZHigh,
                                                                 &semaphore));
 
                     location = nebo_next_partition(location, split);
@@ -326,13 +354,7 @@
                  /* NEBO_REPORT_BACKEND */;
               }
 
-             inline ResizeType resize(structured::IntVec const & minus,
-                                      structured::IntVec const & plus) {
-                return ResizeType((field_.reset_valid_ghosts(structured::
-                                                             GhostData(minus,
-                                                                       plus)),
-                                   field_));
-             }
+             inline ResizeType resize(void) { return ResizeType(field_); }
 #         endif
           /* FIELD_EXPRESSION_THREADS */
 
@@ -424,13 +446,7 @@
                 return field_.device_index();
              }
 
-             inline GPUWalkType gpu_init(structured::IntVec const & minus,
-                                         structured::IntVec const & plus) {
-                return GPUWalkType((field_.reset_valid_ghosts(structured::
-                                                              GhostData(minus,
-                                                                        plus)),
-                                    field_));
-             }
+             inline GPUWalkType gpu_init(void) { return GPUWalkType(field_); }
 
 #            ifdef NEBO_GPU_TEST
                 template<typename RhsType>
@@ -503,10 +519,20 @@
 #            ifdef FIELD_EXPRESSION_THREADS
                 template<typename RhsType>
                  inline void assign(RhsType const & rhs,
-                                    structured::IntVec const & split,
-                                    structured::IntVec const & location,
+                                    int const xLow,
+                                    int const xHigh,
+                                    int const yLow,
+                                    int const yHigh,
+                                    int const zLow,
+                                    int const zHigh,
                                     Semaphore * semaphore) {
-                    init(split, location).assign(rhs.init(split, location));
+                    init().assign(rhs.init(),
+                                  xLow,
+                                  xHigh,
+                                  yLow,
+                                  yHigh,
+                                  zLow,
+                                  zHigh);
 
                     semaphore->post();
                  }
@@ -514,12 +540,7 @@
              /* FIELD_EXPRESSION_THREADS */
 
             private:
-             inline SeqWalkType init(structured::IntVec const & split,
-                                     structured::IntVec const & location) {
-                return SeqWalkType(FieldType(field_.window_with_ghost().refine(split,
-                                                                               location),
-                                             field_));
-             }
+             inline SeqWalkType init(void) { return SeqWalkType(field_); }
 
              FieldType field_;
          }
