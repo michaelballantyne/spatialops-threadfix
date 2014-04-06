@@ -26,10 +26,6 @@
 (require "FulmarAbbreviations.fmr")
 (require "NeboCore.fmr")
 
-(define resize-pmtr (list (adcr IntVec 'minus)
-                          (adcr IntVec 'plus)))
-(define resize-arg (list 'minus 'plus))
-
 (define (build-Initial-lhs name
                            FT
                            tpl-irreg-pars
@@ -59,7 +55,6 @@
       (tpl-def (tpl-pmtr 'RhsType)
                (v-fcn-def name
                           (list (ad 'RhsType 'rhs)
-                                resize-pmtr
                                 low-high-pmtr)
                           report-start
                           body
@@ -67,7 +62,6 @@
   (define (assign-call name)
     (fc (tpl-use name 'RhsType)
         'rhs
-        resize-arg
         low-high-arg))
   (define (assign-error standard message)
     (build-error (list 'Nebo 'Assignment)
@@ -95,7 +89,7 @@
                                                                                (mfc 'rhs 'possible_ghosts)))
                                                    (nt= IntVec 'minus (mfc 'ghosts 'get_minus))
                                                    (nt= IntVec 'plus (mfc 'ghosts 'get_plus))
-                                                   (mfc 'field_ 'reset_valid_ghosts (fc GhostData resize-arg))
+                                                   (mfc 'field_ 'reset_valid_ghosts (fc GhostData 'minus 'plus))
                                                    (nt= GhostData 'extents (fc 'calculate_limits
                                                                                'useGhost
                                                                                (mfc 'field_ 'window_with_ghost)

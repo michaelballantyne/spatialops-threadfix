@@ -104,8 +104,6 @@
 #             ifdef __CUDACC__
 #                ifdef NEBO_GPU_TEST
                     gpu_test_assign<RhsType>(rhs,
-                                             minus,
-                                             plus,
                                              xLow,
                                              xHigh,
                                              yLow,
@@ -116,8 +114,6 @@
                     if(gpu_ready()) {
                        if(rhs.gpu_ready(gpu_device_index())) {
                           gpu_assign<RhsType>(rhs,
-                                              minus,
-                                              plus,
                                               xLow,
                                               xHigh,
                                               yLow,
@@ -140,8 +136,6 @@
                        if(cpu_ready()) {
                           if(rhs.cpu_ready()) {
                              cpu_assign<RhsType>(rhs,
-                                                 minus,
-                                                 plus,
                                                  xLow,
                                                  xHigh,
                                                  yLow,
@@ -174,15 +168,7 @@
 #                endif
                  /* NEBO_GPU_TEST */
 #             else
-                 cpu_assign<RhsType>(rhs,
-                                     minus,
-                                     plus,
-                                     xLow,
-                                     xHigh,
-                                     yLow,
-                                     yHigh,
-                                     zLow,
-                                     zHigh)
+                 cpu_assign<RhsType>(rhs, xLow, xHigh, yLow, yHigh, zLow, zHigh)
 #             endif
               /* __CUDACC__ */;
            }
@@ -190,8 +176,6 @@
          private:
           template<typename RhsType>
            inline void cpu_assign(RhsType rhs,
-                                  structured::IntVec const & minus,
-                                  structured::IntVec const & plus,
                                   int const xLow,
                                   int const xHigh,
                                   int const yLow,
@@ -201,8 +185,6 @@
 #             ifdef FIELD_EXPRESSION_THREADS
                  if(is_thread_parallel()) {
                     thread_parallel_assign<RhsType>(rhs,
-                                                    minus,
-                                                    plus,
                                                     xLow,
                                                     xHigh,
                                                     yLow,
@@ -212,8 +194,6 @@
                  }
                  else {
                     sequential_assign<RhsType>(rhs,
-                                               minus,
-                                               plus,
                                                xLow,
                                                xHigh,
                                                yLow,
@@ -223,8 +203,6 @@
                  }
 #             else
                  sequential_assign<RhsType>(rhs,
-                                            minus,
-                                            plus,
                                             xLow,
                                             xHigh,
                                             yLow,
@@ -237,8 +215,6 @@
 
           template<typename RhsType>
            inline void sequential_assign(RhsType rhs,
-                                         structured::IntVec const & minus,
-                                         structured::IntVec const & plus,
                                          int const xLow,
                                          int const xHigh,
                                          int const yLow,
@@ -263,9 +239,6 @@
 #         ifdef FIELD_EXPRESSION_THREADS
              template<typename RhsType>
               inline void thread_parallel_assign(RhsType rhs,
-                                                 structured::IntVec const &
-                                                 minus,
-                                                 structured::IntVec const & plus,
                                                  int const xLow,
                                                  int const xHigh,
                                                  int const yLow,
@@ -361,8 +334,6 @@
 #         ifdef __CUDACC__
              template<typename RhsType>
               inline void gpu_assign(RhsType rhs,
-                                     structured::IntVec const & minus,
-                                     structured::IntVec const & plus,
                                      int const xLow,
                                      int const xHigh,
                                      int const yLow,
@@ -451,8 +422,6 @@
 #            ifdef NEBO_GPU_TEST
                 template<typename RhsType>
                  inline void gpu_test_assign(RhsType rhs,
-                                             structured::IntVec const & minus,
-                                             structured::IntVec const & plus,
                                              int const xLow,
                                              int const xHigh,
                                              int const yLow,
