@@ -115,12 +115,14 @@ bool manual_error_compare(FieldT& f1,
                     const double abs_error)
 {
   //copy the fields to local ram if applicable
+#ifdef __CUDACC__
   if(f1.memory_device_type() == EXTERNAL_CUDA_GPU) {
     f1.add_consumer(LOCAL_RAM, 0);
   }
   if(f2.memory_device_type() == EXTERNAL_CUDA_GPU) {
     f2.add_consumer(LOCAL_RAM, 0);
   }
+#endif
 
   //iterate through fields.
   typename FieldT::const_iterator if1 = const_cast<const FieldT&>(f1).begin();
@@ -550,10 +552,11 @@ bool manual_error_compare(double d,
                     const double abs_error)
 {
   //copy the fields to local ram if applicable
+#ifdef __CUDACC__
   if(f1.memory_device_type() == EXTERNAL_CUDA_GPU) {
     f1.add_consumer(LOCAL_RAM, 0);
   }
-
+#endif
   //iterate through fields.
   typename FieldT::const_iterator if1 = const_cast<const FieldT&>(f1).begin();
   typename FieldT::const_iterator if1e = const_cast<const FieldT&>(f1).end();
