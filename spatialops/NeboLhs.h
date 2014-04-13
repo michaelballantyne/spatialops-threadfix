@@ -28,8 +28,15 @@
    namespace SpatialOps {
 #     ifdef __CUDACC__
          template<typename LhsType, typename RhsType>
-          __global__ void gpu_assign_kernel(LhsType lhs, RhsType rhs) {
-             lhs.assign(rhs);
+          __global__ void gpu_assign_kernel(LhsType lhs,
+                                            RhsType rhs,
+                                            int const xLow,
+                                            int const xHigh,
+                                            int const yLow,
+                                            int const yHigh,
+                                            int const zLow,
+                                            int const zHigh) {
+             lhs.assign(rhs, xLow, xHigh, yLow, yHigh, zLow, zHigh);
           }
 #     endif
       /* __CUDACC__ */;
@@ -347,21 +354,21 @@
 
                  typename RhsType::GPUWalkType typedef RhsGPUWalkType;
 
-                 int extent0 = field_.window_with_ghost().extent(0);
+                 int xExtent = xHigh - xLow;
 
-                 int extent1 = field_.window_with_ghost().extent(1);
+                 int yExtent = yHigh - yLow;
 
                  int blockDim = 16;
 
-                 int gDimX = extent0 / blockDim + ((extent0 % blockDim) > 0 ? 1
+                 int xGDim = xExtent / blockDim + ((xExtent % blockDim) > 0 ? 1
                                                    : 0);
 
-                 int gDimY = extent1 / blockDim + ((extent1 % blockDim) > 0 ? 1
+                 int yGDim = yExtent / blockDim + ((yExtent % blockDim) > 0 ? 1
                                                    : 0);
 
                  dim3 dimBlock(blockDim, blockDim);
 
-                 dim3 dimGrid(gDimX, gDimY);
+                 dim3 dimGrid(xGDim, yGDim);
 
 #                ifndef NDEBUG
                     cudaError err;
@@ -383,7 +390,13 @@
                                                                   dimBlock,
                                                                   0,
                                                                   field_.get_stream()>>>(gpu_init(),
-                                                                                         rhs.gpu_init(gpu_device_index()));
+                                                                                         rhs.gpu_init(gpu_device_index()),
+                                                                                         xLow,
+                                                                                         xHigh,
+                                                                                         yLow,
+                                                                                         yHigh,
+                                                                                         zLow,
+                                                                                         zHigh);
 
 #                ifndef NDEBUG
                     if(cudaSuccess != (err = cudaStreamSynchronize(field_.get_stream())))
@@ -447,7 +460,13 @@
 
                        NeboField<Initial, FieldType> gpu_lhs(gpu_field);
 
-                       gpu_lhs.template gpu_assign<RhsType>(useGhost, rhs);
+                       gpu_lhs.template gpu_assign<RhsType>(rhs,
+                                                            xLow,
+                                                            xHigh,
+                                                            yLow,
+                                                            yHigh,
+                                                            zLow,
+                                                            zHigh);
 
                        ema::cuda::CUDADeviceInterface & CDI = ema::cuda::
                        CUDADeviceInterface::self();
@@ -458,7 +477,15 @@
                                        field_.allocated_bytes(),
                                        0);
                     }
-                    else { gpu_assign<RhsType>(useGhost, rhs); };
+                    else {
+                       gpu_assign<RhsType>(rhs,
+                                           xLow,
+                                           xHigh,
+                                           yLow,
+                                           yHigh,
+                                           zLow,
+                                           zHigh);
+                    };
 
 #                   ifdef NEBO_REPORT_BACKEND
                        std::cout << "Finished Nebo CUDA with Nebo copying" <<
@@ -525,12 +552,16 @@
           NeboField(FieldType f)
           : xGlob_(f.window_with_ghost().glob_dim(0)),
             yGlob_(f.window_with_ghost().glob_dim(1)),
-            base_(f.field_values() + (f.window_with_ghost().offset(0) + (1 == f.window_with_ghost().extent(0)
-                                                                         ? 0 : f.get_valid_ghost_data().get_minus(0)))
-            + (xGlob_ * ((f.window_with_ghost().offset(1) + (1 == f.window_with_ghost().extent(1)
-                                                             ? 0 : f.get_valid_ghost_data().get_minus(1)))
-                         + (yGlob_ * (f.window_with_ghost().offset(2) + (1 == f.window_with_ghost().extent(2)
-                                                                         ? 0 : f.get_valid_ghost_data().get_minus(2)))))))
+            base_(f.field_values(LOCAL_RAM, 0) + (f.window_with_ghost().offset(0)
+                                                  + (1 == f.window_with_ghost().extent(0)
+                                                     ? 0 : f.get_valid_ghost_data().get_minus(0)))
+            + (f.window_with_ghost().glob_dim(0) * ((f.window_with_ghost().offset(1)
+                                                     + (1 == f.window_with_ghost().extent(1)
+                                                        ? 0 : f.get_valid_ghost_data().get_minus(1)))
+                                                    + (f.window_with_ghost().glob_dim(1)
+                                                       * (f.window_with_ghost().offset(2)
+                                                          + (1 == f.window_with_ghost().extent(2)
+                                                             ? 0 : f.get_valid_ghost_data().get_minus(2)))))))
           {}
 
           template<typename RhsType>
@@ -570,74 +601,72 @@
              typename field_type::value_type typedef value_type;
 
              NeboField(FieldType f)
-             : current_(f.field_values(EXTERNAL_CUDA_GPU, f.device_index()) + f.window_with_ghost().offset(0)
-               + f.window_with_ghost().glob_dim(0) * (f.window_with_ghost().offset(1)
-                                                      + (f.window_with_ghost().glob_dim(1)
-                                                         * f.window_with_ghost().offset(2)))),
-               location_(0),
+             : base_(f.field_values(EXTERNAL_CUDA_GPU, f.device_index()) + (f.window_with_ghost().offset(0)
+                                                                            + (1
+                                                                               ==
+                                                                               f.window_with_ghost().extent(0)
+                                                                               ?
+                                                                               0
+                                                                               :
+                                                                               f.get_valid_ghost_data().get_minus(0)))
+               + (f.window_with_ghost().glob_dim(0) * ((f.window_with_ghost().offset(1)
+                                                        + (1 == f.window_with_ghost().extent(1)
+                                                           ? 0 : f.get_valid_ghost_data().get_minus(1)))
+                                                       + (f.window_with_ghost().glob_dim(1)
+                                                          * (f.window_with_ghost().offset(2)
+                                                             + (1 == f.window_with_ghost().extent(2)
+                                                                ? 0 : f.get_valid_ghost_data().get_minus(2))))))),
                valid_(false),
-               xLength_(f.window_with_ghost().glob_dim(0)),
-               xExtent_(f.window_with_ghost().extent(0)),
-               yExtent_(f.window_with_ghost().extent(1)),
-               zExtent_(f.window_with_ghost().extent(2)),
-               step_(xLength_ * f.window_with_ghost().glob_dim(1))
+               xGlob_(f.window_with_ghost().glob_dim(0)),
+               yGlob_(f.window_with_ghost().glob_dim(1))
              {}
 
              template<typename RhsType>
-              __device__ inline void assign(RhsType rhs) {
+              __device__ inline void assign(RhsType rhs,
+                                            int const xLow,
+                                            int const xHigh,
+                                            int const yLow,
+                                            int const yHigh,
+                                            int const zLow,
+                                            int const zHigh) {
                  const int ii = blockIdx.x * blockDim.x + threadIdx.x;
 
                  const int jj = blockIdx.y * blockDim.y + threadIdx.y;
 
-                 start(ii, jj);
+                 const int x = ii + xLow;
 
-                 rhs.start(ii, jj);
+                 const int y = jj + yLow;
 
-                 while(!at_end()) {
-                    if(valid()) { ref() = rhs.eval(); };
+                 start(x, y, xHigh, yHigh);
 
-                    next();
-
-                    rhs.next();
+                 for(int z = zLow; z < zHigh; z++) {
+                    if(valid()) { ref(x, y, z) = rhs.eval(x, y, z); };
                  };
               }
 
             private:
              __device__ inline bool valid(void) { return valid_; }
 
-             __device__ inline void start(int x, int y) {
-                valid_ = (x < xExtent_ && x >= 0 && y < yExtent_ && y >= 0);
-
-                if(valid()) { location_ = 0; current_ += x + y * xLength_; };
+             __device__ inline void start(int x,
+                                          int y,
+                                          int const xHigh,
+                                          int const yHigh) {
+                valid_ = (x < xHigh && y < yHigh);
              }
 
-             __device__ inline void next(void) {
-                current_ += step_;
-
-                location_++;
+             __device__ inline value_type & ref(int const x,
+                                                int const y,
+                                                int const z) {
+                return base_[x + xGlob_ * (y + (yGlob_ * z))];
              }
 
-             __device__ inline bool at_end(void) {
-                return location_ >= zExtent_;
-             }
-
-             __device__ inline value_type & ref(void) { return *current_; }
-
-             value_type * current_;
-
-             int location_;
+             value_type * base_;
 
              int valid_;
 
-             int const xLength_;
+             int const xGlob_;
 
-             int const xExtent_;
-
-             int const yExtent_;
-
-             int const zExtent_;
-
-             int const step_;
+             int const yGlob_;
          }
 #     endif
       /* __CUDACC__ */;

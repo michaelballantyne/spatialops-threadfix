@@ -127,8 +127,6 @@
                        tpl-reg-pars
                        typedefs
                        constructor
-                       start-body
-                       next-body
                        eval-type
                        eval-result
                        publics
@@ -139,19 +137,14 @@
                      tpl-reg-pars
                      typedefs
                      constructor
-                     (list (device-use (v-fcn-def 'start
-                                                  (list (bs 'int 'x)
-                                                        (bs 'int 'y))
-                                                  start-body))
-                           (device-use (v-fcn-def 'next
-                                                  null
-                                                  next-body))
-                           (device-use (r-fcn-def (constize (fcn-dcl 'eval eval-type))
+                     (list (device-use (r-fcn-def (constize (fcn-dcl 'eval
+                                                                     eval-type
+                                                                     index-pmtr))
                                                   null
                                                   eval-result))
                            publics)
                      privates))
-(define bs-gpu-rhs (arg-swap build-gpu-rhs 8 4 "bs-gpu-rhs"))
+(define bs-gpu-rhs (arg-swap build-gpu-rhs 6 4 "bs-gpu-rhs"))
 (define (build-Reduction name
                          FT
                          tpl-irreg-pars

@@ -40,7 +40,10 @@
              return NeboStencilCoefCollection<Length + 1>(*this, c);
           }
 
-          inline double coef(void) const { return coef_; }
+#         ifdef __CUDACC__
+             __host__ __device__
+#         endif
+          /* __CUDACC__ */ inline double coef(void) const { return coef_; }
 
           inline double get_coef(int const index) const {
              if(index < 0) {
@@ -66,9 +69,11 @@
              return (index == Length - 1 ? coef() : others().get_coef(index));
           }
 
-          inline NeboStencilCoefCollection<Length - 1> const others(void) const {
-             return others_;
-          }
+#         ifdef __CUDACC__
+             __host__ __device__
+#         endif
+          /* __CUDACC__ */ inline NeboStencilCoefCollection<Length - 1> const
+          others(void) const { return others_; }
 
          private:
           NeboStencilCoefCollection<Length - 1> const others_;
@@ -87,7 +92,10 @@
              return NeboStencilCoefCollection<2>(*this, c);
           }
 
-          inline double coef(void) const { return coef_; }
+#         ifdef __CUDACC__
+             __host__ __device__
+#         endif
+          /* __CUDACC__ */ inline double coef(void) const { return coef_; }
 
           inline double get_coef(int const index) const {
              if(index < 0) {
@@ -250,7 +258,7 @@
              }
 
              inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(arg_(gpu_init), coefs_, deviceIndex);
+                return GPUWalkType(arg_.gpu_init(deviceIndex), coefs_);
              }
 
 #            ifdef NEBO_GPU_TEST
@@ -320,9 +328,9 @@
                                            int const y,
                                            int const z) {
                 return EvalExpr<Collection>::eval(arg, coefs.others(), x, y, z)
-                       + arg.eval(x + Point::int_vec()[0],
-                                  y + Point::int_vec()[1],
-                                  z + Point::int_vec()[2]) * coefs.coef();
+                       + arg.eval(x + Point::value(0),
+                                  y + Point::value(1),
+                                  z + Point::value(2)) * coefs.coef();
              }
           };
 
@@ -335,9 +343,9 @@
                                            int const x,
                                            int const y,
                                            int const z) {
-                return arg.eval(x + Point::int_vec()[0],
-                                y + Point::int_vec()[1],
-                                z + Point::int_vec()[2]) * coefs.coef();
+                return arg.eval(x + Point::value(0),
+                                y + Point::value(1),
+                                z + Point::value(2)) * coefs.coef();
              }
           };
 
@@ -362,20 +370,65 @@
 
              typename field_type::value_type typedef value_type;
 
-             NeboStencil(Arg const & a)
-             : arg_(a)
+             NeboStencilCoefCollection<Pts::length> typedef Coefs;
+
+             template<typename PointCollection>
+              struct EvalExpr {
+                NeboStencilCoefCollection<PointCollection::length> typedef Coefs
+                ;
+
+                typename PointCollection::Point typedef Point;
+
+                typename PointCollection::Collection typedef Collection;
+
+                __device__ static inline value_type eval(Arg const & arg,
+                                                         Coefs const & coefs,
+                                                         int const x,
+                                                         int const y,
+                                                         int const z) {
+                   return EvalExpr<Collection>::eval(arg,
+                                                     coefs.others(),
+                                                     x,
+                                                     y,
+                                                     z) + arg.eval(x + Point::
+                                                                   value_gpu(0),
+                                                                   y + Point::
+                                                                   value_gpu(1),
+                                                                   z + Point::
+                                                                   value_gpu(2))
+                          * coefs.coef();
+                }
+             };
+
+             template<typename Point>
+              struct EvalExpr<NeboStencilPointCollection<Point, NeboNil> > {
+                NeboStencilCoefCollection<1> typedef Coefs;
+
+                __device__ static inline value_type eval(Arg const & arg,
+                                                         Coefs const & coefs,
+                                                         int const x,
+                                                         int const y,
+                                                         int const z) {
+                   return arg.eval(x + Point::value_gpu(0),
+                                   y + Point::value_gpu(1),
+                                   z + Point::value_gpu(2)) * coefs.coef();
+                }
+             };
+
+             NeboStencil(Arg const & a, Coefs const & coefs)
+             : arg_(a), coefs_(coefs)
              {}
 
-             __device__ inline void start(int x, int y) { arg_.start(x, y); }
-
-             __device__ inline void next(void) { arg_.next(); }
-
-             __device__ inline value_type eval(void) const {
-                return arg_.eval();
+             __device__ inline value_type eval(int const x,
+                                               int const y,
+                                               int const z) const {
+                return EvalExpr<Pts>::eval(arg_, coefs_, x, y, z);
              }
 
             private:
              Arg arg_;
+
+             Coefs const coefs_;
          }
 #     endif
       /* __CUDACC__ */;
@@ -457,7 +510,7 @@
              }
 
              inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(arg_.gpu_init(), deviceIndex);
+                return GPUWalkType(arg_.gpu_init(deviceIndex));
              }
 
 #            ifdef NEBO_GPU_TEST
@@ -517,16 +570,13 @@
                                            int const z) {
                 return EvalExpr<Collection>::eval(arg, x, y, z) + arg.eval(x +
                                                                            Point::
-                                                                           int_vec()
-                                                                           [0],
+                                                                           value(0),
                                                                            y +
                                                                            Point::
-                                                                           int_vec()
-                                                                           [1],
+                                                                           value(1),
                                                                            z +
                                                                            Point::
-                                                                           int_vec()
-                                                                           [2]);
+                                                                           value(2));
              }
           };
 
@@ -536,9 +586,9 @@
                                            int const x,
                                            int const y,
                                            int const z) {
-                return arg.eval(x + Point::int_vec()[0],
-                                y + Point::int_vec()[1],
-                                z + Point::int_vec()[2]);
+                return arg.eval(x + Point::value(0),
+                                y + Point::value(1),
+                                z + Point::value(2));
              }
           };
 
@@ -561,16 +611,51 @@
 
              typename field_type::value_type typedef value_type;
 
+             template<typename PointCollection>
+              struct EvalExpr {
+                typename PointCollection::Point typedef Point;
+
+                typename PointCollection::Collection typedef Collection;
+
+                __device__ static inline value_type eval(Arg const & arg,
+                                                         int const x,
+                                                         int const y,
+                                                         int const z) {
+                   return EvalExpr<Collection>::eval(arg, x, y, z) + arg.eval(x
+                                                                              +
+                                                                              Point::
+                                                                              value_gpu(0),
+                                                                              y
+                                                                              +
+                                                                              Point::
+                                                                              value_gpu(1),
+                                                                              z
+                                                                              +
+                                                                              Point::
+                                                                              value_gpu(2));
+                }
+             };
+
+             template<typename Point>
+              struct EvalExpr<NeboStencilPointCollection<Point, NeboNil> > {
+                __device__ static inline value_type eval(Arg const & arg,
+                                                         int const x,
+                                                         int const y,
+                                                         int const z) {
+                   return arg.eval(x + Point::value_gpu(0),
+                                   y + Point::value_gpu(1),
+                                   z + Point::value_gpu(2));
+                }
+             };
+
              NeboSumStencil(Arg const & a)
              : arg_(a)
              {}
 
-             __device__ inline void start(int x, int y) { arg_.start(x, y); }
-
-             __device__ inline void next(void) { arg_.next(); }
-
-             __device__ inline value_type eval(void) const {
-                return arg_.eval();
+             __device__ inline value_type eval(int const x,
+                                               int const y,
+                                               int const z) const {
+                return EvalExpr<Pts>::eval(arg_, x, y, z);
              }
 
             private:
@@ -745,11 +830,9 @@
              : arg_(a)
              {}
 
-             __device__ inline void start(int x, int y) { arg_.start(x, y); }
-
-             __device__ inline void next(void) { arg_.next(); }
-
-             __device__ inline bool eval(void) const { return arg_.eval(); }
+             __device__ inline bool eval(int const x, int const y, int const z) const {
+                return arg_.eval(x, y, z);
+             }
 
             private:
              Arg arg_;

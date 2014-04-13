@@ -301,7 +301,7 @@
       /* FIELD_EXPRESSION_THREADS */
       struct SeqWalk;
 #     ifdef __CUDACC__
-         struct GPUWalk
+        struct GPUWalk;
 #     endif
       /* __CUDACC__ */
       struct Reduction;

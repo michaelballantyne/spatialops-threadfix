@@ -140,54 +140,56 @@
              NeboMask(int const deviceIndex,
                       structured::SpatialMask<FieldType> const & m)
              : bitField_(m.mask_values(EXTERNAL_CUDA_GPU, deviceIndex)),
-               offset_(m.window_with_ghost().offset(0) + m.window_with_ghost().glob_dim(0)
-               * (m.window_with_ghost().offset(1) + (m.window_with_ghost().glob_dim(1)
-                                                     * m.window_with_ghost().offset(2)))),
-               bitPosition_(0),
-               blockPosition_(0),
-               xLength_(m.window_with_ghost().glob_dim(0)),
-               step_(xLength_ * m.window_with_ghost().glob_dim(1))
+               xOffset_(m.window_with_ghost().offset(0) + m.get_ghost_data().get_minus(0)),
+               yOffset_(m.window_with_ghost().offset(1) + m.get_ghost_data().get_minus(1)),
+               zOffset_(m.window_with_ghost().offset(2) + m.get_ghost_data().get_minus(2)),
+               xGlob_(m.window_with_ghost().glob_dim(0)),
+               yGlob_(m.window_with_ghost().glob_dim(1))
              {}
 
-             __device__ inline void start(int x, int y) {
-                bitPosition_ = offset_ + x + y * xLength_;
-
-                update_positions();
-             }
-
-             __device__ inline void next(void) {
-                bitPosition_ += step_;
-
-                update_positions();
-             }
-
-             __device__ inline bool eval(void) const {
-                return !(!(*(bitField_ + blockPosition_) & (1 << bitPosition_)));
+             __device__ inline bool eval(int const x, int const y, int const z) const {
+                return deref(x, y, z);
              }
 
             private:
-             __device__ inline void update_positions(void) {
-                if(bitPosition_ < 0 || bitPosition_ >= NEBO_INT_BIT) {
-                   const int flatPosition = blockPosition_ * NEBO_INT_BIT +
-                   bitPosition_;
+             __device__ inline int find_position(int const x,
+                                                 int const y,
+                                                 int const z) const {
+                const int newX = xOffset_ + x;
 
-                   blockPosition_ = flatPosition / NEBO_INT_BIT;
+                const int newY = yOffset_ + y;
 
-                   bitPosition_ = flatPosition % NEBO_INT_BIT;
-                };
+                const int newZ = zOffset_ + z;
+
+                return newX + xGlob_ * (newY + yGlob_ * newZ);
+             }
+
+             __device__ inline int find_block(int const position) const {
+                return position / NEBO_INT_BIT;
+             }
+
+             __device__ inline int find_bit_position(int const position) const {
+                return position % NEBO_INT_BIT;
+             }
+
+             __device__ inline int deref(int const x, int const y, int const z) const {
+                const int position = find_position(x, y, z);
+
+                return !(!(*(bitField_ + find_block(position)) & (1 <<
+                                                                  find_bit_position(position))));
              }
 
              unsigned int const * bitField_;
 
-             int const offset_;
+             int const xOffset_;
 
-             int bitPosition_;
+             int const yOffset_;
 
-             int blockPosition_;
+             int const zOffset_;
 
-             int const xLength_;
+             int const xGlob_;
 
-             int const step_;
+             int const yGlob_;
          }
 #     endif
       /* __CUDACC__ */;

@@ -130,11 +130,11 @@
              : value_(value)
              {}
 
-             __device__ inline void start(int x, int y) {}
-
-             __device__ inline void next(void) {}
-
-             __device__ inline value_type eval(void) const { return value_; }
+             __device__ inline value_type eval(int const x,
+                                               int const y,
+                                               int const z) const {
+                return value_;
+             }
 
             private:
              value_type const value_;
@@ -257,12 +257,16 @@
           NeboConstField(FieldType const & f)
           : xGlob_(f.window_with_ghost().glob_dim(0)),
             yGlob_(f.window_with_ghost().glob_dim(1)),
-            base_(f.field_values() + (f.window_with_ghost().offset(0) + (1 == f.window_with_ghost().extent(0)
-                                                                         ? 0 : f.get_valid_ghost_data().get_minus(0)))
-            + (xGlob_ * ((f.window_with_ghost().offset(1) + (1 == f.window_with_ghost().extent(1)
-                                                             ? 0 : f.get_valid_ghost_data().get_minus(1)))
-                         + yGlob_ * (f.window_with_ghost().offset(2) + (1 == f.window_with_ghost().extent(2)
-                                                                        ? 0 : f.get_valid_ghost_data().get_minus(2))))))
+            base_(f.field_values(LOCAL_RAM, 0) + (f.window_with_ghost().offset(0)
+                                                  + (1 == f.window_with_ghost().extent(0)
+                                                     ? 0 : f.get_valid_ghost_data().get_minus(0)))
+            + (f.window_with_ghost().glob_dim(0) * ((f.window_with_ghost().offset(1)
+                                                     + (1 == f.window_with_ghost().extent(1)
+                                                        ? 0 : f.get_valid_ghost_data().get_minus(1)))
+                                                    + (f.window_with_ghost().glob_dim(1)
+                                                       * (f.window_with_ghost().offset(2)
+                                                          + (1 == f.window_with_ghost().extent(2)
+                                                             ? 0 : f.get_valid_ghost_data().get_minus(2)))))))
           {}
 
           inline value_type eval(int const x, int const y, int const z) const {
@@ -285,28 +289,33 @@
              typename field_type::value_type typedef value_type;
 
              NeboConstField(int const deviceIndex, FieldType const & f)
-             : current_(f.field_values(EXTERNAL_CUDA_GPU, deviceIndex) + f.window_with_ghost().offset(0)
-               + f.window_with_ghost().glob_dim(0) * (f.window_with_ghost().offset(1)
-                                                      + (f.window_with_ghost().glob_dim(1)
-                                                         * f.window_with_ghost().offset(2)))),
-               xLength_(f.window_with_ghost().glob_dim(0)),
-               step_(xLength_ * f.window_with_ghost().glob_dim(1))
+             : base_(f.field_values(EXTERNAL_CUDA_GPU, deviceIndex) + (f.window_with_ghost().offset(0)
+                                                                       + (1 == f.window_with_ghost().extent(0)
+                                                                          ? 0 :
+                                                                          f.get_valid_ghost_data().get_minus(0)))
+               + (f.window_with_ghost().glob_dim(0) * ((f.window_with_ghost().offset(1)
+                                                        + (1 == f.window_with_ghost().extent(1)
+                                                           ? 0 : f.get_valid_ghost_data().get_minus(1)))
+                                                       + (f.window_with_ghost().glob_dim(1)
+                                                          * (f.window_with_ghost().offset(2)
+                                                             + (1 == f.window_with_ghost().extent(2)
+                                                                ? 0 : f.get_valid_ghost_data().get_minus(2))))))),
+               xGlob_(f.window_with_ghost().glob_dim(0)),
+               yGlob_(f.window_with_ghost().glob_dim(1))
              {}
 
-             __device__ inline void start(int x, int y) {
-                current_ += x + y * xLength_;
+             __device__ inline value_type eval(int const x,
+                                               int const y,
+                                               int const z) const {
+                return base_[x + xGlob_ * (y + (yGlob_ * z))];
              }
 
-             __device__ inline void next(void) { current_ += step_; }
-
-             __device__ inline value_type eval(void) const { return *current_; }
-
             private:
-             value_type const * current_;
+             value_type const * base_;
 
-             int const xLength_;
+             int const xGlob_;
 
-             int const step_;
+             int const yGlob_;
          }
 #     endif
       /* __CUDACC__ */;
@@ -469,19 +478,17 @@
 
              NeboConstSingleValueField(int const deviceIndex,
                                        SingleValueFieldType const & f)
-             : ptr_(f.field_values(EXTERNAL_CUDA_GPU, deviceIndex)), value_(0.0)
+             : pointer_(f.field_values(EXTERNAL_CUDA_GPU, deviceIndex))
              {}
 
-             __device__ inline void start(int x, int y) { value_ = *ptr_; }
-
-             __device__ inline void next(void) {}
-
-             __device__ inline value_type eval(void) const { return value_; }
+             __device__ inline value_type eval(int const x,
+                                               int const y,
+                                               int const z) const {
+                return *pointer_;
+             }
 
             private:
-             value_type const * const ptr_;
-
-             value_type value_;
+             value_type const * pointer_;
          }
 #     endif
       /* __CUDACC__ */;

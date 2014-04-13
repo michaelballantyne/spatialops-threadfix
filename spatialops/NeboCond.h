@@ -194,17 +194,15 @@
              : test_(test), expr_(expr)
              {}
 
-             __device__ inline void start(int x, int y) {
-                test_.start(x, y); expr_.start(x, y);
+             __device__ inline value_type eval(int const x,
+                                               int const y,
+                                               int const z) const {
+                return expr_.eval(x, y, z);
              }
 
-             __device__ inline void next(void) { test_.next(); expr_.next(); }
-
-             __device__ inline value_type eval(void) const {
-                return expr_.eval();
+             __device__ inline bool check(int const x, int const y, int const z) const {
+                return test_.eval(x, y, z);
              }
-
-             __device__ inline bool check(void) const { return test_.eval(); }
 
             private:
              Test test_;
@@ -396,16 +394,11 @@
              : clause_(clause), otherwise_(otherwise)
              {}
 
-             __device__ inline void start(int x, int y) {
-                clause_.start(x, y); otherwise_.start(x, y);
-             }
-
-             __device__ inline void next(void) {
-                clause_.next(); otherwise_.next();
-             }
-
-             __device__ inline value_type eval(void) const {
-                return (clause_.check() ? clause_.eval() : otherwise_.eval());
+             __device__ inline value_type eval(int const x,
+                                               int const y,
+                                               int const z) const {
+                return (clause_.check(x, y, z) ? clause_.eval(x, y, z) :
+                        otherwise_.eval(x, y, z));
              }
 
             private:

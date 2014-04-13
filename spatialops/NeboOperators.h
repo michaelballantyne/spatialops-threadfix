@@ -154,19 +154,9 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             __device__ inline void start(int x, int y) {
-                operand1_.start(x, y);
-
-                operand2_.start(x, y);
-             }
-
-             __device__ inline void next(void) {
-                operand1_.next();
-
-                operand2_.next();
-             }
-
-             __device__ inline value_type eval(void) const {
+             __device__ inline value_type eval(int const x,
+                                               int const y,
+                                               int const z) const {
                 return (operand1_.eval(x, y, z) + operand2_.eval(x, y, z));
              }
 
@@ -916,19 +906,9 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             __device__ inline void start(int x, int y) {
-                operand1_.start(x, y);
-
-                operand2_.start(x, y);
-             }
-
-             __device__ inline void next(void) {
-                operand1_.next();
-
-                operand2_.next();
-             }
-
-             __device__ inline value_type eval(void) const {
+             __device__ inline value_type eval(int const x,
+                                               int const y,
+                                               int const z) const {
                 return (operand1_.eval(x, y, z) - operand2_.eval(x, y, z));
              }
 
@@ -1678,19 +1658,9 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             __device__ inline void start(int x, int y) {
-                operand1_.start(x, y);
-
-                operand2_.start(x, y);
-             }
-
-             __device__ inline void next(void) {
-                operand1_.next();
-
-                operand2_.next();
-             }
-
-             __device__ inline value_type eval(void) const {
+             __device__ inline value_type eval(int const x,
+                                               int const y,
+                                               int const z) const {
                 return (operand1_.eval(x, y, z) * operand2_.eval(x, y, z));
              }
 
@@ -2440,19 +2410,9 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             __device__ inline void start(int x, int y) {
-                operand1_.start(x, y);
-
-                operand2_.start(x, y);
-             }
-
-             __device__ inline void next(void) {
-                operand1_.next();
-
-                operand2_.next();
-             }
-
-             __device__ inline value_type eval(void) const {
+             __device__ inline value_type eval(int const x,
+                                               int const y,
+                                               int const z) const {
                 return (operand1_.eval(x, y, z) / operand2_.eval(x, y, z));
              }
 
@@ -3185,11 +3145,9 @@
              : operand_(operand)
              {}
 
-             __device__ inline void start(int x, int y) { operand_.start(x, y); }
-
-             __device__ inline void next(void) { operand_.next(); }
-
-             __device__ inline value_type eval(void) const {
+             __device__ inline value_type eval(int const x,
+                                               int const y,
+                                               int const z) const {
                 return std::sin(operand_.eval(x, y, z));
              }
 
@@ -3394,11 +3352,9 @@
              : operand_(operand)
              {}
 
-             __device__ inline void start(int x, int y) { operand_.start(x, y); }
-
-             __device__ inline void next(void) { operand_.next(); }
-
-             __device__ inline value_type eval(void) const {
+             __device__ inline value_type eval(int const x,
+                                               int const y,
+                                               int const z) const {
                 return std::cos(operand_.eval(x, y, z));
              }
 
@@ -3603,11 +3559,9 @@
              : operand_(operand)
              {}
 
-             __device__ inline void start(int x, int y) { operand_.start(x, y); }
-
-             __device__ inline void next(void) { operand_.next(); }
-
-             __device__ inline value_type eval(void) const {
+             __device__ inline value_type eval(int const x,
+                                               int const y,
+                                               int const z) const {
                 return std::tan(operand_.eval(x, y, z));
              }
 
@@ -3812,11 +3766,9 @@
              : operand_(operand)
              {}
 
-             __device__ inline void start(int x, int y) { operand_.start(x, y); }
-
-             __device__ inline void next(void) { operand_.next(); }
-
-             __device__ inline value_type eval(void) const {
+             __device__ inline value_type eval(int const x,
+                                               int const y,
+                                               int const z) const {
                 return std::exp(operand_.eval(x, y, z));
              }
 
@@ -4023,11 +3975,9 @@
              : operand_(operand)
              {}
 
-             __device__ inline void start(int x, int y) { operand_.start(x, y); }
-
-             __device__ inline void next(void) { operand_.next(); }
-
-             __device__ inline value_type eval(void) const {
+             __device__ inline value_type eval(int const x,
+                                               int const y,
+                                               int const z) const {
                 return std::tanh(operand_.eval(x, y, z));
              }
 
@@ -4232,11 +4182,9 @@
              : operand_(operand)
              {}
 
-             __device__ inline void start(int x, int y) { operand_.start(x, y); }
-
-             __device__ inline void next(void) { operand_.next(); }
-
-             __device__ inline value_type eval(void) const {
+             __device__ inline value_type eval(int const x,
+                                               int const y,
+                                               int const z) const {
                 return std::abs(operand_.eval(x, y, z));
              }
 
@@ -4441,11 +4389,9 @@
              : operand_(operand)
              {}
 
-             __device__ inline void start(int x, int y) { operand_.start(x, y); }
-
-             __device__ inline void next(void) { operand_.next(); }
-
-             __device__ inline value_type eval(void) const {
+             __device__ inline value_type eval(int const x,
+                                               int const y,
+                                               int const z) const {
                 return -(operand_.eval(x, y, z));
              }
 
@@ -4668,19 +4614,9 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             __device__ inline void start(int x, int y) {
-                operand1_.start(x, y);
-
-                operand2_.start(x, y);
-             }
-
-             __device__ inline void next(void) {
-                operand1_.next();
-
-                operand2_.next();
-             }
-
-             __device__ inline value_type eval(void) const {
+             __device__ inline value_type eval(int const x,
+                                               int const y,
+                                               int const z) const {
                 return std::pow(operand1_.eval(x, y, z), operand2_.eval(x, y, z));
              }
 
@@ -5420,11 +5356,9 @@
              : operand_(operand)
              {}
 
-             __device__ inline void start(int x, int y) { operand_.start(x, y); }
-
-             __device__ inline void next(void) { operand_.next(); }
-
-             __device__ inline value_type eval(void) const {
+             __device__ inline value_type eval(int const x,
+                                               int const y,
+                                               int const z) const {
                 return std::sqrt(operand_.eval(x, y, z));
              }
 
@@ -5629,11 +5563,9 @@
              : operand_(operand)
              {}
 
-             __device__ inline void start(int x, int y) { operand_.start(x, y); }
-
-             __device__ inline void next(void) { operand_.next(); }
-
-             __device__ inline value_type eval(void) const {
+             __device__ inline value_type eval(int const x,
+                                               int const y,
+                                               int const z) const {
                 return std::log(operand_.eval(x, y, z));
              }
 
@@ -5840,11 +5772,9 @@
              : operand_(operand)
              {}
 
-             __device__ inline void start(int x, int y) { operand_.start(x, y); }
-
-             __device__ inline void next(void) { operand_.next(); }
-
-             __device__ inline value_type eval(void) const {
+             __device__ inline value_type eval(int const x,
+                                               int const y,
+                                               int const z) const {
                 return std::log10(operand_.eval(x, y, z));
              }
 
@@ -6050,11 +5980,9 @@
              : operand_(operand)
              {}
 
-             __device__ inline void start(int x, int y) { operand_.start(x, y); }
-
-             __device__ inline void next(void) { operand_.next(); }
-
-             __device__ inline value_type eval(void) const {
+             __device__ inline value_type eval(int const x,
+                                               int const y,
+                                               int const z) const {
                 return erf(operand_.eval(x, y, z));
              }
 
@@ -6259,11 +6187,9 @@
              : operand_(operand)
              {}
 
-             __device__ inline void start(int x, int y) { operand_.start(x, y); }
-
-             __device__ inline void next(void) { operand_.next(); }
-
-             __device__ inline value_type eval(void) const {
+             __device__ inline value_type eval(int const x,
+                                               int const y,
+                                               int const z) const {
                 return erfc(operand_.eval(x, y, z));
              }
 
@@ -6483,19 +6409,7 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             __device__ inline void start(int x, int y) {
-                operand1_.start(x, y);
-
-                operand2_.start(x, y);
-             }
-
-             __device__ inline void next(void) {
-                operand1_.next();
-
-                operand2_.next();
-             }
-
-             __device__ inline bool eval(void) const {
+             __device__ inline bool eval(int const x, int const y, int const z) const {
                 return (operand1_.eval(x, y, z) == operand2_.eval(x, y, z));
              }
 
@@ -7323,19 +7237,7 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             __device__ inline void start(int x, int y) {
-                operand1_.start(x, y);
-
-                operand2_.start(x, y);
-             }
-
-             __device__ inline void next(void) {
-                operand1_.next();
-
-                operand2_.next();
-             }
-
-             __device__ inline bool eval(void) const {
+             __device__ inline bool eval(int const x, int const y, int const z) const {
                 return (operand1_.eval(x, y, z) != operand2_.eval(x, y, z));
              }
 
@@ -8166,19 +8068,7 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             __device__ inline void start(int x, int y) {
-                operand1_.start(x, y);
-
-                operand2_.start(x, y);
-             }
-
-             __device__ inline void next(void) {
-                operand1_.next();
-
-                operand2_.next();
-             }
-
-             __device__ inline bool eval(void) const {
+             __device__ inline bool eval(int const x, int const y, int const z) const {
                 return (operand1_.eval(x, y, z) < operand2_.eval(x, y, z));
              }
 
@@ -8996,19 +8886,7 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             __device__ inline void start(int x, int y) {
-                operand1_.start(x, y);
-
-                operand2_.start(x, y);
-             }
-
-             __device__ inline void next(void) {
-                operand1_.next();
-
-                operand2_.next();
-             }
-
-             __device__ inline bool eval(void) const {
+             __device__ inline bool eval(int const x, int const y, int const z) const {
                 return (operand1_.eval(x, y, z) <= operand2_.eval(x, y, z));
              }
 
@@ -9862,19 +9740,7 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             __device__ inline void start(int x, int y) {
-                operand1_.start(x, y);
-
-                operand2_.start(x, y);
-             }
-
-             __device__ inline void next(void) {
-                operand1_.next();
-
-                operand2_.next();
-             }
-
-             __device__ inline bool eval(void) const {
+             __device__ inline bool eval(int const x, int const y, int const z) const {
                 return (operand1_.eval(x, y, z) > operand2_.eval(x, y, z));
              }
 
@@ -10707,19 +10573,7 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             __device__ inline void start(int x, int y) {
-                operand1_.start(x, y);
-
-                operand2_.start(x, y);
-             }
-
-             __device__ inline void next(void) {
-                operand1_.next();
-
-                operand2_.next();
-             }
-
-             __device__ inline bool eval(void) const {
+             __device__ inline bool eval(int const x, int const y, int const z) const {
                 return (operand1_.eval(x, y, z) >= operand2_.eval(x, y, z));
              }
 
@@ -11583,19 +11437,7 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             __device__ inline void start(int x, int y) {
-                operand1_.start(x, y);
-
-                operand2_.start(x, y);
-             }
-
-             __device__ inline void next(void) {
-                operand1_.next();
-
-                operand2_.next();
-             }
-
-             __device__ inline bool eval(void) const {
+             __device__ inline bool eval(int const x, int const y, int const z) const {
                 return (operand1_.eval(x, y, z) && operand2_.eval(x, y, z));
              }
 
@@ -11940,19 +11782,7 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             __device__ inline void start(int x, int y) {
-                operand1_.start(x, y);
-
-                operand2_.start(x, y);
-             }
-
-             __device__ inline void next(void) {
-                operand1_.next();
-
-                operand2_.next();
-             }
-
-             __device__ inline bool eval(void) const {
+             __device__ inline bool eval(int const x, int const y, int const z) const {
                 return (operand1_.eval(x, y, z) || operand2_.eval(x, y, z));
              }
 
@@ -12278,11 +12108,7 @@
              : operand_(operand)
              {}
 
-             __device__ inline void start(int x, int y) { operand_.start(x, y); }
-
-             __device__ inline void next(void) { operand_.next(); }
-
-             __device__ inline bool eval(void) const {
+             __device__ inline bool eval(int const x, int const y, int const z) const {
                 return !(operand_.eval(x, y, z));
              }
 
@@ -12471,19 +12297,9 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             __device__ inline void start(int x, int y) {
-                operand1_.start(x, y);
-
-                operand2_.start(x, y);
-             }
-
-             __device__ inline void next(void) {
-                operand1_.next();
-
-                operand2_.next();
-             }
-
-             __device__ inline value_type eval(void) const {
+             __device__ inline value_type eval(int const x,
+                                               int const y,
+                                               int const z) const {
                 return ((operand1_.eval(x, y, z) > operand2_.eval(x, y, z)) ?
                         operand1_.eval(x, y, z) : operand2_.eval(x, y, z));
              }
@@ -13241,19 +13057,9 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             __device__ inline void start(int x, int y) {
-                operand1_.start(x, y);
-
-                operand2_.start(x, y);
-             }
-
-             __device__ inline void next(void) {
-                operand1_.next();
-
-                operand2_.next();
-             }
-
-             __device__ inline value_type eval(void) const {
+             __device__ inline value_type eval(int const x,
+                                               int const y,
+                                               int const z) const {
                 return ((operand1_.eval(x, y, z) < operand2_.eval(x, y, z)) ?
                         operand1_.eval(x, y, z) : operand2_.eval(x, y, z));
              }

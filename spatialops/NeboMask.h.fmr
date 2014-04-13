@@ -71,60 +71,56 @@
                                   (fc 'mask_ index-arg)
                                   null
                                   (sadc SpatialMask 'mask_))
+                  ;todo:
                   (bs-gpu-rhs null
                               (bm-constructor
                                (list (adc 'int DI-chunk)
                                      (adcr SpatialMask 'm))
                                (list (cons-asgn 'bitField_ (mfc 'm 'mask_values 'EXTERNAL_CUDA_GPU DI-chunk))
-                                     (cons-asgn 'offset_ (n+ (mfc (mfc 'm 'window_with_ghost)
-                                                                  'offset
-                                                                  "0")
-                                                             (n* (mfc (mfc 'm 'window_with_ghost)
-                                                                      'glob_dim
-                                                                      "0")
-                                                                 (par (n+ (mfc (mfc 'm 'window_with_ghost)
-                                                                               'offset
-                                                                               "1")
-                                                                          (par (n* (mfc (mfc 'm 'window_with_ghost)
-                                                                                        'glob_dim
-                                                                                        "1")
-                                                                                   (mfc (mfc 'm 'window_with_ghost)
-                                                                                        'offset
-                                                                                        "2"))))))))
-                                     (cons-asgn 'bitPosition_ "0")
-                                     (cons-asgn 'blockPosition_ "0")
-                                     (cons-asgn 'xLength_ (mfc (mfc 'm 'window_with_ghost)
-                                                               'glob_dim
-                                                               "0"))
-                                     (cons-asgn 'step_ (n* 'xLength_ (mfc (mfc 'm 'window_with_ghost)
-                                                                          'glob_dim
-                                                                          "1"))))
+                                     (cons-asgn 'xOffset_ (n+ (mfc (mfc 'm 'window_with_ghost)
+                                                                   'offset
+                                                                   "0")
+                                                              (mfc (mfc 'm 'get_ghost_data) 'get_minus "0")))
+                                     (cons-asgn 'yOffset_ (n+ (mfc (mfc 'm 'window_with_ghost)
+                                                                   'offset
+                                                                   "1")
+                                                              (mfc (mfc 'm 'get_ghost_data) 'get_minus "1")))
+                                     (cons-asgn 'zOffset_ (n+ (mfc (mfc 'm 'window_with_ghost)
+                                                                   'offset
+                                                                   "2")
+                                                              (mfc (mfc 'm 'get_ghost_data) 'get_minus "2")))
+                                     (cons-asgn 'xGlob_ (mfc (mfc 'm 'window_with_ghost)
+                                                             'glob_dim
+                                                             "0"))
+                                     (cons-asgn 'yGlob_ (mfc (mfc 'm 'window_with_ghost)
+                                                             'glob_dim
+                                                             "1")))
                                null)
-                              (list (n= 'bitPosition_ (n+ 'offset_ (n+ 'x (n* 'y 'xLength_))))
-                                    (fc 'update_positions))
-                              (list (n+= 'bitPosition_ 'step_)
-                                    (fc 'update_positions))
                               'bool
-                              (n-not (n-not (c '* (bs (p (n+ 'bitField_ 'blockPosition_))
-                                                      '&
-                                                      (p (bs "1" '<< 'bitPosition_))))))
+                              (fc 'deref index-arg)
                               null
-                              (list (device-use (v-fcn-def 'update_positions
+                              (list (device-use (r-fcn-def (constize (fcn-dcl 'find_position 'int index-pmtr))
+                                                           (list (nt=c 'int 'newX (n+ 'xOffset_ 'x))
+                                                                 (nt=c 'int 'newY (n+ 'yOffset_ 'y))
+                                                                 (nt=c 'int 'newZ (n+ 'zOffset_ 'z)))
+                                                           (n+ 'newX (n* 'xGlob_ (par (n+ 'newY (n* 'yGlob_ 'newZ)))))))
+                                    (device-use (r-fcn-def (constize (fcn-dcl 'find_block 'int (adc 'int 'position)))
                                                            null
-                                                           (nif (n-or (n< 'bitPosition_ "0")
-                                                                      (n>= 'bitPosition_ 'NEBO_INT_BIT))
-                                                                (nt=c 'int
-                                                                      'flatPosition
-                                                                      (n+ (n* 'blockPosition_ 'NEBO_INT_BIT)
-                                                                          'bitPosition_))
-                                                                (n= 'blockPosition_ (n/ 'flatPosition 'NEBO_INT_BIT))
-                                                                (n= 'bitPosition_ (n% 'flatPosition 'NEBO_INT_BIT)))))
+                                                           (n/ 'position 'NEBO_INT_BIT)))
+                                    (device-use (r-fcn-def (constize (fcn-dcl 'find_bit_position 'int (adc 'int 'position)))
+                                                           null
+                                                           (n% 'position 'NEBO_INT_BIT)))
+                                    (device-use (r-fcn-def (constize (fcn-dcl 'deref 'int index-pmtr))
+                                                           (nt=c 'int 'position (fc 'find_position index-arg))
+                                                           (n-not (n-not (c '* (bs (p (n+ 'bitField_ (fc 'find_block 'position)))
+                                                                                   '&
+                                                                                   (p (bs "1" '<< (fc 'find_bit_position 'position)))))))))
                                     (sadcp (bs 'unsigned 'int) 'bitField_)
-                                    (sadc 'int 'offset_)
-                                    (sad 'int 'bitPosition_)
-                                    (sad 'int 'blockPosition_)
-                                    (sadc 'int 'xLength_)
-                                    (sadc 'int 'step_)))
+                                    (sadc 'int 'xOffset_)
+                                    (sadc 'int 'yOffset_)
+                                    (sadc 'int 'zOffset_)
+                                    (sadc 'int 'xGlob_)
+                                    (sadc 'int 'yGlob_)))
                   (bs-Reduction null
                                 (bm-constructor (adcr SpatialMask 'm)
                                                 (list (cons-asgn 'iter_ (mfc 'm 'begin))

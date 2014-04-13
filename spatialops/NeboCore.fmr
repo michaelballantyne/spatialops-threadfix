@@ -306,13 +306,21 @@
                               'get_minus
                               dir)))))
 
-(define (compute-base field xGlob yGlob)
-  (n+ (mfc field 'field_values)
-      (n+ (base-offset-dir field "0")
-          (par (n* xGlob
-                   (par (n+ (base-offset-dir field "1")
-                            (par (n* yGlob
-                                     (base-offset-dir field "2"))))))))))
+(define (base-global-dir field dir)
+  (mfc (mfc 'f 'window_with_ghost)
+       'glob_dim
+       dir))
+
+(define (compute-base field input-index)
+  (let-values ([(mem-type index) (if (equal? input-index 'none)
+                                     (values 'LOCAL_RAM "0")
+                                     (values 'EXTERNAL_CUDA_GPU input-index))])
+    (n+ (mfc field 'field_values mem-type index)
+        (n+ (base-offset-dir field "0")
+            (par (n* (base-global-dir field "0")
+                     (par (n+ (base-offset-dir field "1")
+                              (par (n* (base-global-dir field "1")
+                                       (base-offset-dir field "2")))))))))))
 
 (define (build-error-with-call where . message)
   (define < '<<)

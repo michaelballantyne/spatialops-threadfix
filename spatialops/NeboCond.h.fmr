@@ -522,15 +522,13 @@
                                               (list (cons-asgn 'test_ 'test)
                                                     (cons-asgn 'expr_ 'expr))
                                               null)
-                              (ccs (mfc 'test_ 'start 'x 'y)
-                                   (mfc 'expr_ 'start 'x 'y))
-                              (ccs (mfc 'test_ 'next)
-                                   (mfc 'expr_ 'next))
                               vt-chunk
-                              (mfc 'expr_ 'eval)
-                              (device-use (r-fcn-def (constize (fcn-dcl 'check 'bool))
+                              (mfc 'expr_ 'eval index-arg)
+                              (device-use (r-fcn-def (constize (fcn-dcl 'check
+                                                                        'bool
+                                                                        index-pmtr))
                                                      null
-                                                     (mfc 'test_ 'eval)))
+                                                     (mfc 'test_ 'eval index-arg)))
                               (list (sad 'Test 'test_)
                                     (sad 'Expr 'expr_)))
                   (bs-Reduction null
@@ -620,14 +618,10 @@
                                               (list (cons-asgn 'clause_ 'clause)
                                                     (cons-asgn 'otherwise_ 'otherwise))
                                               null)
-                              (ccs (mfc 'clause_ 'start 'x 'y)
-                                   (mfc 'otherwise_ 'start 'x 'y))
-                              (ccs (mfc 'clause_ 'next)
-                                   (mfc 'otherwise_ 'next))
                               vt-chunk
-                              (ter-cond (mfc 'clause_ 'check)
-                                        (mfc 'clause_ 'eval)
-                                        (mfc 'otherwise_ 'eval))
+                              (ter-cond (mfc 'clause_ 'check index-arg)
+                                        (mfc 'clause_ 'eval index-arg)
+                                        (mfc 'otherwise_ 'eval index-arg))
                               null
                               (list (sad CT-chunk 'clause_)
                                     (sad 'Otherwise 'otherwise_)))

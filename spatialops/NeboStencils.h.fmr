@@ -27,29 +27,27 @@
 (require "NeboCore.fmr")
 (require "NeboRhsCore.fmr")
 
-(define (point-to-value dir)
-  (c (fc (scope 'Point 'int_vec))
-     "["
-     dir
-     "]"))
+(define (point-to-value dir on-gpu)
+  (let ([value (if on-gpu 'value_gpu 'value)])
+    (fc (scope 'Point value) dir)))
 
-(define (eval-struct name tpl-pmtrs tpl-args typedefs return-expr)
-  (s-tpl-srt-def name
-                 tpl-pmtrs
-                 tpl-args
-                 typedefs
-                 (r-fcn-def (s-fcn-dcl 'eval
-                                       vt-chunk
-                                       (list (adcr 'Arg 'arg)
-                                             (adcr 'Coefs 'coefs)
-                                             (adc 'int 'x)
-                                             (adc 'int 'y)
-                                             (adc 'int 'z)))
-                            null
-                            return-expr)))
+(define (eval-struct name on-gpu tpl-pmtrs tpl-args typedefs return-expr)
+  (let ([on-device (if on-gpu device-use identity)])
+    (s-tpl-srt-def name
+                   tpl-pmtrs
+                   tpl-args
+                   typedefs
+                   (on-device (r-fcn-def (s-fcn-dcl 'eval
+                                                    vt-chunk
+                                                    (list (adcr 'Arg 'arg)
+                                                          (adcr 'Coefs 'coefs)
+                                                          index-pmtr))
+                                         null
+                                         return-expr)))))
 
-(define (general-eval-struct name)
+(define (general-eval-struct name on-gpu)
   (eval-struct name
+               on-gpu
                (tpl-pmtr 'PointCollection)
                null
                (list (s-typedef (tpl-use NSCC (scope 'PointCollection 'length))
@@ -62,45 +60,44 @@
                               'eval)
                        'arg
                        (mfc 'coefs 'others)
-                       'x
-                       'y
-                       'z)
+                       index-arg)
                    (n* (mfc 'arg
                             'eval
-                            (n+ 'x (point-to-value "0"))
-                            (n+ 'y (point-to-value "1"))
-                            (n+ 'z (point-to-value "2")))
+                            (n+ 'x (point-to-value "0" on-gpu))
+                            (n+ 'y (point-to-value "1" on-gpu))
+                            (n+ 'z (point-to-value "2" on-gpu)))
                        (mfc 'coefs 'coef)))))
 
-(define (single-eval-struct name)
+(define (single-eval-struct name on-gpu)
   (eval-struct name
+               on-gpu
                (tpl-pmtr 'Point)
                (c (tpl-use NSPC 'Point Nil-chunk) s)
                (s-typedef (tpl-use NSCC "1")
                           'Coefs)
                (n* (mfc 'arg
                         'eval
-                        (n+ 'x (point-to-value "0"))
-                        (n+ 'y (point-to-value "1"))
-                        (n+ 'z (point-to-value "2")))
+                        (n+ 'x (point-to-value "0" on-gpu))
+                        (n+ 'y (point-to-value "1" on-gpu))
+                        (n+ 'z (point-to-value "2" on-gpu)))
                    (mfc 'coefs 'coef))))
 
-(define (sum-eval-struct name tpl-pmtrs tpl-args typedefs return-expr)
-  (s-tpl-srt-def name
-                 tpl-pmtrs
-                 tpl-args
-                 typedefs
-                 (r-fcn-def (s-fcn-dcl 'eval
-                                       vt-chunk
-                                       (list (adcr 'Arg 'arg)
-                                             (adc 'int 'x)
-                                             (adc 'int 'y)
-                                             (adc 'int 'z)))
-                            null
-                            return-expr)))
+(define (sum-eval-struct name on-gpu tpl-pmtrs tpl-args typedefs return-expr)
+  (let ([on-device (if on-gpu device-use identity)])
+    (s-tpl-srt-def name
+                   tpl-pmtrs
+                   tpl-args
+                   typedefs
+                   (on-device (r-fcn-def (s-fcn-dcl 'eval
+                                                    vt-chunk
+                                                    (list (adcr 'Arg 'arg)
+                                                          index-pmtr))
+                                         null
+                                         return-expr)))))
 
-(define (sum-general-eval-struct name)
+(define (sum-general-eval-struct name on-gpu)
   (sum-eval-struct name
+                   on-gpu
                    (tpl-pmtr 'PointCollection)
                    null
                    (list (s-typedef (tpl-pmtr (scope 'PointCollection 'Point))
@@ -110,25 +107,24 @@
                    (n+ (fc (scope (tpl-use name 'Collection)
                                   'eval)
                            'arg
-                           'x
-                           'y
-                           'z)
+                           index-arg)
                        (mfc 'arg
                             'eval
-                            (n+ 'x (point-to-value "0"))
-                            (n+ 'y (point-to-value "1"))
-                            (n+ 'z (point-to-value "2"))))))
+                            (n+ 'x (point-to-value "0" on-gpu))
+                            (n+ 'y (point-to-value "1" on-gpu))
+                            (n+ 'z (point-to-value "2" on-gpu))))))
 
-(define (sum-single-eval-struct name)
+(define (sum-single-eval-struct name on-gpu)
   (sum-eval-struct name
+                   on-gpu
                    (tpl-pmtr 'Point)
                    (c (tpl-use NSPC 'Point Nil-chunk) s)
                    null
                    (mfc 'arg
                         'eval
-                        (n+ 'x (point-to-value "0"))
-                        (n+ 'y (point-to-value "1"))
-                        (n+ 'z (point-to-value "2")))))
+                        (n+ 'x (point-to-value "0" on-gpu))
+                        (n+ 'y (point-to-value "1" on-gpu))
+                        (n+ 'z (point-to-value "2" on-gpu)))))
 
                                         ; beginnning of file
 (pp-header-file
@@ -150,9 +146,9 @@
                                      (fc (tpl-use NSCC (n+ 'Length "1"))
                                          '*this
                                          'c))
-                          (r-fcn-def (constize (fcn-dcl 'coef 'double))
-                                     null
-                                     'coef_)
+                          (host-device-use (r-fcn-def (constize (fcn-dcl 'coef 'double))
+                                                      null
+                                                      'coef_))
                           (r-fcn-def (constize (fcn-dcl 'get_coef
                                                         'double
                                                         (adc 'int 'index)))
@@ -167,9 +163,9 @@
                                                (mfc (fc 'others)
                                                     'get_coef
                                                     'index)))
-                          (r-fcn-def (constize (fcn-dcl 'others (tc (tpl-use NSCC (n- 'Length "1")))))
-                                     null
-                                     'others_))
+                          (host-device-use (r-fcn-def (constize (fcn-dcl 'others (tc (tpl-use NSCC (n- 'Length "1")))))
+                                                      null
+                                                      'others_)))
                  (priv-sec (sadc (tpl-use NSCC (n- 'Length "1")) 'others_)
                            (sadc 'double 'coef_)))
 
@@ -187,9 +183,9 @@
                                      (fc (tpl-use NSCC "2")
                                          '*this
                                          'c))
-                          (r-fcn-def (constize (fcn-dcl 'coef 'double))
-                                     null
-                                     'coef_)
+                          (host-device-use (r-fcn-def (constize (fcn-dcl 'coef 'double))
+                                                      null
+                                                      'coef_))
                           (r-fcn-def (constize (fcn-dcl 'get_coef
                                                         'double
                                                         (adc 'int 'index)))
@@ -291,9 +287,8 @@
                                         'coefs_)
                                   (mfc 'arg_ 'cpu_ready)
                                   (mfc 'arg_ 'gpu_ready DI-chunk)
-                                  (list (fc 'arg_ 'gpu_init)
-                                        'coefs_
-                                        DI-chunk)
+                                  (list (mfc 'arg_ 'gpu_init DI-chunk)
+                                        'coefs_)
                                   (mfc 'arg_ 'gpu_prep DI-chunk)
                                   (list (mfc 'arg_ 'reduce_init)
                                         'coefs_)
@@ -315,8 +310,8 @@
                                        (sadc 'Coefs 'coefs_)))
                   (bs-SeqWalk-rhs (list (s-typedef (tpl-use NSCC (scope 'Pts 'length))
                                                    'Coefs)
-                                        (general-eval-struct 'EvalExpr)
-                                        (single-eval-struct 'EvalExpr))
+                                        (general-eval-struct 'EvalExpr #false)
+                                        (single-eval-struct 'EvalExpr #false))
                                   (bm-constructor (list (adcr 'Arg 'arg)
                                                         (adcr 'Coefs 'coefs))
                                                   (list (cons-asgn 'arg_ 'arg)
@@ -327,22 +322,28 @@
                                              'eval)
                                       'arg_
                                       'coefs_
-                                      'x
-                                      'y
-                                      'z)
+                                      index-arg)
                                   null
                                   (list (sad 'Arg 'arg_)
                                         (sadc 'Coefs 'coefs_)))
-                  (bs-gpu-rhs null
-                              (bm-constructor (adcr 'Arg 'a)
-                                              (cons-asgn 'arg_ 'a)
+                  (bs-gpu-rhs (list (s-typedef (tpl-use NSCC (scope 'Pts 'length))
+                                               'Coefs)
+                                    (general-eval-struct 'EvalExpr #true)
+                                    (single-eval-struct 'EvalExpr #true))
+                              (bm-constructor (list (adcr 'Arg 'a)
+                                                    (adcr 'Coefs 'coefs))
+                                              (list (cons-asgn 'arg_ 'a)
+                                                    (cons-asgn 'coefs_ 'coefs))
                                               null)
-                              (mfc 'arg_ 'start 'x 'y)
-                              (mfc 'arg_ 'next)
                               vt-chunk
-                              (mfc 'arg_ 'eval)
+                              (fc (scope (tpl-use 'EvalExpr 'Pts)
+                                             'eval)
+                                      'arg_
+                                      'coefs_
+                                      index-arg)
                               null
-                              (sad 'Arg 'arg_))
+                              (list (sad 'Arg 'arg_)
+                                    (sadc 'Coefs 'coefs_)))
                   (bs-Reduction null
                                 (bm-constructor (adcr 'Arg 'arg)
                                                 (cons-asgn 'arg_ 'arg)
@@ -373,8 +374,7 @@
                                   (mfc 'arg_ 'resize)
                                   (mfc 'arg_ 'cpu_ready)
                                   (mfc 'arg_ 'gpu_ready DI-chunk)
-                                  (list (mfc 'arg_ 'gpu_init)
-                                        DI-chunk)
+                                  (mfc 'arg_ 'gpu_init DI-chunk)
                                   (mfc 'arg_ 'gpu_prep DI-chunk)
                                   (mfc 'arg_ 'reduce_init)
                                   null
@@ -387,8 +387,8 @@
                                  (mfc 'arg_ 'init)
                                  null
                                  (sadc 'Arg 'arg_))
-                  (bs-SeqWalk-rhs (list (sum-general-eval-struct 'EvalExpr)
-                                        (sum-single-eval-struct 'EvalExpr))
+                  (bs-SeqWalk-rhs (list (sum-general-eval-struct 'EvalExpr #false)
+                                        (sum-single-eval-struct 'EvalExpr #false))
                                   (bm-constructor (adcr 'Arg 'arg)
                                                   (cons-asgn 'arg_ 'arg)
                                                   null)
@@ -396,19 +396,19 @@
                                   (fc (scope (tpl-use 'EvalExpr 'Pts)
                                              'eval)
                                       'arg_
-                                      'x
-                                      'y
-                                      'z)
+                                      index-arg)
                                   null
                                   (sad 'Arg 'arg_))
-                  (bs-gpu-rhs null
+                  (bs-gpu-rhs (list (sum-general-eval-struct 'EvalExpr #true)
+                                    (sum-single-eval-struct 'EvalExpr #true))
                               (bm-constructor (adcr 'Arg 'a)
                                               (cons-asgn 'arg_ 'a)
                                               null)
-                              (mfc 'arg_ 'start 'x 'y)
-                              (mfc 'arg_ 'next)
                               vt-chunk
-                              (mfc 'arg_ 'eval)
+                              (fc (scope (tpl-use 'EvalExpr 'Pts)
+                                         'eval)
+                                  'arg_
+                                  index-arg)
                               null
                               (sad 'Arg 'arg_))
                   (bs-Reduction null
@@ -451,9 +451,7 @@
                                   (mfc 'arg_ 'resize)
                                   (mfc 'arg_ 'cpu_ready)
                                   (mfc 'arg_ 'gpu_ready DI-chunk)
-                                  (mfc 'arg_
-                                       'gpu_init
-                                       DI-chunk)
+                                  (mfc 'arg_ 'gpu_init DI-chunk)
                                   (mfc 'arg_ 'gpu_prep DI-chunk)
                                   (mfc 'arg_ 'reduce_init)
                                   null
@@ -479,10 +477,8 @@
                               (bm-constructor (adcr 'Arg 'a)
                                               (cons-asgn 'arg_ 'a)
                                               null)
-                              (mfc 'arg_ 'start 'x 'y)
-                              (mfc 'arg_ 'next)
                               'bool
-                              (mfc 'arg_ 'eval)
+                              (mfc 'arg_ 'eval index-arg)
                               null
                               (sad 'Arg 'arg_))
                   (bs-Reduction null

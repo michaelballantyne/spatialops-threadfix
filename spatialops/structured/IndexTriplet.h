@@ -42,6 +42,7 @@
 #include <iomanip>
 #include <string>
 #include <sstream>
+#include <stdexcept>
 
 namespace SpatialOps{
   namespace structured{
@@ -172,10 +173,40 @@ namespace SpatialOps{
       static inline int y_value(){ return int(Y); }
       static inline int z_value(){ return int(Z); }
 
+      static inline int value(int const direction) {
+        if(direction == 0)
+          return int(X);
+        else if(direction == 1)
+          return int(Y);
+        else if(direction == 2)
+          return int(Z);
+        else {
+          std::ostringstream msg;
+          msg << "IndexTriplet value() given bad direction; given: " << direction << "\n";
+          throw(std::runtime_error(msg.str()));
+        }
+      };
+
       static inline IntVec int_vec(){
         return IntVec( i1, i2, i3 );
       }
 
+#ifdef __CUDACC__
+      __device__ static inline int x_value_gpu() { return int(X); }
+      __device__ static inline int y_value_gpu() { return int(Y); }
+      __device__ static inline int z_value_gpu() { return int(Z); }
+
+      __device__ static inline int value_gpu(int const direction) {
+        if(direction == 0)
+          return int(X);
+        else if(direction == 1)
+          return int(Y);
+        else if(direction == 2)
+          return int(Z);
+        else
+          return 9001; //Error: Cannot throw an error on a GPU
+      };
+#endif
     };
 
 

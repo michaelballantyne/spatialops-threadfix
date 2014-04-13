@@ -30,9 +30,7 @@
 (define (build-Nary-struct name
                            number
                            eval-return-type
-                           internal-use
-                           ;until reduce can use index:
-                           reduce-internal-use)
+                           internal-use)
   (define num-lst
     (if (>= 1 number)
         '("")
@@ -113,16 +111,14 @@
                                            vt-chunk)
                                 gen-constructor
                                 eval-return-type
-                                internal-use
+                                (internal-use index-arg)
                                 null
                                 exec-data-mems)
                 (bs-gpu-rhs (s-typedef (tpl-pmtr (scope (first Op-lst) vt-chunk))
                                        vt-chunk)
                             gen-constructor
-                            (op_-mfc 'start 'x 'y)
-                            (op_-mfc 'next)
                             eval-return-type
-                            internal-use
+                            (internal-use index-arg)
                             null
                             exec-data-mems)
                 (bs-Reduction (s-typedef (tpl-pmtr (scope (first Op-lst) vt-chunk))
@@ -132,7 +128,7 @@
                               (exec-or-check 'at_end)
                               (exec-or-check 'has_length)
                               eval-return-type
-                              reduce-internal-use
+                              (internal-use null)
                               null
                               exec-data-mems)))
 
@@ -140,78 +136,64 @@
   (build-Nary-struct name
                      2
                      vt-chunk
-                     (fc internal-name
-                         (mfc 'operand1_ 'eval index-arg)
-                         (mfc 'operand2_ 'eval index-arg))
-                     (fc internal-name
-                         (mfc 'operand1_ 'eval)
-                         (mfc 'operand2_ 'eval))))
+                     (lambda (args)
+                       (fc internal-name
+                           (mfc 'operand1_ 'eval args)
+                           (mfc 'operand2_ 'eval args)))))
 
 (define (build-binary-operator-struct name internal-name)
   (build-Nary-struct name
                      2
                      vt-chunk
-                     (par (mfc 'operand1_ 'eval index-arg)
-                          internal-name
-                          (mfc 'operand2_ 'eval index-arg))
-                     (par (mfc 'operand1_ 'eval)
-                          internal-name
-                          (mfc 'operand2_ 'eval))))
+                     (lambda (args)
+                       (par (mfc 'operand1_ 'eval args)
+                            internal-name
+                            (mfc 'operand2_ 'eval args)))))
 
 (define (build-unary-function-struct name internal-name)
   (build-Nary-struct name
                      1
                      vt-chunk
-                     (fc internal-name
-                         (mfc 'operand_ 'eval index-arg))
-                     (fc internal-name
-                         (mfc 'operand_ 'eval))))
+                     (lambda (args)
+                       (fc internal-name
+                           (mfc 'operand_ 'eval args)))))
 
 (define (build-comparison-struct name internal-name)
   (build-Nary-struct name
                      2
                      'bool
-                     (par (mfc 'operand1_ 'eval index-arg)
-                          internal-name
-                          (mfc 'operand2_ 'eval index-arg))
-                     (par (mfc 'operand1_ 'eval)
-                          internal-name
-                          (mfc 'operand2_ 'eval))))
+                     (lambda (args)
+                       (par (mfc 'operand1_ 'eval args)
+                            internal-name
+                            (mfc 'operand2_ 'eval args)))))
 
 (define (build-unary-logical-function-struct name internal-name)
   (build-Nary-struct name
                      1
                      'bool
-                     (fc internal-name
-                         (mfc 'operand_ 'eval index-arg))
-                     (fc internal-name
-                         (mfc 'operand_ 'eval))))
+                     (lambda (args)
+                       (fc internal-name
+                           (mfc 'operand_ 'eval args)))))
 
 (define (build-logical-operator-struct name internal-name)
   (build-Nary-struct name
                      2
                      'bool
-                     (par (mfc 'operand1_ 'eval index-arg)
-                          internal-name
-                          (mfc 'operand2_ 'eval index-arg))
-                     (par (mfc 'operand1_ 'eval)
-                          internal-name
-                          (mfc 'operand2_ 'eval))))
+                     (lambda (args)
+                       (par (mfc 'operand1_ 'eval args)
+                            internal-name
+                            (mfc 'operand2_ 'eval args)))))
 
 (define (build-extremum-function-struct name comparison)
   (build-Nary-struct name
                      2
                      vt-chunk
-                     (ter-cond (par (mfc 'operand1_ 'eval index-arg)
-                                    comparison
-                                    (mfc 'operand2_ 'eval index-arg))
-                               (mfc 'operand1_ 'eval index-arg)
-                               (mfc 'operand2_ 'eval index-arg))
-                     (ter-cond (par (mfc 'operand1_ 'eval)
-                                    comparison
-                                    (mfc 'operand2_ 'eval))
-                               (mfc 'operand1_ 'eval)
-                               (mfc 'operand2_ 'eval))))
+                     (lambda (args)
+                       (ter-cond (par (mfc 'operand1_ 'eval args)
+                                      comparison
+                                      (mfc 'operand2_ 'eval args))
+                                 (mfc 'operand1_ 'eval args)
+                                 (mfc 'operand2_ 'eval args)))))
 
 (define (add-spacing-check arg)
   (cs arg))
