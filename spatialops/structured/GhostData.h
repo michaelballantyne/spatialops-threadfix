@@ -229,6 +229,15 @@ namespace structured{
     inline bool operator==( const GhostData& rhs ) const{
       return (minus_ == rhs.minus_) && (plus_ == rhs.plus_);
     }
+
+    inline GhostData limit_by_extent( IntVec const & extent) const {
+      return GhostData((extent[0] == 1 ? 0 : minus_[0]),
+                       (extent[0] == 1 ? 0 : plus_[0]),
+                       (extent[1] == 1 ? 0 : minus_[1]),
+                       (extent[1] == 1 ? 0 : plus_[1]),
+                       (extent[2] == 1 ? 0 : minus_[2]),
+                       (extent[2] == 1 ? 0 : plus_[2]));
+    }
   };
 
   inline GhostData min( const GhostData& first, const GhostData& second )

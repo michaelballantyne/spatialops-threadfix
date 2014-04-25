@@ -542,9 +542,9 @@ SpatialField( const MemoryWindow& window,
               const unsigned short int devIdx )
     : fieldWindow_(window),
       interiorFieldWindow_(window), // reset with correct info later
-      bcInfo_( bc ),
-      ghosts_     ( ghost ),
-      validGhosts_( ghost ),
+      bcInfo_( bc.limit_by_extent(window.extent()) ),
+      ghosts_     ( ghost.limit_by_extent(window.extent()) ),
+      validGhosts_( ghost.limit_by_extent(window.extent()) ),
       fieldValues_( ( mtype == LOCAL_RAM ) ?
                     ( ( mode == ExternalStorage) ? fieldValues : (NULL) )
                     : ( NULL ) ),
@@ -660,9 +660,9 @@ SpatialField<Location,T>::
 SpatialField( const MemoryWindow& window, const SpatialField& other )
 : fieldWindow_(window),
   interiorFieldWindow_( other.interiorFieldWindow_ ), // This should not be used!
-  bcInfo_( other.bcInfo_ ),
-  ghosts_( other.ghosts_ ),
-  validGhosts_( other.ghosts_ ),
+  bcInfo_( other.bcInfo_.limit_by_extent(window.extent()) ),
+  ghosts_( other.ghosts_.limit_by_extent(window.extent()) ),
+  validGhosts_( other.ghosts_.limit_by_extent(window.extent()) ),
   fieldValues_(other.fieldValues_),
   fieldValuesExtDevice_(other.fieldValuesExtDevice_),
   builtField_(false),

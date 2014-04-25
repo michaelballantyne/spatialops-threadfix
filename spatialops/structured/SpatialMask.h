@@ -151,9 +151,9 @@ namespace structured{
                 const SpatialMask& other)
       : maskWindow_(window),
         interiorMaskWindow_(other.interiorMaskWindow_), // This should not be used!
-        bcInfo_(other.bcInfo_),
-        ghosts_(other.ghosts_),
-        validGhosts_(other.ghosts_),
+        bcInfo_(other.bcInfo_.limit_by_extent(window.extent())),
+        ghosts_(other.ghosts_.limit_by_extent(window.extent())),
+        validGhosts_(other.ghosts_.limit_by_extent(window.extent())),
         points_(other.points_),
         bitField_(other.bitField_)
     {

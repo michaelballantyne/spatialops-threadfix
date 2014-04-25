@@ -147,6 +147,18 @@ namespace SpatialOps {
        * \brief obtain the number of extra cells *actually* present on this field due to presence of physical boundaries
        */
       inline IntVec has_extra() const{ return IntVec(has_extra(0), has_extra(1), has_extra(2)); }
+
+      /**
+       * \brief limit extra cells to dimensions with extents > 1
+       */
+      inline BoundaryCellInfo limit_by_extent(IntVec const & extent) const {
+        return BoundaryCellInfo(has_bc(0),
+                                has_bc(1),
+                                has_bc(2),
+                                IntVec(extent[0] == 1 ? 0 : has_extra(0),
+                                       extent[1] == 1 ? 0 : has_extra(1),
+                                       extent[2] == 1 ? 0 : has_extra(2)));
+      }
     };
 
     inline std::ostream& operator<<( std::ostream& out, const BoundaryCellInfo& bc ){
