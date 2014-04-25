@@ -43,6 +43,11 @@
                                                   null)
                                   (n+ (mfc 'mask_ 'get_valid_ghost_data)
                                       (fc 'point_to_ghost (mfc (mfc 'mask_ 'boundary_info) 'has_extra)))
+                                  (fc 'point_to_ghost (mfc (mfc 'mask_ 'boundary_info) 'has_extra))
+                                  'true
+                                  null
+                                  (n- (mfc (mfc 'mask_ 'window_without_ghost) 'extent 'dir)
+                                      (mfc (mfc 'mask_ 'boundary_info) 'has_extra 'dir))
                                   'mask_
                                   'mask_
                                   (mfc 'mask_ 'find_consumer 'LOCAL_RAM "0")
@@ -52,7 +57,6 @@
                                          (take-ptr 'mask_))
                                      '->
                                      (fc 'add_consumer 'EXTERNAL_CUDA_GPU DI-chunk))
-                                  'mask_
                                   null
                                   (sadc SpatialMask 'mask_))
                   (bs-Resize-rhs null
@@ -71,7 +75,6 @@
                                   (fc 'mask_ index-arg)
                                   null
                                   (sadc SpatialMask 'mask_))
-                  ;todo:
                   (bs-gpu-rhs null
                               (bm-constructor
                                (list (adc 'int DI-chunk)
@@ -120,20 +123,5 @@
                                     (sadc 'int 'yOffset_)
                                     (sadc 'int 'zOffset_)
                                     (sadc 'int 'xGlob_)
-                                    (sadc 'int 'yGlob_)))
-                  (bs-Reduction null
-                                (bm-constructor (adcr SpatialMask 'm)
-                                                (list (cons-asgn 'iter_ (mfc 'm 'begin))
-                                                      (cons-asgn 'end_ (mfc 'm 'end)))
-                                                null)
-                                (n++ 'iter_)
-                                (n== 'iter_ 'end_)
-                                'true
-                                vt-chunk
-                                (l '* 'iter_)
-                                null
-                                (list (sad (tpl-pmtr (scope SpatialMask 'const_iterator))
-                                           'iter_)
-                                      (sadc (tpl-pmtr (scope SpatialMask 'const_iterator))
-                                            'end_)))))
- )
+                                    (sadc 'int 'yGlob_))))
+    ))

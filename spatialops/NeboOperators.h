@@ -49,16 +49,42 @@
 #         endif
           /* __CUDACC__ */
 
-          SumOp<Reduction,
-                typename Operand1::ReductionType,
-                typename Operand2::ReductionType> typedef ReductionType;
-
           SumOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {}
 
           inline structured::GhostData possible_ghosts(void) const {
              return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          }
+
+          inline bool has_extent(void) const {
+             return (operand1_.has_extent() || operand2_.has_extent());
+          }
+
+          inline int extent(int const dir) const {
+#            ifndef NDEBUG
+                if((operand1_.has_extent() || operand2_.has_extent())) {
+                   int extent;
+
+                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
+                   else { extent = operand2_.extent(dir); };
+
+                   if(operand1_.has_extent()) {
+                      assert(extent == operand1_.extent(dir));
+                   };
+
+                   if(operand2_.has_extent()) {
+                      assert(extent == operand2_.extent(dir));
+                   };
+                }
+#            endif
+             /* NDEBUG */;
+
+             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
           }
 
           inline SeqWalkType init(void) const {
@@ -93,10 +119,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(operand1_.reduce_init(), operand2_.reduce_init());
-          }
 
          private:
           Operand1 const operand1_;
@@ -167,34 +189,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand1, typename Operand2>
-       struct SumOp<Reduction, Operand1, Operand2> {
-         public:
-          typename Operand1::value_type typedef value_type;
-
-          SumOp(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {}
-
-          inline void next(void) { operand1_.next(); operand2_.next(); }
-
-          inline bool at_end(void) const {
-             return (operand1_.at_end() || operand2_.at_end());
-          }
-
-          inline bool has_length(void) const {
-             return (operand1_.has_length() || operand2_.has_length());
-          }
-
-          inline value_type eval(void) const {
-             return (operand1_.eval() + operand2_.eval());
-          }
-
-         private:
-          Operand1 operand1_;
-
-          Operand2 operand2_;
-      };
 
       /* Scalar X Field */
       template<typename FieldType>
@@ -801,16 +795,42 @@
 #         endif
           /* __CUDACC__ */
 
-          DiffOp<Reduction,
-                 typename Operand1::ReductionType,
-                 typename Operand2::ReductionType> typedef ReductionType;
-
           DiffOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {}
 
           inline structured::GhostData possible_ghosts(void) const {
              return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          }
+
+          inline bool has_extent(void) const {
+             return (operand1_.has_extent() || operand2_.has_extent());
+          }
+
+          inline int extent(int const dir) const {
+#            ifndef NDEBUG
+                if((operand1_.has_extent() || operand2_.has_extent())) {
+                   int extent;
+
+                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
+                   else { extent = operand2_.extent(dir); };
+
+                   if(operand1_.has_extent()) {
+                      assert(extent == operand1_.extent(dir));
+                   };
+
+                   if(operand2_.has_extent()) {
+                      assert(extent == operand2_.extent(dir));
+                   };
+                }
+#            endif
+             /* NDEBUG */;
+
+             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
           }
 
           inline SeqWalkType init(void) const {
@@ -845,10 +865,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(operand1_.reduce_init(), operand2_.reduce_init());
-          }
 
          private:
           Operand1 const operand1_;
@@ -919,34 +935,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand1, typename Operand2>
-       struct DiffOp<Reduction, Operand1, Operand2> {
-         public:
-          typename Operand1::value_type typedef value_type;
-
-          DiffOp(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {}
-
-          inline void next(void) { operand1_.next(); operand2_.next(); }
-
-          inline bool at_end(void) const {
-             return (operand1_.at_end() || operand2_.at_end());
-          }
-
-          inline bool has_length(void) const {
-             return (operand1_.has_length() || operand2_.has_length());
-          }
-
-          inline value_type eval(void) const {
-             return (operand1_.eval() - operand2_.eval());
-          }
-
-         private:
-          Operand1 operand1_;
-
-          Operand2 operand2_;
-      };
 
       /* Scalar X Field */
       template<typename FieldType>
@@ -1553,16 +1541,42 @@
 #         endif
           /* __CUDACC__ */
 
-          ProdOp<Reduction,
-                 typename Operand1::ReductionType,
-                 typename Operand2::ReductionType> typedef ReductionType;
-
           ProdOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {}
 
           inline structured::GhostData possible_ghosts(void) const {
              return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          }
+
+          inline bool has_extent(void) const {
+             return (operand1_.has_extent() || operand2_.has_extent());
+          }
+
+          inline int extent(int const dir) const {
+#            ifndef NDEBUG
+                if((operand1_.has_extent() || operand2_.has_extent())) {
+                   int extent;
+
+                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
+                   else { extent = operand2_.extent(dir); };
+
+                   if(operand1_.has_extent()) {
+                      assert(extent == operand1_.extent(dir));
+                   };
+
+                   if(operand2_.has_extent()) {
+                      assert(extent == operand2_.extent(dir));
+                   };
+                }
+#            endif
+             /* NDEBUG */;
+
+             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
           }
 
           inline SeqWalkType init(void) const {
@@ -1597,10 +1611,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(operand1_.reduce_init(), operand2_.reduce_init());
-          }
 
          private:
           Operand1 const operand1_;
@@ -1671,34 +1681,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand1, typename Operand2>
-       struct ProdOp<Reduction, Operand1, Operand2> {
-         public:
-          typename Operand1::value_type typedef value_type;
-
-          ProdOp(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {}
-
-          inline void next(void) { operand1_.next(); operand2_.next(); }
-
-          inline bool at_end(void) const {
-             return (operand1_.at_end() || operand2_.at_end());
-          }
-
-          inline bool has_length(void) const {
-             return (operand1_.has_length() || operand2_.has_length());
-          }
-
-          inline value_type eval(void) const {
-             return (operand1_.eval() * operand2_.eval());
-          }
-
-         private:
-          Operand1 operand1_;
-
-          Operand2 operand2_;
-      };
 
       /* Scalar X Field */
       template<typename FieldType>
@@ -2305,16 +2287,42 @@
 #         endif
           /* __CUDACC__ */
 
-          DivOp<Reduction,
-                typename Operand1::ReductionType,
-                typename Operand2::ReductionType> typedef ReductionType;
-
           DivOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {}
 
           inline structured::GhostData possible_ghosts(void) const {
              return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          }
+
+          inline bool has_extent(void) const {
+             return (operand1_.has_extent() || operand2_.has_extent());
+          }
+
+          inline int extent(int const dir) const {
+#            ifndef NDEBUG
+                if((operand1_.has_extent() || operand2_.has_extent())) {
+                   int extent;
+
+                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
+                   else { extent = operand2_.extent(dir); };
+
+                   if(operand1_.has_extent()) {
+                      assert(extent == operand1_.extent(dir));
+                   };
+
+                   if(operand2_.has_extent()) {
+                      assert(extent == operand2_.extent(dir));
+                   };
+                }
+#            endif
+             /* NDEBUG */;
+
+             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
           }
 
           inline SeqWalkType init(void) const {
@@ -2349,10 +2357,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(operand1_.reduce_init(), operand2_.reduce_init());
-          }
 
          private:
           Operand1 const operand1_;
@@ -2423,34 +2427,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand1, typename Operand2>
-       struct DivOp<Reduction, Operand1, Operand2> {
-         public:
-          typename Operand1::value_type typedef value_type;
-
-          DivOp(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {}
-
-          inline void next(void) { operand1_.next(); operand2_.next(); }
-
-          inline bool at_end(void) const {
-             return (operand1_.at_end() || operand2_.at_end());
-          }
-
-          inline bool has_length(void) const {
-             return (operand1_.has_length() || operand2_.has_length());
-          }
-
-          inline value_type eval(void) const {
-             return (operand1_.eval() / operand2_.eval());
-          }
-
-         private:
-          Operand1 operand1_;
-
-          Operand2 operand2_;
-      };
 
       /* Scalar X Field */
       template<typename FieldType>
@@ -3051,9 +3027,6 @@
 #         endif
           /* __CUDACC__ */
 
-          SinFcn<Reduction, typename Operand::ReductionType> typedef
-          ReductionType;
-
           SinFcn(Operand const & operand)
           : operand_(operand)
           {}
@@ -3061,6 +3034,14 @@
           inline structured::GhostData possible_ghosts(void) const {
              return operand_.possible_ghosts();
           }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return operand_.minimum_ghosts();
+          }
+
+          inline bool has_extent(void) const { return (operand_.has_extent()); }
+
+          inline int extent(int const dir) const { return operand_.extent(dir); }
 
           inline SeqWalkType init(void) const {
              return SeqWalkType(operand_.init());
@@ -3092,10 +3073,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(operand_.reduce_init());
-          }
 
          private:
           Operand const operand_;
@@ -3156,28 +3133,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand>
-       struct SinFcn<Reduction, Operand> {
-         public:
-          typename Operand::value_type typedef value_type;
-
-          SinFcn(Operand const & operand)
-          : operand_(operand)
-          {}
-
-          inline void next(void) { operand_.next(); }
-
-          inline bool at_end(void) const { return (operand_.at_end()); }
-
-          inline bool has_length(void) const { return (operand_.has_length()); }
-
-          inline value_type eval(void) const {
-             return std::sin(operand_.eval());
-          }
-
-         private:
-          Operand operand_;
-      };
 
       /* Field */
       template<typename FieldType>
@@ -3258,9 +3213,6 @@
 #         endif
           /* __CUDACC__ */
 
-          CosFcn<Reduction, typename Operand::ReductionType> typedef
-          ReductionType;
-
           CosFcn(Operand const & operand)
           : operand_(operand)
           {}
@@ -3268,6 +3220,14 @@
           inline structured::GhostData possible_ghosts(void) const {
              return operand_.possible_ghosts();
           }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return operand_.minimum_ghosts();
+          }
+
+          inline bool has_extent(void) const { return (operand_.has_extent()); }
+
+          inline int extent(int const dir) const { return operand_.extent(dir); }
 
           inline SeqWalkType init(void) const {
              return SeqWalkType(operand_.init());
@@ -3299,10 +3259,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(operand_.reduce_init());
-          }
 
          private:
           Operand const operand_;
@@ -3363,28 +3319,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand>
-       struct CosFcn<Reduction, Operand> {
-         public:
-          typename Operand::value_type typedef value_type;
-
-          CosFcn(Operand const & operand)
-          : operand_(operand)
-          {}
-
-          inline void next(void) { operand_.next(); }
-
-          inline bool at_end(void) const { return (operand_.at_end()); }
-
-          inline bool has_length(void) const { return (operand_.has_length()); }
-
-          inline value_type eval(void) const {
-             return std::cos(operand_.eval());
-          }
-
-         private:
-          Operand operand_;
-      };
 
       /* Field */
       template<typename FieldType>
@@ -3465,9 +3399,6 @@
 #         endif
           /* __CUDACC__ */
 
-          TanFcn<Reduction, typename Operand::ReductionType> typedef
-          ReductionType;
-
           TanFcn(Operand const & operand)
           : operand_(operand)
           {}
@@ -3475,6 +3406,14 @@
           inline structured::GhostData possible_ghosts(void) const {
              return operand_.possible_ghosts();
           }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return operand_.minimum_ghosts();
+          }
+
+          inline bool has_extent(void) const { return (operand_.has_extent()); }
+
+          inline int extent(int const dir) const { return operand_.extent(dir); }
 
           inline SeqWalkType init(void) const {
              return SeqWalkType(operand_.init());
@@ -3506,10 +3445,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(operand_.reduce_init());
-          }
 
          private:
           Operand const operand_;
@@ -3570,28 +3505,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand>
-       struct TanFcn<Reduction, Operand> {
-         public:
-          typename Operand::value_type typedef value_type;
-
-          TanFcn(Operand const & operand)
-          : operand_(operand)
-          {}
-
-          inline void next(void) { operand_.next(); }
-
-          inline bool at_end(void) const { return (operand_.at_end()); }
-
-          inline bool has_length(void) const { return (operand_.has_length()); }
-
-          inline value_type eval(void) const {
-             return std::tan(operand_.eval());
-          }
-
-         private:
-          Operand operand_;
-      };
 
       /* Field */
       template<typename FieldType>
@@ -3672,9 +3585,6 @@
 #         endif
           /* __CUDACC__ */
 
-          ExpFcn<Reduction, typename Operand::ReductionType> typedef
-          ReductionType;
-
           ExpFcn(Operand const & operand)
           : operand_(operand)
           {}
@@ -3682,6 +3592,14 @@
           inline structured::GhostData possible_ghosts(void) const {
              return operand_.possible_ghosts();
           }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return operand_.minimum_ghosts();
+          }
+
+          inline bool has_extent(void) const { return (operand_.has_extent()); }
+
+          inline int extent(int const dir) const { return operand_.extent(dir); }
 
           inline SeqWalkType init(void) const {
              return SeqWalkType(operand_.init());
@@ -3713,10 +3631,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(operand_.reduce_init());
-          }
 
          private:
           Operand const operand_;
@@ -3777,28 +3691,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand>
-       struct ExpFcn<Reduction, Operand> {
-         public:
-          typename Operand::value_type typedef value_type;
-
-          ExpFcn(Operand const & operand)
-          : operand_(operand)
-          {}
-
-          inline void next(void) { operand_.next(); }
-
-          inline bool at_end(void) const { return (operand_.at_end()); }
-
-          inline bool has_length(void) const { return (operand_.has_length()); }
-
-          inline value_type eval(void) const {
-             return std::exp(operand_.eval());
-          }
-
-         private:
-          Operand operand_;
-      };
 
       /* Field */
       template<typename FieldType>
@@ -3880,9 +3772,6 @@
 #         endif
           /* __CUDACC__ */
 
-          TanhFcn<Reduction, typename Operand::ReductionType> typedef
-          ReductionType;
-
           TanhFcn(Operand const & operand)
           : operand_(operand)
           {}
@@ -3890,6 +3779,14 @@
           inline structured::GhostData possible_ghosts(void) const {
              return operand_.possible_ghosts();
           }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return operand_.minimum_ghosts();
+          }
+
+          inline bool has_extent(void) const { return (operand_.has_extent()); }
+
+          inline int extent(int const dir) const { return operand_.extent(dir); }
 
           inline SeqWalkType init(void) const {
              return SeqWalkType(operand_.init());
@@ -3921,10 +3818,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(operand_.reduce_init());
-          }
 
          private:
           Operand const operand_;
@@ -3986,28 +3879,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand>
-       struct TanhFcn<Reduction, Operand> {
-         public:
-          typename Operand::value_type typedef value_type;
-
-          TanhFcn(Operand const & operand)
-          : operand_(operand)
-          {}
-
-          inline void next(void) { operand_.next(); }
-
-          inline bool at_end(void) const { return (operand_.at_end()); }
-
-          inline bool has_length(void) const { return (operand_.has_length()); }
-
-          inline value_type eval(void) const {
-             return std::tanh(operand_.eval());
-          }
-
-         private:
-          Operand operand_;
-      };
 
       /* Field */
       template<typename FieldType>
@@ -4088,9 +3959,6 @@
 #         endif
           /* __CUDACC__ */
 
-          AbsFcn<Reduction, typename Operand::ReductionType> typedef
-          ReductionType;
-
           AbsFcn(Operand const & operand)
           : operand_(operand)
           {}
@@ -4098,6 +3966,14 @@
           inline structured::GhostData possible_ghosts(void) const {
              return operand_.possible_ghosts();
           }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return operand_.minimum_ghosts();
+          }
+
+          inline bool has_extent(void) const { return (operand_.has_extent()); }
+
+          inline int extent(int const dir) const { return operand_.extent(dir); }
 
           inline SeqWalkType init(void) const {
              return SeqWalkType(operand_.init());
@@ -4129,10 +4005,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(operand_.reduce_init());
-          }
 
          private:
           Operand const operand_;
@@ -4193,28 +4065,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand>
-       struct AbsFcn<Reduction, Operand> {
-         public:
-          typename Operand::value_type typedef value_type;
-
-          AbsFcn(Operand const & operand)
-          : operand_(operand)
-          {}
-
-          inline void next(void) { operand_.next(); }
-
-          inline bool at_end(void) const { return (operand_.at_end()); }
-
-          inline bool has_length(void) const { return (operand_.has_length()); }
-
-          inline value_type eval(void) const {
-             return std::abs(operand_.eval());
-          }
-
-         private:
-          Operand operand_;
-      };
 
       /* Field */
       template<typename FieldType>
@@ -4295,9 +4145,6 @@
 #         endif
           /* __CUDACC__ */
 
-          NegFcn<Reduction, typename Operand::ReductionType> typedef
-          ReductionType;
-
           NegFcn(Operand const & operand)
           : operand_(operand)
           {}
@@ -4305,6 +4152,14 @@
           inline structured::GhostData possible_ghosts(void) const {
              return operand_.possible_ghosts();
           }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return operand_.minimum_ghosts();
+          }
+
+          inline bool has_extent(void) const { return (operand_.has_extent()); }
+
+          inline int extent(int const dir) const { return operand_.extent(dir); }
 
           inline SeqWalkType init(void) const {
              return SeqWalkType(operand_.init());
@@ -4336,10 +4191,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(operand_.reduce_init());
-          }
 
          private:
           Operand const operand_;
@@ -4400,26 +4251,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand>
-       struct NegFcn<Reduction, Operand> {
-         public:
-          typename Operand::value_type typedef value_type;
-
-          NegFcn(Operand const & operand)
-          : operand_(operand)
-          {}
-
-          inline void next(void) { operand_.next(); }
-
-          inline bool at_end(void) const { return (operand_.at_end()); }
-
-          inline bool has_length(void) const { return (operand_.has_length()); }
-
-          inline value_type eval(void) const { return -(operand_.eval()); }
-
-         private:
-          Operand operand_;
-      };
 
       /* Field */
       template<typename FieldType>
@@ -4509,16 +4340,42 @@
 #         endif
           /* __CUDACC__ */
 
-          PowFcn<Reduction,
-                 typename Operand1::ReductionType,
-                 typename Operand2::ReductionType> typedef ReductionType;
-
           PowFcn(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {}
 
           inline structured::GhostData possible_ghosts(void) const {
              return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          }
+
+          inline bool has_extent(void) const {
+             return (operand1_.has_extent() || operand2_.has_extent());
+          }
+
+          inline int extent(int const dir) const {
+#            ifndef NDEBUG
+                if((operand1_.has_extent() || operand2_.has_extent())) {
+                   int extent;
+
+                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
+                   else { extent = operand2_.extent(dir); };
+
+                   if(operand1_.has_extent()) {
+                      assert(extent == operand1_.extent(dir));
+                   };
+
+                   if(operand2_.has_extent()) {
+                      assert(extent == operand2_.extent(dir));
+                   };
+                }
+#            endif
+             /* NDEBUG */;
+
+             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
           }
 
           inline SeqWalkType init(void) const {
@@ -4553,10 +4410,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(operand1_.reduce_init(), operand2_.reduce_init());
-          }
 
          private:
           Operand1 const operand1_;
@@ -4627,34 +4480,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand1, typename Operand2>
-       struct PowFcn<Reduction, Operand1, Operand2> {
-         public:
-          typename Operand1::value_type typedef value_type;
-
-          PowFcn(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {}
-
-          inline void next(void) { operand1_.next(); operand2_.next(); }
-
-          inline bool at_end(void) const {
-             return (operand1_.at_end() || operand2_.at_end());
-          }
-
-          inline bool has_length(void) const {
-             return (operand1_.has_length() || operand2_.has_length());
-          }
-
-          inline value_type eval(void) const {
-             return std::pow(operand1_.eval(), operand2_.eval());
-          }
-
-         private:
-          Operand1 operand1_;
-
-          Operand2 operand2_;
-      };
 
       /* Scalar X Field */
       template<typename FieldType>
@@ -5261,9 +5086,6 @@
 #         endif
           /* __CUDACC__ */
 
-          SqrtFcn<Reduction, typename Operand::ReductionType> typedef
-          ReductionType;
-
           SqrtFcn(Operand const & operand)
           : operand_(operand)
           {}
@@ -5271,6 +5093,14 @@
           inline structured::GhostData possible_ghosts(void) const {
              return operand_.possible_ghosts();
           }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return operand_.minimum_ghosts();
+          }
+
+          inline bool has_extent(void) const { return (operand_.has_extent()); }
+
+          inline int extent(int const dir) const { return operand_.extent(dir); }
 
           inline SeqWalkType init(void) const {
              return SeqWalkType(operand_.init());
@@ -5302,10 +5132,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(operand_.reduce_init());
-          }
 
          private:
           Operand const operand_;
@@ -5367,28 +5193,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand>
-       struct SqrtFcn<Reduction, Operand> {
-         public:
-          typename Operand::value_type typedef value_type;
-
-          SqrtFcn(Operand const & operand)
-          : operand_(operand)
-          {}
-
-          inline void next(void) { operand_.next(); }
-
-          inline bool at_end(void) const { return (operand_.at_end()); }
-
-          inline bool has_length(void) const { return (operand_.has_length()); }
-
-          inline value_type eval(void) const {
-             return std::sqrt(operand_.eval());
-          }
-
-         private:
-          Operand operand_;
-      };
 
       /* Field */
       template<typename FieldType>
@@ -5469,9 +5273,6 @@
 #         endif
           /* __CUDACC__ */
 
-          LogFcn<Reduction, typename Operand::ReductionType> typedef
-          ReductionType;
-
           LogFcn(Operand const & operand)
           : operand_(operand)
           {}
@@ -5479,6 +5280,14 @@
           inline structured::GhostData possible_ghosts(void) const {
              return operand_.possible_ghosts();
           }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return operand_.minimum_ghosts();
+          }
+
+          inline bool has_extent(void) const { return (operand_.has_extent()); }
+
+          inline int extent(int const dir) const { return operand_.extent(dir); }
 
           inline SeqWalkType init(void) const {
              return SeqWalkType(operand_.init());
@@ -5510,10 +5319,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(operand_.reduce_init());
-          }
 
          private:
           Operand const operand_;
@@ -5574,28 +5379,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand>
-       struct LogFcn<Reduction, Operand> {
-         public:
-          typename Operand::value_type typedef value_type;
-
-          LogFcn(Operand const & operand)
-          : operand_(operand)
-          {}
-
-          inline void next(void) { operand_.next(); }
-
-          inline bool at_end(void) const { return (operand_.at_end()); }
-
-          inline bool has_length(void) const { return (operand_.has_length()); }
-
-          inline value_type eval(void) const {
-             return std::log(operand_.eval());
-          }
-
-         private:
-          Operand operand_;
-      };
 
       /* Field */
       template<typename FieldType>
@@ -5677,9 +5460,6 @@
 #         endif
           /* __CUDACC__ */
 
-          Log10Fcn<Reduction, typename Operand::ReductionType> typedef
-          ReductionType;
-
           Log10Fcn(Operand const & operand)
           : operand_(operand)
           {}
@@ -5687,6 +5467,14 @@
           inline structured::GhostData possible_ghosts(void) const {
              return operand_.possible_ghosts();
           }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return operand_.minimum_ghosts();
+          }
+
+          inline bool has_extent(void) const { return (operand_.has_extent()); }
+
+          inline int extent(int const dir) const { return operand_.extent(dir); }
 
           inline SeqWalkType init(void) const {
              return SeqWalkType(operand_.init());
@@ -5718,10 +5506,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(operand_.reduce_init());
-          }
 
          private:
           Operand const operand_;
@@ -5783,28 +5567,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand>
-       struct Log10Fcn<Reduction, Operand> {
-         public:
-          typename Operand::value_type typedef value_type;
-
-          Log10Fcn(Operand const & operand)
-          : operand_(operand)
-          {}
-
-          inline void next(void) { operand_.next(); }
-
-          inline bool at_end(void) const { return (operand_.at_end()); }
-
-          inline bool has_length(void) const { return (operand_.has_length()); }
-
-          inline value_type eval(void) const {
-             return std::log10(operand_.eval());
-          }
-
-         private:
-          Operand operand_;
-      };
 
       /* Field */
       template<typename FieldType>
@@ -5886,9 +5648,6 @@
 #         endif
           /* __CUDACC__ */
 
-          ErfFcn<Reduction, typename Operand::ReductionType> typedef
-          ReductionType;
-
           ErfFcn(Operand const & operand)
           : operand_(operand)
           {}
@@ -5896,6 +5655,14 @@
           inline structured::GhostData possible_ghosts(void) const {
              return operand_.possible_ghosts();
           }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return operand_.minimum_ghosts();
+          }
+
+          inline bool has_extent(void) const { return (operand_.has_extent()); }
+
+          inline int extent(int const dir) const { return operand_.extent(dir); }
 
           inline SeqWalkType init(void) const {
              return SeqWalkType(operand_.init());
@@ -5927,10 +5694,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(operand_.reduce_init());
-          }
 
          private:
           Operand const operand_;
@@ -5991,26 +5754,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand>
-       struct ErfFcn<Reduction, Operand> {
-         public:
-          typename Operand::value_type typedef value_type;
-
-          ErfFcn(Operand const & operand)
-          : operand_(operand)
-          {}
-
-          inline void next(void) { operand_.next(); }
-
-          inline bool at_end(void) const { return (operand_.at_end()); }
-
-          inline bool has_length(void) const { return (operand_.has_length()); }
-
-          inline value_type eval(void) const { return erf(operand_.eval()); }
-
-         private:
-          Operand operand_;
-      };
 
       /* Field */
       template<typename FieldType>
@@ -6092,9 +5835,6 @@
 #         endif
           /* __CUDACC__ */
 
-          ErfcFcn<Reduction, typename Operand::ReductionType> typedef
-          ReductionType;
-
           ErfcFcn(Operand const & operand)
           : operand_(operand)
           {}
@@ -6102,6 +5842,14 @@
           inline structured::GhostData possible_ghosts(void) const {
              return operand_.possible_ghosts();
           }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return operand_.minimum_ghosts();
+          }
+
+          inline bool has_extent(void) const { return (operand_.has_extent()); }
+
+          inline int extent(int const dir) const { return operand_.extent(dir); }
 
           inline SeqWalkType init(void) const {
              return SeqWalkType(operand_.init());
@@ -6133,10 +5881,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(operand_.reduce_init());
-          }
 
          private:
           Operand const operand_;
@@ -6198,26 +5942,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand>
-       struct ErfcFcn<Reduction, Operand> {
-         public:
-          typename Operand::value_type typedef value_type;
-
-          ErfcFcn(Operand const & operand)
-          : operand_(operand)
-          {}
-
-          inline void next(void) { operand_.next(); }
-
-          inline bool at_end(void) const { return (operand_.at_end()); }
-
-          inline bool has_length(void) const { return (operand_.has_length()); }
-
-          inline value_type eval(void) const { return erfc(operand_.eval()); }
-
-         private:
-          Operand operand_;
-      };
 
       /* Field */
       template<typename FieldType>
@@ -6304,16 +6028,42 @@
 #         endif
           /* __CUDACC__ */
 
-          EqualCmp<Reduction,
-                   typename Operand1::ReductionType,
-                   typename Operand2::ReductionType> typedef ReductionType;
-
           EqualCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {}
 
           inline structured::GhostData possible_ghosts(void) const {
              return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          }
+
+          inline bool has_extent(void) const {
+             return (operand1_.has_extent() || operand2_.has_extent());
+          }
+
+          inline int extent(int const dir) const {
+#            ifndef NDEBUG
+                if((operand1_.has_extent() || operand2_.has_extent())) {
+                   int extent;
+
+                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
+                   else { extent = operand2_.extent(dir); };
+
+                   if(operand1_.has_extent()) {
+                      assert(extent == operand1_.extent(dir));
+                   };
+
+                   if(operand2_.has_extent()) {
+                      assert(extent == operand2_.extent(dir));
+                   };
+                }
+#            endif
+             /* NDEBUG */;
+
+             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
           }
 
           inline SeqWalkType init(void) const {
@@ -6348,10 +6098,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(operand1_.reduce_init(), operand2_.reduce_init());
-          }
 
          private:
           Operand1 const operand1_;
@@ -6420,34 +6166,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand1, typename Operand2>
-       struct EqualCmp<Reduction, Operand1, Operand2> {
-         public:
-          typename Operand1::value_type typedef value_type;
-
-          EqualCmp(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {}
-
-          inline void next(void) { operand1_.next(); operand2_.next(); }
-
-          inline bool at_end(void) const {
-             return (operand1_.at_end() || operand2_.at_end());
-          }
-
-          inline bool has_length(void) const {
-             return (operand1_.has_length() || operand2_.has_length());
-          }
-
-          inline bool eval(void) const {
-             return (operand1_.eval() == operand2_.eval());
-          }
-
-         private:
-          Operand1 operand1_;
-
-          Operand2 operand2_;
-      };
 
       /* Scalar X Field */
       template<typename FieldType>
@@ -7132,16 +6850,42 @@
 #         endif
           /* __CUDACC__ */
 
-          InequalCmp<Reduction,
-                     typename Operand1::ReductionType,
-                     typename Operand2::ReductionType> typedef ReductionType;
-
           InequalCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {}
 
           inline structured::GhostData possible_ghosts(void) const {
              return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          }
+
+          inline bool has_extent(void) const {
+             return (operand1_.has_extent() || operand2_.has_extent());
+          }
+
+          inline int extent(int const dir) const {
+#            ifndef NDEBUG
+                if((operand1_.has_extent() || operand2_.has_extent())) {
+                   int extent;
+
+                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
+                   else { extent = operand2_.extent(dir); };
+
+                   if(operand1_.has_extent()) {
+                      assert(extent == operand1_.extent(dir));
+                   };
+
+                   if(operand2_.has_extent()) {
+                      assert(extent == operand2_.extent(dir));
+                   };
+                }
+#            endif
+             /* NDEBUG */;
+
+             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
           }
 
           inline SeqWalkType init(void) const {
@@ -7176,10 +6920,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(operand1_.reduce_init(), operand2_.reduce_init());
-          }
 
          private:
           Operand1 const operand1_;
@@ -7248,34 +6988,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand1, typename Operand2>
-       struct InequalCmp<Reduction, Operand1, Operand2> {
-         public:
-          typename Operand1::value_type typedef value_type;
-
-          InequalCmp(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {}
-
-          inline void next(void) { operand1_.next(); operand2_.next(); }
-
-          inline bool at_end(void) const {
-             return (operand1_.at_end() || operand2_.at_end());
-          }
-
-          inline bool has_length(void) const {
-             return (operand1_.has_length() || operand2_.has_length());
-          }
-
-          inline bool eval(void) const {
-             return (operand1_.eval() != operand2_.eval());
-          }
-
-         private:
-          Operand1 operand1_;
-
-          Operand2 operand2_;
-      };
 
       /* Scalar X Field */
       template<typename FieldType>
@@ -7963,16 +7675,42 @@
 #         endif
           /* __CUDACC__ */
 
-          LessThanCmp<Reduction,
-                      typename Operand1::ReductionType,
-                      typename Operand2::ReductionType> typedef ReductionType;
-
           LessThanCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {}
 
           inline structured::GhostData possible_ghosts(void) const {
              return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          }
+
+          inline bool has_extent(void) const {
+             return (operand1_.has_extent() || operand2_.has_extent());
+          }
+
+          inline int extent(int const dir) const {
+#            ifndef NDEBUG
+                if((operand1_.has_extent() || operand2_.has_extent())) {
+                   int extent;
+
+                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
+                   else { extent = operand2_.extent(dir); };
+
+                   if(operand1_.has_extent()) {
+                      assert(extent == operand1_.extent(dir));
+                   };
+
+                   if(operand2_.has_extent()) {
+                      assert(extent == operand2_.extent(dir));
+                   };
+                }
+#            endif
+             /* NDEBUG */;
+
+             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
           }
 
           inline SeqWalkType init(void) const {
@@ -8007,10 +7745,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(operand1_.reduce_init(), operand2_.reduce_init());
-          }
 
          private:
           Operand1 const operand1_;
@@ -8079,34 +7813,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand1, typename Operand2>
-       struct LessThanCmp<Reduction, Operand1, Operand2> {
-         public:
-          typename Operand1::value_type typedef value_type;
-
-          LessThanCmp(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {}
-
-          inline void next(void) { operand1_.next(); operand2_.next(); }
-
-          inline bool at_end(void) const {
-             return (operand1_.at_end() || operand2_.at_end());
-          }
-
-          inline bool has_length(void) const {
-             return (operand1_.has_length() || operand2_.has_length());
-          }
-
-          inline bool eval(void) const {
-             return (operand1_.eval() < operand2_.eval());
-          }
-
-         private:
-          Operand1 operand1_;
-
-          Operand2 operand2_;
-      };
 
       /* Scalar X Field */
       template<typename FieldType>
@@ -8777,17 +8483,42 @@
 #         endif
           /* __CUDACC__ */
 
-          LessThanEqualCmp<Reduction,
-                           typename Operand1::ReductionType,
-                           typename Operand2::ReductionType> typedef
-          ReductionType;
-
           LessThanEqualCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {}
 
           inline structured::GhostData possible_ghosts(void) const {
              return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          }
+
+          inline bool has_extent(void) const {
+             return (operand1_.has_extent() || operand2_.has_extent());
+          }
+
+          inline int extent(int const dir) const {
+#            ifndef NDEBUG
+                if((operand1_.has_extent() || operand2_.has_extent())) {
+                   int extent;
+
+                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
+                   else { extent = operand2_.extent(dir); };
+
+                   if(operand1_.has_extent()) {
+                      assert(extent == operand1_.extent(dir));
+                   };
+
+                   if(operand2_.has_extent()) {
+                      assert(extent == operand2_.extent(dir));
+                   };
+                }
+#            endif
+             /* NDEBUG */;
+
+             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
           }
 
           inline SeqWalkType init(void) const {
@@ -8822,10 +8553,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(operand1_.reduce_init(), operand2_.reduce_init());
-          }
 
          private:
           Operand1 const operand1_;
@@ -8897,34 +8624,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand1, typename Operand2>
-       struct LessThanEqualCmp<Reduction, Operand1, Operand2> {
-         public:
-          typename Operand1::value_type typedef value_type;
-
-          LessThanEqualCmp(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {}
-
-          inline void next(void) { operand1_.next(); operand2_.next(); }
-
-          inline bool at_end(void) const {
-             return (operand1_.at_end() || operand2_.at_end());
-          }
-
-          inline bool has_length(void) const {
-             return (operand1_.has_length() || operand2_.has_length());
-          }
-
-          inline bool eval(void) const {
-             return (operand1_.eval() <= operand2_.eval());
-          }
-
-         private:
-          Operand1 operand1_;
-
-          Operand2 operand2_;
-      };
 
       /* Scalar X Field */
       template<typename FieldType>
@@ -9634,17 +9333,42 @@
 #         endif
           /* __CUDACC__ */
 
-          GreaterThanCmp<Reduction,
-                         typename Operand1::ReductionType,
-                         typename Operand2::ReductionType> typedef ReductionType
-          ;
-
           GreaterThanCmp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {}
 
           inline structured::GhostData possible_ghosts(void) const {
              return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          }
+
+          inline bool has_extent(void) const {
+             return (operand1_.has_extent() || operand2_.has_extent());
+          }
+
+          inline int extent(int const dir) const {
+#            ifndef NDEBUG
+                if((operand1_.has_extent() || operand2_.has_extent())) {
+                   int extent;
+
+                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
+                   else { extent = operand2_.extent(dir); };
+
+                   if(operand1_.has_extent()) {
+                      assert(extent == operand1_.extent(dir));
+                   };
+
+                   if(operand2_.has_extent()) {
+                      assert(extent == operand2_.extent(dir));
+                   };
+                }
+#            endif
+             /* NDEBUG */;
+
+             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
           }
 
           inline SeqWalkType init(void) const {
@@ -9679,10 +9403,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(operand1_.reduce_init(), operand2_.reduce_init());
-          }
 
          private:
           Operand1 const operand1_;
@@ -9751,34 +9471,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand1, typename Operand2>
-       struct GreaterThanCmp<Reduction, Operand1, Operand2> {
-         public:
-          typename Operand1::value_type typedef value_type;
-
-          GreaterThanCmp(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {}
-
-          inline void next(void) { operand1_.next(); operand2_.next(); }
-
-          inline bool at_end(void) const {
-             return (operand1_.at_end() || operand2_.at_end());
-          }
-
-          inline bool has_length(void) const {
-             return (operand1_.has_length() || operand2_.has_length());
-          }
-
-          inline bool eval(void) const {
-             return (operand1_.eval() > operand2_.eval());
-          }
-
-         private:
-          Operand1 operand1_;
-
-          Operand2 operand2_;
-      };
 
       /* Scalar X Field */
       template<typename FieldType>
@@ -10462,11 +10154,6 @@
 #         endif
           /* __CUDACC__ */
 
-          GreaterThanEqualCmp<Reduction,
-                              typename Operand1::ReductionType,
-                              typename Operand2::ReductionType> typedef
-          ReductionType;
-
           GreaterThanEqualCmp(Operand1 const & operand1,
                               Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
@@ -10474,6 +10161,36 @@
 
           inline structured::GhostData possible_ghosts(void) const {
              return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          }
+
+          inline bool has_extent(void) const {
+             return (operand1_.has_extent() || operand2_.has_extent());
+          }
+
+          inline int extent(int const dir) const {
+#            ifndef NDEBUG
+                if((operand1_.has_extent() || operand2_.has_extent())) {
+                   int extent;
+
+                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
+                   else { extent = operand2_.extent(dir); };
+
+                   if(operand1_.has_extent()) {
+                      assert(extent == operand1_.extent(dir));
+                   };
+
+                   if(operand2_.has_extent()) {
+                      assert(extent == operand2_.extent(dir));
+                   };
+                }
+#            endif
+             /* NDEBUG */;
+
+             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
           }
 
           inline SeqWalkType init(void) const {
@@ -10508,10 +10225,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(operand1_.reduce_init(), operand2_.reduce_init());
-          }
 
          private:
           Operand1 const operand1_;
@@ -10584,35 +10297,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand1, typename Operand2>
-       struct GreaterThanEqualCmp<Reduction, Operand1, Operand2> {
-         public:
-          typename Operand1::value_type typedef value_type;
-
-          GreaterThanEqualCmp(Operand1 const & operand1,
-                              Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {}
-
-          inline void next(void) { operand1_.next(); operand2_.next(); }
-
-          inline bool at_end(void) const {
-             return (operand1_.at_end() || operand2_.at_end());
-          }
-
-          inline bool has_length(void) const {
-             return (operand1_.has_length() || operand2_.has_length());
-          }
-
-          inline bool eval(void) const {
-             return (operand1_.eval() >= operand2_.eval());
-          }
-
-         private:
-          Operand1 operand1_;
-
-          Operand2 operand2_;
-      };
 
       /* Scalar X Field */
       template<typename FieldType>
@@ -11332,16 +11016,42 @@
 #         endif
           /* __CUDACC__ */
 
-          AndOp<Reduction,
-                typename Operand1::ReductionType,
-                typename Operand2::ReductionType> typedef ReductionType;
-
           AndOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {}
 
           inline structured::GhostData possible_ghosts(void) const {
              return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          }
+
+          inline bool has_extent(void) const {
+             return (operand1_.has_extent() || operand2_.has_extent());
+          }
+
+          inline int extent(int const dir) const {
+#            ifndef NDEBUG
+                if((operand1_.has_extent() || operand2_.has_extent())) {
+                   int extent;
+
+                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
+                   else { extent = operand2_.extent(dir); };
+
+                   if(operand1_.has_extent()) {
+                      assert(extent == operand1_.extent(dir));
+                   };
+
+                   if(operand2_.has_extent()) {
+                      assert(extent == operand2_.extent(dir));
+                   };
+                }
+#            endif
+             /* NDEBUG */;
+
+             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
           }
 
           inline SeqWalkType init(void) const {
@@ -11376,10 +11086,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(operand1_.reduce_init(), operand2_.reduce_init());
-          }
 
          private:
           Operand1 const operand1_;
@@ -11448,34 +11154,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand1, typename Operand2>
-       struct AndOp<Reduction, Operand1, Operand2> {
-         public:
-          typename Operand1::value_type typedef value_type;
-
-          AndOp(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {}
-
-          inline void next(void) { operand1_.next(); operand2_.next(); }
-
-          inline bool at_end(void) const {
-             return (operand1_.at_end() || operand2_.at_end());
-          }
-
-          inline bool has_length(void) const {
-             return (operand1_.has_length() || operand2_.has_length());
-          }
-
-          inline bool eval(void) const {
-             return (operand1_.eval() && operand2_.eval());
-          }
-
-         private:
-          Operand1 operand1_;
-
-          Operand2 operand2_;
-      };
 
       /* Boolean X SubBoolExpr */
       template<typename SubBoolExpr2, typename FieldType>
@@ -11677,16 +11355,42 @@
 #         endif
           /* __CUDACC__ */
 
-          OrOp<Reduction,
-               typename Operand1::ReductionType,
-               typename Operand2::ReductionType> typedef ReductionType;
-
           OrOp(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {}
 
           inline structured::GhostData possible_ghosts(void) const {
              return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          }
+
+          inline bool has_extent(void) const {
+             return (operand1_.has_extent() || operand2_.has_extent());
+          }
+
+          inline int extent(int const dir) const {
+#            ifndef NDEBUG
+                if((operand1_.has_extent() || operand2_.has_extent())) {
+                   int extent;
+
+                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
+                   else { extent = operand2_.extent(dir); };
+
+                   if(operand1_.has_extent()) {
+                      assert(extent == operand1_.extent(dir));
+                   };
+
+                   if(operand2_.has_extent()) {
+                      assert(extent == operand2_.extent(dir));
+                   };
+                }
+#            endif
+             /* NDEBUG */;
+
+             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
           }
 
           inline SeqWalkType init(void) const {
@@ -11721,10 +11425,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(operand1_.reduce_init(), operand2_.reduce_init());
-          }
 
          private:
           Operand1 const operand1_;
@@ -11793,34 +11493,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand1, typename Operand2>
-       struct OrOp<Reduction, Operand1, Operand2> {
-         public:
-          typename Operand1::value_type typedef value_type;
-
-          OrOp(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {}
-
-          inline void next(void) { operand1_.next(); operand2_.next(); }
-
-          inline bool at_end(void) const {
-             return (operand1_.at_end() || operand2_.at_end());
-          }
-
-          inline bool has_length(void) const {
-             return (operand1_.has_length() || operand2_.has_length());
-          }
-
-          inline bool eval(void) const {
-             return (operand1_.eval() || operand2_.eval());
-          }
-
-         private:
-          Operand1 operand1_;
-
-          Operand2 operand2_;
-      };
 
       /* Boolean X SubBoolExpr */
       template<typename SubBoolExpr2, typename FieldType>
@@ -12014,9 +11686,6 @@
 #         endif
           /* __CUDACC__ */
 
-          NotOp<Reduction, typename Operand::ReductionType> typedef
-          ReductionType;
-
           NotOp(Operand const & operand)
           : operand_(operand)
           {}
@@ -12024,6 +11693,14 @@
           inline structured::GhostData possible_ghosts(void) const {
              return operand_.possible_ghosts();
           }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return operand_.minimum_ghosts();
+          }
+
+          inline bool has_extent(void) const { return (operand_.has_extent()); }
+
+          inline int extent(int const dir) const { return operand_.extent(dir); }
 
           inline SeqWalkType init(void) const {
              return SeqWalkType(operand_.init());
@@ -12055,10 +11732,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(operand_.reduce_init());
-          }
 
          private:
           Operand const operand_;
@@ -12117,26 +11790,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand>
-       struct NotOp<Reduction, Operand> {
-         public:
-          typename Operand::value_type typedef value_type;
-
-          NotOp(Operand const & operand)
-          : operand_(operand)
-          {}
-
-          inline void next(void) { operand_.next(); }
-
-          inline bool at_end(void) const { return (operand_.at_end()); }
-
-          inline bool has_length(void) const { return (operand_.has_length()); }
-
-          inline bool eval(void) const { return !(operand_.eval()); }
-
-         private:
-          Operand operand_;
-      };
 
       /* SubBoolExpr */
       template<typename SubBoolExpr, typename FieldType>
@@ -12191,16 +11844,42 @@
 #         endif
           /* __CUDACC__ */
 
-          MaxFcn<Reduction,
-                 typename Operand1::ReductionType,
-                 typename Operand2::ReductionType> typedef ReductionType;
-
           MaxFcn(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {}
 
           inline structured::GhostData possible_ghosts(void) const {
              return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          }
+
+          inline bool has_extent(void) const {
+             return (operand1_.has_extent() || operand2_.has_extent());
+          }
+
+          inline int extent(int const dir) const {
+#            ifndef NDEBUG
+                if((operand1_.has_extent() || operand2_.has_extent())) {
+                   int extent;
+
+                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
+                   else { extent = operand2_.extent(dir); };
+
+                   if(operand1_.has_extent()) {
+                      assert(extent == operand1_.extent(dir));
+                   };
+
+                   if(operand2_.has_extent()) {
+                      assert(extent == operand2_.extent(dir));
+                   };
+                }
+#            endif
+             /* NDEBUG */;
+
+             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
           }
 
           inline SeqWalkType init(void) const {
@@ -12235,10 +11914,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(operand1_.reduce_init(), operand2_.reduce_init());
-          }
 
          private:
           Operand1 const operand1_;
@@ -12311,35 +11986,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand1, typename Operand2>
-       struct MaxFcn<Reduction, Operand1, Operand2> {
-         public:
-          typename Operand1::value_type typedef value_type;
-
-          MaxFcn(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {}
-
-          inline void next(void) { operand1_.next(); operand2_.next(); }
-
-          inline bool at_end(void) const {
-             return (operand1_.at_end() || operand2_.at_end());
-          }
-
-          inline bool has_length(void) const {
-             return (operand1_.has_length() || operand2_.has_length());
-          }
-
-          inline value_type eval(void) const {
-             return ((operand1_.eval() > operand2_.eval()) ? operand1_.eval() :
-                     operand2_.eval());
-          }
-
-         private:
-          Operand1 operand1_;
-
-          Operand2 operand2_;
-      };
 
       /* Scalar X Field */
       template<typename FieldType>
@@ -12951,16 +12597,42 @@
 #         endif
           /* __CUDACC__ */
 
-          MinFcn<Reduction,
-                 typename Operand1::ReductionType,
-                 typename Operand2::ReductionType> typedef ReductionType;
-
           MinFcn(Operand1 const & operand1, Operand2 const & operand2)
           : operand1_(operand1), operand2_(operand2)
           {}
 
           inline structured::GhostData possible_ghosts(void) const {
              return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          }
+
+          inline bool has_extent(void) const {
+             return (operand1_.has_extent() || operand2_.has_extent());
+          }
+
+          inline int extent(int const dir) const {
+#            ifndef NDEBUG
+                if((operand1_.has_extent() || operand2_.has_extent())) {
+                   int extent;
+
+                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
+                   else { extent = operand2_.extent(dir); };
+
+                   if(operand1_.has_extent()) {
+                      assert(extent == operand1_.extent(dir));
+                   };
+
+                   if(operand2_.has_extent()) {
+                      assert(extent == operand2_.extent(dir));
+                   };
+                }
+#            endif
+             /* NDEBUG */;
+
+             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
           }
 
           inline SeqWalkType init(void) const {
@@ -12995,10 +12667,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(operand1_.reduce_init(), operand2_.reduce_init());
-          }
 
          private:
           Operand1 const operand1_;
@@ -13071,35 +12739,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Operand1, typename Operand2>
-       struct MinFcn<Reduction, Operand1, Operand2> {
-         public:
-          typename Operand1::value_type typedef value_type;
-
-          MinFcn(Operand1 const & operand1, Operand2 const & operand2)
-          : operand1_(operand1), operand2_(operand2)
-          {}
-
-          inline void next(void) { operand1_.next(); operand2_.next(); }
-
-          inline bool at_end(void) const {
-             return (operand1_.at_end() || operand2_.at_end());
-          }
-
-          inline bool has_length(void) const {
-             return (operand1_.has_length() || operand2_.has_length());
-          }
-
-          inline value_type eval(void) const {
-             return ((operand1_.eval() < operand2_.eval()) ? operand1_.eval() :
-                     operand2_.eval());
-          }
-
-         private:
-          Operand1 operand1_;
-
-          Operand2 operand2_;
-      };
 
       /* Scalar X Field */
       template<typename FieldType>

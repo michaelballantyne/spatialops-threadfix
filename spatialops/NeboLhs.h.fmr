@@ -33,7 +33,6 @@
                            typedefs
                            tpl-irreg-args
                            constructor
-                           possible-ghosts
                            publics
                            sequential-assign-body
                            SW-cons-args
@@ -77,32 +76,28 @@
                          typedefs
                          tpl-irreg-args
                          constructor
-                         possible-ghosts
                          (list (tpl-def (tpl-pmtr 'RhsType)
                                         (v-fcn-def 'assign
                                                    (list (adc 'bool 'useGhost)
                                                          (ad 'RhsType 'rhs))
-                                                   (nt= GhostData 'ghosts (fc 'calculate_actual_ghost
-                                                                              'useGhost
-                                                                               (fc 'possible_ghosts)
-                                                                               (mfc 'field_ 'boundary_info)
-                                                                               (mfc 'rhs 'possible_ghosts)))
-                                                   (nt= IntVec 'minus (mfc 'ghosts 'get_minus))
-                                                   (nt= IntVec 'plus (mfc 'ghosts 'get_plus))
-                                                   (mfc 'field_ 'reset_valid_ghosts (fc GhostData 'minus 'plus))
+                                                   (mfc 'field_ 'reset_valid_ghosts (fc 'calculate_actual_ghost
+                                                                                        'useGhost
+                                                                                        (mfc 'field_ 'get_ghost_data)
+                                                                                        (mfc 'field_ 'boundary_info)
+                                                                                        (mfc 'rhs 'possible_ghosts)))
                                                    (nt= GhostData 'extents (fc 'calculate_limits
                                                                                'useGhost
                                                                                (mfc 'field_ 'window_with_ghost)
                                                                                (mfc 'field_ 'get_valid_ghost_data)
-                                                                               (fc 'possible_ghosts)
+                                                                               (mfc 'field_ 'get_ghost_data)
                                                                                (mfc 'field_ 'boundary_info)
                                                                                (mfc 'rhs 'possible_ghosts)))
-                                                   (nt= 'int 'xLow (check-extent 'field_ "0" "0" (bs '- (mfc 'extents 'get_minus "0"))))
-                                                   (nt= 'int 'xHigh (check-extent 'field_ "0" "1" (mfc 'extents 'get_plus "0")))
-                                                   (nt= 'int 'yLow (check-extent 'field_ "1" "0" (bs '- (mfc 'extents 'get_minus "1"))))
-                                                   (nt= 'int 'yHigh (check-extent 'field_ "1" "1" (mfc 'extents 'get_plus "1")))
-                                                   (nt= 'int 'zLow (check-extent 'field_ "2" "0" (bs '- (mfc 'extents 'get_minus "2"))))
-                                                   (nt= 'int 'zHigh (check-extent 'field_ "2" "1" (mfc 'extents 'get_plus "2")))
+                                                   (nt=c 'int 'xLow (bs '- (mfc 'extents 'get_minus "0")))
+                                                   (nt=c 'int 'xHigh (mfc 'extents 'get_plus "0"))
+                                                   (nt=c 'int 'yLow (bs '- (mfc 'extents 'get_minus "1")))
+                                                   (nt=c 'int 'yHigh (mfc 'extents 'get_plus "1"))
+                                                   (nt=c 'int 'zLow (bs '- (mfc 'extents 'get_minus "2")))
+                                                   (nt=c 'int 'zHigh (mfc 'extents 'get_plus "2"))
                                                    (gpu-or (gpu-test-or (assign-call 'gpu_test_assign)
                                                                         (nifelse (fc 'gpu_ready)
                                                                                  (nifelse (mfc 'rhs 'gpu_ready (fc 'gpu_device_index))
@@ -154,7 +149,7 @@
                                                                     gpu-test-assign-body
                                                                     (bs 'CUDA 'with 'Nebo 'copying)))))
                                privates)))
-(define bs-Initial-lhs (arg-swap build-Initial-lhs 16 4 "bs-Initial-lhs"))
+(define bs-Initial-lhs (arg-swap build-Initial-lhs 15 4 "bs-Initial-lhs"))
 (define (build-Resize-lhs name
                           FT
                           tpl-irreg-pars
@@ -284,7 +279,6 @@
                                   (bm-constructor (ad FT-chunk 'f)
                                                   (cons-asgn 'field_ 'f)
                                                   null)
-                                  (mfc 'field_ 'get_ghost_data)
                                   null
                                   (list (mfc (fc 'init)
                                              'assign
@@ -479,6 +473,5 @@
                                (list (sadp vt-chunk 'base_)
                                      (sad 'int 'valid_)
                                      (sadc 'int 'xGlob_)
-                                     (sadc 'int 'yGlob_)))
-                  ignore))
- )
+                                     (sadc 'int 'yGlob_))))
+    ))

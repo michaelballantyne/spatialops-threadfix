@@ -45,14 +45,22 @@
 #         endif
           /* __CUDACC__ */
 
-          NeboMask<Reduction, FieldType> typedef ReductionType;
-
           NeboMask(structured::SpatialMask<FieldType> const & m)
           : mask_(m)
           {}
 
           inline structured::GhostData possible_ghosts(void) const {
              return mask_.get_valid_ghost_data() + point_to_ghost(mask_.boundary_info().has_extra());
+          }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return point_to_ghost(mask_.boundary_info().has_extra());
+          }
+
+          inline bool has_extent(void) const { return true; }
+
+          inline int extent(int const dir) const {
+             return mask_.window_without_ghost().extent(dir) - mask_.boundary_info().has_extra(dir);
           }
 
           inline SeqWalkType init(void) const { return SeqWalkType(mask_); }
@@ -84,10 +92,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(mask_);
-          }
 
          private:
           structured::SpatialMask<FieldType> const mask_;
@@ -193,31 +197,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename FieldType>
-       struct NeboMask<Reduction, FieldType> {
-         public:
-          FieldType typedef field_type;
-
-          typename field_type::value_type typedef value_type;
-
-          NeboMask(structured::SpatialMask<FieldType> const & m)
-          : iter_(m.begin()), end_(m.end())
-          {}
-
-          inline void next(void) { iter_++; }
-
-          inline bool at_end(void) const { return iter_ == end_; }
-
-          inline bool has_length(void) const { return true; }
-
-          inline value_type eval(void) const { return *iter_; }
-
-         private:
-          typename structured::SpatialMask<FieldType>::const_iterator iter_;
-
-          typename structured::SpatialMask<FieldType>::const_iterator const end_
-          ;
-      };
    } /* SpatialOps */
 
 #endif

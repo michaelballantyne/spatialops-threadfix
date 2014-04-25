@@ -33,13 +33,16 @@
                            tpl-irreg-args
                            constructor
                            possible-ghosts
+                           minimum-ghosts
+                           has-extent
+                           extent-check
+                           extent-expr
                            SW-cons-args
                            RS-cons-args
                            cpu-ready-body
                            gpu-ready-body
                            gpu-cons-args
                            gpu-prep-body
-                           RD-cons-args
                            publics
                            privates)
   (build-Initial-general name
@@ -49,8 +52,21 @@
                          typedefs
                          tpl-irreg-args
                          constructor
-                         possible-ghosts
-                         (list (r-fcn-def (constize (fcn-dcl 'init 'SeqWalkType))
+                         (list (r-fcn-def (constize (fcn-dcl 'possible_ghosts GhostData))
+                                          null
+                                          possible-ghosts)
+                               (r-fcn-def (constize (fcn-dcl 'minimum_ghosts GhostData))
+                                          null
+                                          minimum-ghosts)
+                               (r-fcn-def (constize (fcn-dcl 'has_extent 'bool))
+                                          null
+                                          has-extent)
+                               (r-fcn-def (constize (fcn-dcl 'extent 'int (adc 'int 'dir)))
+                                          (if (not (null? extent-check))
+                                              (debug-only extent-check)
+                                              null)
+                                          extent-expr)
+                               (r-fcn-def (constize (fcn-dcl 'init 'SeqWalkType))
                                           null
                                           (fc 'SeqWalkType SW-cons-args))
                                (threads-only (r-fcn-def (constize (fcn-dcl 'resize 'ResizeType))
@@ -67,12 +83,9 @@
                                                         (fc 'GPUWalkType gpu-cons-args))
                                              (gpu-test-only (fcn-def (constize (fcn-dcl 'gpu_prep 'void (adc 'int DI-chunk)))
                                                                      gpu-prep-body))))
-                               (r-fcn-def (constize (fcn-dcl 'reduce_init 'ReductionType))
-                                          null
-                                          (fc 'ReductionType RD-cons-args))
                                publics)
                          privates))
-(define bs-Initial-rhs (arg-swap build-Initial-rhs 13 4 "bs-Initial-rhs"))
+(define bs-Initial-rhs (arg-swap build-Initial-rhs 16 4 "bs-Initial-rhs"))
 (define (build-Resize-rhs name
                           FT
                           tpl-irreg-pars
@@ -145,36 +158,3 @@
                            publics)
                      privates))
 (define bs-gpu-rhs (arg-swap build-gpu-rhs 6 4 "bs-gpu-rhs"))
-(define (build-Reduction name
-                         FT
-                         tpl-irreg-pars
-                         tpl-reg-pars
-                         typedefs
-                         constructor
-                         next
-                         at-end
-                         has-length
-                         eval-type
-                         eval-result
-                         publics
-                         privates)
-  (build-mode name
-              'Reduction
-              FT
-              (list tpl-irreg-pars tpl-reg-pars)
-              (list (FT-def-vt FT)
-                    typedefs)
-              constructor
-              (list (v-fcn-def 'next null next)
-                    (r-fcn-def (constize (fcn-dcl 'at_end 'bool))
-                               null
-                               at-end)
-                    (r-fcn-def (constize (fcn-dcl 'has_length 'bool))
-                               null
-                               has-length)
-                    (r-fcn-def (constize (fcn-dcl 'eval eval-type))
-                               null
-                               eval-result)
-                    publics)
-              privates))
-(define bs-Reduction (arg-swap build-Reduction 9 4 "bs-Reduction"))

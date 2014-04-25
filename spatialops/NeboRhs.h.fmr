@@ -40,13 +40,16 @@
                                                   (cons-asgn 'value_ 'v)
                                                   null)
                                   (fc GhostData 'GHOST_MAX)
+                                  (fc GhostData 'GHOST_MAX)
+                                  'false
+                                  null
+                                  "0"
                                   'value_
                                   'value_
                                   'true
                                   'true
                                   'value_
                                   null
-                                  'value_
                                   null
                                   (sadc vt-chunk 'value_))
                   (bs-Resize-rhs (s-typedef AT-chunk vt-chunk)
@@ -72,18 +75,7 @@
                               vt-chunk
                               'value_
                               null
-                              (sadc vt-chunk 'value_))
-                  (bs-Reduction null
-                                (bm-constructor (adc vt-chunk 'value)
-                                                (cons-asgn 'value_ 'value)
-                                                null)
-                                null
-                                'false
-                                'false
-                                vt-chunk
-                                'value_
-                                null
-                                (sadc vt-chunk 'value_)))
+                              (sadc vt-chunk 'value_)))
 
     (build-struct NCF-chunk
                   std-FT
@@ -96,6 +88,13 @@
                                                   null)
                                   (n+ (mfc 'field_ 'get_valid_ghost_data)
                                       (fc 'point_to_ghost (mfc (mfc 'field_ 'boundary_info) 'has_extra)))
+                                  (fc 'point_to_ghost (mfc (mfc 'field_ 'boundary_info) 'has_extra))
+                                  'true
+                                  null
+                                  (n- (n- (n- (mfc (mfc 'field_ 'window_with_ghost) 'extent 'dir)
+                                              (mfc (mfc 'field_ 'boundary_info) 'has_extra 'dir))
+                                          (mfc (mfc 'field_ 'get_valid_ghost_data) 'get_minus 'dir))
+                                      (mfc (mfc 'field_ 'get_valid_ghost_data) 'get_plus 'dir))
                                   'field_
                                   'field_
                                   (mfc 'field_ 'find_consumer 'LOCAL_RAM "0")
@@ -105,7 +104,6 @@
                                          (take-ptr 'field_))
                                      '->
                                      (fc 'add_consumer 'EXTERNAL_CUDA_GPU DI-chunk))
-                                  'field_
                                   null
                                   (sadc FT-chunk 'field_))
                   (bs-Resize-rhs null
@@ -157,22 +155,7 @@
                               null
                               (list (sadcp vt-chunk 'base_)
                                     (sadc 'int 'xGlob_)
-                                    (sadc 'int 'yGlob_)))
-                  (bs-Reduction null
-                                (bm-constructor (adcr FT-chunk 'f)
-                                                (list (cons-asgn 'iter_ (mfc 'f 'begin))
-                                                      (cons-asgn 'end_ (mfc 'f 'end)))
-                                                null)
-                                (n++ 'iter_)
-                                (n== 'iter_ 'end_)
-                                'true
-                                vt-chunk
-                                (l '* 'iter_)
-                                null
-                                (list (sad (tpl-pmtr (scope FT-chunk 'const_iterator))
-                                           'iter_)
-                                      (sadc (tpl-pmtr (scope FT-chunk 'const_iterator))
-                                            'end_))))
+                                    (sadc 'int 'yGlob_))))
     (build-struct NCSVF-chunk
                   SV-FT
                   null
@@ -183,6 +166,10 @@
                                                   (cons-asgn 'field_ 'f)
                                                   null)
                                   (fc GhostData 'GHOST_MAX)
+                                  (fc GhostData 'GHOST_MAX)
+                                  'false
+                                  null
+                                  "0"
                                   (bs "*" (mfc 'field_ 'field_values 'LOCAL_RAM))
                                   (bs "*" (mfc 'field_ 'field_values 'LOCAL_RAM))
                                   (mfc 'field_ 'find_consumer 'LOCAL_RAM "0")
@@ -192,7 +179,6 @@
                                          (take-ptr 'field_))
                                      '->
                                      (fc 'add_consumer 'EXTERNAL_CUDA_GPU DI-chunk))
-                                  (bs "*" (mfc 'field_ 'field_values 'LOCAL_RAM))
                                   null
                                   (sadc SVFT-chunk 'field_))
                   (bs-Resize-rhs null
@@ -219,16 +205,5 @@
                               vt-chunk
                               (c '* 'pointer_)
                               null
-                              (sadcp vt-chunk 'pointer_))
-                  (bs-Reduction null
-                                (bm-constructor (adcr 'double 'v)
-                                                (cons-asgn 'value_ 'v)
-                                                null)
-                                null
-                                'false
-                                'false
-                                vt-chunk
-                                'value_
-                                null
-                                (sadc 'double 'value_))))
- )
+                              (sadcp vt-chunk 'pointer_)))
+    ))

@@ -45,8 +45,6 @@
 #         endif
           /* __CUDACC__ */
 
-          NeboScalar<Reduction, AtomicType> typedef ReductionType;
-
           NeboScalar(value_type const v)
           : value_(v)
           {}
@@ -54,6 +52,14 @@
           inline structured::GhostData possible_ghosts(void) const {
              return structured::GhostData(GHOST_MAX);
           }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return structured::GhostData(GHOST_MAX);
+          }
+
+          inline bool has_extent(void) const { return false; }
+
+          inline int extent(int const dir) const { return 0; }
 
           inline SeqWalkType init(void) const { return SeqWalkType(value_); }
 
@@ -77,10 +83,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(value_);
-          }
 
          private:
           value_type const value_;
@@ -141,26 +143,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename AtomicType>
-       struct NeboScalar<Reduction, AtomicType> {
-         public:
-          AtomicType typedef value_type;
-
-          NeboScalar(value_type const value)
-          : value_(value)
-          {}
-
-          inline void next(void) {}
-
-          inline bool at_end(void) const { return false; }
-
-          inline bool has_length(void) const { return false; }
-
-          inline value_type eval(void) const { return value_; }
-
-         private:
-          value_type const value_;
-      };
 
       template<typename CurrentMode, typename FieldType>
        struct NeboConstField;
@@ -181,14 +163,23 @@
 #         endif
           /* __CUDACC__ */
 
-          NeboConstField<Reduction, FieldType> typedef ReductionType;
-
           NeboConstField(FieldType const & f)
           : field_(f)
           {}
 
           inline structured::GhostData possible_ghosts(void) const {
              return field_.get_valid_ghost_data() + point_to_ghost(field_.boundary_info().has_extra());
+          }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return point_to_ghost(field_.boundary_info().has_extra());
+          }
+
+          inline bool has_extent(void) const { return true; }
+
+          inline int extent(int const dir) const {
+             return field_.window_with_ghost().extent(dir) - field_.boundary_info().has_extra(dir)
+                    - field_.get_valid_ghost_data().get_minus(dir) - field_.get_valid_ghost_data().get_plus(dir);
           }
 
           inline SeqWalkType init(void) const { return SeqWalkType(field_); }
@@ -220,10 +211,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(field_);
-          }
 
          private:
           FieldType const field_;
@@ -258,15 +245,12 @@
           : xGlob_(f.window_with_ghost().glob_dim(0)),
             yGlob_(f.window_with_ghost().glob_dim(1)),
             base_(f.field_values(LOCAL_RAM, 0) + (f.window_with_ghost().offset(0)
-                                                  + (1 == f.window_with_ghost().extent(0)
-                                                     ? 0 : f.get_valid_ghost_data().get_minus(0)))
+                                                  + f.get_valid_ghost_data().get_minus(0))
             + (f.window_with_ghost().glob_dim(0) * ((f.window_with_ghost().offset(1)
-                                                     + (1 == f.window_with_ghost().extent(1)
-                                                        ? 0 : f.get_valid_ghost_data().get_minus(1)))
+                                                     + f.get_valid_ghost_data().get_minus(1))
                                                     + (f.window_with_ghost().glob_dim(1)
                                                        * (f.window_with_ghost().offset(2)
-                                                          + (1 == f.window_with_ghost().extent(2)
-                                                             ? 0 : f.get_valid_ghost_data().get_minus(2)))))))
+                                                          + f.get_valid_ghost_data().get_minus(2))))))
           {}
 
           inline value_type eval(int const x, int const y, int const z) const {
@@ -290,16 +274,12 @@
 
              NeboConstField(int const deviceIndex, FieldType const & f)
              : base_(f.field_values(EXTERNAL_CUDA_GPU, deviceIndex) + (f.window_with_ghost().offset(0)
-                                                                       + (1 == f.window_with_ghost().extent(0)
-                                                                          ? 0 :
-                                                                          f.get_valid_ghost_data().get_minus(0)))
+                                                                       + f.get_valid_ghost_data().get_minus(0))
                + (f.window_with_ghost().glob_dim(0) * ((f.window_with_ghost().offset(1)
-                                                        + (1 == f.window_with_ghost().extent(1)
-                                                           ? 0 : f.get_valid_ghost_data().get_minus(1)))
+                                                        + f.get_valid_ghost_data().get_minus(1))
                                                        + (f.window_with_ghost().glob_dim(1)
                                                           * (f.window_with_ghost().offset(2)
-                                                             + (1 == f.window_with_ghost().extent(2)
-                                                                ? 0 : f.get_valid_ghost_data().get_minus(2))))))),
+                                                             + f.get_valid_ghost_data().get_minus(2)))))),
                xGlob_(f.window_with_ghost().glob_dim(0)),
                yGlob_(f.window_with_ghost().glob_dim(1))
              {}
@@ -319,30 +299,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename FieldType>
-       struct NeboConstField<Reduction, FieldType> {
-         public:
-          FieldType typedef field_type;
-
-          typename field_type::value_type typedef value_type;
-
-          NeboConstField(FieldType const & f)
-          : iter_(f.begin()), end_(f.end())
-          {}
-
-          inline void next(void) { iter_++; }
-
-          inline bool at_end(void) const { return iter_ == end_; }
-
-          inline bool has_length(void) const { return true; }
-
-          inline value_type eval(void) const { return *iter_; }
-
-         private:
-          typename FieldType::const_iterator iter_;
-
-          typename FieldType::const_iterator const end_;
-      };
 
       template<typename CurrentMode, typename T>
        struct NeboConstSingleValueField;
@@ -369,8 +325,6 @@
 #         endif
           /* __CUDACC__ */
 
-          NeboConstSingleValueField<Reduction, T> typedef ReductionType;
-
           NeboConstSingleValueField(SingleValueFieldType const & f)
           : field_(f)
           {}
@@ -378,6 +332,14 @@
           inline structured::GhostData possible_ghosts(void) const {
              return structured::GhostData(GHOST_MAX);
           }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return structured::GhostData(GHOST_MAX);
+          }
+
+          inline bool has_extent(void) const { return false; }
+
+          inline int extent(int const dir) const { return 0; }
 
           inline SeqWalkType init(void) const {
              return SeqWalkType(* field_.field_values(LOCAL_RAM));
@@ -412,10 +374,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(* field_.field_values(LOCAL_RAM));
-          }
 
          private:
           SingleValueFieldType const field_;
@@ -492,30 +450,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename T>
-       struct NeboConstSingleValueField<Reduction, T> {
-         public:
-          SpatialOps::structured::SpatialField<SpatialOps::structured::
-                                               SingleValue,
-                                               T> typedef field_type;
-
-          typename field_type::value_type typedef value_type;
-
-          NeboConstSingleValueField(double const & v)
-          : value_(v)
-          {}
-
-          inline void next(void) {}
-
-          inline bool at_end(void) const { return false; }
-
-          inline bool has_length(void) const { return false; }
-
-          inline value_type eval(void) const { return value_; }
-
-         private:
-          double const value_;
-      };
    } /* SpatialOps */
 
 #endif

@@ -25,14 +25,6 @@
 #ifndef NEBO_REDUCTIONS_H
 #  define NEBO_REDUCTIONS_H
 
-#  define field_fold nebo_fold
-
-#  define field_fold_interior nebo_fold_interior
-
-#  define field_reduce nebo_reduce
-
-#  define field_reduce_interior nebo_reduce_interior
-
 #  define field_max nebo_max
 
 #  define field_max_interior nebo_max_interior
@@ -50,299 +42,74 @@
 #  define field_norm_interior nebo_norm_interior
 
    namespace SpatialOps {
-      template<typename ResultType, typename ExprType, typename FieldType>
-       inline ResultType nebo_fold(ResultType const & (*proc)(ResultType const &,
-                                                              typename FieldType::
-                                                              value_type const &),
-                                   ResultType const & initialValue,
-                                   NeboExpression<ExprType, FieldType> const &
-                                   fexpr) {
-          structured::GhostData ghosts = fexpr.expr().possible_ghosts();
-
-          ResultType result = initialValue;
-
-          typename ExprType::ReductionType expr = fexpr.expr().reduce_init();
-
-          while(!(expr.at_end())) {
-             result = proc(result, expr.eval());
-
-             expr.next();
-          };
-
-          return result;
-       };
-
-      template<typename ResultType, typename FieldType>
-       inline ResultType nebo_fold(ResultType const & (*proc)(ResultType const &,
-                                                              typename FieldType::
-                                                              value_type const &),
-                                   ResultType const & initialValue,
-                                   FieldType const & field) {
-          NeboConstField<Initial, FieldType> typedef ExprType;
-
-          return nebo_fold(proc,
-                           initialValue,
-                           NeboExpression<ExprType, FieldType>(ExprType(field)));
-       };
-
-      template<typename ResultType, typename ExprType, typename FieldType>
-       inline ResultType nebo_fold_interior(ResultType const & (*proc)(ResultType
-                                                                       const &,
-                                                                       typename
-                                                                       FieldType::
-                                                                       value_type
-                                                                       const &),
-                                            ResultType const & initialValue,
-                                            NeboExpression<ExprType, FieldType>
-                                            const & fexpr) {
-          structured::GhostData ghosts(0);
-
-          ResultType result = initialValue;
-
-          typename ExprType::ReductionType expr = fexpr.expr().reduce_init();
-
-          while(!(expr.at_end())) {
-             result = proc(result, expr.eval());
-
-             expr.next();
-          };
-
-          return result;
-       };
-
-      template<typename ResultType, typename FieldType>
-       inline ResultType nebo_fold_interior(ResultType const & (*proc)(ResultType
-                                                                       const &,
-                                                                       typename
-                                                                       FieldType::
-                                                                       value_type
-                                                                       const &),
-                                            ResultType const & initialValue,
-                                            FieldType const & field) {
-          NeboConstField<Initial, FieldType> typedef ExprType;
-
-          return nebo_fold_interior(proc,
-                                    initialValue,
-                                    NeboExpression<ExprType, FieldType>(ExprType(field)));
-       };
-
       template<typename ExprType, typename FieldType>
-       inline typename FieldType::value_type nebo_reduce(typename FieldType::
-                                                         value_type const & (*
-                                                                             proc)(typename
-                                                                                   FieldType::
-                                                                                   value_type
-                                                                                   const
-                                                                                   &,
-                                                                                   typename
-                                                                                   FieldType::
-                                                                                   value_type
-                                                                                   const
-                                                                                   &),
-                                                         NeboExpression<ExprType,
-                                                                        FieldType>
-                                                         const & fexpr) {
-          structured::GhostData ghosts = fexpr.expr().possible_ghosts();
+       inline typename FieldType::value_type nebo_fold(bool useGhost,
+                                                       typename FieldType::
+                                                       value_type (*proc)(typename
+                                                                          FieldType::
+                                                                          value_type,
+                                                                          typename
+                                                                          FieldType::
+                                                                          value_type),
+                                                       typename FieldType::
+                                                       value_type initialValue,
+                                                       NeboExpression<ExprType,
+                                                                      FieldType>
+                                                       const & fexpr) {
+          typename FieldType::value_type typedef value_type;
 
-          typename ExprType::ReductionType expr = fexpr.expr().reduce_init();
+          ExprType initial = fexpr.expr();
 
-          typename FieldType::value_type result = expr.eval();
+          structured::GhostData ghosts = (useGhost ? initial.possible_ghosts() :
+                                          initial.minimum_ghosts());
 
-          expr.next();
+          const int xLow = - ghosts.get_minus(0);
 
-          while(!(expr.at_end())) {
-             result = proc(result, expr.eval());
+          const int xHigh = initial.extent(0) + ghosts.get_plus(0);
 
-             expr.next();
+          const int yLow = - ghosts.get_minus(1);
+
+          const int yHigh = initial.extent(1) + ghosts.get_plus(1);
+
+          const int zLow = - ghosts.get_minus(2);
+
+          const int zHigh = initial.extent(2) + ghosts.get_plus(2);
+
+          value_type result = initialValue;
+
+          typename ExprType::SeqWalkType expr = initial.init();
+
+          for(int z = zLow; z < zHigh; z++) {
+             for(int y = yLow; y < yHigh; y++) {
+                for(int x = xLow; x < xHigh; x++) {
+                   result = proc(result, expr.eval(x, y, z));
+                };
+             };
           };
 
           return result;
        };
 
-      template<typename FieldType>
-       inline typename FieldType::value_type nebo_reduce(typename FieldType::
-                                                         value_type const & (*
-                                                                             proc)(typename
-                                                                                   FieldType::
-                                                                                   value_type
-                                                                                   const
-                                                                                   &,
-                                                                                   typename
-                                                                                   FieldType::
-                                                                                   value_type
-                                                                                   const
-                                                                                   &),
-                                                         FieldType const & field) {
-          NeboConstField<Initial, FieldType> typedef ExprType;
-
-          return nebo_reduce(proc, NeboExpression<ExprType, FieldType>(ExprType(field)));
+      template<typename AtomicType>
+       inline AtomicType nebo_scalar_max(AtomicType a, AtomicType b) {
+          return ((a < b) ? b : a);
        };
 
-      template<typename ExprType, typename FieldType>
-       inline typename FieldType::value_type nebo_reduce_interior(typename
-                                                                  FieldType::
-                                                                  value_type
-                                                                  const & (*proc)(typename
-                                                                                  FieldType::
-                                                                                  value_type
-                                                                                  const
-                                                                                  &,
-                                                                                  typename
-                                                                                  FieldType::
-                                                                                  value_type
-                                                                                  const
-                                                                                  &),
-                                                                  NeboExpression<ExprType,
-                                                                                 FieldType>
-                                                                  const & fexpr) {
-          structured::GhostData ghosts(0);
-
-          typename ExprType::ReductionType expr = fexpr.expr().reduce_init();
-
-          typename FieldType::value_type result = expr.eval();
-
-          expr.next();
-
-          while(!(expr.at_end())) {
-             result = proc(result, expr.eval());
-
-             expr.next();
-          };
-
-          return result;
+      template<typename AtomicType>
+       inline AtomicType nebo_scalar_min(AtomicType a, AtomicType b) {
+          return ((a > b) ? b : a);
        };
 
-      template<typename FieldType>
-       inline typename FieldType::value_type nebo_reduce_interior(typename
-                                                                  FieldType::
-                                                                  value_type
-                                                                  const & (*proc)(typename
-                                                                                  FieldType::
-                                                                                  value_type
-                                                                                  const
-                                                                                  &,
-                                                                                  typename
-                                                                                  FieldType::
-                                                                                  value_type
-                                                                                  const
-                                                                                  &),
-                                                                  FieldType
-                                                                  const & field) {
-          NeboConstField<Initial, FieldType> typedef ExprType;
-
-          return nebo_reduce_interior(proc, NeboExpression<ExprType, FieldType>(ExprType(field)));
-       };
-
-      template<typename ExprType, typename FieldType>
-       inline typename FieldType::value_type nebo_reduce(typename FieldType::
-                                                         value_type (*proc)(typename
-                                                                            FieldType::
-                                                                            value_type
-                                                                            const
-                                                                            &,
-                                                                            typename
-                                                                            FieldType::
-                                                                            value_type
-                                                                            const
-                                                                            &),
-                                                         NeboExpression<ExprType,
-                                                                        FieldType>
-                                                         const & fexpr) {
-          structured::GhostData ghosts = fexpr.expr().possible_ghosts();
-
-          typename ExprType::ReductionType expr = fexpr.expr().reduce_init();
-
-          typename FieldType::value_type result = expr.eval();
-
-          expr.next();
-
-          while(!(expr.at_end())) {
-             result = proc(result, expr.eval());
-
-             expr.next();
-          };
-
-          return result;
-       };
-
-      template<typename FieldType>
-       inline typename FieldType::value_type nebo_reduce(typename FieldType::
-                                                         value_type (*proc)(typename
-                                                                            FieldType::
-                                                                            value_type
-                                                                            const
-                                                                            &,
-                                                                            typename
-                                                                            FieldType::
-                                                                            value_type
-                                                                            const
-                                                                            &),
-                                                         FieldType const & field) {
-          NeboConstField<Initial, FieldType> typedef ExprType;
-
-          return nebo_reduce(proc, NeboExpression<ExprType, FieldType>(ExprType(field)));
-       };
-
-      template<typename ExprType, typename FieldType>
-       inline typename FieldType::value_type nebo_reduce_interior(typename
-                                                                  FieldType::
-                                                                  value_type (*
-                                                                              proc)(typename
-                                                                                    FieldType::
-                                                                                    value_type
-                                                                                    const
-                                                                                    &,
-                                                                                    typename
-                                                                                    FieldType::
-                                                                                    value_type
-                                                                                    const
-                                                                                    &),
-                                                                  NeboExpression<ExprType,
-                                                                                 FieldType>
-                                                                  const & fexpr) {
-          structured::GhostData ghosts(0);
-
-          typename ExprType::ReductionType expr = fexpr.expr().reduce_init();
-
-          typename FieldType::value_type result = expr.eval();
-
-          expr.next();
-
-          while(!(expr.at_end())) {
-             result = proc(result, expr.eval());
-
-             expr.next();
-          };
-
-          return result;
-       };
-
-      template<typename FieldType>
-       inline typename FieldType::value_type nebo_reduce_interior(typename
-                                                                  FieldType::
-                                                                  value_type (*
-                                                                              proc)(typename
-                                                                                    FieldType::
-                                                                                    value_type
-                                                                                    const
-                                                                                    &,
-                                                                                    typename
-                                                                                    FieldType::
-                                                                                    value_type
-                                                                                    const
-                                                                                    &),
-                                                                  FieldType
-                                                                  const & field) {
-          NeboConstField<Initial, FieldType> typedef ExprType;
-
-          return nebo_reduce_interior(proc, NeboExpression<ExprType, FieldType>(ExprType(field)));
+      template<typename AtomicType>
+       inline AtomicType nebo_scalar_sum(AtomicType a, AtomicType b) {
+          return a + b;
        };
 
       template<typename ExprType, typename FieldType>
        inline typename FieldType::value_type nebo_max(NeboExpression<ExprType,
                                                                      FieldType>
                                                       const & fexpr) {
-          return nebo_reduce(std::max, fexpr);
+          return nebo_fold(true, nebo_scalar_max, -1.0 / 0.0, fexpr);
        };
 
       template<typename FieldType>
@@ -356,7 +123,7 @@
        inline typename FieldType::value_type nebo_max_interior(NeboExpression<ExprType,
                                                                               FieldType>
                                                                const & fexpr) {
-          return nebo_reduce_interior(std::max, fexpr);
+          return nebo_fold(false, nebo_scalar_max, -1.0 / 0.0, fexpr);
        };
 
       template<typename FieldType>
@@ -371,7 +138,7 @@
        inline typename FieldType::value_type nebo_min(NeboExpression<ExprType,
                                                                      FieldType>
                                                       const & fexpr) {
-          return nebo_reduce(std::min, fexpr);
+          return nebo_fold(true, nebo_scalar_min, 1.0 / 0.0, fexpr);
        };
 
       template<typename FieldType>
@@ -385,7 +152,7 @@
        inline typename FieldType::value_type nebo_min_interior(NeboExpression<ExprType,
                                                                               FieldType>
                                                                const & fexpr) {
-          return nebo_reduce_interior(std::min, fexpr);
+          return nebo_fold(false, nebo_scalar_min, 1.0 / 0.0, fexpr);
        };
 
       template<typename FieldType>
@@ -396,16 +163,11 @@
           return nebo_min_interior(NeboExpression<ExprType, FieldType>(ExprType(field)));
        };
 
-      template<typename AtomicType>
-       inline AtomicType sum(AtomicType const & a, AtomicType const & b) {
-          return a + b;
-       };
-
       template<typename ExprType, typename FieldType>
        inline typename FieldType::value_type nebo_sum(NeboExpression<ExprType,
                                                                      FieldType>
                                                       const & fexpr) {
-          return nebo_reduce(sum<typename FieldType::value_type>, fexpr);
+          return nebo_fold(true, nebo_scalar_sum, 0.0, fexpr);
        };
 
       template<typename FieldType>
@@ -419,7 +181,7 @@
        inline typename FieldType::value_type nebo_sum_interior(NeboExpression<ExprType,
                                                                               FieldType>
                                                                const & fexpr) {
-          return nebo_reduce_interior(sum<typename FieldType::value_type>, fexpr);
+          return nebo_fold(false, nebo_scalar_sum, 0.0, fexpr);
        };
 
       template<typename FieldType>

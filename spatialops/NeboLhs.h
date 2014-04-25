@@ -60,53 +60,35 @@
 #         endif
           /* __CUDACC__ */
 
-          NeboField<Reduction, FieldType> typedef ReductionType;
-
           NeboField(FieldType f)
           : field_(f)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return field_.get_ghost_data();
-          }
-
           template<typename RhsType>
            inline void assign(bool const useGhost, RhsType rhs) {
-              structured::GhostData ghosts = calculate_actual_ghost(useGhost,
-                                                                    possible_ghosts(),
-                                                                    field_.boundary_info(),
-                                                                    rhs.possible_ghosts());
-
-              structured::IntVec minus = ghosts.get_minus();
-
-              structured::IntVec plus = ghosts.get_plus();
-
-              field_.reset_valid_ghosts(structured::GhostData(minus, plus));
+              field_.reset_valid_ghosts(calculate_actual_ghost(useGhost,
+                                                               field_.get_ghost_data(),
+                                                               field_.boundary_info(),
+                                                               rhs.possible_ghosts()));
 
               structured::GhostData extents = calculate_limits(useGhost,
                                                                field_.window_with_ghost(),
                                                                field_.get_valid_ghost_data(),
-                                                               possible_ghosts(),
+                                                               field_.get_ghost_data(),
                                                                field_.boundary_info(),
                                                                rhs.possible_ghosts());
 
-              int xLow = (1 == field_.window_with_ghost().extent(0) ? 0 : -
-                          extents.get_minus(0));
+              const int xLow = - extents.get_minus(0);
 
-              int xHigh = (1 == field_.window_with_ghost().extent(0) ? 1 :
-                           extents.get_plus(0));
+              const int xHigh = extents.get_plus(0);
 
-              int yLow = (1 == field_.window_with_ghost().extent(1) ? 0 : -
-                          extents.get_minus(1));
+              const int yLow = - extents.get_minus(1);
 
-              int yHigh = (1 == field_.window_with_ghost().extent(1) ? 1 :
-                           extents.get_plus(1));
+              const int yHigh = extents.get_plus(1);
 
-              int zLow = (1 == field_.window_with_ghost().extent(2) ? 0 : -
-                          extents.get_minus(2));
+              const int zLow = - extents.get_minus(2);
 
-              int zHigh = (1 == field_.window_with_ghost().extent(2) ? 1 :
-                           extents.get_plus(2));
+              const int zHigh = extents.get_plus(2);
 
 #             ifdef __CUDACC__
 #                ifdef NEBO_GPU_TEST
@@ -553,15 +535,12 @@
           : xGlob_(f.window_with_ghost().glob_dim(0)),
             yGlob_(f.window_with_ghost().glob_dim(1)),
             base_(f.field_values(LOCAL_RAM, 0) + (f.window_with_ghost().offset(0)
-                                                  + (1 == f.window_with_ghost().extent(0)
-                                                     ? 0 : f.get_valid_ghost_data().get_minus(0)))
+                                                  + f.get_valid_ghost_data().get_minus(0))
             + (f.window_with_ghost().glob_dim(0) * ((f.window_with_ghost().offset(1)
-                                                     + (1 == f.window_with_ghost().extent(1)
-                                                        ? 0 : f.get_valid_ghost_data().get_minus(1)))
+                                                     + f.get_valid_ghost_data().get_minus(1))
                                                     + (f.window_with_ghost().glob_dim(1)
                                                        * (f.window_with_ghost().offset(2)
-                                                          + (1 == f.window_with_ghost().extent(2)
-                                                             ? 0 : f.get_valid_ghost_data().get_minus(2)))))))
+                                                          + f.get_valid_ghost_data().get_minus(2))))))
           {}
 
           template<typename RhsType>
@@ -602,20 +581,12 @@
 
              NeboField(FieldType f)
              : base_(f.field_values(EXTERNAL_CUDA_GPU, f.device_index()) + (f.window_with_ghost().offset(0)
-                                                                            + (1
-                                                                               ==
-                                                                               f.window_with_ghost().extent(0)
-                                                                               ?
-                                                                               0
-                                                                               :
-                                                                               f.get_valid_ghost_data().get_minus(0)))
+                                                                            + f.get_valid_ghost_data().get_minus(0))
                + (f.window_with_ghost().glob_dim(0) * ((f.window_with_ghost().offset(1)
-                                                        + (1 == f.window_with_ghost().extent(1)
-                                                           ? 0 : f.get_valid_ghost_data().get_minus(1)))
+                                                        + f.get_valid_ghost_data().get_minus(1))
                                                        + (f.window_with_ghost().glob_dim(1)
                                                           * (f.window_with_ghost().offset(2)
-                                                             + (1 == f.window_with_ghost().extent(2)
-                                                                ? 0 : f.get_valid_ghost_data().get_minus(2))))))),
+                                                             + f.get_valid_ghost_data().get_minus(2)))))),
                valid_(false),
                xGlob_(f.window_with_ghost().glob_dim(0)),
                yGlob_(f.window_with_ghost().glob_dim(1))

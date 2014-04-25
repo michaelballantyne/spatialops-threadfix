@@ -272,8 +272,7 @@
                                              'Coefs)
                                   (list (list 'Pts (tpl-pmtr (scope 'Arg 'SeqWalkType)))
                                         (list 'Pts (tpl-pmtr (scope 'Arg 'ResizeType)))
-                                        (list 'Pts (tpl-pmtr (scope 'Arg 'GPUWalkType)))
-                                        (list 'Pts (tpl-pmtr (scope 'Arg 'ReductionType))))
+                                        (list 'Pts (tpl-pmtr (scope 'Arg 'GPUWalkType))))
                                   (bm-constructor (list (adcr 'Arg 'a)
                                                         (adcr 'Coefs 'coefs))
                                                   (list (cons-asgn 'arg_ 'a)
@@ -281,6 +280,12 @@
                                                   null)
                                   (fc (scope 'Pts 'possible_ghosts)
                                       (mfc 'arg_ 'possible_ghosts))
+                                  (fc 'min
+                                      (mfc 'arg_ 'possible_ghosts)
+                                      (mfc 'arg_ 'minimum_ghosts))
+                                  (mfc 'arg_ 'has_extent)
+                                  null
+                                  (mfc 'arg_ 'extent 'dir)
                                   (list (mfc 'arg_ 'init)
                                         'coefs_)
                                   (list (mfc 'arg_ 'resize)
@@ -290,8 +295,6 @@
                                   (list (mfc 'arg_ 'gpu_init DI-chunk)
                                         'coefs_)
                                   (mfc 'arg_ 'gpu_prep DI-chunk)
-                                  (list (mfc 'arg_ 'reduce_init)
-                                        'coefs_)
                                   null
                                   (list (sadc 'Arg 'arg_)
                                         (sadc 'Coefs 'coefs_)))
@@ -343,18 +346,7 @@
                                       index-arg)
                               null
                               (list (sad 'Arg 'arg_)
-                                    (sadc 'Coefs 'coefs_)))
-                  (bs-Reduction null
-                                (bm-constructor (adcr 'Arg 'arg)
-                                                (cons-asgn 'arg_ 'arg)
-                                                null)
-                                (mfc 'arg_ 'next)
-                                (mfc 'arg_ 'at_end)
-                                (mfc 'arg_ 'has_length)
-                                vt-chunk
-                                (mfc 'arg_ 'eval)
-                                null
-                                (sad 'Arg 'arg_)))
+                                    (sadc 'Coefs 'coefs_))))
 
     (build-struct 'NeboSumStencil
                   std-FT
@@ -363,20 +355,24 @@
                   (bs-Initial-rhs null
                                   (list (list 'Pts (tpl-pmtr (scope 'Arg 'SeqWalkType)))
                                         (list 'Pts (tpl-pmtr (scope 'Arg 'ResizeType)))
-                                        (list 'Pts (tpl-pmtr (scope 'Arg 'GPUWalkType)))
-                                        (list 'Pts (tpl-pmtr (scope 'Arg 'ReductionType))))
+                                        (list 'Pts (tpl-pmtr (scope 'Arg 'GPUWalkType))))
                                   (bm-constructor (adcr 'Arg 'a)
                                                   (cons-asgn 'arg_ 'a)
                                                   null)
                                   (fc (scope 'Pts 'possible_ghosts)
                                       (mfc 'arg_ 'possible_ghosts))
+                                  (fc 'min
+                                      (mfc 'arg_ 'possible_ghosts)
+                                      (mfc 'arg_ 'minimum_ghosts))
+                                  (mfc 'arg_ 'has_extent)
+                                  null
+                                  (mfc 'arg_ 'extent 'dir)
                                   (mfc 'arg_ 'init)
                                   (mfc 'arg_ 'resize)
                                   (mfc 'arg_ 'cpu_ready)
                                   (mfc 'arg_ 'gpu_ready DI-chunk)
                                   (mfc 'arg_ 'gpu_init DI-chunk)
                                   (mfc 'arg_ 'gpu_prep DI-chunk)
-                                  (mfc 'arg_ 'reduce_init)
                                   null
                                   (sadc 'Arg 'arg_))
                   (bs-Resize-rhs null
@@ -410,18 +406,7 @@
                                   'arg_
                                   index-arg)
                               null
-                              (sad 'Arg 'arg_))
-                  (bs-Reduction null
-                                (bm-constructor (adcr 'Arg 'arg)
-                                                (cons-asgn 'arg_ 'arg)
-                                                null)
-                                (mfc 'arg_ 'next)
-                                (mfc 'arg_ 'at_end)
-                                (mfc 'arg_ 'has_length)
-                                vt-chunk
-                                (mfc 'arg_ 'eval)
-                                null
-                                (sad 'Arg 'arg_)))
+                              (sad 'Arg 'arg_)))
 
     (tpl-def (tpl-pmtr 'Point)
              (r-fcn-def (s-fcn-dcl 'point_possible_ghosts GhostData ghost-pmtr)
@@ -435,25 +420,27 @@
                   (bs-Initial-rhs (list (s-typedef (tpl-pmtr (scope 'Arg 'SeqWalkType))
                                                    'ArgSeqWalkType)
                                         (gpu-only (s-typedef (tpl-pmtr (scope 'Arg 'GPUWalkType))
-                                                             'ArgGPUWalkType))
-                                        (s-typedef (tpl-pmtr (scope 'Arg 'ReductionType))
-                                                   'ArgReductionType))
+                                                             'ArgGPUWalkType)))
                                   (list (list 'Point 'ArgSeqWalkType)
                                         (list 'Point (tpl-pmtr (scope 'Arg 'ResizeType)))
-                                        (list 'Point 'ArgGPUWalkType)
-                                        (list 'Point 'ArgReductionType))
+                                        (list 'Point 'ArgGPUWalkType))
                                   (bm-constructor (adcr 'Arg 'a)
                                                   (cons-asgn 'arg_ 'a)
                                                   null)
                                   (fc (tpl-use 'point_possible_ghosts 'Point)
                                       (mfc 'arg_ 'possible_ghosts))
+                                  (fc 'min
+                                      (mfc 'arg_ 'possible_ghosts)
+                                      (mfc 'arg_ 'minimum_ghosts))
+                                  (mfc 'arg_ 'has_extent)
+                                  null
+                                  (mfc 'arg_ 'extent 'dir)
                                   (mfc 'arg_ 'init)
                                   (mfc 'arg_ 'resize)
                                   (mfc 'arg_ 'cpu_ready)
                                   (mfc 'arg_ 'gpu_ready DI-chunk)
                                   (mfc 'arg_ 'gpu_init DI-chunk)
                                   (mfc 'arg_ 'gpu_prep DI-chunk)
-                                  (mfc 'arg_ 'reduce_init)
                                   null
                                   (sadc 'Arg 'arg_))
                   (bs-Resize-rhs (s-typedef (tpl-pmtr (scope 'Arg 'SeqWalkType))
@@ -480,16 +467,5 @@
                               'bool
                               (mfc 'arg_ 'eval index-arg)
                               null
-                              (sad 'Arg 'arg_))
-                  (bs-Reduction null
-                                (bm-constructor (adcr 'Arg 'arg)
-                                                (cons-asgn 'arg_ 'arg)
-                                                null)
-                                (mfc 'arg_ 'next)
-                                (mfc 'arg_ 'at_end)
-                                (mfc 'arg_ 'has_length)
-                                'bool
-                                (mfc 'arg_ 'eval)
-                                null
-                                (sad 'Arg 'arg_))))
- )
+                              (sad 'Arg 'arg_)))
+    ))

@@ -109,23 +109,16 @@
                                                                        lhsPossibleGhosts,
                                                                        bc,
                                                                        rhsPossibleGhosts);
+        std::cout << "calculate_limits: " << useGhost << " " << lhsActualGhosts.get_minus() << std::endl
+                  << "                    " << (lhsMemoryWindow.extent() - lhsCurrentGhosts.get_minus() - lhsCurrentGhosts.get_plus() +
+                                                lhsActualGhosts.get_plus())
+                  << " = " << lhsMemoryWindow.extent() << " - " << lhsCurrentGhosts.get_minus() << " - " << lhsCurrentGhosts.get_plus() << " + " << lhsActualGhosts.get_plus() << std::endl;
+
         return structured::GhostData(lhsActualGhosts.get_minus(),
                                      (lhsMemoryWindow.extent() - lhsCurrentGhosts.get_minus() - lhsCurrentGhosts.get_plus() +
                                       lhsActualGhosts.get_plus()));
                                       
       };
-
-      template<typename FieldType>
-       inline FieldType resize_ghost(FieldType const & field,
-                                     structured::IntVec const & minus,
-                                     structured::IntVec const & plus) {
-          const structured::IntVec oldMinus = field.get_valid_ghost_data().get_minus();
-          const structured::IntVec oldPlus = field.get_valid_ghost_data().get_plus();
-          const structured::IntVec offsetChange = oldMinus - minus;
-          const structured::IntVec extentChange = minus + plus - oldMinus - oldPlus;
-
-          return field.reshape(extentChange, offsetChange);
-       };
 
       template<typename Type1, typename Type2>
        struct NeboFieldCheck;
@@ -304,7 +297,6 @@
         struct GPUWalk;
 #     endif
       /* __CUDACC__ */
-      struct Reduction;
    } /* SpatialOps */
 
 #endif

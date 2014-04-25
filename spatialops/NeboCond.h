@@ -39,8 +39,6 @@
 #        endif
          /* __CUDACC__ */
 
-         NeboNil typedef ReductionType;
-
          NeboNil() {}
       };
 
@@ -75,17 +73,31 @@
 #         endif
           /* __CUDACC__ */
 
-          NeboClause<Reduction,
-                     typename Test::ReductionType,
-                     typename Expr::ReductionType,
-                     FieldType> typedef ReductionType;
-
           NeboClause(Test const & t, Expr const & e)
           : test_(t), expr_(e)
           {}
 
           inline structured::GhostData possible_ghosts(void) const {
              return min(test_.possible_ghosts(), expr_.possible_ghosts());
+          }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return min(test_.minimum_ghosts(), expr_.minimum_ghosts());
+          }
+
+          inline bool has_extent(void) const {
+             return test_.has_extent() || expr_.has_extent();
+          }
+
+          inline int extent(int const dir) const {
+#            ifndef NDEBUG
+                if(test_.has_extent() && expr_.has_extent()) {
+                   assert(test_.extent(dir) == expr_.extent(dir));
+                }
+#            endif
+             /* NDEBUG */;
+
+             return (test_.has_extent() ? test_.extent(dir) : expr_.extent(dir));
           }
 
           inline SeqWalkType init(void) const {
@@ -122,10 +134,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(test_.reduce_init(), expr_.reduce_init());
-          }
 
          private:
           Test const test_;
@@ -211,36 +219,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Test, typename Expr, typename FieldType>
-       struct NeboClause<Reduction, Test, Expr, FieldType> {
-         public:
-          FieldType typedef field_type;
-
-          typename field_type::value_type typedef value_type;
-
-          NeboClause(Test const & test, Expr const & expr)
-          : test_(test), expr_(expr)
-          {}
-
-          inline void next(void) { test_.next(); expr_.next(); }
-
-          inline bool at_end(void) const {
-             return (test_.at_end() || expr_.at_end());
-          }
-
-          inline bool has_length(void) const {
-             return (test_.has_length() || expr_.has_length());
-          }
-
-          inline value_type eval(void) const { return expr_.eval(); }
-
-          inline bool check(void) const { return test_.eval(); }
-
-         private:
-          Test test_;
-
-          Expr expr_;
-      };
 
       template<typename CurrentMode,
                typename ClauseType,
@@ -273,17 +251,31 @@
 #         endif
           /* __CUDACC__ */
 
-          NeboCond<Reduction,
-                   typename ClauseType::ReductionType,
-                   typename Otherwise::ReductionType,
-                   FieldType> typedef ReductionType;
-
           NeboCond(ClauseType const & c, Otherwise const & e)
           : clause_(c), otherwise_(e)
           {}
 
           inline structured::GhostData possible_ghosts(void) const {
              return min(clause_.possible_ghosts(), otherwise_.possible_ghosts());
+          }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return min(clause_.minimum_ghosts(), otherwise_.minimum_ghosts());
+          }
+
+          inline bool has_extent(void) const {
+             return clause_.has_extent() || otherwise_.has_extent();
+          }
+
+          inline int extent(int const dir) const {
+#            ifndef NDEBUG
+                if(clause_.has_extent() && otherwise_.has_extent()) {
+                   assert(clause_.extent(dir) == otherwise_.extent(dir));
+                }
+#            endif
+             /* NDEBUG */;
+
+             return (clause_.has_extent() ? clause_.extent(dir) : otherwise_.extent(dir));
           }
 
           inline SeqWalkType init(void) const {
@@ -320,10 +312,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(clause_.reduce_init(), otherwise_.reduce_init());
-          }
 
           inline ClauseType const & clause(void) const { return clause_; }
 
@@ -408,36 +396,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename ClauseType, typename Otherwise, typename FieldType>
-       struct NeboCond<Reduction, ClauseType, Otherwise, FieldType> {
-         public:
-          FieldType typedef field_type;
-
-          typename field_type::value_type typedef value_type;
-
-          NeboCond(ClauseType const & clause, Otherwise const & otherwise)
-          : clause_(clause), otherwise_(otherwise)
-          {}
-
-          inline void next(void) { clause_.next(); otherwise_.next(); }
-
-          inline bool at_end(void) const {
-             return (clause_.at_end() || otherwise_.at_end());
-          }
-
-          inline bool has_length(void) const {
-             return (clause_.has_length() || otherwise_.has_length());
-          }
-
-          inline value_type eval(void) const {
-             return (clause_.check() ? clause_.eval() : otherwise_.eval());
-          }
-
-         private:
-          ClauseType clause_;
-
-          Otherwise otherwise_;
-      };
 
       struct NeboSimpleClause {
          public:

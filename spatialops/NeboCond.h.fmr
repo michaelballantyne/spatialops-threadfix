@@ -455,7 +455,6 @@
              (threads-only (s-typedef Nil-chunk 'ResizeType))
              (s-typedef Nil-chunk 'SeqWalkType)
              (gpu-only (s-typedef Nil-chunk 'GPUWalkType))
-             (s-typedef Nil-chunk 'ReductionType)
              (constructor Nil-chunk
                           null
                           null))
@@ -474,6 +473,20 @@
                                   (fc 'min
                                       (mfc 'test_ 'possible_ghosts)
                                       (mfc 'expr_ 'possible_ghosts))
+                                  (fc 'min
+                                      (mfc 'test_ 'minimum_ghosts)
+                                      (mfc 'expr_ 'minimum_ghosts))
+                                  (bs (mfc 'test_ 'has_extent)
+                                      "||"
+                                      (mfc 'expr_ 'has_extent))
+                                  (nif (bs (mfc 'test_ 'has_extent)
+                                           "&&"
+                                           (mfc 'expr_ 'has_extent))
+                                       (fc 'assert (n==  (mfc 'test_ 'extent 'dir)
+                                                         (mfc 'expr_ 'extent 'dir))))
+                                  (ter-cond (mfc 'test_ 'has_extent)
+                                            (mfc 'test_ 'extent 'dir)
+                                            (mfc 'expr_ 'extent 'dir))
                                   (list (mfc 'test_ 'init)
                                         (mfc 'expr_ 'init))
                                   (list (mfc 'test_ 'resize)
@@ -486,8 +499,6 @@
                                         (mfc 'expr_ 'gpu_init DI-chunk))
                                   (list (mfc 'test_ 'gpu_prep DI-chunk)
                                         (mfc 'expr_ 'gpu_prep DI-chunk))
-                                  (list (mfc 'test_ 'reduce_init)
-                                        (mfc 'expr_ 'reduce_init))
                                   null
                                   (list (sadc 'Test 'test_)
                                         (sadc 'Expr 'expr_)))
@@ -530,26 +541,7 @@
                                                      null
                                                      (mfc 'test_ 'eval index-arg)))
                               (list (sad 'Test 'test_)
-                                    (sad 'Expr 'expr_)))
-                  (bs-Reduction null
-                                (bm-constructor (list (adcr 'Test 'test)
-                                                      (adcr 'Expr 'expr))
-                                                (list (cons-asgn 'test_ 'test)
-                                                      (cons-asgn 'expr_ 'expr))
-                                                null)
-                                (ccs (mfc 'test_ 'next)
-                                     (mfc 'expr_ 'next))
-                                (par (n-or (mfc 'test_ 'at_end)
-                                           (mfc 'expr_ 'at_end)))
-                                (par (n-or (mfc 'test_ 'has_length)
-                                           (mfc 'expr_ 'has_length)))
-                                vt-chunk
-                                (mfc 'expr_ 'eval)
-                                (r-fcn-def (constize (fcn-dcl 'check 'bool))
-                                           null
-                                           (mfc 'test_ 'eval))
-                                (list (sad 'Test 'test_)
-                                      (sad 'Expr 'expr_))))
+                                    (sad 'Expr 'expr_))))
 
     (build-struct Cond-chunk
                   std-FT
@@ -565,6 +557,20 @@
                                   (fc 'min
                                       (mfc 'clause_ 'possible_ghosts)
                                       (mfc 'otherwise_ 'possible_ghosts))
+                                  (fc 'min
+                                      (mfc 'clause_ 'minimum_ghosts)
+                                      (mfc 'otherwise_ 'minimum_ghosts))
+                                  (bs (mfc 'clause_ 'has_extent)
+                                      "||"
+                                      (mfc 'otherwise_ 'has_extent))
+                                  (nif (bs (mfc 'clause_ 'has_extent)
+                                           "&&"
+                                           (mfc 'otherwise_ 'has_extent))
+                                       (fc 'assert (n==  (mfc 'clause_ 'extent 'dir)
+                                                         (mfc 'otherwise_ 'extent 'dir))))
+                                  (ter-cond (mfc 'clause_ 'has_extent)
+                                            (mfc 'clause_ 'extent 'dir)
+                                            (mfc 'otherwise_ 'extent 'dir))
                                   (list (mfc 'clause_ 'init)
                                         (mfc 'otherwise_ 'init))
                                   (list (mfc 'clause_ 'resize)
@@ -577,8 +583,6 @@
                                         (mfc 'otherwise_ 'gpu_init DI-chunk))
                                   (list (mfc 'clause_ 'gpu_prep DI-chunk)
                                         (mfc 'otherwise_ 'gpu_prep DI-chunk))
-                                  (list (mfc 'clause_ 'reduce_init)
-                                        (mfc 'otherwise_ 'reduce_init))
                                   (list (r-fcn-def (constize (fcn-dcl 'clause (cref CT-chunk)))
                                                    null
                                                    'clause_)
@@ -624,26 +628,7 @@
                                         (mfc 'otherwise_ 'eval index-arg))
                               null
                               (list (sad CT-chunk 'clause_)
-                                    (sad 'Otherwise 'otherwise_)))
-                  (bs-Reduction null
-                                (bm-constructor (list (adcr CT-chunk 'clause)
-                                                      (adcr 'Otherwise 'otherwise))
-                                                (list (cons-asgn 'clause_ 'clause)
-                                                      (cons-asgn 'otherwise_ 'otherwise))
-                                                null)
-                                (ccs (mfc 'clause_ 'next)
-                                     (mfc 'otherwise_ 'next))
-                                (par (n-or (mfc 'clause_ 'at_end)
-                                           (mfc 'otherwise_ 'at_end)))
-                                (par (n-or (mfc 'clause_ 'has_length)
-                                           (mfc 'otherwise_ 'has_length)))
-                                vt-chunk
-                                (ter-cond (mfc 'clause_ 'check)
-                                          (mfc 'clause_ 'eval)
-                                          (mfc 'otherwise_ 'eval))
-                                null
-                                (list (sad CT-chunk 'clause_)
-                                      (sad 'Otherwise 'otherwise_))))
+                                    (sad 'Otherwise 'otherwise_))))
 
     (srt-def (srt-dcl SClause-chunk)
              (pub-sec (constructor SClause-chunk

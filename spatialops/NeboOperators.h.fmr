@@ -50,13 +50,13 @@
          op_-lst))
   (define (IN-typedef type)
     (lambda (Op) (tpl-pmtr (scope Op type))))
-  (define ghosts
+  (define (ghosts call)
     (letrec ([mins (lambda (calls)
                       (cond [(equal? 1 (length calls)) (first calls)]
                             [else (fc 'min
                                       (first calls)
                                       (mins (rest calls)))]))])
-      (mins (mapper (lambda (op) (mfc op 'possible_ghosts))
+      (mins (mapper (lambda (op) (mfc op call))
                     op_-lst))))
   (define gen-data-mems
     (mapper (lambda (Op op_) (sadc Op op_))
@@ -84,6 +84,27 @@
     (mapper (lambda (Op op_) (sad Op op_))
             Op-lst
             op_-lst))
+  (define (assign-extent remaining)
+    (define assignment (n= 'extent (mfc (car remaining) 'extent 'dir)))
+    (if (= 1 (length remaining))
+        assignment
+        (nifelse (mfc (car remaining) 'has_extent)
+             assignment
+             (assign-extent (cdr remaining)))))
+  (define (check-extent remaining)
+    (define assert (nif (mfc (car remaining) 'has_extent)
+                        (fc 'assert (n== 'extent (mfc (car remaining) 'extent 'dir)))))
+    (if (= 1 (length remaining))
+        assert
+        (list assert
+              (check-extent (cdr remaining)))))
+  (define (return-extent remaining)
+    (define returned (mfc (car remaining) 'extent 'dir))
+    (if (= 1 (length remaining))
+        returned
+        (ter-cond (mfc (car remaining) 'has_extent)
+                  returned
+                  (par (return-extent (cdr remaining))))))
   (build-struct name
                 no-FT
                 null
@@ -91,14 +112,22 @@
                 (bs-Initial-rhs null
                                 null
                                 gen-constructor
-                                ghosts
+                                (ghosts 'possible_ghosts)
+                                (ghosts 'minimum_ghosts)
+                                (exec-or-check 'has_extent)
+                                (if (= 1 number)
+                                    null
+                                    (nif (exec-or-check 'has_extent)
+                                         (ad 'int 'extent)
+                                         (assign-extent op_-lst)
+                                         (check-extent op_-lst)))
+                                (return-extent op_-lst)
                                 (op_-mfc 'init)
                                 (op_-mfc 'resize)
                                 (exec-and-check 'cpu_ready)
                                 (exec-and-check 'gpu_ready DI-chunk)
                                 (op_-mfc 'gpu_init DI-chunk)
                                 (b/a ";" s (op_-mfc 'gpu_prep DI-chunk))
-                                (op_-mfc 'reduce_init)
                                 null
                                 gen-data-mems)
                 (bs-Resize-rhs null
@@ -120,17 +149,7 @@
                             eval-return-type
                             (internal-use index-arg)
                             null
-                            exec-data-mems)
-                (bs-Reduction (s-typedef (tpl-pmtr (scope (first Op-lst) vt-chunk))
-                                         vt-chunk)
-                              gen-constructor
-                              next
-                              (exec-or-check 'at_end)
-                              (exec-or-check 'has_length)
-                              eval-return-type
-                              (internal-use null)
-                              null
-                              exec-data-mems)))
+                            exec-data-mems)))
 
 (define (build-binary-function-struct name internal-name)
   (build-Nary-struct name

@@ -228,9 +228,6 @@
 #         endif
           /* __CUDACC__ */
 
-          NeboStencil<Reduction, Pts, typename Arg::ReductionType, FieldType>
-          typedef ReductionType;
-
           NeboStencil(Arg const & a, Coefs const & coefs)
           : arg_(a), coefs_(coefs)
           {}
@@ -238,6 +235,14 @@
           inline structured::GhostData possible_ghosts(void) const {
              return Pts::possible_ghosts(arg_.possible_ghosts());
           }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return min(arg_.possible_ghosts(), arg_.minimum_ghosts());
+          }
+
+          inline bool has_extent(void) const { return arg_.has_extent(); }
+
+          inline int extent(int const dir) const { return arg_.extent(dir); }
 
           inline SeqWalkType init(void) const {
              return SeqWalkType(arg_.init(), coefs_);
@@ -269,10 +274,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(arg_.reduce_init(), coefs_);
-          }
 
          private:
           Arg const arg_;
@@ -432,28 +433,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Pts, typename Arg, typename FieldType>
-       struct NeboStencil<Reduction, Pts, Arg, FieldType> {
-         public:
-          FieldType typedef field_type;
-
-          typename field_type::value_type typedef value_type;
-
-          NeboStencil(Arg const & arg)
-          : arg_(arg)
-          {}
-
-          inline void next(void) { arg_.next(); }
-
-          inline bool at_end(void) const { return arg_.at_end(); }
-
-          inline bool has_length(void) const { return arg_.has_length(); }
-
-          inline value_type eval(void) const { return arg_.eval(); }
-
-         private:
-          Arg arg_;
-      };
 
       template<typename CurrentMode,
                typename Pts,
@@ -480,9 +459,6 @@
 #         endif
           /* __CUDACC__ */
 
-          NeboSumStencil<Reduction, Pts, typename Arg::ReductionType, FieldType>
-          typedef ReductionType;
-
           NeboSumStencil(Arg const & a)
           : arg_(a)
           {}
@@ -490,6 +466,14 @@
           inline structured::GhostData possible_ghosts(void) const {
              return Pts::possible_ghosts(arg_.possible_ghosts());
           }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return min(arg_.possible_ghosts(), arg_.minimum_ghosts());
+          }
+
+          inline bool has_extent(void) const { return arg_.has_extent(); }
+
+          inline int extent(int const dir) const { return arg_.extent(dir); }
 
           inline SeqWalkType init(void) const {
              return SeqWalkType(arg_.init());
@@ -521,10 +505,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(arg_.reduce_init());
-          }
 
          private:
           Arg const arg_;
@@ -663,28 +643,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Pts, typename Arg, typename FieldType>
-       struct NeboSumStencil<Reduction, Pts, Arg, FieldType> {
-         public:
-          FieldType typedef field_type;
-
-          typename field_type::value_type typedef value_type;
-
-          NeboSumStencil(Arg const & arg)
-          : arg_(arg)
-          {}
-
-          inline void next(void) { arg_.next(); }
-
-          inline bool at_end(void) const { return arg_.at_end(); }
-
-          inline bool has_length(void) const { return arg_.has_length(); }
-
-          inline value_type eval(void) const { return arg_.eval(); }
-
-         private:
-          Arg arg_;
-      };
 
       template<typename Point>
        static inline structured::GhostData point_possible_ghosts(structured::
@@ -710,8 +668,6 @@
 #         endif
           /* __CUDACC__ */
 
-          typename Arg::ReductionType typedef ArgReductionType;
-
           NeboMaskShift<SeqWalk, Point, ArgSeqWalkType, FieldType> typedef
           SeqWalkType;
 
@@ -727,9 +683,6 @@
 #         endif
           /* __CUDACC__ */
 
-          NeboMaskShift<Reduction, Point, ArgReductionType, FieldType> typedef
-          ReductionType;
-
           NeboMaskShift(Arg const & a)
           : arg_(a)
           {}
@@ -737,6 +690,14 @@
           inline structured::GhostData possible_ghosts(void) const {
              return point_possible_ghosts<Point>(arg_.possible_ghosts());
           }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return min(arg_.possible_ghosts(), arg_.minimum_ghosts());
+          }
+
+          inline bool has_extent(void) const { return arg_.has_extent(); }
+
+          inline int extent(int const dir) const { return arg_.extent(dir); }
 
           inline SeqWalkType init(void) const {
              return SeqWalkType(arg_.init());
@@ -768,10 +729,6 @@
              /* NEBO_GPU_TEST */
 #         endif
           /* __CUDACC__ */
-
-          inline ReductionType reduce_init(void) const {
-             return ReductionType(arg_.reduce_init());
-          }
 
          private:
           Arg const arg_;
@@ -839,28 +796,6 @@
          }
 #     endif
       /* __CUDACC__ */;
-      template<typename Point, typename Arg, typename FieldType>
-       struct NeboMaskShift<Reduction, Point, Arg, FieldType> {
-         public:
-          FieldType typedef field_type;
-
-          typename field_type::value_type typedef value_type;
-
-          NeboMaskShift(Arg const & arg)
-          : arg_(arg)
-          {}
-
-          inline void next(void) { arg_.next(); }
-
-          inline bool at_end(void) const { return arg_.at_end(); }
-
-          inline bool has_length(void) const { return arg_.has_length(); }
-
-          inline bool eval(void) const { return arg_.eval(); }
-
-         private:
-          Arg arg_;
-      };
    } /* SpatialOps */
 
 #endif

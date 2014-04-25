@@ -163,13 +163,11 @@
                                typedefs
                                tpl-irreg-args
                                constructor
-                               possible-ghosts
                                publics
                                privates)
   (define SW-tpl-irreg-args (if (null? tpl-irreg-args) null (first tpl-irreg-args)))
   (define RS-tpl-irreg-args (if (null? tpl-irreg-args) null (second tpl-irreg-args)))
   (define gpu-tpl-irreg-args (if (null? tpl-irreg-args) null (third tpl-irreg-args)))
-  (define RD-tpl-irreg-args (if (null? tpl-irreg-args) null (fourth tpl-irreg-args)))
   (define (tpl-reg-args type)
     (map* (type-trans type)
           tpl-reg-pars))
@@ -195,18 +193,9 @@
                                                   gpu-tpl-irreg-args
                                                   (tpl-reg-args 'GPUWalkType)
                                                   (FT-tpl-use FT))
-                                         'GPUWalkType))
-                    (s-typedef (tpl-use name
-                                        'Reduction
-                                        RD-tpl-irreg-args
-                                        (tpl-reg-args 'ReductionType)
-                                        (FT-tpl-use FT))
-                               'ReductionType))
+                                         'GPUWalkType)))
               constructor
-              (list (r-fcn-def (constize (fcn-dcl 'possible_ghosts GhostData))
-                               null
-                               possible-ghosts)
-                    publics)
+              publics
               privates))
 
 (define (build-Resize-general name
@@ -278,33 +267,21 @@
                       Initial
                       Resize
                       SeqWalk
-                      GPUWalk
-                      Reduction)
+                      GPUWalk)
   (internal-smt-list new-line
                      (tpl-srt-dcl name
                                   (map tpl-pmtr (flatten* 'CurrentMode tpl-irreg-pars tpl-reg-pars (FT-tpl FT)))
                                   null)
                      (map (lambda (mode) (mode name FT tpl-irreg-pars tpl-reg-pars))
-                          (list Initial Resize SeqWalk GPUWalk Reduction))))
-
-
-(define (check-extent field dir true false)
-  (ter-cond (n== "1" (mfc (mfc field 'window_with_ghost)
-                          'extent
-                          dir))
-            true
-            false))
+                          (list Initial Resize SeqWalk GPUWalk))))
 
 (define (base-offset-dir field dir)
   (par (n+ (mfc (mfc field 'window_with_ghost)
                 'offset
                 dir)
-           (check-extent field
-                         dir
-                         "0"
-                         (mfc (mfc field 'get_valid_ghost_data)
-                              'get_minus
-                              dir)))))
+           (mfc (mfc field 'get_valid_ghost_data)
+                'get_minus
+                dir))))
 
 (define (base-global-dir field dir)
   (mfc (mfc 'f 'window_with_ghost)

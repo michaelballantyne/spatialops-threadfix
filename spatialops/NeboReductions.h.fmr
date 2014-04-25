@@ -26,102 +26,51 @@
 (require "FulmarAbbreviations.fmr")
 (require "NeboCore.fmr")
 
-(define (build-catamorphism-with-field name
-                                       tpl-pmtrs
-                                       return-type
-                                       pmtrs
-                                       args
-                                       body
-                                       return-expr)
-  (define (build-simple-catamorphism name
-                                     tpl-pmtrs
-                                     return-type
-                                     args
-                                     body
-                                     return-expr)
-    (tpl-def (list tpl-pmtrs (tpl-pmtr FT-chunk))
-             (r-fcn-def (fcn-dcl name return-type args)
-                        body
-                        return-expr)))
-  (list (build-simple-catamorphism name
-                                   (list tpl-pmtrs (tpl-pmtr 'ExprType))
-                                   return-type
-                                   (list pmtrs
-                                         (adcr (tpl-use NE-chunk 'ExprType FT-chunk)
-                                               'fexpr))
-                                   body
-                                   return-expr)
-        (build-simple-catamorphism name
-                                   tpl-pmtrs
-                                   return-type
-                                   (list pmtrs
-                                         (adcr FT-chunk 'field))
-                                   (typedef (tpl-use NCF-chunk 'Initial FT-chunk)
-                                            'ExprType)
-                                   (fc name
-                                       args
-                                       (fc (tpl-use NE-chunk 'ExprType FT-chunk)
-                                           (fc 'ExprType
-                                               'field))))))
+(define value-type (tpl-pmtr (scope FT-chunk 'value_type)))
 
-(define (build-catamorphism name
-                            tpl-pmtrs
-                            return-type
-                            pmtrs
-                            args
-                            body
-                            return-expr)
-  (list (build-catamorphism-with-field name
-                                       tpl-pmtrs
-                                       return-type
-                                       pmtrs
-                                       args
-                                       (list (nt= GhostData 'ghosts (mfc (mfc 'fexpr 'expr)
-                                                                         'possible_ghosts))
-                                             body)
-                                       return-expr)
-        (build-catamorphism-with-field (c name '_interior)
-                                       tpl-pmtrs
-                                       return-type
-                                       pmtrs
-                                       args
-                                       (list (ad GhostData (fc 'ghosts "0"))
-                                             body)
-                                       return-expr)))
+(define (build-scalar-reduction name body)
+  (tpl-def (tpl-pmtr AT-chunk)
+           (r-fcn-def (fcn-dcl name
+                               AT-chunk
+                               (ad AT-chunk 'a)
+                               (ad AT-chunk 'b))
+                      null
+                      body)))
 
-(define (build-applied-catamorphism name body proc)
-  (list (build-catamorphism-with-field name
-                                       null
-                                       (tpl-pmtr (scope FT-chunk vt-chunk))
-                                       null
-                                       null
-                                       body
-                                       (fc 'nebo_reduce proc 'fexpr))
-        (build-catamorphism-with-field (c name '_interior)
-                                       null
-                                       (tpl-pmtr (scope FT-chunk vt-chunk))
-                                       null
-                                       null
-                                       body
-                                       (fc 'nebo_reduce_interior proc 'fexpr))))
+(define (build-reduction name tpl-pmtrs arg body return-expr)
+  (tpl-def tpl-pmtrs
+           (r-fcn-def (fcn-dcl name value-type arg)
+                      body
+                      return-expr)))
 
-(define (build-used-catamorphism name return-expr)
-  (list (build-catamorphism-with-field name
-                                       null
-                                       (tpl-pmtr (scope FT-chunk vt-chunk))
-                                       null
-                                       null
-                                       null
-                                       (return-expr empty))
-        (build-catamorphism-with-field (c name '_interior)
-                                       null
-                                       (tpl-pmtr (scope FT-chunk vt-chunk))
-                                       null
-                                       null
-                                       null
-                                       (return-expr '_interior))))
+(define (build-reduction-pair name return-expr)
+  (list (build-reduction name
+                         (list (tpl-pmtr 'ExprType)
+                               (tpl-pmtr FT-chunk))
+                         (adcr (tpl-use NE-chunk 'ExprType FT-chunk)
+                               'fexpr)
+                         null
+                         return-expr)
+        (build-reduction name
+                         (tpl-pmtr FT-chunk)
+                         (adcr FT-chunk 'field)
+                         (typedef (tpl-use NCF-chunk 'Initial FT-chunk) 'ExprType)
+                         (fc name
+                             (fc (tpl-use NE-chunk 'ExprType FT-chunk)
+                                 (fc 'ExprType 'field))))))
 
-(define proc (p (c "*" 'proc)))
+(define (build-general-nebo-reduction name return-expr)
+  (list (build-reduction-pair name (return-expr #false))
+        (build-reduction-pair (c name '_interior)
+                              (return-expr #true))))
+
+(define (build-nebo-reduction name scalar-name initial-value)
+  (build-general-nebo-reduction name (lambda (is-interior)
+                                       (fc 'nebo_fold
+                                           (if is-interior 'false 'true)
+                                           scalar-name
+                                           initial-value
+                                           'fexpr))))
 
                                         ; beginnning of file
 (pp-header-file
@@ -133,75 +82,62 @@
               (m (c 'field_ name '_interior)
                  null
                  (c 'nebo_ name '_interior))))
-      (list 'fold
-            'reduce
-            'max
+      (list 'max
             'min
             'sum
             'norm))
 
  (n 'SpatialOps
-    (build-catamorphism 'nebo_fold
-                        (tpl-pmtr 'ResultType)
-                        'ResultType
-                        (list (gen-fcn-dcl proc
-                                           (cref 'ResultType)
-                                           (cref 'ResultType)
-                                           (cref (tpl-pmtr (scope FT-chunk vt-chunk))))
-                              (adcr 'ResultType 'initialValue))
-                        (list 'proc 'initialValue)
-                        (list (nt= 'ResultType 'result 'initialValue)
-                              (nt= (tpl-pmtr (scope 'ExprType 'ReductionType))
+    (tpl-def (list (tpl-pmtr 'ExprType)
+                   (tpl-pmtr FT-chunk))
+             (r-fcn-def (fcn-dcl 'nebo_fold
+                                 value-type
+                                 (ad 'bool 'useGhost)
+                                 (gen-fcn-dcl (p (c "*" 'proc))
+                                              value-type
+                                              value-type
+                                              value-type)
+                                 (ad value-type 'initialValue)
+                                 (adcr (tpl-use NE-chunk 'ExprType FT-chunk) 'fexpr))
+                        (list (typedef value-type 'value_type)
+                              (nt= 'ExprType 'initial (mfc 'fexpr 'expr))
+                              (nt= GhostData 'ghosts (ter-cond 'useGhost
+                                                               (mfc 'initial 'possible_ghosts)
+                                                               (mfc 'initial 'minimum_ghosts)))
+                              (nt=c 'int 'xLow (bs "-" (mfc 'ghosts 'get_minus "0")))
+                              (nt=c 'int 'xHigh (n+ (mfc 'initial 'extent "0")
+                                                    (mfc 'ghosts 'get_plus "0")))
+                              (nt=c 'int 'yLow (bs "-" (mfc 'ghosts 'get_minus "1")))
+                              (nt=c 'int 'yHigh (n+ (mfc 'initial 'extent "1")
+                                                    (mfc 'ghosts 'get_plus "1")))
+                              (nt=c 'int 'zLow (bs "-" (mfc 'ghosts 'get_minus "2")))
+                              (nt=c 'int 'zHigh (n+ (mfc 'initial 'extent "2")
+                                                    (mfc 'ghosts 'get_plus "2")))
+                              (nt= 'value_type 'result 'initialValue)
+                              (nt= (tpl-pmtr (scope 'ExprType 'SeqWalkType))
                                    'expr
-                                   (mfc (mfc 'fexpr 'expr)
-                                        'reduce_init))
-                              (nwhile (n-not (mfc 'expr 'at_end))
-                                      (n= 'result (fc 'proc 'result (mfc 'expr 'eval)))
-                                      (mfc 'expr 'next)))
-                        'result)
-    (let ([build-reduce
-           (lambda (return-qual)
-             (define atomic-type (tpl-pmtr (scope FT-chunk vt-chunk)))
-             (build-catamorphism 'nebo_reduce
-                                 null
-                                 atomic-type
-                                 (gen-fcn-dcl proc
-                                              (return-qual atomic-type)
-                                              (cref atomic-type)
-                                              (cref atomic-type))
-                                 'proc
-                                 (list (nt= (tpl-pmtr (scope 'ExprType 'ReductionType))
-                                            'expr
-                                            (mfc (mfc 'fexpr 'expr)
-                                                 'reduce_init))
-                                       (nt= atomic-type 'result (mfc 'expr 'eval))
-                                       (mfc 'expr 'next)
-                                       (nwhile (n-not (mfc 'expr 'at_end))
-                                               (n= 'result (fc 'proc 'result (mfc 'expr 'eval)))
-                                               (mfc 'expr 'next)))
-                                 'result))])
-      (list (build-reduce cref)
-            (build-reduce identity)))
-    (build-applied-catamorphism 'nebo_max
-                                null
-                                (scope 'std 'max))
-    (build-applied-catamorphism 'nebo_min
-                                null
-                                (scope 'std 'min))
-    (tpl-def (tpl-pmtr AT-chunk)
-             (r-fcn-def (fcn-dcl 'sum
-                                 AT-chunk
-                                 (b s AT-chunk 'const "&" 'a)
-                                 (b s AT-chunk 'const "&" 'b))
-                        null
-                        (b s 'a "+" 'b)))
-    (build-applied-catamorphism 'nebo_sum
-                                null
-                                (tpl-use 'sum (tpl-pmtr (scope FT-chunk vt-chunk))))
-    (build-used-catamorphism 'nebo_norm
-                             (lambda (ext)
-                               (fc (scope 'std 'sqrt)
-                                   (fc (c 'nebo_sum ext)
-                                       (fc 'pow 'fexpr "2")))))
-    )
- )
+                                   (mfc 'initial 'init))
+                              (nfor (nt= 'int 'z 'zLow)
+                                    (n< 'z 'zHigh)
+                                    (n++ 'z)
+                                    (nfor (nt= 'int 'y 'yLow)
+                                          (n< 'y 'yHigh)
+                                          (n++ 'y)
+                                          (nfor (nt= 'int 'x 'xLow)
+                                                (n< 'x 'xHigh)
+                                                (n++ 'x)
+                                                (n= 'result (fc 'proc 'result (mfc 'expr 'eval index-arg)))))))
+                        'result))
+
+    (build-scalar-reduction 'nebo_scalar_max (ter-cond (p (bs 'a '< 'b)) 'b 'a))
+    (build-scalar-reduction 'nebo_scalar_min (ter-cond (p (bs 'a '> 'b)) 'b 'a))
+    (build-scalar-reduction 'nebo_scalar_sum (n+ 'a 'b))
+
+    (build-nebo-reduction 'nebo_max 'nebo_scalar_max (n/ "-1.0" "0.0"))
+    (build-nebo-reduction 'nebo_min 'nebo_scalar_min (n/ "1.0" "0.0"))
+    (build-nebo-reduction 'nebo_sum 'nebo_scalar_sum "0.0")
+    (build-general-nebo-reduction 'nebo_norm (lambda (is-interior)
+                                               (fc (scope 'std 'sqrt)
+                                                   (fc (if is-interior 'nebo_sum_interior 'nebo_sum)
+                                                       (fc 'pow 'fexpr "2")))))
+    ))
