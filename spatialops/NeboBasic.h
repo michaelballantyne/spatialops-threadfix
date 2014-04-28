@@ -109,10 +109,6 @@
                                                                        lhsPossibleGhosts,
                                                                        bc,
                                                                        rhsPossibleGhosts);
-        std::cout << "calculate_limits: " << useGhost << " " << lhsActualGhosts.get_minus() << std::endl
-                  << "                    " << (lhsMemoryWindow.extent() - lhsCurrentGhosts.get_minus() - lhsCurrentGhosts.get_plus() +
-                                                lhsActualGhosts.get_plus())
-                  << " = " << lhsMemoryWindow.extent() << " - " << lhsCurrentGhosts.get_minus() << " - " << lhsCurrentGhosts.get_plus() << " + " << lhsActualGhosts.get_plus() << std::endl;
 
         return structured::GhostData(lhsActualGhosts.get_minus(),
                                      (lhsMemoryWindow.extent() - lhsCurrentGhosts.get_minus() - lhsCurrentGhosts.get_plus() +
