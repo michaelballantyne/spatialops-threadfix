@@ -31,6 +31,7 @@
 #  include <spatialops/structured/FVStaggeredFieldTypes.h>
 #  include <cmath>
 #  include <math.h>
+#  include <limits>
 
 #  ifdef NEBO_REPORT_BACKEND
 #     include <iostream>

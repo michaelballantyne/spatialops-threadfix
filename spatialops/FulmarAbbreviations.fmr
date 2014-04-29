@@ -159,6 +159,8 @@
   (between (spaces-around "||") lhs rhs))
 (define (val-not chunk)
   (concat '! (paren chunk)))
+(define (val-negate chunk)
+  (concat '- (paren chunk)))
 (define (const . chunks)
   (add-spaces chunks 'const))
 (define (ref . chunks)

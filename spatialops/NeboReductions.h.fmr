@@ -133,8 +133,10 @@
   (build-scalar-reduction 'nebo_scalar_min (ter-cond (paren (add-spaces 'a '> 'b)) 'b 'a))
   (build-scalar-reduction 'nebo_scalar_sum (val-add 'a 'b))
 
-  (build-nebo-reduction 'nebo_max 'nebo_scalar_max (val-divide "-1.0" "0.0"))
-  (build-nebo-reduction 'nebo_min 'nebo_scalar_min (val-divide "1.0" "0.0"))
+  (build-nebo-reduction 'nebo_max 'nebo_scalar_max (val-negate (val-member-call (val-call (scope 'std (type-template 'numeric_limits 'double)))
+                                                                                'infinity)))
+  (build-nebo-reduction 'nebo_min 'nebo_scalar_min (val-member-call (val-call (scope 'std (type-template 'numeric_limits 'double)))
+                                                                    'infinity))
   (build-nebo-reduction 'nebo_sum 'nebo_scalar_sum "0.0")
   (build-general-nebo-reduction 'nebo_norm (lambda (is-interior)
                                              (val-call (scope 'std 'sqrt)

@@ -109,7 +109,10 @@
        inline typename FieldType::value_type nebo_max(NeboExpression<ExprType,
                                                                      FieldType>
                                                       const & fexpr) {
-          return nebo_fold(true, nebo_scalar_max, -1.0 / 0.0, fexpr);
+          return nebo_fold(true,
+                           nebo_scalar_max,
+                           -(std::numeric_limits<double>().infinity()),
+                           fexpr);
        };
 
       template<typename FieldType>
@@ -123,7 +126,10 @@
        inline typename FieldType::value_type nebo_max_interior(NeboExpression<ExprType,
                                                                               FieldType>
                                                                const & fexpr) {
-          return nebo_fold(false, nebo_scalar_max, -1.0 / 0.0, fexpr);
+          return nebo_fold(false,
+                           nebo_scalar_max,
+                           -(std::numeric_limits<double>().infinity()),
+                           fexpr);
        };
 
       template<typename FieldType>
@@ -138,7 +144,10 @@
        inline typename FieldType::value_type nebo_min(NeboExpression<ExprType,
                                                                      FieldType>
                                                       const & fexpr) {
-          return nebo_fold(true, nebo_scalar_min, 1.0 / 0.0, fexpr);
+          return nebo_fold(true,
+                           nebo_scalar_min,
+                           std::numeric_limits<double>().infinity(),
+                           fexpr);
        };
 
       template<typename FieldType>
@@ -152,7 +161,10 @@
        inline typename FieldType::value_type nebo_min_interior(NeboExpression<ExprType,
                                                                               FieldType>
                                                                const & fexpr) {
-          return nebo_fold(false, nebo_scalar_min, 1.0 / 0.0, fexpr);
+          return nebo_fold(false,
+                           nebo_scalar_min,
+                           std::numeric_limits<double>().infinity(),
+                           fexpr);
        };
 
       template<typename FieldType>
