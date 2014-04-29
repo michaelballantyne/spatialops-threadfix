@@ -35,20 +35,20 @@
                        rhs-input-type
                        rhs-type
                        rhs-expr)
-  (tpl-def (map tpl-pmtr (flatten* tpl-pmtrs lhs-pmtr))
-           (r-fcn-def (fcn-dcl name
-                               (cref lhs-type)
-                               (adr lhs-type 'lhs)
-                               (adcr rhs-input-type 'rhs))
-                      (list (if rhs-type
-                                (typedef rhs-type 'RhsType)
-                                null)
-                            (mfc (fc (tpl-use NF-chunk 'Initial lhs-type-s)
-                                     'lhs)
-                                 (tpl-fcn-use 'assign 'RhsType)
-                                 use-ghost
-                                 rhs-expr))
-                      'lhs)))
+  (def-template (map typename (flatten* tpl-pmtrs lhs-pmtr))
+    (def-returning-function (dcl-function name
+                                          (ref (const lhs-type))
+                                          (function-pmtr (ref lhs-type) 'lhs)
+                                          (function-pmtr (ref (const rhs-input-type)) 'rhs))
+      (list (if rhs-type
+                (typedef rhs-type 'RhsType)
+                null)
+            (val-member-call (val-call (type-template NF-chunk 'Initial lhs-type-s)
+                                       'lhs)
+                             (type-template-function 'assign 'RhsType)
+                             use-ghost
+                             rhs-expr))
+      'lhs)))
 (define (assigns name use-ghost)
   (internal-smt-list
    blank-line
@@ -58,9 +58,9 @@
                   FT-chunk
                   use-ghost
                   null
-                  (tpl-pmtr (scope FT-chunk vt-chunk))
-                  (tpl-use NS-chunk 'Initial (tpl-pmtr (scope FT-chunk vt-chunk)))
-                  (fc 'RhsType 'rhs))
+                  (typename (scope FT-chunk vt-chunk))
+                  (type-template NS-chunk 'Initial (typename (scope FT-chunk vt-chunk)))
+                  (val-call 'RhsType 'rhs))
    (single-assign name
                   FT-chunk
                   FT-chunk
@@ -68,69 +68,69 @@
                   use-ghost
                   null
                   FT-chunk
-                  (tpl-use NCF-chunk 'Initial FT-chunk)
-                  (fc 'RhsType 'rhs))
+                  (type-template NCF-chunk 'Initial FT-chunk)
+                  (val-call 'RhsType 'rhs))
    (single-assign name
                   FT-chunk
                   FT-chunk
                   FT-chunk
                   use-ghost
                   'RhsType
-                  (tpl-use NE-chunk 'RhsType FT-chunk)
+                  (type-template NE-chunk 'RhsType FT-chunk)
                   #false
-                  (mfc 'rhs 'expr))
+                  (val-member-call 'rhs 'expr))
    (single-assign name
                   FT-chunk
                   FT-chunk
                   FT-chunk
                   use-ghost
                   null
-                  (SVFT-def-with-T (tpl-pmtr (scope FT-chunk vt-chunk)))
-                  (tpl-use NCSVF-chunk 'Initial (tpl-pmtr (scope FT-chunk vt-chunk)))
-                  (fc 'RhsType 'rhs))
+                  (SVFT-def-with-T (typename (scope FT-chunk vt-chunk)))
+                  (type-template NCSVF-chunk 'Initial (typename (scope FT-chunk vt-chunk)))
+                  (val-call 'RhsType 'rhs))
    (single-assign name
                   FT-chunk
                   FT-chunk
                   FT-chunk
                   use-ghost
                   'RhsType
-                  (tpl-use NSVE-chunk 'RhsType (tpl-pmtr (scope FT-chunk vt-chunk)))
+                  (type-template NSVE-chunk 'RhsType (typename (scope FT-chunk vt-chunk)))
                   #false
-                  (mfc 'rhs 'expr))
+                  (val-member-call 'rhs 'expr))
    (single-assign name
                   'T
                   SVFT-def-chunk
-                  (cs SVFT-def-chunk)
+                  (space-after SVFT-def-chunk)
                   use-ghost
                   null
-                  (tpl-pmtr (scope SVFT-def-chunk vt-chunk))
-                  (tpl-use NS-chunk 'Initial (tpl-pmtr (scope SVFT-def-chunk vt-chunk)))
-                  (fc 'RhsType 'rhs))
+                  (typename (scope SVFT-def-chunk vt-chunk))
+                  (type-template NS-chunk 'Initial (typename (scope SVFT-def-chunk vt-chunk)))
+                  (val-call 'RhsType 'rhs))
    (single-assign name
                   'T
                   SVFT-def-chunk
-                  (cs SVFT-def-chunk)
+                  (space-after SVFT-def-chunk)
                   use-ghost
                   null
                   SVFT-def-chunk
-                  (tpl-use NCSVF-chunk 'Initial 'T)
-                  (fc 'RhsType 'rhs))
+                  (type-template NCSVF-chunk 'Initial 'T)
+                  (val-call 'RhsType 'rhs))
    (single-assign name
                   'T
                   SVFT-def-chunk
-                  (cs SVFT-def-chunk)
+                  (space-after SVFT-def-chunk)
                   use-ghost
                   'RhsType
-                  (tpl-use NSVE-chunk 'RhsType 'T)
+                  (type-template NSVE-chunk 'RhsType 'T)
                   #false
-                  (mfc 'rhs 'expr))))
+                  (val-member-call 'rhs 'expr))))
 
                                         ; beginnning of file
 (pp-header-file
  'NEBO_ASSIGNMENT_H
- (n 'SpatialOps
-    (assigns (bs 'operator '<<=)
-             'true)
-    (assigns 'interior_assign
-             'false))
- )
+ (SpatialOps-namespace
+  (assigns (add-spaces 'operator '<<=)
+           'true)
+  (assigns 'interior_assign
+           'false)
+  ))

@@ -27,101 +27,101 @@
 (require "NeboCore.fmr")
 (require "NeboRhsCore.fmr")
 
-(define SpatialMask (scope 'structured (tpl-use 'SpatialMask FT-chunk)))
+(define SpatialMask (scope 'structured (type-template 'SpatialMask FT-chunk)))
 
 (pp-header-file
  'NEBO_MASK_H
- (n 'SpatialOps
-    (build-struct 'NeboMask
-                  std-FT
-                  null
-                  null
-                  (bs-Initial-rhs null
-                                  null
-                                  (bm-constructor (adcr SpatialMask 'm)
-                                                  (cons-asgn 'mask_ 'm)
-                                                  null)
-                                  (n+ (mfc 'mask_ 'get_valid_ghost_data)
-                                      (fc 'point_to_ghost (mfc (mfc 'mask_ 'boundary_info) 'has_extra)))
-                                  (fc 'point_to_ghost (mfc (mfc 'mask_ 'boundary_info) 'has_extra))
-                                  'true
-                                  null
-                                  (n- (mfc (mfc 'mask_ 'window_without_ghost) 'extent 'dir)
-                                      (mfc (mfc 'mask_ 'boundary_info) 'has_extra 'dir))
-                                  'mask_
-                                  'mask_
-                                  (mfc 'mask_ 'find_consumer 'LOCAL_RAM "0")
-                                  (mfc 'mask_ 'find_consumer 'EXTERNAL_CUDA_GPU DI-chunk)
-                                  (list DI-chunk 'mask_)
-                                  (c (fc (tpl-use 'const_cast (ptr SpatialMask))
-                                         (take-ptr 'mask_))
-                                     '->
-                                     (fc 'add_consumer 'EXTERNAL_CUDA_GPU DI-chunk))
-                                  null
-                                  (sadc SpatialMask 'mask_))
-                  (bs-Resize-rhs null
-                                 null
-                                 (bm-constructor (adcr SpatialMask 'm)
-                                                 (cons-asgn 'mask_ 'm)
-                                                 null)
-                                 'mask_
-                                 null
-                                 (sadc SpatialMask 'mask_))
-                  (bs-SeqWalk-rhs null
-                                  (bm-constructor (adcr SpatialMask 'm)
-                                                  (cons-asgn 'mask_ 'm)
-                                                  null)
-                                  vt-chunk
-                                  (fc 'mask_ index-arg)
-                                  null
-                                  (sadc SpatialMask 'mask_))
-                  (bs-gpu-rhs null
-                              (bm-constructor
-                               (list (adc 'int DI-chunk)
-                                     (adcr SpatialMask 'm))
-                               (list (cons-asgn 'bitField_ (mfc 'm 'mask_values 'EXTERNAL_CUDA_GPU DI-chunk))
-                                     (cons-asgn 'xOffset_ (n+ (mfc (mfc 'm 'window_with_ghost)
-                                                                   'offset
-                                                                   "0")
-                                                              (mfc (mfc 'm 'get_ghost_data) 'get_minus "0")))
-                                     (cons-asgn 'yOffset_ (n+ (mfc (mfc 'm 'window_with_ghost)
-                                                                   'offset
-                                                                   "1")
-                                                              (mfc (mfc 'm 'get_ghost_data) 'get_minus "1")))
-                                     (cons-asgn 'zOffset_ (n+ (mfc (mfc 'm 'window_with_ghost)
-                                                                   'offset
-                                                                   "2")
-                                                              (mfc (mfc 'm 'get_ghost_data) 'get_minus "2")))
-                                     (cons-asgn 'xGlob_ (mfc (mfc 'm 'window_with_ghost)
-                                                             'glob_dim
-                                                             "0"))
-                                     (cons-asgn 'yGlob_ (mfc (mfc 'm 'window_with_ghost)
-                                                             'glob_dim
-                                                             "1")))
-                               null)
-                              'bool
-                              (fc 'deref index-arg)
-                              null
-                              (list (device-use (r-fcn-def (constize (fcn-dcl 'find_position 'int index-pmtr))
-                                                           (list (nt=c 'int 'newX (n+ 'xOffset_ 'x))
-                                                                 (nt=c 'int 'newY (n+ 'yOffset_ 'y))
-                                                                 (nt=c 'int 'newZ (n+ 'zOffset_ 'z)))
-                                                           (n+ 'newX (n* 'xGlob_ (par (n+ 'newY (n* 'yGlob_ 'newZ)))))))
-                                    (device-use (r-fcn-def (constize (fcn-dcl 'find_block 'int (adc 'int 'position)))
-                                                           null
-                                                           (n/ 'position 'NEBO_INT_BIT)))
-                                    (device-use (r-fcn-def (constize (fcn-dcl 'find_bit_position 'int (adc 'int 'position)))
-                                                           null
-                                                           (n% 'position 'NEBO_INT_BIT)))
-                                    (device-use (r-fcn-def (constize (fcn-dcl 'deref 'int index-pmtr))
-                                                           (nt=c 'int 'position (fc 'find_position index-arg))
-                                                           (n-not (n-not (c '* (bs (p (n+ 'bitField_ (fc 'find_block 'position)))
-                                                                                   '&
-                                                                                   (p (bs "1" '<< (fc 'find_bit_position 'position)))))))))
-                                    (sadcp (bs 'unsigned 'int) 'bitField_)
-                                    (sadc 'int 'xOffset_)
-                                    (sadc 'int 'yOffset_)
-                                    (sadc 'int 'zOffset_)
-                                    (sadc 'int 'xGlob_)
-                                    (sadc 'int 'yGlob_))))
-    ))
+ (SpatialOps-namespace
+  (build-struct 'NeboMask
+                std-FT
+                null
+                null
+                (bs-Initial-rhs null
+                                null
+                                (bm-constructor (function-pmtr (ref (const SpatialMask)) 'm)
+                                                (val-construct 'mask_ 'm)
+                                                null)
+                                (val-add (val-member-call 'mask_ 'get_valid_ghost_data)
+                                         (val-call 'point_to_ghost (val-member-call (val-member-call 'mask_ 'boundary_info) 'has_extra)))
+                                (val-call 'point_to_ghost (val-member-call (val-member-call 'mask_ 'boundary_info) 'has_extra))
+                                'true
+                                null
+                                (val-subtract (val-member-call (val-member-call 'mask_ 'window_without_ghost) 'extent 'dir)
+                                              (val-member-call (val-member-call 'mask_ 'boundary_info) 'has_extra 'dir))
+                                'mask_
+                                'mask_
+                                (val-member-call 'mask_ 'find_consumer 'LOCAL_RAM 0)
+                                (val-member-call 'mask_ 'find_consumer 'EXTERNAL_CUDA_GPU DI-chunk)
+                                (list DI-chunk 'mask_)
+                                (concat (val-call (type-template 'const_cast (ptr SpatialMask))
+                                                  (take-ptr 'mask_))
+                                        '->
+                                        (val-call 'add_consumer 'EXTERNAL_CUDA_GPU DI-chunk))
+                                null
+                                (stmt-dcl-variable (const SpatialMask) 'mask_))
+                (bs-Resize-rhs null
+                               null
+                               (bm-constructor (function-pmtr (ref (const SpatialMask)) 'm)
+                                               (val-construct 'mask_ 'm)
+                                               null)
+                               'mask_
+                               null
+                               (stmt-dcl-variable (const SpatialMask) 'mask_))
+                (bs-SeqWalk-rhs null
+                                (bm-constructor (function-pmtr (ref (const SpatialMask)) 'm)
+                                                (val-construct 'mask_ 'm)
+                                                null)
+                                vt-chunk
+                                (val-call 'mask_ index-arg)
+                                null
+                                (stmt-dcl-variable (const SpatialMask) 'mask_))
+                (bs-gpu-rhs null
+                            (bm-constructor
+                             (list (function-pmtr (const 'int) DI-chunk)
+                                   (function-pmtr (ref (const SpatialMask)) 'm))
+                             (list (val-construct 'bitField_ (val-member-call 'm 'mask_values 'EXTERNAL_CUDA_GPU DI-chunk))
+                                   (val-construct 'xOffset_ (val-add (val-member-call (val-member-call 'm 'window_with_ghost)
+                                                                                      'offset
+                                                                                      0)
+                                                                     (val-member-call (val-member-call 'm 'get_ghost_data) 'get_minus 0)))
+                                   (val-construct 'yOffset_ (val-add (val-member-call (val-member-call 'm 'window_with_ghost)
+                                                                                      'offset
+                                                                                      1)
+                                                                     (val-member-call (val-member-call 'm 'get_ghost_data) 'get_minus 1)))
+                                   (val-construct 'zOffset_ (val-add (val-member-call (val-member-call 'm 'window_with_ghost)
+                                                                                      'offset
+                                                                                      2)
+                                                                     (val-member-call (val-member-call 'm 'get_ghost_data) 'get_minus 2)))
+                                   (val-construct 'xGlob_ (val-member-call (val-member-call 'm 'window_with_ghost)
+                                                                           'glob_dim
+                                                                           0))
+                                   (val-construct 'yGlob_ (val-member-call (val-member-call 'm 'window_with_ghost)
+                                                                           'glob_dim
+                                                                           1)))
+                             null)
+                            'bool
+                            (val-call 'deref index-arg)
+                            null
+                            (list (device-only (def-returning-function (constize (dcl-function 'find_position 'int index-pmtr))
+                                                 (list (val-typed-const-assign 'int 'newX (val-add 'xOffset_ 'x))
+                                                       (val-typed-const-assign 'int 'newY (val-add 'yOffset_ 'y))
+                                                       (val-typed-const-assign 'int 'newZ (val-add 'zOffset_ 'z)))
+                                                 (val-add 'newX (val-multiply 'xGlob_ (paren (val-add 'newY (val-multiply 'yGlob_ 'newZ)))))))
+                                  (device-only (def-returning-function (constize (dcl-function 'find_block 'int (function-pmtr (const 'int) 'position)))
+                                                 null
+                                                 (val-divide 'position 'NEBO_INT_BIT)))
+                                  (device-only (def-returning-function (constize (dcl-function 'find_bit_position 'int (function-pmtr (const 'int) 'position)))
+                                                 null
+                                                 (val-modulo 'position 'NEBO_INT_BIT)))
+                                  (device-only (def-returning-function (constize (dcl-function 'deref 'int index-pmtr))
+                                                 (val-typed-const-assign 'int 'position (val-call 'find_position index-arg))
+                                                 (val-not (val-not (concat '* (add-spaces (paren (val-add 'bitField_ (val-call 'find_block 'position)))
+                                                                                          '&
+                                                                                          (paren (add-spaces 1 '<< (val-call 'find_bit_position 'position)))))))))
+                                  (stmt-dcl-variable (ptr (const (add-spaces 'unsigned 'int))) 'bitField_)
+                                  (stmt-dcl-variable (const 'int) 'xOffset_)
+                                  (stmt-dcl-variable (const 'int) 'yOffset_)
+                                  (stmt-dcl-variable (const 'int) 'zOffset_)
+                                  (stmt-dcl-variable (const 'int) 'xGlob_)
+                                  (stmt-dcl-variable (const 'int) 'yGlob_))))
+  ))

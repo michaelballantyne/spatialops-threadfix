@@ -36,75 +36,75 @@
         '("")
         (map number->string (sequence->list (in-range 1 (+ 1 number))))))
   (define IN-op-lst
-    (map (lambda (str) (l 'op str)) num-lst))
+    (map (lambda (str) (literal 'op str)) num-lst))
   (define op-lst
-    (map (lambda (str) (l 'operand str)) num-lst))
+    (map (lambda (str) (literal 'operand str)) num-lst))
   (define Op-lst
-    (map (lambda (str) (l 'Operand str)) num-lst))
+    (map (lambda (str) (literal 'Operand str)) num-lst))
   (define op_-lst
-    (map (lambda (op) (l op '_)) op-lst))
+    (map (lambda (op) (literal op '_)) op-lst))
   (define (mapper proc . lsts)
     (apply map proc lsts))
   (define (op_-mfc fcn . args)
-    (map (lambda (op_) (mfc op_ fcn args))
+    (map (lambda (op_) (val-member-call op_ fcn args))
          op_-lst))
   (define (IN-typedef type)
-    (lambda (Op) (tpl-pmtr (scope Op type))))
+    (lambda (Op) (typename (scope Op type))))
   (define (ghosts call)
     (letrec ([mins (lambda (calls)
-                      (cond [(equal? 1 (length calls)) (first calls)]
-                            [else (fc 'min
-                                      (first calls)
-                                      (mins (rest calls)))]))])
-      (mins (mapper (lambda (op) (mfc op call))
+                     (cond [(equal? 1 (length calls)) (first calls)]
+                           [else (val-call 'min
+                                           (first calls)
+                                           (mins (rest calls)))]))])
+      (mins (mapper (lambda (op) (val-member-call op call))
                     op_-lst))))
   (define gen-data-mems
-    (mapper (lambda (Op op_) (sadc Op op_))
+    (mapper (lambda (Op op_) (stmt-dcl-variable (const Op) op_))
             Op-lst
             op_-lst))
   (define (gen-typedef type)
-    (lambda (Op) (tpl-pmtr (scope Op type))))
+    (lambda (Op) (typename (scope Op type))))
   (define gen-constructor
-    (bm-constructor (mapper (lambda (Op op) (adcr Op op))
+    (bm-constructor (mapper (lambda (Op op) (function-pmtr (ref (const Op)) op))
                             Op-lst
                             op-lst)
-                    (mapper (lambda (op_ op) (cons-asgn op_ op))
+                    (mapper (lambda (op_ op) (val-construct op_ op))
                             op_-lst
                             op-lst)
                     null))
   (define next
-    (b/a ";" s (op_-mfc 'next)))
+    (between/attach ";" space (op_-mfc 'next)))
   (define (exec-check n-logical fcn . args)
-    (par (n-logical (op_-mfc fcn args))))
+    (paren (n-logical (op_-mfc fcn args))))
   (define (exec-or-check fcn)
-    (exec-check n-or fcn))
+    (exec-check val-or fcn))
   (define (exec-and-check fcn . args)
-    (exec-check n-and fcn args))
+    (exec-check val-and fcn args))
   (define exec-data-mems
-    (mapper (lambda (Op op_) (sad Op op_))
+    (mapper (lambda (Op op_) (stmt-dcl-variable Op op_))
             Op-lst
             op_-lst))
   (define (assign-extent remaining)
-    (define assignment (n= 'extent (mfc (car remaining) 'extent 'dir)))
+    (define assignment (val-assign 'extent (val-member-call (car remaining) 'extent 'dir)))
     (if (= 1 (length remaining))
         assignment
-        (nifelse (mfc (car remaining) 'has_extent)
-             assignment
-             (assign-extent (cdr remaining)))))
+        (stmt-if-else (val-member-call (car remaining) 'has_extent)
+                      assignment
+                      (assign-extent (cdr remaining)))))
   (define (check-extent remaining)
-    (define assert (nif (mfc (car remaining) 'has_extent)
-                        (fc 'assert (n== 'extent (mfc (car remaining) 'extent 'dir)))))
+    (define assert (stmt-if (val-member-call (car remaining) 'has_extent)
+                            (val-call 'assert (val-equal 'extent (val-member-call (car remaining) 'extent 'dir)))))
     (if (= 1 (length remaining))
         assert
         (list assert
               (check-extent (cdr remaining)))))
   (define (return-extent remaining)
-    (define returned (mfc (car remaining) 'extent 'dir))
+    (define returned (val-member-call (car remaining) 'extent 'dir))
     (if (= 1 (length remaining))
         returned
-        (ter-cond (mfc (car remaining) 'has_extent)
+        (ter-cond (val-member-call (car remaining) 'has_extent)
                   returned
-                  (par (return-extent (cdr remaining))))))
+                  (paren (return-extent (cdr remaining))))))
   (build-struct name
                 no-FT
                 null
@@ -117,17 +117,17 @@
                                 (exec-or-check 'has_extent)
                                 (if (= 1 number)
                                     null
-                                    (nif (exec-or-check 'has_extent)
-                                         (ad 'int 'extent)
-                                         (assign-extent op_-lst)
-                                         (check-extent op_-lst)))
+                                    (stmt-if (exec-or-check 'has_extent)
+                                             (function-pmtr 'int 'extent)
+                                             (assign-extent op_-lst)
+                                             (check-extent op_-lst)))
                                 (return-extent op_-lst)
                                 (op_-mfc 'init)
                                 (op_-mfc 'resize)
                                 (exec-and-check 'cpu_ready)
                                 (exec-and-check 'gpu_ready DI-chunk)
                                 (op_-mfc 'gpu_init DI-chunk)
-                                (b/a ";" s (op_-mfc 'gpu_prep DI-chunk))
+                                (between/attach ";" space (op_-mfc 'gpu_prep DI-chunk))
                                 null
                                 gen-data-mems)
                 (bs-Resize-rhs null
@@ -136,15 +136,15 @@
                                (op_-mfc 'init)
                                null
                                gen-data-mems)
-                (bs-SeqWalk-rhs (s-typedef (tpl-pmtr (scope (first Op-lst) vt-chunk))
-                                           vt-chunk)
+                (bs-SeqWalk-rhs (stmt-typedef (typename (scope (first Op-lst) vt-chunk))
+                                              vt-chunk)
                                 gen-constructor
                                 eval-return-type
                                 (internal-use index-arg)
                                 null
                                 exec-data-mems)
-                (bs-gpu-rhs (s-typedef (tpl-pmtr (scope (first Op-lst) vt-chunk))
-                                       vt-chunk)
+                (bs-gpu-rhs (stmt-typedef (typename (scope (first Op-lst) vt-chunk))
+                                          vt-chunk)
                             gen-constructor
                             eval-return-type
                             (internal-use index-arg)
@@ -156,66 +156,66 @@
                      2
                      vt-chunk
                      (lambda (args)
-                       (fc internal-name
-                           (mfc 'operand1_ 'eval args)
-                           (mfc 'operand2_ 'eval args)))))
+                       (val-call internal-name
+                                 (val-member-call 'operand1_ 'eval args)
+                                 (val-member-call 'operand2_ 'eval args)))))
 
 (define (build-binary-operator-struct name internal-name)
   (build-Nary-struct name
                      2
                      vt-chunk
                      (lambda (args)
-                       (par (mfc 'operand1_ 'eval args)
-                            internal-name
-                            (mfc 'operand2_ 'eval args)))))
+                       (paren (val-member-call 'operand1_ 'eval args)
+                              internal-name
+                              (val-member-call 'operand2_ 'eval args)))))
 
 (define (build-unary-function-struct name internal-name)
   (build-Nary-struct name
                      1
                      vt-chunk
                      (lambda (args)
-                       (fc internal-name
-                           (mfc 'operand_ 'eval args)))))
+                       (val-call internal-name
+                                 (val-member-call 'operand_ 'eval args)))))
 
 (define (build-comparison-struct name internal-name)
   (build-Nary-struct name
                      2
                      'bool
                      (lambda (args)
-                       (par (mfc 'operand1_ 'eval args)
-                            internal-name
-                            (mfc 'operand2_ 'eval args)))))
+                       (paren (val-member-call 'operand1_ 'eval args)
+                              internal-name
+                              (val-member-call 'operand2_ 'eval args)))))
 
 (define (build-unary-logical-function-struct name internal-name)
   (build-Nary-struct name
                      1
                      'bool
                      (lambda (args)
-                       (fc internal-name
-                           (mfc 'operand_ 'eval args)))))
+                       (val-call internal-name
+                                 (val-member-call 'operand_ 'eval args)))))
 
 (define (build-logical-operator-struct name internal-name)
   (build-Nary-struct name
                      2
                      'bool
                      (lambda (args)
-                       (par (mfc 'operand1_ 'eval args)
-                            internal-name
-                            (mfc 'operand2_ 'eval args)))))
+                       (paren (val-member-call 'operand1_ 'eval args)
+                              internal-name
+                              (val-member-call 'operand2_ 'eval args)))))
 
 (define (build-extremum-function-struct name comparison)
   (build-Nary-struct name
                      2
                      vt-chunk
                      (lambda (args)
-                       (ter-cond (par (mfc 'operand1_ 'eval args)
-                                      comparison
-                                      (mfc 'operand2_ 'eval args))
-                                 (mfc 'operand1_ 'eval args)
-                                 (mfc 'operand2_ 'eval args)))))
+                       (ter-cond (paren (val-member-call 'operand1_ 'eval args)
+                                        comparison
+                                        (val-member-call 'operand2_ 'eval args))
+                                 (val-member-call 'operand1_ 'eval args)
+                                 (val-member-call 'operand2_ 'eval args)))))
 
 (define (add-spacing-check arg)
-  (cs arg))
+  (space-after arg))
 
 (define (ignore-spacing-check arg)
   arg)
@@ -223,8 +223,8 @@
 (define if-arg-Scalar
   (list 'none
         (lambda (num value-type checked-value-type)
-          (let ([type (tpl-use NS-chunk 'Initial value-type)]
-                [arg (l 'arg num)])
+          (let ([type (type-template NS-chunk 'Initial value-type)]
+                [arg (literal 'arg num)])
             (list 'Scalar
                   #false
                   #false
@@ -232,32 +232,32 @@
                   add-spacing-check
                   type
                   type
-                  (adcr checked-value-type arg)
-                  (fc type arg))))))
+                  (function-pmtr (ref (const checked-value-type)) arg)
+                  (val-call type arg))))))
 
 (define if-arg-Field
   (list 'field
         (lambda (num value-type checked-value-type)
-          (let ([type (tpl-use NCF-chunk 'Initial FT-chunk)]
-                [arg (l 'arg num)])
+          (let ([type (type-template NCF-chunk 'Initial FT-chunk)]
+                [arg (literal 'arg num)])
             (list 'Field
                   #true
                   #false
                   null
                   add-spacing-check
-                  (tpl-use NCF-chunk 'Initial (tpl-pmtr (scope (tpl-use 'NeboFieldCheck
-                                                                        (tpl-pmtr (scope FT-chunk ft-chunk))
-                                                                        FT-chunk)
-                                                               'Result)))
+                  (type-template NCF-chunk 'Initial (typename (scope (type-template 'NeboFieldCheck
+                                                                                    (typename (scope FT-chunk ft-chunk))
+                                                                                    FT-chunk)
+                                                                     'Result)))
                   type
-                  (adcr FT-chunk arg)
-                  (fc type arg))))))
+                  (function-pmtr (ref (const FT-chunk)) arg)
+                  (val-call type arg))))))
 
 (define if-arg-SubExpr
   (list 'field
         (lambda (num value-type checked-value-type)
-          (let* ([type (l 'SubExpr num)]
-                 [arg (l 'arg num)])
+          (let* ([type (literal 'SubExpr num)]
+                 [arg (literal 'arg num)])
             (list 'SubExpr
                   #true
                   #false
@@ -265,15 +265,15 @@
                   ignore-spacing-check
                   type
                   type
-                  (adcr (tpl-use NE-chunk type FT-chunk)
-                        arg)
-                  (mfc arg 'expr))))))
+                  (function-pmtr (ref (const (type-template NE-chunk type FT-chunk)))
+                                 arg)
+                  (val-member-call arg 'expr))))))
 
 (define if-arg-Boolean
   (list 'boolean-only
         (lambda (num value-type checked-value-type)
-          (let ([type (tpl-use NS-chunk 'Initial 'bool)]
-                [arg (l 'arg num)])
+          (let ([type (type-template NS-chunk 'Initial 'bool)]
+                [arg (literal 'arg num)])
             (list 'Boolean
                   #false
                   #false
@@ -281,14 +281,14 @@
                   add-spacing-check
                   type
                   type
-                  (adcr 'bool arg)
-                  (fc type arg))))))
+                  (function-pmtr (ref (const 'bool)) arg)
+                  (val-call type arg))))))
 
 (define if-arg-SubBoolExpr
   (list 'field
         (lambda (num value-type checked-value-type)
-          (let* ([type (l 'SubBoolExpr num)]
-                 [arg (l 'arg num)])
+          (let* ([type (literal 'SubBoolExpr num)]
+                 [arg (literal 'arg num)])
             (list 'SubBoolExpr
                   #true
                   #false
@@ -296,50 +296,50 @@
                   ignore-spacing-check
                   type
                   type
-                  (adcr (tpl-use NBE-chunk type FT-chunk)
-                        arg)
-                  (mfc arg 'expr))))))
+                  (function-pmtr (ref (const (type-template NBE-chunk type FT-chunk)))
+                                 arg)
+                  (val-member-call arg 'expr))))))
 
 (define if-arg-Mask
   (list 'field
         (lambda (num value-type checked-value-type)
-          (let* ([type (tpl-use 'NeboMask 'Initial FT-chunk)]
-                 [arg (l 'arg num)])
+          (let* ([type (type-template 'NeboMask 'Initial FT-chunk)]
+                 [arg (literal 'arg num)])
             (list 'Mask
                   #true
                   #false
                   null
                   add-spacing-check
-                  (tpl-use 'NeboMask 'Initial (tpl-pmtr (scope (tpl-use 'NeboFieldCheck
-                                                                        (tpl-pmtr (scope FT-chunk ft-chunk))
-                                                                        FT-chunk)
-                                                               'Result)))
+                  (type-template 'NeboMask 'Initial (typename (scope (type-template 'NeboFieldCheck
+                                                                                    (typename (scope FT-chunk ft-chunk))
+                                                                                    FT-chunk)
+                                                                     'Result)))
                   type
-                  (adcr (tpl-use (scope 'structured 'SpatialMask)
-                                 FT-chunk)
-                        arg)
-                  (fc type arg))))))
+                  (function-pmtr (ref (const (type-template (scope 'structured 'SpatialMask)
+                                                            FT-chunk)))
+                                 arg)
+                  (val-call type arg))))))
 
 (define if-arg-SingleValue
   (list 'atomic-only
         (lambda (num value-type checked-value-type)
-          (let* ([type (tpl-use NCSVF-chunk 'Initial value-type)]
-                 [arg (l 'arg num)])
+          (let* ([type (type-template NCSVF-chunk 'Initial value-type)]
+                 [arg (literal 'arg num)])
             (list 'SingleValue
                   #false
                   #true
                   null
                   add-spacing-check
-                  (tpl-use NCSVF-chunk 'Initial value-type)
+                  (type-template NCSVF-chunk 'Initial value-type)
                   type
-                  (adcr (SVFT-def-with-T value-type) arg)
-                  (fc type arg))))))
+                  (function-pmtr (ref (const (SVFT-def-with-T value-type))) arg)
+                  (val-call type arg))))))
 
 (define if-arg-SubSingleValueExpr
   (list 'atomic-only
         (lambda (num value-type checked-value-type)
-          (let ([type (l 'SubExpr num)]
-                [arg (l 'arg num)])
+          (let ([type (literal 'SubExpr num)]
+                [arg (literal 'arg num)])
             (list 'SingleValueExpr
                   #false
                   #true
@@ -347,15 +347,15 @@
                   ignore-spacing-check
                   type
                   type
-                  (adcr (tpl-use NSVE-chunk type value-type)
-                        arg)
-                  (mfc arg 'expr))))))
+                  (function-pmtr (ref (const (type-template NSVE-chunk type value-type)))
+                                 arg)
+                  (val-member-call arg 'expr))))))
 
 (define if-arg-SubBoolSingleValueExpr
   (list 'atomic-only
         (lambda (num value-type checked-value-type)
-          (let ([type (l 'SubBoolExpr num)]
-                [arg (l 'arg num)])
+          (let ([type (literal 'SubBoolExpr num)]
+                [arg (literal 'arg num)])
             (list 'SubBoolSingleValueExpr
                   #false
                   #true
@@ -363,19 +363,19 @@
                   ignore-spacing-check
                   type
                   type
-                  (adcr (tpl-use NBSVE-chunk type value-type)
-                        arg)
-                  (mfc arg 'expr))))))
+                  (function-pmtr (ref (const (type-template NBSVE-chunk type value-type)))
+                                 arg)
+                  (val-member-call arg 'expr))))))
 
 (define (build-interface-case name
                               external-name
                               return-style
                               input-arg-info-lst)
   (let* ([prep-tpl-args (lambda (checks args)
-                         (flatten* (take args (- (length args)
-                                                1))
-                                   ((last checks)
-                                    (last args))))]
+                          (flatten* (take args (- (length args)
+                                                  1))
+                                    ((last checks)
+                                     (last args))))]
          [num-lst (let ([number (length input-arg-info-lst)])
                     (cond [(= 0 number) (error "Empty list of arguments to build-interface-case")]
                           [(= 1 number) (list "")]
@@ -402,9 +402,9 @@
                            [(equal? 'atomic-only style)
                             'T]
                            [else
-                            (tpl-pmtr (scope FT-chunk vt-chunk))])]
+                            (typename (scope FT-chunk vt-chunk))])]
          [checked-value-type (if (equal? 'T value-type)
-                                 (tpl-pmtr (scope SVFT-def-chunk vt-chunk))
+                                 (typename (scope SVFT-def-chunk vt-chunk))
                                  value-type)]
          [arg-info-lst (map (lambda (arg num) ((second arg)
                                                num
@@ -424,33 +424,33 @@
          [return-type (lambda (arg)
                         (cond [(and (equal? 'field style)
                                     (equal? 'scalar return-style))
-                               (tpl-use NE-chunk arg FT-chunk)]
+                               (type-template NE-chunk arg FT-chunk)]
                               [(and (equal? 'field style)
                                     (equal? 'boolean return-style))
-                               (tpl-use NBE-chunk arg FT-chunk)]
+                               (type-template NBE-chunk arg FT-chunk)]
                               [(and (equal? 'atomic-only style)
                                     (equal? 'scalar return-style))
-                               (tpl-use NSVE-chunk arg 'T)]
+                               (type-template NSVE-chunk arg 'T)]
                               [(and (equal? 'atomic-only style)
                                     (equal? 'boolean return-style))
-                               (tpl-use NBSVE-chunk arg 'T)]
+                               (type-template NBSVE-chunk arg 'T)]
                               [else
                                (error "Trying to build an operator that has an unclear return structure: " style return-style)]))]
          [construct-return-type (lambda (args)
-                                 (tpl-use name 'Initial (prep-tpl-args last-spacing args)))]
+                                  (type-template name 'Initial (prep-tpl-args last-spacing args)))]
          [result-type-type (construct-return-type (map sixth arg-info-lst))]
          [return-tpl-type (construct-return-type (map seventh arg-info-lst))]
          [parameter-lst (map eighth arg-info-lst)]
          [arg-use-lst (map ninth arg-info-lst)])
-    (d (c (add-between description-lst (scs 'X)))
-       (tpl-def (map tpl-pmtr (flatten* tpl-arg-lst include-tpl))
-                (r-fcn-def (fcn-dcl external-name
-                                    (return-type result-type-type)
-                                    parameter-lst)
-                           (list (typedef return-tpl-type 'ReturnType)
-                                 (typedef (return-type 'ReturnType)
-                                          'ReturnTerm))
-                           (fc 'ReturnTerm (fc 'ReturnType arg-use-lst)))))))
+    (described-smts (concat (add-between description-lst (spaces-around 'X)))
+                    (def-template (map typename (flatten* tpl-arg-lst include-tpl))
+                      (def-returning-function (dcl-function external-name
+                                                            (return-type result-type-type)
+                                                            parameter-lst)
+                        (list (typedef return-tpl-type 'ReturnType)
+                              (typedef (return-type 'ReturnType)
+                                       'ReturnTerm))
+                        (val-call 'ReturnTerm (val-call 'ReturnType arg-use-lst)))))))
 
 (define (build-binary-interface name
                                 external-name
@@ -467,110 +467,117 @@
                                     if-args)]
                                         ;This removes Scalar X Scalar or Boolean X Boolean
          [cross-products (rest (reverse raw-cross-products))])
-    (bb (map (lambda (args) (build-interface-case name
-                                                  external-name
-                                                  op-return-style
-                                                  args))
-             cross-products))))
+    (add-blank-lines (map (lambda (args) (build-interface-case name
+                                                               external-name
+                                                               op-return-style
+                                                               args))
+                          cross-products))))
 
 (define (build-unary-interface name
                                external-name
                                expression-term
                                if-args)
-  (bb (map (lambda (arg) (build-interface-case name
-                                               external-name
-                                               expression-term
-                                               (list arg)))
-           if-args)))
+  (add-blank-lines (map (lambda (arg) (build-interface-case name
+                                                            external-name
+                                                            expression-term
+                                                            (list arg)))
+                        if-args)))
 
 (define binary-expr-arg-lst (list if-arg-Scalar if-arg-Field if-arg-SubExpr if-arg-SingleValue if-arg-SubSingleValueExpr))
 (define unary-expr-arg-lst (list if-arg-Field if-arg-SubExpr if-arg-SingleValue if-arg-SubSingleValueExpr))
 (define binary-logical-expr-arg-lst (list if-arg-Boolean if-arg-SubBoolExpr if-arg-Mask))
 (define unary-logical-expr-arg-lst (list if-arg-SubBoolExpr if-arg-Mask))
 (define (build-binary-function name internal-name external-name)
-  (bl-smts (build-binary-function-struct name internal-name)
-           (build-binary-interface name external-name 'scalar binary-expr-arg-lst)))
+  (internal-smt-list blank-line
+                     (build-binary-function-struct name internal-name)
+                     (build-binary-interface name external-name 'scalar binary-expr-arg-lst)))
 (define (build-binary-operator name internal-name external-name)
-  (bl-smts (build-binary-operator-struct name internal-name)
-           (build-binary-interface name external-name 'scalar binary-expr-arg-lst)))
+  (internal-smt-list blank-line
+                     (build-binary-operator-struct name internal-name)
+                     (build-binary-interface name external-name 'scalar binary-expr-arg-lst)))
 (define (build-unary-function name internal-name external-name)
-  (bl-smts (build-unary-function-struct name internal-name)
-           (build-unary-interface name external-name 'scalar unary-expr-arg-lst)))
+  (internal-smt-list blank-line
+                     (build-unary-function-struct name internal-name)
+                     (build-unary-interface name external-name 'scalar unary-expr-arg-lst)))
 (define (build-comparison-operator name internal-name external-name)
-  (bl-smts (build-comparison-struct name internal-name)
-           (build-binary-interface name external-name 'boolean binary-expr-arg-lst)))
+  (internal-smt-list blank-line
+                     (build-comparison-struct name internal-name)
+                     (build-binary-interface name external-name 'boolean binary-expr-arg-lst)))
 (define (build-binary-logical-operator name internal-name external-name)
-  (bl-smts (build-logical-operator-struct name internal-name)
-           (build-binary-interface name external-name 'boolean binary-logical-expr-arg-lst)))
+  (internal-smt-list blank-line
+                     (build-logical-operator-struct name internal-name)
+                     (build-binary-interface name external-name 'boolean binary-logical-expr-arg-lst)))
 (define (build-unary-logical-function name internal-name external-name)
-  (bl-smts (build-unary-logical-function-struct name internal-name)
-           (build-unary-interface name external-name 'boolean unary-logical-expr-arg-lst)))
+  (internal-smt-list blank-line
+                     (build-unary-logical-function-struct name internal-name)
+                     (build-unary-interface name external-name 'boolean unary-logical-expr-arg-lst)))
 (define (build-unary-to-logical-function name internal-name external-name)
-  (bl-smts (build-unary-logical-function-struct name internal-name)
-           (build-unary-interface name external-name 'boolean unary-expr-arg-lst)))
+  (internal-smt-list blank-line
+                     (build-unary-logical-function-struct name internal-name)
+                     (build-unary-interface name external-name 'boolean unary-expr-arg-lst)))
 (define (build-extremum-function name comparison external-name)
-  (bl-smts (build-extremum-function-struct name comparison)
-           (build-binary-interface name external-name 'scalar binary-expr-arg-lst)))
+  (internal-smt-list blank-line
+                     (build-extremum-function-struct name comparison)
+                     (build-binary-interface name external-name 'scalar binary-expr-arg-lst)))
 
                                         ; beginnning of file
 (pp-header-file
  'NEBO_OPERATORS_H
- (n 'SpatialOps
-    (build-binary-operator 'SumOp '+ (bs 'operator '+))
-    (build-binary-operator 'DiffOp '- (bs 'operator '-))
-    (build-binary-operator 'ProdOp '* (bs 'operator '*))
-    (build-binary-operator 'DivOp '/ (bs 'operator '/))
-    (build-unary-function 'SinFcn
-                          (scope 'std 'sin)
-                          'sin)
-    (build-unary-function 'CosFcn
-                          (scope 'std 'cos)
-                          'cos)
-    (build-unary-function 'TanFcn
-                          (scope 'std 'tan)
-                          'tan)
-    (build-unary-function 'ExpFcn
-                          (scope 'std 'exp)
-                          'exp)
-    (build-unary-function 'TanhFcn
-                          (scope 'std 'tanh)
-                          'tanh)
-    (build-unary-function 'AbsFcn
-                          (scope 'std 'abs)
-                          'abs)
-    (build-unary-function 'NegFcn '- (bs 'operator '-))
-    (build-binary-function 'PowFcn
-                           (scope 'std 'pow)
-                           'pow)
-    (build-unary-function 'SqrtFcn
-                          (scope 'std 'sqrt)
-                          'sqrt)
-    (build-unary-function 'LogFcn
-                          (scope 'std 'log)
-                          'log)
-    (build-unary-function 'Log10Fcn
-                          (scope 'std 'log10)
-                          'log10)
-    (build-unary-function 'ErfFcn
-                          'erf;(scope 'std 'erf)
-                          'erf)
-    (build-unary-function 'ErfcFcn
-                          'erfc;(scope 'std 'erfc)
-                          'erfc)
-    (build-comparison-operator 'EqualCmp '== (bs 'operator '==))
-    (build-comparison-operator 'InequalCmp '!= (bs 'operator '!=))
-    (build-comparison-operator 'LessThanCmp '< (bs 'operator '<))
-    (build-comparison-operator 'LessThanEqualCmp '<= (bs 'operator '<=))
-    (build-comparison-operator 'GreaterThanCmp '> (bs 'operator '>))
-    (build-comparison-operator 'GreaterThanEqualCmp '>= (bs 'operator '>=))
-    (build-binary-logical-operator 'AndOp '&& (bs 'operator '&&))
-    (build-binary-logical-operator 'OrOp "||" (bs 'operator "||"))
-    (build-unary-logical-function 'NotOp '! (bs 'operator '!))
-    (build-extremum-function 'MaxFcn '> 'max)
-    (build-extremum-function 'MinFcn '< 'min)
+ (SpatialOps-namespace
+  (build-binary-operator 'SumOp '+ (add-spaces 'operator '+))
+  (build-binary-operator 'DiffOp '- (add-spaces 'operator '-))
+  (build-binary-operator 'ProdOp '* (add-spaces 'operator '*))
+  (build-binary-operator 'DivOp '/ (add-spaces 'operator '/))
+  (build-unary-function 'SinFcn
+                        (scope 'std 'sin)
+                        'sin)
+  (build-unary-function 'CosFcn
+                        (scope 'std 'cos)
+                        'cos)
+  (build-unary-function 'TanFcn
+                        (scope 'std 'tan)
+                        'tan)
+  (build-unary-function 'ExpFcn
+                        (scope 'std 'exp)
+                        'exp)
+  (build-unary-function 'TanhFcn
+                        (scope 'std 'tanh)
+                        'tanh)
+  (build-unary-function 'AbsFcn
+                        (scope 'std 'abs)
+                        'abs)
+  (build-unary-function 'NegFcn '- (add-spaces 'operator '-))
+  (build-binary-function 'PowFcn
+                         (scope 'std 'pow)
+                         'pow)
+  (build-unary-function 'SqrtFcn
+                        (scope 'std 'sqrt)
+                        'sqrt)
+  (build-unary-function 'LogFcn
+                        (scope 'std 'log)
+                        'log)
+  (build-unary-function 'Log10Fcn
+                        (scope 'std 'log10)
+                        'log10)
+  (build-unary-function 'ErfFcn
+                        'erf            ;(scope 'std 'erf)
+                        'erf)
+  (build-unary-function 'ErfcFcn
+                        'erfc           ;(scope 'std 'erfc)
+                        'erfc)
+  (build-comparison-operator 'EqualCmp '== (add-spaces 'operator '==))
+  (build-comparison-operator 'InequalCmp '!= (add-spaces 'operator '!=))
+  (build-comparison-operator 'LessThanCmp '< (add-spaces 'operator '<))
+  (build-comparison-operator 'LessThanEqualCmp '<= (add-spaces 'operator '<=))
+  (build-comparison-operator 'GreaterThanCmp '> (add-spaces 'operator '>))
+  (build-comparison-operator 'GreaterThanEqualCmp '>= (add-spaces 'operator '>=))
+  (build-binary-logical-operator 'AndOp '&& (add-spaces 'operator '&&))
+  (build-binary-logical-operator 'OrOp "||" (add-spaces 'operator "||"))
+  (build-unary-logical-function 'NotOp '! (add-spaces 'operator '!))
+  (build-extremum-function 'MaxFcn '> 'max)
+  (build-extremum-function 'MinFcn '< 'min)
                                         ; commented out isnan because nvcc has some weird problem with it
                                         ;   (build-unary-to-logical-function 'IsNanFcn
                                         ;                                    (scope 'std 'isnan)
                                         ;                                    'isnan)
-    )
- )
+  ))

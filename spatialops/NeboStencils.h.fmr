@@ -29,443 +29,443 @@
 
 (define (point-to-value dir on-gpu)
   (let ([value (if on-gpu 'value_gpu 'value)])
-    (fc (scope 'Point value) dir)))
+    (val-call (scope 'Point value) dir)))
 
 (define (eval-struct name on-gpu tpl-pmtrs tpl-args typedefs return-expr)
-  (let ([on-device (if on-gpu device-use identity)])
-    (s-tpl-srt-def name
-                   tpl-pmtrs
-                   tpl-args
-                   typedefs
-                   (on-device (r-fcn-def (s-fcn-dcl 'eval
-                                                    vt-chunk
-                                                    (list (adcr 'Arg 'arg)
-                                                          (adcr 'Coefs 'coefs)
-                                                          index-pmtr))
-                                         null
-                                         return-expr)))))
+  (let ([on-device (if on-gpu device-only identity)])
+    (stmt-def-template-struct name
+                              tpl-pmtrs
+                              tpl-args
+                              typedefs
+                              (on-device (def-returning-function (dcl-static-function 'eval
+                                                                                      vt-chunk
+                                                                                      (list (function-pmtr (ref (const 'Arg)) 'arg)
+                                                                                            (function-pmtr (ref (const 'Coefs)) 'coefs)
+                                                                                            index-pmtr))
+                                           null
+                                           return-expr)))))
 
 (define (general-eval-struct name on-gpu)
   (eval-struct name
                on-gpu
-               (tpl-pmtr 'PointCollection)
+               (typename 'PointCollection)
                null
-               (list (s-typedef (tpl-use NSCC (scope 'PointCollection 'length))
-                                'Coefs)
-                     (s-typedef (tpl-pmtr (scope 'PointCollection 'Point))
-                                'Point)
-                     (s-typedef (tpl-pmtr (scope 'PointCollection 'Collection))
-                                'Collection))
-               (n+ (fc (scope (tpl-use name 'Collection)
-                              'eval)
-                       'arg
-                       (mfc 'coefs 'others)
-                       index-arg)
-                   (n* (mfc 'arg
-                            'eval
-                            (n+ 'x (point-to-value "0" on-gpu))
-                            (n+ 'y (point-to-value "1" on-gpu))
-                            (n+ 'z (point-to-value "2" on-gpu)))
-                       (mfc 'coefs 'coef)))))
+               (list (stmt-typedef (type-template NSCC (scope 'PointCollection 'length))
+                                   'Coefs)
+                     (stmt-typedef (typename (scope 'PointCollection 'Point))
+                                   'Point)
+                     (stmt-typedef (typename (scope 'PointCollection 'Collection))
+                                   'Collection))
+               (val-add (val-call (scope (type-template name 'Collection)
+                                         'eval)
+                                  'arg
+                                  (val-member-call 'coefs 'others)
+                                  index-arg)
+                        (val-multiply (val-member-call 'arg
+                                                       'eval
+                                                       (val-add 'x (point-to-value 0 on-gpu))
+                                                       (val-add 'y (point-to-value 1 on-gpu))
+                                                       (val-add 'z (point-to-value 2 on-gpu)))
+                                      (val-member-call 'coefs 'coef)))))
 
 (define (single-eval-struct name on-gpu)
   (eval-struct name
                on-gpu
-               (tpl-pmtr 'Point)
-               (c (tpl-use NSPC 'Point Nil-chunk) s)
-               (s-typedef (tpl-use NSCC "1")
-                          'Coefs)
-               (n* (mfc 'arg
-                        'eval
-                        (n+ 'x (point-to-value "0" on-gpu))
-                        (n+ 'y (point-to-value "1" on-gpu))
-                        (n+ 'z (point-to-value "2" on-gpu)))
-                   (mfc 'coefs 'coef))))
+               (typename 'Point)
+               (space-after (type-template NSPC 'Point Nil-chunk))
+               (stmt-typedef (type-template NSCC 1)
+                             'Coefs)
+               (val-multiply (val-member-call 'arg
+                                              'eval
+                                              (val-add 'x (point-to-value 0 on-gpu))
+                                              (val-add 'y (point-to-value 1 on-gpu))
+                                              (val-add 'z (point-to-value 2 on-gpu)))
+                             (val-member-call 'coefs 'coef))))
 
 (define (sum-eval-struct name on-gpu tpl-pmtrs tpl-args typedefs return-expr)
-  (let ([on-device (if on-gpu device-use identity)])
-    (s-tpl-srt-def name
-                   tpl-pmtrs
-                   tpl-args
-                   typedefs
-                   (on-device (r-fcn-def (s-fcn-dcl 'eval
-                                                    vt-chunk
-                                                    (list (adcr 'Arg 'arg)
-                                                          index-pmtr))
-                                         null
-                                         return-expr)))))
+  (let ([on-device (if on-gpu device-only identity)])
+    (stmt-def-template-struct name
+                              tpl-pmtrs
+                              tpl-args
+                              typedefs
+                              (on-device (def-returning-function (dcl-static-function 'eval
+                                                                                      vt-chunk
+                                                                                      (list (function-pmtr (ref (const 'Arg)) 'arg)
+                                                                                            index-pmtr))
+                                           null
+                                           return-expr)))))
 
 (define (sum-general-eval-struct name on-gpu)
   (sum-eval-struct name
                    on-gpu
-                   (tpl-pmtr 'PointCollection)
+                   (typename 'PointCollection)
                    null
-                   (list (s-typedef (tpl-pmtr (scope 'PointCollection 'Point))
-                                    'Point)
-                         (s-typedef (tpl-pmtr (scope 'PointCollection 'Collection))
-                                    'Collection))
-                   (n+ (fc (scope (tpl-use name 'Collection)
-                                  'eval)
-                           'arg
-                           index-arg)
-                       (mfc 'arg
-                            'eval
-                            (n+ 'x (point-to-value "0" on-gpu))
-                            (n+ 'y (point-to-value "1" on-gpu))
-                            (n+ 'z (point-to-value "2" on-gpu))))))
+                   (list (stmt-typedef (typename (scope 'PointCollection 'Point))
+                                       'Point)
+                         (stmt-typedef (typename (scope 'PointCollection 'Collection))
+                                       'Collection))
+                   (val-add (val-call (scope (type-template name 'Collection)
+                                             'eval)
+                                      'arg
+                                      index-arg)
+                            (val-member-call 'arg
+                                             'eval
+                                             (val-add 'x (point-to-value 0 on-gpu))
+                                             (val-add 'y (point-to-value 1 on-gpu))
+                                             (val-add 'z (point-to-value 2 on-gpu))))))
 
 (define (sum-single-eval-struct name on-gpu)
   (sum-eval-struct name
                    on-gpu
-                   (tpl-pmtr 'Point)
-                   (c (tpl-use NSPC 'Point Nil-chunk) s)
+                   (typename 'Point)
+                   (space-after (type-template NSPC 'Point Nil-chunk))
                    null
-                   (mfc 'arg
-                        'eval
-                        (n+ 'x (point-to-value "0" on-gpu))
-                        (n+ 'y (point-to-value "1" on-gpu))
-                        (n+ 'z (point-to-value "2" on-gpu)))))
+                   (val-member-call 'arg
+                                    'eval
+                                    (val-add 'x (point-to-value 0 on-gpu))
+                                    (val-add 'y (point-to-value 1 on-gpu))
+                                    (val-add 'z (point-to-value 2 on-gpu)))))
 
                                         ; beginnning of file
 (pp-header-file
  'NEBO_STENCILS_H
- (n 'SpatialOps
-    (tpl-srt-def NSCC
-                 (bs 'int 'Length)
-                 null
-                 (pub-sec (constructor NSCC
-                                       (list (adcr (tpl-use NSCC (n- 'Length "1")) 'o)
-                                             (adc 'double 'c))
-                                       (list (cons-asgn 'others_ 'o)
-                                             (cons-asgn 'coef_ 'c))
-                                       null)
-                          (r-fcn-def (constize (fcn-dcl (bs 'operator (p))
-                                                        (tc (tpl-use NSCC (n+ 'Length "1")))
-                                                        (adc 'double 'c)))
-                                     null
-                                     (fc (tpl-use NSCC (n+ 'Length "1"))
-                                         '*this
-                                         'c))
-                          (host-device-use (r-fcn-def (constize (fcn-dcl 'coef 'double))
-                                                      null
-                                                      'coef_))
-                          (r-fcn-def (constize (fcn-dcl 'get_coef
-                                                        'double
-                                                        (adc 'int 'index)))
-                                     (list (nif (n< 'index "0")
-                                                (build-error '(Nebo Stencil Coefficient Collection)
-                                                             '(given negative value for coefficient index)))
-                                           (nif (n>= 'index 'Length)
-                                                (build-error '(Nebo Stencil Coefficient Collection)
-                                                             '(trying to access a coefficient that does not exist))))
-                                     (ter-cond (n== 'index (n- 'Length "1"))
-                                               (fc 'coef)
-                                               (mfc (fc 'others)
-                                                    'get_coef
-                                                    'index)))
-                          (host-device-use (r-fcn-def (constize (fcn-dcl 'others (tc (tpl-use NSCC (n- 'Length "1")))))
-                                                      null
-                                                      'others_)))
-                 (priv-sec (sadc (tpl-use NSCC (n- 'Length "1")) 'others_)
-                           (sadc 'double 'coef_)))
+ (SpatialOps-namespace
+  (def-template-struct NSCC
+    (add-spaces 'int 'Length)
+    null
+    (section-public (constructor NSCC
+                                 (list (function-pmtr (ref (const (type-template NSCC (val-subtract 'Length 1)))) 'o)
+                                       (function-pmtr (const 'double) 'c))
+                                 (list (val-construct 'others_ 'o)
+                                       (val-construct 'coef_ 'c))
+                                 null)
+                    (def-returning-function (constize (dcl-function (add-spaces 'operator (paren))
+                                                                    (const (type-template NSCC (val-add 'Length 1)))
+                                                                    (function-pmtr (const 'double) 'c)))
+                      null
+                      (val-call (type-template NSCC (val-add 'Length 1))
+                                '*this
+                                'c))
+                    (host-device (def-returning-function (constize (dcl-function 'coef 'double))
+                                   null
+                                   'coef_))
+                    (def-returning-function (constize (dcl-function 'get_coef
+                                                                    'double
+                                                                    (function-pmtr (const 'int) 'index)))
+                      (list (stmt-if (val-less-than 'index 0)
+                                     (build-error '(Nebo Stencil Coefficient Collection)
+                                                  '(given negative value for coefficient index)))
+                            (stmt-if (val-greater-equal 'index 'Length)
+                                     (build-error '(Nebo Stencil Coefficient Collection)
+                                                  '(trying to access a coefficient that does not exist))))
+                      (ter-cond (val-equal 'index (val-subtract 'Length 1))
+                                (val-call 'coef)
+                                (val-member-call (val-call 'others)
+                                                 'get_coef
+                                                 'index)))
+                    (host-device (def-returning-function (constize (dcl-function 'others (const (type-template NSCC (val-subtract 'Length 1)))))
+                                   null
+                                   'others_)))
+    (section-private (stmt-dcl-variable (const (type-template NSCC (val-subtract 'Length 1))) 'others_)
+                     (stmt-dcl-variable (const 'double) 'coef_)))
 
-    (tpl-srt-def NSCC
-                 null
-                 "1"
-                 (pub-sec (constructor NSCC
-                                       (adc 'double 'c)
-                                       (cons-asgn 'coef_ 'c)
-                                       null)
-                          (r-fcn-def (constize (fcn-dcl (bs 'operator (p))
-                                                        (tc (tpl-use NSCC "2"))
-                                                        (adc 'double 'c)))
-                                     null
-                                     (fc (tpl-use NSCC "2")
-                                         '*this
-                                         'c))
-                          (host-device-use (r-fcn-def (constize (fcn-dcl 'coef 'double))
-                                                      null
-                                                      'coef_))
-                          (r-fcn-def (constize (fcn-dcl 'get_coef
-                                                        'double
-                                                        (adc 'int 'index)))
-                                     (list (nif (n< 'index "0")
-                                                (build-error '(Nebo Stencil Coefficient Collection)
-                                                             '(given negative value for coefficient index)))
-                                           (nif (n> 'index "1")
-                                                (build-error '(Nebo Stencil Coefficient Collection)
-                                                             '(trying to access a coefficient that does not exist))))
-                                     (fc 'coef)))
-                 (priv-sec (sadc 'double 'coef_)))
+  (def-template-struct NSCC
+    null
+    1
+    (section-public (constructor NSCC
+                                 (function-pmtr (const 'double) 'c)
+                                 (val-construct 'coef_ 'c)
+                                 null)
+                    (def-returning-function (constize (dcl-function (add-spaces 'operator (paren))
+                                                                    (const (type-template NSCC 2))
+                                                                    (function-pmtr (const 'double) 'c)))
+                      null
+                      (val-call (type-template NSCC 2)
+                                '*this
+                                'c))
+                    (host-device (def-returning-function (constize (dcl-function 'coef 'double))
+                                   null
+                                   'coef_))
+                    (def-returning-function (constize (dcl-function 'get_coef
+                                                                    'double
+                                                                    (function-pmtr (const 'int) 'index)))
+                      (list (stmt-if (val-less-than 'index 0)
+                                     (build-error '(Nebo Stencil Coefficient Collection)
+                                                  '(given negative value for coefficient index)))
+                            (stmt-if (val-greater-than 'index 1)
+                                     (build-error '(Nebo Stencil Coefficient Collection)
+                                                  '(trying to access a coefficient that does not exist))))
+                      (val-call 'coef)))
+    (section-private (stmt-dcl-variable (const 'double) 'coef_)))
 
-    (r-fcn-def (fcn-dcl 'build_coef_collection
-                        (tc (tpl-use NSCC "1"))
-                        (adc 'double 'c))
-               null
-               (fc (tpl-use NSCC "1")
-                   'c))
+  (def-returning-function (dcl-function 'build_coef_collection
+                                        (const (type-template NSCC 1))
+                                        (function-pmtr (const 'double) 'c))
+    null
+    (val-call (type-template NSCC 1)
+              'c))
 
-    (r-fcn-def (fcn-dcl 'build_two_point_coef_collection
-                        (tc (tpl-use NSCC "2"))
-                        (adc 'double 'c1)
-                        (adc 'double 'c2))
-               null
-               (fc (fc (tpl-use NSCC "1")
-                       'c1)
-                   'c2))
+  (def-returning-function (dcl-function 'build_two_point_coef_collection
+                                        (const (type-template NSCC 2))
+                                        (function-pmtr (const 'double) 'c1)
+                                        (function-pmtr (const 'double) 'c2))
+    null
+    (val-call (val-call (type-template NSCC 1)
+                        'c1)
+              'c2))
 
-    (r-fcn-def (fcn-dcl 'build_four_point_coef_collection
-                        (tc (tpl-use NSCC "4"))
-                        (adc 'double 'c1)
-                        (adc 'double 'c2)
-                        (adc 'double 'c3)
-                        (adc 'double 'c4))
-               null
-               (fc (fc (fc (fc (tpl-use NSCC "1")
-                               'c1)
-                           'c2)
-                       'c3)
-                   'c4))
+  (def-returning-function (dcl-function 'build_four_point_coef_collection
+                                        (const (type-template NSCC 4))
+                                        (function-pmtr (const 'double) 'c1)
+                                        (function-pmtr (const 'double) 'c2)
+                                        (function-pmtr (const 'double) 'c3)
+                                        (function-pmtr (const 'double) 'c4))
+    null
+    (val-call (val-call (val-call (val-call (type-template NSCC 1)
+                                            'c1)
+                                  'c2)
+                        'c3)
+              'c4))
 
-    (tpl-srt-def NSPC
-                 (list (tpl-pmtr 'PointType)
-                       (tpl-pmtr 'CollectionType))
-                 null
-                 (pub-sec (s-typedef 'PointType 'Point)
-                          (s-typedef 'CollectionType 'Collection)
-                          (s-typedef (tpl-use NSPC 'Point 'Collection)
-                                     'MyType)
-                          (enum (n= 'length (n+ "1" (scope 'Collection 'length))))
-                          (s-tpl-srt-def 'AddPoint
-                                         (tpl-pmtr 'NewPoint)
-                                         null
-                                         (s-typedef (tpl-use NSPC 'NewPoint 'MyType)
-                                                    'Result))
-                          (r-fcn-def (s-fcn-dcl 'possible_ghosts GhostData ghost-pmtr)
-                                     null
-                                     (fc 'min (n- 'ghosts (fc 'point_to_ghost (fc (scope 'Point 'int_vec))))
-                                         (fc (scope 'Collection 'possible_ghosts)
-                                             'ghosts)))))
+  (def-template-struct NSPC
+    (list (typename 'PointType)
+          (typename 'CollectionType))
+    null
+    (section-public (stmt-typedef 'PointType 'Point)
+                    (stmt-typedef 'CollectionType 'Collection)
+                    (stmt-typedef (type-template NSPC 'Point 'Collection)
+                                  'MyType)
+                    (enum (val-assign 'length (val-add 1 (scope 'Collection 'length))))
+                    (stmt-def-template-struct 'AddPoint
+                                              (typename 'NewPoint)
+                                              null
+                                              (stmt-typedef (type-template NSPC 'NewPoint 'MyType)
+                                                            'Result))
+                    (def-returning-function (dcl-static-function 'possible_ghosts GhostData ghost-pmtr)
+                      null
+                      (val-call 'min (val-subtract 'ghosts (val-call 'point_to_ghost (val-call (scope 'Point 'int_vec))))
+                                (val-call (scope 'Collection 'possible_ghosts)
+                                          'ghosts)))))
 
-    (tpl-srt-def NSPC
-                 (tpl-pmtr 'PointType)
-                 (list 'PointType Nil-chunk)
-                 (pub-sec (s-typedef 'PointType 'Point)
-                          (s-typedef Nil-chunk 'Collection)
-                          (s-typedef (tpl-use NSPC 'Point 'Collection)
-                                     'MyType)
-                          (enum (n= 'length "1"))
-                          (s-tpl-srt-def 'AddPoint
-                                         (tpl-pmtr 'NewPoint)
-                                         null
-                                         (s-typedef (tpl-use NSPC 'NewPoint 'MyType)
-                                                    'Result))
-                          (r-fcn-def (s-fcn-dcl 'possible_ghosts GhostData ghost-pmtr)
-                                     null
-                                     (n- 'ghosts (fc 'point_to_ghost (fc (scope 'Point 'int_vec)))))))
+  (def-template-struct NSPC
+    (typename 'PointType)
+    (list 'PointType Nil-chunk)
+    (section-public (stmt-typedef 'PointType 'Point)
+                    (stmt-typedef Nil-chunk 'Collection)
+                    (stmt-typedef (type-template NSPC 'Point 'Collection)
+                                  'MyType)
+                    (enum (val-assign 'length 1))
+                    (stmt-def-template-struct 'AddPoint
+                                              (typename 'NewPoint)
+                                              null
+                                              (stmt-typedef (type-template NSPC 'NewPoint 'MyType)
+                                                            'Result))
+                    (def-returning-function (dcl-static-function 'possible_ghosts GhostData ghost-pmtr)
+                      null
+                      (val-subtract 'ghosts (val-call 'point_to_ghost (val-call (scope 'Point 'int_vec)))))))
 
-    (build-struct 'NeboStencil
-                  std-FT
-                  (list 'Pts 'Arg)
-                  null
-                  (bs-Initial-rhs (s-typedef (tpl-use NSCC (scope 'Pts 'length))
+  (build-struct 'NeboStencil
+                std-FT
+                (list 'Pts 'Arg)
+                null
+                (bs-Initial-rhs (stmt-typedef (type-template NSCC (scope 'Pts 'length))
+                                              'Coefs)
+                                (list (list 'Pts (typename (scope 'Arg 'SeqWalkType)))
+                                      (list 'Pts (typename (scope 'Arg 'ResizeType)))
+                                      (list 'Pts (typename (scope 'Arg 'GPUWalkType))))
+                                (bm-constructor (list (function-pmtr (ref (const 'Arg)) 'a)
+                                                      (function-pmtr (ref (const 'Coefs)) 'coefs))
+                                                (list (val-construct 'arg_ 'a)
+                                                      (val-construct 'coefs_ 'coefs))
+                                                null)
+                                (val-call (scope 'Pts 'possible_ghosts)
+                                          (val-member-call 'arg_ 'possible_ghosts))
+                                (val-call 'min
+                                          (val-member-call 'arg_ 'possible_ghosts)
+                                          (val-member-call 'arg_ 'minimum_ghosts))
+                                (val-member-call 'arg_ 'has_extent)
+                                null
+                                (val-member-call 'arg_ 'extent 'dir)
+                                (list (val-member-call 'arg_ 'init)
+                                      'coefs_)
+                                (list (val-member-call 'arg_ 'resize)
+                                      'coefs_)
+                                (val-member-call 'arg_ 'cpu_ready)
+                                (val-member-call 'arg_ 'gpu_ready DI-chunk)
+                                (list (val-member-call 'arg_ 'gpu_init DI-chunk)
+                                      'coefs_)
+                                (val-member-call 'arg_ 'gpu_prep DI-chunk)
+                                null
+                                (list (stmt-dcl-variable (const 'Arg) 'arg_)
+                                      (stmt-dcl-variable (const 'Coefs) 'coefs_)))
+                (bs-Resize-rhs (stmt-typedef (type-template NSCC (scope 'Pts 'length))
                                              'Coefs)
-                                  (list (list 'Pts (tpl-pmtr (scope 'Arg 'SeqWalkType)))
-                                        (list 'Pts (tpl-pmtr (scope 'Arg 'ResizeType)))
-                                        (list 'Pts (tpl-pmtr (scope 'Arg 'GPUWalkType))))
-                                  (bm-constructor (list (adcr 'Arg 'a)
-                                                        (adcr 'Coefs 'coefs))
-                                                  (list (cons-asgn 'arg_ 'a)
-                                                        (cons-asgn 'coefs_ 'coefs))
-                                                  null)
-                                  (fc (scope 'Pts 'possible_ghosts)
-                                      (mfc 'arg_ 'possible_ghosts))
-                                  (fc 'min
-                                      (mfc 'arg_ 'possible_ghosts)
-                                      (mfc 'arg_ 'minimum_ghosts))
-                                  (mfc 'arg_ 'has_extent)
-                                  null
-                                  (mfc 'arg_ 'extent 'dir)
-                                  (list (mfc 'arg_ 'init)
-                                        'coefs_)
-                                  (list (mfc 'arg_ 'resize)
-                                        'coefs_)
-                                  (mfc 'arg_ 'cpu_ready)
-                                  (mfc 'arg_ 'gpu_ready DI-chunk)
-                                  (list (mfc 'arg_ 'gpu_init DI-chunk)
-                                        'coefs_)
-                                  (mfc 'arg_ 'gpu_prep DI-chunk)
-                                  null
-                                  (list (sadc 'Arg 'arg_)
-                                        (sadc 'Coefs 'coefs_)))
-                  (bs-Resize-rhs (s-typedef (tpl-use NSCC (scope 'Pts 'length))
-                                            'Coefs)
-                                 (list 'Pts (tpl-pmtr (scope 'Arg 'SeqWalkType)))
-                                 (bm-constructor (list (adcr 'Arg 'arg)
-                                                       (adcr 'Coefs 'coefs))
-                                                 (list (cons-asgn 'arg_ 'arg)
-                                                       (cons-asgn 'coefs_ 'coefs))
-                                                 null)
-                                 (list (mfc 'arg_ 'init)
-                                       'coefs_)
-                                 null
-                                 (list (sadc 'Arg 'arg_)
-                                       (sadc 'Coefs 'coefs_)))
-                  (bs-SeqWalk-rhs (list (s-typedef (tpl-use NSCC (scope 'Pts 'length))
-                                                   'Coefs)
-                                        (general-eval-struct 'EvalExpr #false)
-                                        (single-eval-struct 'EvalExpr #false))
-                                  (bm-constructor (list (adcr 'Arg 'arg)
-                                                        (adcr 'Coefs 'coefs))
-                                                  (list (cons-asgn 'arg_ 'arg)
-                                                        (cons-asgn 'coefs_ 'coefs))
-                                                  null)
-                                  vt-chunk
-                                  (fc (scope (tpl-use 'EvalExpr 'Pts)
+                               (list 'Pts (typename (scope 'Arg 'SeqWalkType)))
+                               (bm-constructor (list (function-pmtr (ref (const 'Arg)) 'arg)
+                                                     (function-pmtr (ref (const 'Coefs)) 'coefs))
+                                               (list (val-construct 'arg_ 'arg)
+                                                     (val-construct 'coefs_ 'coefs))
+                                               null)
+                               (list (val-member-call 'arg_ 'init)
+                                     'coefs_)
+                               null
+                               (list (stmt-dcl-variable (const 'Arg) 'arg_)
+                                     (stmt-dcl-variable (const 'Coefs) 'coefs_)))
+                (bs-SeqWalk-rhs (list (stmt-typedef (type-template NSCC (scope 'Pts 'length))
+                                                    'Coefs)
+                                      (general-eval-struct 'EvalExpr #false)
+                                      (single-eval-struct 'EvalExpr #false))
+                                (bm-constructor (list (function-pmtr (ref (const 'Arg)) 'arg)
+                                                      (function-pmtr (ref (const 'Coefs)) 'coefs))
+                                                (list (val-construct 'arg_ 'arg)
+                                                      (val-construct 'coefs_ 'coefs))
+                                                null)
+                                vt-chunk
+                                (val-call (scope (type-template 'EvalExpr 'Pts)
+                                                 'eval)
+                                          'arg_
+                                          'coefs_
+                                          index-arg)
+                                null
+                                (list (stmt-dcl-variable 'Arg 'arg_)
+                                      (stmt-dcl-variable (const 'Coefs) 'coefs_)))
+                (bs-gpu-rhs (list (stmt-typedef (type-template NSCC (scope 'Pts 'length))
+                                                'Coefs)
+                                  (general-eval-struct 'EvalExpr #true)
+                                  (single-eval-struct 'EvalExpr #true))
+                            (bm-constructor (list (function-pmtr (ref (const 'Arg)) 'a)
+                                                  (function-pmtr (ref (const 'Coefs)) 'coefs))
+                                            (list (val-construct 'arg_ 'a)
+                                                  (val-construct 'coefs_ 'coefs))
+                                            null)
+                            vt-chunk
+                            (val-call (scope (type-template 'EvalExpr 'Pts)
                                              'eval)
                                       'arg_
                                       'coefs_
                                       index-arg)
-                                  null
-                                  (list (sad 'Arg 'arg_)
-                                        (sadc 'Coefs 'coefs_)))
-                  (bs-gpu-rhs (list (s-typedef (tpl-use NSCC (scope 'Pts 'length))
-                                               'Coefs)
-                                    (general-eval-struct 'EvalExpr #true)
-                                    (single-eval-struct 'EvalExpr #true))
-                              (bm-constructor (list (adcr 'Arg 'a)
-                                                    (adcr 'Coefs 'coefs))
-                                              (list (cons-asgn 'arg_ 'a)
-                                                    (cons-asgn 'coefs_ 'coefs))
-                                              null)
-                              vt-chunk
-                              (fc (scope (tpl-use 'EvalExpr 'Pts)
-                                             'eval)
-                                      'arg_
-                                      'coefs_
-                                      index-arg)
-                              null
-                              (list (sad 'Arg 'arg_)
-                                    (sadc 'Coefs 'coefs_))))
+                            null
+                            (list (stmt-dcl-variable 'Arg 'arg_)
+                                  (stmt-dcl-variable (const 'Coefs) 'coefs_))))
 
-    (build-struct 'NeboSumStencil
-                  std-FT
-                  (list 'Pts 'Arg)
-                  null
-                  (bs-Initial-rhs null
-                                  (list (list 'Pts (tpl-pmtr (scope 'Arg 'SeqWalkType)))
-                                        (list 'Pts (tpl-pmtr (scope 'Arg 'ResizeType)))
-                                        (list 'Pts (tpl-pmtr (scope 'Arg 'GPUWalkType))))
-                                  (bm-constructor (adcr 'Arg 'a)
-                                                  (cons-asgn 'arg_ 'a)
-                                                  null)
-                                  (fc (scope 'Pts 'possible_ghosts)
-                                      (mfc 'arg_ 'possible_ghosts))
-                                  (fc 'min
-                                      (mfc 'arg_ 'possible_ghosts)
-                                      (mfc 'arg_ 'minimum_ghosts))
-                                  (mfc 'arg_ 'has_extent)
-                                  null
-                                  (mfc 'arg_ 'extent 'dir)
-                                  (mfc 'arg_ 'init)
-                                  (mfc 'arg_ 'resize)
-                                  (mfc 'arg_ 'cpu_ready)
-                                  (mfc 'arg_ 'gpu_ready DI-chunk)
-                                  (mfc 'arg_ 'gpu_init DI-chunk)
-                                  (mfc 'arg_ 'gpu_prep DI-chunk)
-                                  null
-                                  (sadc 'Arg 'arg_))
-                  (bs-Resize-rhs null
-                                 (list 'Pts (tpl-pmtr (scope 'Arg 'SeqWalkType)))
-                                 (bm-constructor (adcr 'Arg 'arg)
-                                                 (cons-asgn 'arg_ 'arg)
-                                                 null)
-                                 (mfc 'arg_ 'init)
-                                 null
-                                 (sadc 'Arg 'arg_))
-                  (bs-SeqWalk-rhs (list (sum-general-eval-struct 'EvalExpr #false)
-                                        (sum-single-eval-struct 'EvalExpr #false))
-                                  (bm-constructor (adcr 'Arg 'arg)
-                                                  (cons-asgn 'arg_ 'arg)
-                                                  null)
-                                  vt-chunk
-                                  (fc (scope (tpl-use 'EvalExpr 'Pts)
+  (build-struct 'NeboSumStencil
+                std-FT
+                (list 'Pts 'Arg)
+                null
+                (bs-Initial-rhs null
+                                (list (list 'Pts (typename (scope 'Arg 'SeqWalkType)))
+                                      (list 'Pts (typename (scope 'Arg 'ResizeType)))
+                                      (list 'Pts (typename (scope 'Arg 'GPUWalkType))))
+                                (bm-constructor (function-pmtr (ref (const 'Arg)) 'a)
+                                                (val-construct 'arg_ 'a)
+                                                null)
+                                (val-call (scope 'Pts 'possible_ghosts)
+                                          (val-member-call 'arg_ 'possible_ghosts))
+                                (val-call 'min
+                                          (val-member-call 'arg_ 'possible_ghosts)
+                                          (val-member-call 'arg_ 'minimum_ghosts))
+                                (val-member-call 'arg_ 'has_extent)
+                                null
+                                (val-member-call 'arg_ 'extent 'dir)
+                                (val-member-call 'arg_ 'init)
+                                (val-member-call 'arg_ 'resize)
+                                (val-member-call 'arg_ 'cpu_ready)
+                                (val-member-call 'arg_ 'gpu_ready DI-chunk)
+                                (val-member-call 'arg_ 'gpu_init DI-chunk)
+                                (val-member-call 'arg_ 'gpu_prep DI-chunk)
+                                null
+                                (stmt-dcl-variable (const 'Arg) 'arg_))
+                (bs-Resize-rhs null
+                               (list 'Pts (typename (scope 'Arg 'SeqWalkType)))
+                               (bm-constructor (function-pmtr (ref (const 'Arg)) 'arg)
+                                               (val-construct 'arg_ 'arg)
+                                               null)
+                               (val-member-call 'arg_ 'init)
+                               null
+                               (stmt-dcl-variable (const 'Arg) 'arg_))
+                (bs-SeqWalk-rhs (list (sum-general-eval-struct 'EvalExpr #false)
+                                      (sum-single-eval-struct 'EvalExpr #false))
+                                (bm-constructor (function-pmtr (ref (const 'Arg)) 'arg)
+                                                (val-construct 'arg_ 'arg)
+                                                null)
+                                vt-chunk
+                                (val-call (scope (type-template 'EvalExpr 'Pts)
+                                                 'eval)
+                                          'arg_
+                                          index-arg)
+                                null
+                                (stmt-dcl-variable 'Arg 'arg_))
+                (bs-gpu-rhs (list (sum-general-eval-struct 'EvalExpr #true)
+                                  (sum-single-eval-struct 'EvalExpr #true))
+                            (bm-constructor (function-pmtr (ref (const 'Arg)) 'a)
+                                            (val-construct 'arg_ 'a)
+                                            null)
+                            vt-chunk
+                            (val-call (scope (type-template 'EvalExpr 'Pts)
                                              'eval)
                                       'arg_
                                       index-arg)
-                                  null
-                                  (sad 'Arg 'arg_))
-                  (bs-gpu-rhs (list (sum-general-eval-struct 'EvalExpr #true)
-                                    (sum-single-eval-struct 'EvalExpr #true))
-                              (bm-constructor (adcr 'Arg 'a)
-                                              (cons-asgn 'arg_ 'a)
-                                              null)
-                              vt-chunk
-                              (fc (scope (tpl-use 'EvalExpr 'Pts)
-                                         'eval)
-                                  'arg_
-                                  index-arg)
-                              null
-                              (sad 'Arg 'arg_)))
+                            null
+                            (stmt-dcl-variable 'Arg 'arg_)))
 
-    (tpl-def (tpl-pmtr 'Point)
-             (r-fcn-def (s-fcn-dcl 'point_possible_ghosts GhostData ghost-pmtr)
-                        null
-                        (n- 'ghosts (fc 'point_to_ghost (fc (scope 'Point 'int_vec))))))
+  (def-template (typename 'Point)
+    (def-returning-function (dcl-static-function 'point_possible_ghosts GhostData ghost-pmtr)
+      null
+      (val-subtract 'ghosts (val-call 'point_to_ghost (val-call (scope 'Point 'int_vec))))))
 
-    (build-struct 'NeboMaskShift
-                  std-FT
-                  (list 'Point 'Arg)
-                  null
-                  (bs-Initial-rhs (list (s-typedef (tpl-pmtr (scope 'Arg 'SeqWalkType))
-                                                   'ArgSeqWalkType)
-                                        (gpu-only (s-typedef (tpl-pmtr (scope 'Arg 'GPUWalkType))
-                                                             'ArgGPUWalkType)))
-                                  (list (list 'Point 'ArgSeqWalkType)
-                                        (list 'Point (tpl-pmtr (scope 'Arg 'ResizeType)))
-                                        (list 'Point 'ArgGPUWalkType))
-                                  (bm-constructor (adcr 'Arg 'a)
-                                                  (cons-asgn 'arg_ 'a)
-                                                  null)
-                                  (fc (tpl-use 'point_possible_ghosts 'Point)
-                                      (mfc 'arg_ 'possible_ghosts))
-                                  (fc 'min
-                                      (mfc 'arg_ 'possible_ghosts)
-                                      (mfc 'arg_ 'minimum_ghosts))
-                                  (mfc 'arg_ 'has_extent)
-                                  null
-                                  (mfc 'arg_ 'extent 'dir)
-                                  (mfc 'arg_ 'init)
-                                  (mfc 'arg_ 'resize)
-                                  (mfc 'arg_ 'cpu_ready)
-                                  (mfc 'arg_ 'gpu_ready DI-chunk)
-                                  (mfc 'arg_ 'gpu_init DI-chunk)
-                                  (mfc 'arg_ 'gpu_prep DI-chunk)
-                                  null
-                                  (sadc 'Arg 'arg_))
-                  (bs-Resize-rhs (s-typedef (tpl-pmtr (scope 'Arg 'SeqWalkType))
-                                            'ArgSeqWalkType)
-                                 (list 'Point 'ArgSeqWalkType)
-                                 (bm-constructor (adcr 'Arg 'arg)
-                                                 (cons-asgn 'arg_ 'arg)
-                                                 null)
-                                 (mfc 'arg_ 'init)
-                                 null
-                                 (sadc 'Arg 'arg_))
-                  (bs-SeqWalk-rhs null
-                                  (bm-constructor (adcr 'Arg 'arg)
-                                                  (cons-asgn 'arg_ 'arg)
-                                                  null)
-                                  'bool
-                                  (mfc 'arg_ 'eval index-arg)
-                                  null
-                                  (sad 'Arg 'arg_))
-                  (bs-gpu-rhs null
-                              (bm-constructor (adcr 'Arg 'a)
-                                              (cons-asgn 'arg_ 'a)
-                                              null)
-                              'bool
-                              (mfc 'arg_ 'eval index-arg)
-                              null
-                              (sad 'Arg 'arg_)))
-    ))
+  (build-struct 'NeboMaskShift
+                std-FT
+                (list 'Point 'Arg)
+                null
+                (bs-Initial-rhs (list (stmt-typedef (typename (scope 'Arg 'SeqWalkType))
+                                                    'ArgSeqWalkType)
+                                      (pp-gpu-only (stmt-typedef (typename (scope 'Arg 'GPUWalkType))
+                                                                 'ArgGPUWalkType)))
+                                (list (list 'Point 'ArgSeqWalkType)
+                                      (list 'Point (typename (scope 'Arg 'ResizeType)))
+                                      (list 'Point 'ArgGPUWalkType))
+                                (bm-constructor (function-pmtr (ref (const 'Arg)) 'a)
+                                                (val-construct 'arg_ 'a)
+                                                null)
+                                (val-call (type-template 'point_possible_ghosts 'Point)
+                                          (val-member-call 'arg_ 'possible_ghosts))
+                                (val-call 'min
+                                          (val-member-call 'arg_ 'possible_ghosts)
+                                          (val-member-call 'arg_ 'minimum_ghosts))
+                                (val-member-call 'arg_ 'has_extent)
+                                null
+                                (val-member-call 'arg_ 'extent 'dir)
+                                (val-member-call 'arg_ 'init)
+                                (val-member-call 'arg_ 'resize)
+                                (val-member-call 'arg_ 'cpu_ready)
+                                (val-member-call 'arg_ 'gpu_ready DI-chunk)
+                                (val-member-call 'arg_ 'gpu_init DI-chunk)
+                                (val-member-call 'arg_ 'gpu_prep DI-chunk)
+                                null
+                                (stmt-dcl-variable (const 'Arg) 'arg_))
+                (bs-Resize-rhs (stmt-typedef (typename (scope 'Arg 'SeqWalkType))
+                                             'ArgSeqWalkType)
+                               (list 'Point 'ArgSeqWalkType)
+                               (bm-constructor (function-pmtr (ref (const 'Arg)) 'arg)
+                                               (val-construct 'arg_ 'arg)
+                                               null)
+                               (val-member-call 'arg_ 'init)
+                               null
+                               (stmt-dcl-variable (const 'Arg) 'arg_))
+                (bs-SeqWalk-rhs null
+                                (bm-constructor (function-pmtr (ref (const 'Arg)) 'arg)
+                                                (val-construct 'arg_ 'arg)
+                                                null)
+                                'bool
+                                (val-member-call 'arg_ 'eval index-arg)
+                                null
+                                (stmt-dcl-variable 'Arg 'arg_))
+                (bs-gpu-rhs null
+                            (bm-constructor (function-pmtr (ref (const 'Arg)) 'a)
+                                            (val-construct 'arg_ 'a)
+                                            null)
+                            'bool
+                            (val-member-call 'arg_ 'eval index-arg)
+                            null
+                            (stmt-dcl-variable 'Arg 'arg_)))
+  ))

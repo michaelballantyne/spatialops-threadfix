@@ -51,17 +51,17 @@
                                      (fcn backend)))]
            [report-start (report report-backend-start)]
            [report-finish (report report-backend-finish)])
-      (tpl-def (tpl-pmtr 'RhsType)
-               (v-fcn-def name
-                          (list (ad 'RhsType 'rhs)
-                                low-high-pmtr)
-                          report-start
-                          body
-                          report-finish))))
+      (def-template (typename 'RhsType)
+        (def-void-function name
+          (list (function-pmtr 'RhsType 'rhs)
+                low-high-pmtr)
+          report-start
+          body
+          report-finish))))
   (define (assign-call name)
-    (fc (tpl-use name 'RhsType)
-        'rhs
-        low-high-arg))
+    (val-call (type-template name 'RhsType)
+              'rhs
+              low-high-arg))
   (define (assign-error standard message)
     (build-error (list 'Nebo 'Assignment)
                  (list '(Left-hand side of assignment allocated on)
@@ -76,78 +76,78 @@
                          typedefs
                          tpl-irreg-args
                          constructor
-                         (list (tpl-def (tpl-pmtr 'RhsType)
-                                        (v-fcn-def 'assign
-                                                   (list (adc 'bool 'useGhost)
-                                                         (ad 'RhsType 'rhs))
-                                                   (mfc 'field_ 'reset_valid_ghosts (fc 'calculate_actual_ghost
-                                                                                        'useGhost
-                                                                                        (mfc 'field_ 'get_ghost_data)
-                                                                                        (mfc 'field_ 'boundary_info)
-                                                                                        (mfc 'rhs 'possible_ghosts)))
-                                                   (nt= GhostData 'extents (fc 'calculate_limits
-                                                                               'useGhost
-                                                                               (mfc 'field_ 'window_with_ghost)
-                                                                               (mfc 'field_ 'get_valid_ghost_data)
-                                                                               (mfc 'field_ 'get_ghost_data)
-                                                                               (mfc 'field_ 'boundary_info)
-                                                                               (mfc 'rhs 'possible_ghosts)))
-                                                   (nt=c 'int 'xLow (bs '- (mfc 'extents 'get_minus "0")))
-                                                   (nt=c 'int 'xHigh (mfc 'extents 'get_plus "0"))
-                                                   (nt=c 'int 'yLow (bs '- (mfc 'extents 'get_minus "1")))
-                                                   (nt=c 'int 'yHigh (mfc 'extents 'get_plus "1"))
-                                                   (nt=c 'int 'zLow (bs '- (mfc 'extents 'get_minus "2")))
-                                                   (nt=c 'int 'zHigh (mfc 'extents 'get_plus "2"))
-                                                   (gpu-or (gpu-test-or (assign-call 'gpu_test_assign)
-                                                                        (nifelse (fc 'gpu_ready)
-                                                                                 (nifelse (mfc 'rhs 'gpu_ready (fc 'gpu_device_index))
+                         (list (def-template (typename 'RhsType)
+                                 (def-void-function 'assign
+                                   (list (function-pmtr (const 'bool) 'useGhost)
+                                         (function-pmtr 'RhsType 'rhs))
+                                   (val-member-call 'field_ 'reset_valid_ghosts (val-call 'calculate_actual_ghost
+                                                                                          'useGhost
+                                                                                          (val-member-call 'field_ 'get_ghost_data)
+                                                                                          (val-member-call 'field_ 'boundary_info)
+                                                                                          (val-member-call 'rhs 'possible_ghosts)))
+                                   (val-typed-assign GhostData 'extents (val-call 'calculate_limits
+                                                                                  'useGhost
+                                                                                  (val-member-call 'field_ 'window_with_ghost)
+                                                                                  (val-member-call 'field_ 'get_valid_ghost_data)
+                                                                                  (val-member-call 'field_ 'get_ghost_data)
+                                                                                  (val-member-call 'field_ 'boundary_info)
+                                                                                  (val-member-call 'rhs 'possible_ghosts)))
+                                   (val-typed-const-assign 'int 'xLow (add-spaces '- (val-member-call 'extents 'get_minus 0)))
+                                   (val-typed-const-assign 'int 'xHigh (val-member-call 'extents 'get_plus 0))
+                                   (val-typed-const-assign 'int 'yLow (add-spaces '- (val-member-call 'extents 'get_minus 1)))
+                                   (val-typed-const-assign 'int 'yHigh (val-member-call 'extents 'get_plus 1))
+                                   (val-typed-const-assign 'int 'zLow (add-spaces '- (val-member-call 'extents 'get_minus 2)))
+                                   (val-typed-const-assign 'int 'zHigh (val-member-call 'extents 'get_plus 2))
+                                   (pp-gpu-or (pp-gpu-test-or (assign-call 'gpu_test_assign)
+                                                              (stmt-if-else (val-call 'gpu_ready)
+                                                                            (stmt-if-else (val-member-call 'rhs 'gpu_ready (val-call 'gpu_device_index))
                                                                                           (assign-call 'gpu_assign)
                                                                                           (assign-error #true 'GPU))
-                                                                                 (nifelse (fc 'cpu_ready)
-                                                                                          (nifelse (mfc 'rhs 'cpu_ready)
-                                                                                                   (assign-call 'cpu_assign)
-                                                                                                   (assign-error #true 'CPU))
+                                                                            (stmt-if-else (val-call 'cpu_ready)
+                                                                                          (stmt-if-else (val-member-call 'rhs 'cpu_ready)
+                                                                                                        (assign-call 'cpu_assign)
+                                                                                                        (assign-error #true 'CPU))
                                                                                           (assign-error #false (cout-break 'unknown '(device - not on CPU or GPU))))))
-                                                           (assign-call 'cpu_assign))))
+                                              (assign-call 'cpu_assign))))
                                publics)
                          (list (assign 'cpu_assign
-                                       (threads-or (nifelse (fc 'is_thread_parallel)
-                                                            (assign-call 'thread_parallel_assign)
-                                                            (assign-call 'sequential_assign))
-                                                   (assign-call 'sequential_assign)))
+                                       (pp-threads-or (stmt-if-else (val-call 'is_thread_parallel)
+                                                                    (assign-call 'thread_parallel_assign)
+                                                                    (assign-call 'sequential_assign))
+                                                      (assign-call 'sequential_assign)))
                                (assign 'sequential_assign sequential-assign-body 'sequential)
-                               (r-fcn-def (fcn-dcl 'init 'SeqWalkType)
-                                          null
-                                          (fc 'SeqWalkType SW-cons-args))
-                               (threads-only (bb (assign 'thread_parallel_assign
-                                                         (list (bs 'Semaphore
-                                                                   (fc 'semaphore "0"))
-                                                               (nt=c 'int 'thread_count (mfc 'field_ 'get_partition_count))
-                                                               thread-parallel-assign-body
-                                                               (nfor (nt= 'int 'ii "0")
-                                                                     (n< 'ii 'max)
-                                                                     (n++ 'ii)
-                                                                     (mfc 'semaphore 'wait)))
-                                                         (bs 'thread 'parallel))
-                                                 (r-fcn-def (fcn-dcl 'resize 'ResizeType)
-                                                            null
-                                                            (fc 'ResizeType RS-cons-args))))
-                               (gpu-only (bb (assign 'gpu_assign gpu-assign-body 'CUDA)
-                                             (r-fcn-def (constize (fcn-dcl 'cpu_ready 'bool))
-                                                        null
-                                                        cpu-ready-body)
-                                             (r-fcn-def (constize (fcn-dcl 'gpu_ready 'bool))
-                                                        null
-                                                        gpu-ready-body)
-                                             (r-fcn-def (constize (fcn-dcl 'gpu_device_index 'int))
-                                                        null
-                                                        gpu-device-index-body)
-                                             (r-fcn-def (fcn-dcl 'gpu_init 'GPUWalkType)
-                                                        null
-                                                        (fc 'GPUWalkType gpu-cons-args))
-                                             (gpu-test-only (assign 'gpu_test_assign
-                                                                    gpu-test-assign-body
-                                                                    (bs 'CUDA 'with 'Nebo 'copying)))))
+                               (def-returning-function (dcl-function 'init 'SeqWalkType)
+                                 null
+                                 (val-call 'SeqWalkType SW-cons-args))
+                               (pp-threads-only (add-blank-lines (assign 'thread_parallel_assign
+                                                                         (list (add-spaces 'Semaphore
+                                                                                           (val-call 'semaphore 0))
+                                                                               (val-typed-const-assign 'int 'thread_count (val-member-call 'field_ 'get_partition_count))
+                                                                               thread-parallel-assign-body
+                                                                               (stmt-for (val-typed-assign 'int 'ii 0)
+                                                                                         (val-less-than 'ii 'max)
+                                                                                         (val-increment 'ii)
+                                                                                         (val-member-call 'semaphore 'wait)))
+                                                                         (add-spaces 'thread 'parallel))
+                                                                 (def-returning-function (dcl-function 'resize 'ResizeType)
+                                                                   null
+                                                                   (val-call 'ResizeType RS-cons-args))))
+                               (pp-gpu-only (add-blank-lines (assign 'gpu_assign gpu-assign-body 'CUDA)
+                                                             (def-returning-function (constize (dcl-function 'cpu_ready 'bool))
+                                                               null
+                                                               cpu-ready-body)
+                                                             (def-returning-function (constize (dcl-function 'gpu_ready 'bool))
+                                                               null
+                                                               gpu-ready-body)
+                                                             (def-returning-function (constize (dcl-function 'gpu_device_index 'int))
+                                                               null
+                                                               gpu-device-index-body)
+                                                             (def-returning-function (dcl-function 'gpu_init 'GPUWalkType)
+                                                               null
+                                                               (val-call 'GPUWalkType gpu-cons-args))
+                                                             (pp-gpu-test-only (assign 'gpu_test_assign
+                                                                                       gpu-test-assign-body
+                                                                                       (add-spaces 'CUDA 'with 'Nebo 'copying)))))
                                privates)))
 (define bs-Initial-lhs (arg-swap build-Initial-lhs 15 4 "bs-Initial-lhs"))
 (define (build-Resize-lhs name
@@ -168,19 +168,19 @@
                         typedefs
                         tpl-irreg-args
                         constructor
-                        (list (threads-only
-                               (tpl-def (tpl-pmtr 'RhsType)
-                                        (v-fcn-def 'assign
-                                                   (list (adcr 'RhsType 'rhs)
-                                                         low-high-pmtr
-                                                         (adp 'Semaphore 'semaphore))
-                                                   (list assign-body
-                                                         (fc (c 'semaphore '-> 'post))))))
+                        (list (pp-threads-only
+                               (def-template (typename 'RhsType)
+                                 (def-void-function 'assign
+                                   (list (function-pmtr (ref (const 'RhsType)) 'rhs)
+                                         low-high-pmtr
+                                         (function-pmtr (ptr 'Semaphore) 'semaphore))
+                                   (list assign-body
+                                         (val-call (concat 'semaphore '-> 'post))))))
                               publics)
-                        (list (r-fcn-def (fcn-dcl 'init
-                                                  'SeqWalkType)
-                                         null
-                                         (fc 'SeqWalkType SW-cons-args))
+                        (list (def-returning-function (dcl-function 'init
+                                                                    'SeqWalkType)
+                                null
+                                (val-call 'SeqWalkType SW-cons-args))
                               privates)))
 (define bs-Resize-lhs (arg-swap build-Resize-lhs 7 4 "bs-Resize-lhs"))
 (define (build-SeqWalk-lhs name
@@ -199,17 +199,17 @@
                          tpl-reg-pars
                          typedefs
                          constructor
-                         (list (tpl-def (tpl-pmtr 'RhsType)
-                                        (v-fcn-def 'assign
-                                                   (list (ad 'RhsType 'rhs)
-                                                         low-high-pmtr)
-                                                   assign-body))
+                         (list (def-template (typename 'RhsType)
+                                 (def-void-function 'assign
+                                   (list (function-pmtr 'RhsType 'rhs)
+                                         low-high-pmtr)
+                                   assign-body))
                                publics)
-                         (list (r-fcn-def (fcn-dcl 'ref
-                                                   (ref vt-chunk)
-                                                   index-pmtr)
-                                          null
-                                          ref-result)
+                         (list (def-returning-function (dcl-function 'ref
+                                                                     (ref vt-chunk)
+                                                                     index-pmtr)
+                                 null
+                                 ref-result)
                                privates)))
 (define bs-SeqWalk-lhs (arg-swap build-SeqWalk-lhs 6 4 "bs-SeqWalk-lhs"))
 (define (build-gpu-lhs name
@@ -230,248 +230,242 @@
                      tpl-reg-pars
                      typedefs
                      constructor
-                     (list (tpl-def (tpl-pmtr 'RhsType)
-                                    (device-use (v-fcn-def 'assign
-                                                           (list (ad 'RhsType 'rhs)
-                                                                 low-high-pmtr)
-                                                           (nt=c 'int 'ii (n+ (n* 'blockIdx.x 'blockDim.x) 'threadIdx.x))
-                                                           (nt=c 'int 'jj (n+ (n* 'blockIdx.y 'blockDim.y) 'threadIdx.y))
-                                                           (nt=c 'int 'x (n+ 'ii 'xLow))
-                                                           (nt=c 'int 'y (n+ 'jj 'yLow))
-                                                           (fc 'start 'x 'y 'xHigh 'yHigh)
-                                                           assign-body)))
+                     (list (def-template (typename 'RhsType)
+                             (device-only (def-void-function 'assign
+                                            (list (function-pmtr 'RhsType 'rhs)
+                                                  low-high-pmtr)
+                                            (val-typed-const-assign 'int 'ii (val-add (val-multiply 'blockIdx.x 'blockDim.x) 'threadIdx.x))
+                                            (val-typed-const-assign 'int 'jj (val-add (val-multiply 'blockIdx.y 'blockDim.y) 'threadIdx.y))
+                                            (val-typed-const-assign 'int 'x (val-add 'ii 'xLow))
+                                            (val-typed-const-assign 'int 'y (val-add 'jj 'yLow))
+                                            (val-call 'start 'x 'y 'xHigh 'yHigh)
+                                            assign-body)))
                            publics)
-                     (list (device-use (r-fcn-def (fcn-dcl 'valid 'bool)
-                                                  null
-                                                  valid-result))
-                           (device-use (v-fcn-def 'start
-                                                  (list (bs 'int 'x)
-                                                        (bs 'int 'y)
-                                                        (adc 'int 'xHigh)
-                                                        (adc 'int 'yHigh))
-                                                  start-body))
-                           (device-use (r-fcn-def (fcn-dcl 'ref
-                                                           (ref vt-chunk)
-                                                           index-pmtr)
-                                                  null
-                                                  ref-result))
+                     (list (device-only (def-returning-function (dcl-function 'valid 'bool)
+                                          null
+                                          valid-result))
+                           (device-only (def-void-function 'start
+                                          (list (add-spaces 'int 'x)
+                                                (add-spaces 'int 'y)
+                                                (function-pmtr (const 'int) 'xHigh)
+                                                (function-pmtr (const 'int) 'yHigh))
+                                          start-body))
+                           (device-only (def-returning-function (dcl-function 'ref
+                                                                              (ref vt-chunk)
+                                                                              index-pmtr)
+                                          null
+                                          ref-result))
                            privates)))
 (define bs-gpu-lhs (arg-swap build-gpu-lhs 8 4 "bs-gpu-lhs"))
 
                                         ; beginnning of file
 (pp-header-file
  'NEBO_LHS_H
- (n 'SpatialOps
-    (gpu-only (tpl-def (list (tpl-pmtr 'LhsType)
-                             (tpl-pmtr 'RhsType))
-                       (fcn-def (gbl-fcn-dcl 'gpu_assign_kernel
-                                             (ad 'LhsType 'lhs)
-                                             (ad 'RhsType 'rhs)
-                                             low-high-pmtr)
-                                (mfc 'lhs 'assign 'rhs low-high-arg))))
+ (SpatialOps-namespace
+  (pp-gpu-only (def-template (list (typename 'LhsType)
+                                   (typename 'RhsType))
+                 (global-only (def-void-function 'gpu_assign_kernel
+                                (list (function-pmtr 'LhsType 'lhs)
+                                      (function-pmtr 'RhsType 'rhs)
+                                      low-high-pmtr)
+                                (val-member-call 'lhs 'assign 'rhs low-high-arg)))))
 
-    (build-struct NF-chunk
-                  std-FT
-                  null
-                  null
-                  (bs-Initial-lhs null
-                                  null
-                                  (bm-constructor (ad FT-chunk 'f)
-                                                  (cons-asgn 'field_ 'f)
-                                                  null)
-                                  null
-                                  (list (mfc (fc 'init)
-                                             'assign
-                                             (mfc 'rhs 'init)
-                                             low-high-arg))
-                                  'field_
-                                  (list (typedef (tpl-pmtr (scope 'RhsType 'ResizeType))
-                                                 'RhsResizeType)
-                                        (nt= 'ResizeType 'new_lhs (fc 'resize))
-                                        (nt= 'RhsResizeType 'new_rhs (mfc 'rhs 'resize))
-                                        (ad 'int 'localXLow)
-                                        (ad 'int 'localXHigh)
-                                        (ad 'int 'localYLow)
-                                        (ad 'int 'localYHigh)
-                                        (ad 'int 'localZLow)
-                                        (ad 'int 'localZHigh)
-                                        (nt=c IntVec 'split (fc 'nebo_find_partition
-                                                                (fc IntVec
-                                                                    (n- 'xHigh 'xLow)
-                                                                    (n- 'yHigh 'yLow)
-                                                                    (n- 'zHigh 'zLow))
-                                                                'thread_count))
-                                        (nt=c 'int 'max (fc 'nebo_partition_count 'split))
-                                        (nt= IntVec 'location ZeroIntVec)
-                                        (nfor (nt= 'int 'count "0")
-                                              (n< 'count 'max)
-                                              (n++ 'count)
-                                              (fc 'nebo_set_up_extents
-                                                  'location
-                                                  'split
-                                                  'localXLow
-                                                  'localXHigh
-                                                  'localYLow
-                                                  'localYHigh
-                                                  'localZLow
-                                                  'localZHigh
-                                                  'xLow
-                                                  'xHigh
-                                                  'yLow
-                                                  'yHigh
-                                                  'zLow
-                                                  'zHigh)
-                                              (mfc (fc (scope 'ThreadPoolFIFO 'self))
-                                                   'schedule
-                                                   (fc (scope 'boost 'bind)
-                                                       (take-ptr (scope 'ResizeType (tpl-fcn-use 'assign 'RhsResizeType)))
-                                                       'new_lhs
-                                                       'new_rhs
-                                                       'localXLow
-                                                       'localXHigh
-                                                       'localYLow
-                                                       'localYHigh
-                                                       'localZLow
-                                                       'localZHigh
-                                                       (take-ptr 'semaphore)))
-                                              (n= 'location (fc 'nebo_next_partition 'location 'split))))
-                                  'field_
-                                  (let ([dim-def (lambda (name extent)
-                                                   (nt= 'int name (n+ (n/ extent 'blockDim)
-                                                                      (ter-cond (n> (par (n% extent 'blockDim))
-                                                                                    "0")
-                                                                                "1"
-                                                                                "0"))))])
-                                    (list (typedef (tpl-pmtr (scope 'RhsType 'GPUWalkType))
-                                                   'RhsGPUWalkType)
-                                          (nt= 'int 'xExtent (n- 'xHigh 'xLow))
-                                          (nt= 'int 'yExtent (n- 'yHigh 'yLow))
-                                          (nt= 'int 'blockDim "16")
-                                          (dim-def 'xGDim 'xExtent)
-                                          (dim-def 'yGDim 'yExtent)
-                                          (bs 'dim3 (fc 'dimBlock 'blockDim 'blockDim))
-                                          (bs 'dim3 (fc 'dimGrid 'xGDim 'yGDim))
-                                          (debug-only (bb (cc (bs 'cudaError 'err))
-                                                          (nif (n!= 'cudaSuccess (p (n= 'err (fc 'cudaStreamSynchronize(mfc 'field_ 'get_stream)))))
-                                                               (build-error-with-call "CUDA Kernel - before call" "\"\t - \""
-                                                                                      '<< (fc 'cudaGetErrorString 'err)))))
-                                          (fc (kernel-use (tpl-use 'gpu_assign_kernel 'GPUWalkType 'RhsGPUWalkType)
-                                                          'dimGrid
-                                                          'dimBlock
-                                                          "0"
-                                                          (mfc 'field_ 'get_stream))
-                                              (fc 'gpu_init)
-                                              (mfc 'rhs 'gpu_init (fc 'gpu_device_index))
-                                              low-high-arg)
-                                          (debug-only (nif (n!= 'cudaSuccess (p (n= 'err (fc 'cudaStreamSynchronize(mfc 'field_ 'get_stream)))))
-                                                           (build-error-with-call "CUDA Kernel - after call" "\"\t - \""
-                                                                                  '<< (fc 'cudaGetErrorString 'err))))))
-                                  (n== 'LOCAL_RAM (mfc 'field_ 'memory_device_type))
-                                  (n== 'EXTERNAL_CUDA_GPU (mfc 'field_ 'memory_device_type))
-                                  (mfc 'field_ 'device_index)
-                                  'field_
-                                  (list (mfc 'rhs 'gpu_prep "0")
-                                        (nifelse (n== 'LOCAL_RAM (mfc 'field_ 'memory_device_type))
-                                                 (list (ad FT-chunk
-                                                           (fc 'gpu_field
-                                                               (mfc 'field_ 'window_with_ghost)
-                                                               (mfc 'field_ 'boundary_info)
-                                                               (mfc 'field_ 'get_valid_ghost_data)
-                                                               'NULL
-                                                               (scope 'structured 'InternalStorage)
-                                                               'EXTERNAL_CUDA_GPU
-                                                               "0"))
-                                                       (ad (tpl-use NF-chunk 'Initial FT-chunk)
-                                                           (fc 'gpu_lhs 'gpu_field))
-                                                       (mfc 'gpu_lhs
-                                                            (tpl-fcn-use 'gpu_assign 'RhsType)
-                                                            'rhs
-                                                            low-high-arg)
-                                                       (let ([CDI (scope (scope 'ema 'cuda)
-                                                                         'CUDADeviceInterface)])
-                                                         (nt= (ref CDI) 'CDI (fc (scope CDI 'self))))
-                                                       (mfc 'CDI
-                                                            'memcpy_from
-                                                            (mfc 'field_ 'field_values)
-                                                            (mfc 'gpu_field
-                                                                 'field_values
-                                                                 'EXTERNAL_CUDA_GPU
-                                                                 "0")
-                                                            (mfc 'field_ 'allocated_bytes)
-                                                            "0"))
-                                                 (fc (tpl-use 'gpu_assign 'RhsType)
-                                                     'rhs
-                                                     low-high-arg)))
-                                  (sad FT-chunk 'field_))
-                  (bs-Resize-lhs null
-                                 null
-                                 (bm-constructor (ad FT-chunk 'f)
-                                                 (cons-asgn 'field_ 'f)
-                                                 null)
-                                 (mfc (fc 'init)
-                                      'assign
-                                      (mfc 'rhs 'init)
-                                      low-high-arg)
-                                 null
-                                 'field_
-                                 (sad FT-chunk 'field_))
-                  (bs-SeqWalk-lhs null
-                                  (bm-constructor (ad FT-chunk 'f)
-                                                  (list (cons-asgn 'xGlob_ (mfc (mfc 'f 'window_with_ghost)
-                                                                                'glob_dim
-                                                                                "0"))
-                                                        (cons-asgn 'yGlob_ (mfc (mfc 'f 'window_with_ghost)
-                                                                                'glob_dim
-                                                                                "1"))
-                                                        (cons-asgn 'base_ (compute-base 'f 'none)))
-                                                  null)
-                                  (nfor (nt= 'int 'z 'zLow)
-                                        (n< 'z 'zHigh)
-                                        (n++ 'z)
-                                        (nfor (nt= 'int 'y 'yLow)
-                                              (n< 'y 'yHigh)
-                                              (n++ 'y)
-                                              (nfor (nt= 'int 'x 'xLow)
-                                                    (n< 'x 'xHigh)
-                                                    (n++ 'x)
-                                                    (n= (fc 'ref index-arg)
-                                                        (mfc 'rhs 'eval index-arg)))))
-                                  null
-                                  (c 'base_
-                                     "["
-                                     (n+ 'x (n* 'xGlob_ (par (n+ 'y (par (n* 'yGlob_ 'z))))))
-                                     "]")
-                                  (list (sadc 'int 'xGlob_)
-                                        (sadc 'int 'yGlob_)
-                                        (sadp vt-chunk 'base_)))
-                  (bs-gpu-lhs  null
-                               (bm-constructor
-                                (ad FT-chunk 'f)
-                                (list (cons-asgn 'base_ (compute-base 'f (mfc 'f 'device_index)))
-                                      (cons-asgn 'valid_ 'false)
-                                      (cons-asgn 'xGlob_ (mfc (mfc 'f 'window_with_ghost)
-                                                              'glob_dim
-                                                              "0"))
-                                      (cons-asgn 'yGlob_ (mfc (mfc 'f 'window_with_ghost)
-                                                              'glob_dim
-                                                              "1")))
-                                null)
-                               (nfor (nt= 'int 'z 'zLow)
-                                     (n< 'z 'zHigh)
-                                     (n++ 'z)
-                                     (nif (fc 'valid)
-                                          (n= (fc 'ref index-arg)
-                                              (mfc 'rhs 'eval index-arg))))
+  (build-struct NF-chunk
+                std-FT
+                null
+                null
+                (bs-Initial-lhs null
+                                null
+                                (bm-constructor (function-pmtr FT-chunk 'f)
+                                                (val-construct 'field_ 'f)
+                                                null)
+                                null
+                                (list (val-member-call (val-call 'init)
+                                                       'assign
+                                                       (val-member-call 'rhs 'init)
+                                                       low-high-arg))
+                                'field_
+                                (list (typedef (typename (scope 'RhsType 'ResizeType))
+                                               'RhsResizeType)
+                                      (val-typed-assign 'ResizeType 'new_lhs (val-call 'resize))
+                                      (val-typed-assign 'RhsResizeType 'new_rhs (val-member-call 'rhs 'resize))
+                                      (function-pmtr 'int 'localXLow)
+                                      (function-pmtr 'int 'localXHigh)
+                                      (function-pmtr 'int 'localYLow)
+                                      (function-pmtr 'int 'localYHigh)
+                                      (function-pmtr 'int 'localZLow)
+                                      (function-pmtr 'int 'localZHigh)
+                                      (val-typed-const-assign IntVec 'split (val-call 'nebo_find_partition
+                                                                                      (val-call IntVec
+                                                                                                (val-subtract 'xHigh 'xLow)
+                                                                                                (val-subtract 'yHigh 'yLow)
+                                                                                                (val-subtract 'zHigh 'zLow))
+                                                                                      'thread_count))
+                                      (val-typed-const-assign 'int 'max (val-call 'nebo_partition_count 'split))
+                                      (val-typed-assign IntVec 'location ZeroIntVec)
+                                      (stmt-for (val-typed-assign 'int 'count 0)
+                                                (val-less-than 'count 'max)
+                                                (val-increment 'count)
+                                                (val-call 'nebo_set_up_extents
+                                                          'location
+                                                          'split
+                                                          'localXLow
+                                                          'localXHigh
+                                                          'localYLow
+                                                          'localYHigh
+                                                          'localZLow
+                                                          'localZHigh
+                                                          'xLow
+                                                          'xHigh
+                                                          'yLow
+                                                          'yHigh
+                                                          'zLow
+                                                          'zHigh)
+                                                (val-member-call (val-call (scope 'ThreadPoolFIFO 'self))
+                                                                 'schedule
+                                                                 (val-call (scope 'boost 'bind)
+                                                                           (take-ptr (scope 'ResizeType (type-template-function 'assign 'RhsResizeType)))
+                                                                           'new_lhs
+                                                                           'new_rhs
+                                                                           'localXLow
+                                                                           'localXHigh
+                                                                           'localYLow
+                                                                           'localYHigh
+                                                                           'localZLow
+                                                                           'localZHigh
+                                                                           (take-ptr 'semaphore)))
+                                                (val-assign 'location (val-call 'nebo_next_partition 'location 'split))))
+                                'field_
+                                (let ([dim-def (lambda (name extent)
+                                                 (val-typed-assign 'int name (val-add (val-divide extent 'blockDim)
+                                                                                      (ter-cond (val-greater-than (paren (val-modulo extent 'blockDim))
+                                                                                                                  0)
+                                                                                                1
+                                                                                                0))))])
+                                  (list (typedef (typename (scope 'RhsType 'GPUWalkType))
+                                                 'RhsGPUWalkType)
+                                        (val-typed-assign 'int 'xExtent (val-subtract 'xHigh 'xLow))
+                                        (val-typed-assign 'int 'yExtent (val-subtract 'yHigh 'yLow))
+                                        (val-typed-assign 'int 'blockDim 16)
+                                        (dim-def 'xGDim 'xExtent)
+                                        (dim-def 'yGDim 'yExtent)
+                                        (add-spaces 'dim3 (val-call 'dimBlock 'blockDim 'blockDim))
+                                        (add-spaces 'dim3 (val-call 'dimGrid 'xGDim 'yGDim))
+                                        (pp-debug-only (add-blank-lines (stmt (add-spaces 'cudaError 'err))
+                                                                        (stmt-if (val-not-equal 'cudaSuccess (paren (val-assign 'err (val-call 'cudaStreamSynchronize(val-member-call 'field_ 'get_stream)))))
+                                                                                 (build-error-with-call "CUDA Kernel - before call" "\"\t - \""
+                                                                                                        '<< (val-call 'cudaGetErrorString 'err)))))
+                                        (val-call (kernel-call (type-template 'gpu_assign_kernel 'GPUWalkType 'RhsGPUWalkType)
+                                                               'dimGrid
+                                                               'dimBlock
+                                                               0
+                                                               (val-member-call 'field_ 'get_stream))
+                                                  (val-call 'gpu_init)
+                                                  (val-member-call 'rhs 'gpu_init (val-call 'gpu_device_index))
+                                                  low-high-arg)
+                                        (pp-debug-only (stmt-if (val-not-equal 'cudaSuccess (paren (val-assign 'err (val-call 'cudaStreamSynchronize(val-member-call 'field_ 'get_stream)))))
+                                                                (build-error-with-call "CUDA Kernel - after call" "\"\t - \""
+                                                                                       '<< (val-call 'cudaGetErrorString 'err))))))
+                                (val-equal 'LOCAL_RAM (val-member-call 'field_ 'memory_device_type))
+                                (val-equal 'EXTERNAL_CUDA_GPU (val-member-call 'field_ 'memory_device_type))
+                                (val-member-call 'field_ 'device_index)
+                                'field_
+                                (list (val-member-call 'rhs 'gpu_prep 0)
+                                      (stmt-if-else (val-equal 'LOCAL_RAM (val-member-call 'field_ 'memory_device_type))
+                                                    (list (function-pmtr FT-chunk
+                                                                         (val-call 'gpu_field
+                                                                                   (val-member-call 'field_ 'window_with_ghost)
+                                                                                   (val-member-call 'field_ 'boundary_info)
+                                                                                   (val-member-call 'field_ 'get_valid_ghost_data)
+                                                                                   'NULL
+                                                                                   (scope 'structured 'InternalStorage)
+                                                                                   'EXTERNAL_CUDA_GPU
+                                                                                   0))
+                                                          (function-pmtr (type-template NF-chunk 'Initial FT-chunk)
+                                                                         (val-call 'gpu_lhs 'gpu_field))
+                                                          (val-member-call 'gpu_lhs
+                                                                           (type-template-function 'gpu_assign 'RhsType)
+                                                                           'rhs
+                                                                           low-high-arg)
+                                                          (let ([CDI (scope (scope 'ema 'cuda)
+                                                                            'CUDADeviceInterface)])
+                                                            (val-typed-assign (ref CDI) 'CDI (val-call (scope CDI 'self))))
+                                                          (val-member-call 'CDI
+                                                                           'memcpy_from
+                                                                           (val-member-call 'field_ 'field_values)
+                                                                           (val-member-call 'gpu_field
+                                                                                            'field_values
+                                                                                            'EXTERNAL_CUDA_GPU
+                                                                                            0)
+                                                                           (val-member-call 'field_ 'allocated_bytes)
+                                                                           0))
+                                                    (val-call (type-template 'gpu_assign 'RhsType)
+                                                              'rhs
+                                                              low-high-arg)))
+                                (stmt-dcl-variable FT-chunk 'field_))
+                (bs-Resize-lhs null
                                null
-                               'valid_
-                               (n= 'valid_ (par (n-and (n< 'x 'xHigh)
-                                                             (n< 'y 'yHigh))))
-                               (c 'base_
-                                  "["
-                                  (n+ 'x (n* 'xGlob_ (par (n+ 'y (par (n* 'yGlob_ 'z))))))
-                                  "]")
-                               (list (sadp vt-chunk 'base_)
-                                     (sad 'int 'valid_)
-                                     (sadc 'int 'xGlob_)
-                                     (sadc 'int 'yGlob_))))
-    ))
+                               (bm-constructor (function-pmtr FT-chunk 'f)
+                                               (val-construct 'field_ 'f)
+                                               null)
+                               (val-member-call (val-call 'init)
+                                                'assign
+                                                (val-member-call 'rhs 'init)
+                                                low-high-arg)
+                               null
+                               'field_
+                               (stmt-dcl-variable FT-chunk 'field_))
+                (bs-SeqWalk-lhs null
+                                (bm-constructor (function-pmtr FT-chunk 'f)
+                                                (list (val-construct 'xGlob_ (val-member-call (val-member-call 'f 'window_with_ghost)
+                                                                                              'glob_dim
+                                                                                              0))
+                                                      (val-construct 'yGlob_ (val-member-call (val-member-call 'f 'window_with_ghost)
+                                                                                              'glob_dim
+                                                                                              1))
+                                                      (val-construct 'base_ (compute-base 'f 'none)))
+                                                null)
+                                (stmt-for (val-typed-assign 'int 'z 'zLow)
+                                          (val-less-than 'z 'zHigh)
+                                          (val-increment 'z)
+                                          (stmt-for (val-typed-assign 'int 'y 'yLow)
+                                                    (val-less-than 'y 'yHigh)
+                                                    (val-increment 'y)
+                                                    (stmt-for (val-typed-assign 'int 'x 'xLow)
+                                                              (val-less-than 'x 'xHigh)
+                                                              (val-increment 'x)
+                                                              (val-assign (val-call 'ref index-arg)
+                                                                          (val-member-call 'rhs 'eval index-arg)))))
+                                null
+                                (array-access 'base_ (val-add 'x (val-multiply 'xGlob_ (paren (val-add 'y (paren (val-multiply 'yGlob_ 'z)))))))
+                                (list (stmt-dcl-variable (const 'int) 'xGlob_)
+                                      (stmt-dcl-variable (const 'int) 'yGlob_)
+                                      (stmt-dcl-variable (ptr vt-chunk) 'base_)))
+                (bs-gpu-lhs  null
+                             (bm-constructor
+                              (function-pmtr FT-chunk 'f)
+                              (list (val-construct 'base_ (compute-base 'f (val-member-call 'f 'device_index)))
+                                    (val-construct 'valid_ 'false)
+                                    (val-construct 'xGlob_ (val-member-call (val-member-call 'f 'window_with_ghost)
+                                                                            'glob_dim
+                                                                            0))
+                                    (val-construct 'yGlob_ (val-member-call (val-member-call 'f 'window_with_ghost)
+                                                                            'glob_dim
+                                                                            1)))
+                              null)
+                             (stmt-for (val-typed-assign 'int 'z 'zLow)
+                                       (val-less-than 'z 'zHigh)
+                                       (val-increment 'z)
+                                       (stmt-if (val-call 'valid)
+                                                (val-assign (val-call 'ref index-arg)
+                                                            (val-member-call 'rhs 'eval index-arg))))
+                             null
+                             'valid_
+                             (val-assign 'valid_ (paren (val-and (val-less-than 'x 'xHigh)
+                                                                 (val-less-than 'y 'yHigh))))
+                             (array-access 'base_ (val-add 'x (val-multiply 'xGlob_ (paren (val-add 'y (paren (val-multiply 'yGlob_ 'z)))))))
+                             (list (stmt-dcl-variable (ptr vt-chunk) 'base_)
+                                   (stmt-dcl-variable 'int 'valid_)
+                                   (stmt-dcl-variable (const 'int) 'xGlob_)
+                                   (stmt-dcl-variable (const 'int) 'yGlob_))))
+  ))

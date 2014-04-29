@@ -26,118 +26,118 @@
 (require "FulmarAbbreviations.fmr")
 (require "NeboCore.fmr")
 
-(define value-type (tpl-pmtr (scope FT-chunk 'value_type)))
+(define value-type (typename (scope FT-chunk 'value_type)))
 
 (define (build-scalar-reduction name body)
-  (tpl-def (tpl-pmtr AT-chunk)
-           (r-fcn-def (fcn-dcl name
-                               AT-chunk
-                               (ad AT-chunk 'a)
-                               (ad AT-chunk 'b))
-                      null
-                      body)))
+  (def-template (typename AT-chunk)
+    (def-returning-function (dcl-function name
+                                          AT-chunk
+                                          (function-pmtr AT-chunk 'a)
+                                          (function-pmtr AT-chunk 'b))
+      null
+      body)))
 
 (define (build-reduction name tpl-pmtrs arg body return-expr)
-  (tpl-def tpl-pmtrs
-           (r-fcn-def (fcn-dcl name value-type arg)
-                      body
-                      return-expr)))
+  (def-template tpl-pmtrs
+    (def-returning-function (dcl-function name value-type arg)
+      body
+      return-expr)))
 
 (define (build-reduction-pair name return-expr)
   (list (build-reduction name
-                         (list (tpl-pmtr 'ExprType)
-                               (tpl-pmtr FT-chunk))
-                         (adcr (tpl-use NE-chunk 'ExprType FT-chunk)
-                               'fexpr)
+                         (list (typename 'ExprType)
+                               (typename FT-chunk))
+                         (function-pmtr (ref (const (type-template NE-chunk 'ExprType FT-chunk)))
+                                        'fexpr)
                          null
                          return-expr)
         (build-reduction name
-                         (tpl-pmtr FT-chunk)
-                         (adcr FT-chunk 'field)
-                         (typedef (tpl-use NCF-chunk 'Initial FT-chunk) 'ExprType)
-                         (fc name
-                             (fc (tpl-use NE-chunk 'ExprType FT-chunk)
-                                 (fc 'ExprType 'field))))))
+                         (typename FT-chunk)
+                         (function-pmtr (ref (const FT-chunk)) 'field)
+                         (typedef (type-template NCF-chunk 'Initial FT-chunk) 'ExprType)
+                         (val-call name
+                                   (val-call (type-template NE-chunk 'ExprType FT-chunk)
+                                             (val-call 'ExprType 'field))))))
 
 (define (build-general-nebo-reduction name return-expr)
   (list (build-reduction-pair name (return-expr #false))
-        (build-reduction-pair (c name '_interior)
+        (build-reduction-pair (literal name '_interior)
                               (return-expr #true))))
 
 (define (build-nebo-reduction name scalar-name initial-value)
   (build-general-nebo-reduction name (lambda (is-interior)
-                                       (fc 'nebo_fold
-                                           (if is-interior 'false 'true)
-                                           scalar-name
-                                           initial-value
-                                           'fexpr))))
+                                       (val-call 'nebo_fold
+                                                 (if is-interior 'false 'true)
+                                                 scalar-name
+                                                 initial-value
+                                                 'fexpr))))
 
                                         ; beginnning of file
 (pp-header-file
  'NEBO_REDUCTIONS_H
  (map (lambda (name)
-        (list (m (c 'field_ name)
-                 null
-                 (c 'nebo_ name))
-              (m (c 'field_ name '_interior)
-                 null
-                 (c 'nebo_ name '_interior))))
+        (list (macro-define (literal 'field_ name)
+                            null
+                            (literal 'nebo_ name))
+              (macro-define (literal 'field_ name '_interior)
+                            null
+                            (literal 'nebo_ name '_interior))))
       (list 'max
             'min
             'sum
             'norm))
 
- (n 'SpatialOps
-    (tpl-def (list (tpl-pmtr 'ExprType)
-                   (tpl-pmtr FT-chunk))
-             (r-fcn-def (fcn-dcl 'nebo_fold
-                                 value-type
-                                 (ad 'bool 'useGhost)
-                                 (gen-fcn-dcl (p (c "*" 'proc))
-                                              value-type
-                                              value-type
-                                              value-type)
-                                 (ad value-type 'initialValue)
-                                 (adcr (tpl-use NE-chunk 'ExprType FT-chunk) 'fexpr))
-                        (list (typedef value-type 'value_type)
-                              (nt= 'ExprType 'initial (mfc 'fexpr 'expr))
-                              (nt= GhostData 'ghosts (ter-cond 'useGhost
-                                                               (mfc 'initial 'possible_ghosts)
-                                                               (mfc 'initial 'minimum_ghosts)))
-                              (nt=c 'int 'xLow (bs "-" (mfc 'ghosts 'get_minus "0")))
-                              (nt=c 'int 'xHigh (n+ (mfc 'initial 'extent "0")
-                                                    (mfc 'ghosts 'get_plus "0")))
-                              (nt=c 'int 'yLow (bs "-" (mfc 'ghosts 'get_minus "1")))
-                              (nt=c 'int 'yHigh (n+ (mfc 'initial 'extent "1")
-                                                    (mfc 'ghosts 'get_plus "1")))
-                              (nt=c 'int 'zLow (bs "-" (mfc 'ghosts 'get_minus "2")))
-                              (nt=c 'int 'zHigh (n+ (mfc 'initial 'extent "2")
-                                                    (mfc 'ghosts 'get_plus "2")))
-                              (nt= 'value_type 'result 'initialValue)
-                              (nt= (tpl-pmtr (scope 'ExprType 'SeqWalkType))
-                                   'expr
-                                   (mfc 'initial 'init))
-                              (nfor (nt= 'int 'z 'zLow)
-                                    (n< 'z 'zHigh)
-                                    (n++ 'z)
-                                    (nfor (nt= 'int 'y 'yLow)
-                                          (n< 'y 'yHigh)
-                                          (n++ 'y)
-                                          (nfor (nt= 'int 'x 'xLow)
-                                                (n< 'x 'xHigh)
-                                                (n++ 'x)
-                                                (n= 'result (fc 'proc 'result (mfc 'expr 'eval index-arg)))))))
-                        'result))
+ (SpatialOps-namespace
+  (def-template (list (typename 'ExprType)
+                      (typename FT-chunk))
+    (def-returning-function (dcl-function 'nebo_fold
+                                          value-type
+                                          (function-pmtr 'bool 'useGhost)
+                                          (dcl-no-inline-function (paren (literal '* 'proc))
+                                                                  value-type
+                                                                  value-type
+                                                                  value-type)
+                                          (function-pmtr value-type 'initialValue)
+                                          (function-pmtr (ref (const (type-template NE-chunk 'ExprType FT-chunk))) 'fexpr))
+      (list (typedef value-type 'value_type)
+            (val-typed-assign 'ExprType 'initial (val-member-call 'fexpr 'expr))
+            (val-typed-assign GhostData 'ghosts (ter-cond 'useGhost
+                                                          (val-member-call 'initial 'possible_ghosts)
+                                                          (val-member-call 'initial 'minimum_ghosts)))
+            (val-typed-const-assign 'int 'xLow (add-spaces '- (val-member-call 'ghosts 'get_minus 0)))
+            (val-typed-const-assign 'int 'xHigh (val-add (val-member-call 'initial 'extent 0)
+                                                         (val-member-call 'ghosts 'get_plus 0)))
+            (val-typed-const-assign 'int 'yLow (add-spaces '- (val-member-call 'ghosts 'get_minus 1)))
+            (val-typed-const-assign 'int 'yHigh (val-add (val-member-call 'initial 'extent 1)
+                                                         (val-member-call 'ghosts 'get_plus 1)))
+            (val-typed-const-assign 'int 'zLow (add-spaces '- (val-member-call 'ghosts 'get_minus 2)))
+            (val-typed-const-assign 'int 'zHigh (val-add (val-member-call 'initial 'extent 2)
+                                                         (val-member-call 'ghosts 'get_plus 2)))
+            (val-typed-assign 'value_type 'result 'initialValue)
+            (val-typed-assign (typename (scope 'ExprType 'SeqWalkType))
+                              'expr
+                              (val-member-call 'initial 'init))
+            (stmt-for (val-typed-assign 'int 'z 'zLow)
+                      (val-less-than 'z 'zHigh)
+                      (val-increment 'z)
+                      (stmt-for (val-typed-assign 'int 'y 'yLow)
+                                (val-less-than 'y 'yHigh)
+                                (val-increment 'y)
+                                (stmt-for (val-typed-assign 'int 'x 'xLow)
+                                          (val-less-than 'x 'xHigh)
+                                          (val-increment 'x)
+                                          (val-assign 'result (val-call 'proc 'result (val-member-call 'expr 'eval index-arg)))))))
+      'result))
 
-    (build-scalar-reduction 'nebo_scalar_max (ter-cond (p (bs 'a '< 'b)) 'b 'a))
-    (build-scalar-reduction 'nebo_scalar_min (ter-cond (p (bs 'a '> 'b)) 'b 'a))
-    (build-scalar-reduction 'nebo_scalar_sum (n+ 'a 'b))
+  (build-scalar-reduction 'nebo_scalar_max (ter-cond (paren (add-spaces 'a '< 'b)) 'b 'a))
+  (build-scalar-reduction 'nebo_scalar_min (ter-cond (paren (add-spaces 'a '> 'b)) 'b 'a))
+  (build-scalar-reduction 'nebo_scalar_sum (val-add 'a 'b))
 
-    (build-nebo-reduction 'nebo_max 'nebo_scalar_max (n/ "-1.0" "0.0"))
-    (build-nebo-reduction 'nebo_min 'nebo_scalar_min (n/ "1.0" "0.0"))
-    (build-nebo-reduction 'nebo_sum 'nebo_scalar_sum "0.0")
-    (build-general-nebo-reduction 'nebo_norm (lambda (is-interior)
-                                               (fc (scope 'std 'sqrt)
-                                                   (fc (if is-interior 'nebo_sum_interior 'nebo_sum)
-                                                       (fc 'pow 'fexpr "2")))))
-    ))
+  (build-nebo-reduction 'nebo_max 'nebo_scalar_max (val-divide "-1.0" "0.0"))
+  (build-nebo-reduction 'nebo_min 'nebo_scalar_min (val-divide "1.0" "0.0"))
+  (build-nebo-reduction 'nebo_sum 'nebo_scalar_sum "0.0")
+  (build-general-nebo-reduction 'nebo_norm (lambda (is-interior)
+                                             (val-call (scope 'std 'sqrt)
+                                                       (val-call (if is-interior 'nebo_sum_interior 'nebo_sum)
+                                                                 (val-call 'pow 'fexpr 2)))))
+  ))

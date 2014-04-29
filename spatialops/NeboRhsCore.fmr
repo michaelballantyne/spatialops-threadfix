@@ -52,37 +52,37 @@
                          typedefs
                          tpl-irreg-args
                          constructor
-                         (list (r-fcn-def (constize (fcn-dcl 'possible_ghosts GhostData))
-                                          null
-                                          possible-ghosts)
-                               (r-fcn-def (constize (fcn-dcl 'minimum_ghosts GhostData))
-                                          null
-                                          minimum-ghosts)
-                               (r-fcn-def (constize (fcn-dcl 'has_extent 'bool))
-                                          null
-                                          has-extent)
-                               (r-fcn-def (constize (fcn-dcl 'extent 'int (adc 'int 'dir)))
-                                          (if (not (null? extent-check))
-                                              (debug-only extent-check)
-                                              null)
-                                          extent-expr)
-                               (r-fcn-def (constize (fcn-dcl 'init 'SeqWalkType))
-                                          null
-                                          (fc 'SeqWalkType SW-cons-args))
-                               (threads-only (r-fcn-def (constize (fcn-dcl 'resize 'ResizeType))
-                                                        null
-                                                        (fc 'ResizeType RS-cons-args)))
-                               (gpu-only (bb (r-fcn-def (constize (fcn-dcl 'cpu_ready 'bool))
-                                                        null
-                                                        cpu-ready-body)
-                                             (r-fcn-def (constize (fcn-dcl 'gpu_ready 'bool (adc 'int DI-chunk)))
-                                                        null
-                                                        gpu-ready-body)
-                                             (r-fcn-def (constize (fcn-dcl 'gpu_init 'GPUWalkType (adc 'int DI-chunk)))
-                                                        null
-                                                        (fc 'GPUWalkType gpu-cons-args))
-                                             (gpu-test-only (fcn-def (constize (fcn-dcl 'gpu_prep 'void (adc 'int DI-chunk)))
-                                                                     gpu-prep-body))))
+                         (list (def-returning-function (constize (dcl-function 'possible_ghosts GhostData))
+                                 null
+                                 possible-ghosts)
+                               (def-returning-function (constize (dcl-function 'minimum_ghosts GhostData))
+                                 null
+                                 minimum-ghosts)
+                               (def-returning-function (constize (dcl-function 'has_extent 'bool))
+                                 null
+                                 has-extent)
+                               (def-returning-function (constize (dcl-function 'extent 'int (function-pmtr (const 'int) 'dir)))
+                                 (if (not (null? extent-check))
+                                     (pp-debug-only extent-check)
+                                     null)
+                                 extent-expr)
+                               (def-returning-function (constize (dcl-function 'init 'SeqWalkType))
+                                 null
+                                 (val-call 'SeqWalkType SW-cons-args))
+                               (pp-threads-only (def-returning-function (constize (dcl-function 'resize 'ResizeType))
+                                                  null
+                                                  (val-call 'ResizeType RS-cons-args)))
+                               (pp-gpu-only (add-blank-lines (def-returning-function (constize (dcl-function 'cpu_ready 'bool))
+                                                               null
+                                                               cpu-ready-body)
+                                                             (def-returning-function (constize (dcl-function 'gpu_ready 'bool (function-pmtr (const 'int) DI-chunk)))
+                                                               null
+                                                               gpu-ready-body)
+                                                             (def-returning-function (constize (dcl-function 'gpu_init 'GPUWalkType (function-pmtr (const 'int) DI-chunk)))
+                                                               null
+                                                               (val-call 'GPUWalkType gpu-cons-args))
+                                                             (pp-gpu-test-only (def-function (constize (dcl-function 'gpu_prep 'void (function-pmtr (const 'int) DI-chunk)))
+                                                                                 gpu-prep-body))))
                                publics)
                          privates))
 (define bs-Initial-rhs (arg-swap build-Initial-rhs 16 4 "bs-Initial-rhs"))
@@ -103,10 +103,10 @@
                         typedefs
                         tpl-irreg-args
                         constructor
-                        (list (r-fcn-def (constize (fcn-dcl 'init
-                                                            'SeqWalkType))
-                                         null
-                                         (fc 'SeqWalkType SW-cons-args))
+                        (list (def-returning-function (constize (dcl-function 'init
+                                                                              'SeqWalkType))
+                                null
+                                (val-call 'SeqWalkType SW-cons-args))
                               publics)
                         privates))
 (define bs-Resize-rhs (arg-swap build-Resize-rhs 6 4 "bs-Resize-rhs"))
@@ -126,11 +126,11 @@
                          tpl-reg-pars
                          typedefs
                          constructor
-                         (list (r-fcn-def (constize (fcn-dcl 'eval
-                                                             eval-type
-                                                             index-pmtr))
-                                          null
-                                          eval-result)
+                         (list (def-returning-function (constize (dcl-function 'eval
+                                                                               eval-type
+                                                                               index-pmtr))
+                                 null
+                                 eval-result)
                                publics)
                          privates))
 (define bs-SeqWalk-rhs (arg-swap build-SeqWalk-rhs 6 4 "bs-SeqWalk-rhs"))
@@ -150,11 +150,11 @@
                      tpl-reg-pars
                      typedefs
                      constructor
-                     (list (device-use (r-fcn-def (constize (fcn-dcl 'eval
-                                                                     eval-type
-                                                                     index-pmtr))
-                                                  null
-                                                  eval-result))
+                     (list (device-only (def-returning-function (constize (dcl-function 'eval
+                                                                                        eval-type
+                                                                                        index-pmtr))
+                                          null
+                                          eval-result))
                            publics)
                      privates))
 (define bs-gpu-rhs (arg-swap build-gpu-rhs 6 4 "bs-gpu-rhs"))

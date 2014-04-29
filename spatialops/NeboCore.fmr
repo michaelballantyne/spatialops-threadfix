@@ -24,6 +24,7 @@
 
 (provide (all-defined-out))
 
+(define SpatialOps-namespace (lambda args (namespace-define 'SpatialOps args)))
 (define DI-chunk 'deviceIndex)
 (define NE-chunk 'NeboExpression)
 (define NSVE-chunk 'NeboSingleValueExpression)
@@ -37,7 +38,7 @@
 (define NCF-chunk 'NeboConstField)
 (define SVFT-chunk 'SingleValueFieldType)
 (define (SVFT-def-with-T T)
-  (tpl-use (scope (scope 'SpatialOps 'structured)
+  (type-template (scope (scope 'SpatialOps 'structured)
                   'SpatialField)
            (scope (scope 'SpatialOps 'structured)
                   'SingleValue)
@@ -52,22 +53,22 @@
 (define Clause-chunk 'NeboClause)
 (define Cond-chunk 'NeboCond)
 (define CT-chunk 'ClauseType)
-(define index-pmtr (list (adc 'int 'x)
-                         (adc 'int 'y)
-                         (adc 'int 'z)))
+(define index-pmtr (list (function-pmtr (const 'int) 'x)
+                         (function-pmtr (const 'int) 'y)
+                         (function-pmtr (const 'int) 'z)))
 (define index-arg (list 'x 'y 'z))
-(define low-high-pmtr (list (adc 'int 'xLow)
-                            (adc 'int 'xHigh)
-                            (adc 'int 'yLow)
-                            (adc 'int 'yHigh)
-                            (adc 'int 'zLow)
-                            (adc 'int 'zHigh)))
+(define low-high-pmtr (list (function-pmtr (const 'int) 'xLow)
+                            (function-pmtr (const 'int) 'xHigh)
+                            (function-pmtr (const 'int) 'yLow)
+                            (function-pmtr (const 'int) 'yHigh)
+                            (function-pmtr (const 'int) 'zLow)
+                            (function-pmtr (const 'int) 'zHigh)))
 (define low-high-arg (list 'xLow 'xHigh 'yLow 'yHigh 'zLow 'zHigh))
 (define IntVec (scope 'structured 'IntVec))
 (define GhostData (scope 'structured 'GhostData))
-(define ghost-pmtr (adcr GhostData 'ghosts))
+(define ghost-pmtr (function-pmtr (ref (const GhostData)) 'ghosts))
 (define ghost-arg 'ghosts)
-(define ZeroIntVec (fc IntVec "0" "0" "0"))
+(define ZeroIntVec (val-call IntVec 0 0 0))
 (define BCInfo (scope 'structured 'BoundaryCellInfo))
 (define NSP 'NeboStencilPoint)
 (define NSPC 'NeboStencilPointCollection)
@@ -77,7 +78,7 @@
 
 (define (type-trans new-type)
   (lambda (old-type)
-    (tpl-pmtr (scope old-type new-type))))
+    (typename (scope old-type new-type))))
 
 (define (arg-swap proc num1 num2 report)
   (lambda args1 (if (not (= num1 (length args1)))
@@ -131,10 +132,10 @@
   (cond [(no-FT? FT)
          null]
         [(scalar-FT? FT)
-         (s-typedef AT-chunk vt-chunk)]
+         (stmt-typedef AT-chunk vt-chunk)]
         [else
-         (s-typedef (tpl-pmtr (scope ft-chunk vt-chunk))
-                    vt-chunk)]))
+         (stmt-typedef (typename (scope ft-chunk vt-chunk))
+                       vt-chunk)]))
 
 (define (build-mode name
                     mode
@@ -144,17 +145,17 @@
                     constructor
                     publics
                     privates)
-  (tpl-srt-def name
-               (map tpl-pmtr (flatten* tpl-pars (FT-tpl FT)))
+  (def-template-struct name
+               (map typename (flatten* tpl-pars (FT-tpl FT)))
                (list mode tpl-pars (FT-tpl-use FT))
-               (pub-sec (if (or (no-FT? FT)
+               (section-public (if (or (no-FT? FT)
                                 (scalar-FT? FT))
                             null
-                            (s-typedef (FT-use FT) ft-chunk))
+                            (stmt-typedef (FT-use FT) ft-chunk))
                         typedefs
                         (constructor name)
                         publics)
-               (priv-sec privates)))
+               (section-private privates)))
 
 (define (build-Initial-general name
                                FT
@@ -176,24 +177,24 @@
               FT
               (list tpl-irreg-pars tpl-reg-pars)
               (list typedefs
-                    (s-typedef (tpl-use name
-                                        'SeqWalk
-                                        SW-tpl-irreg-args
-                                        (tpl-reg-args 'SeqWalkType)
-                                        (FT-tpl-use FT))
-                               'SeqWalkType)
-                    (threads-only (s-typedef (tpl-use name
-                                                      'Resize
-                                                      RS-tpl-irreg-args
-                                                      (tpl-reg-args 'ResizeType)
-                                                      (FT-tpl-use FT))
-                                             'ResizeType))
-                    (gpu-only (s-typedef (tpl-use name
-                                                  'GPUWalk
-                                                  gpu-tpl-irreg-args
-                                                  (tpl-reg-args 'GPUWalkType)
-                                                  (FT-tpl-use FT))
-                                         'GPUWalkType)))
+                    (stmt-typedef (type-template name
+                                           'SeqWalk
+                                           SW-tpl-irreg-args
+                                           (tpl-reg-args 'SeqWalkType)
+                                           (FT-tpl-use FT))
+                                  'SeqWalkType)
+                    (pp-threads-only (stmt-typedef (type-template name
+                                                         'Resize
+                                                         RS-tpl-irreg-args
+                                                         (tpl-reg-args 'ResizeType)
+                                                         (FT-tpl-use FT))
+                                                'ResizeType))
+                    (pp-gpu-only (stmt-typedef (type-template name
+                                                     'GPUWalk
+                                                     gpu-tpl-irreg-args
+                                                     (tpl-reg-args 'GPUWalkType)
+                                                     (FT-tpl-use FT))
+                                            'GPUWalkType)))
               constructor
               publics
               privates))
@@ -207,18 +208,18 @@
                               constructor
                               publics
                               privates)
-  (threads-only (build-mode name
+  (pp-threads-only (build-mode name
                             'Resize
                             FT
                             (list tpl-irreg-pars tpl-reg-pars)
                             (list typedefs
-                                  (s-typedef (tpl-use name
-                                                      'SeqWalk
-                                                      tpl-irreg-args
-                                                      (map* (type-trans 'SeqWalkType)
-                                                            tpl-reg-pars)
-                                                      (FT-tpl-use FT))
-                                             'SeqWalkType))
+                                  (stmt-typedef (type-template name
+                                                         'SeqWalk
+                                                         tpl-irreg-args
+                                                         (map* (type-trans 'SeqWalkType)
+                                                               tpl-reg-pars)
+                                                         (FT-tpl-use FT))
+                                                'SeqWalkType))
                             constructor
                             publics
                             privates)))
@@ -249,7 +250,7 @@
                            constructor
                            publics
                            privates)
-  (gpu-only
+  (pp-gpu-only
    (build-mode name
                'GPUWalk
                FT
@@ -269,63 +270,65 @@
                       SeqWalk
                       GPUWalk)
   (internal-smt-list new-line
-                     (tpl-srt-dcl name
-                                  (map tpl-pmtr (flatten* 'CurrentMode tpl-irreg-pars tpl-reg-pars (FT-tpl FT)))
+                     (dcl-template-struct name
+                                  (map typename (flatten* 'CurrentMode tpl-irreg-pars tpl-reg-pars (FT-tpl FT)))
                                   null)
                      (map (lambda (mode) (mode name FT tpl-irreg-pars tpl-reg-pars))
                           (list Initial Resize SeqWalk GPUWalk))))
 
 (define (base-offset-dir field dir)
-  (par (n+ (mfc (mfc field 'window_with_ghost)
-                'offset
-                dir)
-           (mfc (mfc field 'get_valid_ghost_data)
-                'get_minus
-                dir))))
+  (paren (val-add (val-member-call (val-member-call field 'window_with_ghost)
+                  'offset
+                  dir)
+             (val-member-call (val-member-call field 'get_valid_ghost_data)
+                  'get_minus
+                  dir))))
 
 (define (base-global-dir field dir)
-  (mfc (mfc 'f 'window_with_ghost)
+  (val-member-call (val-member-call 'f 'window_with_ghost)
        'glob_dim
        dir))
 
 (define (compute-base field input-index)
   (let-values ([(mem-type index) (if (equal? input-index 'none)
-                                     (values 'LOCAL_RAM "0")
+                                     (values 'LOCAL_RAM 0)
                                      (values 'EXTERNAL_CUDA_GPU input-index))])
-    (n+ (mfc field 'field_values mem-type index)
-        (n+ (base-offset-dir field "0")
-            (par (n* (base-global-dir field "0")
-                     (par (n+ (base-offset-dir field "1")
-                              (par (n* (base-global-dir field "1")
-                                       (base-offset-dir field "2")))))))))))
+              (val-add (val-member-call field 'field_values mem-type index)
+                  (val-add (base-offset-dir field 0)
+                      (paren (val-multiply (base-global-dir field 0)
+                                 (paren (val-add (base-offset-dir field 1)
+                                            (paren (val-multiply (base-global-dir field 1)
+                                                       (base-offset-dir field 2)))))))))))
 
 (define (build-error-with-call where . message)
   (define < '<<)
   (define (msg-add . line)
-    (bs 'msg < line))
-  (nl-smts (ad (scope 'std 'ostringstream)
-               'msg)
-           (msg-add "\"Nebo error in \"" < (c "\"" (bs where) "\"") < "\":\\n\"")
-           (msg-add (bs message))
+    (stmt 'msg < line))
+  (between new-line
+           (stmt (function-pmtr (scope 'std 'ostringstream)
+                     'msg))
+           (msg-add "\"Nebo error in \"" < (concat "\"" (add-spaces where) "\"") < "\":\\n\"")
+           (msg-add (add-spaces message))
            (msg-add "\"\\n\"")
            (msg-add "\"\\t - \"" < '__FILE__ < "\" : \"" < '__LINE__)
-           (fc 'throw (fc (scope 'std 'runtime_error)
-                          (mfc 'msg 'str)))))
+           (stmt (val-call 'throw (val-call (scope 'std 'runtime_error)
+                                            (val-member-call 'msg 'str))))))
 (define (build-error where . message)
   (define < '<<)
   (define (msg-add . line)
-    (bs 'msg < line))
-  (nl-smts (ad (scope 'std 'ostringstream)
-               'msg)
-           (msg-add "\"Nebo error in \"" < (c "\"" (bs where) "\"") < "\":\\n\"")
-           (msg-add (c "\"" (bs message) "\""))
+    (stmt 'msg < line))
+  (between new-line
+           (stmt (function-pmtr (scope 'std 'ostringstream)
+                     'msg))
+           (msg-add "\"Nebo error in \"" < (concat "\"" (add-spaces where) "\"") < "\":\\n\"")
+           (msg-add (concat "\"" (add-spaces message) "\""))
            (msg-add "\"\\n\"")
            (msg-add "\"\\t - \"" < '__FILE__ < "\" : \"" < '__LINE__)
-           (fc 'throw (fc (scope 'std 'runtime_error)
-                          (mfc 'msg 'str)))))
-(define (ic . chunks)  (immediate (c chunks)))
+           (stmt (val-call 'throw (val-call (scope 'std 'runtime_error)
+                                            (val-member-call 'msg 'str))))))
+(define (ic . chunks)  (immediate (concat chunks)))
 (define cout-end-line (list (ic "\"" ";" new-line 'msg)
-                       '<<))
+                            '<<))
 (define (cout-new-line chunk) (ic "\"" chunk))
 (define (cout-break chunk . chunks) (list cout-end-line
                                           (cout-new-line chunk)
