@@ -59,19 +59,25 @@ endif( ENABLE_THREADS )
 
 set(Boost_USE_MULTITHREAD ON)
 
-if( DEFINED BOOST_ROOT )
+if( DEFINED BOOST_ROOT OR ( DEFINED BOOST_INCLUDEDIR AND DEFINED BOOST_LIBRARYDIR ) )
   message( STATUS "Setting boost installation location as: " ${BOOST_ROOT} )
   set( Boost_NO_SYSTEM_PATHS ON )  # only look in the user-specified location - nowhere else!
-endif( DEFINED BOOST_ROOT )
+endif()
+if( DEFINED BOOST_INCLUDEDIR AND DEFINED BOOST_LIBRARYDIR )
+  message( STATUS "Setting boost include location as: " ${BOOST_INCLUDEDIR} )
+  message( STATUS "Setting boost library location as: " ${BOOST_LIBRARYDIR} )
+  set( Boost_NO_SYSTEM_PATHS ON )  # only look in the user-specified location - nowhere else!
+endif()
 
 set(BOOST_MIN_VERSION "1.49.0" )
 set(Boost_ADDITIONAL_VERSIONS
  ${Boost_ADDITIONAL_VERSIONS}
- "1.49" "1.49.0" "1.50" "1.50.0" "1.51" "1.51.0" "1.52" "1.52.0" "1.53" "1.53.0" )
+ "1.49" "1.49.0" "1.50" "1.50.0" "1.51" "1.51.0" "1.52" "1.52.0"
+ "1.53" "1.53.0" "1.54" "1.54.0" "1.55" "1.55.0" )
 find_package( Boost ${BOOST_MIN_VERSION} REQUIRED COMPONENTS ${boost_comps} )
 
 if( NOT Boost_FOUND )
-  message( FATAL_ERROR "Boost was not found.  Try setting BOOST_ROOT to the path where boost is installed and try again" )
+  message( FATAL_ERROR "Boost was not found.  Try setting BOOST_INCLUDEDIR and BOOST_LIBRARYDIR to the path where boost is installed and try again" )
 else()
   message( STATUS "Boost header installation found at: " ${Boost_INCLUDE_DIR} )
   message( STATUS "      library installation found at: " ${Boost_LIBRARY_DIRS} )
