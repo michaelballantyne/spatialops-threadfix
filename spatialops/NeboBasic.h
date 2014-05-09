@@ -32,6 +32,7 @@
 #  include <cmath>
 #  include <math.h>
 #  include <limits>
+#  include <boost/math/special_functions/erf.hpp>
 
 #  ifdef NEBO_REPORT_BACKEND
 #     include <iostream>

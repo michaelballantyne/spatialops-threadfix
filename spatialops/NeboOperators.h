@@ -5727,7 +5727,7 @@
           {}
 
           inline value_type eval(int const x, int const y, int const z) const {
-             return erf(operand_.eval(x, y, z));
+             return boost::math::erf(operand_.eval(x, y, z));
           }
 
          private:
@@ -5915,7 +5915,7 @@
           {}
 
           inline value_type eval(int const x, int const y, int const z) const {
-             return erfc(operand_.eval(x, y, z));
+             return boost::math::erfc(operand_.eval(x, y, z));
           }
 
          private:
@@ -5999,6 +5999,385 @@
                                                                            const
                                                                            & arg) {
           ErfcFcn<Initial, SubExpr> typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg.expr()));
+       };
+
+      template<typename CurrentMode, typename Operand>
+       struct InvErfFcn;
+      template<typename Operand>
+       struct InvErfFcn<Initial, Operand> {
+         public:
+          InvErfFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
+
+          #ifdef FIELD_EXPRESSION_THREADS
+             InvErfFcn<Resize, typename Operand::ResizeType> typedef ResizeType;
+          #endif
+          /* FIELD_EXPRESSION_THREADS */
+
+          #ifdef __CUDACC__
+             InvErfFcn<GPUWalk, typename Operand::GPUWalkType> typedef
+             GPUWalkType;
+          #endif
+          /* __CUDACC__ */
+
+          InvErfFcn(Operand const & operand)
+          : operand_(operand)
+          {}
+
+          inline structured::GhostData possible_ghosts(void) const {
+             return operand_.possible_ghosts();
+          }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return operand_.minimum_ghosts();
+          }
+
+          inline bool has_extent(void) const { return (operand_.has_extent()); }
+
+          inline int extent(int const dir) const { return operand_.extent(dir); }
+
+          inline SeqWalkType init(void) const {
+             return SeqWalkType(operand_.init());
+          }
+
+          #ifdef FIELD_EXPRESSION_THREADS
+             inline ResizeType resize(void) const {
+                return ResizeType(operand_.resize());
+             }
+          #endif
+          /* FIELD_EXPRESSION_THREADS */
+
+          #ifdef __CUDACC__
+             inline bool cpu_ready(void) const { return (operand_.cpu_ready()); }
+
+             inline bool gpu_ready(int const deviceIndex) const {
+                return (operand_.gpu_ready(deviceIndex));
+             }
+
+             inline GPUWalkType gpu_init(int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(deviceIndex));
+             }
+
+             #ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const {
+                   operand_.gpu_prep(deviceIndex);
+                }
+             #endif
+             /* NEBO_GPU_TEST */
+          #endif
+          /* __CUDACC__ */
+
+         private:
+          Operand const operand_;
+      };
+      #ifdef FIELD_EXPRESSION_THREADS
+         template<typename Operand>
+          struct InvErfFcn<Resize, Operand> {
+            public:
+             InvErfFcn<SeqWalk, typename Operand::SeqWalkType> typedef
+             SeqWalkType;
+
+             InvErfFcn(Operand const & operand)
+             : operand_(operand)
+             {}
+
+             inline SeqWalkType init(void) const {
+                return SeqWalkType(operand_.init());
+             }
+
+            private:
+             Operand const operand_;
+         }
+      #endif
+      /* FIELD_EXPRESSION_THREADS */;
+      template<typename Operand>
+       struct InvErfFcn<SeqWalk, Operand> {
+         public:
+          typename Operand::value_type typedef value_type;
+
+          InvErfFcn(Operand const & operand)
+          : operand_(operand)
+          {}
+
+          inline value_type eval(int const x, int const y, int const z) const {
+             return boost::math::erf_inv(operand_.eval(x, y, z));
+          }
+
+         private:
+          Operand operand_;
+      };
+      #ifdef __CUDACC__
+         template<typename Operand>
+          struct InvErfFcn<GPUWalk, Operand> {
+            public:
+             typename Operand::value_type typedef value_type;
+
+             InvErfFcn(Operand const & operand)
+             : operand_(operand)
+             {}
+
+             __device__ inline value_type eval(int const x,
+                                               int const y,
+                                               int const z) const {
+                return erfinv(operand_.eval(x, y, z));
+             }
+
+            private:
+             Operand operand_;
+         }
+      #endif
+      /* __CUDACC__ */;
+
+      /* Field */
+      template<typename FieldType>
+       inline NeboExpression<InvErfFcn<Initial,
+                                       NeboConstField<Initial,
+                                                      typename NeboFieldCheck<typename
+                                                                              FieldType::
+                                                                              field_type,
+                                                                              FieldType>::
+                                                      Result> >,
+                             FieldType> inv_erf(FieldType const & arg) {
+          InvErfFcn<Initial, NeboConstField<Initial, FieldType> > typedef
+          ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg)));
+       }
+
+      /* SubExpr */
+      template<typename SubExpr, typename FieldType>
+       inline NeboExpression<InvErfFcn<Initial, SubExpr>, FieldType> inv_erf(NeboExpression<SubExpr,
+                                                                                            FieldType>
+                                                                             const
+                                                                             &
+                                                                             arg) {
+          InvErfFcn<Initial, SubExpr> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg.expr()));
+       }
+
+      /* SingleValue */
+      template<typename T>
+       inline NeboSingleValueExpression<InvErfFcn<Initial,
+                                                  NeboConstSingleValueField<Initial,
+                                                                            T> >,
+                                        T> inv_erf(SpatialOps::structured::
+                                                   SpatialField<SpatialOps::
+                                                                structured::
+                                                                SingleValue,
+                                                                T> const & arg) {
+          InvErfFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
+          ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg)));
+       }
+
+      /* SingleValueExpr */
+      template<typename SubExpr, typename T>
+       inline NeboSingleValueExpression<InvErfFcn<Initial, SubExpr>, T> inv_erf(NeboSingleValueExpression<SubExpr,
+                                                                                                          T>
+                                                                                const
+                                                                                &
+                                                                                arg) {
+          InvErfFcn<Initial, SubExpr> typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg.expr()));
+       };
+
+      template<typename CurrentMode, typename Operand>
+       struct InvErfcFcn;
+      template<typename Operand>
+       struct InvErfcFcn<Initial, Operand> {
+         public:
+          InvErfcFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType
+          ;
+
+          #ifdef FIELD_EXPRESSION_THREADS
+             InvErfcFcn<Resize, typename Operand::ResizeType> typedef ResizeType
+             ;
+          #endif
+          /* FIELD_EXPRESSION_THREADS */
+
+          #ifdef __CUDACC__
+             InvErfcFcn<GPUWalk, typename Operand::GPUWalkType> typedef
+             GPUWalkType;
+          #endif
+          /* __CUDACC__ */
+
+          InvErfcFcn(Operand const & operand)
+          : operand_(operand)
+          {}
+
+          inline structured::GhostData possible_ghosts(void) const {
+             return operand_.possible_ghosts();
+          }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return operand_.minimum_ghosts();
+          }
+
+          inline bool has_extent(void) const { return (operand_.has_extent()); }
+
+          inline int extent(int const dir) const { return operand_.extent(dir); }
+
+          inline SeqWalkType init(void) const {
+             return SeqWalkType(operand_.init());
+          }
+
+          #ifdef FIELD_EXPRESSION_THREADS
+             inline ResizeType resize(void) const {
+                return ResizeType(operand_.resize());
+             }
+          #endif
+          /* FIELD_EXPRESSION_THREADS */
+
+          #ifdef __CUDACC__
+             inline bool cpu_ready(void) const { return (operand_.cpu_ready()); }
+
+             inline bool gpu_ready(int const deviceIndex) const {
+                return (operand_.gpu_ready(deviceIndex));
+             }
+
+             inline GPUWalkType gpu_init(int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(deviceIndex));
+             }
+
+             #ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const {
+                   operand_.gpu_prep(deviceIndex);
+                }
+             #endif
+             /* NEBO_GPU_TEST */
+          #endif
+          /* __CUDACC__ */
+
+         private:
+          Operand const operand_;
+      };
+      #ifdef FIELD_EXPRESSION_THREADS
+         template<typename Operand>
+          struct InvErfcFcn<Resize, Operand> {
+            public:
+             InvErfcFcn<SeqWalk, typename Operand::SeqWalkType> typedef
+             SeqWalkType;
+
+             InvErfcFcn(Operand const & operand)
+             : operand_(operand)
+             {}
+
+             inline SeqWalkType init(void) const {
+                return SeqWalkType(operand_.init());
+             }
+
+            private:
+             Operand const operand_;
+         }
+      #endif
+      /* FIELD_EXPRESSION_THREADS */;
+      template<typename Operand>
+       struct InvErfcFcn<SeqWalk, Operand> {
+         public:
+          typename Operand::value_type typedef value_type;
+
+          InvErfcFcn(Operand const & operand)
+          : operand_(operand)
+          {}
+
+          inline value_type eval(int const x, int const y, int const z) const {
+             return boost::math::erfc_inv(operand_.eval(x, y, z));
+          }
+
+         private:
+          Operand operand_;
+      };
+      #ifdef __CUDACC__
+         template<typename Operand>
+          struct InvErfcFcn<GPUWalk, Operand> {
+            public:
+             typename Operand::value_type typedef value_type;
+
+             InvErfcFcn(Operand const & operand)
+             : operand_(operand)
+             {}
+
+             __device__ inline value_type eval(int const x,
+                                               int const y,
+                                               int const z) const {
+                return erfcinv(operand_.eval(x, y, z));
+             }
+
+            private:
+             Operand operand_;
+         }
+      #endif
+      /* __CUDACC__ */;
+
+      /* Field */
+      template<typename FieldType>
+       inline NeboExpression<InvErfcFcn<Initial,
+                                        NeboConstField<Initial,
+                                                       typename NeboFieldCheck<typename
+                                                                               FieldType::
+                                                                               field_type,
+                                                                               FieldType>::
+                                                       Result> >,
+                             FieldType> inv_erfc(FieldType const & arg) {
+          InvErfcFcn<Initial, NeboConstField<Initial, FieldType> > typedef
+          ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg)));
+       }
+
+      /* SubExpr */
+      template<typename SubExpr, typename FieldType>
+       inline NeboExpression<InvErfcFcn<Initial, SubExpr>, FieldType> inv_erfc(NeboExpression<SubExpr,
+                                                                                              FieldType>
+                                                                               const
+                                                                               &
+                                                                               arg) {
+          InvErfcFcn<Initial, SubExpr> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg.expr()));
+       }
+
+      /* SingleValue */
+      template<typename T>
+       inline NeboSingleValueExpression<InvErfcFcn<Initial,
+                                                   NeboConstSingleValueField<Initial,
+                                                                             T> >,
+                                        T> inv_erfc(SpatialOps::structured::
+                                                    SpatialField<SpatialOps::
+                                                                 structured::
+                                                                 SingleValue,
+                                                                 T> const & arg) {
+          InvErfcFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
+          ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg)));
+       }
+
+      /* SingleValueExpr */
+      template<typename SubExpr, typename T>
+       inline NeboSingleValueExpression<InvErfcFcn<Initial, SubExpr>, T>
+       inv_erfc(NeboSingleValueExpression<SubExpr, T> const & arg) {
+          InvErfcFcn<Initial, SubExpr> typedef ReturnType;
 
           NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
 

@@ -30,7 +30,8 @@
 (define (build-Nary-struct name
                            number
                            eval-return-type
-                           internal-use)
+                           CPU-internal-use
+                           GPU-internal-use)
   (define num-lst
     (if (>= 1 number)
         '("")
@@ -140,79 +141,93 @@
                                               vt-chunk)
                                 gen-constructor
                                 eval-return-type
-                                (internal-use index-arg)
+                                (CPU-internal-use index-arg)
                                 null
                                 exec-data-mems)
                 (bs-gpu-rhs (stmt-typedef (typename (scope (first Op-lst) vt-chunk))
                                           vt-chunk)
                             gen-constructor
                             eval-return-type
-                            (internal-use index-arg)
+                            (GPU-internal-use index-arg)
                             null
                             exec-data-mems)))
 
 (define (build-binary-function-struct name internal-name)
-  (build-Nary-struct name
-                     2
-                     vt-chunk
-                     (lambda (args)
-                       (val-call internal-name
-                                 (val-member-call 'operand1_ 'eval args)
-                                 (val-member-call 'operand2_ 'eval args)))))
+  (let ([internal-use (lambda (args)
+                        (val-call internal-name
+                                  (val-member-call 'operand1_ 'eval args)
+                                  (val-member-call 'operand2_ 'eval args)))])
+    (build-Nary-struct name
+                       2
+                       vt-chunk
+                       internal-use
+                       internal-use)))
 
 (define (build-binary-operator-struct name internal-name)
-  (build-Nary-struct name
-                     2
-                     vt-chunk
-                     (lambda (args)
-                       (paren (val-member-call 'operand1_ 'eval args)
-                              internal-name
-                              (val-member-call 'operand2_ 'eval args)))))
+  (let ([internal-use (lambda (args)
+                        (paren (val-member-call 'operand1_ 'eval args)
+                               internal-name
+                               (val-member-call 'operand2_ 'eval args)))])
+    (build-Nary-struct name
+                       2
+                       vt-chunk
+                       internal-use
+                       internal-use)))
 
-(define (build-unary-function-struct name internal-name)
+(define (build-unary-function-struct name CPU-internal-name GPU-internal-name)
+  (define (internal-use internal-name) (lambda (args)
+                                         (val-call internal-name
+                                                   (val-member-call 'operand_ 'eval args))))
   (build-Nary-struct name
                      1
                      vt-chunk
-                     (lambda (args)
-                       (val-call internal-name
-                                 (val-member-call 'operand_ 'eval args)))))
+                     (internal-use CPU-internal-name)
+                     (internal-use GPU-internal-name)))
 
 (define (build-comparison-struct name internal-name)
-  (build-Nary-struct name
-                     2
-                     'bool
-                     (lambda (args)
-                       (paren (val-member-call 'operand1_ 'eval args)
-                              internal-name
-                              (val-member-call 'operand2_ 'eval args)))))
+  (let ([internal-use (lambda (args)
+                        (paren (val-member-call 'operand1_ 'eval args)
+                               internal-name
+                               (val-member-call 'operand2_ 'eval args)))])
+    (build-Nary-struct name
+                       2
+                       'bool
+                       internal-use
+                       internal-use)))
 
 (define (build-unary-logical-function-struct name internal-name)
-  (build-Nary-struct name
-                     1
-                     'bool
-                     (lambda (args)
-                       (val-call internal-name
-                                 (val-member-call 'operand_ 'eval args)))))
+  (let ([internal-use (lambda (args)
+                        (val-call internal-name
+                                  (val-member-call 'operand_ 'eval args)))])
+    (build-Nary-struct name
+                       1
+                       'bool
+                       internal-use
+                       internal-use)))
 
 (define (build-logical-operator-struct name internal-name)
-  (build-Nary-struct name
-                     2
-                     'bool
-                     (lambda (args)
-                       (paren (val-member-call 'operand1_ 'eval args)
-                              internal-name
-                              (val-member-call 'operand2_ 'eval args)))))
+  (let ([internal-use (lambda (args)
+                        (paren (val-member-call 'operand1_ 'eval args)
+                               internal-name
+                               (val-member-call 'operand2_ 'eval args)))])
+    (build-Nary-struct name
+                       2
+                       'bool
+                       internal-use
+                       internal-use)))
 
 (define (build-extremum-function-struct name comparison)
-  (build-Nary-struct name
-                     2
-                     vt-chunk
-                     (lambda (args)
-                       (ter-cond (paren (val-member-call 'operand1_ 'eval args)
-                                        comparison
-                                        (val-member-call 'operand2_ 'eval args))
-                                 (val-member-call 'operand1_ 'eval args)
-                                 (val-member-call 'operand2_ 'eval args)))))
+  (let ([internal-use (lambda (args)
+                        (ter-cond (paren (val-member-call 'operand1_ 'eval args)
+                                         comparison
+                                         (val-member-call 'operand2_ 'eval args))
+                                  (val-member-call 'operand1_ 'eval args)
+                                  (val-member-call 'operand2_ 'eval args)))])
+    (build-Nary-struct name
+                       2
+                       vt-chunk
+                       internal-use
+                       internal-use)))
 
 (define (add-spacing-check arg)
   (space-after arg))
@@ -495,9 +510,9 @@
   (internal-smt-list blank-line
                      (build-binary-operator-struct name internal-name)
                      (build-binary-interface name external-name 'scalar binary-expr-arg-lst)))
-(define (build-unary-function name internal-name external-name)
+(define (build-unary-function name CPU-internal-name GPU-internal-name external-name)
   (internal-smt-list blank-line
-                     (build-unary-function-struct name internal-name)
+                     (build-unary-function-struct name CPU-internal-name GPU-internal-name)
                      (build-unary-interface name external-name 'scalar unary-expr-arg-lst)))
 (define (build-comparison-operator name internal-name external-name)
   (internal-smt-list blank-line
@@ -530,41 +545,63 @@
   (build-binary-operator 'DivOp '/ (add-spaces 'operator '/))
   (build-unary-function 'SinFcn
                         (scope 'std 'sin)
+                        (scope 'std 'sin)
                         'sin)
   (build-unary-function 'CosFcn
+                        (scope 'std 'cos)
                         (scope 'std 'cos)
                         'cos)
   (build-unary-function 'TanFcn
                         (scope 'std 'tan)
+                        (scope 'std 'tan)
                         'tan)
   (build-unary-function 'ExpFcn
+                        (scope 'std 'exp)
                         (scope 'std 'exp)
                         'exp)
   (build-unary-function 'TanhFcn
                         (scope 'std 'tanh)
+                        (scope 'std 'tanh)
                         'tanh)
   (build-unary-function 'AbsFcn
                         (scope 'std 'abs)
+                        (scope 'std 'abs)
                         'abs)
-  (build-unary-function 'NegFcn '- (add-spaces 'operator '-))
+  (build-unary-function 'NegFcn
+                        '-
+                        '-
+                        (add-spaces 'operator '-))
   (build-binary-function 'PowFcn
                          (scope 'std 'pow)
                          'pow)
   (build-unary-function 'SqrtFcn
                         (scope 'std 'sqrt)
+                        (scope 'std 'sqrt)
                         'sqrt)
   (build-unary-function 'LogFcn
+                        (scope 'std 'log)
                         (scope 'std 'log)
                         'log)
   (build-unary-function 'Log10Fcn
                         (scope 'std 'log10)
+                        (scope 'std 'log10)
                         'log10)
   (build-unary-function 'ErfFcn
-                        'erf            ;(scope 'std 'erf)
+                        (scope 'boost (scope 'math 'erf))
+                        'erf
                         'erf)
   (build-unary-function 'ErfcFcn
-                        'erfc           ;(scope 'std 'erfc)
+                        (scope 'boost (scope 'math 'erfc))
+                        'erfc
                         'erfc)
+  (build-unary-function 'InvErfFcn
+                        (scope 'boost (scope 'math 'erf_inv))
+                        'erfinv
+                        'inv_erf)
+  (build-unary-function 'InvErfcFcn
+                        (scope 'boost (scope 'math 'erfc_inv))
+                        'erfcinv
+                        'inv_erfc)
   (build-comparison-operator 'EqualCmp '== (add-spaces 'operator '==))
   (build-comparison-operator 'InequalCmp '!= (add-spaces 'operator '!=))
   (build-comparison-operator 'LessThanCmp '< (add-spaces 'operator '<))

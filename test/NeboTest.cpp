@@ -153,6 +153,8 @@ int main( int iarg, char* carg[] )
     initialize_field(input2, total);
     initialize_field(input3, 2 * total);
     initialize_field(input4, 3 * total);
+    //make input4 positive only:
+    input4 <<= abs(input4);
 
     initialize_field(SVinput1, 0.0);
     initialize_field(SVinput2, total);
@@ -186,8 +188,12 @@ int main( int iarg, char* carg[] )
     //documentation says with 1 ulp, empirically found to be 2
     RUNTESTIGNORENANULP(log10(input1), std::log10(INPUT1), "log10 test", 2);
 
-    RUNTESTULP(erf(input1), erf(INPUT1), "erf test", 2);
-    RUNTESTULP(erfc(input1), erfc(INPUT1), "erfc test", 4);
+    RUNTESTULP(erf(input1), boost::math::erf(INPUT1), "erf test", 2);
+    RUNTESTULP(erfc(input1), boost::math::erfc(INPUT1), "erfc test", 4);
+
+    RUNTESTULP(inv_erf(input1), boost::math::erf_inv(INPUT1), "inv_erf test", 5);
+    //domain is (0.0, 1.0), so use input4:
+    RUNTESTULP(inv_erfc(input4), boost::math::erfc_inv(INPUT4), "inv_erfc test", 6);
 
     RUNTEST(cond(input1 == input2, true)(false), INPUT1 == INPUT2, "equivalence test");
     RUNTEST(cond(input1 != input2, true)(false), INPUT1 != INPUT2, "non-equivalence test");
