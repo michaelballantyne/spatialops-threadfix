@@ -330,7 +330,10 @@ SpatFldPtr<FieldT>::SpatFldPtr(const SpatFldPtr<FieldT>& p)
     deviceIndex_( p.deviceIndex_),
     memType_( p.memType_ )
 {
-    ++(*count_);
+# ifdef ENABLE_THREADS
+  boost::mutex::scoped_lock lock( get_mutex() );
+# endif
+  ++(*count_);
 }
 
 //------------------------------------------------------------------
@@ -349,6 +352,9 @@ template<typename FieldT>
 SpatFldPtr<FieldT>&
 SpatFldPtr<FieldT>::operator=(const SpatFldPtr& p)
 {
+# ifdef ENABLE_THREADS
+  boost::mutex::scoped_lock lock( get_mutex() );
+# endif
   // was this an active SpatFldPtr?
   if (count_ != NULL) {
     // this one is dying so decrement the count.
@@ -379,6 +385,9 @@ SpatFldPtr<FieldT>::operator=(const SpatFldPtr& p)
 template<typename FieldT>
 SpatFldPtr<FieldT>&
 SpatFldPtr<FieldT>::operator=(FieldT* const f) {
+# ifdef ENABLE_THREADS
+  boost::mutex::scoped_lock lock( get_mutex() );
+# endif
   // was this an active SpatFldPtr?
   if (count_ != NULL) {
     // this one is dying so decrement the count.
@@ -410,6 +419,9 @@ SpatFldPtr<FieldT>::operator=(FieldT* const f) {
 
 template<typename FieldT>
 void SpatFldPtr<FieldT>::detach() {
+# ifdef ENABLE_THREADS
+  boost::mutex::scoped_lock lock( get_mutex() );
+# endif
   // was this an active SpatFldPtr?
   if( count_ != NULL ){
     // this one is dying so decrement the count.
