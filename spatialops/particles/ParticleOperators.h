@@ -164,7 +164,7 @@ namespace Particle{
         throw std::runtime_error( "Particle is outside of the domain!" );
       }
 #     endif
-      //loop through all cells effected by the particle and add the source term
+      //loop through all cells affected by the particle and add the contribution
       while(leftloc < rightloc){
         double rb = coordVec_[leftcellIx1] + dx_/2;
         if( rb > rightloc ) rb = rightloc;
