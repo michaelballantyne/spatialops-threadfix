@@ -165,6 +165,13 @@ private:
   bool builtFromStore_;
   unsigned short deviceIndex_;
   MemoryType memType_;
+
+#ifdef ENABLE_THREADS
+  /**
+   *  Used to lock threads to prevent simultaneous access.
+   */
+  inline static boost::mutex& get_mutex() {static boost::mutex m; return m;}
+#endif
 };
 
 /**
