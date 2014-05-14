@@ -237,7 +237,7 @@
           }
 
           inline structured::GhostData minimum_ghosts(void) const {
-             return min(arg_.possible_ghosts(), arg_.minimum_ghosts());
+             return min(possible_ghosts(), arg_.minimum_ghosts());
           }
 
           inline bool has_extent(void) const { return arg_.has_extent(); }
@@ -468,7 +468,7 @@
           }
 
           inline structured::GhostData minimum_ghosts(void) const {
-             return min(arg_.possible_ghosts(), arg_.minimum_ghosts());
+             return min(possible_ghosts(), arg_.minimum_ghosts());
           }
 
           inline bool has_extent(void) const { return arg_.has_extent(); }
@@ -692,7 +692,7 @@
           }
 
           inline structured::GhostData minimum_ghosts(void) const {
-             return min(arg_.possible_ghosts(), arg_.minimum_ghosts());
+             return min(possible_ghosts(), arg_.minimum_ghosts());
           }
 
           inline bool has_extent(void) const { return arg_.has_extent(); }

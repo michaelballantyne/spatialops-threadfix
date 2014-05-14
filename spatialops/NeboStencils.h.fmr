@@ -281,7 +281,7 @@
                                 (val-call (scope 'Pts 'possible_ghosts)
                                           (val-member-call 'arg_ 'possible_ghosts))
                                 (val-call 'min
-                                          (val-member-call 'arg_ 'possible_ghosts)
+                                          (val-call 'possible_ghosts)
                                           (val-member-call 'arg_ 'minimum_ghosts))
                                 (val-member-call 'arg_ 'has_extent)
                                 null
@@ -362,7 +362,7 @@
                                 (val-call (scope 'Pts 'possible_ghosts)
                                           (val-member-call 'arg_ 'possible_ghosts))
                                 (val-call 'min
-                                          (val-member-call 'arg_ 'possible_ghosts)
+                                          (val-call 'possible_ghosts)
                                           (val-member-call 'arg_ 'minimum_ghosts))
                                 (val-member-call 'arg_ 'has_extent)
                                 null
@@ -430,7 +430,7 @@
                                 (val-call (type-template 'point_possible_ghosts 'Point)
                                           (val-member-call 'arg_ 'possible_ghosts))
                                 (val-call 'min
-                                          (val-member-call 'arg_ 'possible_ghosts)
+                                          (val-call 'possible_ghosts)
                                           (val-member-call 'arg_ 'minimum_ghosts))
                                 (val-member-call 'arg_ 'has_extent)
                                 null
