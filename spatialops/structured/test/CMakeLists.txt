@@ -12,6 +12,10 @@ nebo_add_executable( test_mask testMask.cpp )
 target_link_libraries( test_mask ${libs} )
 add_test( test_mask test_mask )
 
+nebo_add_executable( test_nebo_bc testNeboBC.cpp )
+target_link_libraries( test_nebo_bc ${libs} )
+add_test( test_nebo_bc test_nebo_bc )
+
 nebo_add_executable( test_field testField.cpp )
 target_link_libraries( test_field ${libs} )
 add_test( test_field test_field )

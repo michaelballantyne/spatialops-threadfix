@@ -214,6 +214,84 @@ namespace SpatialOps {
     };
 
   /**
+   * \struct NeboEdgelessStencilBuilder
+   * \brief Supports definition of new Nebo stencils that do NOT invalidate ghost cells.
+   *
+   * \tparam OperatorType the type of operator, e.g. SpatialOps::Gradient, SpatialOps::Interpolant, etc.
+   * \tparam PntCltnT     defines the stencil points
+   * \tparam SrcFieldT    the type of field that this operator acts on
+   * \tparam DestFieldT   the type of field that this operator produces
+   */
+    template<typename OperatorType, typename PntCltnT, typename SrcFieldT, typename DestFieldT>
+    struct NeboEdgelessStencilBuilder {
+    public:
+        typedef OperatorType  type;                 ///< operator type (Interpolant, Gradient, Divergence)
+        typedef PntCltnT      PointCollectionType;  ///< collection of stencil points
+        typedef SrcFieldT     SrcFieldType;         ///< source field type
+        typedef DestFieldT    DestFieldType;        ///< destination field type
+        typedef NeboStencilCoefCollection<PointCollectionType::length>
+                              CoefCollection;       ///< collection of coefficients
+
+        // typedefs for when argument is a Nebo expression
+        template<typename Arg>
+        struct WithArg {
+            typedef NeboEdgelessStencil<Initial, PointCollectionType, Arg, DestFieldType> Stencil;
+            typedef NeboExpression<Stencil, DestFieldType> Result;
+        };
+
+        // typedefs for when argument is a field
+        typedef NeboConstField<Initial, SrcFieldType> FieldArg;
+        typedef NeboEdgelessStencil<Initial, PointCollectionType, FieldArg, DestFieldType> FieldStencil;
+        typedef NeboExpression<FieldStencil, DestFieldType> FieldResult;
+
+        /**
+         *  \brief construct a stencil with the specified coefficients
+         */
+        NeboEdgelessStencilBuilder(const CoefCollection & coefs)
+         : coefCollection_(coefs)
+        {}
+
+        ~NeboEdgelessStencilBuilder() {}
+
+        /**
+         * \brief Return coefficient collection
+         */
+        CoefCollection const & coefs(void) const { return coefCollection_; };
+
+        /**
+         * \brief Apply this operator to the supplied source field to produce the supplied destination field
+         * \param src the field that the operator is applied to
+         * \param dest the resulting field.
+         */
+        void apply_to_field( const SrcFieldType & src, DestFieldType & dest ) const {
+            dest <<= operator()(src);
+        }
+
+        /**
+         * \brief Nebo's inline operator for field values
+         * \param src the field to which the operator is applied
+         */
+        inline FieldResult operator ()( const SrcFieldType & src ) const {
+            return FieldResult(FieldStencil(FieldArg(src), coefs()));
+        }
+
+        /**
+         * \brief Nebo's inline operator for Nebo expressions
+         * \param src the Nebo expression to which the operator is applied
+         */
+        template<typename Arg>
+        inline typename WithArg<Arg>::Result
+        operator ()( const NeboExpression<Arg, SrcFieldType> & src ) const {
+            typedef typename WithArg<Arg>::Stencil Stencil;
+            typedef typename WithArg<Arg>::Result Result;
+            return Result(Stencil(src.expr(), coefs()));
+        }
+
+    private:
+        const CoefCollection coefCollection_;
+    };
+
+  /**
    * \struct NeboSumStencilBuilder
    * \brief Supports definition of new Nebo sum stencils, which sums given stencil points WITHOUT coefficients.
    *
@@ -473,8 +551,8 @@ namespace SpatialOps {
    * \struct NeboBoundaryConditionBuilder
    * \brief Supports definition of new Nebo boundary condition.
    *
-   * \tparam DestPnt     Stencil offset for destination in Phi
-   * \tparam SrcPnt      Stencil offset for source in Phi
+   * \tparam LowPnt      Stencil offset for low point in Phi
+   * \tparam HighPnt     Stencil offset for high point in Phi
    * \tparam PhiFieldT   Type of field of phi, which this operator modifies
    * \tparam GammaFieldT Type of fields in gamma, which this operator reads
    *
@@ -485,27 +563,31 @@ namespace SpatialOps {
    * This stencil actually computes (only for given mask points):
    *  dest = (gamma - src * srcCoef) / destCoef
    */
-    template<typename DestPnt, typename SrcPnt, typename PhiFieldT, typename GammaFieldT>
+    template<typename LowPnt, typename HighPnt, typename PhiFieldT, typename GammaFieldT>
     struct NeboBoundaryConditionBuilder {
     public:
-      typedef DestPnt          DestPoint; ///< stencil offset for destination in phi, assumes gamma is origin
-      typedef SrcPnt            SrcPoint; ///< stencil offset for source in phi, assumes gamma is origin
+      typedef LowPnt            LowPoint; ///< stencil offset for low point in phi, assumes gamma is origin
+      typedef HighPnt          HighPoint; ///< stencil offset for high point in phi, assumes gamma is origin
       typedef PhiFieldT     PhiFieldType; ///< field type of phi, which this operator modifies
       typedef GammaFieldT GammaFieldType; ///< type of fields in gamma, which this operator reads
 
-      typedef typename structured::Subtract<structured::IndexTriplet<0,0,0>, DestPoint>::result ShiftedGammaPoint;
-      typedef typename structured::Subtract<SrcPoint, DestPoint>::result                        ShiftedSrcPoint;
+      typedef typename structured::Subtract<structured::IndexTriplet<0,0,0>, LowPoint>:: result LowGammaPoint;
+      typedef typename structured::Subtract<structured::IndexTriplet<0,0,0>, HighPoint>::result HighGammaPoint;
+      typedef typename structured::Subtract<HighPoint, LowPoint>:: result                       LowSrcPoint;
+      typedef typename structured::Subtract<LowPoint,  HighPoint>::result                       HighSrcPoint;
       typedef NeboMask<Initial, GammaFieldType>                                                 GammaMask;
       typedef NeboMaskShiftBuilder<GammaFieldType, PhiFieldType>                                Shift;
 
-      typedef NeboSumStencilBuilder<NEBO_FIRST_POINT_WO_TN(ShiftedGammaPoint), GammaFieldType, PhiFieldType> GammaShiftType;
-      typedef NeboSumStencilBuilder<NEBO_FIRST_POINT_WO_TN(ShiftedSrcPoint), PhiFieldType, PhiFieldType>     PhiShiftType;
+      typedef NeboEdgelessStencilBuilder<NeboNil, NEBO_FIRST_POINT_WO_TN(LowGammaPoint),  GammaFieldType, PhiFieldType> MinusGammaType;
+      typedef NeboEdgelessStencilBuilder<NeboNil, NEBO_FIRST_POINT_WO_TN(HighGammaPoint), GammaFieldType, PhiFieldType> PlusGammaType;
+      typedef NeboEdgelessStencilBuilder<NeboNil, NEBO_FIRST_POINT_WO_TN(LowSrcPoint),  PhiFieldType, PhiFieldType>     MinusPhiType;
+      typedef NeboEdgelessStencilBuilder<NeboNil, NEBO_FIRST_POINT_WO_TN(HighSrcPoint), PhiFieldType, PhiFieldType>     PlusPhiType;
 
       /**
        *  \brief construct a boundary condition
        */
-      NeboBoundaryConditionBuilder(double destCoef, double srcCoef)
-      : destCoef_(destCoef), srcCoef_(srcCoef), gammaShift_(), phiShift_(), shift_()
+      NeboBoundaryConditionBuilder(double lowCoef, double highCoef)
+      : lowCoef_(lowCoef), highCoef_(highCoef), minusGamma_(1.0), minusPhi_(highCoef), plusGamma_(1.0), plusPhi_(lowCoef), shift_()
       {}
 
       ~NeboBoundaryConditionBuilder() {}
@@ -522,10 +604,10 @@ namespace SpatialOps {
                              const NeboExpression<ExprType, GammaFieldType> & gamma,
                              bool minus) const {
         if(minus)
-          phi <<= cond(shift_.minus(mask), (gammaShift_(gamma) - phiShift_(phi) * srcCoef_) / destCoef_)
+          phi <<= cond(shift_.minus(mask), (minusGamma_(gamma) - minusPhi_(phi)) / lowCoef_)
                       (phi);
         else
-          phi <<= cond(shift_.plus(mask), (gammaShift_(gamma) - phiShift_(phi) * srcCoef_) / destCoef_)
+          phi <<= cond(shift_.plus(mask), (plusGamma_(gamma) - plusPhi_(phi)) / highCoef_)
                       (phi);
       }
 
@@ -560,10 +642,12 @@ namespace SpatialOps {
       }
 
     private:
-      const double destCoef_;
-      const double srcCoef_;
-      const GammaShiftType gammaShift_;
-      const PhiShiftType phiShift_;
+      const double lowCoef_;
+      const double highCoef_;
+      const MinusGammaType minusGamma_;
+      const PlusGammaType plusGamma_;
+      const MinusPhiType minusPhi_;
+      const PlusPhiType plusPhi_;
       const Shift shift_;
     };
 

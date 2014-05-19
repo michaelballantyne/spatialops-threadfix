@@ -348,6 +348,127 @@
                             (list (stmt-dcl-variable 'Arg 'arg_)
                                   (stmt-dcl-variable (const 'Coefs) 'coefs_))))
 
+  (build-struct 'NeboEdgelessStencil
+                std-FT
+                (list 'Pts 'Arg)
+                null
+                (bs-Initial-rhs (stmt-typedef (type-template NSCC (scope 'Pts 'length))
+                                              'Coefs)
+                                (list (list 'Pts (typename (scope 'Arg 'SeqWalkType)))
+                                      (list 'Pts (typename (scope 'Arg 'ResizeType)))
+                                      (list 'Pts (typename (scope 'Arg 'GPUWalkType))))
+                                (bm-constructor (list (function-pmtr (ref (const 'Arg)) 'a)
+                                                      (function-pmtr (ref (const 'Coefs)) 'coefs))
+                                                (list (val-construct 'arg_ 'a)
+                                                      (val-construct 'coefs_ 'coefs))
+                                                null)
+                                (val-member-call 'arg_ 'possible_ghosts)
+                                (val-member-call 'arg_ 'minimum_ghosts)
+                                (val-member-call 'arg_ 'has_extent)
+                                null
+                                (val-member-call 'arg_ 'extent 'dir)
+                                (list (val-member-call 'arg_ 'init)
+                                      'coefs_
+                                      (val-call 'lowest_indicies)
+                                      (val-call 'highest_indicies))
+                                (list (val-member-call 'arg_ 'resize)
+                                      'coefs_
+                                      (val-call 'lowest_indicies)
+                                      (val-call 'highest_indicies))
+                                (val-member-call 'arg_ 'cpu_ready)
+                                (val-member-call 'arg_ 'gpu_ready DI-chunk)
+                                (list (val-member-call 'arg_ 'gpu_init DI-chunk)
+                                      'coefs_)
+                                (val-member-call 'arg_ 'gpu_prep DI-chunk)
+                                (list (def-returning-function (constize (dcl-function 'actual_ghosts GhostData))
+                                        null
+                                        (val-call (scope 'Pts 'possible_ghosts)
+                                                  (val-member-call 'arg_ 'possible_ghosts)))
+                                      (def-returning-function (constize (dcl-function 'lowest_indicies IntVec))
+                                        null
+                                        (val-negate (val-member-call (val-call 'actual_ghosts)
+                                                                     'get_minus)))
+                                      (def-returning-function (constize (dcl-function 'highest_indicies IntVec))
+                                        null
+                                        (val-add (val-member-call (val-call 'actual_ghosts)
+                                                                  'get_plus)
+                                                 (val-call IntVec
+                                                           (val-call 'extent 0)
+                                                           (val-call 'extent 1)
+                                                           (val-call 'extent 2)))))
+                                (list (stmt-dcl-variable (const 'Arg) 'arg_)
+                                      (stmt-dcl-variable (const 'Coefs) 'coefs_)))
+                (bs-Resize-rhs (stmt-typedef (type-template NSCC (scope 'Pts 'length))
+                                             'Coefs)
+                               (list 'Pts (typename (scope 'Arg 'SeqWalkType)))
+                               (bm-constructor (list (function-pmtr (ref (const 'Arg)) 'arg)
+                                                     (function-pmtr (ref (const 'Coefs)) 'coefs)
+                                                     (function-pmtr (ref (const IntVec)) 'low)
+                                                     (function-pmtr (ref (const IntVec)) 'high))
+                                               (list (val-construct 'arg_ 'arg)
+                                                     (val-construct 'coefs_ 'coefs)
+                                                     (val-construct 'low_ 'low)
+                                                     (val-construct 'high_ 'high))
+                                               null)
+                               (list (val-member-call 'arg_ 'init)
+                                     'coefs_
+                                     'low_
+                                     'high_)
+                               null
+                               (list (stmt-dcl-variable (const 'Arg) 'arg_)
+                                     (stmt-dcl-variable (const 'Coefs) 'coefs_)
+                                     (stmt-dcl-variable (const IntVec) 'low_)
+                                     (stmt-dcl-variable (const IntVec) 'high_)))
+                (bs-SeqWalk-rhs-with-eval-body (list (stmt-typedef (type-template NSCC (scope 'Pts 'length))
+                                                                   'Coefs)
+                                                     (general-eval-struct 'EvalExpr #false)
+                                                     (single-eval-struct 'EvalExpr #false))
+                                               (bm-constructor (list (function-pmtr (ref (const 'Arg)) 'arg)
+                                                                     (function-pmtr (ref (const 'Coefs)) 'coefs)
+                                                                     (function-pmtr (ref (const IntVec)) 'low)
+                                                                     (function-pmtr (ref (const IntVec)) 'high))
+                                                               (list (val-construct 'arg_ 'arg)
+                                                                     (val-construct 'coefs_ 'coefs)
+                                                                     (val-construct 'low_ 'low)
+                                                                     (val-construct 'high_ 'high))
+                                                               null)
+                                               vt-chunk
+                                               (pp-debug-only (stmt-typed-assign IntVec 'index (val-call IntVec 'x 'y 'z))
+                                                              new-line
+                                                              (stmt-if (val-or (val-less-than 'index 'low_)
+                                                                               (val-greater-equal 'index 'high_))
+                                                                       (build-error-with-call '(Nebo Edgeless Stencil)
+                                                                                              "\"\t - \""
+                                                                                              '<< 'low_ '<< "\" < \"" '<< 'index '<< "\" <= \"" '<< 'high_)))
+                                               (val-call (scope (type-template 'EvalExpr 'Pts)
+                                                                'eval)
+                                                         'arg_
+                                                         'coefs_
+                                                         index-arg)
+                                               null
+                                               (list (stmt-dcl-variable 'Arg 'arg_)
+                                                     (stmt-dcl-variable (const 'Coefs) 'coefs_)
+                                                     (stmt-dcl-variable (const IntVec) 'low_)
+                                                     (stmt-dcl-variable (const IntVec) 'high_)))
+                (bs-gpu-rhs (list (stmt-typedef (type-template NSCC (scope 'Pts 'length))
+                                                'Coefs)
+                                  (general-eval-struct 'EvalExpr #true)
+                                  (single-eval-struct 'EvalExpr #true))
+                            (bm-constructor (list (function-pmtr (ref (const 'Arg)) 'a)
+                                                  (function-pmtr (ref (const 'Coefs)) 'coefs))
+                                            (list (val-construct 'arg_ 'a)
+                                                  (val-construct 'coefs_ 'coefs))
+                                            null)
+                            vt-chunk
+                            (val-call (scope (type-template 'EvalExpr 'Pts)
+                                             'eval)
+                                      'arg_
+                                      'coefs_
+                                      index-arg)
+                            null
+                            (list (stmt-dcl-variable 'Arg 'arg_)
+                                  (stmt-dcl-variable (const 'Coefs) 'coefs_))))
+
   (build-struct 'NeboSumStencil
                 std-FT
                 (list 'Pts 'Arg)
@@ -457,7 +578,11 @@
                                                 (val-construct 'arg_ 'arg)
                                                 null)
                                 'bool
-                                (val-member-call 'arg_ 'eval index-arg)
+                                (val-member-call 'arg_
+                                                 'eval
+                                                 (val-add 'x (point-to-value 0 #false))
+                                                 (val-add 'y (point-to-value 1 #false))
+                                                 (val-add 'z (point-to-value 2 #false)))
                                 null
                                 (stmt-dcl-variable 'Arg 'arg_))
                 (bs-gpu-rhs null
@@ -465,7 +590,11 @@
                                             (val-construct 'arg_ 'a)
                                             null)
                             'bool
-                            (val-member-call 'arg_ 'eval index-arg)
+                            (val-member-call 'arg_
+                                             'eval
+                                             (val-add 'x (point-to-value 0 #true))
+                                             (val-add 'y (point-to-value 1 #true))
+                                             (val-add 'z (point-to-value 2 #true)))
                             null
                             (stmt-dcl-variable 'Arg 'arg_)))
   ))

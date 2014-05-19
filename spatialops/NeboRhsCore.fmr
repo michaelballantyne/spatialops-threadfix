@@ -110,6 +110,31 @@
                               publics)
                         privates))
 (define bs-Resize-rhs (arg-swap build-Resize-rhs 6 4 "bs-Resize-rhs"))
+(define (build-SeqWalk-rhs-with-eval-body name
+                                          FT
+                                          tpl-irreg-pars
+                                          tpl-reg-pars
+                                          typedefs
+                                          constructor
+                                          eval-type
+                                          eval-body
+                                          eval-result
+                                          publics
+                                          privates)
+  (build-SeqWalk-general name
+                         FT
+                         tpl-irreg-pars
+                         tpl-reg-pars
+                         typedefs
+                         constructor
+                         (list (def-returning-function (constize (dcl-function 'eval
+                                                                               eval-type
+                                                                               index-pmtr))
+                                 eval-body
+                                 eval-result)
+                               publics)
+                         privates))
+(define bs-SeqWalk-rhs-with-eval-body (arg-swap build-SeqWalk-rhs-with-eval-body 7 4 "bs-SeqWalk-rhs"))
 (define (build-SeqWalk-rhs name
                            FT
                            tpl-irreg-pars

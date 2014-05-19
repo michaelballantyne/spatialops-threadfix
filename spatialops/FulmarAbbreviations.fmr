@@ -137,7 +137,7 @@
   (add-spaces lhs '< rhs))
 (define (val-greater-than lhs . rhs)
   (add-spaces lhs '> rhs))
-(define (val-lesser-equal lhs . rhs)
+(define (val-less-equal lhs . rhs)
   (add-spaces lhs '<= rhs))
 (define (val-greater-equal lhs . rhs)
   (add-spaces lhs '>= rhs))

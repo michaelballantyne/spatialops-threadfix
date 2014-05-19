@@ -98,6 +98,19 @@ class Numeric3Vec
      return (ijk[0]!=v.ijk[0]) | (ijk[1]!=v.ijk[1]) | (ijk[2]!=v.ijk[2]);
    }
 
+   inline bool operator<(const Numeric3Vec& v) const{
+     return (ijk[0]<v.ijk[0]) & (ijk[1]<v.ijk[1]) & (ijk[2]<v.ijk[2]);
+   }
+   inline bool operator<=(const Numeric3Vec& v) const{
+     return (ijk[0]<=v.ijk[0]) & (ijk[1]<=v.ijk[1]) & (ijk[2]<=v.ijk[2]);
+   }
+   inline bool operator>(const Numeric3Vec& v) const{
+     return (ijk[0]>v.ijk[0]) & (ijk[1]>v.ijk[1]) & (ijk[2]>v.ijk[2]);
+   }
+   inline bool operator>=(const Numeric3Vec& v) const{
+     return (ijk[0]>=v.ijk[0]) & (ijk[1]>=v.ijk[1]) & (ijk[2]>=v.ijk[2]);
+   }
+
 
 
    inline Numeric3Vec operator+( const Numeric3Vec& v ) const{
@@ -119,6 +132,11 @@ class Numeric3Vec
      return Numeric3Vec( ijk[0] / v.ijk[0],
                     ijk[1] / v.ijk[1],
                     ijk[2] / v.ijk[2] );
+   }
+   inline Numeric3Vec operator-() const{
+     return Numeric3Vec( - ijk[0],
+                         - ijk[1],
+                         - ijk[2] );
    }
 
    template<typename T1>

@@ -438,6 +438,292 @@
                typename Pts,
                typename Arg,
                typename FieldType>
+       struct NeboEdgelessStencil;
+      template<typename Pts, typename Arg, typename FieldType>
+       struct NeboEdgelessStencil<Initial, Pts, Arg, FieldType> {
+         public:
+          FieldType typedef field_type;
+
+          NeboStencilCoefCollection<Pts::length> typedef Coefs;
+
+          NeboEdgelessStencil<SeqWalk, Pts, typename Arg::SeqWalkType, FieldType>
+          typedef SeqWalkType;
+
+          #ifdef FIELD_EXPRESSION_THREADS
+             NeboEdgelessStencil<Resize,
+                                 Pts,
+                                 typename Arg::ResizeType,
+                                 FieldType> typedef ResizeType;
+          #endif
+          /* FIELD_EXPRESSION_THREADS */
+
+          #ifdef __CUDACC__
+             NeboEdgelessStencil<GPUWalk,
+                                 Pts,
+                                 typename Arg::GPUWalkType,
+                                 FieldType> typedef GPUWalkType;
+          #endif
+          /* __CUDACC__ */
+
+          NeboEdgelessStencil(Arg const & a, Coefs const & coefs)
+          : arg_(a), coefs_(coefs)
+          {}
+
+          inline structured::GhostData possible_ghosts(void) const {
+             return arg_.possible_ghosts();
+          }
+
+          inline structured::GhostData minimum_ghosts(void) const {
+             return arg_.minimum_ghosts();
+          }
+
+          inline bool has_extent(void) const { return arg_.has_extent(); }
+
+          inline int extent(int const dir) const { return arg_.extent(dir); }
+
+          inline SeqWalkType init(void) const {
+             return SeqWalkType(arg_.init(),
+                                coefs_,
+                                lowest_indicies(),
+                                highest_indicies());
+          }
+
+          #ifdef FIELD_EXPRESSION_THREADS
+             inline ResizeType resize(void) const {
+                return ResizeType(arg_.resize(),
+                                  coefs_,
+                                  lowest_indicies(),
+                                  highest_indicies());
+             }
+          #endif
+          /* FIELD_EXPRESSION_THREADS */
+
+          #ifdef __CUDACC__
+             inline bool cpu_ready(void) const { return arg_.cpu_ready(); }
+
+             inline bool gpu_ready(int const deviceIndex) const {
+                return arg_.gpu_ready(deviceIndex);
+             }
+
+             inline GPUWalkType gpu_init(int const deviceIndex) const {
+                return GPUWalkType(arg_.gpu_init(deviceIndex), coefs_);
+             }
+
+             #ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const {
+                   arg_.gpu_prep(deviceIndex);
+                }
+             #endif
+             /* NEBO_GPU_TEST */
+          #endif
+          /* __CUDACC__ */
+
+          inline structured::GhostData actual_ghosts(void) const {
+             return Pts::possible_ghosts(arg_.possible_ghosts());
+          }
+
+          inline structured::IntVec lowest_indicies(void) const {
+             return -(actual_ghosts().get_minus());
+          }
+
+          inline structured::IntVec highest_indicies(void) const {
+             return actual_ghosts().get_plus() + structured::IntVec(extent(0),
+                                                                    extent(1),
+                                                                    extent(2));
+          }
+
+         private:
+          Arg const arg_;
+
+          Coefs const coefs_;
+      };
+      #ifdef FIELD_EXPRESSION_THREADS
+         template<typename Pts, typename Arg, typename FieldType>
+          struct NeboEdgelessStencil<Resize, Pts, Arg, FieldType> {
+            public:
+             FieldType typedef field_type;
+
+             NeboStencilCoefCollection<Pts::length> typedef Coefs;
+
+             NeboEdgelessStencil<SeqWalk,
+                                 Pts,
+                                 typename Arg::SeqWalkType,
+                                 FieldType> typedef SeqWalkType;
+
+             NeboEdgelessStencil(Arg const & arg,
+                                 Coefs const & coefs,
+                                 structured::IntVec const & low,
+                                 structured::IntVec const & high)
+             : arg_(arg), coefs_(coefs), low_(low), high_(high)
+             {}
+
+             inline SeqWalkType init(void) const {
+                return SeqWalkType(arg_.init(), coefs_, low_, high_);
+             }
+
+            private:
+             Arg const arg_;
+
+             Coefs const coefs_;
+
+             structured::IntVec const low_;
+
+             structured::IntVec const high_;
+         }
+      #endif
+      /* FIELD_EXPRESSION_THREADS */;
+      template<typename Pts, typename Arg, typename FieldType>
+       struct NeboEdgelessStencil<SeqWalk, Pts, Arg, FieldType> {
+         public:
+          FieldType typedef field_type;
+
+          typename field_type::value_type typedef value_type;
+
+          NeboStencilCoefCollection<Pts::length> typedef Coefs;
+
+          template<typename PointCollection>
+           struct EvalExpr {
+             NeboStencilCoefCollection<PointCollection::length> typedef Coefs;
+
+             typename PointCollection::Point typedef Point;
+
+             typename PointCollection::Collection typedef Collection;
+
+             static inline value_type eval(Arg const & arg,
+                                           Coefs const & coefs,
+                                           int const x,
+                                           int const y,
+                                           int const z) {
+                return EvalExpr<Collection>::eval(arg, coefs.others(), x, y, z)
+                       + arg.eval(x + Point::value(0),
+                                  y + Point::value(1),
+                                  z + Point::value(2)) * coefs.coef();
+             }
+          };
+
+          template<typename Point>
+           struct EvalExpr<NeboStencilPointCollection<Point, NeboNil> > {
+             NeboStencilCoefCollection<1> typedef Coefs;
+
+             static inline value_type eval(Arg const & arg,
+                                           Coefs const & coefs,
+                                           int const x,
+                                           int const y,
+                                           int const z) {
+                return arg.eval(x + Point::value(0),
+                                y + Point::value(1),
+                                z + Point::value(2)) * coefs.coef();
+             }
+          };
+
+          NeboEdgelessStencil(Arg const & arg,
+                              Coefs const & coefs,
+                              structured::IntVec const & low,
+                              structured::IntVec const & high)
+          : arg_(arg), coefs_(coefs), low_(low), high_(high)
+          {}
+
+          inline value_type eval(int const x, int const y, int const z) const {
+             #ifndef NDEBUG
+                structured::IntVec index = structured::IntVec(x, y, z);
+                if(index < low_ || index >= high_) {
+                   std::ostringstream msg;
+                   msg << "Nebo error in " << "Nebo Edgeless Stencil" << ":\n";
+                   msg << "	 - " << low_ << " < " << index << " <= " << high_;
+                   msg << "\n";
+                   msg << "\t - " << __FILE__ << " : " << __LINE__;
+                   throw(std::runtime_error(msg.str()));;
+                }
+             #endif
+             /* NDEBUG */;
+
+             return EvalExpr<Pts>::eval(arg_, coefs_, x, y, z);
+          }
+
+         private:
+          Arg arg_;
+
+          Coefs const coefs_;
+
+          structured::IntVec const low_;
+
+          structured::IntVec const high_;
+      };
+      #ifdef __CUDACC__
+         template<typename Pts, typename Arg, typename FieldType>
+          struct NeboEdgelessStencil<GPUWalk, Pts, Arg, FieldType> {
+            public:
+             FieldType typedef field_type;
+
+             typename field_type::value_type typedef value_type;
+
+             NeboStencilCoefCollection<Pts::length> typedef Coefs;
+
+             template<typename PointCollection>
+              struct EvalExpr {
+                NeboStencilCoefCollection<PointCollection::length> typedef Coefs
+                ;
+
+                typename PointCollection::Point typedef Point;
+
+                typename PointCollection::Collection typedef Collection;
+
+                __device__ static inline value_type eval(Arg const & arg,
+                                                         Coefs const & coefs,
+                                                         int const x,
+                                                         int const y,
+                                                         int const z) {
+                   return EvalExpr<Collection>::eval(arg,
+                                                     coefs.others(),
+                                                     x,
+                                                     y,
+                                                     z) + arg.eval(x + Point::
+                                                                   value_gpu(0),
+                                                                   y + Point::
+                                                                   value_gpu(1),
+                                                                   z + Point::
+                                                                   value_gpu(2))
+                          * coefs.coef();
+                }
+             };
+
+             template<typename Point>
+              struct EvalExpr<NeboStencilPointCollection<Point, NeboNil> > {
+                NeboStencilCoefCollection<1> typedef Coefs;
+
+                __device__ static inline value_type eval(Arg const & arg,
+                                                         Coefs const & coefs,
+                                                         int const x,
+                                                         int const y,
+                                                         int const z) {
+                   return arg.eval(x + Point::value_gpu(0),
+                                   y + Point::value_gpu(1),
+                                   z + Point::value_gpu(2)) * coefs.coef();
+                }
+             };
+
+             NeboEdgelessStencil(Arg const & a, Coefs const & coefs)
+             : arg_(a), coefs_(coefs)
+             {}
+
+             __device__ inline value_type eval(int const x,
+                                               int const y,
+                                               int const z) const {
+                return EvalExpr<Pts>::eval(arg_, coefs_, x, y, z);
+             }
+
+            private:
+             Arg arg_;
+
+             Coefs const coefs_;
+         }
+      #endif
+      /* __CUDACC__ */;
+
+      template<typename CurrentMode,
+               typename Pts,
+               typename Arg,
+               typename FieldType>
        struct NeboSumStencil;
       template<typename Pts, typename Arg, typename FieldType>
        struct NeboSumStencil<Initial, Pts, Arg, FieldType> {
@@ -769,7 +1055,9 @@
           {}
 
           inline bool eval(int const x, int const y, int const z) const {
-             return arg_.eval(x, y, z);
+             return arg_.eval(x + Point::value(0),
+                              y + Point::value(1),
+                              z + Point::value(2));
           }
 
          private:
@@ -788,7 +1076,9 @@
              {}
 
              __device__ inline bool eval(int const x, int const y, int const z) const {
-                return arg_.eval(x, y, z);
+                return arg_.eval(x + Point::value_gpu(0),
+                                 y + Point::value_gpu(1),
+                                 z + Point::value_gpu(2));
              }
 
             private:

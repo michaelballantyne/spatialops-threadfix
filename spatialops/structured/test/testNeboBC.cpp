@@ -14,6 +14,7 @@ using std::endl;
 #include <spatialops/structured/SpatialMask.h>
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/structured/FVTools.h>
+#include <spatialops/structured/FieldComparisons.h>
 #include <spatialops/structured/SpatialFieldStore.h>
 #include <spatialops/structured/stencil/FVStaggeredBCOp.h>
 #include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
@@ -37,56 +38,73 @@ int main()
   typedef SVolField PhiFieldT;
   typedef SSurfXField GammaFieldT;
 
-  const IntVec dim(10, 10, 1);
+  const IntVec dim(3, 3, 1);
   const std::vector<bool> bcFlag(3,false);
   const GhostData  fghost(1);
   const GhostData dfghost(1);
   const BoundaryCellInfo  fbc = BoundaryCellInfo::build<PhiFieldT>( bcFlag[0], bcFlag[1], bcFlag[2] );
   const BoundaryCellInfo dfbc = BoundaryCellInfo::build<GammaFieldT>( bcFlag[0], bcFlag[1], bcFlag[2] );
 
-  SpatFldPtr<PhiFieldT > f  = SpatialFieldStore::get_from_window<PhiFieldT>( get_window_with_ghost(dim, fghost, fbc),  fbc,  fghost );
-  SpatFldPtr<GammaFieldT> df = SpatialFieldStore::get_from_window<GammaFieldT>( get_window_with_ghost(dim,dfghost,dfbc), dfbc, dfghost );
+  SpatFldPtr<PhiFieldT  > test  = SpatialFieldStore::get_from_window<PhiFieldT>( get_window_with_ghost(dim, fghost, fbc),  fbc,  fghost );
+  SpatFldPtr<PhiFieldT  > ref   = SpatialFieldStore::get_from_window<PhiFieldT>( get_window_with_ghost(dim, fghost, fbc),  fbc,  fghost );
+  SpatFldPtr<GammaFieldT> gamma = SpatialFieldStore::get_from_window<GammaFieldT>( get_window_with_ghost(dim,dfghost,dfbc), dfbc, dfghost );
 
-  PhiFieldT::iterator ifld=f->begin();
-  for( int i = 0; i < 12; i++)
-    for(int j=0; j < 12; j++) {
-      *ifld = i;
-      ifld++;
+  GammaFieldT::iterator ig = gamma->begin();
+  PhiFieldT::iterator ir = ref->begin();
+  PhiFieldT::iterator it = test->begin();
+  for(int j=-1; j < 4; j++)
+    for( int i = -1; i < 4; i++) {
+      *ig = 25 + i + j * 5;
+      *it = i + j * 5;
+      if( (i == -1 && j == 1) ||
+          (i ==  0 && j == 2) ||
+          (i ==  2 && j == 1) ||
+          (i ==  3 && j == 2)
+          )
+        *ir = 25;
+      else
+        *ir = i + j * 5;
+      ig++;
+      it++;
+      ir++;
     }
-  //*f <<= 3.0;
 
-  GammaFieldT::iterator idfld=df->begin();
-  for( int i = 0; i < 12; i++)
-    for(int j=0; j < 12; j++) {
-      *idfld = j;
-      idfld++;
-    }
-  //*df <<= 1.0;
+  //make the minus BC:
+  NeboBoundaryConditionBuilder<IndexTriplet<-1,0,0>, IndexTriplet<0,0,0>, PhiFieldT, GammaFieldT> minusBC(1.0, 1.0);
 
-  //make the BC:
-  NeboBoundaryConditionBuilder<IndexTriplet<-1,0,0>, IndexTriplet<0,0,0>, PhiFieldT, GammaFieldT> bc(1.0, 1.0);
+  //make the minus mask:
+  std::vector<IntVec> minusSet;
+  minusSet.push_back(IntVec(0,1,0));
+  minusSet.push_back(IntVec(1,2,0));
+  SpatialMask<SSurfXField> minus(*gamma, minusSet);
 
-  //make the mask:
-  std::vector<IntVec> maskSet;
-  maskSet.push_back(IntVec(0,5,0));
-  //maskSet.push_back(IntVec(4,0,0));
-  SpatialMask<SSurfXField> mask(*df, maskSet);
+  // evaluate the minus BC and set it in the field.
+  minusBC(minus, *test, *gamma, true);
 
-  typedef NeboMaskShift<Initial, IndexTriplet<1,0,0>, NeboMask<Initial, GammaFieldT>, PhiFieldT> ShiftedMask;
-  ShiftedMask shiftedMask(NeboMask<Initial, GammaFieldT>(mask));
+  //make the plus BC:
+  NeboBoundaryConditionBuilder<IndexTriplet<0,0,0>, IndexTriplet<-1,0,0>, PhiFieldT, GammaFieldT> plusBC(1.0, 1.0);
 
-  cout << "Gamma" << endl;
-  print_field(*df);
+  //make the plus mask:
+  std::vector<IntVec> plusSet;
+  plusSet.push_back(IntVec(2,1,0));
+  plusSet.push_back(IntVec(3,2,0));
+  SpatialMask<SSurfXField> plus(*gamma, plusSet);
 
-  cout << "Phi" << endl;
-  print_field(*f);
+  // evaluate the plus BC and set it in the field.
+  plusBC(plus, *test, *gamma, false);
 
-  // evaluate the BC and set it in the field.
-  bc(mask, *f, *df, true);
+  cout << "test" << endl;
+  print_field(*test);
 
   // verify that the BC was set properly.
-  cout << "Phi" << endl;
-  print_field(*f);
+  if( display_fields_compare(*test, *ref, true, true) ) {
+    cout << "ALL TESTS PASSED :)" << endl;
+    return 0;
+  } else {
+    cout << "******************************" << endl
+         << " At least one test FAILED! :(" << endl
+         << "******************************" << endl;
+    return -1;
+  }
 
-  return 0;
 }
