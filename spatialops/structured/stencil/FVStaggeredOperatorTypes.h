@@ -247,6 +247,18 @@ namespace structured{
   AVE_OP_BUILDER( YVolField )
   AVE_OP_BUILDER( ZVolField )
 
+  AVE_OP_BUILDER( XSurfXField )
+  AVE_OP_BUILDER( XSurfYField )
+  AVE_OP_BUILDER( XSurfZField )
+
+  AVE_OP_BUILDER( YSurfXField )
+  AVE_OP_BUILDER( YSurfYField )
+  AVE_OP_BUILDER( YSurfZField )
+
+  AVE_OP_BUILDER( ZSurfXField )
+  AVE_OP_BUILDER( ZSurfYField )
+  AVE_OP_BUILDER( ZSurfZField )
+  
   // finite difference:
 #define FD_OP_BUILDER( OP, FIELDT )                             \
   template<> struct OperatorTypeBuilder<OP,FIELDT,FIELDT>{      \
