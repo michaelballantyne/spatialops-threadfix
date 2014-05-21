@@ -384,13 +384,22 @@
                                                                                    0))
                                                           (function-pmtr (type-template NF-chunk 'Initial FT-chunk)
                                                                          (val-call 'gpu_lhs 'gpu_field))
+                                                          (let ([CDI (scope (scope 'ema 'cuda)
+                                                                            'CUDADeviceInterface)])
+                                                            (val-typed-assign (ref CDI) 'CDI (val-call (scope CDI 'self))))
+                                                          (val-member-call 'CDI
+                                                                           'memcpy_to
+                                                                           (val-member-call 'gpu_field
+                                                                                            'field_values
+                                                                                            'EXTERNAL_CUDA_GPU
+                                                                                            0)
+                                                                           (val-member-call 'field_ 'field_values)
+                                                                           (val-member-call 'field_ 'allocated_bytes)
+                                                                           0)
                                                           (val-member-call 'gpu_lhs
                                                                            (type-template-function 'gpu_assign 'RhsType)
                                                                            'rhs
                                                                            low-high-arg)
-                                                          (let ([CDI (scope (scope 'ema 'cuda)
-                                                                            'CUDADeviceInterface)])
-                                                            (val-typed-assign (ref CDI) 'CDI (val-call (scope CDI 'self))))
                                                           (val-member-call 'CDI
                                                                            'memcpy_from
                                                                            (val-member-call 'field_ 'field_values)

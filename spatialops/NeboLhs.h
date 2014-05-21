@@ -442,6 +442,14 @@
 
                        NeboField<Initial, FieldType> gpu_lhs(gpu_field);
 
+                       ema::cuda::CUDADeviceInterface & CDI = ema::cuda::
+                       CUDADeviceInterface::self();
+
+                       CDI.memcpy_to(gpu_field.field_values(EXTERNAL_CUDA_GPU, 0),
+                                     field_.field_values(),
+                                     field_.allocated_bytes(),
+                                     0);
+
                        gpu_lhs.template gpu_assign<RhsType>(rhs,
                                                             xLow,
                                                             xHigh,
@@ -449,9 +457,6 @@
                                                             yHigh,
                                                             zLow,
                                                             zHigh);
-
-                       ema::cuda::CUDADeviceInterface & CDI = ema::cuda::
-                       CUDADeviceInterface::self();
 
                        CDI.memcpy_from(field_.field_values(),
                                        gpu_field.field_values(EXTERNAL_CUDA_GPU,
