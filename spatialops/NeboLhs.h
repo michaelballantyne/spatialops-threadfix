@@ -28,14 +28,14 @@
    namespace SpatialOps {
       #ifdef __CUDACC__
          template<typename LhsType, typename RhsType>
-          __global__ inline void gpu_assign_kernel(LhsType lhs,
-                                                   RhsType rhs,
-                                                   int const xLow,
-                                                   int const xHigh,
-                                                   int const yLow,
-                                                   int const yHigh,
-                                                   int const zLow,
-                                                   int const zHigh) {
+          __global__ void gpu_assign_kernel(LhsType lhs,
+                                            RhsType rhs,
+                                            int const xLow,
+                                            int const xHigh,
+                                            int const yLow,
+                                            int const yHigh,
+                                            int const zLow,
+                                            int const zHigh) {
              lhs.assign(rhs, xLow, xHigh, yLow, yHigh, zLow, zHigh);
           }
       #endif

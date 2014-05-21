@@ -264,10 +264,11 @@
  (SpatialOps-namespace
   (pp-gpu-only (def-template (list (typename 'LhsType)
                                    (typename 'RhsType))
-                 (global-only (def-void-function 'gpu_assign_kernel
-                                (list (function-pmtr 'LhsType 'lhs)
-                                      (function-pmtr 'RhsType 'rhs)
-                                      low-high-pmtr)
+                 (global-only (def-function (general-function-declare 'gpu_assign_kernel
+                                                                      'void
+                                                                      (list (function-pmtr 'LhsType 'lhs)
+                                                                            (function-pmtr 'RhsType 'rhs)
+                                                                            low-high-pmtr))
                                 (val-member-call 'lhs 'assign 'rhs low-high-arg)))))
 
   (build-struct NF-chunk
