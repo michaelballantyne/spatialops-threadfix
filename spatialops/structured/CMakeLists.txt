@@ -7,7 +7,6 @@ set( src
 if( ENABLE_CUDA )
     set( src ${src}
          CudaMemoryAllocator.cu
-         GPUtest.cu
         )
 endif( ENABLE_CUDA )
 
