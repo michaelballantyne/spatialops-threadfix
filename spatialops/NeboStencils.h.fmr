@@ -165,7 +165,17 @@
                                                  'index)))
                     (host-device (def-returning-function (constize (dcl-function 'others (const (type-template NSCC (val-subtract 'Length 1)))))
                                    null
-                                   'others_)))
+                                   'others_))
+                    (def-returning-function (constize (dcl-function 'last 'double))
+                      null
+                      (val-member-call (val-call 'others)
+                                       'last))
+                    (def-returning-function (constize (dcl-function 'all_but_last (type-template NSCC (val-subtract 'Length 1))))
+                      null
+                      (val-call (type-template NSCC (val-subtract 'Length 1))
+                                (val-member-call (val-call 'others)
+                                                 'all_but_last)
+                                'coef_)))
     (section-private (stmt-dcl-variable (const (type-template NSCC (val-subtract 'Length 1))) 'others_)
                      (stmt-dcl-variable (const 'double) 'coef_)))
 
@@ -174,6 +184,11 @@
     1
     (section-public (constructor NSCC
                                  (function-pmtr (const 'double) 'c)
+                                 (val-construct 'coef_ 'c)
+                                 null)
+                    (constructor NSCC
+                                 (list (function-pmtr Nil-chunk 'nil)
+                                       (function-pmtr (const 'double) 'c))
                                  (val-construct 'coef_ 'c)
                                  null)
                     (def-returning-function (constize (dcl-function (add-spaces 'operator (paren))
@@ -195,7 +210,13 @@
                             (stmt-if (val-greater-than 'index 1)
                                      (build-error '(Nebo Stencil Coefficient Collection)
                                                   '(trying to access a coefficient that does not exist))))
-                      (val-call 'coef)))
+                      (val-call 'coef))
+                    (def-returning-function (constize (dcl-function 'last 'double))
+                      null
+                      'coef_)
+                    (def-returning-function (constize (dcl-function 'all_but_last Nil-chunk))
+                      null
+                      (val-call Nil-chunk)))
     (section-private (stmt-dcl-variable (const 'double) 'coef_)))
 
   (def-returning-function (dcl-function 'build_coef_collection
@@ -235,6 +256,11 @@
                     (stmt-typedef 'CollectionType 'Collection)
                     (stmt-typedef (type-template NSPC 'Point 'Collection)
                                   'MyType)
+                    (stmt-typedef 'Point 'First)
+                    (stmt-typedef 'Collection 'AllButFirst)
+                    (stmt-typedef (typename (scope 'Collection 'Last)) 'Last)
+                    (stmt-typedef (type-template NSPC 'Point (typename (scope 'Collection 'AllButLast)))
+                                  'AllButLast)
                     (enum (val-assign 'length (val-add 1 (scope 'Collection 'length))))
                     (stmt-def-template-struct 'AddPoint
                                               (typename 'NewPoint)
@@ -254,6 +280,8 @@
                     (stmt-typedef Nil-chunk 'Collection)
                     (stmt-typedef (type-template NSPC 'Point 'Collection)
                                   'MyType)
+                    (stmt-typedef 'Point 'Last)
+                    (stmt-typedef Nil-chunk 'AllButLast)
                     (enum (val-assign 'length 1))
                     (stmt-def-template-struct 'AddPoint
                                               (typename 'NewPoint)

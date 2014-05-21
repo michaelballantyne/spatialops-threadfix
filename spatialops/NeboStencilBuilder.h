@@ -55,6 +55,25 @@
 namespace SpatialOps {
 
   /**
+   *  \struct Subtract
+   *  \brief Perform compile-time subtraction over a list of IndexTriplet types
+   */
+  template< typename List, typename IT >
+    struct ListSubtract
+    {
+      typedef NeboStencilPointCollection< typename structured::Subtract< typename List::Point, IT >::result,
+                                          typename ListSubtract< typename List::Collection, IT >::result >
+              result;
+    };
+
+  template< typename Point, typename IT >
+    struct ListSubtract< NeboStencilPointCollection< Point, NeboNil >, IT >
+    {
+      typedef NeboStencilPointCollection< typename structured::Subtract< Point, IT >::result, NeboNil >
+              result;
+    };
+
+  /**
    * \struct NeboStencilBuilder
    * \brief Supports definition of new Nebo stencils.
    *
@@ -563,31 +582,35 @@ namespace SpatialOps {
    * This stencil actually computes (only for given mask points):
    *  dest = (gamma - src * srcCoef) / destCoef
    */
-    template<typename LowPnt, typename HighPnt, typename PhiFieldT, typename GammaFieldT>
+    template<typename PointCollection, typename PhiFieldT, typename GammaFieldT>
     struct NeboBoundaryConditionBuilder {
     public:
-      typedef LowPnt            LowPoint; ///< stencil offset for low point in phi, assumes gamma is origin
-      typedef HighPnt          HighPoint; ///< stencil offset for high point in phi, assumes gamma is origin
+      typedef typename PointCollection::First       LowPoint;      ///< stencil offset for low point in phi, assumes gamma is origin
+      typedef typename PointCollection::AllButFirst NonLowPoints;  ///< stencil offsets for all but low point in phi, assumes gamma is origin
+      typedef typename PointCollection::Last        HighPoint;     ///< stencil offset for high point in phi, assumes gamma is origin
+      typedef typename PointCollection::AllButLast  NonHighPoints; ///< stencil offsets for all but high point in phi, assumes gamma is origin
       typedef PhiFieldT     PhiFieldType; ///< field type of phi, which this operator modifies
       typedef GammaFieldT GammaFieldType; ///< type of fields in gamma, which this operator reads
 
       typedef typename structured::Subtract<structured::IndexTriplet<0,0,0>, LowPoint>:: result LowGammaPoint;
       typedef typename structured::Subtract<structured::IndexTriplet<0,0,0>, HighPoint>::result HighGammaPoint;
-      typedef typename structured::Subtract<HighPoint, LowPoint>:: result                       LowSrcPoint;
-      typedef typename structured::Subtract<LowPoint,  HighPoint>::result                       HighSrcPoint;
+      typedef typename ListSubtract<NonLowPoints,  LowPoint>:: result                           NonLowSrcPoints;
+      typedef typename ListSubtract<NonHighPoints, HighPoint>::result                           NonHighSrcPoints;
       typedef NeboMask<Initial, GammaFieldType>                                                 GammaMask;
       typedef NeboMaskShiftBuilder<GammaFieldType, PhiFieldType>                                Shift;
 
+      typedef NeboStencilCoefCollection<PointCollection::length> CoefCollection; ///< collection of coefficients
+
       typedef NeboEdgelessStencilBuilder<NeboNil, NEBO_FIRST_POINT_WO_TN(LowGammaPoint),  GammaFieldType, PhiFieldType> MinusGammaType;
       typedef NeboEdgelessStencilBuilder<NeboNil, NEBO_FIRST_POINT_WO_TN(HighGammaPoint), GammaFieldType, PhiFieldType> PlusGammaType;
-      typedef NeboEdgelessStencilBuilder<NeboNil, NEBO_FIRST_POINT_WO_TN(LowSrcPoint),  PhiFieldType, PhiFieldType>     MinusPhiType;
-      typedef NeboEdgelessStencilBuilder<NeboNil, NEBO_FIRST_POINT_WO_TN(HighSrcPoint), PhiFieldType, PhiFieldType>     PlusPhiType;
+      typedef NeboEdgelessStencilBuilder<NeboNil, NonLowSrcPoints,                        PhiFieldType,   PhiFieldType> MinusPhiType;
+      typedef NeboEdgelessStencilBuilder<NeboNil, NonHighSrcPoints,                       PhiFieldType,   PhiFieldType> PlusPhiType;
 
       /**
        *  \brief construct a boundary condition
        */
-      NeboBoundaryConditionBuilder(double lowCoef, double highCoef)
-      : lowCoef_(lowCoef), highCoef_(highCoef), minusGamma_(1.0), minusPhi_(highCoef), plusGamma_(1.0), plusPhi_(lowCoef), shift_()
+      NeboBoundaryConditionBuilder(CoefCollection const & coefs)
+      : lowCoef_(coefs.coef()), highCoef_(coefs.last()), minusGamma_(1.0), minusPhi_(coefs.others()), plusGamma_(1.0), plusPhi_(coefs.all_but_last()), shift_()
       {}
 
       ~NeboBoundaryConditionBuilder() {}
