@@ -26,6 +26,14 @@ using std::endl;
 
 //--------------------------------------------------------------------
 
+#ifndef NEBO_GPU_TEST
+#define ACCEPTABLE_ERROR 0.0
+#else
+#define ACCEPTABLE_ERROR 1.0e-10
+#endif
+
+//--------------------------------------------------------------------
+
 template<typename Field>
 void initialize_field(Field & f)
 {
@@ -84,7 +92,7 @@ bool test_stencil2(const IntVec npts,
   //run operator:
   op->apply_to_field(src, test);
 
-  return (field_equal(test, ref, 0.0));
+  return (field_equal(test, ref, ACCEPTABLE_ERROR));
 };
 
 //--------------------------------------------------------------------
@@ -125,7 +133,7 @@ bool test_stencil4(const IntVec npts,
   //run operator:
   op->apply_to_field(src, test);
 
-  return (field_equal(test, ref, 0.0));
+  return (field_equal(test, ref, ACCEPTABLE_ERROR));
 };
 
 //--------------------------------------------------------------------
@@ -161,7 +169,7 @@ bool test_fd_stencil2(const IntVec npts,
   //run operator:
   op->apply_to_field(src, test);
 
-  return (field_equal(test, ref, 0.0));
+  return (field_equal(test, ref, ACCEPTABLE_ERROR));
 };
 
 //--------------------------------------------------------------------
@@ -197,7 +205,7 @@ bool test_null_stencil(const IntVec npts,
   //run operator:
   op->apply_to_field(src, test);
 
-  return (field_equal(test, ref, 0.0));
+  return (field_equal(test, ref, ACCEPTABLE_ERROR));
 };
 
 //--------------------------------------------------------------------
@@ -230,7 +238,7 @@ bool test_box_filter_stencil(const IntVec npts,
   //run operator:
   op->apply_to_field(src, test);
 
-  return (field_equal(test, ref, 0.0));
+  return (field_equal(test, ref, ACCEPTABLE_ERROR));
 };
 
 //--------------------------------------------------------------------

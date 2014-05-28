@@ -28,14 +28,14 @@
    namespace SpatialOps {
       #ifdef __CUDACC__
          template<typename LhsType, typename RhsType>
-          __global__ inline void gpu_assign_kernel(LhsType lhs,
-                                                   RhsType rhs,
-                                                   int const xLow,
-                                                   int const xHigh,
-                                                   int const yLow,
-                                                   int const yHigh,
-                                                   int const zLow,
-                                                   int const zHigh) {
+          __global__ void gpu_assign_kernel(LhsType lhs,
+                                            RhsType rhs,
+                                            int const xLow,
+                                            int const xHigh,
+                                            int const yLow,
+                                            int const yHigh,
+                                            int const zLow,
+                                            int const zHigh) {
              lhs.assign(rhs, xLow, xHigh, yLow, yHigh, zLow, zHigh);
           }
       #endif
@@ -442,6 +442,14 @@
 
                        NeboField<Initial, FieldType> gpu_lhs(gpu_field);
 
+                       ema::cuda::CUDADeviceInterface & CDI = ema::cuda::
+                       CUDADeviceInterface::self();
+
+                       CDI.memcpy_to(gpu_field.field_values(EXTERNAL_CUDA_GPU, 0),
+                                     field_.field_values(),
+                                     field_.allocated_bytes(),
+                                     0);
+
                        gpu_lhs.template gpu_assign<RhsType>(rhs,
                                                             xLow,
                                                             xHigh,
@@ -449,9 +457,6 @@
                                                             yHigh,
                                                             zLow,
                                                             zHigh);
-
-                       ema::cuda::CUDADeviceInterface & CDI = ema::cuda::
-                       CUDADeviceInterface::self();
 
                        CDI.memcpy_from(field_.field_values(),
                                        gpu_field.field_values(EXTERNAL_CUDA_GPU,

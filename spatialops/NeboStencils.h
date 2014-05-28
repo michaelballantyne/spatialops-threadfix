@@ -75,6 +75,13 @@
           /* __CUDACC__ */ inline NeboStencilCoefCollection<Length - 1> const
           others(void) const { return others_; }
 
+          inline double last(void) const { return others().last(); }
+
+          inline NeboStencilCoefCollection<Length - 1> all_but_last(void) const {
+             return NeboStencilCoefCollection<Length - 1>(others().all_but_last(),
+                                                          coef_);
+          }
+
          private:
           NeboStencilCoefCollection<Length - 1> const others_;
 
@@ -85,6 +92,10 @@
        struct NeboStencilCoefCollection<1> {
          public:
           NeboStencilCoefCollection(double const c)
+          : coef_(c)
+          {}
+
+          NeboStencilCoefCollection(NeboNil nil, double const c)
           : coef_(c)
           {}
 
@@ -120,6 +131,10 @@
 
              return coef();
           }
+
+          inline double last(void) const { return coef_; }
+
+          inline NeboNil all_but_last(void) const { return NeboNil(); }
 
          private:
           double const coef_;
@@ -163,6 +178,15 @@
 
           NeboStencilPointCollection<Point, Collection> typedef MyType;
 
+          Point typedef First;
+
+          Collection typedef AllButFirst;
+
+          typename Collection::Last typedef Last;
+
+          NeboStencilPointCollection<Point, typename Collection::AllButLast>
+          typedef AllButLast;
+
           enum {length = 1 + Collection::length};
 
           template<typename NewPoint>
@@ -186,6 +210,10 @@
           NeboNil typedef Collection;
 
           NeboStencilPointCollection<Point, Collection> typedef MyType;
+
+          Point typedef Last;
+
+          NeboNil typedef AllButLast;
 
           enum {length = 1};
 

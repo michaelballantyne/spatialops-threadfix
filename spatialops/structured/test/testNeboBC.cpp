@@ -57,11 +57,11 @@ int main()
       *ig = 25 + i + j * 5;
       *it = i + j * 5;
       if( (i == -1 && j == 1) ||
-          (i ==  0 && j == 2) ||
-          (i ==  2 && j == 1) ||
-          (i ==  3 && j == 2)
-          )
+          (i ==  0 && j == 2) )
         *ir = 25;
+      else if( (i ==  2 && j == 1) ||
+               (i ==  3 && j == 2) )
+        *ir = 26;
       else
         *ir = i + j * 5;
       ig++;
@@ -70,7 +70,8 @@ int main()
     }
 
   //make the minus BC:
-  NeboBoundaryConditionBuilder<IndexTriplet<-1,0,0>, IndexTriplet<0,0,0>, PhiFieldT, GammaFieldT> minusBC(1.0, 1.0);
+  typedef NeboStencilPointCollection< IndexTriplet<0,0,0>, NeboNil >::AddPoint< IndexTriplet<-1,0,0> >::Result Location;
+  NeboBoundaryConditionBuilder<Location, PhiFieldT, GammaFieldT> BC(build_two_point_coef_collection(1.0, 1.0));
 
   //make the minus mask:
   std::vector<IntVec> minusSet;
@@ -79,10 +80,8 @@ int main()
   SpatialMask<SSurfXField> minus(*gamma, minusSet);
 
   // evaluate the minus BC and set it in the field.
-  minusBC(minus, *test, *gamma, true);
+  BC(minus, *test, *gamma, true);
 
-  //make the plus BC:
-  NeboBoundaryConditionBuilder<IndexTriplet<0,0,0>, IndexTriplet<-1,0,0>, PhiFieldT, GammaFieldT> plusBC(1.0, 1.0);
 
   //make the plus mask:
   std::vector<IntVec> plusSet;
@@ -91,7 +90,7 @@ int main()
   SpatialMask<SSurfXField> plus(*gamma, plusSet);
 
   // evaluate the plus BC and set it in the field.
-  plusBC(plus, *test, *gamma, false);
+  BC(plus, *test, *gamma, false);
 
   cout << "test" << endl;
   print_field(*test);
