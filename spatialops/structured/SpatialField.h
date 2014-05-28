@@ -65,8 +65,7 @@ namespace SpatialOps{
 namespace structured{
 
   //Forward Declaration
-  template <typename T>
-    class Pool;
+  template <typename T> class Pool;
 
   enum StorageMode
   {
