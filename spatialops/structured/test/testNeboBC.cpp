@@ -1,3 +1,5 @@
+#include <spatialops/SpatialOpsTools.h>
+
 #include <vector>
 #include <iostream>
 #include <sstream>
@@ -5,12 +7,10 @@
 #include <limits>
 #include <cmath>
 
-using std::cout;
-using std::endl;
-
 #include <spatialops/OperatorDatabase.h>
 
 #include <spatialops/Nebo.h>
+#include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialMask.h>
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/structured/FVTools.h>
@@ -39,6 +39,8 @@ int main()
   typedef SSurfXField GammaFieldT;
 
   const IntVec dim(3, 3, 1);
+  const double length = 1.5;
+  const double dx = length/dim[0];
   const std::vector<bool> bcFlag(3,false);
   const GhostData  fghost(1);
   const GhostData dfghost(1);
@@ -49,6 +51,31 @@ int main()
   SpatFldPtr<PhiFieldT  > ref   = SpatialFieldStore::get_from_window<PhiFieldT>( get_window_with_ghost(dim, fghost, fbc),  fbc,  fghost );
   SpatFldPtr<GammaFieldT> gamma = SpatialFieldStore::get_from_window<GammaFieldT>( get_window_with_ghost(dim,dfghost,dfbc), dfbc, dfghost );
 
+  /* Invert interpolant:
+   *  Cell (volume) to face:
+   *  -------------
+   *  |     |     |
+   *  |  A  B  C  |
+   *  |     |     |
+   *  --------------
+   *
+   *  dx = Lx/nx
+   *
+   *  Gradient:
+   *  B = A * -1/dx + C * 1/dx
+   *
+   *  Negative side inversion:
+   *  A = (B - C * 1/dx) / (-1/dx)
+   *
+   *  Positive side inversion:
+   *  C = (B - A * -1/dx) / (1/dx)
+   *
+   *  Indices:
+   *  A = -1, 0, 0
+   *  B =  0, 0, 0
+   *  C =  0, 0, 0
+   */
+
   GammaFieldT::iterator ig = gamma->begin();
   PhiFieldT::iterator ir = ref->begin();
   PhiFieldT::iterator it = test->begin();
@@ -57,11 +84,19 @@ int main()
       *ig = 25 + i + j * 5;
       *it = i + j * 5;
       if( (i == -1 && j == 1) ||
-          (i ==  0 && j == 2) )
-        *ir = 25;
+          (i ==  0 && j == 2) ) {
+        //Negative side inversion: *ir == A
+        int B = 25 + (i + 1) + j * 5;
+        int C = (i + 1) + j * 5;
+        *ir = (B - C * (1/dx)) / (-1/dx);
+      }
       else if( (i ==  2 && j == 1) ||
-               (i ==  3 && j == 2) )
-        *ir = 26;
+               (i ==  3 && j == 2) ) {
+        //Positive side inversion: *ir == C
+        int B = 25 + (i) + j * 5;
+        int A = (i - 1) + j * 5;
+        *ir = (B - A * (-1/dx)) / (1/dx);
+      }
       else
         *ir = i + j * 5;
       ig++;
@@ -69,9 +104,12 @@ int main()
       ir++;
     }
 
-  //make the minus BC:
-  typedef NeboStencilPointCollection< IndexTriplet<0,0,0>, NeboNil >::AddPoint< IndexTriplet<-1,0,0> >::Result Location;
-  NeboBoundaryConditionBuilder<Location, PhiFieldT, GammaFieldT> BC(build_two_point_coef_collection(1.0, 1.0));
+  //make the BC:
+  OperatorDatabase opdb;
+  build_stencils( dim[0], dim[1], dim[2], length, length, length, opdb );
+  typedef structured::BasicOpTypes<PhiFieldT>::GradX OpT;
+  const OpT* const op = opdb.retrieve_operator<OpT>();
+  NeboBoundaryConditionBuilder<OpT, PhiFieldT, GammaFieldT> BC(*op);
 
   //make the minus mask:
   std::vector<IntVec> minusSet;
@@ -82,7 +120,6 @@ int main()
   // evaluate the minus BC and set it in the field.
   BC(minus, *test, *gamma, true);
 
-
   //make the plus mask:
   std::vector<IntVec> plusSet;
   plusSet.push_back(IntVec(2,1,0));
@@ -92,17 +129,17 @@ int main()
   // evaluate the plus BC and set it in the field.
   BC(plus, *test, *gamma, false);
 
-  cout << "test" << endl;
-  print_field(*test);
+  //display differences and values:
+  //display_fields_compare(*test, *ref, true, true);
 
   // verify that the BC was set properly.
-  if( display_fields_compare(*test, *ref, true, true) ) {
-    cout << "ALL TESTS PASSED :)" << endl;
+  if( field_equal(*test, *ref) ) {
+    std::cout << "ALL TESTS PASSED :)" << std::endl;
     return 0;
   } else {
-    cout << "******************************" << endl
-         << " At least one test FAILED! :(" << endl
-         << "******************************" << endl;
+    std::cout << "******************************" << std::endl
+              << " At least one test FAILED! :(" << std::endl
+              << "******************************" << std::endl;
     return -1;
   }
 
