@@ -234,15 +234,16 @@ double apply_stencil( const SpatialOps::structured::IntVec& npts,
   const OpT* const op = opdb.retrieve_operator<OpT>();
 
   #ifdef ENABLE_CUDA
-  const MemoryType mtype = EXTERNAL_CUDA_GPU;
+  const short int devIdx = GPU_INDEX;
   const StorageMode mode = InternalStorage;
-  DestT gpuDest( dmw, dbc, dg, NULL, mode, mtype );
+  DestT gpuDest( dmw, dbc, dg, NULL, mode, devIdx );
   #endif
 
   #ifdef ENABLE_CUDA
-    src.add_consumer( EXTERNAL_CUDA_GPU, gpuDest.device_index() );
+    src.add_field_loc( GPU_INDEX );
+    src.set_field_loc_active( GPU_INDEX );
     op->apply_to_field( src, gpuDest );
-    gpuDest.add_consumer( LOCAL_RAM, dest.device_index() );
+    gpuDest.add_field_loc( CPU_INDEX );
     return interior_norm( gpuDest, destExact );
   #else
     op->apply_to_field( src, dest );

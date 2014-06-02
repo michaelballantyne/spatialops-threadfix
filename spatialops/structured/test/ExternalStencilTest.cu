@@ -104,8 +104,8 @@ int main(int argc, char** argv){
 
   const GhostData ghost(0);
   const BoundaryCellInfo bc = BoundaryCellInfo::build<PointFloatField>(false,false,false);
-  PointFloatField  pff(swin, bc, ghost, NULL,  InternalStorage, LOCAL_RAM, 0);
-  PointFloatField spff(swin, bc, ghost, svals, InternalStorage, EXTERNAL_CUDA_GPU, 0);
+  PointFloatField  pff(swin, bc, ghost, NULL,  InternalStorage, CPU_INDEX);
+  PointFloatField spff(swin, bc, ghost, svals, InternalStorage, GPU_INDEX);
 
   CDI.print_device_info();
 

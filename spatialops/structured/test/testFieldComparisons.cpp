@@ -40,7 +40,7 @@ void fill_field_range(FieldT * f1, double start, double range)
 {
   FieldT * f;
   bool created_field = false;
-  if(f1->memory_device_type() == EXTERNAL_CUDA_GPU) {
+  if(f1->device_index() == GPU_INDEX) {
     created_field = true;
     f = new FieldT(f1->window_with_ghost(), f1->boundary_info(), f1->get_valid_ghost_data(), NULL, InternalStorage);
   }
@@ -79,7 +79,7 @@ void sprinkle_in_field(FieldT * f1, typename FieldT::value_type* vals, size_t si
 
   FieldT * f;
   bool created_field = false;
-  if(f1->memory_device_type() == EXTERNAL_CUDA_GPU) {
+  if(f1->device_index() == GPU_INDEX) {
     created_field = true;
     f = new FieldT(f1->window_with_ghost(), f1->boundary_info(), f1->get_valid_ghost_data(), NULL, InternalStorage);
     *f = *f1;
@@ -116,11 +116,11 @@ bool manual_error_compare(FieldT& f1,
 {
   //copy the fields to local ram if applicable
 #ifdef __CUDACC__
-  if(f1.memory_device_type() == EXTERNAL_CUDA_GPU) {
-    f1.add_consumer(LOCAL_RAM, 0);
+  if(f1.device_index() == GPU_INDEX) {
+    f1.add_field_loc(CPU_INDEX);
   }
-  if(f2.memory_device_type() == EXTERNAL_CUDA_GPU) {
-    f2.add_consumer(LOCAL_RAM, 0);
+  if(f2.device_index() == GPU_INDEX) {
+    f2.add_field_loc(CPU_INDEX);
   }
 #endif
 
@@ -225,12 +225,12 @@ class TestFieldEqual
     const GhostData gd;
     const int total;
 
-    MemoryType memType1;
-    MemoryType memType2;
+    short int devIdx1;
+    short int devIdx2;
 
     TestFieldEqual(const IntVec npts)
-      : memType1(LOCAL_RAM),
-      memType2(LOCAL_RAM),
+      : devIdx1(CPU_INDEX),
+      devIdx2(CPU_INDEX),
       window(npts),
       bc(BoundaryCellInfo::build<FieldT>()),
       gd(1),
@@ -247,8 +247,8 @@ class TestFieldEqual
         bool const testFieldNotEqualFunction,
         bool const verboseOutput)
     {
-      FieldT sf1(window, bc, gd, NULL, InternalStorage, memType1);
-      FieldT sf2(window, bc, gd, NULL, InternalStorage, memType2);
+      FieldT sf1(window, bc, gd, NULL, InternalStorage, devIdx1);
+      FieldT sf2(window, bc, gd, NULL, InternalStorage, devIdx2);
 
       /* Fill in Field 1 Values to Sprinkle */
       fill_field_range(&sf1, 0, f1Range);
@@ -300,8 +300,8 @@ class TestFieldEqual
         bool const testFieldNotEqualFunction,
         bool const verboseOutput)
     {
-      FieldT f1(window, bc, gd, NULL, InternalStorage, memType1);
-      FieldT f2(window, bc, gd, NULL, InternalStorage, memType2);
+      FieldT f1(window, bc, gd, NULL, InternalStorage, devIdx1);
+      FieldT f2(window, bc, gd, NULL, InternalStorage, devIdx2);
       f1 <<= f1Val;
       f2 <<= f2Val;
       return compare_fields(&f1, &f2, et, error, expectedEqual, absError, testFieldNotEqualFunction, verboseOutput);
@@ -321,8 +321,8 @@ class TestFieldEqual
 
     bool compare_memory_windows(IntVec const & f1Npts, IntVec const & f2Npts, ErrorType const & et, bool const testFieldNotEqualFunction)
     {
-      FieldT F1(MemoryWindow(f1Npts), bc, gd, NULL, InternalStorage, memType1);
-      FieldT F2(MemoryWindow(f2Npts), bc, gd, NULL, InternalStorage, memType2);
+      FieldT F1(MemoryWindow(f1Npts), bc, gd, NULL, InternalStorage, devIdx1);
+      FieldT F2(MemoryWindow(f2Npts), bc, gd, NULL, InternalStorage, devIdx2);
 
       F1 <<= 1.0;
       F2 <<= 1.0;
@@ -356,16 +356,16 @@ class TestFieldEqual
       return result;
     }
 
-    bool test(const MemoryType memType1,
-        const MemoryType memType2,
+    bool test(const short int devIdx1,
+        const short int devIdx2,
         const ErrorType et,
         const bool testFieldNotEqualFunction,
         const bool verboseOutput)
     {
       TestHelper status(verboseOutput);
       std::numeric_limits<double> nl;
-      this->memType1 = memType1;
-      this->memType2 = memType2;
+      this->devIdx1 = devIdx1;
+      this->devIdx2 = devIdx2;
 
       FieldT* f1;
       FieldT* f2;
@@ -380,20 +380,20 @@ class TestFieldEqual
       initialize_field(lf3, total);
 #ifdef __CUDACC__
       //gpu fields
-      FieldT gf1(window, bc, gd, NULL, InternalStorage, EXTERNAL_CUDA_GPU, 0);
-      FieldT gf2(window, bc, gd, NULL, InternalStorage, EXTERNAL_CUDA_GPU, 0);
-      FieldT gf3(window, bc, gd, NULL, InternalStorage, EXTERNAL_CUDA_GPU, 0);
+      FieldT gf1(window, bc, gd, NULL, InternalStorage, GPU_INDEX);
+      FieldT gf2(window, bc, gd, NULL, InternalStorage, GPU_INDEX);
+      FieldT gf3(window, bc, gd, NULL, InternalStorage, GPU_INDEX);
       //move local initialized fields to gpu if necessary
-      if(memType1 == EXTERNAL_CUDA_GPU) {
-        lf1.add_consumer(EXTERNAL_CUDA_GPU, 0);
+      if(IS_GPU_INDEX(devIdx1)) {
+        lf1.add_field_loc(GPU_INDEX);
         gf1 <<= lf1;
         f1 = &gf1;
       }
       else {
         f1 = &lf1;
       }
-      if(memType2 == EXTERNAL_CUDA_GPU) {
-        lf2.add_consumer(EXTERNAL_CUDA_GPU, 0);
+      if(IS_GPU_INDEX(devIdx2)) {
+        lf2.add_field_loc(GPU_INDEX);
         gf2 <<= lf2;
         f2 = &gf2;
       }
@@ -410,8 +410,8 @@ class TestFieldEqual
 
       //change second field and compare not equal
 #ifdef __CUDACC__
-      if(memType2 == EXTERNAL_CUDA_GPU) {
-        lf3.add_consumer(EXTERNAL_CUDA_GPU, 0);
+      if(IS_GPU_INDEX(devIdx2)) {
+        lf3.add_field_loc(GPU_INDEX);
         gf3 <<= lf3;
         f2 = &gf3;
       }
@@ -553,8 +553,8 @@ bool manual_error_compare(double d,
 {
   //copy the fields to local ram if applicable
 #ifdef __CUDACC__
-  if(f1.memory_device_type() == EXTERNAL_CUDA_GPU) {
-    f1.add_consumer(LOCAL_RAM, 0);
+  if(IS_GPU_INDEX(f1.device_index())) {
+    f1.add_field_loc(CPU_INDEX);
   }
 #endif
   //iterate through fields.
@@ -656,11 +656,11 @@ class TestFieldEqualScalar
     const GhostData gd;
     const int total;
 
-    MemoryType memType1;
+    short int devIdx1;
 
   public:
     TestFieldEqualScalar(const IntVec npts)
-      : memType1(LOCAL_RAM), window(npts), bc(BoundaryCellInfo::build<FieldT>()),
+      : devIdx1(CPU_INDEX), window(npts), bc(BoundaryCellInfo::build<FieldT>()),
       gd(1), total(npts[0]*npts[1]*npts[2])
     {}
 
@@ -673,15 +673,15 @@ class TestFieldEqualScalar
         bool const testFieldNotEqualFunction,
         bool const verboseOutput)
     {
-      FieldT f1(window, bc, gd, NULL, InternalStorage, this->memType1);
+      FieldT f1(window, bc, gd, NULL, InternalStorage, this->devIdx1);
       f1 <<= f1Val;
       return manual_error_compare(val, f1, error, et, testFieldNotEqualFunction, verboseOutput, expectedEqual, absError);
     }
-    bool test(const MemoryType memType1, const ErrorType et, const bool testFieldNotEqualFunction, const bool verboseOutput)
+    bool test(short int devIdx1, const ErrorType et, const bool testFieldNotEqualFunction, const bool verboseOutput)
     {
       TestHelper status(verboseOutput);
       std::numeric_limits<double> nl;
-      this->memType1 = memType1;
+      this->devIdx1 = devIdx1;
 
       //field exactly equal
       status(compare_field_scalar(42.0, 42.0, et, 0.0, true, 0, testFieldNotEqualFunction, verboseOutput), "Duplicate Fields Equal");
@@ -803,51 +803,51 @@ int main(int argc, const char *argv[])
   {
     TestFieldEqual<SVolField> tfe(winSize);
     //test field_equal
-    overall(tfe.test(LOCAL_RAM, LOCAL_RAM, RELATIVE, false, fieldEqualVerbose), "LOCAL_RAM x LOCAL_RAM Relative Equal Test");
+    overall(tfe.test(CPU_INDEX, CPU_INDEX, RELATIVE, false, fieldEqualVerbose), "CPU_INDEX x CPU_INDEX Relative Equal Test");
 #ifdef __CUDACC__
-    overall(tfe.test(LOCAL_RAM, EXTERNAL_CUDA_GPU, RELATIVE, false, fieldEqualVerbose), "LOCAL_RAM x EXTERNAL_CUDA_GPU Relative Equal Test");
-    overall(tfe.test(EXTERNAL_CUDA_GPU, LOCAL_RAM, RELATIVE, false, fieldEqualVerbose), "EXTERNAL_CUDA_GPU x LOCAL_RAM Relative Equal Test");
-    overall(tfe.test(EXTERNAL_CUDA_GPU, EXTERNAL_CUDA_GPU, RELATIVE, false, fieldEqualVerbose), "EXTERNAL_CUDA_GPU x EXTERNAL_CUDA_GPU Relative Equal Test");
+    overall(tfe.test(CPU_INDEX, GPU_INDEX, RELATIVE, false, fieldEqualVerbose), "CPU_INDEX x GPU_INDEX Relative Equal Test");
+    overall(tfe.test(GPU_INDEX, CPU_INDEX, RELATIVE, false, fieldEqualVerbose), "GPU_INDEX x CPU_INDEX Relative Equal Test");
+    overall(tfe.test(GPU_INDEX, GPU_INDEX, RELATIVE, false, fieldEqualVerbose), "GPU_INDEX x GPU_INDEX Relative Equal Test");
 #endif
 
     //test field_equal_abs
-    overall(tfe.test(LOCAL_RAM, LOCAL_RAM, ABSOLUTE, false, fieldEqualVerbose), "LOCAL_RAM x LOCAL_RAM Absolute Error Equal Test");
+    overall(tfe.test(CPU_INDEX, CPU_INDEX, ABSOLUTE, false, fieldEqualVerbose), "CPU_INDEX x CPU_INDEX Absolute Error Equal Test");
 #ifdef __CUDACC__
-    overall(tfe.test(LOCAL_RAM, EXTERNAL_CUDA_GPU, ABSOLUTE, false, fieldEqualVerbose), "LOCAL_RAM x EXTERNAL_CUDA_GPU Absolute Error Equal Test");
-    overall(tfe.test(EXTERNAL_CUDA_GPU, LOCAL_RAM, ABSOLUTE, false, fieldEqualVerbose), "EXTERNAL_CUDA_GPU x LOCAL_RAM Absolute Error Equal Test");
-    overall(tfe.test(EXTERNAL_CUDA_GPU, EXTERNAL_CUDA_GPU, ABSOLUTE, false, fieldEqualVerbose), "EXTERNAL_CUDA_GPU x EXTERNAL_CUDA_GPU Absolute Error Equal Test");
+    overall(tfe.test(CPU_INDEX, GPU_INDEX, ABSOLUTE, false, fieldEqualVerbose), "CPU_INDEX x GPU_INDEX Absolute Error Equal Test");
+    overall(tfe.test(GPU_INDEX, CPU_INDEX, ABSOLUTE, false, fieldEqualVerbose), "GPU_INDEX x CPU_INDEX Absolute Error Equal Test");
+    overall(tfe.test(GPU_INDEX, GPU_INDEX, ABSOLUTE, false, fieldEqualVerbose), "GPU_INDEX x GPU_INDEX Absolute Error Equal Test");
 #endif
 
     //test field_equal_ulp
-    overall(tfe.test(LOCAL_RAM, LOCAL_RAM, ULP, false, fieldEqualVerbose), "LOCAL_RAM x LOCAL_RAM Ulps Equal Test");
+    overall(tfe.test(CPU_INDEX, CPU_INDEX, ULP, false, fieldEqualVerbose), "CPU_INDEX x CPU_INDEX Ulps Equal Test");
 #ifdef __CUDACC__
-    overall(tfe.test(LOCAL_RAM, EXTERNAL_CUDA_GPU, ULP, false, fieldEqualVerbose), "LOCAL_RAM x EXTERNAL_CUDA_GPU Ulps Equal Test");
-    overall(tfe.test(EXTERNAL_CUDA_GPU, LOCAL_RAM, ULP, false, fieldEqualVerbose), "EXTERNAL_CUDA_GPU x LOCAL_RAM Ulps Equal Test");
-    overall(tfe.test(EXTERNAL_CUDA_GPU, EXTERNAL_CUDA_GPU, ULP, false, fieldEqualVerbose), "EXTERNAL_CUDA_GPU x EXTERNAL_CUDA_GPU Ulps Equal Test");
+    overall(tfe.test(CPU_INDEX, GPU_INDEX, ULP, false, fieldEqualVerbose), "CPU_INDEX x GPU_INDEX Ulps Equal Test");
+    overall(tfe.test(GPU_INDEX, CPU_INDEX, ULP, false, fieldEqualVerbose), "GPU_INDEX x CPU_INDEX Ulps Equal Test");
+    overall(tfe.test(GPU_INDEX, GPU_INDEX, ULP, false, fieldEqualVerbose), "GPU_INDEX x GPU_INDEX Ulps Equal Test");
 #endif
 
     //test field_not_equal
-    overall(tfe.test(LOCAL_RAM, LOCAL_RAM, RELATIVE, true, fieldEqualVerbose), "LOCAL_RAM x LOCAL_RAM Relative Not Equal Test");
+    overall(tfe.test(CPU_INDEX, CPU_INDEX, RELATIVE, true, fieldEqualVerbose), "CPU_INDEX x CPU_INDEX Relative Not Equal Test");
 #ifdef __CUDACC__
-    overall(tfe.test(LOCAL_RAM, EXTERNAL_CUDA_GPU, RELATIVE, true, fieldEqualVerbose), "LOCAL_RAM x EXTERNAL_CUDA_GPU Relative Not Equal Test");
-    overall(tfe.test(EXTERNAL_CUDA_GPU, LOCAL_RAM, RELATIVE, true, fieldEqualVerbose), "EXTERNAL_CUDA_GPU x LOCAL_RAM Relative Not Equal Test");
-    overall(tfe.test(EXTERNAL_CUDA_GPU, EXTERNAL_CUDA_GPU, RELATIVE, true, fieldEqualVerbose), "EXTERNAL_CUDA_GPU x EXTERNAL_CUDA_GPU Relative Not Equal Test");
+    overall(tfe.test(CPU_INDEX, GPU_INDEX, RELATIVE, true, fieldEqualVerbose), "CPU_INDEX x GPU_INDEX Relative Not Equal Test");
+    overall(tfe.test(GPU_INDEX, CPU_INDEX, RELATIVE, true, fieldEqualVerbose), "GPU_INDEX x CPU_INDEX Relative Not Equal Test");
+    overall(tfe.test(GPU_INDEX, GPU_INDEX, RELATIVE, true, fieldEqualVerbose), "GPU_INDEX x GPU_INDEX Relative Not Equal Test");
 #endif
 
     //test field_not_equal_abs
-    overall(tfe.test(LOCAL_RAM, LOCAL_RAM, ABSOLUTE, true, fieldEqualVerbose), "LOCAL_RAM x LOCAL_RAM Absolute Error Not Equal Test");
+    overall(tfe.test(CPU_INDEX, CPU_INDEX, ABSOLUTE, true, fieldEqualVerbose), "CPU_INDEX x CPU_INDEX Absolute Error Not Equal Test");
 #ifdef __CUDACC__
-    overall(tfe.test(LOCAL_RAM, EXTERNAL_CUDA_GPU, ABSOLUTE, true, fieldEqualVerbose), "LOCAL_RAM x EXTERNAL_CUDA_GPU Absolute Error Not Equal Test");
-    overall(tfe.test(EXTERNAL_CUDA_GPU, LOCAL_RAM, ABSOLUTE, true, fieldEqualVerbose), "EXTERNAL_CUDA_GPU x LOCAL_RAM Absolute Error Not Equal Test");
-    overall(tfe.test(EXTERNAL_CUDA_GPU, EXTERNAL_CUDA_GPU, ABSOLUTE, true, fieldEqualVerbose), "EXTERNAL_CUDA_GPU x EXTERNAL_CUDA_GPU Absolute Error Not Equal Test");
+    overall(tfe.test(CPU_INDEX, GPU_INDEX, ABSOLUTE, true, fieldEqualVerbose), "CPU_INDEX x GPU_INDEX Absolute Error Not Equal Test");
+    overall(tfe.test(GPU_INDEX, CPU_INDEX, ABSOLUTE, true, fieldEqualVerbose), "GPU_INDEX x CPU_INDEX Absolute Error Not Equal Test");
+    overall(tfe.test(GPU_INDEX, GPU_INDEX, ABSOLUTE, true, fieldEqualVerbose), "GPU_INDEX x GPU_INDEX Absolute Error Not Equal Test");
 #endif
 
     //test field_not_equal_ulp
-    overall(tfe.test(LOCAL_RAM, LOCAL_RAM, ULP, true, fieldEqualVerbose), "LOCAL_RAM x LOCAL_RAM Ulps Not Equal Test");
+    overall(tfe.test(CPU_INDEX, CPU_INDEX, ULP, true, fieldEqualVerbose), "CPU_INDEX x CPU_INDEX Ulps Not Equal Test");
 #ifdef __CUDACC__
-    overall(tfe.test(LOCAL_RAM, EXTERNAL_CUDA_GPU, ULP, true, fieldEqualVerbose), "LOCAL_RAM x EXTERNAL_CUDA_GPU Ulps Not Equal Test");
-    overall(tfe.test(EXTERNAL_CUDA_GPU, LOCAL_RAM, ULP, true, fieldEqualVerbose), "EXTERNAL_CUDA_GPU x LOCAL_RAM Ulps Not Equal Test");
-    overall(tfe.test(EXTERNAL_CUDA_GPU, EXTERNAL_CUDA_GPU, ULP, true, fieldEqualVerbose), "EXTERNAL_CUDA_GPU x EXTERNAL_CUDA_GPU Ulps Not Equal Test");
+    overall(tfe.test(CPU_INDEX, GPU_INDEX, ULP, true, fieldEqualVerbose), "CPU_INDEX x GPU_INDEX Ulps Not Equal Test");
+    overall(tfe.test(GPU_INDEX, CPU_INDEX, ULP, true, fieldEqualVerbose), "GPU_INDEX x CPU_INDEX Ulps Not Equal Test");
+    overall(tfe.test(GPU_INDEX, GPU_INDEX, ULP, true, fieldEqualVerbose), "GPU_INDEX x GPU_INDEX Ulps Not Equal Test");
 #endif
   }
 
@@ -858,39 +858,39 @@ int main(int argc, const char *argv[])
     TestFieldEqualScalar<SVolField> tfes(winSize);
 
     //test field_equal with scalar
-    overall(tfes.test(LOCAL_RAM, RELATIVE, false, fieldEqualVerbose), "SCALAR x LOCAL_RAM Relative Equal Test");
+    overall(tfes.test(CPU_INDEX, RELATIVE, false, fieldEqualVerbose), "SCALAR x CPU_INDEX Relative Equal Test");
 #ifdef __CUDACC__
-    overall(tfes.test(EXTERNAL_CUDA_GPU, RELATIVE, false, fieldEqualVerbose), "SCALAR x EXTERNAL_CUDA_GPU Relative Equal Test");
+    overall(tfes.test(GPU_INDEX, RELATIVE, false, fieldEqualVerbose), "SCALAR x GPU_INDEX Relative Equal Test");
 #endif
 
     //test field_equal_abs with scalar
-    overall(tfes.test(LOCAL_RAM, ABSOLUTE, false, fieldEqualVerbose), "SCALAR x LOCAL_RAM Absolute Error Equal Test");
+    overall(tfes.test(CPU_INDEX, ABSOLUTE, false, fieldEqualVerbose), "SCALAR x CPU_INDEX Absolute Error Equal Test");
 #ifdef __CUDACC__
-    overall(tfes.test(EXTERNAL_CUDA_GPU, ABSOLUTE, false, fieldEqualVerbose), "SCALAR x EXTERNAL_CUDA_GPU Absolute Error Equal Test");
+    overall(tfes.test(GPU_INDEX, ABSOLUTE, false, fieldEqualVerbose), "SCALAR x GPU_INDEX Absolute Error Equal Test");
 #endif
 
     //test field_equal_ulp with scalar
-    overall(tfes.test(LOCAL_RAM, ULP, false, fieldEqualVerbose), "SCALAR x LOCAL_RAM Ulps Equal Test");
+    overall(tfes.test(CPU_INDEX, ULP, false, fieldEqualVerbose), "SCALAR x CPU_INDEX Ulps Equal Test");
 #ifdef __CUDACC__
-    overall(tfes.test(EXTERNAL_CUDA_GPU, ULP, false, fieldEqualVerbose), "SCALAR x EXTERNAL_CUDA_GPU Ulps Equal Test");
+    overall(tfes.test(GPU_INDEX, ULP, false, fieldEqualVerbose), "SCALAR x GPU_INDEX Ulps Equal Test");
 #endif
 
     //test field_not_equal with scalar
-    overall(tfes.test(LOCAL_RAM, RELATIVE, true, fieldEqualVerbose), "SCALAR x LOCAL_RAM Relative Not Equal Test");
+    overall(tfes.test(CPU_INDEX, RELATIVE, true, fieldEqualVerbose), "SCALAR x CPU_INDEX Relative Not Equal Test");
 #ifdef __CUDACC__
-    overall(tfes.test(EXTERNAL_CUDA_GPU, RELATIVE, true, fieldEqualVerbose), "SCALAR x EXTERNAL_CUDA_GPU Relative Not Equal Test");
+    overall(tfes.test(GPU_INDEX, RELATIVE, true, fieldEqualVerbose), "SCALAR x GPU_INDEX Relative Not Equal Test");
 #endif
 
     //test field_not_equal_abs with scalar
-    overall(tfes.test(LOCAL_RAM, ABSOLUTE, true, fieldEqualVerbose), "SCALAR x LOCAL_RAM Absolute Error Not Equal Test");
+    overall(tfes.test(CPU_INDEX, ABSOLUTE, true, fieldEqualVerbose), "SCALAR x CPU_INDEX Absolute Error Not Equal Test");
 #ifdef __CUDACC__
-    overall(tfes.test(EXTERNAL_CUDA_GPU, ABSOLUTE, true, fieldEqualVerbose), "SCALAR x EXTERNAL_CUDA_GPU Absolute Error Not Equal Test");
+    overall(tfes.test(GPU_INDEX, ABSOLUTE, true, fieldEqualVerbose), "SCALAR x GPU_INDEX Absolute Error Not Equal Test");
 #endif
 
     //test field_not_equal_ulp with scalar
-    overall(tfes.test(LOCAL_RAM, ULP, true, fieldEqualVerbose), "SCALAR x LOCAL_RAM Ulps Not Equal Test");
+    overall(tfes.test(CPU_INDEX, ULP, true, fieldEqualVerbose), "SCALAR x CPU_INDEX Ulps Not Equal Test");
 #ifdef __CUDACC__
-    overall(tfes.test(EXTERNAL_CUDA_GPU, ULP, true, fieldEqualVerbose), "SCALAR x EXTERNAL_CUDA_GPU Ulps Not Equal Test");
+    overall(tfes.test(GPU_INDEX, ULP, true, fieldEqualVerbose), "SCALAR x GPU_INDEX Ulps Not Equal Test");
 #endif
   }
 

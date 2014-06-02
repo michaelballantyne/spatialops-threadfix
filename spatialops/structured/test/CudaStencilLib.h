@@ -354,7 +354,7 @@ void __host__ divergence_float_gpu(FieldT* f, float dx, float dy, float dz){
 
     cudaMalloc((void**)&d_workspace, f->allocated_bytes() );
     cudaMemset(d_workspace, 0, f->allocated_bytes());
-    cudaMemcpy((void*)d_workspace, (void*)f->field_values(SpatialOps::EXTERNAL_CUDA_GPU,0), f->allocated_bytes(), cudaMemcpyDeviceToDevice );
+    cudaMemcpy((void*)d_workspace, (void*)f->field_values(GPU_INDEX), f->allocated_bytes(), cudaMemcpyDeviceToDevice );
 
     dim3 dimBlock( BLOCK_DIM, BLOCK_DIM );
     dim3 dimGrid( blockx, blocky );
@@ -377,12 +377,12 @@ void __host__ divergence_float_gpu(FieldT* f, float dx, float dy, float dz){
     //_div_float_opt1<<<dimGrid, dimBlock, 0, 0>>>( d_workspace,
     _div_float_opt2<<<dimGrid_op2, dimBlock_op2, 0, 0>>>( d_workspace,
     //_div_float_opt3<<<dimGrid_op3, dimBlock_op3, 0, 0>>>( d_workspace,
-    											f->field_values(SpatialOps::EXTERNAL_CUDA_GPU,0),
+    											f->field_values(GPU_INDEX),
                                                 dx, dy, dz,
                                                 extent[0], extent[1], extent[2] );
 
     cudaThreadSynchronize();
-    cudaMemcpy(h_workspace, f->field_values( SpatialOps::EXTERNAL_CUDA_GPU, 0 ), f->allocated_bytes(), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_workspace, f->field_values( GPU_INDEX ), f->allocated_bytes(), cudaMemcpyDeviceToHost);
     cudaFree(d_workspace);
 
     std::ofstream file;
